@@ -4,14 +4,14 @@ Created on 7 Jan 2014
 @author: kavonszadkowski
 '''
 
-marstypes = [tuple(['node']*3),
+marstypes = [tuple(['body']*3),
              ('joint', 'joint', 'joint'),
              ('motor', 'motor', 'motor'),
              ('sensor', 'sensor', 'sensor')]
 
 type_properties = {
-    "node": ('name', 'coll_bitmask'),
-    "node_default": ('new_node', '65536'),
+    "body": ('name', 'coll_bitmask'),
+    "body_default": ('new_node', '65536'),
     "joint": ('name', 'node2'),
     "joint_default": ("new_joint", 'some_node'),
     "motor": ('name', 'motor_type'),
@@ -24,3 +24,46 @@ type_property_defaults = {
     'node': {'name': 'new_node',
              'coll_bitmask': '65536'}
     }
+
+# definition of node types
+nodeTypes = ["undefined",
+             "mesh",
+             "box",
+             "sphere",
+             "capsule",
+             "cylinder",
+             "plane",
+             "terrain",
+             "reference"
+            ]
+
+# definition of joint types
+jointTypes = ["undefined",
+              "hinge",
+              "hinge2",
+              "slider",
+              "ball",
+              "universal",
+              "fixed",
+              "istruct-spine"
+             ]
+
+# definition of sensor types
+sensorTypes = ["RaySensor",
+               "CameraSensor",
+               "ScanningSonar",
+               "JointPosition",
+               "JointVelocity",
+               "JointLoad",
+               "JointTorque",
+               "JointAVGTorque",
+               "Joint6DOF",
+               "NodeContact",
+               "NodePosition",
+               "NodeRotation",
+               "NodeContactForce",
+               "NodeCOM",
+               "NodeVelocity",
+               "NodeAngularVelocity",
+               "MotorCurrent"
+              ]

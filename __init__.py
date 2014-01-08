@@ -15,7 +15,7 @@ in your preferences to gain instant (virtual) world domination.
 bl_info = {
     "name": "MARS Blender Tools",
     "description": "A set of marstools to simplify editing of MARS robot models in Blender.",
-    "author": "Kai von Szadkowski",
+    "author": "Kai von Szadkowski, Malte Langosz",
     "version": (0, 1),
     "blender": (2, 62, 0),
     "location": "",
@@ -26,23 +26,31 @@ bl_info = {
 
 if "bpy" in locals():
     import imp
+    #imp.reload(mtimport)
+    #imp.reload(mtexport)
+    #imp.reload(mtmaterials)
+    #imp.reload(mtjoints)
+    #imp.reload(mtcreateprops)
     imp.reload(mtgui)
     imp.reload(mtmisctools)
-    print("Reloaded MARS Tools.")
+    #imp.reload(mtjoints)
+    print("Reloading MARS Tools.")
 else:
-    from . import mtgui, mtmisctools
-    print("Imported MARS Tools modules.")
+    from . import mtgui, mtmisctools#, mtjoints
+    print("Importing MARS Tools modules.")
 
 import bpy
 
 def register():
-    #mtgui.register()
-    #mtmisctools.register()
+    mtgui.register()
+    mtmisctools.register()
+    #mtjoints.register()
     bpy.utils.register_module(__name__)
 
 def unregister():
-    #marstools.mtgui.unregister()
-    #marstools.mtmisctools.unregister()
+    mtgui.unregister()
+    mtmisctools.unregister()
+    #mjoints.unregister()
     bpy.utils.unregister_module(__name__)
 
 if __name__ == "__main__":

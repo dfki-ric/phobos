@@ -9,19 +9,83 @@ Created on 6 Jan 2014
 '''
 
 import bpy
-from bpy.props import EnumProperty
-import marstools.mtdefs
+from bpy.types import Operator
+from bpy.props import EnumProperty, BoolProperty
+import marstools.mtdefs as mtdefs
 
 
 def register():
-    bpy.utils.register_class(MARSToolPanel)
-    bpy.utils.register_class(MARSObjectPanel)
-    bpy.utils.register_class(MARSWorldPanel)
+    print("Registering mtgui...")
+    bpy.types.Object.MARStype = EnumProperty(
+            items = mtdefs.marstypes,
+            name = "type",
+            description = "MARS object type")
+    print("    Added 'MARStype' to Object properties.")
+
+    bpy.types.World.showBodies = BoolProperty(name = "showBodies")
+    bpy.types.World.showJoints = BoolProperty(name = "showJoints")
+    bpy.types.World.showConstraints = BoolProperty(name = "showConstraints")
+    bpy.types.World.showJointSpheres = BoolProperty(name = "showJointSpheres")
+    bpy.types.World.showSensors = BoolProperty(name = "showSensors")
+    bpy.types.World.showNames = BoolProperty(name = "showNames")
+    setWorldView([True, True, False, False, True, False])
+
+    # These may be optional
+    #bpy.utils.register_class(MARSToolPanel)
+    #bpy.utils.register_class(MARSObjectPanel)
+    #bpy.utils.register_class(MARSWorldPanel)
 
 def unregister():
-    bpy.utils.unregister_class(MARSToolPanel)
-    bpy.utils.unregister_class(MARSObjectPanel)
-    bpy.utils.register_class(MARSWorldPanel)
+    print("Unregistering mtgui...")
+    #bpy.utils.unregister_class(MARSToolPanel)
+    #bpy.utils.unregister_class(MARSObjectPanel)
+    #bpy.utils.register_class(MARSWorldPanel)
+
+
+
+class setLayersOperator(Operator):#
+    """setLayersOperator"""
+    bl_idname = "world.set_layers"
+    bl_label = "Set active Layers according to MARS world data."
+
+    def execute(self, context):
+        layers = [False]*20
+        layers[0] = bpy.data.worlds[0].showBodies
+        layers[1] = bpy.data.worlds[0].showJoints
+        layers[2] = bpy.data.worlds[0].showConstraints
+        layers[3] = bpy.data.worlds[0].showJointSpheres
+        layers[4] = bpy.data.worlds[0].showSensors
+        layers[5] = bpy.data.worlds[0].showNames
+        onetrue = False
+        for b in layers:
+            onetrue = onetrue or b
+        print (onetrue)
+        if not onetrue:
+            bpy.data.worlds[0].showBodies = True
+            layers[0] = True
+        bpy.context.scene.layers = layers
+        return {'FINISHED'}
+
+
+
+def setWorldView(b):
+    bpy.data.worlds[0].showBodies = b[0]
+    bpy.data.worlds[0].showJoints = b[1]
+    bpy.data.worlds[0].showConstraints = b[2]
+    bpy.data.worlds[0].showJointSpheres = b[3]
+    bpy.data.worlds[0].showSensors = b[4]
+    bpy.data.worlds[0].showNames = b[5]
+    applyWorldView()
+
+def applyWorldView():
+    layers = [False]*20
+    layers[0] = bpy.data.worlds[0].showBodies
+    layers[1] = bpy.data.worlds[0].showJoints
+    layers[2] = bpy.data.worlds[0].showConstraints
+    layers[3] = bpy.data.worlds[0].showJointSpheres
+    layers[4] = bpy.data.worlds[0].showSensors
+    layers[5] = bpy.data.worlds[0].showNames
+    bpy.context.scene.layers = layers
 
 
 
@@ -33,15 +97,10 @@ def unregister():
 #    '''
 
 
-def __init__(self, params):
-    '''
-    Define types and create all GUI elements.
-    '''
-
-    bpy.types.Object.MARStype = EnumProperty(
-            items = mtdefs.marstypes,
-            name = "type",
-            description = "MARS object type")
+#def __init__(self, params):
+#    '''
+#    Define types and create all GUI elements.
+#    '''
 
 
 
@@ -65,19 +124,40 @@ class MARSToolPanel(bpy.types.Panel):
         split = layout.split()
         col_edit = split.column(align = True)
 
-        col_edit.operator('object.batch_edit_property', text = 'MARS Properties', icon = 'ZOOMIN')
-        col_edit.operator('object.batch_edit_property', text = 'Create/Edit Custom Property', icon = 'GREASEPENCIL')
+        col_edit.operator('object.mt_create_props', text = 'Update MARS model', icon = 'ZOOMIN')
+        col_edit.operator('object.mt_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
 
         layout.separator()
 
-        # Validation and Export Menu
+        # Inspection Menu
         row_export = layout.row()
-        row_export.label(text = "Check/Export Robot")
+        row_export.label(text = "Inspect Robot")
 
-        split = layout.split()
-        col_export = split.column(align = True)
+        lsplit = layout.column(align=True)
+        #lsplit = layout.split()
+        lsplit.prop(bpy.data.worlds[0], "showBodies")
+        lsplit.prop(bpy.data.worlds[0], "showJoints")
+        lsplit.prop(bpy.data.worlds[0], "showConstraints")
+        lsplit.prop(bpy.data.worlds[0], "showJointSpheres")
+        lsplit.prop(bpy.data.worlds[0], "showSensors")
+        lsplit.prop(bpy.data.worlds[0], "showNames")
+        lsplit.operator('world.set_layers', text='Apply Visibility')
 
-        col_export.operator("object.batch_edit_property", text = "Export Robot Model", icon = "PASTEDOWN")
+        row_sensors = layout.row()
+        row_sensors.label(text="Add Sensors")
+        sensor_split = layout.split()
+
+        n_sensortypes = int(len(mtdefs.sensorTypes))
+        half_n_sensortypes = int(n_sensortypes/2)
+        col_sensor_1 = sensor_split.column(align=True)
+        for i in range(half_n_sensortypes):#sensor in mtdefs.sensorTypes:
+            sensor = mtdefs.sensorTypes[i]
+            col_sensor_1.operator('object.mt_add_sensor_'+sensor, text=sensor)
+        col_sensor_2 = sensor_split.column(align=True)
+        for i in range(n_sensortypes-half_n_sensortypes):
+            sensor = mtdefs.sensorTypes[i+half_n_sensortypes]
+            col_sensor_2.operator('object.mt_add_sensor_'+sensor, text=sensor)
+
 
 
 
@@ -108,8 +188,8 @@ class MARSObjectPanel(bpy.types.Panel):
             #box_props.label(prop)
             if prop in bpy.context.active_object:
                 box_props.prop(bpy.context.active_object, '["'+prop+'"]')
-            else:
-                bpy.context.active_object[prop] = mtdefs.type_properties[bpy.context.active_object.MARStype+"_default"]
+            #else:
+            #    bpy.context.active_object[prop] = mtdefs.type_properties[bpy.context.active_object.MARStype+"_default"]
 
 
 
@@ -126,6 +206,14 @@ class MARSWorldPanel(bpy.types.Panel):
     def draw(self, context):
 
         layout = self.layout
+
+        layout.label(text="Export the Model:")
+        group_export = layout.box()
+        group_export.prop(bpy.data.worlds[0], "exportPath")
+        group_export.prop(bpy.data.worlds[0], "filename")
+        group_export.prop(bpy.data.worlds[0], "exportBobj")
+        group_export.prop(bpy.data.worlds[0], "exportMesh")
+        group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
 
 
 
