@@ -43,6 +43,40 @@ def unregister():
     #bpy.utils.register_class(MARSWorldPanel)
 
 
+class MessageOperator(bpy.types.Operator):
+    bl_idname = "error.message"
+    bl_label = "Message"
+    type = StringProperty()
+    message = StringProperty()
+
+    def execute(self, context):
+        self.report({'INFO'}, self.message)
+        print(self.message)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_popup(self, width=400, height=200)
+
+    def draw(self, context):
+        self.layout.label("MARS Tools")
+        row = self.layout#.split(0.25)
+        row.prop(self, "type")
+        row.prop(self, "message")
+        #row = self.layout#.split(0.80)
+        row.label("")
+        row.operator("error.ok")
+
+#
+#   The OK button in the error dialog
+#
+class OkOperator(bpy.types.Operator):
+    bl_idname = "error.ok"
+    bl_label = "OK"
+    def execute(self, context):
+        return {'FINISHED'}
+
+
 
 class setLayersOperator(Operator):#
     """setLayersOperator"""
@@ -131,9 +165,17 @@ class MARSToolPanel(bpy.types.Panel):
         layout.separator()
 
         # Inspection Menu
-        row_export = layout.row()
-        row_export.label(text = "Inspect Robot")
+        layout.label(text = "Inspect Robot", icon = 'VIEWZOOM')
+        layout.operator('object.mt_check_model', text = 'Check model validity')
+        layout.operator('object.mt_calculate_mass', text = 'Show Mass')
+        layout.operator('object.mt_show_motor_types', text = "Show Motor Types")
+        layout.operator('object.mt_unshow_motor_types', text = "Unshow Motor Types")
 
+
+        layout.separator()
+
+
+        # Visibility
         lsplit = layout.column(align=True)
         #lsplit = layout.split()
         lsplit.prop(bpy.data.worlds[0], "showBodies")

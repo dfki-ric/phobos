@@ -67,3 +67,13 @@ sensorTypes = ["RaySensor",
                "NodeAngularVelocity",
                "MotorCurrent"
               ]
+
+#definitions of which elements live on which layers
+layerTypes = {
+              "nodes": 1,
+              "joints": 2,
+              "constraints": 3,
+              "jointSpheres": 4,
+              "sensors": 5,
+              "names": 6
+              }
