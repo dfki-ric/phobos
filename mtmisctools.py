@@ -113,6 +113,61 @@ class AddObjectsToSensorOperator(Operator):
             # each object is selected
         return{'FINISHED'}
 
+class CalculateMassOperator(Operator):
+    """CalculateMassOperator"""
+    bl_idname = "object.mt_calculate_mass"
+    bl_label = "Calculate mass of the selected objects"
+
+    def execute(self, context):
+        mass = 0
+        names = ""
+        for obj in bpy.context.selected_objects:
+            mass += obj["mass"]
+            names += obj.name + " "
+        bpy.ops.error.message('INVOKE_DEFAULT', type="mass of "+names, message=str(mass))
+        return {'FINISHED'}
+
+
+# def calculateMass():
+#     mass = 0
+#     for obj in bpy.context.selected_objects:
+#         mass += obj["mass"]
+#     return mass
+
+
+class CheckModelOperator(Operator):
+    """CheckModelOperator"""
+    bl_idname = "object.mt_check_model"
+    bl_label = "Check if the robot model is valid."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        notifications = ""
+        faulty_objects = []
+        for obj in bpy.context.selected_objects:
+            if obj.MARStype != obj["type"]:
+                print('CheckModel: Error, object "' + obj.name + '" has inconsistent types.')
+                notifications += 'CheckModel: Error, object "' + obj.name + '" has inconsistent types.\n'
+                faulty_objects.append(obj)
+            if obj.MARStype == "body":
+                if not ("mass" in obj):
+                    print('CheckModel: Error, object "' + obj.name + '" has no attribute "mass".')
+                    notifications += 'CheckModel: Error, object "' + obj.name + '" has no attribute "mass".'
+                    faulty_objects.append(obj)
+                else:
+                    if obj["mass"] == 0 or obj["mass"] == 0.0 or obj["mass"] == "0":
+                        print('CheckModel: Error, object "' + obj.name + '" has no mass.')
+                        notifications += 'CheckModel: Error, object "' + obj.name + '" has no mass.\n'
+                        faulty_objects.append(obj)
+        bpy.ops.error.message('INVOKE_DEFAULT', type="Errors", message=notifications)
+
+        #Deselect all objects and select those with errors
+        bpy.ops.object.select_all() # alternatively: for obj in bpy.data.objects: obj.selected = False
+        for obj in faulty_objects:
+            obj.selected = True
+        return {'FINISHED'}
+
+class ExportModelOperator(Operator):
     """ExportModelOperator"""
     bl_idname = "object.mt_export_robot"
     bl_label = "Initialise MARS properties for all objects"
