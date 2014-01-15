@@ -44,7 +44,7 @@ def getChildren(parent):
     return children
 
 def createWorldProperties():
-    bpy.data.worlds[0].exportPath = "."
+    bpy.data.worlds[0].path = "."
     bpy.data.worlds[0].filename = "filename"
     bpy.data.worlds[0].exportBobj = False
     bpy.data.worlds[0].exportMesh = True

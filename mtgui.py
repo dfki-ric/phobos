@@ -214,7 +214,7 @@ class MARSWorldPanel(bpy.types.Panel):
 
         layout.label(text="Export the Model:")
         group_export = layout.box()
-        group_export.prop(bpy.data.worlds[0], "exportPath")
+        group_export.prop(bpy.data.worlds[0], "path")
         group_export.prop(bpy.data.worlds[0], "filename")
         group_export.prop(bpy.data.worlds[0], "exportBobj")
         group_export.prop(bpy.data.worlds[0], "exportMesh")
