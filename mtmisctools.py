@@ -15,8 +15,8 @@ import marstools.mtutility as mtutility
 
 def register():
     print("Registering mtmisctools...")
-    bpy.types.World.exportPath = StringProperty(name = "exportPath")
-    print("    Added 'exportPath' to Object properties.")
+    bpy.types.World.path = StringProperty(name = "path")
+    print("    Added 'pathath' to Object properties.")
     bpy.types.World.filename = StringProperty(name = "filename")
     print("    Added 'filename' to Object properties.")
     bpy.types.World.exportBobj = BoolProperty(name = "exportBobj")
