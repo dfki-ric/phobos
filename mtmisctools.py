@@ -56,6 +56,20 @@ def unregister():
 
 
 class ExportModelOperator(Operator):#
+class AddObjectsToSensorOperator(Operator):
+    """AddObjectsToSensorOperator"""
+    bl_idname = "object.mt_add_to_sensor"
+    bl_label = "Check if the robot model is valid."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            print("TODO")
+            # the problem is that python will mess up the right order, to a simple "for" will not work
+            # we need to look at the entire tree starting from the root and then check whether or not
+            # each object is selected
+        return{'FINISHED'}
+
     """ExportModelOperator"""
     bl_idname = "object.mt_export_robot"
     bl_label = "Initialise MARS properties for all objects"

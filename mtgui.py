@@ -10,8 +10,9 @@ Created on 6 Jan 2014
 
 import bpy
 from bpy.types import Operator
-from bpy.props import EnumProperty, BoolProperty
+from bpy.props import EnumProperty, BoolProperty, StringProperty
 import marstools.mtdefs as mtdefs
+import marstools.mtsensors as mtsensors
 
 
 def register():
@@ -143,6 +144,8 @@ class MARSToolPanel(bpy.types.Panel):
         lsplit.prop(bpy.data.worlds[0], "showNames")
         lsplit.operator('world.set_layers', text='Apply Visibility')
 
+
+        # create sensor creation buttons
         row_sensors = layout.row()
         row_sensors.label(text="Add Sensors")
         sensor_split = layout.split()
@@ -152,11 +155,13 @@ class MARSToolPanel(bpy.types.Panel):
         col_sensor_1 = sensor_split.column(align=True)
         for i in range(half_n_sensortypes):#sensor in mtdefs.sensorTypes:
             sensor = mtdefs.sensorTypes[i]
-            col_sensor_1.operator('object.mt_add_sensor_'+sensor, text=sensor)
+            #col_sensor_1.operator('object.mt_add_sensor_'+sensor, text=sensor)
+            col_sensor_1.operator('object.mt_add_sensor', text=sensor).sensor_type = sensor
         col_sensor_2 = sensor_split.column(align=True)
         for i in range(n_sensortypes-half_n_sensortypes):
             sensor = mtdefs.sensorTypes[i+half_n_sensortypes]
-            col_sensor_2.operator('object.mt_add_sensor_'+sensor, text=sensor)
+            col_sensor_2.operator('object.mt_add_sensor', text=sensor).sensor_type = sensor
+            #col_sensor_2.operator('object.mt_add_sensor_'+sensor, text=sensor)
 
 
 
