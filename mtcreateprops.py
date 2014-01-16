@@ -128,7 +128,7 @@ class MARSPropsGenerator():
 
 def getRoot():
     for obj in bpy.data.objects:
-        if (obj.select) and (obj.parent == None) and (obj.type == "MESH"):
+        if (obj.select) and (obj.parent == None):
             return obj
 
 def main():
