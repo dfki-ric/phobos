@@ -70,10 +70,11 @@ sensorTypes = ["RaySensor",
 
 #definitions of which elements live on which layers
 layerTypes = {
-              "nodes": 1,
-              "joints": 2,
-              "constraints": 3,
-              "jointSpheres": 4,
-              "sensors": 5,
+              "nodes": 0,
+              "joints": 1,
+              "jointSpheres": 2,
+              "sensors": 3,
+              "decorations": 4,
+              "constraints": 5,
               "names": 6
               }

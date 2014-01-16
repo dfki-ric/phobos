@@ -29,7 +29,8 @@ def register():
     bpy.types.World.showJointSpheres = BoolProperty(name = "showJointSpheres")
     bpy.types.World.showSensors = BoolProperty(name = "showSensors")
     bpy.types.World.showNames = BoolProperty(name = "showNames")
-    setWorldView([True, True, False, False, True, False])
+    bpy.types.World.showNames = BoolProperty(name = "showDecorations")
+    setWorldView([True, True, True, True, True, False, False])
 
     # These may be optional
     #bpy.utils.register_class(MARSToolPanel)
@@ -87,10 +88,11 @@ class setLayersOperator(Operator):#
         layers = [False]*20
         layers[0] = bpy.data.worlds[0].showBodies
         layers[1] = bpy.data.worlds[0].showJoints
-        layers[2] = bpy.data.worlds[0].showConstraints
-        layers[3] = bpy.data.worlds[0].showJointSpheres
-        layers[4] = bpy.data.worlds[0].showSensors
-        layers[5] = bpy.data.worlds[0].showNames
+        layers[2] = bpy.data.worlds[0].showJointSpheres
+        layers[3] = bpy.data.worlds[0].showSensors
+        layers[4] = bpy.data.worlds[0].showDecorations
+        layers[5] = bpy.data.worlds[0].showConstraints
+        layers[6] = bpy.data.worlds[0].showNames
         onetrue = False
         for b in layers:
             onetrue = onetrue or b
@@ -106,20 +108,22 @@ class setLayersOperator(Operator):#
 def setWorldView(b):
     bpy.data.worlds[0].showBodies = b[0]
     bpy.data.worlds[0].showJoints = b[1]
-    bpy.data.worlds[0].showConstraints = b[2]
-    bpy.data.worlds[0].showJointSpheres = b[3]
-    bpy.data.worlds[0].showSensors = b[4]
-    bpy.data.worlds[0].showNames = b[5]
+    bpy.data.worlds[0].showJointSpheres = b[2]
+    bpy.data.worlds[0].showSensors = b[3]
+    bpy.data.worlds[0].showDecorations = b[4]
+    bpy.data.worlds[0].showConstraints = b[5]
+    bpy.data.worlds[0].showNames = b[6]
     applyWorldView()
 
 def applyWorldView():
     layers = [False]*20
     layers[0] = bpy.data.worlds[0].showBodies
     layers[1] = bpy.data.worlds[0].showJoints
-    layers[2] = bpy.data.worlds[0].showConstraints
-    layers[3] = bpy.data.worlds[0].showJointSpheres
-    layers[4] = bpy.data.worlds[0].showSensors
-    layers[5] = bpy.data.worlds[0].showNames
+    layers[2] = bpy.data.worlds[0].showJointSpheres
+    layers[3] = bpy.data.worlds[0].showSensors
+    layers[4] = bpy.data.worlds[0].showDecorations
+    layers[5] = bpy.data.worlds[0].showConstraints
+    layers[6] = bpy.data.worlds[0].showNames
     bpy.context.scene.layers = layers
 
 
@@ -180,9 +184,10 @@ class MARSToolPanel(bpy.types.Panel):
         #lsplit = layout.split()
         lsplit.prop(bpy.data.worlds[0], "showBodies")
         lsplit.prop(bpy.data.worlds[0], "showJoints")
-        lsplit.prop(bpy.data.worlds[0], "showConstraints")
         lsplit.prop(bpy.data.worlds[0], "showJointSpheres")
         lsplit.prop(bpy.data.worlds[0], "showSensors")
+        lsplit.prop(bpy.data.worlds[0], "showDecorations")
+        lsplit.prop(bpy.data.worlds[0], "showConstraints")
         lsplit.prop(bpy.data.worlds[0], "showNames")
         lsplit.operator('world.set_layers', text='Apply Visibility')
 
