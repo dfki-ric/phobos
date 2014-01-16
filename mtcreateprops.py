@@ -21,15 +21,20 @@ import marstools.mtmaterials as mtmaterials
 #if editmode: Blender.Window.EditMode(0)
 
 class IDGenerator(object):
+
+    startID = 0
+
     def __init__(self, startID=0):
         self.nextID = startID
+        self.startID = startID
+
     def __call__(self):
         ret, self.nextID = self.nextID, self.nextID + 1
         return ret
 
-getNextBodyID = IDGenerator(1)
-getNextJointID = IDGenerator(1)
-getNextGroupID = IDGenerator(1)
+    def reset(self):
+        self.nextID = self.startID
+
 
 def setDefault(obj, key, value):
     if key not in obj:
@@ -43,79 +48,99 @@ def getChildren(parent):
             children.append(obj)
     return children
 
-def createWorldProperties():
-    bpy.data.worlds[0].path = "."
-    bpy.data.worlds[0].filename = "filename"
-    bpy.data.worlds[0].exportBobj = False
-    bpy.data.worlds[0].exportMesh = True
+class MARSPropsGenerator():
 
-def createBodyProperties(obj):
-    obj.MARStype = "body"
-    obj["id"] = getNextBodyID()
-    if obj.parent:
-        children = getChildren(obj.parent)
-        setGroup = False
-        for child in children:
-            if "type" in child and child["type"] == "joint":
-                if "node2" in child and child["node2"] == obj.name:
-                    obj["group"] = getNextGroupID()
-                    setGroup = True
-                    break
-        if not setGroup and obj.parent:
-            obj["group"] = obj.parent["group"]
-    else:
-        obj["group"] = getNextGroupID()
-    if "mass" not in obj and "density" not in obj:
-        setDefault(obj, "mass", 0.1)
+    def __init__(self):
+        self.getNextBodyID = IDGenerator(1)
+        self.getNextJointID = IDGenerator(1)
+        self.getNextGroupID = IDGenerator(1)
+        self.createWorldProperties()
 
-def createJointProperties(obj):
-    obj.MARStype = "joint"
-    obj["id"] = getNextJointID()
-    setDefault(obj, "node2", "air")
-    setDefault(obj, "jointType", "hinge")
-    setDefault(obj, "anchor", "node2")
-    setDefault(obj, "controllerIndex", 0)
-    children = getChildren(obj.parent)
-    if len(children) == 2:
-        if children[0] != obj:
-            obj["node2"] = children[0].name
+    def reset(self):
+        self.getNextBodyID.reset()
+        self.getNextJointID.reset()
+        self.getNextGroupID.reset()
+
+    def createWorldProperties(self):
+        world = bpy.data.worlds[0]
+        if not hasattr(world, "path"):
+            world.path = "."
+        if not hasattr(world, "filename"):
+            world.filename = "filename"
+        if not hasattr(world, "exportBobj"):
+            world.exportBobj = False
+        if not hasattr(world, "exportMesh"):
+            world.exportMesh = True
+
+    def createBodyProperties(self, obj):
+        obj.MARStype = "body"
+        obj["id"] = self.getNextBodyID()
+        if obj.parent:
+            children = getChildren(obj.parent)
+            setGroup = False
+            for child in children:
+                if "type" in child and child["type"] == "joint":
+                    if "node2" in child and child["node2"] == obj.name:
+                        obj["group"] = self.getNextGroupID()
+                        setGroup = True
+                        break
+            if not setGroup and obj.parent:
+                obj["group"] = obj.parent["group"]
         else:
-            obj["node2"] = children[1].name
-    else:
-        print(obj.name+": num children: "+str(len(children)))
+            obj["group"] = self.getNextGroupID()
+        if "mass" not in obj and "density" not in obj:
+            setDefault(obj, "mass", 0.1)
 
-def handleProps(obj):
-    print("handle: "+obj.name)
-#    obj.select = False
-    obj.data.name = obj.name
-    defaultType = "body"
-    if obj.name.find("joint") > -1:
-        defaultType = "joint"
+    def createJointProperties(self, obj):
+        obj.MARStype = "joint"
+        obj["id"] = self.getNextJointID()
+        setDefault(obj, "node2", "air")
+        setDefault(obj, "jointType", "hinge")
+        setDefault(obj, "anchor", "node2")
+        setDefault(obj, "controllerIndex", 0)
+        children = getChildren(obj.parent)
+        if len(children) == 2:
+            if children[0] != obj:
+                obj["node2"] = children[0].name
+            else:
+                obj["node2"] = children[1].name
+        else:
+            print(obj.name+": num children: "+str(len(children)))
 
-    objType = setDefault(obj, "type", defaultType)
-    if objType == "body":
-        createBodyProperties(obj)
-    elif objType == "joint":
-        createJointProperties(obj)
+    def handleProps(self, obj):
+        print("handle: "+obj.name)
+    #    obj.select = False
+        obj.data.name = obj.name
+        defaultType = "body"
+        if obj.name.find("joint") > -1:
+            defaultType = "joint"
 
-    children = getChildren(obj)
-    for obj in children:
-        handleProps(obj)
+        objType = setDefault(obj, "type", defaultType)
+        if objType == "body":
+            self.createBodyProperties(obj)
+        elif objType == "joint":
+            self.createJointProperties(obj)
+
+        children = getChildren(obj)
+        for obj in children:
+            self.handleProps(obj)
 
 
 def getRoot():
     for obj in bpy.data.objects:
-        if obj.select and obj.parent == None:
+        if (obj.select) and (obj.parent == None) and (obj.type == "MESH"):
             return obj
 
 def main():
+    propscreator = MARSPropsGenerator()
+
     mtmaterials.createMARSMaterials()
-    createWorldProperties()
     root = getRoot()
 
     if root:
         print(root.name)
-        handleProps(root)
+        propscreator.reset()
+        propscreator.handleProps(root)
 
 
 if __name__ == '__main__':
