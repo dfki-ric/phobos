@@ -43,7 +43,7 @@ class AddSensorOperator(Operator):
                 objects = []
                 for obj in bpy.context.selected_objects:
                     objects.append(obj)
-                mtutility.createPrimitive(self.sensor_type, self.sensor_type, 0.1, location, mtdefs.layerTypes["sensors"], "sensor")
+                mtutility.createPrimitive(self.sensor_type, "sphere", 0.1, location, mtdefs.layerTypes["sensors"], "sensor")
                 sensor = bpy.context.scene.objects.active
                 sensor.MARStype = "sensor"
                 if "Node" in self.sensor_type:
@@ -68,9 +68,14 @@ class AddSensorOperator(Operator):
                 if self.sensor_type == "RaySensor":
                     print("Added nodes to new " + self.sensor_type)
                 elif self.sensor_type == "CameraSensor":
+                    bpy.ops.object.add(type='CAMERA', location=bpy.context.scene.cursor_location)
+                    sensor = bpy.context.active_object
                     print("Added nodes to new " + self.sensor_type)
                 elif self.sensor_type == "ScanningSonar":
                     print("Added nodes to new " + self.sensor_type)
+            for prop in mtdefs.sensorProperties[self.sensor_type]:
+                sensor.name = self.sensor_type
+                sensor[prop] = mtdefs.sensorProperties[self.sensor_type][prop]
         else:
             print("Sensor could not be created: unknown sensor type.")
         return {'FINISHED'}

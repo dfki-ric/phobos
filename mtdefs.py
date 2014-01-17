@@ -4,9 +4,10 @@ Created on 7 Jan 2014
 @author: kavonszadkowski
 '''
 
-marstypes = [tuple(['body']*3),
+marstypes = [tuple(['undefined']*3),
+             tuple(['body']*3),
              ('joint', 'joint', 'joint'),
-             ('motor', 'motor', 'motor'),
+             #('motor', 'motor', 'motor'),
              ('sensor', 'sensor', 'sensor')]
 
 type_properties = {
@@ -67,6 +68,25 @@ sensorTypes = ["RaySensor",
                "NodeAngularVelocity",
                "MotorCurrent"
               ]
+
+sensorProperties = {"RaySensor": {"width": 144},
+               "CameraSensor": {"width": 640, "height": 480},
+               "ScanningSonar": {},
+               "JointPosition": {},
+               "JointVelocity": {},
+               "JointLoad": {},
+               "JointTorque": {},
+               "JointAVGTorque": {},
+               "Joint6DOF": {},
+               "NodeContact": {},
+               "NodePosition": {},
+               "NodeRotation": {},
+               "NodeContactForce": {},
+               "NodeCOM": {},
+               "NodeVelocity": {},
+               "NodeAngularVelocity": {},
+               "MotorCurrent": {}
+              }
 
 #definitions of which elements live on which layers
 layerTypes = {

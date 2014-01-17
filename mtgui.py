@@ -29,7 +29,7 @@ def register():
     bpy.types.World.showJointSpheres = BoolProperty(name = "showJointSpheres")
     bpy.types.World.showSensors = BoolProperty(name = "showSensors")
     bpy.types.World.showNames = BoolProperty(name = "showNames")
-    bpy.types.World.showNames = BoolProperty(name = "showDecorations")
+    bpy.types.World.showDecorations = BoolProperty(name = "showDecorations")
     setWorldView([True, True, True, True, True, False, False])
 
     # These may be optional
