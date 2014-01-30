@@ -13,6 +13,7 @@ from bpy.types import Operator
 from bpy.props import EnumProperty, BoolProperty, StringProperty
 import marstools.mtdefs as mtdefs
 import marstools.mtsensors as mtsensors
+import marstools.mtcontrollers as mtcontrollers
 
 
 def register():
@@ -194,7 +195,7 @@ class MARSToolPanel(bpy.types.Panel):
 
         # create sensor creation buttons
         row_sensors = layout.row()
-        row_sensors.label(text="Add Sensors")
+        row_sensors.label(text="Add Sensors / Controllers")
         sensor_split = layout.split()
 
         n_sensortypes = int(len(mtdefs.sensorTypes))
@@ -209,6 +210,8 @@ class MARSToolPanel(bpy.types.Panel):
             sensor = mtdefs.sensorTypes[i+half_n_sensortypes]
             col_sensor_2.operator('object.mt_add_sensor', text=sensor).sensor_type = sensor
             #col_sensor_2.operator('object.mt_add_sensor_'+sensor, text=sensor)
+        layout.operator("object.mt_add_controller", text="Add Controller")
+
 
 
 

@@ -8,7 +8,8 @@ marstypes = [tuple(['undefined']*3),
              tuple(['body']*3),
              ('joint', 'joint', 'joint'),
              #('motor', 'motor', 'motor'),
-             ('sensor', 'sensor', 'sensor')]
+             ('sensor', 'sensor', 'sensor'),
+             tuple(['controller']*3)]
 
 type_properties = {
     "body": ('name', 'coll_bitmask'),
