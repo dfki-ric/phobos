@@ -89,7 +89,7 @@ class MARSPropsGenerator():
         else:
             obj["group"] = self.getNextGroupID()
         if "mass" not in obj and "density" not in obj:
-            setDefault(obj, "mass", 0.1)
+            setDefault(obj, "mass", 0.001)
 
     def createJointProperties(self, obj):
         obj.MARStype = "joint"

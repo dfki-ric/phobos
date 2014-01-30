@@ -31,3 +31,10 @@ def defLayers(layerlist):
     for layer in layerlist:
         layers[layer+1] = True
     return layers
+
+def returnObjectList(marstype):
+    objlist = []
+    for obj in bpy.context.scene.objects:
+        if obj.MARStype == marstype:
+            objlist.append(obj)
+    return objlist

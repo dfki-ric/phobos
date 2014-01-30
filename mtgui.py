@@ -213,6 +213,15 @@ class MARSToolPanel(bpy.types.Panel):
         layout.operator("object.mt_add_controller", text="Add Controller")
 
 
+        #export robot model options
+        layout.label(text="Export the Model:")
+        group_export = layout.box()
+        group_export.prop(bpy.data.worlds[0], "path")
+        group_export.prop(bpy.data.worlds[0], "filename")
+        group_export.prop(bpy.data.worlds[0], "exportBobj")
+        group_export.prop(bpy.data.worlds[0], "exportMesh")
+        group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
+
 
 
 
@@ -262,13 +271,13 @@ class MARSWorldPanel(bpy.types.Panel):
 
         layout = self.layout
 
-        layout.label(text="Export the Model:")
-        group_export = layout.box()
-        group_export.prop(bpy.data.worlds[0], "path")
-        group_export.prop(bpy.data.worlds[0], "filename")
-        group_export.prop(bpy.data.worlds[0], "exportBobj")
-        group_export.prop(bpy.data.worlds[0], "exportMesh")
-        group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
+#         layout.label(text="Export the Model:")
+#         group_export = layout.box()
+#         group_export.prop(bpy.data.worlds[0], "path")
+#         group_export.prop(bpy.data.worlds[0], "filename")
+#         group_export.prop(bpy.data.worlds[0], "exportBobj")
+#         group_export.prop(bpy.data.worlds[0], "exportMesh")
+#         group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
 
 
 

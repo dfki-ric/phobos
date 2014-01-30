@@ -142,6 +142,13 @@ class CheckModelOperator(Operator):
     bl_label = "Check if the robot model is valid."
     bl_options = {'REGISTER', 'UNDO'}
 
+    #Todo functions:
+    # - check for duplicate names
+    # - check whether there are two roots
+    # - check whether all indices registered with sensors exist
+    # - check for doubles in registered indices of sensors
+    # - check if all joints have a sensible node2
+
     def execute(self, context):
         notifications = ""
         faulty_objects = []
