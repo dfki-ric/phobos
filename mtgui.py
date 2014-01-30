@@ -30,7 +30,7 @@ def register():
     bpy.types.World.showSensors = BoolProperty(name = "showSensors")
     bpy.types.World.showNames = BoolProperty(name = "showNames")
     bpy.types.World.showDecorations = BoolProperty(name = "showDecorations")
-    setWorldView([True, True, True, True, True, False, False])
+    #setWorldView([True, True, True, True, True, False, False])
 
     # These may be optional
     #bpy.utils.register_class(MARSToolPanel)

@@ -21,7 +21,6 @@ import os, glob
 import mathutils
 import struct
 
-scn = bpy.context.scene
 objList = []
 jointList = []
 sensorList = []
@@ -53,6 +52,7 @@ defValues = { "filename": "example",
 
 
 def parseDefaultValues():
+    scn = bpy.context.scene
     global defValues
     for key in defValues:
         if key in scn.world:
