@@ -216,12 +216,12 @@ def getChildren(parent):
     return children
 
 def fillList(obj):
-    if "type" in obj:
-        if obj["type"] == "body":
+    if "MARStype" in obj:
+        if obj.MARStype == "body":
             objList.append(obj)
-        elif obj["type"] == "joint":
+        elif obj.MARStype == "joint":
             jointList.append(obj)
-        elif obj["type"] == "sensor":
+        elif obj.MARStype == "sensor":
             sensorList.append(obj)
     obj.select = False
 
