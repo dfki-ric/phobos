@@ -79,7 +79,7 @@ class MARSPropsGenerator():
             children = getChildren(obj.parent)
             setGroup = False
             for child in children:
-                if "type" in child and child["type"] == "joint":
+                if "MARStype" in child and child.MARStype == "joint":
                     if "node2" in child and child["node2"] == obj.name:
                         obj["group"] = self.getNextGroupID()
                         setGroup = True
@@ -115,7 +115,7 @@ class MARSPropsGenerator():
         if obj.name.find("joint") > -1:
             defaultType = "joint"
 
-        objType = setDefault(obj, "type", defaultType)
+        objType = setDefault(obj, "MARStype", defaultType)
         if objType == "body":
             self.createBodyProperties(obj)
         elif objType == "joint":
