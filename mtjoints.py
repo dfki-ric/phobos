@@ -55,18 +55,20 @@ class AddJointTwoNodesOperator(Operator):
         description = "scale of the joint arbor")
 
     def execute(self, context):
-        location = bpy.context.scene.cursor_location
-
         # store the two nodes
         nodes = []
         for obj in bpy.context.selected_objects:
             if obj.MARStype == "body":
                 nodes.append(obj)
 
+        #calculate relative location
+        location = bpy.context.scene.cursor_location - nodes[0].location
+
         createJoint('test', self.joint_scale, location)
         joint = bpy.context.object
         joint.parent = nodes[0]
         joint['node2'] = nodes[1].name
+        joint.MARStype = "joint"
         return{'FINISHED'}
 
 class DeriveJointSpheresOperator(Operator):
