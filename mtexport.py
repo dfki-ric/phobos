@@ -614,7 +614,8 @@ def main():
 
 
     wm = bpy.context.window_manager
-    wm.progress_begin(0, len(objList))
+    total = float(len(objList))
+    wm.progress_begin(0, total)
     i = 1
     for obj in objList:
         if "use" in obj:
@@ -644,8 +645,8 @@ def main():
         obj.rotation_quaternion = rotation
         obj.parent = parent
         obj.select = False
-        i += 1
         wm.progress_update(i)
+        i += 1
 
     wm.progress_end()
 
