@@ -34,7 +34,7 @@ class AddControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            mtutility.createPrimitive("controller", "sphere", 0.1, location, mtdefs.layerTypes["sensors"], "controller")
+            mtutility.createPrimitive("controller", "sphere", (0.1), mtdefs.layerTypes["sensors"], "controller", location)
             bpy.context.scene.objects.active.MARStype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)

@@ -8,18 +8,18 @@ import bpy
 import marstools.mtmaterials as mtmaterials
 import marstools.mtdefs as mtdefs
 
-def createPrimitive(pname, ptype, psize, plocation, player, pmaterial):
+def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation = (0, 0, 0)):
     try:
         n_layer = int(player)
     except ValueError:
         n_layer = mtdefs.layerTypes[player]
     players = defLayers([n_layer])
     if ptype == "sphere":
-        bpy.ops.mesh.primitive_uv_sphere_add(size = psize, layers = players, location = plocation)
+        bpy.ops.mesh.primitive_uv_sphere_add(size = psize[1], layers = players, location = plocation, rotation = protation)
     elif ptype == "cylinder":
-        bpy.ops.mesh.primitive_cylinder_add(vertices=8, radius=psize, depth=psize, location = plocation)
+        bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=psize[0], depth=psize[1], location = plocation, rotation = protation)
     elif ptype == "cone":
-        bpy.ops.mesh.primitive_cone_add(vertices=8,radius=psize,depth=psize, cap_end=True, location=plocation)
+        bpy.ops.mesh.primitive_cone_add(vertices=32,radius=psize[0],depth=psize[1], cap_end=True, location=plocation, rotation = protation)
 
     obj = bpy.context.object
     obj.name = pname
