@@ -190,6 +190,9 @@ class MARSToolModelPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
+        layout.operator('object.add_joint_2_nodes', text = "Add joint between nodes")
+        layout.operator('object.derive_joint_spheres', text = "Derive Joint Spheres from joints")
+
 
 class MARSToolSenConPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
