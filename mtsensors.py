@@ -32,8 +32,6 @@ class AddSensorOperator(Operator):
         default = "",
         description = "type of the sensor to be created")
 
-    test = "123"
-
     def execute(self, context):
         location = bpy.context.scene.cursor_location
         if self.sensor_type in mtdefs.sensorTypes:
@@ -54,6 +52,10 @@ class AddSensorOperator(Operator):
                     sense["sensorType"] = self.sensor_type
                     sensors.append(sense)
                 for sensor in sensors:
+                    for key in sensor.keys():
+                        if key.find("index") >= 0:
+                            del sensor[key]
+                            print("Deleting " + key + " in " + sensor.name)
                     i = 1
                     if "Node" in sensor["sensorType"]:
                         for obj in objects:

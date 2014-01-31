@@ -24,8 +24,6 @@ class AddControllerOperator(Operator):
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
 
-    test = "123"
-
     def execute(self, context):
         location = bpy.context.scene.cursor_location
         objects = []
@@ -40,7 +38,12 @@ class AddControllerOperator(Operator):
             bpy.context.scene.objects.active.MARStype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
+        #empty index list so enable update of controller
         for ctrl in controllers:
+            for key in ctrl.keys():
+                if key.find("index") >= 0:
+                    del ctrl[key]
+                    print("Deleting " + key + " in " + ctrl.name)
             i = 1
             for obj in objects:
                 if obj.MARStype == "joint":
