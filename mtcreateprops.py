@@ -48,6 +48,11 @@ def getChildren(parent):
             children.append(obj)
     return children
 
+def updateType(obj):
+    if "type" in obj:
+        obj["MARStype"] = obj["type"]
+        del obj["type"]
+
 class MARSPropsGenerator():
 
     def __init__(self):
@@ -111,10 +116,10 @@ class MARSPropsGenerator():
         print("handle: "+obj.name)
     #    obj.select = False
         obj.data.name = obj.name
+        updateType(obj)
         defaultType = "body"
         if obj.name.find("joint") > -1:
             defaultType = "joint"
-
         objType = setDefault(obj, "MARStype", defaultType)
         if objType == "body":
             self.createBodyProperties(obj)
