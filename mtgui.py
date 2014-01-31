@@ -158,45 +158,54 @@ class MARSToolPanel(bpy.types.Panel):
         layout = self.layout
 
         # Edit Properties Menu
-        row_edit = layout.row()
-        row_edit.label(text="Edit MARS Properties:")
+        layout.label(text="Edit MARS Properties:")
+        col_edit = layout.column(align = True)
 
-        split = layout.split()
-        col_edit = split.column(align = True)
-
-        col_edit.operator('object.mt_create_props', text = 'Update MARS model', icon = 'ZOOMIN')
+        col_edit.operator('object.mt_create_props', text = 'Update MARS model', icon = 'FILE_REFRESH')
         col_edit.operator('object.mt_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
 
         layout.separator()
 
         # Inspection Menu
+        inlayout = layout.split()
         layout.label(text = "Inspect Robot", icon = 'VIEWZOOM')
-        layout.operator('object.mt_check_model', text = 'Check model validity')
-        layout.operator('object.mt_calculate_mass', text = 'Show Mass')
-        layout.operator('object.mt_show_motor_types', text = "Show Motor Types")
-        layout.operator('object.mt_unshow_motor_types', text = "Unshow Motor Types")
+        linspect1 = inlayout.column(align = True)
+        linspect1.operator('object.mt_check_model', text = 'Check model validity')
+        linspect1.operator('object.mt_calculate_mass', text = 'Show Mass')
+        linspect2 = inlayout.column(align = True)
+        linspect2.operator('object.mt_show_motor_types', text = "Show Motor Types")
+        linspect2.operator('object.mt_unshow_motor_types', text = "Unshow Motor Types")
 
 
-        layout.separator()
+class MARSToolModelPanel(bpy.types.Panel):
+    """A Custom Panel in the Viewport Toolbar for MARS options"""
+    bl_idname = "TOOLS_MODEL_PT_MARS"
+    bl_label = "MARS Bodies & Joints"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+
+    def draw_header(self, context):
+        self.layout.label(icon = 'MOD_ARMATURE')
+
+    def draw(self, context):
+        layout = self.layout
 
 
-        # Visibility
-        lsplit = layout.column(align=True)
-        #lsplit = layout.split()
-        lsplit.prop(bpy.data.worlds[0], "showBodies")
-        lsplit.prop(bpy.data.worlds[0], "showJoints")
-        lsplit.prop(bpy.data.worlds[0], "showJointSpheres")
-        lsplit.prop(bpy.data.worlds[0], "showSensors")
-        lsplit.prop(bpy.data.worlds[0], "showDecorations")
-        lsplit.prop(bpy.data.worlds[0], "showConstraints")
-        lsplit.prop(bpy.data.worlds[0], "showNames")
-        lsplit.operator('world.set_layers', text='Apply Visibility')
+class MARSToolSenConPanel(bpy.types.Panel):
+    """A Custom Panel in the Viewport Toolbar for MARS options"""
+    bl_idname = "TOOLS_SENCON_PT_MARS"
+    bl_label = "MARS: Sensors & Controllers"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
 
+    def draw_header(self, context):
+        self.layout.label(icon = 'GAME')
 
+    def draw(self, context):
+        row_sensors = self.layout
         # create sensor creation buttons
-        row_sensors = layout.row()
         row_sensors.label(text="Add Sensors / Controllers")
-        sensor_split = layout.split()
+        sensor_split = row_sensors.split()
 
         n_sensortypes = int(len(mtdefs.sensorTypes))
         half_n_sensortypes = int(n_sensortypes/2)
@@ -210,19 +219,52 @@ class MARSToolPanel(bpy.types.Panel):
             sensor = mtdefs.sensorTypes[i+half_n_sensortypes]
             col_sensor_2.operator('object.mt_add_sensor', text=sensor).sensor_type = sensor
             #col_sensor_2.operator('object.mt_add_sensor_'+sensor, text=sensor)
-        layout.operator("object.mt_add_controller", text="Add Controller")
+        row_sensors.operator("object.mt_add_controller", text="Controller")
 
 
+class MARSToolVisPanel(bpy.types.Panel):
+    """A Custom Panel in the Viewport Toolbar for MARS options"""
+    bl_idname = "TOOLS_VIS_PT_MARS"
+    bl_label = "MARS: Visibility"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+
+    def draw_header(self, context):
+        self.layout.label(icon = 'VISIBLE_IPO_ON')
+
+    def draw(self, context):
+        lvis = self.layout
+        # Visibility
+        lsplit = lvis.column(align=True)
+        #lsplit = layout.split()
+        lsplit.prop(bpy.data.worlds[0], "showBodies")
+        lsplit.prop(bpy.data.worlds[0], "showJoints")
+        lsplit.prop(bpy.data.worlds[0], "showJointSpheres")
+        lsplit.prop(bpy.data.worlds[0], "showSensors")
+        lsplit.prop(bpy.data.worlds[0], "showDecorations")
+        lsplit.prop(bpy.data.worlds[0], "showConstraints")
+        lsplit.prop(bpy.data.worlds[0], "showNames")
+        lsplit.operator('world.set_layers', text='Apply Visibility')
+
+
+class MARSToolExportPanel(bpy.types.Panel):
+    """A Custom Panel in the Viewport Toolbar for MARS options"""
+    bl_idname = "TOOLS_ZEXPORT_PT_MARS"
+    bl_label = "MARS: Export Model"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+
+    def draw_header(self, context):
+        self.layout.label(icon = 'SMOOTH')
+
+    def draw(self, context):
+        group_export = self.layout
         #export robot model options
-        layout.label(text="Export the Model:")
-        group_export = layout.box()
         group_export.prop(bpy.data.worlds[0], "path")
         group_export.prop(bpy.data.worlds[0], "filename")
         group_export.prop(bpy.data.worlds[0], "exportBobj")
         group_export.prop(bpy.data.worlds[0], "exportMesh")
         group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
-
-
 
 
 class MARSObjectPanel(bpy.types.Panel):
