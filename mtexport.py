@@ -613,6 +613,9 @@ def main():
     os.system("zip "+defValues["filename"]+".scn "+defValues["filename"]+".scene")
 
 
+    wm = bpy.context.window_manager
+    wm.progress_begin(0, len(objList))
+    i = 1
     for obj in objList:
         if "use" in obj:
             continue
@@ -641,6 +644,10 @@ def main():
         obj.rotation_quaternion = rotation
         obj.parent = parent
         obj.select = False
+        i += 1
+        wm.progress_update(i)
+
+    wm.progress_end()
 
 
 # it would be nice to also set the pivot to the object center
