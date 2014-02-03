@@ -71,6 +71,43 @@ class AddJointTwoNodesOperator(Operator):
         joint.MARStype = "joint"
         return{'FINISHED'}
 
+
+class ConnectNodesOperator(Operator):
+    """Select n bodies (lowest child to overall parent, parent = active object) to be connected via newly-created joints."""
+    bl_idname = "object.connect_nodes"
+    bl_label = "Creates Joint Helper Objects for all Joints"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    joint_scale = FloatProperty(
+        name = "joint_scale",
+        default = 0.1,
+        description = "scale of the joint arbor")
+
+    def execute(self, context):
+        # store the two nodes
+        nodes = []
+        for obj in bpy.context.selected_objects:
+            if obj.MARStype == "body":
+                nodes.append(obj)
+                obj.select = False
+
+        for node in nodes:
+            if node.parent in nodes:
+                node.select = True
+                node.parent.select = True
+                bpy.ops.view3d.snap_cursor_to_selected()
+                #calculate relative location
+                location = bpy.context.scene.cursor_location - node.parent.location
+                createJoint('joint_' + node.parent.name + '_' + node.name, self.joint_scale, location)
+                joint = bpy.context.object #TODO: check if this really refers to active object and not "bpy.context.scene.objects.active"
+                joint.parent = node.parent
+                joint['node2'] = node.name
+                joint.MARStype = "joint"
+                for obj in bpy.context.selected_objects:
+                    obj.select = False
+        return{'FINISHED'}
+
+
 class DeriveJointSpheresOperator(Operator):
     """DeriveJointSpheresOperator"""
     bl_idname = "object.derive_joint_spheres"
