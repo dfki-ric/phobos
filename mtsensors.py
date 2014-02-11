@@ -75,6 +75,8 @@ class AddSensorOperator(Operator):
                                 sensor["index"+str(i)] = obj.name
                                 i += 1
                         print("Added nodes to new " + self.sensor_type)
+                    if len(objects) > 0:
+                        sensor.parent = mtutility.getRoot(objects[0])
             else: #visual sensor
                 if self.sensor_type == "RaySensor":
                     print("Added nodes to new " + self.sensor_type)

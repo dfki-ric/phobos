@@ -38,3 +38,12 @@ def returnObjectList(marstype):
         if obj.MARStype == marstype:
             objlist.append(obj)
     return objlist
+
+def getRoot(obj):
+    """Finds the root object of a model given one containing object."""
+    child = obj
+    parent = obj.parent
+    while obj.parent != None:
+        child = parent
+        parent = child.parent
+    return child
