@@ -22,8 +22,6 @@ import marstools.mtmaterials as mtmaterials
 
 class IDGenerator(object):
 
-    startID = 0
-
     def __init__(self, startID=0):
         self.nextID = startID
         self.startID = startID
@@ -50,7 +48,7 @@ def getChildren(parent):
 
 def updateType(obj):
     if "type" in obj:
-        obj["MARStype"] = obj["type"]
+        obj.MARStype = str(obj["type"])
         del obj["type"]
 
 class MARSPropsGenerator():
@@ -84,7 +82,7 @@ class MARSPropsGenerator():
             children = getChildren(obj.parent)
             setGroup = False
             for child in children:
-                if "MARStype" in child and child.MARStype == "joint":
+                if child.MARStype == "joint":
                     if "node2" in child and child["node2"] == obj.name:
                         obj["group"] = self.getNextGroupID()
                         setGroup = True
@@ -113,18 +111,20 @@ class MARSPropsGenerator():
             print(obj.name+": num children: "+str(len(children)))
 
     def handleProps(self, obj):
-        print("handle: "+obj.name)
+        print("Creating properties for object:", obj.name)
     #    obj.select = False
         obj.data.name = obj.name
         updateType(obj)
-        defaultType = "body"
+        defaultType = 1 #this is defined in mtdefs and equals "body"
         if obj.name.find("joint") > -1:
-            defaultType = "joint"
+            defaultType = 2
         objType = setDefault(obj, "MARStype", defaultType)
-        if objType == "body":
+        if objType == 1: #body
             self.createBodyProperties(obj)
-        elif objType == "joint":
+        elif objType == 2: #joint
             self.createJointProperties(obj)
+        else:
+            print("Unable to determine type for", obj.name)
 
         children = getChildren(obj)
         for obj in children:
@@ -137,15 +137,18 @@ def getRoot():
             return obj
 
 def main():
-    propscreator = MARSPropsGenerator()
+    #propscreator = MARSPropsGenerator()
 
     mtmaterials.createMARSMaterials()
     root = getRoot()
 
     if root:
-        print(root.name)
-        propscreator.reset()
+        print("Found root node:", root.name)
+        #propscreator.reset()
+        propscreator = MARSPropsGenerator()
         propscreator.handleProps(root)
+    else:
+        print("No root found, aborting property creation.")
 
 
 if __name__ == '__main__':

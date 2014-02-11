@@ -123,8 +123,9 @@ class CalculateMassOperator(Operator):
         mass = 0
         names = ""
         for obj in bpy.context.selected_objects:
-            mass += obj["mass"]
-            names += obj.name + " "
+            if obj.MARStype == "body":
+                mass += obj["mass"]
+                names += obj.name + " "
         bpy.ops.error.message('INVOKE_DEFAULT', type="mass of "+names, message=str(mass))
         return {'FINISHED'}
 

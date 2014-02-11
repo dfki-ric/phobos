@@ -28,6 +28,21 @@ haveController = 0
 myMotorList = {}
 out = None
 
+#This is a really bad hack, there has to be a better way of doing this.
+def initGlobalVariables():
+    global objList
+    global jointList
+    global sensorList
+    global haveController
+    global myMotorList
+    global out
+    objList = []
+    jointList = []
+    sensorList = []
+    haveController = 0
+    myMotorList = {}
+    out = None
+
 class IdGenerator(object):
     def __init__(self, initValue=0):
         self._nextId = initValue
@@ -512,6 +527,7 @@ def findRoot():
 
 
 def main():
+    initGlobalVariables()
     global out
 
     parseDefaultValues()
