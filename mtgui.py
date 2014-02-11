@@ -304,27 +304,27 @@ class MARSObjectPanel(bpy.types.Panel):
 
 
 
-class MARSWorldPanel(bpy.types.Panel):
-    bl_idname = "WORLD_PT_MARS"
-    bl_label = "MARS"
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = "world"
-
-    def draw_header(self, context):
-        self.layout.label(icon = 'SMOOTH')
-
-    def draw(self, context):
-
-        layout = self.layout
-
-#         layout.label(text="Export the Model:")
-#         group_export = layout.box()
-#         group_export.prop(bpy.data.worlds[0], "path")
-#         group_export.prop(bpy.data.worlds[0], "filename")
-#         group_export.prop(bpy.data.worlds[0], "exportBobj")
-#         group_export.prop(bpy.data.worlds[0], "exportMesh")
-#         group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
+# class MARSWorldPanel(bpy.types.Panel):
+#     bl_idname = "WORLD_PT_MARS"
+#     bl_label = "MARS"
+#     bl_space_type = 'PROPERTIES'
+#     bl_region_type = 'WINDOW'
+#     bl_context = "world"
+#
+#     def draw_header(self, context):
+#         self.layout.label(icon = 'SMOOTH')
+#
+#     def draw(self, context):
+#
+#         layout = self.layout
+#
+# #         layout.label(text="Export the Model:")
+# #         group_export = layout.box()
+# #         group_export.prop(bpy.data.worlds[0], "path")
+# #         group_export.prop(bpy.data.worlds[0], "filename")
+# #         group_export.prop(bpy.data.worlds[0], "exportBobj")
+# #         group_export.prop(bpy.data.worlds[0], "exportMesh")
+# #         group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
 
 
 
