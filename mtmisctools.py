@@ -154,10 +154,6 @@ class CheckModelOperator(Operator):
         notifications = ""
         faulty_objects = []
         for obj in bpy.context.selected_objects:
-            if obj.MARStype != obj["type"]:
-                print('CheckModel: Error, object "' + obj.name + '" has inconsistent types.')
-                notifications += 'CheckModel: Error, object "' + obj.name + '" has inconsistent types.\n'
-                faulty_objects.append(obj)
             if obj.MARStype == "body":
                 if not ("mass" in obj):
                     print('CheckModel: Error, object "' + obj.name + '" has no attribute "mass".')
