@@ -35,7 +35,7 @@ class AddSensorOperator(Operator):
     sensor_scale = FloatProperty(
         name = "sensor_scale",
         default = 0.1,
-        description = "scale of the joint arbor")
+        description = "scale of the sensor visualization")
 
     def execute(self, context):
         location = bpy.context.scene.cursor_location

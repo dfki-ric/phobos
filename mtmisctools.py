@@ -57,7 +57,7 @@ def unregister():
 class ShowMotorTypesOperator(Operator):
     """ShowMotorTypesOperator"""
     bl_idname = "object.mt_show_motor_types"
-    bl_label = "Check if the robot model is valid."
+    bl_label = "DisplayMotorTypes."
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
