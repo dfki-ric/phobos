@@ -39,6 +39,11 @@ def setDefault(obj, key, value):
         obj[key] = value
     return obj[key]
 
+def setDefaultType(obj, value):
+    if obj.MARStype == "undefined":
+        obj.MARStype = value
+    return obj.MARStype
+
 def getChildren(parent):
     children = []
     for obj in bpy.data.objects:
@@ -93,6 +98,8 @@ class MARSPropsGenerator():
             obj["group"] = self.getNextGroupID()
         if "mass" not in obj and "density" not in obj:
             setDefault(obj, "mass", 0.001)
+        #TODO_ make collision bitmask a string in binary format
+        #if "collision_bitmask" in obj and obj["collision_bitmask"]
 
     def createJointProperties(self, obj):
         obj.MARStype = "joint"
@@ -115,17 +122,16 @@ class MARSPropsGenerator():
     #    obj.select = False
         obj.data.name = obj.name
         updateType(obj)
-        defaultType = 1 #this is defined in mtdefs and equals "body"
+        defaultType = "body"
         if obj.name.find("joint") > -1:
-            defaultType = 2
-        objType = setDefault(obj, "MARStype", defaultType)
-        if objType == 1: #body
+            defaultType = "joint"
+        objType = setDefaultType(obj, defaultType)
+        if objType == "body":
             self.createBodyProperties(obj)
-        elif objType == 2: #joint
+        elif objType == "joint":
             self.createJointProperties(obj)
         else:
             print("Unable to determine type for", obj.name)
-
         children = getChildren(obj)
         for obj in children:
             self.handleProps(obj)
