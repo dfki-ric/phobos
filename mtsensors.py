@@ -45,7 +45,7 @@ class AddSensorOperator(Operator):
                     else:
                         objects.append(obj)
                 if len(sensors) <= 0:
-                    mtutility.createPrimitive(self.sensor_type, "sphere", (0.1), mtdefs.layerTypes["sensors"], "sensor", location)
+                    mtutility.createPrimitive(self.sensor_type, "sphere", (0.1,), mtdefs.layerTypes["sensors"], "sensor", location)
                     sense = bpy.context.scene.objects.active
                     sense.MARStype = "sensor"
                     sense.name = self.sensor_type
