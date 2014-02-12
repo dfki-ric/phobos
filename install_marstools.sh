@@ -14,22 +14,43 @@ else
     echo "blenderversion=$blenderversion" >>installconfig.txt
 fi
 
-echo "Copying marstools to $blenderpath/$blenderversion/scripts/addons/marstools/"
-if [ ! -d "$blenderpath/$blenderversion/scripts/addons/marstools/" ]
+#marstools
+echo "Checking marstools installation..."
+marsfolder="$blenderpath/$blenderversion/scripts/addons/marstools/"
+if [ ! -d $marsfolder ]
 then
-    echo "marstools folder does not exist, create marstools folder in $blenderpath/$blenderversion/scripts/addons/marstools/ ? (y/n)"
+    echo "marstools folder does not exist, create marstools folder in $marsfolder ? (y/n)"
     read YN
     case $YN in
-        y|Y ) mkdir $blenderpath/$blenderversion/scripts/addons/marstools/ ;;
-        n|N ) echo "No folder created";;
+        y|Y )
+            mkdir $marsfolder 
+            cp *.py $marsfolder
+            echo "Copied marstools to $marsfolder"
+            ;;
+        n|N ) echo "No folder for marstools created";;
     esac
-fi
-if [ -d "$blenderpath/$blenderversion/scripts/addons/marstools/" ]
-then
-    cp *.py $blenderpath/$blenderversion/scripts/addons/marstools/
-    echo "Marstools Installation completed."
 else
-    echo "Installation failed."
+    cp *.py $marsfolder
+    echo "Copied marstools to $marsfolder"
+fi
+
+#YAML
+echo "Checking YAML installation..."
+yamlfolder="$blenderpath/$blenderversion/python/lib/python3.3/yaml/"
+if [ ! -d $yamlfolder ]
+then
+    echo "yaml folder does not exist, create marstools folder in $yamlfolder ? (y/n)"
+    read YN
+    case $YN in
+        y|Y )
+            mkdir $yamlfolder
+            cp -r ./yaml/ $yamlfolder
+            echo "Copied YAML to $yamlfolder"
+            ;;
+        n|N ) echo "No folder for YAML created";;
+    esac
+else
+    echo "Found existing YAML folder, no files copied. Please check for latest version yourself."
 fi
 
 #TODO: add yaml package properly after checking if it needs any c binaries
