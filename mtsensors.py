@@ -7,7 +7,7 @@ Created on 9 Jan 2014
 
 import bpy
 from bpy.types import Operator
-from bpy.props import StringProperty, BoolProperty
+from bpy.props import StringProperty, BoolProperty, FloatProperty
 import marstools.mtcreateprops as mtcreateprops
 import marstools.mtmaterials as mtmaterials
 import marstools.mtdefs as mtdefs
@@ -32,6 +32,11 @@ class AddSensorOperator(Operator):
         default = "",
         description = "type of the sensor to be created")
 
+    sensor_scale = FloatProperty(
+        name = "sensor_scale",
+        default = 0.1,
+        description = "scale of the joint arbor")
+
     def execute(self, context):
         location = bpy.context.scene.cursor_location
         if self.sensor_type in mtdefs.sensorTypes:
@@ -45,7 +50,7 @@ class AddSensorOperator(Operator):
                     else:
                         objects.append(obj)
                 if len(sensors) <= 0:
-                    mtutility.createPrimitive(self.sensor_type, "sphere", (0.1,), mtdefs.layerTypes["sensors"], "sensor", location)
+                    mtutility.createPrimitive(self.sensor_type, "sphere", (self.sensor_scale,), mtdefs.layerTypes["sensors"], "sensor", location)
                     sense = bpy.context.scene.objects.active
                     sense.MARStype = "sensor"
                     sense.name = self.sensor_type
