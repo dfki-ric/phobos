@@ -6,7 +6,7 @@ Created on 30 Jan 2014
 
 import bpy
 from bpy.types import Operator
-from bpy.props import StringProperty, BoolProperty
+from bpy.props import StringProperty, BoolProperty, FloatProperty
 import marstools.mtcreateprops as mtcreateprops
 import marstools.mtmaterials as mtmaterials
 import marstools.mtdefs as mtdefs
@@ -24,6 +24,11 @@ class AddControllerOperator(Operator):
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
 
+    controller_scale = FloatProperty(
+        name = "controller_scale",
+        default = 0.1,
+        description = "scale of the controller visualization")
+
     def execute(self, context):
         location = bpy.context.scene.cursor_location
         objects = []
@@ -34,7 +39,7 @@ class AddControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            mtutility.createPrimitive("controller", "sphere", (0.1), mtdefs.layerTypes["sensors"], "controller", location)
+            mtutility.createPrimitive("controller", "sphere", (self.controller_scale,), mtdefs.layerTypes["sensors"], "controller", location)
             bpy.context.scene.objects.active.MARStype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
