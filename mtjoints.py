@@ -38,44 +38,15 @@ def createJoint(name, scale, location, rotation = (0, 0, 0)):
     #TODO: set correct default values
     #j1.name = joint['name']
     j1['jointType'] = 'hinge'
-    j1['type'] = 'joint'
+    j1.MARStype = 'joint'
     j1['anchor'] = 'node2'
     j1['node2'] = ''
 
 
-class AddJointTwoNodesOperator(Operator):
-    """AddJointTwoNodesOperator"""
-    bl_idname = "object.add_joint_2_nodes"
-    bl_label = "Creates Joint Helper Objects for all Joints"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    joint_scale = FloatProperty(
-        name = "joint_scale",
-        default = 0.1,
-        description = "scale of the joint arbor")
-
-    def execute(self, context):
-        # store the two nodes
-        nodes = []
-        for obj in bpy.context.selected_objects:
-            if obj.MARStype == "body":
-                nodes.append(obj)
-
-        #calculate relative location
-        location = bpy.context.scene.cursor_location - nodes[0].location
-
-        createJoint('test', self.joint_scale, location)
-        joint = bpy.context.object
-        joint.parent = nodes[0]
-        joint['node2'] = nodes[1].name
-        joint.MARStype = "joint"
-        return{'FINISHED'}
-
-
-class ConnectNodesOperator(Operator):
+class AddJointsOperator(Operator):
     """Select n bodies (lowest child to overall parent, parent = active object) to be connected via newly-created joints."""
-    bl_idname = "object.connect_nodes"
-    bl_label = "Creates Joint Helper Objects for all Joints"
+    bl_idname = "object.add_joints"
+    bl_label = "Adds Joints between all selected Nodes (or World if only one Node is selected)"
     bl_options = {'REGISTER', 'UNDO'}
 
     joint_scale = FloatProperty(
@@ -91,20 +62,31 @@ class ConnectNodesOperator(Operator):
                 nodes.append(obj)
                 obj.select = False
 
-        for node in nodes:
-            if node.parent in nodes:
-                node.select = True
-                node.parent.select = True
-                bpy.ops.view3d.snap_cursor_to_selected()
-                #calculate relative location
-                location = bpy.context.scene.cursor_location - node.parent.location
-                createJoint('joint_' + node.parent.name + '_' + node.name, self.joint_scale, location)
-                joint = bpy.context.object #TODO: check if this really refers to active object and not "bpy.context.scene.objects.active"
-                joint.parent = node.parent
-                joint['node2'] = node.name
-                joint.MARStype = "joint"
-                for obj in bpy.context.selected_objects:
-                    obj.select = False
+        if len(nodes) < 2:
+            node = nodes[0]
+            location = node.location
+            createJoint('joint_' + node.name + '_world', self.joint_scale, location)
+            joint = bpy.context.object
+            joint.parent = node
+            joint['node2'] = 'world'
+        else:
+            parent = False
+            for node in nodes:
+                if node.parent in nodes:
+                    parent = True
+                    node.select = True
+                    node.parent.select = True
+                    bpy.ops.view3d.snap_cursor_to_selected()
+                    #calculate relative location
+                    location = bpy.context.scene.cursor_location - node.parent.location
+                    createJoint('joint_' + node.parent.name + '_' + node.name, self.joint_scale, location)
+                    joint = bpy.context.object #TODO: check if this really refers to active object and not "bpy.context.scene.objects.active"
+                    joint.parent = node.parent
+                    joint['node2'] = node.name
+                    for obj in bpy.context.selected_objects:
+                        obj.select = False
+            if not parent:
+                bpy.ops.error.message('INVOKE_DEFAULT', type="AddJoints Error", message="None of the selected objects are related as parent-child.")
         return{'FINISHED'}
 
 

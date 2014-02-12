@@ -190,10 +190,9 @@ class MARSToolModelPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout.split()
         c1 = layout.column(align = True)
-        c1.operator('object.add_joint_2_nodes', text = "Add joint between nodes")
+        c1.operator('object.add_joints', text = "Add joint(s)")
         c2 = layout.column(align = True)
         c2.operator('object.derive_joint_spheres', text = "Derive Joint Spheres")
-        c1.operator('object.connect_nodes', text = "Connect Nodes with Joints")
 
 
 class MARSToolSenConPanel(bpy.types.Panel):
