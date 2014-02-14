@@ -138,11 +138,52 @@ class CalculateMassOperator(Operator):
         return {'FINISHED'}
 
 
+class SelectRootOperator(Operator):
+    """SelectRootOperator"""
+    bl_idname = "object.mt_select_root"
+    bl_label = "Select root object(s) of currently selected object(s)"
+
+    def execute(self, context):
+        roots = set()
+        for obj in bpy.context.selected_objects:
+            roots.add(mtutility.getRoot(obj))
+        mtutility.selectObjects(list(roots), True)
+        bpy.context.scene.objects.active = list(roots)[0]
+        return {'FINISHED'}
+
 # def calculateMass():
 #     mass = 0
 #     for obj in bpy.context.selected_objects:
 #         mass += obj["mass"]
 #     return mass
+class SelectModelOperator(Operator):
+    """SelectModelOperator"""
+    bl_idname = "object.mt_select_model"
+    bl_label = "Select all objects of model(s) containing the currently selected object(s)"
+
+    modelname = StringProperty(
+        name = "modelname",
+        default = "",
+        description = "name of the model to be selected")
+
+    def execute(self, context):
+        selection = []
+        if self.modelname:
+            print("MARStools: Selecting model", self.modelname)
+            roots = mtutility.getRoots()
+            for root in roots:
+                if root["modelname"] == self.modelname:
+                    selection = mtutility.getChildren(root)
+        else:
+            print("MARStools: No model name provided, deriving from selection...")
+            roots = set()
+            for obj in bpy.context.selected_objects:
+                print("Selecting", mtutility.getRoot(obj).name)
+                roots.add(mtutility.getRoot(obj))
+            for root in list(roots):
+                selection.extend(mtutility.getChildren(root))
+        mtutility.selectObjects(list(selection), True)
+        return {'FINISHED'}
 
 
 class CheckModelOperator(Operator):

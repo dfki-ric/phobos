@@ -18,6 +18,7 @@ from bpy.props import EnumProperty, BoolProperty, StringProperty
 import marstools.mtdefs as mtdefs
 import marstools.mtsensors as mtsensors
 import marstools.mtcontrollers as mtcontrollers
+import marstools.mtutility as mtutility
 
 
 def register():
@@ -171,11 +172,13 @@ class MARSToolPanel(bpy.types.Panel):
         layout.separator()
 
         # Inspection Menu
-        inlayout = layout.split()
         layout.label(text = "Inspect Robot", icon = 'VIEWZOOM')
+        inlayout = layout.split()
         linspect1 = inlayout.column(align = True)
         linspect1.operator('object.mt_check_model', text = 'Check model validity')
         linspect1.operator('object.mt_calculate_mass', text = 'Show Mass')
+        linspect1.operator('object.mt_select_root', text = 'Select Root')
+        linspect1.operator('object.mt_select_model', text = 'Select Robot')
         linspect2 = inlayout.column(align = True)
         linspect2.operator('object.mt_show_motor_types', text = "Show Motor Types")
         linspect2.operator('object.mt_unshow_motor_types', text = "Unshow Motor Types")

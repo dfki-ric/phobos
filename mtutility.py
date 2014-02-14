@@ -57,11 +57,44 @@ def returnObjectList(marstype):
             objlist.append(obj)
     return objlist
 
-def getRoot(obj):
-    """Finds the root object of a model given one containing object."""
+#TODO: this has to be tested throroughly, because it might run pretty damn long!
+def getChildren(root):
+    """Finds all children for a given root"""
+    children = []
+    for obj in bpy.data.objects:
+        if getRoot(obj) == root:
+            children.append(obj)
+    return children
+
+def getRoot(obj = None):
+    """Finds the root object of a model given one of the model elements is selected or provided"""
+    if obj == None:
+        for anobj in bpy.data.objects:
+            if (anobj.select):
+                obj = anobj
     child = obj
-    parent = obj.parent
-    while obj.parent != None:
-        child = parent
-        parent = child.parent
+    while child.parent != None:
+        child = child.parent
     return child
+
+def getRoots():
+    """Returns a list of all roots (=objects without parent) present in the scene"""
+    roots = []
+    for obj in bpy.data.objects:
+        if not obj.parent and obj.MARStype == "body":
+            roots.append(obj)
+
+    if roots == []:
+        print("MARStools: No root objects found.")
+    else:
+        print("MARStools: Found", len(roots), "root object(s)", [root.name+"; " for root in roots])
+    return roots #TODO: Should we change this and all other list return values in a tuple or generator expression?
+
+
+def selectObjects(objects, clear):
+    """Selects all objects provided in list, clears current selection if clear=True"""
+    if clear:
+        for obj in bpy.context.selected_objects:
+            obj.select = False
+    for obj in objects:
+        obj.select = True
