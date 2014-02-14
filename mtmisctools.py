@@ -1,7 +1,15 @@
 '''
+MARS Blender Tools - a Blender Add-On to work with MARS robot models
+
+File mtmisctools.py
+
 Created on 6 Jan 2014
 
-@author: kavonszadkowski
+@author: Kai von Szadkowski
+
+Copy this add-on to your Blender add-on folder and activate it
+in your preferences to gain instant (virtual) world domination.
+You may use the provided install shell script.
 '''
 
 import bpy

@@ -1,7 +1,21 @@
 '''
+MARS Blender Tools - a Blender Add-On to work with MARS robot models
+
+File mtdefs.py
+
 Created on 7 Jan 2014
 
-@author: kavonszadkowski
+@author: Kai von Szadkowski
+
+Copy this add-on to your Blender add-on folder and activate it
+in your preferences to gain instant (virtual) world domination.
+You may use the provided install shell script.
+
+NOTE: This module is used to provide a number of global definitions which
+are used by the other modules. If you make changes to this module,
+do not include any imports which are not part of the standard python 3 libray.
+This module may well be imported and used outside of the MARS Blender Tools
+in the future.
 '''
 
 marstypes = [tuple(['undefined']*3),

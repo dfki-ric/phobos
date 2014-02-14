@@ -1,7 +1,15 @@
 '''
+MARS Blender Tools - a Blender Add-On to work with MARS robot models
+
+File mtutility.py
+
 Created on 9 Jan 2014
 
-@author: kavonszadkowski
+@author: Kai von Szadkowski
+
+Copy this add-on to your Blender add-on folder and activate it
+in your preferences to gain instant (virtual) world domination.
+You may use the provided install shell script.
 '''
 
 import bpy
@@ -16,6 +24,7 @@ def unregister():
     print("Unregistering mtutility...")
 
 def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation = (0, 0, 0)):
+    """Generates the primitive specified by the input parameters"""
     try:
         n_layer = int(player)
     except ValueError:
@@ -34,12 +43,14 @@ def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation
 
 
 def defLayers(layerlist):
+    """Returns a list of 20 elements encoding the visible layers according to layerlist"""
     layers = 20*[False]
     for layer in layerlist:
         layers[layer+1] = True
     return layers
 
 def returnObjectList(marstype):
+    """Returns list of all objects in the current scene matching marstype"""
     objlist = []
     for obj in bpy.context.scene.objects:
         if obj.MARStype == marstype:
