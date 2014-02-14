@@ -161,6 +161,9 @@ class MARSToolPanel(bpy.types.Panel):
         linspect1.operator('object.mt_select_root', text = 'Select Root')
         linspect1.operator('object.mt_select_model', text = 'Select Robot')
         linspect1.operator('object.mt_name_model', text = 'Name Robot')
+        #for root in mtutility.getRoots():
+        #    linspect1.operator('object.mt_select_model', text=root["modelname"]).modelname = \
+        #     root["modelname"] if "modelname" in root else root.name
         linspect2 = inlayout.column(align = True)
         linspect2.operator('object.mt_show_motor_types', text = "Show Motor Types")
         linspect2.operator('object.mt_unshow_motor_types', text = "Unshow Motor Types")
@@ -254,9 +257,12 @@ class MARSToolExportPanel(bpy.types.Panel):
         group_export = self.layout
         #export robot model options
         group_export.prop(bpy.data.worlds[0], "path")
-        group_export.prop(bpy.data.worlds[0], "filename")
+        #group_export.prop(bpy.data.worlds[0], "filename")
         group_export.prop(bpy.data.worlds[0], "exportBobj")
         group_export.prop(bpy.data.worlds[0], "exportMesh")
+        group_export.prop(bpy.data.worlds[0], "exportSMURF")
+        group_export.prop(bpy.data.worlds[0], "exportURDF")
+        group_export.prop(bpy.data.worlds[0], "exportYAML")
         group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
 
 

@@ -21,6 +21,7 @@ import os, glob
 import mathutils
 import struct
 
+
 objList = []
 jointList = []
 sensorList = []
@@ -260,6 +261,7 @@ def calcCenter(boundingbox):
     return c
 
 def writeNode(obj):
+    #TODO: move to updateproperties
     if obj.active_material is None:
         print("WARNING: Object %s has no material! Creating default" % str(obj))
         obj.active_material = bpy.data.materials.new("default")
@@ -270,7 +272,7 @@ def writeNode(obj):
         obj.active_material["marsID"] = matID
 
     obj_name = obj["use"] if "use" in obj else obj.name
-    filename = obj_name + (".bobj" if defValues["exportBobj"] else ".obj")
+    filename = obj_name + (".bobj" if defValues["exportBobj"] else ".obj") #!
 
     # get bounding box:
     bBox = obj.bound_box

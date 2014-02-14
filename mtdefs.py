@@ -21,18 +21,18 @@ in the future.
 marstypes = [tuple(['undefined']*3),
              tuple(['body']*3),
              ('joint', 'joint', 'joint'),
-             #('motor', 'motor', 'motor'),
+             ('motor', 'motor', 'motor'),
              ('sensor', 'sensor', 'sensor'),
              tuple(['controller']*3)]
 
 type_properties = {
-    "body": ('name', 'coll_bitmask'),
+    "body": ('name', 'collisionPrimitive', 'collisionBitmask', ),
     "body_default": ('new_node', '65536'),
-    "joint": ('name', 'node2'),
-    "joint_default": ("new_joint", 'some_node'),
-    #"motor": ('name', 'motor_type'),
-    #"motor_default": ("new_motor", "1"),
-    "sensor": ('name', 'sensor_type'),
+    "joint": ('name', 'child', 'jointType'),
+    "joint_default": ("new_joint", 'some_node', 'hinge'),
+    "motor": ('name', 'motor_type'),
+    "motor_default": ("new_motor", "1"),
+    "sensor": ('name', 'sensorType'),
     "sensor_default": ("new_sensor", "RaySensor"),
     "controller": ('name'),
     "controller_default": ("controller")
@@ -40,7 +40,7 @@ type_properties = {
 
 type_property_defaults = {
     'node': {'name': 'new_node',
-             'coll_bitmask': '65536'}
+             'collisionBitmask': '65536'}
     }
 
 # definition of node types
