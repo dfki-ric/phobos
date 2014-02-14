@@ -52,7 +52,7 @@ def unregister():
 
 class MessageOperator(bpy.types.Operator):
     bl_idname = "error.message"
-    bl_label = "Message"
+    bl_label = "Displays a message in a window"
     type = StringProperty()
     message = StringProperty()
 
@@ -74,9 +74,6 @@ class MessageOperator(bpy.types.Operator):
         row.label("")
         row.operator("error.ok")
 
-#
-#   The OK button in the error dialog
-#
 class OkOperator(bpy.types.Operator):
     bl_idname = "error.ok"
     bl_label = "OK"
@@ -133,26 +130,10 @@ def applyWorldView():
     bpy.context.scene.layers = layers
 
 
-
-#class MB_GUI(object):
-#    '''
-#    This class creates a number of GUI elements within Blender that allow to edit
-#    a robot model and its MARS properties directly. It provides access to all
-#    functionalities of the MARS Blender Tools.
-#    '''
-
-
-#def __init__(self, params):
-#    '''
-#    Define types and create all GUI elements.
-#    '''
-
-
-
 class MARSToolPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_PT_MARS"
-    bl_label = "MARS"
+    bl_label = "MARStools panel for general functionality"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -166,7 +147,7 @@ class MARSToolPanel(bpy.types.Panel):
         layout.label(text="Edit MARS Properties:")
         col_edit = layout.column(align = True)
 
-        col_edit.operator('object.mt_create_props', text = 'Update MARS model', icon = 'FILE_REFRESH')
+        col_edit.operator('object.mt_update_models', text = 'Update MARS model', icon = 'FILE_REFRESH')
         col_edit.operator('object.mt_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
 
         layout.separator()
@@ -188,7 +169,7 @@ class MARSToolPanel(bpy.types.Panel):
 class MARSToolModelPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_MODEL_PT_MARS"
-    bl_label = "MARS Bodies & Joints"
+    bl_label = "MARStools panel for Bodies & Joints"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -206,7 +187,7 @@ class MARSToolModelPanel(bpy.types.Panel):
 class MARSToolSenConPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_SENCON_PT_MARS"
-    bl_label = "MARS: Sensors & Controllers"
+    bl_label = "MARStools panel for Sensors & Controllers"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -237,7 +218,7 @@ class MARSToolSenConPanel(bpy.types.Panel):
 class MARSToolVisPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_VIS_PT_MARS"
-    bl_label = "MARS: Visibility"
+    bl_label = "MARStools panel for Visibility"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -262,7 +243,7 @@ class MARSToolVisPanel(bpy.types.Panel):
 class MARSToolExportPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_ZEXPORT_PT_MARS"
-    bl_label = "MARS: Export Model"
+    bl_label = "MARStools panel for Exporting"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -281,7 +262,7 @@ class MARSToolExportPanel(bpy.types.Panel):
 
 class MARSObjectPanel(bpy.types.Panel):
     bl_idname = "OBJECT_PT_MARS"
-    bl_label = "MARS"
+    bl_label = "MARStools Object panel displaying custom properties"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "object"

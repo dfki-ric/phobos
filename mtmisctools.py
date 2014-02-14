@@ -65,7 +65,7 @@ def unregister():
 class ShowMotorTypesOperator(Operator):
     """ShowMotorTypesOperator"""
     bl_idname = "object.mt_show_motor_types"
-    bl_label = "DisplayMotorTypes."
+    bl_label = "Use colors to mark different motor types in the scene."
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -95,7 +95,7 @@ class ShowMotorTypesOperator(Operator):
 class UnshowMotorTypesOperator(Operator):
     """UnshowMotorTypesOperator"""
     bl_idname = "object.mt_unshow_motor_types"
-    bl_label = "Make joint discs blue again."
+    bl_label = "Revert the color changes made by the ShowMotorTypes operator."
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -106,26 +106,25 @@ class UnshowMotorTypesOperator(Operator):
         bpy.data.scenes[0].update()
         return{'FINISHED'}
 
-
-class AddObjectsToSensorOperator(Operator):
-    """AddObjectsToSensorOperator"""
-    bl_idname = "object.mt_add_to_sensor"
-    bl_label = "Check if the robot model is valid."
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        for obj in bpy.context.selected_objects:
-            print("TODO")
-            # the problem is that python will mess up the right order, to a simple "for" will not work
-            # we need to look at the entire tree starting from the root and then check whether or not
-            # each object is selected
-        return{'FINISHED'}
+#TODO: Do we still need this operator? May be covered by AddSensorOperator (mtsensors)
+# class AddObjectsToSensorOperator(Operator):
+#     """AddObjectsToSensorOperator"""
+#     bl_idname = "object.mt_add_to_sensor"
+#     bl_label = "Add selected objects to the list of the selected sensors."
+#     bl_options = {'REGISTER', 'UNDO'}
+#
+#     def execute(self, context):
+#         for obj in bpy.context.selected_objects:
+#             # the problem is that python will mess up the right order, to a simple "for" will not work
+#             # we need to look at the entire tree starting from the root and then check whether or not
+#             # each object is selected
+#         return{'FINISHED'}
 
 
 class CalculateMassOperator(Operator):
     """CalculateMassOperator"""
     bl_idname = "object.mt_calculate_mass"
-    bl_label = "Calculate mass of the selected objects"
+    bl_label = "Display mass of the selected objects in a pop-up window."
 
     def execute(self, context):
         mass = 0
@@ -166,11 +165,6 @@ class SelectRootOperator(Operator):
         bpy.context.scene.objects.active = list(roots)[0]
         return {'FINISHED'}
 
-# def calculateMass():
-#     mass = 0
-#     for obj in bpy.context.selected_objects:
-#         mass += obj["mass"]
-#     return mass
 class SelectModelOperator(Operator):
     """SelectModelOperator"""
     bl_idname = "object.mt_select_model"
@@ -239,11 +233,11 @@ class CheckModelOperator(Operator):
 class ExportModelOperator(Operator):
     """ExportModelOperator"""
     bl_idname = "object.mt_export_robot"
-    bl_label = "Initialise MARS properties for all objects"
+    bl_label = "Export the selected model(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        #add selection of all layers bpy.ops.object.select_all()
+        #TODO: add selection of all layers bpy.ops.object.select_all()
         mtexport.main()
         return {'FINISHED'}
 
@@ -264,7 +258,7 @@ class UpdateMarsModelsOperator(Operator):
 class BatchEditPropertyOperator(Operator):
     """Batch-Edit Property Operator"""
     bl_idname = "object.mt_batch_property"
-    bl_label = "Edit custom property"
+    bl_label = "Edit custom property of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     property_name = StringProperty(
@@ -282,6 +276,7 @@ class BatchEditPropertyOperator(Operator):
             obj[self.property_name] = self.property_value
         return {'FINISHED'}
 
+    #TODO: Do we need the following?
     @classmethod
     def poll(cls, context):
         ob = context.active_object
@@ -334,6 +329,7 @@ class BatchSmoothenSurfaceOperator(Operator):
 # from object_cloud_gen.py (an addon that comes with the Blender 2.6 package)
 #
 def duplicateObject(scene, name, copyobj, material, layers):
+    """Returns a copy of the provided object"""
 
     # Create new mesh
     mesh = bpy.data.meshes.new(name)
@@ -362,9 +358,3 @@ def duplicateObject(scene, name, copyobj, material, layers):
 #         BatchEditPropertyOperator.bl_idname,
 #         text=BatchEditPropertyOperator.__doc__,
 #         icon='PLUGIN')
-
-
-
-# if script is run directly, register contained classes
-if __name__ == "__main__":
-    register()

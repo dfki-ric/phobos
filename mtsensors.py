@@ -32,7 +32,7 @@ def unregister():
 class AddSensorOperator(Operator):
     """AddSensorOperator"""
     bl_idname = "object.mt_add_sensor"
-    bl_label = "Add a node-dependent sensor"
+    bl_label = "Add/Update a sensor"
     bl_options = {'REGISTER', 'UNDO'}
 
     sensor_type = StringProperty(

@@ -15,6 +15,7 @@ You may use the provided install shell script.
 import bpy
 
 def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0):
+    """Returns a Blender material specified by the input parameters"""
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = diffuse
     mat.diffuse_shader = 'LAMBERT'
@@ -27,6 +28,7 @@ def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0):
     return mat
 
 def createMARSMaterials():
+    """Uses makeMaterial() to create a list of standard materials used in MARStools"""
     materials = bpy.data.materials.keys()
     if not 'joint_sphere' in materials:
         makeMaterial('joint_sphere', (0, 1, 0), (1, 1, 1), 1)

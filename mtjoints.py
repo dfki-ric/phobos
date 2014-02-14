@@ -35,6 +35,7 @@ def createJoint(name, scale, location, rotation = (0, 0, 0)):
     d1 = 4.0
     d2 = 0.05
 
+#    bpy.ops.mesh.primitive_cone_add(type='ARROWS')
     mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
     j1 = bpy.context.object
     mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
@@ -49,6 +50,11 @@ def createJoint(name, scale, location, rotation = (0, 0, 0)):
     j1.MARStype = 'joint'
     j1['anchor'] = 'node2'
     j1['node2'] = ''
+    #TODO: make arrows (=coord systems) work for joints to show at least the orientation
+    #arrows = bpy.ops.object.empty_add(type='ARROWS')
+    #bpy.ops.transform.resize(value = (d1*scale, d1*scale, d1*scale)
+    #bpy.context.scene.objects.active = j1
+    #bpy.ops.group.create(name = j1.name)
 
 
 class AddJointsOperator(Operator):

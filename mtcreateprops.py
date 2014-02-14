@@ -69,6 +69,7 @@ class MARSPropsGenerator():
         self.getNextGroupID = IDGenerator(1)
         self.createWorldProperties()
 
+#TODO: deprecated, get rid of this
     def reset(self):
         self.getNextBodyID.reset()
         self.getNextJointID.reset()

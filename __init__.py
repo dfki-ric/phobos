@@ -43,6 +43,9 @@ else:
     print("Importing MARS Tools modules.")
 
 import bpy
+#import sys
+#sys.path.append('/usr/lib/python3/dist-packages/') #TODO: make this work on any system!!!
+#import yaml
 
 def register():
     mtgui.register()
