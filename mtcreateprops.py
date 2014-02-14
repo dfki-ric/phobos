@@ -20,7 +20,6 @@ especially none on the other modules of the MARStools package.
 import bpy
 import os, glob
 import mathutils
-import marstools.mtmaterials as mtmaterials
 
 
 #editmode = Blender.Window.EditMode()
@@ -142,25 +141,25 @@ class MARSPropsGenerator():
         for obj in children:
             self.handleProps(obj)
 
+def getRoots():
+    """Finds any selected root objects"""
+    roots = []
+    for obj in bpy.context.selected_objects:
+        if obj.parent == None:
+            roots.append(object)
+    return roots
 
-def getRoot():
-    for obj in bpy.data.objects:
-        if (obj.select) and (obj.parent == None):
-            return obj
-
-def main():
-    #propscreator = MARSPropsGenerator()
-
-    mtmaterials.createMARSMaterials()
-    root = getRoot()
-
-    if root:
-        print("Found root node:", root.name)
-        #propscreator.reset()
+def main(roots = None):
+    if roots == None:
+        roots = getRoots()
+#TODO: the following code has to be tested for correct re-initialization
+    for root in roots:
+        print("MARStools: Updating properties for model", root.name)
+        if not "modelname" in root:
+            root["modelname"] = root.name
+            print("MARStools: new root detected, setting modelname to", root.name)
         propscreator = MARSPropsGenerator()
         propscreator.handleProps(root)
-    else:
-        print("No root found, aborting property creation.")
 
 
 if __name__ == '__main__':

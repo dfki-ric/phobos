@@ -192,16 +192,17 @@ class ExportModelOperator(Operator):
         return {'FINISHED'}
 
 
-class CreateMARSPropsOperator(Operator):
-    """CreateMARSPropsOperator"""
-    bl_idname = "object.mt_create_props"
-    bl_label = "Initialise MARS properties for all objects"
+class UpdateMarsModelsOperator(Operator):
+    """UpdateMarsModelsOperator"""
+    bl_idname = "object.mt_update_models"
+    bl_label = "Update MARS properties for all objects"
     bl_options = {'REGISTER', 'UNDO'}
 
-    print("Creating MARS properties for selected objects...")
+    print("MARStools: Updating MARS properties for selected objects...")
 
     def execute(self, context):
-        mtcreateprops.main()
+        mtmaterials.createMARSMaterials()
+        mtcreateprops.main(mtutility.getRoots())
         return {'FINISHED'}
 
 class BatchEditPropertyOperator(Operator):
