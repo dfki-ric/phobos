@@ -137,6 +137,21 @@ class CalculateMassOperator(Operator):
         bpy.ops.error.message('INVOKE_DEFAULT', type="mass of "+names, message=str(mass))
         return {'FINISHED'}
 
+class NameModelOperator(Operator):
+    """NameModelOperator"""
+    bl_idname = "object.mt_name_model"
+    bl_label = "Name model by assigning 'modelname' property to root node "
+    bl_options = {'REGISTER', 'UNDO'}
+
+    modelname = StringProperty(
+        name = "modelname",
+        default = "",
+        description = "name of the robot model to be assigned")
+
+    def execute(self, context):
+        root = mtutility.getRoot(bpy.context.active_object)
+        root["modelname"] = self.modelname
+        return {'FINISHED'}
 
 class SelectRootOperator(Operator):
     """SelectRootOperator"""

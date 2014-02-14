@@ -78,8 +78,8 @@ class MARSPropsGenerator():
         world = bpy.data.worlds[0]
         if not hasattr(world, "path"):
             world.path = "."
-        if not hasattr(world, "filename"):
-            world.filename = "filename"
+        #if not hasattr(world, "filename"):
+        #    world.filename = "filename"
         if not hasattr(world, "exportBobj"):
             world.exportBobj = False
         if not hasattr(world, "exportMesh"):

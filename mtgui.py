@@ -179,6 +179,7 @@ class MARSToolPanel(bpy.types.Panel):
         linspect1.operator('object.mt_calculate_mass', text = 'Show Mass')
         linspect1.operator('object.mt_select_root', text = 'Select Root')
         linspect1.operator('object.mt_select_model', text = 'Select Robot')
+        linspect1.operator('object.mt_name_model', text = 'Name Robot')
         linspect2 = inlayout.column(align = True)
         linspect2.operator('object.mt_show_motor_types', text = "Show Motor Types")
         linspect2.operator('object.mt_unshow_motor_types', text = "Unshow Motor Types")
