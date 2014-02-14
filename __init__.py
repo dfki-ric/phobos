@@ -29,17 +29,17 @@ if "bpy" in locals():
     #imp.reload(mtimport)
     #imp.reload(mtexport)
     #imp.reload(mtmaterials)
-    #imp.reload(mtjoints)
+    imp.reload(mtjoints)
     #imp.reload(mtcreateprops)
     imp.reload(mtgui)
     imp.reload(mtmisctools)
     imp.reload(mtsensors)
     imp.reload(mtcontrollers)
-    #imp.reload(mtutility)
+    imp.reload(mtutility)
     imp.reload(mtjoints)
     print("Reloading MARS Tools.")
 else:
-    from . import mtgui, mtmisctools, mtsensors, mtcontrollers, mtjoints
+    from . import mtgui, mtmisctools, mtsensors, mtcontrollers, mtjoints, mtutility
     print("Importing MARS Tools modules.")
 
 import bpy
@@ -50,6 +50,7 @@ def register():
     mtsensors.register()
     mtcontrollers.register()
     mtjoints.register()
+    mtutility.register()
     bpy.utils.register_module(__name__)
 
 def unregister():
@@ -57,7 +58,8 @@ def unregister():
     mtmisctools.unregister()
     mtsensors.unregister()
     mtcontrollers.unregister()
-    mjoints.unregister()
+    mtjoints.unregister()
+    mtutility.unregister()
     bpy.utils.unregister_module(__name__)
 
 if __name__ == "__main__":

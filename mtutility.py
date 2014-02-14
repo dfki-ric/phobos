@@ -8,6 +8,13 @@ import bpy
 import marstools.mtmaterials as mtmaterials
 import marstools.mtdefs as mtdefs
 
+def register():
+    print("Registering mtutility...")
+
+
+def unregister():
+    print("Unregistering mtutility...")
+
 def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation = (0, 0, 0)):
     try:
         n_layer = int(player)
