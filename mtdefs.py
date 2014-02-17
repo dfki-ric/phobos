@@ -34,13 +34,10 @@ type_properties = {
     "motor_default": ("new_motor", "1"),
     "sensor": ('name', 'sensorType'),
     "sensor_default": ("new_sensor", "RaySensor"),
-    "controller": ('name'),
-    "controller_default": ("controller")
-    }
-
-type_property_defaults = {
-    'node': {'name': 'new_node',
-             'collisionBitmask': '65536'}
+    "controller": ('name',),
+    "controller_default": ("controller",),
+    "undefined": (),
+    "undefined_default": ()
     }
 
 # definition of node types
