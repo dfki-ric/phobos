@@ -21,9 +21,9 @@ in the future.
 marstypes = [tuple(['undefined']*3),
              tuple(['body']*3),
              ('joint', 'joint', 'joint'),
-             ('motor', 'motor', 'motor'),
              ('sensor', 'sensor', 'sensor'),
-             tuple(['controller']*3)]
+             tuple(['controller']*3),
+             ('motor', 'motor', 'motor')]
 
 type_properties = {
     "body": ('name', 'collisionPrimitive', 'collisionBitmask', ),
