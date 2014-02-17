@@ -46,7 +46,7 @@ def defLayers(layerlist):
     """Returns a list of 20 elements encoding the visible layers according to layerlist"""
     layers = 20*[False]
     for layer in layerlist:
-        layers[layer+1] = True
+        layers[layer] = True
     return layers
 
 def returnObjectList(marstype):
