@@ -76,6 +76,9 @@ class AddJointsOperator(Operator):
                 nodes.append(obj)
                 obj.select = False
 
+        if nodes == []:
+            bpy.ops.error.message('INVOKE_DEFAULT', type="AddJoints Error", message="Not enough objects of MARStype 'body' selected.")
+            return{'CANCELLED'}
         if len(nodes) < 2:
             node = nodes[0]
             location = node.location
