@@ -291,11 +291,15 @@ class MARSObjectPanel(bpy.types.Panel):
         row_type.prop(bpy.context.active_object, 'MARStype')
 
         box_props = layout.box()
-        for prop in mtdefs.type_properties[bpy.context.active_object.MARStype]:
-            #box_props.label(prop)
-            if prop in bpy.context.active_object:
-                box_props.prop(bpy.context.active_object, '["'+prop+'"]')
-            #else:
+
+        try:
+            for prop in mtdefs.type_properties[bpy.context.active_object.MARStype]:
+                #box_props.label(prop)
+                if prop in bpy.context.active_object:
+                    box_props.prop(bpy.context.active_object, '["'+prop+'"]')
+        except KeyError:
+            print("Key could not be found.")
+                #else:
             #    bpy.context.active_object[prop] = mtdefs.type_properties[bpy.context.active_object.MARStype+"_default"]
 
 
