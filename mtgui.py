@@ -185,6 +185,8 @@ class MARSToolModelPanel(bpy.types.Panel):
         c1.operator('object.add_joints', text = "Add joint(s)")
         c2 = layout.column(align = True)
         c2.operator('object.derive_joint_spheres', text = "Derive Joint Spheres")
+        c1 = layout.column(align = True)
+        c1.operator('object.mt_smoothen_surface', text = "Smoothen Surface")
 
 
 class MARSToolSenConPanel(bpy.types.Panel):

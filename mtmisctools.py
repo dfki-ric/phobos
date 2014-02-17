@@ -283,25 +283,6 @@ class BatchEditPropertyOperator(Operator):
 class SmoothenSurfaceOperator(Operator):
     """SmoothenSurfaceOperator"""
     bl_idname = "object.mt_smoothen_surface"
-    bl_label = "Smoothen Active Object"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        bpy.ops.object.mode_set(mode = 'EDIT')
-        bpy.ops.mesh.select_all()
-        bpy.ops.mesh.normals_make_consistent()
-        bpy.ops.object.mode_set(mode = 'OBJECT')
-        bpy.ops.object.modifier_add(type='EDGE_SPLIT')
-        return {'FINISHED'}
-
-    @classmethod
-    def poll(cls, context):
-        ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT'
-
-class BatchSmoothenSurfaceOperator(Operator):
-    """BatchSmoothenSurfaceOperator"""
-    bl_idname = "object.mt_batch_smoothen_surface"
     bl_label = "Smoothen Selected Objects"
     bl_options = {'REGISTER', 'UNDO'}
 
