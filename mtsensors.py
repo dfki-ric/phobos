@@ -76,16 +76,10 @@ class AddSensorOperator(Operator):
                                 sensor["index"+str(i)] = obj.name
                                 i += 1
                         print("Added nodes to new " + self.sensor_type)
-                    elif "Joint" in sensor["sensorType"]:
+                    elif "Joint" in sensor["sensorType"] or "Motor" in sensor["sensorType"]:
                         for obj in objects:
                             if obj.MARStype == "joint":
-                                sensor["index"+str(i)] = obj.name
-                                i += 1
-                        print("Added nodes to new " + self.sensor_type)
-                    elif "Motor" in sensor["sensorType"]:
-                        for obj in objects:
-                            if obj.MARStype == "joint":
-                                sensor["index"+str(i)] = obj.name
+                                sensor["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                                 i += 1
                         print("Added nodes to new " + self.sensor_type)
                     if len(objects) > 0:
@@ -104,6 +98,3 @@ class AddSensorOperator(Operator):
         else:
             print("Sensor could not be created: unknown sensor type.")
         return {'FINISHED'}
-
-
-

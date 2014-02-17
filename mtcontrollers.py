@@ -60,7 +60,7 @@ class AddControllerOperator(Operator):
             i = 1
             for obj in objects:
                 if obj.MARStype == "joint":
-                    ctrl["index"+str(i)] = obj.name
+                    ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                     i += 1
         print("Added joints to (new) controller(s).")
         #for prop in mtdefs.controllerProperties[self.controller_type]:
