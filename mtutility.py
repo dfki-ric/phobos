@@ -107,3 +107,15 @@ def selectObjects(objects, clear):
             obj.select = False
     for obj in objects:
         obj.select = True
+
+def getObjByName(name):
+    for obj in bpy.data.objects:
+        if obj.name == name:
+            return obj
+    print("MARStools: no object", name, "could be found.")
+    return None
+
+def replaceNameElement():
+    for obj in bpy.context.selected_objects:
+        if "node2" in obj and obj["node2"].find("joint_sphere_leg") > -1:
+            obj["node2"] = obj["node2"].replace("leg", "extremity")
