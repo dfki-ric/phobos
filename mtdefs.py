@@ -27,7 +27,7 @@ marstypes = [tuple(['undefined']*3),
 
 type_properties = {
     "body": ('name', 'collisionPrimitive', 'collisionBitmask', ),
-    "body_default": ('new_node', '65536'),
+    "body_default": ('new_node', 'box', '65536'),
     "joint": ('name', 'child', 'jointType'),
     "joint_default": ("new_joint", 'some_node', 'hinge'),
     "motor": ('name', 'motor_type'),
