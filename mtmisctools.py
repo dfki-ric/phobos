@@ -19,6 +19,7 @@ import marstools.mtcreateprops as mtcreateprops
 import marstools.mtexport as mtexport
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
+import marstools.mturdfexport as mturdfexport
 
 
 def register():
@@ -47,7 +48,6 @@ def unregister():
     #bpy.utils.unregister_class(SmoothenSurfaceOperator)
     #bpy.utils.unregister_class(BatchSmoothenSurfaceOperator)
     #del bpy.types.VIEW3D_MT_object.append(add_object_button)
-
 
 
 # class ImportModelOperator(Operator):#
@@ -228,6 +228,7 @@ class CheckModelOperator(Operator):
             obj.selected = True
         return {'FINISHED'}
 
+
 class ExportModelOperator(Operator):
     """ExportModelOperator"""
     bl_idname = "object.mt_export_robot"
@@ -236,7 +237,11 @@ class ExportModelOperator(Operator):
 
     def execute(self, context):
         #TODO: add selection of all layers bpy.ops.object.select_all()
-        mtexport.main()
+        if bpy.types.World.exportSMURF:
+            robot = mturdfexport.main()
+            print(robot)
+        else:
+            mtexport.main()
         return {'FINISHED'}
 
 
@@ -252,6 +257,7 @@ class UpdateMarsModelsOperator(Operator):
         mtmaterials.createMARSMaterials()
         mtcreateprops.main(mtutility.getRoots())
         return {'FINISHED'}
+
 
 class BatchEditPropertyOperator(Operator):
     """Batch-Edit Property Operator"""
