@@ -80,12 +80,12 @@ def deriveDictEntry(obj):
         props[key] = obj[key]
 
     #pre-calculations
-        bBox = obj.bound_box
-        center = mtutility.calcBoundingBoxCenter(obj.bound_box)
-        size = [0.0, 0.0, 0.0]
-        size[0] = abs(2.0*(bBox[0][0] - center[0]))
-        size[1] = abs(2.0*(bBox[0][1] - center[1]))
-        size[2] = abs(2.0*(bBox[0][2] - center[2]))
+    bBox = obj.bound_box
+    center = mtutility.calcBoundingBoxCenter(obj.bound_box)
+    size = [0.0, 0.0, 0.0]
+    size[0] = abs(2.0*(bBox[0][0] - center[0]))
+    size[1] = abs(2.0*(bBox[0][1] - center[1]))
+    size[2] = abs(2.0*(bBox[0][2] - center[2]))
     #now manage individual properties
     if obj.MARStype == "body":
         props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj")
