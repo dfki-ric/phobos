@@ -18,13 +18,14 @@ especially none on the other modules of the MARStools package.
 '''
 
 import bpy
+import sys
 import mathutils
 import os
 import yaml
 import marstools.mtdefs as mtdefs
 import marstools.mtutility as mtutility
 
-xmlindent = '  '
+indent = '  '
 urdfHeader = '<xml version="1.0">\n'
 urdfFooter = '</xml>'
 
@@ -82,59 +83,69 @@ def deriveDictEntry(obj):
     #pre-calculations
     bBox = obj.bound_box
     center = mtutility.calcBoundingBoxCenter(obj.bound_box)
+    print (center)
     size = [0.0, 0.0, 0.0]
     size[0] = abs(2.0*(bBox[0][0] - center[0]))
     size[1] = abs(2.0*(bBox[0][1] - center[1]))
     size[2] = abs(2.0*(bBox[0][2] - center[2]))
+
     #now manage individual properties
-    if obj.MARStype == "body":
-        props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj")
-        props["pose"] = calcPose(obj, center, "link")
-        #inertial #TODO: implement inertia calculation
+    try:
+        if obj.MARStype == "body":
+            props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj")
+            props["pose"] = calcPose(obj, center, "link")
+            #inertial #TODO: implement inertia calculation
 
-        #collision object
-        collision = {}
-        if "collisionBitmask" in props:
-            collision["bitmask"] = props["collisionBitmask"]
-            del props["collisionBitmask"]
-        else:
-            collision["bitmask"] = mtdefs.type_properties["body_default"][mtdefs.type_properties["body"].index("collisionBitmask")] #TODO: this is just plain ugly
-        collGeom = {}
-        if "collisionPrimitive" in props:
-            collGeom["collisionPrimitive"] = str(props["collisionPrimitive"])
-            del props["collisionPrimitive"] #TODO ugly
-        else:
-            collGeom["collisionPrimitive"] = "box"
-        if collGeom["collisionPrimitive"] == "sphere":
-            collGeom["radius"] = max(size)/2
-        elif collGeom["collisionPrimitive"] == "box":
-            collGeom["size"] = size
-        elif collGeom["collisionPrimitive"] == "cylinder":
-            collGeom["radius"] = size[0]
-            collGeom["height"] = size[1]
-        elif collGeom["collisionPrimitive"] == "mesh":
-            collGeom["size"] = size
-        elif collGeom["collisionPrimitive"] == "plane":
-            collGeom["size"] = [size[0], size[1]]
-        collision["geometry"] = collGeom
-        collision["pose"] = calcPose(obj, center, "collision")
-        if "maxContacts" in props:
-            collision["max_contacts"] = str(obj["maxContacts"])
-            del props["maxContacts"] #TODO ugly
-        else:
-            collision["max_contacts"] = -1
-        props["collision"] = collision
+            #collision object
+            collision = {}
+            if "collisionBitmask" in props:
+                collision["bitmask"] = props["collisionBitmask"]
+                del props["collisionBitmask"]
+            else:
+                collision["bitmask"] = mtdefs.type_properties["body_default"][mtdefs.type_properties["body"].index("collisionBitmask")] #TODO: this is just plain ugly
+            collGeom = {}
+            if "collisionPrimitive" in props:
+                collGeom["collisionPrimitive"] = str(props["collisionPrimitive"])
+                del props["collisionPrimitive"] #TODO ugly
+            else:
+                collGeom["collisionPrimitive"] = "box"
+            if collGeom["collisionPrimitive"] == "sphere":
+                collGeom["radius"] = max(size)/2
+            elif collGeom["collisionPrimitive"] == "box":
+                collGeom["size"] = size
+            elif collGeom["collisionPrimitive"] == "cylinder":
+                collGeom["radius"] = size[0]
+                collGeom["height"] = size[1]
+            elif collGeom["collisionPrimitive"] == "mesh":
+                collGeom["size"] = size
+            elif collGeom["collisionPrimitive"] == "plane":
+                collGeom["size"] = [size[0], size[1]]
+            collision["geometry"] = collGeom
+            collision["pose"] = calcPose(obj, center, "collision")
+            if "maxContacts" in props:
+                collision["max_contacts"] = str(obj["maxContacts"])
+                del props["maxContacts"] #TODO ugly
+            else:
+                collision["max_contacts"] = -1
+            props["collision"] = collision
 
-        #visual object
-        visual = {}
-        visual["pose"] = calcPose(obj, center, "visual")
-        visual["material"] = {}
-        visual["geometry"] = collision["geometry"]["collisionPrimitive"]
-    elif obj.MARStype == "joint":
-        props["parent"] = obj.parent.name
-        props["child"] = props["node2"]
-        del props["node2"]
-        props["pose"] = calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+            #visual object
+            visual = {}
+            visual["pose"] = calcPose(obj, center, "visual")
+            material = {}
+            material["name"] = obj.data.materials[0].name #simply grab the first material
+            material["color"] = list(obj.data.materials[0].diffuse_color)
+            visual["material"] = material
+            visual["geometry"] = collision["geometry"]["collisionPrimitive"]
+            props["visual"] = visual
+        elif obj.MARStype == "joint":
+            props["parent"] = obj.parent.name
+            props["child"] = props["node2"]
+            del props["node2"]
+            props["pose"] = calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+    except KeyError:
+        print('MARStools: A KeyError occurred, likely because there is missing information in the model:\n    ', sys.exc_info()[0])
+
     #clean dictionary entries
     getridof = ["MARStype", "_RNA_UI"]
     for key in getridof:
@@ -173,9 +184,9 @@ def exportModelToYAML(model, path):
     with open(filename, 'w') as outputfile:
         outputfile.write(yaml.dump(model))
 
-def xmlline(indent, tag, names, values):
+def xmlline(ind, tag, names, values):
     line = []
-    line.append(xmlindent*indent+'<'+tag)
+    line.append(indent*ind+'<'+tag)
     for i in range(len(names)):
         line.append(' '+names[i]+'="'+values[i]+'"')
     line.append('/>\n')
@@ -194,32 +205,44 @@ def exportModelToURDF(model, path):
     filename = os.path.expanduser(path + model["modelname"] + ".urdf")
     output = []
     output.append(urdfHeader)
-    output.append(xmlindent+'<robot name="'+model["modelname"]+'">\n')
+    output.append(indent+'<robot name="'+model["modelname"]+'">\n\n')
     for l in model["body"].keys():
         link = model["body"][l]
         output.append(xmlline(2, 'link', ['name'], [l]))
-        output.append(xmlindent*3+'<inertial>\n')
+        output.append(indent*3+'<inertial>\n')
         output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link["pose"][0:3]), l2str(link["pose"][3:-1])]))
         output.append(xmlline(4, 'mass', ['value'], [str(link["mass"])]))
-        #inertia
-        output.append(xmlindent*3+'</inertial>\n')
-        output.append(xmlindent*3+'<visual>\n')
-        #origin
-        #geometry
-        #material
-        output.append(xmlindent*3+'</visual>\n')
-        output.append(xmlindent*3+'<collision>\n')
-        #geometry
-        output.append(xmlindent*3+'</collision>\n')
-        output.append(xmlindent*2+'</link>\n\n')
+        if "inertia" in link:
+            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyx', 'iyy', 'iyz'], map(float, link["inertia"])))
+        output.append(indent*3+'</inertial>\n')
+        output.append(indent*3+'<visual>\n')
+        #origin #TODO: offset of visual to real representation
+        output.append(indent*4+'<geometry>\n')
+        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link["name"], '1.0']))
+        output.append(indent*4+'</geometry>\n')
+        output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
+        output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["color"]) + '1.0"/>\n')
+        output.append(indent*4+'</material>\n')
+        output.append(indent*3+'</visual>\n')
+        output.append(indent*3+'<collision>\n')
+        if link['collision']['geometry']['collisionPrimitive'] == "box":
+            output.append(xmlline(4, 'box', ['size'], l2str(link["collision"]["geometry"]["size"])))
+        elif link['collision']['geometry']['collisionPrimitive'] == "cylinder":
+            output.append(xmlline(4, 'cylinder', ['radius', 'length'], [link["collision"]["geometry"]["radius"], link["collision"]["geometry"]["height"]]))
+        elif link['collision']['geometry']['collisionPrimitive'] == "sphere":
+            output.append(xmlline(4, 'cylinder', ['radius'], [link["collision"]["geometry"]["radius"]]))
+        elif link['collision']['geometry']['collisionPrimitive'] == "mesh":
+            output.append(xmlline(4, 'mesh', ['filename', 'scale'], [link["name"], '1.0']))#TODO correct this after implementing filename and scale properly
+        output.append(indent*3+'</collision>\n')
+        output.append(indent*2+'</link>\n\n')
     for j in model["joint"]:
         joint = model["joint"][j]
-        output.append(xmlindent*2+'<joint name="'+j+'" type="'+joint["jointType"]+'/>\n') #TODO: correct type
-        output.append(xmlindent*3+'<parent link="'+joint["parent"]+'"/>\n')
-        output.append(xmlindent*3+'<child link="'+joint["child"]+'"/>\n')
-        output.append(xmlindent*2+'</joint>\n\n')
+        output.append(indent*2+'<joint name="'+j+'" type="'+joint["jointType"]+'"/>\n') #TODO: correct type
+        output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')
+        output.append(indent*3+'<child link="'+joint["child"]+'"/>\n')
+        output.append(indent*2+'</joint>\n\n')
         #if "pose" in joint:
-        #    output.append(xmlindent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!
+        #    output.append(indent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!
     output.append(urdfFooter)
     with open(filename, 'w') as outputfile:
         outputfile.write(''.join(output))
