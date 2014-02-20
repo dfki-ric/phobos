@@ -13,8 +13,9 @@ You may use the provided install shell script.
 '''
 
 import bpy
+import math
 from bpy.types import Operator
-from bpy.props import StringProperty, BoolProperty
+from bpy.props import StringProperty, BoolProperty, FloatVectorProperty
 import marstools.mtcreateprops as mtcreateprops
 import marstools.mtexport as mtexport
 import marstools.mtmaterials as mtmaterials
@@ -30,6 +31,7 @@ def register():
     bpy.types.World.exportSMURF = BoolProperty(name = "exportSMURF")
     bpy.types.World.exportURDF = BoolProperty(name = "exportURDF")
     bpy.types.World.exportYAML = BoolProperty(name = "exportYAML")
+    bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
     #bpy.utils.register_class(ExportModelOperator)
     #bpy.utils.register_class(ImportModelOperator)
     #bpy.utils.register_class(CreateMARSPropsOperator)
@@ -345,6 +347,22 @@ def duplicateObject(scene, name, copyobj, material, layers):
 
     return ob_new
 
+class addGravityVector(Operator):
+    """Add Gravity Operator"""
+    bl_idname = "object.mt_add_gravity"
+    bl_label = "Add a vector representing gravity in the scene"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    property_name = FloatVectorProperty(
+        name = "gravity_vector",
+        default = "",
+        description = "gravity vector")
+
+    def execute(self, context):
+        bpy.ops.object.empty_add(type='SINGLE_ARROW')
+        bpy.context.active_object.name = "gravity"
+        bpy.ops.transform.rotate(value=(math.pi), axis=(1.0, 0.0, 0.0))
+        return {'FINISHED'}
 
 # the following code is used to directly add buttons to current operator menu
 # - we don't need that if we create a custom toolbar with pre-defined buttons
