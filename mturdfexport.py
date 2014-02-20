@@ -21,6 +21,7 @@ import bpy
 import sys
 import mathutils
 import os
+import datetime
 import yaml
 import marstools.mtdefs as mtdefs
 import marstools.mtutility as mtutility
@@ -134,7 +135,7 @@ def deriveDictEntry(obj):
             visual["pose"] = calcPose(obj, center, "visual")
             material = {}
             material["name"] = obj.data.materials[0].name #simply grab the first material
-            material["color"] = list(obj.data.materials[0].diffuse_color)
+            material["color"] = list(obj.data.materials[0].diffuse_color) #TODO. get rid of this and directly retrieve information from blenders material list
             visual["material"] = material
             visual["geometry"] = collision["geometry"]["collisionPrimitive"]
             props["visual"] = visual
@@ -143,6 +144,8 @@ def deriveDictEntry(obj):
             props["child"] = props["node2"]
             del props["node2"]
             props["pose"] = calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+        elif obj.MARStype == "sensor":
+            props["link"] = obj.parent.name
     except KeyError:
         print('MARStools: A KeyError occurred, likely because there is missing information in the model:\n    ', sys.exc_info()[0])
 
@@ -151,6 +154,7 @@ def deriveDictEntry(obj):
     for key in getridof:
         if key in props:
             del props[key]
+    props["name"] = obj.name
     return props
 
 
@@ -160,6 +164,9 @@ def buildRobotDictionary():
             "sensor": {},
             "motor": {},
             "controller": {}}
+    #save timestamped version of model
+    robot["date"] = datetime.datetime.now().strftime("%Y%m%d_%H:%M")
+    #now get the actual robot content
     for obj in bpy.context.selected_objects:#bpy.data.objects:
         robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
         #check if we need a fixed joint
@@ -178,11 +185,11 @@ def buildRobotDictionary():
         robot["modelname"] = "robot"
     return robot
 
-def exportModelToYAML(model, path):
-    filename = os.path.expanduser(path + model["modelname"] + ".yaml")
-    print("MARStools YAML export: Writing model data to", filename )
-    with open(filename, 'w') as outputfile:
-        outputfile.write(yaml.dump(model))
+def exportModelToYAML(model, filepath):
+    print("MARStools YAML export: Writing model data to", filepath )
+    with open(filepath, 'w') as outputfile:
+        outputfile.write('#YAML dump of robot model "'+model["modelname"]+'", '+datetime.datetime.now().strftime("%Y%m%d_%H:%M"))
+        outputfile.write(yaml.dump(model, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 def xmlline(ind, tag, names, values):
     line = []
@@ -201,8 +208,7 @@ def l2str(items, start=-1, end=-1):
         i += 1
     return ''.join(line)[0:-1]
 
-def exportModelToURDF(model, path):
-    filename = os.path.expanduser(path + model["modelname"] + ".urdf")
+def exportModelToURDF(model, filepath):
     output = []
     output.append(urdfHeader)
     output.append(indent+'<robot name="'+model["modelname"]+'">\n\n')
@@ -244,25 +250,109 @@ def exportModelToURDF(model, path):
         #if "pose" in joint:
         #    output.append(indent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!
     output.append(urdfFooter)
-    with open(filename, 'w') as outputfile:
+    with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))
     #print(model["body"].keys())
     # problem of different joint transformations needed for fixed joints
-    print("MARStools URDF export: Writing model data to", filename )
+    print("MARStools URDF export: Writing model data to", filepath )
 
-def exportToSMURF(model, path): # Syntactically Malleable Universal Robot Format / Supplementable, Mostly URF / Supplement-Managed URF
-    exportModelToURDF(model, path)
+def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot Format / Supplementable, Mostly URF / Supplement-Managed URF
+    #create all filenames
+    model_filename = os.path.expanduser(path + model["modelname"] + ".yml")
     urdf_filename = os.path.expanduser(path + model["modelname"] + ".urdf")
-    materials_filename = os.path.expanduser(path + "materials_" + model["modelname"] + ".yaml")
-    sensors_filename = os.path.expanduser(path + "sensors_" + model["modelname"] + ".yaml")
-    motors_filename = os.path.expanduser(path + "motors_" + model["modelname"] + ".yaml")
-    simulation_filename = os.path.expanduser(path + "simulation_" + model["modelname"] + ".yaml")
+    materials_filename = os.path.expanduser(path + model["modelname"] + "_materials.yml")
+    sensors_filename = os.path.expanduser(path + model["modelname"] + "_sensors.yml")
+    motors_filename = os.path.expanduser(path + model["modelname"] + "_motors.yml")
+    controllers_filename = os.path.expanduser(path + model["modelname"] + "_controllers.yml")
+    simulation_filename = os.path.expanduser(path + model["modelname"] + "_simulation.yml")
 
-def main():
-    robot = buildRobotDictionary()
-    exportModelToYAML(robot, bpy.context.scene.world.path)
-    exportModelToURDF(robot, bpy.context.scene.world.path)
-    #exportModelToSMURF(robot, bpy.context.scene.world.path)
+    infostring = ' definition SMURF file for "'+model["modelname"]+', '+model["date"]+"\n"
+
+    #write model information
+    print('Writing SMURF information to...\n'+model_filename)
+    modeldata = {}
+    #modeldata["modelname"] = model["modelname"]
+    modeldata["date"] = model["date"]
+    modeldata["files"] = [urdf_filename, materials_filename,
+                          sensors_filename, motors_filename,
+                          controllers_filename, simulation_filename]
+    with open(model_filename, 'w') as op:
+        op.write('#main SMURF file of the model "'+model["modelname"]+"\n")
+        op.write("modelname: "+model["modelname"]+"\n")
+        op.write(yaml.dump(modeldata, default_flow_style=False))
+
+    #write urdf
+    exportModelToURDF(model, urdf_filename)
+
+    #write materials
+    with open(materials_filename, 'w') as op:
+        op.write('#materials'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        materialdata = {}
+        for key in bpy.data.materials.keys():
+            mat = bpy.data.materials[key]
+            materialdata["name"] = key
+            materialdata["color_diffuse"] = list(mat.diffuse_color)
+            materialdata["color_specular"] = list(mat.specular_color)
+            materialdata["alpha"] = mat.alpha
+        op.write(yaml.dump(materialdata, default_flow_style=False))
+
+    #write sensors
+    with open(sensors_filename, 'w') as op:
+        op.write('#sensors'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        sensordata = {}
+        for sens in model["sensors"]:
+            pass
+        op.write(yaml.dump(sensordata, default_flow_style=False))
+
+    #write motors
+    with open(sensors_filename, 'w') as op:
+        op.write('#motors'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        motordata = {}
+        for mot in model["motors"]:
+            pass
+        op.write(yaml.dump(motordata, default_flow_style=False))
+
+    #write controllers
+    with open(sensors_filename, 'w') as op:
+        op.write('#controllers'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        controllerdata = {}
+        for ctrl in model["controllers"]:
+            pass
+        op.write(yaml.dump(controllerdata, default_flow_style=False))
+
+    #write simulation
+    with open(sensors_filename, 'w') as op:
+        op.write('#simulation'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        simulationdata = {}
+        #TODO: handle simulation data
+        op.write(yaml.dump(simulationdata, default_flow_style=False))
+
+def exportSceneToSMURF(path):
+    pass
+
+def securepath(path): #TODO: this is totally not error-handled!
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return os.path.expanduser(path)
+
+def main(yaml=True, urdf=True, smurf=True):
+    print("yaml",yaml,"urdf",urdf,"smurf",smurf)
+    if yaml or urdf or smurf:
+        robot = buildRobotDictionary()
+        if yaml:
+            outpath = securepath(os.path.expanduser(bpy.context.scene.world.path))
+            exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
+        if smurf:
+            outpath = securepath(os.path.expanduser(bpy.context.scene.world.path))
+            exportModelToSMURF(robot, outpath)
+        elif urdf:
+            outpath = securepath(os.path.expanduser(bpy.context.scene.world.path))
+            exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
 
 
 #allow manual execution of script in blender

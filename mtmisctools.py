@@ -239,9 +239,10 @@ class ExportModelOperator(Operator):
 
     def execute(self, context):
         #TODO: add selection of all layers bpy.ops.object.select_all()
-        if bpy.types.World.exportSMURF:
-            robot = mturdfexport.main()
-            print(robot)
+        if bpy.types.World.exportSMURF or bpy.data.worlds[0].exportURDF or bpy.data.worlds[0].exportYAML:
+            mturdfexport.main(yaml = bpy.data.worlds[0].exportYAML,
+                              urdf = bpy.data.worlds[0].exportURDF,
+                              smurf = bpy.data.worlds[0].exportSMURF)
         else:
             mtexport.main()
         return {'FINISHED'}
