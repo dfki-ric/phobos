@@ -290,11 +290,12 @@ def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot F
         op.write("modelname: "+model["modelname"]+"\n")
         materialdata = {}
         for key in bpy.data.materials.keys():
+            print("MARStools: processing material", key)
             mat = bpy.data.materials[key]
-            materialdata["name"] = key
-            materialdata["color_diffuse"] = list(mat.diffuse_color)
-            materialdata["color_specular"] = list(mat.specular_color)
-            materialdata["alpha"] = mat.alpha
+            materialdata[key] = {}
+            materialdata[key]["color_diffuse"] = list(mat.diffuse_color)
+            materialdata[key]["color_specular"] = list(mat.specular_color)
+            materialdata[key]["alpha"] = mat.alpha
         op.write(yaml.dump(materialdata, default_flow_style=False))
 
     #write sensors
@@ -302,7 +303,7 @@ def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot F
         op.write('#sensors'+infostring)
         op.write("modelname: "+model["modelname"]+"\n")
         sensordata = {}
-        for sens in model["sensors"]:
+        for sens in model["sensor"]:
             pass
         op.write(yaml.dump(sensordata, default_flow_style=False))
 
@@ -311,7 +312,7 @@ def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot F
         op.write('#motors'+infostring)
         op.write("modelname: "+model["modelname"]+"\n")
         motordata = {}
-        for mot in model["motors"]:
+        for mot in model["motor"]:
             pass
         op.write(yaml.dump(motordata, default_flow_style=False))
 
@@ -320,7 +321,7 @@ def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot F
         op.write('#controllers'+infostring)
         op.write("modelname: "+model["modelname"]+"\n")
         controllerdata = {}
-        for ctrl in model["controllers"]:
+        for ctrl in model["controller"]:
             pass
         op.write(yaml.dump(controllerdata, default_flow_style=False))
 
