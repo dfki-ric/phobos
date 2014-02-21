@@ -302,35 +302,26 @@ def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot F
     with open(sensors_filename, 'w') as op:
         op.write('#sensors'+infostring)
         op.write("modelname: "+model["modelname"]+"\n")
-        sensordata = {}
-        for sens in model["sensor"]:
-            pass
-        op.write(yaml.dump(sensordata, default_flow_style=False))
+        op.write(yaml.dump(model["sensor"], default_flow_style=False))
 
     #write motors
-    with open(sensors_filename, 'w') as op:
+    with open(motors_filename, 'w') as op:
         op.write('#motors'+infostring)
         op.write("modelname: "+model["modelname"]+"\n")
-        motordata = {}
-        for mot in model["motor"]:
-            pass
-        op.write(yaml.dump(motordata, default_flow_style=False))
+        op.write(yaml.dump(model["motor"], default_flow_style=False))
 
     #write controllers
-    with open(sensors_filename, 'w') as op:
+    with open(controllers_filename, 'w') as op:
         op.write('#controllers'+infostring)
         op.write("modelname: "+model["modelname"]+"\n")
-        controllerdata = {}
-        for ctrl in model["controller"]:
-            pass
-        op.write(yaml.dump(controllerdata, default_flow_style=False))
+        op.write(yaml.dump(model["controller"], default_flow_style=False))
 
     #write simulation
-    with open(sensors_filename, 'w') as op:
+    with open(simulation_filename, 'w') as op:
         op.write('#simulation'+infostring)
         op.write("modelname: "+model["modelname"]+"\n")
         simulationdata = {}
-        #TODO: handle simulation data
+        #TODO: handle simulationd-specific data
         op.write(yaml.dump(simulationdata, default_flow_style=False))
 
 def exportSceneToSMURF(path):
