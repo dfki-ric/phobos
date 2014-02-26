@@ -95,7 +95,6 @@ def SetVisibleLayers(self, context):
     onetrue = False
     for b in layers:
         onetrue = onetrue or b
-    print (onetrue)
     if not onetrue:
         bpy.data.worlds[0].showBodies = True
         layers[0] = True
@@ -125,7 +124,6 @@ def applyWorldView():
 
 def showMotorTypes(self, context):
     """Changes materials of joints to indicate different motor types."""
-    print(bpy.data.worlds[0].showMotorTypes)
     if bpy.data.worlds[0].showMotorTypes:
         types = {}
         n_indicators = 0
