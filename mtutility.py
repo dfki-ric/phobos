@@ -25,17 +25,22 @@ def unregister():
 
 def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation = (0, 0, 0)):
     """Generates the primitive specified by the input parameters"""
+    print(ptype, psize)
     try:
         n_layer = int(player)
     except ValueError:
         n_layer = mtdefs.layerTypes[player]
     players = defLayers([n_layer])
+    if ptype == "box":
+        bpy.ops.mesh.primitive_cube_add(layers = players, location = plocation, rotation = protation)
+        obj = bpy.context.object
+        obj.dimensions = psize
     if ptype == "sphere":
         bpy.ops.mesh.primitive_uv_sphere_add(size = psize[0], layers = players, location = plocation, rotation = protation)
     elif ptype == "cylinder":
-        bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=psize[0], depth=psize[1], location = plocation, rotation = protation)
+        bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=psize[0], depth=psize[1], layers=players, location = plocation, rotation = protation)
     elif ptype == "cone":
-        bpy.ops.mesh.primitive_cone_add(vertices=32,radius=psize[0],depth=psize[1], cap_end=True, location=plocation, rotation = protation)
+        bpy.ops.mesh.primitive_cone_add(vertices=32,radius=psize[0],depth=psize[1], cap_end=True, layers=players, location=plocation, rotation = protation)
 
     obj = bpy.context.object
     obj.name = pname

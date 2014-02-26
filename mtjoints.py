@@ -12,12 +12,9 @@ in your preferences to gain instant (virtual) world domination.
 You may use the provided install shell script.
 '''
 
-#The following script places green haaelper sphere objects at the positions of all selected objects and fills in name and other properties, assuming that the selected objects are joints
-#NOTE: For this script to work, you need to make all involved layers visible (probably 0, 1, 2)
-
 import bpy
 from bpy.types import Operator
-from bpy.props import FloatProperty
+from bpy.props import FloatProperty, EnumProperty
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
 import marstools.mtdefs as mtdefs
@@ -29,24 +26,31 @@ def register():
 def unregister():
     print("Unregistering mtjoints...")
 
-def createJoint(name, scale, location, rotation = (0, 0, 0)):
+def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
     r1 = 0.075
     r2 = 1.5
     d1 = 4.0
     d2 = 0.05
 
 #    bpy.ops.mesh.primitive_cone_add(type='ARROWS')
-    mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-    j1 = bpy.context.object
-    mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-    j2 = bpy.context.object
-    j1.select = True
-    j2.select = True
-    bpy.context.scene.objects.active = j1
-    bpy.ops.object.join()
+    if jtype == 'hinge':
+        mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j1 = bpy.context.object
+        mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j2 = bpy.context.object
+        j1.select = True
+        j2.select = True
+        bpy.context.scene.objects.active = j1
+        bpy.ops.object.join()
+    elif jtype == 'linear':
+        mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j1 = bpy.context.object
+    elif jtype == 'planar':
+        mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j1 = bpy.context.object
     #TODO: set correct default values
     #j1.name = joint['name']
-    j1['jointType'] = 'hinge'
+    j1['jointType'] = jtype
     j1.MARStype = 'joint'
     j1['anchor'] = 'node2'
     j1['node2'] = ''
@@ -55,6 +59,17 @@ def createJoint(name, scale, location, rotation = (0, 0, 0)):
     #bpy.ops.transform.resize(value = (d1*scale, d1*scale, d1*scale)
     #bpy.context.scene.objects.active = j1
     #bpy.ops.group.create(name = j1.name)
+
+# def createHingeJoint(name):
+#
+#     revolute - a hinge joint that rotates along the axis and has a limited range specified by the upper and lower limits.
+# continuous - a continuous hinge joint that rotates around the axis and has no upper and lower limits
+#
+# planar - This joint allows motion in a plane perpendicular to the axis.
+# prismatic - a sliding joint that slides along the axis, and has a limited range specified by the upper and lower limits.
+#
+# fixed - This is not really a joint because it cannot move. All degrees of freedom are locked. This type of joint does not require the axis, calibration, dynamics, limits or safety_controller.
+# floating - This joint allows motion for all 6 degrees of freedom.
 
 
 class AddJointsOperator(Operator):
@@ -68,8 +83,17 @@ class AddJointsOperator(Operator):
         default = 0.1,
         description = "scale of the joint arbor")
 
+    joint_type = EnumProperty(
+        name = "joint_type",
+        default = "hinge",
+        description = "type of the joint",
+        items = [('hinge', 'hinge', 'hinge'),
+                 ('linear', 'linear', 'linear'),
+                 ('planar', 'planar', 'planar')])
+
     def execute(self, context):
-        # store the two nodes
+
+        bpy.data.worlds[0].showJoints = True
         nodes = []
         for obj in bpy.context.selected_objects:
             if obj.MARStype == "body":
@@ -82,7 +106,7 @@ class AddJointsOperator(Operator):
         if len(nodes) < 2:
             node = nodes[0]
             location = node.location
-            createJoint('joint_' + node.name + '_world', self.joint_scale, location)
+            createJoint('joint_' + node.name + '_world', self.joint_type, self.joint_scale, location)
             joint = bpy.context.object
             joint.parent = node
             joint['node2'] = 'world'
@@ -96,7 +120,7 @@ class AddJointsOperator(Operator):
                     bpy.ops.view3d.snap_cursor_to_selected()
                     #calculate relative location
                     location = bpy.context.scene.cursor_location - node.parent.location
-                    createJoint('joint_' + node.parent.name + '_' + node.name, self.joint_scale, location)
+                    createJoint('joint_' + node.parent.name + '_' + node.name, self.joint_type, self.joint_scale, location)
                     joint = bpy.context.object #TODO: check if this really refers to active object and not "bpy.context.scene.objects.active"
                     joint.parent = node.parent
                     joint['node2'] = node.name
