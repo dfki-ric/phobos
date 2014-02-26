@@ -29,13 +29,14 @@ def register():
             description = "MARS object type")
     print("    Added 'MARStype' to Object properties.")
 
-    bpy.types.World.showBodies = BoolProperty(name = "showBodies")
-    bpy.types.World.showJoints = BoolProperty(name = "showJoints")
-    bpy.types.World.showConstraints = BoolProperty(name = "showConstraints")
-    bpy.types.World.showJointSpheres = BoolProperty(name = "showJointSpheres")
-    bpy.types.World.showSensors = BoolProperty(name = "showSensors")
-    bpy.types.World.showNames = BoolProperty(name = "showNames")
-    bpy.types.World.showDecorations = BoolProperty(name = "showDecorations")
+    bpy.types.World.showBodies = BoolProperty(name = "showBodies", update=SetVisibleLayers)
+    bpy.types.World.showJoints = BoolProperty(name = "showJoints", update=SetVisibleLayers)
+    bpy.types.World.showConstraints = BoolProperty(name = "showConstraints", update=SetVisibleLayers)
+    bpy.types.World.showJointSpheres = BoolProperty(name = "showJointSpheres", update=SetVisibleLayers)
+    bpy.types.World.showSensors = BoolProperty(name = "showSensors", update=SetVisibleLayers)
+    bpy.types.World.showNames = BoolProperty(name = "showNames", update=SetVisibleLayers)
+    bpy.types.World.showDecorations = BoolProperty(name = "showDecorations", update=SetVisibleLayers)
+    bpy.types.World.showMotorTypes = BoolProperty(name = "showMotorTypes", update=showMotorTypes)
     #setWorldView([True, True, True, True, True, False, False])
 
     # These may be optional
@@ -81,31 +82,24 @@ class OkOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-
-class setLayersOperator(Operator):#
-    """setLayersOperator"""
-    bl_idname = "world.set_layers"
-    bl_label = "Set active Layers according to MARS world data."
-
-    def execute(self, context):
-        layers = [False]*20
-        layers[0] = bpy.data.worlds[0].showBodies
-        layers[1] = bpy.data.worlds[0].showJoints
-        layers[2] = bpy.data.worlds[0].showJointSpheres
-        layers[3] = bpy.data.worlds[0].showSensors
-        layers[4] = bpy.data.worlds[0].showDecorations
-        layers[5] = bpy.data.worlds[0].showConstraints
-        layers[6] = bpy.data.worlds[0].showNames
-        onetrue = False
-        for b in layers:
-            onetrue = onetrue or b
-        print (onetrue)
-        if not onetrue:
-            bpy.data.worlds[0].showBodies = True
-            layers[0] = True
-        bpy.context.scene.layers = layers
-        return {'FINISHED'}
-
+def SetVisibleLayers(self, context):
+    """Set active Layers according to MARS world data."""
+    layers = [False]*20
+    layers[0] = bpy.data.worlds[0].showBodies
+    layers[1] = bpy.data.worlds[0].showJoints
+    layers[2] = bpy.data.worlds[0].showJointSpheres
+    layers[3] = bpy.data.worlds[0].showSensors
+    layers[4] = bpy.data.worlds[0].showDecorations
+    layers[5] = bpy.data.worlds[0].showConstraints
+    layers[6] = bpy.data.worlds[0].showNames
+    onetrue = False
+    for b in layers:
+        onetrue = onetrue or b
+    print (onetrue)
+    if not onetrue:
+        bpy.data.worlds[0].showBodies = True
+        layers[0] = True
+    bpy.context.scene.layers = layers
 
 
 def setWorldView(b):
@@ -128,6 +122,29 @@ def applyWorldView():
     layers[5] = bpy.data.worlds[0].showConstraints
     layers[6] = bpy.data.worlds[0].showNames
     bpy.context.scene.layers = layers
+
+def showMotorTypes(self, context):
+    """Changes materials of joints to indicate different motor types."""
+    print(bpy.data.worlds[0].showMotorTypes)
+    if bpy.data.worlds[0].showMotorTypes:
+        types = {}
+        n_indicators = 0
+        for obj in bpy.context.selected_objects:
+            if obj.MARStype == "joint":
+                if "spec_motor" in obj:
+                    if not (obj["spec_motor"] in types):
+                        n_indicators += 1
+                        types[obj["spec_motor"]] = "indicator" + str(n_indicators)
+                    if not types[obj["spec_motor"]] in obj.data.materials:
+                        obj.data.materials.append(bpy.data.materials[types[obj["spec_motor"]]])
+                        obj.data.materials.pop(0, update_data=True)
+        bpy.data.scenes[0].update()
+    else:
+        for obj in bpy.context.selected_objects:
+            if obj.MARStype == "joint":
+                obj.data.materials.append(bpy.data.materials["Joint Discs"])
+                obj.data.materials.pop(0, update_data=True)
+    bpy.data.scenes[0].update()
 
 
 class MARSToolPanel(bpy.types.Panel):
@@ -164,9 +181,6 @@ class MARSToolPanel(bpy.types.Panel):
         #for root in mtutility.getRoots():
         #    linspect1.operator('object.mt_select_model', text=root["modelname"]).modelname = \
         #     root["modelname"] if "modelname" in root else root.name
-        linspect2 = inlayout.column(align = True)
-        linspect2.operator('object.mt_show_motor_types', text = "Show Motor Types")
-        linspect2.operator('object.mt_unshow_motor_types', text = "Unshow Motor Types")
 
 
 class MARSToolModelPanel(bpy.types.Panel):
@@ -241,7 +255,7 @@ class MARSToolVisPanel(bpy.types.Panel):
         lsplit.prop(bpy.data.worlds[0], "showDecorations")
         lsplit.prop(bpy.data.worlds[0], "showConstraints")
         lsplit.prop(bpy.data.worlds[0], "showNames")
-        lsplit.operator('world.set_layers', text='Apply Visibility')
+        lsplit.prop(bpy.data.worlds[0], "showMotorTypes")
 
 
 class MARSToolExportPanel(bpy.types.Panel):

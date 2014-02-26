@@ -62,50 +62,6 @@ def unregister():
 #         #add selction of all layers bpy.ops.object.select_all()
 #         mtimport.main()
 
-class ShowMotorTypesOperator(Operator):
-    """ShowMotorTypesOperator"""
-    bl_idname = "object.mt_show_motor_types"
-    bl_label = "Use colors to mark different motor types in the scene."
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-#        types = {}
-#        n_indicators = 0
-#        print("Preparing to indicate motor types...")
-#         for obj in bpy.context.selected_objects:
-#             if "spec_motor" in obj:
-#                 if not (obj["spec_motor"] in types):
-#                     n_indicators += 1
-#                     types[obj["spec_motor"]] = "indicator" + str(n_indicators)
-#                 duplicateObject(bpy.context.scene, "ind_"+obj.name, obj, types[obj["spec_motor"]], mtutility.defLayers([10]))
-        types = {}
-        n_indicators = 0
-        for obj in bpy.context.selected_objects:
-            if "spec_motor" in obj:
-                if not (obj["spec_motor"] in types):
-                    n_indicators += 1
-                    types[obj["spec_motor"]] = "indicator" + str(n_indicators)
-                if not types[obj["spec_motor"]] in obj.data.materials:
-                    obj.data.materials.append(bpy.data.materials[types[obj["spec_motor"]]])
-                    obj.data.materials.pop(0, update_data=True)
-        bpy.data.scenes[0].update()
-        #TODO: REALLY refresh the scene
-        return{'FINISHED'}
-
-class UnshowMotorTypesOperator(Operator):
-    """UnshowMotorTypesOperator"""
-    bl_idname = "object.mt_unshow_motor_types"
-    bl_label = "Revert the color changes made by the ShowMotorTypes operator."
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        print("Preparing to indicate motor types...")
-        for obj in bpy.context.selected_objects:
-            obj.data.materials.append(bpy.data.materials["Joint Discs"])
-            obj.data.materials.pop(0, update_data=True)
-        bpy.data.scenes[0].update()
-        return{'FINISHED'}
-
 #TODO: Do we still need this operator? May be covered by AddSensorOperator (mtsensors)
 # class AddObjectsToSensorOperator(Operator):
 #     """AddObjectsToSensorOperator"""
