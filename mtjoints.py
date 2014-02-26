@@ -15,6 +15,7 @@ You may use the provided install shell script.
 import bpy
 from bpy.types import Operator
 from bpy.props import FloatProperty, EnumProperty
+import math
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
 import marstools.mtdefs as mtdefs
@@ -89,7 +90,7 @@ class AddJointsOperator(Operator):
         description = "type of the joint",
         items = [('hinge', 'hinge', 'hinge'),
                  ('linear', 'linear', 'linear'),
-                 ('planar', 'planar', 'planar')])
+                 ('planar', 'planar', 'planar')]) #TODO: move this to mtdefs?
 
     def execute(self, context):
 
@@ -128,6 +129,34 @@ class AddJointsOperator(Operator):
                         obj.select = False
             if not parent:
                 bpy.ops.error.message('INVOKE_DEFAULT', type="AddJoints Error", message="None of the selected objects are related as parent-child.")
+        return{'FINISHED'}
+
+
+class DefineJointConstraintsOperator(Operator):
+    """DefineJointConstraintsOperator"""
+    bl_idname = "object.define_joint_constraints_spheres"
+    bl_label = "Creates Joint Helper Objects for all Joints"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    lower = FloatProperty(
+        name = "lower",
+        default = 0.0,
+        description = "lower constraint of the joint")
+
+    upper = FloatProperty(
+        name = "upper",
+        default = 0.0,
+        description = "upper constraint of the joint")
+
+    def execute(self, context):
+        for joint in bpy.context.selected_objects:
+            if joint.MARStype == "joint":
+                if joint['jointType'] == 'hinge':
+                    joint["lowerConstraint"] = (self.lower / 180) * math.pi
+                    joint["upperConstraint"] = (self.upper / 180) * math.pi
+                else:
+                    joint["lowerConstraint"] = self.lower
+                    joint["upperConstraint"] = self.upper
         return{'FINISHED'}
 
 

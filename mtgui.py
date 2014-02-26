@@ -194,11 +194,11 @@ class MARSToolModelPanel(bpy.types.Panel):
     def draw(self, context):
         inlayout = self.layout.split()
         c1 = inlayout.column(align = True)
-        c1.operator('object.add_joints', text = "Add joint(s)")
-        c1.operator('object.mt_smoothen_surface', text = "Smoothen Surface")
+        c1.operator('object.add_joints', text = "Add Joint(s)")
+        c1.operator('object.define_joint_constraints_spheres', text = "Define Joint Constraints")
         c2 = inlayout.column(align = True)
         c2.operator('object.derive_joint_spheres', text = "Derive Joint Spheres")
-
+        c2.operator('object.mt_smoothen_surface', text = "Smoothen Surface")
 
 class MARSToolSenConPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
