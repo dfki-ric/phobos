@@ -142,6 +142,8 @@ def deriveDictEntry(obj):
         elif obj.MARStype == "joint":
             props["parent"] = obj.parent.name
             props["child"] = props["node2"]
+            if "lowerConstraint" not in props and props["jointType"] == 'hinge':
+                props['jointType'] = 'continuous'
             del props["node2"]
             props["pose"] = calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
         elif obj.MARStype == "sensor":
@@ -243,9 +245,13 @@ def exportModelToURDF(model, filepath):
         output.append(indent*2+'</link>\n\n')
     for j in model["joint"]:
         joint = model["joint"][j]
-        output.append(indent*2+'<joint name="'+j+'" type="'+joint["jointType"]+'"/>\n') #TODO: correct type
+        urdfJoints = {"hinge": "revolute", "linear": "prismatic", "continuous": "continuous", "fixed": "fixed", "planar": "planar"} #TODO: make this nicer
+        jointType = urdfJoints[joint["jointType"]]
+        output.append(indent*2+'<joint name="'+j+'" type="'+jointType+'"/>\n')#TODO: currently no floating joints are supported
         output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')
         output.append(indent*3+'<child link="'+joint["child"]+'"/>\n')
+        if "lowerConstraint" in joint:
+            output.append(xmlline(3+'limit', ['lower', 'upper'], [joint["lowerConstraint"], joint["upperConstraint"]]))
         output.append(indent*2+'</joint>\n\n')
         #if "pose" in joint:
         #    output.append(indent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!
