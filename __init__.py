@@ -27,7 +27,7 @@ bl_info = {
 if "bpy" in locals():
     import imp
     #imp.reload(mtimport)
-    #imp.reload(mtexport)
+    #imp.reload(mt_oldexport)
     #imp.reload(mtmaterials)
     imp.reload(mtjoints)
     #imp.reload(mtcreateprops)

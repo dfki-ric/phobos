@@ -17,10 +17,10 @@ import math
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatVectorProperty
 import marstools.mtcreateprops as mtcreateprops
-import marstools.mtexport as mtexport
+import marstools.mt_oldexport as mt_oldexport
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
-import marstools.mturdfexport as mturdfexport
+import marstools.mtexport as mtexport
 
 
 def register():
@@ -239,12 +239,12 @@ class ExportModelOperator(Operator):
 
     def execute(self, context):
         #TODO: add selection of all layers bpy.ops.object.select_all()
-        if bpy.types.World.exportSMURF or bpy.data.worlds[0].exportURDF or bpy.data.worlds[0].exportYAML:
-            mturdfexport.main(yaml = bpy.data.worlds[0].exportYAML,
+        if bpy.data.worlds[0].exportSMURF or bpy.data.worlds[0].exportURDF or bpy.data.worlds[0].exportYAML:
+            mtexport.main(yaml = bpy.data.worlds[0].exportYAML,
                               urdf = bpy.data.worlds[0].exportURDF,
                               smurf = bpy.data.worlds[0].exportSMURF)
         else:
-            mtexport.main()
+            mt_oldexport.main()
         return {'FINISHED'}
 
 

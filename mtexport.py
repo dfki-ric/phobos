@@ -3,674 +3,350 @@ MARS Blender Tools - a Blender Add-On to work with MARS robot models
 
 File mtcreateprops.py
 
-Created on 7 Jan 2014
+Created on 13 Feb 2014
 
-@author: Malte Langosz, Kai von Szadkowski
+@author: Kai von Szadkowski
 
 Copy this add-on to your Blender add-on folder and activate it
 in your preferences to gain instant (virtual) world domination.
+You may use the provided install shell script.
+
+NOTE: If you edit this script, please make sure not to use any imports
+not supported by Blender's standard python distribution. This is a script
+intended to be usable on its own and thus should not use external dependencies,
+especially none on the other modules of the MARStools package.
 '''
 
-
-# ******** TODO:
-#               - add jointOffset calculation by using rotation difference
-#                 on joint axis of node2
-
 import bpy
-import os, glob
+import sys
 import mathutils
-import struct
+import os
+import datetime
+import yaml
+import marstools.mtdefs as mtdefs
+import marstools.mtutility as mtutility
 
+indent = '  '
+urdfHeader = '<xml version="1.0">\n'
+urdfFooter = '</xml>'
 
-objList = []
-jointList = []
-sensorList = []
-haveController = 0
-myMotorList = {}
-out = None
+def calcPose(obj, center, type):
+    pose = []
+    if type == "link" or type == "visual" or type == "collision":
+        pivot = center
+        location = obj.location.copy()
+        location += obj.matrix_world.to_quaternion() * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
 
-#This is a really bad hack, there has to be a better way of doing this.
-def initGlobalVariables():
-    global objList
-    global jointList
-    global sensorList
-    global haveController
-    global myMotorList
-    global out
-    objList = []
-    jointList = []
-    sensorList = []
-    haveController = 0
-    myMotorList = {}
-    out = None
+        obj.rotation_mode = 'QUATERNION'
+        q = obj.rotation_quaternion
 
-class IdGenerator(object):
-    def __init__(self, initValue=0):
-        self._nextId = initValue
-    def __call__(self):
-        ret, self._nextId = self._nextId, self._nextId + 1
-        return ret
+        if obj.parent:
+            parent = obj.parent
+            parentIQ = parent.matrix_world.to_quaternion().inverted()
+            pivot2 = mtutility.calcBoundingBoxCenter(parent.bound_box)
+            v = mathutils.Vector((pivot2[0], pivot2[1], pivot2[2]))
+            #v = parent.matrix_world.to_quaternion() * v
+            parentPos = parent.matrix_world * v
+            childPos = obj.matrix_world * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
+            childPos = childPos - parentPos
+            location = parentIQ * childPos
+            parentRot = parent.matrix_world.to_quaternion()
+            childRot = obj.matrix_world.to_quaternion()
+            childRot = parentRot.rotation_difference(childRot)
+            q = childRot
+        pose = list(location)
+        pose.extend(q)
+#    elif type == "visual":
+#        pass
+#    elif type == "collision":
+#        pass
+    elif type == "joint":
+        pos = mathutils.Vector((0.0, 0.0, 1.0))
+        axis = obj.matrix_world.to_quaternion() * pos
+        center = obj.matrix_world * mathutils.Vector((0.0, 0.0, 0.0))
+        obj.rotation_mode = 'QUATERNION'
+        v1 = obj.rotation_quaternion * mathutils.Vector((1.0, 0.0, 0.0))
+        if obj["node2"] != "world":
+            node2 = mtutility.getObjByName(obj["node2"])
+            v2 = node2.rotation_quaternion * mathutils.Vector((1.0, 0.0, 0.0)) #TODO: link to other node in node2
+        q = obj.rotation_quaternion.copy().inverted()
+        pose = list(center)
+        pose.extend(q)
+    return pose
 
-nextMaterialId = IdGenerator(1)
+def deriveDictEntry(obj):
+    props = {}
+    #first get all custom properties (this is effectively a super-set of MARS-defined properties)
+    print("MARStools: Deriving dictionary entry for", obj.name)
+    for key in obj.keys():
+        props[key] = obj[key]
 
-# configuration
-defValues = { "filename": "example",
-              "path": ".",
-              "exportMesh": True,
-              "exportBobj": False,
-              "defCollBitmask": 65535,
-              "defP": 13,
-              "defI": 0.015,
-              "defD": 0,
-              "defMaxMotorForce": 18,
-              "defMaxMotorSpeed": 12,
-              }
-
-
-def parseDefaultValues():
-    scn = bpy.context.scene
-    global defValues
-    for key in defValues:
-        if key in scn.world:
-            defValues[key] = scn.world[key]
-    defValues["path"] = os.path.expanduser(defValues["path"])
-
-
-def veckey3d(v):
-    return round(v.x, 6), round(v.y, 6), round(v.z, 6)
-
-def getID(name):
-    for obj in bpy.data.objects:
-        if obj.name == name:
-            return obj["id"] if "id" in obj else 0
-    return 0
-
-def outputVector(outStream, name, vec, indentLevel):
-    indent = " " * indentLevel
-    outStream.write(indent + '<'+name+'>\n')
-    outStream.write(indent + '  <x>'+str(vec[0])+'</x>\n')
-    outStream.write(indent + '  <y>'+str(vec[1])+'</y>\n')
-    outStream.write(indent + '  <z>'+str(vec[2])+'</z>\n')
-    outStream.write(indent + '</'+name+'>\n')
-
-def outputQuaternion(outStream, name, q, indentLevel):
-    indent = " " * indentLevel
-    outStream.write(indent + '<'+name+'>\n')
-    outStream.write(indent + '  <x>'+str(q[1])+'</x>\n')
-    outStream.write(indent + '  <y>'+str(q[2])+'</y>\n')
-    outStream.write(indent + '  <z>'+str(q[3])+'</z>\n')
-    outStream.write(indent + '  <w>'+str(q[0])+'</w>\n')
-    outStream.write(indent + '</'+name+'>\n')
-
-
-def exportBobj(outname, obj):
-    totverts = totuvco = totno = 1
-
-    face_vert_index = 1
-
-    globalNormals = {}
-
-    if obj.select:
-
-        # ignore dupli children
-        if obj.parent and obj.parent.dupli_type in {'VERTS', 'FACES'}:
-            # XXX
-            print(obj.name, 'is a dupli child - ignoring')
-            return
-
-        #obj.select = False
-        mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW')
-        #mesh.transform(obj.matrix_world)
-
-        write_uv = False
-        faceuv = len(mesh.uv_textures)
-        if faceuv:
-            uv_layer = mesh.uv_textures.active.data[:]
-            write_uv = True
-
-        if bpy.app.version[1] >= 65:
-            face_index_pairs = [(face, index) for index, face in enumerate(mesh.tessfaces)]
-        else:
-            face_index_pairs = [(face, index) for index, face in enumerate(mesh.faces)]
-
-        mesh.calc_normals()
-
-        me_verts = mesh.vertices[:]
-
-        out = open(outname, "wb")
-
-        for v in mesh.vertices:
-            out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
-
-        if faceuv:
-            uv = uvkey = uv_dict = f_index = uv_index = None
-
-            uv_face_mapping = [[0, 0, 0, 0] for i in range(len(face_index_pairs))]  # a bit of a waste for tri's :/
-
-            uv_dict = {}  # could use a set() here
-            if bpy.app.version[1] >= 65:
-                uv_layer = mesh.tessface_uv_textures.active.data[:]
-            else:
-                uv_layer = mesh.uv_textures.active.data
-            for f, f_index in face_index_pairs:
-                for uv_index, uv in enumerate(uv_layer[f_index].uv):
-                    uvkey = round(uv[0], 6), round(uv[1], 6)
-                    try:
-                        uv_face_mapping[f_index][uv_index] = uv_dict[uvkey]
-                    except:
-                        uv_face_mapping[f_index][uv_index] = uv_dict[uvkey] = len(uv_dict)
-                        out.write(struct.pack('iff', 2, uv[0], uv[1]))
-
-            uv_unique_count = len(uv_dict)
-
-            del uv, uvkey, uv_dict, f_index, uv_index
-
-        for f, f_index in face_index_pairs:
-            if f.use_smooth:
-                for v_idx in f.vertices:
-                    v = me_verts[v_idx]
-                    noKey = veckey3d(v.normal)
-                    if noKey not in globalNormals:
-                        globalNormals[noKey] = totno
-                        totno += 1
-                        da = struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2])
-                        out.write(da)
-            else:
-                # Hard, 1 normal from the face.
-                noKey = veckey3d(f.normal)
-                if noKey not in globalNormals:
-                    globalNormals[noKey] = totno
-                    totno += 1
-                    da = struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2])
-                    out.write(da)
-
-        for f, f_index in face_index_pairs:
-            f_smooth = f.use_smooth
-            if faceuv:
-                tface = uv_layer[f_index]
-            # wrtie smooth info for face?
-
-            f_v_orig = [(vi, me_verts[v_idx]) for vi, v_idx in enumerate(f.vertices)]
-
-            if len(f_v_orig) == 3:
-                f_v_iter = (f_v_orig, )
-            else:
-                f_v_iter = (f_v_orig[0], f_v_orig[1], f_v_orig[2]), (f_v_orig[0], f_v_orig[2], f_v_orig[3])
-
-            for f_v in f_v_iter:
-                da = struct.pack('i', 4)
-                out.write(da)
-
-                if faceuv:
-                    if f_smooth:  # Smoothed, use vertex normals
-                        for vi, v in f_v:
-                            da = struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], globalNormals[veckey3d(v.normal)])
-                            out.write(da)  # vert, uv, normal
-                    else:  # No smoothing, face normals
-                        no = globalNormals[veckey3d(f.normal)]
-                        for vi, v in f_v:
-                            da = struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], no)
-                            out.write(da)  # vert, uv, normal
-                else:  # No UV's
-                    if f_smooth:  # Smoothed, use vertex normals
-                        for vi, v in f_v:
-                            da = struct.pack('iii', v.index + totverts, 0, globalNormals[veckey3d(v.normal)])
-                            out.write(da)  # vert, uv, normal
-                    else:  # No smoothing, face normals
-                        no = globalNormals[veckey3d(f.normal)]
-                        for vi, v in f_v:
-                            da = struct.pack('iii', v.index + totverts, 0, no)
-                            out.write(da)  # vert, uv, normal
-        out.close()
-
-
-def getChildren(parent):
-    children = []
-    for obj in bpy.data.objects:
-        if obj.select and obj.parent == parent:
-            children.append(obj)
-    return children
-
-def fillList(obj):
-    if "MARStype" in obj:
-        if obj.MARStype == "body":
-            objList.append(obj)
-        elif obj.MARStype == "joint":
-            jointList.append(obj)
-        elif obj.MARStype == "sensor":
-            sensorList.append(obj)
-    obj.select = False
-
-    children = getChildren(obj)
-    for child in children:
-        fillList(child)
-
-def writeSceneHeader():
-    out.write('<?xml version="1.0"?>\n'
-              "<!DOCTYPE dfkiMarsSceneFile PUBLIC '-//DFKI/RIC/MARS SceneFile 1.0//EN' ''>\n"
-              '<SceneFile>\n'
-              '  <version>0.2</version>\n')
-
-def calcCenter(boundingbox):
-    c = [0,0,0]
-    for v in boundingbox:
-        for i in range(3):
-            c[i] += v[i]
-    for i in range(3):
-        c[i] /= 8.
-    return c
-
-def writeNode(obj):
-    #TODO: move to updateproperties
-    if obj.active_material is None:
-        print("WARNING: Object %s has no material! Creating default" % str(obj))
-        obj.active_material = bpy.data.materials.new("default")
-    if "marsID" in obj.active_material and obj.active_material["marsID"] != 0:
-        matID = obj.active_material["marsID"]
-    else:
-        matID = nextMaterialId()
-        obj.active_material["marsID"] = matID
-
-    obj_name = obj["use"] if "use" in obj else obj.name
-    filename = obj_name + (".bobj" if defValues["exportBobj"] else ".obj") #!
-
-    # get bounding box:
+    #pre-calculations
     bBox = obj.bound_box
-    center = calcCenter(bBox)
+    center = mtutility.calcBoundingBoxCenter(obj.bound_box)
+    print (center)
     size = [0.0, 0.0, 0.0]
     size[0] = abs(2.0*(bBox[0][0] - center[0]))
     size[1] = abs(2.0*(bBox[0][1] - center[1]))
     size[2] = abs(2.0*(bBox[0][2] - center[2]))
 
-    sizeScaleX = obj["sizeScaleX"] if "sizeScaleX" in obj else 1.0
-    sizeScaleY = obj["sizeScaleY"] if "sizeScaleY" in obj else 1.0
-    sizeScaleZ = obj["sizeScaleZ"] if "sizeScaleZ" in obj else 1.0
+    #now manage individual properties
+    try:
+        if obj.MARStype == "body":
+            props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj")
+            props["pose"] = calcPose(obj, center, "link")
+            #inertial #TODO: implement inertia calculation
 
-    physicMode = obj["physicMode"] if "physicMode" in obj else "box"
-    radius = obj["radius"] if "radius" in obj else 0.0
-    height = obj["height"] if "height" in obj else 0.0
-
-    ext = [0, 0, 0]
-    ext[0] = radius if radius > 0. else sizeScaleX*size[0]
-    ext[1] = height if height > 0. else sizeScaleY*size[1]
-    ext[2] = sizeScaleZ*size[2]
-
-    pivot = center
-    center = obj.location.copy()
-    center += obj.matrix_world.to_quaternion() * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
-
-    noPhysical = False
-    if "noPhysical" in obj:
-        noPhysical = obj["noPhysical"]
-
-    if "mass" in obj:
-        density = 0
-    elif "density" in obj:
-        density = obj["density"]
-    else:
-        density = 500
-    coll_bitmask = obj["coll_bitmask"] if "coll_bitmask" in obj else defValues["defCollBitmask"]
-
-    parentID = 0
-
-    obj.rotation_mode = 'QUATERNION'
-    q = obj.rotation_quaternion
-
-    if obj.parent:
-        parentID = obj.parent["id"]
-        parent = obj.parent
-        parentIQ = parent.matrix_world.to_quaternion().inverted()
-        bBox = parent.bound_box
-        pivot2 = calcCenter(bBox)
-        v = mathutils.Vector((pivot2[0], pivot2[1], pivot2[2]))
-        #v = parent.matrix_world.to_quaternion() * v
-        parentPos = parent.matrix_world * v
-        childPos = obj.matrix_world * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
-        childPos = childPos - parentPos
-        center = parentIQ * childPos
-        parentRot = parent.matrix_world.to_quaternion()
-        childRot = obj.matrix_world.to_quaternion()
-        childRot = parentRot.rotation_difference(childRot)
-        q = childRot
-
-    out.write('    <node name="'+obj.name+'">\n')
-    out.write('      <origname>'+obj_name+'</origname>\n')
-    out.write('      <filename>'+filename+'</filename>\n')
-    out.write('      <index>'+str(obj["id"])+'</index>\n')
-    out.write('      <groupid>'+str(obj["group"])+'</groupid>\n')
-    out.write('      <physicmode>'+physicMode+'</physicmode>\n')
-    if(noPhysical):
-        out.write('      <noPhysical>'+str(noPhysical)+'</noPhysical>\n')
-    if parentID:
-        out.write('      <relativeid>'+str(parentID)+'</relativeid>\n')
-    outputVector(out, "position", center, 6)
-    outputQuaternion(out, "rotation", q, 6)
-    outputVector(out, "extend", ext, 6)
-    outputVector(out, "pivot", pivot, 6)
-    outputVector(out, "visualsize", size, 6)
-    if "movable" in obj:
-        out.write('      <movable>'+str(obj["movable"])+'</movable>\n')
-    else:
-        out.write('      <movable>true</movable>\n')
-    if "mass" in obj:
-        out.write('      <mass>'+str(obj["mass"])+'</mass>\n')
-    out.write('      <density>'+str(density)+'</density>\n')
-    out.write('      <material_id>'+str(matID)+'</material_id>\n')
-    out.write('      <coll_bitmask>'+str(coll_bitmask)+'</coll_bitmask>\n')
-    out.write('    </node>\n')
-
-
-
-def writeJoint(joint):
-    #bBox = joint.bound_box
-    pos = mathutils.Vector((0.0, 0.0, 1.0))
-    axis = joint.matrix_world.to_quaternion() * pos
-    center = joint.matrix_world * mathutils.Vector((0.0, 0.0, 0.0))
-    node2ID = 0
-    node2 = None
-    if joint["node2"] in bpy.data.objects:
-        node2 = bpy.data.objects[joint["node2"]]
-        node2ID = node2["id"]
-
-    invert = 1
-    if "invertAxis" in joint and joint["invertAxis"] == 1:
-        invert = -1
-
-    jointOffset = 0.0
-    if "jointOffset" in joint:
-        jointOffset = joint["jointOffset"]
-    elif node2:
-        joint.rotation_mode = 'QUATERNION'
-        v1 = joint.rotation_quaternion * mathutils.Vector((1.0, 0.0, 0.0))
-        v2 = node2.rotation_quaternion * mathutils.Vector((1.0, 0.0, 0.0))
-        jointOffset = v1.angle(v2, 0.0)
-        q = joint.rotation_quaternion.copy().inverted()
-        axis_ = q * v1.cross(v2)
-        if axis_[2] > 0:
-            jointOffset *= -1
-
-    #jointType = {"hinge": 1, "fixed": 6, "slider": 3}[joint["jointType"]]
-    jointType = joint["jointType"]
-    anchorPos = {"custom": 4, "node1": 1, "node2": 2, "center": 3}[joint["anchor"]]
-
-    #calcCenter(bBox)
-    #center = sum(bBox) / 8.
-    out.write('    <joint name="'+joint.name+'">\n')
-    out.write('      <index>'+str(joint["id"])+'</index>\n')
-    out.write('      <type>'+str(jointType)+'</type>\n')
-    out.write('      <nodeindex1>'+str(joint.parent["id"])+'</nodeindex1>\n')
-    out.write('      <nodeindex2>'+str(node2ID)+'</nodeindex2>\n')
-    out.write('      <anchorpos>'+str(anchorPos)+'</anchorpos>\n')
-    outputVector(out, "anchor", center, 6)
-    outputVector(out, "axis1", (invert*axis[0],invert*axis[1],invert*axis[2]), 6)
-    if "axis2x" in joint:
-        outputVector(out, "axis2", (joint["axis2x"], joint["axis2y"], joint["axis2z"]), 6)
-    if "lowStop" in joint:
-        out.write('      <lowStopAxis1>'+str(joint["lowStop"])+'</lowStopAxis1>\n')
-    if "highStop" in joint:
-        out.write('      <highStopAxis1>'+str(joint["highStop"])+'</highStopAxis1>\n')
-    if "springConst" in joint:
-        out.write('      <spring_const_constraint_axis1>'+str(joint["springConst"])+'</spring_const_constraint_axis1>\n')
-    if "dampingConst" in joint:
-        out.write('      <damping_const_constraint_axis1>'+str(joint["dampingConst"])+'</damping_const_constraint_axis1>\n')
-    out.write('      <angle1_offset>'+str(invert*jointOffset)+'</angle1_offset>\n')
-    out.write('    </joint>\n')
-    return jointOffset*invert
-
-
-def writeMotor(joint, motorValue):
-    motor_type = joint["motor_type"] if "motor_type" in joint else 1
-    motor_axis = joint["motorAxis"] if "motorAxis" in joint else 1
-    motor_p = joint["p"] if "p" in joint else defValues["defP"]
-    motor_i = joint["i"] if "i" in joint else defValues["defI"]
-    motor_d = joint["d"] if "d" in joint else defValues["defD"]
-    low_stop = joint["lowStop"] if "lowStop" in joint else -6.28
-    high_stop = joint["highStop"] if "highStop" in joint else 6.28
-    max_speed = joint["maxSpeed"] if "maxSpeed" in joint else defValues["defMaxMotorSpeed"]
-    max_force = joint["maxForce"] if "maxForce" in joint else defValues["defMaxMotorForce"]
-
-    out.write('    <motor name="'+joint.name+'">\n')
-    out.write('      <index>'+str(joint["id"])+'</index>\n')
-    out.write('      <jointIndex>'+str(joint["id"])+'</jointIndex>\n')
-    out.write('      <axis>'+str(motor_axis)+'</axis>\n')
-    out.write('      <maximumVelocity>'+str(max_speed)+'</maximumVelocity>\n')
-    out.write('      <motorMaxForce>'+str(max_force)+'</motorMaxForce>\n')
-    out.write('      <type>'+str(motor_type)+'</type>\n')
-    out.write('      <p>'+str(motor_p)+'</p>\n')
-    out.write('      <i>'+str(motor_i)+'</i>\n')
-    out.write('      <d>'+str(motor_d)+'</d>\n')
-    out.write('      <min_val>'+str(low_stop)+'</min_val>\n')
-    out.write('      <max_val>'+str(high_stop)+'</max_val>\n')
-    out.write('      <value>'+str(motorValue)+'</value>\n')
-    out.write('    </motor>\n')
-
-
-def writeSensor(sensor):
-    sensorType = sensor["sensorType"] if "sensorType" in sensor else "unknown"
-    rate = sensor["rate"] if "rate" in sensor else 10.0
-    idList = {}
-
-    if "listMotors" in sensor:
-        idList = myMotorList
-    elif "listNodes" in sensor:
-        for i, obj in enumerate(objList):
-            idList[i] = obj["id"]
-    for key, value in sensor.items():
-        if key[:5] == "index":
-            index = getID(value)
-            if index != 0:
-                idList[int(key[5:])] = index
-    out.write('    <sensor name="'+sensor.name+'" type="'+str(sensorType)+'">\n')
-    out.write('      <index>'+str(sensor["id"])+'</index>\n')
-    out.write('      <rate>'+str(rate)+'</rate>\n')
-    for value in idList.values():
-        out.write('      <id>'+str(value)+'</id>\n')
-    if sensorType == "Joint6DOF":
-        nodeID = getID(sensor["nodeID"])
-        jointID = getID(sensor["jointID"])
-        out.write('      <nodeID>'+str(nodeID)+'</nodeID>\n')
-        out.write('      <jointID>'+str(jointID)+'</jointID>\n')
-    elif sensorType == "RaySensor":
-        nodeID = getID(sensor["attached_node"])
-        out.write('      <attached_node>'+str(nodeID)+'</attached_node>\n')
-        out.write('      <width>'+str(sensor["width"])+'</width>\n')
-        out.write('      <opening_width>'+str(sensor["opening_width"])+
-                  '</opening_width>\n')
-        out.write('      <max_distance>'+str(sensor["max_distance"])+
-                  '</max_distance>\n')
-        if "draw_rays" in sensor:
-            out.write('      <draw_rays>'+str(sensor["draw_rays"])+'</draw_rays>\n')
-    elif sensorType == "CameraSensor":
-        nodeID = getID(sensor["attached_node"])
-        out.write('      <attached_node>'+str(nodeID)+'</attached_node>\n')
-        out.write('      <depth_image>'+str(sensor["depth_image"])+'</depth_image>\n')
-        out.write('      <show_cam hud_idx="'+str(sensor["hud_idx"])+'">'+str(sensor["show_cam"])+'</show_cam>\n')
-        out.write('      <position_offset x="'+str(sensor["position_offset_x"])+
-                '" y="'+str(sensor["position_offset_y"])+
-                '" z="'+str(sensor["position_offset_z"])+'"/>\n')
-        out.write('      <orientation_offset yaw="'+str(sensor["orientation_offset_yaw"])+
-                '" pitch="'+str(sensor["orientation_offset_pitch"])+
-                '" roll="'+str(sensor["orientation_offset_roll"])+'"/>\n')
-    out.write('    </sensor>\n')
-
-
-def writeMaterial(material):
-    out.write('    <material>\n')
-    out.write('      <id>'+str(material["marsID"])+'</id>\n')
-    out.write('      <diffuseFront>\n');
-    out.write('        <a>1.0</a>\n');
-    out.write('        <r>'+str(material.diffuse_color[0])+'</r>\n');
-    out.write('        <g>'+str(material.diffuse_color[1])+'</g>\n');
-    out.write('        <b>'+str(material.diffuse_color[2])+'</b>\n');
-    out.write('      </diffuseFront>\n');
-    out.write('      <specularFront>\n');
-    out.write('        <a>1.0</a>\n');
-    out.write('        <r>'+str(material.specular_color[0])+'</r>\n');
-    out.write('        <g>'+str(material.specular_color[1])+'</g>\n');
-    out.write('        <b>'+str(material.specular_color[2])+'</b>\n');
-    out.write('      </specularFront>\n');
-    out.write('      <shininess>'+str(material.specular_hardness/2)+'</shininess>\n');
-    if "cullMask" in material:
-        out.write('      <cullMask>'+str(material["cullMask"])+'</cullMask>\n');
-    if "texturename" in material:
-        out.write('      <texturename>'+str(material["texturename"])+'</texturename>\n');
-    out.write('    </material>\n')
-
-
-
-def findRoot():
-    root = None
-    for obj in bpy.data.objects:
-        if obj.select:
-            if not obj.parent:
-                root = obj
-                break
-    return root
-
-
-def main():
-    initGlobalVariables()
-    global out
-
-    parseDefaultValues()
-    out = open(defValues["path"]+"/"+defValues["filename"]+".scene", "w")
-
-    writeSceneHeader()
-    root = findRoot()
-    if root:
-        fillList(root)
-    for material in bpy.data.materials:
-        if "marsID" in material:
-            material["marsID"] = 0
-
-    out.write('  <nodelist>\n')
-    for node in objList:
-        writeNode(node)
-    out.write('  </nodelist>\n')
-
-    out.write('  <jointlist>\n')
-    motorValue = []
-    for joint in jointList:
-        motorOffset = writeJoint(joint)
-        if not "springConst" in joint:
-            if joint["jointType"] == "hinge":
-                motorValue.append(motorOffset)
-            if joint["jointType"] == "hinge2":
-                motorValue.append(motorOffset)
-            if joint["jointType"] == "slider":
-                motorValue.append(motorOffset)
-    out.write('  </jointlist>\n')
-
-    out.write('  <motorlist>\n')
-    i = 0
-    for joint in jointList:
-        if not "springConst" in joint:
-            if joint["jointType"] == "hinge":
-                writeMotor(joint, motorValue[i])
-                i += 1
-            elif joint["jointType"] == "hinge2":
-                writeMotor(joint, motorValue[i])
-                i += 1
-            elif joint["jointType"] == "slider":
-                writeMotor(joint, motorValue[i])
-                i += 1
-    out.write('  </motorlist>\n')
-
-    haveController = 0
-    for joint in jointList:
-        if "controllerIndex" in joint and joint["controllerIndex"] > 0:
-            haveController = 1
-            myMotorList[joint["controllerIndex"]] = str(joint["id"])
-
-    mySensorList = {}
-    for sensor in sensorList:
-        if sensor["id"] > 0:
-            haveController = 1
-            mySensorList[sensor["id"]] = str(sensor["id"])
-
-
-    out.write('  <sensorlist>\n')
-    for sensor in sensorList:
-        writeSensor(sensor)
-    out.write('  </sensorlist>\n')
-
-    if haveController == 1:
-        out.write('  <controllerlist>\n')
-        out.write('    <controller>\n')
-        out.write('      <rate>40</rate>\n')
-        for value in mySensorList.values():
-            out.write('      <sensorid>'+value+'</sensorid>\n')
-        for value in myMotorList.values():
-            out.write('      <motorid>'+value+'</motorid>\n')
-        out.write('    </controller>\n')
-        out.write('  </controllerlist>\n')
-
-    out.write('  <materiallist>\n')
-
-    for material in bpy.data.materials:
-        if "marsID" in material and material["marsID"] != 0:
-            writeMaterial(material)
-
-    out.write('  </materiallist>\n')
-
-    out.write('  <graphicOptions>\n')
-    out.write('    <clearColor>\n')
-    out.write('      <r>0.550000</r>\n')
-    out.write('      <g>0.670000</g>\n')
-    out.write('      <b>0.880000</b>\n')
-    out.write('      <a>1.000000</a>\n')
-    out.write('    </clearColor>\n')
-    out.write('    <fogEnabled>false</fogEnabled>\n')
-    out.write('  </graphicOptions>\n')
-    out.write('</SceneFile>\n')
-
-    out.close()
-
-    os.chdir(defValues["path"])
-    os.system("rm "+defValues["filename"]+".scn")
-    os.system("zip "+defValues["filename"]+".scn "+defValues["filename"]+".scene")
-
-
-    wm = bpy.context.window_manager
-    total = float(len(objList))
-    wm.progress_begin(0, total)
-    i = 1
-    for obj in objList:
-        if "use" in obj:
-            continue
-        obj_filename = obj.name + (".bobj" if defValues["exportBobj"] else ".obj")
-        obj.select = True
-        bpy.context.scene.objects.active = obj
-        bpy.ops.object.modifier_apply(modifier='EdgeSplit')
-    #bpy.ops.object.transform_apply(rotation=True)
-        location = obj.location.copy()
-        rotation = obj.rotation_quaternion.copy()
-        parent = obj.parent
-        obj.location = [0.0, 0.0, 0.0]
-        obj.rotation_quaternion = [1.0, 0.0, 0.0, 0.0]
-        obj.parent = None
-        if defValues["exportMesh"]:
-            out_name = defValues["path"]+"/" + obj_filename
-            if defValues["exportBobj"]:
-                exportBobj(out_name, obj)
+            #collision object
+            collision = {}
+            if "collisionBitmask" in props:
+                collision["bitmask"] = props["collisionBitmask"]
+                del props["collisionBitmask"]
             else:
-                bpy.ops.export_scene.obj(filepath=out_name, axis_forward='-Z',
-                                         axis_up='Y', use_selection=True,
-                                         use_normals=True)
-        os.system("zip "+defValues["filename"]+".scn "+obj_filename)
-        #os.system("zip "+defValues["filename"]+".scn "+obj.name+".mtl")
-        obj.location = location
-        obj.rotation_quaternion = rotation
-        obj.parent = parent
-        obj.select = False
-        wm.progress_update(i)
+                collision["bitmask"] = mtdefs.type_properties["body_default"][mtdefs.type_properties["body"].index("collisionBitmask")] #TODO: this is just plain ugly
+            collGeom = {}
+            if "collisionPrimitive" in props:
+                collGeom["collisionPrimitive"] = str(props["collisionPrimitive"])
+                del props["collisionPrimitive"] #TODO ugly
+            else:
+                collGeom["collisionPrimitive"] = "box"
+            if collGeom["collisionPrimitive"] == "sphere":
+                collGeom["radius"] = max(size)/2
+            elif collGeom["collisionPrimitive"] == "box":
+                collGeom["size"] = size
+            elif collGeom["collisionPrimitive"] == "cylinder":
+                collGeom["radius"] = size[0]
+                collGeom["height"] = size[1]
+            elif collGeom["collisionPrimitive"] == "mesh":
+                collGeom["size"] = size
+            elif collGeom["collisionPrimitive"] == "plane":
+                collGeom["size"] = [size[0], size[1]]
+            collision["geometry"] = collGeom
+            collision["pose"] = calcPose(obj, center, "collision")
+            if "maxContacts" in props:
+                collision["max_contacts"] = str(obj["maxContacts"])
+                del props["maxContacts"] #TODO ugly
+            else:
+                collision["max_contacts"] = -1
+            props["collision"] = collision
+
+            #visual object
+            visual = {}
+            visual["pose"] = calcPose(obj, center, "visual")
+            material = {}
+            material["name"] = obj.data.materials[0].name #simply grab the first material
+            material["color"] = list(obj.data.materials[0].diffuse_color) #TODO. get rid of this and directly retrieve information from blenders material list
+            visual["material"] = material
+            visual["geometry"] = collision["geometry"]["collisionPrimitive"]
+            props["visual"] = visual
+        elif obj.MARStype == "joint":
+            props["parent"] = obj.parent.name
+            props["child"] = props["node2"]
+            del props["node2"]
+            props["pose"] = calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+        elif obj.MARStype == "sensor":
+            props["link"] = obj.parent.name
+    except KeyError:
+        print('MARStools: A KeyError occurred, likely because there is missing information in the model:\n    ', sys.exc_info()[0])
+
+    #clean dictionary entries
+    getridof = ["MARStype", "_RNA_UI"]
+    for key in getridof:
+        if key in props:
+            del props[key]
+    props["name"] = obj.name
+    return props
+
+
+def buildRobotDictionary():
+    robot = {"body": {},
+            "joint": {},
+            "sensor": {},
+            "motor": {},
+            "controller": {}}
+    #save timestamped version of model
+    robot["date"] = datetime.datetime.now().strftime("%Y%m%d_%H:%M")
+    #now get the actual robot content
+    for obj in bpy.context.selected_objects:#bpy.data.objects:
+        robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
+        #check if we need a fixed joint
+        if obj.MARStype == "body" and obj.parent and obj.parent.MARStype == "body":
+            fixedjoint = {}
+            fixedjoint["name"] = obj.parent.name+"_fixedto_"+obj.name
+            fixedjoint["parent"] = obj.parent.name
+            fixedjoint["child"] = obj.name
+            #fixedjoint["pose"] = (0,0,0,0,0,0) #calcPose(obj, 0, "body") #TODO; not sure what the difference is in this case
+            fixedjoint["jointType"] = "fixed"
+            robot["joint"][fixedjoint["name"]] = fixedjoint
+        #check if we have a root object with a modelname
+        if "modelname" in obj:
+            robot["modelname"] = obj["modelname"]
+    if not "modelname" in robot:
+        robot["modelname"] = "robot"
+    return robot
+
+def exportModelToYAML(model, filepath):
+    print("MARStools YAML export: Writing model data to", filepath )
+    with open(filepath, 'w') as outputfile:
+        outputfile.write('#YAML dump of robot model "'+model["modelname"]+'", '+datetime.datetime.now().strftime("%Y%m%d_%H:%M"))
+        outputfile.write(yaml.dump(model, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
+
+def xmlline(ind, tag, names, values):
+    line = []
+    line.append(indent*ind+'<'+tag)
+    for i in range(len(names)):
+        line.append(' '+names[i]+'="'+values[i]+'"')
+    line.append('/>\n')
+    return ''.join(line)
+
+def l2str(items, start=-1, end=-1):
+    line = []
+    i = start if start >= 0 else 0
+    maxi = end if end >= 0 else len(items)
+    while i < maxi:
+        line.append(str(items[i])+' ')
         i += 1
+    return ''.join(line)[0:-1]
 
-    wm.progress_end()
+def exportModelToURDF(model, filepath):
+    output = []
+    output.append(urdfHeader)
+    output.append(indent+'<robot name="'+model["modelname"]+'">\n\n')
+    for l in model["body"].keys():
+        link = model["body"][l]
+        output.append(xmlline(2, 'link', ['name'], [l]))
+        output.append(indent*3+'<inertial>\n')
+        output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link["pose"][0:3]), l2str(link["pose"][3:-1])]))
+        output.append(xmlline(4, 'mass', ['value'], [str(link["mass"])]))
+        if "inertia" in link:
+            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyx', 'iyy', 'iyz'], map(float, link["inertia"])))
+        output.append(indent*3+'</inertial>\n')
+        output.append(indent*3+'<visual>\n')
+        #origin #TODO: offset of visual to real representation
+        output.append(indent*4+'<geometry>\n')
+        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link["name"], '1.0']))
+        output.append(indent*4+'</geometry>\n')
+        output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
+        output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["color"]) + '1.0"/>\n')
+        output.append(indent*4+'</material>\n')
+        output.append(indent*3+'</visual>\n')
+        output.append(indent*3+'<collision>\n')
+        if link['collision']['geometry']['collisionPrimitive'] == "box":
+            output.append(xmlline(4, 'box', ['size'], l2str(link["collision"]["geometry"]["size"])))
+        elif link['collision']['geometry']['collisionPrimitive'] == "cylinder":
+            output.append(xmlline(4, 'cylinder', ['radius', 'length'], [link["collision"]["geometry"]["radius"], link["collision"]["geometry"]["height"]]))
+        elif link['collision']['geometry']['collisionPrimitive'] == "sphere":
+            output.append(xmlline(4, 'cylinder', ['radius'], [link["collision"]["geometry"]["radius"]]))
+        elif link['collision']['geometry']['collisionPrimitive'] == "mesh":
+            output.append(xmlline(4, 'mesh', ['filename', 'scale'], [link["name"], '1.0']))#TODO correct this after implementing filename and scale properly
+        output.append(indent*3+'</collision>\n')
+        output.append(indent*2+'</link>\n\n')
+    for j in model["joint"]:
+        joint = model["joint"][j]
+        output.append(indent*2+'<joint name="'+j+'" type="'+joint["jointType"]+'"/>\n') #TODO: correct type
+        output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')
+        output.append(indent*3+'<child link="'+joint["child"]+'"/>\n')
+        output.append(indent*2+'</joint>\n\n')
+        #if "pose" in joint:
+        #    output.append(indent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!
+    output.append(urdfFooter)
+    with open(filepath, 'w') as outputfile:
+        outputfile.write(''.join(output))
+    #print(model["body"].keys())
+    # problem of different joint transformations needed for fixed joints
+    print("MARStools URDF export: Writing model data to", filepath )
+
+def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot Format / Supplementable, Mostly URF / Supplement-Managed URF
+    #create all filenames
+    model_filename = os.path.expanduser(path + model["modelname"] + ".yml")
+    urdf_filename = os.path.expanduser(path + model["modelname"] + ".urdf")
+    materials_filename = os.path.expanduser(path + model["modelname"] + "_materials.yml")
+    sensors_filename = os.path.expanduser(path + model["modelname"] + "_sensors.yml")
+    motors_filename = os.path.expanduser(path + model["modelname"] + "_motors.yml")
+    controllers_filename = os.path.expanduser(path + model["modelname"] + "_controllers.yml")
+    simulation_filename = os.path.expanduser(path + model["modelname"] + "_simulation.yml")
+
+    infostring = ' definition SMURF file for "'+model["modelname"]+', '+model["date"]+"\n"
+
+    #write model information
+    print('Writing SMURF information to...\n'+model_filename)
+    modeldata = {}
+    #modeldata["modelname"] = model["modelname"]
+    modeldata["date"] = model["date"]
+    modeldata["files"] = [urdf_filename, materials_filename,
+                          sensors_filename, motors_filename,
+                          controllers_filename, simulation_filename]
+    with open(model_filename, 'w') as op:
+        op.write('#main SMURF file of the model "'+model["modelname"]+"\n")
+        op.write("modelname: "+model["modelname"]+"\n")
+        op.write(yaml.dump(modeldata, default_flow_style=False))
+
+    #write urdf
+    exportModelToURDF(model, urdf_filename)
+
+    #write materials
+    with open(materials_filename, 'w') as op:
+        op.write('#materials'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        materialdata = {}
+        for key in bpy.data.materials.keys():
+            print("MARStools: processing material", key)
+            mat = bpy.data.materials[key]
+            materialdata[key] = {}
+            materialdata[key]["color_diffuse"] = list(mat.diffuse_color)
+            materialdata[key]["color_specular"] = list(mat.specular_color)
+            materialdata[key]["alpha"] = mat.alpha
+        op.write(yaml.dump(materialdata, default_flow_style=False))
+
+    #write sensors
+    with open(sensors_filename, 'w') as op:
+        op.write('#sensors'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        op.write(yaml.dump(model["sensor"], default_flow_style=False))
+
+    #write motors
+    with open(motors_filename, 'w') as op:
+        op.write('#motors'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        op.write(yaml.dump(model["motor"], default_flow_style=False))
+
+    #write controllers
+    with open(controllers_filename, 'w') as op:
+        op.write('#controllers'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        op.write(yaml.dump(model["controller"], default_flow_style=False))
+
+    #write simulation
+    with open(simulation_filename, 'w') as op:
+        op.write('#simulation'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        simulationdata = {}
+        #TODO: handle simulationd-specific data
+        op.write(yaml.dump(simulationdata, default_flow_style=False))
+
+def exportSceneToSMURF(path):
+    pass
+
+def securepath(path): #TODO: this is totally not error-handled!
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return os.path.expanduser(path)
+
+def main(yaml=True, urdf=True, smurf=True):
+    print("yaml",yaml,"urdf",urdf,"smurf",smurf)
+    if yaml or urdf or smurf:
+        robot = buildRobotDictionary()
+        if yaml:
+            outpath = securepath(os.path.expanduser(bpy.context.scene.world.path))
+            exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
+        if smurf:
+            outpath = securepath(os.path.expanduser(bpy.context.scene.world.path))
+            exportModelToSMURF(robot, outpath)
+        elif urdf:
+            outpath = securepath(os.path.expanduser(bpy.context.scene.world.path))
+            exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
 
 
-# it would be nice to also set the pivot to the object center
-#Blender.Redraw()
-
+#allow manual execution of script in blender
 if __name__ == '__main__':
     main()
