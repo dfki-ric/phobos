@@ -30,9 +30,9 @@ indent = '  '
 urdfHeader = '<xml version="1.0">\n'
 urdfFooter = '</xml>'
 
-def calcPose(obj, center, type):
+def calcPose(obj, center, objtype):
     pose = []
-    if type == "link" or type == "visual" or type == "collision":
+    if objtype == "link" or objtype == "visual" or objtype == "collision":
         pivot = center
         location = obj.location.copy()
         location += obj.matrix_world.to_quaternion() * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
@@ -56,11 +56,11 @@ def calcPose(obj, center, type):
             q = childRot
         pose = list(location)
         pose.extend(q)
-#    elif type == "visual":
+#    elif objtype == "visual":
 #        pass
-#    elif type == "collision":
+#    elif objtype == "collision":
 #        pass
-    elif type == "joint":
+    elif objtype == "joint":
         pos = mathutils.Vector((0.0, 0.0, 1.0))
         axis = obj.matrix_world.to_quaternion() * pos
         center = obj.matrix_world * mathutils.Vector((0.0, 0.0, 0.0))
