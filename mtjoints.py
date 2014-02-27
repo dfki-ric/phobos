@@ -33,34 +33,35 @@ def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
     d1 = 4.0
     d2 = 0.05
 
-#    bpy.ops.mesh.primitive_cone_add(type='ARROWS')
     if jtype == 'hinge':
-        mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-        j1 = bpy.context.object
-        mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-        j2 = bpy.context.object #TODO: check if this really refers to active object and not "bpy.context.scene.objects.active"
+        j1 = mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j2 = mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        #arrows.select = True
         j1.select = True
         j2.select = True
         bpy.context.scene.objects.active = j1
         bpy.ops.object.join()
+        bpy.ops.object.empty_add(type='ARROWS', location = j1.location, rotation = j1.rotation_euler)
+        arrows = bpy.context.object
+        dx = d1*0.7
+        bpy.ops.transform.resize(value = (dx*scale, dx*scale, dx*scale))
+        #arrows.parent = j1
+        arrows.name = "axes_" + j1.name
+        j1.select = True
+        arrows.select = True
+        bpy.context.scene.objects.active = j1
+        bpy.ops.object.parent_set()
     elif jtype == 'linear':
         mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
         j1 = bpy.context.object
     elif jtype == 'planar':
         mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
         j1 = bpy.context.object
-    #TODO: set correct default values
-    #j1.name = joint['name']
     j1['jointType'] = jtype
     j1.MARStype = 'joint'
     j1['anchor'] = 'node2'
     j1['node2'] = ''
     return j1
-    #TODO: make arrows (=coord systems) work for joints to show at least the orientation
-    #arrows = bpy.ops.object.empty_add(type='ARROWS')
-    #bpy.ops.transform.resize(value = (d1*scale, d1*scale, d1*scale)
-    #bpy.context.scene.objects.active = j1
-    #bpy.ops.group.create(name = j1.name)
 
 def createJointSphere(joint, psize):
     #create the joint sphere / joint ball
@@ -129,7 +130,7 @@ class AddJointsOperator(Operator):
             node = nodes[0]
             location = node.location
             createJoint('joint_' + node.name + '_world', self.joint_type, self.joint_scale, location)
-            joint = bpy.context.object
+            joint = bpy.context.object #TODO: check if this really refers to active object and not "bpy.context.scene.objects.active"
             joint.parent = node
             joint['node2'] = 'world'
         else:
