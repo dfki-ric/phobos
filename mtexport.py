@@ -95,7 +95,7 @@ def deriveDictEntry(obj):
         if obj.MARStype == "body":
             props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj")
             props["pose"] = calcPose(obj, center, "link")
-            #inertial #TODO: implement inertia calculation
+            #inertial #TODO: implement inertia calculation (should be possible to get it from blender)
 
             #collision object
             collision = {}
@@ -122,7 +122,7 @@ def deriveDictEntry(obj):
             elif collGeom["collisionPrimitive"] == "plane":
                 collGeom["size"] = [size[0], size[1]]
             collision["geometry"] = collGeom
-            collision["pose"] = calcPose(obj, center, "collision")
+            collision["pose"] = calcPose(obj, center, "collision") #TODO: technically, this creates twice the computation for naught
             if "maxContacts" in props:
                 collision["max_contacts"] = str(obj["maxContacts"])
                 del props["maxContacts"] #TODO ugly
@@ -135,7 +135,7 @@ def deriveDictEntry(obj):
             visual["pose"] = calcPose(obj, center, "visual")
             material = {}
             material["name"] = obj.data.materials[0].name #simply grab the first material
-            material["color"] = list(obj.data.materials[0].diffuse_color) #TODO. get rid of this and directly retrieve information from blenders material list
+            material["color"] = list(obj.data.materials[0].diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
             visual["material"] = material
             visual["geometry"] = collision["geometry"]["collisionPrimitive"]
             props["visual"] = visual
