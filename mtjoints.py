@@ -41,26 +41,24 @@ def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
         j2.select = True
         bpy.context.scene.objects.active = j1
         bpy.ops.object.join()
-        bpy.ops.object.empty_add(type='ARROWS', location = j1.location, rotation = j1.rotation_euler)
-        arrows = bpy.context.object
-        dx = d1*0.7
-        bpy.ops.transform.resize(value = (dx*scale, dx*scale, dx*scale))
-        #arrows.parent = j1
-        arrows.name = "axes_" + j1.name
-        j1.select = True
-        arrows.select = True
-        bpy.context.scene.objects.active = j1
-        bpy.ops.object.parent_set()
     elif jtype == 'linear':
-        mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-        j1 = bpy.context.object
+        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
     elif jtype == 'planar':
-        mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-        j1 = bpy.context.object
+        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
     j1['jointType'] = jtype
     j1.MARStype = 'joint'
     j1['anchor'] = 'node2'
     j1['node2'] = ''
+    #now add joint orientation
+    bpy.ops.object.empty_add(type='ARROWS', location = j1.location, rotation = j1.rotation_euler)
+    arrows = bpy.context.object
+    dx = d1*0.7
+    bpy.ops.transform.resize(value = (dx*scale, dx*scale, dx*scale))
+    arrows.name = "axes_" + j1.name
+    j1.select = True
+    arrows.select = True
+    bpy.context.scene.objects.active = j1
+    bpy.ops.object.parent_set()
     return j1
 
 def createJointSphere(joint, psize):
