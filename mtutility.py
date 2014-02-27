@@ -45,6 +45,7 @@ def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation
     obj = bpy.context.object
     obj.name = pname
     obj.data.materials.append(bpy.data.materials[pmaterial])
+    return obj
 
 
 def defLayers(layerlist):
