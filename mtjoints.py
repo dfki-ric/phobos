@@ -145,6 +145,7 @@ class AddJointsOperator(Operator):
                     joint = createJoint('joint_' + node.parent.name + '_' + node.name, self.joint_type, self.joint_scale, location)
                     joint.parent = node.parent #TODO: this might be the reason that we have to compute a relative location above,
                     #the other solution using the set_parent() operator might have prevented that problem
+                    joint['node2'] = node.name
                     for obj in bpy.context.selected_objects:
                         obj.select = False
                     createJointSphere(joint, self.joint_scale/5.0)
