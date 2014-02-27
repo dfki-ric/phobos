@@ -423,3 +423,11 @@ for obj in bpy.context.selected_objects:
     bpy.ops.mesh.normals_make_consistent()
     bpy.ops.object.mode_set(mode = 'OBJECT')
     bpy.ops.object.modifier_add(type='EDGE_SPLIT')
+
+
+#physics collision!
+for obj in bpy.context.selected_objects:
+    print(obj.game.collision_mask)
+#    obj.game.use_collision_bounds=True
+#    obj.game.collision_bounds_type=True
+#    bpy.types.GameObjectSettings.collision_bounds_type: enum in [‘BOX’, ‘SPHERE’, ‘CYLINDER’, ‘CONE’, ‘CONVEX_HULL’, ‘TRIANGLE_MESH’, ‘CAPSULE’], default ‘BOX’
