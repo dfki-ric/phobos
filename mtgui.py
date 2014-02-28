@@ -91,7 +91,6 @@ def SetVisibleLayers(self, context):
     layers[3] = bpy.data.worlds[0].showSensors
     layers[4] = bpy.data.worlds[0].showDecorations
     layers[5] = bpy.data.worlds[0].showConstraints
-    layers[6] = bpy.data.worlds[0].showNames
     onetrue = False
     for b in layers:
         onetrue = onetrue or b
@@ -99,6 +98,8 @@ def SetVisibleLayers(self, context):
         bpy.data.worlds[0].showBodies = True
         layers[0] = True
     bpy.context.scene.layers = layers
+    for obj in bpy.data.objects:
+        obj.show_name = bpy.data.worlds[0].showNames
 
 
 def setWorldView(b):
