@@ -24,52 +24,32 @@ import struct
 #
 # Test Scenario 2:
 # The same as above, only that all rotations were applied to the objects.
+#
+# results can be found in work/mars/blendertools/test
 
 
 sep = "------------------------------------------------------"
 
-def calcCenter(boundingbox):
-    c = [0,0,0]
-    for v in boundingbox:
-        for i in range(3):
-            c[i] += v[i]
-    for i in range(3):
-        c[i] /= 8.
-    return c
+def calcCenter(bound_box):
+    """returns a mathutils.Vector for the bounding box's center point"""
+    c = sum((mathutils.Vector(b) for b in bound_box), mathutils.Vector())
+    return c / 8
 
 def writeNode(obj):
-    # get bounding box:
-    bBox = obj.bound_box
-    center = calcCenter(bBox)
-    size = [0.0, 0.0, 0.0]
-    size[0] = abs(2.0*(bBox[0][0] - center[0]))
-    size[1] = abs(2.0*(bBox[0][1] - center[1]))
-    size[2] = abs(2.0*(bBox[0][2] - center[2]))
+    size = obj.dimensions
 
     #get pivot
-    pivot = center
-    center = obj.location.copy()
-    center += obj.matrix_world.to_quaternion() * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
-
-
-    obj.rotation_mode = 'QUATERNION'
-    q = obj.rotation_quaternion
+    obj_pivot = calcCenter(obj.bound_box)
 
     if obj.parent:
         parent = obj.parent
-        parentIQ = parent.matrix_world.to_quaternion().inverted()
-        bBox = parent.bound_box
-        pivot2 = calcCenter(bBox)
-        v = mathutils.Vector((pivot2[0], pivot2[1], pivot2[2]))
-        #v = parent.matrix_world.to_quaternion() * v
-        parentPos = parent.matrix_world * v
-        childPos = obj.matrix_world * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
+        parent_pivot = calcCenter(parent.bound_box)
+        parentPos = parent.matrix_world * parent_pivot
+        childPos = obj.matrix_world * obj_pivot
         childPos = childPos - parentPos
-        center = parentIQ * childPos
-        parentRot = parent.matrix_world.to_quaternion()
-        childRot = obj.matrix_world.to_quaternion()
-        childRot = parentRot.rotation_difference(childRot)
-        q = childRot
+        child_center = parent.matrix_world.to_quaternion().inverted() * childPos        #output: position
+        parent_rot = parent.matrix_world.to_quaternion()
+        child_rot = obj.matrix_local.to_quaternion()    #output: rotation
 
 def printMatrices(obj):
     print("Transformation Matrices for object:", obj.name)
@@ -95,7 +75,8 @@ def printRotLoc(obj):
 
 def printBoundBox(obj):
     print("Bounding box for object:", obj.name)
-    print(obj.bound_box)
+    for coord in obj.bound_box:
+        print(coord)
     print("\n\n")
 
 def main():
@@ -103,6 +84,7 @@ def main():
         printMatrices(obj)
         printRotLoc(obj)
         printBoundBox(obj)
+        writeNode(obj)
 
 if __name__ == '__main__':
     main()
