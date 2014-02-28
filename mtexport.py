@@ -1,7 +1,7 @@
 '''
 MARS Blender Tools - a Blender Add-On to work with MARS robot models
 
-File mtcreateprops.py
+File export.py
 
 Created on 13 Feb 2014
 
