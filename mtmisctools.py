@@ -32,13 +32,6 @@ def register():
     bpy.types.World.exportURDF = BoolProperty(name = "exportURDF")
     bpy.types.World.exportYAML = BoolProperty(name = "exportYAML")
     bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
-    #bpy.utils.register_class(ExportModelOperator)
-    #bpy.utils.register_class(ImportModelOperator)
-    #bpy.utils.register_class(CreateMARSPropsOperator)
-    #bpy.utils.register_class(BatchEditPropertyOperator)
-    #bpy.utils.register_class(SmoothenSurfaceOperator)
-    #bpy.utils.register_class(BatchSmoothenSurfaceOperator)
-    #bpy.types.VIEW3D_MT_object.append(add_object_button)
 
 
 def unregister():
@@ -60,7 +53,7 @@ def unregister():
 #
 #     def execute(self, context):
 #         #add selction of all layers bpy.ops.object.select_all()
-#         mtimport.main()
+#         mtoldimport.main()
 
 #TODO: Do we still need this operator? May be covered by AddSensorOperator (mtsensors)
 # class AddObjectsToSensorOperator(Operator):
@@ -312,7 +305,7 @@ class addGravityVector(Operator):
 
     property_name = FloatVectorProperty(
         name = "gravity_vector",
-        default = "",
+        default = (0, 0, -9.81),
         description = "gravity vector")
 
     def execute(self, context):
