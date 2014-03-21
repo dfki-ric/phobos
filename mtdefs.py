@@ -109,6 +109,5 @@ layerTypes = {
               "jointSpheres": 2,
               "sensors": 3,
               "decorations": 4,
-              "constraints": 5,
-              "names": 6
+              "constraints": 5
               }

@@ -431,3 +431,111 @@ for obj in bpy.context.selected_objects:
 #    obj.game.use_collision_bounds=True
 #    obj.game.collision_bounds_type=True
 #    bpy.types.GameObjectSettings.collision_bounds_type: enum in [‘BOX’, ‘SPHERE’, ‘CYLINDER’, ‘CONE’, ‘CONVEX_HULL’, ‘TRIANGLE_MESH’, ‘CAPSULE’], default ‘BOX’
+
+
+Interesting elements form the blender documentation:
+
+bpy.types.Object:
+
+ bound_box
+
+    Object’s bounding box in object-space coordinates, all values are -1.0 when not available
+    Type :    float array of 24 items in [-inf, inf], default (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0), (readonly)
+
+dimensions
+
+    Absolute bounding box dimensions of the object
+    Type :    float array of 3 items in [-inf, inf], default (0.0, 0.0, 0.0)
+
+draw_bounds_type
+
+    Object boundary display type
+
+        BOX Box, Draw bounds as box.
+        SPHERE Sphere, Draw bounds as sphere.
+        CYLINDER Cylinder, Draw bounds as cylinder.
+        CONE Cone, Draw bounds as cone.
+
+    Type :    enum in [‘BOX’, ‘SPHERE’, ‘CYLINDER’, ‘CONE’], default ‘BOX’
+
+draw_type
+
+    Maximum draw type to display object with in viewport
+
+        BOUNDS Bounds, Draw the bounding box of the object.
+        WIRE Wire, Draw the object as a wireframe.
+        SOLID Solid, Draw the object as a solid (if solid drawing is enabled in the viewport).
+        TEXTURED Textured, Draw the object with textures (if textures are enabled in the viewport).
+
+    Type :    enum in [‘BOUNDS’, ‘WIRE’, ‘SOLID’, ‘TEXTURED’], default ‘BOUNDS’
+
+
+
+show_axis
+
+    Display the object’s origin and axes
+    Type :    boolean, default False
+
+show_bounds
+
+    Display the object’s bounds
+    Type :    boolean, default False
+
+show_name
+
+    Display the object’s name
+
+
+
+ show_wire
+
+    Add the object’s wireframe over solid drawing
+    Type :    boolean, default False
+
+ track_axis
+
+    Axis that points in ‘forward’ direction (applies to DupliFrame when parent ‘Follow’ is enabled)
+    Type :    enum in [‘POS_X’, ‘POS_Y’, ‘POS_Z’, ‘NEG_X’, ‘NEG_Y’, ‘NEG_Z’], default ‘POS_X’
+
+ up_axis
+
+    Axis that points in the upward direction (applies to DupliFrame when parent ‘Follow’ is enabled)
+    Type :    enum in [‘X’, ‘Y’, ‘Z’], default ‘X’
+
+
+children
+
+    All the children of this object (readonly)
+
+ ray_cast(start, end)
+
+    Cast a ray onto in object space
+    Return (location, normal, index):
+
+
+    location, The hit location of this ray cast, float array of 3 items in [-inf, inf]
+
+    normal, The face normal at the ray cast hit location, float array of 3 items in [-inf, inf]
+
+    index, The face index, -1 when no intersection is found, int in [-inf, inf]
+
+
+matrix_basis
+
+    Matrix access to location, rotation and scale (including deltas), before constraints and parenting are applied
+    Type :    float array of 16 items in [-inf, inf], default (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+matrix_local
+
+    Parent relative transformation matrix
+    Type :    float array of 16 items in [-inf, inf], default (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+matrix_parent_inverse
+
+    Inverse of object’s parent matrix at time of parenting
+    Type :    float array of 16 items in [-inf, inf], default (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+
+matrix_world
+
+    Worldspace transformation matrix
+    Type :    float array of 16 items in [-inf, inf], default (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
