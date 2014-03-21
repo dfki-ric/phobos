@@ -12,9 +12,9 @@ in your preferences to gain instant (virtual) world domination.
 You may use the provided install shell script.
 
 NOTE: If you edit this script, please make sure not to use any imports
-not supported by Blender's standard python distribution. This is a script
+not supported by Blender's standard Python distribution. This is a script
 intended to be usable on its own and thus should not use external dependencies,
-especially none on the other modules of the MARStools package.
+especially none of the other modules of the MARStools package.
 '''
 
 import bpy
@@ -26,9 +26,12 @@ import yaml
 import marstools.mtdefs as mtdefs
 import marstools.mtutility as mtutility
 
+def register():
+    print("Registering mtexport...")
+
 indent = '  '
 urdfHeader = '<xml version="1.0">\n'
-urdfFooter = '</xml>'
+urdfFooter = indent+'</robot>\n</xml>'
 
 def calcPose(obj, center, objtype):
     pose = []
@@ -214,11 +217,14 @@ def exportModelToURDF(model, filepath):
     output = []
     output.append(urdfHeader)
     output.append(indent+'<robot name="'+model["modelname"]+'">\n\n')
+    #export link information
     for l in model["body"].keys():
         link = model["body"][l]
-        output.append(xmlline(2, 'link', ['name'], [l]))
+        output.append(indent*2+'<link name="'+l+'">\n')
+        #output.append(xmlline(2, 'link', ['name'], [l]))
         output.append(indent*3+'<inertial>\n')
-        output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link["pose"][0:3]), l2str(link["pose"][3:-1])]))
+        #output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link["pose"][0:3]), l2str(link["pose"][3:])])) #this is the original code, now moved to joints
+        #output.append(xmlline(4, 'origin', ['xyz', 'rpy'], ["0 0 0", "0 0 0"])) #TODO: add this if it's needed (pivot)
         output.append(xmlline(4, 'mass', ['value'], [str(link["mass"])]))
         if "inertia" in link:
             output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyx', 'iyy', 'iyz'], map(float, link["inertia"])))
@@ -226,7 +232,7 @@ def exportModelToURDF(model, filepath):
         output.append(indent*3+'<visual>\n')
         #origin #TODO: offset of visual to real representation
         output.append(indent*4+'<geometry>\n')
-        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link["name"], '1.0']))
+        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link["filename"], '1.0']))
         output.append(indent*4+'</geometry>\n')
         output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
         output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["color"]) + '1.0"/>\n')
@@ -243,11 +249,14 @@ def exportModelToURDF(model, filepath):
             output.append(xmlline(4, 'mesh', ['filename', 'scale'], [link["name"], '1.0']))#TODO correct this after implementing filename and scale properly
         output.append(indent*3+'</collision>\n')
         output.append(indent*2+'</link>\n\n')
+    #export joint information
     for j in model["joint"]:
         joint = model["joint"][j]
         urdfJoints = {"hinge": "revolute", "linear": "prismatic", "continuous": "continuous", "fixed": "fixed", "planar": "planar"} #TODO: make this nicer
         jointType = urdfJoints[joint["jointType"]]
-        output.append(indent*2+'<joint name="'+j+'" type="'+jointType+'"/>\n')#TODO: currently no floating joints are supported
+        output.append(indent*2+'<joint name="'+j+'" type="'+jointType+'">\n')#TODO: currently no floating joints are supported
+        child = model["body"][joint["child"]]
+        output.append(xmlline(3, 'origin', ['xyz', 'rpy'], [l2str(child["pose"][0:3]), l2str(child["pose"][3:])]))
         output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')
         output.append(indent*3+'<child link="'+joint["child"]+'"/>\n')
         if "lowerConstraint" in joint:
@@ -255,6 +264,7 @@ def exportModelToURDF(model, filepath):
         output.append(indent*2+'</joint>\n\n')
         #if "pose" in joint:
         #    output.append(indent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!
+    #finish the export
     output.append(urdfFooter)
     with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))

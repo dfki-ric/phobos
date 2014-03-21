@@ -37,18 +37,9 @@ def register():
     bpy.types.World.showNames = BoolProperty(name = "showNames", update=SetVisibleLayers)
     bpy.types.World.showDecorations = BoolProperty(name = "showDecorations", update=SetVisibleLayers)
     bpy.types.World.showMotorTypes = BoolProperty(name = "showMotorTypes", update=showMotorTypes)
-    #setWorldView([True, True, True, True, True, False, False])
-
-    # These may be optional
-    #bpy.utils.register_class(MARSToolPanel)
-    #bpy.utils.register_class(MARSObjectPanel)
-    #bpy.utils.register_class(MARSWorldPanel)
 
 def unregister():
     print("Unregistering mtgui...")
-    #bpy.utils.unregister_class(MARSToolPanel)
-    #bpy.utils.unregister_class(MARSObjectPanel)
-    #bpy.utils.register_class(MARSWorldPanel)
 
 
 class MessageOperator(bpy.types.Operator):
@@ -277,6 +268,7 @@ class MARSToolExportPanel(bpy.types.Panel):
         group_export.prop(bpy.data.worlds[0], "exportURDF")
         group_export.prop(bpy.data.worlds[0], "exportYAML")
         group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
+        group_export.operator("obj.import_robot_model", text = "Import Robot Model", icon = "COPYDOWN")
 
 
 class MARSObjectPanel(bpy.types.Panel):
