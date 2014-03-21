@@ -14,33 +14,35 @@ in your preferences to gain instant (virtual) world domination.
 
 bl_info = {
     "name": "MARS Blender Tools",
-    "description": "A set of marstools to simplify editing of MARS robot models in Blender.",
+    "description": "A set of tools to enable editing of MARS robot models in Blender.",
     "author": "Kai von Szadkowski, Malte Langosz",
-    "version": (0, 1),
+    "version": (0, 3),
     "blender": (2, 62, 0),
     "location": "",
-    "warning": "", # used for warning icon and text in addons panel
+    "warning": "",
     "wiki_url": "",
     "category": "3D View"
     }
 
 if "bpy" in locals():
     import imp
-    #imp.reload(mtimport)
-    #imp.reload(mt_oldexport)
     #imp.reload(mtmaterials)
-    imp.reload(mtjoints)
     #imp.reload(mtcreateprops)
+    #imp.reload(mt_importexport)
+    #imp.reload(mt_oldexport)
+    imp.reload(mtcontrollers)
+    imp.reload(mtexport)
+    imp.reload(mtimport)
     imp.reload(mtgui)
+    imp.reload(mtimport)
+    imp.reload(mtjoints)
     imp.reload(mtmisctools)
     imp.reload(mtsensors)
-    imp.reload(mtcontrollers)
     imp.reload(mtutility)
-    imp.reload(mtjoints)
-    print("Reloading MARS Tools.")
+    print("Reloading MARS Blender Tools.")
 else:
-    from . import mtgui, mtmisctools, mtsensors, mtcontrollers, mtjoints, mtutility
-    print("Importing MARS Tools modules.")
+    from . import mtcontrollers, mtexport, mtgui, mtimport, mtjoints, mtmisctools, mtsensors, mtutility
+    print("Importing MARS Blender Tools modules.")
 
 import bpy
 #import sys
@@ -48,20 +50,24 @@ import bpy
 #import yaml
 
 def register():
+    mtcontrollers.register()
+    mtexport.register()
     mtgui.register()
+    mtimport.register()
+    mtjoints.register()
     mtmisctools.register()
     mtsensors.register()
-    mtcontrollers.register()
-    mtjoints.register()
     mtutility.register()
     bpy.utils.register_module(__name__)
 
 def unregister():
+    mtcontrollers.unregister()
+    mtexport.unregister()
     mtgui.unregister()
+    mtimport.unregister()
+    mtjoints.unregister()
     mtmisctools.unregister()
     mtsensors.unregister()
-    mtcontrollers.unregister()
-    mtjoints.unregister()
     mtutility.unregister()
     bpy.utils.unregister_module(__name__)
 
