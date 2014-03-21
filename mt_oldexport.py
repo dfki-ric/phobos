@@ -271,7 +271,7 @@ def writeNode(obj):
     filename = obj_name + (".bobj" if defValues["exportBobj"] else ".obj") #!
 
     # get bounding box:
-    size = obj.dimension
+    size = obj.dimensions
 
     sizeScaleX = obj["sizeScaleX"] if "sizeScaleX" in obj else 1.0
     sizeScaleY = obj["sizeScaleY"] if "sizeScaleY" in obj else 1.0
@@ -306,6 +306,9 @@ def writeNode(obj):
         childPos = childPos - parentPos
         center = parent.matrix_world.to_quaternion().inverted() * childPos
         childRot = obj.matrix_local.to_quaternion()
+    else:
+        center = (0, 0, 0)
+        childRot = (1, 0, 0, 0)
 
     out.write('    <node name="'+obj.name+'">\n')
     out.write('      <origname>'+obj_name+'</origname>\n')
