@@ -33,44 +33,64 @@ def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
     d1 = 4.0
     d2 = 0.05
 
-#    bpy.ops.mesh.primitive_cone_add(type='ARROWS')
     if jtype == 'hinge':
-        mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-        j1 = bpy.context.object
-        mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-        j2 = bpy.context.object
+        j1 = mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j2 = mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        #arrows.select = True
         j1.select = True
         j2.select = True
         bpy.context.scene.objects.active = j1
         bpy.ops.object.join()
     elif jtype == 'linear':
-        mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-        j1 = bpy.context.object
+        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
     elif jtype == 'planar':
-        mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-        j1 = bpy.context.object
-    #TODO: set correct default values
-    #j1.name = joint['name']
+        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
     j1['jointType'] = jtype
     j1.MARStype = 'joint'
     j1['anchor'] = 'node2'
     j1['node2'] = ''
-    #TODO: make arrows (=coord systems) work for joints to show at least the orientation
-    #arrows = bpy.ops.object.empty_add(type='ARROWS')
-    #bpy.ops.transform.resize(value = (d1*scale, d1*scale, d1*scale)
-    #bpy.context.scene.objects.active = j1
-    #bpy.ops.group.create(name = j1.name)
+    #now add joint orientation
+    bpy.ops.object.empty_add(type='ARROWS', location = j1.location, rotation = j1.rotation_euler)
+    arrows = bpy.context.object
+    dx = d1*0.7
+    bpy.ops.transform.resize(value = (dx*scale, dx*scale, dx*scale))
+    arrows.name = "axes_" + j1.name
+    j1.select = True
+    arrows.select = True
+    bpy.context.scene.objects.active = j1
+    bpy.ops.object.parent_set()
+    return j1
 
-# def createHingeJoint(name):
-#
-#     revolute - a hinge joint that rotates along the axis and has a limited range specified by the upper and lower limits.
-# continuous - a continuous hinge joint that rotates around the axis and has no upper and lower limits
-#
-# planar - This joint allows motion in a plane perpendicular to the axis.
-# prismatic - a sliding joint that slides along the axis, and has a limited range specified by the upper and lower limits.
-#
-# fixed - This is not really a joint because it cannot move. All degrees of freedom are locked. This type of joint does not require the axis, calibration, dynamics, limits or safety_controller.
-# floating - This joint allows motion for all 6 degrees of freedom.
+def createJointSphere(joint, psize):
+    #create the joint sphere / joint ball
+    ball = mtutility.createPrimitive('joint_sphere_' + joint.name,
+                                     'sphere',
+                                     [psize],
+                                     mtdefs.layerTypes['jointSpheres'],
+                                     'joint_sphere',
+                                     joint.location,
+                                     joint.rotation_euler)
+    #TODO: Why does it work here, but not below? It might be because I gave an absolute location to the create_primitive
+    # Blender function and I did not, as in the commented code below, leave it out and set the location later...?
+    ball.parent = joint.parent
+    #TODO: the following lines should be rendered unnecessary by the above
+    #ball.select = True
+    #bpy.context.scene.objects.active = joint.parent
+    #bpy.ops.object.parent_set() #makes active object parent of selected object
+    ball["coll_bitmask"] = 0
+    ball.MARStype = "body"
+    ball["mass"] = 0
+    #adapt the child limb
+    limb = bpy.context.scene.objects[joint['node2']] #TODO: this is an elegant trick that should be used everywhere
+    #limb.parent = ball
+    limb.select = True
+    bpy.context.scene.objects.active = ball
+    bpy.ops.object.parent_set()
+    #adapt the joint
+    joint['node2'] = ball.name
+    #TODO: the following lines should not be necessary, either (see problem above)
+    #ball.location = joint.location
+    #ball.rotation_euler = joint.rotation_euler
 
 
 class AddJointsOperator(Operator):
@@ -102,13 +122,13 @@ class AddJointsOperator(Operator):
                 obj.select = False
 
         if nodes == []:
-            bpy.ops.error.message('INVOKE_DEFAULT', type="AddJoints Error", message="Not enough objects of MARStype 'body' selected.")
+            bpy.ops.error.message('INVOKE_DEFAULT', type="AddJoints Error", message="Not enough bodies selected.")
             return{'CANCELLED'}
         if len(nodes) < 2:
             node = nodes[0]
             location = node.location
             createJoint('joint_' + node.name + '_world', self.joint_type, self.joint_scale, location)
-            joint = bpy.context.object
+            joint = bpy.context.object #TODO: check if this really refers to active object and not "bpy.context.scene.objects.active"
             joint.parent = node
             joint['node2'] = 'world'
         else:
@@ -121,14 +141,15 @@ class AddJointsOperator(Operator):
                     bpy.ops.view3d.snap_cursor_to_selected()
                     #calculate relative location
                     location = bpy.context.scene.cursor_location - node.parent.location
-                    createJoint('joint_' + node.parent.name + '_' + node.name, self.joint_type, self.joint_scale, location)
-                    joint = bpy.context.object #TODO: check if this really refers to active object and not "bpy.context.scene.objects.active"
-                    joint.parent = node.parent
+                    joint = createJoint('joint_' + node.parent.name + '_' + node.name, self.joint_type, self.joint_scale, location)
+                    joint.parent = node.parent #TODO: this might be the reason that we have to compute a relative location above,
+                    #the other solution using the set_parent() operator might have prevented that problem
                     joint['node2'] = node.name
                     for obj in bpy.context.selected_objects:
                         obj.select = False
+                    createJointSphere(joint, self.joint_scale/5.0)
             if not parent:
-                bpy.ops.error.message('INVOKE_DEFAULT', type="AddJoints Error", message="None of the selected objects are related as parent-child.")
+                bpy.ops.error.message('INVOKE_DEFAULT', type="AddJoints Error", message="Missing parent-child connection.")
         return{'FINISHED'}
 
 
@@ -172,34 +193,5 @@ class DeriveJointSpheresOperator(Operator):
         js_layers[2] = True
         for joint in bpy.context.selected_objects:
             if joint.MARStype == "joint":
-                # create ball
-                bpy.ops.mesh.primitive_uv_sphere_add(size = 0.01,
-                                              layers = js_layers)
-                #                              location = joint.location)
-                #                              rotation = joint.rotation_euler)
-                ball = bpy.context.object
-                ball.name = 'joint_sphere_' + joint.name
-                ball.data.materials.append(mtmaterials.materials['joint_sphere'])
-                ball.parent = joint.parent
-                ball.select = True
-                bpy.context.scene.objects.active = joint.parent
-                bpy.ops.object.parent_set() #makes active object parent of selected object
-                ball.location = joint.location
-                ball.rotation_euler = joint.rotation_euler
-
-                #modify limb
-                print(joint.name)
-                print("    ", joint['node2'])
-                print("")
-                limb = bpy.context.scene.objects[joint['node2']]
-                limb.select = True
-                bpy.context.scene.objects.active = ball
-                bpy.ops.object.parent_set()
-
-                #modify joint
-                joint['anchor'] = "node2"
-                joint['node2'] = ball.name
-                ball["coll_bitmask"] = 0
-                ball["type"] = "body"
-                ball["mass"] = 0
+                createJointSphere(joint, self.joint_scale/5.0)
         return{'FINISHED'}
