@@ -423,8 +423,6 @@ for obj in bpy.context.selected_objects:
     bpy.ops.mesh.normals_make_consistent()
     bpy.ops.object.mode_set(mode = 'OBJECT')
     bpy.ops.object.modifier_add(type='EDGE_SPLIT')
-<<<<<<< Updated upstream
-=======
 
 
 #physics collision!
@@ -541,4 +539,3 @@ matrix_world
 
     Worldspace transformation matrix
     Type :    float array of 16 items in [-inf, inf], default (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
->>>>>>> Stashed changes
