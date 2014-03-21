@@ -251,14 +251,10 @@ def writeSceneHeader():
               '<SceneFile>\n'
               '  <version>0.2</version>\n')
 
-def calcCenter(boundingbox):
-    c = [0,0,0]
-    for v in boundingbox:
-        for i in range(3):
-            c[i] += v[i]
-    for i in range(3):
-        c[i] /= 8.
-    return c
+def calcCenter(bound_box):
+    """returns a mathutils.Vector for the bounding box's center point"""
+    c = sum((mathutils.Vector(b) for b in bound_box), mathutils.Vector())
+    return c / 8
 
 def writeNode(obj):
     #TODO: move to updateproperties
@@ -275,12 +271,7 @@ def writeNode(obj):
     filename = obj_name + (".bobj" if defValues["exportBobj"] else ".obj") #!
 
     # get bounding box:
-    bBox = obj.bound_box
-    center = calcCenter(bBox)
-    size = [0.0, 0.0, 0.0]
-    size[0] = abs(2.0*(bBox[0][0] - center[0]))
-    size[1] = abs(2.0*(bBox[0][1] - center[1]))
-    size[2] = abs(2.0*(bBox[0][2] - center[2]))
+    size = obj.dimension
 
     sizeScaleX = obj["sizeScaleX"] if "sizeScaleX" in obj else 1.0
     sizeScaleY = obj["sizeScaleY"] if "sizeScaleY" in obj else 1.0
@@ -295,13 +286,7 @@ def writeNode(obj):
     ext[1] = height if height > 0. else sizeScaleY*size[1]
     ext[2] = sizeScaleZ*size[2]
 
-    pivot = center
-    center = obj.location.copy()
-    center += obj.matrix_world.to_quaternion() * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
-
-    noPhysical = False
-    if "noPhysical" in obj:
-        noPhysical = obj["noPhysical"]
+    noPhysical = obj["noPhysical"] if "noPhysical" in obj else False
 
     if "mass" in obj:
         density = 0
@@ -312,26 +297,15 @@ def writeNode(obj):
     coll_bitmask = obj["coll_bitmask"] if "coll_bitmask" in obj else defValues["defCollBitmask"]
 
     parentID = 0
-
-    obj.rotation_mode = 'QUATERNION'
-    q = obj.rotation_quaternion
-
+    pivot = calcCenter(obj.bound_box)
     if obj.parent:
         parentID = obj.parent["id"]
         parent = obj.parent
-        parentIQ = parent.matrix_world.to_quaternion().inverted()
-        bBox = parent.bound_box
-        pivot2 = calcCenter(bBox)
-        v = mathutils.Vector((pivot2[0], pivot2[1], pivot2[2]))
-        #v = parent.matrix_world.to_quaternion() * v
-        parentPos = parent.matrix_world * v
-        childPos = obj.matrix_world * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
+        parentPos = parent.matrix_world * calcCenter(parent.bound_box)
+        childPos = obj.matrix_world * pivot
         childPos = childPos - parentPos
-        center = parentIQ * childPos
-        parentRot = parent.matrix_world.to_quaternion()
-        childRot = obj.matrix_world.to_quaternion()
-        childRot = parentRot.rotation_difference(childRot)
-        q = childRot
+        center = parent.matrix_world.to_quaternion().inverted() * childPos
+        childRot = obj.matrix_local.to_quaternion()
 
     out.write('    <node name="'+obj.name+'">\n')
     out.write('      <origname>'+obj_name+'</origname>\n')
@@ -344,7 +318,7 @@ def writeNode(obj):
     if parentID:
         out.write('      <relativeid>'+str(parentID)+'</relativeid>\n')
     outputVector(out, "position", center, 6)
-    outputQuaternion(out, "rotation", q, 6)
+    outputQuaternion(out, "rotation", childRot, 6)
     outputVector(out, "extend", ext, 6)
     outputVector(out, "pivot", pivot, 6)
     outputVector(out, "visualsize", size, 6)
@@ -362,21 +336,20 @@ def writeNode(obj):
 
 
 def writeJoint(joint):
-    #bBox = joint.bound_box
-    pos = mathutils.Vector((0.0, 0.0, 1.0))
-    axis = joint.matrix_world.to_quaternion() * pos
-    center = joint.matrix_world * mathutils.Vector((0.0, 0.0, 0.0))
-    node2ID = 0
-    node2 = None
+    axis = joint.matrix_world.to_quaternion() * mathutils.Vector((0.0, 0.0, 1.0))
+    center = joint.matrix_world.to_translation()
     if joint["node2"] in bpy.data.objects:
         node2 = bpy.data.objects[joint["node2"]]
         node2ID = node2["id"]
+    else:
+        node2 = None
+        node2ID = 0
 
-    invert = 1
     if "invertAxis" in joint and joint["invertAxis"] == 1:
         invert = -1
+    else:
+        invert = 1
 
-    jointOffset = 0.0
     if "jointOffset" in joint:
         jointOffset = joint["jointOffset"]
     elif node2:
@@ -388,13 +361,13 @@ def writeJoint(joint):
         axis_ = q * v1.cross(v2)
         if axis_[2] > 0:
             jointOffset *= -1
+    else:
+        jointOffset = 0.0
 
     #jointType = {"hinge": 1, "fixed": 6, "slider": 3}[joint["jointType"]]
     jointType = joint["jointType"]
     anchorPos = {"custom": 4, "node1": 1, "node2": 2, "center": 3}[joint["anchor"]]
 
-    #calcCenter(bBox)
-    #center = sum(bBox) / 8.
     out.write('    <joint name="'+joint.name+'">\n')
     out.write('      <index>'+str(joint["id"])+'</index>\n')
     out.write('      <type>'+str(jointType)+'</type>\n')
