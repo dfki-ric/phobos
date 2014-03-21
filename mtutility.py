@@ -114,7 +114,7 @@ def selectObjects(objects, clear):
     for obj in objects:
         obj.select = True
 
-def getObjByName(name):
+def getObjByName(name): #TODO:This routine might be totally obsolete as bpy.data.objects[name] should work as well
     for obj in bpy.data.objects:
         if obj.name == name:
             return obj

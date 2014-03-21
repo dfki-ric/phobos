@@ -77,11 +77,11 @@ def createJointSphere(joint, psize):
     #ball.select = True
     #bpy.context.scene.objects.active = joint.parent
     #bpy.ops.object.parent_set() #makes active object parent of selected object
-    ball["coll_bitmask"] = 0
+    ball['coll_bitmask'] = 0
     ball.MARStype = "body"
-    ball["mass"] = 0
+    ball['mass'] = 0
     #adapt the child limb
-    limb = bpy.context.scene.objects[joint['node2']] #TODO: this is an elegant trick that should be used everywhere
+    limb = bpy.context.scene.objects[joint['node2']] #TODO: this is an elegant trick that should be used everywhere, maybe even bpy.data.objects[name]
     #limb.parent = ball
     limb.select = True
     bpy.context.scene.objects.active = ball
