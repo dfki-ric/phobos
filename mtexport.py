@@ -36,34 +36,24 @@ urdfFooter = indent+'</robot>\n</xml>'
 def calcPose(obj, center, objtype):
     pose = []
     if objtype == "link" or objtype == "visual" or objtype == "collision":
-        pivot = center
-        location = obj.location.copy()
-        location += obj.matrix_world.to_quaternion() * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
-
-        obj.rotation_mode = 'QUATERNION'
-        q = obj.rotation_quaternion
-
+        pivot = mtutility.calcBoundingBoxCenter(obj.bound_box)
         if obj.parent:
             parent = obj.parent
-            parentIQ = parent.matrix_world.to_quaternion().inverted()
-            pivot2 = mtutility.calcBoundingBoxCenter(parent.bound_box)
-            v = mathutils.Vector((pivot2[0], pivot2[1], pivot2[2]))
-            #v = parent.matrix_world.to_quaternion() * v
-            parentPos = parent.matrix_world * v
-            childPos = obj.matrix_world * mathutils.Vector((pivot[0], pivot[1], pivot[2]))
+            parentPos = parent.matrix_world * mtutility.calcBoundingBoxCenter(parent.bound_box)
+            childPos = obj.matrix_world * pivot
             childPos = childPos - parentPos
-            location = parentIQ * childPos
-            parentRot = parent.matrix_world.to_quaternion()
-            childRot = obj.matrix_world.to_quaternion()
-            childRot = parentRot.rotation_difference(childRot)
-            q = childRot
-        pose = list(location)
-        pose.extend(q)
+            center = parent.matrix_world.to_quaternion().inverted() * childPos
+            childRot = obj.matrix_local.to_quaternion()
+        else:
+            center = obj.location
+            childRot = obj.rotation_quaternion
+        pose = list(center)
+        pose.extend(childRot)
 #    elif objtype == "visual":
 #        pass
 #    elif objtype == "collision":
 #        pass
-    elif objtype == "joint":
+    elif objtype == "joint": #TODO: we need this for the offset information of the joint with respect to the link
         pos = mathutils.Vector((0.0, 0.0, 1.0))
         axis = obj.matrix_world.to_quaternion() * pos
         center = obj.matrix_world * mathutils.Vector((0.0, 0.0, 0.0))

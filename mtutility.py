@@ -13,6 +13,7 @@ You may use the provided install shell script.
 '''
 
 import bpy
+import mathutils
 import marstools.mtmaterials as mtmaterials
 import marstools.mtdefs as mtdefs
 
@@ -98,13 +99,8 @@ def getRoots():
 
 def calcBoundingBoxCenter(boundingbox):
     """Calculates the center of a bounding box"""
-    c = [0,0,0]
-    for v in boundingbox:
-        for i in range(3):
-            c[i] += v[i]
-    for i in range(3):
-        c[i] /= 8.
-    return c
+    c = sum((mathutils.Vector(b) for b in boundingbox), mathutils.Vector())
+    return c / 8
 
 def selectObjects(objects, clear):
     """Selects all objects provided in list, clears current selection if clear=True"""

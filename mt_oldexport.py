@@ -307,8 +307,8 @@ def writeNode(obj):
         center = parent.matrix_world.to_quaternion().inverted() * childPos
         childRot = obj.matrix_local.to_quaternion()
     else:
-        center = (0, 0, 0)
-        childRot = (1, 0, 0, 0)
+        center = obj.location
+        childRot = obj.rotation_quaternion
 
     out.write('    <node name="'+obj.name+'">\n')
     out.write('      <origname>'+obj_name+'</origname>\n')
