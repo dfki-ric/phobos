@@ -30,8 +30,8 @@ def register():
     print("Registering mtexport...")
 
 indent = '  '
-urdfHeader = '<xml version="1.0">\n'
-urdfFooter = indent+'</robot>\n</xml>'
+urdfHeader = '<?xml version="1.0"?>\n'
+urdfFooter = indent+'</robot>\n'
 
 def calcPose(obj, center, objtype):
     pose = []
@@ -229,14 +229,16 @@ def exportModelToURDF(model, filepath):
         output.append(indent*4+'</material>\n')
         output.append(indent*3+'</visual>\n')
         output.append(indent*3+'<collision>\n')
+        output.append(indent*4+'<geometry>\n')
         if link['collision']['geometry']['collisionPrimitive'] == "box":
-            output.append(xmlline(4, 'box', ['size'], l2str(link["collision"]["geometry"]["size"])))
+            output.append(xmlline(5, 'box', ['size'], l2str(link["collision"]["geometry"]["size"])))
         elif link['collision']['geometry']['collisionPrimitive'] == "cylinder":
-            output.append(xmlline(4, 'cylinder', ['radius', 'length'], [link["collision"]["geometry"]["radius"], link["collision"]["geometry"]["height"]]))
+            output.append(xmlline(5, 'cylinder', ['radius', 'length'], [link["collision"]["geometry"]["radius"], link["collision"]["geometry"]["height"]]))
         elif link['collision']['geometry']['collisionPrimitive'] == "sphere":
-            output.append(xmlline(4, 'cylinder', ['radius'], [link["collision"]["geometry"]["radius"]]))
+            output.append(xmlline(5, 'cylinder', ['radius'], [link["collision"]["geometry"]["radius"]]))
         elif link['collision']['geometry']['collisionPrimitive'] == "mesh":
-            output.append(xmlline(4, 'mesh', ['filename', 'scale'], [link["name"], '1.0']))#TODO correct this after implementing filename and scale properly
+            output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link["name"], '1.0']))#TODO correct this after implementing filename and scale properly
+        output.append(indent*4+'</geometry>\n')
         output.append(indent*3+'</collision>\n')
         output.append(indent*2+'</link>\n\n')
     #export joint information
