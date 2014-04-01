@@ -24,9 +24,10 @@ def register():
 def unregister():
     print("Unregistering mtutility...")
 
-def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation = (0, 0, 0)):
+def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation = (0, 0, 0), verbose=False):
     """Generates the primitive specified by the input parameters"""
-    print(ptype, psize)
+    if verbose:
+        print(ptype, psize)
     try:
         n_layer = int(player)
     except ValueError:
@@ -45,7 +46,12 @@ def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation
 
     obj = bpy.context.object
     obj.name = pname
-    obj.data.materials.append(bpy.data.materials[pmaterial])
+    if pmaterial != 'None':
+        if pmaterial in bpy.data.materials:
+            obj.data.materials.append(bpy.data.materials[pmaterial])
+        else:
+            pass ##HACK: rather provide a standard material
+
     return obj
 
 
