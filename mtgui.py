@@ -186,9 +186,11 @@ class MARSToolModelPanel(bpy.types.Panel):
     def draw(self, context):
         inlayout = self.layout.split()
         c1 = inlayout.column(align = True)
+        c1.operator('object.create_collision_objects', text = "Create Collision Object(s)")
         c1.operator('object.add_joints', text = "Add Joint(s)")
         c1.operator('object.define_joint_constraints_spheres', text = "Define Joint Constraints")
         c2 = inlayout.column(align = True)
+        c2.operator('object.set_collision_types', text = "Set Collision Type(s)")
         c2.operator('object.derive_joint_spheres', text = "Derive Joint Spheres")
         c2.operator('object.mt_smoothen_surface', text = "Smoothen Surface")
 
