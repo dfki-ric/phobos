@@ -85,8 +85,8 @@ def deriveDictEntry(obj):
 
     #now manage individual properties
     try:
-        if obj.MARStype == "body":
-            props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj")
+        if obj.MARStype == "link":
+            props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj") #TODO: make this non-redundant
             props["pose"] = calcPose(obj, center, "link")
             #inertial #TODO: implement inertia calculation (should be possible to get it from blender)
 
@@ -96,23 +96,23 @@ def deriveDictEntry(obj):
                 collision["bitmask"] = props["collisionBitmask"]
                 del props["collisionBitmask"]
             else:
-                collision["bitmask"] = mtdefs.type_properties["body_default"][mtdefs.type_properties["body"].index("collisionBitmask")] #TODO: this is just plain ugly
+                collision["bitmask"] = mtdefs.type_properties["link_default"][mtdefs.type_properties["link"].index("collisionBitmask")] #TODO: this is just plain ugly
             collGeom = {}
             if "collisionPrimitive" in props:
-                collGeom["collisionPrimitive"] = str(props["collisionPrimitive"])
+                collGeom["primitive"] = str(props["collisionPrimitive"])
                 del props["collisionPrimitive"] #TODO ugly
             else:
-                collGeom["collisionPrimitive"] = "box"
-            if collGeom["collisionPrimitive"] == "sphere":
+                collGeom["primitive"] = "box"
+            if collGeom["primitive"] == "sphere":
                 collGeom["radius"] = max(size)/2
-            elif collGeom["collisionPrimitive"] == "box":
+            elif collGeom["primitive"] == "box":
                 collGeom["size"] = size
-            elif collGeom["collisionPrimitive"] == "cylinder":
+            elif collGeom["primitive"] == "cylinder":
                 collGeom["radius"] = size[0]
                 collGeom["height"] = size[1]
-            elif collGeom["collisionPrimitive"] == "mesh":
+            elif collGeom["primitive"] == "mesh":
                 collGeom["size"] = size
-            elif collGeom["collisionPrimitive"] == "plane":
+            elif collGeom["primitive"] == "plane":
                 collGeom["size"] = [size[0], size[1]]
             collision["geometry"] = collGeom
             collision["pose"] = calcPose(obj, center, "collision") #TODO: technically, this creates twice the computation for naught
@@ -128,9 +128,13 @@ def deriveDictEntry(obj):
             visual["pose"] = calcPose(obj, center, "visual")
             material = {}
             material["name"] = obj.data.materials[0].name #simply grab the first material
-            material["color"] = list(obj.data.materials[0].diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
+            material["diffuseColor"] = list(obj.data.materials[0].diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
+            material["specularColor"] = list(obj.data.materials[0].specular_color)
+            material["ambientColor"] = list(obj.data.materials[0].ambient)
+            material["emissionColor"] = list(obj.data.materials[0].emission_color)
+            material["transparency"] = list(obj.data.materials[0].alpha)
             visual["material"] = material
-            visual["geometry"] = collision["geometry"]["collisionPrimitive"]
+            #visual["geometry"] = collision["geometry"]["collisionPrimitive"] #TODO: We don't need this, do we?
             props["visual"] = visual
         elif obj.MARStype == "joint":
             props["parent"] = obj.parent.name
@@ -154,7 +158,7 @@ def deriveDictEntry(obj):
 
 
 def buildRobotDictionary():
-    robot = {"body": {},
+    robot = {"link": {},
             "joint": {},
             "sensor": {},
             "motor": {},
@@ -162,15 +166,15 @@ def buildRobotDictionary():
     #save timestamped version of model
     robot["date"] = datetime.datetime.now().strftime("%Y%m%d_%H:%M")
     #now get the actual robot content
-    for obj in bpy.context.selected_objects:#bpy.data.objects:
+    for obj in bpy.context.selected_objects: #this is only selected objects since one might want to export only part of a robot (e.g. without sensors)
         robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
         #check if we need a fixed joint
-        if obj.MARStype == "body" and obj.parent and obj.parent.MARStype == "body":
+        if obj.MARStype == "link" and obj.parent and obj.parent.MARStype == "link":
             fixedjoint = {}
             fixedjoint["name"] = obj.parent.name+"_fixedto_"+obj.name
             fixedjoint["parent"] = obj.parent.name
             fixedjoint["child"] = obj.name
-            #fixedjoint["pose"] = (0,0,0,0,0,0) #calcPose(obj, 0, "body") #TODO; not sure what the difference is in this case
+            #fixedjoint["pose"] = (0,0,0,0,0,0) #calcPose(obj, 0, "link") #TODO; not sure what the difference is in this case
             fixedjoint["jointType"] = "fixed"
             robot["joint"][fixedjoint["name"]] = fixedjoint
         #check if we have a root object with a modelname
@@ -208,8 +212,8 @@ def exportModelToURDF(model, filepath):
     output.append(urdfHeader)
     output.append(indent+'<robot name="'+model["modelname"]+'">\n\n')
     #export link information
-    for l in model["body"].keys():
-        link = model["body"][l]
+    for l in model["link"].keys():
+        link = model["link"][l]
         output.append(indent*2+'<link name="'+l+'">\n')
         #output.append(xmlline(2, 'link', ['name'], [l]))
         output.append(indent*3+'<inertial>\n')
@@ -247,7 +251,7 @@ def exportModelToURDF(model, filepath):
         urdfJoints = {"hinge": "revolute", "linear": "prismatic", "continuous": "continuous", "fixed": "fixed", "planar": "planar"} #TODO: make this nicer
         jointType = urdfJoints[joint["jointType"]]
         output.append(indent*2+'<joint name="'+j+'" type="'+jointType+'">\n')#TODO: currently no floating joints are supported
-        child = model["body"][joint["child"]]
+        child = model["link"][joint["child"]]
         output.append(xmlline(3, 'origin', ['xyz', 'rpy'], [l2str(child["pose"][0:3]), l2str(child["pose"][3:])]))
         output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')
         output.append(indent*3+'<child link="'+joint["child"]+'"/>\n')
@@ -260,7 +264,7 @@ def exportModelToURDF(model, filepath):
     output.append(urdfFooter)
     with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))
-    #print(model["body"].keys())
+    #print(model["link"].keys())
     # problem of different joint transformations needed for fixed joints
     print("MARStools URDF export: Writing model data to", filepath )
 

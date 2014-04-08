@@ -14,7 +14,7 @@ You may use the provided install shell script.
 
 import bpy
 from bpy.types import Operator
-from bpy.props import EnumProperty, BoolProperty, StringProperty
+from bpy.props import EnumProperty, BoolProperty, StringProperty, IntProperty
 import marstools.mtdefs as mtdefs
 import marstools.mtsensors as mtsensors
 import marstools.mtcontrollers as mtcontrollers
@@ -37,6 +37,9 @@ def register():
     bpy.types.World.showNames = BoolProperty(name = "showNames", update=SetVisibleLayers)
     bpy.types.World.showDecorations = BoolProperty(name = "showDecorations", update=SetVisibleLayers)
     bpy.types.World.showMotorTypes = BoolProperty(name = "showMotorTypes", update=showMotorTypes)
+    bpy.types.World.manageLayers = BoolProperty(name = "manage layers", update=manageLayers)
+    bpy.types.World.useDefaultLayers = BoolProperty(name = "use default layers", update=useDefaultLayers)
+    bpy.types.World.bodyLayer = IntProperty(name = "body", update=manageLayers)
 
 def unregister():
     print("Unregistering mtgui...")
@@ -113,6 +116,14 @@ def applyWorldView():
     layers[5] = bpy.data.worlds[0].showConstraints
     layers[6] = bpy.data.worlds[0].showNames
     bpy.context.scene.layers = layers
+
+def manageLayers():
+    if bpy.data.worlds[0].manageLayers:
+        pass #TODO: not so important
+
+
+def useDefaultLayers():
+    pass #TODO: not so important
 
 def showMotorTypes(self, context):
     """Changes materials of joints to indicate different motor types."""

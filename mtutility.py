@@ -24,7 +24,7 @@ def register():
 def unregister():
     print("Unregistering mtutility...")
 
-def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation = (0, 0, 0), verbose=False):
+def createPrimitive(pname, ptype, psize, player = bpy.context.scene.active_layer, pmaterial = "None", plocation = (0, 0, 0), protation = (0, 0, 0), verbose=False):
     """Generates the primitive specified by the input parameters"""
     if verbose:
         print(ptype, psize)
@@ -32,6 +32,7 @@ def createPrimitive(pname, ptype, psize, player, pmaterial, plocation, protation
         n_layer = int(player)
     except ValueError:
         n_layer = mtdefs.layerTypes[player]
+    if bpy.data.worlds[0].
     players = defLayers([n_layer])
     if ptype == "box":
         bpy.ops.mesh.primitive_cube_add(layers = players, location = plocation, rotation = protation)
@@ -123,7 +124,7 @@ def getObjByName(name): #TODO:This routine might be totally obsolete as bpy.data
     print("MARStools: no object", name, "could be found.")
     return None
 
-def replaceNameElement():
+def replaceNameElement(prop, old, new):
     for obj in bpy.context.selected_objects:
-        if "node2" in obj and obj["node2"].find("joint_sphere_leg") > -1:
-            obj["node2"] = obj["node2"].replace("leg", "extremity")
+        if prop in obj and obj[prop].find(old) > -1:
+            obj[prop] = obj[prop].replace(old, new)

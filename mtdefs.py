@@ -19,15 +19,21 @@ in the future.
 '''
 
 marstypes = [tuple(['undefined']*3),
-             tuple(['body']*3),
+             tuple(['link']*3),
+             tuple(['visual']*3),
+             tuple(['collision']*3),
              ('joint', 'joint', 'joint'),
              ('sensor', 'sensor', 'sensor'),
              tuple(['controller']*3),
              ('motor', 'motor', 'motor')]
 
 type_properties = {
-    "body": ('name', 'collisionPrimitive', 'collisionBitmask', ),
-    "body_default": ('new_node', 'box', '65536'),
+    "link": ('name'),
+    "link_default": ('new_node'),
+    "visual": ('name', 'type'),
+    "visual_default": ('new_node', 'box'),
+    "collision": ('name', 'type', 'bitmask'),
+    "collision_default": ('new_node', 'box', '65536'),
     "joint": ('name', 'child', 'jointType'),
     "joint_default": ("new_joint", 'some_node', 'hinge'),
     "motor": ('name', 'motor_type'),
@@ -41,7 +47,7 @@ type_properties = {
     }
 
 # definition of node types
-nodeTypes = ["undefined",
+nodeTypes = ("undefined",
              "mesh",
              "box",
              "sphere",
@@ -50,18 +56,20 @@ nodeTypes = ["undefined",
              "plane",
              "terrain",
              "reference"
-            ]
+            )
 
 # definition of joint types
-jointTypes = ["undefined",
-              "hinge",
+jointTypes = ("undefined",
+              "revolute",
+              "continuous",
+              "prismatic",
               "hinge2",
               "slider",
               "ball",
               "universal",
               "fixed",
               "istruct-spine"
-             ]
+             )
 
 # definition of sensor types
 sensorTypes = ["RaySensor",

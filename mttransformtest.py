@@ -75,9 +75,10 @@ def printRotLoc(obj):
 
 def printBoundBox(obj):
     print("Bounding box for object:", obj.name)
-    for coord in obj.bound_box:
-        print(coord)
-    print("\n\n")
+    for vector in obj.bound_box:
+        for value in vector:
+            print(value, end="")
+        print()
 
 def main():
     for obj in bpy.context.selected_objects:
