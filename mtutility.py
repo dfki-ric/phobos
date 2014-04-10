@@ -80,6 +80,18 @@ def getChildren(root):
             children.append(obj)
     return children
 
+def getImmediateChildren(obj, marstype = 'None'):
+    """Finds all immediate children for a given object"""
+    children = []
+    for child in bpy.data.objects: #TODO: this is not the best list to iterate over (there might be multiple scenes)
+        if child.parent == obj:
+            if marstype is not 'None':
+                if marstype == obj.MARStype:
+                    children.append(child)
+            else:
+                children.append(child)
+    return children
+
 def getRoot(obj = None):
     """Finds the root object of a model given one of the model elements is selected or provided"""
     if obj == None:
