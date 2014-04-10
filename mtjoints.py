@@ -16,6 +16,8 @@ import bpy
 from bpy.types import Operator
 from bpy.props import FloatProperty, EnumProperty
 import math
+import mathutils
+import warnings
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
 import marstools.mtdefs as mtdefs
@@ -26,6 +28,93 @@ def register():
 
 def unregister():
     print("Unregistering mtjoints...")
+
+def deriveJointType(joint, adjust = False):
+    jtype = 'floating' # 'universal' in MARS nomenclature
+    cloc, crot = None
+    for c in joint.pose.bones[0].constraints:
+        if c.type == 'LIMIT_LOCATION':
+            cloc = [c.use_min_x, c.use_max_x,
+                    c.use_min_y, c.Use_max_y,
+                    c.use_min_z, c.Use_max_z]
+        elif c.type == 'LIMIT_ROTATION':
+            crot = [c.use_lim_x, c.use_lim_y, c.use_lim_z]
+    if crot:
+        if sum(crot) < 3: #continuous or revolute
+            if ((c.use_lim_x and (c.min_x or c.max_x))
+                or (c.use_lim_y and (c.min_y or c.max_y))
+                or (c.use_lim_z and (c.min_z or c.max_z))):
+                jtype = 'revolute'
+            else:
+                jtype = 'continuous'
+        else: # prismatic, planar or fixed
+            if sum(cloc) >= 4:
+                if sum(cloc) == 6:
+                    jtype = 'fixed'
+                else:
+                    jtype = 'prismatic'
+            else:
+                jtype = 'planar'
+    if 'jointType' in joint and joint['jointType'] != jtype:
+        warnings.warn("Type of joint "+joint.name+" does not match constraints!", Warning) #TODO: not sure if that is correct like that
+        if(adjust):
+            joint['jointType'] = jtype
+            print("Changed type to '"+jtype+"'.")
+    return jtype, crot
+
+def getJointConstraints(joint):
+    if "jointType" not in joint:
+        warnings.warn("Type of joint"+joint.name+"undefined. Trying to auto-assign joint type.")
+        jt, crot = deriveJointType(joint, adjust = True)
+    else:
+        jt = joint['jointType']
+    if jt not in ['floating', 'fixed']:
+        if jt in ['revolute', 'continuous'] and crot:
+            c = getJointConstraint(joint, 'LIMIT_ROTATION')
+            axis = mathutils.Vector([int(not i) for i in crot])
+            if crot[0]:
+                limits = (c.min_x, c.max_x)
+            elif crot[1]:
+                limits = (c.min_y, c.max_y)
+            elif crot[2]:
+                limits = (c.min_z, c.max_z)
+        else:
+            c = getJointConstraint(joint, 'LIMIT_LOCATION')
+            axis, limits = None
+            freeloc = [c.use_min_x and c.use_max_x and c.min_x == c.max_x,
+                    c.use_min_y and c.Use_max_y and c.min_x == c.max_x,
+                    c.use_min_z and c.Use_max_z and c.min_x == c.max_x]
+            if jt == 'prismatic':
+                if sum(freeloc) == 2:
+                    axis = mathutils.Vector([int(not i) for i in freeloc])
+                    if freeloc[0]:
+                        limits = (c.min_x, c.max_x)
+                    elif freeloc[1]:
+                        limits = (c.min_x, c.max_x)
+                    elif freeloc[2]:
+                        limits = (c.min_x, c.max_x)
+                else:
+                    raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
+            elif jt == 'planar':
+                if sum(freeloc) == 1:
+                    axis = mathutils.Vector([int(i) for i in freeloc])
+                    if axis[0]:
+                        limits = (c.min_y, c.max_y, c.min_z, c.max_z)
+                    elif axis[1]:
+                        limits = (c.min_x, c.max_x, c.min_z, c.max_z)
+                    elif axis[2]:
+                        limits = (c.min_x, c.max_x, c.min_y, c.max_y)
+                else:
+                    raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
+    else:
+        return None, None
+
+def getJointConstraint(joint, ctype):
+    con = None
+    for c in joint.pose.bones[0].constraints:
+        if c.type == ctype:
+            con = c
+    return con
 
 def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
     r1 = 0.075
