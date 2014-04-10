@@ -25,6 +25,7 @@ import datetime
 import yaml
 import marstools.mtdefs as mtdefs
 import marstools.mtutility as mtutility
+import marstools.mtjoints as mtjoints
 
 def register():
     print("Registering mtexport...")
@@ -79,15 +80,22 @@ def deriveLink(obj, props):
     props = initObjectProperties(obj)
     props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj") #TODO: this is only valid if this function is only called upon export
     props["pose"] = calcPose(obj, "link")
+    return props
 
 def deriveJoint(obj):
     props = initObjectProperties(obj)
-    props["parent"] = obj.parent.name
-    props["child"] = props["node2"]
-    if "lowerConstraint" not in props and props["jointType"] == 'hinge':
-        props['jointType'] = 'continuous'
-    del props["node2"]
-    props["pose"] = calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+    props['parent'] = obj.parent.name
+    props['child'] = mtutility.getImmediateChildren(obj, 'link')[0].name #list contains only 1 element
+    props['type'] = mtjoints.deriveJointType(obj)
+    axis, limit = mtjoints.getJointConstraints(obj)
+    props['axis'] = obj.rotation_quaternion * axis #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+    props['limit'] = limit
+    #TODO:
+    # - calibration
+    # - dynamics
+    # - mimic
+    # - safety_controller
+    return props, obj.parent.name
 
 def deriveVisual(obj):
     props = initObjectProperties(obj)
@@ -98,6 +106,7 @@ def deriveVisual(obj):
     material["color"] = list(obj.data.materials[0].diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
     visual["material"] = material
     visual["geometry"] = collision["geometry"]["collisionPrimitive"]
+    return props, obj.parent.name
 
 def deriveCollision(obj):
     props = initObjectProperties(obj)
@@ -132,6 +141,7 @@ def deriveCollision(obj):
     else:
         collision["max_contacts"] = -1
     props["collision"] = collision
+    return props, obj.parent.name
 
 def deriveSensor(obj):
     props = initObjectProperties(obj)
@@ -196,12 +206,16 @@ def buildRobotDictionary():
     # now parse the scene
     # first digest all the links and joints
     for obj in bpy.context.selected_objects:
-        if obj.MARStype == 'link' or obj.MARStype == 'joint':
+        if obj.MARStype == 'link':
             robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
+    for obj in bpy.context.selected_objects:
+         if obj.MARStype == 'joint':
+             parent, props = deriveDictEntry(obj)
     # second complete link information by parsing visuals and collision objects
     for obj in bpy.context.selected_objects:
             if obj.MARStype == 'visual' or obj.MARStype == 'collision':
-                robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
+                parent, props = deriveDictEntry(obj)
+                robot['link'][parent] = props
     # finally parse sensors and controllers - doing this last enabled fail-checking as all links are known
     for obj in bpy.context.selected_objects:
         if obj.MARStype == 'sensor' or obj.MARStype == 'controller':
