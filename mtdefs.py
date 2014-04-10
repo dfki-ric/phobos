@@ -20,30 +20,33 @@ in the future.
 
 marstypes = [tuple(['undefined']*3),
              tuple(['link']*3),
+             tuple(['inertial']*3),
              tuple(['visual']*3),
              tuple(['collision']*3),
-             ('joint', 'joint', 'joint'),
-             ('sensor', 'sensor', 'sensor'),
+             tuple(['joint']*3),
+             tuple(['sensor']*3),
              tuple(['controller']*3),
-             ('motor', 'motor', 'motor')]
+             tuple(['motor']*3)]
 
 type_properties = {
+    "undefined": (),
+    "undefined_default": (),
     "link": ('name'),
     "link_default": ('new_node'),
-    "visual": ('name', 'type'),
+    "inertial": ('name'),
+    "inertial_default": ('new_node'),
+    "visual": ('name', 'visualType'),
     "visual_default": ('new_node', 'box'),
-    "collision": ('name', 'type', 'bitmask'),
+    "collision": ('name', 'collisionType', 'bitmask'),
     "collision_default": ('new_node', 'box', '65536'),
     "joint": ('name', 'child', 'jointType'),
     "joint_default": ("new_joint", 'some_node', 'hinge'),
-    "motor": ('name', 'motor_type'),
-    "motor_default": ("new_motor", "1"),
     "sensor": ('name', 'sensorType'),
     "sensor_default": ("new_sensor", "RaySensor"),
     "controller": ('name',),
-    "controller_default": ("controller",),
-    "undefined": (),
-    "undefined_default": ()
+    "controller_default": ("controller"),
+    "motor": ('name', 'motorType'),
+    "motor_default": ("new_motor", "1")
     }
 
 # definition of node types
