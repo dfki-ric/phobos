@@ -23,6 +23,7 @@ import mathutils
 import os
 import datetime
 import yaml
+import warnings
 import marstools.mtdefs as mtdefs
 import marstools.mtutility as mtutility
 import marstools.mtjoints as mtjoints
@@ -80,10 +81,16 @@ def deriveLink(obj, props):
     props = initObjectProperties(obj)
     props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj") #TODO: this is only valid if this function is only called upon export
     props["pose"] = calcPose(obj, "link")
+    props["collision"] = {}
+    props["visual"] = {}
+    props["inertial"] = {}
+    del props["mass"]
+    del props["inertia"]
     return props
 
 def deriveJoint(obj):
     props = initObjectProperties(obj)
+    #motorprops = {key:props[key] for key in [key if props[key].find('motor/') else None for key in props]}
     props['parent'] = obj.parent.name
     props['child'] = mtutility.getImmediateChildren(obj, 'link')[0].name #list contains only 1 element
     props['type'] = mtjoints.deriveJointType(obj)
@@ -95,57 +102,55 @@ def deriveJoint(obj):
     # - dynamics
     # - mimic
     # - safety_controller
-    return props, obj.parent.name
+    return props#, motorprops
+
+def deriveMotor(obj):
+    props = initObjectProperties(obj)
+    return props, obj.parent
+
+def deriveGeometry(obj):
+    if 'geometryType' in obj:
+        geometry = {'type': obj['geometryType']}
+        gt = obj['geometryType']
+        if gt == 'box':
+            geometry['size'] = obj.dimensions
+        elif gt == 'cylinder':
+            geometry["radius"] = obj.dimensions[0]
+            geometry["height"] = obj.dimensions[1]
+        elif gt == 'sphere':
+            geometry['radius'] = obj.dimensions[0]
+        elif gt == 'mesh':
+            geometry['size'] = obj.dimensions #TODO: this has to be converted to scale when URDF is exported
+        return geometry
+    else:
+        warnings.warn("No geometryType found for object "+obj.name+".")
+        return None
+
+def deriveInertial(obj):
+    props = initObjectProperties(obj)
+    props['inertia'] = props['inertia'].split()
+    return props, obj.parent
 
 def deriveVisual(obj):
     props = initObjectProperties(obj)
     visual = {}
-    visual["pose"] = calcPose(obj, center, "visual")
+    visual["pose"] = calcPose(obj, "visual")
     material = {}
     material["name"] = obj.data.materials[0].name #simply grab the first material
-    material["color"] = list(obj.data.materials[0].diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
+    material["diffuseColor"] = list(obj.data.materials[0].diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
     visual["material"] = material
-    visual["geometry"] = collision["geometry"]["collisionPrimitive"]
-    return props, obj.parent.name
+    visual["geometry"] = deriveGeometry(obj)
+    return props, obj.parent
 
 def deriveCollision(obj):
     props = initObjectProperties(obj)
     collision = {}
-    if "collisionBitmask" in props:
-        collision["bitmask"] = props["collisionBitmask"]
-        del props["collisionBitmask"]
-    else:
-        collision["bitmask"] = mtdefs.type_properties["body_default"][mtdefs.type_properties["body"].index("collisionBitmask")] #TODO: this is just plain ugly
-    collGeom = {}
-    if "collisionPrimitive" in props:
-        collGeom["collisionPrimitive"] = str(props["collisionPrimitive"])
-        del props["collisionPrimitive"] #TODO ugly
-    else:
-        collGeom["collisionPrimitive"] = "box"
-    if collGeom["collisionPrimitive"] == "sphere":
-        collGeom["radius"] = max(size)/2
-    elif collGeom["collisionPrimitive"] == "box":
-        collGeom["size"] = size
-    elif collGeom["collisionPrimitive"] == "cylinder":
-        collGeom["radius"] = size[0]
-        collGeom["height"] = size[1]
-    elif collGeom["collisionPrimitive"] == "mesh":
-        collGeom["size"] = size
-    elif collGeom["collisionPrimitive"] == "plane":
-        collGeom["size"] = [size[0], size[1]]
-    collision["geometry"] = collGeom
-    collision["pose"] = calcPose(obj, center, "collision") #TODO: technically, this creates twice the computation for naught
-    if "maxContacts" in props:
-        collision["max_contacts"] = str(obj["maxContacts"])
-        del props["maxContacts"] #TODO ugly
-    else:
-        collision["max_contacts"] = -1
-    props["collision"] = collision
-    return props, obj.parent.name
+    collision["geometry"] = deriveGeometry(obj)
+    collision["pose"] = calcPose(obj, "collision") #TODO: technically, this creates twice the computation for naught
+    return props, obj.parent
 
 def deriveSensor(obj):
     props = initObjectProperties(obj)
-
     return props
 
 def deriveController(obj):
@@ -170,29 +175,38 @@ def cleanObjectProperties(props):
 def deriveDictEntry(obj):
     #first get all custom properties (enables use of custom-defined properties and saves some manual parsing)
     print("MARStools: Deriving dictionary entry for", obj.name)
+    props, parent = None
     try:
         if obj.MARStype == 'link':
             props = deriveLink(obj)
         elif obj.MARStype == 'joint':
             props = deriveJoint(obj)
+        elif obj.MARStype == 'inertial':
+            props, parent = deriveInertial(obj)
         elif obj.MARStype == 'visual':
-            props = deriveVisual(obj)
+            props, parent = deriveVisual(obj)
         elif obj.MARStype == 'collision':
-            props = deriveCollision(obj)
+            props, parent = deriveCollision(obj)
         elif obj.MARStype == 'sensor':
             props = deriveSensor(obj)
+        elif obj.MARStype == 'motor':
+            props, parent = deriveMotor(obj)
         elif obj.MARStype == 'controller':
             props = deriveController(obj)
     except KeyError:
         print('MARStools: A KeyError occurred, likely because there is missing information in the model:\n    ', sys.exc_info()[0])
-    return cleanObjectProperties(props)
+    return cleanObjectProperties(props), parent
+
+def deriveGroupEntry(group):
+    return [obj.name for obj in group.objects]
 
 def buildRobotDictionary():
     robot = {"link": {},
             "joint": {},
             "sensor": {},
             "motor": {},
-            "controller": {}}
+            "controller": {},
+            "group": {}}
     #save timestamped version of model
     robot["date"] = datetime.datetime.now().strftime("%Y%m%d_%H:%M")
     root = mtutility.getRoot(bpy.context.selected_objects[0])
@@ -204,22 +218,18 @@ def buildRobotDictionary():
     else:
         print("ERROR: Found no 'link' object as root of the robot model.")
     # now parse the scene
-    # first digest all the links and joints
+    # first digest all the links and joints as well as sensors, motors and controllers
     for obj in bpy.context.selected_objects:
-        if obj.MARStype == 'link':
+        if obj.MARStype in ['link', 'joint', 'sensor', 'motor', 'controller']:
             robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
-    for obj in bpy.context.selected_objects:
-         if obj.MARStype == 'joint':
-             parent, props = deriveDictEntry(obj)
+            obj.select = False
     # second complete link information by parsing visuals and collision objects
     for obj in bpy.context.selected_objects:
-            if obj.MARStype == 'visual' or obj.MARStype == 'collision':
+            if obj.MARStype in ['inertial', 'visual', 'collision', 'motor']:
                 parent, props = deriveDictEntry(obj)
-                robot['link'][parent] = props
-    # finally parse sensors and controllers - doing this last enabled fail-checking as all links are known
-    for obj in bpy.context.selected_objects:
-        if obj.MARStype == 'sensor' or obj.MARStype == 'controller':
-            robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
+                robot[parent.MARStype][parent.name][obj.MARStype] = props
+    for group in bpy.data.groups: #TODO: get rid of the "data" part
+        robot["group"] = deriveGroupEntry(group)
     return robot
 
 def exportModelToYAML(model, filepath):
@@ -267,7 +277,7 @@ def exportModelToURDF(model, filepath):
         output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link["filename"], '1.0']))
         output.append(indent*4+'</geometry>\n')
         output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
-        output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["color"]) + '1.0"/>\n')
+        output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["diffuseColor"]) + '1.0"/>\n')
         output.append(indent*4+'</material>\n')
         output.append(indent*3+'</visual>\n')
         output.append(indent*3+'<collision>\n')
