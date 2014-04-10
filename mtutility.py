@@ -32,7 +32,8 @@ def createPrimitive(pname, ptype, psize, player = bpy.context.scene.active_layer
         n_layer = int(player)
     except ValueError:
         n_layer = mtdefs.layerTypes[player]
-    if bpy.data.worlds[0].
+    if bpy.data.worlds[0]: #TODO: complete this
+        pass
     players = defLayers([n_layer])
     if ptype == "box":
         bpy.ops.mesh.primitive_cube_add(layers = players, location = plocation, rotation = protation)
@@ -75,7 +76,7 @@ def returnObjectList(marstype):
 def getChildren(root):
     """Finds all children for a given root"""
     children = []
-    for obj in bpy.data.objects:
+    for obj in bpy.data.objects: #TODO: this is not the best list to iterate over (there might be multiple scenes)
         if getRoot(obj) == root:
             children.append(obj)
     return children
@@ -95,7 +96,7 @@ def getImmediateChildren(obj, marstype = 'None'):
 def getRoot(obj = None):
     """Finds the root object of a model given one of the model elements is selected or provided"""
     if obj == None:
-        for anobj in bpy.data.objects:
+        for anobj in bpy.data.objects: #TODO: this is not the best list to iterate over (there might be multiple scenes)
             if (anobj.select):
                 obj = anobj
     child = obj
@@ -106,7 +107,7 @@ def getRoot(obj = None):
 def getRoots():
     """Returns a list of all roots (=objects without parent) present in the scene"""
     roots = []
-    for obj in bpy.data.objects:
+    for obj in bpy.data.objects: #TODO: this is not the best list to iterate over (there might be multiple scenes)
         if not obj.parent and obj.MARStype == "body":
             roots.append(obj)
 
@@ -129,14 +130,8 @@ def selectObjects(objects, clear):
     for obj in objects:
         obj.select = True
 
-def getObjByName(name): #TODO:This routine might be totally obsolete as bpy.data.objects[name] should work as well
-    for obj in bpy.data.objects:
-        if obj.name == name:
-            return obj
-    print("MARStools: no object", name, "could be found.")
-    return None
-
 def replaceNameElement(prop, old, new):
     for obj in bpy.context.selected_objects:
         if prop in obj and obj[prop].find(old) > -1:
             obj[prop] = obj[prop].replace(old, new)
+
