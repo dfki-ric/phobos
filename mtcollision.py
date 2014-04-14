@@ -31,7 +31,7 @@ def unregister():
 class CreateCollisionObjects(Operator):
     """Select n bodies to create collision objects for."""
     bl_idname = "object.create_collision_objects"
-    bl_label = "Create collition objects for all selected Nodes"
+    bl_label = "Create collision objects for all selected Links"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -45,7 +45,6 @@ class CreateCollisionObjects(Operator):
         if nodes == []:
             bpy.ops.error.message('INVOKE_DEFAULT', type="CreateCollisions Error", message="Not enough bodies selected.")
             return{'CANCELLED'}
-        parent = False
         for node in nodes:
             bBox = node.bound_box
             center = mtutility.calcBoundingBoxCenter(bBox)
@@ -60,7 +59,7 @@ class CreateCollisionObjects(Operator):
                                            mtdefs.layerTypes["collision"], 'joint', center,
                                            node.matrix_world.to_euler())
             ob.MARStype = "collision"
-            ob["type"] = "box"
+            ob["collisionType"] = "box"
             if node.parent:
                 ob.select = True
                 bpy.ops.object.transform_apply(scale=True)
