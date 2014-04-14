@@ -238,9 +238,9 @@ class RobotModelParser():
     def createRecursiveBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model."""
         print("\n\nCreating Blender model...")
-        for l in self.robot['body']:
+        for l in self.robot['link']:
             print(l + ', ', end='')
-            link = self.robot['body'][l]
+            link = self.robot['link'][l]
 
             #determine which visual representation to use
             geomtype = 'None'
@@ -303,9 +303,9 @@ class RobotModelParser():
         def place_children_of(parent):
             print(parent['name']+ ', ', end='')
             children = []
-            for l in self.robot['body']:
-                if 'parent' in self.robot['body'][l] and self.robot['body'][l]['parent'] == parent['name']:
-                    children.append(self.robot['body'][l])
+            for l in self.robot['link']:
+                if 'parent' in self.robot['link'][l] and self.robot['link'][l]['parent'] == parent['name']:
+                    children.append(self.robot['link'][l])
             for child in children:
                 # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
                 parentLink = bpy.data.objects[parent['name']]
@@ -337,9 +337,9 @@ class RobotModelParser():
                 place_children_of(child)
 
         #build tree recursively and correct translation & rotation on the fly
-        for l in self.robot['body']:
-            if not 'parent' in self.robot['body'][l]:
-                root = self.robot['body'][l]
+        for l in self.robot['link']:
+            if not 'parent' in self.robot['link'][l]:
+                root = self.robot['link'][l]
         print("\n\nPlacing links...")
         place_children_of(root)
 
@@ -454,7 +454,7 @@ class URDFModelParser(RobotModelParser):
             #write link to list
             links[newlink['name']] = newlink
             #print(newlink)
-        self.robot["body"] = links
+        self.robot["link"] = links
 
         #write joints to dictionary
         joints = {}
@@ -465,7 +465,7 @@ class URDFModelParser(RobotModelParser):
             origin = joint.find('origin')
             newjoint['parent'] = joint.find('parent').attrib['link']
             newjoint['child'] = joint.find('child').attrib['link']
-            self.robot['body'][newjoint['child']]['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
+            self.robot['link'][newjoint['child']]['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
             #axis
             #calibration
             #dynamics
@@ -486,7 +486,7 @@ class URDFModelParser(RobotModelParser):
         print("\n\nWriting parent-child information to nodes..")
         for j in self.robot['joint']:
             joint = self.robot['joint'][j]
-            self.robot['body'][joint['child']]['parent'] = joint['parent']
+            self.robot['link'][joint['child']]['parent'] = joint['parent']
             print(joint['parent'] + ', ', end='')
 
         materials = []

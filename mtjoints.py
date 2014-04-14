@@ -206,7 +206,7 @@ class AddJointsOperator(Operator):
         bpy.data.worlds[0].showJoints = True
         nodes = []
         for obj in bpy.context.selected_objects:
-            if obj.MARStype == "body":
+            if obj.MARStype == "link":
                 nodes.append(obj)
                 obj.select = False
 

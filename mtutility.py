@@ -108,7 +108,7 @@ def getRoots():
     """Returns a list of all roots (=objects without parent) present in the scene"""
     roots = []
     for obj in bpy.data.objects: #TODO: this is not the best list to iterate over (there might be multiple scenes)
-        if not obj.parent and obj.MARStype == "body":
+        if not obj.parent and obj.MARStype == "link":
             roots.append(obj)
 
     if roots == []:

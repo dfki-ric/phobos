@@ -64,14 +64,14 @@ def updateType(obj):
 class MARSPropsGenerator():
 
     def __init__(self):
-        self.getNextBodyID = IDGenerator(1)
+        self.getNextLinkID = IDGenerator(1)
         self.getNextJointID = IDGenerator(1)
         self.getNextGroupID = IDGenerator(1)
         self.createWorldProperties()
 
 #TODO: deprecated, get rid of this
     def reset(self):
-        self.getNextBodyID.reset()
+        self.getNextLinkID.reset()
         self.getNextJointID.reset()
         self.getNextGroupID.reset()
 
@@ -86,9 +86,9 @@ class MARSPropsGenerator():
         if not hasattr(world, "exportMesh"):
             world.exportMesh = True
 
-    def createBodyProperties(self, obj):
-        obj.MARStype = "body"
-        obj["id"] = self.getNextBodyID()
+    def createLinkProperties(self, obj):
+        obj.MARStype = "link"
+        obj["id"] = self.getNextLinkID()
         if obj.parent:
             children = getChildren(obj.parent)
             setGroup = False
@@ -128,12 +128,12 @@ class MARSPropsGenerator():
     #    obj.select = False
         obj.data.name = obj.name
         updateType(obj)
-        defaultType = "body"
+        defaultType = "link"
         if obj.name.find("joint") > -1:
             defaultType = "joint"
         objType = setDefaultType(obj, defaultType)
-        if objType == "body":
-            self.createBodyProperties(obj)
+        if objType == "link":
+            self.createLinkProperties(obj)
         elif objType == "joint":
             self.createJointProperties(obj)
         else:

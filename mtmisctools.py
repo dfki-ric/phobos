@@ -79,7 +79,7 @@ class CalculateMassOperator(Operator):
         mass = 0
         names = ""
         for obj in bpy.context.selected_objects:
-            if obj.MARStype == "body":
+            if obj.MARStype == "link":
                 mass += obj["mass"]
                 names += obj.name + " "
         bpy.ops.error.message('INVOKE_DEFAULT', type="mass of "+names, message=str(mass))
@@ -161,7 +161,7 @@ class CheckModelOperator(Operator):
         notifications = ""
         faulty_objects = []
         for obj in bpy.context.selected_objects:
-            if obj.MARStype == "body":
+            if obj.MARStype == "link":
                 if not ("mass" in obj):
                     print('CheckModel: Error, object "' + obj.name + '" has no attribute "mass".')
                     notifications += 'CheckModel: Error, object "' + obj.name + '" has no attribute "mass".'

@@ -233,7 +233,7 @@ def getChildren(parent):
 
 def fillList(obj):
     if "MARStype" in obj:
-        if obj.MARStype == "body":
+        if obj.MARStype == "link":
             objList.append(obj)
         elif obj.MARStype == "joint":
             jointList.append(obj)
