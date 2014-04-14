@@ -39,7 +39,7 @@ def register():
     bpy.types.World.showMotorTypes = BoolProperty(name = "showMotorTypes", update=showMotorTypes)
     bpy.types.World.manageLayers = BoolProperty(name = "manage layers", update=manageLayers)
     bpy.types.World.useDefaultLayers = BoolProperty(name = "use default layers", update=useDefaultLayers)
-    bpy.types.World.bodyLayer = IntProperty(name = "body", update=manageLayers)
+    bpy.types.World.linkLayer = IntProperty(name = "link", update=manageLayers)
 
 def unregister():
     print("Unregistering mtgui...")
@@ -117,12 +117,12 @@ def applyWorldView():
     layers[6] = bpy.data.worlds[0].showNames
     bpy.context.scene.layers = layers
 
-def manageLayers():
+def manageLayers(self, context):
     if bpy.data.worlds[0].manageLayers:
         pass #TODO: not so important
 
 
-def useDefaultLayers():
+def useDefaultLayers(self, context):
     pass #TODO: not so important
 
 def showMotorTypes(self, context):
