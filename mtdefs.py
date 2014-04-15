@@ -18,15 +18,15 @@ This module may well be imported and used outside of the MARS Blender Tools
 in the future.
 '''
 
-marstypes = [tuple(['undefined']*3),
-             tuple(['link']*3),
-             tuple(['inertial']*3),
-             tuple(['visual']*3),
-             tuple(['collision']*3),
-             tuple(['joint']*3),
-             tuple(['sensor']*3),
-             tuple(['controller']*3),
-             tuple(['motor']*3)]
+marstypes = (('undefined',)*3,
+             ('link',)*3,
+             ('inertial',)*3,
+             ('visual',)*3,
+             ('collision',)*3,
+             ('joint',)*3,
+             ('sensor',)*3,
+             ('controller',)*3,
+             ('motor',)*3)
 
 type_properties = {
     "undefined": (),
@@ -75,7 +75,7 @@ jointTypes = ("undefined",
              )
 
 # definition of sensor types
-sensorTypes = ["RaySensor",
+sensorTypes = ("RaySensor",
                "CameraSensor",
                "ScanningSonar",
                "JointPosition",
@@ -92,7 +92,7 @@ sensorTypes = ["RaySensor",
                "NodeVelocity",
                "NodeAngularVelocity",
                "MotorCurrent"
-              ]
+              )
 
 sensorProperties = {"RaySensor": {"width": 144},
                "CameraSensor": {"width": 640, "height": 480},
@@ -113,12 +113,14 @@ sensorProperties = {"RaySensor": {"width": 144},
                "MotorCurrent": {}
               }
 
-#definitions of which elements live on which layers
+#definitions of which elements live on which layers by default
 layerTypes = {
-              "nodes": 0,
-              "joints": 1,
-              "jointSpheres": 2,
-              "sensors": 3,
-              "decorations": 4,
-              "constraints": 5
+              "link": 0,
+              'inertial': 1,
+              "visual": 2,
+              "collision": 3,
+              "joint": 4,
+              "sensor": 5,
+              "motor": 10,
+              "decoration": 6
               }
