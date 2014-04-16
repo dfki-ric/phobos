@@ -25,25 +25,25 @@ import marstools.mtdefs as mtdefs
 def register():
     print("Registering mtjoints...")
 
-
 def unregister():
     print("Unregistering mtjoints...")
 
 def deriveJointType(joint, adjust = False):
     jtype = 'floating' # 'universal' in MARS nomenclature
-    cloc, crot = None
+    cloc = None
+    crot = None
     for c in joint.pose.bones[0].constraints:
         if c.type == 'LIMIT_LOCATION':
             cloc = [c.use_min_x, c.use_max_x,
                     c.use_min_y, c.Use_max_y,
                     c.use_min_z, c.Use_max_z]
         elif c.type == 'LIMIT_ROTATION':
-            crot = [c.use_lim_x, c.use_lim_y, c.use_lim_z]
+            crot = [c.use_limit_x, c.use_limit_y, c.use_limit_z]
     if crot:
         if sum(crot) < 3: #continuous or revolute
-            if ((c.use_lim_x and (c.min_x or c.max_x))
-                or (c.use_lim_y and (c.min_y or c.max_y))
-                or (c.use_lim_z and (c.min_z or c.max_z))):
+            if ((c.use_limit_x and (c.min_x or c.max_x))
+                or (c.use_limit_y and (c.min_y or c.max_y))
+                or (c.use_limit_z and (c.min_z or c.max_z))):
                 jtype = 'revolute'
             else:
                 jtype = 'continuous'
@@ -80,7 +80,8 @@ def getJointConstraints(joint):
                 limits = (c.min_z, c.max_z)
         else:
             c = getJointConstraint(joint, 'LIMIT_LOCATION')
-            axis, limits = None
+            axis = None
+            limits = None
             freeloc = [c.use_min_x and c.use_max_x and c.min_x == c.max_x,
                     c.use_min_y and c.Use_max_y and c.min_x == c.max_x,
                     c.use_min_z and c.Use_max_z and c.min_x == c.max_x]
@@ -124,22 +125,23 @@ def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
     d2 = 0.05
 
     if jtype == 'hinge':
-        j1 = mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-        j2 = mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j1 = mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
+        j2 = mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
         #arrows.select = True
         j1.select = True
         j2.select = True
         bpy.context.scene.objects.active = j1
         bpy.ops.object.join()
     elif jtype == 'linear':
-        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
     elif jtype == 'planar':
-        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
     j1['jointType'] = jtype
     j1.MARStype = 'joint'
     j1['anchor'] = 'node2'
     j1['node2'] = ''
     #now add joint orientation
+    joint = bpy.ops.object.armature_add(location = bpy.context.scene.cursor_location)
     bpy.ops.object.empty_add(type='ARROWS', location = j1.location, rotation = j1.rotation_euler)
     arrows = bpy.context.object
     dx = d1*0.7
