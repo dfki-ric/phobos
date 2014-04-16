@@ -68,30 +68,32 @@ class CreateCollisionObjects(Operator):
                 bpy.ops.object.parent_set()
         return{'FINISHED'}
 
-class SetCollisionTypes(Operator):
-    """Select n bodies to set collision type."""
-    bl_idname = "object.set_collision_types"
-    bl_label = "Set collition types for all selected Nodes"
-    bl_options = {'REGISTER', 'UNDO'}
 
-    collision_type = EnumProperty(
-        name = "collision_type",
-        default = "box",
-        description = "type of the collision geometry",
-        items = [tuple(['box']*3),
-                 tuple(['sphere']*3),
-                 tuple(['cylinder']*3),
-                 tuple(['capsule']*3),
-                 tuple(['mesh']*3)] #TODO: move this to mtdefs?
-    )
+# class SetCollisionTypes(Operator):
+#     """Select n bodies to set collision type."""
+#     bl_idname = "object.set_collision_types"
+#     bl_label = "Set collition types for all selected Nodes"
+#     bl_options = {'REGISTER', 'UNDO'}
+#
+#     collision_type = EnumProperty(
+#         name = "collision_type",
+#         default = "box",
+#         description = "type of the collision geometry",
+#         items = [tuple(['box']*3),
+#                  tuple(['sphere']*3),
+#                  tuple(['cylinder']*3),
+#                  tuple(['capsule']*3),
+#                  tuple(['mesh']*3)] #TODO: move this to mtdefs?
+#     )
+#
+#     def execute(self, context):
+#         nodes = []
+#         for obj in bpy.context.selected_objects:
+#             if obj.MARStype == "collision":
+#                 nodes.append(obj)
+#
+#         for node in nodes:
+#             node["type"] = self.collision_type
+#
+#         return{'FINISHED'}
 
-    def execute(self, context):
-        nodes = []
-        for obj in bpy.context.selected_objects:
-            if obj.MARStype == "collision":
-                nodes.append(obj)
-
-        for node in nodes:
-            node["type"] = self.collision_type
-
-        return{'FINISHED'}
