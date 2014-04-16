@@ -24,9 +24,11 @@ import os
 import datetime
 import yaml
 import warnings
+from bpy.types import Operator
 import marstools.mtdefs as mtdefs
-import marstools.mtutility as mtutility
+from marstools.mtutility import *
 import marstools.mtjoints as mtjoints
+import marstools.mtmisctools as mtmisctools
 
 def register():
     print("Registering mtexport...")
@@ -35,10 +37,13 @@ indent = '  '
 urdfHeader = '<?xml version="1.0"?>\n'
 urdfFooter = indent+'</robot>\n'
 
+#bpy.data.armatures["Armature.001"].bones["Bone"].x_axis
+#bpy.data.objects["Armature.001"].pose.bones["Bone"].x_axis
+
 def calcPose(obj, objtype):
     #pre-calculations
     bBox = obj.bound_box
-    center = mtutility.calcBoundingBoxCenter(bBox)
+    center = calcBoundingBoxCenter(bBox)
     size = [0.0]*3
     size[0] = abs(2.0*(bBox[0][0] - center[0]))
     size[1] = abs(2.0*(bBox[0][1] - center[1]))
@@ -46,10 +51,10 @@ def calcPose(obj, objtype):
 
     pose = []
     if objtype == "link" or objtype == "visual" or objtype == "collision":
-        pivot = mtutility.calcBoundingBoxCenter(obj.bound_box)
+        pivot = calcBoundingBoxCenter(obj.bound_box)
         if obj.parent:
             parent = obj.parent
-            parentPos = parent.matrix_world * mtutility.calcBoundingBoxCenter(parent.bound_box)
+            parentPos = parent.matrix_world * calcBoundingBoxCenter(parent.bound_box)
             childPos = obj.matrix_world * pivot
             childPos = childPos - parentPos
             center = parent.matrix_world.to_quaternion().inverted() * childPos
@@ -70,33 +75,39 @@ def calcPose(obj, objtype):
         obj.rotation_mode = 'QUATERNION'
         v1 = obj.rotation_quaternion * mathutils.Vector((1.0, 0.0, 0.0))
         if obj["node2"] != "world":
-            node2 = mtutility.getObjByName(obj["node2"])
+            node2 = getObjByName(obj["node2"])
             v2 = node2.rotation_quaternion * mathutils.Vector((1.0, 0.0, 0.0)) #TODO: link to other node in node2
         q = obj.rotation_quaternion.copy().inverted()
         pose = list(center)
         pose.extend(q)
     return pose
 
-def deriveLink(obj, props):
+def deriveLink(obj):
     props = initObjectProperties(obj)
     props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj") #TODO: this is only valid if this function is only called upon export
     props["pose"] = calcPose(obj, "link")
     props["collision"] = {}
     props["visual"] = {}
     props["inertial"] = {}
-    del props["mass"]
-    del props["inertia"]
+    if "mass" in props:
+        props["inertial"]["mass"] = props["mass"]
+        del props["mass"]
+    if "inertia" in props:
+        props["inertial"]["inertia"] = props["inertia"]
+        del props["inertia"]
     return props
 
 def deriveJoint(obj):
     props = initObjectProperties(obj)
     #motorprops = {key:props[key] for key in [key if props[key].find('motor/') else None for key in props]}
     props['parent'] = obj.parent.name
-    props['child'] = mtutility.getImmediateChildren(obj, 'link')[0].name #list contains only 1 element
-    props['type'] = mtjoints.deriveJointType(obj)
+    children = getImmediateChildren(obj, 'link')
+    props['child'] = children[0].name if children else '' #list contains only 1 element
+    props['jointType'], crot = mtjoints.deriveJointType(obj)
     axis, limit = mtjoints.getJointConstraints(obj)
-    props['axis'] = obj.rotation_quaternion * axis #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
-    props['limit'] = limit
+    props['axis'] = obj.rotation_quaternion * axis if axis else '' #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+    props['limit'] = limit if limit else ''
+    props['state'] = obj.pose.bones[0].rotation_euler[0:3] #TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
     #TODO:
     # - calibration
     # - dynamics
@@ -110,7 +121,7 @@ def deriveMotor(obj):
 
 def deriveGeometry(obj):
     if 'geometryType' in obj:
-        geometry = {'type': obj['geometryType']}
+        geometry = {'geometryType': obj['geometryType']}
         gt = obj['geometryType']
         if gt == 'box':
             geometry['size'] = obj.dimensions
@@ -132,22 +143,21 @@ def deriveInertial(obj):
     return props, obj.parent
 
 def deriveVisual(obj):
-    props = initObjectProperties(obj)
-    visual = {}
+    visual = initObjectProperties(obj)
     visual["pose"] = calcPose(obj, "visual")
-    material = {}
-    material["name"] = obj.data.materials[0].name #simply grab the first material
-    material["diffuseColor"] = list(obj.data.materials[0].diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
-    visual["material"] = material
+    if obj.data.materials:
+        material = {}
+        material["name"] = obj.data.materials[0].name #simply grab the first material
+        material["diffuseColor"] = list(obj.data.materials[0].diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
+        visual["material"] = material
     visual["geometry"] = deriveGeometry(obj)
-    return props, obj.parent
+    return visual, obj.parent
 
 def deriveCollision(obj):
-    props = initObjectProperties(obj)
-    collision = {}
+    collision = initObjectProperties(obj)
     collision["geometry"] = deriveGeometry(obj)
     collision["pose"] = calcPose(obj, "collision") #TODO: technically, this creates twice the computation for naught
-    return props, obj.parent
+    return collision, obj.parent
 
 def deriveSensor(obj):
     props = initObjectProperties(obj)
@@ -162,20 +172,22 @@ def initObjectProperties(obj):
     props = {}
     for key in obj.keys():
         props[key] = obj[key]
+    props['name'] = obj.name
     return props
 
 def cleanObjectProperties(props):
     #clean dictionary entries
-    getridof = ["MARStype", "_RNA_UI"]
-    for key in getridof:
-        if key in props:
-            del props[key]
+    getridof = ['MARStype', '_RNA_UI', 'cycles_visibility']
+    if props:
+        for key in getridof:
+            if key in props:
+                del props[key]
     return props
 
 def deriveDictEntry(obj):
-    #first get all custom properties (enables use of custom-defined properties and saves some manual parsing)
     print("MARStools: Deriving dictionary entry for", obj.name)
-    props, parent = None
+    props = None
+    parent = None
     try:
         if obj.MARStype == 'link':
             props = deriveLink(obj)
@@ -195,12 +207,17 @@ def deriveDictEntry(obj):
             props = deriveController(obj)
     except KeyError:
         print('MARStools: A KeyError occurred, likely because there is missing information in the model:\n    ', sys.exc_info()[0])
-    return cleanObjectProperties(props), parent
+    if obj.MARStype in ['link', 'joint', 'sensor', 'motor' 'controller']:
+        return cleanObjectProperties(props)
+    else:
+        return cleanObjectProperties(props), parent
 
 def deriveGroupEntry(group):
     return [obj.name for obj in group.objects]
 
 def buildRobotDictionary():
+    notifications, faulty_objects = mtmisctools.checkModel(bpy.context.selected_objects)
+    print(notifications)
     robot = {"link": {},
             "joint": {},
             "sensor": {},
@@ -209,7 +226,7 @@ def buildRobotDictionary():
             "group": {}}
     #save timestamped version of model
     robot["date"] = datetime.datetime.now().strftime("%Y%m%d_%H:%M")
-    root = mtutility.getRoot(bpy.context.selected_objects[0])
+    root = getRoot(bpy.context.selected_objects[0])
     if root.MARStype == 'link':
         if 'modelname' in root:
             robot['modelname'] = root["modelname"]
@@ -224,10 +241,14 @@ def buildRobotDictionary():
             robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
             obj.select = False
     # second complete link information by parsing visuals and collision objects
-    for obj in bpy.context.selected_objects:
-            if obj.MARStype in ['inertial', 'visual', 'collision', 'motor']:
-                parent, props = deriveDictEntry(obj)
-                robot[parent.MARStype][parent.name][obj.MARStype] = props
+    try:
+        for obj in bpy.context.selected_objects:
+            if obj.MARStype in ['inertial', 'visual', 'collision']:
+                props, parent = deriveDictEntry(obj)
+                robot[parent.parent.MARStype][parent.parent.name][obj.MARStype] = props
+    except (KeyError, TypeError):
+        print("An error occurred when inserting the entry for object", obj.name, sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
+        print(robot)
     for group in bpy.data.groups: #TODO: get rid of the "data" part
         robot["group"] = deriveGroupEntry(group)
     return robot
@@ -267,28 +288,29 @@ def exportModelToURDF(model, filepath):
         output.append(indent*3+'<inertial>\n')
         #output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link["pose"][0:3]), l2str(link["pose"][3:])])) #this is the original code, now moved to joints
         #output.append(xmlline(4, 'origin', ['xyz', 'rpy'], ["0 0 0", "0 0 0"])) #TODO: add this if it's needed (pivot)
-        output.append(xmlline(4, 'mass', ['value'], [str(link["mass"])]))
+        output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
         if "inertia" in link:
-            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyx', 'iyy', 'iyz'], map(float, link["inertia"])))
+            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyx', 'iyy', 'iyz'], map(float, link['inertial']['inertia'])))
         output.append(indent*3+'</inertial>\n')
         output.append(indent*3+'<visual>\n')
         #origin #TODO: offset of visual to real representation
         output.append(indent*4+'<geometry>\n')
         output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link["filename"], '1.0']))
         output.append(indent*4+'</geometry>\n')
-        output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
-        output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["diffuseColor"]) + '1.0"/>\n')
-        output.append(indent*4+'</material>\n')
+        if 'material' in link['visual']:
+            output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
+            output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["diffuseColor"]) + '1.0"/>\n')
+            output.append(indent*4+'</material>\n')
         output.append(indent*3+'</visual>\n')
         output.append(indent*3+'<collision>\n')
         output.append(indent*4+'<geometry>\n')
-        if link['collision']['geometry']['collisionPrimitive'] == "box":
+        if link['collision']['geometry']['geometryType'] == "box":
             output.append(xmlline(5, 'box', ['size'], l2str(link["collision"]["geometry"]["size"])))
-        elif link['collision']['geometry']['collisionPrimitive'] == "cylinder":
+        elif link['collision']['geometry']['geometryType'] == "cylinder":
             output.append(xmlline(5, 'cylinder', ['radius', 'length'], [link["collision"]["geometry"]["radius"], link["collision"]["geometry"]["height"]]))
-        elif link['collision']['geometry']['collisionPrimitive'] == "sphere":
+        elif link['collision']['geometry']['geometryType'] == "sphere":
             output.append(xmlline(5, 'cylinder', ['radius'], [link["collision"]["geometry"]["radius"]]))
-        elif link['collision']['geometry']['collisionPrimitive'] == "mesh":
+        elif link['collision']['geometry']['geometryType'] == "mesh":
             output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link["name"], '1.0']))#TODO correct this after implementing filename and scale properly
         output.append(indent*4+'</geometry>\n')
         output.append(indent*3+'</collision>\n')
@@ -296,9 +318,7 @@ def exportModelToURDF(model, filepath):
     #export joint information
     for j in model["joint"]:
         joint = model["joint"][j]
-        urdfJoints = {"hinge": "revolute", "linear": "prismatic", "continuous": "continuous", "fixed": "fixed", "planar": "planar"} #TODO: make this nicer
-        jointType = urdfJoints[joint["jointType"]]
-        output.append(indent*2+'<joint name="'+j+'" type="'+jointType+'">\n')#TODO: currently no floating joints are supported
+        output.append(indent*2+'<joint name="'+j+'" type="'+joint["jointType"]+'">\n')#TODO: currently no floating joints are supported
         child = model["link"][joint["child"]]
         output.append(xmlline(3, 'origin', ['xyz', 'rpy'], [l2str(child["pose"][0:3]), l2str(child["pose"][3:])]))
         output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')
@@ -392,8 +412,23 @@ def securepath(path): #TODO: this is totally not error-handled!
         os.makedirs(path)
     return os.path.expanduser(path)
 
+class ExportModelOperator(Operator):
+    """ExportModelOperator"""
+    bl_idname = "object.mt_export_robot"
+    bl_label = "Export the selected model(s)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        #TODO: add selection of all layers bpy.ops.object.select_all()
+        if bpy.data.worlds[0].exportSMURF or bpy.data.worlds[0].exportURDF or bpy.data.worlds[0].exportYAML:
+            main(yaml = bpy.data.worlds[0].exportYAML,
+                              urdf = bpy.data.worlds[0].exportURDF,
+                              smurf = bpy.data.worlds[0].exportSMURF)
+        else:
+            main()
+        return {'FINISHED'}
+
 def main(yaml=True, urdf=True, smurf=True):
-    print("yaml",yaml,"urdf",urdf,"smurf",smurf)
     if yaml or urdf or smurf:
         robot = buildRobotDictionary()
         if yaml:
