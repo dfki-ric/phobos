@@ -17,7 +17,8 @@ do not include any imports which are not part of the standard python 3 libray.
 This module may well be imported and used outside of the MARS Blender Tools
 in the future.
 '''
-
+#TODO: the following definitions for enum properties in blender should be
+# combined with the type definitions further below
 marstypes = (('undefined',)*3,
              ('link',)*3,
              ('inertial',)*3,
@@ -27,6 +28,18 @@ marstypes = (('undefined',)*3,
              ('sensor',)*3,
              ('controller',)*3,
              ('motor',)*3)
+
+jointtypes = (('revolute',)*3,
+              ('continuous',)*3,
+              ('prismatic',)*3,
+              ('fixed',)*3,
+              ('floating',)*3,
+              ('planar',)*3)
+
+geometrytypes = (('box',)*3,
+            ('cylinder',)*3,
+            ('sphere',)*3,
+            ('mesh',)*3)
 
 type_properties = {
     "undefined": (),
