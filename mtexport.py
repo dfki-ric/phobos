@@ -25,6 +25,7 @@ import datetime
 import yaml
 import warnings
 from bpy.types import Operator
+from bpy.props import StringProperty, BoolProperty, IntProperty
 import marstools.mtdefs as mtdefs
 from marstools.mtutility import *
 import marstools.mtjoints as mtjoints
@@ -32,13 +33,22 @@ import marstools.mtmisctools as mtmisctools
 
 def register():
     print("Registering mtexport...")
+    bpy.types.World.path = StringProperty(name = "path")
+    bpy.types.World.epsilon = IntProperty(name = "decimalPlaces",
+                                          description = "number of decimal places to export",
+                                          default = 6) # TODO: this needs implementation
+    bpy.types.World.exportBobj = BoolProperty(name = "exportBobj")
+    bpy.types.World.exportMesh = BoolProperty(name = "exportMesh")
+    bpy.types.World.exportSMURF = BoolProperty(name = "exportSMURF")
+    bpy.types.World.exportURDF = BoolProperty(name = "exportURDF")
+    bpy.types.World.exportYAML = BoolProperty(name = "exportYAML")
+
+def unregister():
+    print("Unregistering mtexport...")
 
 indent = '  '
 urdfHeader = '<?xml version="1.0"?>\n'
 urdfFooter = indent+'</robot>\n'
-
-#bpy.data.armatures["Armature.001"].bones["Bone"].x_axis
-#bpy.data.objects["Armature.001"].pose.bones["Bone"].x_axis
 
 def calcPose(obj, objtype):
     #pre-calculations
@@ -84,8 +94,8 @@ def calcPose(obj, objtype):
 
 def deriveLink(obj):
     props = initObjectProperties(obj)
-    props["filename"] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj") #TODO: this is only valid if this function is only called upon export
-    props["pose"] = calcPose(obj, "link")
+    props["pose"] = deriveLinkPose(obj) #calcPose(obj, "link")
+    props["state"] = deriveJointState(obj)
     props["collision"] = {}
     props["visual"] = {}
     props["inertial"] = {}
@@ -97,23 +107,50 @@ def deriveLink(obj):
         del props["inertia"]
     return props
 
+def deriveLinkPose(link):
+    pose = {}
+    pose['matrix'] = list(link.matrix_local)
+    pose['translation'] = list(link.matrix_local.to_translation())
+    pose['rotation_euler'] = list(link.matrix_local.to_euler())
+    pose['rotation_quaternion'] = list(link.matrix_local.to_quaternion())
+    return pose
+
 def deriveJoint(obj):
-    props = initObjectProperties(obj)
+    props = {'name': 'joint_' + obj.parent.name + '_' + obj.name}
     #motorprops = {key:props[key] for key in [key if props[key].find('motor/') else None for key in props]}
     props['parent'] = obj.parent.name
-    children = getImmediateChildren(obj, 'link')
-    props['child'] = children[0].name if children else '' #list contains only 1 element
+    props['child'] = obj.name
     props['jointType'], crot = mtjoints.deriveJointType(obj)
     axis, limit = mtjoints.getJointConstraints(obj)
-    props['axis'] = obj.rotation_quaternion * axis if axis else '' #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
-    props['limit'] = limit if limit else ''
-    props['state'] = obj.pose.bones[0].rotation_euler[0:3] #TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
+    props['axis'] = obj.rotation_quaternion * axis if axis else None #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+    props['limits'] = limit # limit gets returned as None if there are no limits
+    #TODO: What to do with the following information on the axes?
+    #bpy.data.armatures["Armature.001"].bones["Bone"].x_axis
+    #bpy.data.objects["Armature.001"].pose.bones["Bone"].x_axis
     #TODO:
     # - calibration
     # - dynamics
     # - mimic
     # - safety_controller
     return props#, motorprops
+
+def deriveJointState(joint):
+    '''Calculates the pose of a joint from the pose of the link armature.
+    Note that this is the current pose and not the zero pose.'''
+    pose = {}
+    pose['matrix'] = list(joint.pose.bones[0].matrix)
+    pose['translation'] = list(joint.pose.bones[0].matrix.to_translation())
+    pose['rotation_euler'] = list(joint.pose.bones[0].matrix.to_euler()) #[0:3]
+    pose['rotation_quaternion'] = list(joint.pose.bones[0].matrix.to_quaternion()) #[0:4]
+    #TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
+    return pose
+
+def deriveKinematics(obj):
+    link = deriveLink(obj)
+    joint = None
+    if obj.parent:
+        joint = deriveJoint(obj)
+    return link, joint
 
 def deriveMotor(obj):
     props = initObjectProperties(obj)
@@ -131,6 +168,7 @@ def deriveGeometry(obj):
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]
         elif gt == 'mesh':
+            geometry['filename'] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj") #TODO: this is only valid if this function is only called upon export
             geometry['size'] = obj.dimensions #TODO: this has to be converted to scale when URDF is exported
         return geometry
     else:
@@ -142,9 +180,19 @@ def deriveInertial(obj):
     props['inertia'] = props['inertia'].split()
     return props, obj.parent
 
+def deriveObjectPose(obj):
+    '''Derive pose of visual or collision object. This is at the moment the same
+    implementation as the deriveLinkPose function and may be merged in the future.'''
+    pose = {}
+    pose['matrix'] = list(obj.matrix_local)
+    pose['translation'] = list(obj.matrix_local.to_translation())
+    pose['rotation_euler'] = list(obj.matrix_local.to_euler())
+    pose['rotation_quaternion'] = list(obj.matrix_local.to_quaternion())
+    return pose
+
 def deriveVisual(obj):
     visual = initObjectProperties(obj)
-    visual["pose"] = calcPose(obj, "visual")
+    visual["pose"] = deriveObjectPose(obj) #calcPose(obj, "visual")
     if obj.data.materials:
         material = {}
         material["name"] = obj.data.materials[0].name #simply grab the first material
@@ -156,7 +204,7 @@ def deriveVisual(obj):
 def deriveCollision(obj):
     collision = initObjectProperties(obj)
     collision["geometry"] = deriveGeometry(obj)
-    collision["pose"] = calcPose(obj, "collision") #TODO: technically, this creates twice the computation for naught
+    collision["pose"] = deriveObjectPose(obj) #calcPose(obj, "collision") #TODO: technically, this creates twice the computation for naught
     return collision, obj.parent
 
 def deriveSensor(obj):
@@ -189,11 +237,13 @@ def deriveDictEntry(obj):
     props = None
     parent = None
     try:
-        if obj.MARStype == 'link':
-            props = deriveLink(obj)
-        elif obj.MARStype == 'joint':
-            props = deriveJoint(obj)
-        elif obj.MARStype == 'inertial':
+        #links and joints are now treated separately in deriveKinematics
+        #if obj.MARStype == 'link':
+         #   link = deriveLink(obj)
+         #   joint = deriveJoint(obj)lines of code c++ vs python
+        #elif obj.MARStype == 'joint':
+         #   props = deriveJoint(obj)
+        if obj.MARStype == 'inertial':
             props, parent = deriveInertial(obj)
         elif obj.MARStype == 'visual':
             props, parent = deriveVisual(obj)
@@ -216,8 +266,8 @@ def deriveGroupEntry(group):
     return [obj.name for obj in group.objects]
 
 def buildRobotDictionary():
-    notifications, faulty_objects = mtmisctools.checkModel(bpy.context.selected_objects)
-    print(notifications)
+    #notifications, faulty_objects = mtmisctools.checkModel(bpy.context.selected_objects)
+    #print(notifications)
     robot = {"link": {},
             "joint": {},
             "sensor": {},
@@ -227,28 +277,41 @@ def buildRobotDictionary():
     #save timestamped version of model
     robot["date"] = datetime.datetime.now().strftime("%Y%m%d_%H:%M")
     root = getRoot(bpy.context.selected_objects[0])
-    if root.MARStype == 'link':
+    if root.MARStype != 'link':
+        raise Exception("Found no 'link' object as root of the robot model.")
+    else:
         if 'modelname' in root:
             robot['modelname'] = root["modelname"]
         else:
             robot['modelname'] = 'unnamed_robot'
-    else:
-        print("ERROR: Found no 'link' object as root of the robot model.")
     # now parse the scene
-    # first digest all the links and joints as well as sensors, motors and controllers
+    # first digest all the links to derive link and joint information
     for obj in bpy.context.selected_objects:
-        if obj.MARStype in ['link', 'joint', 'sensor', 'motor', 'controller']:
-            robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
+        if obj.MARStype == 'link':
+            print('Parsing', obj.MARStype, obj.name, '...')
+            link, joint = deriveKinematics(obj)
+            robot['link'][obj.name] = link
+            if joint: #joint can be None if link is a root
+                robot['joint'][obj.name] = joint
             obj.select = False
     # second complete link information by parsing visuals and collision objects
-    try:
-        for obj in bpy.context.selected_objects:
-            if obj.MARStype in ['inertial', 'visual', 'collision']:
-                props, parent = deriveDictEntry(obj)
-                robot[parent.parent.MARStype][parent.parent.name][obj.MARStype] = props
-    except (KeyError, TypeError):
-        print("An error occurred when inserting the entry for object", obj.name, sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
-        print(robot)
+    #try:
+    for obj in bpy.context.selected_objects:
+        if obj.MARStype in ['inertial', 'visual', 'collision']:
+            print('Parsing', obj.MARStype, obj.name, '...')
+            props, parent = deriveDictEntry(obj)
+            robot[parent.parent.MARStype][parent.parent.name][obj.MARStype] = props
+            obj.select = False
+    # third parse motors, sensors and contrllers
+    for obj in bpy.context.selected_objects:
+        if obj.MARStype in ['sensor', 'motor', 'controller']:
+            print('Parsing', obj.MARStype, obj.name, '...')
+            robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
+            obj.select = False
+    #except (KeyError, TypeError):
+    #    print("An error occurred when inserting the entry for object", obj.name, sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
+    #    print(robot)
+    # finally, gather information on the groups of objects
     for group in bpy.data.groups: #TODO: get rid of the "data" part
         robot["group"] = deriveGroupEntry(group)
     return robot
@@ -284,47 +347,49 @@ def exportModelToURDF(model, filepath):
     for l in model["link"].keys():
         link = model["link"][l]
         output.append(indent*2+'<link name="'+l+'">\n')
-        #output.append(xmlline(2, 'link', ['name'], [l]))
         output.append(indent*3+'<inertial>\n')
-        #output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link["pose"][0:3]), l2str(link["pose"][3:])])) #this is the original code, now moved to joints
-        #output.append(xmlline(4, 'origin', ['xyz', 'rpy'], ["0 0 0", "0 0 0"])) #TODO: add this if it's needed (pivot)
         output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
-        if "inertia" in link:
+        if "inertia" in link['inertial']:
             output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyx', 'iyy', 'iyz'], map(float, link['inertial']['inertia'])))
         output.append(indent*3+'</inertial>\n')
-        output.append(indent*3+'<visual>\n')
-        #origin #TODO: offset of visual to real representation
-        output.append(indent*4+'<geometry>\n')
-        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link["filename"], '1.0']))
-        output.append(indent*4+'</geometry>\n')
-        if 'material' in link['visual']:
-            output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
-            output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["diffuseColor"]) + '1.0"/>\n')
-            output.append(indent*4+'</material>\n')
-        output.append(indent*3+'</visual>\n')
-        output.append(indent*3+'<collision>\n')
-        output.append(indent*4+'<geometry>\n')
-        if link['collision']['geometry']['geometryType'] == "box":
-            output.append(xmlline(5, 'box', ['size'], l2str(link["collision"]["geometry"]["size"])))
-        elif link['collision']['geometry']['geometryType'] == "cylinder":
-            output.append(xmlline(5, 'cylinder', ['radius', 'length'], [link["collision"]["geometry"]["radius"], link["collision"]["geometry"]["height"]]))
-        elif link['collision']['geometry']['geometryType'] == "sphere":
-            output.append(xmlline(5, 'cylinder', ['radius'], [link["collision"]["geometry"]["radius"]]))
-        elif link['collision']['geometry']['geometryType'] == "mesh":
-            output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link["name"], '1.0']))#TODO correct this after implementing filename and scale properly
-        output.append(indent*4+'</geometry>\n')
-        output.append(indent*3+'</collision>\n')
+        #visual object
+        if link['visual']:
+            output.append(indent*3+'<visual>\n')
+            output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['visual']['pose']['translation']), l2str(link['visual']['pose']['rotation_euler'])]))
+            output.append(indent*4+'<geometry>\n')
+            output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link['visual']['geometry']['filename'], '1.0']))
+            output.append(indent*4+'</geometry>\n')
+            if 'material' in link['visual']:
+                output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
+                output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["diffuseColor"]) + '1.0"/>\n')
+                output.append(indent*4+'</material>\n')
+            output.append(indent*3+'</visual>\n')
+        #collision object
+        if link['collision']:
+            output.append(indent*3+'<collision>\n')
+            output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['collision']['pose']['translation']), l2str(link['collision']['pose']['rotation_euler'])]))
+            output.append(indent*4+'<geometry>\n')
+            if link['collision']['geometry']['geometryType'] == "box":
+                output.append(xmlline(5, 'box', ['size'], l2str(link["collision"]["geometry"]["size"])))
+            elif link['collision']['geometry']['geometryType'] == "cylinder":
+                output.append(xmlline(5, 'cylinder', ['radius', 'length'], [link["collision"]["geometry"]["radius"], link["collision"]["geometry"]["height"]]))
+            elif link['collision']['geometry']['geometryType'] == "sphere":
+                output.append(xmlline(5, 'cylinder', ['radius'], [link["collision"]["geometry"]["radius"]]))
+            elif link['collision']['geometry']['geometryType'] == "mesh":
+                output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link['collision']['geometry']['filename'], '1.0']))#TODO correct this after implementing filename and scale properly
+            output.append(indent*4+'</geometry>\n')
+            output.append(indent*3+'</collision>\n')
         output.append(indent*2+'</link>\n\n')
     #export joint information
     for j in model["joint"]:
         joint = model["joint"][j]
-        output.append(indent*2+'<joint name="'+j+'" type="'+joint["jointType"]+'">\n')#TODO: currently no floating joints are supported
+        output.append(indent*2+'<joint name="'+j+'" type="'+joint["jointType"]+'">\n')
         child = model["link"][joint["child"]]
-        output.append(xmlline(3, 'origin', ['xyz', 'rpy'], [l2str(child["pose"][0:3]), l2str(child["pose"][3:])]))
+        output.append(xmlline(3, 'origin', ['xyz', 'rpy'], [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])]))
         output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')
         output.append(indent*3+'<child link="'+joint["child"]+'"/>\n')
-        if "lowerConstraint" in joint:
-            output.append(xmlline(3+'limit', ['lower', 'upper'], [joint["lowerConstraint"], joint["upperConstraint"]]))
+        if joint['limits']:
+            output.append(xmlline(3+'limit', ['lower', 'upper'], [joint['limits'][0], joint['limits'][0]]))
         output.append(indent*2+'</joint>\n\n')
         #if "pose" in joint:
         #    output.append(indent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!

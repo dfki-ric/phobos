@@ -32,23 +32,25 @@ def deriveJointType(joint, adjust = False):
     jtype = 'floating' # 'universal' in MARS nomenclature
     cloc = None
     crot = None
+    #the [0] in the following statement may look like a hack, however since an axis is
+    # always added as the first element of the chain, this works for both an axis present and not
     for c in joint.pose.bones[0].constraints:
         if c.type == 'LIMIT_LOCATION':
             cloc = [c.use_min_x, c.use_max_x,
-                    c.use_min_y, c.Use_max_y,
-                    c.use_min_z, c.Use_max_z]
+                    c.use_min_y, c.use_max_y,
+                    c.use_min_z, c.use_max_z]
         elif c.type == 'LIMIT_ROTATION':
             crot = [c.use_limit_x, c.use_limit_y, c.use_limit_z]
     if crot:
         if sum(crot) < 3: #continuous or revolute
-            if ((c.use_limit_x and (c.min_x or c.max_x))
-                or (c.use_limit_y and (c.min_y or c.max_y))
-                or (c.use_limit_z and (c.min_z or c.max_z))):
+            if ((c.use_limit_x and (c.min_x != 0 or c.max_x != 0))
+                or (c.use_limit_y and (c.min_y != 0 or c.max_y != 0))
+                or (c.use_limit_z and (c.min_z != 0 or c.max_z)) != 0):
                 jtype = 'revolute'
             else:
                 jtype = 'continuous'
         else: # prismatic, planar or fixed
-            if sum(cloc) >= 4:
+            if cloc and sum(cloc) >= 4:
                 if sum(cloc) == 6:
                     jtype = 'fixed'
                 else:
@@ -57,17 +59,13 @@ def deriveJointType(joint, adjust = False):
                 jtype = 'planar'
     if 'jointType' in joint and joint['jointType'] != jtype:
         warnings.warn("Type of joint "+joint.name+" does not match constraints!", Warning) #TODO: not sure if that is correct like that
-        if(adjust):
-            joint['jointType'] = jtype
-            print("Changed type to '"+jtype+"'.")
+    if(adjust):
+        joint['jointType'] = jtype
+        print("Changed type of joint'" + joint.name, 'to', jtype + "'.")
     return jtype, crot
 
 def getJointConstraints(joint):
-    if "jointType" not in joint:
-        warnings.warn("Type of joint"+joint.name+"undefined. Trying to auto-assign joint type.")
-        jt, crot = deriveJointType(joint, adjust = True)
-    else:
-        jt = joint['jointType']
+    jt, crot = deriveJointType(joint, adjust = True)
     if jt not in ['floating', 'fixed']:
         if jt in ['revolute', 'continuous'] and crot:
             c = getJointConstraint(joint, 'LIMIT_ROTATION')
@@ -80,6 +78,8 @@ def getJointConstraints(joint):
                 limits = (c.min_z, c.max_z)
         else:
             c = getJointConstraint(joint, 'LIMIT_LOCATION')
+            if not c:
+                raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
             axis = None
             limits = None
             freeloc = [c.use_min_x and c.use_max_x and c.min_x == c.max_x,
