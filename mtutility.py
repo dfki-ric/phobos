@@ -24,12 +24,82 @@ def register():
 def unregister():
     print("Unregistering mtutility...")
 
-def createPrimitive(pname, ptype, psize, player = bpy.context.scene.active_layer, pmaterial = "None", plocation = (0, 0, 0), protation = (0, 0, 0), verbose=False):
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+def is_int(s):
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
+
+def parse_number(s):
+    if is_int(s):
+        return int(s)
+    elif is_float(s):
+        return float(s)
+    else:
+        return s
+
+def only_contains_int(stringlist):
+    for num in stringlist:
+        if not is_int(num):
+            return False
+    return True
+
+def only_contains_float(stringlist):
+    for num in stringlist:
+        if not is_float(num):
+            return False
+    return True
+
+def find_in_list(alist, prop, value):
+    n = -1
+
+    for i in range(len(alist)):
+        if alist[i][prop] == value:
+            n = i
+            break
+    return n
+
+def retrieve_from_list(alist, prop, value):
+    n = -1
+
+    for i in range(len(alist)):
+        if alist[i][prop] == value:
+            n = i
+            break
+    if n >= 0:
+        return alist[n][prop]
+    else:
+        return "None"
+
+def parse_text(s):
+    numstrings = s.split()
+    if len(numstrings) > 0:
+        if only_contains_int(numstrings):
+            nums = [int(num) for num in numstrings]
+            return nums
+        elif only_contains_float(numstrings):
+            nums = [float(num) for num in numstrings]
+            return nums
+        else:
+            return s
+    else:
+        return parse_number(s)
+
+def createPrimitive(pname, ptype, psize, player = 0, pmaterial = "None", plocation = (0, 0, 0), protation = (0, 0, 0), verbose=False):
     """Generates the primitive specified by the input parameters"""
     if verbose:
         print(ptype, psize)
     try:
-        n_layer = int(player)
+        n_layer = bpy.context.scene.active_layer
+        #n_layer = int(player)
     except ValueError:
         n_layer = mtdefs.layerTypes[player]
     if bpy.data.worlds[0]: #TODO: complete this
@@ -108,7 +178,7 @@ def getRoots():
     """Returns a list of all roots (=objects without parent) present in the scene"""
     roots = []
     for obj in bpy.data.objects: #TODO: this is not the best list to iterate over (there might be multiple scenes)
-        if not obj.parent and obj.MARStype == "body":
+        if not obj.parent and obj.MARStype == "link":
             roots.append(obj)
 
     if roots == []:

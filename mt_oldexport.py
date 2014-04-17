@@ -232,8 +232,9 @@ def getChildren(parent):
     return children
 
 def fillList(obj):
+    print("Exporting", obj.name)
     if "MARStype" in obj:
-        if obj.MARStype == "body":
+        if obj.MARStype == "link":
             objList.append(obj)
         elif obj.MARStype == "joint":
             jointList.append(obj)
@@ -513,8 +514,11 @@ def main():
 
     writeSceneHeader()
     root = findRoot()
+    print(root)
     if root:
         fillList(root)
+    else:
+        print("oldexport: no root found!")
     for material in bpy.data.materials:
         if "marsID" in material:
             material["marsID"] = 0

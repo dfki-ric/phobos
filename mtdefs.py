@@ -17,16 +17,29 @@ do not include any imports which are not part of the standard python 3 libray.
 This module may well be imported and used outside of the MARS Blender Tools
 in the future.
 '''
+#TODO: the following definitions for enum properties in blender should be
+# combined with the type definitions further below
+marstypes = (('undefined',)*3,
+             ('link',)*3,
+             ('inertial',)*3,
+             ('visual',)*3,
+             ('collision',)*3,
+             ('joint',)*3,
+             ('sensor',)*3,
+             ('controller',)*3,
+             ('motor',)*3)
 
-marstypes = [tuple(['undefined']*3),
-             tuple(['link']*3),
-             tuple(['inertial']*3),
-             tuple(['visual']*3),
-             tuple(['collision']*3),
-             tuple(['joint']*3),
-             tuple(['sensor']*3),
-             tuple(['controller']*3),
-             tuple(['motor']*3)]
+jointtypes = (('revolute',)*3,
+              ('continuous',)*3,
+              ('prismatic',)*3,
+              ('fixed',)*3,
+              ('floating',)*3,
+              ('planar',)*3)
+
+geometrytypes = (('box',)*3,
+            ('cylinder',)*3,
+            ('sphere',)*3,
+            ('mesh',)*3)
 
 type_properties = {
     "undefined": (),
@@ -75,7 +88,7 @@ jointTypes = ("undefined",
              )
 
 # definition of sensor types
-sensorTypes = ["RaySensor",
+sensorTypes = ("RaySensor",
                "CameraSensor",
                "ScanningSonar",
                "JointPosition",
@@ -92,7 +105,7 @@ sensorTypes = ["RaySensor",
                "NodeVelocity",
                "NodeAngularVelocity",
                "MotorCurrent"
-              ]
+              )
 
 sensorProperties = {"RaySensor": {"width": 144},
                "CameraSensor": {"width": 640, "height": 480},
@@ -113,12 +126,14 @@ sensorProperties = {"RaySensor": {"width": 144},
                "MotorCurrent": {}
               }
 
-#definitions of which elements live on which layers
+#definitions of which elements live on which layers by default
 layerTypes = {
-              "nodes": 0,
-              "joints": 1,
-              "jointSpheres": 2,
-              "sensors": 3,
-              "decorations": 4,
-              "constraints": 5
+              "link": 0,
+              'inertial': 1,
+              "visual": 2,
+              "collision": 3,
+              "joint": 4,
+              "sensor": 5,
+              "motor": 10,
+              "decoration": 6
               }
