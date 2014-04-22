@@ -120,10 +120,12 @@ def deriveJoint(obj):
     #motorprops = {key:props[key] for key in [key if props[key].find('motor/') else None for key in props]}
     props['parent'] = obj.parent.name
     props['child'] = obj.name
-    props['jointType'], crot = mtjoints.deriveJointType(obj)
+    props['jointType'], crot = mtjoints.deriveJointType(obj, True)
     axis, limit = mtjoints.getJointConstraints(obj)
-    props['axis'] = obj.rotation_quaternion * axis if axis else None #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
-    props['limits'] = limit # limit gets returned as None if there are no limits
+    if axis:
+        props['axis'] = axis #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+    if limit:
+        props['limits'] = limit # limit gets returned as None if there are no limits
     #TODO: What to do with the following information on the axes?
     #bpy.data.armatures["Armature.001"].bones["Bone"].x_axis
     #bpy.data.objects["Armature.001"].pose.bones["Bone"].x_axis
@@ -388,8 +390,10 @@ def exportModelToURDF(model, filepath):
         output.append(xmlline(3, 'origin', ['xyz', 'rpy'], [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])]))
         output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')
         output.append(indent*3+'<child link="'+joint["child"]+'"/>\n')
-        if joint['limits']:
-            output.append(xmlline(3+'limit', ['lower', 'upper'], [joint['limits'][0], joint['limits'][0]]))
+        if 'axis' in joint:
+            output.append(indent*3+'<axis xyz="'+l2str(joint['axis'])+'"/>\n')
+        if 'limits' in joint:
+            output.append(xmlline(3, 'limit', ['lower', 'upper'], [str(joint['limits'][0]), str(joint['limits'][1])]))
         output.append(indent*2+'</joint>\n\n')
         #if "pose" in joint:
         #    output.append(indent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!

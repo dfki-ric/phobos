@@ -32,31 +32,35 @@ def deriveJointType(joint, adjust = False):
     jtype = 'floating' # 'universal' in MARS nomenclature
     cloc = None
     crot = None
+    limloc = None
+    limrot = None
     #the [0] in the following statement may look like a hack, however since an axis is
     # always added as the first element of the chain, this works for both an axis present and not
     for c in joint.pose.bones[0].constraints:
         if c.type == 'LIMIT_LOCATION':
+            #limloc = c
             cloc = [c.use_min_x, c.use_max_x,
                     c.use_min_y, c.use_max_y,
                     c.use_min_z, c.use_max_z]
         elif c.type == 'LIMIT_ROTATION':
-            crot = [c.use_limit_x, c.use_limit_y, c.use_limit_z]
+            limrot = c
+            crot = [c.use_limit_x and (c.min_x != 0 or c.max_x != 0),
+                    c.use_limit_y and (c.min_y != 0 or c.max_y != 0),
+                    c.use_limit_z and (c.min_z != 0 or c.max_z != 0)]
+            print(joint.name, crot)
     if crot:
-        if sum(crot) < 3: #continuous or revolute
-            if ((c.use_limit_x and (c.min_x != 0 or c.max_x != 0))
-                or (c.use_limit_y and (c.min_y != 0 or c.max_y != 0))
-                or (c.use_limit_z and (c.min_z != 0 or c.max_z)) != 0):
-                jtype = 'revolute'
-            else:
+        if sum(crot) > 0: #continuous or revolute, this always has to be 3, but we allow less restrictions
+            jtype = 'revolute'
+        elif sum(limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z) < 3:
                 jtype = 'continuous'
-        else: # prismatic, planar or fixed
-            if cloc and sum(cloc) >= 4:
-                if sum(cloc) == 6:
-                    jtype = 'fixed'
-                else:
-                    jtype = 'prismatic'
+    else: # prismatic, planar or fixed
+        if cloc and sum(cloc) >= 4:
+            if sum(cloc) == 6:
+                jtype = 'fixed'
             else:
-                jtype = 'planar'
+                jtype = 'prismatic'
+        else:
+            jtype = 'planar'
     if 'jointType' in joint and joint['jointType'] != jtype:
         warnings.warn("Type of joint "+joint.name+" does not match constraints!", Warning) #TODO: not sure if that is correct like that
     if(adjust):
@@ -69,7 +73,14 @@ def getJointConstraints(joint):
     if jt not in ['floating', 'fixed']:
         if jt in ['revolute', 'continuous'] and crot:
             c = getJointConstraint(joint, 'LIMIT_ROTATION')
-            axis = mathutils.Vector([int(not i) for i in crot])
+            if 'axis' in bpy.data.armatures[joint.name].bones:
+                axis = (bpy.data.objects[joint.name].matrix_local * -bpy.data.armatures[joint.name].bones['axis'].vector).normalized()
+            else:
+                tmpaxis = [int(i) for i in crot]
+                if tmpaxis == [1, 0, 0]:
+                    axis = None
+                else:
+                    axis = mathutils.Vector(tmpaxis)
             if crot[0]:
                 limits = (c.min_x, c.max_x)
             elif crot[1]:
@@ -107,6 +118,7 @@ def getJointConstraints(joint):
                         limits = (c.min_x, c.max_x, c.min_y, c.max_y)
                 else:
                     raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
+        print(axis, limits)
         return axis, limits
     else:
         return None, None
