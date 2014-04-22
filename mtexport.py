@@ -165,13 +165,14 @@ def deriveGeometry(obj):
         if gt == 'box':
             geometry['size'] = obj.dimensions
         elif gt == 'cylinder':
-            geometry["radius"] = obj.dimensions[0]
-            geometry["height"] = obj.dimensions[1]
+            geometry["radius"] = obj.dimensions[0]/2
+            geometry["height"] = obj.dimensions[2]
         elif gt == 'sphere':
-            geometry['radius'] = obj.dimensions[0]
+            geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
             geometry['filename'] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj") #TODO: this is only valid if this function is only called upon export
-            geometry['size'] = obj.dimensions #TODO: this has to be converted to scale when URDF is exported
+            #geometry['size'] = obj.dimensions
+            geometry['scale'] = obj.scale #TODO: we still need checking for a mesh's existence, as we cannot always re-export every single mesh in the long run
         return geometry
     else:
         warnings.warn("No geometryType found for object "+obj.name+".")
@@ -302,7 +303,7 @@ def buildRobotDictionary():
         if obj.MARStype in ['inertial', 'visual', 'collision']:
             print('Parsing', obj.MARStype, obj.name, '...')
             props, parent = deriveDictEntry(obj)
-            robot[parent.parent.MARStype][parent.parent.name][obj.MARStype] = props
+            robot[parent.MARStype][parent.name][obj.MARStype] = props
             obj.select = False
     # third parse motors, sensors and contrllers
     for obj in bpy.context.selected_objects:
@@ -328,7 +329,7 @@ def xmlline(ind, tag, names, values):
     line = []
     line.append(indent*ind+'<'+tag)
     for i in range(len(names)):
-        line.append(' '+names[i]+'="'+values[i]+'"')
+        line.append(' '+names[i]+'="'+str(values[i])+'"')
     line.append('/>\n')
     return ''.join(line)
 
@@ -340,6 +341,18 @@ def l2str(items, start=-1, end=-1):
         line.append(str(items[i])+' ')
         i += 1
     return ''.join(line)[0:-1]
+
+def writeURDFGeometry(output, element):
+    output.append(indent*4+'<geometry>\n')
+    if element['geometryType'] == "box":
+        output.append(xmlline(5, 'box', ['size'], l2str(element["size"])))
+    elif element['geometryType'] == "cylinder":
+        output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element["radius"], element["geometry"]["height"]]))
+    elif element['geometryType'] == "sphere":
+        output.append(xmlline(5, 'cylinder', ['radius'], [element["radius"]]))
+    elif element['geometryType'] == "mesh":
+        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], '1.0 1.0 1.0']))#TODO correct this after implementing filename and scale properly
+    output.append(indent*4+'</geometry>\n')
 
 def exportModelToURDF(model, filepath):
     output = []
@@ -358,9 +371,7 @@ def exportModelToURDF(model, filepath):
         if link['visual']:
             output.append(indent*3+'<visual>\n')
             output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['visual']['pose']['translation']), l2str(link['visual']['pose']['rotation_euler'])]))
-            output.append(indent*4+'<geometry>\n')
-            output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link['visual']['geometry']['filename'], '1.0']))
-            output.append(indent*4+'</geometry>\n')
+            writeURDFGeometry(output, link['visual']['geometry'])
             if 'material' in link['visual']:
                 output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
                 output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["diffuseColor"]) + '1.0"/>\n')
@@ -370,16 +381,7 @@ def exportModelToURDF(model, filepath):
         if link['collision']:
             output.append(indent*3+'<collision>\n')
             output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['collision']['pose']['translation']), l2str(link['collision']['pose']['rotation_euler'])]))
-            output.append(indent*4+'<geometry>\n')
-            if link['collision']['geometry']['geometryType'] == "box":
-                output.append(xmlline(5, 'box', ['size'], l2str(link["collision"]["geometry"]["size"])))
-            elif link['collision']['geometry']['geometryType'] == "cylinder":
-                output.append(xmlline(5, 'cylinder', ['radius', 'length'], [link["collision"]["geometry"]["radius"], link["collision"]["geometry"]["height"]]))
-            elif link['collision']['geometry']['geometryType'] == "sphere":
-                output.append(xmlline(5, 'cylinder', ['radius'], [link["collision"]["geometry"]["radius"]]))
-            elif link['collision']['geometry']['geometryType'] == "mesh":
-                output.append(xmlline(5, 'mesh', ['filename', 'scale'], [link['collision']['geometry']['filename'], '1.0']))#TODO correct this after implementing filename and scale properly
-            output.append(indent*4+'</geometry>\n')
+            writeURDFGeometry(output, link['collision']['geometry'])
             output.append(indent*3+'</collision>\n')
         output.append(indent*2+'</link>\n\n')
     #export joint information
