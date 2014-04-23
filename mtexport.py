@@ -95,8 +95,7 @@ def calcPose(obj, objtype):
 
 def deriveLink(obj):
     props = initObjectProperties(obj)
-    props["pose"] = deriveLinkPose(obj) #calcPose(obj, "link")
-    props["state"] = deriveJointState(obj)
+    props["pose"] = deriveLinkPose(obj)
     props["collision"] = {}
     props["visual"] = {}
     props["inertial"] = {}
@@ -127,6 +126,7 @@ def deriveJoint(obj):
         props['axis'] = axis #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
     if limit:
         props['limits'] = limit # limit gets returned as None if there are no limits
+    props["state"] = deriveJointState(obj)
     #TODO: What to do with the following information on the axes?
     #bpy.data.armatures["Armature.001"].bones["Bone"].x_axis
     #bpy.data.objects["Armature.001"].pose.bones["Bone"].x_axis
@@ -138,15 +138,15 @@ def deriveJoint(obj):
     return props#, motorprops
 
 def deriveJointState(joint):
-    '''Calculates the pose of a joint from the pose of the link armature.
-    Note that this is the current pose and not the zero pose.'''
-    pose = {}
-    pose['matrix'] = list(joint.pose.bones[0].matrix)
-    pose['translation'] = list(joint.pose.bones[0].matrix.to_translation())
-    pose['rotation_euler'] = list(joint.pose.bones[0].matrix.to_euler()) #[0:3]
-    pose['rotation_quaternion'] = list(joint.pose.bones[0].matrix.to_quaternion()) #[0:4]
+    '''Calculates the state of a joint from the state of the link armature.
+    Note that this is the current state and not the zero state.'''
+    state = {}
+    state['matrix'] = [list(vector) for vector in list(joint.pose.bones[0].matrix_basis)]
+    state['translation'] = list(joint.pose.bones[0].matrix_basis.to_translation())
+    state['rotation_euler'] = list(joint.pose.bones[0].matrix_basis.to_euler()) #[0:3]
+    state['rotation_quaternion'] = list(joint.pose.bones[0].matrix_basis.to_quaternion()) #[0:4]
     #TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
-    return pose
+    return state
 
 def deriveKinematics(obj):
     link = deriveLink(obj)
@@ -222,7 +222,6 @@ def deriveController(obj):
     props = initObjectProperties(obj)
 
     return props
-
 def initObjectProperties(obj):
     props = {}
     for key in obj.keys():
@@ -232,7 +231,7 @@ def initObjectProperties(obj):
 
 def cleanObjectProperties(props):
     '''Cleans a predefined list of Blender-specific properties from the dictionary.'''
-    getridof = ['MARStype', '_RNA_UI', 'cycles_visibility']
+    getridof = ['MARStype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain']
     if props:
         for key in getridof:
             if key in props:
@@ -266,15 +265,41 @@ def deriveDictEntry(obj):
 def deriveGroupEntry(group):
     return [obj.name for obj in group.objects]
 
+def deriveChainEntry(obj):
+    returnchains = []
+    if 'endChain' in obj:
+        endChain = obj['endChain'].split()
+    for chainName in endChain:
+        chainclosed = False
+        parent = obj
+        chain = {'name': chainName, 'start': '', 'end': obj.name, 'elements': []}
+        while not chainclosed:
+            if parent.parent == None:
+                print('### Error: Unclosed chain, aborting parsing chain', chainName)
+                chain = None
+                break
+            chain['elements'].append(parent.name)
+            parent = parent.parent
+            if 'startChain' in parent:
+                startChain = parent['startChain'].split()
+                if chainName in startChain:
+                    chain['start'] = parent.name
+                    chainclosed = True
+        if chain is not None:
+            returnchains.append(chain)
+    return returnchains
+
 def buildRobotDictionary():
     #notifications, faulty_objects = mtmisctools.checkModel(bpy.context.selected_objects)
     #print(notifications)
-    robot = {"link": {},
-            "joint": {},
-            "sensor": {},
-            "motor": {},
-            "controller": {},
-            "group": {}}
+    robot = {'link': {},
+            'joint': {},
+            'sensor': {},
+            'motor': {},
+            'controller': {},
+            'material': {},
+            'group': {},
+            'chain': {}}
     #save timestamped version of model
     robot["date"] = datetime.datetime.now().strftime("%Y%m%d_%H:%M")
     root = getRoot(bpy.context.selected_objects[0])
@@ -326,9 +351,16 @@ def buildRobotDictionary():
     #except (KeyError, TypeError):
     #    print("An error occurred when inserting the entry for object", obj.name, sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
     #    print(robot)
-    # gather information on the groups of objects
+    # gather information on groups of objects
     for group in bpy.data.groups: #TODO: get rid of the "data" part
-        robot["group"] = deriveGroupEntry(group)
+        robot["group"][group.name] = deriveGroupEntry(group)
+    # gather information on chains of objects
+    chains = []
+    for link in bpy.data.objects:
+        if obj.MARStype == 'link' and 'endChain' in obj:
+            chains.extend(deriveChainEntry(obj))
+    for chain in chains:
+        robot['chain'][chain['name']] = chain
     return robot
 
 def exportModelToYAML(model, filepath):
@@ -419,16 +451,27 @@ def exportModelToURDF(model, filepath):
     # problem of different joint transformations needed for fixed joints
     print("MARStools URDF export: Writing model data to", filepath )
 
-def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot Format / Supplementable, Mostly URF / Supplement-Managed URF
+def exportModelToSMURF(model, path, relative = True): # Syntactically Malleable Universal Robot Format / Supplementable, Mostly URF / Supplement-Managed URF
     #create all filenames
     model_filename = os.path.expanduser(path + model["modelname"] + ".yml")
     urdf_filename = os.path.expanduser(path + model["modelname"] + ".urdf")
-    pose_filename = os.path.expanduser(path + model["modelname"] + "_pose.yml")
+    semantics_filename = os.path.expanduser(path + model["modelname"] + "_semantics.yml")
+    state_filename = os.path.expanduser(path + model["modelname"] + "_state.yml")
     materials_filename = os.path.expanduser(path + model["modelname"] + "_materials.yml")
     sensors_filename = os.path.expanduser(path + model["modelname"] + "_sensors.yml")
     motors_filename = os.path.expanduser(path + model["modelname"] + "_motors.yml")
     controllers_filename = os.path.expanduser(path + model["modelname"] + "_controllers.yml")
     simulation_filename = os.path.expanduser(path + model["modelname"] + "_simulation.yml")
+    if relative:
+        rel_urdf_filename = model["modelname"] + ".urdf"
+        rel_semantics_filename = model["modelname"] + "_kinematics.yml"
+        rel_state_filename = model["modelname"] + "_state.yml"
+        rel_materials_filename = model["modelname"] + "_materials.yml"
+        rel_sensors_filename = model["modelname"] + "_sensors.yml"
+        rel_motors_filename = model["modelname"] + "_motors.yml"
+        rel_controllers_filename = model["modelname"] + "_controllers.yml"
+        rel_simulation_filename = model["modelname"] + "_simulation.yml"
+
 
     infostring = ' definition SMURF file for "'+model["modelname"]+', '+model["date"]+"\n"
 
@@ -437,17 +480,42 @@ def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot F
     modeldata = {}
     #modeldata["name"] = model["modelname"]
     modeldata["date"] = model["date"]
-    modeldata["files"] = [urdf_filename, pose_filename,
-                          materials_filename, sensors_filename,
-                          motors_filename, controllers_filename,
-                          simulation_filename]
+    if relative:
+        modeldata["files"] = [rel_urdf_filename, rel_semantics_filename, rel_state_filename,
+                              rel_materials_filename, rel_sensors_filename,
+                              rel_motors_filename, rel_controllers_filename,
+                              rel_simulation_filename]
+    else:
+        modeldata["files"] = [urdf_filename, semantics_filename, state_filename,
+                              materials_filename, sensors_filename,
+                              motors_filename, controllers_filename,
+                              simulation_filename]
     with open(model_filename, 'w') as op:
-        op.write('#main SMURF file of model "'+model["modelname"]+"\n")
-        op.write("name: "+model["modelname"]+"\n")
+        op.write('#main SMURF file of model "'+model["modelname"]+'"\n')
+        op.write("modelname: "+model["modelname"]+"\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
     #write urdf
     exportModelToURDF(model, urdf_filename)
+
+    #write semantics (SRDF information in YML format)
+    with open(semantics_filename, 'w') as op:
+        op.write('#semantics'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        op.write(yaml.dump(model["group"], default_flow_style=False))
+        op.write(yaml.dump(model["chain"], default_flow_style=False))
+
+    #write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
+    states = {}
+    #gather all states
+    for jointname in model['joint']:
+        joint = model['joint'][jointname]
+        if 'state' in joint: #this should always be the case, but testing doesn't hurt
+            states[jointname] = joint['state']
+    with open(state_filename, 'w') as op:
+        op.write('#state'+infostring)
+        op.write("modelname: "+model["modelname"]+"\n")
+        op.write(yaml.dump(states, default_flow_style=False))
 
     #write materials
     with open(materials_filename, 'w') as op:
@@ -490,6 +558,7 @@ def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot F
         op.write(yaml.dump(simulationdata, default_flow_style=False))
 
 def exportSceneToSMURF(path):
+    """Exports all robots in a scene to separate SMURF folders."""
     pass
 
 def securepath(path): #TODO: this is totally not error-handled!
