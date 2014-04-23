@@ -1,7 +1,7 @@
 '''
 MARS Blender Tools - a Blender Add-On to work with MARS robot models
 
-File export.py
+File mtexport.py
 
 Created on 13 Feb 2014
 
@@ -30,6 +30,7 @@ import marstools.mtdefs as mtdefs
 from marstools.mtutility import *
 import marstools.mtjoints as mtjoints
 import marstools.mtmisctools as mtmisctools
+import marstools.mtinertia as mtinertia
 
 def register():
     print("Registering mtexport...")
@@ -163,7 +164,7 @@ def deriveGeometry(obj):
         geometry = {'geometryType': obj['geometryType']}
         gt = obj['geometryType']
         if gt == 'box':
-            geometry['size'] = obj.dimensions
+            geometry['size'] = list(obj.dimensions)
         elif gt == 'cylinder':
             geometry["radius"] = obj.dimensions[0]/2
             geometry["height"] = obj.dimensions[2]
@@ -172,15 +173,18 @@ def deriveGeometry(obj):
         elif gt == 'mesh':
             geometry['filename'] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj") #TODO: this is only valid if this function is only called upon export
             #geometry['size'] = obj.dimensions
-            geometry['scale'] = obj.scale #TODO: we still need checking for a mesh's existence, as we cannot always re-export every single mesh in the long run
+            geometry['scale'] = list(obj.scale) #TODO: we still need checking for a mesh's existence, as we cannot always re-export every single mesh in the long run
         return geometry
     else:
         warnings.warn("No geometryType found for object "+obj.name+".")
         return None
 
 def deriveInertial(obj):
+    '''Derives a dictionary entry of an inertial object. These settings override any 'mass' or 'inertia'
+    settings placed in the object itself.'''
     props = initObjectProperties(obj)
-    props['inertia'] = props['inertia'].split()
+    inertia = props['inertia'].split()
+    props['inertia'] = map(float, inertia)
     return props, obj.parent
 
 def deriveObjectPose(obj):
@@ -227,7 +231,7 @@ def initObjectProperties(obj):
     return props
 
 def cleanObjectProperties(props):
-    #clean dictionary entries
+    '''Cleans a predefined list of Blender-specific properties from the dictionary.'''
     getridof = ['MARStype', '_RNA_UI', 'cycles_visibility']
     if props:
         for key in getridof:
@@ -240,12 +244,6 @@ def deriveDictEntry(obj):
     props = None
     parent = None
     try:
-        #links and joints are now treated separately in deriveKinematics
-        #if obj.MARStype == 'link':
-         #   link = deriveLink(obj)
-         #   joint = deriveJoint(obj)lines of code c++ vs python
-        #elif obj.MARStype == 'joint':
-         #   props = deriveJoint(obj)
         if obj.MARStype == 'inertial':
             props, parent = deriveInertial(obj)
         elif obj.MARStype == 'visual':
@@ -260,7 +258,7 @@ def deriveDictEntry(obj):
             props = deriveController(obj)
     except KeyError:
         print('MARStools: A KeyError occurred, likely because there is missing information in the model:\n    ', sys.exc_info()[0])
-    if obj.MARStype in ['link', 'joint', 'sensor', 'motor' 'controller']:
+    if obj.MARStype in ['sensor', 'motor' 'controller']:
         return cleanObjectProperties(props)
     else:
         return cleanObjectProperties(props), parent
@@ -288,7 +286,7 @@ def buildRobotDictionary():
         else:
             robot['modelname'] = 'unnamed_robot'
     # now parse the scene
-    # first digest all the links to derive link and joint information
+    # digest all the links to derive link and joint information
     for obj in bpy.context.selected_objects:
         if obj.MARStype == 'link':
             print('Parsing', obj.MARStype, obj.name, '...')
@@ -297,7 +295,7 @@ def buildRobotDictionary():
             if joint: #joint can be None if link is a root
                 robot['joint'][obj.name] = joint
             obj.select = False
-    # second complete link information by parsing visuals and collision objects
+    # complete link information by parsing visuals and collision objects
     #try:
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['inertial', 'visual', 'collision']:
@@ -305,7 +303,21 @@ def buildRobotDictionary():
             props, parent = deriveDictEntry(obj)
             robot[parent.MARStype][parent.name][obj.MARStype] = props
             obj.select = False
-    # third parse motors, sensors and contrllers
+    # recalculate inertials from collision/visual geometry if necessary
+    for linkname in robot['link']:
+        link = robot['link'][linkname]
+        print('Checking inertial for link', link['name'])
+        if 'inertial' in link: #ignore links without inertial
+            print('Found inertial...')
+            if 'mass' in link['inertial'] and 'inertia' not in link['inertial']: #ignore links without mass or links with predefined inertia
+                print('Found mass, but no inertia...')
+                if 'collision' in link and 'geometry' in link['collision']:
+                    link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], link['collision']['geometry'])
+                elif 'visual' in link and 'geometry' in link['visual']:
+                    link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], link['visual']['geometry'])
+                else:
+                    print("### WARNING: link has mass but no inertia/collision/visual:", link['name'])
+    # parse motors, sensors and controllers
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['sensor', 'motor', 'controller']:
             print('Parsing', obj.MARStype, obj.name, '...')
@@ -314,7 +326,7 @@ def buildRobotDictionary():
     #except (KeyError, TypeError):
     #    print("An error occurred when inserting the entry for object", obj.name, sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
     #    print(robot)
-    # finally, gather information on the groups of objects
+    # gather information on the groups of objects
     for group in bpy.data.groups: #TODO: get rid of the "data" part
         robot["group"] = deriveGroupEntry(group)
     return robot
@@ -344,12 +356,12 @@ def l2str(items, start=-1, end=-1):
 
 def writeURDFGeometry(output, element):
     output.append(indent*4+'<geometry>\n')
-    if element['geometryType'] == "box":
-        output.append(xmlline(5, 'box', ['size'], l2str(element["size"])))
+    if element['geometryType'] == 'box':
+        output.append(xmlline(5, 'box', ['size'], l2str(element['size'])))
     elif element['geometryType'] == "cylinder":
-        output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element["radius"], element["geometry"]["height"]]))
+        output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['height']]))
     elif element['geometryType'] == "sphere":
-        output.append(xmlline(5, 'cylinder', ['radius'], [element["radius"]]))
+        output.append(xmlline(5, 'cylinder', ['radius'], [element['radius']]))
     elif element['geometryType'] == "mesh":
         output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], '1.0 1.0 1.0']))#TODO correct this after implementing filename and scale properly
     output.append(indent*4+'</geometry>\n')
@@ -364,8 +376,8 @@ def exportModelToURDF(model, filepath):
         output.append(indent*2+'<link name="'+l+'">\n')
         output.append(indent*3+'<inertial>\n')
         output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
-        if "inertia" in link['inertial']:
-            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyx', 'iyy', 'iyz'], map(float, link['inertial']['inertia'])))
+        if 'inertia' in link['inertial']:
+            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyx', 'iyy', 'iyz'], link['inertial']['inertia']))
         output.append(indent*3+'</inertial>\n')
         #visual object
         if link['visual']:
@@ -411,6 +423,7 @@ def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot F
     #create all filenames
     model_filename = os.path.expanduser(path + model["modelname"] + ".yml")
     urdf_filename = os.path.expanduser(path + model["modelname"] + ".urdf")
+    pose_filename = os.path.expanduser(path + model["modelname"] + "_pose.yml")
     materials_filename = os.path.expanduser(path + model["modelname"] + "_materials.yml")
     sensors_filename = os.path.expanduser(path + model["modelname"] + "_sensors.yml")
     motors_filename = os.path.expanduser(path + model["modelname"] + "_motors.yml")
@@ -422,14 +435,15 @@ def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot F
     #write model information
     print('Writing SMURF information to...\n'+model_filename)
     modeldata = {}
-    #modeldata["modelname"] = model["modelname"]
+    #modeldata["name"] = model["modelname"]
     modeldata["date"] = model["date"]
-    modeldata["files"] = [urdf_filename, materials_filename,
-                          sensors_filename, motors_filename,
-                          controllers_filename, simulation_filename]
+    modeldata["files"] = [urdf_filename, pose_filename,
+                          materials_filename, sensors_filename,
+                          motors_filename, controllers_filename,
+                          simulation_filename]
     with open(model_filename, 'w') as op:
-        op.write('#main SMURF file of the model "'+model["modelname"]+"\n")
-        op.write("modelname: "+model["modelname"]+"\n")
+        op.write('#main SMURF file of model "'+model["modelname"]+"\n")
+        op.write("name: "+model["modelname"]+"\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
     #write urdf
@@ -472,7 +486,7 @@ def exportModelToSMURF(model, path): # Syntactically Malleable Universal Robot F
         op.write('#simulation'+infostring)
         op.write("modelname: "+model["modelname"]+"\n")
         simulationdata = {}
-        #TODO: handle simulationd-specific data
+        #TODO: handle simulation-specific data
         op.write(yaml.dump(simulationdata, default_flow_style=False))
 
 def exportSceneToSMURF(path):
