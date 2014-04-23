@@ -284,6 +284,7 @@ def deriveChainEntry(obj):
                 startChain = parent['startChain'].split()
                 if chainName in startChain:
                     chain['start'] = parent.name
+                    chain['elements'].append(parent.name)
                     chainclosed = True
         if chain is not None:
             returnchains.append(chain)
@@ -356,8 +357,9 @@ def buildRobotDictionary():
         robot["group"][group.name] = deriveGroupEntry(group)
     # gather information on chains of objects
     chains = []
-    for link in bpy.data.objects:
+    for obj in bpy.data.objects:
         if obj.MARStype == 'link' and 'endChain' in obj:
+            print("################FOUNDACHAIN###########")
             chains.extend(deriveChainEntry(obj))
     for chain in chains:
         robot['chain'][chain['name']] = chain
@@ -464,7 +466,7 @@ def exportModelToSMURF(model, path, relative = True): # Syntactically Malleable 
     simulation_filename = os.path.expanduser(path + model["modelname"] + "_simulation.yml")
     if relative:
         rel_urdf_filename = model["modelname"] + ".urdf"
-        rel_semantics_filename = model["modelname"] + "_kinematics.yml"
+        rel_semantics_filename = model["modelname"] + "_semantics.yml"
         rel_state_filename = model["modelname"] + "_state.yml"
         rel_materials_filename = model["modelname"] + "_materials.yml"
         rel_sensors_filename = model["modelname"] + "_sensors.yml"
@@ -502,8 +504,12 @@ def exportModelToSMURF(model, path, relative = True): # Syntactically Malleable 
     with open(semantics_filename, 'w') as op:
         op.write('#semantics'+infostring)
         op.write("modelname: "+model["modelname"]+"\n")
-        op.write(yaml.dump(model["group"], default_flow_style=False))
-        op.write(yaml.dump(model["chain"], default_flow_style=False))
+        semantics = {}
+        if model['group'] != {}:
+            semantics['group'] = model['group']
+        if model['chain'] != {}:
+            semantics['chain'] = model['chain']
+        op.write(yaml.dump(semantics, default_flow_style=False))
 
     #write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
     states = {}
