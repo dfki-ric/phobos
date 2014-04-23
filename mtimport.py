@@ -141,100 +141,6 @@ class RobotModelParser():
         self.path, self.filename = os.path.split(self.filepath)
         self.robot = {}
 
-#     def createBlenderModel(self):
-#         """Creates the blender object representation of the imported model."""
-#         print("Creating Blender model...")
-#         for l in self.robot['body']:
-#             link = self.robot['body'][l]
-#             #position = link['pose'][0:3]
-#             #rotation = link[link]['pose'][3:]
-#             #print(link['visual']['geometry'])
-#             geomtype = link['visual']['geometry']['type']
-#             if geomtype == 'mesh':
-#                 # import the .obj file (after importing a .obj file the newly
-#                 # added objects are selected by Blender)
-#                 filetype = link['filename'].split('.')[-1]
-#                 if filetype == 'obj' or filetype == 'OBJ':
-#                     bpy.ops.import_scene.obj(filepath=os.path.join(self.path, link['filename']))
-#                 elif filetype == 'stl' or filetype == 'STL':
-#                     bpy.ops.import_mesh.stl(filepath=os.path.join(self.path, link['filename']))
-#             elif geomtype == 'box':
-#                 mtutility.createPrimitive(link['name'],
-#                                           geomtype,
-#                                           tuple(link['visual']['geometry']['size']),
-#                                           0,
-#                                           link['visual']['material']['name'], #TODO: this does not yet work for locally re-defined materials
-#                                           (0, 0, 0)
-#                                           )
-#             elif geomtype == 'cylinder':
-#                 mtutility.createPrimitive(link['name'],
-#                                           geomtype,
-#                                           tuple(link['visual']['geometry']['radius'], link['visual']['geometry']['length']),
-#                                           0,
-#                                           link['visual']['material']['name'], #TODO: this does not yet work for locally re-defined materials
-#                                           (0, 0, 0)
-#                                           )
-#             elif geomtype == 'sphere':
-#                 mtutility.createPrimitive(link['name'],
-#                                           geomtype,
-#                                           [link['visual']['geometry']['radius']], #tuple would cause problem here
-#                                           0,
-#                                           link['visual']['material']['name'], #TODO: this does not yet work for locally re-defined materials
-#                                           (0, 0, 0)
-#                                           )
-#             #print(bpy.context.object)
-#             #print(bpy.context.scene.objects.active)
-#             newlink = bpy.context.selected_objects[0] #TODO: this is a total hack!!!
-#             newlink.name = link['name']
-#             if newlink.name != link['name']:
-#                 print("Warning, name conflict!")
-#             #reset scale
-#             if 'visual' in link and 'geometry' in link['visual'] and 'scale' in link['visual']['geometry']:
-#                 print("Rescaling object", link['name'])
-#                 newlink.scale = link['visual']['geometry']['scale']
-#             #correct translation & rotation
-#             print("Correcting pose of", l)
-#             newlink = bpy.data.objects[l]
-#             #print(linkslist[l])
-#             #print(self.robot['body'][linkslist[l]])
-#             #print(self.robot['body'][linkslist[l]]['parent'])
-#             try:
-#                 parent = self.robot['body'][self.robot['body'][self.robot['body'][l]]['parent']] #TODO: here we still have a problem with changed names
-#             except KeyError:
-#                 print("Did not find parent node for", l, "- root node?")
-#                 continue
-#             parent_location = mathutils.Vector(tuple(parent['pose'][0:3]))
-#             parent_rotation = mathutils.Euler(tuple(parent['pose'][3:]), 'XYZ')
-#             parent_rotationQ = parent_rotation.to_quaternion()
-#             newlink.location = parent_location + parent_rotationQ * (parent_location + mathutils.Vector(link['pose'][0:3]))
-#             print(newlink.rotation_quaternion)
-#             newlink_rotation = mathutils.Euler(tuple(link['pose'][3:]), 'XYZ')
-#             newlink.rotation_mode = "QUATERNION"
-#             newlink.rotation_quaternion = parent_rotationQ * newlink_rotation.to_quaternion()
-#             print(newlink.rotation_quaternion, '\n')
-#             bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
-#
-#             # now that we've applied the rotation of the joint, let's add the visual part (which is applied, too)
-#             newlink.rotation_quaternion = mathutils.Euler(tuple(link['visual']['pose'][3:]), 'XYZ').to_quaternion()
-#             #bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
-#             #newlink.dimensions = [a*b for a,b in zip(newlink.dimensions, link['visual']['geometry']['scale'])]
-#
-#         #build tree
-#         print("\n\n Build tree...")
-#         for l in self.robot.body[l]:
-#             link = self.robot['body'][l]
-#             if 'parent' in link:
-#                 print(l + '..', end="")
-#                 parentLink = bpy.data.objects[link['parent']]
-#                 childLink = bpy.data.objects[link['name']]
-#                 bpy.ops.object.select_all(action="DESELECT") #bpy.context.selected_objects = []
-#                 childLink.select = True
-#                 parentLink.select = True
-#                 bpy.context.scene.objects.active = parentLink
-#                 bpy.ops.object.parent_set()
-#                 #childLink.parent = parentLink # TODO: this circumvents the parent inverse calculation!!!
-#         print("done.")
-
     def createRecursiveBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model."""
         print("\n\nCreating Blender model...")
@@ -393,7 +299,7 @@ class URDFModelParser(RobotModelParser):
                     values = []
                     newlink['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
             else:
-                newlink['inertial']['mass'] = defaults.mass
+                newlink['inertial'] = {'mass': defaults.mass}
 
             #parse 'visual'
             visual = link.find('visual')
@@ -424,12 +330,12 @@ class URDFModelParser(RobotModelParser):
                     newlink['visual']['material'] = {'name':'None'} #TODO: this is a hack!
                     print("\n### Warning: No material provided for link", newlink['name'])
             else:
-                print("\n### WARNING: No visual information provided for link", newlink['name'] + '. Trying to parse from collision...')
+                print("\n### WARNING: No visual information provided for link", newlink['name'])
 
             #parse 'collision' #TODO: support multiple collision bodies via union of the geometry
             collision = link.find('collision')
             if collision is not None:
-                newlink['collision'] = {a: visual.attrib[a] for a in visual.attrib}
+                newlink['collision'] = {a: collision.attrib[a] for a in collision.attrib}
                 origin = collision.find('origin')
                 if origin is not None:
                     newlink['collision']['pose'] = origin.attrib['xyz'].split(' ') + origin.attrib['rpy'].split(' ')
@@ -441,10 +347,10 @@ class URDFModelParser(RobotModelParser):
                     newlink['collision']['geometry']['type'] = geometry[0].tag
                     if geometry[0].tag == 'mesh':
                         newlink['filename'] = geometry[0].attrib['filename']
-                    if novisual:
-                        newlink['visual']['geometry'] = newlink['collision']['geometry']
+                    #if novisual:
+                    #    newlink['visual']['geometry'] = newlink['collision']['geometry']
                 else:
-                    print("\n### WARNING: No collision information provided for link", newlink['name'] + '.')
+                    print("\n### WARNING: No collision geometry information provided for link", newlink['name'] + '.')
                     if novisual:
                         print("\n### WARNING:", newlink['name'], "is empty.")
             else:
