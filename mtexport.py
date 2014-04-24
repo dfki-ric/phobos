@@ -123,9 +123,9 @@ def deriveJoint(obj):
     props['jointType'], crot = mtjoints.deriveJointType(obj, True)
     axis, limit = mtjoints.getJointConstraints(obj)
     if axis:
-        props['axis'] = axis #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+        props['axis'] = list(axis) #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
     if limit:
-        props['limits'] = limit # limit gets returned as None if there are no limits
+        props['limits'] = list(limit) # limit gets returned as None if there are no limits
     props["state"] = deriveJointState(obj)
     #TODO: What to do with the following information on the axes?
     #bpy.data.armatures["Armature.001"].bones["Bone"].x_axis
