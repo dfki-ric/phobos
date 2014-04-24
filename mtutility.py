@@ -112,7 +112,7 @@ def createPrimitive(pname, ptype, psize, player = 0, pmaterial = "None", plocati
         obj = bpy.context.object
         obj.dimensions = psize
     if ptype == "sphere":
-        bpy.ops.mesh.primitive_uv_sphere_add(size = psize[0], layers = players, location = plocation, rotation = protation)
+        bpy.ops.mesh.primitive_uv_sphere_add(size = psize, layers = players, location = plocation, rotation = protation)
     elif ptype == "cylinder":
         bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=psize[0], depth=psize[1], layers=players, location = plocation, rotation = protation)
     elif ptype == "cone":
