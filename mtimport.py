@@ -141,27 +141,45 @@ class RobotModelParser():
         self.path, self.filename = os.path.split(self.filepath)
         self.robot = {}
 
-    def createRecursiveBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
-        """Creates the blender object representation of the imported model."""
-        print("\n\nCreating Blender model...")
+    def place_children_of(self, parent):
+        print(parent['name']+ ', ', end='')
+        children = []
         for l in self.robot['link']:
-            print(l + ', ', end='')
-            link = self.robot['link'][l]
+            if 'parent' in self.robot['link'][l] and self.robot['link'][l]['parent'] == parent['name']:
+                children.append(self.robot['link'][l])
+        for child in children:
+            # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
+            parentLink = bpy.data.objects[parent['name']]
+            childLink = bpy.data.objects[child['name']]
+            bpy.ops.object.select_all(action="DESELECT") #bpy.context.selected_objects = []
+            childLink.select = True
+            parentLink.select = True
+            bpy.context.scene.objects.active = parentLink
+            bpy.ops.object.parent_set()
+            # 2: move to parents origin by setting the world matrix to the parents world matrix
+            childLink.matrix_world = parentLink.matrix_world #HACK: this does not work if the parent link has transformed visual
+            # 3: apply local transform as saved in urdf (change matrix_local from identity to urdf)
+            # 3.1: build a transformation matrix from urdf joint pose (this can be used for creating new joint spheres)
+            urdf_loc = mathutils.Matrix.Translation(child['pose'][0:3]) #TODO: this is actually only the position of the joint sphere, we need to add visual/inertial to this
+            urdf_rot = mathutils.Euler(tuple(child['pose'][3:]), 'XYZ').to_matrix().to_4x4()
+            # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
+            if 'visual' in child and 'pose' in child['visual']:
+                urdf_visual_loc = mathutils.Matrix.Translation(child['visual']['pose'][0:3])
+                urdf_visual_rot = mathutils.Euler(tuple(child['visual']['pose'][3:]), 'XYZ').to_matrix().to_4x4()
+            else:
+                urdf_visual_loc = mathutils.Matrix.Identity(4)
+                urdf_visual_rot = mathutils.Matrix.Identity(4)
+            #urdf_sca = #TODO: solve problem with scale
+            urdfmatrix = urdf_loc * urdf_rot * urdf_visual_loc * urdf_visual_rot #*urdf_sca
+            # 3.3: set local transform to matrix computed from urdf #TODO: keep bounding boxes on a different layer in blender or use inbuilt bounding box functionality?
+            childLink.matrix_local = urdfmatrix
+            # 4: be happy, as world and basis are now the same and local is the transform to be exported to urdf
+            # 5: take care of the rest of the tree
+            self.place_children_of(child)
 
-            #determine which visual representation to use
-            geomtype = 'None'
-            geomsrc = 'visual'
-            if 'visual' in link:
-                geomtype = link['visual']['geometry']['type']
-            elif 'collision' in link:
-                geomtype = link['collision']['geometry']['type']
-                geomsrc = 'collision'
-            else: #only inertial, create dummy link
-                mtutility.createPrimitive(link['name'], 'sphere', [0.001], 0, 'None', (0, 0, 0))
-                #bpy.ops.object.empty_add(type='ARROWS')
-                #obj = bpy.context.object
-                #obj.name = link['name']
-
+    def createGeometry(self, link, geomsrc):
+        if link[geomsrc]['geometry'] is not {}:
+            geomtype = link[geomsrc]['geometry']['geometryType']
             # create the Blender object
             if geomtype == 'mesh':
                 filetype = link['filename'].split('.')[-1]
@@ -173,81 +191,83 @@ class RobotModelParser():
                 mtutility.createPrimitive(link['name'],
                                           geomtype,
                                           tuple(link['visual']['geometry']['size']),
-                                          0,
+                                          mtdefs.layerTypes(geomsrc),
                                           link[geomsrc]['material']['name'], #TODO: this does not yet work for locally re-defined materials
                                           (0, 0, 0)
                                           )
+                return bpy.context.object
             elif geomtype == 'cylinder':
                 mtutility.createPrimitive(link['name'],
                                           geomtype,
                                           tuple(link['visual']['geometry']['radius'], link['visual']['geometry']['length']),
-                                          0,
+                                          mtdefs.layerTypes(geomsrc),
                                           link[geomsrc]['material']['name'], #TODO: this does not yet work for locally re-defined materials
                                           (0, 0, 0)
                                           )
+                return bpy.context.object
             elif geomtype == 'sphere':
                 mtutility.createPrimitive(link['name'],
                                           geomtype,
                                           link['visual']['geometry']['radius'], #tuple would cause problem here
-                                          0,
+                                          mtdefs.layerTypes(geomsrc),
                                           link[geomsrc]['material']['name'], #TODO: this does not yet work for locally re-defined materials
                                           (0, 0, 0)
                                           )
+                return bpy.context.active_object
             else:
-                print("### ERROR: Could not determine geometry type of link", l + '. Placing empty coordinate system.')
-            #print(bpy.context.object)
-            #print(bpy.context.scene.objects.active)
-            newlink = bpy.context.selected_objects[0] #TODO: this is a total hack!!!
-            newlink.name = link['name']
-            if newlink.name != link['name']:
-                print("Warning, name conflict!")
-            #reset scale
-            if 'visual' in link and 'geometry' in link['visual'] and 'scale' in link['visual']['geometry']:
-                newlink.scale = link['visual']['geometry']['scale']
-                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                print("### ERROR: Could not determine geometry type of link", link['name'] + '. Placing empty coordinate system.')
+                return None
 
-        def place_children_of(parent):
-            print(parent['name']+ ', ', end='')
-            children = []
-            for l in self.robot['link']:
-                if 'parent' in self.robot['link'][l] and self.robot['link'][l]['parent'] == parent['name']:
-                    children.append(self.robot['link'][l])
-            for child in children:
-                # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
-                parentLink = bpy.data.objects[parent['name']]
-                childLink = bpy.data.objects[child['name']]
-                bpy.ops.object.select_all(action="DESELECT") #bpy.context.selected_objects = []
-                childLink.select = True
-                parentLink.select = True
-                bpy.context.scene.objects.active = parentLink
-                bpy.ops.object.parent_set()
-                # 2: move to parents origin by setting the world matrix to the parents world matrix
-                childLink.matrix_world = parentLink.matrix_world #HACK: this does not work if the parent link has transformed visual
-                # 3: apply local transform as saved in urdf (change matrix_local from identity to urdf)
-                # 3.1: build a transformation matrix from urdf joint pose (this can be used for creating new joint spheres)
-                urdf_loc = mathutils.Matrix.Translation(child['pose'][0:3]) #TODO: this is actually only the position of the joint sphere, we need to add visual/inertial to this
-                urdf_rot = mathutils.Euler(tuple(child['pose'][3:]), 'XYZ').to_matrix().to_4x4()
-                # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
-                if 'visual' in child and 'pose' in child['visual']:
-                    urdf_visual_loc = mathutils.Matrix.Translation(child['visual']['pose'][0:3])
-                    urdf_visual_rot = mathutils.Euler(tuple(child['visual']['pose'][3:]), 'XYZ').to_matrix().to_4x4()
-                else:
-                    urdf_visual_loc = mathutils.Matrix.Identity(4)
-                    urdf_visual_rot = mathutils.Matrix.Identity(4)
-                #urdf_sca = #TODO: solve problem with scale
-                urdfmatrix = urdf_loc * urdf_rot * urdf_visual_loc * urdf_visual_rot #*urdf_sca
-                # 3.3: set local transform to matrix computed from urdf #TODO: keep bounding boxes on a different layer in blender or use inbuilt bounding box functionality?
-                childLink.matrix_local = urdfmatrix
-                # 4: be happy, as world and basis are now the same and local is the transform to be exported to urdf
-                # 5: take care of the rest of the tree
-                place_children_of(child)
+    def createInertial(self, name, inertial):
+        inert = mtutility.createPrimitive('inertial'+name, 'sphere', [0.01], 0, 'None', (0, 0, 0))
+        #obj = bpy.context.object
+        #obj.name = name
+        for prop in inertial:
+            inert[prop] = inertial[prop]
+
+    def createLink(self, link):
+        #create base object ( =armature)
+        bpy.ops.object.armature_add(layers=mtutility.defLayers([0]))
+        blendlink = bpy.context.active_object
+        #place inertial
+        if 'inertial' in link:
+            self.createInertial(self, link['name'], link['inertial'])
+        # place visual
+        if 'visual' in link:
+            if 'geometry' in link['visual']:
+                visual = self.createGeometry(link, 'visual')
+        # place collision
+        if 'collision' in link:
+            if 'geometry' in link['collision']:
+                collision = self.createGeometry(link, 'collision')
+
+
+        #print(bpy.context.object)
+        #print(bpy.context.scene.objects.active)
+        newlink = bpy.context.selected_objects[0] #TODO: this is a total hack!!!
+        newlink.name = link['name']
+        if newlink.name != link['name']:
+            print("Warning, name conflict!")
+        #reset scale
+        if 'visual' in link and 'geometry' in link['visual'] and 'scale' in link['visual']['geometry']:
+            newlink.scale = link['visual']['geometry']['scale']
+            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
+    def createRecursiveBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
+        """Creates the blender object representation of the imported model."""
+        print("\n\nCreating Blender model...")
+        for l in self.robot['link']:
+            print(l + ', ', end='')
+            link = self.robot['link'][l]
+
+            self.createLink(link)
 
         #build tree recursively and correct translation & rotation on the fly
         for l in self.robot['link']:
             if not 'parent' in self.robot['link'][l]:
                 root = self.robot['link'][l]
         print("\n\nPlacing links...")
-        place_children_of(root)
+        self.place_children_of(root)
 
 
 class MARSModelParser(RobotModelParser):
