@@ -144,7 +144,7 @@ class RobotModelParser():
     def placeChildLinks(self, parent):
         print(parent['name']+ ', ', end='')
         children = []
-        for l in self.robot['links']: #TODO: couldn't we look this up in the list of joints?
+        for l in self.robot['links']:
             if 'parent' in self.robot['links'][l] and self.robot['links'][l]['parent'] == parent['name']:
                 children.append(self.robot['links'][l])
         for child in children:
@@ -167,16 +167,34 @@ class RobotModelParser():
             # 5: take care of the rest of the tree
             self.placeChildLinks(child)
 
-    def placeChildVisualInertial(self, link):
+    def placeLinkSubelements(self, link):
         #urdf_sca = #TODO: solve problem with scale
         # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
         #* urdf_visual_loc * urdf_visual_rot #*urdf_sca
-        if 'visual' in link and 'pose' in link['visual']:
-            urdf_visual_loc = mathutils.Matrix.Translation(link['visual']['pose'][0:3])
-            urdf_visual_rot = mathutils.Euler(tuple(link['visual']['pose'][3:]), 'XYZ').to_matrix().to_4x4()
-        else:
-            urdf_visual_loc = mathutils.Matrix.Identity(4)
-            urdf_visual_rot = mathutils.Matrix.Identity(4)
+        parentLink = bpy.data.objects[link['name']]
+        for geomsrc in ['visual', 'collision']: #TODO: add inertial (name issue)
+            if geomsrc in link:
+                if 'pose' in link[geomsrc]:
+                    print(link['name'], geomsrc, link[geomsrc]['pose'][0:3])
+                    urdf_geom_loc = mathutils.Matrix.Translation(link[geomsrc]['pose'][0:3])
+                    urdf_geom_rot = mathutils.Euler(tuple(link[geomsrc]['pose'][3:]), 'XYZ').to_matrix().to_4x4()
+                else:
+                    urdf_geom_loc = mathutils.Matrix.Identity(4)
+                    urdf_geom_rot = mathutils.Matrix.Identity(4)
+                if 'scale' in link[geomsrc]['geometry']:
+                    urdf_geom_scale = link[geomsrc]['geometry']['scale']
+                else:
+                    urdf_geom_scale = [1.0, 1.0, 1.0]
+                    #bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                geom = bpy.data.objects[link[geomsrc]['name']]
+                bpy.ops.object.select_all(action="DESELECT")
+                geom.select = True
+                parentLink.select = True
+                bpy.context.scene.objects.active = parentLink
+                bpy.ops.object.parent_set()
+                geom.matrix_world = parentLink.matrix_world
+                geom.matrix_local = urdf_geom_loc * urdf_geom_rot
+                geom.scale = urdf_geom_scale
 
     def createGeometry(self, link, geomsrc):
         newgeom = None
@@ -186,6 +204,7 @@ class RobotModelParser():
                 name = link[geomsrc]['name']
             else:
                 name = geomsrc+'_'+link['name']
+                link[geomsrc]['name'] = name # TODO: Not sure if this should really be done here!
             # create the Blender object
             if geomtype == 'mesh':
                 filetype = link['filename'].split('.')[-1]
@@ -217,10 +236,6 @@ class RobotModelParser():
                                           )
             else:
                 print("### ERROR: Could not determine geometry type of link", link['name'] + '. Placing empty coordinate system.')
-            if newgeom is not None:
-                if 'scale' in link[geomsrc]['geometry']: #TODO: check if this influences translation later
-                    newgeom.scale = link[geomsrc]['geometry']['scale']
-                    #bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
             return newgeom
 
     def createInertial(self, name, inertial):
@@ -267,7 +282,7 @@ class RobotModelParser():
         print("\n\nPlacing links...")
         self.placeChildLinks(root)
         for link in self.robot['links']:
-            placeChildVisualInertial(robot['links'][link])
+            self.placeLinkSubelements(self.robot['links'][link])
 
 
 
@@ -400,7 +415,7 @@ class URDFModelParser(RobotModelParser):
             newlink['collision'] = {a: collision.attrib[a] for a in collision.attrib}
             origin = collision.find('origin')
             if origin is not None:
-                newlink['collision']['pose'] = origin.attrib['xyz'].split(' ') + origin.attrib['rpy'].split(' ')
+                newlink['collision']['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
             else:
                 newlink['collision']['pose'] = defaults.idtransform
             geometry = collision.find('geometry')
