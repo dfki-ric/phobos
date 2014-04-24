@@ -293,14 +293,14 @@ def deriveChainEntry(obj):
 def buildRobotDictionary():
     #notifications, faulty_objects = mtmisctools.checkModel(bpy.context.selected_objects)
     #print(notifications)
-    robot = {'link': {},
-            'joint': {},
-            'sensor': {},
-            'motor': {},
-            'controller': {},
-            'material': {},
-            'group': {},
-            'chain': {}}
+    robot = {'links': {},
+            'joints': {},
+            'sensors': {},
+            'motors': {},
+            'controllers': {},
+            'materials': {},
+            'groups': {},
+            'chains': {}}
     #save timestamped version of model
     robot["date"] = datetime.datetime.now().strftime("%Y%m%d_%H:%M")
     root = getRoot(bpy.context.selected_objects[0])
@@ -317,9 +317,9 @@ def buildRobotDictionary():
         if obj.MARStype == 'link':
             print('Parsing', obj.MARStype, obj.name, '...')
             link, joint = deriveKinematics(obj)
-            robot['link'][obj.name] = link
+            robot['links'][obj.name] = link
             if joint: #joint can be None if link is a root
-                robot['joint'][obj.name] = joint
+                robot['joints'][joint['name']] = joint
             obj.select = False
     # complete link information by parsing visuals and collision objects
     #try:
@@ -327,11 +327,11 @@ def buildRobotDictionary():
         if obj.MARStype in ['inertial', 'visual', 'collision']:
             print('Parsing', obj.MARStype, obj.name, '...')
             props, parent = deriveDictEntry(obj)
-            robot[parent.MARStype][parent.name][obj.MARStype] = props
+            robot[parent.MARStype+'s'][parent.name][obj.MARStype] = props
             obj.select = False
     # recalculate inertials from collision/visual geometry if necessary
-    for linkname in robot['link']:
-        link = robot['link'][linkname]
+    for linkname in robot['links']:
+        link = robot['links'][linkname]
         print('Checking inertial for link', link['name'])
         if 'inertial' in link: #ignore links without inertial
             print('Found inertial...')
@@ -347,29 +347,28 @@ def buildRobotDictionary():
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['sensor', 'motor', 'controller']:
             print('Parsing', obj.MARStype, obj.name, '...')
-            robot[obj.MARStype][obj.name] = deriveDictEntry(obj)
+            robot[obj.MARStype+'s'][obj.name] = deriveDictEntry(obj)
             obj.select = False
     #except (KeyError, TypeError):
     #    print("An error occurred when inserting the entry for object", obj.name, sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
     #    print(robot)
     # gather information on groups of objects
     for group in bpy.data.groups: #TODO: get rid of the "data" part
-        robot["group"][group.name] = deriveGroupEntry(group)
+        robot['groups'][group.name] = deriveGroupEntry(group)
     # gather information on chains of objects
     chains = []
     for obj in bpy.data.objects:
         if obj.MARStype == 'link' and 'endChain' in obj:
-            print("################FOUNDACHAIN###########")
             chains.extend(deriveChainEntry(obj))
     for chain in chains:
-        robot['chain'][chain['name']] = chain
+        robot['chains'][chain['name']] = chain
     return robot
 
 def exportModelToYAML(model, filepath):
     print("MARStools YAML export: Writing model data to", filepath )
     with open(filepath, 'w') as outputfile:
-        outputfile.write('#YAML dump of robot model "'+model["modelname"]+'", '+datetime.datetime.now().strftime("%Y%m%d_%H:%M"))
-        outputfile.write(yaml.dump(model, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
+        outputfile.write('#YAML dump of robot model "'+model['modelname']+'", '+datetime.datetime.now().strftime("%Y%m%d_%H:%M")+"\n\n")
+        outputfile.write(yaml.dump(model))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 def xmlline(ind, tag, names, values):
     line = []
@@ -403,10 +402,10 @@ def writeURDFGeometry(output, element):
 def exportModelToURDF(model, filepath):
     output = []
     output.append(urdfHeader)
-    output.append(indent+'<robot name="'+model["modelname"]+'">\n\n')
+    output.append(indent+'<robot name="'+model['modelname']+'">\n\n')
     #export link information
-    for l in model["link"].keys():
-        link = model["link"][l]
+    for l in model['links'].keys():
+        link = model['links'][l]
         output.append(indent*2+'<link name="'+l+'">\n')
         output.append(indent*3+'<inertial>\n')
         output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
@@ -431,10 +430,10 @@ def exportModelToURDF(model, filepath):
             output.append(indent*3+'</collision>\n')
         output.append(indent*2+'</link>\n\n')
     #export joint information
-    for j in model["joint"]:
-        joint = model["joint"][j]
+    for j in model['joints']:
+        joint = model['joints'][j]
         output.append(indent*2+'<joint name="'+joint['name']+'" type="'+joint["jointType"]+'">\n')
-        child = model["link"][joint["child"]]
+        child = model['links'][joint["child"]]
         output.append(xmlline(3, 'origin', ['xyz', 'rpy'], [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])]))
         output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')
         output.append(indent*3+'<child link="'+joint["child"]+'"/>\n')
@@ -449,38 +448,38 @@ def exportModelToURDF(model, filepath):
     output.append(urdfFooter)
     with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))
-    #print(model["link"].keys())
+    #print(model['links'].keys())
     # problem of different joint transformations needed for fixed joints
     print("MARStools URDF export: Writing model data to", filepath )
 
 def exportModelToSMURF(model, path, relative = True): # Syntactically Malleable Universal Robot Format / Supplementable, Mostly URF / Supplement-Managed URF
     #create all filenames
-    model_filename = os.path.expanduser(path + model["modelname"] + ".yml")
-    urdf_filename = os.path.expanduser(path + model["modelname"] + ".urdf")
-    semantics_filename = os.path.expanduser(path + model["modelname"] + "_semantics.yml")
-    state_filename = os.path.expanduser(path + model["modelname"] + "_state.yml")
-    materials_filename = os.path.expanduser(path + model["modelname"] + "_materials.yml")
-    sensors_filename = os.path.expanduser(path + model["modelname"] + "_sensors.yml")
-    motors_filename = os.path.expanduser(path + model["modelname"] + "_motors.yml")
-    controllers_filename = os.path.expanduser(path + model["modelname"] + "_controllers.yml")
-    simulation_filename = os.path.expanduser(path + model["modelname"] + "_simulation.yml")
+    model_filename = os.path.expanduser(path + model['modelname'] + ".yml")
+    urdf_filename = os.path.expanduser(path + model['modelname'] + ".urdf")
+    semantics_filename = os.path.expanduser(path + model['modelname'] + "_semantics.yml")
+    state_filename = os.path.expanduser(path + model['modelname'] + "_state.yml")
+    materials_filename = os.path.expanduser(path + model['modelname'] + "_materials.yml")
+    sensors_filename = os.path.expanduser(path + model['modelname'] + "_sensors.yml")
+    motors_filename = os.path.expanduser(path + model['modelname'] + "_motors.yml")
+    controllers_filename = os.path.expanduser(path + model['modelname'] + "_controllers.yml")
+    simulation_filename = os.path.expanduser(path + model['modelname'] + "_simulation.yml")
     if relative:
-        rel_urdf_filename = model["modelname"] + ".urdf"
-        rel_semantics_filename = model["modelname"] + "_semantics.yml"
-        rel_state_filename = model["modelname"] + "_state.yml"
-        rel_materials_filename = model["modelname"] + "_materials.yml"
-        rel_sensors_filename = model["modelname"] + "_sensors.yml"
-        rel_motors_filename = model["modelname"] + "_motors.yml"
-        rel_controllers_filename = model["modelname"] + "_controllers.yml"
-        rel_simulation_filename = model["modelname"] + "_simulation.yml"
+        rel_urdf_filename = model['modelname'] + ".urdf"
+        rel_semantics_filename = model['modelname'] + "_semantics.yml"
+        rel_state_filename = model['modelname'] + "_state.yml"
+        rel_materials_filename = model['modelname'] + "_materials.yml"
+        rel_sensors_filename = model['modelname'] + "_sensors.yml"
+        rel_motors_filename = model['modelname'] + "_motors.yml"
+        rel_controllers_filename = model['modelname'] + "_controllers.yml"
+        rel_simulation_filename = model['modelname'] + "_simulation.yml"
 
 
-    infostring = ' definition SMURF file for "'+model["modelname"]+', '+model["date"]+"\n"
+    infostring = ' definition SMURF file for "'+model['modelname']+'", '+model["date"]+"\n\n"
 
     #write model information
     print('Writing SMURF information to...\n'+model_filename)
     modeldata = {}
-    #modeldata["name"] = model["modelname"]
+    #modeldata["name"] = model['modelname']
     modeldata["date"] = model["date"]
     if relative:
         modeldata["files"] = [rel_urdf_filename, rel_semantics_filename, rel_state_filename,
@@ -493,8 +492,8 @@ def exportModelToSMURF(model, path, relative = True): # Syntactically Malleable 
                               motors_filename, controllers_filename,
                               simulation_filename]
     with open(model_filename, 'w') as op:
-        op.write('#main SMURF file of model "'+model["modelname"]+'"\n')
-        op.write("modelname: "+model["modelname"]+"\n")
+        op.write('#main SMURF file of model "'+model['modelname']+'"\n\n')
+        op.write("modelname: "+model['modelname']+"\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
     #write urdf
@@ -503,30 +502,30 @@ def exportModelToSMURF(model, path, relative = True): # Syntactically Malleable 
     #write semantics (SRDF information in YML format)
     with open(semantics_filename, 'w') as op:
         op.write('#semantics'+infostring)
-        op.write("modelname: "+model["modelname"]+"\n")
+        op.write("modelname: "+model['modelname']+'\n')
         semantics = {}
-        if model['group'] != {}:
-            semantics['group'] = model['group']
-        if model['chain'] != {}:
-            semantics['chain'] = model['chain']
+        if model['groups'] != {}:
+            semantics['groups'] = model['groups']
+        if model['chains'] != {}:
+            semantics['chains'] = model['chains']
         op.write(yaml.dump(semantics, default_flow_style=False))
 
     #write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
     states = {}
     #gather all states
-    for jointname in model['joint']:
-        joint = model['joint'][jointname]
+    for jointname in model['joints']:
+        joint = model['joints'][jointname]
         if 'state' in joint: #this should always be the case, but testing doesn't hurt
             states[jointname] = joint['state']
     with open(state_filename, 'w') as op:
         op.write('#state'+infostring)
-        op.write("modelname: "+model["modelname"]+"\n")
-        op.write(yaml.dump(states, default_flow_style=False))
+        op.write("modelname: "+model['modelname']+'\n')
+        op.write(yaml.dump(states))#, default_flow_style=False))
 
     #write materials
     with open(materials_filename, 'w') as op:
         op.write('#materials'+infostring)
-        op.write("modelname: "+model["modelname"]+"\n")
+        op.write("modelname: "+model['modelname']+'\n')
         materialdata = {}
         for key in bpy.data.materials.keys():
             print("MARStools: processing material", key)
@@ -540,25 +539,25 @@ def exportModelToSMURF(model, path, relative = True): # Syntactically Malleable 
     #write sensors
     with open(sensors_filename, 'w') as op:
         op.write('#sensors'+infostring)
-        op.write("modelname: "+model["modelname"]+"\n")
-        op.write(yaml.dump(model["sensor"], default_flow_style=False))
+        op.write("modelname: "+model['modelname']+'\n')
+        op.write(yaml.dump(model['sensors'], default_flow_style=False))
 
     #write motors
     with open(motors_filename, 'w') as op:
         op.write('#motors'+infostring)
-        op.write("modelname: "+model["modelname"]+"\n")
-        op.write(yaml.dump(model["motor"], default_flow_style=False))
+        op.write("modelname: "+model['modelname']+'\n')
+        op.write(yaml.dump(model['motors'], default_flow_style=False))
 
     #write controllers
     with open(controllers_filename, 'w') as op:
         op.write('#controllers'+infostring)
-        op.write("modelname: "+model["modelname"]+"\n")
-        op.write(yaml.dump(model["controller"], default_flow_style=False))
+        op.write("modelname: "+model['modelname']+'\n')
+        op.write(yaml.dump(model['controllers'], default_flow_style=False))
 
     #write simulation
     with open(simulation_filename, 'w') as op:
         op.write('#simulation'+infostring)
-        op.write("modelname: "+model["modelname"]+"\n")
+        op.write("modelname: "+model['modelname']+'\n')
         simulationdata = {}
         #TODO: handle simulation-specific data
         op.write(yaml.dump(simulationdata, default_flow_style=False))
