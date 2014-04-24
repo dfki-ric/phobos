@@ -199,6 +199,7 @@ def deriveObjectPose(obj):
 
 def deriveVisual(obj):
     visual = initObjectProperties(obj)
+    visual['name'] = obj.name
     visual["pose"] = deriveObjectPose(obj) #calcPose(obj, "visual")
     if obj.data.materials:
         material = {}
@@ -210,6 +211,7 @@ def deriveVisual(obj):
 
 def deriveCollision(obj):
     collision = initObjectProperties(obj)
+    collision['name'] = obj.name
     collision["geometry"] = deriveGeometry(obj)
     collision["pose"] = deriveObjectPose(obj) #calcPose(obj, "collision") #TODO: technically, this creates twice the computation for naught
     return collision, obj.parent
