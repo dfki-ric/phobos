@@ -30,76 +30,8 @@ defaults = Defaults(0.001, #mass
 def register():
     print("Registering mtimport...")
 
-
-# def is_float(s):
-#     try:
-#         float(s)
-#         return True
-#     except ValueError:
-#         return False
-#
-# def is_int(s):
-#     try:
-#         int(s)
-#         return True
-#     except ValueError:
-#         return False
-#
-# def parse_number(s):
-#     if is_int(s):
-#         return int(s)
-#     elif is_float(s):
-#         return float(s)
-#     else:
-#         return s
-#
-# def only_contains_int(stringlist):
-#     for num in stringlist:
-#         if not is_int(num):
-#             return False
-#     return True
-#
-# def only_contains_float(stringlist):
-#     for num in stringlist:
-#         if not is_float(num):
-#             return False
-#     return True
-#
-# def find_in_list(alist, prop, value):
-#     n = -1
-#
-#     for i in range(len(alist)):
-#         if alist[i][prop] == value:
-#             n = i
-#             break
-#     return n
-#
-# def retrieve_from_list(alist, prop, value):
-#     n = -1
-#
-#     for i in range(len(alist)):
-#         if alist[i][prop] == value:
-#             n = i
-#             break
-#     if n >= 0:
-#         return alist[n][prop]
-#     else:
-#         return "None"
-#
-#
-# def parse_text(s):
-#     numstrings = s.split()
-#     if len(numstrings) > 0:
-#         if only_contains_int(numstrings):
-#             nums = [int(num) for num in numstrings]
-#             return nums
-#         elif only_contains_float(numstrings):
-#             nums = [float(num) for num in numstrings]
-#             return nums
-#         else:
-#             return s
-#     else:
-#         return parse_number(s)
+def unregister():
+    print("Unregistering mtimport...")
 
 def cleanUpScene():
     # select all objects
@@ -120,17 +52,6 @@ def cleanUpScene():
     # and all lights (aka lamps)
     for lamp in bpy.data.lamps:
         bpy.data.lamps.remove(lamp)
-
-    # clear global parameters (needed when importing this file and trying
-    # to load multiple .scn files)
-    #nodeList.clear()
-    #jointList.clear()
-    #sensorList.clear()
-    #materialList.clear()
-    #controllerList.clear()
-    #lightList.clear()
-    #objFileMap.clear()
-    #unusedNodeList.clear()
 
 
 class RobotModelParser():
@@ -172,7 +93,7 @@ class RobotModelParser():
         # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
         #* urdf_visual_loc * urdf_visual_rot #*urdf_sca
         parentLink = bpy.data.objects[link['name']]
-        for geomsrc in ['visual', 'collision']: #TODO: add inertial (name issue)
+        for geomsrc in ['visual', 'collision', 'inertial']:
             if geomsrc in link:
                 if 'pose' in link[geomsrc]:
                     print(link['name'], geomsrc, link[geomsrc]['pose'][0:3])
@@ -181,12 +102,13 @@ class RobotModelParser():
                 else:
                     urdf_geom_loc = mathutils.Matrix.Identity(4)
                     urdf_geom_rot = mathutils.Matrix.Identity(4)
-                if 'scale' in link[geomsrc]['geometry']:
+                if 'geometry' in link[geomsrc] and 'scale' in link[geomsrc]['geometry']:
                     urdf_geom_scale = link[geomsrc]['geometry']['scale']
                 else:
                     urdf_geom_scale = [1.0, 1.0, 1.0]
                     #bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                geom = bpy.data.objects[link[geomsrc]['name']]
+                geoname = 'inertial_'+link['name'] if geomsrc is 'inertial' else link[geomsrc]['name']
+                geom = bpy.data.objects[geoname]
                 bpy.ops.object.select_all(action="DESELECT")
                 geom.select = True
                 parentLink.select = True
@@ -236,15 +158,19 @@ class RobotModelParser():
                                           )
             else:
                 print("### ERROR: Could not determine geometry type of link", link['name'] + '. Placing empty coordinate system.')
+            if newgeom is not None:
+                newgeom.MARStype = geomsrc
             return newgeom
 
     def createInertial(self, name, inertial):
-        inert = createPrimitive('inertial_'+name, 'sphere', [0.01], 0, 'None', (0, 0, 0))
+        inert = createPrimitive('inertial_'+name, 'sphere', 0.01, 0, 'None', (0, 0, 0))
         #obj = bpy.context.object
         #obj.name = name
         for prop in inertial:
             if prop not in ['pose'] and inertial[prop] is not None:
                 inert[prop] = inertial[prop]
+        inert.MARStype = 'inertial'
+        return inert
 
     def createLink(self, link):
         print("Creating link", link['name'])
@@ -266,6 +192,8 @@ class RobotModelParser():
         if 'collision' in link:
             if 'geometry' in link['collision']:
                 collision = self.createGeometry(link, 'collision')
+        newlink.MARStype = 'link'
+        return newlink
 
     def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model."""
