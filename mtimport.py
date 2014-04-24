@@ -17,7 +17,7 @@ import mathutils
 import os
 from collections import namedtuple
 import xml.etree.ElementTree as ET
-import marstools.mtutility as mtutility
+from marstools.mtutility import *
 import marstools.mtdefs as mtdefs
 import marstools.mtmaterials as mtmaterials
 
@@ -31,75 +31,75 @@ def register():
     print("Registering mtimport...")
 
 
-def is_float(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
-def is_int(s):
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
-
-def parse_number(s):
-    if is_int(s):
-        return int(s)
-    elif is_float(s):
-        return float(s)
-    else:
-        return s
-
-def only_contains_int(stringlist):
-    for num in stringlist:
-        if not is_int(num):
-            return False
-    return True
-
-def only_contains_float(stringlist):
-    for num in stringlist:
-        if not is_float(num):
-            return False
-    return True
-
-def find_in_list(alist, prop, value):
-    n = -1
-
-    for i in range(len(alist)):
-        if alist[i][prop] == value:
-            n = i
-            break
-    return n
-
-def retrieve_from_list(alist, prop, value):
-    n = -1
-
-    for i in range(len(alist)):
-        if alist[i][prop] == value:
-            n = i
-            break
-    if n >= 0:
-        return alist[n][prop]
-    else:
-        return "None"
-
-
-def parse_text(s):
-    numstrings = s.split()
-    if len(numstrings) > 0:
-        if only_contains_int(numstrings):
-            nums = [int(num) for num in numstrings]
-            return nums
-        elif only_contains_float(numstrings):
-            nums = [float(num) for num in numstrings]
-            return nums
-        else:
-            return s
-    else:
-        return parse_number(s)
+# def is_float(s):
+#     try:
+#         float(s)
+#         return True
+#     except ValueError:
+#         return False
+#
+# def is_int(s):
+#     try:
+#         int(s)
+#         return True
+#     except ValueError:
+#         return False
+#
+# def parse_number(s):
+#     if is_int(s):
+#         return int(s)
+#     elif is_float(s):
+#         return float(s)
+#     else:
+#         return s
+#
+# def only_contains_int(stringlist):
+#     for num in stringlist:
+#         if not is_int(num):
+#             return False
+#     return True
+#
+# def only_contains_float(stringlist):
+#     for num in stringlist:
+#         if not is_float(num):
+#             return False
+#     return True
+#
+# def find_in_list(alist, prop, value):
+#     n = -1
+#
+#     for i in range(len(alist)):
+#         if alist[i][prop] == value:
+#             n = i
+#             break
+#     return n
+#
+# def retrieve_from_list(alist, prop, value):
+#     n = -1
+#
+#     for i in range(len(alist)):
+#         if alist[i][prop] == value:
+#             n = i
+#             break
+#     if n >= 0:
+#         return alist[n][prop]
+#     else:
+#         return "None"
+#
+#
+# def parse_text(s):
+#     numstrings = s.split()
+#     if len(numstrings) > 0:
+#         if only_contains_int(numstrings):
+#             nums = [int(num) for num in numstrings]
+#             return nums
+#         elif only_contains_float(numstrings):
+#             nums = [float(num) for num in numstrings]
+#             return nums
+#         else:
+#             return s
+#     else:
+#         return parse_number(s)
 
 def cleanUpScene():
     # select all objects
@@ -141,12 +141,12 @@ class RobotModelParser():
         self.path, self.filename = os.path.split(self.filepath)
         self.robot = {}
 
-    def place_children_of(self, parent):
+    def placeChildLinks(self, parent):
         print(parent['name']+ ', ', end='')
         children = []
-        for l in self.robot['link']:
-            if 'parent' in self.robot['link'][l] and self.robot['link'][l]['parent'] == parent['name']:
-                children.append(self.robot['link'][l])
+        for l in self.robot['links']: #TODO: couldn't we look this up in the list of joints?
+            if 'parent' in self.robot['links'][l] and self.robot['links'][l]['parent'] == parent['name']:
+                children.append(self.robot['links'][l])
         for child in children:
             # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
             parentLink = bpy.data.objects[parent['name']]
@@ -157,81 +157,92 @@ class RobotModelParser():
             bpy.context.scene.objects.active = parentLink
             bpy.ops.object.parent_set()
             # 2: move to parents origin by setting the world matrix to the parents world matrix
-            childLink.matrix_world = parentLink.matrix_world #HACK: this does not work if the parent link has transformed visual
+            childLink.matrix_world = parentLink.matrix_world
             # 3: apply local transform as saved in urdf (change matrix_local from identity to urdf)
-            # 3.1: build a transformation matrix from urdf joint pose (this can be used for creating new joint spheres)
-            urdf_loc = mathutils.Matrix.Translation(child['pose'][0:3]) #TODO: this is actually only the position of the joint sphere, we need to add visual/inertial to this
+            urdf_loc = mathutils.Matrix.Translation(child['pose'][0:3])
             urdf_rot = mathutils.Euler(tuple(child['pose'][3:]), 'XYZ').to_matrix().to_4x4()
-            # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
-            if 'visual' in child and 'pose' in child['visual']:
-                urdf_visual_loc = mathutils.Matrix.Translation(child['visual']['pose'][0:3])
-                urdf_visual_rot = mathutils.Euler(tuple(child['visual']['pose'][3:]), 'XYZ').to_matrix().to_4x4()
-            else:
-                urdf_visual_loc = mathutils.Matrix.Identity(4)
-                urdf_visual_rot = mathutils.Matrix.Identity(4)
-            #urdf_sca = #TODO: solve problem with scale
-            urdfmatrix = urdf_loc * urdf_rot * urdf_visual_loc * urdf_visual_rot #*urdf_sca
-            # 3.3: set local transform to matrix computed from urdf #TODO: keep bounding boxes on a different layer in blender or use inbuilt bounding box functionality?
+            urdfmatrix = urdf_loc * urdf_rot
             childLink.matrix_local = urdfmatrix
             # 4: be happy, as world and basis are now the same and local is the transform to be exported to urdf
             # 5: take care of the rest of the tree
-            self.place_children_of(child)
+            self.placeChildLinks(child)
+
+    def placeChildVisualInertial(self, link):
+        #urdf_sca = #TODO: solve problem with scale
+        # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
+        #* urdf_visual_loc * urdf_visual_rot #*urdf_sca
+        if 'visual' in link and 'pose' in link['visual']:
+            urdf_visual_loc = mathutils.Matrix.Translation(link['visual']['pose'][0:3])
+            urdf_visual_rot = mathutils.Euler(tuple(link['visual']['pose'][3:]), 'XYZ').to_matrix().to_4x4()
+        else:
+            urdf_visual_loc = mathutils.Matrix.Identity(4)
+            urdf_visual_rot = mathutils.Matrix.Identity(4)
 
     def createGeometry(self, link, geomsrc):
+        newgeom = None
         if link[geomsrc]['geometry'] is not {}:
             geomtype = link[geomsrc]['geometry']['geometryType']
+            if 'name' in link[geomsrc]:
+                name = link[geomsrc]['name']
+            else:
+                name = geomsrc+'_'+link['name']
             # create the Blender object
             if geomtype == 'mesh':
                 filetype = link['filename'].split('.')[-1]
                 if filetype == 'obj' or filetype == 'OBJ':
                     bpy.ops.import_scene.obj(filepath=os.path.join(self.path, link['filename'])) #FIXME: we don't use the geomsrc variable here (problem with local and global filename)
+                    newgeom = bpy.context.object
+                    newgeom.name = name
                 elif filetype == 'stl' or filetype == 'STL':
                     bpy.ops.import_mesh.stl(filepath=os.path.join(self.path, link['filename']))
+                    newgeom = bpy.context.object
+                    newgeom.name = name
             elif geomtype == 'box':
-                mtutility.createPrimitive(link['name'],
+                newgeom = createPrimitive(name,
                                           geomtype,
-                                          tuple(link['visual']['geometry']['size']),
-                                          mtdefs.layerTypes(geomsrc),
-                                          link[geomsrc]['material']['name'], #TODO: this does not yet work for locally re-defined materials
-                                          (0, 0, 0)
+                                          link[geomsrc]['geometry']['size'],
+                                          mtdefs.layerTypes[geomsrc]
                                           )
-                return bpy.context.object
             elif geomtype == 'cylinder':
-                mtutility.createPrimitive(link['name'],
+                newgeom = createPrimitive(name,
                                           geomtype,
-                                          tuple(link['visual']['geometry']['radius'], link['visual']['geometry']['length']),
-                                          mtdefs.layerTypes(geomsrc),
-                                          link[geomsrc]['material']['name'], #TODO: this does not yet work for locally re-defined materials
-                                          (0, 0, 0)
+                                          (link[geomsrc]['geometry']['radius'], link[geomsrc]['geometry']['length']),
+                                          mtdefs.layerTypes[geomsrc]
                                           )
-                return bpy.context.object
             elif geomtype == 'sphere':
-                mtutility.createPrimitive(link['name'],
+                newgeom = createPrimitive(name,
                                           geomtype,
-                                          link['visual']['geometry']['radius'], #tuple would cause problem here
-                                          mtdefs.layerTypes(geomsrc),
-                                          link[geomsrc]['material']['name'], #TODO: this does not yet work for locally re-defined materials
-                                          (0, 0, 0)
+                                          link[geomsrc]['geometry']['radius'], #tuple would cause problem here
+                                          mtdefs.layerTypes[geomsrc]
                                           )
-                return bpy.context.active_object
             else:
                 print("### ERROR: Could not determine geometry type of link", link['name'] + '. Placing empty coordinate system.')
-                return None
+            if newgeom is not None:
+                if 'scale' in link[geomsrc]['geometry']: #TODO: check if this influences translation later
+                    newgeom.scale = link[geomsrc]['geometry']['scale']
+                    #bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+            return newgeom
 
     def createInertial(self, name, inertial):
-        inert = mtutility.createPrimitive('inertial'+name, 'sphere', [0.01], 0, 'None', (0, 0, 0))
+        inert = createPrimitive('inertial_'+name, 'sphere', [0.01], 0, 'None', (0, 0, 0))
         #obj = bpy.context.object
         #obj.name = name
         for prop in inertial:
-            inert[prop] = inertial[prop]
+            if prop not in ['pose'] and inertial[prop] is not None:
+                inert[prop] = inertial[prop]
 
     def createLink(self, link):
+        print("Creating link", link['name'])
         #create base object ( =armature)
-        bpy.ops.object.armature_add(layers=mtutility.defLayers([0]))
-        blendlink = bpy.context.active_object
+        bpy.ops.view3d.snap_cursor_to_center()
+        bpy.ops.object.armature_add(layers=defLayers([0]))
+        newlink = bpy.context.active_object #print(bpy.context.object) #print(bpy.context.scene.objects.active) #bpy.context.selected_objects[0]
+        newlink.name = link['name']
+        if newlink.name != link['name']:
+            print("Warning, name conflict!")
         #place inertial
         if 'inertial' in link:
-            self.createInertial(self, link['name'], link['inertial'])
+            self.createInertial(link['name'], link['inertial'])
         # place visual
         if 'visual' in link:
             if 'geometry' in link['visual']:
@@ -241,33 +252,23 @@ class RobotModelParser():
             if 'geometry' in link['collision']:
                 collision = self.createGeometry(link, 'collision')
 
-
-        #print(bpy.context.object)
-        #print(bpy.context.scene.objects.active)
-        newlink = bpy.context.selected_objects[0] #TODO: this is a total hack!!!
-        newlink.name = link['name']
-        if newlink.name != link['name']:
-            print("Warning, name conflict!")
-        #reset scale
-        if 'visual' in link and 'geometry' in link['visual'] and 'scale' in link['visual']['geometry']:
-            newlink.scale = link['visual']['geometry']['scale']
-            bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-
-    def createRecursiveBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
+    def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model."""
         print("\n\nCreating Blender model...")
-        for l in self.robot['link']:
+        for l in self.robot['links']:
             print(l + ', ', end='')
-            link = self.robot['link'][l]
-
+            link = self.robot['links'][l]
             self.createLink(link)
 
         #build tree recursively and correct translation & rotation on the fly
-        for l in self.robot['link']:
-            if not 'parent' in self.robot['link'][l]:
-                root = self.robot['link'][l]
+        for l in self.robot['links']:
+            if not 'parent' in self.robot['links'][l]:
+                root = self.robot['links'][l]
         print("\n\nPlacing links...")
-        self.place_children_of(root)
+        self.placeChildLinks(root)
+        for link in self.robot['links']:
+            placeChildVisualInertial(robot['links'][link])
+
 
 
 class MARSModelParser(RobotModelParser):
@@ -298,109 +299,21 @@ class URDFModelParser(RobotModelParser):
         links = {}
         print("\n\nParsing links..")
         for link in self.root.iter('link'):
-            novisual = True
-            print(link.attrib['name'] + ', ', end='')
-            newlink = {a: link.attrib[a] for a in link.attrib}
-
-            #parse 'inertial'
-            newlink['inertial'] = {}
-            inertial = link.find('inertial')
-            if inertial is not None: # !!! 'if Element' yields none if the Element contains no children, thus this notation !!!
-                origin = inertial.find('origin')
-                if origin is not None:
-                    newlink['inertial']['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-                else:
-                    newlink['inertial']['pose'] = defaults.idtransform
-                mass = inertial.find('mass')
-                if mass is not None:
-                    newlink['inertial']['mass'] = float(mass.attrib['value'])
-                inertia = inertial.find('inertia')
-                if inertia is not None:
-                    values = []
-                    newlink['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
-            else:
-                newlink['inertial'] = {'mass': defaults.mass}
-
-            #parse 'visual'
-            visual = link.find('visual')
-            if visual is not None:
-                newlink['visual'] = {a: visual.attrib[a] for a in visual.attrib}
-                origin = visual.find('origin')
-                if origin is not None:
-                    newlink['visual']['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-                else:
-                    newlink['visual']['pose'] = defaults.idtransform
-                geometry = visual.find('geometry')
-                if geometry is not None:
-                    newlink['visual']['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-                    newlink['visual']['geometry']['type'] = geometry[0].tag
-                    print(newlink['name'], geometry[0].tag)
-                    novisual = False
-                    if geometry[0].tag == 'mesh':
-                        newlink['filename'] = geometry[0].attrib['filename'] #TODO: remove this, also from export, as it is double
-                else: #if geometry is None
-                    print("\n### WARNING: No geometry information for visual element, trying to parse from collision data.")
-                material = visual.find('material')
-                if material is not None:
-                    newlink['visual']['material'] = {'name': material.attrib['name']}
-                    color = material.find('color')
-                    if color is not None:
-                        newlink['visual']['material']['color'] = parse_text(color.attrib['rgba'])
-                else:
-                    newlink['visual']['material'] = {'name':'None'} #TODO: this is a hack!
-                    print("\n### Warning: No material provided for link", newlink['name'])
-            else:
-                print("\n### WARNING: No visual information provided for link", newlink['name'])
-
-            #parse 'collision' #TODO: support multiple collision bodies via union of the geometry
-            collision = link.find('collision')
-            if collision is not None:
-                newlink['collision'] = {a: collision.attrib[a] for a in collision.attrib}
-                origin = collision.find('origin')
-                if origin is not None:
-                    newlink['collision']['pose'] = origin.attrib['xyz'].split(' ') + origin.attrib['rpy'].split(' ')
-                else:
-                    newlink['collision']['pose'] = defaults.idtransform
-                geometry = collision.find('geometry')
-                if geometry is not None:
-                    newlink['collision']['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-                    newlink['collision']['geometry']['type'] = geometry[0].tag
-                    if geometry[0].tag == 'mesh':
-                        newlink['filename'] = geometry[0].attrib['filename']
-                    #if novisual:
-                    #    newlink['visual']['geometry'] = newlink['collision']['geometry']
-                else:
-                    print("\n### WARNING: No collision geometry information provided for link", newlink['name'] + '.')
-                    if novisual:
-                        print("\n### WARNING:", newlink['name'], "is empty.")
-            else:
-                print("\n### WARNING: No collision information provided for link", newlink['name'] + '.')
-                if novisual:
-                    print("\n### WARNING:", newlink['name'], "is empty.")
+            newlink = self.parseLink(link)
             #write link to list
             links[newlink['name']] = newlink
             #print(newlink)
-        self.robot["link"] = links
+        self.robot['links'] = links
 
         #write joints to dictionary
         joints = {}
         print("\n\nParsing joints..")
         for joint in self.root.iter('joint'):
-            print(joint.attrib['name']+', ', end='')
-            newjoint = {a: joint.attrib[a] for a in joint.attrib}
-            origin = joint.find('origin')
-            newjoint['parent'] = joint.find('parent').attrib['link']
-            newjoint['child'] = joint.find('child').attrib['link']
-            self.robot['link'][newjoint['child']]['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-            #axis
-            #calibration
-            #dynamics
-            #limit
-            #mimic
-            #safety_controller
+            newjoint, pose = self.parseJoint(joint)
+            self.robot['links'][newjoint['child']]['pose'] = pose
             joints[newjoint['name']] = newjoint
             #print(newjoint)
-        self.robot["joint"] = joints
+        self.robot['joints'] = joints
 
         #find any links that still have no pose (most likely because they had no parent)
         for link in links:
@@ -410,12 +323,12 @@ class URDFModelParser(RobotModelParser):
 
         #write parent-child information to nodes
         print("\n\nWriting parent-child information to nodes..")
-        for j in self.robot['joint']:
-            joint = self.robot['joint'][j]
-            self.robot['link'][joint['child']]['parent'] = joint['parent']
+        for j in self.robot['joints']:
+            joint = self.robot['joints'][j]
+            self.robot['links'][joint['child']]['parent'] = joint['parent']
             print(joint['parent'] + ', ', end='')
 
-        materials = []
+        materials = [] #TODO: build dictionary entry for materials
         print("\n\nParsing materials..")
         for material in self.root.iter('material'):
             newmaterial = {a: material.attrib[a] for a in material.attrib}
@@ -427,15 +340,101 @@ class URDFModelParser(RobotModelParser):
         for m in materials:
             mtmaterials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) #TODO: handle duplicate names? urdf_robotname_xxx?
 
-    def parseLink(self, linkinfo):
-        print("Parsing link", )
-        link = {}
-        return link
+    def parseLink(self, link):
+        novisual = True
+        print(link.attrib['name'] + ', ', end='')
+        newlink = {a: link.attrib[a] for a in link.attrib}
 
-    def parseJoint(self, jointinfo):
-        print("Parsing joint", )
-        joint = {}
-        return joint
+        #parse 'inertial'
+        newlink['inertial'] = {}
+        inertial = link.find('inertial')
+        if inertial is not None: # !!! 'if Element' yields none if the Element contains no children, thus this notation !!!
+            origin = inertial.find('origin')
+            if origin is not None:
+                newlink['inertial']['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
+            else:
+                newlink['inertial']['pose'] = defaults.idtransform
+            mass = inertial.find('mass')
+            if mass is not None:
+                newlink['inertial']['mass'] = float(mass.attrib['value'])
+            inertia = inertial.find('inertia')
+            if inertia is not None:
+                values = []
+                newlink['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
+        else:
+            newlink['inertial'] = {'mass': defaults.mass}
+
+        #parse 'visual'
+        visual = link.find('visual')
+        if visual is not None:
+            newlink['visual'] = {a: visual.attrib[a] for a in visual.attrib}
+            origin = visual.find('origin')
+            if origin is not None:
+                newlink['visual']['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
+            else:
+                newlink['visual']['pose'] = defaults.idtransform
+            geometry = visual.find('geometry')
+            if geometry is not None:
+                newlink['visual']['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+                newlink['visual']['geometry']['geometryType'] = geometry[0].tag
+                novisual = False
+                if geometry[0].tag == 'mesh':
+                    newlink['filename'] = geometry[0].attrib['filename'] #TODO: remove this, also from export, as it is double
+            else: #if geometry is None
+                print("\n### WARNING: No geometry information for visual element, trying to parse from collision data.")
+            material = visual.find('material')
+            if material is not None:
+                newlink['visual']['material'] = {'name': material.attrib['name']}
+                color = material.find('color')
+                if color is not None:
+                    newlink['visual']['material']['color'] = parse_text(color.attrib['rgba'])
+            else:
+                newlink['visual']['material'] = {'name':'None'} #TODO: this is a hack!
+                print("\n### Warning: No material provided for link", newlink['name'])
+        else:
+            print("\n### WARNING: No visual information provided for link", newlink['name'])
+
+        #parse 'collision' #TODO: support multiple collision bodies via union of the geometry
+        collision = link.find('collision')
+        if collision is not None:
+            newlink['collision'] = {a: collision.attrib[a] for a in collision.attrib}
+            origin = collision.find('origin')
+            if origin is not None:
+                newlink['collision']['pose'] = origin.attrib['xyz'].split(' ') + origin.attrib['rpy'].split(' ')
+            else:
+                newlink['collision']['pose'] = defaults.idtransform
+            geometry = collision.find('geometry')
+            if geometry is not None:
+                newlink['collision']['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+                newlink['collision']['geometry']['geometryType'] = geometry[0].tag
+                if geometry[0].tag == 'mesh':
+                    newlink['filename'] = geometry[0].attrib['filename']
+                #if novisual:
+                #    newlink['visual']['geometry'] = newlink['collision']['geometry']
+            else:
+                print("\n### WARNING: No collision geometry information provided for link", newlink['name'] + '.')
+                if novisual:
+                    print("\n### WARNING:", newlink['name'], "is empty.")
+        else:
+            print("\n### WARNING: No collision information provided for link", newlink['name'] + '.')
+            if novisual:
+                print("\n### WARNING:", newlink['name'], "is empty.")
+        return newlink
+
+    def parseJoint(self, joint):
+        print(joint.attrib['name']+', ', end='')
+        newjoint = {a: joint.attrib[a] for a in joint.attrib}
+        origin = joint.find('origin')
+        newjoint['parent'] = joint.find('parent').attrib['link']
+        newjoint['child'] = joint.find('child').attrib['link']
+        pose = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
+        #axis
+        #calibration
+        #dynamics
+        #limit
+        #mimic
+        #safety_controller
+        return newjoint, pose
 
 class SMURFModelParser(RobotModelParser):
     """Class derived from RobotModelParser which parses a SMURF model"""
@@ -479,7 +478,7 @@ class RobotModelImporter(bpy.types.Operator):
             print("Unknown model format, aborting import...")
 
         importer.parseModel()
-        importer.createRecursiveBlenderModel()
+        importer.createBlenderModel()
 
         return {'FINISHED'}
 
@@ -495,6 +494,7 @@ bpy.utils.register_class(RobotModelImporter)
 
 def main():
     # call the newly registered operator
+    cleanUpScene()
     bpy.ops.import_robot_model('INVOKE_DEFAULT')
 
 if __name__ == '__main__':
