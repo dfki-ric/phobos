@@ -81,7 +81,9 @@ def retrieve_from_list(alist, prop, value):
 
 def parse_text(s):
     numstrings = s.split()
-    if len(numstrings) > 0:
+    if numstrings == []:
+        return None
+    if len(numstrings) > 1:
         if only_contains_int(numstrings):
             nums = [int(num) for num in numstrings]
             return nums
@@ -89,7 +91,7 @@ def parse_text(s):
             nums = [float(num) for num in numstrings]
             return nums
         else:
-            return s
+            return numstrings #s
     else:
         return parse_number(s)
 
