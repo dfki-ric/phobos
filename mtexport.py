@@ -205,6 +205,7 @@ def deriveVisual(obj):
         material = {}
         material["name"] = obj.data.materials[0].name #simply grab the first material
         material["diffuseColor"] = list(obj.data.materials[0].diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
+        material["specularColor"] = list(obj.data.materials[0].specular_color)
         visual["material"] = material
     visual["geometry"] = deriveGeometry(obj)
     return visual, obj.parent
