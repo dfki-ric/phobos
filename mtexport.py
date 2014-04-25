@@ -413,7 +413,7 @@ def exportModelToURDF(model, filepath):
         output.append(indent*3+'<inertial>\n')
         output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
         if 'inertia' in link['inertial']:
-            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyx', 'iyy', 'iyz'], link['inertial']['inertia']))
+            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'], link['inertial']['inertia']))
         output.append(indent*3+'</inertial>\n')
         #visual object
         if link['visual']:
@@ -443,7 +443,7 @@ def exportModelToURDF(model, filepath):
         if 'axis' in joint:
             output.append(indent*3+'<axis xyz="'+l2str(joint['axis'])+'"/>\n')
         if 'limits' in joint:
-            output.append(xmlline(3, 'limit', ['lower', 'upper'], [str(joint['limits'][0]), str(joint['limits'][1])]))
+            output.append(xmlline(3, 'limit', ['lower', 'upper', 'velocity', 'effort'], [str(joint['limits'][0]), str(joint['limits'][1]), 1.0, 1.0])) #TODO: effort and velocity
         output.append(indent*2+'</joint>\n\n')
         #if "pose" in joint:
         #    output.append(indent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!
