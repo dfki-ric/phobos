@@ -93,6 +93,25 @@ def calcPose(obj, objtype):
         pose.extend(q)
     return pose
 
+def collectMaterials():
+    materials = {}
+    for obj in bpy.data.objects:
+        if obj.MARStype == 'visual' and obj.data.materials:
+            mat = obj.data.materials[0]
+            if not mat.name in materials:
+                materials[mat.name] = {'users': 1, 'mat': mat}
+            else:
+                materials[mat.name]['users'] += 1
+    return materials
+
+def deriveMaterial(mat):
+    material = {}
+    material["name"] = mat.name #simply grab the first material
+    material["diffuseColor"] = list(mat.diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
+    material["specularColor"] = list(mat.specular_color)
+    #material["ambientColor"] = list(mat.ambient_color)
+    return material
+
 def deriveLink(obj):
     props = initObjectProperties(obj)
     props["pose"] = deriveLinkPose(obj)
@@ -201,12 +220,8 @@ def deriveVisual(obj):
     visual = initObjectProperties(obj)
     visual['name'] = obj.name
     visual["pose"] = deriveObjectPose(obj) #calcPose(obj, "visual")
-    if obj.data.materials:
-        material = {}
-        material["name"] = obj.data.materials[0].name #simply grab the first material
-        material["diffuseColor"] = list(obj.data.materials[0].diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
-        material["specularColor"] = list(obj.data.materials[0].specular_color)
-        visual["material"] = material
+    #if obj.data.materials:
+    #    visual['material'] = deriveMaterial(obj.data.materials[0]) #this is now centralized!
     visual["geometry"] = deriveGeometry(obj)
     return visual, obj.parent
 
@@ -344,8 +359,9 @@ def buildRobotDictionary():
                     link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], link['collision']['geometry'])
                 elif 'visual' in link and 'geometry' in link['visual']:
                     link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], link['visual']['geometry'])
+                    #TODO: check if this really makes sense or if we should not export anything special to let ODE handle the job!!!
                 else:
-                    print("### WARNING: link has mass but no inertia/collision/visual:", link['name'])
+                    print("### WARNING: link has mass but no inertia:", link['name'])
     # parse motors, sensors and controllers
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['sensor', 'motor', 'controller']:
@@ -355,6 +371,22 @@ def buildRobotDictionary():
     #except (KeyError, TypeError):
     #    print("An error occurred when inserting the entry for object", obj.name, sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
     #    print(robot)
+    # parse materials
+    materials = collectMaterials()
+    for mat in materials:
+        print(mat, materials[mat])
+    for obj in bpy.data.objects:
+        if obj.MARStype == 'visual' and obj.data.materials:
+            mat = obj.data.materials[0]
+            if materials[mat.name]['users'] > 1:
+                if mat.name not in robot['materials']:
+                    robot['materials'][mat.name] = deriveMaterial(mat)
+                else:
+                    robot['links'][obj.parent.name]['visual']['material'] = {'name': mat.name}
+            else:
+                robot['links'][obj.parent.name]['visual']['material'] = deriveMaterial(mat)
+    for mat in robot['materials']:
+        print(mat)
     # gather information on groups of objects
     for group in bpy.data.groups: #TODO: get rid of the "data" part
         robot['groups'][group.name] = deriveGroupEntry(group)
@@ -421,9 +453,12 @@ def exportModelToURDF(model, filepath):
             output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['visual']['pose']['translation']), l2str(link['visual']['pose']['rotation_euler'])]))
             writeURDFGeometry(output, link['visual']['geometry'])
             if 'material' in link['visual']:
-                output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
-                output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["diffuseColor"]) + '1.0"/>\n')
-                output.append(indent*4+'</material>\n')
+                if 'diffuseColor' in link['visual']['material']:
+                    output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
+                    output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["diffuseColor"]) + '1.0"/>\n')
+                    output.append(indent*4+'</material>\n')
+                else:
+                    output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '"/>\n')
             output.append(indent*3+'</visual>\n')
         #collision object
         if link['collision']:
@@ -447,6 +482,11 @@ def exportModelToURDF(model, filepath):
         output.append(indent*2+'</joint>\n\n')
         #if "pose" in joint:
         #    output.append(indent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!
+    #export material information
+    for m in model['materials']:
+        output.append(indent*2+'<material name="' + m + '">\n')
+        output.append(indent*3+'<color rgba="'+l2str(model['materials'][m]['diffuseColor']) + '1.0"/>\n')
+        output.append(indent*2+'</material>\n\n')
     #finish the export
     output.append(urdfFooter)
     with open(filepath, 'w') as outputfile:
