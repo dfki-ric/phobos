@@ -401,6 +401,14 @@ def buildRobotDictionary():
 
 def exportModelToYAML(model, filepath):
     print("MARStools YAML export: Writing model data to", filepath )
+    outputmodel = model #TODO: is this necessary?
+    for l in model['links']:
+        link = model['links'][l]
+        link['pose']['matrix'] = [list(vector) for vector in list(link['pose']['matrix'])]
+        if 'visual' in link and 'pose' in link['visual']:
+            link['visual']['pose']['matrix'] = [list(vector) for vector in list(link['visual']['pose']['matrix'])]
+        if 'collision' in link and 'pose' in link['collision']:
+            link['collision']['pose']['matrix'] = [list(vector) for vector in list(link['collision']['pose']['matrix'])]
     with open(filepath, 'w') as outputfile:
         outputfile.write('#YAML dump of robot model "'+model['modelname']+'", '+datetime.datetime.now().strftime("%Y%m%d_%H:%M")+"\n\n")
         outputfile.write(yaml.dump(model))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
