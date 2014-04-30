@@ -204,6 +204,7 @@ def deriveInertial(obj):
     props = initObjectProperties(obj)
     inertia = props['inertia'].split()
     props['inertia'] = map(float, inertia)
+    props['pose'] = deriveObjectPose(obj)
     return props, obj.parent
 
 def deriveObjectPose(obj):
@@ -347,21 +348,24 @@ def buildRobotDictionary():
             props, parent = deriveDictEntry(obj)
             robot[parent.MARStype+'s'][parent.name][obj.MARStype] = props
             obj.select = False
-    # recalculate inertials from collision/visual geometry if necessary
+    # recalculate inertial from collision/visual geometry if necessary
     for linkname in robot['links']:
         link = robot['links'][linkname]
         print('Checking inertial for link', link['name'])
-        if 'inertial' in link: #ignore links without inertial
-            print('Found inertial...')
-            if 'mass' in link['inertial'] and 'inertia' not in link['inertial']: #ignore links without mass or links with predefined inertia
+        if 'mass' in link['inertial']:
+            if 'inertia' not in link['inertial']: #ignore links without mass or links with predefined inertia
                 print('Found mass, but no inertia...')
                 if 'collision' in link and 'geometry' in link['collision']:
                     link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], link['collision']['geometry'])
+                    link['inertial']['pose'] = link['collision']['pose']
                 elif 'visual' in link and 'geometry' in link['visual']:
                     link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], link['visual']['geometry'])
+                    link['inertial']['pose'] = link['visual']['pose']
                     #TODO: check if this really makes sense or if we should not export anything special to let ODE handle the job!!!
                 else:
                     print("### WARNING: link has mass but no inertia:", link['name'])
+        else:
+            link['inertial']['mass'] = 0.001
     # parse motors, sensors and controllers
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['sensor', 'motor', 'controller']:
@@ -451,6 +455,8 @@ def exportModelToURDF(model, filepath):
         link = model['links'][l]
         output.append(indent*2+'<link name="'+l+'">\n')
         output.append(indent*3+'<inertial>\n')
+        if 'pose' in link['inertial']:
+            output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['inertial']['pose']['translation']), l2str(link['inertial']['pose']['rotation_euler'])]))
         output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
         if 'inertia' in link['inertial']:
             output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'], link['inertial']['inertia']))
