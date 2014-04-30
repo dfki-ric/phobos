@@ -107,8 +107,8 @@ def collectMaterials():
 def deriveMaterial(mat):
     material = {}
     material["name"] = mat.name #simply grab the first material
-    material["diffuseFront"] = list(mat.diffuse_color) #TODO: get rid of this and directly retrieve information from blenders material list
-    material["specularFront"] = list(mat.specular_color)
+    material["diffuseFront"] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
+    material["specularFront"] = dict(zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
     material['shininess'] = mat.specular_hardness
     material["transparency"] = mat.alpha
     #material["ambientColor"] = list(mat.ambient_color)
@@ -471,7 +471,8 @@ def exportModelToURDF(model, filepath):
             if 'material' in link['visual']:
                 if 'diffuseFront' in link['visual']['material']:
                     output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
-                    output.append(indent*5+'<color rgba="'+l2str(link["visual"]["material"]["diffuseFront"]) + ' ' + str(link["visual"]["material"]["transparency"]) + '"/>\n')
+                    color = link['visual']['material']['diffuseFront']
+                    output.append(indent*5+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(link["visual"]["material"]["transparency"]) + '"/>\n')
                     output.append(indent*4+'</material>\n')
                 else:
                     output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '"/>\n')
@@ -501,7 +502,8 @@ def exportModelToURDF(model, filepath):
     #export material information
     for m in model['materials']:
         output.append(indent*2+'<material name="' + m + '">\n')
-        output.append(indent*3+'<color rgba="'+l2str(model['materials'][m]['diffuseFront']) + ' ' + str(model['materials'][m]["transparency"]) + '"/>\n')
+        color = model['materials'][m]['diffuseFront']
+        output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(model['materials'][m]["transparency"]) + '"/>\n')
         output.append(indent*2+'</material>\n\n')
     #finish the export
     output.append(urdfFooter)
@@ -595,7 +597,7 @@ def exportModelToSMURF(model, path, relative = True): # Syntactically Malleable 
         #    materialdata[key]["transparency"] = mat.alpha
         #    materialdata[key]["shininess"] = mat.specular_hardness
         #op.write(yaml.dump(materialdata, default_flow_style=False))
-        op.write(yaml.dump(yaml.dump(model['materials']), default_flow_style=False))
+        op.write(yaml.dump(model['materials'], default_flow_style=False))
 
     #write sensors
     with open(sensors_filename, 'w') as op:
