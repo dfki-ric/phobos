@@ -287,8 +287,8 @@ def writeNode(obj):
     sizeScaleZ = obj["sizeScaleZ"] if "sizeScaleZ" in obj else 1.0
 
     physicMode = obj["physicMode"] if "physicMode" in obj else "box"
-    radius = obj["radius"] if "radius" in obj else 0.0
-    height = obj["height"] if "height" in obj else 0.0
+    radius = float(obj["radius"]) if "radius" in obj else 0.0
+    height = float(obj["height"]) if "height" in obj else 0.0
 
     ext = [0, 0, 0]
     ext[0] = radius if radius > 0. else sizeScaleX*size[0]
@@ -584,7 +584,7 @@ def main():
 
     mySensorList = {}
     for sensor in sensorList:
-        if sensor["id"] > 0:
+        if "controllerIndex" in sensor and sensor["controllerIndex"] > 0:
             haveController = 1
             mySensorList[sensor["id"]] = str(sensor["id"])
 
@@ -631,9 +631,9 @@ def main():
     os.system("zip "+defValues["filename"]+".scn "+defValues["filename"]+".scene")
 
 
-    wm = bpy.context.window_manager
+    #wm = bpy.context.window_manager
     total = float(len(objList))
-    wm.progress_begin(0, total)
+    #wm.progress_begin(0, total)
     i = 1
     for obj in objList:
         if "use" in obj:
@@ -663,10 +663,10 @@ def main():
         obj.rotation_quaternion = rotation
         obj.parent = parent
         obj.select = False
-        wm.progress_update(i)
+        #wm.progress_update(i)
         i += 1
 
-    wm.progress_end()
+    #wm.progress_end()
 
 
 # it would be nice to also set the pivot to the object center
