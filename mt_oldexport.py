@@ -106,7 +106,6 @@ def outputQuaternion(outStream, name, q, indentLevel):
 def exportBobj(outname, obj):
     totverts = totuvco = totno = 1
 
-    face_vert_index = 1
 
     globalNormals = {}
 
@@ -122,11 +121,9 @@ def exportBobj(outname, obj):
         mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW')
         #mesh.transform(obj.matrix_world)
 
-        write_uv = False
         faceuv = len(mesh.uv_textures)
         if faceuv:
             uv_layer = mesh.uv_textures.active.data[:]
-            write_uv = True
 
         if bpy.app.version[1] >= 65:
             face_index_pairs = [(face, index) for index, face in enumerate(mesh.tessfaces)]
@@ -145,7 +142,7 @@ def exportBobj(outname, obj):
         if faceuv:
             uv = uvkey = uv_dict = f_index = uv_index = None
 
-            uv_face_mapping = [[0, 0, 0, 0] for i in range(len(face_index_pairs))]  # a bit of a waste for tri's :/
+            uv_face_mapping = [[0, 0, 0, 0]] * len(face_index_pairs)  # a bit of a waste for tri's :/
 
             uv_dict = {}  # could use a set() here
             if bpy.app.version[1] >= 65:
@@ -160,8 +157,6 @@ def exportBobj(outname, obj):
                     except:
                         uv_face_mapping[f_index][uv_index] = uv_dict[uvkey] = len(uv_dict)
                         out.write(struct.pack('iff', 2, uv[0], uv[1]))
-
-            uv_unique_count = len(uv_dict)
 
             del uv, uvkey, uv_dict, f_index, uv_index
 
@@ -186,8 +181,6 @@ def exportBobj(outname, obj):
 
         for f, f_index in face_index_pairs:
             f_smooth = f.use_smooth
-            if faceuv:
-                tface = uv_layer[f_index]
             # wrtie smooth info for face?
 
             f_v_orig = [(vi, me_verts[v_idx]) for vi, v_idx in enumerate(f.vertices)]
