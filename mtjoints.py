@@ -35,12 +35,10 @@ def deriveJointType(joint, adjust = False):
     jtype = 'floating' # 'universal' in MARS nomenclature
     cloc = None
     crot = None
-    limloc = None
     limrot = None
     # we pick the first bone in the armature as there is only one
     for c in joint.pose.bones[0].constraints:
         if c.type == 'LIMIT_LOCATION':
-            #limloc = c
             cloc = [c.use_min_x, c.use_max_x,
                     c.use_min_y, c.use_max_y,
                     c.use_min_z, c.use_max_z]
