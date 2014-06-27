@@ -74,14 +74,7 @@ def getJointConstraints(joint):
     if jt not in ['floating', 'fixed']:
         if jt in ['revolute', 'continuous'] and crot:
             c = getJointConstraint(joint, 'LIMIT_ROTATION')
-            if 'axis' in bpy.data.armatures[joint.name].bones:
-                axis = (bpy.data.objects[joint.name].matrix_local * -bpy.data.armatures[joint.name].bones['axis'].vector).normalized()
-            else:
-                tmpaxis = [int(i) for i in crot]
-                if tmpaxis == [1, 0, 0]:
-                    axis = None
-                else:
-                    axis = mathutils.Vector(tmpaxis)
+            axis = (bpy.data.objects[joint.name].matrix_local * -bpy.data.armatures[joint.name].bones[0].vector).normalized() #TODO:
             if crot[0]:
                 limits = (c.min_x, c.max_x)
             elif crot[1]:
