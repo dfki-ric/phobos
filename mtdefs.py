@@ -17,31 +17,53 @@ do not include any imports which are not part of the standard python 3 libray.
 This module may well be imported and used outside of the MARS Blender Tools
 in the future.
 '''
+#TODO: the following definitions for enum properties in blender should be
+# combined with the type definitions further below
+marstypes = (('undefined',)*3,
+             ('link',)*3,
+             ('inertial',)*3,
+             ('visual',)*3,
+             ('collision',)*3,
+             ('joint',)*3,
+             ('sensor',)*3,
+             ('controller',)*3,
+             ('motor',)*3)
 
-marstypes = [tuple(['undefined']*3),
-             tuple(['body']*3),
-             ('joint', 'joint', 'joint'),
-             ('sensor', 'sensor', 'sensor'),
-             tuple(['controller']*3),
-             ('motor', 'motor', 'motor')]
+jointtypes = (('revolute',)*3,
+              ('continuous',)*3,
+              ('prismatic',)*3,
+              ('fixed',)*3,
+              ('floating',)*3,
+              ('planar',)*3)
+
+geometrytypes = (('box',)*3,
+            ('cylinder',)*3,
+            ('sphere',)*3,
+            ('mesh',)*3)
 
 type_properties = {
-    "body": ('name', 'collisionPrimitive', 'collisionBitmask', ),
-    "body_default": ('new_node', 'box', '65536'),
+    "undefined": (),
+    "undefined_default": (),
+    "link": ('name'),
+    "link_default": ('new_node'),
+    "inertial": ('name'),
+    "inertial_default": ('new_node'),
+    "visual": ('name', 'visualType'),
+    "visual_default": ('new_node', 'box'),
+    "collision": ('name', 'collisionType', 'bitmask'),
+    "collision_default": ('new_node', 'box', '65536'),
     "joint": ('name', 'child', 'jointType'),
     "joint_default": ("new_joint", 'some_node', 'hinge'),
-    "motor": ('name', 'motor_type'),
-    "motor_default": ("new_motor", "1"),
     "sensor": ('name', 'sensorType'),
     "sensor_default": ("new_sensor", "RaySensor"),
     "controller": ('name',),
-    "controller_default": ("controller",),
-    "undefined": (),
-    "undefined_default": ()
+    "controller_default": ("controller"),
+    "motor": ('name', 'motorType'),
+    "motor_default": ("new_motor", "1")
     }
 
 # definition of node types
-nodeTypes = ["undefined",
+nodeTypes = ("undefined",
              "mesh",
              "box",
              "sphere",
@@ -50,21 +72,23 @@ nodeTypes = ["undefined",
              "plane",
              "terrain",
              "reference"
-            ]
+            )
 
 # definition of joint types
-jointTypes = ["undefined",
-              "hinge",
+jointTypes = ("undefined",
+              "revolute",
+              "continuous",
+              "prismatic",
               "hinge2",
               "slider",
               "ball",
               "universal",
               "fixed",
               "istruct-spine"
-             ]
+             )
 
 # definition of sensor types
-sensorTypes = ["RaySensor",
+sensorTypes = ("RaySensor",
                "CameraSensor",
                "ScanningSonar",
                "JointPosition",
@@ -81,7 +105,7 @@ sensorTypes = ["RaySensor",
                "NodeVelocity",
                "NodeAngularVelocity",
                "MotorCurrent"
-              ]
+              )
 
 sensorProperties = {"RaySensor": {"width": 144},
                "CameraSensor": {"width": 640, "height": 480},
@@ -102,12 +126,14 @@ sensorProperties = {"RaySensor": {"width": 144},
                "MotorCurrent": {}
               }
 
-#definitions of which elements live on which layers
+#definitions of which elements live on which layers by default
 layerTypes = {
-              "nodes": 0,
-              "joints": 1,
-              "jointSpheres": 2,
-              "sensors": 3,
-              "decorations": 4,
-              "constraints": 5
+              "link": 0,
+              'inertial': 1,
+              "visual": 2,
+              "collision": 3,
+              "joint": 4,
+              "sensor": 5,
+              "motor": 10,
+              "decoration": 6
               }

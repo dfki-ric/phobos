@@ -72,7 +72,7 @@ class AddSensorOperator(Operator):
                     i = 1
                     if "Node" in sensor["sensorType"]:
                         for obj in objects:
-                            if obj.MARStype == "body":
+                            if obj.MARStype == "link":
                                 sensor["index"+str(i)] = obj.name
                                 i += 1
                         print("Added nodes to new " + self.sensor_type)

@@ -16,6 +16,8 @@ import bpy
 from bpy.types import Operator
 from bpy.props import FloatProperty, EnumProperty
 import math
+import mathutils
+import warnings
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
 import marstools.mtdefs as mtdefs
@@ -23,9 +25,110 @@ import marstools.mtdefs as mtdefs
 def register():
     print("Registering mtjoints...")
 
-
 def unregister():
     print("Unregistering mtjoints...")
+
+def deriveJointType(joint, adjust = False):
+    jtype = 'floating' # 'universal' in MARS nomenclature
+    cloc = None
+    crot = None
+    limloc = None
+    limrot = None
+    #the [0] in the following statement may look like a hack, however since an axis is
+    # always added as the first element of the chain, this works for both an axis present and not
+    for c in joint.pose.bones[0].constraints:
+        if c.type == 'LIMIT_LOCATION':
+            #limloc = c
+            cloc = [c.use_min_x, c.use_max_x,
+                    c.use_min_y, c.use_max_y,
+                    c.use_min_z, c.use_max_z]
+        elif c.type == 'LIMIT_ROTATION':
+            limrot = c
+            crot = [c.use_limit_x and (c.min_x != 0 or c.max_x != 0),
+                    c.use_limit_y and (c.min_y != 0 or c.max_y != 0),
+                    c.use_limit_z and (c.min_z != 0 or c.max_z != 0)]
+            print(joint.name, crot)
+    if crot:
+        if sum(crot) > 0: #continuous or revolute, this always has to be 3, but we allow less restrictions
+            jtype = 'revolute'
+        elif sum(limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z) < 3:
+                jtype = 'continuous'
+    else: # prismatic, planar or fixed
+        if cloc and sum(cloc) >= 4:
+            if sum(cloc) == 6:
+                jtype = 'fixed'
+            else:
+                jtype = 'prismatic'
+        else:
+            jtype = 'planar'
+    if 'jointType' in joint and joint['jointType'] != jtype:
+        warnings.warn("Type of joint "+joint.name+" does not match constraints!", Warning) #TODO: not sure if that is correct like that
+    if(adjust):
+        joint['jointType'] = jtype
+        print("Changed type of joint'" + joint.name, 'to', jtype + "'.")
+    return jtype, crot
+
+def getJointConstraints(joint):
+    jt, crot = deriveJointType(joint, adjust = True)
+    if jt not in ['floating', 'fixed']:
+        if jt in ['revolute', 'continuous'] and crot:
+            c = getJointConstraint(joint, 'LIMIT_ROTATION')
+            if 'axis' in bpy.data.armatures[joint.name].bones:
+                axis = (bpy.data.objects[joint.name].matrix_local * -bpy.data.armatures[joint.name].bones['axis'].vector).normalized()
+            else:
+                tmpaxis = [int(i) for i in crot]
+                if tmpaxis == [1, 0, 0]:
+                    axis = None
+                else:
+                    axis = mathutils.Vector(tmpaxis)
+            if crot[0]:
+                limits = (c.min_x, c.max_x)
+            elif crot[1]:
+                limits = (c.min_y, c.max_y)
+            elif crot[2]:
+                limits = (c.min_z, c.max_z)
+        else:
+            c = getJointConstraint(joint, 'LIMIT_LOCATION')
+            if not c:
+                raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
+            axis = None
+            limits = None
+            freeloc = [c.use_min_x and c.use_max_x and c.min_x == c.max_x,
+                    c.use_min_y and c.Use_max_y and c.min_x == c.max_x,
+                    c.use_min_z and c.Use_max_z and c.min_x == c.max_x]
+            if jt == 'prismatic':
+                if sum(freeloc) == 2:
+                    axis = mathutils.Vector([int(not i) for i in freeloc])
+                    if freeloc[0]:
+                        limits = (c.min_x, c.max_x)
+                    elif freeloc[1]:
+                        limits = (c.min_x, c.max_x)
+                    elif freeloc[2]:
+                        limits = (c.min_x, c.max_x)
+                else:
+                    raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
+            elif jt == 'planar':
+                if sum(freeloc) == 1:
+                    axis = mathutils.Vector([int(i) for i in freeloc])
+                    if axis[0]:
+                        limits = (c.min_y, c.max_y, c.min_z, c.max_z)
+                    elif axis[1]:
+                        limits = (c.min_x, c.max_x, c.min_z, c.max_z)
+                    elif axis[2]:
+                        limits = (c.min_x, c.max_x, c.min_y, c.max_y)
+                else:
+                    raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
+        print(axis, limits)
+        return axis, limits
+    else:
+        return None, None
+
+def getJointConstraint(joint, ctype):
+    con = None
+    for c in joint.pose.bones[0].constraints:
+        if c.type == ctype:
+            con = c
+    return con
 
 def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
     r1 = 0.075
@@ -34,22 +137,23 @@ def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
     d2 = 0.05
 
     if jtype == 'hinge':
-        j1 = mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
-        j2 = mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j1 = mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
+        j2 = mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
         #arrows.select = True
         j1.select = True
         j2.select = True
         bpy.context.scene.objects.active = j1
         bpy.ops.object.join()
     elif jtype == 'linear':
-        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
     elif jtype == 'planar':
-        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joints"], 'joint', location, rotation)
+        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
     j1['jointType'] = jtype
     j1.MARStype = 'joint'
     j1['anchor'] = 'node2'
     j1['node2'] = ''
     #now add joint orientation
+    joint = bpy.ops.object.armature_add(location = bpy.context.scene.cursor_location)
     bpy.ops.object.empty_add(type='ARROWS', location = j1.location, rotation = j1.rotation_euler)
     arrows = bpy.context.object
     dx = d1*0.7
@@ -77,11 +181,11 @@ def createJointSphere(joint, psize):
     #ball.select = True
     #bpy.context.scene.objects.active = joint.parent
     #bpy.ops.object.parent_set() #makes active object parent of selected object
-    ball["coll_bitmask"] = 0
+    ball['coll_bitmask'] = 0
     ball.MARStype = "body"
-    ball["mass"] = 0
+    ball['mass'] = 0
     #adapt the child limb
-    limb = bpy.context.scene.objects[joint['node2']] #TODO: this is an elegant trick that should be used everywhere
+    limb = bpy.context.scene.objects[joint['node2']] #TODO: this is an elegant trick that should be used everywhere, maybe even bpy.data.objects[name]
     #limb.parent = ball
     limb.select = True
     bpy.context.scene.objects.active = ball
@@ -117,7 +221,7 @@ class AddJointsOperator(Operator):
         bpy.data.worlds[0].showJoints = True
         nodes = []
         for obj in bpy.context.selected_objects:
-            if obj.MARStype == "body":
+            if obj.MARStype == "link":
                 nodes.append(obj)
                 obj.select = False
 

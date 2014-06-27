@@ -14,7 +14,7 @@ You may use the provided install shell script.
 
 import bpy
 from bpy.types import Operator
-from bpy.props import EnumProperty, BoolProperty, StringProperty
+from bpy.props import EnumProperty, BoolProperty, StringProperty, IntProperty
 import marstools.mtdefs as mtdefs
 import marstools.mtsensors as mtsensors
 import marstools.mtcontrollers as mtcontrollers
@@ -37,18 +37,12 @@ def register():
     bpy.types.World.showNames = BoolProperty(name = "showNames", update=SetVisibleLayers)
     bpy.types.World.showDecorations = BoolProperty(name = "showDecorations", update=SetVisibleLayers)
     bpy.types.World.showMotorTypes = BoolProperty(name = "showMotorTypes", update=showMotorTypes)
-    #setWorldView([True, True, True, True, True, False, False])
-
-    # These may be optional
-    #bpy.utils.register_class(MARSToolPanel)
-    #bpy.utils.register_class(MARSObjectPanel)
-    #bpy.utils.register_class(MARSWorldPanel)
+    bpy.types.World.manageLayers = BoolProperty(name = "manage layers", update=manageLayers)
+    bpy.types.World.useDefaultLayers = BoolProperty(name = "use default layers", update=useDefaultLayers)
+    bpy.types.World.linkLayer = IntProperty(name = "link", update=manageLayers)
 
 def unregister():
     print("Unregistering mtgui...")
-    #bpy.utils.unregister_class(MARSToolPanel)
-    #bpy.utils.unregister_class(MARSObjectPanel)
-    #bpy.utils.register_class(MARSWorldPanel)
 
 
 class MessageOperator(bpy.types.Operator):
@@ -123,6 +117,14 @@ def applyWorldView():
     layers[6] = bpy.data.worlds[0].showNames
     bpy.context.scene.layers = layers
 
+def manageLayers(self, context):
+    if bpy.data.worlds[0].manageLayers:
+        pass #TODO: not so important
+
+
+def useDefaultLayers(self, context):
+    pass #TODO: not so important
+
 def showMotorTypes(self, context):
     """Changes materials of joints to indicate different motor types."""
     if bpy.data.worlds[0].showMotorTypes:
@@ -174,9 +176,12 @@ class MARSToolPanel(bpy.types.Panel):
         linspect1 = inlayout.column(align = True)
         linspect1.operator('object.mt_check_model', text = 'Check model validity')
         linspect1.operator('object.mt_calculate_mass', text = 'Show Mass')
-        linspect1.operator('object.mt_select_root', text = 'Select Root')
-        linspect1.operator('object.mt_select_model', text = 'Select Robot')
         linspect1.operator('object.mt_name_model', text = 'Name Robot')
+        linspect2 = inlayout.column(align = True)
+        linspect2.operator('object.mt_select_objects_by_marstype', text = "Select by MARStype")
+        linspect2.operator('object.mt_select_objects_by_name', text = "Select by Name")
+        linspect2.operator('object.mt_select_root', text = 'Select Root')
+        linspect2.operator('object.mt_select_model', text = 'Select Robot')
         #for root in mtutility.getRoots():
         #    linspect1.operator('object.mt_select_model', text=root["modelname"]).modelname = \
         #     root["modelname"] if "modelname" in root else root.name
@@ -195,9 +200,13 @@ class MARSToolModelPanel(bpy.types.Panel):
     def draw(self, context):
         inlayout = self.layout.split()
         c1 = inlayout.column(align = True)
+        c1.operator('object.create_collision_objects', text = "Create Collision Object(s)")
         c1.operator('object.add_joints', text = "Add Joint(s)")
         c1.operator('object.define_joint_constraints_spheres', text = "Define Joint Constraints")
+        c1.operator('object.mt_partial_rename', text = "Partial Rename")
         c2 = inlayout.column(align = True)
+        c2.operator('object.mt_set_geometry_type', text = "Set Geometry Type(s)")
+        c2.operator('object.mt_set_marstype', text = 'Set MARStype')
         c2.operator('object.derive_joint_spheres', text = "Derive Joint Spheres")
         c2.operator('object.mt_smoothen_surface', text = "Smoothen Surface")
 
@@ -278,6 +287,7 @@ class MARSToolExportPanel(bpy.types.Panel):
         group_export.prop(bpy.data.worlds[0], "exportURDF")
         group_export.prop(bpy.data.worlds[0], "exportYAML")
         group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
+        group_export.operator("obj.import_robot_model", text = "Import Robot Model", icon = "COPYDOWN")
 
 
 class MARSObjectPanel(bpy.types.Panel):
