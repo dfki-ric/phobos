@@ -630,7 +630,7 @@ def main():
     os.system("rm "+defValues["filename"]+".scn")
     os.system("zip "+defValues["filename"]+".scn "+defValues["filename"]+".scene")
 
-    show_progress = True if bpy.app.version[0]*100+bpy.app.version[1] >= 269 else False;
+    show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269;
     if show_progress:
         wm = bpy.context.window_manager
         total = float(len(objList))
