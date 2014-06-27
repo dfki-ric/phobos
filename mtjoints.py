@@ -29,13 +29,15 @@ def unregister():
     print("Unregistering mtjoints...")
 
 def deriveJointType(joint, adjust = False):
+    ''' Derives the type of the joint defined by the armature object 'joint' based on the constraints defined in the joint.
+    The parameter 'adjust' decides whether or not the type of the joint is adjusted after detecting (without checking whether
+    the property "type" was previously defined in the armature or not).'''
     jtype = 'floating' # 'universal' in MARS nomenclature
     cloc = None
     crot = None
     limloc = None
     limrot = None
-    #the [0] in the following statement may look like a hack, however since an axis is
-    # always added as the first element of the chain, this works for both an axis present and not
+    # we pick the first bone in the armature as there is only one
     for c in joint.pose.bones[0].constraints:
         if c.type == 'LIMIT_LOCATION':
             #limloc = c
@@ -69,6 +71,7 @@ def deriveJointType(joint, adjust = False):
     return jtype, crot
 
 def getJointConstraints(joint):
+    ''' Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'.'''
     jt, crot = deriveJointType(joint, adjust = True)
     if jt not in ['floating', 'fixed']:
         if jt in ['revolute', 'continuous'] and crot:

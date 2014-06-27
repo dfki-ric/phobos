@@ -128,7 +128,7 @@ def deriveLink(obj):
         del props["inertia"]
     return props
 
-def deriveLinkPose(link):
+def deriveLinkPose(link): #TODO: this data is later used in dumping to yaml, but not writing URDF - why do we need this??
     pose = {}
     pose['matrix'] = list(link.matrix_local)
     pose['translation'] = list(link.matrix_local.to_translation())
@@ -407,7 +407,6 @@ def buildRobotDictionary():
 
 def exportModelToYAML(model, filepath):
     print("MARStools YAML export: Writing model data to", filepath )
-    outputmodel = model #TODO: is this necessary?
     for l in model['links']:
         link = model['links'][l]
         link['pose']['matrix'] = [list(vector) for vector in list(link['pose']['matrix'])]
@@ -513,7 +512,7 @@ def exportModelToURDF(model, filepath):
     # problem of different joint transformations needed for fixed joints
     print("MARStools URDF export: Writing model data to", filepath )
 
-def exportModelToSMURF(model, path, relative = True): # Syntactically Malleable Universal Robot Format / Supplementable, Mostly URF / Supplement-Managed URF
+def exportModelToSMURF(model, path, relative = True):
     #create all filenames
     model_filename = os.path.expanduser(path + model['modelname'] + ".yml")
     urdf_filename = os.path.expanduser(path + model['modelname'] + ".urdf")
