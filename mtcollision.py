@@ -16,6 +16,7 @@ import bpy
 from bpy.types import Operator
 from bpy.props import FloatProperty, EnumProperty
 import math
+import mathutils
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
 import marstools.mtdefs as mtdefs
@@ -34,6 +35,12 @@ class CreateCollisionObjects(Operator):
     bl_label = "Create collision objects for all selected Links"
     bl_options = {'REGISTER', 'UNDO'}
 
+    property_colltype = EnumProperty(
+        name = 'coll_type',
+        default = 'box',
+        description = "collision type",
+        items = mtdefs.geometrytypes)
+
     def execute(self, context):
 
         nodes = []
@@ -45,27 +52,38 @@ class CreateCollisionObjects(Operator):
         if nodes == []:
             bpy.ops.error.message('INVOKE_DEFAULT', type="CreateCollisions Error", message="Not enough bodies selected.")
             return{'CANCELLED'}
-        for node in nodes:
-            bBox = node.bound_box
-            center = mtutility.calcBoundingBoxCenter(bBox)
-            size = [0.0, 0.0, 0.0]
-            size[0] = abs(2.0*(bBox[0][0] - center[0]))
-            size[1] = abs(2.0*(bBox[0][1] - center[1]))
-            size[2] = abs(2.0*(bBox[0][2] - center[2]))
-
-            center = node.matrix_world.to_translation() + node.matrix_world.to_quaternion()*center
-
-            ob = mtutility.createPrimitive('coll_'+node.name, 'box', (size[0], size[1], size[2]),
-                                           mtdefs.layerTypes["collision"], 'joint', center,
-                                           node.matrix_world.to_euler())
-            ob.MARStype = "collision"
-            ob["collisionType"] = "box"
-            if node.parent:
-                ob.select = True
-                bpy.ops.object.transform_apply(scale=True)
-                node.parent.select = True
-                bpy.context.scene.objects.active = node.parent
-                bpy.ops.object.parent_set()
+        if not self.property_colltype == 'mesh': #TODO: copy mesh to collision object!
+            for node in nodes:
+                bBox = node.bound_box
+                center = mtutility.calcBoundingBoxCenter(bBox)
+                size = list(node.dimensions)
+                rotation = mathutils.Matrix.Identity(4)
+                if self.property_colltype == 'cylinder':
+                    axes = ('X', 'Y', 'Z')
+                    long_side = axes[size.index(max(size))]
+                    height = max(size)
+                    radii = [s for s in size if s is not height]
+                    radius = max(radii)/2 if radii is not [] else height/2
+                    size = (radius, height)
+                    if long_side == 'X':
+                        rotation = mathutils.Matrix.Rotation(math.pi/2, 4, 'Y')
+                    elif long_side == 'Y':
+                        rotation = mathutils.Matrix.Rotation(math.pi/2, 4, 'X')
+                elif self.property_colltype == 'sphere':
+                    size = max(size)/2
+                center = node.matrix_world.to_translation() + node.matrix_world.to_quaternion()*center
+                ob = mtutility.createPrimitive('coll_'+node.name, self.property_colltype, size,
+                                               mtdefs.layerTypes["collision"], node.data.materials[0].name, center,
+                                               (rotation * node.matrix_world).to_euler()) #TODO: is this the correct way around?
+                #TODO: apply rotation for moved cylinder object?
+                ob.MARStype = "collision"
+                ob["geometryType"] = self.property_colltype
+                if node.parent:
+                    ob.select = True
+                    bpy.ops.object.transform_apply(scale=True)
+                    node.parent.select = True
+                    bpy.context.scene.objects.active = node.parent
+                    bpy.ops.object.parent_set()
         return{'FINISHED'}
 
 
