@@ -14,12 +14,11 @@ You may use the provided install shell script.
 
 
 import bpy
-from bpy.types import Operator
-from bpy.props import StringProperty, BoolProperty, FloatProperty
-import marstools.mtcreateprops as mtcreateprops
 import marstools.mtmaterials as mtmaterials
 import marstools.mtdefs as mtdefs
 import marstools.mtutility as mtutility
+from bpy.types import Operator
+from bpy.props import StringProperty, FloatProperty
 
 def register():
     print("Registering mtsensors...")

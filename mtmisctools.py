@@ -16,7 +16,7 @@ import bpy
 import math
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty
-import marstools.mtcreateprops as mtcreateprops
+import marstools.mtupdate as mtupdate
 import marstools.mt_oldexport as mt_oldexport
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
