@@ -14,7 +14,7 @@ You may use the provided install shell script.
 
 import bpy
 from bpy.types import Operator
-from bpy.props import EnumProperty, BoolProperty, StringProperty, IntProperty
+from bpy.props import EnumProperty, BoolProperty, StringProperty, IntProperty, FloatVectorProperty
 import marstools.mtdefs as mtdefs
 import marstools.mtsensors as mtsensors
 import marstools.mtcontrollers as mtcontrollers
@@ -40,6 +40,16 @@ def register():
     bpy.types.World.manageLayers = BoolProperty(name = "manage layers", update=manageLayers)
     bpy.types.World.useDefaultLayers = BoolProperty(name = "use default layers", update=useDefaultLayers)
     bpy.types.World.linkLayer = IntProperty(name = "link", update=manageLayers)
+
+    bpy.types.World.path = StringProperty(name = 'path', default='.')
+    bpy.types.World.exportBobj = BoolProperty(name = "exportBobj", update=updateExportOptions)
+    bpy.types.World.exportObj = BoolProperty(name = "exportObj", update=updateExportOptions)
+    bpy.types.World.exportMARSscene = BoolProperty(name = "exportMARSscene", update=updateExportOptions)
+    bpy.types.World.exportSMURF = BoolProperty(name = "exportSMURF", default=True, update=updateExportOptions)
+    bpy.types.World.exportURDF = BoolProperty(name = "exportURDF", default=True, update=updateExportOptions)
+    bpy.types.World.exportYAML = BoolProperty(name = "exportYAML", update=updateExportOptions)
+
+    bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
 
 def unregister():
     print("Unregistering mtgui...")

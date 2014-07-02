@@ -25,14 +25,6 @@ import marstools.mtdefs as mtdefs
 
 def register():
     print("Registering mtmisctools...")
-    bpy.types.World.path = StringProperty(name = "path")
-    bpy.types.World.exportBobj = BoolProperty(name = "exportBobj")
-    bpy.types.World.exportMesh = BoolProperty(name = "exportMesh")
-    bpy.types.World.exportSMURF = BoolProperty(name = "exportSMURF")
-    bpy.types.World.exportURDF = BoolProperty(name = "exportURDF")
-    bpy.types.World.exportYAML = BoolProperty(name = "exportYAML")
-    bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
-
 
 def unregister():
     print("Unregistering mtmisctools...")
