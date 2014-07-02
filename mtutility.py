@@ -100,8 +100,8 @@ def createPrimitive(pname, ptype, psize, player = 0, pmaterial = "None", plocati
     if verbose:
         print(ptype, psize)
     try:
-        n_layer = bpy.context.scene.active_layer
-        #n_layer = int(player)
+        #n_layer = bpy.context.scene.active_layer
+        n_layer = int(player)
     except ValueError:
         n_layer = mtdefs.layerTypes[player]
     if bpy.data.worlds[0]: #TODO: complete this
