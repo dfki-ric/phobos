@@ -176,35 +176,6 @@ class SelectModelOperator(Operator):
         return {'FINISHED'}
 
 
-class CheckModelOperator(Operator):
-    """CheckModelOperator"""
-    bl_idname = "object.mt_check_model"
-    bl_label = "Check if the robot model is valid."
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        notifications, faulty_objects = checkModel(bpy.context.selected_objects)
-        bpy.ops.error.message('INVOKE_DEFAULT', type="Errors", message=notifications)
-        #Deselect all objects and select those with errors
-        #bpy.ops.object.select_all() # alternatively:
-        for obj in bpy.data.objects: obj.selected = False
-        for obj in faulty_objects:
-            obj.selected = True
-        return {'FINISHED'}
-
-
-def checkModel(objlist, correct = False):
-    notifications = ""
-    faulty_objects = []
-    for obj in objlist:
-        if obj.MARStype == "link":
-            if not ("mass" in obj) or ('mass' in obj and float(obj['mass'] == 0)):
-                notifications += "Error, object '" + obj.name + "' has no attribute 'mass' or zero mass.\n"
-                faulty_objects.append(obj)
-                if correct:
-                    obj['mass'] = 0.001
-    return notifications, faulty_objects
-
 
 class UpdateMarsModelsOperator(Operator):
     """UpdateMarsModelsOperator"""
