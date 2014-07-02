@@ -85,6 +85,9 @@ class OkOperator(bpy.types.Operator):
     def execute(self, context):
         return {'FINISHED'}
 
+def updateExportOptions(self, context):
+    if bpy.data.worlds[0].exportSMURF and not bpy.data.worlds[0].exportURDF:
+        bpy.data.worlds[0].exportURDF = True
 
 def SetVisibleLayers(self, context):
     """Set active Layers according to MARS world data."""
@@ -176,6 +179,7 @@ class MARSToolPanel(bpy.types.Panel):
         col_edit = layout.column(align = True)
 
         col_edit.operator('object.mt_update_models', text = 'Update MARS model', icon = 'FILE_REFRESH')
+        col_edit.operator('object.mt_change_marstype', text = "Change MARS type", icon = 'SMOOTH')
         col_edit.operator('object.mt_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
 
         layout.separator()
@@ -184,7 +188,6 @@ class MARSToolPanel(bpy.types.Panel):
         layout.label(text = "Inspect Robot", icon = 'VIEWZOOM')
         inlayout = layout.split()
         linspect1 = inlayout.column(align = True)
-        linspect1.operator('object.mt_check_model', text = 'Check model validity')
         linspect1.operator('object.mt_calculate_mass', text = 'Show Mass')
         linspect1.operator('object.mt_name_model', text = 'Name Robot')
         linspect2 = inlayout.column(align = True)
@@ -212,7 +215,7 @@ class MARSToolModelPanel(bpy.types.Panel):
         c1 = inlayout.column(align = True)
         c1.operator('object.create_collision_objects', text = "Create Collision Object(s)")
         c1.operator('object.add_joints', text = "Add Joint(s)")
-        c1.operator('object.define_joint_constraints_spheres', text = "Define Joint Constraints")
+        c1.operator('object.define_joint_constraints', text = "Define Joint Constraints")
         c1.operator('object.mt_partial_rename', text = "Partial Rename")
         c2 = inlayout.column(align = True)
         c2.operator('object.mt_set_geometry_type', text = "Set Geometry Type(s)")
@@ -291,11 +294,12 @@ class MARSToolExportPanel(bpy.types.Panel):
         #export robot model options
         group_export.prop(bpy.data.worlds[0], "path")
         #group_export.prop(bpy.data.worlds[0], "filename")
-        group_export.prop(bpy.data.worlds[0], "exportBobj")
-        group_export.prop(bpy.data.worlds[0], "exportMesh")
-        group_export.prop(bpy.data.worlds[0], "exportSMURF")
-        group_export.prop(bpy.data.worlds[0], "exportURDF")
-        group_export.prop(bpy.data.worlds[0], "exportYAML")
+        group_export.prop(bpy.data.worlds[0], "exportBobj", text = "export mesh as .bobj")
+        group_export.prop(bpy.data.worlds[0], "exportObj", text = "export mesh as .obj")
+        group_export.prop(bpy.data.worlds[0], "exportMARSscene", text = "export robot as MARS scene")
+        group_export.prop(bpy.data.worlds[0], "exportSMURF", text = "export robot as SMURF")
+        group_export.prop(bpy.data.worlds[0], "exportURDF", text = "export robot as URDF")
+        group_export.prop(bpy.data.worlds[0], "exportYAML", text = "export robot data as YAML dump")
         group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
         group_export.operator("obj.import_robot_model", text = "Import Robot Model", icon = "COPYDOWN")
 
