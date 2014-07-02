@@ -176,18 +176,22 @@ class SelectModelOperator(Operator):
         return {'FINISHED'}
 
 
-
 class UpdateMarsModelsOperator(Operator):
     """UpdateMarsModelsOperator"""
     bl_idname = "object.mt_update_models"
     bl_label = "Update MARS properties for all objects"
     bl_options = {'REGISTER', 'UNDO'}
 
+    property_fix = BoolProperty(
+        name = 'fix',
+        default = False,
+        description = "try to fix detected errors?")
+
     print("MARStools: Updating MARS properties for selected objects...")
 
     def execute(self, context):
-        mtmaterials.createMARSMaterials()
-        mtcreateprops.main(mtutility.getRoots())
+        mtmaterials.createMARSMaterials() #TODO: this should move to initialization
+        mtupdate.updateModels(mtutility.getRoots(), self.property_fix)
         return {'FINISHED'}
 
 
