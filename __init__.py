@@ -26,10 +26,7 @@ bl_info = {
 
 if "bpy" in locals():
     import imp
-    #imp.reload(mtmaterials)
-    #imp.reload(mtcreateprops)
-    #imp.reload(mt_importexport)
-    #imp.reload(mt_oldexport)
+    imp.reload(mtupdate)
     imp.reload(mtcontrollers)
     imp.reload(mtexport)
     imp.reload(mtimport)
@@ -43,7 +40,7 @@ if "bpy" in locals():
     imp.reload(mtinertia)
     print("Reloading MARS Blender Tools.")
 else:
-    from . import mtcontrollers, mtexport, mtgui, mtimport, mtjoints, mtmisctools, mtsensors, mtutility, mtcollision, mtinertia
+    from . import mtupdate, mtcontrollers, mtexport, mtgui, mtimport, mtjoints, mtmisctools, mtsensors, mtutility, mtcollision, mtinertia
     print("Importing MARS Blender Tools modules.")
 
 import bpy
@@ -77,5 +74,5 @@ def unregister():
     mtinertia.register()
     bpy.utils.unregister_module(__name__)
 
-if __name__ == "__main__":
-    register()
+#if __name__ == "__main__":
+#    register()
