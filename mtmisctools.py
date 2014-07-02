@@ -191,6 +191,29 @@ class UpdateMarsModelsOperator(Operator):
         return {'FINISHED'}
 
 
+class ChangeMARStypeOperator(Operator):
+    """Change MARStype Operator"""
+    bl_idname = 'object.mt_change_marstype'
+    bl_label = "Change MARStype of selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    property_marstype = EnumProperty(
+        name = "mars_type",
+        default = "undefined",
+        description = "MARS type",
+        items = mtdefs.marstypes)
+
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            obj.MARStype = self.property_marstype
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob is not None and ob.mode == 'OBJECT'
+
+
 class BatchEditPropertyOperator(Operator):
     """Batch-Edit Property Operator"""
     bl_idname = "object.mt_batch_property"
