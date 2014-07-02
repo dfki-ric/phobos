@@ -629,6 +629,10 @@ def exportSceneToSMURF(path):
     """Exports all robots in a scene to separate SMURF folders."""
     pass
 
+def exportModelToMARS(path):
+    """Exports selected robot as a MARS scene"""
+    pass
+
 def securepath(path): #TODO: this is totally not error-handled!
     if not os.path.exists(path):
         os.makedirs(path)
@@ -642,20 +646,21 @@ class ExportModelOperator(Operator):
 
     def execute(self, context):
         #TODO: add selection of all layers bpy.ops.object.select_all()
-        if bpy.data.worlds[0].exportSMURF or bpy.data.worlds[0].exportURDF or bpy.data.worlds[0].exportYAML:
-            main(yaml = bpy.data.worlds[0].exportYAML,
-                              urdf = bpy.data.worlds[0].exportURDF,
-                              smurf = bpy.data.worlds[0].exportSMURF)
-        else:
-            main()
+        main(yaml = bpy.data.worlds[0].exportYAML,
+                    urdf = bpy.data.worlds[0].exportURDF,
+                    smurf = bpy.data.worlds[0].exportSMURF,
+                    mars = bpy.data.worlds[0].exportMARSscene)
         return {'FINISHED'}
 
-def main(yaml=True, urdf=True, smurf=True):
-    if yaml or urdf or smurf:
+def main(yaml=True, urdf=True, smurf=True, mars=False):
+    if yaml or urdf or smurf or mars:
         robot = buildRobotDictionary()
         if yaml:
             outpath = securepath(os.path.expanduser(bpy.context.scene.world.path))
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
+        if mars:
+            outpath = securepath(os.path.expanduser(bpy.context.scene.world.path))
+            exportModelToMARS(robot, outpath + robot["modelname"] + "_mars.scn")
         if smurf:
             outpath = securepath(os.path.expanduser(bpy.context.scene.world.path))
             exportModelToSMURF(robot, outpath)
