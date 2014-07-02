@@ -176,9 +176,9 @@ def deriveKinematics(obj):
         joint = deriveJoint(obj)
     return link, joint
 
-def deriveMotor(obj):
-    props = initObjectProperties(obj)
-    return props, obj.parent
+#def deriveMotor(obj):
+#    props = initObjectProperties(obj)
+#    return props, obj.parent
 
 def deriveGeometry(obj):
     if 'geometryType' in obj:
@@ -195,6 +195,7 @@ def deriveGeometry(obj):
             geometry['filename'] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj") #TODO: this is only valid if this function is only called upon export
             #geometry['size'] = obj.dimensions
             geometry['scale'] = list(obj.scale) #TODO: we still need checking for a mesh's existence, as we cannot always re-export every single mesh in the long run
+            geometry['size'] = list(obj.dimensions) #this is needed to calculate an approximate inertia
         return geometry
     else:
         warnings.warn("No geometryType found for object "+obj.name+".")
@@ -222,17 +223,17 @@ def deriveObjectPose(obj):
 def deriveVisual(obj):
     visual = initObjectProperties(obj)
     visual['name'] = obj.name
-    visual["pose"] = deriveObjectPose(obj) #calcPose(obj, "visual")
+    visual['pose'] = deriveObjectPose(obj) #calcPose(obj, "visual")
     #if obj.data.materials:
     #    visual['material'] = deriveMaterial(obj.data.materials[0]) #this is now centralized!
-    visual["geometry"] = deriveGeometry(obj)
+    visual['geometry'] = deriveGeometry(obj)
     return visual, obj.parent
 
 def deriveCollision(obj):
     collision = initObjectProperties(obj)
     collision['name'] = obj.name
-    collision["geometry"] = deriveGeometry(obj)
-    collision["pose"] = deriveObjectPose(obj) #calcPose(obj, "collision") #TODO: technically, this creates twice the computation for naught
+    collision['geometry'] = deriveGeometry(obj)
+    collision['pose'] = deriveObjectPose(obj) #calcPose(obj, "collision") #TODO: technically, this creates twice the computation for naught
     return collision, obj.parent
 
 def deriveSensor(obj):
@@ -272,8 +273,8 @@ def deriveDictEntry(obj):
             props, parent = deriveCollision(obj)
         elif obj.MARStype == 'sensor':
             props = deriveSensor(obj)
-        elif obj.MARStype == 'motor':
-            props, parent = deriveMotor(obj)
+        #elif obj.MARStype == 'motor':
+        #    props, parent = deriveMotor(obj)
         elif obj.MARStype == 'controller':
             props = deriveController(obj)
     except KeyError:
@@ -348,7 +349,7 @@ def buildRobotDictionary():
         if obj.MARStype in ['inertial', 'visual', 'collision']:
             print('Parsing', obj.MARStype, obj.name, '...')
             props, parent = deriveDictEntry(obj)
-            robot[parent.MARStype+'s'][parent.name][obj.MARStype] = props
+            robot['links'][parent.name][obj.MARStype] = props
             obj.select = False
     # recalculate inertial from collision/visual geometry if necessary
     for linkname in robot['links']:
