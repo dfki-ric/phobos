@@ -17,9 +17,10 @@ in your preferences to gain instant (virtual) world domination.
 #                 on joint axis of node2
 
 import bpy
-import os, glob
+import os
 import mathutils
 import struct
+import marstools.mtutility as mtutility
 
 
 objList = []
@@ -216,14 +217,6 @@ def exportBobj(outname, obj):
                             out.write(da)  # vert, uv, normal
         out.close()
 
-
-def getChildren(parent):
-    children = []
-    for obj in bpy.data.objects:
-        if obj.select and obj.parent == parent:
-            children.append(obj)
-    return children
-
 def fillList(obj):
     print("Exporting", obj.name)
     if "MARStype" in obj:
@@ -235,7 +228,7 @@ def fillList(obj):
             sensorList.append(obj)
     obj.select = False
 
-    children = getChildren(obj)
+    children = mtutility.getChildren(obj)
     for child in children:
         fillList(child)
 
@@ -261,24 +254,17 @@ def writeNode(obj):
         matID = nextMaterialId()
         obj.active_material["marsID"] = matID
 
-    obj_name = obj["use"] if "use" in obj else obj.name
-    filename = obj_name + (".bobj" if defValues["exportBobj"] else ".obj") #!
+    filename = obj.name + (".bobj" if defValues["exportBobj"] else ".obj") #!
 
     # get bounding box:
-    size = obj.dimensions
-
-    sizeScaleX = obj["sizeScaleX"] if "sizeScaleX" in obj else 1.0
-    sizeScaleY = obj["sizeScaleY"] if "sizeScaleY" in obj else 1.0
-    sizeScaleZ = obj["sizeScaleZ"] if "sizeScaleZ" in obj else 1.0
 
     physicMode = obj["physicMode"] if "physicMode" in obj else "box"
     radius = float(obj["radius"]) if "radius" in obj else 0.0
     height = float(obj["height"]) if "height" in obj else 0.0
 
-    ext = [0, 0, 0]
-    ext[0] = radius if radius > 0. else sizeScaleX*size[0]
-    ext[1] = height if height > 0. else sizeScaleY*size[1]
-    ext[2] = sizeScaleZ*size[2]
+    ext = [obj.dimensions[i] * obj.scale[i] for i in range(3)]
+    ext[0] = radius if radius > 0. else obj.scale[0]
+    ext[1] = height if height > 0. else obj.scale[1]
 
     noPhysical = obj["noPhysical"] if "noPhysical" in obj else False
 
@@ -305,7 +291,7 @@ def writeNode(obj):
         childRot = obj.rotation_quaternion
 
     out.write('    <node name="'+obj.name+'">\n')
-    out.write('      <origname>'+obj_name+'</origname>\n')
+    out.write('      <origname>'+obj.name+'</origname>\n')
     out.write('      <filename>'+filename+'</filename>\n')
     out.write('      <index>'+str(obj["id"])+'</index>\n')
     out.write('      <groupid>'+str(obj["group"])+'</groupid>\n')
@@ -318,7 +304,7 @@ def writeNode(obj):
     outputQuaternion(out, "rotation", childRot, 6)
     outputVector(out, "extend", ext, 6)
     outputVector(out, "pivot", pivot, 6)
-    outputVector(out, "visualsize", size, 6)
+    outputVector(out, "visualsize", obj.dimensions, 6)
     if "movable" in obj:
         out.write('      <movable>'+str(obj["movable"])+'</movable>\n')
     else:
@@ -486,18 +472,6 @@ def writeMaterial(material):
         out.write('      <texturename>'+str(material["texturename"])+'</texturename>\n');
     out.write('    </material>\n')
 
-
-
-def findRoot():
-    root = None
-    for obj in bpy.data.objects:
-        if obj.select:
-            if not obj.parent:
-                root = obj
-                break
-    return root
-
-
 def main():
     initGlobalVariables()
     global out
@@ -506,7 +480,7 @@ def main():
     out = open(defValues["path"]+"/"+defValues["filename"]+".scene", "w")
 
     writeSceneHeader()
-    root = findRoot()
+    root = mtutility.getRoot()
     print(root)
     if root:
         fillList(root)
