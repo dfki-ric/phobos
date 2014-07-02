@@ -51,7 +51,7 @@ def deriveJointType(joint, adjust = False):
     if crot:
         if sum(crot) > 0: #continuous or revolute, this always has to be 3, but we allow less restrictions
             jtype = 'revolute'
-        elif sum(limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z) < 3:
+        elif sum((limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z,)) < 3:
                 jtype = 'continuous'
     else: # prismatic, planar or fixed
         if cloc and sum(cloc) >= 4:
@@ -74,7 +74,8 @@ def getJointConstraints(joint):
     if jt not in ['floating', 'fixed']:
         if jt in ['revolute', 'continuous'] and crot:
             c = getJointConstraint(joint, 'LIMIT_ROTATION')
-            axis = (bpy.data.objects[joint.name].matrix_local * -bpy.data.armatures[joint.name].bones[0].vector).normalized() #TODO:
+            #axis = (joint.matrix_local * -bpy.data.armatures[joint.name].bones[0].vector).normalized() #we cannot use joint for both as the first is a Blender 'Object', the second an 'Armature'
+            axis = (joint.matrix_local * -joint.data.bones[0].vector).normalized() #joint.data accesses the armature, thus the armature's name is not important anymore
             if crot[0]:
                 limits = (c.min_x, c.max_x)
             elif crot[1]:
@@ -96,9 +97,9 @@ def getJointConstraints(joint):
                     if freeloc[0]:
                         limits = (c.min_x, c.max_x)
                     elif freeloc[1]:
-                        limits = (c.min_x, c.max_x)
+                        limits = (c.min_y, c.max_y)
                     elif freeloc[2]:
-                        limits = (c.min_x, c.max_x)
+                        limits = (c.min_z, c.max_z)
                 else:
                     raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
             elif jt == 'planar':
@@ -124,6 +125,7 @@ def getJointConstraint(joint, ctype):
             con = c
     return con
 
+#DEPRECATED
 def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
     r1 = 0.075
     r2 = 1.5
@@ -159,6 +161,7 @@ def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
     bpy.ops.object.parent_set()
     return j1
 
+#DEPRECATED
 def createJointSphere(joint, psize):
     #create the joint sphere / joint ball
     ball = mtutility.createPrimitive('joint_sphere_' + joint.name,
@@ -190,7 +193,7 @@ def createJointSphere(joint, psize):
     #ball.location = joint.location
     #ball.rotation_euler = joint.rotation_euler
 
-
+#DEPRECATED
 class AddJointsOperator(Operator):
     """Select n bodies (lowest child to overall parent, parent = active object) to be connected via newly-created joints."""
     bl_idname = "object.add_joints"
@@ -250,12 +253,17 @@ class AddJointsOperator(Operator):
                 bpy.ops.error.message('INVOKE_DEFAULT', type="AddJoints Error", message="Missing parent-child connection.")
         return{'FINISHED'}
 
-
 class DefineJointConstraintsOperator(Operator):
     """DefineJointConstraintsOperator"""
-    bl_idname = "object.define_joint_constraints_spheres"
-    bl_label = "Creates Joint Helper Objects for all Joints"
+    bl_idname = "object.define_joint_constraints"
+    bl_label = "Adds Bone Constraints to the joint (link)"
     bl_options = {'REGISTER', 'UNDO'}
+
+    joint_type = EnumProperty(
+        name = 'joint_type',
+        default = 'revolute',
+        description = "type of the joint",
+        items = mtdefs.jointtypes)
 
     lower = FloatProperty(
         name = "lower",
@@ -268,17 +276,139 @@ class DefineJointConstraintsOperator(Operator):
         description = "upper constraint of the joint")
 
     def execute(self, context):
-        for joint in bpy.context.selected_objects:
-            if joint.MARStype == "joint":
-                if joint['jointType'] == 'hinge':
-                    joint["lowerConstraint"] = (self.lower / 180) * math.pi
-                    joint["upperConstraint"] = (self.upper / 180) * math.pi
+        lower = math.radians(self.lower)
+        upper = math.radians(self.upper)
+        for link in bpy.context.selected_objects:
+            bpy.context.scene.objects.active = link
+            bpy.ops.object.mode_set(mode='POSE')
+            for c in link.pose.bones[0].constraints:
+                #bpy.ops.pose.constraint.delete() #Howto select the right one?
+                del(c)
+            if link.MARStype == 'link':
+                if self.joint_type == 'revolute':
+                    # fix location
+                    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+                    cloc = getJointConstraint(link, 'LIMIT_LOCATION')
+                    cloc.use_min_x = True
+                    cloc.use_min_y = True
+                    cloc.use_min_z = True
+                    cloc.use_max_x = True
+                    cloc.use_max_y = True
+                    cloc.use_max_z = True
+                    cloc.owner_space = 'LOCAL'
+                    # fix rotation x, z and limit z
+                    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+                    crot = getJointConstraint(link, 'LIMIT_ROTATION')
+                    crot.use_limit_x = True
+                    crot.min_x = 0
+                    crot.max_x = 0
+                    crot.use_limit_y = True
+                    crot.min_y = lower
+                    crot.max_y = upper
+                    crot.use_limit_z = True
+                    crot.min_z = 0
+                    crot.max_z = 0
+                    crot.owner_space = 'LOCAL'
+                elif self.joint_type == 'continuous':
+                    # fix location
+                    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+                    cloc = getJointConstraint(link, 'LIMIT_LOCATION')
+                    cloc.use_min_x = True
+                    cloc.use_min_y = True
+                    cloc.use_min_z = True
+                    cloc.use_max_x = True
+                    cloc.use_max_y = True
+                    cloc.use_max_z = True
+                    cloc.owner_space = 'LOCAL'
+                    # fix rotation x, y
+                    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+                    crot = getJointConstraint(link, 'LIMIT_ROTATION')
+                    crot.use_limit_x = True
+                    crot.min_x = 0
+                    crot.max_x = 0
+                    crot.use_limit_y = True
+                    crot.min_y = 0
+                    crot.max_y = 0
+                    crot.owner_space = 'LOCAL'
+                elif self.joint_type == 'prismatic':
+                    # fix location except for x axis
+                    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+                    cloc = getJointConstraint(link, 'LIMIT_LOCATION')
+                    cloc.use_min_x = True
+                    cloc.use_min_y = True
+                    cloc.use_min_z = True
+                    cloc.use_max_x = True
+                    cloc.use_max_y = True
+                    cloc.use_max_z = True
+                    cloc.min_x = lower
+                    cloc.max_x = upper
+                    cloc.owner_space = 'LOCAL'
+                    # fix rotation
+                    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+                    crot = getJointConstraint(link, 'LIMIT_ROTATION')
+                    crot.use_limit_x = True
+                    crot.min_x = 0
+                    crot.max_x = 0
+                    crot.use_limit_y = True
+                    crot.min_y = 0
+                    crot.max_y = 0
+                    crot.use_limit_z = True
+                    crot.min_z = 0
+                    crot.max_z = 0
+                    crot.owner_space = 'LOCAL'
+                elif self.joint_type == 'fixed':
+                    # fix location
+                    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+                    cloc = getJointConstraint(link, 'LIMIT_LOCATION')
+                    cloc.use_min_x = True
+                    cloc.use_min_y = True
+                    cloc.use_min_z = True
+                    cloc.use_max_x = True
+                    cloc.use_max_y = True
+                    cloc.use_max_z = True
+                    cloc.owner_space = 'LOCAL'
+                    # fix rotation
+                    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+                    crot = getJointConstraint(link, 'LIMIT_ROTATION')
+                    crot.use_limit_x = True
+                    crot.min_x = 0
+                    crot.max_x = 0
+                    crot.use_limit_y = True
+                    crot.min_y = 0
+                    crot.max_y = 0
+                    crot.use_limit_z = True
+                    crot.min_z = 0
+                    crot.max_z = 0
+                    crot.owner_space = 'LOCAL'
+                elif self.joint_type == 'floating':
+                    # 6DOF
+                    pass
+                elif self.joint_type == 'planar':
+                    # fix location
+                    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+                    cloc = getJointConstraint(link, 'LIMIT_LOCATION')
+                    cloc.use_min_z = True
+                    cloc.use_max_z = True
+                    cloc.owner_space = 'LOCAL'
+                    # fix rotation
+                    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+                    crot = getJointConstraint(link, 'LIMIT_ROTATION')
+                    crot.use_limit_x = True
+                    crot.min_x = 0
+                    crot.max_x = 0
+                    crot.use_limit_y = True
+                    crot.min_y = 0
+                    crot.max_y = 0
+                    crot.use_limit_z = True
+                    crot.min_z = 0
+                    crot.max_z = 0
+                    crot.owner_space = 'LOCAL'
                 else:
-                    joint["lowerConstraint"] = self.lower
-                    joint["upperConstraint"] = self.upper
+                    print("Unknown joint type, aborting")
+                link['jointType'] = self.joint_type
         return{'FINISHED'}
 
-
+#DEPRECATED
 class DeriveJointSpheresOperator(Operator):
     """DeriveJointSpheresOperator"""
     bl_idname = "object.derive_joint_spheres"
