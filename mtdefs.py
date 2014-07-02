@@ -24,10 +24,8 @@ marstypes = (('undefined',)*3,
              ('inertial',)*3,
              ('visual',)*3,
              ('collision',)*3,
-             ('joint',)*3,
              ('sensor',)*3,
-             ('controller',)*3,
-             ('motor',)*3)
+             ('controller',)*3)
 
 jointtypes = (('revolute',)*3,
               ('continuous',)*3,
@@ -52,14 +50,10 @@ type_properties = {
     "visual_default": ('new_node', 'box'),
     "collision": ('name', 'collisionType', 'bitmask'),
     "collision_default": ('new_node', 'box', '65536'),
-    "joint": ('name', 'child', 'jointType'),
-    "joint_default": ("new_joint", 'some_node', 'hinge'),
     "sensor": ('name', 'sensorType'),
     "sensor_default": ("new_sensor", "RaySensor"),
     "controller": ('name',),
-    "controller_default": ("controller"),
-    "motor": ('name', 'motorType'),
-    "motor_default": ("new_motor", "1")
+    "controller_default": ("controller")
     }
 
 # definition of node types
@@ -128,12 +122,10 @@ sensorProperties = {"RaySensor": {"width": 144},
 
 #definitions of which elements live on which layers by default
 layerTypes = {
-              "link": 0,
-              'inertial': 1,
-              "visual": 2,
-              "collision": 3,
-              "joint": 4,
+              "link": 1,
+              'inertial': 2,
+              "visual": 3,
+              "collision": 4,
               "sensor": 5,
-              "motor": 10,
               "decoration": 6
               }
