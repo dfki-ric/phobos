@@ -17,7 +17,6 @@ import math
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty
 import marstools.mtupdate as mtupdate
-import marstools.mt_oldexport as mt_oldexport
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
 import marstools.mtdefs as mtdefs
@@ -28,38 +27,6 @@ def register():
 
 def unregister():
     print("Unregistering mtmisctools...")
-    #bpy.utils.unregister_class(ExportModelOperator)
-    #bpy.utils.unregister_class(ImportModelOperator)
-    #bpy.utils.unregister_class(CreateMARSPropsOperator)
-    #bpy.utils.unregister_class(BatchEditPropertyOperator)
-    #bpy.utils.unregister_class(SmoothenSurfaceOperator)
-    #bpy.utils.unregister_class(BatchSmoothenSurfaceOperator)
-    #del bpy.types.VIEW3D_MT_object.append(add_object_button)
-
-
-# class ImportModelOperator(Operator):#
-#     """ExportModelOperator"""
-#     bl_idname = "object.mt_export_robot"
-#     bl_label = "Initialise MARS properties for all objects"
-#     bl_options = {'REGISTER', 'UNDO'}
-#
-#     def execute(self, context):
-#         #add selction of all layers bpy.ops.object.select_all()
-#         mtoldimport.main()
-
-#TODO: Do we still need this operator? May be covered by AddSensorOperator (mtsensors)
-# class AddObjectsToSensorOperator(Operator):
-#     """AddObjectsToSensorOperator"""
-#     bl_idname = "object.mt_add_to_sensor"
-#     bl_label = "Add selected objects to the list of the selected sensors."
-#     bl_options = {'REGISTER', 'UNDO'}
-#
-#     def execute(self, context):
-#         for obj in bpy.context.selected_objects:
-#             # the problem is that python will mess up the right order, to a simple "for" will not work
-#             # we need to look at the entire tree starting from the root and then check whether or not
-#             # each object is selected
-#         return{'FINISHED'}
 
 
 class CalculateMassOperator(Operator):
