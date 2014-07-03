@@ -207,3 +207,6 @@ def replaceNameElement(prop, old, new):
         if prop in obj and obj[prop].find(old) > -1:
             obj[prop] = obj[prop].replace(old, new)
 
+def roundVector(v, n):
+    return round(v.x, n), round(v.y, n), round(v.z, n)
+

@@ -19,31 +19,7 @@ in your preferences to gain instant (virtual) world domination.
 import bpy
 import os
 import mathutils
-import struct
 import marstools.mtutility as mtutility
-
-
-objList = []
-jointList = []
-sensorList = []
-haveController = 0
-myMotorList = {}
-out = None
-
-#This is a really bad hack, there has to be a better way of doing this.
-def initGlobalVariables():
-    global objList
-    global jointList
-    global sensorList
-    global haveController
-    global myMotorList
-    global out
-    objList = []
-    jointList = []
-    sensorList = []
-    haveController = 0
-    myMotorList = {}
-    out = None
 
 class IdGenerator(object):
     def __init__(self, initValue=0):
@@ -51,34 +27,6 @@ class IdGenerator(object):
     def __call__(self):
         ret, self._nextId = self._nextId, self._nextId + 1
         return ret
-
-nextMaterialId = IdGenerator(1)
-
-# configuration
-defValues = { "filename": "example",
-              "path": ".",
-              "exportMesh": True,
-              "exportBobj": False,
-              "defCollBitmask": 65535,
-              "defP": 13,
-              "defI": 0.015,
-              "defD": 0,
-              "defMaxMotorForce": 18,
-              "defMaxMotorSpeed": 12,
-              }
-
-
-def parseDefaultValues():
-    scn = bpy.context.scene
-    global defValues
-    for key in defValues:
-        if key in scn.world:
-            defValues[key] = scn.world[key]
-    defValues["path"] = os.path.expanduser(defValues["path"])
-
-
-def veckey3d(v):
-    return round(v.x, 6), round(v.y, 6), round(v.z, 6)
 
 def getID(name):
     for obj in bpy.data.objects:
@@ -103,178 +51,27 @@ def outputQuaternion(outStream, name, q, indentLevel):
     outStream.write(indent + '  <w>'+str(q[0])+'</w>\n')
     outStream.write(indent + '</'+name+'>\n')
 
-
-def exportBobj(outname, obj):
-    totverts = totuvco = totno = 1
-
-
-    globalNormals = {}
-
-    if obj.select:
-
-        # ignore dupli children
-        if obj.parent and obj.parent.dupli_type in {'VERTS', 'FACES'}:
-            # XXX
-            print(obj.name, 'is a dupli child - ignoring')
-            return
-
-        #obj.select = False
-        mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW')
-        #mesh.transform(obj.matrix_world)
-
-        faceuv = len(mesh.uv_textures)
-        if faceuv:
-            uv_layer = mesh.uv_textures.active.data[:]
-
-        if bpy.app.version[1] >= 65:
-            face_index_pairs = [(face, index) for index, face in enumerate(mesh.tessfaces)]
-        else:
-            face_index_pairs = [(face, index) for index, face in enumerate(mesh.faces)]
-
-        mesh.calc_normals()
-
-        me_verts = mesh.vertices[:]
-
-        out = open(outname, "wb")
-
-        for v in mesh.vertices:
-            out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
-
-        if faceuv:
-            uv = uvkey = uv_dict = f_index = uv_index = None
-
-            uv_face_mapping = [[0, 0, 0, 0]] * len(face_index_pairs)  # a bit of a waste for tri's :/
-
-            uv_dict = {}  # could use a set() here
-            if bpy.app.version[1] >= 65:
-                uv_layer = mesh.tessface_uv_textures.active.data[:]
-            else:
-                uv_layer = mesh.uv_textures.active.data
-            for f, f_index in face_index_pairs:
-                for uv_index, uv in enumerate(uv_layer[f_index].uv):
-                    uvkey = round(uv[0], 6), round(uv[1], 6)
-                    try:
-                        uv_face_mapping[f_index][uv_index] = uv_dict[uvkey]
-                    except:
-                        uv_face_mapping[f_index][uv_index] = uv_dict[uvkey] = len(uv_dict)
-                        out.write(struct.pack('iff', 2, uv[0], uv[1]))
-
-            del uv, uvkey, uv_dict, f_index, uv_index
-
-        for f, f_index in face_index_pairs:
-            if f.use_smooth:
-                for v_idx in f.vertices:
-                    v = me_verts[v_idx]
-                    noKey = veckey3d(v.normal)
-                    if noKey not in globalNormals:
-                        globalNormals[noKey] = totno
-                        totno += 1
-                        da = struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2])
-                        out.write(da)
-            else:
-                # Hard, 1 normal from the face.
-                noKey = veckey3d(f.normal)
-                if noKey not in globalNormals:
-                    globalNormals[noKey] = totno
-                    totno += 1
-                    da = struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2])
-                    out.write(da)
-
-        for f, f_index in face_index_pairs:
-            f_smooth = f.use_smooth
-            # wrtie smooth info for face?
-
-            f_v_orig = [(vi, me_verts[v_idx]) for vi, v_idx in enumerate(f.vertices)]
-
-            if len(f_v_orig) == 3:
-                f_v_iter = (f_v_orig, )
-            else:
-                f_v_iter = (f_v_orig[0], f_v_orig[1], f_v_orig[2]), (f_v_orig[0], f_v_orig[2], f_v_orig[3])
-
-            for f_v in f_v_iter:
-                da = struct.pack('i', 4)
-                out.write(da)
-
-                if faceuv:
-                    if f_smooth:  # Smoothed, use vertex normals
-                        for vi, v in f_v:
-                            da = struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], globalNormals[veckey3d(v.normal)])
-                            out.write(da)  # vert, uv, normal
-                    else:  # No smoothing, face normals
-                        no = globalNormals[veckey3d(f.normal)]
-                        for vi, v in f_v:
-                            da = struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], no)
-                            out.write(da)  # vert, uv, normal
-                else:  # No UV's
-                    if f_smooth:  # Smoothed, use vertex normals
-                        for vi, v in f_v:
-                            da = struct.pack('iii', v.index + totverts, 0, globalNormals[veckey3d(v.normal)])
-                            out.write(da)  # vert, uv, normal
-                    else:  # No smoothing, face normals
-                        no = globalNormals[veckey3d(f.normal)]
-                        for vi, v in f_v:
-                            da = struct.pack('iii', v.index + totverts, 0, no)
-                            out.write(da)  # vert, uv, normal
-        out.close()
-
-def fillList(obj):
-    print("Exporting", obj.name)
-    if "MARStype" in obj:
-        if obj.MARStype == "link":
-            objList.append(obj)
-        elif obj.MARStype == "joint":
-            jointList.append(obj)
-        elif obj.MARStype == "sensor":
-            sensorList.append(obj)
-    obj.select = False
-
-    children = mtutility.getChildren(obj)
-    for child in children:
-        fillList(child)
-
-def writeSceneHeader():
-    out.write('<?xml version="1.0"?>\n'
-              "<!DOCTYPE dfkiMarsSceneFile PUBLIC '-//DFKI/RIC/MARS SceneFile 1.0//EN' ''>\n"
-              '<SceneFile>\n'
-              '  <version>0.2</version>\n')
-
 def calcCenter(bound_box):
     """returns a mathutils.Vector for the bounding box's center point"""
     c = sum((mathutils.Vector(b) for b in bound_box), mathutils.Vector())
     return c / 8
 
-def writeNode(obj):
-    #TODO: move to updateproperties
-    if obj.active_material is None:
-        print("WARNING: Object %s has no material! Creating default" % str(obj))
-        obj.active_material = bpy.data.materials.new("default")
-    if "marsID" in obj.active_material and obj.active_material["marsID"] != 0:
-        matID = obj.active_material["marsID"]
-    else:
-        matID = nextMaterialId()
-        obj.active_material["marsID"] = matID
+def writeNode(link):
+    noPhysical = 'collision' in link
+    if 'collision' in link:
+        geom = link['collision']['geometry']
+        physicMode = geom['geometryType']
+        radius = geom["radius"] if "radius" in geom else 0.0
+        height = geom["height"] if "height" in geom else 0.0
 
-    filename = obj.name + (".bobj" if defValues["exportBobj"] else ".obj") #!
+        ext = [geom['size'][i] * geom['scale'][i] for i in range(3)]
+        ext[0] = radius if radius > 0. else geom['scale'][0]
+        ext[1] = height if height > 0. else geom['scale'][1]
 
-    # get bounding box:
+        coll_bitmask = link['collision']['coll_bitmask'] if "coll_bitmask" in link['collision'] else '65535'
 
-    physicMode = obj["physicMode"] if "physicMode" in obj else "box"
-    radius = float(obj["radius"]) if "radius" in obj else 0.0
-    height = float(obj["height"]) if "height" in obj else 0.0
 
-    ext = [obj.dimensions[i] * obj.scale[i] for i in range(3)]
-    ext[0] = radius if radius > 0. else obj.scale[0]
-    ext[1] = height if height > 0. else obj.scale[1]
-
-    noPhysical = obj["noPhysical"] if "noPhysical" in obj else False
-
-    if "mass" in obj:
-        density = 0
-    elif "density" in obj:
-        density = obj["density"]
-    else:
-        density = 500
-    coll_bitmask = obj["coll_bitmask"] if "coll_bitmask" in obj else defValues["defCollBitmask"]
+    filename = link['name'] + '.obj' if bpy.worlds[0].exportObj else link['name'] + '.bobj'
 
     parentID = 0
     pivot = calcCenter(obj.bound_box)
@@ -287,34 +84,33 @@ def writeNode(obj):
         center = parent.matrix_world.to_quaternion().inverted() * childPos
         childRot = obj.matrix_local.to_quaternion()
     else:
-        center = obj.location
-        childRot = obj.rotation_quaternion
+        center = link['pose']['translation']
+        childRot = link['pose']['rotation_quaternion']
 
-    out.write('    <node name="'+obj.name+'">\n')
-    out.write('      <origname>'+obj.name+'</origname>\n')
-    out.write('      <filename>'+filename+'</filename>\n')
-    out.write('      <index>'+str(obj["id"])+'</index>\n')
-    out.write('      <groupid>'+str(obj["group"])+'</groupid>\n')
-    out.write('      <physicmode>'+physicMode+'</physicmode>\n')
+    out.append('    <node name="' + link['name'] + '">\n')
+    out.append('      <origname>' + link['name'] + '</origname>\n')
+    out.append('      <filename>'+filename+'</filename>\n')
+    out.append('      <index>'+str(obj["id"])+'</index>\n')
+    out.append('      <groupid>'+str(obj["group"])+'</groupid>\n')
+    out.append('      <physicmode>'+physicMode+'</physicmode>\n')
     if(noPhysical):
-        out.write('      <noPhysical>'+str(noPhysical)+'</noPhysical>\n')
+        out.append('      <noPhysical>'+str(noPhysical)+'</noPhysical>\n')
     if parentID:
-        out.write('      <relativeid>'+str(parentID)+'</relativeid>\n')
+        out.append('      <relativeid>'+str(parentID)+'</relativeid>\n')
     outputVector(out, "position", center, 6)
     outputQuaternion(out, "rotation", childRot, 6)
     outputVector(out, "extend", ext, 6)
     outputVector(out, "pivot", pivot, 6)
     outputVector(out, "visualsize", obj.dimensions, 6)
     if "movable" in obj:
-        out.write('      <movable>'+str(obj["movable"])+'</movable>\n')
+        out.append('      <movable>'+str(obj["movable"])+'</movable>\n')
     else:
-        out.write('      <movable>true</movable>\n')
+        out.append('      <movable>true</movable>\n')
     if "mass" in obj:
-        out.write('      <mass>'+str(obj["mass"])+'</mass>\n')
-    out.write('      <density>'+str(density)+'</density>\n')
-    out.write('      <material_id>'+str(matID)+'</material_id>\n')
-    out.write('      <coll_bitmask>'+str(coll_bitmask)+'</coll_bitmask>\n')
-    out.write('    </node>\n')
+        out.append('      <mass>'+str(obj["mass"])+'</mass>\n')
+    out.append('      <material_id>'+str(matID)+'</material_id>\n')
+    out.append('      <coll_bitmask>'+str(coll_bitmask)+'</coll_bitmask>\n')
+    out.append('    </node>\n')
 
 
 
@@ -351,26 +147,26 @@ def writeJoint(joint):
     jointType = joint["jointType"]
     anchorPos = {"custom": 4, "node1": 1, "node2": 2, "center": 3}[joint["anchor"]]
 
-    out.write('    <joint name="'+joint.name+'">\n')
-    out.write('      <index>'+str(joint["id"])+'</index>\n')
-    out.write('      <type>'+str(jointType)+'</type>\n')
-    out.write('      <nodeindex1>'+str(joint.parent["id"])+'</nodeindex1>\n')
-    out.write('      <nodeindex2>'+str(node2ID)+'</nodeindex2>\n')
-    out.write('      <anchorpos>'+str(anchorPos)+'</anchorpos>\n')
+    out.append('    <joint name="'+joint.name+'">\n')
+    out.append('      <index>'+str(joint["id"])+'</index>\n')
+    out.append('      <type>'+str(jointType)+'</type>\n')
+    out.append('      <nodeindex1>'+str(joint.parent["id"])+'</nodeindex1>\n')
+    out.append('      <nodeindex2>'+str(node2ID)+'</nodeindex2>\n')
+    out.append('      <anchorpos>'+str(anchorPos)+'</anchorpos>\n')
     outputVector(out, "anchor", center, 6)
     outputVector(out, "axis1", (invert*axis[0],invert*axis[1],invert*axis[2]), 6)
     if "axis2x" in joint:
         outputVector(out, "axis2", (joint["axis2x"], joint["axis2y"], joint["axis2z"]), 6)
     if "lowStop" in joint:
-        out.write('      <lowStopAxis1>'+str(joint["lowStop"])+'</lowStopAxis1>\n')
+        out.append('      <lowStopAxis1>'+str(joint["lowStop"])+'</lowStopAxis1>\n')
     if "highStop" in joint:
-        out.write('      <highStopAxis1>'+str(joint["highStop"])+'</highStopAxis1>\n')
+        out.append('      <highStopAxis1>'+str(joint["highStop"])+'</highStopAxis1>\n')
     if "springConst" in joint:
-        out.write('      <spring_const_constraint_axis1>'+str(joint["springConst"])+'</spring_const_constraint_axis1>\n')
+        out.append('      <spring_const_constraint_axis1>'+str(joint["springConst"])+'</spring_const_constraint_axis1>\n')
     if "dampingConst" in joint:
-        out.write('      <damping_const_constraint_axis1>'+str(joint["dampingConst"])+'</damping_const_constraint_axis1>\n')
-    out.write('      <angle1_offset>'+str(invert*jointOffset)+'</angle1_offset>\n')
-    out.write('    </joint>\n')
+        out.append('      <damping_const_constraint_axis1>'+str(joint["dampingConst"])+'</damping_const_constraint_axis1>\n')
+    out.append('      <angle1_offset>'+str(invert*jointOffset)+'</angle1_offset>\n')
+    out.append('    </joint>\n')
     return jointOffset*invert
 
 
@@ -385,20 +181,20 @@ def writeMotor(joint, motorValue):
     max_speed = joint["maxSpeed"] if "maxSpeed" in joint else defValues["defMaxMotorSpeed"]
     max_force = joint["maxForce"] if "maxForce" in joint else defValues["defMaxMotorForce"]
 
-    out.write('    <motor name="'+joint.name+'">\n')
-    out.write('      <index>'+str(joint["id"])+'</index>\n')
-    out.write('      <jointIndex>'+str(joint["id"])+'</jointIndex>\n')
-    out.write('      <axis>'+str(motor_axis)+'</axis>\n')
-    out.write('      <maximumVelocity>'+str(max_speed)+'</maximumVelocity>\n')
-    out.write('      <motorMaxForce>'+str(max_force)+'</motorMaxForce>\n')
-    out.write('      <type>'+str(motor_type)+'</type>\n')
-    out.write('      <p>'+str(motor_p)+'</p>\n')
-    out.write('      <i>'+str(motor_i)+'</i>\n')
-    out.write('      <d>'+str(motor_d)+'</d>\n')
-    out.write('      <min_val>'+str(low_stop)+'</min_val>\n')
-    out.write('      <max_val>'+str(high_stop)+'</max_val>\n')
-    out.write('      <value>'+str(motorValue)+'</value>\n')
-    out.write('    </motor>\n')
+    out.append('    <motor name="'+joint.name+'">\n')
+    out.append('      <index>'+str(joint["id"])+'</index>\n')
+    out.append('      <jointIndex>'+str(joint["id"])+'</jointIndex>\n')
+    out.append('      <axis>'+str(motor_axis)+'</axis>\n')
+    out.append('      <maximumVelocity>'+str(max_speed)+'</maximumVelocity>\n')
+    out.append('      <motorMaxForce>'+str(max_force)+'</motorMaxForce>\n')
+    out.append('      <type>'+str(motor_type)+'</type>\n')
+    out.append('      <p>'+str(motor_p)+'</p>\n')
+    out.append('      <i>'+str(motor_i)+'</i>\n')
+    out.append('      <d>'+str(motor_d)+'</d>\n')
+    out.append('      <min_val>'+str(low_stop)+'</min_val>\n')
+    out.append('      <max_val>'+str(high_stop)+'</max_val>\n')
+    out.append('      <value>'+str(motorValue)+'</value>\n')
+    out.append('    </motor>\n')
 
 
 def writeSensor(sensor):
@@ -416,86 +212,80 @@ def writeSensor(sensor):
             index = getID(value)
             if index != 0:
                 idList[int(key[5:])] = index
-    out.write('    <sensor name="'+sensor.name+'" type="'+str(sensorType)+'">\n')
-    out.write('      <index>'+str(sensor["id"])+'</index>\n')
-    out.write('      <rate>'+str(rate)+'</rate>\n')
+    out.append('    <sensor name="'+sensor.name+'" type="'+str(sensorType)+'">\n')
+    out.append('      <index>'+str(sensor["id"])+'</index>\n')
+    out.append('      <rate>'+str(rate)+'</rate>\n')
     for value in idList.values():
-        out.write('      <id>'+str(value)+'</id>\n')
+        out.append('      <id>'+str(value)+'</id>\n')
     if sensorType == "Joint6DOF":
         nodeID = getID(sensor["nodeID"])
         jointID = getID(sensor["jointID"])
-        out.write('      <nodeID>'+str(nodeID)+'</nodeID>\n')
-        out.write('      <jointID>'+str(jointID)+'</jointID>\n')
+        out.append('      <nodeID>'+str(nodeID)+'</nodeID>\n')
+        out.append('      <jointID>'+str(jointID)+'</jointID>\n')
     elif sensorType == "RaySensor":
         nodeID = getID(sensor["attached_node"])
-        out.write('      <attached_node>'+str(nodeID)+'</attached_node>\n')
-        out.write('      <width>'+str(sensor["width"])+'</width>\n')
-        out.write('      <opening_width>'+str(sensor["opening_width"])+
+        out.append('      <attached_node>'+str(nodeID)+'</attached_node>\n')
+        out.append('      <width>'+str(sensor["width"])+'</width>\n')
+        out.append('      <opening_width>'+str(sensor["opening_width"])+
                   '</opening_width>\n')
-        out.write('      <max_distance>'+str(sensor["max_distance"])+
+        out.append('      <max_distance>'+str(sensor["max_distance"])+
                   '</max_distance>\n')
         if "draw_rays" in sensor:
-            out.write('      <draw_rays>'+str(sensor["draw_rays"])+'</draw_rays>\n')
+            out.append('      <draw_rays>'+str(sensor["draw_rays"])+'</draw_rays>\n')
     elif sensorType == "CameraSensor":
         nodeID = getID(sensor["attached_node"])
-        out.write('      <attached_node>'+str(nodeID)+'</attached_node>\n')
-        out.write('      <depth_image>'+str(sensor["depth_image"])+'</depth_image>\n')
-        out.write('      <show_cam hud_idx="'+str(sensor["hud_idx"])+'">'+str(sensor["show_cam"])+'</show_cam>\n')
-        out.write('      <position_offset x="'+str(sensor["position_offset_x"])+
+        out.append('      <attached_node>'+str(nodeID)+'</attached_node>\n')
+        out.append('      <depth_image>'+str(sensor["depth_image"])+'</depth_image>\n')
+        out.append('      <show_cam hud_idx="'+str(sensor["hud_idx"])+'">'+str(sensor["show_cam"])+'</show_cam>\n')
+        out.append('      <position_offset x="'+str(sensor["position_offset_x"])+
                 '" y="'+str(sensor["position_offset_y"])+
                 '" z="'+str(sensor["position_offset_z"])+'"/>\n')
-        out.write('      <orientation_offset yaw="'+str(sensor["orientation_offset_yaw"])+
+        out.append('      <orientation_offset yaw="'+str(sensor["orientation_offset_yaw"])+
                 '" pitch="'+str(sensor["orientation_offset_pitch"])+
                 '" roll="'+str(sensor["orientation_offset_roll"])+'"/>\n')
-    out.write('    </sensor>\n')
+    out.append('    </sensor>\n')
 
 
 def writeMaterial(material):
-    out.write('    <material>\n')
-    out.write('      <id>'+str(material["marsID"])+'</id>\n')
-    out.write('      <diffuseFront>\n');
-    out.write('        <a>1.0</a>\n');
-    out.write('        <r>'+str(material.diffuse_color[0])+'</r>\n');
-    out.write('        <g>'+str(material.diffuse_color[1])+'</g>\n');
-    out.write('        <b>'+str(material.diffuse_color[2])+'</b>\n');
-    out.write('      </diffuseFront>\n');
-    out.write('      <specularFront>\n');
-    out.write('        <a>1.0</a>\n');
-    out.write('        <r>'+str(material.specular_color[0])+'</r>\n');
-    out.write('        <g>'+str(material.specular_color[1])+'</g>\n');
-    out.write('        <b>'+str(material.specular_color[2])+'</b>\n');
-    out.write('      </specularFront>\n');
-    out.write('      <shininess>'+str(material.specular_hardness/2)+'</shininess>\n');
+    out.append('    <material>\n')
+    out.append('      <id>'+str(material["marsID"])+'</id>\n')
+    out.append('      <diffuseFront>\n');
+    out.append('        <a>1.0</a>\n');
+    out.append('        <r>'+str(material.diffuse_color[0])+'</r>\n');
+    out.append('        <g>'+str(material.diffuse_color[1])+'</g>\n');
+    out.append('        <b>'+str(material.diffuse_color[2])+'</b>\n');
+    out.append('      </diffuseFront>\n');
+    out.append('      <specularFront>\n');
+    out.append('        <a>1.0</a>\n');
+    out.append('        <r>'+str(material.specular_color[0])+'</r>\n');
+    out.append('        <g>'+str(material.specular_color[1])+'</g>\n');
+    out.append('        <b>'+str(material.specular_color[2])+'</b>\n');
+    out.append('      </specularFront>\n');
+    out.append('      <shininess>'+str(material.specular_hardness/2)+'</shininess>\n');
     if "cullMask" in material:
-        out.write('      <cullMask>'+str(material["cullMask"])+'</cullMask>\n');
+        out.append('      <cullMask>'+str(material["cullMask"])+'</cullMask>\n');
     if "texturename" in material:
-        out.write('      <texturename>'+str(material["texturename"])+'</texturename>\n');
-    out.write('    </material>\n')
+        out.append('      <texturename>'+str(material["texturename"])+'</texturename>\n');
+    out.append('    </material>\n')
 
-def main():
-    initGlobalVariables()
-    global out
+def exportModelToMARS(model, filepath):
+    out = ['<?xml version="1.0"?>\n',
+           "<!DOCTYPE dfkiMarsSceneFile PUBLIC '-//DFKI/RIC/MARS SceneFile 1.0//EN' ''>\n",
+           '<SceneFile>\n',
+           '  <version>0.2</version>\n']
 
-    parseDefaultValues()
-    out = open(defValues["path"]+"/"+defValues["filename"]+".scene", "w")
+    #add ids to materials
+    i = 1
+    for mat in model['materials']:
+        model['materials'][mat]['id'] = i
+        i += 1
 
-    writeSceneHeader()
-    root = mtutility.getRoot()
-    print(root)
-    if root:
-        fillList(root)
-    else:
-        print("oldexport: no root found!")
-    for material in bpy.data.materials:
-        if "marsID" in material:
-            material["marsID"] = 0
+    out.append('  <nodelist>\n')
+    for l in model['links']:
+        out.append(writeNode(model['links'][l]))
+    out.append('  </nodelist>\n')
 
-    out.write('  <nodelist>\n')
-    for node in objList:
-        writeNode(node)
-    out.write('  </nodelist>\n')
-
-    out.write('  <jointlist>\n')
+    out.append('  <jointlist>\n')
     motorValue = []
     for joint in jointList:
         motorOffset = writeJoint(joint)
@@ -506,9 +296,9 @@ def main():
                 motorValue.append(motorOffset)
             if joint["jointType"] == "slider":
                 motorValue.append(motorOffset)
-    out.write('  </jointlist>\n')
+    out.append('  </jointlist>\n')
 
-    out.write('  <motorlist>\n')
+    out.append('  <motorlist>\n')
     i = 0
     for joint in jointList:
         if not "springConst" in joint:
@@ -521,7 +311,7 @@ def main():
             elif joint["jointType"] == "slider":
                 writeMotor(joint, motorValue[i])
                 i += 1
-    out.write('  </motorlist>\n')
+    out.append('  </motorlist>\n')
 
     haveController = 0
     for joint in jointList:
@@ -536,40 +326,40 @@ def main():
             mySensorList[sensor["id"]] = str(sensor["id"])
 
 
-    out.write('  <sensorlist>\n')
+    out.append('  <sensorlist>\n')
     for sensor in sensorList:
         writeSensor(sensor)
-    out.write('  </sensorlist>\n')
+    out.append('  </sensorlist>\n')
 
     if haveController == 1:
-        out.write('  <controllerlist>\n')
-        out.write('    <controller>\n')
-        out.write('      <rate>40</rate>\n')
+        out.append('  <controllerlist>\n')
+        out.append('    <controller>\n')
+        out.append('      <rate>40</rate>\n')
         for value in mySensorList.values():
-            out.write('      <sensorid>'+value+'</sensorid>\n')
+            out.append('      <sensorid>'+value+'</sensorid>\n')
         for value in myMotorList.values():
-            out.write('      <motorid>'+value+'</motorid>\n')
-        out.write('    </controller>\n')
-        out.write('  </controllerlist>\n')
+            out.append('      <motorid>'+value+'</motorid>\n')
+        out.append('    </controller>\n')
+        out.append('  </controllerlist>\n')
 
-    out.write('  <materiallist>\n')
+    out.append('  <materiallist>\n')
 
     for material in bpy.data.materials:
         if "marsID" in material and material["marsID"] != 0:
             writeMaterial(material)
 
-    out.write('  </materiallist>\n')
+    out.append('  </materiallist>\n')
 
-    out.write('  <graphicOptions>\n')
-    out.write('    <clearColor>\n')
-    out.write('      <r>0.550000</r>\n')
-    out.write('      <g>0.670000</g>\n')
-    out.write('      <b>0.880000</b>\n')
-    out.write('      <a>1.000000</a>\n')
-    out.write('    </clearColor>\n')
-    out.write('    <fogEnabled>false</fogEnabled>\n')
-    out.write('  </graphicOptions>\n')
-    out.write('</SceneFile>\n')
+    out.append('  <graphicOptions>\n')
+    out.append('    <clearColor>\n')
+    out.append('      <r>0.550000</r>\n')
+    out.append('      <g>0.670000</g>\n')
+    out.append('      <b>0.880000</b>\n')
+    out.append('      <a>1.000000</a>\n')
+    out.append('    </clearColor>\n')
+    out.append('    <fogEnabled>false</fogEnabled>\n')
+    out.append('  </graphicOptions>\n')
+    out.append('</SceneFile>\n')
 
     out.close()
 
@@ -616,6 +406,9 @@ def main():
         i += 1
     if show_progress:
         wm.progress_end()
+
+    with open(filepath, 'w') as outputfile:
+        outputfile.write(''.join(out))
 
 
 # it would be nice to also set the pivot to the object center
