@@ -25,6 +25,48 @@ arm_2_3 = 0.330 #length lower arm
 #- one head joint (z)
 #- one sensor joint (x)
 
+def calcPose(obj, objtype):
+    #pre-calculations
+    bBox = obj.bound_box
+    center = calcBoundingBoxCenter(bBox)
+    size = [0.0]*3
+    size[0] = abs(2.0*(bBox[0][0] - center[0]))
+    size[1] = abs(2.0*(bBox[0][1] - center[1]))
+    size[2] = abs(2.0*(bBox[0][2] - center[2]))
+
+    pose = []
+    if objtype == "link" or objtype == "visual" or objtype == "collision":
+        pivot = calcBoundingBoxCenter(obj.bound_box)
+        if obj.parent:
+            parent = obj.parent
+            parentPos = parent.matrix_world * calcBoundingBoxCenter(parent.bound_box)
+            childPos = obj.matrix_world * pivot
+            childPos = childPos - parentPos
+            center = parent.matrix_world.to_quaternion().inverted() * childPos
+            childRot = obj.matrix_local.to_quaternion()
+        else:
+            center = obj.location
+            childRot = obj.rotation_quaternion
+        pose = list(center)
+        pose.extend(childRot)
+#    elif objtype == "visual":
+#        pass
+#    elif objtype == "collision":
+#        pass
+    elif objtype == "joint": #TODO: we need this for the offset information of the joint with respect to the link
+        pos = mathutils.Vector((0.0, 0.0, 1.0))
+        axis = obj.matrix_world.to_quaternion() * pos
+        center = obj.matrix_world * mathutils.Vector((0.0, 0.0, 0.0))
+        obj.rotation_mode = 'QUATERNION'
+        v1 = obj.rotation_quaternion * mathutils.Vector((1.0, 0.0, 0.0))
+        if obj["node2"] != "world":
+            node2 = getObjByName(obj["node2"])
+            v2 = node2.rotation_quaternion * mathutils.Vector((1.0, 0.0, 0.0)) #TODO: link to other node in node2
+        q = obj.rotation_quaternion.copy().inverted()
+        pose = list(center)
+        pose.extend(q)
+    return pose
+
 
 #preprocessing
 alpha = math.radians(alpha)

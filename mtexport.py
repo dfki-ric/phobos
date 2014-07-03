@@ -51,47 +51,7 @@ indent = '  '
 urdfHeader = '<?xml version="1.0"?>\n'
 urdfFooter = indent+'</robot>\n'
 
-def calcPose(obj, objtype):
-    #pre-calculations
-    bBox = obj.bound_box
-    center = calcBoundingBoxCenter(bBox)
-    size = [0.0]*3
-    size[0] = abs(2.0*(bBox[0][0] - center[0]))
-    size[1] = abs(2.0*(bBox[0][1] - center[1]))
-    size[2] = abs(2.0*(bBox[0][2] - center[2]))
-
-    pose = []
-    if objtype == "link" or objtype == "visual" or objtype == "collision":
-        pivot = calcBoundingBoxCenter(obj.bound_box)
-        if obj.parent:
-            parent = obj.parent
-            parentPos = parent.matrix_world * calcBoundingBoxCenter(parent.bound_box)
-            childPos = obj.matrix_world * pivot
-            childPos = childPos - parentPos
-            center = parent.matrix_world.to_quaternion().inverted() * childPos
-            childRot = obj.matrix_local.to_quaternion()
         else:
-            center = obj.location
-            childRot = obj.rotation_quaternion
-        pose = list(center)
-        pose.extend(childRot)
-#    elif objtype == "visual":
-#        pass
-#    elif objtype == "collision":
-#        pass
-    elif objtype == "joint": #TODO: we need this for the offset information of the joint with respect to the link
-        pos = mathutils.Vector((0.0, 0.0, 1.0))
-        axis = obj.matrix_world.to_quaternion() * pos
-        center = obj.matrix_world * mathutils.Vector((0.0, 0.0, 0.0))
-        obj.rotation_mode = 'QUATERNION'
-        v1 = obj.rotation_quaternion * mathutils.Vector((1.0, 0.0, 0.0))
-        if obj["node2"] != "world":
-            node2 = getObjByName(obj["node2"])
-            v2 = node2.rotation_quaternion * mathutils.Vector((1.0, 0.0, 0.0)) #TODO: link to other node in node2
-        q = obj.rotation_quaternion.copy().inverted()
-        pose = list(center)
-        pose.extend(q)
-    return pose
 
 def collectMaterials():
     materials = {}
@@ -144,7 +104,7 @@ def deriveJoint(obj):
     props['jointType'], crot = mtjoints.deriveJointType(obj, True)
     axis, limit = mtjoints.getJointConstraints(obj)
     if axis:
-        props['axis'] = list(axis) #calcPose(obj, 0, "joint") #TODO: the 0 is an ugly hack
+        props['axis'] = list(axis)
     if limit:
         props['limits'] = list(limit) # limit gets returned as None if there are no limits
     props["state"] = deriveJointState(obj)
@@ -223,7 +183,7 @@ def deriveObjectPose(obj):
 def deriveVisual(obj):
     visual = initObjectProperties(obj)
     visual['name'] = obj.name
-    visual['pose'] = deriveObjectPose(obj) #calcPose(obj, "visual")
+    visual['pose'] = deriveObjectPose(obj)
     #if obj.data.materials:
     #    visual['material'] = deriveMaterial(obj.data.materials[0]) #this is now centralized!
     visual['geometry'] = deriveGeometry(obj)
@@ -233,7 +193,7 @@ def deriveCollision(obj):
     collision = initObjectProperties(obj)
     collision['name'] = obj.name
     collision['geometry'] = deriveGeometry(obj)
-    collision['pose'] = deriveObjectPose(obj) #calcPose(obj, "collision") #TODO: technically, this creates twice the computation for naught
+    collision['pose'] = deriveObjectPose(obj)
     return collision, obj.parent
 
 def deriveSensor(obj):
