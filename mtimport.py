@@ -93,67 +93,71 @@ class RobotModelParser():
         # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
         #* urdf_visual_loc * urdf_visual_rot #*urdf_sca
         parentLink = bpy.data.objects[link['name']]
-        for geomsrc in ['visual', 'collision', 'inertial']:
+        for geomsrc in ['visual', 'collision']:
             if geomsrc in link:
-                if 'pose' in link[geomsrc]:
-                    print(link['name'], geomsrc, link[geomsrc]['pose'][0:3])
-                    urdf_geom_loc = mathutils.Matrix.Translation(link[geomsrc]['pose'][0:3])
-                    urdf_geom_rot = mathutils.Euler(tuple(link[geomsrc]['pose'][3:]), 'XYZ').to_matrix().to_4x4()
-                else:
-                    urdf_geom_loc = mathutils.Matrix.Identity(4)
-                    urdf_geom_rot = mathutils.Matrix.Identity(4)
-                if 'geometry' in link[geomsrc] and 'scale' in link[geomsrc]['geometry']:
-                    urdf_geom_scale = link[geomsrc]['geometry']['scale']
-                else:
-                    urdf_geom_scale = [1.0, 1.0, 1.0]
-                    #bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-                geoname = 'inertial_'+link['name'] if geomsrc is 'inertial' else link[geomsrc]['name']
-                geom = bpy.data.objects[geoname]
-                bpy.ops.object.select_all(action="DESELECT")
-                geom.select = True
-                parentLink.select = True
-                bpy.context.scene.objects.active = parentLink
-                bpy.ops.object.parent_set()
-                geom.matrix_world = parentLink.matrix_world
-                geom.matrix_local = urdf_geom_loc * urdf_geom_rot
-                geom.scale = urdf_geom_scale
+                for g in link[geomsrc]:
+                    geom = link[geomsrc][g]
+                    print([key for key in geom])
+                    if 'pose' in geom:
+                        print(link['name'], geomsrc, geom['pose'][0:3])
+                        urdf_geom_loc = mathutils.Matrix.Translation(geom['pose'][0:3])
+                        urdf_geom_rot = mathutils.Euler(tuple(geom['pose'][3:]), 'XYZ').to_matrix().to_4x4()
+                    else:
+                        urdf_geom_loc = mathutils.Matrix.Identity(4)
+                        urdf_geom_rot = mathutils.Matrix.Identity(4)
+                    if 'geometry' in geom and 'scale' in geom['geometry']:
+                        urdf_geom_scale = geom['geometry']['scale']
+                    else:
+                        urdf_geom_scale = [1.0, 1.0, 1.0]
+                        #bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+                    geoname = geom['name'] #g
+                    geom = bpy.data.objects[geoname]
+                    bpy.ops.object.select_all(action="DESELECT")
+                    geom.select = True
+                    parentLink.select = True
+                    bpy.context.scene.objects.active = parentLink
+                    bpy.ops.object.parent_set()
+                    geom.matrix_world = parentLink.matrix_world
+                    geom.matrix_local = urdf_geom_loc * urdf_geom_rot
+                    geom.scale = urdf_geom_scale
 
-    def createGeometry(self, link, geomsrc):
+    def createGeometry(self, link, geomsrc, geomname):
+        print(bpy.data.objects[link['name']])
         newgeom = None
-        if link[geomsrc]['geometry'] is not {}:
-            geomtype = link[geomsrc]['geometry']['geometryType']
-            if 'name' in link[geomsrc]:
-                name = link[geomsrc]['name']
-            else:
-                name = geomsrc+'_'+link['name']
-                link[geomsrc]['name'] = name # TODO: Not sure if this should really be done here!
+        if link[geomsrc][geomname]['geometry'] is not {}:
+            geom = link[geomsrc][geomname]['geometry']
+            geomtype = geom['geometryType']
             # create the Blender object
+            # tag all objects
+            for obj in bpy.data.objects:
+                obj.tag = True
             if geomtype == 'mesh':
                 filetype = link['filename'].split('.')[-1]
                 if filetype == 'obj' or filetype == 'OBJ':
                     bpy.ops.import_scene.obj(filepath=os.path.join(self.path, link['filename'])) #FIXME: we don't use the geomsrc variable here (problem with local and global filename)
-                    newgeom = bpy.context.object
-                    newgeom.name = name
                 elif filetype == 'stl' or filetype == 'STL':
                     bpy.ops.import_mesh.stl(filepath=os.path.join(self.path, link['filename']))
-                    newgeom = bpy.context.object
-                    newgeom.name = name
+                # find the newly imported obj
+                for obj in bpy.data.objects:
+                    if not obj.tag:
+                        newgeom = obj
+                newgeom.name = geomname
             elif geomtype == 'box':
-                newgeom = createPrimitive(name,
+                newgeom = createPrimitive(geomname,
                                           geomtype,
-                                          link[geomsrc]['geometry']['size'],
+                                          geom['size'],
                                           mtdefs.layerTypes[geomsrc]
                                           )
             elif geomtype == 'cylinder':
-                newgeom = createPrimitive(name,
+                newgeom = createPrimitive(geomname,
                                           geomtype,
-                                          (link[geomsrc]['geometry']['radius'], link[geomsrc]['geometry']['length']),
+                                          (geom['radius'], geom['length']),
                                           mtdefs.layerTypes[geomsrc]
                                           )
             elif geomtype == 'sphere':
-                newgeom = createPrimitive(name,
+                newgeom = createPrimitive(geomname,
                                           geomtype,
-                                          link[geomsrc]['geometry']['radius'], #tuple would cause problem here
+                                          geom['radius'], #tuple would cause problem here
                                           mtdefs.layerTypes[geomsrc]
                                           )
             else:
@@ -162,37 +166,32 @@ class RobotModelParser():
                 newgeom.MARStype = geomsrc
             return newgeom
 
-    def createInertial(self, name, inertial):
-        inert = createPrimitive('inertial_'+name, 'sphere', 0.01, 0, 'None', (0, 0, 0))
-        #obj = bpy.context.object
-        #obj.name = name
-        for prop in inertial:
-            if prop not in ['pose'] and inertial[prop] is not None:
-                inert[prop] = inertial[prop]
-        inert.MARStype = 'inertial'
-        return inert
-
     def createLink(self, link):
         print("Creating link", link['name'])
         #create base object ( =armature)
-        bpy.ops.view3d.snap_cursor_to_center()
+        bpy.ops.object.select_all(action='DESELECT')
+        #bpy.ops.view3d.snap_cursor_to_center()
         bpy.ops.object.armature_add(layers=defLayers([0]))
         newlink = bpy.context.active_object #print(bpy.context.object) #print(bpy.context.scene.objects.active) #bpy.context.selected_objects[0]
         newlink.name = link['name']
+        newlink.location = (0.0, 0.0, 0.0)
+        newlink.MARStype = 'link'
         if newlink.name != link['name']:
             print("Warning, name conflict!")
-        #place inertial
+        #read inertial
         if 'inertial' in link:
-            self.createInertial(link['name'], link['inertial'])
-        # place visual
+            for prop in link['inertial']:
+                link[prop] = link['inertial'][prop]
+        ## place visual
         if 'visual' in link:
-            if 'geometry' in link['visual']:
-                visual = self.createGeometry(link, 'visual')
+            for v in link['visual']:
+                if 'geometry' in link['visual'][v]:
+                    self.createGeometry(link, 'visual', v)
         # place collision
         if 'collision' in link:
-            if 'geometry' in link['collision']:
-                collision = self.createGeometry(link, 'collision')
-        newlink.MARStype = 'link'
+            for c in link['collision']:
+                if 'geometry' in link['collision'][c]:
+                    self.createGeometry(link, 'collision', c)
         return newlink
 
     def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
@@ -201,6 +200,7 @@ class RobotModelParser():
         for l in self.robot['links']:
             print(l + ', ', end='')
             link = self.robot['links'][l]
+            print(link['name'])
             self.createLink(link)
 
         #build tree recursively and correct translation & rotation on the fly
@@ -308,18 +308,26 @@ class URDFModelParser(RobotModelParser):
             newlink['inertial'] = {'mass': defaults.mass}
 
         #parse 'visual'
-        visual = link.find('visual')
-        if visual is not None:
-            newlink['visual'] = {a: visual.attrib[a] for a in visual.attrib}
+        newlink['visual'] = {}
+        i=0
+        for visual in link.iter('visual'):
+            try:
+                visname = visual.attrib['name']
+            except KeyError:
+                visname = newlink['name'] + '_vis' + str(i)
+                i += 1
+            newlink['visual'][visname] = {a: visual.attrib[a] for a in visual.attrib}
+            vis = newlink['visual'][visname]
+            vis['name'] = visname
             origin = visual.find('origin')
             if origin is not None:
-                newlink['visual']['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
+                vis['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
             else:
-                newlink['visual']['pose'] = defaults.idtransform
+                vis['pose'] = defaults.idtransform
             geometry = visual.find('geometry')
             if geometry is not None:
-                newlink['visual']['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-                newlink['visual']['geometry']['geometryType'] = geometry[0].tag
+                vis['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+                vis['geometry']['geometryType'] = geometry[0].tag
                 novisual = False
                 if geometry[0].tag == 'mesh':
                     newlink['filename'] = geometry[0].attrib['filename'] #TODO: remove this, also from export, as it is double
@@ -327,33 +335,41 @@ class URDFModelParser(RobotModelParser):
                 print("\n### WARNING: No geometry information for visual element, trying to parse from collision data.")
             material = visual.find('material')
             if material is not None:
-                newlink['visual']['material'] = {'name': material.attrib['name']}
+                vis['material'] = {'name': material.attrib['name']}
                 color = material.find('color')
                 if color is not None:
-                    newlink['visual']['material']['color'] = parse_text(color.attrib['rgba'])
+                    vis['material']['color'] = parse_text(color.attrib['rgba'])
             else:
-                newlink['visual']['material'] = {'name':'None'} #TODO: this is a hack!
+                vis['material'] = {'name':'None'} #TODO: this is a hack!
                 print("\n### Warning: No material provided for link", newlink['name'])
         else:
             print("\n### WARNING: No visual information provided for link", newlink['name'])
 
-        #parse 'collision' #TODO: support multiple collision bodies via union of the geometry
-        collision = link.find('collision')
-        if collision is not None:
-            newlink['collision'] = {a: collision.attrib[a] for a in collision.attrib}
+        #parse 'collision'
+        newlink['collision'] = {}
+        i=0
+        for collision in link.iter('collision'):
+            try:
+                colname = collision.attrib['name']
+            except KeyError:
+                colname = newlink['name'] + '_col' + str(i)
+                i += 1
+            newlink['collision'][colname] = {a: collision.attrib[a] for a in collision.attrib}
+            col = newlink['collision'][colname]
+            col['name'] = colname
             origin = collision.find('origin')
             if origin is not None:
-                newlink['collision']['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
+                col['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
             else:
-                newlink['collision']['pose'] = defaults.idtransform
+                col['pose'] = defaults.idtransform
             geometry = collision.find('geometry')
             if geometry is not None:
-                newlink['collision']['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-                newlink['collision']['geometry']['geometryType'] = geometry[0].tag
+                col['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+                col['geometry']['geometryType'] = geometry[0].tag
                 if geometry[0].tag == 'mesh':
                     newlink['filename'] = geometry[0].attrib['filename']
                 #if novisual:
-                #    newlink['visual']['geometry'] = newlink['collision']['geometry']
+                #    newlink['visual']['geometry'] = col['geometry']
             else:
                 print("\n### WARNING: No collision geometry information provided for link", newlink['name'] + '.')
                 if novisual:

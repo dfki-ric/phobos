@@ -306,32 +306,49 @@ def buildRobotDictionary():
     # complete link information by parsing visuals and collision objects
     #try:
     for obj in bpy.context.selected_objects:
-        if obj.MARStype in ['inertial', 'visual', 'collision']:
-            print('Parsing', obj.MARStype, obj.name, '...')
+        if obj.MARStype == 'inertial':
             props, parent = deriveDictEntry(obj)
             robot['links'][parent.name][obj.MARStype] = props
             obj.select = False
+        if obj.MARStype in ['visual', 'collision']:
+            props, parent = deriveDictEntry(obj)
+            robot['links'][parent.name][obj.MARStype][obj.name] = props
+            obj.select = False
+    # TODO: change this to not solely depend on the last collision object
     # recalculate inertial from collision/visual geometry if necessary
+    print('\n\n[MARStools] Calculating inertia from collision and visual objects...')
     for linkname in robot['links']:
         link = robot['links'][linkname]
         print('Checking inertial for link', link['name'])
         if 'mass' in link['inertial']:
             if 'inertia' not in link['inertial']: #ignore links without mass or links with predefined inertia
                 print('Found mass, but no inertia...')
-                if 'collision' in link and 'geometry' in link['collision']:
-                    link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], link['collision']['geometry'])
-                    link['inertial']['pose'] = link['collision']['pose']
-                elif 'visual' in link and 'geometry' in link['visual']:
-                    link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], link['visual']['geometry'])
-                    link['inertial']['pose'] = link['visual']['pose']
+                if 'collision' in link:
+                    print('Trying to derive from collision...')
+                    for c in link['collision']:
+                        col = link['collision'][c]
+                        if 'geometry' in col:
+                            link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], col['geometry'])
+                            link['inertial']['pose'] = col['pose']
+                # TODO: We don't want to use visual objects to calculate inertia - this makes it possible
+                # to attach purely visual objects in separate links, still, they should have no mass, which is
+                # why we put out a warning
+                elif 'visual' in link:
+                    print('Trying to derive from visual...')
+                    for v in link['visual']:
+                        vis = link['visual'][v]
+                        if 'geometry' in vis:
+                            link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], vis['geometry'])
+                            link['inertial']['pose'] = vis['pose']
                     #TODO: check if this really makes sense or if we should not export anything special to let ODE handle the job!!!
-                else:
-                    print("### WARNING: link has mass but no inertia:", link['name'])
+            if 'inertia' not in link['inertial']:
+                print('...failed. Inserting dummy inertia...')
+                link['inertial']['inertia'] = mtinertia.getDummyInertia()
         else:
-            link['inertial']['mass'] = 0.001
+            link['inertial']['mass'] = 0.001 #TODO: do we really want this fixed here?
     # parse motors, sensors and controllers
     for obj in bpy.context.selected_objects:
-        if obj.MARStype in ['sensor', 'motor', 'controller']:
+        if obj.MARStype in ['sensor', 'controller']:
             print('Parsing', obj.MARStype, obj.name, '...')
             robot[obj.MARStype+'s'][obj.name] = deriveDictEntry(obj)
             obj.select = False
@@ -342,16 +359,16 @@ def buildRobotDictionary():
     materials = collectMaterials()
     for mat in materials:
         print(mat, materials[mat])
-    for obj in bpy.data.objects:
+    for obj in bpy.data.objects: #TODO: this is actually a shitty implementation, as it incorporates what's selected
         if obj.MARStype == 'visual' and obj.data.materials:
             mat = obj.data.materials[0]
             if materials[mat.name]['users'] > 1:
                 if mat.name not in robot['materials']:
                     robot['materials'][mat.name] = deriveMaterial(mat)
                 else:
-                    robot['links'][obj.parent.name]['visual']['material'] = {'name': mat.name}
+                    robot['links'][obj.parent.name]['visual'][obj.name]['material'] = {'name': mat.name}
             else:
-                robot['links'][obj.parent.name]['visual']['material'] = deriveMaterial(mat)
+                robot['links'][obj.parent.name]['visual'][obj.name]['material'] = deriveMaterial(mat)
     for mat in robot['materials']:
         print(mat)
     # gather information on groups of objects
@@ -371,10 +388,16 @@ def exportModelToYAML(model, filepath):
     for l in model['links']:
         link = model['links'][l]
         link['pose']['matrix'] = [list(vector) for vector in list(link['pose']['matrix'])]
-        if 'visual' in link and 'pose' in link['visual']:
-            link['visual']['pose']['matrix'] = [list(vector) for vector in list(link['visual']['pose']['matrix'])]
-        if 'collision' in link and 'pose' in link['collision']:
-            link['collision']['pose']['matrix'] = [list(vector) for vector in list(link['collision']['pose']['matrix'])]
+        if 'visual' in link:
+            for v in link['visual']:
+                vis = link['visual'][v]
+                if 'pose' in vis:
+                    vis['pose']['matrix'] = [list(vector) for vector in list(vis['pose']['matrix'])]
+        if 'collision' in link:
+            for c in link['collision']:
+                col = link['collision'][c]
+                if 'pose' in col:
+                    col['pose']['matrix'] = [list(vector) for vector in list(col['pose']['matrix'])]
     with open(filepath, 'w') as outputfile:
         outputfile.write('#YAML dump of robot model "'+model['modelname']+'", '+datetime.datetime.now().strftime("%Y%m%d_%H:%M")+"\n\n")
         outputfile.write(yaml.dump(model))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
@@ -399,11 +422,11 @@ def l2str(items, start=-1, end=-1):
 def writeURDFGeometry(output, element):
     output.append(indent*4+'<geometry>\n')
     if element['geometryType'] == 'box':
-        output.append(xmlline(5, 'box', ['size'], l2str(element['size'])))
+        output.append(xmlline(5, 'box', ['size'], [l2str(element['size'])]))
     elif element['geometryType'] == "cylinder":
         output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['height']]))
     elif element['geometryType'] == "sphere":
-        output.append(xmlline(5, 'cylinder', ['radius'], [element['radius']]))
+        output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
     elif element['geometryType'] == "mesh":
         output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], '1.0 1.0 1.0']))#TODO correct this after implementing filename and scale properly
     output.append(indent*4+'</geometry>\n')
@@ -425,24 +448,28 @@ def exportModelToURDF(model, filepath):
         output.append(indent*3+'</inertial>\n')
         #visual object
         if link['visual']:
-            output.append(indent*3+'<visual>\n')
-            output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['visual']['pose']['translation']), l2str(link['visual']['pose']['rotation_euler'])]))
-            writeURDFGeometry(output, link['visual']['geometry'])
-            if 'material' in link['visual']:
-                if 'diffuseFront' in link['visual']['material']:
-                    output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '">\n')
-                    color = link['visual']['material']['diffuseFront']
-                    output.append(indent*5+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(link["visual"]["material"]["transparency"]) + '"/>\n')
-                    output.append(indent*4+'</material>\n')
-                else:
-                    output.append(indent*4+'<material name="' + link["visual"]["material"]["name"] + '"/>\n')
-            output.append(indent*3+'</visual>\n')
+            for v in link['visual']:
+                vis = link['visual'][v]
+                output.append(indent*3+'<visual name="' + vis['name'] + '">\n')
+                output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
+                writeURDFGeometry(output, vis['geometry'])
+                if 'material' in vis:
+                    if 'diffuseColor' in vis['material']:
+                        output.append(indent*4+'<material name="' + vis["material"]["name"] + '">\n')
+                        color = link['visual']['material']['diffuseColor']
+                        output.append(indent*5+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(vis["material"]["transparency"]) + '"/>\n')
+                        output.append(indent*4+'</material>\n')
+                    else:
+                        output.append(indent*4+'<material name="' + vis["material"]["name"] + '"/>\n')
+                output.append(indent*3+'</visual>\n')
         #collision object
         if link['collision']:
-            output.append(indent*3+'<collision>\n')
-            output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['collision']['pose']['translation']), l2str(link['collision']['pose']['rotation_euler'])]))
-            writeURDFGeometry(output, link['collision']['geometry'])
-            output.append(indent*3+'</collision>\n')
+            for c in link['collision']:
+                col = link['collision'][c]
+                output.append(indent*3+'<collision name="' + col['name'] + '">\n')
+                output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
+                writeURDFGeometry(output, col['geometry'])
+                output.append(indent*3+'</collision>\n')
         output.append(indent*2+'</link>\n\n')
     #export joint information
     for j in model['joints']:
