@@ -190,8 +190,8 @@ def collectMaterials():
 def deriveMaterial(mat):
     material = {}
     material["name"] = mat.name #simply grab the first material
-    material["diffuseFront"] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
-    material["specularFront"] = dict(zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
+    material["diffuseColor"] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
+    material["specularColor"] = dict(zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
     material['shininess'] = mat.specular_hardness
     material["transparency"] = mat.alpha
     #material["ambientColor"] = list(mat.ambient_color)
@@ -612,7 +612,7 @@ def exportModelToURDF(model, filepath):
     #export material information
     for m in model['materials']:
         output.append(indent*2+'<material name="' + m + '">\n')
-        color = model['materials'][m]['diffuseFront']
+        color = model['materials'][m]['diffuseColor']
         output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(model['materials'][m]["transparency"]) + '"/>\n')
         output.append(indent*2+'</material>\n\n')
     #finish the export
