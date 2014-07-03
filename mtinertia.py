@@ -23,6 +23,9 @@ def register():
 def unregister():
     print("Unregistering mtinertia...")
 
+def getDummyInertia():
+    return calculateBoxInertia(0.001, (0.01, 0.01, 0.01,))
+
 def calculateInertia(mass, geometry):
     inertia = None
     gt = geometry['geometryType']
