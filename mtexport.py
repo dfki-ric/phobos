@@ -164,17 +164,11 @@ def exportObj(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
     obj.select = True
     outpath = os.path.join(path, obj.name) + '.obj'
-    location = obj.location.copy()
-    rotation = obj.rotation_quaternion.copy()
-    parent = obj.parent
-    obj.location = [0.0, 0.0, 0.0]
-    obj.rotation_quaternion = [1.0, 0.0, 0.0, 0.0]
-    obj.parent = None
+    world_matrix = obj.matrix_world.copy()
+    obj.matrix_world = mathutils.Matrix.Identity(4)
     bpy.ops.export_scene.obj(filepath=outpath, axis_forward='-Z',
                              axis_up='Y', use_selection=True, use_normals=True)
-    obj.location = location
-    obj.rotation_quaternion = rotation
-    obj.parent = parent
+    obj.matrix_world = world_matrix
 
 def collectMaterials():
     materials = {}
@@ -579,7 +573,7 @@ def exportModelToURDF(model, filepath):
                 if 'material' in vis:
                     if 'diffuseColor' in vis['material']:
                         output.append(indent*4+'<material name="' + vis["material"]["name"] + '">\n')
-                        color = link['visual']['material']['diffuseColor']
+                        color = vis['material']['diffuseColor']
                         output.append(indent*5+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(vis["material"]["transparency"]) + '"/>\n')
                         output.append(indent*4+'</material>\n')
                     else:
