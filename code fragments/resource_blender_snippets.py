@@ -475,6 +475,16 @@ for obj in bpy.context.selected_objects:
 #    bpy.types.GameObjectSettings.collision_bounds_type: enum in [‘BOX’, ‘SPHERE’, ‘CYLINDER’, ‘CONE’, ‘CONVEX_HULL’, ‘TRIANGLE_MESH’, ‘CAPSULE’], default ‘BOX’
 
 
+
+#    print("\n", obj.name)
+#    print("local", obj.matrix_local, "\n")
+#    print("basis", obj.matrix_basis, "\n")
+#    print(obj.location)
+#    print("global", obj.matrix_world, "\n")
+#    print("bone", obj.data.bones[0].matrix_local, "\n") #this is the transform of the edit-bone with respect to the armature! = rest-position
+#    print("pose", obj.pose.bones[0].matrix_basis, "\n") # this is the transform of the pose-bone with repsect to its edit-bone
+
+
 Interesting elements form the blender documentation:
 
 bpy.types.Object:
