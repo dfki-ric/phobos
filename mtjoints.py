@@ -47,8 +47,8 @@ def deriveJointType(joint, adjust = False):
             crot = [c.use_limit_x and (c.min_x != 0 or c.max_x != 0),
                     c.use_limit_y and (c.min_y != 0 or c.max_y != 0),
                     c.use_limit_z and (c.min_z != 0 or c.max_z != 0)]
-    ncloc = sum(cloc)
-    ncrot = sum((limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z,))
+    ncloc = sum(cloc) if cloc else None
+    ncrot = sum((limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z,)) if limrot else None
     if cloc: # = if there is any constraint at all, as all joints but floating ones have translation limits
         if ncloc == 6: # fixed or revolute
             if ncrot == 3:
