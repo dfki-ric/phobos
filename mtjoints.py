@@ -47,19 +47,20 @@ def deriveJointType(joint, adjust = False):
             crot = [c.use_limit_x and (c.min_x != 0 or c.max_x != 0),
                     c.use_limit_y and (c.min_y != 0 or c.max_y != 0),
                     c.use_limit_z and (c.min_z != 0 or c.max_z != 0)]
-            print(joint.name, crot)
-    if crot:
-        if sum(crot) > 0: #continuous or revolute, this always has to be 3, but we allow less restrictions
-            jtype = 'revolute'
-        elif sum((limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z,)) < 3:
+    ncloc = sum(cloc)
+    ncrot = sum((limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z,))
+    if cloc: # = if there is any constraint at all, as all joints but floating ones have translation limits
+        if ncloc == 6: # fixed or revolute
+            if ncrot == 3:
+                if sum(crot) > 0:
+                    jtype = 'revolute'
+                else:
+                    jtype = 'fixed'
+            elif ncrot == 2:
                 jtype = 'continuous'
-    else: # prismatic, planar or fixed
-        if cloc and sum(cloc) >= 4:
-            if sum(cloc) == 6:
-                jtype = 'fixed'
-            else:
-                jtype = 'prismatic'
-        else:
+        elif ncloc == 4:
+            jtype = 'prismatic'
+        elif ncloc == 2:
             jtype = 'planar'
     if 'jointType' in joint and joint['jointType'] != jtype:
         warnings.warn("Type of joint "+joint.name+" does not match constraints!", Warning) #TODO: not sure if that is correct like that
