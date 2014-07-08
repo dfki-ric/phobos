@@ -41,7 +41,8 @@ def register():
     bpy.types.World.useDefaultLayers = BoolProperty(name = "use default layers", update=useDefaultLayers)
     bpy.types.World.linkLayer = IntProperty(name = "link", update=manageLayers)
 
-    bpy.types.World.path = StringProperty(name = 'path', default='.')
+    bpy.types.World.path = StringProperty(name = 'path', default='.', update=updateExportPath)
+    bpy.types.World.relativePath = BoolProperty(name='relative path', default=True)
     bpy.types.World.exportBobj = BoolProperty(name = "exportBobj", update=updateExportOptions)
     bpy.types.World.exportObj = BoolProperty(name = "exportObj", update=updateExportOptions)
     bpy.types.World.exportMARSscene = BoolProperty(name = "exportMARSscene", update=updateExportOptions)
@@ -88,6 +89,10 @@ class OkOperator(bpy.types.Operator):
 def updateExportOptions(self, context):
     if bpy.data.worlds[0].exportSMURF and not bpy.data.worlds[0].exportURDF:
         bpy.data.worlds[0].exportURDF = True
+
+def updateExportPath(self, context):
+    if not bpy.data.worlds[0].path.endswith('/'):
+        bpy.data.worlds[0].path += '/'
 
 def SetVisibleLayers(self, context):
     """Set active Layers according to MARS world data."""
@@ -293,6 +298,7 @@ class MARSToolExportPanel(bpy.types.Panel):
         group_export = self.layout
         #export robot model options
         group_export.prop(bpy.data.worlds[0], "path")
+        group_export.prop(bpy.data.worlds[0], "relativePath")
         #group_export.prop(bpy.data.worlds[0], "filename")
         group_export.prop(bpy.data.worlds[0], "exportBobj", text = "export mesh as .bobj")
         group_export.prop(bpy.data.worlds[0], "exportObj", text = "export mesh as .obj")

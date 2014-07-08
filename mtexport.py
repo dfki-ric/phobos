@@ -752,16 +752,20 @@ class ExportModelOperator(Operator):
 
     def execute(self, context):
         #TODO: add selection of all layers bpy.ops.object.select_all()
-        main(yaml = bpy.data.worlds[0].exportYAML,
-                    urdf = bpy.data.worlds[0].exportURDF,
-                    smurf = bpy.data.worlds[0].exportSMURF,
-                    mars = bpy.data.worlds[0].exportMARSscene,
-                    obj = bpy.data.worlds[0].exportObj,
-                    bobj = bpy.data.worlds[0].exportBobj)
+        if bpy.data.worlds[0].relativePath:
+           path = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.context.scene.world.path)))
+        else:
+            path = securepath(os.path.expanduser(bpy.context.scene.world.path))
+        main(outpath = path,
+                yaml = bpy.data.worlds[0].exportYAML,
+                urdf = bpy.data.worlds[0].exportURDF,
+                smurf = bpy.data.worlds[0].exportSMURF,
+                mars = bpy.data.worlds[0].exportMARSscene,
+                obj = bpy.data.worlds[0].exportObj,
+                bobj = bpy.data.worlds[0].exportBobj)
         return {'FINISHED'}
 
-def main(yaml=True, urdf=True, smurf=True, mars=False, obj=False, bobj=False):
-    outpath = securepath(os.path.expanduser(bpy.context.scene.world.path))
+def main(outpath = '', yaml=True, urdf=True, smurf=True, mars=False, obj=False, bobj=False):
     if yaml or urdf or smurf or mars:
         robot = buildRobotDictionary()
         if yaml:
