@@ -676,12 +676,14 @@ def exportModelToSMURF(model, path, relative = True):
         op.write(yaml.dump(semantics, default_flow_style=False))
 
     #write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
-    states = {}
+    states = []
     #gather all states
     for jointname in model['joints']:
         joint = model['joints'][jointname]
         if 'state' in joint: #this should always be the case, but testing doesn't hurt
-            states[jointname] = joint['state']
+            tmpstate = joint['state'].copy()
+            tmpstate['name'] = jointname
+            states.append(joint['state'])
     with open(state_filename, 'w') as op:
         op.write('#state'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
@@ -690,7 +692,7 @@ def exportModelToSMURF(model, path, relative = True):
     #write materials
     with open(materials_filename, 'w') as op:
         op.write('#materials'+infostring)
-        op.write("modelname: "+model['modelname']+'\n')
+        #op.write("modelname: "+model['modelname']+'\n')
         #materialdata = {}
         #for key in bpy.data.materials.keys(): #TODO: this is kind of independent of the dictionary, right?
         #    print("MARStools: processing material", key)
@@ -701,25 +703,25 @@ def exportModelToSMURF(model, path, relative = True):
         #    materialdata[key]["transparency"] = mat.alpha
         #    materialdata[key]["shininess"] = mat.specular_hardness
         #op.write(yaml.dump(materialdata, default_flow_style=False))
-        op.write(yaml.dump(model['materials'], default_flow_style=False))
+        op.write(yaml.dump(list(model['materials'].values()), default_flow_style=False))
 
     #write sensors
     with open(sensors_filename, 'w') as op:
         op.write('#sensors'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
-        op.write(yaml.dump(model['sensors'], default_flow_style=False))
+        op.write(yaml.dump(list(model['sensors'].values()), default_flow_style=False))
 
     #write motors
     with open(motors_filename, 'w') as op:
         op.write('#motors'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
-        op.write(yaml.dump(model['motors'], default_flow_style=False))
+        op.write(yaml.dump(list(model['motors'].values()), default_flow_style=False))
 
     #write controllers
     with open(controllers_filename, 'w') as op:
         op.write('#controllers'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
-        op.write(yaml.dump(model['controllers'], default_flow_style=False))
+        op.write(yaml.dump(list(model['controllers'].values()), default_flow_style=False))
 
     #write simulation
     with open(simulation_filename, 'w') as op:
@@ -727,7 +729,7 @@ def exportModelToSMURF(model, path, relative = True):
         op.write("modelname: "+model['modelname']+'\n')
         simulationdata = {}
         #TODO: handle simulation-specific data
-        op.write(yaml.dump(simulationdata, default_flow_style=False))
+        op.write(yaml.dump(list(simulationdata.values()), default_flow_style=False))
 
 def exportSceneToSMURF(path):
     """Exports all robots in a scene to separate SMURF folders."""
