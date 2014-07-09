@@ -72,7 +72,7 @@ class CreateCollisionObjects(Operator):
                 elif self.property_colltype == 'sphere':
                     size = max(size)/2
                 center = node.matrix_world.to_translation() + node.matrix_world.to_quaternion()*center
-                ob = mtutility.createPrimitive('coll_'+node.name, self.property_colltype, size,
+                ob = mtutility.createPrimitive('collision_'+node.name, self.property_colltype, size,
                                                mtdefs.layerTypes["collision"], node.data.materials[0].name, center,
                                                (rotation * node.matrix_world).to_euler()) #TODO: is this the correct way around?
                 #TODO: apply rotation for moved cylinder object?
