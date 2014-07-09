@@ -251,10 +251,10 @@ def deriveGeometry(obj):
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
-            geometry['filename'] = obj.name + (".bobj" if bpy.context.scene.world.exportBobj else ".obj") #TODO: this is only valid if this function is only called upon export
-            #geometry['size'] = obj.dimensions
-            geometry['scale'] = list(obj.scale) #TODO: we still need checking for a mesh's existence, as we cannot always re-export every single mesh in the long run
-            geometry['size'] = list(obj.dimensions) #this is needed to calculate an approximate inertia
+            filename = obj['filename'] if 'filename' in obj else obj.name
+            geometry['filename'] = filename + (".bobj" if bpy.context.scene.world.exportBobj else ".obj")
+            geometry['scale'] = list(obj.scale)
+            geometry['size'] = list(obj.dimensions) #this is needed to calculate an approximate inertia if collision is inertia
         return geometry
     else:
         warnings.warn("No geometryType found for object "+obj.name+".")
