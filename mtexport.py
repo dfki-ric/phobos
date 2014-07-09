@@ -476,7 +476,7 @@ def buildRobotDictionary():
             chains.extend(deriveChainEntry(obj))
     for chain in chains:
         robot['chains'][chain['name']] = chain
-    return robot
+    return epsilonToZero(robot, 0.00001)
 
 def exportModelToYAML(model, filepath):
     print("MARStools YAML export: Writing model data to", filepath )

@@ -28,7 +28,7 @@ def is_float(s):
     try:
         float(s)
         return True
-    except ValueError:
+    except (ValueError, TypeError):
         return False
 
 def is_int(s):
@@ -209,4 +209,21 @@ def replaceNameElement(prop, old, new):
 
 def roundVector(v, n):
     return round(v.x, n), round(v.y, n), round(v.z, n)
+
+def epsilonToZero(data, epsilon): #TODO: should we also introduce rounding to 1.0 for instance?
+    """Recursively loops through a dictionary and sets all floating values
+     < epsilon equal to zero."""
+    if is_float(data):
+        print('eTZ:float', data)
+        return 0 if abs(data) < epsilon else data
+    elif type(data) is list:
+        print('eTZ:list')
+        return [epsilonToZero(a, epsilon) for a in data]
+    elif type(data) is dict:
+        print('eTZ:dict')
+        return {key: epsilonToZero(value, epsilon) for key, value in data.items()}
+    else: #any other type, such as string
+        print('eTZ:else')
+        return data
+
 
