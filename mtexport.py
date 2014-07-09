@@ -454,7 +454,7 @@ def buildRobotDictionary():
     materials = collectMaterials()
     for mat in materials:
         print(mat, materials[mat])
-    for obj in bpy.data.objects: #TODO: this is actually a shitty implementation, as it incorporates what's selected
+    for obj in bpy.data.objects: #TODO: check which is the best pointer to selected objects
         if obj.MARStype == 'visual' and obj.data.materials:
             mat = obj.data.materials[0]
             if materials[mat.name]['users'] > 1:

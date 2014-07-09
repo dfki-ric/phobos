@@ -195,7 +195,7 @@ def calcBoundingBoxCenter(boundingbox):
     return c / 8
 
 def selectObjects(objects, clear):
-    """Selects all objects provided in list, clears current selection if clear=True"""
+    """Selects all objects provided in list, clears current selection if clear==True"""
     if clear:
         for obj in bpy.context.selected_objects:
             obj.select = False

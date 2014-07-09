@@ -136,7 +136,7 @@ class RobotModelParser():
                     bpy.ops.object.parent_set()
                     geom.matrix_world = parentLink.matrix_world
                     geom.matrix_local = urdf_geom_loc * urdf_geom_rot
-                    geom.scale = urdf_geom_scale
+                    geom.scale = urdf_geom_scale # TODO: should we not combine this in the local part?
 
     def createGeometry(self, link, geomsrc, geomname):
         print(bpy.data.objects[link['name']])
@@ -296,6 +296,10 @@ class URDFModelParser(RobotModelParser):
             joint = self.robot['joints'][j]
             self.robot['links'][joint['child']]['parent'] = joint['parent']
             print(joint['parent'] + ', ', end='')
+
+        #now some debug output
+        with open(self.filepath+'_debug.yml', 'w') as outputfile:
+            outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
         materials = [] #TODO: build dictionary entry for materials
         print("\n\nParsing materials..")
