@@ -225,7 +225,7 @@ def deriveJointState(joint):
     state['translation'] = list(joint.pose.bones[0].matrix_basis.to_translation())
     state['rotation_euler'] = list(joint.pose.bones[0].matrix_basis.to_euler()) #[0:3]
     state['rotation_quaternion'] = list(joint.pose.bones[0].matrix_basis.to_quaternion()) #[0:4]
-    #TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
+    # TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
     return state
 
 def deriveKinematics(obj):
@@ -501,7 +501,7 @@ def writeURDFGeometry(output, element):
     elif element['geometryType'] == "sphere":
         output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
     elif element['geometryType'] == "mesh":
-        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], '1.0 1.0 1.0']))#TODO correct this after implementing filename and scale properly
+        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], '1.0 1.0 1.0']))#TODO correct this after implementing scale properly
     output.append(indent*4+'</geometry>\n')
 
 def exportModelToURDF(model, filepath):
@@ -557,8 +557,6 @@ def exportModelToURDF(model, filepath):
         if 'limits' in joint:
             output.append(xmlline(3, 'limit', ['lower', 'upper', 'velocity', 'effort'], [str(joint['limits'][0]), str(joint['limits'][1]), 1.0, 1.0])) #TODO: effort and velocity
         output.append(indent*2+'</joint>\n\n')
-        #if "pose" in joint:
-        #    output.append(indent*2+'<origin xyz="'+str(joint["pose"][0:3])+' rpy="'+str(joint["pose"][3:-1]+'/>\n')) #todo: correct lists and relative poses!!!
     #export material information
     for m in model['materials']:
         output.append(indent*2+'<material name="' + m + '">\n')
@@ -569,7 +567,6 @@ def exportModelToURDF(model, filepath):
     output.append(urdfFooter)
     with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))
-    #print(model['links'].keys())
     # problem of different joint transformations needed for fixed joints
     print("MARStools URDF export: Writing model data to", filepath )
 
@@ -600,7 +597,6 @@ def exportModelToSMURF(model, path, relative = True):
     #write model information
     print('Writing SMURF information to...\n'+model_filename)
     modeldata = {}
-    #modeldata["name"] = model['modelname']
     modeldata["date"] = model["date"]
     if relative:
         modeldata["files"] = [rel_urdf_filename, rel_semantics_filename, rel_state_filename,
@@ -696,7 +692,7 @@ class ExportModelOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        #TODO: add selection of all layers bpy.ops.object.select_all()
+        #TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
         if bpy.data.worlds[0].relativePath:
            path = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.context.scene.world.path)))
         else:
