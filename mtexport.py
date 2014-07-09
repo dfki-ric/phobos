@@ -283,7 +283,7 @@ def deriveInertial(obj):
     settings placed in the object itself.'''
     props = initObjectProperties(obj)
     inertia = props['inertia'].split()
-    props['inertia'] = map(float, inertia)
+    props['inertia'] = list(map(float, inertia))
     props['pose'] = deriveObjectPose(obj)
     return props, obj.parent
 
@@ -432,37 +432,23 @@ def buildRobotDictionary():
             robot['links'][parent.name][obj.MARStype][obj.name] = props
             obj.select = False
     # TODO: change this to not solely depend on the last collision object
-    # recalculate inertial from collision/visual geometry if necessary
+    # recalculate inertial from collision geometry if necessary
     print('\n\n[MARStools] Calculating inertia from collision and visual objects...')
     for linkname in robot['links']:
         link = robot['links'][linkname]
         print('Checking inertial for link', link['name'])
-        if 'mass' in link['inertial']:
-            if 'inertia' not in link['inertial']: #ignore links without mass or links with predefined inertia
-                print('Found mass, but no inertia...')
-                if 'collision' in link:
-                    print('Trying to derive from collision...')
-                    for c in link['collision']:
-                        col = link['collision'][c]
-                        if 'geometry' in col:
-                            link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], col['geometry'])
-                            link['inertial']['pose'] = col['pose']
-                # TODO: We don't want to use visual objects to calculate inertia - this makes it possible
-                # to attach purely visual objects in separate links, still, they should have no mass, which is
-                # why we put out a warning
-                elif 'visual' in link:
-                    print('Trying to derive from visual...')
-                    for v in link['visual']:
-                        vis = link['visual'][v]
-                        if 'geometry' in vis:
-                            link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], vis['geometry'])
-                            link['inertial']['pose'] = vis['pose']
-                    #TODO: check if this really makes sense or if we should not export anything special to let ODE handle the job!!!
-            if 'inertia' not in link['inertial']:
+        if 'mass' in link['inertial'] and 'inertia' not in link['inertial']:
+                print('Found mass, but no inertia...trying to derive from collision...')
+                for c in link['collision']:
+                    col = link['collision'][c]
+                    if 'geometry' in col:
+                        link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], col['geometry'])
+                        link['inertial']['pose'] = col['pose']
+                #TODO: check if this really makes sense or if we should not export anything special to let ODE handle the job!!!
                 print('...failed. Inserting dummy inertia...')
                 link['inertial']['inertia'] = mtinertia.getDummyInertia()
         else:
-            link['inertial']['mass'] = 0.001 #TODO: do we really want this fixed here?
+            print("###WARNING: link", link['name'], "has no mass.")
     # parse motors, sensors and controllers
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['sensor', 'controller']:

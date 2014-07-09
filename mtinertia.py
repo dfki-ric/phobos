@@ -48,7 +48,7 @@ def calculateBoxInertia(mass, size):
     iyy = i*(size[0]**2 + size[2]**2)
     iyz = 0
     izz = i*(size[0]**2 + size[1]**2)
-    return (ixx, ixy, ixz, iyy, iyz, izz)
+    return [ixx, ixy, ixz, iyy, iyz, izz]
 
 def calculateCylinderInertia(mass, r, h):
     '''Returns upper diagonal of inertia tensor of a cylinder as tuple.'''
@@ -59,7 +59,7 @@ def calculateCylinderInertia(mass, r, h):
     iyy = i
     iyz = 0
     izz = 0.5 * mass * r**2
-    return (ixx, ixy, ixz, iyy, iyz, izz)
+    return [ixx, ixy, ixz, iyy, iyz, izz]
 
 def calculateSphereInertia(mass, r):
     '''Returns upper diagonal of inertia tensor of a sphere as tuple.'''
@@ -70,7 +70,7 @@ def calculateSphereInertia(mass, r):
     iyy = i
     iyz = 0
     izz = i
-    return (ixx, ixy, ixz, iyy, iyz, izz)
+    return [ixx, ixy, ixz, iyy, iyz, izz]
 
 def calculateEllipsoidInertia(mass, size):
     '''Returns upper diagonal of inertia tensor of an ellisoid as tuple.'''
@@ -81,4 +81,4 @@ def calculateEllipsoidInertia(mass, size):
     iyy = i*(size[0]**2 + size[2]**2)
     iyz = 0
     izz = i*(size[0]**2 + size[1]**2)
-    return (ixx, ixy, ixz, iyy, iyz, izz)
+    return [ixx, ixy, ixz, iyy, iyz, izz]

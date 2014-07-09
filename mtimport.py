@@ -93,13 +93,30 @@ class RobotModelParser():
         # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
         #* urdf_visual_loc * urdf_visual_rot #*urdf_sca
         parentLink = bpy.data.objects[link['name']]
+        if 'inertial' in link:
+            if 'pose' in link['inertial']:
+                print(link['name'], 'inertial', link['inertial']['pose'][0:3])
+                urdf_geom_loc = mathutils.Matrix.Translation(link['inertial']['pose'][0:3])
+                urdf_geom_rot = mathutils.Euler(tuple(link['inertial']['pose'][3:]), 'XYZ').to_matrix().to_4x4()
+            else:
+                urdf_geom_loc = mathutils.Matrix.Identity(4)
+                urdf_geom_rot = mathutils.Matrix.Identity(4)
+            geoname = link['inertial']['name'] #g
+            geom = bpy.data.objects[geoname]
+            bpy.ops.object.select_all(action="DESELECT")
+            geom.select = True
+            parentLink.select = True
+            bpy.context.scene.objects.active = parentLink
+            bpy.ops.object.parent_set()
+            geom.matrix_world = parentLink.matrix_world
+            geom.matrix_local = urdf_geom_loc * urdf_geom_rot
         for geomsrc in ['visual', 'collision']:
             if geomsrc in link:
                 for g in link[geomsrc]:
                     geom = link[geomsrc][g]
                     print([key for key in geom])
                     if 'pose' in geom:
-                        print(link['name'], geomsrc, geom['pose'][0:3])
+
                         urdf_geom_loc = mathutils.Matrix.Translation(geom['pose'][0:3])
                         urdf_geom_rot = mathutils.Euler(tuple(geom['pose'][3:]), 'XYZ').to_matrix().to_4x4()
                     else:
@@ -166,6 +183,16 @@ class RobotModelParser():
                 newgeom.MARStype = geomsrc
             return newgeom
 
+    def createInertial(self, name, inertial):
+        inert = createPrimitive('inertial_'+name, 'sphere', 0.01, 0, 'None', (0, 0, 0))
+        #obj = bpy.context.object
+        #obj.name = name
+        for prop in inertial:
+            if prop not in ['pose'] and inertial[prop] is not None:
+                inert[prop] = inertial[prop]
+        inert.MARStype = 'inertial'
+        return inert
+
     def createLink(self, link):
         print("Creating link", link['name'])
         #create base object ( =armature)
@@ -178,11 +205,10 @@ class RobotModelParser():
         newlink.MARStype = 'link'
         if newlink.name != link['name']:
             print("Warning, name conflict!")
-        #read inertial
+        # place inertial
         if 'inertial' in link:
-            for prop in link['inertial']:
-                link[prop] = link['inertial'][prop]
-        ## place visual
+            self.createInertial(link['name'], link['inertial'])
+        # place visual
         if 'visual' in link:
             for v in link['visual']:
                 if 'geometry' in link['visual'][v]:
