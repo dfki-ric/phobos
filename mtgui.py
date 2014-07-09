@@ -42,6 +42,9 @@ def register():
     bpy.types.World.linkLayer = IntProperty(name = "link", update=manageLayers)
 
     bpy.types.World.path = StringProperty(name = 'path', default='.', update=updateExportPath)
+    bpy.types.World.decimalPlaces = IntProperty(name = "decimalPlaces",
+                                          description = "number of decimal places to export",
+                                          default = 6)
     bpy.types.World.relativePath = BoolProperty(name='relative path', default=True)
     bpy.types.World.exportBobj = BoolProperty(name = "exportBobj", update=updateExportOptions)
     bpy.types.World.exportObj = BoolProperty(name = "exportObj", update=updateExportOptions)
@@ -298,6 +301,7 @@ class MARSToolExportPanel(bpy.types.Panel):
         group_export = self.layout
         #export robot model options
         group_export.prop(bpy.data.worlds[0], "path")
+        group_export.prop(bpy.data.worlds[0], "decimalPlaces")
         group_export.prop(bpy.data.worlds[0], "relativePath")
         #group_export.prop(bpy.data.worlds[0], "filename")
         group_export.prop(bpy.data.worlds[0], "exportBobj", text = "export mesh as .bobj")

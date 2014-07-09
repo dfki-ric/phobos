@@ -36,15 +36,6 @@ import marstools.mtinertia as mtinertia
 
 def register():
     print("Registering mtexport...")
-    bpy.types.World.path = StringProperty(name = "path")
-    bpy.types.World.epsilon = IntProperty(name = "decimalPlaces",
-                                          description = "number of decimal places to export",
-                                          default = 6) # TODO: this needs implementation
-    bpy.types.World.exportBobj = BoolProperty(name = "exportBobj")
-    bpy.types.World.exportMesh = BoolProperty(name = "exportMesh")
-    bpy.types.World.exportSMURF = BoolProperty(name = "exportSMURF")
-    bpy.types.World.exportURDF = BoolProperty(name = "exportURDF")
-    bpy.types.World.exportYAML = BoolProperty(name = "exportYAML")
 
 def unregister():
     print("Unregistering mtexport...")
@@ -475,7 +466,8 @@ def buildRobotDictionary():
             chains.extend(deriveChainEntry(obj))
     for chain in chains:
         robot['chains'][chain['name']] = chain
-    return epsilonToZero(robot, 0.00001)
+    epsilon = 10**(-bpy.data.worlds[0].decimalPlaces) #TODO: implement this separately
+    return epsilonToZero(robot, epsilon, bpy.data.worlds[0].decimalPlaces)
 
 def exportModelToYAML(model, filepath):
     print("MARStools YAML export: Writing model data to", filepath )
