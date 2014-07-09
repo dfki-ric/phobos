@@ -188,7 +188,6 @@ def deriveMaterial(mat):
     material["specularColor"] = dict(zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
     material['shininess'] = mat.specular_hardness
     material["transparency"] = mat.alpha
-    #material["ambientColor"] = list(mat.ambient_color)
     return material
 
 def deriveLink(obj):
@@ -657,17 +656,6 @@ def exportModelToSMURF(model, path, relative = True):
     #write materials
     with open(materials_filename, 'w') as op:
         op.write('#materials'+infostring)
-        #op.write("modelname: "+model['modelname']+'\n')
-        #materialdata = {}
-        #for key in bpy.data.materials.keys(): #TODO: this is kind of independent of the dictionary, right?
-        #    print("MARStools: processing material", key)
-        #    mat = bpy.data.materials[key]
-        #    materialdata[key] = {'name': key}
-        #    materialdata[key]["diffuseFront"] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
-        #    materialdata[key]["specularFront"] = list(mat.specular_color)#.append(mat.specular_alpha)
-        #    materialdata[key]["transparency"] = mat.alpha
-        #    materialdata[key]["shininess"] = mat.specular_hardness
-        #op.write(yaml.dump(materialdata, default_flow_style=False))
         op.write(yaml.dump(list(model['materials'].values()), default_flow_style=False))
 
     #write sensors
