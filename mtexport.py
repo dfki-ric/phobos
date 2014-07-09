@@ -193,7 +193,7 @@ def deriveMaterial(mat):
 
 def deriveLink(obj):
     props = initObjectProperties(obj)
-    props["pose"] = deriveLinkPose(obj)
+    props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
     props["visual"] = {}
     props["inertial"] = {}
@@ -204,14 +204,6 @@ def deriveLink(obj):
         props["inertial"]["inertia"] = props["inertia"]
         del props["inertia"]
     return props
-
-def deriveLinkPose(link): #TODO: this data is later used in dumping to yaml, but not writing URDF - why do we need this??
-    pose = {}
-    pose['matrix'] = list(link.matrix_local)
-    pose['translation'] = list(link.matrix_local.to_translation())
-    pose['rotation_euler'] = list(link.matrix_local.to_euler())
-    pose['rotation_quaternion'] = list(link.matrix_local.to_quaternion())
-    return pose
 
 def deriveJoint(obj):
     props = {'name': 'joint_' + obj.parent.name + '_' + obj.name}
@@ -291,7 +283,7 @@ def deriveObjectPose(obj):
     '''Derive pose of visual or collision object. This is at the moment the same
     implementation as the deriveLinkPose function and may be merged in the future.'''
     pose = {}
-    pose['matrix'] = list(obj.matrix_local)
+    pose['matrix'] = [list(vector) for vector in list(obj.matrix_local)]
     pose['translation'] = list(obj.matrix_local.to_translation())
     pose['rotation_euler'] = list(obj.matrix_local.to_euler())
     pose['rotation_quaternion'] = list(obj.matrix_local.to_quaternion())
@@ -488,19 +480,6 @@ def buildRobotDictionary():
 
 def exportModelToYAML(model, filepath):
     print("MARStools YAML export: Writing model data to", filepath )
-    for l in model['links']:
-        link = model['links'][l]
-        link['pose']['matrix'] = [list(vector) for vector in list(link['pose']['matrix'])]
-        if 'visual' in link:
-            for v in link['visual']:
-                vis = link['visual'][v]
-                if 'pose' in vis:
-                    vis['pose']['matrix'] = [list(vector) for vector in list(vis['pose']['matrix'])]
-        if 'collision' in link:
-            for c in link['collision']:
-                col = link['collision'][c]
-                if 'pose' in col:
-                    col['pose']['matrix'] = [list(vector) for vector in list(col['pose']['matrix'])]
     with open(filepath, 'w') as outputfile:
         outputfile.write('#YAML dump of robot model "'+model['modelname']+'", '+datetime.datetime.now().strftime("%Y%m%d_%H:%M")+"\n\n")
         outputfile.write(yaml.dump(model))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
