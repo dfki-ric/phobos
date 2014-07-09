@@ -15,6 +15,7 @@ You may use the provided install shell script.
 import bpy
 import mathutils
 import os
+import yaml
 from collections import namedtuple
 import xml.etree.ElementTree as ET
 from marstools.mtutility import *
