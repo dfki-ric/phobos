@@ -485,6 +485,11 @@ for obj in bpy.context.selected_objects:
 #    print("pose", obj.pose.bones[0].matrix_basis, "\n") # this is the transform of the pose-bone with repsect to its edit-bone
 
 
+#joints
+    #bpy.data.armatures["Armature.001"].bones["Bone"].x_axis
+    #bpy.data.objects["Armature.001"].pose.bones["Bone"].x_axis
+
+
 Interesting elements form the blender documentation:
 
 bpy.types.Object:

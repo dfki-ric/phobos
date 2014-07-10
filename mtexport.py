@@ -207,9 +207,6 @@ def deriveJoint(obj):
     if limit:
         props['limits'] = list(limit) # limit gets returned as None if there are no limits
     props["state"] = deriveJointState(obj)
-    #TODO: What to do with the following information on the axes?
-    #bpy.data.armatures["Armature.001"].bones["Bone"].x_axis
-    #bpy.data.objects["Armature.001"].pose.bones["Bone"].x_axis
     #TODO:
     # - calibration
     # - dynamics
