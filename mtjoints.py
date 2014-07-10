@@ -76,7 +76,8 @@ def getJointConstraints(joint):
         if jt in ['revolute', 'continuous'] and crot:
             c = getJointConstraint(joint, 'LIMIT_ROTATION')
             #axis = (joint.matrix_local * -bpy.data.armatures[joint.name].bones[0].vector).normalized() #we cannot use joint for both as the first is a Blender 'Object', the second an 'Armature'
-            axis = (joint.matrix_local * -joint.data.bones[0].vector).normalized() #joint.data accesses the armature, thus the armature's name is not important anymore
+            #axis = (joint.matrix_local * -joint.data.bones[0].vector).normalized() #joint.data accesses the armature, thus the armature's name is not important anymore
+            axis = joint.data.bones[0].vector.normalized()
             if crot[0]:
                 limits = (c.min_x, c.max_x)
             elif crot[1]:
