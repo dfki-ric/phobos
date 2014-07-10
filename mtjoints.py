@@ -341,8 +341,8 @@ class DefineJointConstraintsOperator(Operator):
                     cloc.use_max_x = True
                     cloc.use_max_y = True
                     cloc.use_max_z = True
-                    cloc.min_x = lower
-                    cloc.max_x = upper
+                    cloc.min_x = self.lower
+                    cloc.max_x = self.upper
                     cloc.owner_space = 'LOCAL'
                     # fix rotation
                     bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
