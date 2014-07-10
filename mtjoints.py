@@ -284,8 +284,7 @@ class DefineJointConstraintsOperator(Operator):
             bpy.context.scene.objects.active = link
             bpy.ops.object.mode_set(mode='POSE')
             for c in link.pose.bones[0].constraints:
-                #bpy.ops.pose.constraint.delete() #Howto select the right one?
-                del(c)
+                link.pose.bones[0].constraints.remove(c)
             if link.MARStype == 'link':
                 if self.joint_type == 'revolute':
                     # fix location
