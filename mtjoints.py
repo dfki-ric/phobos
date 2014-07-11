@@ -409,6 +409,55 @@ class DefineJointConstraintsOperator(Operator):
                 link['jointType'] = self.joint_type
         return{'FINISHED'}
 
+class AttachMotorOperator(Operator):
+    """AttachMotorOperator"""
+    bl_idname = "object.attach_motor"
+    bl_label = "Attaches motor values to selected joints"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    P = FloatProperty(
+        name = "P",
+        default = 0.0,
+        description = "P-value")
+
+    I = FloatProperty(
+        name = "I",
+        default = 0.0,
+        description = "I-value")
+
+    D = FloatProperty(
+        name = "D",
+        default = 0.0,
+        description = "D-value")
+
+    vmax = FloatProperty(
+        name = "maximum velocity [rpm]",
+        default = 1.0,
+        description = "maximum turning velocity of the motor")
+
+    taumax = FloatProperty(
+        name = "maximum torque [Nm]",
+        default = 0.1,
+        description = "maximum torque a motor can apply")
+
+    motortype = EnumProperty(
+        name = 'motor_type',
+        default = 'servo',
+        description = "type of the motor",
+        items = mtdefs.motortypes)
+
+    def execute(self, context):
+        for joint in bpy.context.selected_objects:
+            if joint.MARStype == "link":
+                #TODO: these keys have to be adapted
+                joint['motor/p'] = self.P
+                joint['motor/i'] = self.I
+                joint['motor/d'] = self.D
+                joint['motor/motorMaxSpeed'] = self.vmax*2*math.pi
+                joint['motor/motorMaxForce'] = self.taumax
+                joint['type'] = 1 if self.motortype == 'servo' else 2
+        return{'FINISHED'}
+
 #DEPRECATED
 class DeriveJointSpheresOperator(Operator):
     """DeriveJointSpheresOperator"""

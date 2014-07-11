@@ -197,7 +197,6 @@ def deriveLink(obj):
 
 def deriveJoint(obj):
     props = {'name': 'joint_' + obj.parent.name + '_' + obj.name}
-    #motorprops = {key:props[key] for key in [key if props[key].find('motor/') else None for key in props]}
     props['parent'] = obj.parent.name
     props['child'] = obj.name
     props['jointType'], crot = mtjoints.deriveJointType(obj, True)
@@ -212,7 +211,13 @@ def deriveJoint(obj):
     # - dynamics
     # - mimic
     # - safety_controller
-    return props#, motorprops
+
+    #derive motor data
+    motorprops = {'name': 'motor_' + obj.name, 'joint': 'joint_' + obj.name}
+    for key,value in obj.items():
+        if key.find('motor/') >= 0:
+            motorprops[key.replace('motor/', '')] = value
+    return props, motorprops
 
 def deriveJointState(joint):
     '''Calculates the state of a joint from the state of the link armature.
@@ -228,9 +233,10 @@ def deriveJointState(joint):
 def deriveKinematics(obj):
     link = deriveLink(obj)
     joint = None
+    motor = None
     if obj.parent:
-        joint = deriveJoint(obj)
-    return link, joint
+        joint, motor = deriveJoint(obj)
+    return link, joint, motor
 
 #def deriveMotor(obj):
 #    props = initObjectProperties(obj)
@@ -394,10 +400,12 @@ def buildRobotDictionary():
     for obj in bpy.context.selected_objects:
         if obj.MARStype == 'link':
             print('Parsing', obj.MARStype, obj.name, '...')
-            link, joint = deriveKinematics(obj)
+            link, joint, motor = deriveKinematics(obj)
             robot['links'][obj.name] = link
             if joint: #joint can be None if link is a root
                 robot['joints'][joint['name']] = joint
+            if motor:
+                robot['motors'][joint['name']] = motor
             obj.select = False
     # complete link information by parsing visuals and collision objects
     #try:
@@ -653,7 +661,8 @@ def exportModelToSMURF(model, path, relative = True):
     with open(motors_filename, 'w') as op:
         op.write('#motors'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
-        op.write(yaml.dump(list(model['motors'].values()), default_flow_style=False))
+        #op.write("motors:\n")
+        op.write(yaml.dump({'motors': list(model['motors'].values())}, default_flow_style=False))
 
     #write controllers
     with open(controllers_filename, 'w') as op:
