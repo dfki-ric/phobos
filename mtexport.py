@@ -174,11 +174,13 @@ def collectMaterials():
 
 def deriveMaterial(mat):
     material = {}
-    material["name"] = mat.name #simply grab the first material
-    material["diffuseColor"] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
-    material["specularColor"] = dict(zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
+    material["name"] = mat.name
+    material["diffuseFront"] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
+    material["specularFront"] = dict(zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
     material['shininess'] = mat.specular_hardness
-    material["transparency"] = mat.alpha
+    material["transparency"] = 1.0-mat.alpha
+    if mat.texture_slots[0] is not None: # grab the first texture
+        material["texturename"] = mat.texture_slots[0].name
     return material
 
 def deriveLink(obj):
@@ -532,9 +534,9 @@ def exportModelToURDF(model, filepath):
                 output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
                 writeURDFGeometry(output, vis['geometry'])
                 if 'material' in vis:
-                    if 'diffuseColor' in vis['material']:
+                    if 'diffuseFront' in vis['material']:
                         output.append(indent*4+'<material name="' + vis["material"]["name"] + '">\n')
-                        color = vis['material']['diffuseColor']
+                        color = vis['material']['diffuseFront']
                         output.append(indent*5+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(vis["material"]["transparency"]) + '"/>\n')
                         output.append(indent*4+'</material>\n')
                     else:
@@ -565,7 +567,7 @@ def exportModelToURDF(model, filepath):
     #export material information
     for m in model['materials']:
         output.append(indent*2+'<material name="' + m + '">\n')
-        color = model['materials'][m]['diffuseColor']
+        color = model['materials'][m]['diffuseFront']
         output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(model['materials'][m]["transparency"]) + '"/>\n')
         output.append(indent*2+'</material>\n\n')
     #finish the export
@@ -649,7 +651,7 @@ def exportModelToSMURF(model, path, relative = True):
     #write materials
     with open(materials_filename, 'w') as op:
         op.write('#materials'+infostring)
-        op.write(yaml.dump(list(model['materials'].values()), default_flow_style=False))
+        op.write(yaml.dump({'materials': list(model['materials'].values())}, default_flow_style=False))
 
     #write sensors
     with open(sensors_filename, 'w') as op:
