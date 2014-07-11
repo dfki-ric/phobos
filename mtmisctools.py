@@ -203,8 +203,13 @@ class BatchEditPropertyOperator(Operator):
 
     def execute(self, context):
         value = mtutility.parse_number(self.property_value)
-        for obj in bpy.context.selected_objects:
-            obj[self.property_name] = value
+        if value == '':
+            for obj in bpy.context.selected_objects:
+                if self.property_name in obj:
+                    del(obj[self.property_name])
+        else:
+            for obj in bpy.context.selected_objects:
+                obj[self.property_name] = value
         return {'FINISHED'}
 
     @classmethod
