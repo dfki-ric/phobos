@@ -39,9 +39,9 @@ def deriveJointType(joint, adjust = False):
     # we pick the first bone in the armature as there is only one
     for c in joint.pose.bones[0].constraints:
         if c.type == 'LIMIT_LOCATION':
-            cloc = [c.use_min_x, c.use_max_x,
-                    c.use_min_y, c.use_max_y,
-                    c.use_min_z, c.use_max_z]
+            cloc = [c.use_min_x and c.min_x == c.max_x,
+                    c.use_min_y and c.min_y == c.max_y,
+                    c.use_min_z and c.min_z == c.max_z]
         elif c.type == 'LIMIT_ROTATION':
             limrot = c
             crot = [c.use_limit_x and (c.min_x != 0 or c.max_x != 0),
@@ -50,7 +50,7 @@ def deriveJointType(joint, adjust = False):
     ncloc = sum(cloc) if cloc else None
     ncrot = sum((limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z,)) if limrot else None
     if cloc: # = if there is any constraint at all, as all joints but floating ones have translation limits
-        if ncloc == 6: # fixed or revolute
+        if ncloc == 3: # fixed or revolute
             if ncrot == 3:
                 if sum(crot) > 0:
                     jtype = 'revolute'
@@ -58,9 +58,9 @@ def deriveJointType(joint, adjust = False):
                     jtype = 'fixed'
             elif ncrot == 2:
                 jtype = 'continuous'
-        elif ncloc == 4:
-            jtype = 'prismatic'
         elif ncloc == 2:
+            jtype = 'prismatic'
+        elif ncloc == 1:
             jtype = 'planar'
     if 'jointType' in joint and joint['jointType'] != jtype:
         warnings.warn("Type of joint "+joint.name+" does not match constraints!", Warning) #TODO: not sure if that is correct like that
@@ -91,8 +91,8 @@ def getJointConstraints(joint):
             axis = None
             limits = None
             freeloc = [c.use_min_x and c.use_max_x and c.min_x == c.max_x,
-                    c.use_min_y and c.Use_max_y and c.min_x == c.max_x,
-                    c.use_min_z and c.Use_max_z and c.min_x == c.max_x]
+                    c.use_min_y and c.use_max_y and c.min_y == c.max_y,
+                    c.use_min_z and c.use_max_z and c.min_z == c.max_z]
             if jt == 'prismatic':
                 if sum(freeloc) == 2:
                     axis = mathutils.Vector([int(not i) for i in freeloc])
