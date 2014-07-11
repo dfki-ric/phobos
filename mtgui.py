@@ -228,7 +228,7 @@ class MARSToolModelPanel(bpy.types.Panel):
         c2 = inlayout.column(align = True)
         c2.operator('object.mt_set_geometry_type', text = "Set Geometry Type(s)")
         c2.operator('object.mt_set_marstype', text = 'Set MARStype')
-        c2.operator('object.derive_joint_spheres', text = "Derive Joint Spheres")
+        c2.operator('object.attach_motor', text = "Attach motor")
         c2.operator('object.mt_smoothen_surface', text = "Smoothen Surface")
 
 class MARSToolSenConPanel(bpy.types.Panel):
