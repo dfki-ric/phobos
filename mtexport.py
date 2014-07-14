@@ -165,7 +165,7 @@ def collectMaterials():
     materials = {}
     for obj in bpy.data.objects:
         if obj.MARStype == 'visual' and obj.data.materials:
-            mat = obj.data.materials[0]
+            mat = obj.data.materials[0] #simply grab the first material
             if not mat.name in materials:
                 materials[mat.name] = {'users': 1, 'mat': mat}
             else:
@@ -180,7 +180,7 @@ def deriveMaterial(mat):
     material['shininess'] = mat.specular_hardness
     material["transparency"] = 1.0-mat.alpha
     if mat.texture_slots[0] is not None: # grab the first texture
-        material["texturename"] = mat.texture_slots[0].name
+        material["texturename"] = mat.texture_slots[0].texture.image.name
     return material
 
 def deriveLink(obj):
