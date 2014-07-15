@@ -161,13 +161,15 @@ def exportObj(path, obj):
                              axis_up='Y', use_selection=True, use_normals=True)
     obj.matrix_world = world_matrix
 
-def collectMaterials():
+def collectMaterials(objectlist):
+    print('\n\nCollecting materials...')
     materials = {}
-    for obj in bpy.data.objects:
+    for obj in objectlist:
         if obj.MARStype == 'visual' and obj.data.materials:
             mat = obj.data.materials[0] #simply grab the first material
-            if not mat.name in materials:
-                materials[mat.name] = {'users': 1, 'mat': mat}
+            if mat.name not in materials:
+                materials[mat.name] = deriveMaterial(mat)
+                materials[mat.name]['users'] = 1
             else:
                 materials[mat.name]['users'] += 1
     return materials
@@ -377,6 +379,7 @@ def deriveChainEntry(obj):
     return returnchains
 
 def buildRobotDictionary():
+    objectlist = bpy.context.selected_objects
     #notifications, faulty_objects = mtmisctools.checkModel(bpy.context.selected_objects)
     #print(notifications)
     robot = {'links': {},
@@ -448,21 +451,13 @@ def buildRobotDictionary():
     #    print("An error occurred when inserting the entry for object", obj.name, sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
     #    print(robot)
     # parse materials
-    materials = collectMaterials()
-    for mat in materials:
-        print(mat, materials[mat])
-    for obj in bpy.data.objects: #TODO: check which is the best pointer to selected objects
-        if obj.MARStype == 'visual' and obj.data.materials:
+    robot['materials'] = collectMaterials(objectlist)
+    for obj in objectlist:
+        if obj.MARStype == 'visual' and len(obj.data.materials) > 0:
             mat = obj.data.materials[0]
-            if materials[mat.name]['users'] > 1:
-                if mat.name not in robot['materials']:
-                    robot['materials'][mat.name] = deriveMaterial(mat)
-                else:
-                    robot['links'][obj.parent.name]['visual'][obj.name]['material'] = {'name': mat.name}
-            else:
-                robot['links'][obj.parent.name]['visual'][obj.name]['material'] = deriveMaterial(mat)
-    for mat in robot['materials']:
-        print(mat)
+            if not mat.name in robot['materials']:
+                robot['materials'][mat.name] = deriveMaterial(mat) #this should actually never happen
+            robot['links'][obj.parent.name]['visual'][obj.name]['material'] = mat.name
     # gather information on groups of objects
     for group in bpy.data.groups: #TODO: get rid of the "data" part
         robot['groups'][group.name] = deriveGroupEntry(group)
@@ -474,6 +469,7 @@ def buildRobotDictionary():
     for chain in chains:
         robot['chains'][chain['name']] = chain
     epsilon = 10**(-bpy.data.worlds[0].decimalPlaces) #TODO: implement this separately
+    print(robot['materials'])
     return epsilonToZero(robot, epsilon, bpy.data.worlds[0].decimalPlaces)
 
 def exportModelToYAML(model, filepath):
@@ -534,13 +530,14 @@ def exportModelToURDF(model, filepath):
                 output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
                 writeURDFGeometry(output, vis['geometry'])
                 if 'material' in vis:
-                    if 'diffuseFront' in vis['material']:
-                        output.append(indent*4+'<material name="' + vis["material"]["name"] + '">\n')
-                        color = vis['material']['diffuseFront']
-                        output.append(indent*5+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(vis["material"]["transparency"]) + '"/>\n')
+                    if model['materials'][vis['material']]['users'] == 1:
+                        mat = model['materials'][vis['material']]
+                        output.append(indent*4+'<material name="' + mat['name'] + '">\n')
+                        color = mat['diffuseFront']
+                        output.append(indent*5+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(mat["transparency"]) + '"/>\n')
                         output.append(indent*4+'</material>\n')
                     else:
-                        output.append(indent*4+'<material name="' + vis["material"]["name"] + '"/>\n')
+                        output.append(indent*4+'<material name="' + vis["material"] + '"/>\n')
                 output.append(indent*3+'</visual>\n')
         #collision object
         if link['collision']:
@@ -566,10 +563,11 @@ def exportModelToURDF(model, filepath):
         output.append(indent*2+'</joint>\n\n')
     #export material information
     for m in model['materials']:
-        output.append(indent*2+'<material name="' + m + '">\n')
-        color = model['materials'][m]['diffuseFront']
-        output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(model['materials'][m]["transparency"]) + '"/>\n')
-        output.append(indent*2+'</material>\n\n')
+        if model['materials'][m]['users'] > 1:
+            output.append(indent*2+'<material name="' + m + '">\n')
+            color = model['materials'][m]['diffuseFront']
+            output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(model['materials'][m]["transparency"]) + '"/>\n')
+            output.append(indent*2+'</material>\n\n')
     #finish the export
     output.append(urdfFooter)
     with open(filepath, 'w') as outputfile:
