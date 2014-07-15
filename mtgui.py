@@ -172,7 +172,7 @@ def showMotorTypes(self, context):
 class MARSToolPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_PT_MARS"
-    bl_label = "MARStools panel for general functionality"
+    bl_label = "MARStools panel for editing a model"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -182,26 +182,29 @@ class MARSToolPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
-        # Edit Properties Menu
-        layout.label(text="Edit MARS Properties:")
-        col_edit = layout.column(align = True)
-
-        col_edit.operator('object.mt_update_models', text = 'Update MARS model', icon = 'FILE_REFRESH')
-        col_edit.operator('object.mt_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
-
-        layout.separator()
+        # Robot Model Menu
+        layout.label(text="Robot Model:")
+        inlayout = layout.split()
+        rc1 = inlayout.column(align = True)
+        rc1.operator('object.mt_update_models', text = 'Update MARS model', icon = 'FILE_REFRESH')
+        rc2 = inlayout.column(align = True)
+        rc2.operator('object.mt_name_model', text = 'Name Robot')
 
         # Inspection Menu
+        layout.separator()
         layout.label(text = "Inspect Robot", icon = 'VIEWZOOM')
-        inlayout = layout.split()
-        linspect1 = inlayout.column(align = True)
-        linspect1.operator('object.mt_calculate_mass', text = 'Show Mass')
-        linspect1.operator('object.mt_name_model', text = 'Name Robot')
-        linspect2 = inlayout.column(align = True)
-        linspect2.operator('object.mt_select_objects_by_marstype', text = "Select by MARStype")
-        linspect2.operator('object.mt_select_objects_by_name', text = "Select by Name")
-        linspect2.operator('object.mt_select_root', text = 'Select Root')
-        linspect2.operator('object.mt_select_model', text = 'Select Robot')
+
+        # Selection Menu
+        layout.separator()
+        layout.label(text = "Selection(s)", icon = 'HAND')
+        sinlayout = layout.split()
+        sc1 = sinlayout.column(align = True)
+        sc1.operator('object.mt_select_root', text = 'Select Root')
+        sc1.operator('object.mt_select_model', text = 'Select Robot')
+        sc2 = sinlayout.column(align = True)
+        sc2.operator('object.mt_select_objects_by_marstype', text = "Select by MARStype")
+        sc2.operator('object.mt_select_objects_by_name', text = "Select by Name")
+
         #for root in mtutility.getRoots():
         #    linspect1.operator('object.mt_select_model', text=root["modelname"]).modelname = \
         #     root["modelname"] if "modelname" in root else root.name
@@ -210,7 +213,7 @@ class MARSToolPanel(bpy.types.Panel):
 class MARSToolModelPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_MODEL_PT_MARS"
-    bl_label = "MARStools panel for Bodies & Joints"
+    bl_label = "MARStools panel for Objects"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -218,17 +221,29 @@ class MARSToolModelPanel(bpy.types.Panel):
         self.layout.label(icon = 'MOD_ARMATURE')
 
     def draw(self, context):
-        inlayout = self.layout.split()
+        layout = self.layout
+
+        inlayout = layout.split()
         c1 = inlayout.column(align = True)
+        c1.operator('object.mt_set_marstype', text = 'Set MARStype')
+        c1.operator('object.mt_set_geometry_type', text = "Set Geometry Type(s)")
         c1.operator('object.create_collision_objects', text = "Create Collision Object(s)")
-        c1.operator('object.add_joints', text = "Add Joint(s)")
         c1.operator('object.define_joint_constraints', text = "Define Joint Constraints")
-        c1.operator('object.mt_partial_rename', text = "Partial Rename")
         c2 = inlayout.column(align = True)
-        c2.operator('object.mt_set_geometry_type', text = "Set Geometry Type(s)")
-        c2.operator('object.mt_set_marstype', text = 'Set MARStype')
+        c2.operator('object.mt_partial_rename', text = "Partial Rename")
         c2.operator('object.attach_motor', text = "Attach motor")
         c2.operator('object.mt_smoothen_surface', text = "Smoothen Surface")
+        c2.operator('object.mt_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
+
+        #Mass Menu
+        layout.separator()
+        layout.label(text = "Masses", icon = 'PHYSICS')
+        minlayout = layout.split()
+        mc1 = minlayout.column(align = True)
+        mc1.operator('object.mt_calculate_mass', text = 'Show Mass')
+        mc2 = minlayout.column(align = True)
+        mc2.operator('object.mt_set_inertia', text = 'Set Inertia')
+
 
 class MARSToolSenConPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
