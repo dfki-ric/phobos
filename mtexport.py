@@ -713,6 +713,7 @@ class ExportModelOperator(Operator):
         return {'FINISHED'}
 
 def main(outpath = '', yaml=True, urdf=True, smurf=True, mars=False, obj=False, bobj=False):
+    objectlist = bpy.context.selected_objects
     if yaml or urdf or smurf or mars:
         robot = buildRobotDictionary()
         if yaml:
@@ -723,14 +724,26 @@ def main(outpath = '', yaml=True, urdf=True, smurf=True, mars=False, obj=False, 
             exportModelToSMURF(robot, outpath)
         elif urdf:
             exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
-    if obj or bobj:
+    selectObjects(objectlist, True)
+    if objexp or bobjexp:
+        show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269;
+        if show_progress:
+            wm = bpy.context.window_manager
+            total = float(len(objectlist))
+            wm.progress_begin(0, total)
+            i = 1
         for obj in bpy.context.selected_objects:
-            if (obj.MARStype == 'visual' or
-                obj.MARStype == 'collision' and obj['geometryType'] == 'mesh'):
-                if obj:
+            if ((obj.MARStype == 'visual' or
+                obj.MARStype == 'collision') and obj['geometryType'] == 'mesh'):
+                if objexp:
                     exportObj(outpath, obj)
-                if bobj:
+                if bobjexp:
                     exportBobj(outpath, obj)
+            if show_progress:
+                wm.progress_update(i)
+                i += 1
+        if show_progress:
+            wm.progress_end()
 
 #allow manual execution of script in blender
 if __name__ == '__main__':
