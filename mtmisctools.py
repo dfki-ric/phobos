@@ -298,10 +298,12 @@ class SmoothenSurfaceOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        wm = bpy.context.window_manager
-        total = float(len(bpy.context.selected_objects))
-        wm.progress_begin(0, total)
-        i = 1
+        show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269;
+        if show_progress:
+            wm = bpy.context.window_manager
+            total = float(len(bpy.context.selected_objects))
+            wm.progress_begin(0, total)
+            i = 1
         for obj in bpy.context.selected_objects:
             if obj.type != 'MESH':
                 continue
@@ -312,9 +314,11 @@ class SmoothenSurfaceOperator(Operator):
             bpy.ops.object.mode_set(mode = 'OBJECT')
             bpy.ops.object.shade_smooth()
             bpy.ops.object.modifier_add(type='EDGE_SPLIT')
-            wm.progress_update(i)
-            i += 1
-        wm.progress_end()
+            if show_progress:
+                wm.progress_update(i)
+                i += 1
+        if show_progress:
+            wm.progress_end()
         return {'FINISHED'}
 
     @classmethod
