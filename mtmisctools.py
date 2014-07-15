@@ -240,6 +240,40 @@ class SetGeometryType(Operator):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT'
 
+class SetInertia(Operator):
+    """Set Inertia Operator"""
+    bl_idname = "object.mt_set_inertia"
+    bl_label = "Set inertia of selected object(s)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    #inertiamatrix = FloatVectorProperty (
+    #        name = "inertia",
+    #        default = [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    #        subtype = 'MATRIX',
+    #        size = 9,
+    #        description = "set inertia for a link")
+
+    inertiavector = FloatVectorProperty (
+            name = "inertiavec",
+            default = [0, 0, 0, 0, 0, 0],
+            subtype = 'NONE',
+            size = 6,
+            description = "set inertia for a link"
+            )
+
+    def execute(self, context):
+        #m = self.inertiamatrix
+        #inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
+        #obj['inertia'] = ' '.join(inertialist)
+        for obj in context.selected_objects:
+            obj['inertia'] = ' '.join([str(i) for i in self.inertiavector])
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob is not None and ob.mode == 'OBJECT' and ob.MARStype == 'inertial'
+
 class PartialRename(Operator):
     """Partial Rename Operator"""
     bl_idname = "object.mt_partial_rename"
