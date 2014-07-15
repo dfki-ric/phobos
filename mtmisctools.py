@@ -162,21 +162,21 @@ class UpdateMarsModelsOperator(Operator):
         return {'FINISHED'}
 
 
-class ChangeMARStypeOperator(Operator):
-    """Change MARStype Operator"""
-    bl_idname = 'object.mt_change_marstype'
-    bl_label = "Change MARStype of selected objects"
+class SetMARSType(Operator):
+    """Set MARStype Operator"""
+    bl_idname = "object.mt_set_marstype"
+    bl_label = "Edit MARStype of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    property_marstype = EnumProperty(
-        name = "mars_type",
-        default = "undefined",
-        description = "MARS type",
-        items = mtdefs.marstypes)
+    marstype = EnumProperty (
+            items = mtdefs.marstypes,
+            name = "MARStype",
+            default = "undefined",
+            description = "MARStype")
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
-            obj.MARStype = self.property_marstype
+            obj.MARStype = self.marstype
         return {'FINISHED'}
 
     @classmethod
@@ -233,29 +233,6 @@ class SetGeometryType(Operator):
         for obj in bpy.context.selected_objects:
             if obj.MARStype == 'collision' or obj.MARStype == 'visual':
                 obj['geometryType'] = self.geomType
-        return {'FINISHED'}
-
-    @classmethod
-    def poll(cls, context):
-        ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT'
-
-
-class SetMARSType(Operator):
-    """Set MARStype Operator"""
-    bl_idname = "object.mt_set_marstype"
-    bl_label = "Edit MARStype of selected object(s)"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    marstype = EnumProperty (
-            items = mtdefs.marstypes,
-            name = "MARStype",
-            default = "undefined",
-            description = "MARStype")
-
-    def execute(self, context):
-        for obj in bpy.context.selected_objects:
-            obj.MARStype = self.marstype
         return {'FINISHED'}
 
     @classmethod

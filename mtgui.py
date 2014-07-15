@@ -187,7 +187,6 @@ class MARSToolPanel(bpy.types.Panel):
         col_edit = layout.column(align = True)
 
         col_edit.operator('object.mt_update_models', text = 'Update MARS model', icon = 'FILE_REFRESH')
-        col_edit.operator('object.mt_change_marstype', text = "Change MARS type", icon = 'SMOOTH')
         col_edit.operator('object.mt_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
 
         layout.separator()
