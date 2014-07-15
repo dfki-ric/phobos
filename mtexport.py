@@ -575,26 +575,17 @@ def exportModelToURDF(model, filepath):
     # problem of different joint transformations needed for fixed joints
     print("MARStools URDF export: Writing model data to", filepath )
 
-def exportModelToSMURF(model, path, relative = True):
+def exportModelToSMURF(model, path):
     #create all filenames
-    model_filename = os.path.expanduser(path + model['modelname'] + ".smurf")
-    urdf_filename = os.path.expanduser(path + model['modelname'] + ".urdf")
-    semantics_filename = os.path.expanduser(path + model['modelname'] + "_semantics.yml")
-    state_filename = os.path.expanduser(path + model['modelname'] + "_state.yml")
-    materials_filename = os.path.expanduser(path + model['modelname'] + "_materials.yml")
-    sensors_filename = os.path.expanduser(path + model['modelname'] + "_sensors.yml")
-    motors_filename = os.path.expanduser(path + model['modelname'] + "_motors.yml")
-    controllers_filename = os.path.expanduser(path + model['modelname'] + "_controllers.yml")
-    simulation_filename = os.path.expanduser(path + model['modelname'] + "_simulation.yml")
-    if relative:
-        rel_urdf_filename = model['modelname'] + ".urdf"
-        rel_semantics_filename = model['modelname'] + "_semantics.yml"
-        rel_state_filename = model['modelname'] + "_state.yml"
-        rel_materials_filename = model['modelname'] + "_materials.yml"
-        rel_sensors_filename = model['modelname'] + "_sensors.yml"
-        rel_motors_filename = model['modelname'] + "_motors.yml"
-        rel_controllers_filename = model['modelname'] + "_controllers.yml"
-        rel_simulation_filename = model['modelname'] + "_simulation.yml"
+    model_filename = model['modelname'] + ".smurf"
+    urdf_filename = model['modelname'] + ".urdf"
+    semantics_filename = model['modelname'] + "_semantics.yml"
+    state_filename = model['modelname'] + "_state.yml"
+    materials_filename = model['modelname'] + "_materials.yml"
+    sensors_filename = model['modelname'] + "_sensors.yml"
+    motors_filename = model['modelname'] + "_motors.yml"
+    controllers_filename = model['modelname'] + "_controllers.yml"
+    simulation_filename = model['modelname'] + "_simulation.yml"
 
 
     infostring = ' definition SMURF file for "'+model['modelname']+'", '+model["date"]+"\n\n"
@@ -603,26 +594,20 @@ def exportModelToSMURF(model, path, relative = True):
     print('Writing SMURF information to...\n'+model_filename)
     modeldata = {}
     modeldata["date"] = model["date"]
-    if relative:
-        modeldata["files"] = [rel_urdf_filename, rel_semantics_filename, rel_state_filename,
-                              rel_materials_filename, rel_sensors_filename,
-                              rel_motors_filename, rel_controllers_filename,
-                              rel_simulation_filename]
-    else:
-        modeldata["files"] = [urdf_filename, semantics_filename, state_filename,
-                              materials_filename, sensors_filename,
-                              motors_filename, controllers_filename,
-                              simulation_filename]
-    with open(model_filename, 'w') as op:
+    modeldata["files"] = [urdf_filename, semantics_filename, state_filename,
+                          materials_filename, sensors_filename,
+                          motors_filename, controllers_filename,
+                          simulation_filename]
+    with open(path + model_filename, 'w') as op:
         op.write('#main SMURF file of model "'+model['modelname']+'"\n\n')
         op.write("modelname: "+model['modelname']+"\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
     #write urdf
-    exportModelToURDF(model, urdf_filename)
+    exportModelToURDF(model, path + urdf_filename)
 
     #write semantics (SRDF information in YML format)
-    with open(semantics_filename, 'w') as op:
+    with open(path + semantics_filename, 'w') as op:
         op.write('#semantics'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
         semantics = {}
@@ -641,37 +626,37 @@ def exportModelToSMURF(model, path, relative = True):
             tmpstate = joint['state'].copy()
             tmpstate['name'] = jointname
             states.append(joint['state'])
-    with open(state_filename, 'w') as op:
+    with open(path + state_filename, 'w') as op:
         op.write('#state'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
         op.write(yaml.dump(states))#, default_flow_style=False))
 
     #write materials
-    with open(materials_filename, 'w') as op:
+    with open(path + materials_filename, 'w') as op:
         op.write('#materials'+infostring)
         op.write(yaml.dump({'materials': list(model['materials'].values())}, default_flow_style=False))
 
     #write sensors
-    with open(sensors_filename, 'w') as op:
+    with open(path + sensors_filename, 'w') as op:
         op.write('#sensors'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
         op.write(yaml.dump(list(model['sensors'].values()), default_flow_style=False))
 
     #write motors
-    with open(motors_filename, 'w') as op:
+    with open(path + motors_filename, 'w') as op:
         op.write('#motors'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
         #op.write("motors:\n")
         op.write(yaml.dump({'motors': list(model['motors'].values())}, default_flow_style=False))
 
     #write controllers
-    with open(controllers_filename, 'w') as op:
+    with open(path + controllers_filename, 'w') as op:
         op.write('#controllers'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
         op.write(yaml.dump(list(model['controllers'].values()), default_flow_style=False))
 
     #write simulation
-    with open(simulation_filename, 'w') as op:
+    with open(path + simulation_filename, 'w') as op:
         op.write('#simulation'+infostring)
         op.write("modelname: "+model['modelname']+'\n')
         simulationdata = {}
@@ -708,11 +693,11 @@ class ExportModelOperator(Operator):
                 urdf = bpy.data.worlds[0].exportURDF,
                 smurf = bpy.data.worlds[0].exportSMURF,
                 mars = bpy.data.worlds[0].exportMARSscene,
-                obj = bpy.data.worlds[0].exportObj,
-                bobj = bpy.data.worlds[0].exportBobj)
+                objexp = bpy.data.worlds[0].exportObj,
+                bobjexp = bpy.data.worlds[0].exportBobj)
         return {'FINISHED'}
 
-def main(outpath = '', yaml=True, urdf=True, smurf=True, mars=False, obj=False, bobj=False):
+def main(outpath = '', yaml=True, urdf=True, smurf=True, mars=False, objexp=False, bobjexp=False):
     objectlist = bpy.context.selected_objects
     if yaml or urdf or smurf or mars:
         robot = buildRobotDictionary()
