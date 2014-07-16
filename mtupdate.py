@@ -60,13 +60,19 @@ def updateObject(obj, fix = False):
             if fix:
                 obj['mass'] = mass
     elif obj.MARStype == 'inertial':
-        pass
+        if fix:
+            if not obj.name.startswith('inertial_'):
+                obj.name = 'inertial_' + obj.name
     elif obj.MARStype == 'visual':
         if fix:
             if not "geometryType" in obj:
                 obj["geometryType"] = "mesh"
+            if not obj.name.startswith('visual_'):
+                obj.name = 'visual_' + obj.name
     elif obj.MARStype == 'collision':
-        pass
+        if fix:
+            if not obj.name.startswith('collision_'):
+                obj.name = 'collision_' + obj.name
     elif obj.MARStype == 'sensor':
         pass
     return notifications, faulty_objects
