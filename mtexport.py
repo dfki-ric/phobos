@@ -469,7 +469,6 @@ def buildRobotDictionary():
     for chain in chains:
         robot['chains'][chain['name']] = chain
     epsilon = 10**(-bpy.data.worlds[0].decimalPlaces) #TODO: implement this separately
-    print(robot['materials'])
     return epsilonToZero(robot, epsilon, bpy.data.worlds[0].decimalPlaces)
 
 def exportModelToYAML(model, filepath):
@@ -535,6 +534,8 @@ def exportModelToURDF(model, filepath):
                         output.append(indent*4+'<material name="' + mat['name'] + '">\n')
                         color = mat['diffuseFront']
                         output.append(indent*5+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(mat["transparency"]) + '"/>\n')
+                        if 'texturename' in mat:
+                            output.append(indent*5+'<texture filename="'+mat['texturename']+'"/>\n')
                         output.append(indent*4+'</material>\n')
                     else:
                         output.append(indent*4+'<material name="' + vis["material"] + '"/>\n')
