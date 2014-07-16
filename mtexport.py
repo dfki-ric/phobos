@@ -389,7 +389,9 @@ def buildRobotDictionary():
             'controllers': {},
             'materials': {},
             'groups': {},
-            'chains': {}}
+            'chains': {},
+            'simulation': {}
+            }
     #save timestamped version of model
     robot["date"] = datetime.datetime.now().strftime("%Y%m%d_%H:%M")
     root = getRoot(bpy.context.selected_objects[0])
@@ -579,29 +581,36 @@ def exportModelToURDF(model, filepath):
     print("MARStools URDF export: Writing model data to", filepath )
 
 def exportModelToSMURF(model, path):
-    #create all filenames
-    model_filename = model['modelname'] + ".smurf"
-    urdf_filename = model['modelname'] + ".urdf"
-    semantics_filename = model['modelname'] + "_semantics.yml"
-    state_filename = model['modelname'] + "_state.yml"
-    materials_filename = model['modelname'] + "_materials.yml"
-    sensors_filename = model['modelname'] + "_sensors.yml"
-    motors_filename = model['modelname'] + "_motors.yml"
-    controllers_filename = model['modelname'] + "_controllers.yml"
-    simulation_filename = model['modelname'] + "_simulation.yml"
+    export = {'semantics': model['groups'] != {} or model['chains'] != {},
+              'state': False,#model['state'] != {}, #TODO: handle state
+              'materials': model['materials'] != {},
+              'sensors': model['sensors'] != {},
+              'motors': model['motors'] != {},
+              'controllers': model['controllers'] != {},
+              'simulation': model['simulation'] != {}
+              }
 
+
+    #create all filenames
+    smurf_filename = model['modelname'] + ".smurf"
+    urdf_filename =  model['modelname'] + ".urdf"
+    filenames = {'semantics': model['modelname'] + "_semantics.yml",
+                 'state': model['modelname'] + "_state.yml",
+                 'materials': model['modelname'] + "_materials.yml",
+                 'sensors': model['modelname'] + "_sensors.yml",
+                 'motors': model['modelname'] + "_motors.yml",
+                 'controllers': model['modelname'] + "_controllers.yml",
+                 'simulation': model['modelname'] + "_simulation.yml"
+                 }
 
     infostring = ' definition SMURF file for "'+model['modelname']+'", '+model["date"]+"\n\n"
 
     #write model information
-    print('Writing SMURF information to...\n'+model_filename)
+    print('Writing SMURF information to...\n'+smurf_filename)
     modeldata = {}
     modeldata["date"] = model["date"]
-    modeldata["files"] = [urdf_filename, semantics_filename, state_filename,
-                          materials_filename, sensors_filename,
-                          motors_filename, controllers_filename,
-                          simulation_filename]
-    with open(path + model_filename, 'w') as op:
+    modeldata["files"] = [urdf_filename] + [filenames[f] for f in filenames if export[f]]
+    with open(path + smurf_filename, 'w') as op:
         op.write('#main SMURF file of model "'+model['modelname']+'"\n\n')
         op.write("modelname: "+model['modelname']+"\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
@@ -610,61 +619,67 @@ def exportModelToSMURF(model, path):
     exportModelToURDF(model, path + urdf_filename)
 
     #write semantics (SRDF information in YML format)
-    with open(path + semantics_filename, 'w') as op:
-        op.write('#semantics'+infostring)
-        op.write("modelname: "+model['modelname']+'\n')
-        semantics = {}
-        if model['groups'] != {}:
-            semantics['groups'] = model['groups']
-        if model['chains'] != {}:
-            semantics['chains'] = model['chains']
-        op.write(yaml.dump(semantics, default_flow_style=False))
+    if export['semantics']:
+        with open(path + filenames['semantics'], 'w') as op:
+            op.write('#semantics'+infostring)
+            op.write("modelname: "+model['modelname']+'\n')
+            semantics = {}
+            if model['groups'] != {}:
+                semantics['groups'] = model['groups']
+            if model['chains'] != {}:
+                semantics['chains'] = model['chains']
+            op.write(yaml.dump(semantics, default_flow_style=False))
 
     #write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
-    states = []
-    #gather all states
-    for jointname in model['joints']:
-        joint = model['joints'][jointname]
-        if 'state' in joint: #this should always be the case, but testing doesn't hurt
-            tmpstate = joint['state'].copy()
-            tmpstate['name'] = jointname
-            states.append(joint['state'])
-    with open(path + state_filename, 'w') as op:
-        op.write('#state'+infostring)
-        op.write("modelname: "+model['modelname']+'\n')
-        op.write(yaml.dump(states))#, default_flow_style=False))
+    if export['state']:
+        states = []
+        #gather all states
+        for jointname in model['joints']:
+            joint = model['joints'][jointname]
+            if 'state' in joint: #this should always be the case, but testing doesn't hurt
+                tmpstate = joint['state'].copy()
+                tmpstate['name'] = jointname
+                states.append(joint['state'])
+        with open(path + filenames['state'], 'w') as op:
+            op.write('#state'+infostring)
+            op.write("modelname: "+model['modelname']+'\n')
+            op.write(yaml.dump(states))#, default_flow_style=False))
 
     #write materials
-    with open(path + materials_filename, 'w') as op:
-        op.write('#materials'+infostring)
-        op.write(yaml.dump({'materials': list(model['materials'].values())}, default_flow_style=False))
+    if export['materials']:
+        with open(path + filenames['materials'], 'w') as op:
+            op.write('#materials'+infostring)
+            op.write(yaml.dump({'materials': list(model['materials'].values())}, default_flow_style=False))
 
     #write sensors
-    with open(path + sensors_filename, 'w') as op:
-        op.write('#sensors'+infostring)
-        op.write("modelname: "+model['modelname']+'\n')
-        op.write(yaml.dump(list(model['sensors'].values()), default_flow_style=False))
+    if export['sensors']:
+        with open(path + filenames['sensors'], 'w') as op:
+            op.write('#sensors'+infostring)
+            op.write("modelname: "+model['modelname']+'\n')
+            op.write(yaml.dump(list(model['sensors'].values()), default_flow_style=False))
 
     #write motors
-    with open(path + motors_filename, 'w') as op:
-        op.write('#motors'+infostring)
-        op.write("modelname: "+model['modelname']+'\n')
-        #op.write("motors:\n")
-        op.write(yaml.dump({'motors': list(model['motors'].values())}, default_flow_style=False))
+    if export['motors']:
+        with open(path + filenames['motors'], 'w') as op:
+            op.write('#motors'+infostring)
+            op.write("modelname: "+model['modelname']+'\n')
+            #op.write("motors:\n")
+            op.write(yaml.dump({'motors': list(model['motors'].values())}, default_flow_style=False))
 
     #write controllers
-    with open(path + controllers_filename, 'w') as op:
-        op.write('#controllers'+infostring)
-        op.write("modelname: "+model['modelname']+'\n')
-        op.write(yaml.dump(list(model['controllers'].values()), default_flow_style=False))
+    if export['controllers']:
+        with open(path + filenames['controllers'], 'w') as op:
+            op.write('#controllers'+infostring)
+            op.write("modelname: "+model['modelname']+'\n')
+            op.write(yaml.dump(list(model['controllers'].values()), default_flow_style=False))
 
     #write simulation
-    with open(path + simulation_filename, 'w') as op:
-        op.write('#simulation'+infostring)
-        op.write("modelname: "+model['modelname']+'\n')
-        simulationdata = {}
-        #TODO: handle simulation-specific data
-        op.write(yaml.dump(list(simulationdata.values()), default_flow_style=False))
+    if export['simulation']:
+        with open(path + filenames['simulation'], 'w') as op:
+            op.write('#simulation'+infostring)
+            op.write("modelname: "+model['modelname']+'\n')
+            #TODO: handle simulation-specific data
+            op.write(yaml.dump(list(model['simulation'].values()), default_flow_style=False))
 
 def exportSceneToSMURF(path):
     """Exports all robots in a scene to separate SMURF folders."""
