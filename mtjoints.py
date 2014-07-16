@@ -127,41 +127,6 @@ def getJointConstraint(joint, ctype):
             con = c
     return con
 
-#DEPRECATED
-def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
-    r1 = 0.075
-    r2 = 1.5
-    d1 = 4.0
-    d2 = 0.05
-
-    if jtype == 'hinge':
-        j1 = mtutility.createPrimitive(name+'_1', 'cylinder', (r1*scale, d1*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
-        j2 = mtutility.createPrimitive(name, 'cylinder', (r2*scale, d2*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
-        #arrows.select = True
-        j1.select = True
-        j2.select = True
-        bpy.context.scene.objects.active = j1
-        bpy.ops.object.join()
-    elif jtype == 'linear':
-        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d2*scale, d2*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
-    elif jtype == 'planar':
-        j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
-    j1['jointType'] = jtype
-    j1.MARStype = 'joint'
-    j1['anchor'] = 'node2'
-    j1['node2'] = ''
-    #now add joint orientation
-    joint = bpy.ops.object.armature_add(location = bpy.context.scene.cursor_location)
-    bpy.ops.object.empty_add(type='ARROWS', location = j1.location, rotation = j1.rotation_euler)
-    arrows = bpy.context.object
-    dx = d1*0.7
-    bpy.ops.transform.resize(value = (dx*scale, dx*scale, dx*scale))
-    arrows.name = "axes_" + j1.name
-    j1.select = True
-    arrows.select = True
-    bpy.context.scene.objects.active = j1
-    bpy.ops.object.parent_set()
-    return j1
 
 class DefineJointConstraintsOperator(Operator):
     """DefineJointConstraintsOperator"""
