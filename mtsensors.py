@@ -41,7 +41,7 @@ class AddSensorOperator(Operator):
 
     sensor_scale = FloatProperty(
         name = "sensor_scale",
-        default = 0.1,
+        default = 0.05,
         description = "scale of the sensor visualization")
 
     def execute(self, context):
@@ -57,7 +57,7 @@ class AddSensorOperator(Operator):
                     else:
                         objects.append(obj)
                 if len(sensors) <= 0:
-                    mtutility.createPrimitive(self.sensor_type, "sphere", (self.sensor_scale,), mtdefs.layerTypes["sensors"], "sensor", location)
+                    mtutility.createPrimitive(self.sensor_type, "sphere", self.sensor_scale, mtdefs.layerTypes["sensor"], "sensor", location)
                     sense = bpy.context.scene.objects.active
                     sense.MARStype = "sensor"
                     sense.name = self.sensor_type
@@ -71,13 +71,13 @@ class AddSensorOperator(Operator):
                     i = 1
                     if "Node" in sensor["sensorType"]:
                         for obj in objects:
-                            if obj.MARStype == "link":
-                                sensor["index"+str(i)] = obj.name
+                            if obj.MARStype == "collision":
+                                sensor["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                                 i += 1
                         print("Added nodes to new " + self.sensor_type)
                     elif "Joint" in sensor["sensorType"] or "Motor" in sensor["sensorType"]:
                         for obj in objects:
-                            if obj.MARStype == "joint":
+                            if obj.MARStype == "link":
                                 sensor["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                                 i += 1
                         print("Added nodes to new " + self.sensor_type)

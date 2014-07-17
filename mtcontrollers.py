@@ -33,7 +33,7 @@ class AddControllerOperator(Operator):
 
     controller_scale = FloatProperty(
         name = "controller_scale",
-        default = 0.1,
+        default = 0.05,
         description = "scale of the controller visualization")
 
     def execute(self, context):
@@ -46,7 +46,7 @@ class AddControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            mtutility.createPrimitive("controller", "sphere", (self.controller_scale,), mtdefs.layerTypes["sensors"], "controller", location)
+            mtutility.createPrimitive("controller", "sphere", self.controller_scale, mtdefs.layerTypes["sensor"], "controller", location)
             bpy.context.scene.objects.active.MARStype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
@@ -58,7 +58,7 @@ class AddControllerOperator(Operator):
                     print("Deleting " + key + " in " + ctrl.name)
             i = 1
             for obj in objects:
-                if obj.MARStype == "joint":
+                if obj.MARStype == "link":
                     ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                     i += 1
         print("Added joints to (new) controller(s).")
