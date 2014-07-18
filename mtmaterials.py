@@ -42,6 +42,8 @@ def createMARSMaterials():
         makeMaterial('camera', (0.13, 0.4, 1), (1, 1, 1), 0.3, 0.8)
     if not 'tof-camera' in materials:
         makeMaterial('tof-camera', (0.44, 1, 0.735), (1, 1, 1), 0.3, 0.7)
+    if not 'inertial' in materials:
+        makeMaterial('inertial', (1, 0.18, 0), (1, 1, 1), 0.3, 0.7)
     if not 'sensor' in materials:
         makeMaterial('sensor', (0.8, 0.3, 0), (1, 1, 1), 0.3, 0.7)
     if not 'controller' in materials:
