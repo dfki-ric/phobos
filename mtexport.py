@@ -191,12 +191,6 @@ def deriveLink(obj):
     props["collision"] = {}
     props["visual"] = {}
     props["inertial"] = {}
-    if "mass" in props:
-        props["inertial"]["mass"] = props["mass"]
-        del props["mass"]
-    if "inertia" in props:
-        props["inertial"]["inertia"] = props["inertia"]
-        del props["inertia"]
     return props
 
 def deriveJoint(obj):
