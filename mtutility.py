@@ -160,8 +160,8 @@ def getImmediateChildren(obj, marstype = 'None'):
     children = []
     for child in bpy.data.objects: #TODO: this is not the best list to iterate over (there might be multiple scenes)
         if child.parent == obj:
-            if marstype is not 'None':
-                if marstype == obj.MARStype:
+            if marstype != 'None':
+                if marstype == child.MARStype:
                     children.append(child)
             else:
                 children.append(child)
