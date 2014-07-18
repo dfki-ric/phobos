@@ -125,10 +125,10 @@ sensorProperties = {"RaySensor": {"width": 144},
 
 #definitions of which elements live on which layers by default
 layerTypes = {
-              "link": 1,
-              'inertial': 2,
-              "visual": 3,
-              "collision": 4,
-              "sensor": 5,
-              "decoration": 6
+              "link": 0,
+              'inertial': 1,
+              "visual": 2,
+              "collision": 3,
+              "sensor": 4,
+              "decoration": 5
               }
