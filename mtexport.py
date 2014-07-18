@@ -21,7 +21,7 @@ import bpy
 import sys
 import mathutils
 import os
-import datetime
+from datetime import datetime
 import yaml
 import warnings
 import struct
@@ -393,7 +393,7 @@ def buildRobotDictionary():
             'simulation': {}
             }
     #save timestamped version of model
-    robot["date"] = datetime.datetime.now().strftime("%Y%m%d_%H:%M")
+    robot["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
     root = getRoot(bpy.context.selected_objects[0])
     if root.MARStype != 'link':
         raise Exception("Found no 'link' object as root of the robot model.")
@@ -476,7 +476,7 @@ def buildRobotDictionary():
 def exportModelToYAML(model, filepath):
     print("MARStools YAML export: Writing model data to", filepath )
     with open(filepath, 'w') as outputfile:
-        outputfile.write('#YAML dump of robot model "'+model['modelname']+'", '+datetime.datetime.now().strftime("%Y%m%d_%H:%M")+"\n\n")
+        outputfile.write('#YAML dump of robot model "'+model['modelname']+'", '+datetime.now().strftime("%Y%m%d_%H:%M")+"\n\n")
         outputfile.write(yaml.dump(model))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 def xmlline(ind, tag, names, values):
