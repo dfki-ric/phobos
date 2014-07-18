@@ -16,6 +16,9 @@ not supported by Blender's standard Python distribution. This is a script
 intended to be usable on its own and thus should not use external dependencies,
 especially none of the other modules of the MARStools package.
 '''
+import bpy
+import marstools.mtdefs as mtdefs
+import marstools.mtutility as mtutility
 
 def register():
     print("Registering mtinertia...")
@@ -25,6 +28,23 @@ def unregister():
 
 def getDummyInertia():
     return calculateBoxInertia(0.001, (0.01, 0.01, 0.01,))
+
+def createInertial(link):
+    size = (0.05, 0.05, 0.05)
+    rotation = (0, 0, 0)
+    center = (0, 0, 0)
+    inertial = mtutility.createPrimitive('inertial_' + link.name, 'box', size,
+                                   mtdefs.layerTypes["inertial"], 'inertial', center, rotation)
+    inertial.MARStype = 'inertial'
+    bpy.ops.object.select_all(action="DESELECT")
+    inertial.select = True
+    bpy.context.scene.objects.active = inertial
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    link.select = True
+    bpy.context.scene.objects.active = link
+    inertial.matrix_world = link.matrix_world
+    bpy.ops.object.parent_set()
+    return inertial
 
 def calculateInertia(mass, geometry):
     inertia = None
