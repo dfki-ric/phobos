@@ -12,10 +12,12 @@ in your preferences to gain instant (virtual) world domination.
 You may use the provided install shell script.
 '''
 
+import re
 import bpy
 import mathutils
 import marstools.mtmaterials as mtmaterials
 import marstools.mtdefs as mtdefs
+from datetime import datetime
 
 def register():
     print("Registering mtutility...")
@@ -225,5 +227,22 @@ def epsilonToZero(data, epsilon, decimals):
     else: #any other type, such as string
         print('eTZ:else')
         return data
+
+def datetimeFromIso(iso):
+    """Accepts a date-time string in iso format and returns a datetime object."""
+    return datetime(*[int(a) for a in re.split(":|-|T|\.", iso)])
+
+#def useLegacyNames(data):
+#    if type(data) is str:
+#        print(data, end=': ')
+#        if data in mtdefs.MARSlegacydict:
+#            print(mtdefs.MARSlegacydict[data])
+#            return mtdefs.MARSlegacydict[data]
+#        else:
+#            print(data)
+#            return data
+#    elif type(data) is dict:
+#        tmpdict = {useLegacyNames(key): value for key, value in data.items()}
+#        return {key: useLegacyNames(value) for key, value in tmpdict.items()}
 
 
