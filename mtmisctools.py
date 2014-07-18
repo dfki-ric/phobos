@@ -88,7 +88,7 @@ class SyncMassesOperator(Operator):
         sourcelist = []
         targetlist = []
         processed = []
-        links = [obj.name for obj in bpy.context.selected_objects]
+        links = [obj.name for obj in bpy.context.selected_objects if obj.MARStype == 'link']
         t = dt.now()
         objdict = {obj.name: obj for obj in bpy.context.selected_objects}
         for obj in objdict.keys():
@@ -99,22 +99,22 @@ class SyncMassesOperator(Operator):
                     and 'visual_' + basename in objdict.keys()
                     and 'collision_' + basename in objdict.keys()): #if both partners are present
                     processed.append(basename)
+        for basename in processed:
+            if self.synctype == "vtc":
+                sourcelist.append('visual_' + basename)
+                targetlist.append('collision_' + basename)
+            elif self.synctype == "ctv":
+                targetlist.append('visual_' + basename)
+                sourcelist.append('collision_' + basename)
+            else: #latest to oldest
+                tv = mtutility.datetimeFromIso(objdict['visual_'+basename]['masschanged'])
+                tc = mtutility.datetimeFromIso(objdict['collision_'+basename]['masschanged'])
+                if tc < tv: #if collision information is older than visual information
+                    sourcelist.append('visual_' + basename)
+                    targetlist.append('collision_' + basename)
                 else:
-                    if self.synctype == "vtc":
-                        sourcelist.append('visual_' + basename)
-                        targetlist.append('collision_' + basename)
-                    elif self.synctype == "ctv":
-                        targetlist.append('visual_' + basename)
-                        sourcelist.append('collision_' + basename)
-                    else: #latest to oldest
-                        tv = mtutility.datetimeFromIso(objdict['visual_'+basename]['masschanged'])
-                        tc = mtutility.datetimeFromIso(objdict['collision_'+basename]['masschanged'])
-                        if tc < tv: #if collision information is older than visual information
-                            sourcelist.append('visual_' + basename)
-                            targetlist.append('collision_' + basename)
-                        else:
-                            targetlist.append('visual_' + basename)
-                            sourcelist.append('collision_' + basename)
+                    targetlist.append('visual_' + basename)
+                    sourcelist.append('collision_' + basename)
         for i in range(len(sourcelist)):
             objdict[targetlist[i]]['mass'] = objdict[sourcelist[i]]['mass']
             objdict[targetlist[i]]['masschanged'] = objdict[sourcelist[i]]['masschanged']
@@ -122,11 +122,12 @@ class SyncMassesOperator(Operator):
             for linkname in links:
                 masssum = 0.0
                 collision_children = [obj for obj in mtutility.getImmediateChildren(objdict[linkname], 'collision')]
+                print(collision_children)
                 for coll in collision_children:
                     masssum += coll['mass']
                 try:
                     inertial = bpy.data.objects['inertial_' + linkname]
-                    if inertial['mass'] != masssum:
+                    if not 'mass' in inertial or inertial['mass'] != masssum:
                         inertial['mass'] = masssum
                         inertial['masschanged'] = t.isoformat()
                 except KeyError:
