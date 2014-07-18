@@ -319,7 +319,7 @@ def initObjectProperties(obj):
 
 def cleanObjectProperties(props):
     '''Cleans a predefined list of Blender-specific properties from the dictionary.'''
-    getridof = ['MARStype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain']
+    getridof = ['MARStype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
     if props:
         for key in getridof:
             if key in props:

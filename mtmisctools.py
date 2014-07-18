@@ -15,11 +15,12 @@ You may use the provided install shell script.
 import bpy
 import math
 from bpy.types import Operator
-from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty
+from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty, FloatProperty
 import marstools.mtupdate as mtupdate
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
 import marstools.mtdefs as mtdefs
+from datetime import datetime as dt
 
 
 def register():
@@ -42,6 +43,95 @@ class CalculateMassOperator(Operator):
                 mass += obj["mass"]
                 names += obj.name + " "
         bpy.ops.error.message('INVOKE_DEFAULT', type="mass of "+names, message=str(mass))
+        return {'FINISHED'}
+
+class SetMassOperator(Operator):
+    """SetMassOperator"""
+    bl_idname = "object.mt_set_mass"
+    bl_label = "Sets the mass of the selected object(s)."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    mass = FloatProperty(
+        name = 'mass',
+        default = 0.001,
+        description = 'mass in kg')
+
+    def execute(self, context):
+        for obj in bpy.context.selected_objects:
+            if obj.MARStype in ['visual', 'collision', 'inertial']:
+                obj['mass'] = self.mass
+                t = dt.now()
+                obj['masschanged'] = t.isoformat()
+        return {'FINISHED'}
+
+class SyncMassesOperator(Operator):
+    """SyncMassesOperator"""
+    bl_idname = "object.mt_sync_masses"
+    bl_label = "Synchronize masses among the selected object(s)."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    synctype = EnumProperty (
+            items = (("vtc", "visual to collision", "visual to collision"),
+                     ("ctv", "collision to visual", "collision to visual"),
+                     ("lto", "latest to oldest", "latest to oldest")),
+            name = "synctype",
+            default = "vtc",
+            description = "MARS object type")
+
+    writeinertial = BoolProperty(
+                name = 'write_inertial',
+                default = True,
+                description = 'write mass to inertial'
+                )
+
+    def execute(self, context):
+        sourcelist = []
+        targetlist = []
+        processed = []
+        links = [obj.name for obj in bpy.context.selected_objects]
+        t = dt.now()
+        objdict = {obj.name: obj for obj in bpy.context.selected_objects}
+        for obj in objdict.keys():
+            if objdict[obj].MARStype in ['visual', 'collision']:
+                basename = obj.replace(objdict[obj].MARStype+'_', '')
+                if (objdict[obj].parent.name in links
+                    and basename not in processed
+                    and 'visual_' + basename in objdict.keys()
+                    and 'collision_' + basename in objdict.keys()): #if both partners are present
+                    processed.append(basename)
+                else:
+                    if self.synctype == "vtc":
+                        sourcelist.append('visual_' + basename)
+                        targetlist.append('collision_' + basename)
+                    elif self.synctype == "ctv":
+                        targetlist.append('visual_' + basename)
+                        sourcelist.append('collision_' + basename)
+                    else: #latest to oldest
+                        tv = mtutility.datetimeFromIso(objdict['visual_'+basename]['masschanged'])
+                        tc = mtutility.datetimeFromIso(objdict['collision_'+basename]['masschanged'])
+                        if tc < tv: #if collision information is older than visual information
+                            sourcelist.append('visual_' + basename)
+                            targetlist.append('collision_' + basename)
+                        else:
+                            targetlist.append('visual_' + basename)
+                            sourcelist.append('collision_' + basename)
+        for i in range(len(sourcelist)):
+            objdict[targetlist[i]]['mass'] = objdict[sourcelist[i]]['mass']
+            objdict[targetlist[i]]['masschanged'] = objdict[sourcelist[i]]['masschanged']
+        if self.writeinertial:
+            for linkname in links:
+                masssum = 0.0
+                collision_children = [obj for obj in mtutility.getImmediateChildren(objdict[linkname], 'collision')]
+                for coll in collision_children:
+                    masssum += coll['mass']
+                try:
+                    inertial = bpy.data.objects['inertial_' + linkname]
+                    if inertial['mass'] != masssum:
+                        inertial['mass'] = masssum
+                        inertial['masschanged'] = t.isoformat()
+                except KeyError:
+                    print("###Warning: no inertial object for link", linkname)
+
         return {'FINISHED'}
 
 class NameModelOperator(Operator):
