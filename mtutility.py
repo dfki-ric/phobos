@@ -216,16 +216,12 @@ def epsilonToZero(data, epsilon, decimals):
     """Recursively loops through a dictionary and sets all floating values
      < epsilon equal to zero."""
     if is_float(data):
-        print('eTZ:float', data)
         return 0 if abs(data) < epsilon else round(data, decimals)
     elif type(data) is list:
-        print('eTZ:list')
         return [epsilonToZero(a, epsilon, decimals) for a in data]
     elif type(data) is dict:
-        print('eTZ:dict')
         return {key: epsilonToZero(value, epsilon, decimals) for key, value in data.items()}
     else: #any other type, such as string
-        print('eTZ:else')
         return data
 
 def datetimeFromIso(iso):
@@ -248,6 +244,11 @@ def calculateMass(objects):
             if 'mass' in obj and not collision in objlist:
                 mass += obj['mass']
     return mass
+
+def distance(objects):
+    v = objects[0].matrix_world.to_translation()-objects[1].matrix_world.to_translation()
+    return v.length
+
 
 #def useLegacyNames(data):
 #    if type(data) is str:
