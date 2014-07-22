@@ -232,6 +232,23 @@ def datetimeFromIso(iso):
     """Accepts a date-time string in iso format and returns a datetime object."""
     return datetime(*[int(a) for a in re.split(":|-|T|\.", iso)])
 
+def calculateMassOfLink(link):
+    objects = (getImmediateChildren(link, 'visual')
+              + getImmediateChildren(link, 'collision'))
+    return calculateMass(objects)
+
+def calculateMass(objects):
+    mass = 0
+    objlist = [obj.name for obj in objects]
+    for obj in objects:
+        if obj.MARStype == 'collision' and 'mass' in obj:
+            mass += obj['mass']
+        elif obj.MARStype == 'visual':
+            collision = obj.name.replace('visual_', 'collision_')
+            if 'mass' in obj and not collision in objlist:
+                mass += obj['mass']
+    return mass
+
 #def useLegacyNames(data):
 #    if type(data) is str:
 #        print(data, end=': ')

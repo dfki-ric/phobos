@@ -29,20 +29,14 @@ def register():
 def unregister():
     print("Unregistering mtmisctools...")
 
-
 class CalculateMassOperator(Operator):
     """CalculateMassOperator"""
     bl_idname = "object.mt_calculate_mass"
     bl_label = "Display mass of the selected objects in a pop-up window."
 
     def execute(self, context):
-        mass = 0
-        names = ""
-        for obj in bpy.context.selected_objects:
-            if obj.MARStype == "link":
-                mass += obj["mass"]
-                names += obj.name + " "
-        bpy.ops.error.message('INVOKE_DEFAULT', type="mass of "+names, message=str(mass))
+        mass = mtutility.calculateMass(bpy.context.selected_objects)
+        bpy.ops.error.message('INVOKE_DEFAULT', type="mass", message=str(mass))
         return {'FINISHED'}
 
 class SetMassOperator(Operator):

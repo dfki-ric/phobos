@@ -49,32 +49,30 @@ def updateObject(obj, fix = False):
     notifications = []
     faulty_objects = []
     if obj.MARStype == 'link':
-        mass = 0.0
-        collisions = mtutility.getImmediateChildren(obj, 'collision')
         inertials = mtutility.getImmediateChildren(obj, 'inertial')
         inertial = None
         if len(inertials) == 0:
-            notifications.append("Error, link '" + obj.name + "' has no inertial object.")
-            if fix:
-                mtinertia.createInertial(obj)
+            notifications.append("Warning, link '" + obj.name + "' has no inertial object.")
+            #if fix:
+            #    mtinertia.createInertial(obj)
         elif len(inertials) > 1:
                 notifications.append("Error, link '" + obj.name + "' has more than 1 inertial object.")
         elif len(inertials) == 1:
             inertial = inertials[0]
         # checking whether masses add up if we have an inertial by now
+        mass = mtutility.calculateMassOfLink(obj)
+        if not mass > 0:
+            notifications.append("Warning, link '" + obj.name + "' has no mass.")
         if inertial != None:
             print('Checking inertial: ' + inertial.name)
-            for child in collisions:
-                if 'mass' in child:
-                    mass += child['mass']
-            if not mass > 0:
-                mass = 0.001
+            if not 'inertia' in inertial:
+                notifications.append("Error, inertial of link '" + obj.name + "' has no inertia.")
             if not 'mass' in inertial or not inertial['mass'] > 0:
-                notifications.append("Error, object '" + obj.name + "' has no attribute 'mass' or zero mass.")
+                notifications.append("Error, inertial of link '" + obj.name + "' has no attribute 'mass' or zero mass.")
                 faulty_objects.append(obj)
-                if fix:
-                    inertial['mass'] = mass
-                    inertial['masschanged'] = dt.now().isoformat()
+                #if fix:
+                #    inertial['mass'] = mass
+                #    inertial['masschanged'] = dt.now().isoformat()
     elif obj.MARStype == 'inertial':
         if fix:
             if not obj.name.startswith('inertial_'):
