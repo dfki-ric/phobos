@@ -129,6 +129,57 @@ class SyncMassesOperator(Operator):
 
         return {'FINISHED'}
 
+class ShowDistanceOperator(Operator):
+    """ShowDistanceOperator"""
+    bl_idname = "object.mt_show_distance"
+    bl_label = "Shows distance between two selected objects in world coordinates."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    distance = FloatProperty(
+        name = "distance",
+        default = 0.0,
+        description = "distance between objects")
+
+    def execute(self, context):
+        self.distance = mtutility.distance(bpy.context.selected_objects)
+        print(self.distance)
+        return {'FINISHED'}
+
+class SetXRayOperator(Operator):
+    """SetXrayOperator"""
+    bl_idname = "object.mt_set_xray"
+    bl_label = "Shows the selected/chosen objects via X-Ray."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    objects = EnumProperty(
+        name = "objects",
+        default = 'selected',
+        items = (('all',)*3, ('selected',)*3) + mtdefs.marstypes,
+        description = "show objects via x-ray")
+
+    show = BoolProperty(
+        name = "show",
+        default = True,
+        description = "set to")
+
+    namepart = StringProperty(
+        name = "name",
+        default = "",
+        description = "name contains")
+
+    def execute(self, context):
+        if self.objects == 'all':
+            objlist = bpy.data.objects
+        elif self.objects == 'select':
+            objlist = bpy.context.selected_objects
+        elif self.objects == 'by name':
+            objlist = [obj for obj in bpy.data.objects if obj.name.find(self.namepart) > 0]
+        else:
+            objlist = [obj for obj in bpy.data.objects if obj.MARStype == self.objects]
+        for obj in objlist:
+            obj.show_x_ray = self.show
+        return {'FINISHED'}
+
 class NameModelOperator(Operator):
     """NameModelOperator"""
     bl_idname = "object.mt_name_model"
