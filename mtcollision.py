@@ -75,10 +75,11 @@ class CreateCollisionObjects(Operator):
                         rotation = mathutils.Matrix.Rotation(math.pi/2, 4, 'X')
                 elif self.property_colltype == 'sphere':
                     size = max(size)/2
+                rotation = (vis.matrix_world*rotation).to_euler()
                 center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion()*center
                 ob = mtutility.createPrimitive(collname, self.property_colltype, size,
                                                mtdefs.layerTypes["collision"], vis.data.materials[0].name, center,
-                                               (rotation * vis.matrix_world).to_euler()) #TODO: is this the correct way around?
+                                               rotation)
                 #TODO: apply rotation for moved cylinder object?
                 ob.MARStype = "collision"
                 ob["geometryType"] = self.property_colltype
