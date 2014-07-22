@@ -28,6 +28,10 @@ def register():
             name = "type",
             description = "MARS object type")
     print("    Added 'MARStype' to Object properties.")
+    #bpy.types.Object.lastchanged = StringProperty(
+    #        default = '',
+    #        name = "lastchanged",
+    #        description = "Iso format datetime string of last change event")
 
     bpy.types.World.showBodies = BoolProperty(name = "showBodies", update=SetVisibleLayers)
     bpy.types.World.showJoints = BoolProperty(name = "showJoints", update=SetVisibleLayers)
@@ -193,6 +197,11 @@ class MARSToolPanel(bpy.types.Panel):
         # Inspection Menu
         layout.separator()
         layout.label(text = "Inspect Robot", icon = 'VIEWZOOM')
+        iinlayout = layout.split()
+        ic1 = iinlayout.column(align = True)
+        ic1.operator('object.mt_show_distance', text = 'Measure distance')
+        ic2 = iinlayout.column(align = True)
+        ic2.operator('object.mt_set_xray', text = 'Always show objects')
 
         # Selection Menu
         layout.separator()
