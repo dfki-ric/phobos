@@ -421,24 +421,24 @@ def buildRobotDictionary():
             robot['links'][parent.name][obj.MARStype][obj.name] = props
             obj.select = False
     # TODO: change this to not solely depend on the last collision object
-    # recalculate inertial from collision geometry if necessary
-    print('\n\n[MARStools] Calculating inertia from collision and visual objects...')
-    for linkname in robot['links']:
-        link = robot['links'][linkname]
-        print('Checking inertial for link', link['name'])
-        if 'mass' in link['inertial'] and 'inertia' not in link['inertial']:
-                print('Found mass, but no inertia...trying to derive from collision...')
-                for c in link['collision']:
-                    col = link['collision'][c]
-                    if 'geometry' in col:
-                        link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], col['geometry'])
-                        link['inertial']['pose'] = col['pose']
-                #TODO: check if this really makes sense or if we should not export anything special to let ODE handle the job!!!
-                print('...failed. Inserting dummy inertia...')
-                link['inertial']['inertia'] = mtinertia.getDummyInertia()
-        else:
-            print("###WARNING: link", link['name'], "has no mass.")
-    # parse motors, sensors and controllers
+    ## recalculate inertial from collision geometry if necessary
+    #print('\n\n[MARStools] Calculating inertia from collision objects...')
+    #for linkname in robot['links']:
+    #    link = robot['links'][linkname]
+    #    print('Checking inertial for link', link['name'])
+    #    if 'mass' in link['inertial'] and 'inertia' not in link['inertial']:
+    #            print('Found mass, but no inertia...trying to derive from collision...')
+    #            for c in link['collision']:
+    #                col = link['collision'][c]
+    #                if 'geometry' in col:
+    #                    link['inertial']['inertia'] = mtinertia.calculateInertia(link['inertial']['mass'], col['geometry'])
+    #                    link['inertial']['pose'] = col['pose']
+    #            #TODO: check if this really makes sense or if we should not export anything special to let ODE handle the job!!!
+    #            print('...failed. Inserting dummy inertia...')
+    #            link['inertial']['inertia'] = mtinertia.getDummyInertia()
+    #    else:
+    #        print("###WARNING: link", link['name'], "has no mass.")
+    # parse sensors and controllers
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['sensor', 'controller']:
             print('Parsing', obj.MARStype, obj.name, '...')
