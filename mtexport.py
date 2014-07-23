@@ -717,7 +717,7 @@ def main(outpath = '', yaml=True, urdf=True, smurf=True, mars=False, objexp=Fals
         if yaml:
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
         if mars:
-            exportModelToMARS(robot, outpath + robot["modelname"] + "_mars.scn")
+            exportModelToMARS(robot, outpath + robot["modelname"] + "_mars.scene")
         if smurf:
             exportModelToSMURF(robot, outpath)
         elif urdf:
