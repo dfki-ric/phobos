@@ -179,7 +179,7 @@ def deriveMaterial(mat):
     material["name"] = mat.name
     material["diffuseFront"] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
     material["specularFront"] = dict(zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
-    material['shininess'] = mat.specular_hardness
+    material['shininess'] = mat.specular_hardness/2
     if mat.use_transparency:
         material["transparency"] = 1.0-mat.alpha
     if mat.texture_slots[0] is not None: # grab the first texture
