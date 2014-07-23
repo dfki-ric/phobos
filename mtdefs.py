@@ -132,3 +132,7 @@ layerTypes = {
               "sensor": 4,
               "decoration": 5
               }
+
+MARSlegacydict = {'specularColor': 'specularFront',
+                  'diffuseColor': 'diffuseFront'
+                  }
