@@ -65,6 +65,7 @@ class CreateCollisionObjects(Operator):
                 if self.property_colltype == 'cylinder':
                     axes = ('X', 'Y', 'Z')
                     long_side = axes[size.index(max(size))]
+                    #xyequal = (size[0] - size[1])
                     height = max(size)
                     radii = [s for s in size if s is not height]
                     radius = max(radii)/2 if radii is not [] else height/2

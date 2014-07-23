@@ -109,7 +109,7 @@ class RobotModelParser():
             parentLink.select = True
             bpy.context.scene.objects.active = parentLink
             bpy.ops.object.parent_set()
-            geom.matrix_world = parentLink.matrix_world
+            geom.matrix_world = parentLink.matrix_world #FIXME: this applies the scale of the parent, making boxes BIIIG
             geom.matrix_local = urdf_geom_loc * urdf_geom_rot
         for geomsrc in ['visual', 'collision']:
             if geomsrc in link:
@@ -121,7 +121,7 @@ class RobotModelParser():
                         urdf_geom_loc = mathutils.Matrix.Translation(geom['pose'][0:3])
                         urdf_geom_rot = mathutils.Euler(tuple(geom['pose'][3:]), 'XYZ').to_matrix().to_4x4()
                     else:
-                        urdf_geom_loc = mathutils.Matrix.Identity(4)
+                        urdf_geom_loc = mathutils.Matrix.Identity(4) #TODO: 4 ?
                         urdf_geom_rot = mathutils.Matrix.Identity(4)
                     if 'geometry' in geom and 'scale' in geom['geometry']:
                         urdf_geom_scale = geom['geometry']['scale']

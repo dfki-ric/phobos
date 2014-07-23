@@ -303,8 +303,8 @@ def deriveSensor(obj):
 
 def deriveController(obj):
     props = initObjectProperties(obj)
-
     return props
+
 def initObjectProperties(obj):
     props = {}
     for key in obj.keys():
