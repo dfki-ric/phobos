@@ -198,7 +198,10 @@ def deriveLink(obj):
     return props
 
 def deriveJoint(obj):
-    props = {'name': 'joint_' + obj.parent.name + '_' + obj.name}
+    #props = {'name': 'joint_' + obj.parent.name + '_' + obj.name}
+    syllables = obj.name.split('_')
+    jointname = syllables[0] + '/joint' + '_'.join(syllables[1:])
+    props = {'name': jointname}
     props['parent'] = obj.parent.name
     props['child'] = obj.name
     props['jointType'], crot = mtjoints.deriveJointType(obj, True)
