@@ -300,18 +300,34 @@ def writeMaterial(material):
     out.append('    <material>')
     out.append('      <id>'+material['id']+'</id>')
     out.append('      <diffuseFront>');
-    out.append('        <a>'+str(material['transparency'])+'</a>');
+    out.append('        <a>'+str(1-material['transparency'])+'</a>');
     out.append('        <r>'+str(material['diffuseFront']['r'])+'</r>');
     out.append('        <g>'+str(material['diffuseFront']['g'])+'</g>');
     out.append('        <b>'+str(material['diffuseFront']['b'])+'</b>');
     out.append('      </diffuseFront>');
+    out.append('      <ambientFront>');
+    out.append('        <a>'+str(1-material['transparency'])+'</a>');
+    out.append('        <r>'+str(material['ambientFront']['r'])+'</r>');
+    out.append('        <g>'+str(material['ambientFront']['g'])+'</g>');
+    out.append('        <b>'+str(material['ambientFront']['b'])+'</b>');
+    out.append('      </ambientFront>');
     out.append('      <specularFront>');
-    out.append('        <a>'+str(material['transparency'])+'</a>');
+    out.append('        <a>'+str(1-material['transparency'])+'</a>');
     out.append('        <r>'+str(material['specularFront']['r'])+'</r>');
     out.append('        <g>'+str(material['specularFront']['g'])+'</g>');
     out.append('        <b>'+str(material['specularFront']['b'])+'</b>');
     out.append('      </specularFront>');
+    if (material['emissionFront']['r'] > 0
+        or material['emissionFront']['g'] > 0
+        or material['emissionFront']['b'] > 0):
+        out.append('      <emissionFront>');
+        out.append('        <a>'+str(1-material['transparency'])+'</a>');
+        out.append('        <r>'+str(material['emissionFront']['r'])+'</r>');
+        out.append('        <g>'+str(material['emissionFront']['g'])+'</g>');
+        out.append('        <b>'+str(material['emissionFront']['b'])+'</b>');
+        out.append('      </emissionFront>');
     out.append('      <shininess>'+str(material['shininess'])+'</shininess>');
+    out.append('      <transparency>'+str(material['transparency'])+'</transparency>');
     if "texturename" in material:
         out.append('      <texturename>'+str(material["texturename"])+'</texturename>');
     out.append('    </material>')

@@ -176,14 +176,17 @@ def collectMaterials(objectlist):
 
 def deriveMaterial(mat):
     material = {}
-    material["name"] = mat.name
-    material["diffuseFront"] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
-    material["specularFront"] = dict(zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
+    material['name'] = mat.name
+    material['diffuseFront'] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
+    material['ambientFront'] = dict(zip(['r', 'g', 'b'], [mat.ambient * mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
+    material['specularFront'] = dict(zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
+    if mat.emit > 0:
+        material['emissionFront'] = dict(zip(['r', 'g', 'b'], [mat.emit * mat.specular_intensity * num for num in list(mat.specular_color)]))
     material['shininess'] = mat.specular_hardness/2
     if mat.use_transparency:
-        material["transparency"] = 1.0-mat.alpha
+        material['transparency'] = 1.0-mat.alpha
     if mat.texture_slots[0] is not None: # grab the first texture
-        material["texturename"] = mat.texture_slots[0].texture.image.name
+        material['texturename'] = mat.texture_slots[0].texture.image.name
     return material
 
 def deriveLink(obj):
