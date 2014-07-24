@@ -45,7 +45,7 @@ def createMARSMaterials():
     if not 'inertial' in materials:
         makeMaterial('inertial', (1, 0.18, 0), (1, 1, 1), 0.3, 0.7)
     if not 'sensor' in materials:
-        makeMaterial('sensor', (0.8, 0.3, 0), (1, 1, 1), 0.3, 0.7)
+        makeMaterial('sensor', (0.8, 0.75, 0), (1, 1, 1), 0.3, 0.7)
     if not 'controller' in materials:
         makeMaterial('controller', (0.518, 0.364, 0.8), (1, 1, 1), 0.3, 0.7)
     if not 'indicator1' in materials:
