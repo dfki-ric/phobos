@@ -248,6 +248,13 @@ def distance(objects):
     v = objects[0].matrix_world.to_translation()-objects[1].matrix_world.to_translation()
     return v.length
 
+def outerProduct(v, u):
+    '''Returns a mathutils.Matrix representing the outer product of vectors v and u.'''
+    lines = []
+    for vi in v:
+        lines.append([vi * ui for ui in u])
+    return mathutils.Matrix(lines)
+
 
 #def useLegacyNames(data):
 #    if type(data) is str:
