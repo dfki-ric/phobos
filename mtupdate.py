@@ -49,7 +49,7 @@ def updateObject(obj, fix = False):
     notifications = []
     faulty_objects = []
     if obj.MARStype == 'link':
-        inertials = mtutility.getImmediateChildren(obj, 'inertial')
+        inertials = mtutility.getImmediateChildren(obj, ['inertial'])
         inertial = None
         if len(inertials) == 0:
             notifications.append("Warning, link '" + obj.name + "' has no inertial object.")

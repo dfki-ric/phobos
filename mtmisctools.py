@@ -115,7 +115,7 @@ class SyncMassesOperator(Operator):
         if self.writeinertial:
             for linkname in links:
                 masssum = 0.0
-                collision_children = [obj for obj in mtutility.getImmediateChildren(objdict[linkname], 'collision')]
+                collision_children = [obj for obj in mtutility.getImmediateChildren(objdict[linkname], ['collision'])]
                 print(collision_children)
                 for coll in collision_children:
                     masssum += coll['mass']

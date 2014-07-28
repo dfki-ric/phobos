@@ -155,13 +155,13 @@ def getChildren(root):
             children.append(obj)
     return children
 
-def getImmediateChildren(obj, marstype = 'None'):
+def getImmediateChildren(obj, marstypes = ['None']):
     """Finds all immediate children for a given object"""
     children = []
     for child in bpy.data.objects: #TODO: this is not the best list to iterate over (there might be multiple scenes)
         if child.parent == obj:
-            if marstype != 'None':
-                if marstype == child.MARStype:
+            if marstypes != ['None']:
+                if child.MARStype in marstypes:
                     children.append(child)
             else:
                 children.append(child)
@@ -229,8 +229,7 @@ def datetimeFromIso(iso):
     return datetime(*[int(a) for a in re.split(":|-|T|\.", iso)])
 
 def calculateMassOfLink(link):
-    objects = (getImmediateChildren(link, 'visual')
-              + getImmediateChildren(link, 'collision'))
+    objects = (getImmediateChildren(link, ['visual', 'collision']))
     return calculateMass(objects)
 
 def calculateMass(objects):
