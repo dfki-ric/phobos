@@ -203,13 +203,13 @@ def exportModelToURDF(model, filepath):
     for l in model['links'].keys():
         link = model['links'][l]
         output.append(indent*2+'<link name="'+l+'">\n')
-        output.append(indent*3+'<inertial>\n')
-        if 'pose' in link['inertial']:
-            output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['inertial']['pose']['translation']), l2str(link['inertial']['pose']['rotation_euler'])]))
-        output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
-        if 'inertia' in link['inertial']:
+        if link['inertial'] != {} and 'mass' in link['inertial'] and 'inertia' in link['inertial']:
+            output.append(indent*3+'<inertial>\n')
+            if 'pose' in link['inertial']:
+                output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['inertial']['pose']['translation']), l2str(link['inertial']['pose']['rotation_euler'])]))
+            output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
             output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'], link['inertial']['inertia']))
-        output.append(indent*3+'</inertial>\n')
+            output.append(indent*3+'</inertial>\n')
         #visual object
         if link['visual']:
             for v in link['visual']:
@@ -363,10 +363,18 @@ def exportModelToSMURF(model, path):
 
     #write simulation
     if export['simulation']:
+        nodes = {}
+        for link in model['links']:
+            for objtype in ['visual', 'collision']:
+                for objname in model['links'][link][objtype]:
+                    obj = model['links'][link]['visual'][objname]
+                    if 'mass' in obj:
+                        nodes[obj['name']] = {'mass': obj['mass']}
         with open(path + filenames['simulation'], 'w') as op:
             op.write('#simulation'+infostring)
             op.write("modelname: "+model['modelname']+'\n')
             #TODO: handle simulation-specific data
+            op.write(yaml.dump(nodes, default_flow_style=False))
             op.write(yaml.dump(list(model['simulation'].values()), default_flow_style=False))
 
 def exportSceneToSMURF(path):
