@@ -5,28 +5,23 @@ File mtrobotdictionary.py
 
 Created on 28 Jul 2014
 
-@author: Kai von Szadkowski
+@author: Kai von Szadkowski, Stefan Rahms
 
 Copy this add-on to your Blender add-on folder and activate it
 in your preferences to gain instant (virtual) world domination.
 You may use the provided install shell script.
-
-NOTE: If you edit this script, please make sure not to use any imports
-not supported by Blender's standard Python distribution. This is a script
-intended to be usable on its own and thus should not use external dependencies,
-especially none of the other modules of the MARStools package.
 '''
 
 import bpy
-import sys
 import mathutils
-import os
+import sys
 import datetime
-import yaml
+import warnings
 import marstools.mtdefs as mtdefs
 import marstools.mtutility as mtutility
 import marstools.mtjoints as mtjoints
-import marstools.mtmisctools as mtmisctools
+import marstools.mtinertia as mtinertia
+from marstools.mtutility import *
 
 
 def register():
@@ -149,8 +144,7 @@ def deriveGeometry(obj):
 
 
 def deriveInertial(obj):
-    '''Derives a dictionary entry of an inertial object. These settings override any 'mass' or 'inertia'
-    settings placed in the object itself.'''
+    '''Derives a dictionary entry of an inertial object.'''
     props = initObjectProperties(obj)
     inertia = props['inertia'].split()
     props['inertia'] = list(map(float, inertia))
@@ -270,8 +264,9 @@ def deriveChainEntry(obj):
 
 
 def buildRobotDictionary():
+    '''Builds a python dictionary representation of a Blender robot model for export and inspection.'''
     objectlist = bpy.context.selected_objects
-    #notifications, faulty_objects = mtmisctools.checkModel(bpy.context.selected_objects)
+    #notifications, faulty_objects = mtupdate.updateModel(bpy.context.selected_objects)
     #print(notifications)
     robot = {'links': {},
             'joints': {},
@@ -306,12 +301,30 @@ def buildRobotDictionary():
                 robot['motors'][joint['name']] = motor
             obj.select = False
 
+    # add inertial information to link
+    for l in robot['links']:
+        link = bpy.data.objects[l]
+        inertials = getImmediateChildren(link, 'inertial')
+        if len(inertials) == 1:
+            props, parent = deriveDictEntry(inertials[0])
+            robot['links'][parent.name]['inertial'] = props
+            inertials[0].select = False
+        elif len(inertials) > 1:
+            parent = inertials[0].parent.name
+            mass, com, inertia = mtinertia.compound_inertia_analysis_3x3(inertials)
+            matrix_local = mathutils.Matrix.Translation(mathutils.Vector(com))
+            pose = {}
+            pose['matrix'] = [list(vector) for vector in list(matrix_local)]
+            pose['translation'] = list(matrix_local.to_translation())
+            pose['rotation_euler'] = list(matrix_local.to_euler())
+            pose['rotation_quaternion'] = list(matrix_local.to_quaternion())
+            props = {'mass': mass, 'pose': pose, 'inertia': inertia}
+            robot['links'][parent.name]['inertial'] = props
+            for i in inertials:
+                i.select = False
+
     # complete link information by parsing visuals and collision objects
     for obj in bpy.context.selected_objects:
-        if obj.MARStype == 'inertial':
-            props, parent = deriveDictEntry(obj)
-            robot['links'][parent.name][obj.MARStype] = props
-            obj.select = False
         if obj.MARStype in ['visual', 'collision']:
             props, parent = deriveDictEntry(obj)
             robot['links'][parent.name][obj.MARStype][obj.name] = props
@@ -545,6 +558,6 @@ def check_dict(model):
     '''
     '''
     notifications = ''
-    notifications += check_link(model['link'])
-    notifications += check_joint(model['joint'])
+    notifications += check_links(model['links'])
+    notifications += check_joints(model['joints'])
     return notifications

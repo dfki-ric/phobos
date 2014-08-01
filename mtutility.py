@@ -256,6 +256,34 @@ def outerProduct(v, u):
     return mathutils.Matrix(lines)
 
 
+# The following function is adapted from Bret Battey's adaptation
+# (http://bathatmedia.blogspot.de/2012/08/duplicating-objects-in-blender-26.html) of
+# Nick Keeline "Cloud Generator" addNewObject
+# from object_cloud_gen.py (an addon that comes with the Blender 2.6 package)
+#
+def duplicateObject(scene, name, copyobj, material, layers):
+    """Returns a copy of the provided object"""
+
+    # Create new mesh
+    mesh = bpy.data.meshes.new(name)
+
+    # Create new object associated with the mesh
+    ob_new = bpy.data.objects.new(name, mesh)
+
+    # Copy data block from the old object into the new object
+    ob_new.data = copyobj.data.copy()
+    ob_new.scale = copyobj.scale
+    ob_new.location = copyobj.location
+    ob_new.data.materials.append(bpy.data.materials[material])
+
+    # Link new object to the given scene and select it
+    scene.objects.link(ob_new)
+    ob_new.layers = layers
+    #ob_new.select = True
+
+    return ob_new
+
+
 #def useLegacyNames(data):
 #    if type(data) is str:
 #        print(data, end=': ')

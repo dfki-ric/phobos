@@ -20,6 +20,8 @@ import marstools.mtupdate as mtupdate
 import marstools.mtmaterials as mtmaterials
 import marstools.mtutility as mtutility
 import marstools.mtdefs as mtdefs
+import marstools.mtinertia as mtinertia
+import marstools.mtrobotdictionary as mtrobotdictionary
 from datetime import datetime as dt
 
 
@@ -112,13 +114,12 @@ class SyncMassesOperator(Operator):
         for i in range(len(sourcelist)):
             objdict[targetlist[i]]['mass'] = objdict[sourcelist[i]]['mass']
             objdict[targetlist[i]]['masschanged'] = objdict[sourcelist[i]]['masschanged']
-        if self.writeinertial:
-            for linkname in links:
-                masssum = 0.0
-                collision_children = [obj for obj in mtutility.getImmediateChildren(objdict[linkname], ['collision'])]
-                print(collision_children)
-                for coll in collision_children:
-                    masssum += coll['mass']
+        for linkname in links:
+            masssum = 0.0
+            collision_children = mtinertia.getInertiaRelevantObjects(links[linkname])
+            for coll in collision_children:
+                masssum += coll['mass']
+            if self.writeinertial:
                 try:
                     inertial = bpy.data.objects['inertial_' + linkname]
                     if not 'mass' in inertial or inertial['mass'] != masssum:
@@ -126,6 +127,9 @@ class SyncMassesOperator(Operator):
                         inertial['masschanged'] = t.isoformat()
                 except KeyError:
                     print("###Warning: no inertial object for link", linkname)
+            else:
+                links[linkname]['mass'] = masssum
+                links[linkname]['masschanged'] = t.isoformat()
 
         return {'FINISHED'}
 
@@ -474,32 +478,38 @@ class SmoothenSurfaceOperator(Operator):
         return ob is not None and ob.mode == 'OBJECT'
 
 
-# The following function is adapted from Bret Battey's adaptation
-# (http://bathatmedia.blogspot.de/2012/08/duplicating-objects-in-blender-26.html) of
-# Nick Keeline "Cloud Generator" addNewObject
-# from object_cloud_gen.py (an addon that comes with the Blender 2.6 package)
-#
-def duplicateObject(scene, name, copyobj, material, layers):
-    """Returns a copy of the provided object"""
+class CreateInertialOperator(Operator):
+    """CreateInertialOperator"""
+    bl_idname = "object.create_inertial"
+    bl_label = "Adds Bone Constraints to the joint (link)"
+    bl_options = {'REGISTER', 'UNDO'}
 
-    # Create new mesh
-    mesh = bpy.data.meshes.new(name)
+    writeinertial = BoolProperty(
+                name = 'automate_links',
+                default = False,
+                description = 'automate links'
+                )
 
-    # Create new object associated with the mesh
-    ob_new = bpy.data.objects.new(name, mesh)
+    def execute(self, context):
+        links = []
+        viscols = set()
+        for obj in bpy.context.selected_objects:
+            if obj.MARStype == 'link':
+                links.append(obj)
+            elif obj.MARStype in ['visual', 'collision']:
+                viscols.add(obj)
+        for link in links:
+            if self.automate_links:
+                viscols.add(mtinertia.getInertiaRelevantObjects(link))
+            else:
+                inertial = mtinertia.createInertial(link)
+                inertial['mass'] = link['mass']
+                inertial['inertia'] = mtinertia.calculateInertia(
+                                      link, mtrobotdictionary.deriveGeometry(link))
+        for obj in viscols:
+            mtinertia.createInertial(obj)
+        return {'FINISHED'}
 
-    # Copy data block from the old object into the new object
-    ob_new.data = copyobj.data.copy()
-    ob_new.scale = copyobj.scale
-    ob_new.location = copyobj.location
-    ob_new.data.materials.append(bpy.data.materials[material])
-
-    # Link new object to the given scene and select it
-    scene.objects.link(ob_new)
-    ob_new.layers = layers
-    #ob_new.select = True
-
-    return ob_new
 
 class AddGravityVector(Operator):
     """Add Gravity Operator"""

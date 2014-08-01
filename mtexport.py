@@ -18,17 +18,15 @@ especially none of the other modules of the MARStools package.
 '''
 
 import bpy
-import sys
 import mathutils
 import os
 from datetime import datetime
 import yaml
-import warnings
 import struct
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, IntProperty
-import marstools.mtdefs as mtdefs
 from marstools.mtutility import *
+import marstools.mtdefs as mtdefs
 import marstools.mtmarssceneexport as mtmse
 import marstools.mtinertia as mtinertia
 import marstools.mtrobotdictionary as mtrobotdictionary
