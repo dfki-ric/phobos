@@ -27,6 +27,7 @@ bl_info = {
 if "bpy" in locals():
     import imp
     imp.reload(mtupdate)
+    imp.reload(mtrobotdictionary)
     imp.reload(mtcontrollers)
     imp.reload(mtexport)
     imp.reload(mtimport)
@@ -42,7 +43,7 @@ if "bpy" in locals():
     imp.reload(mtmarssceneexport)
     print("Reloading MARS Blender Tools.")
 else:
-    from . import mtupdate, mtlinks, mtmarssceneexport, mtcontrollers, mtexport, mtgui, mtimport, mtjoints, mtmisctools, mtsensors, mtutility, mtcollision, mtinertia
+    from . import mtupdate, mtlinks, mtmarssceneexport, mtrobotdictionary, mtcontrollers, mtexport, mtgui, mtimport, mtjoints, mtmisctools, mtsensors, mtutility, mtcollision, mtinertia
     print("Importing MARS Blender Tools modules.")
 
 import bpy
