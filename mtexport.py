@@ -216,7 +216,7 @@ def exportModelToURDF(model, filepath):
                 output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
                 writeURDFGeometry(output, vis['geometry'])
                 if 'material' in vis:
-                    if model['materials'][vis['material']]['users'] == 1:
+                    if model['materials'][vis['material']]['users'] == 0: #FIXME: change back to 1 when implemented in urdfloader
                         mat = model['materials'][vis['material']]
                         output.append(indent*4+'<material name="' + mat['name'] + '">\n')
                         color = mat['diffuseFront']
@@ -251,7 +251,7 @@ def exportModelToURDF(model, filepath):
         output.append(indent*2+'</joint>\n\n')
     #export material information
     for m in model['materials']:
-        if model['materials'][m]['users'] > 1:
+        if model['materials'][m]['users'] > 0: #FIXME: change back to 1 when implemented in urdfloader
             output.append(indent*2+'<material name="' + m + '">\n')
             color = model['materials'][m]['diffuseFront']
             transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
