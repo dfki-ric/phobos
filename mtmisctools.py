@@ -37,7 +37,7 @@ class CalculateMassOperator(Operator):
     bl_label = "Display mass of the selected objects in a pop-up window."
 
     def execute(self, context):
-        mass = mtutility.calculateMass(bpy.context.selected_objects)
+        mass = mtutility.calculateSum(bpy.context.selected_objects, 'mass')
         bpy.ops.error.message('INVOKE_DEFAULT', type="mass", message=str(mass))
         return {'FINISHED'}
 

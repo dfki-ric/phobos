@@ -102,7 +102,7 @@ def inertiaListToMatrix(il):
 
 
 def getInertiaRelevantObjects(link):
-    '''Returns a list of visual and collision objects of a link. If pairs of visual and collision
+    '''Returns a list of visual and collision objects of a link. If name-pairs of visual and collision
     objects are detected, the visual objects are omitted to prevent redundant information. The function
     does not check whether mass information within pairs is consistent.'''
     tmpobjects = mtutility.getImmediateChildren(link, ['visual', 'collision'])
@@ -119,9 +119,24 @@ def getInertiaRelevantObjects(link):
     return inertiaobjects
 
 
+def calculateMassOfLink(link):
+    '''Calculates the masses of visual and collision objects found in a link, compares it to mass
+    in link inertial object if present and returns the max of both, warning if they are not equal.'''
+    objects = getInertiaRelevantObjects(link, ['visual', 'collision'])
+    inertials = mtutility.getImmediateChildren(link, ['inertial'])
+    objectsmass = mtutility.calculateSum(objects, 'mass')
+    if len(inertials) == 1:
+        inertialmass = inertials[0]['mass'] if 'mass' in inertials[0] else 0
+    if objectsmass != inertialmass:
+        print("Warning: Masses are inconsistent, sync masses of link!")
+    return max(objectsmass, inertialmass)
+
+
 def calculateLinkInertiaData(inertials):
     '''Returns mass, center of mass and inertia of a link as a whole, taking a list of inertials.
-    *mass* is of type double'''
+    *mass*: double
+    *com*: mathutils:Vector(3)
+    *inertia*: mathutils:Matrix(3)'''
     objects = []
     for o in inertials:
         try:

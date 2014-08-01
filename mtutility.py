@@ -263,27 +263,20 @@ def epsilonToZero(data, epsilon, decimals):
         return data
 
 
+def calculateSum(objects, numeric_prop):
+    '''Returns sum of *numeric_prop* in *objects*.'''
+    numsum = 0
+    for obj in objects:
+        try:
+            numsum += obj[numeric_prop]
+        except KeyError:
+            pass
+    return numsum
+
+
 def datetimeFromIso(iso):
     """Accepts a date-time string in iso format and returns a datetime object."""
     return datetime(*[int(a) for a in re.split(":|-|T|\.", iso)])
-
-
-def calculateMassOfLink(link):
-    objects = (getImmediateChildren(link, ['visual', 'collision']))
-    return calculateMass(objects)
-
-
-def calculateMass(objects):
-    mass = 0
-    objlist = [obj.name for obj in objects]
-    for obj in objects:
-        if obj.MARStype == 'collision' and 'mass' in obj:
-            mass += obj['mass']
-        elif obj.MARStype == 'visual':
-            collision = obj.name.replace('visual_', 'collision_')
-            if 'mass' in obj and not collision in objlist:
-                mass += obj['mass']
-    return mass
 
 
 def distance(objects):
