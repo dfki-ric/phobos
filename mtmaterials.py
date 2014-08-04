@@ -30,8 +30,8 @@ def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0):
 def createMARSMaterials():
     """Uses makeMaterial() to create a list of standard materials used in MARStools"""
     materials = bpy.data.materials.keys()
-    if not 'joint_sphere' in materials:
-        makeMaterial('joint_sphere', (0, 1, 0), (1, 1, 1), 1)
+    #if not 'joint_sphere' in materials:
+    #    makeMaterial('joint_sphere', (0, 1, 0), (1, 1, 1), 1)
     if not 'joint' in materials:
         makeMaterial('joint', (0, 0, 1), (1, 1, 1), 1)
     if not 'name' in materials:
