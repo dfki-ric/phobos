@@ -78,8 +78,9 @@ class CreateCollisionObjects(Operator):
                     size = max(size)/2
                 rotation = (vis.matrix_world*rotation).to_euler()
                 center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion()*center
+                materialname = vis.data.materials[0].name if len(vis.data.materials>0) else "None"
                 ob = mtutility.createPrimitive(collname, self.property_colltype, size,
-                                               mtdefs.layerTypes["collision"], vis.data.materials[0].name, center,
+                                               mtdefs.layerTypes["collision"], materialname, center,
                                                rotation)
                 #TODO: apply rotation for moved cylinder object?
                 ob.MARStype = "collision"
@@ -90,6 +91,9 @@ class CreateCollisionObjects(Operator):
                     vis.parent.select = True
                     bpy.context.scene.objects.active = vis.parent
                     bpy.ops.object.parent_set()
+        else: #if self.property_colltype == 'mesh'
+            pass
+            #TODO: copy mesh!!
         return{'FINISHED'}
 
 
