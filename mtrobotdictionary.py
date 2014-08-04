@@ -311,8 +311,8 @@ def buildRobotDictionary():
             robot['links'][parent.name]['inertial'] = props
             inertials[0].select = False
         elif len(inertials) > 1:
+            mass, com, inertia = mtinertia.fuseInertiaData(inertials)
             parent = inertials[0].parent.name
-            mass, com, inertia = mtinertia.compound_inertia_analysis_3x3(inertials)
             matrix_local = mathutils.Matrix.Translation(mathutils.Vector(com))
             pose = {}
             pose['matrix'] = [list(vector) for vector in list(matrix_local)]
