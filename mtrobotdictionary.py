@@ -72,10 +72,7 @@ def deriveLink(obj):
 
 
 def deriveJoint(obj):
-    #props = {'name': 'joint_' + obj.parent.name + '_' + obj.name}
-    syllables = obj.name.split('_')
-    jointname = syllables[0] + '/joint' + '_'.join(syllables[1:])
-    props = {'name': jointname}
+    props = {'name': obj.name}
     props['parent'] = obj.parent.name
     props['child'] = obj.name
     props['jointType'], crot = mtjoints.deriveJointType(obj, True)
@@ -92,7 +89,7 @@ def deriveJoint(obj):
     # - safety_controller
 
     #derive motor data
-    motorprops = {'name': 'motor_' + obj.name, 'joint': 'joint_' + obj.name}
+    motorprops = {'name': obj.name, 'joint': obj.name}
     for key,value in obj.items():
         if key.find('motor/') >= 0:
             motorprops[key.replace('motor/', '')] = value
@@ -137,7 +134,7 @@ def deriveGeometry(obj):
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
-            filename = obj['filename'] if 'filename' in obj else obj.name
+            filename = obj['filename'] if 'filename' in obj else obj.name.replace('/','_')
             geometry['filename'] = filename + (".bobj" if bpy.context.scene.world.exportBobj else ".obj")
             geometry['scale'] = list(obj.scale)
             geometry['size'] = list(obj.dimensions) #this is needed to calculate an approximate inertia if collision is inertia
