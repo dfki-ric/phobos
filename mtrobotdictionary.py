@@ -53,8 +53,12 @@ def deriveMaterial(mat):
     material['shininess'] = mat.specular_hardness/2
     if mat.use_transparency:
         material['transparency'] = 1.0-mat.alpha
-    if mat.texture_slots[0] is not None: # grab the first texture
-        material['texturename'] = mat.texture_slots[0].texture.image.name
+    try:
+        material['texturename'] = mat.texture_slots[0].texture.image.name # grab the first texture
+    except KeyError:
+        print('Material ' + mat.name + ' has no property texturename.')
+    except AttributeError:
+        print('Texture in material ' + mat.name + ' not specified with image data.')
     return material
 
 
