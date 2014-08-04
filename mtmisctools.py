@@ -14,6 +14,7 @@ You may use the provided install shell script.
 
 import bpy
 import math
+import mathutils
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty, FloatProperty
 import marstools.mtupdate as mtupdate
@@ -28,8 +29,10 @@ from datetime import datetime as dt
 def register():
     print("Registering mtmisctools...")
 
+
 def unregister():
     print("Unregistering mtmisctools...")
+
 
 class CalculateMassOperator(Operator):
     """CalculateMassOperator"""
@@ -40,6 +43,7 @@ class CalculateMassOperator(Operator):
         mass = mtutility.calculateSum(bpy.context.selected_objects, 'mass')
         bpy.ops.error.message('INVOKE_DEFAULT', type="mass", message=str(mass))
         return {'FINISHED'}
+
 
 class SetMassOperator(Operator):
     """SetMassOperator"""
@@ -59,6 +63,7 @@ class SetMassOperator(Operator):
                 t = dt.now()
                 obj['masschanged'] = t.isoformat()
         return {'FINISHED'}
+
 
 class SyncMassesOperator(Operator):
     """SyncMassesOperator"""
@@ -133,6 +138,7 @@ class SyncMassesOperator(Operator):
 
         return {'FINISHED'}
 
+
 class ShowDistanceOperator(Operator):
     """ShowDistanceOperator"""
     bl_idname = "object.mt_show_distance"
@@ -148,6 +154,7 @@ class ShowDistanceOperator(Operator):
         self.distance = mtutility.distance(bpy.context.selected_objects)
         print(self.distance)
         return {'FINISHED'}
+
 
 class SetXRayOperator(Operator):
     """SetXrayOperator"""
@@ -184,6 +191,7 @@ class SetXRayOperator(Operator):
             obj.show_x_ray = self.show
         return {'FINISHED'}
 
+
 class NameModelOperator(Operator):
     """NameModelOperator"""
     bl_idname = "object.mt_name_model"
@@ -199,6 +207,7 @@ class NameModelOperator(Operator):
         root = mtutility.getRoot(bpy.context.active_object)
         root["modelname"] = self.modelname
         return {'FINISHED'}
+
 
 class SelectObjectsByMARSType(Operator):
     """SelectObjectsByType"""
@@ -219,6 +228,7 @@ class SelectObjectsByMARSType(Operator):
                 objlist.append(obj)
         mtutility.selectObjects(objlist, True)
         return {'FINISHED'}
+
 
 class SelectObjectsByName(Operator):
     """SelectObjectsByName"""
@@ -252,6 +262,7 @@ class SelectRootOperator(Operator):
         mtutility.selectObjects(list(roots), True)
         bpy.context.scene.objects.active = list(roots)[0]
         return {'FINISHED'}
+
 
 class SelectModelOperator(Operator):
     """SelectModelOperator"""
@@ -357,6 +368,7 @@ class BatchEditPropertyOperator(Operator):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT'
 
+
 class SetGeometryType(Operator):
     """Set Geometry Type Operator"""
     bl_idname = "object.mt_set_geometry_type"
@@ -370,6 +382,7 @@ class SetGeometryType(Operator):
             description = "MARS geometry type")
 
     def execute(self, context):
+
         for obj in bpy.context.selected_objects:
             if obj.MARStype == 'collision' or obj.MARStype == 'visual':
                 obj['geometryType'] = self.geomType
@@ -379,6 +392,7 @@ class SetGeometryType(Operator):
     def poll(cls, context):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT'
+
 
 class SetInertia(Operator):
     """Set Inertia Operator"""
@@ -413,6 +427,7 @@ class SetInertia(Operator):
     def poll(cls, context):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and ob.MARStype == 'inertial'
+
 
 class PartialRename(Operator):
     """Partial Rename Operator"""
