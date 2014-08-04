@@ -237,6 +237,7 @@ class MARSToolModelPanel(bpy.types.Panel):
         c1.operator('object.mt_set_marstype', text = 'Set MARStype')
         c1.operator('object.mt_set_geometry_type', text = "Set Geometry Type(s)")
         c1.operator('object.create_collision_objects', text = "Create Collision Object(s)")
+        c1.operator('object.create_inertial_objects', text = "Create Inertial Object(s)")
         c1.operator('object.define_joint_constraints', text = "Define Joint Constraints")
         c2 = inlayout.column(align = True)
         c2.operator('object.mt_partial_rename', text = "Partial Rename")

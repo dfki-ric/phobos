@@ -28,11 +28,22 @@ def unregister():
     print("Unregistering mtinertia...")
 
 
-def getDummyInertia():
-    return calculateBoxInertia(0.001, (0.01, 0.01, 0.01,))
+def calculateMassOfLink(link):
+    '''Calculates the masses of visual and collision objects found in a link, compares it to mass
+    in link inertial object if present and returns the max of both, warning if they are not equal.'''
+    objects = getInertiaRelevantObjects(link, ['visual', 'collision'])
+    inertials = mtutility.getImmediateChildren(link, ['inertial'])
+    objectsmass = mtutility.calculateSum(objects, 'mass')
+    if len(inertials) == 1:
+        inertialmass = inertials[0]['mass'] if 'mass' in inertials[0] else 0
+    if objectsmass != inertialmass:
+        print("Warning: Masses are inconsistent, sync masses of link!")
+    return max(objectsmass, inertialmass)
 
 
 def calculateInertia(mass, geometry):
+    '''Calculates the inertia of an object given its *geometry* and *mass* and
+    returns the upper diagonal of the inertia 3x3 inertia tensor.'''
     inertia = None
     gt = geometry['geometryType']
     if gt == 'box':
@@ -55,7 +66,7 @@ def calculateBoxInertia(mass, size):
     iyy = i*(size[0]**2 + size[2]**2)
     iyz = 0
     izz = i*(size[0]**2 + size[1]**2)
-    return [ixx, ixy, ixz, iyy, iyz, izz]
+    return tuple(ixx, ixy, ixz, iyy, iyz, izz)
 
 
 def calculateCylinderInertia(mass, r, h):
@@ -67,7 +78,7 @@ def calculateCylinderInertia(mass, r, h):
     iyy = i
     iyz = 0
     izz = 0.5 * mass * r**2
-    return [ixx, ixy, ixz, iyy, iyz, izz]
+    return tuple(ixx, ixy, ixz, iyy, iyz, izz)
 
 
 def calculateSphereInertia(mass, r):
@@ -79,7 +90,7 @@ def calculateSphereInertia(mass, r):
     iyy = i
     iyz = 0
     izz = i
-    return [ixx, ixy, ixz, iyy, iyz, izz]
+    return tuple(ixx, ixy, ixz, iyy, iyz, izz)
 
 
 def calculateEllipsoidInertia(mass, size):
@@ -91,14 +102,21 @@ def calculateEllipsoidInertia(mass, size):
     iyy = i*(size[0]**2 + size[2]**2)
     iyz = 0
     izz = i*(size[0]**2 + size[1]**2)
-    return [ixx, ixy, ixz, iyy, iyz, izz]
+    return tuple(ixx, ixy, ixz, iyy, iyz, izz)
 
 
 def inertiaListToMatrix(il):
+    '''Takes a tuple or list representing the upper diagonal of a 3x3 inertia
+    tensor and returns the full tensor.'''
     inertia = [[il[0], il[1], il[2]],
                [0.0, il[3], il[4]],
                [0.0, 0.0, il[5]]]
     return mathutils.Matrix(inertia)
+
+def inertiaMatrixToList(im):
+    '''Takes a full 3x3 inertia tensor and returns a tuple representing the
+    upper diagonal.'''
+    return tuple(im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2],[2])
 
 
 def getInertiaRelevantObjects(link):
@@ -119,20 +137,7 @@ def getInertiaRelevantObjects(link):
     return inertiaobjects
 
 
-def calculateMassOfLink(link):
-    '''Calculates the masses of visual and collision objects found in a link, compares it to mass
-    in link inertial object if present and returns the max of both, warning if they are not equal.'''
-    objects = getInertiaRelevantObjects(link, ['visual', 'collision'])
-    inertials = mtutility.getImmediateChildren(link, ['inertial'])
-    objectsmass = mtutility.calculateSum(objects, 'mass')
-    if len(inertials) == 1:
-        inertialmass = inertials[0]['mass'] if 'mass' in inertials[0] else 0
-    if objectsmass != inertialmass:
-        print("Warning: Masses are inconsistent, sync masses of link!")
-    return max(objectsmass, inertialmass)
-
-
-def calculateLinkInertiaData(inertials):
+def fuseInertiaData(inertials):
     '''Returns mass, center of mass and inertia of a link as a whole, taking a list of inertials.
     *mass*: double
     *com*: mathutils:Vector(3)
@@ -148,11 +153,14 @@ def calculateLinkInertiaData(inertials):
         except KeyError:
             print('Inertial object ' + o.name + ' is missing data.')
         objects.append(objdict)
+
     mass, com, inertia = compound_inertia_analysis_3x3(objects)
-    return mass, com, inertia#
+    return mass, com, inertia
 
 
 def createInertial(obj):
+    '''Creates an empty inertial object with the same world transform as the corresponding
+    object and parents it to the correct link.'''
     size = (0.05, 0.05, 0.05)
     rotation = (0, 0, 0)
     center = (0, 0, 0)
@@ -168,7 +176,7 @@ def createInertial(obj):
     bpy.context.scene.objects.active = inertial
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj.select = True
-    if obj.MARStyp == 'link':
+    if obj.MARStype == 'link':
         bpy.context.scene.objects.active = obj
         #TODO: sync masses (invoke operator?)
         #TODO: set inertia (invoke operator?)
@@ -179,10 +187,10 @@ def createInertial(obj):
     bpy.ops.object.parent_set()
     return inertial
 
+
 ################################################################################
 # From here on we have code modified from Berti's implementation
 
-#import  numpy
 
 def combine_cog_3x3(objects) :
     '''

@@ -480,14 +480,20 @@ class SmoothenSurfaceOperator(Operator):
 
 class CreateInertialOperator(Operator):
     """CreateInertialOperator"""
-    bl_idname = "object.create_inertial"
-    bl_label = "Adds Bone Constraints to the joint (link)"
+    bl_idname = "object.create_inertial_objects"
+    bl_label = "Creates inertial objects based on existing objects"
     bl_options = {'REGISTER', 'UNDO'}
 
-    writeinertial = BoolProperty(
-                name = 'automate_links',
+    include_children = BoolProperty(
+                name = 'include_children',
                 default = False,
-                description = 'automate links'
+                description = 'use link child objects'
+                )
+
+    fuse_link_inertials = BoolProperty(
+                name = 'fuse_link_inertials',
+                default = False,
+                description = 'fuse inertials for links'
                 )
 
     def execute(self, context):
@@ -498,16 +504,28 @@ class CreateInertialOperator(Operator):
                 links.append(obj)
             elif obj.MARStype in ['visual', 'collision']:
                 viscols.add(obj)
-        for link in links:
-            if self.automate_links:
+        if self.include_children:
+            for link in links:
                 viscols.add(mtinertia.getInertiaRelevantObjects(link))
+        for link in links:
+            if self.fuse_link_inertials:
+                pass
+            #for link in links:
+            #    inertial = mtinertia.createInertial(link)
+            #    mass, com, inertia = mtinertia.fuseInertiaData(mtinertia.getInertiaRelevantObjects(link))
+            #    com_translate = mathutils.Matrix.Translation(com)
+            #    inertial.matrix_local += com_translate
+            #    inertial['mass'] = mass
+            #    inertial['inertia'] = ' '.join()[mtinertia.inertiaMatrixToList(inertia)]
+            # TODO: remove viscols of the processed links from viscols list
             else:
                 inertial = mtinertia.createInertial(link)
-                inertial['mass'] = link['mass']
-                inertial['inertia'] = mtinertia.calculateInertia(
-                                      link, mtrobotdictionary.deriveGeometry(link))
+
+        #in any case, process whatever visual and collision objects remain
         for obj in viscols:
-            mtinertia.createInertial(obj)
+            inertial = mtinertia.createInertial(obj)
+            if 'mass' in obj:
+                inertial['mass'] = obj['mass']
         return {'FINISHED'}
 
 
