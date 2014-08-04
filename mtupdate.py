@@ -50,20 +50,19 @@ def updateObject(obj, fix = False):
     faulty_objects = []
     if obj.MARStype == 'link':
         inertials = mtutility.getImmediateChildren(obj, ['inertial'])
-        inertial = None
         if len(inertials) == 0:
             notifications.append("Warning, link '" + obj.name + "' has no inertial object.")
             #if fix:
             #    mtinertia.createInertial(obj)
         elif len(inertials) > 1:
-                notifications.append("Error, link '" + obj.name + "' has more than 1 inertial object.")
+            pass
         elif len(inertials) == 1:
-            inertial = inertials[0]
+            pass
         # checking whether masses add up if we have an inertial by now
         mass = mtutility.calculateMassOfLink(obj)
         if not mass > 0:
             notifications.append("Warning, link '" + obj.name + "' has no mass.")
-        if inertial != None:
+        for inertial in inertials:
             print('Checking inertial: ' + inertial.name)
             if not 'inertia' in inertial:
                 notifications.append("Error, inertial of link '" + obj.name + "' has no inertia.")
