@@ -273,7 +273,7 @@ def exportModelToSMURF(model, path):
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'simulation': model['simulation'] != {}
+              'simulation': True#model['simulation'] != {} #TODO: make this a nice test
               }
 
 
@@ -361,19 +361,24 @@ def exportModelToSMURF(model, path):
 
     #write simulation
     if export['simulation']:
-        nodes = {}
+        nodes = {'visual': {}, 'collision': {}}
         for link in model['links']:
             for objtype in ['visual', 'collision']:
                 for objname in model['links'][link][objtype]:
-                    obj = model['links'][link]['visual'][objname]
-                    if 'mass' in obj:
-                        nodes[obj['name']] = {'mass': obj['mass']}
+                    props = model['links'][link][objtype][objname]
+                    #for prop in ['name']: #TODO: filter these properties and purge redundant ones
+                    #    del(props[prop])
+                    nodes[objtype][objname] = props
         with open(path + filenames['simulation'], 'w') as op:
             op.write('#simulation'+infostring)
-            op.write("modelname: "+model['modelname']+'\n')
-            #TODO: handle simulation-specific data
-            op.write(yaml.dump(nodes, default_flow_style=False))
-            op.write(yaml.dump(list(model['simulation'].values()), default_flow_style=False))
+            if model['simulation'] != {}:
+                op.write("modelname: "+model['modelname']+'\n')
+                #TODO: handle simulation-specific data
+                op.write(yaml.dump(list(model['simulation'].values()), default_flow_style=False))
+            op.write("\nvisual:\n")
+            op.write(yaml.dump(list(nodes['visual'].values())))
+            op.write("\ncollision:\n")
+            op.write(yaml.dump(list(nodes['collision'].values())))
 
 def exportSceneToSMURF(path):
     """Exports all robots in a scene to separate SMURF folders."""

@@ -154,7 +154,7 @@ def deriveInertial(obj):
 
 
 def deriveObjectPose(obj):
-    '''Derive pose of visual or collision object.'''
+    '''Derive pose of link, visual or collision object.'''
     pose = {}
     pose['matrix'] = [list(vector) for vector in list(obj.matrix_local)]
     pose['translation'] = list(obj.matrix_local.to_translation())
