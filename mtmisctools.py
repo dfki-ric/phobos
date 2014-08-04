@@ -116,7 +116,7 @@ class SyncMassesOperator(Operator):
             objdict[targetlist[i]]['masschanged'] = objdict[sourcelist[i]]['masschanged']
         for linkname in links:
             masssum = 0.0
-            collision_children = mtinertia.getInertiaRelevantObjects(links[linkname])
+            collision_children = mtinertia.getInertiaRelevantObjects(objdict[linkname])
             for coll in collision_children:
                 masssum += coll['mass']
             if self.writeinertial:
