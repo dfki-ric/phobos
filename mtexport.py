@@ -133,7 +133,7 @@ def exportBobj(path, obj):
             if faceuv:
                 if f_smooth:  # Smoothed, use vertex normals
                     for vi, v in f_v:
-                        out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], globalNormals[veckey3d(v.normal)]))
+                        out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], globalNormals[roundVector(v.normal, 6)]))
                 else:  # No smoothing, face normals
                     no = globalNormals[roundVector(f.normal, 6)]
                     for vi, v in f_v:
@@ -141,7 +141,7 @@ def exportBobj(path, obj):
             else:  # No UV's
                 if f_smooth:  # Smoothed, use vertex normals
                     for vi, v in f_v:
-                        out.write(struct.pack('iii', v.index + totverts, 0, globalNormals[roundVector(f.normal, 6)]))
+                        out.write(struct.pack('iii', v.index + totverts, 0, globalNormals[roundVector(v.normal, 6)]))
                 else:  # No smoothing, face normals
                     no = globalNormals[roundVector(f.normal, 6)]
                     for vi, v in f_v:
