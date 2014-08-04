@@ -395,22 +395,23 @@ class ExportModelOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        #TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
-        if bpy.data.worlds[0].relativePath:
-           path = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.context.scene.world.path)))
-        else:
-            path = securepath(os.path.expanduser(bpy.context.scene.world.path))
-        main(outpath = path,
-                yaml = bpy.data.worlds[0].exportYAML,
-                urdf = bpy.data.worlds[0].exportURDF,
-                smurf = bpy.data.worlds[0].exportSMURF,
-                mars = bpy.data.worlds[0].exportMARSscene,
-                objexp = bpy.data.worlds[0].exportObj,
-                bobjexp = bpy.data.worlds[0].exportBobj)
+        export()
         return {'FINISHED'}
 
-def main(outpath = '', yaml=True, urdf=True, smurf=True, mars=False, objexp=False, bobjexp=False):
+def export():
+    #TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
+    if bpy.data.worlds[0].relativePath:
+        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+    else:
+        outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+    yaml = bpy.data.worlds[0].exportYAML
+    urdf = bpy.data.worlds[0].exportURDF
+    smurf = bpy.data.worlds[0].exportSMURF
+    mars = bpy.data.worlds[0].exportMARSscene
+    objexp = bpy.data.worlds[0].exportObj
+    bobjexp = bpy.data.worlds[0].exportBobj
     objectlist = bpy.context.selected_objects
+
     if yaml or urdf or smurf or mars:
         robot = mtrobotdictionary.buildRobotDictionary()
         if yaml:
@@ -442,6 +443,3 @@ def main(outpath = '', yaml=True, urdf=True, smurf=True, mars=False, objexp=Fals
         if show_progress:
             wm.progress_end()
 
-#allow manual execution of script in blender
-if __name__ == '__main__':
-    main()
