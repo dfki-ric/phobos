@@ -161,13 +161,15 @@ def fuseInertiaData(inertials):
 def createInertial(obj):
     '''Creates an empty inertial object with the same world transform as the corresponding
     object and parents it to the correct link.'''
-    size = (0.05, 0.05, 0.05)
-    rotation = (0, 0, 0)
-    center = (0, 0, 0)
     if obj.MARStype == 'link':
         name = obj.name
+        parent = obj.parent
     else:
         name = obj.name.replace(obj.MARStype+'_', '')
+        parent = obj
+    size = (0.05, 0.05, 0.05)
+    rotation = parent.matrix_world.to_euler()
+    center = parent.matrix_world.to_translation()
     inertial = mtutility.createPrimitive('inertial_' + name, 'box', size,
                                    mtdefs.layerTypes["inertial"], 'inertial', center, rotation)
     inertial.MARStype = 'inertial'
@@ -176,15 +178,11 @@ def createInertial(obj):
     bpy.context.scene.objects.active = inertial
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj.select = True
-    if obj.MARStype == 'link':
-        bpy.context.scene.objects.active = obj
-        #TODO: sync masses (invoke operator?)
-        #TODO: set inertia (invoke operator?)
-    else:
-        bpy.context.scene.objects.active = obj.parent
-        #TODO: invoke setmass operator if mass not present
-    inertial.matrix_world = obj.matrix_world
+    bpy.context.scene.objects.active = parent
     bpy.ops.object.parent_set()
+    #TODO: sync masses (invoke operator?)
+    #TODO: set inertia (invoke operator?)
+    #TODO: invoke setmass operator if mass not present
     return inertial
 
 
