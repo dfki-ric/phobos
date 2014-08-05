@@ -505,10 +505,10 @@ class CreateInertialOperator(Operator):
                 description = 'use link child objects'
                 )
 
-    fuse_link_inertials = BoolProperty(
-                name = 'fuse_link_inertials',
+    auto_compute = BoolProperty(
+                name = 'auto_compute',
                 default = False,
-                description = 'fuse inertials for links'
+                description = 'auto-compute inertia'
                 )
 
     def execute(self, context):
@@ -521,26 +521,25 @@ class CreateInertialOperator(Operator):
                 viscols.add(obj)
         if self.include_children:
             for link in links:
-                viscols.add(mtinertia.getInertiaRelevantObjects(link))
-        for link in links:
-            if self.fuse_link_inertials:
-                pass
-            #for link in links:
-            #    inertial = mtinertia.createInertial(link)
-            #    mass, com, inertia = mtinertia.fuseInertiaData(mtinertia.getInertiaRelevantObjects(link))
-            #    com_translate = mathutils.Matrix.Translation(com)
-            #    inertial.matrix_local += com_translate
-            #    inertial['mass'] = mass
-            #    inertial['inertia'] = ' '.join()[mtinertia.inertiaMatrixToList(inertia)]
-            # TODO: remove viscols of the processed links from viscols list
-            else:
-                inertial = mtinertia.createInertial(link)
-
-        #in any case, process whatever visual and collision objects remain
+                viscols.update(mtinertia.getInertiaRelevantObjects(link)) #union?
         for obj in viscols:
             inertial = mtinertia.createInertial(obj)
             if 'mass' in obj:
                 inertial['mass'] = obj['mass']
+                if self.auto_compute:
+                    geometry = mtrobotdictionary.deriveGeometry(obj)
+                    inertial['inertia'] = mtinertia.calculateInertia(inertial['mass'], geometry)
+        for link in links:
+            if self.auto_compute:
+                inertial = mtinertia.createInertial(link)
+                mass, com, inertia = mtinertia.fuseInertiaData(mtutility.getImmediateChildren(link, ['inertial']))
+                if mass and com and inertia:
+                    com_translate = mathutils.Matrix.Translation(com)
+                    inertial.matrix_local += com_translate
+                    inertial['mass'] = mass
+                    inertial['inertia'] = ' '.join([str(a) for a in mtinertia.inertiaMatrixToList(inertia)])
+            else:
+                inertial = mtinertia.createInertial(link)
         return {'FINISHED'}
 
 

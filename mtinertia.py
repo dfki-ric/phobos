@@ -66,7 +66,7 @@ def calculateBoxInertia(mass, size):
     iyy = i*(size[0]**2 + size[2]**2)
     iyz = 0
     izz = i*(size[0]**2 + size[1]**2)
-    return tuple(ixx, ixy, ixz, iyy, iyz, izz)
+    return (ixx, ixy, ixz, iyy, iyz, izz,)
 
 
 def calculateCylinderInertia(mass, r, h):
@@ -78,7 +78,7 @@ def calculateCylinderInertia(mass, r, h):
     iyy = i
     iyz = 0
     izz = 0.5 * mass * r**2
-    return tuple(ixx, ixy, ixz, iyy, iyz, izz)
+    return (ixx, ixy, ixz, iyy, iyz, izz,)
 
 
 def calculateSphereInertia(mass, r):
@@ -90,7 +90,7 @@ def calculateSphereInertia(mass, r):
     iyy = i
     iyz = 0
     izz = i
-    return tuple(ixx, ixy, ixz, iyy, iyz, izz)
+    return (ixx, ixy, ixz, iyy, iyz, izz,)
 
 
 def calculateEllipsoidInertia(mass, size):
@@ -102,7 +102,7 @@ def calculateEllipsoidInertia(mass, size):
     iyy = i*(size[0]**2 + size[2]**2)
     iyz = 0
     izz = i*(size[0]**2 + size[1]**2)
-    return tuple(ixx, ixy, ixz, iyy, iyz, izz)
+    return (ixx, ixy, ixz, iyy, iyz, izz,)
 
 
 def inertiaListToMatrix(il):
@@ -116,7 +116,7 @@ def inertiaListToMatrix(il):
 def inertiaMatrixToList(im):
     '''Takes a full 3x3 inertia tensor and returns a tuple representing the
     upper diagonal.'''
-    return tuple(im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2],[2])
+    return (im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2][2],)
 
 
 def getInertiaRelevantObjects(link):
@@ -144,6 +144,7 @@ def fuseInertiaData(inertials):
     *inertia*: mathutils:Matrix(3)'''
     objects = []
     for o in inertials:
+        objdict = None
         try:
             objdict = {'name': o.name,
                        'mass': o['mass'],
@@ -152,10 +153,13 @@ def fuseInertiaData(inertials):
                        }
         except KeyError:
             print('Inertial object ' + o.name + ' is missing data.')
-        objects.append(objdict)
-
-    mass, com, inertia = compound_inertia_analysis_3x3(objects)
-    return mass, com, inertia
+        if objdict:
+            objects.append(objdict)
+    if len(objects) > 0:
+        mass, com, inertia = compound_inertia_analysis_3x3(objects)
+        return mass, com, inertia
+    else:
+        return None, None, None
 
 
 def createInertial(obj):
@@ -163,10 +167,10 @@ def createInertial(obj):
     object and parents it to the correct link.'''
     if obj.MARStype == 'link':
         name = obj.name
-        parent = obj.parent
+        parent = obj
     else:
         name = obj.name.replace(obj.MARStype+'_', '')
-        parent = obj
+        parent = obj.parent
     size = (0.05, 0.05, 0.05)
     rotation = parent.matrix_world.to_euler()
     center = parent.matrix_world.to_translation()
@@ -199,7 +203,7 @@ def combine_cog_3x3(objects) :
     combined_com = mathutils.Vector((0.0,)*3)
     combined_mass = 0
     for obj in objects:
-        combined_com = combined_com + obj.matrix_local.to_translation() * obj['mass']
+        combined_com = combined_com + obj['com'] * obj['mass']
         combined_mass = obj['mass']
     combined_com = combined_com / combined_mass
     return (combined_mass, combined_com)
@@ -223,8 +227,7 @@ def _shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0
     '''
     # diff_vec
     c               = cog - ref_point
-    c_outer         = mtutility.outerProduct(c)
-
+    c_outer         = mtutility.outerProduct(c, c)
     inertia_ref    = inertia_cog + mass * (c.dot(c) * mathutils.Matrix.Identity(3) - c_outer)
 
     return inertia_ref, c, c_outer
@@ -274,17 +277,22 @@ def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.
 #     return rotated_inertia
 
 
-def _compound_inertia_analysis_3x3(masses, cogs, inertias):
+def _compound_inertia_analysis_3x3(objects):
     '''
     '''
-    total_mass, common_cog = combine_cog_3x3(masses, cogs)
+    total_mass, common_cog = combine_cog_3x3(objects)
 
     shifted_inertias = list()
-    for mass_i, cog_i, inert_i in zip(masses, cogs, inertias):
-        inert_i_at_common_cog = shift_cog_inertia_3x3(mass_i, cog_i, inert_i, common_cog)
+    for obj in objects:
+        inert_i_at_common_cog = shift_cog_inertia_3x3(obj['mass'], obj['com'], inertiaListToMatrix(obj['inertia']), common_cog)
         shifted_inertias.append(inert_i_at_common_cog)
 
-    total_inertia_at_common_cog = sum(shifted_inertias)
+    print('###########\n', shifted_inertias)
+
+    total_inertia_at_common_cog = mathutils.Matrix.Identity(3)
+    total_inertia_at_common_cog.zero()
+    for inertia in shifted_inertias:
+        total_inertia_at_common_cog = total_inertia_at_common_cog + inertia
 
     return total_mass, common_cog, total_inertia_at_common_cog
 
@@ -294,11 +302,11 @@ def compound_inertia_analysis_3x3(objects):
     Computes total mass, common center of mass and inertia matrix at CCOM
     '''
 
-    masses          = [o['mass'] for o in objects]      # float
-    cogs            = [o['com'] for o in objects]      # origin vector of collision object
-    inertias        = [o['inertia'] for o in objects]   # 3x3 inertia matrix of collision object
+    #masses          = [o['mass'] for o in objects]      # float
+    #cogs            = [o['com'] for o in objects]      # origin vector of collision object
+    #inertias        = [o['inertia'] for o in objects]   # 3x3 inertia matrix of collision object
 
-    total_mass, common_cog, total_inertia_at_common_cog = _compound_inertia_analysis_3x3(masses, cogs, inertias)
+    total_mass, common_cog, total_inertia_at_common_cog = _compound_inertia_analysis_3x3(objects)
 
     return total_mass, common_cog, total_inertia_at_common_cog
 
