@@ -50,8 +50,9 @@ def register():
                                           description = "number of decimal places to export",
                                           default = 6)
     bpy.types.World.relativePath = BoolProperty(name='relative path', default=True)
-    bpy.types.World.exportBobj = BoolProperty(name = "exportBobj", update=updateExportOptions)
-    bpy.types.World.exportObj = BoolProperty(name = "exportObj", update=updateExportOptions)
+    bpy.types.World.useBobj = BoolProperty(name = "useBobj", update=updateExportOptions)
+    bpy.types.World.useObj = BoolProperty(name = "useObj", update=updateExportOptions)
+    bpy.types.World.exportMesh = BoolProperty(name = "exportMesh", update=updateExportOptions)
     bpy.types.World.exportMARSscene = BoolProperty(name = "exportMARSscene", update=updateExportOptions)
     bpy.types.World.exportSMURF = BoolProperty(name = "exportSMURF", default=True, update=updateExportOptions)
     bpy.types.World.exportURDF = BoolProperty(name = "exportURDF", default=True, update=updateExportOptions)
@@ -176,7 +177,7 @@ def showMotorTypes(self, context):
 class MARSToolPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_PT_MARS"
-    bl_label = "MARStools panel for editing a model"
+    bl_label = "MARStools: Model editing"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -222,7 +223,7 @@ class MARSToolPanel(bpy.types.Panel):
 class MARSToolModelPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_MODEL_PT_MARS"
-    bl_label = "MARStools panel for Objects"
+    bl_label = "MARStools: Object editing"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -247,7 +248,7 @@ class MARSToolModelPanel(bpy.types.Panel):
 
         #Mass Menu
         layout.separator()
-        layout.label(text = "Masses", icon = 'PHYSICS')
+        layout.label(text = "Masses & Inertia", icon = 'PHYSICS')
         minlayout = layout.split()
         mc1 = minlayout.column(align = True)
         mc1.operator('object.mt_calculate_mass', text = 'Show Mass')
@@ -260,7 +261,7 @@ class MARSToolModelPanel(bpy.types.Panel):
 class MARSToolSenConPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_SENCON_PT_MARS"
-    bl_label = "MARStools panel for Sensors & Controllers"
+    bl_label = "MARStools: Sensors & Controllers"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -291,7 +292,7 @@ class MARSToolSenConPanel(bpy.types.Panel):
 class MARSToolVisPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_VIS_PT_MARS"
-    bl_label = "MARStools panel for Visibility"
+    bl_label = "MARStools: Visibility"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -316,7 +317,7 @@ class MARSToolVisPanel(bpy.types.Panel):
 class MARSToolExportPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
     bl_idname = "TOOLS_ZEXPORT_PT_MARS"
-    bl_label = "MARStools panel for Exporting"
+    bl_label = "MARStools: Export & Import"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -324,20 +325,38 @@ class MARSToolExportPanel(bpy.types.Panel):
         self.layout.label(icon = 'SMOOTH')
 
     def draw(self, context):
-        group_export = self.layout
+        layout = self.layout
+
         #export robot model options
-        group_export.prop(bpy.data.worlds[0], "path")
-        group_export.prop(bpy.data.worlds[0], "decimalPlaces")
-        group_export.prop(bpy.data.worlds[0], "relativePath")
-        #group_export.prop(bpy.data.worlds[0], "filename")
-        group_export.prop(bpy.data.worlds[0], "exportBobj", text = "export mesh as .bobj")
-        group_export.prop(bpy.data.worlds[0], "exportObj", text = "export mesh as .obj")
-        group_export.prop(bpy.data.worlds[0], "exportMARSscene", text = "export robot as MARS scene")
-        group_export.prop(bpy.data.worlds[0], "exportSMURF", text = "export robot as SMURF")
-        group_export.prop(bpy.data.worlds[0], "exportURDF", text = "export robot as URDF")
-        group_export.prop(bpy.data.worlds[0], "exportYAML", text = "export robot data as YAML dump")
-        group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
-        group_export.operator("obj.import_robot_model", text = "Import Robot Model", icon = "COPYDOWN")
+        self.layout.label(text = "General")
+        self.layout.prop(bpy.data.worlds[0], "path")
+        ginlayout = self.layout.split()
+        g1 = ginlayout.column(align = True)
+        g1.prop(bpy.data.worlds[0], "relativePath")
+        g2 = ginlayout.column(align = True)
+        g2.prop(bpy.data.worlds[0], "decimalPlaces")
+
+        layout.separator()
+
+        inlayout = self.layout.split()
+        c1 = inlayout.column(align = True)
+        c1.label(text = "Mesh export")
+        c1.prop(bpy.data.worlds[0], "exportMesh", text = "export meshes")
+        c1.prop(bpy.data.worlds[0], "useBobj", text = "use .bobj format")
+        c1.prop(bpy.data.worlds[0], "useObj", text = "use .obj format")
+        c1.label(text = ".obj is used" if not (bpy.data.worlds[0].useBobj and not bpy.data.worlds[0].useObj) else '.bobj is used')
+        c2 = inlayout.column(align = True)
+        c2.label(text = "Robot data export")
+        c2.prop(bpy.data.worlds[0], "exportMARSscene", text = "as MARS scene")
+        c2.prop(bpy.data.worlds[0], "exportSMURF", text = "as SMURF")
+        c2.prop(bpy.data.worlds[0], "exportURDF", text = "as URDF")
+        c2.prop(bpy.data.worlds[0], "exportYAML", text = "as YAML dump")
+
+        layout.separator()
+
+        layout.label(text = "Export/Import")
+        layout.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
+        layout.operator("obj.import_robot_model", text = "Import Robot Model", icon = "COPYDOWN")
 
 
 class MARSObjectPanel(bpy.types.Panel):

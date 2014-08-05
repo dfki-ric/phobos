@@ -413,8 +413,9 @@ def export():
     urdf = bpy.data.worlds[0].exportURDF
     smurf = bpy.data.worlds[0].exportSMURF
     mars = bpy.data.worlds[0].exportMARSscene
-    objexp = bpy.data.worlds[0].exportObj
-    bobjexp = bpy.data.worlds[0].exportBobj
+    meshexp = bpy.data.worlds[0].exportMesh
+    objexp = bpy.data.worlds[0].useObj
+    bobjexp = bpy.data.worlds[0].useBobj
     objectlist = bpy.context.selected_objects
 
     if yaml or urdf or smurf or mars:
@@ -428,7 +429,7 @@ def export():
         elif urdf:
             exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
     selectObjects(objectlist, True)
-    if objexp or bobjexp:
+    if meshexp:
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269;
         if show_progress:
             wm = bpy.context.window_manager

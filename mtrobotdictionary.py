@@ -130,7 +130,7 @@ def deriveGeometry(obj):
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
             filename = obj['filename'] if 'filename' in obj else obj.name.replace('/','_')
-            geometry['filename'] = filename + (".bobj" if bpy.context.scene.world.exportBobj else ".obj")
+            geometry['filename'] = filename + ('.obj' if not (bpy.data.worlds[0].useBobj and not bpy.data.worlds[0].useObj) else '.bobj')
             geometry['scale'] = list(obj.scale)
             geometry['size'] = list(obj.dimensions) #this is needed to calculate an approximate inertia
         return geometry
