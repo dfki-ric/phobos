@@ -181,9 +181,11 @@ def createInertial(obj):
     inertial.select = True
     bpy.context.scene.objects.active = inertial
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    obj.select = True
+    inertial.select = True
     bpy.context.scene.objects.active = parent
     bpy.ops.object.parent_set()
+    inertial.parent_type = obj.parent_type
+    inertial.parent_bone = obj.parent_bone
     #TODO: sync masses (invoke operator?)
     #TODO: set inertia (invoke operator?)
     #TODO: invoke setmass operator if mass not present
