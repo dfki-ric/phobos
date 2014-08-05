@@ -29,7 +29,6 @@ def register():
 
 
 def collectMaterials(objectlist):
-    print('\n\nCollecting materials...')
     materials = {}
     for obj in objectlist:
         if obj.MARStype == 'visual' and obj.data.materials:
@@ -55,10 +54,8 @@ def deriveMaterial(mat):
         material['transparency'] = 1.0-mat.alpha
     try:
         material['texturename'] = mat.texture_slots[0].texture.image.name # grab the first texture
-    except KeyError:
-        print('Material ' + mat.name + ' has no property texturename.')
-    except AttributeError:
-        print('Texture in material ' + mat.name + ' not specified with image data.')
+    except (KeyError, AttributeError):
+        print('None or incomplete texture data for material ' + mat.name + '.')
     return material
 
 
@@ -213,7 +210,7 @@ def cleanObjectProperties(props):
 
 
 def deriveDictEntry(obj):
-    print("MARStools: Deriving dictionary entry for", obj.MARStype + ': ' + obj.name, )
+    print(obj.name, end=', ')
     props = None
     parent = None
     try:
@@ -294,9 +291,9 @@ def buildRobotDictionary():
             robot['modelname'] = 'unnamed_robot'
 
     # digest all the links to derive link and joint information
+    print('\nParsing links, joints and motors...')
     for obj in bpy.context.selected_objects:
         if obj.MARStype == 'link':
-            print('Parsing', obj.MARStype, obj.name, '...')
             link, joint, motor = deriveKinematics(obj)
             robot['links'][obj.name] = link
             if joint: #joint can be None if link is a root
@@ -306,6 +303,7 @@ def buildRobotDictionary():
             obj.select = False
 
     # add inertial information to link
+    print('\n\nParsing inertials...')
     for l in robot['links']:
         link = bpy.data.objects[l]
         inertials = getImmediateChildren(link, 'inertial')
@@ -328,6 +326,7 @@ def buildRobotDictionary():
                 i.select = False
 
     # complete link information by parsing visuals and collision objects
+    print('\n\nParsing visual and collision objects...')
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['visual', 'collision']:
             props, parent = deriveDictEntry(obj)
@@ -335,13 +334,14 @@ def buildRobotDictionary():
             obj.select = False
 
     # parse sensors and controllers
+    print('\n\nParsing sensors and controllers...')
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['sensor', 'controller']:
-            print('Parsing', obj.MARStype, obj.name, '...')
             robot[obj.MARStype+'s'][obj.name] = deriveDictEntry(obj)
             obj.select = False
 
     # parse materials
+    print('\n\nParsing materials...')
     robot['materials'] = collectMaterials(objectlist)
     for obj in objectlist:
         if obj.MARStype == 'visual' and len(obj.data.materials) > 0:
@@ -351,10 +351,12 @@ def buildRobotDictionary():
             robot['links'][obj.parent.name]['visual'][obj.name]['material'] = mat.name
 
     # gather information on groups of objects
+    print('\n\nParsing groups...')
     for group in bpy.data.groups: #TODO: get rid of the "data" part
         robot['groups'][group.name] = deriveGroupEntry(group)
 
     # gather information on chains of objects
+    print('\n\nParsing chains...')
     chains = []
     for obj in bpy.data.objects:
         if obj.MARStype == 'link' and 'endChain' in obj:
@@ -363,6 +365,7 @@ def buildRobotDictionary():
         robot['chains'][chain['name']] = chain
 
     #shorten numbers in dictionary to n decimalPlaces and return it
+    print('\n\nRounding numbers...')
     epsilon = 10**(-bpy.data.worlds[0].decimalPlaces) #TODO: implement this separately
     return epsilonToZero(robot, epsilon, bpy.data.worlds[0].decimalPlaces)
 

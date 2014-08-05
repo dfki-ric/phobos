@@ -292,7 +292,7 @@ def exportModelToSMURF(model, path):
     infostring = ' definition SMURF file for "'+model['modelname']+'", '+model["date"]+"\n\n"
 
     #write model information
-    print('Writing SMURF information to...\n'+smurf_filename)
+    print('Writing SMURF information to', smurf_filename)
     modeldata = {}
     modeldata["date"] = model["date"]
     modeldata["files"] = [urdf_filename] + [filenames[f] for f in filenames if export[f]]

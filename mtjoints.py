@@ -115,7 +115,6 @@ def getJointConstraints(joint):
                         limits = (c.min_x, c.max_x, c.min_y, c.max_y)
                 else:
                     raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
-        print(axis, limits)
         return axis, limits
     else:
         return None, None
