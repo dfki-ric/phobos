@@ -369,6 +369,38 @@ class BatchEditPropertyOperator(Operator):
         return ob is not None and ob.mode == 'OBJECT'
 
 
+class CopyCustomProperties(Operator):
+    """Copy Custom Properties Operator"""
+    bl_idname = "object.mt_copy_props"
+    bl_label = "Edit custom property of selected object(s)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    empty_properties = BoolProperty(
+        name = 'empty',
+        default = False,
+        description = "empty properties?")
+
+    def execute(self, context):
+        slaves = context.selected_objects
+        master = context.active_object
+        print(slaves)
+        slaves.remove(master)
+        print(slaves)
+        props = mtrobotdictionary.cleanObjectProperties(dict(master.items()))
+        for obj in slaves:
+            if self.empty_properties:
+                for key in obj.keys():
+                    del(obj[key])
+            for key in props.keys():
+                obj[key] = props[key]
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob is not None and ob.mode == 'OBJECT'
+
+
 class SetGeometryType(Operator):
     """Set Geometry Type Operator"""
     bl_idname = "object.mt_set_geometry_type"

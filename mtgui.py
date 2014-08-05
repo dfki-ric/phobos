@@ -245,6 +245,7 @@ class MARSToolModelPanel(bpy.types.Panel):
         c2.operator('object.attach_motor', text = "Attach motor")
         c2.operator('object.mt_smoothen_surface', text = "Smoothen Surface")
         c2.operator('object.mt_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
+        c2.operator('object.mt_copy_props', text = 'Copy Custom Property', icon = 'GREASEPENCIL')
 
         #Mass Menu
         layout.separator()
