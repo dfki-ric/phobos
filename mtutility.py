@@ -132,9 +132,8 @@ def createPrimitive(pname, ptype, psize, player = 0, pmaterial = "None", plocati
         n_layer = int(player)
     except ValueError:
         n_layer = mtdefs.layerTypes[player]
-    if bpy.data.worlds[0]: #TODO: complete this
-        pass
     players = defLayers([n_layer])
+    bpy.context.scene.layers[n_layer] = True #the layer has to be active to prevent problems with object placement
     if ptype == "box":
         bpy.ops.mesh.primitive_cube_add(layers = players, location = plocation, rotation = protation)
         obj = bpy.context.object
@@ -145,15 +144,11 @@ def createPrimitive(pname, ptype, psize, player = 0, pmaterial = "None", plocati
         bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=psize[0], depth=psize[1], layers=players, location = plocation, rotation = protation)
     elif ptype == "cone":
         bpy.ops.mesh.primitive_cone_add(vertices=32,radius=psize[0],depth=psize[1], cap_end=True, layers=players, location=plocation, rotation = protation)
-
     obj = bpy.context.object
     obj.name = pname
     if pmaterial != 'None':
         if pmaterial in bpy.data.materials:
             obj.data.materials.append(bpy.data.materials[pmaterial])
-        else:
-            pass ##HACK: rather provide a standard material
-
     return obj
 
 
