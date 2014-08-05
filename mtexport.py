@@ -206,7 +206,7 @@ def exportModelToURDF(model, filepath):
             if 'pose' in link['inertial']:
                 output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['inertial']['pose']['translation']), l2str(link['inertial']['pose']['rotation_euler'])]))
             output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
-            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'], link['inertial']['inertia']))
+            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'], ' '.join(link['inertial']['inertia'])))
             output.append(indent*3+'</inertial>\n')
         #visual object
         if link['visual']:

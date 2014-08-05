@@ -394,10 +394,10 @@ class SetGeometryType(Operator):
         return ob is not None and ob.mode == 'OBJECT'
 
 
-class SetInertia(Operator):
-    """Set Inertia Operator"""
-    bl_idname = "object.mt_set_inertia"
-    bl_label = "Set inertia of selected object(s)"
+class EditInertia(Operator):
+    """Edit Inertia Operator"""
+    bl_idname = "object.mt_edit_inertia"
+    bl_label = "Edit inertia of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     #inertiamatrix = FloatVectorProperty (
@@ -415,12 +415,17 @@ class SetInertia(Operator):
             description = "set inertia for a link"
             )
 
+    def invoke(self, context, event):
+        if 'inertia' in context.active_object:
+            self.inertiavector = mathutils.Vector(context.active_object['inertia'])
+        return self.execute(context)
+
     def execute(self, context):
         #m = self.inertiamatrix
         #inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
         #obj['inertia'] = ' '.join(inertialist)
         for obj in context.selected_objects:
-            obj['inertia'] = ' '.join([str(i) for i in self.inertiavector])
+            obj['inertia'] = self.inertiavector#' '.join([str(i) for i in self.inertiavector])
         return {'FINISHED'}
 
     @classmethod
@@ -537,7 +542,7 @@ class CreateInertialOperator(Operator):
                     com_translate = mathutils.Matrix.Translation(com)
                     inertial.matrix_local += com_translate
                     inertial['mass'] = mass
-                    inertial['inertia'] = ' '.join([str(a) for a in mtinertia.inertiaMatrixToList(inertia)])
+                    inertial['inertia'] = mtinertia.inertiaMatrixToList(inertia)
             else:
                 inertial = mtinertia.createInertial(link)
         return {'FINISHED'}

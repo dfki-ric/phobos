@@ -254,7 +254,7 @@ class MARSToolModelPanel(bpy.types.Panel):
         mc1.operator('object.mt_set_mass', text = 'Set Mass')
         mc2 = minlayout.column(align = True)
         mc2.operator('object.mt_sync_masses', text = 'Sync Masses')
-        mc2.operator('object.mt_set_inertia', text = 'Set Inertia')
+        mc2.operator('object.mt_edit_inertia', text = 'Edit Inertia')
 
 
 class MARSToolSenConPanel(bpy.types.Panel):

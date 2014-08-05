@@ -132,7 +132,7 @@ def deriveGeometry(obj):
             filename = obj['filename'] if 'filename' in obj else obj.name.replace('/','_')
             geometry['filename'] = filename + (".bobj" if bpy.context.scene.world.exportBobj else ".obj")
             geometry['scale'] = list(obj.scale)
-            geometry['size'] = list(obj.dimensions) #this is needed to calculate an approximate inertia if collision is inertia
+            geometry['size'] = list(obj.dimensions) #this is needed to calculate an approximate inertia
         return geometry
     else:
         warnings.warn("No geometryType found for object "+obj.name+".")
@@ -142,8 +142,8 @@ def deriveGeometry(obj):
 def deriveInertial(obj):
     '''Derives a dictionary entry of an inertial object.'''
     props = initObjectProperties(obj)
-    inertia = props['inertia'].split()
-    props['inertia'] = list(map(float, inertia))
+    #inertia = props['inertia'].split()
+    #props['inertia'] = list(map(float, inertia))
     props['pose'] = deriveObjectPose(obj)
     return props, obj.parent
 
