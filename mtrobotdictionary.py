@@ -63,7 +63,7 @@ def deriveMaterial(mat):
 
 
 def deriveLink(obj):
-    props = initObjectProperties(obj)
+    props = initObjectProperties(obj, 'link')
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
     props["visual"] = {}
@@ -72,7 +72,8 @@ def deriveLink(obj):
 
 
 def deriveJoint(obj):
-    props = {'name': obj.name}
+    props = initObjectProperties(obj, 'joint')
+    props['name'] = obj.name
     props['parent'] = obj.parent.name
     props['child'] = obj.name
     props['jointType'], crot = mtjoints.deriveJointType(obj, True)
@@ -87,13 +88,7 @@ def deriveJoint(obj):
     # - dynamics
     # - mimic
     # - safety_controller
-
-    #derive motor data
-    motorprops = {'name': obj.name, 'joint': obj.name}
-    for key,value in obj.items():
-        if key.find('motor/') >= 0:
-            motorprops[key.replace('motor/', '')] = value
-    return props, motorprops
+    return props
 
 
 def deriveJointState(joint):
@@ -108,18 +103,21 @@ def deriveJointState(joint):
     return state
 
 
+def deriveMotor(obj):
+    props = initObjectProperties(obj, 'motor')
+    props['name'] = obj.name
+    props['joint'] = obj.name
+    return props#, obj.parent
+
+
 def deriveKinematics(obj):
     link = deriveLink(obj)
     joint = None
     motor = None
     if obj.parent:
-        joint, motor = deriveJoint(obj)
+        joint = deriveJoint(obj)
+        motor = deriveMotor(obj)
     return link, joint, motor
-
-
-#def deriveMotor(obj):
-#    props = initObjectProperties(obj)
-#    return props, obj.parent
 
 
 def deriveGeometry(obj):
@@ -191,10 +189,15 @@ def deriveController(obj):
     return props
 
 
-def initObjectProperties(obj):
+def initObjectProperties(obj, marstype = None):
     props = {}
-    for key in obj.keys():
-        props[key] = obj[key]
+    if not marstype:
+        for key, value in obj.items():
+            props[key] = value
+    else:
+        for key, value in obj.items():
+            if key.find(marstype+'/') >= 0:
+                props[key.replace(marstype+'/', '')] = value
     props['name'] = obj.name
     return props
 
