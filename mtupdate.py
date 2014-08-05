@@ -59,7 +59,7 @@ def updateObject(obj, fix = False):
         elif len(inertials) == 1:
             pass
         # checking whether masses add up if we have an inertial by now
-        mass = mtutility.calculateMassOfLink(obj)
+        mass = mtutility.calculateSum(mtutility.getImmediateChildren(obj), 'mass')
         if not mass > 0:
             notifications.append("Warning, link '" + obj.name + "' has no mass.")
         for inertial in inertials:
