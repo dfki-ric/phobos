@@ -457,7 +457,8 @@ class EditInertia(Operator):
         #inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
         #obj['inertia'] = ' '.join(inertialist)
         for obj in context.selected_objects:
-            obj['inertia'] = self.inertiavector#' '.join([str(i) for i in self.inertiavector])
+            if obj.MARStype == 'inertial':
+                obj['inertia'] = self.inertiavector#' '.join([str(i) for i in self.inertiavector])
         return {'FINISHED'}
 
     @classmethod
