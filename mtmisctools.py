@@ -229,6 +229,10 @@ class SelectObjectsByMARSType(Operator):
         mtutility.selectObjects(objlist, True)
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        return context.mode == 'OBJECT'
+
 
 class SelectObjectsByName(Operator):
     """SelectObjectsByName"""
