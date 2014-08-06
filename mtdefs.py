@@ -40,6 +40,7 @@ motortypes = (('servo',)*3,
 geometrytypes = (('box',)*3,
             ('cylinder',)*3,
             ('sphere',)*3,
+            ('capsule',)*3,
             ('mesh',)*3)
 
 type_properties = {

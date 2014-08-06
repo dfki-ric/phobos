@@ -52,48 +52,67 @@ class CreateCollisionObjects(Operator):
         if visuals == []:
             bpy.ops.error.message('INVOKE_DEFAULT', type="CreateCollisions Error", message="Not enough bodies selected.")
             return{'CANCELLED'}
-        if not self.property_colltype == 'mesh': #TODO: copy mesh to collision object!
-            for vis in visuals:
-                nameparts = vis.name.split('_')
-                if nameparts[0] == 'visual':
-                    nameparts[0] = 'collision'
-                collname = '_'.join(nameparts)
-                bBox = vis.bound_box
-                center = mtutility.calcBoundingBoxCenter(bBox)
-                size = list(vis.dimensions)
-                rotation = mathutils.Matrix.Identity(4)
-                if self.property_colltype == 'cylinder':
-                    axes = ('X', 'Y', 'Z')
-                    long_side = axes[size.index(max(size))]
-                    #xyequal = (size[0] - size[1])
-                    height = max(size)
-                    radii = [s for s in size if s is not height]
-                    radius = max(radii)/2 if radii is not [] else height/2
-                    size = (radius, height)
-                    if long_side == 'X':
-                        rotation = mathutils.Matrix.Rotation(math.pi/2, 4, 'Y')
-                    elif long_side == 'Y':
-                        rotation = mathutils.Matrix.Rotation(math.pi/2, 4, 'X')
-                elif self.property_colltype == 'sphere':
-                    size = max(size)/2
-                rotation = (vis.matrix_world*rotation).to_euler()
-                center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion()*center
-                materialname = vis.data.materials[0].name if len(vis.data.materials>0) else "None"
+        for vis in visuals:
+            nameparts = vis.name.split('_')
+            if nameparts[0] == 'visual':
+                nameparts[0] = 'collision'
+            collname = '_'.join(nameparts)
+            materialname = vis.data.materials[0].name if len(vis.data.materials) > 0 else "None"
+            bBox = vis.bound_box
+            center = mtutility.calcBoundingBoxCenter(bBox)
+            rotation = mathutils.Matrix.Identity(4)
+            size = list(vis.dimensions)
+            if self.property_colltype in ['cylinder', 'capsule']:
+                axes = ('X', 'Y', 'Z')
+                long_side = axes[size.index(max(size))]
+                #xyequal = (size[0] - size[1])
+                height = max(size)
+                radii = [s for s in size if s != height]
+                radius = max(radii)/2 if radii != [] else height/2
+                size = (radius, height)
+                if long_side == 'X':
+                    rotation = mathutils.Matrix.Rotation(math.pi/2, 4, 'Y')
+                elif long_side == 'Y':
+                    rotation = mathutils.Matrix.Rotation(math.pi/2, 4, 'X')
+                #FIXME: apply rotation for moved cylinder object?
+            elif self.property_colltype == 'sphere':
+                size = max(size)/2
+            rotation_euler = (vis.matrix_world*rotation).to_euler()
+            center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion()*center
+            if self.property_colltype != 'capsule':
                 ob = mtutility.createPrimitive(collname, self.property_colltype, size,
                                                mtdefs.layerTypes["collision"], materialname, center,
-                                               rotation)
-                #TODO: apply rotation for moved cylinder object?
-                ob.MARStype = "collision"
-                ob["geometryType"] = self.property_colltype
-                if vis.parent:
-                    ob.select = True
-                    bpy.ops.object.transform_apply(scale=True)
-                    vis.parent.select = True
-                    bpy.context.scene.objects.active = vis.parent
-                    bpy.ops.object.parent_set()
-        else: #if self.property_colltype == 'mesh'
-            pass
-            #TODO: copy mesh!!
+                                               rotation_euler)
+            elif self.property_colltype == 'capsule':
+                height = max(height-2*radius, 0.001) #prevent height from turning negative
+                size = (radius, height)
+                zshift = height/2
+                ob = mtutility.createPrimitive(collname, 'cylinder', size,
+                               mtdefs.layerTypes["collision"], materialname, center,
+                               rotation_euler)
+                sph1 = mtutility.createPrimitive('tmpsph1', 'sphere', radius,
+                               mtdefs.layerTypes["collision"], materialname, center+rotation*mathutils.Vector((0,0,zshift)),
+                               rotation_euler)
+                sph2 = mtutility.createPrimitive('tmpsph2', 'sphere', radius,
+                               mtdefs.layerTypes["collision"], materialname, center-rotation*mathutils.Vector((0,0,zshift)),
+                               rotation_euler)
+                mtutility.selectObjects([ob, sph1, sph2], True, 0)
+                bpy.ops.object.join()
+                ob['height'] = height
+                ob['radius'] = radius
+            elif self.property_colltype == 'mesh':
+                pass
+                #TODO: copy mesh!!
+            ob.MARStype = "collision"
+            ob["geometryType"] = self.property_colltype
+            if vis.parent:
+                ob.select = True
+                bpy.ops.object.transform_apply(scale=True)
+                vis.parent.select = True
+                bpy.context.scene.objects.active = vis.parent
+                bpy.ops.object.parent_set()
+                ob.parent_type = vis.parent_type
+                ob.parent_bone = vis.parent_bone
         return{'FINISHED'}
 
 
