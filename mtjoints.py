@@ -64,9 +64,9 @@ def deriveJointType(joint, adjust = False):
             jtype = 'planar'
     if 'jointType' in joint and joint['jointType'] != jtype:
         warnings.warn("Type of joint "+joint.name+" does not match constraints!", Warning) #TODO: not sure if that is correct like that
-    if(adjust):
-        joint['jointType'] = jtype
-        print("Changed type of joint'" + joint.name, 'to', jtype + "'.")
+        if(adjust):
+            joint['jointType'] = jtype
+            print("Changed type of joint'" + joint.name, 'to', jtype + "'.")
     return jtype, crot
 
 def getJointConstraints(joint):
