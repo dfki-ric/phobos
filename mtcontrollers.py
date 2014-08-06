@@ -19,15 +19,61 @@ import marstools.mtmaterials as mtmaterials
 import marstools.mtdefs as mtdefs
 import marstools.mtutility as mtutility
 
+
 def register():
     print("Registering mtcontrollers...")
+
 
 def unregister():
     print("Unregistering mtcontrollers...")
 
+
 class AddControllerOperator(Operator):
     """AddControllerOperator"""
     bl_idname = "object.mt_add_controller"
+    bl_label = "Add a node-dependent controller"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    controller_scale = FloatProperty(
+        name = "controller scale",
+        default = 0.05,
+        description = "scale of the controller visualization")
+
+    controller_name = StringProperty(
+        name = "controller name",
+        default = 'controller',
+        description = "name of the controller")
+
+    def execute(self, context):
+        location = bpy.context.scene.cursor_location
+        objects = []
+        controllers = []
+        for obj in bpy.context.selected_objects:
+            if obj.MARStype == "controller":
+                controllers.append(obj)
+            else:
+                objects.append(obj)
+        if len(controllers) <= 0:
+            mtutility.createPrimitive("controller", "sphere", self.controller_scale, mtdefs.layerTypes["sensor"], "controller", location)
+            bpy.context.scene.objects.active.MARStype = "controller"
+            bpy.context.scene.objects.active.name = "controller"
+            controllers.append(bpy.context.scene.objects.active)
+        #empty index list so enable update of controller
+        for ctrl in controllers:
+            sensors = [obj.name for obj in objects if obj.MARStype == 'sensor']
+            motors = [obj.name for obj in objects if obj.MARStype == 'motor']
+            ctrl['sensors'] = sorted(sensors, key=str.lower)
+            ctrl['motors'] = sorted(motors, key=str.lower)
+        print("Added joints to (new) controller(s).")
+        #for prop in mtdefs.controllerProperties[self.controller_type]:
+        #    for ctrl in controllers:
+        #        ctrl[prop] = mtdefs.controllerProperties[prop]
+        return {'FINISHED'}
+
+
+class AddLegacyControllerOperator(Operator):
+    """AddControllerOperator"""
+    bl_idname = "object.mt_add_legacy_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
 
