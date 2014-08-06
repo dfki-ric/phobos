@@ -72,12 +72,14 @@ def deriveJointType(joint, adjust = False):
 def getJointConstraints(joint):
     ''' Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'.'''
     jt, crot = deriveJointType(joint, adjust = True)
+    axis = None
+    limits = None
     if jt not in ['floating', 'fixed']:
         if jt in ['revolute', 'continuous'] and crot:
             c = getJointConstraint(joint, 'LIMIT_ROTATION')
             #axis = (joint.matrix_local * -bpy.data.armatures[joint.name].bones[0].vector).normalized() #we cannot use joint for both as the first is a Blender 'Object', the second an 'Armature'
             #axis = (joint.matrix_local * -joint.data.bones[0].vector).normalized() #joint.data accesses the armature, thus the armature's name is not important anymore
-            axis = joint.data.bones[0].vector.normalized() # this is vector along the axis of the bone in object space
+            axis = joint.data.bones[0].vector.normalized() #vector along axis of bone (Y axis of pose bone) in object space
             if crot[0]:
                 limits = (c.min_x, c.max_x)
             elif crot[1]:
@@ -88,14 +90,13 @@ def getJointConstraints(joint):
             c = getJointConstraint(joint, 'LIMIT_LOCATION')
             if not c:
                 raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
-            axis = None
-            limits = None
             freeloc = [c.use_min_x and c.use_max_x and c.min_x == c.max_x,
                     c.use_min_y and c.use_max_y and c.min_y == c.max_y,
                     c.use_min_z and c.use_max_z and c.min_z == c.max_z]
             if jt == 'prismatic':
                 if sum(freeloc) == 2:
-                    axis = mathutils.Vector([int(not i) for i in freeloc])
+                    #axis = mathutils.Vector([int(not i) for i in freeloc])
+                    axis = joint.data.bones[0].vector.normalized() #vector along axis of bone (Y axis of pose bone) in obect space
                     if freeloc[0]:
                         limits = (c.min_x, c.max_x)
                     elif freeloc[1]:
@@ -115,9 +116,7 @@ def getJointConstraints(joint):
                         limits = (c.min_x, c.max_x, c.min_y, c.max_y)
                 else:
                     raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
-        return axis, limits
-    else:
-        return None, None
+    return axis, limits
 
 def getJointConstraint(joint, ctype):
     con = None
@@ -169,7 +168,7 @@ class DefineJointConstraintsOperator(Operator):
                     cloc.use_max_y = True
                     cloc.use_max_z = True
                     cloc.owner_space = 'LOCAL'
-                    # fix rotation x, z and limit z
+                    # fix rotation x, z and limit y
                     bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
                     crot = getJointConstraint(link, 'LIMIT_ROTATION')
                     crot.use_limit_x = True
@@ -193,18 +192,18 @@ class DefineJointConstraintsOperator(Operator):
                     cloc.use_max_y = True
                     cloc.use_max_z = True
                     cloc.owner_space = 'LOCAL'
-                    # fix rotation x, y
+                    # fix rotation x, z
                     bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
                     crot = getJointConstraint(link, 'LIMIT_ROTATION')
                     crot.use_limit_x = True
                     crot.min_x = 0
                     crot.max_x = 0
-                    crot.use_limit_y = True
-                    crot.min_y = 0
-                    crot.max_y = 0
+                    crot.use_limit_z = True
+                    crot.min_z = 0
+                    crot.max_z = 0
                     crot.owner_space = 'LOCAL'
                 elif self.joint_type == 'prismatic':
-                    # fix location except for x axis
+                    # fix location except for y axis
                     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
                     cloc = getJointConstraint(link, 'LIMIT_LOCATION')
                     cloc.use_min_x = True
@@ -213,8 +212,12 @@ class DefineJointConstraintsOperator(Operator):
                     cloc.use_max_x = True
                     cloc.use_max_y = True
                     cloc.use_max_z = True
-                    cloc.min_x = self.lower
-                    cloc.max_x = self.upper
+                    if self.lower == self.upper:
+                        cloc.use_min_y = False
+                        cloc.use_max_y = False
+                    else:
+                        cloc.min_y = self.lower
+                        cloc.max_y = self.upper
                     cloc.owner_space = 'LOCAL'
                     # fix rotation
                     bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
@@ -260,8 +263,8 @@ class DefineJointConstraintsOperator(Operator):
                     # fix location
                     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
                     cloc = getJointConstraint(link, 'LIMIT_LOCATION')
-                    cloc.use_min_z = True
-                    cloc.use_max_z = True
+                    cloc.use_min_y = True
+                    cloc.use_max_y = True
                     cloc.owner_space = 'LOCAL'
                     # fix rotation
                     bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
