@@ -331,33 +331,12 @@ def exportModelToSMURF(model, path):
             op.write("modelname: "+model['modelname']+'\n')
             op.write(yaml.dump(states))#, default_flow_style=False))
 
-    #write materials
-    if export['materials']:
-        with open(path + filenames['materials'], 'w') as op:
-            op.write('#materials'+infostring)
-            op.write(yaml.dump({'materials': list(model['materials'].values())}, default_flow_style=False))
-
-    #write sensors
-    if export['sensors']:
-        with open(path + filenames['sensors'], 'w') as op:
-            op.write('#sensors'+infostring)
-            op.write("modelname: "+model['modelname']+'\n')
-            op.write(yaml.dump(list(model['sensors'].values()), default_flow_style=False))
-
-    #write motors
-    if export['motors']:
-        with open(path + filenames['motors'], 'w') as op:
-            op.write('#motors'+infostring)
-            op.write("modelname: "+model['modelname']+'\n')
-            #op.write("motors:\n")
-            op.write(yaml.dump({'motors': list(model['motors'].values())}, default_flow_style=False))
-
-    #write controllers
-    if export['controllers']:
-        with open(path + filenames['controllers'], 'w') as op:
-            op.write('#controllers'+infostring)
-            op.write("modelname: "+model['modelname']+'\n')
-            op.write(yaml.dump(list(model['controllers'].values()), default_flow_style=False))
+    #write materials, sensors, motors & controllers
+    for data in ['materials', 'sensors', 'motors', 'controllers']:
+        if export[data]:
+            with open(path + filenames[data], 'w') as op:
+                op.write('#' + data +infostring)
+                op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
     #write simulation
     if export['simulation']:
