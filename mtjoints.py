@@ -148,6 +148,16 @@ class DefineJointConstraintsOperator(Operator):
         default = 0.0,
         description = "upper constraint of the joint")
 
+    maxeffort = FloatProperty(
+        name = "max effort (N or Nm)",
+        default = 0.0,
+        description = "maximum effort of the joint")
+
+    maxvelocity = FloatProperty(
+        name = "max velocity (m/s or rad/s",
+        default = 0.0,
+        description = "maximum velocity of the joint")
+
     def execute(self, context):
         lower = math.radians(self.lower)
         upper = math.radians(self.upper)
@@ -280,8 +290,11 @@ class DefineJointConstraintsOperator(Operator):
                     crot.max_z = 0
                     crot.owner_space = 'LOCAL'
                 else:
-                    print("Unknown joint type, aborting")
+                    print("Error: Unknown joint type")
                 link['jointType'] = self.joint_type
+                if self.joint_type != 'fixed':
+                    link['maxeffort'] = self.maxeffort
+                    link['maxvelocity'] = self.maxvelocity
         return{'FINISHED'}
 
 class AttachMotorOperator(Operator):

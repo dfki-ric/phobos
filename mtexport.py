@@ -247,7 +247,7 @@ def exportModelToURDF(model, filepath):
         if 'axis' in joint:
             output.append(indent*3+'<axis xyz="'+l2str(joint['axis'])+'"/>\n')
         if 'limits' in joint:
-            output.append(xmlline(3, 'limit', ['lower', 'upper', 'velocity', 'effort'], [str(joint['limits'][0]), str(joint['limits'][1]), 1.0, 1.0])) #TODO: effort and velocity
+            output.append(xmlline(3, 'limit', ['lower', 'upper', 'velocity', 'effort'], [str(joint['limits'][0]), str(joint['limits'][1]), joint['maxvelocity'], joint['maxeffort']]))
         output.append(indent*2+'</joint>\n\n')
     #export material information
     for m in model['materials']:
