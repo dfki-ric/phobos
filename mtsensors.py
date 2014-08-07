@@ -45,7 +45,7 @@ class AddSensorOperator(Operator):
 
     sensor_name = StringProperty(
         name = "sensor_name",
-        default = 0.05,
+        default = 'new_sensor',
         description = "name of the sensor")
 
     def execute(self, context):
