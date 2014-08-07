@@ -556,7 +556,7 @@ class CreateInertialOperator(Operator):
     def execute(self, context):
         links = []
         viscols = set()
-        for obj in bpy.context.selected_objects:
+        for obj in context.selected_objects:
             if obj.MARStype == 'link':
                 links.append(obj)
             elif obj.MARStype in ['visual', 'collision']:
@@ -577,7 +577,7 @@ class CreateInertialOperator(Operator):
                 mass, com, inertia = mtinertia.fuseInertiaData(mtutility.getImmediateChildren(link, ['inertial']))
                 if mass and com and inertia:
                     com_translate = mathutils.Matrix.Translation(com)
-                    inertial.matrix_local += com_translate
+                    inertial.matrix_local = com_translate
                     inertial['mass'] = mass
                     inertial['inertia'] = mtinertia.inertiaMatrixToList(inertia)
             else:
