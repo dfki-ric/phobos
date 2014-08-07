@@ -172,20 +172,21 @@ def createInertial(obj):
         name = obj.name.replace(obj.MARStype+'_', '')
         parent = obj.parent
     size = (0.05, 0.05, 0.05)
-    rotation = parent.matrix_world.to_euler()
-    center = parent.matrix_world.to_translation()
+    rotation = obj.matrix_world.to_euler()
+    center = obj.matrix_world.to_translation()
     inertial = mtutility.createPrimitive('inertial_' + name, 'box', size,
                                    mtdefs.layerTypes["inertial"], 'inertial', center, rotation)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     inertial.MARStype = 'inertial'
     bpy.ops.object.select_all(action="DESELECT")
-    inertial.select = True
-    bpy.context.scene.objects.active = inertial
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    inertial.select = True
-    bpy.context.scene.objects.active = parent
-    bpy.ops.object.parent_set()
-    inertial.parent_type = obj.parent_type
-    inertial.parent_bone = obj.parent_bone
+    #mtutility.selectObjects([inertial], True, 0)
+
+    mtutility.selectObjects([parent, inertial], True, 0)
+    if parent.MARStype == 'link':
+        #bpy.context.scene.objects.active = parent.pose.bones[0]
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    else:
+        bpy.ops.object.parent_set(type='OBJECT')
     #TODO: sync masses (invoke operator?)
     #TODO: set inertia (invoke operator?)
     #TODO: invoke setmass operator if mass not present
@@ -211,7 +212,7 @@ def combine_cog_3x3(objects) :
     return (combined_mass, combined_com)
 
 
-def _shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.0,)*3)) :
+def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.0,)*3)) :
     '''
     shift inertia matrix, steiner theorem / parallel axis theorem, private method
 
@@ -231,19 +232,6 @@ def _shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0
     c               = cog - ref_point
     c_outer         = mtutility.outerProduct(c, c)
     inertia_ref    = inertia_cog + mass * (c.dot(c) * mathutils.Matrix.Identity(3) - c_outer)
-
-    return inertia_ref, c, c_outer
-
-
-def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.0,)*3)):
-    '''
-    shift inertia matrix, Steiner theorem / parallel axis theorem
-
-        see SCISIC B.12 or Featherstone 2.63, but not Selig (sign swap, not COG)
-
-    shift inertia matrix, proxy to _shift_inertia_3x3
-    '''
-    inertia_ref, c, c_outer = _shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point)
 
     return inertia_ref
 
@@ -279,8 +267,9 @@ def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.
 #     return rotated_inertia
 
 
-def _compound_inertia_analysis_3x3(objects):
+def compound_inertia_analysis_3x3(objects):
     '''
+    Computes total mass, common center of mass and inertia matrix at CCOM
     '''
     total_mass, common_cog = combine_cog_3x3(objects)
 
@@ -295,20 +284,6 @@ def _compound_inertia_analysis_3x3(objects):
     total_inertia_at_common_cog.zero()
     for inertia in shifted_inertias:
         total_inertia_at_common_cog = total_inertia_at_common_cog + inertia
-
-    return total_mass, common_cog, total_inertia_at_common_cog
-
-
-def compound_inertia_analysis_3x3(objects):
-    '''
-    Computes total mass, common center of mass and inertia matrix at CCOM
-    '''
-
-    #masses          = [o['mass'] for o in objects]      # float
-    #cogs            = [o['com'] for o in objects]      # origin vector of collision object
-    #inertias        = [o['inertia'] for o in objects]   # 3x3 inertia matrix of collision object
-
-    total_mass, common_cog, total_inertia_at_common_cog = _compound_inertia_analysis_3x3(objects)
 
     return total_mass, common_cog, total_inertia_at_common_cog
 
