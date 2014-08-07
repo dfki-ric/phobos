@@ -110,9 +110,9 @@ class CreateCollisionObjects(Operator):
                 bpy.ops.object.transform_apply(scale=True)
                 vis.parent.select = True
                 bpy.context.scene.objects.active = vis.parent
-                bpy.ops.object.parent_set()
-                ob.parent_type = vis.parent_type
-                ob.parent_bone = vis.parent_bone
+                bpy.ops.object.parent_set(type='BONE_RELATIVE')
+                #ob.parent_type = vis.parent_type
+                #ob.parent_bone = vis.parent_bone
         return{'FINISHED'}
 
 
