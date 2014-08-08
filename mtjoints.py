@@ -63,7 +63,7 @@ def deriveJointType(joint, adjust = False):
         elif ncloc == 1:
             jtype = 'planar'
     if 'jointType' in joint and joint['jointType'] != jtype:
-        warnings.warn("Type of joint "+joint.name+" does not match constraints!", Warning) #TODO: not sure if that is correct like that
+        warnings.warn("Type of joint "+joint.name+" does not match constraints!", Warning) #TODO: this goes to sys.stderr, i.e. nirvana
         if(adjust):
             joint['jointType'] = jtype
             print("Changed type of joint'" + joint.name, 'to', jtype + "'.")
@@ -293,8 +293,8 @@ class DefineJointConstraintsOperator(Operator):
                     print("Error: Unknown joint type")
                 link['jointType'] = self.joint_type
                 if self.joint_type != 'fixed':
-                    link['maxeffort'] = self.maxeffort
-                    link['maxvelocity'] = self.maxvelocity
+                    link['joint/maxeffort'] = self.maxeffort
+                    link['joint/maxvelocity'] = self.maxvelocity
         return{'FINISHED'}
 
 class AttachMotorOperator(Operator):
