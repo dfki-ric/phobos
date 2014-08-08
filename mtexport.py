@@ -149,14 +149,31 @@ def exportBobj(path, obj):
     out.close()
 
 def exportObj(path, obj):
+    objname = obj.name
+    obj.name = 'tmp_export_666' #surely no one will ever name an object like so
+    tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
+    tmpobject.data = obj.data #copy the mesh here
+    outpath = os.path.join(path, objname) + '.obj'
+    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True)
     bpy.ops.object.select_all(action='DESELECT')
-    obj.select = True
-    outpath = os.path.join(path, obj.name) + '.obj'
-    world_matrix = obj.matrix_world.copy()
-    obj.matrix_world = mathutils.Matrix.Identity(4)
-    bpy.ops.export_scene.obj(filepath=outpath, axis_forward='-Z',
-                             axis_up='Y', use_selection=True, use_normals=True)
-    obj.matrix_world = world_matrix
+    tmpobject.select = True
+    bpy.ops.object.delete()
+    obj.name = objname
+
+    #This is the old implementation which did not work properly (08.08.2014)
+    #bpy.ops.object.select_all(action='DESELECT')
+    #obj.select = True
+    #outpath = os.path.join(path, obj.name) + '.obj'
+    #world_matrix = obj.matrix_world.copy()
+    ##inverse_local_rotation = obj.matrix_local.to_euler().to_matrix().inverted()
+    ##world_scale = world_matrix.to_scale() TODO: implement scale
+    ## we move the object to the world origin and revert its local rotation
+    ##print(inverse_local_rotation, mathutils.Matrix.Translation((0, 0, 0)))
+    ##obj.matrix_world = inverse_local_rotation.to_4x4() * mathutils.Matrix.Identity(4)
+    #obj.matrix_world = mathutils.Matrix.Identity(4)
+    #bpy.ops.export_scene.obj(filepath=outpath, axis_forward='-Z',
+    #                         axis_up='Y', use_selection=True, use_normals=True)
+    #obj.matrix_world = world_matrix
 
 def exportModelToYAML(model, filepath):
     print("MARStools YAML export: Writing model data to", filepath )
