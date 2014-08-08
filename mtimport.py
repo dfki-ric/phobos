@@ -153,6 +153,12 @@ class RobotModelParser():
                 for obj in bpy.data.objects:
                     if not obj.tag:
                         newgeom = obj
+                        #with obj file import, blender only turns the object, not the vertices,
+                        #leaving a rotation in the matrix_basis, which we here get rid of
+                        if filetype == 'obj':
+                            bpy.ops.object.select_all(action='DESELECT')
+                            newgeom.select = True
+                            bpy.ops.object.transform_apply(rotation=True)
                 newgeom.name = viscol['name']
             elif geomtype == 'box':
                 newgeom = createPrimitive(viscol['name'],
@@ -180,6 +186,8 @@ class RobotModelParser():
                 if 'scale' in geom:
                     newgeom.scale = geom['scale']
                 bpy.ops.object.transform_apply(scale=True)
+                newgeom['geometryType'] = geomtype
+                #TODO: which other properties remain?
             #FIXME: place empty coordinate system and return...what?
         return newgeom
 
