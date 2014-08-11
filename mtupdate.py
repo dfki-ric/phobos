@@ -79,6 +79,7 @@ def updateObject(obj, fix = False):
     elif obj.MARStype == 'visual':
         if fix:
             if not "geometryType" in obj:
+                notifications.append("Warning, visual '" + obj.name + "' has no geometryType.")
                 obj["geometryType"] = "mesh"
             if not obj.name.startswith('visual_'):
                 obj.name = 'visual_' + obj.name
