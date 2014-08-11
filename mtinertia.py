@@ -183,11 +183,8 @@ def createInertial(obj):
     #mtutility.selectObjects([inertial], True, 0)
 
     mtutility.selectObjects([parent, inertial], True, 0)
-    if parent.MARStype == 'link':
-        #bpy.context.scene.objects.active = parent.pose.bones[0]
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
-    else:
-        bpy.ops.object.parent_set(type='OBJECT')
+    #bpy.context.scene.objects.active = parent.pose.bones[0]
+    bpy.ops.object.parent_set(type='BONE_RELATIVE')
     #TODO: sync masses (invoke operator?)
     #TODO: set inertia (invoke operator?)
     #TODO: invoke setmass operator if mass not present
@@ -208,7 +205,7 @@ def combine_cog_3x3(objects) :
     combined_mass = 0
     for obj in objects:
         combined_com = combined_com + obj['com'] * obj['mass']
-        combined_mass = obj['mass']
+        combined_mass += obj['mass']
     combined_com = combined_com / combined_mass
     return (combined_mass, combined_com)
 
