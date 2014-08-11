@@ -149,6 +149,7 @@ def fuseInertiaData(inertials):
             objdict = {'name': o.name,
                        'mass': o['mass'],
                        'com': o.matrix_local.to_translation(),
+                       'rot': o.matrix_local.to_3x3(),
                        'inertia': o['inertia']
                        }
         except KeyError:
@@ -236,35 +237,35 @@ def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.
     return inertia_ref
 
 
-# def spin_inertia_3x3(inertia_3x3, rotmat, interpretation="passive" ) :
-#     '''
-#     rotate the inertia matrix
-#
-#     active and passive interpretation
-#
-#         "passive"   -- the object stands still but the inertia is expressed with respect to a rotated reference frame
-#         "active"    -- the object moves and therefore its inertia
-#
-#     consistent with 6x6 method :
-#
-#          active     -- consistent with   N'  =  (H^T)^{-1}  *  N  *  H^{-1}
-#          passive    -- consistent with   N'  =  (H^T)       *  N  *  H
-#
-#     WHERE IS a COMBINED METHOD of shifted and rotated inertia ? does it exist ?
-#     '''
-#     R   = rotmat
-#     R_T = rotmat.T
-#     I   = inertia_3x3
-#
-#     if interpretation == "passive" :
-#         # the object stands still but the inertia is expressed with respect to a rotated reference frame
-#         rotated_inertia = (R_T.dot(I)).dot(R)
-#
-#     elif interpretation == "active" :
-#         # the object moves and therefore its inertia
-#         rotated_inertia = ((R.dot(I)).dot(R_T))
-#
-#     return rotated_inertia
+def spin_inertia_3x3(inertia_3x3, rotmat, passive=True) :
+    '''
+    rotate the inertia matrix
+
+    active and passive interpretation
+
+        "passive"   -- the object stands still but the inertia is expressed with respect to a rotated reference frame
+        "active"    -- the object moves and therefore its inertia
+
+    consistent with 6x6 method :
+
+         active     -- consistent with   N'  =  (H^T)^{-1}  *  N  *  H^{-1}
+         passive    -- consistent with   N'  =  (H^T)       *  N  *  H
+
+    WHERE IS a COMBINED METHOD of shifted and rotated inertia ? does it exist ?
+    '''
+    R   = rotmat
+    R_T = rotmat.transposed() #unlike .transpose(), this yields a new matrix and does not reset the original
+    I   = inertia_3x3
+
+    if passive :
+        # the object stands still but the inertia is expressed with respect to a rotated reference frame
+        rotated_inertia = R_T * I * R
+
+    else:
+        # the object moves and therefore its inertia
+        rotated_inertia = R * I * R_T
+
+    return rotated_inertia
 
 
 def compound_inertia_analysis_3x3(objects):
@@ -275,7 +276,11 @@ def compound_inertia_analysis_3x3(objects):
 
     shifted_inertias = list()
     for obj in objects:
-        inert_i_at_common_cog = shift_cog_inertia_3x3(obj['mass'], obj['com'], inertiaListToMatrix(obj['inertia']), common_cog)
+        if not obj['rot'] == mathutils.Matrix.Identity(3): #if object is rotated in local space
+            objinertia = spin_inertia_3x3(inertiaListToMatrix(obj['inertia']), obj['rot']) #transform inertia to link space
+        else:
+            objinertia = inertiaListToMatrix(obj['inertia']) # keep inertia
+        inert_i_at_common_cog = shift_cog_inertia_3x3(obj['mass'], obj['com'], objinertia, common_cog)
         shifted_inertias.append(inert_i_at_common_cog)
 
     print('###########\n', shifted_inertias)
