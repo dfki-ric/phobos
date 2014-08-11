@@ -123,6 +123,14 @@ def parse_text(s):
         return parse_number(s)
 
 
+def printMatrices(info, obj):
+    print("\n----------------", info, "---------------------\n",
+          "local:\n", obj.matrix_local,
+          "\n\nworld:\n", obj.matrix_world,
+          "\n\nparent_inverse:\n", obj.matrix_parent_inverse,
+          "\n\nbasis:\n", obj.matrix_basis)
+
+
 def createPrimitive(pname, ptype, psize, player = 0, pmaterial = "None", plocation = (0, 0, 0), protation = (0, 0, 0), verbose=False):
     '''Generates the primitive specified by the input parameters'''
     if verbose:
