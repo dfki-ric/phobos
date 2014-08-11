@@ -543,13 +543,13 @@ class CreateInertialOperator(Operator):
 
     include_children = BoolProperty(
                 name = 'include_children',
-                default = False,
+                default = True,
                 description = 'use link child objects'
                 )
 
     auto_compute = BoolProperty(
                 name = 'auto_compute',
-                default = False,
+                default = True,
                 description = 'auto-compute inertia'
                 )
 
