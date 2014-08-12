@@ -312,16 +312,24 @@ def buildRobotDictionary():
             robot['links'][parent.name]['inertial'] = props
             inertials[0].select = False
         elif len(inertials) > 1:
-            mass, com, inertia = mtinertia.fuseInertiaData(inertials)
-            parent = inertials[0].parent.name
-            matrix_local = mathutils.Matrix.Translation(mathutils.Vector(com))
-            pose = {}
-            pose['matrix'] = [list(vector) for vector in list(matrix_local)]
-            pose['translation'] = list(matrix_local.to_translation())
-            pose['rotation_euler'] = list(matrix_local.to_euler())
-            pose['rotation_quaternion'] = list(matrix_local.to_quaternion())
-            props = {'mass': mass, 'pose': pose, 'inertia': inertia}
-            robot['links'][parent.name]['inertial'] = props
+            linkinertial = None
+            for i in inertials:
+                if i.name == 'inertial__' + l:
+                    linkinertial = i
+                    props, parent = deriveDictEntry(linkinertial)
+                    robot['links'][parent.name]['inertial'] = props
+            #FIXME: this has to be re-implemented
+            #if linkinertial == None:
+            #    mass, com, inertia = mtinertia.fuseInertiaData(inertials)
+            #    parent = inertials[0].parent
+            #    matrix_local = mathutils.Matrix.Translation(mathutils.Vector(com))
+            #    pose = {}
+            #    pose['matrix'] = [list(vector) for vector in list(matrix_local)]
+            #    pose['translation'] = list(matrix_local.to_translation())
+            #    pose['rotation_euler'] = list(matrix_local.to_euler())
+            #    pose['rotation_quaternion'] = list(matrix_local.to_quaternion())
+            #    props = {'mass': mass, 'pose': pose, 'inertia': inertia}
+            #    robot['links'][parent.name]['inertial'] = props
             for i in inertials:
                 i.select = False
 
