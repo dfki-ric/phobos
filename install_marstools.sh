@@ -56,6 +56,13 @@ then
 				echo "Linked YAML to $yamlfolder"
 			else
 				echo "There was no YAML installation found or the python version is wrong"
+				echo "Do you want to install YAML with the old method an copy static yaml files into blenders python libs? (y/n)"
+				read YN
+				case $YN in
+					y|Y )
+						cp yamlbak $yamlfolder;;
+					n|N ) echo "YAML wasn't installed at all";;
+				esac
 			fi
             ;;
         n|N ) echo "No folder for YAML created";;
