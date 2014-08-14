@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtmaterials.py
+File materials.py
 
 Created on 7 Jan 2014
 

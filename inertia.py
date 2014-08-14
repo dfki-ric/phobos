@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtinertia.py
+File inertia.py
 
 Created on 13 Feb 2014
 
@@ -16,24 +16,24 @@ import bpy
 import mathutils
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty, FloatProperty
-import marstools.mtdefs as mtdefs
-import marstools.mtutility as mtutility
+from . import defs
+from . import utility
 
 
 def register():
-    print("Registering mtinertia...")
+    print("Registering inertia...")
 
 
 def unregister():
-    print("Unregistering mtinertia...")
+    print("Unregistering inertia...")
 
 
 def calculateMassOfLink(link):
     '''Calculates the masses of visual and collision objects found in a link, compares it to mass
     in link inertial object if present and returns the max of both, warning if they are not equal.'''
     objects = getInertiaRelevantObjects(link, ['visual', 'collision'])
-    inertials = mtutility.getImmediateChildren(link, ['inertial'])
-    objectsmass = mtutility.calculateSum(objects, 'mass')
+    inertials = utility.getImmediateChildren(link, ['inertial'])
+    objectsmass = utility.calculateSum(objects, 'mass')
     if len(inertials) == 1:
         inertialmass = inertials[0]['mass'] if 'mass' in inertials[0] else 0
     if objectsmass != inertialmass:
@@ -123,7 +123,7 @@ def getInertiaRelevantObjects(link):
     '''Returns a list of visual and collision objects of a link. If name-pairs of visual and collision
     objects are detected, the visual objects are omitted to prevent redundant information. The function
     does not check whether mass information within pairs is consistent.'''
-    tmpobjects = mtutility.getImmediateChildren(link, ['visual', 'collision'])
+    tmpobjects = utility.getImmediateChildren(link, ['visual', 'collision'])
     objlist = [obj.name for obj in tmpobjects]
     inertiaobjects = []
     for obj in tmpobjects:
@@ -175,14 +175,14 @@ def createInertial(obj):
     size = (0.04, 0.04, 0.04) if obj.MARStype == 'link' else (0.02, 0.02, 0.02)
     rotation = obj.matrix_world.to_euler()
     center = obj.matrix_world.to_translation()
-    inertial = mtutility.createPrimitive('inertial_' + obj.name, 'box', size,
-                                   mtdefs.layerTypes["inertial"], 'inertial', center, rotation)
+    inertial = utility.createPrimitive('inertial_' + obj.name, 'box', size,
+                                   defs.layerTypes["inertial"], 'inertial', center, rotation)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     inertial.MARStype = 'inertial'
     bpy.ops.object.select_all(action="DESELECT")
-    #mtutility.selectObjects([inertial], True, 0)
+    #utility.selectObjects([inertial], True, 0)
 
-    mtutility.selectObjects([parent, inertial], True, 0)
+    utility.selectObjects([parent, inertial], True, 0)
     #bpy.context.scene.objects.active = parent.pose.bones[0]
     bpy.ops.object.parent_set(type='BONE_RELATIVE')
     #TODO: sync masses (invoke operator?)
@@ -228,7 +228,7 @@ def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.
     '''
     # diff_vec
     c               = cog - ref_point
-    c_outer         = mtutility.outerProduct(c, c)
+    c_outer         = utility.outerProduct(c, c)
     inertia_ref    = inertia_cog + mass * (c.dot(c) * mathutils.Matrix.Identity(3) - c_outer)
 
     return inertia_ref
@@ -279,8 +279,6 @@ def compound_inertia_analysis_3x3(objects):
             objinertia = inertiaListToMatrix(obj['inertia']) # keep inertia
         inert_i_at_common_cog = shift_cog_inertia_3x3(obj['mass'], obj['com'], objinertia, common_cog)
         shifted_inertias.append(inert_i_at_common_cog)
-
-    print('###########\n', shifted_inertias)
 
     total_inertia_at_common_cog = mathutils.Matrix.Identity(3)
     total_inertia_at_common_cog.zero()

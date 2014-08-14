@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtsensors.py
+File sensors.py
 
 Created on 6 Jan 2014
 
@@ -14,22 +14,23 @@ You may use the provided install shell script.
 
 
 import bpy
-import marstools.mtmaterials as mtmaterials
-import marstools.mtdefs as mtdefs
-import marstools.mtutility as mtutility
 from bpy.types import Operator
 from bpy.props import StringProperty, FloatProperty
+from . import materials
+from . import defs
+from . import utility
+
 
 def register():
-    print("Registering mtsensors...")
+    print("Registering sensors...")
 
 def unregister():
-    print("Unregistering mtsensors...")
+    print("Unregistering sensors...")
 
 
 class AddSensorOperator(Operator):
     """AddSensorOperator"""
-    bl_idname = "object.mt_add_sensor"
+    bl_idname = "object.phobos_add_sensor"
     bl_label = "Add/Update a sensor"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -50,7 +51,7 @@ class AddSensorOperator(Operator):
 
     def execute(self, context):
         location = bpy.context.scene.cursor_location
-        if self.sensor_type in mtdefs.sensorTypes:
+        if self.sensor_type in defs.sensorTypes:
             if "Node" in self.sensor_type or "Joint" in self.sensor_type or "Motor" in self.sensor_type:
                 objects = []
                 sensors = []
@@ -61,12 +62,12 @@ class AddSensorOperator(Operator):
                     else:
                         objects.append(obj)
                 if len(sensors) <= 0:
-                    sense = mtutility.createPrimitive(self.sensor_type, "sphere", self.sensor_scale, mtdefs.layerTypes["sensor"], "sensor", location)
+                    sense = utility.createPrimitive(self.sensor_type, "sphere", self.sensor_scale, defs.layerTypes["sensor"], "sensor", location)
                     sense.MARStype = "sensor"
                     sense.name = self.sensor_name if self.sensor_name != '' else 'new_' + self.sensor_type
                     sense["sensorType"] = self.sensor_type
                     sensors.append(sense)
-                    sense.parent = mtutility.getRoot(objects[0])
+                    sense.parent = utility.getRoot(objects[0])
                 for sensor in sensors:
                     if "Node" in sensor["sensorType"]:
                         sensor['nodes'] = [obj for obj in objects if obj.MARStype == 'collision']
@@ -79,8 +80,8 @@ class AddSensorOperator(Operator):
                     bpy.ops.object.add(type='CAMERA', location=bpy.context.scene.cursor_location)
                     sensor = bpy.context.active_object
                     print("Added nodes to new " + self.sensor_type)
-            for prop in mtdefs.sensorProperties[self.sensor_type]:
-                sensor[prop] = mtdefs.sensorProperties[self.sensor_type][prop]
+            for prop in defs.sensorProperties[self.sensor_type]:
+                sensor[prop] = defs.sensorProperties[self.sensor_type][prop]
         else:
             print("Error: Sensor could not be created: unknown sensor type.")
         return {'FINISHED'}
@@ -88,7 +89,7 @@ class AddSensorOperator(Operator):
 
 class AddLegacySensorOperator(Operator):
     """AddSensorOperator"""
-    bl_idname = "object.mt_add_legacy_sensor"
+    bl_idname = "object.phobos_add_legacy_sensor"
     bl_label = "Add/Update a sensor"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -104,7 +105,7 @@ class AddLegacySensorOperator(Operator):
 
     def execute(self, context):
         location = bpy.context.scene.cursor_location
-        if self.sensor_type in mtdefs.sensorTypes:
+        if self.sensor_type in defs.sensorTypes:
             if "Node" in self.sensor_type or "Joint" in self.sensor_type or "Motor" in self.sensor_type:
                 objects = []
                 sensors = []
@@ -115,7 +116,7 @@ class AddLegacySensorOperator(Operator):
                     else:
                         objects.append(obj)
                 if len(sensors) <= 0:
-                    mtutility.createPrimitive(self.sensor_type, "sphere", self.sensor_scale, mtdefs.layerTypes["sensor"], "sensor", location)
+                    utility.createPrimitive(self.sensor_type, "sphere", self.sensor_scale, defs.layerTypes["sensor"], "sensor", location)
                     sense = bpy.context.scene.objects.active
                     sense.MARStype = "sensor"
                     sense.name = self.sensor_type
@@ -140,7 +141,7 @@ class AddLegacySensorOperator(Operator):
                                 i += 1
                         print("Added nodes to new " + self.sensor_type)
                     if len(objects) > 0:
-                        sensor.parent = mtutility.getRoot(objects[0])
+                        sensor.parent = utility.getRoot(objects[0])
             else: #visual sensor
                 if self.sensor_type == "RaySensor":
                     print("Added nodes to new " + self.sensor_type)
@@ -150,8 +151,8 @@ class AddLegacySensorOperator(Operator):
                     print("Added nodes to new " + self.sensor_type)
                 elif self.sensor_type == "ScanningSonar":
                     print("Added nodes to new " + self.sensor_type)
-            for prop in mtdefs.sensorProperties[self.sensor_type]:
-                sensor[prop] = mtdefs.sensorProperties[self.sensor_type][prop]
+            for prop in defs.sensorProperties[self.sensor_type]:
+                sensor[prop] = defs.sensorProperties[self.sensor_type][prop]
         else:
             print("Sensor could not be created: unknown sensor type.")
         return {'FINISHED'}

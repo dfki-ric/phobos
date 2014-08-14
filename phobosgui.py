@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtgui.py
+File phobosgui.py
 
 Created on 6 Jan 2014
 
@@ -15,16 +15,14 @@ You may use the provided install shell script.
 import bpy
 from bpy.types import Operator
 from bpy.props import EnumProperty, BoolProperty, StringProperty, IntProperty, FloatVectorProperty
-import marstools.mtdefs as mtdefs
-import marstools.mtsensors as mtsensors
-import marstools.mtcontrollers as mtcontrollers
-import marstools.mtutility as mtutility
+from . import defs
+from . import utility
 
 
 def register():
-    print("Registering mtgui...")
+    print("Registering gui...")
     bpy.types.Object.MARStype = EnumProperty(
-            items = mtdefs.marstypes,
+            items = defs.marstypes,
             name = "type",
             description = "MARS object type")
     print("    Added 'MARStype' to Object properties.")
@@ -61,7 +59,7 @@ def register():
     bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
 
 def unregister():
-    print("Unregistering mtgui...")
+    print("Unregistering gui...")
 
 
 class MessageOperator(bpy.types.Operator):
@@ -174,10 +172,10 @@ def showMotorTypes(self, context):
     bpy.data.scenes[0].update()
 
 
-class MARSToolPanel(bpy.types.Panel):
+class PhobosPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
-    bl_idname = "TOOLS_PT_MARS"
-    bl_label = "MARStools: Model editing"
+    bl_idname = "TOOLS_PT_PHOBOS"
+    bl_label = "phobos: Model editing"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -191,39 +189,39 @@ class MARSToolPanel(bpy.types.Panel):
         layout.label(text="Robot Model:")
         inlayout = layout.split()
         rc1 = inlayout.column(align = True)
-        rc1.operator('object.mt_update_models', text = 'Update MARS model', icon = 'FILE_REFRESH')
+        rc1.operator('object.phobos_update_models', text = 'Update MARS model', icon = 'FILE_REFRESH')
         rc2 = inlayout.column(align = True)
-        rc2.operator('object.mt_name_model', text = 'Name Robot')
+        rc2.operator('object.phobos_name_model', text = 'Name Robot')
 
         # Inspection Menu
         layout.separator()
         layout.label(text = "Inspect Robot", icon = 'VIEWZOOM')
         iinlayout = layout.split()
         ic1 = iinlayout.column(align = True)
-        ic1.operator('object.mt_show_distance', text = 'Measure distance')
+        ic1.operator('object.phobos_show_distance', text = 'Measure distance')
         ic2 = iinlayout.column(align = True)
-        ic2.operator('object.mt_set_xray', text = 'Always show objects')
+        ic2.operator('object.phobos_set_xray', text = 'Always show objects')
 
         # Selection Menu
         layout.separator()
         layout.label(text = "Selection(s)", icon = 'HAND')
         sinlayout = layout.split()
         sc1 = sinlayout.column(align = True)
-        sc1.operator('object.mt_select_root', text = 'Select Root')
-        sc1.operator('object.mt_select_model', text = 'Select Robot')
+        sc1.operator('object.phobos_select_root', text = 'Select Root')
+        sc1.operator('object.phobos_select_model', text = 'Select Robot')
         sc2 = sinlayout.column(align = True)
-        sc2.operator('object.mt_select_objects_by_marstype', text = "Select by MARStype")
-        sc2.operator('object.mt_select_objects_by_name', text = "Select by Name")
+        sc2.operator('object.phobos_select_objects_by_marstype', text = "Select by MARStype")
+        sc2.operator('object.phobos_select_objects_by_name', text = "Select by Name")
 
-        #for root in mtutility.getRoots():
-        #    linspect1.operator('object.mt_select_model', text=root["modelname"]).modelname = \
+        #for root in utility.getRoots():
+        #    linspect1.operator('object.phobos_select_model', text=root["modelname"]).modelname = \
         #     root["modelname"] if "modelname" in root else root.name
 
 
-class MARSToolModelPanel(bpy.types.Panel):
+class PhobosModelPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
-    bl_idname = "TOOLS_MODEL_PT_MARS"
-    bl_label = "MARStools: Object editing"
+    bl_idname = "TOOLS_MODEL_PT_PHOBOS"
+    bl_label = "phobos: Object editing"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -235,34 +233,34 @@ class MARSToolModelPanel(bpy.types.Panel):
 
         inlayout = layout.split()
         c1 = inlayout.column(align = True)
-        c1.operator('object.mt_set_marstype', text = 'Set MARStype')
-        c1.operator('object.mt_set_geometry_type', text = "Set Geometry Type(s)")
+        c1.operator('object.phobos_set_marstype', text = 'Set MARStype')
+        c1.operator('object.phobos_set_geometry_type', text = "Set Geometry Type(s)")
         c1.operator('object.create_collision_objects', text = "Create Collision Object(s)")
         c1.operator('object.create_inertial_objects', text = "Create Inertial Object(s)")
         c1.operator('object.define_joint_constraints', text = "Define Joint Constraints")
         c2 = inlayout.column(align = True)
-        c2.operator('object.mt_partial_rename', text = "Partial Rename")
+        c2.operator('object.phobos_partial_rename', text = "Partial Rename")
         c2.operator('object.attach_motor', text = "Attach motor")
-        c2.operator('object.mt_smoothen_surface', text = "Smoothen Surface")
-        c2.operator('object.mt_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
-        c2.operator('object.mt_copy_props', text = 'Copy Custom Property', icon = 'GREASEPENCIL')
+        c2.operator('object.phobos_smoothen_surface', text = "Smoothen Surface")
+        c2.operator('object.phobos_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
+        c2.operator('object.phobos_copy_props', text = 'Copy Custom Property', icon = 'GREASEPENCIL')
 
         #Mass Menu
         layout.separator()
         layout.label(text = "Masses & Inertia", icon = 'PHYSICS')
         minlayout = layout.split()
         mc1 = minlayout.column(align = True)
-        mc1.operator('object.mt_calculate_mass', text = 'Show Mass')
-        mc1.operator('object.mt_set_mass', text = 'Set Mass')
+        mc1.operator('object.phobos_calculate_mass', text = 'Show Mass')
+        mc1.operator('object.phobos_set_mass', text = 'Set Mass')
         mc2 = minlayout.column(align = True)
-        mc2.operator('object.mt_sync_masses', text = 'Sync Masses')
-        mc2.operator('object.mt_edit_inertia', text = 'Edit Inertia')
+        mc2.operator('object.phobos_sync_masses', text = 'Sync Masses')
+        mc2.operator('object.phobos_edit_inertia', text = 'Edit Inertia')
 
 
-class MARSToolSenConPanel(bpy.types.Panel):
+class PhobosSenConPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
-    bl_idname = "TOOLS_SENCON_PT_MARS"
-    bl_label = "MARStools: Sensors & Controllers"
+    bl_idname = "TOOLS_SENCON_PT_PHOBOS"
+    bl_label = "phobos: Sensors & Controllers"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -275,25 +273,25 @@ class MARSToolSenConPanel(bpy.types.Panel):
         row_sensors.label(text="Add Sensors / Controllers")
         sensor_split = row_sensors.split()
 
-        n_sensortypes = int(len(mtdefs.sensorTypes))
+        n_sensortypes = int(len(defs.sensorTypes))
         half_n_sensortypes = int(n_sensortypes/2)
         col_sensor_1 = sensor_split.column(align=True)
-        for i in range(half_n_sensortypes):#sensor in mtdefs.sensorTypes:
-            sensor = mtdefs.sensorTypes[i]
-            #col_sensor_1.operator('object.mt_add_sensor_'+sensor, text=sensor)
-            col_sensor_1.operator('object.mt_add_sensor', text=sensor).sensor_type = sensor
+        for i in range(half_n_sensortypes):#sensor in defs.sensorTypes:
+            sensor = defs.sensorTypes[i]
+            #col_sensor_1.operator('object.phobos_add_sensor_'+sensor, text=sensor)
+            col_sensor_1.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
         col_sensor_2 = sensor_split.column(align=True)
         for i in range(n_sensortypes-half_n_sensortypes):
-            sensor = mtdefs.sensorTypes[i+half_n_sensortypes]
-            col_sensor_2.operator('object.mt_add_sensor', text=sensor).sensor_type = sensor
-            #col_sensor_2.operator('object.mt_add_sensor_'+sensor, text=sensor)
-        row_sensors.operator("object.mt_add_controller", text="Controller")
+            sensor = defs.sensorTypes[i+half_n_sensortypes]
+            col_sensor_2.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
+            #col_sensor_2.operator('object.phobos_add_sensor_'+sensor, text=sensor)
+        row_sensors.operator("object.phobos_add_controller", text="Controller")
 
 
-class MARSToolVisPanel(bpy.types.Panel):
+class PhobosVisPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
-    bl_idname = "TOOLS_VIS_PT_MARS"
-    bl_label = "MARStools: Visibility"
+    bl_idname = "TOOLS_VIS_PT_PHOBOS"
+    bl_label = "phobos: Visibility"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -315,10 +313,10 @@ class MARSToolVisPanel(bpy.types.Panel):
         lsplit.prop(bpy.data.worlds[0], "showMotorTypes")
 
 
-class MARSToolExportPanel(bpy.types.Panel):
+class PhobosExportPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for MARS options"""
-    bl_idname = "TOOLS_ZEXPORT_PT_MARS"
-    bl_label = "MARStools: Export & Import"
+    bl_idname = "TOOLS_EXPORT_PT_PHOBOS"
+    bl_label = "phobos: Export & Import"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
 
@@ -356,13 +354,13 @@ class MARSToolExportPanel(bpy.types.Panel):
         layout.separator()
 
         layout.label(text = "Export/Import")
-        layout.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
+        layout.operator("object.phobos_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
         layout.operator("obj.import_robot_model", text = "Import Robot Model", icon = "COPYDOWN")
 
 
-class MARSObjectPanel(bpy.types.Panel):
-    bl_idname = "OBJECT_PT_MARS"
-    bl_label = "MARStools Object panel displaying custom properties"
+class PhobosObjectPanel(bpy.types.Panel):
+    bl_idname = "OBJECT_PT_PHOBOS"
+    bl_label = "phobos Object panel displaying custom properties"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "object"
@@ -385,19 +383,19 @@ class MARSObjectPanel(bpy.types.Panel):
         box_props = layout.box()
 
         try:
-            for prop in mtdefs.type_properties[bpy.context.active_object.MARStype]:
+            for prop in defs.type_properties[bpy.context.active_object.MARStype]:
                 #box_props.label(prop)
                 if prop in bpy.context.active_object:
                     box_props.prop(bpy.context.active_object, '["'+prop+'"]')
         except KeyError:
             print("Key could not be found.")
                 #else:
-            #    bpy.context.active_object[prop] = mtdefs.type_properties[bpy.context.active_object.MARStype+"_default"]
+            #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.MARStype+"_default"]
 
 
 
-# class MARSWorldPanel(bpy.types.Panel):
-#     bl_idname = "WORLD_PT_MARS"
+# class PhobosWorldPanel(bpy.types.Panel):
+#     bl_idname = "WORLD_PT_Phobos"
 #     bl_label = "MARS"
 #     bl_space_type = 'PROPERTIES'
 #     bl_region_type = 'WINDOW'
@@ -416,7 +414,7 @@ class MARSObjectPanel(bpy.types.Panel):
 # #         group_export.prop(bpy.data.worlds[0], "filename")
 # #         group_export.prop(bpy.data.worlds[0], "exportBobj")
 # #         group_export.prop(bpy.data.worlds[0], "exportMesh")
-# #         group_export.operator("object.mt_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
+# #         group_export.operator("object.phobos_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
 
 
 

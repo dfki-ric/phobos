@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtlinks.py
+File links.py
 
 Created on 14 Apr 2014
 
@@ -18,16 +18,13 @@ from bpy.props import FloatProperty, EnumProperty
 import math
 import mathutils
 import warnings
-import marstools.mtmaterials as mtmaterials
-import marstools.mtutility as mtutility
-import marstools.mtdefs as mtdefs
 
 def register():
-    print("Registering mtlinks...")
+    print("Registering links...")
 
 
 def unregister():
-    print("Unregistering mtlinks...")
+    print("Unregistering links...")
 
 def createLink(joints):
     '''Creates an empty link (bone) at the current 3D cursor position.'''

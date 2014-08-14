@@ -4,8 +4,8 @@ import os
 
 sys.path.insert(0, os.environ['MARS_BLENDER_SCRIPT_PATH'])
 
-import marstools.mtexport as mtexport
-import marstools.mtgui as mtgui
+import phobos.exporter as exporter
+import phobos.gui as gui
 
 
 mtgui.register()

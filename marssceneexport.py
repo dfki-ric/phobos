@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtupdate.py
+File marssceneexporter.py
 
 Created on 7 Jan 2014
 
@@ -19,7 +19,6 @@ in your preferences to gain instant (virtual) world domination.
 import bpy
 import os
 import mathutils
-import marstools.mtutility as mtutility
 
 class IdGenerator(object):
     def __init__(self, initValue=0):
@@ -107,9 +106,9 @@ def writeNode(node):
     #    height = geom['height'] if 'height' in geom else 0
     #    ext[0] = radius if radius > 0. else geom['scale'][0]
     #    ext[1] = height if height > 0. else geom['scale'][1]
-    #    pivot = mtutility.calcBoundingBoxCenter(obj.bound_box)
+    #    pivot = utility.calcBoundingBoxCenter(obj.bound_box)
     #    parent = obj.parent
-    #    parentPos = parent.matrix_world * mtutility.calcBoundingBoxCenter(parent.bound_box)
+    #    parentPos = parent.matrix_world * utility.calcBoundingBoxCenter(parent.bound_box)
     #    childPos = obj.matrix_world * pivot
     #    childPos = childPos - parentPos
     #   center = parent.matrix_world.to_quaternion().inverted() * childPos

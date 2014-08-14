@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtcontrollers.py
+File controllers.py
 
 Created on 30 Jan 2014
 
@@ -15,22 +15,21 @@ You may use the provided install shell script.
 import bpy
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatProperty
-import marstools.mtmaterials as mtmaterials
-import marstools.mtdefs as mtdefs
-import marstools.mtutility as mtutility
+from . import defs
+from . import utility
 
 
 def register():
-    print("Registering mtcontrollers...")
+    print("Registering controllers...")
 
 
 def unregister():
-    print("Unregistering mtcontrollers...")
+    print("Unregistering controllers...")
 
 
 class AddControllerOperator(Operator):
     """AddControllerOperator"""
-    bl_idname = "object.mt_add_controller"
+    bl_idname = "object.phobos_add_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -54,26 +53,26 @@ class AddControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            mtutility.createPrimitive("controller", "sphere", self.controller_scale, mtdefs.layerTypes["sensor"], "controller", location)
+            utility.createPrimitive("controller", "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
             bpy.context.scene.objects.active.MARStype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
-        #empty index list so enable update of controller
+        #empty index list so enable robotupdate of controller
         for ctrl in controllers:
             sensors = [obj.name for obj in objects if obj.MARStype == 'sensor']
             motors = [obj.name for obj in objects if obj.MARStype == 'motor']
             ctrl['sensors'] = sorted(sensors, key=str.lower)
             ctrl['motors'] = sorted(motors, key=str.lower)
         print("Added joints to (new) controller(s).")
-        #for prop in mtdefs.controllerProperties[self.controller_type]:
+        #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
-        #        ctrl[prop] = mtdefs.controllerProperties[prop]
+        #        ctrl[prop] = defs.controllerProperties[prop]
         return {'FINISHED'}
 
 
 class AddLegacyControllerOperator(Operator):
     """AddControllerOperator"""
-    bl_idname = "object.mt_add_legacy_controller"
+    bl_idname = "object.phobos_add_legacy_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -92,11 +91,11 @@ class AddLegacyControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            mtutility.createPrimitive("controller", "sphere", self.controller_scale, mtdefs.layerTypes["sensor"], "controller", location)
+            utility.createPrimitive("controller", "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
             bpy.context.scene.objects.active.MARStype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
-        #empty index list so enable update of controller
+        #empty index list so enable robotupdate of controller
         for ctrl in controllers:
             for key in ctrl.keys():
                 if key.find("index") >= 0:
@@ -108,7 +107,7 @@ class AddLegacyControllerOperator(Operator):
                     ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                     i += 1
         print("Added joints to (new) controller(s).")
-        #for prop in mtdefs.controllerProperties[self.controller_type]:
+        #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
-        #        ctrl[prop] = mtdefs.controllerProperties[prop]
+        #        ctrl[prop] = defs.controllerProperties[prop]
         return {'FINISHED'}

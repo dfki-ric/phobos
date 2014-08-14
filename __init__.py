@@ -1,11 +1,11 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
 File __init__.py
 
 Created on 6 Jan 2014
 
-@author: kavonszadkowski
+@author: Kai von Szadkowski
 
 Copy this add-on to your Blender add-on folder and activate it
 in your preferences to gain instant (virtual) world domination.
@@ -13,10 +13,10 @@ in your preferences to gain instant (virtual) world domination.
 
 
 bl_info = {
-    "name": "MARS Blender Tools",
+    "name": "Phobos",
     "description": "A set of tools to enable editing of MARS robot models in Blender.",
-    "author": "Kai von Szadkowski, Malte Langosz",
-    "version": (0, 3),
+    "author": "Kai von Szadkowski, Malte Langosz, Stefan Rahms, Ole Schwiegert",
+    "version": (0, 5),
     "blender": (2, 62, 0),
     "location": "",
     "warning": "",
@@ -26,25 +26,25 @@ bl_info = {
 
 if "bpy" in locals():
     import imp
-    imp.reload(mtupdate)
-    imp.reload(mtrobotdictionary)
-    imp.reload(mtcontrollers)
-    imp.reload(mtexport)
-    imp.reload(mtimport)
-    imp.reload(mtgui)
-    imp.reload(mtimport)
-    imp.reload(mtjoints)
-    imp.reload(mtlinks)
-    imp.reload(mtmisctools)
-    imp.reload(mtsensors)
-    imp.reload(mtutility)
-    imp.reload(mtcollision)
-    imp.reload(mtinertia)
-    imp.reload(mtmarssceneexport)
-    print("Reloading MARS Blender Tools.")
+    imp.reload(update)
+    imp.reload(robotdictionary)
+    imp.reload(controllers)
+    imp.reload(export)
+    imp.reload(importer)
+    imp.reload(phobosgui)
+    imp.reload(joints)
+    imp.reload(links)
+    imp.reload(misctools)
+    imp.reload(sensors)
+    imp.reload(utility)
+    imp.reload(testing)
+    imp.reload(collision)
+    imp.reload(inertia)
+    imp.reload(marssceneexport)
+    print("Reloading Phobos.")
 else:
-    from . import mtupdate, mtlinks, mtmarssceneexport, mtrobotdictionary, mtcontrollers, mtexport, mtgui, mtimport, mtjoints, mtmisctools, mtsensors, mtutility, mtcollision, mtinertia
-    print("Importing MARS Blender Tools modules.")
+    from . import robotupdate, links, marssceneexport, robotdictionary, controllers, exporter, importer, joints, misctools, sensors, utility, collision, inertia, phobosgui
+    print("Importing Phobos modules.")
 
 import bpy
 #import sys
@@ -52,31 +52,31 @@ import bpy
 #import yaml
 
 def register():
-    mtlinks.register()
-    mtcontrollers.register()
-    mtexport.register()
-    mtgui.register()
-    mtimport.register()
-    mtjoints.register()
-    mtmisctools.register()
-    mtsensors.register()
-    mtutility.register()
-    mtcollision.register()
-    mtinertia.register()
+    links.register()
+    controllers.register()
+    exporter.register()
+    phobosgui.register()
+    importer.register()
+    joints.register()
+    misctools.register()
+    sensors.register()
+    utility.register()
+    collision.register()
+    inertia.register()
     bpy.utils.register_module(__name__)
 
 def unregister():
-    mtlinks.unregister()
-    mtcontrollers.unregister()
-    mtexport.unregister()
-    mtgui.unregister()
-    mtimport.unregister()
-    mtjoints.unregister()
-    mtmisctools.unregister()
-    mtsensors.unregister()
-    mtutility.unregister()
-    mtcollision.unregister()
-    mtinertia.register()
+    links.unregister()
+    controllers.unregister()
+    exporter.unregister()
+    phobosgui.unregister()
+    importer.unregister()
+    joints.unregister()
+    misctools.unregister()
+    sensors.unregister()
+    utility.unregister()
+    collision.unregister()
+    inertia.register()
     bpy.utils.unregister_module(__name__)
 
 #if __name__ == "__main__":

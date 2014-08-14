@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtutility.py
+File utility.py
 
 Created on 9 Jan 2014
 
@@ -15,17 +15,17 @@ You may use the provided install shell script.
 import re
 import bpy
 import mathutils
-import marstools.mtmaterials as mtmaterials
-import marstools.mtdefs as mtdefs
 from datetime import datetime
+from . import materials
+from . import defs
 
 
 def register():
-    print("Registering mtutility...")
+    print("Registering phobos.utility...")
 
 
 def unregister():
-    print("Unregistering mtutility...")
+    print("Unregistering phobos.utility...")
 
 
 def is_float(s):
@@ -139,7 +139,7 @@ def createPrimitive(pname, ptype, psize, player = 0, pmaterial = "None", plocati
         #n_layer = bpy.context.scene.active_layer
         n_layer = int(player)
     except ValueError:
-        n_layer = mtdefs.layerTypes[player]
+        n_layer = defs.layerTypes[player]
     players = defLayers([n_layer])
     bpy.context.scene.layers[n_layer] = True #the layer has to be active to prevent problems with object placement
     if ptype == "box":
@@ -177,7 +177,6 @@ def returnObjectList(marstype):
     return objlist
 
 
-#TODO: this has to be tested throroughly, because it might run pretty damn long!
 def getChildren(root):
     """Finds all children for a given root"""
     children = []
@@ -286,7 +285,7 @@ def datetimeFromIso(iso):
 
 def distance(objects):
     v = objects[0].matrix_world.to_translation()-objects[1].matrix_world.to_translation()
-    return v.length
+    return v.length, v
 
 
 def outerProduct(v, u):
@@ -329,9 +328,9 @@ def duplicateObject(scene, name, copyobj, material, layers):
 #def useLegacyNames(data):
 #    if type(data) is str:
 #        print(data, end=': ')
-#        if data in mtdefs.MARSlegacydict:
-#            print(mtdefs.MARSlegacydict[data])
-#            return mtdefs.MARSlegacydict[data]
+#        if data in defs.MARSlegacydict:
+#            print(defs.MARSlegacydict[data])
+#            return defs.MARSlegacydict[data]
 #        else:
 #            print(data)
 #            return data

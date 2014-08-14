@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtexport.py
+File export.py
 
 Created on 13 Feb 2014
 
@@ -14,7 +14,7 @@ You may use the provided install shell script.
 NOTE: If you edit this script, please make sure not to use any imports
 not supported by Blender's standard Python distribution. This is a script
 intended to be usable on its own and thus should not use external dependencies,
-especially none of the other modules of the MARStools package.
+especially none of the other modules of the phobos package.
 '''
 
 import bpy
@@ -25,17 +25,17 @@ import yaml
 import struct
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, IntProperty
-from marstools.mtutility import *
-import marstools.mtdefs as mtdefs
-import marstools.mtmarssceneexport as mtmse
-import marstools.mtinertia as mtinertia
-import marstools.mtrobotdictionary as mtrobotdictionary
+from phobos.utility import *
+from . import defs
+from . import marssceneexport as mse
+from . import inertia
+from . import robotdictionary
 
 def register():
-    print("Registering mtexport...")
+    print("Registering export...")
 
 def unregister():
-    print("Unregistering mtexport...")
+    print("Unregistering export...")
 
 indent = '  '
 urdfHeader = '<?xml version="1.0"?>\n'
@@ -176,7 +176,7 @@ def exportObj(path, obj):
     #obj.matrix_world = world_matrix
 
 def exportModelToYAML(model, filepath):
-    print("MARStools YAML export: Writing model data to", filepath )
+    print("phobos YAML export: Writing model data to", filepath )
     with open(filepath, 'w') as outputfile:
         outputfile.write('#YAML dump of robot model "'+model['modelname']+'", '+datetime.now().strftime("%Y%m%d_%H:%M")+"\n\n")
         outputfile.write(yaml.dump(model))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
@@ -281,7 +281,7 @@ def exportModelToURDF(model, filepath):
     with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))
     # problem of different joint transformations needed for fixed joints
-    print("MARStools URDF export: Writing model data to", filepath )
+    print("phobos URDF export: Writing model data to", filepath )
 
 def exportModelToSMURF(model, path):
     export = {'semantics': model['groups'] != {} or model['chains'] != {},
@@ -382,7 +382,7 @@ def exportSceneToSMURF(path):
 
 def exportModelToMARS(model, path):
     """Exports selected robot as a MARS scene"""
-    mtmse.exportModelToMARS(model, path)
+    mse.exportModelToMARS(model, path)
 
 def securepath(path): #TODO: this is totally not error-handled!
     if not os.path.exists(path):
@@ -391,7 +391,7 @@ def securepath(path): #TODO: this is totally not error-handled!
 
 class ExportModelOperator(Operator):
     """ExportModelOperator"""
-    bl_idname = "object.mt_export_robot"
+    bl_idname = "object.phobos_export_robot"
     bl_label = "Export the selected model(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -415,7 +415,7 @@ def export():
     objectlist = bpy.context.selected_objects
 
     if yaml or urdf or smurf or mars:
-        robot = mtrobotdictionary.buildRobotDictionary()
+        robot = robotdictionary.buildRobotDictionary()
         if yaml:
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
         if mars:

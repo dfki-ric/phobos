@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtmisctools.py
+File misctools.py
 
 Created on 6 Jan 2014
 
@@ -17,37 +17,37 @@ import math
 import mathutils
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty, FloatProperty
-import marstools.mtupdate as mtupdate
-import marstools.mtmaterials as mtmaterials
-import marstools.mtutility as mtutility
-import marstools.mtdefs as mtdefs
-import marstools.mtinertia as mtinertia
-import marstools.mtrobotdictionary as mtrobotdictionary
 from datetime import datetime as dt
+from . import robotupdate
+from . import materials
+from . import utility
+from . import defs
+from . import inertia
+from . import robotdictionary
 
 
 def register():
-    print("Registering mtmisctools...")
+    print("Registering misctools...")
 
 
 def unregister():
-    print("Unregistering mtmisctools...")
+    print("Unregistering misctools...")
 
 
 class CalculateMassOperator(Operator):
     """CalculateMassOperator"""
-    bl_idname = "object.mt_calculate_mass"
+    bl_idname = "object.phobos_calculate_mass"
     bl_label = "Display mass of the selected objects in a pop-up window."
 
     def execute(self, context):
-        mass = mtutility.calculateSum(bpy.context.selected_objects, 'mass')
+        mass = utility.calculateSum(bpy.context.selected_objects, 'mass')
         bpy.ops.error.message('INVOKE_DEFAULT', type="mass", message=str(mass))
         return {'FINISHED'}
 
 
 class SetMassOperator(Operator):
     """SetMassOperator"""
-    bl_idname = "object.mt_set_mass"
+    bl_idname = "object.phobos_set_mass"
     bl_label = "Sets the mass of the selected object(s)."
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -67,7 +67,7 @@ class SetMassOperator(Operator):
 
 class SyncMassesOperator(Operator):
     """SyncMassesOperator"""
-    bl_idname = "object.mt_sync_masses"
+    bl_idname = "object.phobos_sync_masses"
     bl_label = "Synchronize masses among the selected object(s)."
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -80,7 +80,7 @@ class SyncMassesOperator(Operator):
             description = "MARS object type")
 
     writeinertial = BoolProperty(
-                name = 'write_inertial',
+                name = 'robotupdate inertial',
                 default = True,
                 description = 'write mass to inertial'
                 )
@@ -108,8 +108,8 @@ class SyncMassesOperator(Operator):
                 targetlist.append('visual_' + basename)
                 sourcelist.append('collision_' + basename)
             else: #latest to oldest
-                tv = mtutility.datetimeFromIso(objdict['visual_'+basename]['masschanged'])
-                tc = mtutility.datetimeFromIso(objdict['collision_'+basename]['masschanged'])
+                tv = utility.datetimeFromIso(objdict['visual_'+basename]['masschanged'])
+                tc = utility.datetimeFromIso(objdict['collision_'+basename]['masschanged'])
                 if tc < tv: #if collision information is older than visual information
                     sourcelist.append('visual_' + basename)
                     targetlist.append('collision_' + basename)
@@ -121,7 +121,7 @@ class SyncMassesOperator(Operator):
             objdict[targetlist[i]]['masschanged'] = objdict[sourcelist[i]]['masschanged']
         for linkname in links:
             masssum = 0.0
-            collision_children = mtinertia.getInertiaRelevantObjects(objdict[linkname])
+            collision_children = inertia.getInertiaRelevantObjects(objdict[linkname])
             for coll in collision_children:
                 masssum += coll['mass']
             if self.writeinertial:
@@ -141,31 +141,42 @@ class SyncMassesOperator(Operator):
 
 class ShowDistanceOperator(Operator):
     """ShowDistanceOperator"""
-    bl_idname = "object.mt_show_distance"
+    bl_idname = "object.phobos_show_distance"
     bl_label = "Shows distance between two selected objects in world coordinates."
     bl_options = {'REGISTER', 'UNDO'}
 
     distance = FloatProperty(
         name = "distance",
         default = 0.0,
+        subtype = 'DISTANCE',
+        unit = 'LENGTH',
+        precision = 6,
+        description = "distance between objects")
+
+    distVector = FloatVectorProperty(
+        name = "distanceVector",
+        default = (0.0, 0.0, 0.0,),
+        subtype = 'TRANSLATION',
+        unit = 'LENGTH',
+        size = 3,
+        precision = 6,
         description = "distance between objects")
 
     def execute(self, context):
-        self.distance = mtutility.distance(bpy.context.selected_objects)
-        print(self.distance)
+        self.distance, self.distVector = utility.distance(bpy.context.selected_objects)
         return {'FINISHED'}
 
 
 class SetXRayOperator(Operator):
     """SetXrayOperator"""
-    bl_idname = "object.mt_set_xray"
+    bl_idname = "object.phobos_set_xray"
     bl_label = "Shows the selected/chosen objects via X-Ray."
     bl_options = {'REGISTER', 'UNDO'}
 
     objects = EnumProperty(
         name = "objects",
         default = 'selected',
-        items = (('all',)*3, ('selected',)*3) + mtdefs.marstypes,
+        items = (('all',)*3, ('selected',)*3) + defs.marstypes,
         description = "show objects via x-ray")
 
     show = BoolProperty(
@@ -194,7 +205,7 @@ class SetXRayOperator(Operator):
 
 class NameModelOperator(Operator):
     """NameModelOperator"""
-    bl_idname = "object.mt_name_model"
+    bl_idname = "object.phobos_name_model"
     bl_label = "Name model by assigning 'modelname' property to root node "
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -204,19 +215,19 @@ class NameModelOperator(Operator):
         description = "name of the robot model to be assigned")
 
     def execute(self, context):
-        root = mtutility.getRoot(bpy.context.active_object)
+        root = utility.getRoot(bpy.context.active_object)
         root["modelname"] = self.modelname
         return {'FINISHED'}
 
 
 class SelectObjectsByMARSType(Operator):
     """SelectObjectsByType"""
-    bl_idname = "object.mt_select_objects_by_marstype"
+    bl_idname = "object.phobos_select_objects_by_marstype"
     bl_label = "Select objects in the scene by MARStype"
     bl_options = {'REGISTER', 'UNDO'}
 
     seltype = EnumProperty (
-            items = mtdefs.marstypes,
+            items = defs.marstypes,
             name = "MARStype",
             default = "link",
             description = "MARS object type")
@@ -226,7 +237,7 @@ class SelectObjectsByMARSType(Operator):
         for obj in bpy.data.objects:
             if obj.MARStype == self.seltype:
                 objlist.append(obj)
-        mtutility.selectObjects(objlist, True)
+        utility.selectObjects(objlist, True)
         return {'FINISHED'}
 
     @classmethod
@@ -236,7 +247,7 @@ class SelectObjectsByMARSType(Operator):
 
 class SelectObjectsByName(Operator):
     """SelectObjectsByName"""
-    bl_idname = "object.mt_select_objects_by_name"
+    bl_idname = "object.phobos_select_objects_by_name"
     bl_label = "Select objects in the scene by their name"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -250,28 +261,29 @@ class SelectObjectsByName(Operator):
         for obj in bpy.data.objects:
             if self.namefragment in obj.name:
                 objlist.append(obj)
-        mtutility.selectObjects(objlist, True)
+        utility.selectObjects(objlist, True)
         return {'FINISHED'}
 
 
 class SelectRootOperator(Operator):
     """SelectRootOperator"""
-    bl_idname = "object.mt_select_root"
+    bl_idname = "object.phobos_select_root"
     bl_label = "Select root object(s) of currently selected object(s)"
 
     def execute(self, context):
         roots = set()
         for obj in bpy.context.selected_objects:
-            roots.add(mtutility.getRoot(obj))
-        mtutility.selectObjects(list(roots), True)
+            roots.add(utility.getRoot(obj))
+        utility.selectObjects(list(roots), True)
         bpy.context.scene.objects.active = list(roots)[0]
         return {'FINISHED'}
 
 
 class SelectModelOperator(Operator):
     """SelectModelOperator"""
-    bl_idname = "object.mt_select_model"
+    bl_idname = "object.phobos_select_model"
     bl_label = "Select all objects of model(s) containing the currently selected object(s)"
+    bl_options = {'REGISTER', 'UNDO'}
 
     modelname = StringProperty(
         name = "modelname",
@@ -281,26 +293,26 @@ class SelectModelOperator(Operator):
     def execute(self, context):
         selection = []
         if self.modelname:
-            print("MARStools: Selecting model", self.modelname)
-            roots = mtutility.getRoots()
+            print("phobos: Selecting model", self.modelname)
+            roots = utility.getRoots()
             for root in roots:
                 if root["modelname"] == self.modelname:
-                    selection = mtutility.getChildren(root)
+                    selection = utility.getChildren(root)
         else:
-            print("MARStools: No model name provided, deriving from selection...")
+            print("phobos: No model name provided, deriving from selection...")
             roots = set()
             for obj in bpy.context.selected_objects:
-                print("Selecting", mtutility.getRoot(obj).name)
-                roots.add(mtutility.getRoot(obj))
+                print("Selecting", utility.getRoot(obj).name)
+                roots.add(utility.getRoot(obj))
             for root in list(roots):
-                selection.extend(mtutility.getChildren(root))
-        mtutility.selectObjects(list(selection), True)
+                selection.extend(utility.getChildren(root))
+        utility.selectObjects(list(selection), True)
         return {'FINISHED'}
 
 
 class UpdateMarsModelsOperator(Operator):
     """UpdateMarsModelsOperator"""
-    bl_idname = "object.mt_update_models"
+    bl_idname = "object.phobos_update_models"
     bl_label = "Update MARS properties for all objects"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -309,22 +321,22 @@ class UpdateMarsModelsOperator(Operator):
         default = False,
         description = "try to fix detected errors?")
 
-    print("MARStools: Updating MARS properties for selected objects...")
+    print("phobos: Updating MARS properties for selected objects...")
 
     def execute(self, context):
-        mtmaterials.createMARSMaterials() #TODO: this should move to initialization
-        mtupdate.updateModels(mtutility.getRoots(), self.property_fix)
+        materials.createMARSMaterials() #TODO: this should move to initialization
+        robotupdate.updateModels(utility.getRoots(), self.property_fix)
         return {'FINISHED'}
 
 
 class SetMARSType(Operator):
     """Set MARStype Operator"""
-    bl_idname = "object.mt_set_marstype"
+    bl_idname = "object.phobos_set_marstype"
     bl_label = "Edit MARStype of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     marstype = EnumProperty (
-            items = mtdefs.marstypes,
+            items = defs.marstypes,
             name = "MARStype",
             default = "undefined",
             description = "MARStype")
@@ -342,7 +354,7 @@ class SetMARSType(Operator):
 
 class BatchEditPropertyOperator(Operator):
     """Batch-Edit Property Operator"""
-    bl_idname = "object.mt_batch_property"
+    bl_idname = "object.phobos_batch_property"
     bl_label = "Edit custom property of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -357,7 +369,7 @@ class BatchEditPropertyOperator(Operator):
         description = "custom property value")
 
     def execute(self, context):
-        value = mtutility.parse_number(self.property_value)
+        value = utility.parse_number(self.property_value)
         if value == '':
             for obj in bpy.context.selected_objects:
                 if self.property_name in obj:
@@ -375,7 +387,7 @@ class BatchEditPropertyOperator(Operator):
 
 class CopyCustomProperties(Operator):
     """Copy Custom Properties Operator"""
-    bl_idname = "object.mt_copy_props"
+    bl_idname = "object.phobos_copy_props"
     bl_label = "Edit custom property of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -390,7 +402,7 @@ class CopyCustomProperties(Operator):
         print(slaves)
         slaves.remove(master)
         print(slaves)
-        props = mtrobotdictionary.cleanObjectProperties(dict(master.items()))
+        props = robotdictionary.cleanObjectProperties(dict(master.items()))
         for obj in slaves:
             if self.empty_properties:
                 for key in obj.keys():
@@ -407,12 +419,12 @@ class CopyCustomProperties(Operator):
 
 class SetGeometryType(Operator):
     """Set Geometry Type Operator"""
-    bl_idname = "object.mt_set_geometry_type"
+    bl_idname = "object.phobos_set_geometry_type"
     bl_label = "Edit geometry type of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     geomType = EnumProperty (
-            items = mtdefs.geometrytypes,
+            items = defs.geometrytypes,
             name = "geometryType",
             default = "box",
             description = "MARS geometry type")
@@ -432,7 +444,7 @@ class SetGeometryType(Operator):
 
 class EditInertia(Operator):
     """Edit Inertia Operator"""
-    bl_idname = "object.mt_edit_inertia"
+    bl_idname = "object.phobos_edit_inertia"
     bl_label = "Edit inertia of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -471,9 +483,58 @@ class EditInertia(Operator):
         return ob is not None and ob.mode == 'OBJECT' and ob.MARStype == 'inertial'
 
 
+class EditStringList(Operator):
+    """Edit Inertia Operator"""
+    bl_idname = "object.phobos_edit_inertia"
+    bl_label = "Edit inertia of selected object(s)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    #inertiamatrix = FloatVectorProperty (
+    #        name = "inertia",
+    #        default = [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    #        subtype = 'MATRIX',
+    #        size = 9,
+    #        description = "set inertia for a link")
+
+    #inertiavector = StringVectorProperty (
+    #        name = "inertiavec",
+    #        default = ['', '', ''],
+    #        subtype = 'NONE',
+    #        size = 3,
+    #        description = "set inertia for a link"
+    #        )
+
+    def invoke(self, context, event):
+        if 'inertia' in context.active_object:
+            self.inertiavector = mathutils.Vector(context.active_object['inertia'])
+        return self.execute(context)
+
+    def execute(self, context):
+        #m = self.inertiamatrix
+        #inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
+        #obj['inertia'] = ' '.join(inertialist)
+        for obj in context.selected_objects:
+            if obj.MARStype == 'inertial':
+                obj['inertia'] = self.inertiavector#' '.join([str(i) for i in self.inertiavector])
+        return {'FINISHED'}
+
+    #def draw(self, context):
+    #    layout = self.layout
+    #    layout.operator(OBJECT_OT_my_operator.bl_idname, text="Operator 1 - invoke (default)")
+    #
+    #    col = layout.column()
+    #    col.operator_context = 'EXEC_DEFAULT'
+    #    col.operator(OBJECT_OT_my_operator.bl_idname, text="Operator 1 - execute")
+
+    #@classmethod
+    #def poll(cls, context):
+    #    ob = context.active_object
+    #    return ob is not None and ob.mode == 'OBJECT' and ob.MARStype == 'inertial'
+
+
 class PartialRename(Operator):
     """Partial Rename Operator"""
-    bl_idname = "object.mt_partial_rename"
+    bl_idname = "object.phobos_partial_rename"
     bl_label = "Replace part of the name of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -501,7 +562,7 @@ def replaceNameElement(prop, old, new):
 
 class SmoothenSurfaceOperator(Operator):
     """SmoothenSurfaceOperator"""
-    bl_idname = "object.mt_smoothen_surface"
+    bl_idname = "object.phobos_smoothen_surface"
     bl_label = "Smoothen Selected Objects"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -563,31 +624,31 @@ class CreateInertialOperator(Operator):
                 viscols.add(obj)
         if self.include_children:
             for link in links:
-                viscols.update(mtinertia.getInertiaRelevantObjects(link)) #union?
+                viscols.update(inertia.getInertiaRelevantObjects(link)) #union?
         for obj in viscols:
-            inertial = mtinertia.createInertial(obj)
+            inertial = inertia.createInertial(obj)
             if 'mass' in obj:
                 inertial['mass'] = obj['mass']
                 if self.auto_compute:
-                    geometry = mtrobotdictionary.deriveGeometry(obj)
-                    inertial['inertia'] = mtinertia.calculateInertia(inertial['mass'], geometry)
+                    geometry = robotdictionary.deriveGeometry(obj)
+                    inertial['inertia'] = inertia.calculateInertia(inertial['mass'], geometry)
         for link in links:
             if self.auto_compute:
-                inertial = mtinertia.createInertial(link)
-                mass, com, inertia = mtinertia.fuseInertiaData(mtutility.getImmediateChildren(link, ['inertial']))
+                inertial = inertia.createInertial(link)
+                mass, com, inertia = inertia.fuseInertiaData(utility.getImmediateChildren(link, ['inertial']))
                 if mass and com and inertia:
                     com_translate = mathutils.Matrix.Translation(com)
                     inertial.matrix_local = com_translate
                     inertial['mass'] = mass
-                    inertial['inertia'] = mtinertia.inertiaMatrixToList(inertia)
+                    inertial['inertia'] = inertia.inertiaMatrixToList(inertia)
             else:
-                inertial = mtinertia.createInertial(link)
+                inertial = inertia.createInertial(link)
         return {'FINISHED'}
 
 
 class AddGravityVector(Operator):
     """Add Gravity Operator"""
-    bl_idname = "object.mt_add_gravity"
+    bl_idname = "object.phobos_add_gravity"
     bl_label = "Add a vector representing gravity in the scene"
     bl_options = {'REGISTER', 'UNDO'}
 

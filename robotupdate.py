@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtupdate.py
+File robotupdate.py
 
 Created on 7 Jan 2014
 
@@ -20,9 +20,10 @@ especially none on the other modules of the MARStools package.
 import bpy
 import os, glob
 import mathutils
-import marstools.mtutility as mtutility
-import marstools.mtinertia as mtinertia
 from datetime import datetime as dt
+from . import utility
+from . import inertia
+
 
 #editmode = Blender.Window.EditMode()
 #if editmode: Blender.Window.EditMode(0)
@@ -49,17 +50,18 @@ def updateObject(obj, fix = False):
     notifications = []
     faulty_objects = []
     if obj.MARStype == 'link':
-        inertials = mtutility.getImmediateChildren(obj, ['inertial'])
+        inertials = utility.getImmediateChildren(obj, ['inertial'])
         if len(inertials) == 0:
             notifications.append("Warning, link '" + obj.name + "' has no inertial object.")
             #if fix:
-            #    mtinertia.createInertial(obj)
+            #    inertia.createInertial(obj)
         elif len(inertials) > 1:
             pass
         elif len(inertials) == 1:
             pass
         # checking whether masses add up if we have an inertial by now
-        mass = mtutility.calculateSum(mtutility.getImmediateChildren(obj), 'mass')
+        mass = utility.calculateSum(utility.getImmediateChildren(obj), 'mass')
+        #FIXME: inertia.calculateMassOfLink???
         if not mass > 0:
             notifications.append("Warning, link '" + obj.name + "' has no mass.")
         for inertial in inertials:
@@ -98,7 +100,7 @@ def updateObject(obj, fix = False):
 def updateModel(root, fix = False):
     notifications = []
     faulty_objects = []
-    children = mtutility.getChildren(root)
+    children = utility.getChildren(root)
     for obj in children:
         n, f = updateObject(obj, fix)
         notifications.extend(n)
@@ -109,7 +111,7 @@ def updateModels(roots = None, fix = False):
     notifications = []
     faulty_objects = []
     if roots == None:
-        roots = mtutility.getRoots()
+        roots = utility.getRoots()
     for root in roots:
         print("MARStools: Updating properties for model", root.name)
         if not "modelname" in root:

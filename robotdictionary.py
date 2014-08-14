@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtrobotdictionary.py
+File robotdictionary.py
 
 Created on 28 Jul 2014
 
@@ -17,15 +17,15 @@ import mathutils
 import sys
 import datetime
 import warnings
-import marstools.mtdefs as mtdefs
-import marstools.mtutility as mtutility
-import marstools.mtjoints as mtjoints
-import marstools.mtinertia as mtinertia
-from marstools.mtutility import *
+import phobos.defs as defs
+import phobos.utility as utility
+import phobos.joints as joints
+import phobos.inertia as inertia
+from phobos.utility import *
 
 
 def register():
-    print("Registering mtexport...")
+    print("Registering export...")
 
 
 def collectMaterials(objectlist):
@@ -73,8 +73,8 @@ def deriveJoint(obj):
     props['name'] = obj.name
     props['parent'] = obj.parent.name
     props['child'] = obj.name
-    props['jointType'], crot = mtjoints.deriveJointType(obj, True)
-    axis, limit = mtjoints.getJointConstraints(obj)
+    props['jointType'], crot = joints.deriveJointType(obj, True)
+    axis, limit = joints.getJointConstraints(obj)
     if axis:
         props['axis'] = list(axis)
     if limit:
@@ -227,7 +227,7 @@ def deriveDictEntry(obj):
         elif obj.MARStype == 'controller':
             props = deriveController(obj)
     except KeyError:
-        print('MARStools: A KeyError occurred, likely due to missing information in the model:\n    ', sys.exc_info()[0])
+        print('phobos: A KeyError occurred, likely due to missing information in the model:\n    ', sys.exc_info()[0])
     if obj.MARStype in ['sensor', 'motor' 'controller']:
         return cleanObjectProperties(props)
     else:
@@ -267,7 +267,7 @@ def deriveChainEntry(obj):
 def buildRobotDictionary():
     '''Builds a python dictionary representation of a Blender robot model for export and inspection.'''
     objectlist = bpy.context.selected_objects
-    #notifications, faulty_objects = mtupdate.updateModel(bpy.context.selected_objects)
+    #notifications, faulty_objects = robotupdate.updateModel(bpy.context.selected_objects)
     #print(notifications)
     robot = {'links': {},
             'joints': {},
@@ -320,7 +320,7 @@ def buildRobotDictionary():
                     robot['links'][parent.name]['inertial'] = props
             #FIXME: this has to be re-implemented
             #if linkinertial == None:
-            #    mass, com, inertia = mtinertia.fuseInertiaData(inertials)
+            #    mass, com, inertia = inertia.fuseInertiaData(inertials)
             #    parent = inertials[0].parent
             #    matrix_local = mathutils.Matrix.Translation(mathutils.Vector(com))
             #    pose = {}

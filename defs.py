@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtdefs.py
+File defs.py
 
 Created on 7 Jan 2014
 
@@ -17,6 +17,7 @@ do not include any imports which are not part of the standard python 3 libray.
 This module may well be imported and used outside of the MARS Blender Tools
 in the future.
 '''
+
 #TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below
 marstypes = (('undefined',)*3,

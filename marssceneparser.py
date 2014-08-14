@@ -1,5 +1,14 @@
 '''
-File mars_scene_to_dict.py
+Phobos - a Blender Add-On to work with MARS robot models
+
+File marssceneparser.py
+
+Created ???
+
+@author: Stefan Rahms
+
+Copy this add-on to your Blender add-on folder and activate it
+in your preferences to gain instant (virtual) world domination.
 '''
 
 import xml.etree.ElementTree as ET
@@ -29,14 +38,14 @@ class MARS_Scene_Parser(object):
         self.link_indices = set([])
         self.vis_coll_groups = {}
         self.base_poses = {}
-        
+
     def _read_scene(self, filename):
         '''
         '''
         tree = ET.parse(filename)
         self.xml_tree = tree
         return tree
-    
+
     def _get_pose(self, node):
         '''
         '''
@@ -50,7 +59,7 @@ class MARS_Scene_Parser(object):
         ry = round_float(rotation.find('y').text)
         rz = round_float(rotation.find('z').text)
         return [px, py, pz, rw, rx, ry, rz]
-    
+
     def _get_links(self, nodes, joints):
         '''
         '''
@@ -59,7 +68,7 @@ class MARS_Scene_Parser(object):
             self.link_indices.update([parent])
             child = int(joint.find('nodeindex2').text)
             self.link_indices.update([child])
-        
+
     def _parse_materials(self, materials):
         '''
         done
@@ -67,14 +76,14 @@ class MARS_Scene_Parser(object):
         for material in materials:
             material_dict = {}
             mat_id = int(material.find('id').text)
-            
+
             # check needs to be explicit for future versions
             if material.find('name') is not None:
                 name = material.find('name').text
             else:
                 name = 'material_' + str(mat_id)
             material_dict['name'] = name
-            
+
             for xml_colour in colour_dict:
                 colour = material.find(xml_colour)
                 if colour is not None:
@@ -84,17 +93,17 @@ class MARS_Scene_Parser(object):
                     a = round_float(colour.find('a').text)
                     py_colour = colour_dict[xml_colour]
                     material_dict[py_colour] = [r, g, b, a]
-            
+
             transparency = material.find('transparency')
             if transparency is not None:
                 material_dict['transparency'] = round_float(transparency.text)
             else:
                 material_dict['transparency'] = 0.0
-                
+
             material_dict['shininess'] = round_float(material.find('shininess').text)
-                
+
             self.material_indices[mat_id] = material_dict
-    
+
     def _parse_geometry(self, node, mode):
         '''
         mesh incomplete
@@ -104,11 +113,11 @@ class MARS_Scene_Parser(object):
             size = node.find('visualsize')
         elif mode == 'collision':
             size = node.find('extend')
-        
+
         geometry_dict = {}
         geometry_type = node.find('physicmode').text
         geometry_dict['type'] = geometry_type
-        
+
         if geometry_type == 'box' or geometry_type == 'mesh':
             x = round_float(size.find('x').text)
             y = round_float(size.find('y').text)
@@ -128,14 +137,14 @@ class MARS_Scene_Parser(object):
             y = round_float(size.find('y').text)
             geometry_dict['size'] = [x, y]
         return geometry_dict
-    
+
     def _parse_visual(self, visuals_dict, node):
         '''
         '''
         visual_dict = {}
         name = node.get('name')
         index = int(node.find('index').text)
-        
+
         pose = self.base_poses[index]
         visual_pose = [0.0]*len(pose)
         visual_position = node.find('visualposition')
@@ -153,15 +162,15 @@ class MARS_Scene_Parser(object):
         for p, vp in zip(pose, visual_pose):
             abs_pose.append(p+vp)
         visual_dict['pose'] = abs_pose
-        
+
         mat_index = int(node.find('material_id').text)
         visual_dict['material'] = self.material_indices[mat_index]
-        
+
         geometry_dict = self._parse_geometry(node, 'visual')
         visual_dict['geometry'] = geometry_dict
-        
+
         visuals_dict[name] = visual_dict
-        
+
     def _parse_collision(self, collisions_dict, node):
         '''
         max_contacts not in example. can it occur?
@@ -170,20 +179,20 @@ class MARS_Scene_Parser(object):
         name = node.get('name')
         index = int(node.find('index').text)
         collision_dict['pose'] = self.base_poses[index]
-        
+
         bitmask = int(node.find('coll_bitmask').text)
         collision_dict['bitmask'] = bitmask
-        
+
         geometry_dict = self._parse_geometry(node, 'collision')
         collision_dict['geometry'] = geometry_dict
-        
+
         max_contacts = node.find('cmax_num_contacts')
         if max_contacts is not None:
             collision_dict['max_contacts'] = int(max_contacts.text)
-        
+
         collisions_dict[name] = collision_dict
-        
-    
+
+
     def _parse_links(self, nodes):
         '''
         '''
@@ -192,7 +201,7 @@ class MARS_Scene_Parser(object):
             index = int(node.find('index').text)
             name = node.get('name')
             self.link_index_dict[index] = name
-            
+
             group = int(node.find('groupid').text)
             node_group_dict = {'name': name,
                                'index': index}
@@ -200,23 +209,23 @@ class MARS_Scene_Parser(object):
                 self.link_groups[group].append(node_group_dict)
             else:
                 self.link_groups[group] = [node_group_dict]
-                
+
             if index in self.link_indices:
                 link_dict = {}
-                
+
                 link_dict['filename'] = node.find('filename').text
-                
+
                 pose = self.base_poses[index]
                 link_dict['pose'] = pose
-                
+
                 visuals_dict = {}
                 self._parse_visual(visuals_dict, node)
                 link_dict['visuals'] = visuals_dict
-                
+
                 collisions_dict = {}
                 self._parse_collision(collisions_dict, node)
                 link_dict['collisions'] = collisions_dict
-                
+
                 inertial_dict = {}
                 mass = round_float(node.find('mass').text)
                 inertial_dict['mass'] = mass
@@ -236,12 +245,12 @@ class MARS_Scene_Parser(object):
                                                      i11, i12,
                                                           i22]
                 links_dict[name] = link_dict
-                
+
             else:
                 self.vis_coll_groups[index] = group
-                
+
         return links_dict
-        
+
     def _parse_additional_visuals_and_collisions(self, model, nodes):
         '''
         not well-tested yet
@@ -255,13 +264,13 @@ class MARS_Scene_Parser(object):
                         visuals_dict = model['links'][group_node['name']]['visuals']
                         self._parse_visual(visuals_dict, node)
                         model['links'][group_node['name']]['visuals'] = visuals_dict
-                        
+
                         collisions_dict = model['links'][group_node['name']]['collisions']
                         self._parse_collision(collisions_dict, node)
                         model['links'][group_node['name']]['collisions'] = collisions_dict
-                        
+
                         break
-        
+
     def _parse_joints(self, joints):
         '''
         '''
@@ -270,15 +279,15 @@ class MARS_Scene_Parser(object):
             joint_dict = {}
             name = joint.get('name')
             joint_dict['jointType'] = joint.find('type').text
-            
+
             parent_index = int(joint.find('nodeindex1').text)
             joint_dict['parent'] = self.link_index_dict[parent_index]
             child_index = int(joint.find('nodeindex2').text)
             joint_dict['child'] = self.link_index_dict[child_index]
-            
+
             joints_dict[name] = joint_dict
         return joints_dict
-        
+
     def _apply_relative_ids(self, nodes):
         '''
         seems to work but not well-tested yet
@@ -295,7 +304,7 @@ class MARS_Scene_Parser(object):
             else:
                 base_nodes[index] = pose
         num_rel_nodes = -1
-        while rel_nodes:        
+        while rel_nodes:
             to_delete = []
             if len(rel_nodes) == num_rel_nodes:             # check for infinite loop (happens if referenced node does not exist)
                 print('Error: non-existant relative id')
@@ -315,7 +324,7 @@ class MARS_Scene_Parser(object):
             for index in to_delete:
                 del rel_nodes[index]
         self.base_poses = base_nodes
-    
+
     def _parse_sensors(self, sensors):
         '''
         'link' is missing in manual
@@ -327,26 +336,26 @@ class MARS_Scene_Parser(object):
             sensor_dict['link'] = None  # where to get this?
             sensor_dict['sensorType'] = sensor.get('type')
             sensors_dict[name] = sensor_dict
-    
+
     def _parse_motors(self, motors):
         '''
         don't know yet what motors look like
         '''
         pass
-    
+
     def _parse_controllers(self, controllers):
         '''
         don't know yet what controllers look like
         '''
         pass
-        
+
     def parse_scene(self, filename):
         '''
         '''
         self.link_index_dict = {}
         self.link_groups = {}
         self.material_indices = {}
-        
+
         model = {}
         tree = self._read_scene(filename)
         root = tree.getroot()
@@ -356,11 +365,11 @@ class MARS_Scene_Parser(object):
         motors = root.find('motorlist')
         controllers = root.find('controllerlist')
         materials = root.find('materiallist')
-        
+
         self._apply_relative_ids(nodes)
         self._get_links(nodes, joints)
         self._parse_materials(materials)
-        
+
         model['links'] = self._parse_links(nodes)
         model['joints'] = self._parse_joints(joints)
         model['sensors'] = self._parse_sensors(sensors)
@@ -378,7 +387,7 @@ def test_read_scene():
     tree = msp._read_scene('kai_car_4.scene')
     root = tree.getroot()
     print(root.tag)
-    
+
 def test_xml_tree_handling():
     '''
     '''
@@ -386,14 +395,14 @@ def test_xml_tree_handling():
     root = tree.getroot()
     for child in root:
         print(child.tag)
-        
+
 def test_round_float():
     '''
     '''
     print(round_float('0.000000000001'))
     print(round_float('0.23948324321'))
     print(round_float('3.892737823'))
-        
+
 def test_parse_scene(msp):
     '''
     '''
@@ -414,7 +423,7 @@ def test_parse_scene(msp):
     print('material_indices:', msp.material_indices)
     print('link_indices:', msp.link_indices)
     print('vis_coll_groups:', msp.vis_coll_groups)
-    
+
 def test():
     '''
     '''
@@ -423,6 +432,6 @@ def test():
     #test_xml_tree_handling(msp)
     test_parse_scene(msp)
     #test_round_float()
-    
+
 if __name__ == '__main__':
     test()

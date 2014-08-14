@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtimport.py
+File importer.py
 
 Created on 28 Feb 2014
 
@@ -18,9 +18,9 @@ import os
 import yaml
 from collections import namedtuple
 import xml.etree.ElementTree as ET
-from marstools.mtutility import *
-import marstools.mtdefs as mtdefs
-import marstools.mtmaterials as mtmaterials
+from phobos.utility import *
+from . import defs
+from . import materials
 
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
@@ -29,10 +29,10 @@ defaults = Defaults(0.001, #mass
                     )
 
 def register():
-    print("Registering mtimport...")
+    print("Registering importer...")
 
 def unregister():
-    print("Unregistering mtimport...")
+    print("Unregistering importer...")
 
 def cleanUpScene():
     # select all objects
@@ -164,19 +164,19 @@ class RobotModelParser():
                 newgeom = createPrimitive(viscol['name'],
                                           geomtype,
                                           geom['size'],
-                                          mtdefs.layerTypes[geomsrc]
+                                          defs.layerTypes[geomsrc]
                                           )
             elif geomtype == 'cylinder':
                 newgeom = createPrimitive(viscol['name'],
                                           geomtype,
                                           (geom['radius'], geom['length']),
-                                          mtdefs.layerTypes[geomsrc]
+                                          defs.layerTypes[geomsrc]
                                           )
             elif geomtype == 'sphere':
                 newgeom = createPrimitive(viscol['name'],
                                           geomtype,
                                           geom['radius'], #tuple would cause problem here
-                                          mtdefs.layerTypes[geomsrc]
+                                          defs.layerTypes[geomsrc]
                                           )
             else:
                 print("### ERROR: Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.')
@@ -327,7 +327,7 @@ class URDFModelParser(RobotModelParser):
                 newmaterial['color'] = parse_text(color.attrib['rgba'])
                 materials.append(newmaterial)
         for m in materials:
-            mtmaterials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) #TODO: handle duplicate names? urdf_robotname_xxx?
+            materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) #TODO: handle duplicate names? urdf_robotname_xxx?
 
     def parseLink(self, link):
         novisual = True

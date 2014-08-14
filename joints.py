@@ -1,7 +1,7 @@
 '''
-MARS Blender Tools - a Blender Add-On to work with MARS robot models
+Phobos - a Blender Add-On to work with MARS robot models
 
-File mtjoints.py
+File joints.py
 
 Created on 7 Jan 2014
 
@@ -18,15 +18,13 @@ from bpy.props import FloatProperty, EnumProperty
 import math
 import mathutils
 import warnings
-import marstools.mtmaterials as mtmaterials
-import marstools.mtutility as mtutility
-import marstools.mtdefs as mtdefs
+from . import defs
 
 def register():
-    print("Registering mtjoints...")
+    print("Registering joints...")
 
 def unregister():
-    print("Unregistering mtjoints...")
+    print("Unregistering joints...")
 
 def deriveJointType(joint, adjust = False):
     ''' Derives the type of the joint defined by the armature object 'joint' based on the constraints defined in the joint.
@@ -136,7 +134,7 @@ class DefineJointConstraintsOperator(Operator):
         name = 'joint_type',
         default = 'revolute',
         description = "type of the joint",
-        items = mtdefs.jointtypes)
+        items = defs.jointtypes)
 
     lower = FloatProperty(
         name = "lower",
@@ -332,7 +330,7 @@ class AttachMotorOperator(Operator):
         name = 'motor_type',
         default = 'servo',
         description = "type of the motor",
-        items = mtdefs.motortypes)
+        items = defs.motortypes)
 
     def execute(self, context):
         for joint in bpy.context.selected_objects:

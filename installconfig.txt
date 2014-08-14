@@ -1,0 +1,2 @@
+blenderpath=~/tools/blender-2.69
+blenderversion=2.69
