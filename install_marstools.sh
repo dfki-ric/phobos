@@ -36,16 +36,27 @@ fi
 
 #YAML
 echo "Checking YAML installation..."
-yamlfolder="$blenderpath/$blenderversion/python/lib/python3.3/yaml/"
+#TODO:Set python correct python folder for different blender versions
+yamlfolder="$blenderpath/$blenderversion/python/lib/python3.4/yaml/"
+#prevents the yaml folder in the yaml folder
+pythonfolder="$blenderpath/$blenderversion/python/lib/python3.4/"
 if [ ! -d $yamlfolder ]
 then
-    echo "yaml folder does not exist, create marstools folder in $yamlfolder ? (y/n)"
+    echo "YAML installation does not exist, link YAML installation to $yamlfolder ? (y/n)"
     read YN
     case $YN in
         y|Y )
-            mkdir $yamlfolder
-            cp -r ./yaml/ $yamlfolder
-            echo "Copied YAML to $yamlfolder"
+			#TODO just works if python3 is in path..maybe ask for python binary??
+			#TODO integrate external YAMLFinder.py into this script
+			yamlpath=`python3 YAMLFinder.py | tail -n 1`
+			echo $yamlpath
+			if [ -d $yamlpath ]
+			then
+				cp -R $yamlpath $pythonfolder
+				echo "Linked YAML to $yamlfolder"
+			else
+				echo "There was no YAML installation found or the python version is wrong"
+			fi
             ;;
         n|N ) echo "No folder for YAML created";;
     esac
