@@ -28,17 +28,17 @@ import sys
 import os.path
 yamlconfpath=sys.path[0]+"/phobos/yamlpath.conf"
 if (os.path.isfile(yamlconfpath)):
-	f = open(yamlconfpath)
-	path = f.read()
-	f.close()
-	if (path == "v" or path == "i"):
-		print("There is no YAML installation for python 3.4 or greater on this computer")
-	else:
-		print("Importing yaml module")
-		sys.path.insert(0, path)
-		import yaml
+    f = open(yamlconfpath)
+    path = f.read()
+    f.close()
+    if (path == "v" or path == "i"):
+        print("There is no YAML installation for python 3.4 or greater on this computer")
+    else:
+        print("Importing yaml module")
+        sys.path.insert(0, path)
+        import yaml
 else:
-	print("Could not find yamlpath.conf")
+    print("Could not find yamlpath.conf")
 
 if "bpy" in locals():
     import imp
