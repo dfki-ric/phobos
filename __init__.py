@@ -5,7 +5,7 @@ File __init__.py
 
 Created on 6 Jan 2014
 
-@author: Kai von Szadkowski
+@author: Kai von Szadkowski, Ole Schwiegert
 
 Copy this add-on to your Blender add-on folder and activate it
 in your preferences to gain instant (virtual) world domination.
@@ -23,6 +23,22 @@ bl_info = {
     "wiki_url": "",
     "category": "3D View"
     }
+
+import sys
+import os.path
+yamlconfpath=sys.path[0]+"/phobos/yamlpath.conf"
+if (os.path.isfile(yamlconfpath)):
+	f = open(yamlconfpath)
+	path = f.read()
+	f.close()
+	if (path == "v" or path == "i"):
+		print("There is no YAML installation for python 3.4 or greater on this computer")
+	else:
+		print("Importing yaml module")
+		sys.path.insert(0, path)
+		import yaml
+else:
+	print("Could not find yamlpath.conf")
 
 if "bpy" in locals():
     import imp
@@ -47,9 +63,7 @@ else:
     print("Importing Phobos modules.")
 
 import bpy
-#import sys
-#sys.path.append('/usr/lib/python3/dist-packages/') #TODO: make this work on any system!!!
-#import yaml
+
 
 def register():
     links.register()
