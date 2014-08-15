@@ -42,7 +42,7 @@ else:
 
 if "bpy" in locals():
     import imp
-    imp.reload(update)
+    imp.reload(robotupdate)
     imp.reload(robotdictionary)
     imp.reload(controllers)
     imp.reload(export)
