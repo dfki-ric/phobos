@@ -45,7 +45,7 @@ if "bpy" in locals():
     imp.reload(robotupdate)
     imp.reload(robotdictionary)
     imp.reload(controllers)
-    imp.reload(export)
+    imp.reload(exporter)
     imp.reload(importer)
     imp.reload(phobosgui)
     imp.reload(joints)
