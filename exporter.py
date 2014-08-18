@@ -10,11 +10,6 @@ Created on 13 Feb 2014
 Copy this add-on to your Blender add-on folder and activate it
 in your preferences to gain instant (virtual) world domination.
 You may use the provided install shell script.
-
-NOTE: If you edit this script, please make sure not to use any imports
-not supported by Blender's standard Python distribution. This is a script
-intended to be usable on its own and thus should not use external dependencies,
-especially none of the other modules of the phobos package.
 '''
 
 import bpy
