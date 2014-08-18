@@ -483,55 +483,6 @@ class EditInertia(Operator):
         return ob is not None and ob.mode == 'OBJECT' and ob.MARStype == 'inertial'
 
 
-class EditStringList(Operator):
-    """Edit Inertia Operator"""
-    bl_idname = "object.phobos_edit_inertia"
-    bl_label = "Edit inertia of selected object(s)"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    #inertiamatrix = FloatVectorProperty (
-    #        name = "inertia",
-    #        default = [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #        subtype = 'MATRIX',
-    #        size = 9,
-    #        description = "set inertia for a link")
-
-    #inertiavector = StringVectorProperty (
-    #        name = "inertiavec",
-    #        default = ['', '', ''],
-    #        subtype = 'NONE',
-    #        size = 3,
-    #        description = "set inertia for a link"
-    #        )
-
-    def invoke(self, context, event):
-        if 'inertia' in context.active_object:
-            self.inertiavector = mathutils.Vector(context.active_object['inertia'])
-        return self.execute(context)
-
-    def execute(self, context):
-        #m = self.inertiamatrix
-        #inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
-        #obj['inertia'] = ' '.join(inertialist)
-        for obj in context.selected_objects:
-            if obj.MARStype == 'inertial':
-                obj['inertia'] = self.inertiavector#' '.join([str(i) for i in self.inertiavector])
-        return {'FINISHED'}
-
-    #def draw(self, context):
-    #    layout = self.layout
-    #    layout.operator(OBJECT_OT_my_operator.bl_idname, text="Operator 1 - invoke (default)")
-    #
-    #    col = layout.column()
-    #    col.operator_context = 'EXEC_DEFAULT'
-    #    col.operator(OBJECT_OT_my_operator.bl_idname, text="Operator 1 - execute")
-
-    #@classmethod
-    #def poll(cls, context):
-    #    ob = context.active_object
-    #    return ob is not None and ob.mode == 'OBJECT' and ob.MARStype == 'inertial'
-
-
 class PartialRename(Operator):
     """Partial Rename Operator"""
     bl_idname = "object.phobos_partial_rename"
