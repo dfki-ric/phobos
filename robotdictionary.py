@@ -300,9 +300,9 @@ def buildRobotDictionary(typetags=False):
     print('\nParsing links, joints and motors...')
     for obj in bpy.context.selected_objects:
         if obj.MARStype == 'link':
-            link, joint, motor = deriveKinematics(obj)
-            robot['links'][obj.name] = link
-            if joint: #joint can be None if link is a root
+            link, joint, motor = deriveKinematics(obj, typetags)
+            robot['links'][obj.name] = link # it's important that this is really the object's name
+            if joint: # joint can be None if link is a root
                 robot['joints'][joint['name']] = joint
             if motor:
                 robot['motors'][joint['name']] = motor
