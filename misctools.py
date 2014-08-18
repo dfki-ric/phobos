@@ -552,7 +552,6 @@ class PartialRename(Operator):
         for obj in bpy.context.selected_objects:
             obj.name = obj.name.replace(self.find, self.replace)
         return {'FINISHED'}
-def replaceNameElement(prop, old, new):
 
     @classmethod
     def poll(cls, context):
