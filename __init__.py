@@ -53,7 +53,6 @@ if "bpy" in locals():
     imp.reload(misctools)
     imp.reload(sensors)
     imp.reload(utility)
-    imp.reload(testing)
     imp.reload(collision)
     imp.reload(inertia)
     imp.reload(marssceneexport)
