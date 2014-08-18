@@ -56,7 +56,7 @@ def register():
     bpy.types.World.exportURDF = BoolProperty(name="exportURDF", default=True)
     bpy.types.World.exportYAML = BoolProperty(name = "exportYAML", update=updateExportOptions)
 
-    bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
+    #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
 
 def unregister():
     print("Unregistering gui...")
