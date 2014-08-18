@@ -390,11 +390,17 @@ class ExportModelOperator(Operator):
     bl_label = "Export the selected model(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
+    typetags = BoolProperty(
+                name = 'typetags',
+                default = False,
+                description = 'add link/joint typetags'
+                )
+
     def execute(self, context):
-        export()
+        export(self.typetags)
         return {'FINISHED'}
 
-def export():
+def export(typetags=False):
     #TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
     if bpy.data.worlds[0].relativePath:
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
@@ -410,7 +416,7 @@ def export():
     objectlist = bpy.context.selected_objects
 
     if yaml or urdf or smurf or mars:
-        robot = robotdictionary.buildRobotDictionary()
+        robot = robotdictionary.buildRobotDictionary(typetags)
         if yaml:
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
         if mars:

@@ -59,7 +59,7 @@ def deriveMaterial(mat):
     return material
 
 
-def deriveLink(obj):
+def deriveLink(obj, typetags=False):
     props = initObjectProperties(obj, 'link')
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
@@ -68,9 +68,15 @@ def deriveLink(obj):
     return props
 
 
-def deriveJoint(obj):
+def deriveJoint(obj, typetags=False):
     props = initObjectProperties(obj, 'joint')
-    props['name'] = obj.name
+    if typetags:
+        if not '/' in obj.name:
+            props['name'] = obj.name + '_joint'
+        else:
+            props['name'] = obj.name.replace('/', '/joint')
+    else:
+        props['name'] = obj.name
     props['parent'] = obj.parent.name
     props['child'] = obj.name
     props['jointType'], crot = joints.deriveJointType(obj, True)
@@ -107,12 +113,12 @@ def deriveMotor(obj):
     return props#, obj.parent
 
 
-def deriveKinematics(obj):
-    link = deriveLink(obj)
+def deriveKinematics(obj, typetags=False):
+    link = deriveLink(obj, typetags)
     joint = None
     motor = None
     if obj.parent:
-        joint = deriveJoint(obj)
+        joint = deriveJoint(obj, typetags)
         motor = deriveMotor(obj)
     return link, joint, motor
 
@@ -264,7 +270,7 @@ def deriveChainEntry(obj):
     return returnchains
 
 
-def buildRobotDictionary():
+def buildRobotDictionary(typetags=False):
     '''Builds a python dictionary representation of a Blender robot model for export and inspection.'''
     objectlist = bpy.context.selected_objects
     #notifications, faulty_objects = robotupdate.updateModel(bpy.context.selected_objects)
