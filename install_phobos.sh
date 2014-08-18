@@ -59,7 +59,7 @@ else
 	y|Y )
 	
 	###BEGIN PYTHON SNIPPET###
-		python3 << END
+		pythoncom << END
 import sys
 f = open("yamlpath.conf", "w")
 f.truncate() #Empty the file
