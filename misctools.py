@@ -634,12 +634,12 @@ class CreateInertialOperator(Operator):
         for link in links:
             if self.auto_compute:
                 inertial = inertia.createInertial(link)
-                mass, com, inertia = inertia.fuseInertiaData(utility.getImmediateChildren(link, ['inertial']))
-                if mass and com and inertia:
+                mass, com, inert = inertia.fuseInertiaData(utility.getImmediateChildren(link, ['inertial']))
+                if mass and com and inert:
                     com_translate = mathutils.Matrix.Translation(com)
                     inertial.matrix_local = com_translate
                     inertial['mass'] = mass
-                    inertial['inertia'] = inertia.inertiaMatrixToList(inertia)
+                    inertial['inertia'] = inertia.inertiaMatrixToList(inert)
             else:
                 inertial = inertia.createInertial(link)
         return {'FINISHED'}
