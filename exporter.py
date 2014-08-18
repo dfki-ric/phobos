@@ -1,4 +1,4 @@
-'''
+"""
 Phobos - a Blender Add-On to work with MARS robot models
 
 File export.py
@@ -10,7 +10,7 @@ Created on 13 Feb 2014
 Copy this add-on to your Blender add-on folder and activate it
 in your preferences to gain instant (virtual) world domination.
 You may use the provided install shell script.
-'''
+"""
 
 import bpy
 import mathutils
@@ -19,15 +19,15 @@ from datetime import datetime
 import yaml
 import struct
 from bpy.types import Operator
-from bpy.props import StringProperty, BoolProperty, IntProperty
+from bpy.props import BoolProperty
 from phobos.utility import *
-from . import defs
 from . import marssceneexport as mse
-from . import inertia
 from . import robotdictionary
+
 
 def register():
     print("Registering export...")
+
 
 def unregister():
     print("Unregistering export...")
@@ -35,6 +35,7 @@ def unregister():
 indent = '  '
 urdfHeader = '<?xml version="1.0"?>\n'
 urdfFooter = indent+'</robot>\n'
+
 
 def exportBobj(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
@@ -47,7 +48,6 @@ def exportBobj(path, obj):
 
     # ignore dupli children
     if obj.parent and obj.parent.dupli_type in {'VERTS', 'FACES'}:
-        # XXX
         print(obj.name, 'is a dupli child - ignoring')
         return
 
@@ -87,7 +87,7 @@ def exportBobj(path, obj):
                 uvkey = round(uv[0], 6), round(uv[1], 6)
                 try:
                     uv_face_mapping[f_index][uv_index] = uv_dict[uvkey]
-                except:
+                except:  # TODO: what can really go wrong here?
                     uv_face_mapping[f_index][uv_index] = uv_dict[uvkey] = len(uv_dict)
                     out.write(struct.pack('iff', 2, uv[0], uv[1]))
 
@@ -143,11 +143,12 @@ def exportBobj(path, obj):
                         out.write(struct.pack('iii', v.index + totverts, 0, no))
     out.close()
 
+
 def exportObj(path, obj):
     objname = obj.name
-    obj.name = 'tmp_export_666' #surely no one will ever name an object like so
+    obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
-    tmpobject.data = obj.data #copy the mesh here
+    tmpobject.data = obj.data  # copy the mesh here
     outpath = os.path.join(path, objname) + '.obj'
     bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True)
     bpy.ops.object.select_all(action='DESELECT')
@@ -170,11 +171,13 @@ def exportObj(path, obj):
     #                         axis_up='Y', use_selection=True, use_normals=True)
     #obj.matrix_world = world_matrix
 
+
 def exportModelToYAML(model, filepath):
     print("phobos YAML export: Writing model data to", filepath )
     with open(filepath, 'w') as outputfile:
         outputfile.write('#YAML dump of robot model "'+model['modelname']+'", '+datetime.now().strftime("%Y%m%d_%H:%M")+"\n\n")
-        outputfile.write(yaml.dump(model))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
+        outputfile.write(yaml.dump(model)) # default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
+
 
 def xmlline(ind, tag, names, values):
     line = []
@@ -183,6 +186,7 @@ def xmlline(ind, tag, names, values):
         line.append(' '+names[i]+'="'+str(values[i])+'"')
     line.append('/>\n')
     return ''.join(line)
+
 
 def l2str(items, start=-1, end=-1):
     line = []
@@ -193,6 +197,7 @@ def l2str(items, start=-1, end=-1):
         i += 1
     return ''.join(line)[0:-1]
 
+
 def writeURDFGeometry(output, element):
     output.append(indent*4+'<geometry>\n')
     if element['geometryType'] == 'box':
@@ -201,9 +206,10 @@ def writeURDFGeometry(output, element):
         output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['height']]))
     elif element['geometryType'] == "sphere":
         output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
-    elif element['geometryType'] in ['capsule', 'mesh']: #capsules are not supported in URDF and are emulated using meshes
+    elif element['geometryType'] in ['capsule', 'mesh']: # capsules are not supported in URDF and are emulated using meshes
         output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], '1.0 1.0 1.0']))#TODO correct this after implementing scale properly
     output.append(indent*4+'</geometry>\n')
+
 
 def exportModelToURDF(model, filepath):
     output = []
@@ -263,7 +269,7 @@ def exportModelToURDF(model, filepath):
         output.append(indent*2+'</joint>\n\n')
     #export material information
     for m in model['materials']:
-        if model['materials'][m]['users'] > 0: #FIXME: change back to 1 when implemented in urdfloader
+        if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
             output.append(indent*2+'<material name="' + m + '">\n')
             color = model['materials'][m]['diffuseFront']
             transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
@@ -277,6 +283,7 @@ def exportModelToURDF(model, filepath):
         outputfile.write(''.join(output))
     # problem of different joint transformations needed for fixed joints
     print("phobos URDF export: Writing model data to", filepath )
+
 
 def exportModelToSMURF(model, path):
     export = {'semantics': model['groups'] != {} or model['chains'] != {},
@@ -334,7 +341,7 @@ def exportModelToSMURF(model, path):
         #gather all states
         for jointname in model['joints']:
             joint = model['joints'][jointname]
-            if 'state' in joint: #this should always be the case, but testing doesn't hurt
+            if 'state' in joint:  # this should always be the case, but testing doesn't hurt
                 tmpstate = joint['state'].copy()
                 tmpstate['name'] = jointname
                 states.append(joint['state'])
@@ -371,18 +378,22 @@ def exportModelToSMURF(model, path):
             op.write("\ncollision:\n")
             op.write(yaml.dump(list(nodes['collision'].values())))
 
+
 def exportSceneToSMURF(path):
     """Exports all robots in a scene to separate SMURF folders."""
     pass
+
 
 def exportModelToMARS(model, path):
     """Exports selected robot as a MARS scene"""
     mse.exportModelToMARS(model, path)
 
+
 def securepath(path): #TODO: this is totally not error-handled!
     if not os.path.exists(path):
         os.makedirs(path)
     return os.path.expanduser(path)
+
 
 class ExportModelOperator(Operator):
     """ExportModelOperator"""
@@ -399,6 +410,7 @@ class ExportModelOperator(Operator):
     def execute(self, context):
         export(self.typetags)
         return {'FINISHED'}
+
 
 def export(typetags=False):
     #TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
@@ -427,7 +439,7 @@ def export(typetags=False):
             exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
     selectObjects(objectlist, True)
     if meshexp:
-        show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269;
+        show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
         if show_progress:
             wm = bpy.context.window_manager
             total = float(len(objectlist))
@@ -445,4 +457,3 @@ def export(typetags=False):
                 i += 1
         if show_progress:
             wm.progress_end()
-
