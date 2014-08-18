@@ -143,7 +143,7 @@ def deriveInertial(obj):
     '''Derives a dictionary entry of an inertial object.'''
     props = initObjectProperties(obj)
     #inertia = props['inertia'].split()
-    #props['inertia'] = list(map(float, inertia))
+    props['inertia'] = list(map(float, obj['inertia']))
     props['pose'] = deriveObjectPose(obj)
     return props, obj.parent
 
@@ -314,9 +314,8 @@ def buildRobotDictionary():
         elif len(inertials) > 1:
             linkinertial = None
             for i in inertials:
-                if i.name == 'inertial__' + l:
-                    linkinertial = i
-                    props, parent = deriveDictEntry(linkinertial)
+                if i.name == 'inertial_' + l:
+                    props, parent = deriveDictEntry(i)
                     robot['links'][parent.name]['inertial'] = props
             #FIXME: this has to be re-implemented
             #if linkinertial == None:
