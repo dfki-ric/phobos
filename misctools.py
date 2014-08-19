@@ -601,33 +601,35 @@ class SetOriginToCOMOperator(Operator):
     bl_label = "Set Origin to COM"
     bl_options = {'REGISTER', 'UNDO'}
 
-    com_position = FloatVectorProperty(
-        name = "CAD origin shift",
-        default = (0.0, 0.0, 0.0,),
-        subtype = 'TRANSLATION',
-        unit = 'LENGTH',
-        size = 3,
-        precision = 6,
-        description = "distance between objects")
+    com_shift = FloatVectorProperty(
+        name="CAD origin shift",
+        default=(0.0, 0.0, 0.0,),
+        subtype='TRANSLATION',
+        unit='LENGTH',
+        size=3,
+        precision=6,
+        description="distance between objects")
 
     cursor_location = FloatVectorProperty(
-        name = "CAD origin",
-        default = (0.0, 0.0, 0.0,),
-        subtype = 'TRANSLATION',
-        unit = 'LENGTH',
-        size = 3,
-        precision = 6,
-        description = "distance between objects")
+        name="CAD origin",
+        default=(0.0, 0.0, 0.0,),
+        subtype='TRANSLATION',
+        unit='LENGTH',
+        size=3,
+        precision=6,
+        description="distance between objects")
 
     def execute(self, context):
         master = context.active_object
         slaves = context.selected_objects
         to_cadorigin = self.cursor_location - master.matrix_world.to_translation()
-        com_shift_world = self.com_position + to_cadorigin
-        for s in self.slaves:
+        com_shift_world = to_cadorigin + self.com_shift
+        for s in slaves:
             utility.selectObjects([s], True, 0)
-            context.scene.cursor_location = s.matrix_world.to_translation() + (s.matrix_world.to_quaternion() * com_shift_world)
+            context.scene.cursor_location = s.matrix_world.to_translation() + com_shift_world
             bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+        utility.selectObjects(slaves, True, slaves.index(master))
+        context.scene.cursor_location = self.cursor_location.copy()
         return {'FINISHED'}
 
     def invoke(self, context, event):
