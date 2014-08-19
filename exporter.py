@@ -172,6 +172,19 @@ def exportObj(path, obj):
     #obj.matrix_world = world_matrix
 
 
+def exportStl(path, obj):
+    objname = obj.name
+    obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
+    tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
+    tmpobject.data = obj.data  # copy the mesh here
+    outpath = os.path.join(path, objname) + '.stl'
+    bpy.ops.export_mesh.stl(filepath=outpath, axis_forward='-Z', axis_up='Y')
+    bpy.ops.object.select_all(action='DESELECT')
+    tmpobject.select = True
+    bpy.ops.object.delete()
+    obj.name = objname
+
+
 def exportModelToYAML(model, filepath):
     print("phobos YAML export: Writing model data to", filepath )
     with open(filepath, 'w') as outputfile:
@@ -425,6 +438,7 @@ def export(typetags=False):
     meshexp = bpy.data.worlds[0].exportMesh
     objexp = bpy.data.worlds[0].useObj
     bobjexp = bpy.data.worlds[0].useBobj
+    stlexp = bpy.data.worlds[0].useStl
     objectlist = bpy.context.selected_objects
 
     if yaml or urdf or smurf or mars:
@@ -452,6 +466,8 @@ def export(typetags=False):
                     exportObj(outpath, obj)
                 if bobjexp:
                     exportBobj(outpath, obj)
+                if stlexp:
+                    exportStl(outpath, obj)
             if show_progress:
                 wm.progress_update(i)
                 i += 1
