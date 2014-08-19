@@ -576,23 +576,27 @@ class CreateInertialOperator(Operator):
             for link in links:
                 viscols.update(inertia.getInertiaRelevantObjects(link)) #union?
         for obj in viscols:
-            inertial = inertia.createInertial(obj)
-            if 'mass' in obj:
-                inertial['mass'] = obj['mass']
-                if self.auto_compute:
-                    geometry = robotdictionary.deriveGeometry(obj)
-                    inertial['inertia'] = inertia.calculateInertia(inertial['mass'], geometry)
+            if self.auto_compute:
+                mass = obj['mass'] if 'mass' in obj else None
+                geometry = robotdictionary.deriveGeometry(obj)
+                inert = inertia.calculateInertia(mass, geometry)
+                if mass is not None and inert is not None:
+                    inertial = inertia.createInertial(obj)
+                    inertial['mass'] = mass
+                    inertial['inertia'] = inert
+            else:
+                inertia.createInertial(obj)
         for link in links:
             if self.auto_compute:
-                inertial = inertia.createInertial(link)
                 mass, com, inert = inertia.fuseInertiaData(utility.getImmediateChildren(link, ['inertial']))
                 if mass and com and inert:
+                    inertial = inertia.createInertial(link)
                     com_translate = mathutils.Matrix.Translation(com)
                     inertial.matrix_local = com_translate
                     inertial['mass'] = mass
                     inertial['inertia'] = inertia.inertiaMatrixToList(inert)
             else:
-                inertial = inertia.createInertial(link)
+                inertia.createInertial(link)
         return {'FINISHED'}
 
 
