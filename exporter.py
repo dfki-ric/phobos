@@ -150,7 +150,7 @@ def exportObj(path, obj):
     tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = os.path.join(path, objname) + '.obj'
-    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True)
+    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
