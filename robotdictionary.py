@@ -315,10 +315,10 @@ def buildRobotDictionary(typetags=False):
         inertials = getImmediateChildren(link, 'inertial')
         if len(inertials) == 1:
             props, parent = deriveDictEntry(inertials[0])
-            robot['links'][parent.name]['inertial'] = props
+            if not (props is None or parent is None):  # this may be the case if there is inertia information missing
+                robot['links'][parent.name]['inertial'] = props
             inertials[0].select = False
         elif len(inertials) > 1:
-            linkinertial = None
             for i in inertials:
                 if i.name == 'inertial_' + l:
                     props, parent = deriveDictEntry(i)
