@@ -238,6 +238,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c1.operator('object.create_collision_objects', text = "Create Collision Object(s)")
         c1.operator('object.create_inertial_objects', text = "Create Inertial Object(s)")
         c1.operator('object.define_joint_constraints', text = "Define Joint Constraints")
+        c1.operator('object.phobos_set_origin_to_com', text = "Set Origin to COM")
         c2 = inlayout.column(align = True)
         c2.operator('object.phobos_partial_rename', text = "Partial Rename")
         c2.operator('object.attach_motor', text = "Attach motor")
