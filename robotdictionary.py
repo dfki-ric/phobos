@@ -32,7 +32,7 @@ def collectMaterials(objectlist):
     materials = {}
     for obj in objectlist:
         if obj.MARStype == 'visual' and obj.data.materials:
-            mat = obj.data.materials[0] #simply grab the first material
+            mat = obj.data.materials[0]  # simply grab the first material
             if mat.name not in materials:
                 materials[mat.name] = deriveMaterial(mat)
                 materials[mat.name]['users'] = 1
@@ -135,10 +135,10 @@ def deriveGeometry(obj):
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
-            filename = obj['filename'] if 'filename' in obj else obj.name.replace('/','_')
+            filename = obj['filename'] if 'filename' in obj else obj.name.replace('/', '_')
             geometry['filename'] = filename + ('.obj' if not (bpy.data.worlds[0].useBobj and not bpy.data.worlds[0].useObj) else '.bobj')
             geometry['scale'] = list(obj.scale)
-            geometry['size'] = list(obj.dimensions) #this is needed to calculate an approximate inertia
+            geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
         return geometry
     else:
         warnings.warn("No geometryType found for object "+obj.name+".")
@@ -146,7 +146,7 @@ def deriveGeometry(obj):
 
 
 def deriveInertial(obj):
-    '''Derives a dictionary entry of an inertial object.'''
+    """Derives a dictionary entry of an inertial object."""
     props = initObjectProperties(obj)
     #inertia = props['inertia'].split()
     props['inertia'] = list(map(float, obj['inertia']))
@@ -155,7 +155,7 @@ def deriveInertial(obj):
 
 
 def deriveObjectPose(obj):
-    '''Derive pose of link, visual or collision object.'''
+    """Derive pose of link, visual or collision object."""
     pose = {}
     pose['matrix'] = [list(vector) for vector in list(obj.matrix_local)]
     pose['translation'] = list(obj.matrix_local.to_translation())
@@ -192,7 +192,7 @@ def deriveController(obj):
     return props
 
 
-def initObjectProperties(obj, marstype = None):
+def initObjectProperties(obj, marstype=None):
     props = {}
     if not marstype:
         for key, value in obj.items():
@@ -206,7 +206,7 @@ def initObjectProperties(obj, marstype = None):
 
 
 def cleanObjectProperties(props):
-    '''Cleans a predefined list of Blender-specific properties from the dictionary.'''
+    """Cleans a predefined list of Blender-specific properties from the dictionary."""
     getridof = ['MARStype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
     if props:
         for key in getridof:
@@ -253,7 +253,7 @@ def deriveChainEntry(obj):
         parent = obj
         chain = {'name': chainName, 'start': '', 'end': obj.name, 'elements': []}
         while not chainclosed:
-            if parent.parent == None:
+            if parent.parent is None:
                 print('### Error: Unclosed chain, aborting parsing chain', chainName)
                 chain = None
                 break
@@ -271,7 +271,7 @@ def deriveChainEntry(obj):
 
 
 def buildRobotDictionary(typetags=False):
-    '''Builds a python dictionary representation of a Blender robot model for export and inspection.'''
+    """Builds a python dictionary representation of a Blender robot model for export and inspection."""
     objectlist = bpy.context.selected_objects
     #notifications, faulty_objects = robotupdate.updateModel(bpy.context.selected_objects)
     #print(notifications)
@@ -323,7 +323,7 @@ def buildRobotDictionary(typetags=False):
                 if i.name == 'inertial_' + l:
                     props, parent = deriveDictEntry(i)
                     robot['links'][parent.name]['inertial'] = props
-            #FIXME: this has to be re-implemented
+            # FIXME: this has to be re-implemented
             #if linkinertial == None:
             #    mass, com, inertia = inertia.fuseInertiaData(inertials)
             #    parent = inertials[0].parent
@@ -365,7 +365,7 @@ def buildRobotDictionary(typetags=False):
 
     # gather information on groups of objects
     print('\n\nParsing groups...')
-    for group in bpy.data.groups: #TODO: get rid of the "data" part
+    for group in bpy.data.groups:  # TODO: get rid of the "data" part
         robot['groups'][group.name] = deriveGroupEntry(group)
 
     # gather information on chains of objects
@@ -379,13 +379,13 @@ def buildRobotDictionary(typetags=False):
 
     #shorten numbers in dictionary to n decimalPlaces and return it
     print('\n\nRounding numbers...')
-    epsilon = 10**(-bpy.data.worlds[0].decimalPlaces) #TODO: implement this separately
+    epsilon = 10**(-bpy.data.worlds[0].decimalPlaces)  # TODO: implement this separately
     return epsilonToZero(robot, epsilon, bpy.data.worlds[0].decimalPlaces)
 
 
 def check_geometry(geometry, owner_type, owner_key, link_key):
-    '''
-    '''
+    """
+    """
     notifications = ''
     if not 'type' in geometry:
         note = "CheckModel: Error, geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'type'."
@@ -427,8 +427,8 @@ def check_geometry(geometry, owner_type, owner_key, link_key):
 
 
 def check_visuals(visuals, link_key):
-    '''
-    '''
+    """
+    """
     notifications = ''
     for visual_key in visuals.keys():
         visual = visuals[visual_key]
@@ -476,8 +476,8 @@ def check_visuals(visuals, link_key):
 
 
 def check_collisions(collisions, link_key):
-    '''
-    '''
+    """
+    """
     notifications = ''
     for collision_key in collisions.keys():
         collision = collisions[collision_key]
@@ -507,8 +507,8 @@ def check_collisions(collisions, link_key):
 
 
 def check_links(links):
-    '''
-    '''
+    """
+    """
     notifications = ''
     for link_key in links.keys():
         link = links[link_key]
@@ -550,8 +550,8 @@ def check_links(links):
 
 
 def check_joints(joints):
-    '''
-    '''
+    """
+    """
     notifications = ''
     for joint_key in joints.keys():
         joint = joints[joint_key]
@@ -575,8 +575,8 @@ def check_joints(joints):
 
 
 def check_dict(model):
-    '''
-    '''
+    """
+    """
     notifications = ''
     notifications += check_links(model['links'])
     notifications += check_joints(model['joints'])
