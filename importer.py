@@ -317,7 +317,7 @@ class URDFModelParser(RobotModelParser):
         with open(self.filepath+'_debug.yml', 'w') as outputfile:
             outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
-        materials = [] #TODO: build dictionary entry for materials
+        materiallist = [] #TODO: build dictionary entry for materials
         print("\n\nParsing materials..")
         for material in self.root.iter('material'):
             newmaterial = {a: material.attrib[a] for a in material.attrib}
@@ -325,8 +325,8 @@ class URDFModelParser(RobotModelParser):
             if color is not None:
                 print(material.attrib['name'] + ', ', end='')
                 newmaterial['color'] = parse_text(color.attrib['rgba'])
-                materials.append(newmaterial)
-        for m in materials:
+                materiallist.append(newmaterial)
+        for m in materiallist:
             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) #TODO: handle duplicate names? urdf_robotname_xxx?
 
     def parseLink(self, link):
