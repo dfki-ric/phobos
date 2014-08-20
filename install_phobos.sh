@@ -47,7 +47,7 @@ osys = platform.system()
 if osys == "Linux":
     f.write("addonpath=$HOME/.config/blender/$blenderversion/scripts/addons")
 elif osys == "Darwin":
-    f.write("addonpath=$HOME/Library/Application\ Support/Blender/$blenderversion/scripts/addons")
+    f.write("addonpath=$HOME/Library/Application Support/Blender/$blenderversion/scripts/addons")
 f.close()
 END
     ###END PYTHON SNIPPET###
@@ -79,8 +79,8 @@ installPhobos() {
         read YN
         case $YN in
             y|Y )
-                mkdir -p $phobospath
-                cp *.py $phobospath
+                mkdir -p "$phobospath"
+                cp *.py "$phobospath"
                 installed=1
                 echo "Copied phobos to $phobospath"
                 ;;
@@ -120,11 +120,11 @@ f.close()
 exit(1)
 END
             ###END PYTHON SNIPPET###
-            cp yamlpath.conf $phobospath/yamlpath.conf
+            cp yamlpath.conf "$phobospath/yamlpath.conf"
             echo "yamlpath.conf created and copied"
         fi
     else
-        cp -R yaml $phobospath
+        cp -R yaml "$phobospath"
         echo "YAML package was copied into $phobospath."
     fi
 }
