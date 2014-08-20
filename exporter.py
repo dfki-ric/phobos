@@ -286,7 +286,7 @@ def exportModelToURDF(model, filepath):
             output.append(indent*2+'<material name="' + m + '">\n')
             color = model['materials'][m]['diffuseFront']
             transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
-            output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(transparency) + '"/>\n')
+            output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(1.0-transparency) + '"/>\n')
             if 'texturename' in model['materials'][m]:
                             output.append(indent*3+'<texture filename="'+model['materials'][m]['texturename']+'"/>\n')
             output.append(indent*2+'</material>\n\n')
