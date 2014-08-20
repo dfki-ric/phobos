@@ -430,10 +430,14 @@ class URDFModelParser(RobotModelParser):
     def parseJoint(self, joint):
         print(joint.attrib['name']+', ', end='')
         newjoint = {a: joint.attrib[a] for a in joint.attrib}
-        origin = joint.find('origin')
+        try:
+            origin = joint.find('origin')
+            origindict = {'xyz': origin.attrib['xyz'].split(), 'rpy': origin.attrib['rpy'].split()}
+        except AttributeError:
+            origindict = {'xyz': [0, 0, 0], 'rpy': [0, 0, 0]}
         newjoint['parent'] = joint.find('parent').attrib['link']
         newjoint['child'] = joint.find('child').attrib['link']
-        pose = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
+        pose = [float(num) for num in (origindict['xyz'] + origindict['rpy'])]
         #axis
         #calibration
         #dynamics
