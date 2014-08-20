@@ -8,12 +8,14 @@
 #If you used the old install script you can delete the previous phobos folder
 #You also have to delete the old installconfig.txt to run this script correctly.
 
+
+
+###Config file name###
 file="installconfig.txt"
-if [ -r $file ]
-then
-    echo "Found install config file."
-    . ./$file
-else
+
+#####
+writeConfig() {
+    #Creates the config and writes it to installconfig.txt
     echo "Enter your blender version (e.g. '2.71')"
     read blenderversion
     echo "blenderversion=$blenderversion" >>installconfig.txt
@@ -26,8 +28,8 @@ else
             echo "useP=$useP" >>installconfig.txt
             echo "Please enter the command to run your python3 binary (e.g python3 or /usr/bin/python3)"
             read pythoncom
-            alias pythoncom=$pythoncom
-            echo "alias pythoncom=$pythoncom" >>installconfig.txt
+            pythoncom=$pythoncom
+            echo "pythoncom=$pythoncom" >>installconfig.txt
             ;;
         n|N )
             useP='no'
@@ -47,47 +49,59 @@ elif osys == "Darwin":
 f.close()
 END
     ###END PYTHON SNIPPET###
-    #Read the installconf.txt to get the addonpath
-    . ./$file
-fi
+}
+#####
 
-#Phobos installation
-echo "Check for phobos installation..."
-phobospath="$addonpath/phobos"
-if [ -d $phobospath ]
-then
-	echo "Phobos installation found and updated."
-	cp *.py $phobospath
-else
-	echo "Phobos folder does not exist, create phobos folder in $addonpath ? (y/n)"
-    read YN
-    case $YN in
-        y|Y )
-            mkdir -p $phobospath
-            cp *.py $phobospath
-            echo "Copied phobos to $phobospath"
-            ;;
-        n|N ) echo "No folder for phobos created";;
-    esac
-fi
-
-#YAML new version
-#TODO: I think it doesn't work when there is no phobos folder
-if [ "$useP" = "yes" ]
-then
-    echo "Checking for yamlpath.conf"
-    yamlpath="$phobospath/yamlpath.conf"
-    if [ -r $yamlpath ]
+#####
+initConfig() {
+    if [ -r $file ]
     then
-        echo "yamlpath.conf found! Done."
+        echo "Found install config file."
+        . ./$file
     else
-        echo "Do you want to create your yamlpath.conf? (y/n)"
+        writeConfig
+    fi
+    . ./$file
+}
+
+installPhobos() {
+    echo "Check for phobos installation..."
+    phobospath="$addonpath/phobos"
+    if [ -d $phobospath ]
+    then
+        echo "Phobos installation found and updated."
+        cp *.py $phobospath
+    else
+        echo "Phobos folder does not exist, create phobos folder in $addonpath ? (y/n)"
         read YN
         case $YN in
-        y|Y )
-    
-        ###BEGIN PYTHON SNIPPET###
-            pythoncom << END
+            y|Y )
+                mkdir -p $phobospath
+                cp *.py $phobospath
+                echo "Copied phobos to $phobospath"
+                ;;
+            n|N ) echo "No folder for phobos created";;
+        esac
+    fi
+}
+#####
+
+#####
+installYAML() {
+    if [ "$useP" = "yes" ]
+    then
+        echo "Checking for yamlpath.conf"
+        yamlpath="$phobospath/yamlpath.conf"
+        if [ -r $yamlpath ]
+        then
+            echo "yamlpath.conf found! Done."
+        else
+            echo "Do you want to create your yamlpath.conf? (y/n)"
+            read YN
+            case $YN in
+                y|Y )
+                ###BEGIN PYTHON SNIPPET###
+                $pythoncom << END
 import sys
 import os
 dirs = sys.path
@@ -105,17 +119,22 @@ f.write(yamlpath)
 f.close()
 exit(1)
 END
-###END PYTHON SNIPPET###
-            #delete the bash alias for python3 binary
-            unalias pythoncom
-            cp yamlpath.conf $phobospath/yamlpath.conf
-            echo "yamlpath.conf created and copied"
-            ;;
-        n|N )
-            echo "yamlpath.conf wasn't created.";;
-        esac
+                ###END PYTHON SNIPPET###
+                cp yamlpath.conf $phobospath/yamlpath.conf
+                echo "yamlpath.conf created and copied"
+                ;;
+            n|N )
+                echo "yamlpath.conf wasn't created.";;
+            esac
+        fi
+    else
+        cp -R yaml $phobospath
+        echo "YAML package was copied into $phobospath."
     fi
-else
-    cp -R yaml $phobospath
-    echo "YAML package was copied into $phobospath."
-fi
+}
+#####
+
+#####MAIN SCRIPT#####
+initConfig
+installPhobos
+installYAML
