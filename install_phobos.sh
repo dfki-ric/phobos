@@ -17,14 +17,25 @@ else
     echo "Enter your blender version (e.g. '2.71')"
     read blenderversion
     echo "blenderversion=$blenderversion" >>installconfig.txt
-    echo "Please enter the command to run your python3 binary (e.g python3 or /usr/bin/python3)"
-    read pythoncom
-    alias pythoncom=$pythoncom
-    echo "alias pythoncom=$pythoncom" >>installconfig.txt
+    echo "Do you want to use your python3 yaml library or do you want to use the yaml version
+    distributed with phobos? (y - use python3 library / n - use distributed package)"
+    read YN
+    case $YN in
+        y|Y )
+            useP='yes'
+            echo "useP=$useP" >>installconfig.txt
+            echo "Please enter the command to run your python3 binary (e.g python3 or /usr/bin/python3)"
+            read pythoncom
+            alias pythoncom=$pythoncom
+            echo "alias pythoncom=$pythoncom" >>installconfig.txt
+            ;;
+        n|N )
+            useP='no'
+            echo "useP=$useP" >>installconfig.txt;;
+    esac
     
     #Getting OS
     ###BEGIN PYTHON SNIPPET###
-    #TODO: I don't know why, but the shell doesnt know pythoncom at this point.. So I used python instead to run this script
     python << END
 import platform
 f = open("installconfig.txt", 'a')
@@ -62,43 +73,49 @@ fi
 
 #YAML new version
 #TODO: I think it doesn't work when there is no phobos folder
-echo "Checking for yamlpath.conf"
-yamlpath="$phobospath/yamlpath.conf"
-if [ -r $yamlpath ]
+if [ "$useP" = "yes" ]
 then
-    echo "yamlpath.conf found! Done."
-else
-    echo "Do you want to create your yamlpath.conf? (y/n)"
-    read YN
-    case $YN in
-    y|Y )
+    echo "Checking for yamlpath.conf"
+    yamlpath="$phobospath/yamlpath.conf"
+    if [ -r $yamlpath ]
+    then
+        echo "yamlpath.conf found! Done."
+    else
+        echo "Do you want to create your yamlpath.conf? (y/n)"
+        read YN
+        case $YN in
+        y|Y )
     
-    ###BEGIN PYTHON SNIPPET###
-        pythoncom << END
+        ###BEGIN PYTHON SNIPPET###
+            pythoncom << END
 import sys
-f = open("yamlpath.conf", "w")
-f.truncate() #Empty the file
-try:
-	import yaml
-except ImportError:
-	f.write("i")
-	f.close()
-	print("There was no YAML module in the current python version. Please install it with your favorite package manager")
-	exit(0)
-	
-fullpath = yaml.__file__
-f.write(fullpath.split("yaml")[0])
+import os
+dirs = sys.path
+yamlpath="i"
+for directory in dirs:
+    if os.path.isdir(directory):
+        modules = os.listdir(directory)
+        for module in modules:
+            if module == "yaml":
+                yamlpath=directory
+                print ("YAML module found!")
+f = open("yamlpath.conf", 'w')
+f.truncate()#Empty the file
+f.write(yamlpath)
 f.close()
-print("YAMl module found!")
 exit(1)
 END
 ###END PYTHON SNIPPET###
-        #delete the bash alias for python3 binary
-        unalias pythoncom
-        cp yamlpath.conf $phobospath/yamlpath.conf
-        echo "yamlpath.conf created and copied"
-        ;;
-    n|N )
-        echo "yamlpath.conf wasn't created.";;
-    esac
+            #delete the bash alias for python3 binary
+            unalias pythoncom
+            cp yamlpath.conf $phobospath/yamlpath.conf
+            echo "yamlpath.conf created and copied"
+            ;;
+        n|N )
+            echo "yamlpath.conf wasn't created.";;
+        esac
+    fi
+else
+    cp -R yaml $phobospath
+    echo "YAML package was copied into $phobospath."
 fi
