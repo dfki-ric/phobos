@@ -22,10 +22,10 @@ writeConfig() {
     read blenderversion
     echo "blenderversion=$blenderversion" >>installconfig.txt
     echo "Do you want to use your python3 yaml library or do you want to use the yaml version
-    distributed with phobos? (y - use python3 library / n - use distributed package)"
-    read YN
-    case $YN in
-        y|Y )
+    distributed with phobos? (p - use python3 library / d - use distributed package)"
+    read PD
+    case $PD in
+        p|P )
             useP='yes'
             echo "useP=$useP" >>installconfig.txt
             echo "Please enter the command to run your python3 binary (e.g python3 or /usr/bin/python3)"
@@ -33,7 +33,7 @@ writeConfig() {
             pythoncom=$pythoncom
             echo "pythoncom=$pythoncom" >>installconfig.txt
             ;;
-        n|N )
+        d|D )
             useP='no'
             echo "useP=$useP" >>installconfig.txt;;
     esac
@@ -100,12 +100,8 @@ installYAML() {
         then
             echo "yamlpath.conf found! Done."
         else
-            echo "Do you want to create your yamlpath.conf? (y/n)"
-            read YN
-            case $YN in
-                y|Y )
-                ###BEGIN PYTHON SNIPPET###
-                $pythoncom << END
+            ###BEGIN PYTHON SNIPPET###
+            $pythoncom << END
 import sys
 import os
 dirs = sys.path
@@ -123,13 +119,9 @@ f.write(yamlpath)
 f.close()
 exit(1)
 END
-                ###END PYTHON SNIPPET###
-                cp yamlpath.conf $phobospath/yamlpath.conf
-                echo "yamlpath.conf created and copied"
-                ;;
-            n|N )
-                echo "yamlpath.conf wasn't created.";;
-            esac
+            ###END PYTHON SNIPPET###
+            cp yamlpath.conf $phobospath/yamlpath.conf
+            echo "yamlpath.conf created and copied"
         fi
     else
         cp -R yaml $phobospath
