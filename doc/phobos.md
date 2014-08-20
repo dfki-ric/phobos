@@ -1,24 +1,27 @@
-Phobos Blender Add-On {#marstools}
+Phobos Blender Add-On {#phobos}
 ===================
 
-Phobos is an Add-On for Blender which simplifies editing robot models and environments to be used in the MARS simulation.
+Phobos is an open-source Add-On for Blender which simplifies creating and editing robot models and environments to be used in the MARS simulation. Specifically, Phobos allows the user to create URDF files as well as SMURF robot descriptions in a visual, interactive user interface, providing a number of import and export options.
 
 ## Installation
 
-### Linux/OSX
-
-Phobos provides a simple way of installation via the *install.sh* shell script.
-
-### Windows
-
+See [Phobos installation](phobos_installation.md) for details.
 
 ## Overview
 
-Creating adequate simulation models of a robot is a difficult task that especially in the world of open source and research oftentimes comes down to editing complex custom data (XML) files by hand. This is not only error-prone and slow, it also forces the robotics researcher or enthusiast to give up any visual context and painstakingly re-iterate all those construction steps that came before using a text editor. While there are some remedies for this problem such as macro languages (e.g. XACRO) for robot definition or plugins for CAD-software allowing to export the structure of a robot, none of these allow the user to intuitively create robot models from scratch or customize the models used for construction for use in simulation with ease. This is a gap that Phobos is supposed to fill and we hope that many users out there will find it useful for their needs.
+Creating adequate simulation models of a robot is a difficult task that especially in the world of open source and research oftentimes comes down to editing complex custom data (XML) files by hand. This is not only error-prone and slow, it also forces the robotics researcher or enthusiast to give up any visual context and painstakingly re-iterate construction using a text editor. While there are some remedies for this problem such as macro languages (e.g. XACRO) for robot definition or plugins for CAD-software allowing to export the structure of a robot, none of these allow the user to intuitively create robot models from scratch or customize the models used for construction for use in simulation with ease. This is a gap that Phobos is supposed to fill and we hope that many users out there will find it useful for their needs.
 
-- MARS simulation framework 
+### The MARS simulation framework
 
-- Blender is a powerful 3D modelling and animation software...
+MARS is a realtime physics simulation that has been developed at the German Research Center for Artificial Intelligence's Robotics Innovation Center (DFKI-RIC) in Bremen in collaboration with the University of Bremen. It uses the [Open Dynamics Engine (ODE)](http://www.ode.org/) to calculate rigid body physics and [OpenSceneGraph (OSG)](http://www.openscenegraph.org/) for visualization. MARS is very easily extendable through its plugin architecture and can be used within other applications, as it is by the [Rock robotics framework](http://rock-robotics.org/).
+
+As Phobos, MARS is open-source and has its own [repository]() at GitHub.
+
+### Blender
+
+Blender is a feature-rich, mature open-source 3D modelling and animation software that comes with an extensive and flexible Python scripting API. Using this API, it is possible to script almost every feature available from the GUI, thus allowing to automate repetitive tasks or simplify complex editing procedures.
+
+### Phobos Add-On
 
 Phobos is built upon a set of scripts which were originally created to use the power of Blender for modelling MARS scenes, i.e. the original scene format used in the MARS simulation. With the decision to switch our kinematics representation to URDF and embed it in a new hierarchical format to store all other relevant information, we also decided to take our approach to harnessing Blender one step further and create a fully-fledged addon with its own GUI for Blender.
 
