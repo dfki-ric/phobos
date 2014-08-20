@@ -12,6 +12,8 @@
 
 ###Config file name###
 file="installconfig.txt"
+###Phobos install flag###
+installed=0
 
 #####
 writeConfig() {
@@ -71,6 +73,7 @@ installPhobos() {
     then
         echo "Phobos installation found and updated."
         cp *.py $phobospath
+        installed=1
     else
         echo "Phobos folder does not exist, create phobos folder in $addonpath ? (y/n)"
         read YN
@@ -78,6 +81,7 @@ installPhobos() {
             y|Y )
                 mkdir -p $phobospath
                 cp *.py $phobospath
+                installed=1
                 echo "Copied phobos to $phobospath"
                 ;;
             n|N ) echo "No folder for phobos created";;
@@ -137,4 +141,9 @@ END
 #####MAIN SCRIPT#####
 initConfig
 installPhobos
-installYAML
+if [ "$installed" -eq "1" ]
+then
+    installYAML
+else
+    echo "Cannot install YAML, because Phobos wasn't installed."
+fi
