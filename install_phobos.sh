@@ -19,10 +19,25 @@ else
     echo "blenderversion=$blenderversion" >>installconfig.txt
     echo "Please enter the command to run your python3 binary (e.g python3 or /usr/bin/python3)"
     read pythoncom
-    alias pythoncom='$pythoncom'
-    echo "alias pythoncom='$pythoncom'" >>installconfig.txt
-    addonpath="$HOME/.config/blender/$blenderversion/scripts/addons"
-    echo "addonpath=$addonpath" >>installconfig.txt
+    alias pythoncom=$pythoncom
+    echo "alias pythoncom=$pythoncom" >>installconfig.txt
+    
+    #Getting OS
+    ###BEGIN PYTHON SNIPPET###
+    #TODO: I don't know why, but the shell doesnt know pythoncom at this point.. So I used python instead to run this script
+    python << END
+import platform
+f = open("installconfig.txt", 'a')
+osys = platform.system()
+if osys == "Linux":
+    f.write("addonpath=$HOME/.config/blender/$blenderversion/scripts/addons")
+elif osys == "Darwin":
+    f.write("addonpath=$HOME/Library/Application Support/Blender/$blenderversion/scripts/addons")
+f.close()
+END
+    ###END PYTHON SNIPPET###
+    #Read the installconf.txt to get the addonpath
+    . ./$file
 fi
 
 #Phobos installation
@@ -51,15 +66,15 @@ echo "Checking for yamlpath.conf"
 yamlpath="$phobospath/yamlpath.conf"
 if [ -r $yamlpath ]
 then
-	echo "yamlpath.conf found! Done."
+    echo "yamlpath.conf found! Done."
 else
-	echo "Do you want to create your yamlpath.conf? (y/n)"
-	read YN
-	case $YN in
-	y|Y )
-	
-	###BEGIN PYTHON SNIPPET###
-		pythoncom << END
+    echo "Do you want to create your yamlpath.conf? (y/n)"
+    read YN
+    case $YN in
+    y|Y )
+    
+    ###BEGIN PYTHON SNIPPET###
+        pythoncom << END
 import sys
 f = open("yamlpath.conf", "w")
 f.truncate() #Empty the file
@@ -78,12 +93,12 @@ print("YAMl module found!")
 exit(1)
 END
 ###END PYTHON SNIPPET###
-		#delete the bash alias for python3 binary
-		unalias pythoncom
-		cp yamlpath.conf $phobospath/yamlpath.conf
-		echo "yamlpath.conf created and copied"
-		;;
-	n|N )
-		echo "yamlpath.conf wasn't created.";;
-	esac
+        #delete the bash alias for python3 binary
+        unalias pythoncom
+        cp yamlpath.conf $phobospath/yamlpath.conf
+        echo "yamlpath.conf created and copied"
+        ;;
+    n|N )
+        echo "yamlpath.conf wasn't created.";;
+    esac
 fi
