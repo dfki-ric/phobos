@@ -30,12 +30,12 @@ bl_info = {
     "name": "Phobos",
     "description": "A set of tools to enable editing of MARS robot models in Blender.",
     "author": "Kai von Szadkowski, Malte Langosz, Stefan Rahms, Ole Schwiegert",
-    "version": (0, 5),
-    "blender": (2, 62, 0),
-    "location": "",
+    "version": (0, 3),
+    "blender": (2, 69, 0),
+    "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
     "wiki_url": "",
-    "category": "3D View"
+    "category": "Development"
     }
 
 import sys
