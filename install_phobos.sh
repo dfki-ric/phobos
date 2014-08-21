@@ -1,12 +1,31 @@
 #! /bin/sh
 
-#author: Kai von Szadkowski, Ole Schwiegert
+# Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 #
-#This script will install phobos into your user bound python addon repository.
-#It also provides a way for blenders python to import your python3s yaml module.
-
-#If you used the old install script you can delete the previous phobos folder
-#You also have to delete the old installconfig.txt to run this script correctly.
+# This file is part of Phobos, a Blender Add-On to edit robot models.
+#
+# Phobos is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License
+# as published by the Free Software Foundation, either version 3
+# of the License, or (at your option) any later version.
+#
+# Phobos is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
+#
+# File install_phobos.sh
+#
+# author: Kai von Szadkowski, Ole Schwiegert
+#
+# This script will install phobos into your user bound python addon repository.
+# It also provides a way for blenders python to import your python3s yaml module.
+#
+# If you used the old install script you can delete the previous phobos folder
+# You also have to delete the old installconfig.txt to run this script correctly.
 
 
 
