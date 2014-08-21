@@ -3,9 +3,15 @@ Phobos Blender Add-On {#phobos}
 
 Phobos is an open-source Add-On for Blender which simplifies creating and editing robot models and environments to be used in the MARS simulation. Specifically, Phobos allows the user to create URDF files as well as SMURF robot descriptions in a visual, interactive user interface, providing a number of import and export options.
 
+Check out the Phobos [Roadmap](roadmap.md)
+
 ## Installation
 
-See [Phobos installation](phobos_installation.md) for details.
+See [Phobos installation](installation.md).
+
+## Tutorials
+
+All tutorials will also be linked in the relevant sections of this documentation.
 
 ## Overview
 
@@ -15,7 +21,7 @@ Creating adequate simulation models of a robot is a difficult task that especial
 
 MARS is a realtime physics simulation that has been developed at the German Research Center for Artificial Intelligence's Robotics Innovation Center (DFKI-RIC) in Bremen in collaboration with the University of Bremen. It uses the [Open Dynamics Engine (ODE)](http://www.ode.org/) to calculate rigid body physics and [OpenSceneGraph (OSG)](http://www.openscenegraph.org/) for visualization. MARS is very easily extendable through its plugin architecture and can be used within other applications, as it is by the [Rock robotics framework](http://rock-robotics.org/).
 
-As Phobos, MARS is open-source and has its own [repository]() at GitHub.
+As Phobos, MARS is open-source and has its own [repository](https://github.com/rock-simulation/mars) at GitHub.
 
 ### Blender
 
