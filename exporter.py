@@ -322,8 +322,12 @@ def exportModelToSRDF(model, path):
     #for joint in model['state']['joints']:
     #    pass
     for link in model['links']:
-        for sphere in model['links'][link]['approxcollision']:
-            output.append(xmlline(2, 'sphere', ('center', 'radius'), (sphere['center'], sphere['radius'])))
+        # TODO: empty spheres vs. no spheres
+        if len(model['links'][link]['approxcollision']) > 0:
+            output.append(xmlline(1, 'link_sphere_approximation', ('link',), (model['links'][link]['name'],)))
+            for sphere in model['links'][link]['approxcollision']:
+                output.append(xmlline(2, 'sphere', ('center', 'radius'), (l2str(sphere['center']), sphere['radius'])))
+            output.append(indent+'</link_sphere_approximation>\n\n')
     #finish the export
     output.append(xmlFooter)
     with open(filepath, 'w') as outputfile:
