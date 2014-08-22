@@ -26,7 +26,8 @@ marstypes = (('undefined',)*3,
              ('visual',)*3,
              ('collision',)*3,
              ('sensor',)*3,
-             ('controller',)*3)
+             ('controller',)*3,
+             ('approxsphere',)*3)
 
 jointtypes = (('revolute',)*3,
               ('continuous',)*3,

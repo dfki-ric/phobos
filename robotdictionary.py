@@ -65,6 +65,7 @@ def deriveLink(obj, typetags=False):
     props["collision"] = {}
     props["visual"] = {}
     props["inertial"] = {}
+    props['approxcollision'] = []
     return props
 
 
@@ -181,6 +182,12 @@ def deriveCollision(obj):
     collision['pose'] = deriveObjectPose(obj)
     return collision, obj.parent
 
+def deriveApproxsphere(obj):
+    sphere = initObjectProperties(obj)
+    sphere['radius'] = obj.dimensions[0]/2
+    sphere['center'] = list(obj.matrix_local.to_translation())
+    return sphere, obj.parent
+
 
 def deriveSensor(obj):
     props = initObjectProperties(obj)
@@ -226,6 +233,8 @@ def deriveDictEntry(obj):
             props, parent = deriveVisual(obj)
         elif obj.MARStype == 'collision':
             props, parent = deriveCollision(obj)
+        elif obj.MARStype == 'approxsphere':
+            props, parent = deriveApproxsphere(obj)
         elif obj.MARStype == 'sensor':
             props = deriveSensor(obj)
         #elif obj.MARStype == 'motor':
@@ -339,11 +348,15 @@ def buildRobotDictionary(typetags=False):
                 i.select = False
 
     # complete link information by parsing visuals and collision objects
-    print('\n\nParsing visual and collision objects...')
+    print('\n\nParsing visual and collision (approximation) objects...')
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['visual', 'collision']:
             props, parent = deriveDictEntry(obj)
             robot['links'][parent.name][obj.MARStype][obj.name] = props
+            obj.select = False
+        elif obj.MARStype == 'approxsphere':
+            props, parent = deriveDictEntry(obj)
+            robot['links'][parent.name]['approxcollision'].append(props)
             obj.select = False
 
     # parse sensors and controllers
