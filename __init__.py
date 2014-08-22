@@ -53,6 +53,10 @@ if (os.path.isfile(yamlconfpath)):
         import yaml
 else:
     print("Could not find yamlpath.conf")
+    print("Using distributed package instead!")
+    sys.path.insert(0, sys.path[0]+"/phobos")
+    import yaml
+    print("Importing yaml module")
 
 if "bpy" in locals():
     import imp
