@@ -69,6 +69,8 @@ type_properties = {
     "visual_default": ('new_node', 'box'),
     "collision": ('name', 'collisionType', 'bitmask'),
     "collision_default": ('new_node', 'box', '65536'),
+    "approxsphere": (),
+    "approxsphere_default": (),
     "sensor": ('name', 'sensorType'),
     "sensor_default": ("new_sensor", "RaySensor"),
     "controller": ('name',),
