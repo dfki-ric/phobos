@@ -467,6 +467,7 @@ def export(typetags=False):
         outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
     yaml = bpy.data.worlds[0].exportYAML
     urdf = bpy.data.worlds[0].exportURDF
+    srdf = bpy.data.worlds[0].exportSRDF
     smurf = bpy.data.worlds[0].exportSMURF
     mars = bpy.data.worlds[0].exportMARSscene
     meshexp = bpy.data.worlds[0].exportMesh
@@ -481,6 +482,8 @@ def export(typetags=False):
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
         if mars:
             exportModelToMARS(robot, outpath + robot["modelname"] + "_mars.scene")
+        if srdf:
+            exportModelToSRDF(robot, outpath + robot["modelname"] + ".srdf")
         if smurf:
             exportModelToSMURF(robot, outpath)
         elif urdf:
