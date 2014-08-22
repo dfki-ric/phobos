@@ -1,16 +1,29 @@
-'''
-Phobos - a Blender Add-On to work with MARS robot models
+#!/usr/bin/python
+
+"""
+Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
+
+This file is part of Phobos, a Blender Add-On to edit robot models.
+
+Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 File phobosgui.py
 
 Created on 6 Jan 2014
 
 @author: Kai von Szadkowski
-
-Copy this add-on to your Blender add-on folder and activate it
-in your preferences to gain instant (virtual) world domination.
-You may use the provided install shell script.
-'''
+"""
 
 import bpy
 from bpy.types import Operator
@@ -50,6 +63,7 @@ def register():
     bpy.types.World.relativePath = BoolProperty(name='relative path', default=True)
     bpy.types.World.useBobj = BoolProperty(name = "useBobj", update=updateExportOptions)
     bpy.types.World.useObj = BoolProperty(name = "useObj", update=updateExportOptions)
+    bpy.types.World.useStl = BoolProperty(name = "useStl", update=updateExportOptions)
     bpy.types.World.exportMesh = BoolProperty(name = "exportMesh", update=updateExportOptions)
     bpy.types.World.exportMARSscene = BoolProperty(name = "exportMARSscene", update=updateExportOptions)
     bpy.types.World.exportSMURF = BoolProperty(name = "exportSMURF", default=True, update=updateExportOptions)
@@ -57,7 +71,7 @@ def register():
     bpy.types.World.exportSRDF = BoolProperty(name = "exportSRDF", default=True)
     bpy.types.World.exportYAML = BoolProperty(name = "exportYAML", update=updateExportOptions)
 
-    bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
+    #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
 
 def unregister():
     print("Unregistering gui...")
@@ -239,6 +253,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c1.operator('object.create_collision_objects', text = "Create Collision Object(s)")
         c1.operator('object.create_inertial_objects', text = "Create Inertial Object(s)")
         c1.operator('object.define_joint_constraints', text = "Define Joint Constraints")
+        c1.operator('object.phobos_set_origin_to_com', text = "Set Origin to COM")
         c2 = inlayout.column(align = True)
         c2.operator('object.phobos_partial_rename', text = "Partial Rename")
         c2.operator('object.attach_motor', text = "Attach motor")
@@ -344,7 +359,16 @@ class PhobosExportPanel(bpy.types.Panel):
         c1.prop(bpy.data.worlds[0], "exportMesh", text = "export meshes")
         c1.prop(bpy.data.worlds[0], "useBobj", text = "use .bobj format")
         c1.prop(bpy.data.worlds[0], "useObj", text = "use .obj format")
-        c1.label(text = ".obj is used" if not (bpy.data.worlds[0].useBobj and not bpy.data.worlds[0].useObj) else '.bobj is used')
+        c1.prop(bpy.data.worlds[0], "useStl", text = "use .stl format")
+        if bpy.data.worlds[0].useObj:
+            labeltext = ".obj is used"
+        elif bpy.data.worlds[0].useBobj:
+            labeltext = ".bobj is used"
+        elif bpy.data.worlds[0].useStl:
+            labeltext = ".stl is used"
+        else:
+            labeltext = ".obj is used"
+        c1.label(text=labeltext)
         c2 = inlayout.column(align = True)
         c2.label(text = "Robot data export")
         c2.prop(bpy.data.worlds[0], "exportMARSscene", text = "as MARS scene")

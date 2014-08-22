@@ -1,5 +1,22 @@
-'''
-Phobos - a Blender Add-On to work with MARS robot models
+#!/usr/bin/python
+
+"""
+Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
+
+This file is part of Phobos, a Blender Add-On to edit robot models.
+
+Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 File defs.py
 
@@ -7,16 +24,12 @@ Created on 7 Jan 2014
 
 @author: Kai von Szadkowski
 
-Copy this add-on to your Blender add-on folder and activate it
-in your preferences to gain instant (virtual) world domination.
-You may use the provided install shell script.
-
 NOTE: This module is used to provide a number of global definitions which
 are used by the other modules. If you make changes to this module,
 do not include any imports which are not part of the standard python 3 libray.
 This module may well be imported and used outside of the MARS Blender Tools
 in the future.
-'''
+"""
 
 #TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below

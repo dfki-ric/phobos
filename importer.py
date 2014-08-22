@@ -1,16 +1,29 @@
-'''
-Phobos - a Blender Add-On to work with MARS robot models
+#!/usr/bin/python
+
+"""
+Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
+
+This file is part of Phobos, a Blender Add-On to edit robot models.
+
+Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 File importer.py
 
 Created on 28 Feb 2014
 
 @author: Kai von Szadkowski
-
-Copy this add-on to your Blender add-on folder and activate it
-in your preferences to gain instant (virtual) world domination.
-You may use the provided install shell script.
-'''
+"""
 
 import bpy
 import mathutils
@@ -317,7 +330,7 @@ class URDFModelParser(RobotModelParser):
         with open(self.filepath+'_debug.yml', 'w') as outputfile:
             outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
-        materials = [] #TODO: build dictionary entry for materials
+        materiallist = [] #TODO: build dictionary entry for materials
         print("\n\nParsing materials..")
         for material in self.root.iter('material'):
             newmaterial = {a: material.attrib[a] for a in material.attrib}
@@ -325,8 +338,8 @@ class URDFModelParser(RobotModelParser):
             if color is not None:
                 print(material.attrib['name'] + ', ', end='')
                 newmaterial['color'] = parse_text(color.attrib['rgba'])
-                materials.append(newmaterial)
-        for m in materials:
+                materiallist.append(newmaterial)
+        for m in materiallist:
             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) #TODO: handle duplicate names? urdf_robotname_xxx?
 
     def parseLink(self, link):
@@ -430,10 +443,14 @@ class URDFModelParser(RobotModelParser):
     def parseJoint(self, joint):
         print(joint.attrib['name']+', ', end='')
         newjoint = {a: joint.attrib[a] for a in joint.attrib}
-        origin = joint.find('origin')
+        try:
+            origin = joint.find('origin')
+            origindict = {'xyz': origin.attrib['xyz'].split(), 'rpy': origin.attrib['rpy'].split()}
+        except AttributeError:
+            origindict = {'xyz': [0, 0, 0], 'rpy': [0, 0, 0]}
         newjoint['parent'] = joint.find('parent').attrib['link']
         newjoint['child'] = joint.find('child').attrib['link']
-        pose = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
+        pose = [float(num) for num in (origindict['xyz'] + origindict['rpy'])]
         #axis
         #calibration
         #dynamics

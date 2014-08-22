@@ -1,16 +1,29 @@
-'''
-Phobos - a Blender Add-On to work with MARS robot models
+#!/usr/bin/python
+
+"""
+Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
+
+This file is part of Phobos, a Blender Add-On to edit robot models.
+
+Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 File utility.py
 
 Created on 9 Jan 2014
 
 @author: Kai von Szadkowski
-
-Copy this add-on to your Blender add-on folder and activate it
-in your preferences to gain instant (virtual) world domination.
-You may use the provided install shell script.
-'''
+"""
 
 import re
 import bpy
@@ -294,35 +307,6 @@ def outerProduct(v, u):
     for vi in v:
         lines.append([vi * ui for ui in u])
     return mathutils.Matrix(lines)
-
-
-
-# The following function is adapted from Bret Battey's adaptation
-# (http://bathatmedia.blogspot.de/2012/08/duplicating-objects-in-blender-26.html) of
-# Nick Keeline "Cloud Generator" addNewObject
-# from object_cloud_gen.py (an addon that comes with the Blender 2.6 package)
-#
-def duplicateObject(scene, name, copyobj, material, layers):
-    """Returns a copy of the provided object"""
-
-    # Create new mesh
-    mesh = bpy.data.meshes.new(name)
-
-    # Create new object associated with the mesh
-    ob_new = bpy.data.objects.new(name, mesh)
-
-    # Copy data block from the old object into the new object
-    ob_new.data = copyobj.data.copy()
-    ob_new.scale = copyobj.scale
-    ob_new.location = copyobj.location
-    ob_new.data.materials.append(bpy.data.materials[material])
-
-    # Link new object to the given scene and select it
-    scene.objects.link(ob_new)
-    ob_new.layers = layers
-    #ob_new.select = True
-
-    return ob_new
 
 
 #def useLegacyNames(data):

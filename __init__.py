@@ -1,27 +1,41 @@
-'''
-Phobos - a Blender Add-On to work with MARS robot models
+#!/usr/bin/python
+
+"""
+Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
+
+This file is part of Phobos, a Blender Add-On to edit robot models.
+
+Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 File __init__.py
 
 Created on 6 Jan 2014
 
 @author: Kai von Szadkowski, Ole Schwiegert
-
-Copy this add-on to your Blender add-on folder and activate it
-in your preferences to gain instant (virtual) world domination.
-'''
+"""
 
 
 bl_info = {
     "name": "Phobos",
     "description": "A set of tools to enable editing of MARS robot models in Blender.",
     "author": "Kai von Szadkowski, Malte Langosz, Stefan Rahms, Ole Schwiegert",
-    "version": (0, 5),
-    "blender": (2, 62, 0),
-    "location": "",
+    "version": (0, 3),
+    "blender": (2, 69, 0),
+    "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
     "wiki_url": "",
-    "category": "3D View"
+    "category": "Development"
     }
 
 import sys
@@ -39,6 +53,10 @@ if (os.path.isfile(yamlconfpath)):
         import yaml
 else:
     print("Could not find yamlpath.conf")
+    print("Using distributed package instead!")
+    sys.path.insert(0, sys.path[0]+"/phobos")
+    import yaml
+    print("Importing yaml module")
 
 if "bpy" in locals():
     import imp

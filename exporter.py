@@ -1,15 +1,28 @@
+#!/usr/bin/python
+
 """
-Phobos - a Blender Add-On to work with MARS robot models
+Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
+
+This file is part of Phobos, a Blender Add-On to edit robot models.
+
+Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 File export.py
 
 Created on 13 Feb 2014
 
 @author: Kai von Szadkowski
-
-Copy this add-on to your Blender add-on folder and activate it
-in your preferences to gain instant (virtual) world domination.
-You may use the provided install shell script.
 """
 
 import bpy
@@ -150,7 +163,7 @@ def exportObj(path, obj):
     tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = os.path.join(path, objname) + '.obj'
-    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True)
+    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
@@ -170,6 +183,19 @@ def exportObj(path, obj):
     #bpy.ops.export_scene.obj(filepath=outpath, axis_forward='-Z',
     #                         axis_up='Y', use_selection=True, use_normals=True)
     #obj.matrix_world = world_matrix
+
+
+def exportStl(path, obj):
+    objname = obj.name
+    obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
+    tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
+    tmpobject.data = obj.data  # copy the mesh here
+    outpath = os.path.join(path, objname) + '.stl'
+    bpy.ops.export_mesh.stl(filepath=outpath)
+    bpy.ops.object.select_all(action='DESELECT')
+    tmpobject.select = True
+    bpy.ops.object.delete()
+    obj.name = objname
 
 
 def exportModelToYAML(model, filepath):
@@ -273,7 +299,7 @@ def exportModelToURDF(model, filepath):
             output.append(indent*2+'<material name="' + m + '">\n')
             color = model['materials'][m]['diffuseFront']
             transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
-            output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(transparency) + '"/>\n')
+            output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(1.0-transparency) + '"/>\n')
             if 'texturename' in model['materials'][m]:
                             output.append(indent*3+'<texture filename="'+model['materials'][m]['texturename']+'"/>\n')
             output.append(indent*2+'</material>\n\n')
@@ -446,6 +472,7 @@ def export(typetags=False):
     meshexp = bpy.data.worlds[0].exportMesh
     objexp = bpy.data.worlds[0].useObj
     bobjexp = bpy.data.worlds[0].useBobj
+    stlexp = bpy.data.worlds[0].useStl
     objectlist = bpy.context.selected_objects
 
     if yaml or urdf or smurf or mars:
@@ -473,6 +500,8 @@ def export(typetags=False):
                     exportObj(outpath, obj)
                 if bobjexp:
                     exportBobj(outpath, obj)
+                if stlexp:
+                    exportStl(outpath, obj)
             if show_progress:
                 wm.progress_update(i)
                 i += 1

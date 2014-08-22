@@ -1,16 +1,29 @@
-'''
-Phobos - a Blender Add-On to work with MARS robot models
+#!/usr/bin/python
+
+"""
+Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
+
+This file is part of Phobos, a Blender Add-On to edit robot models.
+
+Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 File robotdictionary.py
 
 Created on 28 Jul 2014
 
 @author: Kai von Szadkowski, Stefan Rahms
-
-Copy this add-on to your Blender add-on folder and activate it
-in your preferences to gain instant (virtual) world domination.
-You may use the provided install shell script.
-'''
+"""
 
 import bpy
 import mathutils
@@ -32,7 +45,7 @@ def collectMaterials(objectlist):
     materials = {}
     for obj in objectlist:
         if obj.MARStype == 'visual' and obj.data.materials:
-            mat = obj.data.materials[0] #simply grab the first material
+            mat = obj.data.materials[0]  # simply grab the first material
             if mat.name not in materials:
                 materials[mat.name] = deriveMaterial(mat)
                 materials[mat.name]['users'] = 1
@@ -136,10 +149,18 @@ def deriveGeometry(obj):
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
-            filename = obj['filename'] if 'filename' in obj else obj.name.replace('/','_')
-            geometry['filename'] = filename + ('.obj' if not (bpy.data.worlds[0].useBobj and not bpy.data.worlds[0].useObj) else '.bobj')
+            filename = obj['filename'] if 'filename' in obj else obj.name.replace('/', '_')
+            if bpy.data.worlds[0].useObj:
+                extension = ".obj"
+            elif bpy.data.worlds[0].useBobj:
+                extension = ".bobj"
+            elif bpy.data.worlds[0].useStl:
+                extension = ".stl"
+            else:
+                extension = ".obj"
+            geometry['filename'] = filename + extension
             geometry['scale'] = list(obj.scale)
-            geometry['size'] = list(obj.dimensions) #this is needed to calculate an approximate inertia
+            geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
         return geometry
     else:
         warnings.warn("No geometryType found for object "+obj.name+".")
@@ -147,7 +168,7 @@ def deriveGeometry(obj):
 
 
 def deriveInertial(obj):
-    '''Derives a dictionary entry of an inertial object.'''
+    """Derives a dictionary entry of an inertial object."""
     props = initObjectProperties(obj)
     #inertia = props['inertia'].split()
     props['inertia'] = list(map(float, obj['inertia']))
@@ -156,7 +177,7 @@ def deriveInertial(obj):
 
 
 def deriveObjectPose(obj):
-    '''Derive pose of link, visual or collision object.'''
+    """Derive pose of link, visual or collision object."""
     pose = {}
     pose['matrix'] = [list(vector) for vector in list(obj.matrix_local)]
     pose['translation'] = list(obj.matrix_local.to_translation())
@@ -199,7 +220,7 @@ def deriveController(obj):
     return props
 
 
-def initObjectProperties(obj, marstype = None):
+def initObjectProperties(obj, marstype=None):
     props = {}
     if not marstype:
         for key, value in obj.items():
@@ -213,7 +234,7 @@ def initObjectProperties(obj, marstype = None):
 
 
 def cleanObjectProperties(props):
-    '''Cleans a predefined list of Blender-specific properties from the dictionary.'''
+    """Cleans a predefined list of Blender-specific properties from the dictionary."""
     getridof = ['MARStype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
     if props:
         for key in getridof:
@@ -262,7 +283,7 @@ def deriveChainEntry(obj):
         parent = obj
         chain = {'name': chainName, 'start': '', 'end': obj.name, 'elements': []}
         while not chainclosed:
-            if parent.parent == None:
+            if parent.parent is None:
                 print('### Error: Unclosed chain, aborting parsing chain', chainName)
                 chain = None
                 break
@@ -280,7 +301,7 @@ def deriveChainEntry(obj):
 
 
 def buildRobotDictionary(typetags=False):
-    '''Builds a python dictionary representation of a Blender robot model for export and inspection.'''
+    """Builds a python dictionary representation of a Blender robot model for export and inspection."""
     objectlist = bpy.context.selected_objects
     #notifications, faulty_objects = robotupdate.updateModel(bpy.context.selected_objects)
     #print(notifications)
@@ -324,15 +345,15 @@ def buildRobotDictionary(typetags=False):
         inertials = getImmediateChildren(link, 'inertial')
         if len(inertials) == 1:
             props, parent = deriveDictEntry(inertials[0])
-            robot['links'][parent.name]['inertial'] = props
+            if not (props is None or parent is None):  # this may be the case if there is inertia information missing
+                robot['links'][parent.name]['inertial'] = props
             inertials[0].select = False
         elif len(inertials) > 1:
-            linkinertial = None
             for i in inertials:
                 if i.name == 'inertial_' + l:
                     props, parent = deriveDictEntry(i)
                     robot['links'][parent.name]['inertial'] = props
-            #FIXME: this has to be re-implemented
+            # FIXME: this has to be re-implemented
             #if linkinertial == None:
             #    mass, com, inertia = inertia.fuseInertiaData(inertials)
             #    parent = inertials[0].parent
@@ -378,7 +399,7 @@ def buildRobotDictionary(typetags=False):
 
     # gather information on groups of objects
     print('\n\nParsing groups...')
-    for group in bpy.data.groups: #TODO: get rid of the "data" part
+    for group in bpy.data.groups:  # TODO: get rid of the "data" part
         robot['groups'][group.name] = deriveGroupEntry(group)
 
     # gather information on chains of objects
@@ -392,13 +413,13 @@ def buildRobotDictionary(typetags=False):
 
     #shorten numbers in dictionary to n decimalPlaces and return it
     print('\n\nRounding numbers...')
-    epsilon = 10**(-bpy.data.worlds[0].decimalPlaces) #TODO: implement this separately
+    epsilon = 10**(-bpy.data.worlds[0].decimalPlaces)  # TODO: implement this separately
     return epsilonToZero(robot, epsilon, bpy.data.worlds[0].decimalPlaces)
 
 
 def check_geometry(geometry, owner_type, owner_key, link_key):
-    '''
-    '''
+    """
+    """
     notifications = ''
     if not 'type' in geometry:
         note = "CheckModel: Error, geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'type'."
@@ -440,8 +461,8 @@ def check_geometry(geometry, owner_type, owner_key, link_key):
 
 
 def check_visuals(visuals, link_key):
-    '''
-    '''
+    """
+    """
     notifications = ''
     for visual_key in visuals.keys():
         visual = visuals[visual_key]
@@ -489,8 +510,8 @@ def check_visuals(visuals, link_key):
 
 
 def check_collisions(collisions, link_key):
-    '''
-    '''
+    """
+    """
     notifications = ''
     for collision_key in collisions.keys():
         collision = collisions[collision_key]
@@ -520,8 +541,8 @@ def check_collisions(collisions, link_key):
 
 
 def check_links(links):
-    '''
-    '''
+    """
+    """
     notifications = ''
     for link_key in links.keys():
         link = links[link_key]
@@ -563,8 +584,8 @@ def check_links(links):
 
 
 def check_joints(joints):
-    '''
-    '''
+    """
+    """
     notifications = ''
     for joint_key in joints.keys():
         joint = joints[joint_key]
@@ -588,8 +609,8 @@ def check_joints(joints):
 
 
 def check_dict(model):
-    '''
-    '''
+    """
+    """
     notifications = ''
     notifications += check_links(model['links'])
     notifications += check_joints(model['joints'])
