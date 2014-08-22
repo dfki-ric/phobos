@@ -330,10 +330,10 @@ def exportModelToSRDF(model, path):
             output.append(indent+'</link_sphere_approximation>\n\n')
     #finish the export
     output.append(xmlFooter)
-    with open(filepath, 'w') as outputfile:
+    with open(path, 'w') as outputfile:
         outputfile.write(''.join(output))
     # problem of different joint transformations needed for fixed joints
-    print("phobos SRDF export: Writing model data to", filepath )
+    print("phobos SRDF export: Writing model data to", path )
 
 
 def exportModelToSMURF(model, path):
