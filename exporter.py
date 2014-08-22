@@ -33,8 +33,8 @@ def unregister():
     print("Unregistering export...")
 
 indent = '  '
-urdfHeader = '<?xml version="1.0"?>\n'
-urdfFooter = indent+'</robot>\n'
+xmlHeader = '<?xml version="1.0"?>\n'
+xmlFooter = indent+'</robot>\n'
 
 
 def exportBobj(path, obj):
@@ -213,7 +213,7 @@ def writeURDFGeometry(output, element):
 
 def exportModelToURDF(model, filepath):
     output = []
-    output.append(urdfHeader)
+    output.append(xmlHeader)
     output.append(indent+'<robot name="'+model['modelname']+'">\n\n')
     #export link information
     for l in model['links'].keys():
@@ -278,15 +278,36 @@ def exportModelToURDF(model, filepath):
                             output.append(indent*3+'<texture filename="'+model['materials'][m]['texturename']+'"/>\n')
             output.append(indent*2+'</material>\n\n')
     #finish the export
-    output.append(urdfFooter)
+    output.append(xmlFooter)
     with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))
     # problem of different joint transformations needed for fixed joints
     print("phobos URDF export: Writing model data to", filepath )
 
 
+def exportModelToSRDF(model, path):
+    output = []
+    output.append(xmlHeader)
+    output.append(indent+'<robot name="'+model['modelname']+'">\n\n')
+    for group in model['groups']:
+        pass
+    for chain in model['chains']:
+        pass
+    #for joint in model['state']['joints']:
+    #    pass
+    for link in model['links']:
+        for sphere in model['links'][link]['approxcollision']:
+            output.append(xmlline(2, 'sphere', ('center', 'radius'), (sphere['center'], sphere['radius'])))
+    #finish the export
+    output.append(xmlFooter)
+    with open(filepath, 'w') as outputfile:
+        outputfile.write(''.join(output))
+    # problem of different joint transformations needed for fixed joints
+    print("phobos SRDF export: Writing model data to", filepath )
+
+
 def exportModelToSMURF(model, path):
-    export = {'semantics': model['groups'] != {} or model['chains'] != {},
+    export = {#'semantics': model['groups'] != {} or model['chains'] != {},,
               'state': False,#model['state'] != {}, #TODO: handle state
               'materials': model['materials'] != {},
               'sensors': model['sensors'] != {},
@@ -299,7 +320,7 @@ def exportModelToSMURF(model, path):
     #create all filenames
     smurf_filename = model['modelname'] + ".smurf"
     urdf_filename =  model['modelname'] + ".urdf"
-    filenames = {'semantics': model['modelname'] + "_semantics.yml",
+    filenames = {#'semantics': model['modelname'] + "_semantics.yml",
                  'state': model['modelname'] + "_state.yml",
                  'materials': model['modelname'] + "_materials.yml",
                  'sensors': model['modelname'] + "_sensors.yml",
@@ -323,17 +344,17 @@ def exportModelToSMURF(model, path):
     #write urdf
     exportModelToURDF(model, path + urdf_filename)
 
-    #write semantics (SRDF information in YML format)
-    if export['semantics']:
-        with open(path + filenames['semantics'], 'w') as op:
-            op.write('#semantics'+infostring)
-            op.write("modelname: "+model['modelname']+'\n')
-            semantics = {}
-            if model['groups'] != {}:
-                semantics['groups'] = model['groups']
-            if model['chains'] != {}:
-                semantics['chains'] = model['chains']
-            op.write(yaml.dump(semantics, default_flow_style=False))
+    # #write semantics (SRDF information in YML format)
+    # if export['semantics']:
+    #     with open(path + filenames['semantics'], 'w') as op:
+    #         op.write('#semantics'+infostring)
+    #         op.write("modelname: "+model['modelname']+'\n')
+    #         semantics = {}
+    #         if model['groups'] != {}:
+    #             semantics['groups'] = model['groups']
+    #         if model['chains'] != {}:
+    #             semantics['chains'] = model['chains']
+    #         op.write(yaml.dump(semantics, default_flow_style=False))
 
     #write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
     if export['state']:
