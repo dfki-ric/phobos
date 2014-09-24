@@ -2,7 +2,7 @@
 In this tutorial you will learn how to use the brand new phobos plugin for blender and create your own little robot. You will also learn how to export it to several formats like smurf or urdf.
 
 ### Requirements ###
-To get through this tutorial you need a working blender with phobos setup. This tutorial uses blender version 2.71, but it will also work fine with 2.69.
+To get through this tutorial you need a working blender setup with the phobos plugin installed. This tutorial uses blender version 2.71, but it will also work fine with 2.69.
 <!-- The next requirement will be eliminated, when we add a Step called Blender Basics -->
 The tutorial supposes you know the blender basics, so you can navigate in the 3D View and do simple manipulations like scaling and transforming on objects.
 
@@ -39,7 +39,7 @@ Links and joints are handled as bones in phobos. The transform property will ser
 
 ![new bone added](img/antenna.PNG)
 
-Can you see the antenna? Thats our bone. In phobos the z-axis is used to rotate on a joint. Just keep it in mind. The next step is to assign all visual parts that should move with the new bone to it. For that we use the so named *bone related* relationship between objects in blender. Just select all visuals you want to assign to the new link (in our case its the neck and the head). Make sure the last object you select is the bone itself. That makes the bone also the *active* object. Now we cann press Strg+P and choose the *bone relative* operation. In the outliner (upper right corner per default) you can see a new hirarchy, where the Armature is the parent of our neck and head. Thats perfect!
+Can you see the antenna? Thats our bone. In phobos the z-axis is used to rotate on a joint. Just keep it in mind. The next step is to assign all visual parts that should move with the new bone to it. For that we use the so named *bone related* relationship between objects in blender. Just select all visuals you want to assign to the new link (in our case its the neck and the head). Make sure the last object you select is the bone itself. That makes the bone also the *active* object. Now we can press Strg+P and choose the *bone relative* operation. In the outliner (upper right corner per default) you can see a new hierarchy, where the Armature is the parent of our neck and head. Thats perfect!
 
 ![outliner](img/outliner.PNG)
 
@@ -59,6 +59,6 @@ Try to add a collision object for the neck too. You can use a cylinder for that 
 
 ### Step 5 - Export your robot ###
 
-Exporting your robot in your favourite file format is very easy with phobos. Just select any component you want to be exported (in most situations you want to export the whole robot) and select the formats you want your robot exported to. Then start the export and your done.
+Exporting your robot in your favourite file format is very easy with phobos. Just select any component you want to be exported (in most situations you want to export the whole robot) and select the formats you want your robot exported to. Then start the export and you're done.
 
 We hope that tutorial helped you getting started with phobos. Enjoy your now fully visual robot making!
