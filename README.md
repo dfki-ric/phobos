@@ -7,7 +7,7 @@ Phobos was initiated and is currently developed at the [Robotics Innovation Cent
 
 ![Model of the SpaceClimber robot in Blender, next to the Phobos toolbar displayed on the left.](doc/img/phobos_spaceclimber.png)
 
-*Model of the SpaceClimber robot in Blender, next to the Phobos toolbar displayed on the left.*
+*Model of the [SpaceClimber](http://robotik.dfki-bremen.de/en/research/projects/spaceclimber-1.html) robot in Blender, next to the Phobos toolbar displayed on the left.*
 
 ## Robot representation
 Phobos makes use of Blender's hierarchical object graph and its bone objects. These objects, normally used for animating 3D characters, allow to store 3D coordinate systems and apply constraints to their movements, for instance to restrict the movement of an object to a certain range on a specific axis. This allows to replicate the links and joints defined in a URDF model and together with the hierarchical tree of parent and child objects, the complete, branching kinematic chain of a robot can be represented.
