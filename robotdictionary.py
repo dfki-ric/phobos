@@ -271,11 +271,15 @@ def deriveDictEntry(obj):
 
 
 def deriveGroupEntry(group, typetags):
-    links = [{'type': 'link', 'name': obj.name} for obj in group.objects]
+    links = []
     joints = []
     for obj in group.objects:
-        joint = deriveJoint(obj, typetags)
-        joints.append({'type': 'joint', 'name': joint['name']})
+        if obj.MARStype == 'link':
+            links.append({'type': 'link', 'name': obj.name})
+            joint = deriveJoint(obj, typetags)
+            joints.append({'type': 'joint', 'name': joint['name']})
+        else:
+            print("### Error: group " + group.name + " contains " + obj.MARStype + ': ' + obj.name)
     return links + joints
 
 
@@ -405,7 +409,7 @@ def buildRobotDictionary(typetags=False):
     # gather information on groups of objects
     print('\n\nParsing groups...')
     for group in bpy.data.groups:  # TODO: get rid of the "data" part
-        if len(group.objects) > 0:
+        if len(group.objects) > 0 and group.name != "RigidBodyWorld":
             robot['groups'][group.name] = deriveGroupEntry(group, typetags)
 
     # gather information on chains of objects
