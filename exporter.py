@@ -315,19 +315,26 @@ def exportModelToSRDF(model, path):
     output = []
     output.append(xmlHeader)
     output.append(indent+'<robot name="'+model['modelname']+'">\n\n')
-    for group in model['groups']:
-        pass
-    for chain in model['chains']:
-        pass
+    for groupname in model['groups']:
+        output.append(indent*2 + '<group name="'+groupname+'">\n')
+        for member in model['groups'][groupname]:
+            output.append(indent*3+'<'+member['type']+' name="'+member['name']+'" />\n')
+        output.append(indent*2 + '</group>\n\n')
+    for chainname in model['chains']:
+        chain = model['chains'][chainname]
+        output.append(indent*2 + '<chain name="'+chainname+'" base_link="'+chain['start']+'" tip_link="'+chain['end']+'" />\n\n')
     #for joint in model['state']['joints']:
     #    pass
     for link in model['links']:
-        # TODO: empty spheres vs. no spheres
         if len(model['links'][link]['approxcollision']) > 0:
-            output.append(xmlline(1, 'link_sphere_approximation', ('link',), (model['links'][link]['name'],)))
+            output.append(indent*2+'<link_sphere_approximation link="'+model['links'][link]['name']+'">\n')
             for sphere in model['links'][link]['approxcollision']:
-                output.append(xmlline(2, 'sphere', ('center', 'radius'), (l2str(sphere['center']), sphere['radius'])))
-            output.append(indent+'</link_sphere_approximation>\n\n')
+                output.append(xmlline(3, 'sphere', ('center', 'radius'), (l2str(sphere['center']), sphere['radius'])))
+            output.append(indent*2+'</link_sphere_approximation>\n\n')
+        else:
+            output.append(indent*2+'<link_sphere_approximation link="'+model['links'][link]['name']+'">\n')
+            output.append(xmlline(3, 'sphere', ('center', 'radius'), ('0.0 0.0 0.0', '0')))
+            output.append(indent*2+'</link_sphere_approximation>\n\n')
     #finish the export
     output.append(xmlFooter)
     with open(path, 'w') as outputfile:
