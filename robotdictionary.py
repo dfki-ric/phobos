@@ -270,8 +270,13 @@ def deriveDictEntry(obj):
         return cleanObjectProperties(props), parent
 
 
-def deriveGroupEntry(group):
-    return [obj.name for obj in group.objects]
+def deriveGroupEntry(group, typetags):
+    links = [{'type': 'link', 'name': obj.name} for obj in group.objects]
+    joints = []
+    for obj in group.objects:
+        joint = deriveJoint(obj, typetags)
+        joints.append({'type': 'joint', 'name': joint['name']})
+    return links + joints
 
 
 def deriveChainEntry(obj):
