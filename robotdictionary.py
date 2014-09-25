@@ -201,6 +201,10 @@ def deriveCollision(obj):
     collision['name'] = obj.name
     collision['geometry'] = deriveGeometry(obj)
     collision['pose'] = deriveObjectPose(obj)
+    try:
+        collision['bitmask'] = int(''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups]), 2)
+    except AttributeError:
+        pass
     return collision, obj.parent
 
 def deriveApproxsphere(obj):
@@ -388,6 +392,17 @@ def buildRobotDictionary(typetags=False):
             props, parent = deriveDictEntry(obj)
             robot['links'][parent.name]['approxcollision'].append(props)
             obj.select = False
+
+    # combine collision information for links
+    for linkname in robot['links']:
+        link = robot['links'][linkname]
+        bitmask = 0
+        for collname in link['collision']:
+            try:
+                bitmask = bitmask | link['collision'][collname]['bitmask']
+            except KeyError:
+                pass
+        link['collision_bitmask'] = bitmask
 
     # parse sensors and controllers
     print('\n\nParsing sensors and controllers...')

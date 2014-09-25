@@ -31,6 +31,7 @@ import os
 from datetime import datetime
 import yaml
 import struct
+import itertools
 from bpy.types import Operator
 from bpy.props import BoolProperty
 from phobos.utility import *
@@ -331,9 +332,6 @@ def exportModelToSRDF(model, path):
     Chains are fully supported as defined in SRDF. The dictionary also contains a list of all elements belonging to that
     chain, which is discarded and not written to SRDF, however. It might be written to SMURF in the future.
 
-    <disable_collisions>
-    currently not supported
-
     <passive_joint>
     currently not supported
 
@@ -373,6 +371,17 @@ def exportModelToSRDF(model, path):
             output.append(indent*2+'<link_sphere_approximation link="'+model['links'][link]['name']+'">\n')
             output.append(xmlline(3, 'sphere', ('center', 'radius'), ('0.0 0.0 0.0', '0')))
             output.append(indent*2+'</link_sphere_approximation>\n\n')
+    #calculate collision-exclusive links
+    for combination in itertools.combinations(model['links'], 2):
+        link1 = model['links'][combination[0]]
+        link2 = model['links'][combination[1]]
+        # TODO: we might want to automatically add parent/child link combinations
+        try:
+            if link1['collision_bitmask'] & link2['collision_bitmask'] == 0:
+                output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (link1['name'], link2['name'])))
+        except KeyError:
+            pass
+    output.append('\n')
     #finish the export
     output.append(xmlFooter)
     with open(path, 'w') as outputfile:
