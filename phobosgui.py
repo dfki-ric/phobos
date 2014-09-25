@@ -259,6 +259,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c2.operator('object.phobos_partial_rename', text = "Partial Rename")
         c2.operator('object.attach_motor', text = "Attach motor")
         c2.operator('object.phobos_smoothen_surface', text = "Smoothen Surface")
+        c2.operator('object.phobos_set_collision_group', text = "Set Collision Group")
         c2.operator('object.phobos_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
         c2.operator('object.phobos_copy_props', text = 'Copy Custom Property', icon = 'GREASEPENCIL')
 
