@@ -282,8 +282,8 @@ def deriveGroupEntry(group, typetags):
 def deriveChainEntry(obj):
     returnchains = []
     if 'endChain' in obj:
-        endChain = obj['endChain'].split()
-    for chainName in endChain:
+        chainlist = obj['endChain']
+    for chainName in chainlist:
         chainclosed = False
         parent = obj
         chain = {'name': chainName, 'start': '', 'end': obj.name, 'elements': []}
@@ -295,7 +295,7 @@ def deriveChainEntry(obj):
             chain['elements'].append(parent.name)
             parent = parent.parent
             if 'startChain' in parent:
-                startChain = parent['startChain'].split()
+                startChain = parent['startChain']
                 if chainName in startChain:
                     chain['start'] = parent.name
                     chain['elements'].append(parent.name)
