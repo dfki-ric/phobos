@@ -405,7 +405,8 @@ def buildRobotDictionary(typetags=False):
     # gather information on groups of objects
     print('\n\nParsing groups...')
     for group in bpy.data.groups:  # TODO: get rid of the "data" part
-        robot['groups'][group.name] = deriveGroupEntry(group)
+        if len(group.objects) > 0:
+            robot['groups'][group.name] = deriveGroupEntry(group, typetags)
 
     # gather information on chains of objects
     print('\n\nParsing chains...')
