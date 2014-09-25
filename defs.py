@@ -148,7 +148,8 @@ layerTypes = {
               "visual": 2,
               "collision": 3,
               "sensor": 4,
-              "decoration": 5
+              "decoration": 5,
+              "approxsphere": 13
               }
 
 MARSlegacydict = {'specularColor': 'specularFront',
