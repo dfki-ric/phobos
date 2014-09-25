@@ -101,14 +101,35 @@ class SetMassOperator(Operator):
     mass = FloatProperty(
         name = 'mass',
         default = 0.001,
-        description = 'mass in kg')
+        description = 'mass (of active object) in kg')
+
+    userbmass = BoolProperty(
+        name='use rigid body mass',
+        default=False,
+        description='If True, mass entry from rigid body data is used.')
+
+    def invoke(self, context, event):
+        try:
+            self.mass = context.active_object['mass']
+        except KeyError:
+            self.mass = 0.001
+        return self.execute(context)
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
             if obj.MARStype in ['visual', 'collision', 'inertial']:
-                obj['mass'] = self.mass
-                t = dt.now()
-                obj['masschanged'] = t.isoformat()
+                oldmass = obj['mass']
+                if self.userbmass:
+                    try:
+                        obj['mass'] = obj.rigid_body.mass
+                    except AttributeError:
+                        obj['mass'] = 0.001
+                        print("### Error: object has no rigid body properties.")
+                else:
+                    obj['mass'] = self.mass
+                if obj['mass'] != oldmass:
+                    t = dt.now()
+                    obj['masschanged'] = t.isoformat()
         return {'FINISHED'}
 
 
