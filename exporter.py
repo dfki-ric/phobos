@@ -312,6 +312,44 @@ def exportModelToURDF(model, filepath):
 
 
 def exportModelToSRDF(model, path):
+    """
+    This function exports the SRDF-relevant data from the dictionary to a specified path. Further detail on different
+    elements of SRDF:
+
+    <group>
+    Groups in SRDF can contain *links*, *joints*, *chains* and other *groups* (the latter two of which have to be specified
+    upstream. As nested groups is just a shortcut for adding links and joints to a group, it is not supported and the
+    user will have to add all links and joints explicitly to each group.
+    Adding *chains* to groups is currently not supported.
+    If links are added, their associated (parent) joints are added as well, which is a necessity resulting from using
+    Blender bones, but also follows the definition of SRDF.
+
+    <group_state>
+    currently not supported
+
+    <chain>
+    Chains are fully supported as defined in SRDF. The dictionary also contains a list of all elements belonging to that
+    chain, which is discarded and not written to SRDF, however. It might be written to SMURF in the future.
+
+    <disable_collisions>
+    currently not supported
+
+    <passive_joint>
+    currently not supported
+
+    <virtual_joint>
+    currently not supported
+
+    <link_sphere_approximatio>
+    SRDF defines the convention that if no sphere is defined, one large sphere is
+    assumed for that link. If one wants to have no sphere at all, it is necessary to define a sphere of radius 0.
+    As one large sphere can be explicitly added by the user and should be if that is what he intends (WYSIWYG),
+    we add a sphere of radius 0 by default if no sphere is specified.
+
+    :param model: a robot model dictionary
+    :param path: the outpath for the file
+    :return: None
+    """
     output = []
     output.append(xmlHeader)
     output.append(indent+'<robot name="'+model['modelname']+'">\n\n')
@@ -339,18 +377,18 @@ def exportModelToSRDF(model, path):
     output.append(xmlFooter)
     with open(path, 'w') as outputfile:
         outputfile.write(''.join(output))
-    # problem of different joint transformations needed for fixed joints
-    print("phobos SRDF export: Writing model data to", path )
+    # FIXME: problem of different joint transformations needed for fixed joints
+    print("phobos SRDF export: Writing model data to", path)
 
 
 def exportModelToSMURF(model, path):
     export = {#'semantics': model['groups'] != {} or model['chains'] != {},,
-              'state': False,#model['state'] != {}, #TODO: handle state
+              'state': False,  #model['state'] != {}, #TODO: handle state
               'materials': model['materials'] != {},
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'simulation': True#model['simulation'] != {} #TODO: make this a nice test
+              'simulation': True  #model['simulation'] != {} #TODO: make this a nice test
               }
 
 
