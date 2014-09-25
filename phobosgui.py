@@ -205,6 +205,7 @@ class PhobosPanel(bpy.types.Panel):
         inlayout = layout.split()
         rc1 = inlayout.column(align = True)
         rc1.operator('object.phobos_update_models', text = 'Update MARS model', icon = 'FILE_REFRESH')
+        rc1.operator('object.phobos_add_chain', text = 'Define kinematic chain', icon = 'CONSTRAINT')
         rc2 = inlayout.column(align = True)
         rc2.operator('object.phobos_name_model', text = 'Name Robot')
 

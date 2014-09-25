@@ -58,6 +58,40 @@ class CalculateMassOperator(Operator):
         return {'FINISHED'}
 
 
+class AddChainOperator(Operator):
+    """AddChainOperator"""
+    bl_idname = "object.phobos_add_chain"
+    bl_label = "Adds a chain between two selected objects."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    chainname = StringProperty(
+        name = 'chainname',
+        default = 'new_chain',
+        description = 'name of the chain to be created')
+
+    def execute(self, context):
+        endobj = context.active_object
+        for obj in context.selected_objects:
+            if obj is not context.active_object:
+                startobj = obj
+                break
+        if not 'startChain' in startobj:
+            startobj['startChain'] = [self.chainname]
+        else:
+            namelist = startobj['startChain']
+            if self.chainname not in namelist:
+                namelist.append(self.chainname)
+            startobj['startChain'] = namelist
+        if not 'endChain' in endobj:
+            endobj['endChain'] = [self.chainname]
+        else:
+            namelist = endobj['endChain']
+            if self.chainname not in namelist:
+                namelist.append(self.chainname)
+            endobj['endChain'] = namelist
+        return {'FINISHED'}
+
+
 class SetMassOperator(Operator):
     """SetMassOperator"""
     bl_idname = "object.phobos_set_mass"
