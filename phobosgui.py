@@ -262,6 +262,8 @@ class PhobosModelPanel(bpy.types.Panel):
         c2.operator('object.phobos_set_collision_group', text = "Set Collision Group")
         c2.operator('object.phobos_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
         c2.operator('object.phobos_copy_props', text = 'Copy Custom Property', icon = 'GREASEPENCIL')
+        c2.operator('object.phobos_rename_custom_property', text = 'Rename Custom Property', icon = 'GREASEPENCIL')
+
 
         #Mass Menu
         layout.separator()

@@ -547,6 +547,47 @@ class CopyCustomProperties(Operator):
         return ob is not None and ob.mode == 'OBJECT'
 
 
+class RenameCustomProperty(Operator):
+    """Rename Custom Properties Operator"""
+    bl_idname = "object.phobos_rename_custom_property"
+    bl_label = "Edit custom property of selected object(s)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    find = StringProperty(
+        name="find property name:",
+        default='',
+        description="name to be searched for")
+
+    replace = StringProperty(
+        name="replacement name:",
+        default='',
+        description="new name to be replaced with")
+
+    overwrite = BoolProperty(
+        name='overwrite existing properties',
+        default=False,
+        description="If a property of the specified replacement name exists, overwrite it?"
+    )
+
+    def execute(self, context):
+        for obj in context.selected_objects:
+            if self.find in obj and self.replace != '':
+                if self.replace in obj:
+                    print("### Error: property", self.replace, "already present in object", obj.name)
+                    if self.overwrite:
+                        obj[self.replace] = obj[self.find]
+                        del obj[self.find]
+                else:
+                    obj[self.replace] = obj[self.find]
+                    del obj[self.find]
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob is not None and ob.mode == 'OBJECT'
+
+
 class SetGeometryType(Operator):
     """Set Geometry Type Operator"""
     bl_idname = "object.phobos_set_geometry_type"
