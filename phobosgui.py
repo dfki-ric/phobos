@@ -216,7 +216,7 @@ class PhobosPanel(bpy.types.Panel):
         ic1 = iinlayout.column(align = True)
         ic1.operator('object.phobos_show_distance', text = 'Measure distance')
         ic2 = iinlayout.column(align = True)
-        ic2.operator('object.phobos_set_xray', text = 'Always show objects')
+        ic2.operator('object.phobos_set_xray', text = 'X-Ray view')
 
         # Selection Menu
         layout.separator()

@@ -288,9 +288,9 @@ class SetXRayOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     objects = EnumProperty(
-        name = "objects",
+        name = "show objects:",
         default = 'selected',
-        items = (('all',)*3, ('selected',)*3) + defs.marstypes,
+        items = (('all',)*3, ('selected',)*3, ('by name',)*3) + defs.marstypes,
         description = "show objects via x-ray")
 
     show = BoolProperty(
@@ -299,17 +299,30 @@ class SetXRayOperator(Operator):
         description = "set to")
 
     namepart = StringProperty(
-        name = "name",
+        name = "name contains",
         default = "",
-        description = "name contains")
+        description = "part of a name for objects to be selected in 'by name' mode")
+
+    @classmethod
+    def poll(cls, context):
+        return context.mode == 'OBJECT' or context.mode == 'POSE'
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="Select Items for X-Ray view")
+
+        layout.prop(self, "objects")
+        layout.prop(self, "show", text="x-ray enabled" if self.show else "x-ray disabled")
+        if self.objects == 'by name':
+            layout.prop(self, "namepart")
 
     def execute(self, context):
         if self.objects == 'all':
             objlist = bpy.data.objects
-        elif self.objects == 'select':
+        elif self.objects == 'selected':
             objlist = bpy.context.selected_objects
         elif self.objects == 'by name':
-            objlist = [obj for obj in bpy.data.objects if obj.name.find(self.namepart) > 0]
+            objlist = [obj for obj in bpy.data.objects if obj.name.find(self.namepart) >= 0]
         else:
             objlist = [obj for obj in bpy.data.objects if obj.MARStype == self.objects]
         for obj in objlist:
