@@ -4,10 +4,10 @@
 
 This is going to be the first ever 'release', resulting in a newly created branch 'stable'.
 
-| branch  | push date |
+| branch  | designated push date |
 | ------------- | ------------- |
-| next  | 24.09.2014  |
-| stable | 01.10.2014  |
+| next  | 01.10.2014  |
+| stable | 03.10.2014  |
 
 ### Features still incomplete or missing
 
