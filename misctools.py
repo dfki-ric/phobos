@@ -376,8 +376,11 @@ class SelectRootOperator(Operator):
         roots = set()
         for obj in bpy.context.selected_objects:
             roots.add(utility.getRoot(obj))
-        utility.selectObjects(list(roots), True)
-        bpy.context.scene.objects.active = list(roots)[0]
+        if len(roots) > 0:
+            utility.selectObjects(list(roots), True)
+            bpy.context.scene.objects.active = list(roots)[0]
+        else:
+            bpy.ops.error.message('INVOKE_DEFAULT', type="ERROR", message="Couldn't find any root object.")
         return {'FINISHED'}
 
 
