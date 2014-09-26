@@ -67,7 +67,8 @@ def register():
     bpy.types.World.exportMesh = BoolProperty(name = "exportMesh", update=updateExportOptions)
     bpy.types.World.exportMARSscene = BoolProperty(name = "exportMARSscene", update=updateExportOptions)
     bpy.types.World.exportSMURF = BoolProperty(name = "exportSMURF", default=True, update=updateExportOptions)
-    bpy.types.World.exportURDF = BoolProperty(name="exportURDF", default=True)
+    bpy.types.World.exportURDF = BoolProperty(name = "exportURDF", default=True, update=updateExportOptions)
+    bpy.types.World.exportSRDF = BoolProperty(name = "exportSRDF", default=True)
     bpy.types.World.exportYAML = BoolProperty(name = "exportYAML", update=updateExportOptions)
 
     #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
@@ -204,6 +205,7 @@ class PhobosPanel(bpy.types.Panel):
         inlayout = layout.split()
         rc1 = inlayout.column(align = True)
         rc1.operator('object.phobos_update_models', text = 'Update MARS model', icon = 'FILE_REFRESH')
+        rc1.operator('object.phobos_add_chain', text = 'Define kinematic chain', icon = 'CONSTRAINT')
         rc2 = inlayout.column(align = True)
         rc2.operator('object.phobos_name_model', text = 'Name Robot')
 
@@ -257,6 +259,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c2.operator('object.phobos_partial_rename', text = "Partial Rename")
         c2.operator('object.attach_motor', text = "Attach motor")
         c2.operator('object.phobos_smoothen_surface', text = "Smoothen Surface")
+        c2.operator('object.phobos_set_collision_group', text = "Set Collision Group")
         c2.operator('object.phobos_batch_property', text = 'Edit Custom Property', icon = 'GREASEPENCIL')
         c2.operator('object.phobos_copy_props', text = 'Copy Custom Property', icon = 'GREASEPENCIL')
 
@@ -373,6 +376,7 @@ class PhobosExportPanel(bpy.types.Panel):
         c2.prop(bpy.data.worlds[0], "exportMARSscene", text = "as MARS scene")
         c2.prop(bpy.data.worlds[0], "exportSMURF", text = "as SMURF")
         c2.prop(bpy.data.worlds[0], "exportURDF", text = "as URDF")
+        c2.prop(bpy.data.worlds[0], "exportSRDF", text = "with SRDF")
         c2.prop(bpy.data.worlds[0], "exportYAML", text = "as YAML dump")
 
         layout.separator()

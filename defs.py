@@ -39,7 +39,8 @@ marstypes = (('undefined',)*3,
              ('visual',)*3,
              ('collision',)*3,
              ('sensor',)*3,
-             ('controller',)*3)
+             ('controller',)*3,
+             ('approxsphere',)*3)
 
 jointtypes = (('revolute',)*3,
               ('continuous',)*3,
@@ -68,6 +69,8 @@ type_properties = {
     "visual_default": ('new_node', 'box'),
     "collision": ('name', 'collisionType', 'bitmask'),
     "collision_default": ('new_node', 'box', '65536'),
+    "approxsphere": (),
+    "approxsphere_default": (),
     "sensor": ('name', 'sensorType'),
     "sensor_default": ("new_sensor", "RaySensor"),
     "controller": ('name',),
@@ -145,7 +148,8 @@ layerTypes = {
               "visual": 2,
               "collision": 3,
               "sensor": 4,
-              "decoration": 5
+              "decoration": 5,
+              "approxsphere": 13
               }
 
 MARSlegacydict = {'specularColor': 'specularFront',

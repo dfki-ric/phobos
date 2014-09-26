@@ -31,6 +31,7 @@ import os
 from datetime import datetime
 import yaml
 import struct
+import itertools
 from bpy.types import Operator
 from bpy.props import BoolProperty
 from phobos.utility import *
@@ -46,8 +47,8 @@ def unregister():
     print("Unregistering export...")
 
 indent = '  '
-urdfHeader = '<?xml version="1.0"?>\n'
-urdfFooter = indent+'</robot>\n'
+xmlHeader = '<?xml version="1.0"?>\n'
+xmlFooter = indent+'</robot>\n'
 
 
 def exportBobj(path, obj):
@@ -239,7 +240,7 @@ def writeURDFGeometry(output, element):
 
 def exportModelToURDF(model, filepath):
     output = []
-    output.append(urdfHeader)
+    output.append(xmlHeader)
     output.append(indent+'<robot name="'+model['modelname']+'">\n\n')
     #export link information
     for l in model['links'].keys():
@@ -304,28 +305,110 @@ def exportModelToURDF(model, filepath):
                             output.append(indent*3+'<texture filename="'+model['materials'][m]['texturename']+'"/>\n')
             output.append(indent*2+'</material>\n\n')
     #finish the export
-    output.append(urdfFooter)
+    output.append(xmlFooter)
     with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))
     # problem of different joint transformations needed for fixed joints
     print("phobos URDF export: Writing model data to", filepath )
 
 
+def exportModelToSRDF(model, path):
+    """
+    This function exports the SRDF-relevant data from the dictionary to a specified path. Further detail on different
+    elements of SRDF:
+
+    <group>
+    Groups in SRDF can contain *links*, *joints*, *chains* and other *groups* (the latter two of which have to be specified
+    upstream. As nested groups is just a shortcut for adding links and joints to a group, it is not supported and the
+    user will have to add all links and joints explicitly to each group.
+    Originally both links and their associated parent joints were added. SRDF however implicitly assumes this, so the
+    current implementation only adds the links.
+
+    <chain>
+    Chains are elements to simplify defining groups and are supported. The dictionary also contains a list of all
+    elements belonging to that chain, which is discarded and not written to SRDF, however. It might be written to SMURF
+    in the future.
+
+    <link_sphere_approximatio>
+    SRDF defines the convention that if no sphere is defined, one large sphere is
+    assumed for that link. If one wants to have no sphere at all, it is necessary to define a sphere of radius 0.
+    As one large sphere can be explicitly added by the user and should be if that is what he intends (WYSIWYG),
+    we add a sphere of radius 0 by default if no sphere is specified.
+
+    Currently not supported:
+    - <group_state>
+    - <virtual_joint>
+
+    :param model: a robot model dictionary
+    :param path: the outpath for the file
+    :return: None
+    """
+    output = []
+    output.append(xmlHeader)
+    output.append(indent+'<robot name="'+model['modelname']+'">\n\n')
+    for groupname in model['groups']:
+        output.append(indent*2 + '<group name="'+groupname+'">\n')
+        for member in model['groups'][groupname]:
+            output.append(indent*3+'<'+member['type']+' name="'+member['name']+'" />\n')
+        output.append(indent*2 + '</group>\n\n')
+    for chainname in model['chains']:
+        output.append(indent*2 + '<group name="'+chainname+'">\n')
+        chain = model['chains'][chainname]
+        output.append(indent*3 + '<chain base_link="'+chain['start']+'" tip_link="'+chain['end']+'" />\n')
+        output.append(indent*2 + '</group>\n\n')
+    #for joint in model['state']['joints']:
+    #    pass
+    #passive joints
+    for joint in model['joints']:
+        try:
+            if model['joints'][joint]['passive']:
+                output.append(indent*2+'<passive_joint name="'+model['links'][joint]['name']+'">\n\n')
+        except KeyError:
+            pass
+    for link in model['links']:
+        if len(model['links'][link]['approxcollision']) > 0:
+            output.append(indent*2+'<link_sphere_approximation link="'+model['links'][link]['name']+'">\n')
+            for sphere in model['links'][link]['approxcollision']:
+                output.append(xmlline(3, 'sphere', ('center', 'radius'), (l2str(sphere['center']), sphere['radius'])))
+            output.append(indent*2+'</link_sphere_approximation>\n\n')
+        else:
+            output.append(indent*2+'<link_sphere_approximation link="'+model['links'][link]['name']+'">\n')
+            output.append(xmlline(3, 'sphere', ('center', 'radius'), ('0.0 0.0 0.0', '0')))
+            output.append(indent*2+'</link_sphere_approximation>\n\n')
+    #calculate collision-exclusive links
+    for combination in itertools.combinations(model['links'], 2):
+        link1 = model['links'][combination[0]]
+        link2 = model['links'][combination[1]]
+        # TODO: we might want to automatically add parent/child link combinations
+        try:
+            if link1['collision_bitmask'] & link2['collision_bitmask'] == 0:
+                output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (link1['name'], link2['name'])))
+        except KeyError:
+            pass
+    output.append('\n')
+    #finish the export
+    output.append(xmlFooter)
+    with open(path, 'w') as outputfile:
+        outputfile.write(''.join(output))
+    # FIXME: problem of different joint transformations needed for fixed joints
+    print("phobos SRDF export: Writing model data to", path)
+
+
 def exportModelToSMURF(model, path):
-    export = {'semantics': model['groups'] != {} or model['chains'] != {},
-              'state': False,#model['state'] != {}, #TODO: handle state
+    export = {#'semantics': model['groups'] != {} or model['chains'] != {},,
+              'state': False,  #model['state'] != {}, #TODO: handle state
               'materials': model['materials'] != {},
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'simulation': True#model['simulation'] != {} #TODO: make this a nice test
+              'simulation': True  #model['simulation'] != {} #TODO: make this a nice test
               }
 
 
     #create all filenames
     smurf_filename = model['modelname'] + ".smurf"
     urdf_filename =  model['modelname'] + ".urdf"
-    filenames = {'semantics': model['modelname'] + "_semantics.yml",
+    filenames = {#'semantics': model['modelname'] + "_semantics.yml",
                  'state': model['modelname'] + "_state.yml",
                  'materials': model['modelname'] + "_materials.yml",
                  'sensors': model['modelname'] + "_sensors.yml",
@@ -349,17 +432,17 @@ def exportModelToSMURF(model, path):
     #write urdf
     exportModelToURDF(model, path + urdf_filename)
 
-    #write semantics (SRDF information in YML format)
-    if export['semantics']:
-        with open(path + filenames['semantics'], 'w') as op:
-            op.write('#semantics'+infostring)
-            op.write("modelname: "+model['modelname']+'\n')
-            semantics = {}
-            if model['groups'] != {}:
-                semantics['groups'] = model['groups']
-            if model['chains'] != {}:
-                semantics['chains'] = model['chains']
-            op.write(yaml.dump(semantics, default_flow_style=False))
+    # #write semantics (SRDF information in YML format)
+    # if export['semantics']:
+    #     with open(path + filenames['semantics'], 'w') as op:
+    #         op.write('#semantics'+infostring)
+    #         op.write("modelname: "+model['modelname']+'\n')
+    #         semantics = {}
+    #         if model['groups'] != {}:
+    #             semantics['groups'] = model['groups']
+    #         if model['chains'] != {}:
+    #             semantics['chains'] = model['chains']
+    #         op.write(yaml.dump(semantics, default_flow_style=False))
 
     #write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
     if export['state']:
@@ -446,6 +529,7 @@ def export(typetags=False):
         outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
     yaml = bpy.data.worlds[0].exportYAML
     urdf = bpy.data.worlds[0].exportURDF
+    srdf = bpy.data.worlds[0].exportSRDF
     smurf = bpy.data.worlds[0].exportSMURF
     mars = bpy.data.worlds[0].exportMARSscene
     meshexp = bpy.data.worlds[0].exportMesh
@@ -460,6 +544,8 @@ def export(typetags=False):
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
         if mars:
             exportModelToMARS(robot, outpath + robot["modelname"] + "_mars.scene")
+        if srdf:
+            exportModelToSRDF(robot, outpath + robot["modelname"] + ".srdf")
         if smurf:
             exportModelToSMURF(robot, outpath)
         elif urdf:

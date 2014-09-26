@@ -29,7 +29,7 @@ import bpy
 import math
 import mathutils
 from bpy.types import Operator
-from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty, FloatProperty
+from bpy.props import StringProperty, BoolProperty, BoolVectorProperty, FloatVectorProperty, EnumProperty, FloatProperty
 from datetime import datetime as dt
 from . import robotupdate
 from . import materials
@@ -58,6 +58,74 @@ class CalculateMassOperator(Operator):
         return {'FINISHED'}
 
 
+class AddChainOperator(Operator):
+    """AddChainOperator"""
+    bl_idname = "object.phobos_add_chain"
+    bl_label = "Adds a chain between two selected objects."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    chainname = StringProperty(
+        name = 'chainname',
+        default = 'new_chain',
+        description = 'name of the chain to be created')
+
+    def execute(self, context):
+        endobj = context.active_object
+        for obj in context.selected_objects:
+            if obj is not context.active_object:
+                startobj = obj
+                break
+        if not 'startChain' in startobj:
+            startobj['startChain'] = [self.chainname]
+        else:
+            namelist = startobj['startChain']
+            if self.chainname not in namelist:
+                namelist.append(self.chainname)
+            startobj['startChain'] = namelist
+        if not 'endChain' in endobj:
+            endobj['endChain'] = [self.chainname]
+        else:
+            namelist = endobj['endChain']
+            if self.chainname not in namelist:
+                namelist.append(self.chainname)
+            endobj['endChain'] = namelist
+        return {'FINISHED'}
+
+
+class SetCollisionGroupOperator(Operator):
+    """SetCollisionGroupOperator"""
+    bl_idname = "object.phobos_set_collision_group"
+    bl_label = "Sets the collision group of the selected object(s)."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    groups = BoolVectorProperty(
+        name='collision groups',
+        size=20,
+        subtype='LAYER',
+        default=(False,)*20,
+        description='collision groups')
+
+    def invoke(self, context, event):
+        try:
+            self.groups = context.active_object.rigid_body.collision_groups
+        except AttributeError:
+            pass  # TODO: catch properly
+        return self.execute(context)
+
+    def execute(self, context):
+        active_object = context.active_object
+        for obj in context.selected_objects:
+            if obj.MARStype == 'collision':
+                try:
+                    obj.rigid_body.collision_groups = self.groups
+                except AttributeError:
+                    context.scene.objects.active = obj
+                    bpy.ops.rigidbody.object_add(type='ACTIVE')
+                    obj.rigid_body.collision_groups = self.groups
+        context.scene.objects.active = active_object
+        return {'FINISHED'}
+
+
 class SetMassOperator(Operator):
     """SetMassOperator"""
     bl_idname = "object.phobos_set_mass"
@@ -67,14 +135,35 @@ class SetMassOperator(Operator):
     mass = FloatProperty(
         name = 'mass',
         default = 0.001,
-        description = 'mass in kg')
+        description = 'mass (of active object) in kg')
+
+    userbmass = BoolProperty(
+        name='use rigid body mass',
+        default=False,
+        description='If True, mass entry from rigid body data is used.')
+
+    def invoke(self, context, event):
+        try:
+            self.mass = context.active_object['mass']
+        except KeyError:
+            self.mass = 0.001
+        return self.execute(context)
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
             if obj.MARStype in ['visual', 'collision', 'inertial']:
-                obj['mass'] = self.mass
-                t = dt.now()
-                obj['masschanged'] = t.isoformat()
+                oldmass = obj['mass']
+                if self.userbmass:
+                    try:
+                        obj['mass'] = obj.rigid_body.mass
+                    except AttributeError:
+                        obj['mass'] = 0.001
+                        print("### Error: object has no rigid body properties.")
+                else:
+                    obj['mass'] = self.mass
+                if obj['mass'] != oldmass:
+                    t = dt.now()
+                    obj['masschanged'] = t.isoformat()
         return {'FINISHED'}
 
 

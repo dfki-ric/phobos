@@ -27,7 +27,7 @@ Created on 7 Jan 2014
 
 import bpy
 from bpy.types import Operator
-from bpy.props import FloatProperty, EnumProperty
+from bpy.props import FloatProperty, EnumProperty, BoolProperty
 import math
 import mathutils
 import warnings
@@ -169,6 +169,14 @@ class DefineJointConstraintsOperator(Operator):
         default = 0.0,
         description = "maximum velocity of the joint")
 
+    passive = BoolProperty(
+        name='passive',
+        default=False,
+        description='makes the joint passive (no actuation)'
+    )
+
+    # TODO: invoke function to read all values in
+
     def execute(self, context):
         lower = math.radians(self.lower)
         upper = math.radians(self.upper)
@@ -306,6 +314,12 @@ class DefineJointConstraintsOperator(Operator):
                 if self.joint_type != 'fixed':
                     link['joint/maxeffort'] = self.maxeffort
                     link['joint/maxvelocity'] = self.maxvelocity
+                if self.passive:
+                    link['joint/passive'] = True
+                else:
+                    pass  # FIXME: add default motor here or upon export?
+                          # upon export might have the advantage of being able
+                          # to check for missing motors in the model checking
         return{'FINISHED'}
 
 class AttachMotorOperator(Operator):

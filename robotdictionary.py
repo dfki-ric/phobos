@@ -78,6 +78,7 @@ def deriveLink(obj, typetags=False):
     props["collision"] = {}
     props["visual"] = {}
     props["inertial"] = {}
+    props['approxcollision'] = []
     return props
 
 
@@ -200,7 +201,17 @@ def deriveCollision(obj):
     collision['name'] = obj.name
     collision['geometry'] = deriveGeometry(obj)
     collision['pose'] = deriveObjectPose(obj)
+    try:
+        collision['bitmask'] = int(''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups]), 2)
+    except AttributeError:
+        pass
     return collision, obj.parent
+
+def deriveApproxsphere(obj):
+    sphere = initObjectProperties(obj)
+    sphere['radius'] = obj.dimensions[0]/2
+    sphere['center'] = list(obj.matrix_local.to_translation())
+    return sphere, obj.parent
 
 
 def deriveSensor(obj):
@@ -247,6 +258,8 @@ def deriveDictEntry(obj):
             props, parent = deriveVisual(obj)
         elif obj.MARStype == 'collision':
             props, parent = deriveCollision(obj)
+        elif obj.MARStype == 'approxsphere':
+            props, parent = deriveApproxsphere(obj)
         elif obj.MARStype == 'sensor':
             props = deriveSensor(obj)
         #elif obj.MARStype == 'motor':
@@ -261,15 +274,24 @@ def deriveDictEntry(obj):
         return cleanObjectProperties(props), parent
 
 
-def deriveGroupEntry(group):
-    return [obj.name for obj in group.objects]
+def deriveGroupEntry(group, typetags):
+    links = []
+    #joints = []
+    for obj in group.objects:
+        if obj.MARStype == 'link':
+            links.append({'type': 'link', 'name': obj.name})
+            #joint = deriveJoint(obj, typetags)
+            #joints.append({'type': 'joint', 'name': joint['name']})
+        else:
+            print("### Error: group " + group.name + " contains " + obj.MARStype + ': ' + obj.name)
+    return links #+ joints
 
 
 def deriveChainEntry(obj):
     returnchains = []
     if 'endChain' in obj:
-        endChain = obj['endChain'].split()
-    for chainName in endChain:
+        chainlist = obj['endChain']
+    for chainName in chainlist:
         chainclosed = False
         parent = obj
         chain = {'name': chainName, 'start': '', 'end': obj.name, 'elements': []}
@@ -281,7 +303,7 @@ def deriveChainEntry(obj):
             chain['elements'].append(parent.name)
             parent = parent.parent
             if 'startChain' in parent:
-                startChain = parent['startChain'].split()
+                startChain = parent['startChain']
                 if chainName in startChain:
                     chain['start'] = parent.name
                     chain['elements'].append(parent.name)
@@ -360,12 +382,27 @@ def buildRobotDictionary(typetags=False):
                 i.select = False
 
     # complete link information by parsing visuals and collision objects
-    print('\n\nParsing visual and collision objects...')
+    print('\n\nParsing visual and collision (approximation) objects...')
     for obj in bpy.context.selected_objects:
         if obj.MARStype in ['visual', 'collision']:
             props, parent = deriveDictEntry(obj)
             robot['links'][parent.name][obj.MARStype][obj.name] = props
             obj.select = False
+        elif obj.MARStype == 'approxsphere':
+            props, parent = deriveDictEntry(obj)
+            robot['links'][parent.name]['approxcollision'].append(props)
+            obj.select = False
+
+    # combine collision information for links
+    for linkname in robot['links']:
+        link = robot['links'][linkname]
+        bitmask = 0
+        for collname in link['collision']:
+            try:
+                bitmask = bitmask | link['collision'][collname]['bitmask']
+            except KeyError:
+                pass
+        link['collision_bitmask'] = bitmask
 
     # parse sensors and controllers
     print('\n\nParsing sensors and controllers...')
@@ -387,7 +424,8 @@ def buildRobotDictionary(typetags=False):
     # gather information on groups of objects
     print('\n\nParsing groups...')
     for group in bpy.data.groups:  # TODO: get rid of the "data" part
-        robot['groups'][group.name] = deriveGroupEntry(group)
+        if len(group.objects) > 0 and group.name != "RigidBodyWorld":
+            robot['groups'][group.name] = deriveGroupEntry(group, typetags)
 
     # gather information on chains of objects
     print('\n\nParsing chains...')
