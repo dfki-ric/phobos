@@ -93,7 +93,7 @@ def deriveJoint(obj, typetags=False):
         props['name'] = obj.name
     props['parent'] = obj.parent.name
     props['child'] = obj.name
-    props['jointType'], crot = joints.deriveJointType(obj, True)
+    props['type'], crot = joints.deriveJointType(obj, True)
     axis, limit = joints.getJointConstraints(obj)
     if axis:
         props['axis'] = list(axis)
@@ -622,13 +622,13 @@ def check_joints(joints):
             note = "CheckModel: Error, joint '" + joint_key + "' has no attribute 'child'."
             notifications += note + "\n"
             print(note)
-        if not 'jointType' in joint:
+        if not 'type' in joint:
             note = "CheckModel: Error, joint '" + joint_key + "' has no attribute 'type'."
             notifications += note + "\n"
             print(note)
-        elif joint['jointType'] not in ['hinge', 'continuous', 'linear']:
-            note = "CheckModel: Error, joint '" + joint_key + "' has invalid value for attribute 'jointType': '" + joint['jointType'] + "'."
-            notifications +=  note + '\n'
+        elif joint['type'] not in defs.jointtypes:
+            note = "CheckModel: Error, joint '" + joint_key + "' has invalid value for attribute 'joint/type': '" + joint['type'] + "'."
+            notifications += note + '\n'
             print(note)
     return notifications
 

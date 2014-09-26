@@ -292,7 +292,7 @@ class MARS_Scene_Parser(object):
         for joint in joints:
             joint_dict = {}
             name = joint.get('name')
-            joint_dict['jointType'] = joint.find('type').text
+            joint_dict['joint/type'] = joint.find('type').text
 
             parent_index = int(joint.find('nodeindex1').text)
             joint_dict['parent'] = self.link_index_dict[parent_index]

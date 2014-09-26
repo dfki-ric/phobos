@@ -284,7 +284,7 @@ def exportModelToURDF(model, filepath):
     #export joint information
     for j in model['joints']:
         joint = model['joints'][j]
-        output.append(indent*2+'<joint name="'+joint['name']+'" type="'+joint["jointType"]+'">\n')
+        output.append(indent*2+'<joint name="'+joint['name']+'" type="'+joint["type"]+'">\n')
         child = model['links'][joint["child"]]
         output.append(xmlline(3, 'origin', ['xyz', 'rpy'], [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])]))
         output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')

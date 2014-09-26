@@ -147,7 +147,7 @@ model
 - {joint}
 	- parent: str
 	- child: str
-	- jointType: str ("hinge", "continuous", "linear")
+	- type: str ("hinge", "continuous", "linear")
 - ["sensor"]
 	- link: str
 	- sensorType: str

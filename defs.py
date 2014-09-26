@@ -90,17 +90,17 @@ nodeTypes = ("undefined",
             )
 
 # definition of joint types
-jointTypes = ("undefined",
-              "revolute",
-              "continuous",
-              "prismatic",
-              "hinge2",
-              "slider",
-              "ball",
-              "universal",
-              "fixed",
-              "istruct-spine"
-             )
+#jointTypes = ("undefined",
+#              "revolute",
+#              "continuous",
+#              "prismatic",
+#              "hinge2",
+#              "slider",
+#              "ball",
+#              "universal",
+#              "fixed",
+#              "istruct-spine"
+#             )
 
 # definition of sensor types
 sensorTypes = ("RaySensor",
