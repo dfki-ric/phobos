@@ -276,15 +276,15 @@ def deriveDictEntry(obj):
 
 def deriveGroupEntry(group, typetags):
     links = []
-    joints = []
+    #joints = []
     for obj in group.objects:
         if obj.MARStype == 'link':
             links.append({'type': 'link', 'name': obj.name})
-            joint = deriveJoint(obj, typetags)
-            joints.append({'type': 'joint', 'name': joint['name']})
+            #joint = deriveJoint(obj, typetags)
+            #joints.append({'type': 'joint', 'name': joint['name']})
         else:
             print("### Error: group " + group.name + " contains " + obj.MARStype + ': ' + obj.name)
-    return links + joints
+    return links #+ joints
 
 
 def deriveChainEntry(obj):

@@ -357,8 +357,10 @@ def exportModelToSRDF(model, path):
             output.append(indent*3+'<'+member['type']+' name="'+member['name']+'" />\n')
         output.append(indent*2 + '</group>\n\n')
     for chainname in model['chains']:
+        output.append(indent*2 + '<group name="'+chainname+'">\n')
         chain = model['chains'][chainname]
-        output.append(indent*2 + '<chain name="'+chainname+'" base_link="'+chain['start']+'" tip_link="'+chain['end']+'" />\n\n')
+        output.append(indent*3 + '<chain base_link="'+chain['start']+'" tip_link="'+chain['end']+'" />\n')
+        output.append(indent*2 + '</group>\n\n')
     #for joint in model['state']['joints']:
     #    pass
     for link in model['links']:
