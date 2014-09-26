@@ -142,6 +142,13 @@ class SetMassOperator(Operator):
         default=False,
         description='If True, mass entry from rigid body data is used.')
 
+    @classmethod
+    def poll(cls, context):
+        for obj in context.selected_objects:
+            if obj.MARStype in ['visual', 'collision', 'inertial']:
+                return True
+        return False
+
     def invoke(self, context, event):
         try:
             self.mass = context.active_object['mass']
