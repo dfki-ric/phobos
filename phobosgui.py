@@ -291,16 +291,16 @@ class PhobosSenConPanel(bpy.types.Panel):
         row_sensors.label(text="Add Sensors / Controllers")
         sensor_split = row_sensors.split()
 
-        n_sensortypes = int(len(defs.sensorTypes))
+        n_sensortypes = int(len(defs.sensortypes))
         half_n_sensortypes = int(n_sensortypes/2)
         col_sensor_1 = sensor_split.column(align=True)
         for i in range(half_n_sensortypes):#sensor in defs.sensorTypes:
-            sensor = defs.sensorTypes[i]
+            sensor = defs.sensortypes[i]
             #col_sensor_1.operator('object.phobos_add_sensor_'+sensor, text=sensor)
             col_sensor_1.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
         col_sensor_2 = sensor_split.column(align=True)
         for i in range(n_sensortypes-half_n_sensortypes):
-            sensor = defs.sensorTypes[i+half_n_sensortypes]
+            sensor = defs.sensortypes[i+half_n_sensortypes]
             col_sensor_2.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
             #col_sensor_2.operator('object.phobos_add_sensor_'+sensor, text=sensor)
         row_sensors.operator("object.phobos_add_controller", text="Controller")

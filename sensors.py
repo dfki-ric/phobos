@@ -64,7 +64,7 @@ class AddSensorOperator(Operator):
 
     def execute(self, context):
         location = bpy.context.scene.cursor_location
-        if self.sensor_type in defs.sensorTypes:
+        if self.sensor_type in defs.sensortypes:
             if "Node" in self.sensor_type or "Joint" in self.sensor_type or "Motor" in self.sensor_type:
                 objects = []
                 sensors = []
@@ -118,7 +118,7 @@ class AddLegacySensorOperator(Operator):
 
     def execute(self, context):
         location = bpy.context.scene.cursor_location
-        if self.sensor_type in defs.sensorTypes:
+        if self.sensor_type in defs.sensortypes:
             if "Node" in self.sensor_type or "Joint" in self.sensor_type or "Motor" in self.sensor_type:
                 objects = []
                 sensors = []

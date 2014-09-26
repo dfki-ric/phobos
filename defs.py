@@ -103,7 +103,7 @@ jointTypes = ("undefined",
              )
 
 # definition of sensor types
-sensorTypes = ("RaySensor",
+sensortypes = ("RaySensor",
                "CameraSensor",
                "ScanningSonar",
                "JointPosition",
