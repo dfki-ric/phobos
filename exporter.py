@@ -332,9 +332,6 @@ def exportModelToSRDF(model, path):
     Chains are fully supported as defined in SRDF. The dictionary also contains a list of all elements belonging to that
     chain, which is discarded and not written to SRDF, however. It might be written to SMURF in the future.
 
-    <passive_joint>
-    currently not supported
-
     <virtual_joint>
     currently not supported
 
@@ -363,6 +360,13 @@ def exportModelToSRDF(model, path):
         output.append(indent*2 + '</group>\n\n')
     #for joint in model['state']['joints']:
     #    pass
+    #passive joints
+    for joint in model['joints']:
+        try:
+            if model['joints'][joint]['passive']:
+                output.append(indent*2+'<passive_joint name="'+model['links'][joint]['name']+'">\n\n')
+        except KeyError:
+            pass
     for link in model['links']:
         if len(model['links'][link]['approxcollision']) > 0:
             output.append(indent*2+'<link_sphere_approximation link="'+model['links'][link]['name']+'">\n')
