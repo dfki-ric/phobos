@@ -55,7 +55,7 @@ def collectMaterials(objectlist):
 
 
 def deriveMaterial(mat):
-    material = {}
+    material = initObjectProperties(mat, 'material')
     material['name'] = mat.name
     material['diffuseFront'] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
     material['ambientFront'] = dict(zip(['r', 'g', 'b'], [mat.ambient * mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
@@ -215,12 +215,12 @@ def deriveApproxsphere(obj):
 
 
 def deriveSensor(obj):
-    props = initObjectProperties(obj)
+    props = initObjectProperties(obj, 'sensor')
     return props
 
 
 def deriveController(obj):
-    props = initObjectProperties(obj)
+    props = initObjectProperties(obj, 'controller')
     return props
 
 
