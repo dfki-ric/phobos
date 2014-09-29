@@ -542,8 +542,8 @@ class CopyCustomProperties(Operator):
 
     @classmethod
     def poll(cls, context):
-        ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT'
+        obs = context.selected_objects
+        return len(obs)>0 #and ob.mode == 'OBJECT' Is not possible anymore..
 
 
 class RenameCustomProperty(Operator):
