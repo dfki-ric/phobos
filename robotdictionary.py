@@ -73,7 +73,7 @@ def deriveMaterial(mat):
 
 
 def deriveLink(obj, typetags=False):
-    props = initObjectProperties(obj, 'link')
+    props = initObjectProperties(obj, marstype='link', ignoretypes=['joint', 'motor'])
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
     props["visual"] = {}
@@ -83,7 +83,7 @@ def deriveLink(obj, typetags=False):
 
 
 def deriveJoint(obj, typetags=False):
-    props = initObjectProperties(obj, 'joint')
+    props = initObjectProperties(obj, marstype='joint', ignoretypes=['link', 'motor'])
     if typetags:
         if not '/' in obj.name:
             props['name'] = obj.name + '_joint'
@@ -121,7 +121,7 @@ def deriveJointState(joint):
 
 
 def deriveMotor(obj):
-    props = initObjectProperties(obj, 'motor')
+    props = initObjectProperties(obj, marstype='motor', ignoretypes=['link', 'joint'])
     props['name'] = obj.name
     props['joint'] = obj.name
     return props#, obj.parent
@@ -188,7 +188,6 @@ def deriveObjectPose(obj):
 
 def deriveVisual(obj):
     visual = initObjectProperties(obj)
-    visual['name'] = obj.name
     visual['geometry'] = deriveGeometry(obj)
     visual['pose'] = deriveObjectPose(obj)
     #if obj.data.materials:
@@ -198,7 +197,6 @@ def deriveVisual(obj):
 
 def deriveCollision(obj):
     collision = initObjectProperties(obj)
-    collision['name'] = obj.name
     collision['geometry'] = deriveGeometry(obj)
     collision['pose'] = deriveObjectPose(obj)
     try:
@@ -224,16 +222,22 @@ def deriveController(obj):
     return props
 
 
-def initObjectProperties(obj, marstype=None):
-    props = {}
+def initObjectProperties(obj, marstype=None, ignoretypes=[]):
+    props = {'name': obj.name}
     if not marstype:
         for key, value in obj.items():
             props[key] = value
     else:
         for key, value in obj.items():
-            if key.find(marstype+'/') >= 0:
-                props[key.replace(marstype+'/', '')] = value
-    props['name'] = obj.name
+            if '/' in key:
+                if marstype+'/' in key:
+                    props[key.replace(marstype+'/', '')] = value
+                else:
+                    category, specifier = key.split('/')
+                    if category not in ignoretypes:
+                        if not category in props:
+                            props[category] = {}
+                        props[category][specifier] = value
     return props
 
 
@@ -268,10 +272,10 @@ def deriveDictEntry(obj):
             props = deriveController(obj)
     except KeyError:
         print('phobos: A KeyError occurred, likely due to missing information in the model:\n    ', sys.exc_info()[0])
-    if obj.MARStype in ['sensor', 'motor' 'controller']:
-        return cleanObjectProperties(props)
+    if obj.MARStype in ['sensor', 'controller']:
+        return props
     else:
-        return cleanObjectProperties(props), parent
+        return props, parent
 
 
 def deriveGroupEntry(group, typetags):
