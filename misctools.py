@@ -152,7 +152,12 @@ class SetMassOperator(Operator):
     def execute(self, context):
         for obj in bpy.context.selected_objects:
             if obj.MARStype in ['visual', 'collision', 'inertial']:
-                oldmass = obj['mass']
+                try:
+                    oldmass = obj['mass']
+                except KeyError:
+                    #TODO: Is this the correct default value? - Ole
+                    print("### Error: object has no mass. Using default value as oldmass value.")
+                    oldmass = 0.001
                 if self.userbmass:
                     try:
                         obj['mass'] = obj.rigid_body.mass
