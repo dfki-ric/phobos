@@ -151,7 +151,7 @@ class RobotModelParser():
         if viscol['geometry'] is not {}:
             bpy.ops.object.select_all(action='DESELECT')
             geom = viscol['geometry']
-            geomtype = geom['geometryType']
+            geomtype = geom['type']
             # create the Blender object
             # tag all objects
             for obj in bpy.data.objects:
@@ -199,7 +199,7 @@ class RobotModelParser():
                 if 'scale' in geom:
                     newgeom.scale = geom['scale']
                 bpy.ops.object.transform_apply(scale=True)
-                newgeom['geometryType'] = geomtype
+                newgeom['geometry/type'] = geomtype
                 #TODO: which other properties remain?
             #FIXME: place empty coordinate system and return...what?
         return newgeom
@@ -385,7 +385,7 @@ class URDFModelParser(RobotModelParser):
             geometry = visual.find('geometry')
             if geometry is not None:
                 vis['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-                vis['geometry']['geometryType'] = geometry[0].tag
+                vis['geometry']['type'] = geometry[0].tag
                 novisual = False
                 if geometry[0].tag == 'mesh':
                     vis['geometry']['filename'] = geometry[0].attrib['filename'] #TODO: remove this, also from export, as it is double
@@ -424,7 +424,7 @@ class URDFModelParser(RobotModelParser):
             geometry = collision.find('geometry')
             if geometry is not None:
                 col['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-                col['geometry']['geometryType'] = geometry[0].tag
+                col['geometry']['type'] = geometry[0].tag
                 if geometry[0].tag == 'mesh':
                     col['geometry']['filename'] = geometry[0].attrib['filename']
                 #if novisual:

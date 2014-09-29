@@ -80,7 +80,7 @@ def createNodes(model):
                     'name': vis['name'],
                     'origname': vis['name'],
                     'collision_bitmask': str(0)}
-            if vis['geometry']['geometryType'] == 'mesh':
+            if vis['geometry']['type'] == 'mesh':
                 node['filename'] = vis['geometry']['filename']
             node['material_id'] = model['materials'][vis['material']]['id']
             node['mass'] = '0.001' #FUXME: this needs to be implemented via inertial
@@ -92,7 +92,7 @@ def createNodes(model):
         #            'groupid': str(groupid),
         #            'relativeid': relativeid,
         #            'name': vis['name'],
-        #            'physicMode': col['geometry']['geometryType'],
+        #            'physicMode': col['geometry']['type'],
         #            'collision_bitmask': col['collision_bitmask'] if "coll_bitmask" in col else '65535'}
         #    if 'radius' in col['geometry']:
         #        node['radius': str(col['geometry']['radius'])]

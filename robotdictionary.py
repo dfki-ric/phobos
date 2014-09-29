@@ -138,9 +138,9 @@ def deriveKinematics(obj, typetags=False):
 
 
 def deriveGeometry(obj):
-    if 'geometryType' in obj:
-        geometry = {'geometryType': obj['geometryType']}
-        gt = obj['geometryType']
+    if 'geometry/type' in obj:
+        geometry = {'type': obj['geometry/type']}
+        gt = obj['geometry/type']
         if gt == 'box':
             geometry['size'] = list(obj.dimensions)
         elif gt == 'cylinder':
@@ -163,7 +163,7 @@ def deriveGeometry(obj):
             geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
         return geometry
     else:
-        warnings.warn("No geometryType found for object "+obj.name+".")
+        warnings.warn("No geometry/type found for object "+obj.name+".")
         return None
 
 
@@ -189,10 +189,10 @@ def deriveObjectPose(obj):
 def deriveVisual(obj):
     visual = initObjectProperties(obj)
     visual['name'] = obj.name
+    visual['geometry'] = deriveGeometry(obj)
     visual['pose'] = deriveObjectPose(obj)
     #if obj.data.materials:
     #    visual['material'] = deriveMaterial(obj.data.materials[0]) #this is now centralized!
-    visual['geometry'] = deriveGeometry(obj)
     return visual, obj.parent
 
 

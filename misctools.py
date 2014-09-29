@@ -527,7 +527,7 @@ class SetGeometryType(Operator):
 
     geomType = EnumProperty (
             items = defs.geometrytypes,
-            name = "geometryType",
+            name = "type",
             default = "box",
             description = "MARS geometry type")
 
@@ -535,7 +535,7 @@ class SetGeometryType(Operator):
 
         for obj in bpy.context.selected_objects:
             if obj.MARStype == 'collision' or obj.MARStype == 'visual':
-                obj['geometryType'] = self.geomType
+                obj['geometry/type'] = self.geomType
         return {'FINISHED'}
 
     @classmethod

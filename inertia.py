@@ -58,7 +58,7 @@ def calculateInertia(mass, geometry):
     '''Calculates the inertia of an object given its *geometry* and *mass* and
     returns the upper diagonal of the inertia 3x3 inertia tensor.'''
     inertia = None
-    gt = geometry['geometryType']
+    gt = geometry['type']
     if gt == 'box':
         inertia = calculateBoxInertia(mass, geometry['size'])
     elif gt == 'cylinder':

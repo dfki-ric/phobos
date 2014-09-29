@@ -227,13 +227,13 @@ def l2str(items, start=-1, end=-1):
 
 def writeURDFGeometry(output, element):
     output.append(indent*4+'<geometry>\n')
-    if element['geometryType'] == 'box':
+    if element['type'] == 'box':
         output.append(xmlline(5, 'box', ['size'], [l2str(element['size'])]))
-    elif element['geometryType'] == "cylinder":
+    elif element['type'] == "cylinder":
         output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['height']]))
-    elif element['geometryType'] == "sphere":
+    elif element['type'] == "sphere":
         output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
-    elif element['geometryType'] in ['capsule', 'mesh']: # capsules are not supported in URDF and are emulated using meshes
+    elif element['type'] in ['capsule', 'mesh']: # capsules are not supported in URDF and are emulated using meshes
         output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], '1.0 1.0 1.0']))#TODO correct this after implementing scale properly
     output.append(indent*4+'</geometry>\n')
 
@@ -560,7 +560,7 @@ def export(typetags=False):
             i = 1
         for obj in bpy.context.selected_objects:
             if ((obj.MARStype == 'visual' or
-                obj.MARStype == 'collision') and obj['geometryType'] == 'mesh'):
+                obj.MARStype == 'collision') and obj['geometry/type'] == 'mesh'):
                 if objexp:
                     exportObj(outpath, obj)
                 if bobjexp:
