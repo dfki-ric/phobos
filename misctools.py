@@ -163,8 +163,7 @@ class SetMassOperator(Operator):
                     oldmass = obj['mass']
                 except KeyError:
                     #TODO: Is this the correct default value? - Ole
-                    print("### Error: object has no mass. Using default value as oldmass value.")
-                    oldmass = 0.001
+                    oldmass = None
                 if self.userbmass:
                     try:
                         obj['mass'] = obj.rigid_body.mass
