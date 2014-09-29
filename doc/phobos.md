@@ -101,7 +101,7 @@ URDF, the "Unified Robot Description Format", is an XML-Format limited to provid
 To facilitate simple im- and export of robot models in various formats, Phobos uses a file-format-independent Python dictionary representation to store robot data. This dictionary representation is loosely based on URDF/SDF, with some added MARS' and 'Blender's own naming conventions. It is layed out in the following in YAML-notation:
 
 model
-- {link}
+- {links}
 	- filename: str
 	- [pose]: (d, d, d, d, d, d, d)
 	- {visual}:
@@ -144,7 +144,7 @@ model
 	- {inertial}:
 		- mass: d
 		- [inertia]: (d, d, d, d, d, d) #ixx, ixy, ixz, iyx, iyy, iyz
-- {joint}
+- {joints}
 	- parent: str
 	- child: str
 	- type: str ("hinge", "continuous", "linear")
@@ -156,6 +156,8 @@ model
 - {group}:
 	- [group1]: (str, ...) #names of links
 	- ...
+- {poses}:
+    
 
 
 int: integer
