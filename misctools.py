@@ -543,7 +543,8 @@ class CopyCustomProperties(Operator):
     @classmethod
     def poll(cls, context):
         obs = context.selected_objects
-        return len(obs)>0 #and ob.mode == 'OBJECT' Is not possible anymore..
+        ob = context.active_object
+        return len(obs) > 0 and ob.mode == 'OBJECT' and ob != None
 
 
 class RenameCustomProperty(Operator):
@@ -584,7 +585,7 @@ class RenameCustomProperty(Operator):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects)>0
+        return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
 
 class SetGeometryType(Operator):
@@ -609,7 +610,7 @@ class SetGeometryType(Operator):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT'
+        return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
 
 class EditInertia(Operator):
@@ -650,7 +651,7 @@ class EditInertia(Operator):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT' and ob.MARStype == 'inertial'
+        return ob is not None and ob.mode == 'OBJECT' and ob.MARStype == 'inertial' and len(context.selected_objects) > 0
 
 
 class PartialRename(Operator):
@@ -677,7 +678,7 @@ class PartialRename(Operator):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT'
+        return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
 
 class SmoothenSurfaceOperator(Operator):
@@ -713,7 +714,7 @@ class SmoothenSurfaceOperator(Operator):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT'
+        return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
 
 class SetOriginToCOMOperator(Operator):
@@ -760,7 +761,7 @@ class SetOriginToCOMOperator(Operator):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT'
+        return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
 
 class CreateInertialOperator(Operator):
