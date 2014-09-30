@@ -169,7 +169,7 @@ def deriveGeometry(obj):
 
 def deriveInertial(obj):
     """Derives a dictionary entry of an inertial object."""
-    props = initObjectProperties(obj)
+    props = initObjectProperties(obj, marstype='inertial')
     #inertia = props['inertia'].split()
     props['inertia'] = list(map(float, obj['inertia']))
     props['pose'] = deriveObjectPose(obj)
@@ -187,7 +187,7 @@ def deriveObjectPose(obj):
 
 
 def deriveVisual(obj):
-    visual = initObjectProperties(obj)
+    visual = initObjectProperties(obj, marstype='visual', ignoretypes='geometry')
     visual['geometry'] = deriveGeometry(obj)
     visual['pose'] = deriveObjectPose(obj)
     #if obj.data.materials:
@@ -196,7 +196,7 @@ def deriveVisual(obj):
 
 
 def deriveCollision(obj):
-    collision = initObjectProperties(obj)
+    collision = initObjectProperties(obj, marstype='collision', ignoretypes='geometry')
     collision['geometry'] = deriveGeometry(obj)
     collision['pose'] = deriveObjectPose(obj)
     try:
@@ -213,12 +213,12 @@ def deriveApproxsphere(obj):
 
 
 def deriveSensor(obj):
-    props = initObjectProperties(obj, 'sensor')
+    props = initObjectProperties(obj, marstype='sensor')
     return props
 
 
 def deriveController(obj):
-    props = initObjectProperties(obj, 'controller')
+    props = initObjectProperties(obj, marstype='controller')
     return props
 
 
@@ -231,13 +231,20 @@ def initObjectProperties(obj, marstype=None, ignoretypes=[]):
         for key, value in obj.items():
             if '/' in key:
                 if marstype+'/' in key:
-                    props[key.replace(marstype+'/', '')] = value
-                else:
+                    specs = key.split('/')[1:]
+                    if len(specs) == 1:
+                        props[key.replace(marstype+'/', '')] = value
+                    elif len(specs) == 2:
+                        category, specifier = specs
+                        if '$'+category not in props:
+                            props['$'+category] = {}
+                        props['$'+category][specifier] = value
+                elif key.count('/') == 1: #ignore two-level specifiers if marstype is not present
                     category, specifier = key.split('/')
                     if category not in ignoretypes:
-                        if not category in props:
-                            props[category] = {}
-                        props[category][specifier] = value
+                        if '$'+category not in props:
+                            props['$'+category] = {}
+                        props['$'+category][specifier] = value
     return props
 
 
