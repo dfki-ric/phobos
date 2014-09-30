@@ -55,7 +55,7 @@ def collectMaterials(objectlist):
 
 
 def deriveMaterial(mat):
-    material = {}
+    material = initObjectProperties(mat, 'material')
     material['name'] = mat.name
     material['diffuseFront'] = dict(zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
     material['ambientFront'] = dict(zip(['r', 'g', 'b'], [mat.ambient * mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
@@ -73,7 +73,7 @@ def deriveMaterial(mat):
 
 
 def deriveLink(obj, typetags=False):
-    props = initObjectProperties(obj, 'link')
+    props = initObjectProperties(obj, marstype='link', ignoretypes=['joint', 'motor'])
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
     props["visual"] = {}
@@ -83,7 +83,7 @@ def deriveLink(obj, typetags=False):
 
 
 def deriveJoint(obj, typetags=False):
-    props = initObjectProperties(obj, 'joint')
+    props = initObjectProperties(obj, marstype='joint', ignoretypes=['link', 'motor'])
     if typetags:
         if not '/' in obj.name:
             props['name'] = obj.name + '_joint'
@@ -121,7 +121,7 @@ def deriveJointState(joint):
 
 
 def deriveMotor(obj):
-    props = initObjectProperties(obj, 'motor')
+    props = initObjectProperties(obj, marstype='motor', ignoretypes=['link', 'joint'])
     props['name'] = obj.name
     props['joint'] = obj.name
     return props#, obj.parent
@@ -138,9 +138,9 @@ def deriveKinematics(obj, typetags=False):
 
 
 def deriveGeometry(obj):
-    if 'geometryType' in obj:
-        geometry = {'geometryType': obj['geometryType']}
-        gt = obj['geometryType']
+    if 'geometry/type' in obj:
+        geometry = {'type': obj['geometry/type']}
+        gt = obj['geometry/type']
         if gt == 'box':
             geometry['size'] = list(obj.dimensions)
         elif gt == 'cylinder':
@@ -163,13 +163,13 @@ def deriveGeometry(obj):
             geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
         return geometry
     else:
-        warnings.warn("No geometryType found for object "+obj.name+".")
+        warnings.warn("No geometry/type found for object "+obj.name+".")
         return None
 
 
 def deriveInertial(obj):
     """Derives a dictionary entry of an inertial object."""
-    props = initObjectProperties(obj)
+    props = initObjectProperties(obj, marstype='inertial')
     #inertia = props['inertia'].split()
     props['inertia'] = list(map(float, obj['inertia']))
     props['pose'] = deriveObjectPose(obj)
@@ -187,18 +187,16 @@ def deriveObjectPose(obj):
 
 
 def deriveVisual(obj):
-    visual = initObjectProperties(obj)
-    visual['name'] = obj.name
+    visual = initObjectProperties(obj, marstype='visual', ignoretypes='geometry')
+    visual['geometry'] = deriveGeometry(obj)
     visual['pose'] = deriveObjectPose(obj)
     #if obj.data.materials:
     #    visual['material'] = deriveMaterial(obj.data.materials[0]) #this is now centralized!
-    visual['geometry'] = deriveGeometry(obj)
     return visual, obj.parent
 
 
 def deriveCollision(obj):
-    collision = initObjectProperties(obj)
-    collision['name'] = obj.name
+    collision = initObjectProperties(obj, marstype='collision', ignoretypes='geometry')
     collision['geometry'] = deriveGeometry(obj)
     collision['pose'] = deriveObjectPose(obj)
     try:
@@ -215,36 +213,49 @@ def deriveApproxsphere(obj):
 
 
 def deriveSensor(obj):
-    props = initObjectProperties(obj)
+    props = initObjectProperties(obj, marstype='sensor')
     return props
 
 
 def deriveController(obj):
-    props = initObjectProperties(obj)
+    props = initObjectProperties(obj, marstype='controller')
     return props
 
 
-def initObjectProperties(obj, marstype=None):
-    props = {}
+def initObjectProperties(obj, marstype=None, ignoretypes=[]):
+    props = {'name': obj.name}
     if not marstype:
         for key, value in obj.items():
             props[key] = value
     else:
         for key, value in obj.items():
-            if key.find(marstype+'/') >= 0:
-                props[key.replace(marstype+'/', '')] = value
-    props['name'] = obj.name
+            if '/' in key:
+                if marstype+'/' in key:
+                    specs = key.split('/')[1:]
+                    if len(specs) == 1:
+                        props[key.replace(marstype+'/', '')] = value
+                    elif len(specs) == 2:
+                        category, specifier = specs
+                        if '$'+category not in props:
+                            props['$'+category] = {}
+                        props['$'+category][specifier] = value
+                elif key.count('/') == 1: #ignore two-level specifiers if marstype is not present
+                    category, specifier = key.split('/')
+                    if category not in ignoretypes:
+                        if '$'+category not in props:
+                            props['$'+category] = {}
+                        props['$'+category][specifier] = value
     return props
 
 
-def cleanObjectProperties(props):
-    """Cleans a predefined list of Blender-specific properties from the dictionary."""
-    getridof = ['MARStype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
-    if props:
-        for key in getridof:
-            if key in props:
-                del props[key]
-    return props
+# def cleanObjectProperties(props):
+#     """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
+#     getridof = ['MARStype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
+#     if props:
+#         for key in getridof:
+#             if key in props:
+#                 del props[key]
+#     return props
 
 
 def deriveDictEntry(obj):
@@ -268,10 +279,10 @@ def deriveDictEntry(obj):
             props = deriveController(obj)
     except KeyError:
         print('phobos: A KeyError occurred, likely due to missing information in the model:\n    ', sys.exc_info()[0])
-    if obj.MARStype in ['sensor', 'motor' 'controller']:
-        return cleanObjectProperties(props)
+    if obj.MARStype in ['sensor', 'controller']:
+        return props
     else:
-        return cleanObjectProperties(props), parent
+        return props, parent
 
 
 def deriveGroupEntry(group, typetags):

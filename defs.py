@@ -65,13 +65,13 @@ type_properties = {
     "link_default": ('new_node'),
     "inertial": ('name'),
     "inertial_default": ('new_node'),
-    "visual": ('name', 'visualType'),
+    "visual": ('name', 'visual/type'),
     "visual_default": ('new_node', 'box'),
-    "collision": ('name', 'collisionType', 'bitmask'),
+    "collision": ('name', 'collision/type', 'bitmask'),
     "collision_default": ('new_node', 'box', '65536'),
     "approxsphere": (),
     "approxsphere_default": (),
-    "sensor": ('name', 'sensorType'),
+    "sensor": ('name', 'sensor/type'),
     "sensor_default": ("new_sensor", "RaySensor"),
     "controller": ('name',),
     "controller_default": ("controller")
@@ -103,7 +103,7 @@ nodeTypes = ("undefined",
 #             )
 
 # definition of sensor types
-sensorTypes = ("RaySensor",
+sensortypes = ("RaySensor",
                "CameraSensor",
                "ScanningSonar",
                "JointPosition",

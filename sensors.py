@@ -64,27 +64,27 @@ class AddSensorOperator(Operator):
 
     def execute(self, context):
         location = bpy.context.scene.cursor_location
-        if self.sensor_type in defs.sensorTypes:
+        if self.sensor_type in defs.sensortypes:
             if "Node" in self.sensor_type or "Joint" in self.sensor_type or "Motor" in self.sensor_type:
                 objects = []
                 sensors = []
                 for obj in bpy.context.selected_objects:
                     if obj.MARStype == "sensor":
                         sensors.append(obj)
-                        self.sensor_type = obj["sensorType"]
+                        self.sensor_type = obj["sensor/type"]
                     else:
                         objects.append(obj)
                 if len(sensors) <= 0:
                     sense = utility.createPrimitive(self.sensor_type, "sphere", self.sensor_scale, defs.layerTypes["sensor"], "sensor", location)
                     sense.MARStype = "sensor"
                     sense.name = self.sensor_name if self.sensor_name != '' else 'new_' + self.sensor_type
-                    sense["sensorType"] = self.sensor_type
+                    sense["sensor/type"] = self.sensor_type
                     sensors.append(sense)
                     sense.parent = utility.getRoot(objects[0])
                 for sensor in sensors:
-                    if "Node" in sensor["sensorType"]:
+                    if "Node" in sensor["sensor/type"]:
                         sensor['nodes'] = [obj for obj in objects if obj.MARStype == 'collision']
-                    elif "Joint" in sensor["sensorType"] or "Motor" in sensor["sensorType"]:
+                    elif "Joint" in sensor["sensor/type"] or "Motor" in sensor["sensor/type"]:
                         sensor['joints'] = [obj for obj in objects if obj.MARStype == 'link']
             else: #visual sensor
                 if self.sensor_type in ["RaySensor", "RotatingRaySensor", "ScanningSonar"]:
@@ -118,14 +118,14 @@ class AddLegacySensorOperator(Operator):
 
     def execute(self, context):
         location = bpy.context.scene.cursor_location
-        if self.sensor_type in defs.sensorTypes:
+        if self.sensor_type in defs.sensortypes:
             if "Node" in self.sensor_type or "Joint" in self.sensor_type or "Motor" in self.sensor_type:
                 objects = []
                 sensors = []
                 for obj in bpy.context.selected_objects:
                     if obj.MARStype == "sensor":
                         sensors.append(obj)
-                        self.sensor_type = obj["sensorType"]
+                        self.sensor_type = obj["sensor/type"]
                     else:
                         objects.append(obj)
                 if len(sensors) <= 0:
@@ -133,7 +133,7 @@ class AddLegacySensorOperator(Operator):
                     sense = bpy.context.scene.objects.active
                     sense.MARStype = "sensor"
                     sense.name = self.sensor_type
-                    sense["sensorType"] = self.sensor_type
+                    sense["sensor/type"] = self.sensor_type
                     sensors.append(sense)
                 for sensor in sensors:
                     for key in sensor.keys():
@@ -141,13 +141,13 @@ class AddLegacySensorOperator(Operator):
                             del sensor[key]
                             print("Deleting " + key + " in " + sensor.name)
                     i = 1
-                    if "Node" in sensor["sensorType"]:
+                    if "Node" in sensor["sensor/type"]:
                         for obj in objects:
                             if obj.MARStype == "collision":
                                 sensor["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                                 i += 1
                         print("Added nodes to new " + self.sensor_type)
-                    elif "Joint" in sensor["sensorType"] or "Motor" in sensor["sensorType"]:
+                    elif "Joint" in sensor["sensor/type"] or "Motor" in sensor["sensor/type"]:
                         for obj in objects:
                             if obj.MARStype == "link":
                                 sensor["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name

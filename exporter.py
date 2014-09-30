@@ -225,15 +225,35 @@ def l2str(items, start=-1, end=-1):
     return ''.join(line)[0:-1]
 
 
+def gatherAnnotations(model):
+    annotations = {}
+    types = ('links', 'joints', 'sensors', 'motors', 'controllers', 'materials')
+    #fixme: collision / visual??
+    for type in types:
+        for elementname in model[type]:
+            element = model[type][elementname]
+            for key in element:
+                if key.startswith('$'):
+                    category = key[1:]
+                    print(elementname, category)
+                    if category not in annotations:
+                        annotations[category] = []
+                    tmpdict = {k: element[key][k] for k in element[key]}
+                    tmpdict['type'] = type[:-1]
+                    tmpdict['name'] = elementname
+                    annotations[category].append(tmpdict)
+    return annotations
+
+
 def writeURDFGeometry(output, element):
     output.append(indent*4+'<geometry>\n')
-    if element['geometryType'] == 'box':
+    if element['type'] == 'box':
         output.append(xmlline(5, 'box', ['size'], [l2str(element['size'])]))
-    elif element['geometryType'] == "cylinder":
+    elif element['type'] == "cylinder":
         output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['height']]))
-    elif element['geometryType'] == "sphere":
+    elif element['type'] == "sphere":
         output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
-    elif element['geometryType'] in ['capsule', 'mesh']: # capsules are not supported in URDF and are emulated using meshes
+    elif element['type'] in ['capsule', 'mesh']: # capsules are not supported in URDF and are emulated using meshes
         output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], '1.0 1.0 1.0']))#TODO correct this after implementing scale properly
     output.append(indent*4+'</geometry>\n')
 
@@ -401,10 +421,8 @@ def exportModelToSMURF(model, path):
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'simulation': True  #model['simulation'] != {} #TODO: make this a nice test
+              'simulation': model['simulation'] != {}
               }
-
-
     #create all filenames
     smurf_filename = model['modelname'] + ".smurf"
     urdf_filename =  model['modelname'] + ".urdf"
@@ -416,6 +434,12 @@ def exportModelToSMURF(model, path):
                  'controllers': model['modelname'] + "_controllers.yml",
                  'simulation': model['modelname'] + "_simulation.yml"
                  }
+
+    annotationdict = gatherAnnotations(model)
+    print(annotationdict)
+    for category in annotationdict:
+        filenames[category] = model['modelname'] + '_'+category+'.yml'
+        export[category] = True
 
     infostring = ' definition SMURF file for "'+model['modelname']+'", '+model["date"]+"\n\n"
 
@@ -463,29 +487,15 @@ def exportModelToSMURF(model, path):
     for data in ['materials', 'sensors', 'motors', 'controllers']:
         if export[data]:
             with open(path + filenames[data], 'w') as op:
-                op.write('#' + data +infostring)
+                op.write('#' + data + infostring)
                 op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
-    #write simulation
-    if export['simulation']:
-        nodes = {'visual': {}, 'collision': {}}
-        for link in model['links']:
-            for objtype in ['visual', 'collision']:
-                for objname in model['links'][link][objtype]:
-                    props = model['links'][link][objtype][objname]
-                    #for prop in ['name']: #TODO: filter these properties and purge redundant ones
-                    #    del(props[prop])
-                    nodes[objtype][objname] = props
-        with open(path + filenames['simulation'], 'w') as op:
-            op.write('#simulation'+infostring)
-            if model['simulation'] != {}:
-                op.write("modelname: "+model['modelname']+'\n')
-                #TODO: handle simulation-specific data
-                op.write(yaml.dump(list(model['simulation'].values()), default_flow_style=False))
-            op.write("\nvisual:\n")
-            op.write(yaml.dump(list(nodes['visual'].values())))
-            op.write("\ncollision:\n")
-            op.write(yaml.dump(list(nodes['collision'].values())))
+#write additional information
+    for data in annotationdict.keys():
+        if export[data]:
+            with open(path + filenames[data], 'w') as op:
+                op.write('#' + data + infostring)
+                op.write(yaml.dump({data: annotationdict[data]}, default_flow_style=False))
 
 
 def exportSceneToSMURF(path):
@@ -560,7 +570,7 @@ def export(typetags=False):
             i = 1
         for obj in bpy.context.selected_objects:
             if ((obj.MARStype == 'visual' or
-                obj.MARStype == 'collision') and obj['geometryType'] == 'mesh'):
+                obj.MARStype == 'collision') and obj['geometry/type'] == 'mesh'):
                 if objexp:
                     exportObj(outpath, obj)
                 if bobjexp:

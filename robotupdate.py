@@ -88,9 +88,9 @@ def updateObject(obj, fix = False):
                 obj.name = 'inertial_' + obj.name
     elif obj.MARStype == 'visual':
         if fix:
-            if not "geometryType" in obj:
-                notifications.append("Warning, visual '" + obj.name + "' has no geometryType.")
-                obj["geometryType"] = "mesh"
+            if not "geometry/type" in obj:
+                notifications.append("Warning, visual '" + obj.name + "' has no geometry/type.")
+                obj["geometry/type"] = "mesh"
             if not obj.name.startswith('visual_'):
                 obj.name = 'visual_' + obj.name
             if not 'masschanged' in obj:

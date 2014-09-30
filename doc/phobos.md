@@ -150,7 +150,7 @@ model
 	- type: str ("hinge", "continuous", "linear")
 - ["sensor"]
 	- link: str
-	- sensorType: str
+	- type: str
 - ["motor"]
 - ["controller"]
 - {group}:

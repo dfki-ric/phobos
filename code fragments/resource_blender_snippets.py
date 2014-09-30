@@ -588,7 +588,7 @@ import bpy
 
 hud_i = 1
 for obj in bpy.context.selected_objects:
-    if obj["sensorType"] == "CameraSensor":
+    if obj["sensor/type"] == "CameraSensor":
         obj["attached_node"] = 1
         obj["depth_image"] = "false"
         obj["show_cam"] = "true"

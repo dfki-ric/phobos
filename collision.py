@@ -115,7 +115,7 @@ class CreateCollisionObjects(Operator):
                 pass
                 #TODO: copy mesh!!
             ob.MARStype = "collision"
-            ob["geometryType"] = self.property_colltype
+            ob["geometry/type"] = self.property_colltype
             if vis.parent:
                 ob.select = True
                 bpy.ops.object.transform_apply(scale=True)
