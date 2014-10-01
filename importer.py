@@ -263,8 +263,15 @@ class RobotModelParser():
                 root = self.robot['links'][l]
         print("\n\nPlacing links...")
         self.placeChildLinks(root)
+        print("\n\nAssigning model name...")
+        try:
+            rootlink = getRoot(bpy.data.objects[root['name']])
+            rootlink['modelname'] = self.robot['name']
+        except KeyError:
+            print("### Error: Could not assign model name to root link.")
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
+
 
 
 
