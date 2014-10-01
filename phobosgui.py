@@ -193,6 +193,8 @@ class PhobosPanel(bpy.types.Panel):
     bl_label = "phobos: Model editing"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
+    #bl_context = ''
 
     def draw_header(self, context):
         self.layout.label(icon = 'SMOOTH')
@@ -240,6 +242,7 @@ class PhobosModelPanel(bpy.types.Panel):
     bl_label = "phobos: Object editing"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
 
     def draw_header(self, context):
         self.layout.label(icon = 'MOD_ARMATURE')
@@ -283,6 +286,7 @@ class PhobosSenConPanel(bpy.types.Panel):
     bl_label = "phobos: Sensors & Controllers"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
 
     def draw_header(self, context):
         self.layout.label(icon = 'GAME')
@@ -339,6 +343,7 @@ class PhobosExportPanel(bpy.types.Panel):
     bl_label = "phobos: Export & Import"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
 
     def draw_header(self, context):
         self.layout.label(icon = 'SMOOTH')
@@ -394,6 +399,7 @@ class PhobosObjectPanel(bpy.types.Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "object"
+    bl_category = 'Phobos'
 
     def draw_header(self, context):
         self.layout.label(icon = 'SMOOTH')
