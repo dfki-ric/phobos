@@ -312,29 +312,30 @@ class PhobosSenConPanel(bpy.types.Panel):
         row_sensors.operator("object.phobos_add_controller", text="Controller")
 
 
-class PhobosVisPanel(bpy.types.Panel):
-    """A Custom Panel in the Viewport Toolbar for MARS options"""
-    bl_idname = "TOOLS_VIS_PT_PHOBOS"
-    bl_label = "phobos: Visibility"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
-
-    def draw_header(self, context):
-        self.layout.label(icon = 'VISIBLE_IPO_ON')
-
-    def draw(self, context):
-        lvis = self.layout
-        # Visibility
-        lsplit = lvis.column(align=True)
-        #lsplit = layout.split()
-        lsplit.prop(bpy.data.worlds[0], "showBodies")
-        lsplit.prop(bpy.data.worlds[0], "showJoints")
-        lsplit.prop(bpy.data.worlds[0], "showJointSpheres")
-        lsplit.prop(bpy.data.worlds[0], "showSensors")
-        lsplit.prop(bpy.data.worlds[0], "showDecorations")
-        lsplit.prop(bpy.data.worlds[0], "showConstraints")
-        lsplit.prop(bpy.data.worlds[0], "showNames")
-        lsplit.prop(bpy.data.worlds[0], "showMotorTypes")
+# class PhobosVisPanel(bpy.types.Panel):
+#     """A Custom Panel in the Viewport Toolbar for MARS options"""
+#     bl_idname = "TOOLS_VIS_PT_PHOBOS"
+#     bl_label = "phobos: Visibility"
+#     bl_space_type = 'VIEW_3D'
+#     bl_region_type = 'TOOLS'
+#     bl_category = 'Phobos'
+#
+#     def draw_header(self, context):
+#         self.layout.label(icon = 'VISIBLE_IPO_ON')
+#
+#     def draw(self, context):
+#         lvis = self.layout
+#         # Visibility
+#         lsplit = lvis.column(align=True)
+#         #lsplit = layout.split()
+#         lsplit.prop(bpy.data.worlds[0], "showBodies")
+#         lsplit.prop(bpy.data.worlds[0], "showJoints")
+#         lsplit.prop(bpy.data.worlds[0], "showJointSpheres")
+#         lsplit.prop(bpy.data.worlds[0], "showSensors")
+#         lsplit.prop(bpy.data.worlds[0], "showDecorations")
+#         lsplit.prop(bpy.data.worlds[0], "showConstraints")
+#         lsplit.prop(bpy.data.worlds[0], "showNames")
+#         lsplit.prop(bpy.data.worlds[0], "showMotorTypes")
 
 
 class PhobosExportPanel(bpy.types.Panel):
