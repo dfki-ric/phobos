@@ -173,6 +173,7 @@ class RobotModelParser():
                             newgeom.select = True
                             bpy.ops.object.transform_apply(rotation=True)
                 newgeom.name = viscol['name']
+                newgeom['filename'] = geom['filename']
             elif geomtype == 'box':
                 newgeom = createPrimitive(viscol['name'],
                                           geomtype,
@@ -395,7 +396,7 @@ class URDFModelParser(RobotModelParser):
                 vis['geometry']['type'] = geometry[0].tag
                 novisual = False
                 if geometry[0].tag == 'mesh':
-                    vis['geometry']['filename'] = geometry[0].attrib['filename'] #TODO: remove this, also from export, as it is double
+                    vis['geometry']['filename'] = geometry[0].attrib['filename']
             else: #if geometry is None
                 print("\n### WARNING: No geometry information for visual element, trying to parse from collision data.")
             material = visual.find('material')
