@@ -29,7 +29,7 @@ import bpy
 import math
 import mathutils
 from bpy.types import Operator
-from bpy.props import StringProperty, BoolProperty, BoolVectorProperty, FloatVectorProperty, EnumProperty, FloatProperty
+from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty, FloatProperty
 from datetime import datetime as dt
 from . import robotupdate
 from . import materials
@@ -89,40 +89,6 @@ class AddChainOperator(Operator):
             if self.chainname not in namelist:
                 namelist.append(self.chainname)
             endobj['endChain'] = namelist
-        return {'FINISHED'}
-
-
-class SetCollisionGroupOperator(Operator):
-    """SetCollisionGroupOperator"""
-    bl_idname = "object.phobos_set_collision_group"
-    bl_label = "Sets the collision group of the selected object(s)."
-    bl_options = {'REGISTER', 'UNDO'}
-
-    groups = BoolVectorProperty(
-        name='collision groups',
-        size=20,
-        subtype='LAYER',
-        default=(False,)*20,
-        description='collision groups')
-
-    def invoke(self, context, event):
-        try:
-            self.groups = context.active_object.rigid_body.collision_groups
-        except AttributeError:
-            pass  # TODO: catch properly
-        return self.execute(context)
-
-    def execute(self, context):
-        active_object = context.active_object
-        for obj in context.selected_objects:
-            if obj.MARStype == 'collision':
-                try:
-                    obj.rigid_body.collision_groups = self.groups
-                except AttributeError:
-                    context.scene.objects.active = obj
-                    bpy.ops.rigidbody.object_add(type='ACTIVE')
-                    obj.rigid_body.collision_groups = self.groups
-        context.scene.objects.active = active_object
         return {'FINISHED'}
 
 

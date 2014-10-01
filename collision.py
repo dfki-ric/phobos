@@ -25,7 +25,7 @@ Created on 7 Jan 2014
 
 import bpy
 from bpy.types import Operator
-from bpy.props import FloatProperty, EnumProperty
+from bpy.props import FloatProperty, EnumProperty, BoolVectorProperty
 import math
 from mathutils import Vector, Matrix
 from . import materials
@@ -125,5 +125,46 @@ class CreateCollisionObjects(Operator):
                 #ob.parent_type = vis.parent_type
                 #ob.parent_bone = vis.parent_bone
         return{'FINISHED'}
+
+
+    class SetCollisionGroupOperator(Operator):
+        """SetCollisionGroupOperator"""
+        bl_idname = "object.phobos_set_collision_group"
+        bl_label = "Sets the collision group of the selected object(s)."
+        bl_options = {'REGISTER', 'UNDO'}
+
+        groups = BoolVectorProperty(
+            name='collision groups',
+            size=20,
+            subtype='LAYER',
+            default=(False,)*20,
+            description='collision groups')
+
+        @classmethod
+        def poll(self, context):
+            for obj in context.selected_objects:
+                if obj.MARStype == 'collision':
+                    return True
+            return False
+
+        def invoke(self, context, event):
+            try:
+                self.groups = context.active_object.rigid_body.collision_groups
+            except AttributeError:
+                pass  # TODO: catch properly
+            return self.execute(context)
+
+        def execute(self, context):
+            active_object = context.active_object
+            for obj in context.selected_objects:
+                if obj.MARStype == 'collision':
+                    try:
+                        obj.rigid_body.collision_groups = self.groups
+                    except AttributeError:
+                        context.scene.objects.active = obj
+                        bpy.ops.rigidbody.object_add(type='ACTIVE')
+                        obj.rigid_body.collision_groups = self.groups
+            context.scene.objects.active = active_object
+            return {'FINISHED'}
 
 
