@@ -114,9 +114,7 @@ class RobotModelParser():
             else:
                 urdf_geom_loc = mathutils.Matrix.Identity(4)
                 urdf_geom_rot = mathutils.Matrix.Identity(4)
-            print(link['name'], link['inertial'])
-            print(link['inertial']['name'])
-            geoname = link['inertial']['name'] #g
+            geoname = link['inertial']['name']
             geom = bpy.data.objects[geoname]
             bpy.ops.object.select_all(action="DESELECT")
             geom.select = True
@@ -129,7 +127,6 @@ class RobotModelParser():
             if geomsrc in link:
                 for g in link[geomsrc]:
                     geom = link[geomsrc][g]
-                    print([key for key in geom])
                     if 'pose' in geom:
                         urdf_geom_loc = mathutils.Matrix.Translation(geom['pose'][0:3])
                         urdf_geom_rot = mathutils.Euler(tuple(geom['pose'][3:]), 'XYZ').to_matrix().to_4x4()
@@ -219,7 +216,6 @@ class RobotModelParser():
         return inert
 
     def createLink(self, link):
-        print("Creating link", link['name'])
         #create base object ( =armature)
         bpy.ops.object.select_all(action='DESELECT')
         #bpy.ops.view3d.snap_cursor_to_center()
@@ -252,10 +248,10 @@ class RobotModelParser():
     def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model."""
         print("\n\nCreating Blender model...")
+        print("Creating links...")
         for l in self.robot['links']:
             print(l + ', ', end='')
             link = self.robot['links'][l]
-            print(link['name'])
             self.createLink(link)
 
         #build tree recursively and correct translation & rotation on the fly
@@ -307,7 +303,6 @@ class URDFModelParser(RobotModelParser):
             newlink = self.parseLink(link)
             #write link to list
             links[newlink['name']] = newlink
-            #print(newlink)
         self.robot['links'] = links
 
         #write joints to dictionary
@@ -318,14 +313,12 @@ class URDFModelParser(RobotModelParser):
                 newjoint, pose = self.parseJoint(joint)
                 self.robot['links'][newjoint['child']]['pose'] = pose
                 joints[newjoint['name']] = newjoint
-                #print(newjoint)
         self.robot['joints'] = joints
 
         #find any links that still have no pose (most likely because they had no parent)
         for link in links:
             if not 'pose' in links[link]:
                 links[link]['pose'] = defaults.idtransform
-            #print(link, links[link]['pose'])
 
         #write parent-child information to nodes
         print("\n\nWriting parent-child information to nodes..")
@@ -351,13 +344,12 @@ class URDFModelParser(RobotModelParser):
             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) #TODO: handle duplicate names? urdf_robotname_xxx?
 
     def parseLink(self, link):
-        novisual = True
         print(link.attrib['name'] + ', ', end='')
         newlink = {a: link.attrib[a] for a in link.attrib}
 
         #parse 'inertial'
         inertial = link.find('inertial')
-        if inertial is not None: # !!! 'if Element' yields none if the Element contains no children, thus this notation !!!
+        if inertial is not None: # 'if Element' yields none if the Element contains no children, thus this notation
             newlink['inertial'] = {}
             origin = inertial.find('origin')
             if origin is not None:
@@ -373,79 +365,41 @@ class URDFModelParser(RobotModelParser):
                 newlink['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
             newlink['inertial']['name'] = 'inertial_' + newlink['name']
 
-        #parse 'visual'
-        newlink['visual'] = {}
-        i=0
-        for visual in link.iter('visual'):
-            try:
-                visname = visual.attrib['name']
-            except KeyError:
-                visname = 'visual_' + str(i) + '_' + newlink['name']
-                i += 1
-            newlink['visual'][visname] = {a: visual.attrib[a] for a in visual.attrib}
-            vis = newlink['visual'][visname]
-            vis['name'] = visname
-            origin = visual.find('origin')
-            if origin is not None:
-                vis['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-            else:
-                vis['pose'] = defaults.idtransform
-            geometry = visual.find('geometry')
-            if geometry is not None:
-                vis['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-                vis['geometry']['type'] = geometry[0].tag
-                novisual = False
-                if geometry[0].tag == 'mesh':
-                    vis['geometry']['filename'] = geometry[0].attrib['filename']
-            else: #if geometry is None
-                print("\n### WARNING: No geometry information for visual element, trying to parse from collision data.")
-            material = visual.find('material')
-            if material is not None:
-                vis['material'] = {'name': material.attrib['name']}
-                color = material.find('color')
-                if color is not None:
-                    vis['material']['color'] = parse_text(color.attrib['rgba'])
-            else:
-                vis['material'] = {'name':'None'} #TODO: this is a hack!
-                print("\n### Warning: No material provided for link", newlink['name'])
-        if newlink['visual'] == {}: #'else' cannot be used as we don't use a break
-            del(newlink['visual'])
-            print("\n### WARNING: No visual information provided for link", newlink['name'])
-
-        #parse 'collision'
-        newlink['collision'] = {}
-        i=0
-        for collision in link.iter('collision'):
-            try:
-                colname = collision.attrib['name']
-            except KeyError:
-                colname = 'collision_' + str(i) + '_' + newlink['name']
-                i += 1
-            newlink['collision'][colname] = {a: collision.attrib[a] for a in collision.attrib}
-            col = newlink['collision'][colname]
-            col['name'] = colname
-            origin = collision.find('origin')
-            if origin is not None:
-                col['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-            else:
-                col['pose'] = defaults.idtransform
-            geometry = collision.find('geometry')
-            if geometry is not None:
-                col['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-                col['geometry']['type'] = geometry[0].tag
-                if geometry[0].tag == 'mesh':
-                    col['geometry']['filename'] = geometry[0].attrib['filename']
-                #if novisual:
-                #    newlink['visual']['geometry'] = col['geometry']
-            else:
-                print("\n### WARNING: No collision geometry information provided for link", newlink['name'] + '.')
-                if novisual:
-                    print("\n### WARNING:", newlink['name'], "is empty.")
-        if newlink['collision'] == {}: #'else' cannot be used as we don't use a break
-            del(newlink['collision'])
-            print("\n### WARNING: No collision information provided for link", newlink['name'] + '.')
-            if novisual:
-                print("\n### WARNING:", newlink['name'], "is empty.")
+        #parse visual and collision objects
+        for type in ['visual', 'collision']:
+            newlink[type] = {}
+            i=0
+            for xmlelement in link.iter(type):
+                try:
+                    elementname = xmlelement.attrib['name']
+                except KeyError:
+                    elementname = type + '_' + str(i) + '_' + newlink['name']
+                    i += 1
+                newlink[type][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
+                dictelement = newlink[type][elementname]
+                dictelement['name'] = elementname
+                origin = xmlelement.find('origin')
+                if origin is not None:
+                    dictelement['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
+                else:
+                    dictelement['pose'] = defaults.idtransform
+                geometry = xmlelement.find('geometry')
+                if geometry is not None:
+                    dictelement['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+                    dictelement['geometry']['type'] = geometry[0].tag
+                    novisual = False
+                    if geometry[0].tag == 'mesh':
+                        dictelement['geometry']['filename'] = geometry[0].attrib['filename']
+                        try:
+                            dictelement['geometry']['scale'] = parse_text(geometry[0].attrib['scale'])
+                        except KeyError:
+                            dictelement['geometry']['scale'] = [1.0, 1.0, 1.0]
+                material = xmlelement.find('material')
+                if material is not None:
+                    dictelement['material'] = {'name': material.attrib['name']}
+                    color = material.find('color')
+                    if color is not None:
+                        dictelement['material']['color'] = parse_text(color.attrib['rgba'])
         return newlink
 
     def parseJoint(self, joint):
