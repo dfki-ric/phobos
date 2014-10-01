@@ -226,7 +226,7 @@ def deriveController(obj):
 
 
 def initObjectProperties(obj, marstype=None, ignoretypes=[]):
-    props = {'name': obj.name}
+    props = {'name': obj.name.split(':')[-1]}  #allow duplicated names differentiated by types
     if not marstype:
         for key, value in obj.items():
             props[key] = value
