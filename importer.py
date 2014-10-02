@@ -114,15 +114,14 @@ class RobotModelParser():
             else:
                 urdf_geom_loc = mathutils.Matrix.Identity(4)
                 urdf_geom_rot = mathutils.Matrix.Identity(4)
-            geoname = link['inertial']['name']
-            geom = bpy.data.objects[geoname]
+            inertialname = link['inertial']['name']
+            inertialobj = bpy.data.objects[inertialname]
             bpy.ops.object.select_all(action="DESELECT")
-            geom.select = True
+            inertialobj.select = True
             parentLink.select = True
             bpy.context.scene.objects.active = parentLink
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            #geom.matrix_world = parentLink.matrix_world #FIXME: this applies the scale of the parent, making boxes BIIIG
-            geom.matrix_local = urdf_geom_loc * urdf_geom_rot
+            inertialobj.matrix_local = urdf_geom_loc * urdf_geom_rot
         for geomsrc in ['visual', 'collision']:
             if geomsrc in link:
                 for g in link[geomsrc]:
