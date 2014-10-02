@@ -164,27 +164,27 @@ def manageLayers(self, context):
 def useDefaultLayers(self, context):
     pass #TODO: not so important
 
-def showMotorTypes(self, context):
-    """Changes materials of joints to indicate different motor types."""
-    if bpy.data.worlds[0].showMotorTypes:
-        types = {}
-        n_indicators = 0
-        for obj in bpy.context.selected_objects:
-            if obj.MARStype == "joint":
-                if "spec_motor" in obj:
-                    if not (obj["spec_motor"] in types):
-                        n_indicators += 1
-                        types[obj["spec_motor"]] = "indicator" + str(n_indicators)
-                    if not types[obj["spec_motor"]] in obj.data.materials:
-                        obj.data.materials.append(bpy.data.materials[types[obj["spec_motor"]]])
-                        obj.data.materials.pop(0, update_data=True)
-        bpy.data.scenes[0].update()
-    else:
-        for obj in bpy.context.selected_objects:
-            if obj.MARStype == "joint":
-                obj.data.materials.append(bpy.data.materials["Joint Discs"])
-                obj.data.materials.pop(0, update_data=True)
-    bpy.data.scenes[0].update()
+# def showMotorTypes(self, context):
+#     """Changes materials of joints to indicate different motor types."""
+#     if bpy.data.worlds[0].showMotorTypes:
+#         types = {}
+#         n_indicators = 0
+#         for obj in bpy.context.selected_objects:
+#             if obj.MARStype == "joint":
+#                 if "spec_motor" in obj:
+#                     if not (obj["spec_motor"] in types):
+#                         n_indicators += 1
+#                         types[obj["spec_motor"]] = "indicator" + str(n_indicators)
+#                     if not types[obj["spec_motor"]] in obj.data.materials:
+#                         obj.data.materials.append(bpy.data.materials[types[obj["spec_motor"]]])
+#                         obj.data.materials.pop(0, update_data=True)
+#         bpy.data.scenes[0].update()
+#     else:
+#         for obj in bpy.context.selected_objects:
+#             if obj.MARStype == "joint":
+#                 obj.data.materials.append(bpy.data.materials["Joint Discs"])
+#                 obj.data.materials.pop(0, update_data=True)
+#     bpy.data.scenes[0].update()
 
 
 class PhobosPanel(bpy.types.Panel):
