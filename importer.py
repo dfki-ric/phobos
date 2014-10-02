@@ -145,6 +145,7 @@ class RobotModelParser():
     def createGeometry(self, viscol, geomsrc):
         newgeom = None
         if viscol['geometry'] is not {}:
+            dimensions = None
             bpy.ops.object.select_all(action='DESELECT')
             geom = viscol['geometry']
             geomtype = geom['type']
@@ -171,25 +172,15 @@ class RobotModelParser():
                 newgeom.name = viscol['name']
                 newgeom['filename'] = geom['filename']
             elif geomtype == 'box':
-                newgeom = createPrimitive(viscol['name'],
-                                          geomtype,
-                                          geom['size'],
-                                          defs.layerTypes[geomsrc]
-                                          )
+                dimensions = geom['size']
             elif geomtype == 'cylinder':
-                newgeom = createPrimitive(viscol['name'],
-                                          geomtype,
-                                          (geom['radius'], geom['length']),
-                                          defs.layerTypes[geomsrc]
-                                          )
+                dimensions = (geom['radius'], geom['length'])
             elif geomtype == 'sphere':
-                newgeom = createPrimitive(viscol['name'],
-                                          geomtype,
-                                          geom['radius'], #tuple would cause problem here
-                                          defs.layerTypes[geomsrc]
-                                          )
+                dimensions = geom['radius']
             else:
                 print("### ERROR: Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.')
+            if dimensions:  # if a standard primitive type is found, create the object
+                newgeom = createPrimitive(viscol['name'], geomtype, dimensions, defs.layerTypes[geomsrc])
             if newgeom is not None:
                 newgeom.MARStype = geomsrc
                 newgeom.select = True
