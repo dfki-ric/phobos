@@ -37,8 +37,8 @@ from . import materials
 
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
-defaults = Defaults(0.001, #mass
-                    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0] #idtransform
+defaults = Defaults(0.001, # mass
+                    [0.0, 0.0, 0.0] # idtransform
                     )
 
 def register():
@@ -95,8 +95,8 @@ class RobotModelParser():
             # 2: move to parents origin by setting the world matrix to the parents world matrix
             childLink.matrix_world = parentLink.matrix_world
             # 3: apply local transform as saved in urdf (change matrix_local from identity to urdf)
-            urdf_loc = mathutils.Matrix.Translation(child['pose'][0:3])
-            urdf_rot = mathutils.Euler(tuple(child['pose'][3:]), 'XYZ').to_matrix().to_4x4()
+            urdf_loc = mathutils.Matrix.Translation(child['pose']['translation'])
+            urdf_rot = mathutils.Euler(tuple(child['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
             urdfmatrix = urdf_loc * urdf_rot
             childLink.matrix_local = urdfmatrix
             # 4: be happy, as world and basis are now the same and local is the transform to be exported to urdf
@@ -111,8 +111,8 @@ class RobotModelParser():
         parentLink = bpy.data.objects[link['name']]
         if 'inertial' in link:
             if 'pose' in link['inertial']:
-                urdf_geom_loc = mathutils.Matrix.Translation(link['inertial']['pose'][0:3])
-                urdf_geom_rot = mathutils.Euler(tuple(link['inertial']['pose'][3:]), 'XYZ').to_matrix().to_4x4()
+                urdf_geom_loc = mathutils.Matrix.Translation(link['inertial']['pose']['translation'])
+                urdf_geom_rot = mathutils.Euler(tuple(link['inertial']['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
             else:
                 urdf_geom_loc = mathutils.Matrix.Identity(4)
                 urdf_geom_rot = mathutils.Matrix.Identity(4)
@@ -129,8 +129,8 @@ class RobotModelParser():
                 for g in link[geomsrc]:
                     geomelement = link[geomsrc][g]
                     if 'pose' in geomelement:
-                        urdf_geom_loc = mathutils.Matrix.Translation(geomelement['pose'][0:3])
-                        urdf_geom_rot = mathutils.Euler(tuple(geomelement['pose'][3:]), 'XYZ').to_matrix().to_4x4()
+                        urdf_geom_loc = mathutils.Matrix.Translation(geomelement['pose']['translation'])
+                        urdf_geom_rot = mathutils.Euler(tuple(geomelement['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
                     else:
                         urdf_geom_loc = mathutils.Matrix.Identity(4)
                         urdf_geom_rot = mathutils.Matrix.Identity(4)
@@ -286,6 +286,16 @@ class URDFModelParser(RobotModelParser):
     def __init__(self, filepath):
         RobotModelParser.__init__(self, filepath)
 
+    def parsePose(self, origin):
+        pose = {}
+        if origin is not None:
+            pose['translation'] = parse_text(origin.attrib['xyz'])
+            pose['rotation_euler'] = parse_text(origin.attrib['rpy'])
+        else:
+            pose['translation'] = defaults.idtransform
+            pose['rotation_euler'] = defaults.idtransform
+        return pose
+
     def parseModel(self):
         print("\nParsing URDF model from", self.filepath)
         self.tree = ET.parse(self.filepath)
@@ -316,7 +326,7 @@ class URDFModelParser(RobotModelParser):
         #find any links that still have no pose (most likely because they had no parent)
         for link in links:
             if not 'pose' in links[link]:
-                links[link]['pose'] = defaults.idtransform
+                links[link]['pose'] = self.parsePose(None)
 
         #write parent-child information to nodes
         print("\n\nWriting parent-child information to nodes..")
@@ -349,11 +359,7 @@ class URDFModelParser(RobotModelParser):
         inertial = link.find('inertial')
         if inertial is not None: # 'if Element' yields none if the Element contains no children, thus this notation
             newlink['inertial'] = {}
-            origin = inertial.find('origin')
-            if origin is not None:
-                newlink['inertial']['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-            else:
-                newlink['inertial']['pose'] = defaults.idtransform
+            newlink['inertial']['pose'] = self.parsePose(inertial.find('origin'))
             mass = inertial.find('mass')
             if mass is not None:
                 newlink['inertial']['mass'] = float(mass.attrib['value'])
@@ -376,11 +382,7 @@ class URDFModelParser(RobotModelParser):
                 newlink[type][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
                 dictelement = newlink[type][elementname]
                 dictelement['name'] = elementname
-                origin = xmlelement.find('origin')
-                if origin is not None:
-                    dictelement['pose'] = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-                else:
-                    dictelement['pose'] = defaults.idtransform
+                dictelement['pose'] = self.parsePose(xmlelement.find('origin'))
                 geometry = xmlelement.find('geometry')
                 if geometry is not None:
                     dictelement['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
@@ -403,11 +405,7 @@ class URDFModelParser(RobotModelParser):
     def parseJoint(self, joint):
         print(joint.attrib['name']+', ', end='')
         newjoint = {a: joint.attrib[a] for a in joint.attrib}
-        try:
-            origin = joint.find('origin')
-            origindict = {'xyz': origin.attrib['xyz'].split(), 'rpy': origin.attrib['rpy'].split()}
-        except AttributeError:
-            origindict = {'xyz': [0, 0, 0], 'rpy': [0, 0, 0]}
+        pose = self.parsePose(joint.find('origin'))
         newjoint['parent'] = joint.find('parent').attrib['link']
         newjoint['child'] = joint.find('child').attrib['link']
         pose = [float(num) for num in (origindict['xyz'] + origindict['rpy'])]
