@@ -164,6 +164,14 @@ int: integer
 d: double
 str: string
 
+## Model Structure info
+
+- if 'filename' exists in a visual or collision and it is of 'geometry/type' mesh, then
+  that filename is written to the urdf, but the mesh is not exported
+- names such as sensor:blub are reduced to blub when the object of type sensor is exported,
+  which makes it possible to have the same names for a link and an attached sensor
+- 
+
 ## Some Notes on Blender
 
 ### Blender Transformation Matrices
