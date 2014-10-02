@@ -142,6 +142,10 @@ class RobotModelParser():
                     bpy.context.scene.objects.active = parentLink
                     bpy.ops.object.parent_set(type='BONE_RELATIVE')
                     geom.matrix_local = urdf_geom_loc * urdf_geom_rot
+                    try:
+                        geom.scale = geomelement['geometry']['scale']
+                    except KeyError:
+                        pass
 
     def createGeometry(self, viscol, geomsrc):
         newgeom = None
