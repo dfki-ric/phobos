@@ -510,7 +510,7 @@ class CopyCustomProperties(Operator):
     def poll(cls, context):
         obs = context.selected_objects
         ob = context.active_object
-        return len(obs) > 0 and ob.mode == 'OBJECT' and ob != None
+        return len(obs) > 0 and ob is not None and ob.mode == 'OBJECT'
 
 
 class RenameCustomProperty(Operator):
