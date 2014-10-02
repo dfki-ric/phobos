@@ -125,21 +125,22 @@ class RobotModelParser():
         for geomsrc in ['visual', 'collision']:
             if geomsrc in link:
                 for g in link[geomsrc]:
-                    geom = link[geomsrc][g]
-                    if 'pose' in geom:
-                        urdf_geom_loc = mathutils.Matrix.Translation(geom['pose'][0:3])
-                        urdf_geom_rot = mathutils.Euler(tuple(geom['pose'][3:]), 'XYZ').to_matrix().to_4x4()
+                    geomelement = link[geomsrc][g]
+                    if 'pose' in geomelement:
+                        urdf_geom_loc = mathutils.Matrix.Translation(geomelement['pose'][0:3])
+                        urdf_geom_rot = mathutils.Euler(tuple(geomelement['pose'][3:]), 'XYZ').to_matrix().to_4x4()
                     else:
                         urdf_geom_loc = mathutils.Matrix.Identity(4)
                         urdf_geom_rot = mathutils.Matrix.Identity(4)
-                    geoname = geom['name'] #g
+                    geoname = geomelement['name']
                     geom = bpy.data.objects[geoname]
+                    # FIXME: this does not do anything - how to set basis matrix to local?
+                    #geom.matrix_world = parentLink.matrix_world
                     bpy.ops.object.select_all(action="DESELECT")
                     geom.select = True
                     parentLink.select = True
                     bpy.context.scene.objects.active = parentLink
                     bpy.ops.object.parent_set(type='BONE_RELATIVE')
-                    geom.matrix_world = parentLink.matrix_world
                     geom.matrix_local = urdf_geom_loc * urdf_geom_rot
 
     def createGeometry(self, viscol, geomsrc):
@@ -171,6 +172,10 @@ class RobotModelParser():
                             bpy.ops.object.transform_apply(rotation=True)
                 newgeom.name = viscol['name']
                 newgeom['filename'] = geom['filename']
+                #newgeom.select = True
+                #if 'scale' in geom:
+                #    newgeom.scale = geom['scale']
+                #bpy.ops.object.transform_apply(scale=True)
             elif geomtype == 'box':
                 dimensions = geom['size']
             elif geomtype == 'cylinder':
@@ -181,24 +186,19 @@ class RobotModelParser():
                 print("### ERROR: Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.')
             if dimensions:  # if a standard primitive type is found, create the object
                 newgeom = createPrimitive(viscol['name'], geomtype, dimensions, defs.layerTypes[geomsrc])
+                newgeom.select = True
+                bpy.ops.object.transform_apply(scale=True)
             if newgeom is not None:
                 newgeom.MARStype = geomsrc
-                newgeom.select = True
-                if 'scale' in geom:
-                    newgeom.scale = geom['scale']
-                bpy.ops.object.transform_apply(scale=True)
                 newgeom['geometry/type'] = geomtype
-                #TODO: which other properties remain?
-            #FIXME: place empty coordinate system and return...what?
+            #FIXME: place empty coordinate system and return...what? Error handling of file import!
         return newgeom
 
     def createInertial(self, name, inertial):
         bpy.ops.object.select_all(action='DESELECT')
-        inert = createPrimitive('inertial_'+name, 'sphere', 0.01, 0, 'None', (0, 0, 0))
+        inert = createPrimitive('inertial_'+name, 'box', [0.01, 0.01, 0.01], 0, 'None', (0, 0, 0))
         inert.select = True
         bpy.ops.object.transform_apply(scale=True)
-        #obj = bpy.context.object
-        #obj.name = name
         for prop in inertial:
             if prop not in ['pose'] and inertial[prop] is not None:
                 inert[prop] = inertial[prop]
