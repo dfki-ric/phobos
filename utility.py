@@ -178,6 +178,8 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
 
 def defLayers(layerlist):
     """Returns a list of 20 elements encoding the visible layers according to layerlist"""
+    if type(layerlist) is not list:
+        layerlist = [layerlist]
     layers = 20 * [False]
     for layer in layerlist:
         layers[layer] = True

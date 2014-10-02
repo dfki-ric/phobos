@@ -77,6 +77,7 @@ class RobotModelParser():
         self.robot = {}
 
     def placeChildLinks(self, parent):
+        bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
         print(parent['name']+ ', ', end='')
         children = []
         for l in self.robot['links']:
@@ -103,6 +104,7 @@ class RobotModelParser():
             self.placeChildLinks(child)
 
     def placeLinkSubelements(self, link):
+        bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
         #urdf_sca = #TODO: solve problem with scale
         # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
         #* urdf_visual_loc * urdf_visual_rot #*urdf_sca
@@ -159,6 +161,7 @@ class RobotModelParser():
             for obj in bpy.data.objects:
                 obj.tag = True
             if geomtype == 'mesh':
+                bpy.context.scene.layers = defLayers(defs.layerTypes[geomsrc])
                 filetype = geom['filename'].split('.')[-1]
                 if filetype == 'obj' or filetype == 'OBJ':
                     bpy.ops.import_scene.obj(filepath=os.path.join(self.path, geom['filename']))
@@ -189,7 +192,7 @@ class RobotModelParser():
             else:
                 print("### ERROR: Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.')
             if dimensions:  # if a standard primitive type is found, create the object
-                newgeom = createPrimitive(viscol['name'], geomtype, dimensions, defs.layerTypes[geomsrc])
+                newgeom = createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
                 newgeom.select = True
                 bpy.ops.object.transform_apply(scale=True)
             if newgeom is not None:
@@ -200,7 +203,7 @@ class RobotModelParser():
 
     def createInertial(self, name, inertial):
         bpy.ops.object.select_all(action='DESELECT')
-        inert = createPrimitive('inertial_'+name, 'box', [0.01, 0.01, 0.01], 0, 'None', (0, 0, 0))
+        inert = createPrimitive('inertial_'+name, 'box', [0.01, 0.01, 0.01], player='inertial')
         inert.select = True
         bpy.ops.object.transform_apply(scale=True)
         for prop in inertial:
@@ -210,10 +213,11 @@ class RobotModelParser():
         return inert
 
     def createLink(self, link):
+        bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
         #create base object ( =armature)
         bpy.ops.object.select_all(action='DESELECT')
         #bpy.ops.view3d.snap_cursor_to_center()
-        bpy.ops.object.armature_add(layers=defLayers([0]))
+        bpy.ops.object.armature_add(layers=defLayers(0))
         newlink = bpy.context.active_object #print(bpy.context.object) #print(bpy.context.scene.objects.active) #bpy.context.selected_objects[0]
         newlink.name = link['name']
         newlink.location = (0.0, 0.0, 0.0)
