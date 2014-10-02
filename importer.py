@@ -243,6 +243,34 @@ class RobotModelParser():
                     self.createGeometry(collision, 'collision')
         return newlink
 
+    def createJoint(self, joint):
+        bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
+        link = bpy.data.objects[joint['child']]
+        # add joint information
+        link['joint/type'] = joint['type']
+        if 'limits' in joint:
+            for param in joint['limits']:
+                link['joint/'+param] = joint['limits'][param]
+
+        # set axis
+        selectObjects([link], clear=True, active=0)
+        bpy.ops.object.mode_set(mode='EDIT')
+        editbone = link.data.edit_bones[0]
+        #oldaxis = editbone.vector
+        length = editbone.length
+        if 'axis' in joint:
+            axis = mathutils.Vector(tuple(joint['axis']))
+            #oldaxis.cross(axis) # rotation axis
+            editbone.tail = editbone.head + axis.normalized() * length
+
+        # add constraints
+        bpy.ops.object.mode_set(mode='POSE')
+        posebone = link.data.bones[0]
+        # add constraints
+        pass
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+
     def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model."""
         print("\n\nCreating Blender model...")
@@ -251,6 +279,12 @@ class RobotModelParser():
             print(l + ', ', end='')
             link = self.robot['links'][l]
             self.createLink(link)
+
+        print("Creating links...")
+        for j in self.robot['joints']:
+            print(j + ', ', end='')
+            joint = self.robot['joints'][j]
+            self.createJoint(joint)
 
         #build tree recursively and correct translation & rotation on the fly
         for l in self.robot['links']:
@@ -266,8 +300,6 @@ class RobotModelParser():
             print("### Error: Could not assign model name to root link.")
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
-
-
 
 
 class MARSModelParser(RobotModelParser):
@@ -408,11 +440,14 @@ class URDFModelParser(RobotModelParser):
         pose = self.parsePose(joint.find('origin'))
         newjoint['parent'] = joint.find('parent').attrib['link']
         newjoint['child'] = joint.find('child').attrib['link']
-        pose = [float(num) for num in (origindict['xyz'] + origindict['rpy'])]
-        #axis
+        axis = joint.find('axis')
+        if axis is not None:
+            newjoint['axis'] = parse_text(axis.attrib['xyz'])
+        limit = joint.find('limit')
+        if limit is not None:
+            newjoint['limits'] = {a: limit.attrib[a] for a in limit.attrib}
         #calibration
         #dynamics
-        #limit
         #mimic
         #safety_controller
         return newjoint, pose
