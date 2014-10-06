@@ -106,9 +106,6 @@ class RobotModelParser():
 
     def placeLinkSubelements(self, link):
         bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
-        #urdf_sca = #TODO: solve problem with scale
-        # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
-        #* urdf_visual_loc * urdf_visual_rot #*urdf_sca
         parentLink = bpy.data.objects[link['name']]
         if 'inertial' in link:
             if 'pose' in link['inertial']:
@@ -136,6 +133,8 @@ class RobotModelParser():
                     geom = bpy.data.objects[geoname]
                     # FIXME: this does not do anything - how to set basis matrix to local?
                     #geom.matrix_world = parentLink.matrix_world
+                    #selectObjects([geom], True, 0)
+                    #bpy.ops.object.transform_apply(location=True, rotation=True)
                     selectObjects([geom, parentLink], True, 1)
                     bpy.ops.object.parent_set(type='BONE_RELATIVE')
                     geom.matrix_local = urdf_geom_loc * urdf_geom_rot

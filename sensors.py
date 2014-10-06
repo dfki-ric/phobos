@@ -164,6 +164,7 @@ class AddLegacySensorOperator(Operator):
                     print("Added nodes to new " + self.sensor_type)
                 elif self.sensor_type == "ScanningSonar":
                     print("Added nodes to new " + self.sensor_type)
+            # add the pre-defined sensor properties
             for prop in defs.sensorProperties[self.sensor_type]:
                 sensor[prop] = defs.sensorProperties[self.sensor_type][prop]
         else:
