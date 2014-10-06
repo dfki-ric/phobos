@@ -91,10 +91,7 @@ class RobotModelParser():
             # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
             parentLink = bpy.data.objects[parent['name']]
             childLink = bpy.data.objects[child['name']]
-            bpy.ops.object.select_all(action="DESELECT")  # bpy.context.selected_objects = []
-            childLink.select = True
-            parentLink.select = True
-            bpy.context.scene.objects.active = parentLink
+            selectObjects([childLink, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             # 2: move to parents origin by setting the world matrix to the parents world matrix
             childLink.matrix_world = parentLink.matrix_world
@@ -122,10 +119,7 @@ class RobotModelParser():
                 urdf_geom_rot = mathutils.Matrix.Identity(4)
             inertialname = link['inertial']['name']
             inertialobj = bpy.data.objects[inertialname]
-            bpy.ops.object.select_all(action="DESELECT")
-            inertialobj.select = True
-            parentLink.select = True
-            bpy.context.scene.objects.active = parentLink
+            selectObjects([inertialobj, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             inertialobj.matrix_local = urdf_geom_loc * urdf_geom_rot
         for geomsrc in ['visual', 'collision']:
@@ -142,10 +136,7 @@ class RobotModelParser():
                     geom = bpy.data.objects[geoname]
                     # FIXME: this does not do anything - how to set basis matrix to local?
                     #geom.matrix_world = parentLink.matrix_world
-                    bpy.ops.object.select_all(action="DESELECT")
-                    geom.select = True
-                    parentLink.select = True
-                    bpy.context.scene.objects.active = parentLink
+                    selectObjects([geom, parentLink], True, 1)
                     bpy.ops.object.parent_set(type='BONE_RELATIVE')
                     geom.matrix_local = urdf_geom_loc * urdf_geom_rot
                     try:
