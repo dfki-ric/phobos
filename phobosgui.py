@@ -51,7 +51,7 @@ def register():
     bpy.types.World.showSensors = BoolProperty(name = "showSensors", update=SetVisibleLayers)
     bpy.types.World.showNames = BoolProperty(name = "showNames", update=SetVisibleLayers)
     bpy.types.World.showDecorations = BoolProperty(name = "showDecorations", update=SetVisibleLayers)
-    bpy.types.World.showMotorTypes = BoolProperty(name = "showMotorTypes", update=showMotorTypes)
+    #bpy.types.World.showMotorTypes = BoolProperty(name = "showMotorTypes", update=showMotorTypes)
     bpy.types.World.manageLayers = BoolProperty(name = "manage layers", update=manageLayers)
     bpy.types.World.useDefaultLayers = BoolProperty(name = "use default layers", update=useDefaultLayers)
     bpy.types.World.linkLayer = IntProperty(name = "link", update=manageLayers)
