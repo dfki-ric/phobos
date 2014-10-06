@@ -94,12 +94,23 @@ def deriveJoint(obj, typetags=False):
     props['parent'] = obj.parent.name
     props['child'] = obj.name
     props['type'], crot = joints.deriveJointType(obj, True)
-    axis, limit = joints.getJointConstraints(obj)
+    axis, minmax = joints.getJointConstraints(obj)
     if axis:
         props['axis'] = list(axis)
-    if limit:
-        props['limits'] = list(limit) # limit gets returned as None if there are no limits
-    props["state"] = deriveJointState(obj)
+    limits = {}
+    if minmax is not None:
+        if len(minmax) == 2:  # prismatic or revolute joint, TODO: planar etc.
+            limits['lower'] = minmax[0]
+            limits['upper'] = minmax[1]
+    if 'maxvelocity' in props:
+        limits['velocity'] = props['maxvelocity']
+        del props['maxvelocity']
+    if 'maxeffort' in props:
+        limits['effort'] = props['maxeffort']
+        del props['maxeffort']
+    if limits != {}:
+        props['limits'] = limits
+    props['state'] = deriveJointState(obj)
     #TODO:
     # - calibration
     # - dynamics

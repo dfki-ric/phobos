@@ -34,6 +34,7 @@ import xml.etree.ElementTree as ET
 from phobos.utility import *
 from . import defs
 from . import materials
+from . import joints
 
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
@@ -247,10 +248,7 @@ class RobotModelParser():
         bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
         link = bpy.data.objects[joint['child']]
         # add joint information
-        link['joint/type'] = joint['type']
-        if 'limits' in joint:
-            for param in joint['limits']:
-                link['joint/'+param] = joint['limits'][param]
+        # link['joint/type'] = joint['type']
 
         # set axis
         selectObjects([link], clear=True, active=0)
@@ -264,12 +262,18 @@ class RobotModelParser():
             editbone.tail = editbone.head + axis.normalized() * length
 
         # add constraints
-        bpy.ops.object.mode_set(mode='POSE')
-        posebone = link.data.bones[0]
-        # add constraints
-        pass
-        bpy.ops.object.mode_set(mode='OBJECT')
-
+        for param in ['effort', 'velocity']:
+            try:
+                link['joint/max'+param] = joint['limits'][param]
+            except KeyError:
+                pass
+        try:
+            lower = joint['limits']['lower']
+            upper = joint['limits']['upper']
+        except KeyError:
+            lower = 0.0
+            upper = 0.0
+        joints.setJointConstraints(link, joint['type'], lower, upper)
 
     def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model."""
@@ -280,7 +284,7 @@ class RobotModelParser():
             link = self.robot['links'][l]
             self.createLink(link)
 
-        print("Creating links...")
+        print("\n\nCreating joints...")
         for j in self.robot['joints']:
             print(j + ', ', end='')
             joint = self.robot['joints'][j]
@@ -436,7 +440,7 @@ class URDFModelParser(RobotModelParser):
 
     def parseJoint(self, joint):
         print(joint.attrib['name']+', ', end='')
-        newjoint = {a: joint.attrib[a] for a in joint.attrib}
+        newjoint = {a: parse_text(joint.attrib[a]) for a in joint.attrib}
         pose = self.parsePose(joint.find('origin'))
         newjoint['parent'] = joint.find('parent').attrib['link']
         newjoint['child'] = joint.find('child').attrib['link']
@@ -445,7 +449,7 @@ class URDFModelParser(RobotModelParser):
             newjoint['axis'] = parse_text(axis.attrib['xyz'])
         limit = joint.find('limit')
         if limit is not None:
-            newjoint['limits'] = {a: limit.attrib[a] for a in limit.attrib}
+            newjoint['limits'] = {a: parse_text(limit.attrib[a]) for a in limit.attrib}
         #calibration
         #dynamics
         #mimic

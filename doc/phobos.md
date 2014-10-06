@@ -148,6 +148,11 @@ model
 	- parent: str
 	- child: str
 	- type: str ("hinge", "continuous", "linear")
+	- {limits}:
+	    - lower
+	    - upper
+	    - velocity
+	    - effort
 - ["sensor"]
 	- link: str
 	- type: str
