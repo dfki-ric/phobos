@@ -212,7 +212,7 @@ class RobotModelParser():
 
     def createInertial(self, name, inertial):
         bpy.ops.object.select_all(action='DESELECT')
-        inert = createPrimitive('inertial_'+name, 'box', [0.01, 0.01, 0.01], player='inertial')
+        inert = createPrimitive('inertial_'+name, 'box', [0.04, 0.04, 0.04], player='inertial')
         inert.select = True
         bpy.ops.object.transform_apply(scale=True)
         for prop in inertial:
