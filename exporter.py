@@ -254,7 +254,7 @@ def writeURDFGeometry(output, element):
     elif element['type'] == "sphere":
         output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
     elif element['type'] in ['capsule', 'mesh']: # capsules are not supported in URDF and are emulated using meshes
-        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], element['scale']])) # TODO: check if this is working properly
+        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], l2str(element['scale'])]))
     output.append(indent*4+'</geometry>\n')
 
 
