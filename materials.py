@@ -27,7 +27,7 @@ Created on 7 Jan 2014
 
 import bpy
 
-def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0):
+def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
     """Returns a Blender material specified by the input parameters"""
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = diffuse
@@ -38,6 +38,8 @@ def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0):
     mat.specular_intensity = 0.5
     mat.alpha = alpha
     mat.ambient = 1
+    if texture is not None:
+        pass
     return mat
 
 def createMARSMaterials():

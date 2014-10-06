@@ -202,6 +202,11 @@ class RobotModelParser():
             if newgeom is not None:
                 newgeom.MARStype = geomsrc
                 newgeom['geometry/type'] = geomtype
+                if geomsrc == 'visual':
+                    try:
+                        newgeom.data.materials.append(bpy.data.materials[viscol['material']['name']])
+                    except KeyError:
+                        print('No material for obj', viscol['name'])
             #FIXME: place empty coordinate system and return...what? Error handling of file import!
         return newgeom
 
@@ -384,8 +389,12 @@ class URDFModelParser(RobotModelParser):
             newmaterial = {a: material.attrib[a] for a in material.attrib}
             color = material.find('color')
             if color is not None:
-                print(material.attrib['name'] + ', ', end='')
                 newmaterial['color'] = parse_text(color.attrib['rgba'])
+            texture = material.find('texture')
+            if texture is not None:
+                newmaterial['texture'] = texture.attrib['filename']
+            if color is not None or texture is not None:
+                print(material.attrib['name'] + ', ', end='')
                 materiallist.append(newmaterial)
         for m in materiallist:
             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) #TODO: handle duplicate names? urdf_robotname_xxx?
@@ -435,9 +444,12 @@ class URDFModelParser(RobotModelParser):
                 material = xmlelement.find('material')
                 if material is not None:
                     dictelement['material'] = {'name': material.attrib['name']}
-                    color = material.find('color')
-                    if color is not None:
-                        dictelement['material']['color'] = parse_text(color.attrib['rgba'])
+                    # We don't need to do the following, as any material with color or texture
+                    # will be parsed in the parsing of materials in parseModel
+                    # This might be necessary if there are name conflicts etc.
+                    #color = material.find('color')
+                    #if color is not None:
+                    #    dictelement['material']['color'] = parse_text(color.attrib['rgba'])
         return newlink
 
     def parseJoint(self, joint):
