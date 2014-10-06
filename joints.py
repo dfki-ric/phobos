@@ -33,17 +33,20 @@ import mathutils
 import warnings
 from . import defs
 
+
 def register():
     print("Registering joints...")
+
 
 def unregister():
     print("Unregistering joints...")
 
-def deriveJointType(joint, adjust = False):
-    ''' Derives the type of the joint defined by the armature object 'joint' based on the constraints defined in the joint.
+
+def deriveJointType(joint, adjust=False):
+    """ Derives the type of the joint defined by the armature object 'joint' based on the constraints defined in the joint.
     The parameter 'adjust' decides whether or not the type of the joint is adjusted after detecting (without checking whether
-    the property "type" was previously defined in the armature or not).'''
-    jtype = 'floating' # 'universal' in MARS nomenclature
+    the property "type" was previously defined in the armature or not)."""
+    jtype = 'floating'  # 'universal' in MARS nomenclature
     cloc = None
     crot = None
     limrot = None
@@ -60,8 +63,8 @@ def deriveJointType(joint, adjust = False):
                     c.use_limit_z and (c.min_z != 0 or c.max_z != 0)]
     ncloc = sum(cloc) if cloc else None
     ncrot = sum((limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z,)) if limrot else None
-    if cloc: # = if there is any constraint at all, as all joints but floating ones have translation limits
-        if ncloc == 3: # fixed or revolute
+    if cloc:  # = if there is any constraint at all, as all joints but floating ones have translation limits
+        if ncloc == 3:  # fixed or revolute
             if ncrot == 3:
                 if sum(crot) > 0:
                     jtype = 'revolute'
@@ -80,8 +83,9 @@ def deriveJointType(joint, adjust = False):
             print("Changed type of joint'" + joint.name, 'to', jtype + "'.")
     return jtype, crot
 
+
 def getJointConstraints(joint):
-    ''' Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'.'''
+    """ Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'."""
     jt, crot = deriveJointType(joint, adjust = True)
     axis = None
     limits = None
@@ -128,6 +132,7 @@ def getJointConstraints(joint):
                 else:
                     raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
     return axis, limits
+
 
 def getJointConstraint(joint, ctype):
     con = None
@@ -277,30 +282,30 @@ class DefineJointConstraintsOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     joint_type = EnumProperty(
-        name = 'joint_type',
-        default = 'revolute',
-        description = "type of the joint",
-        items = defs.jointtypes)
+        name='joint_type',
+        default='revolute',
+        description="type of the joint",
+        items=defs.jointtypes)
 
     lower = FloatProperty(
-        name = "lower",
-        default = 0.0,
-        description = "lower constraint of the joint")
+        name="lower",
+        default=0.0,
+        description="lower constraint of the joint")
 
     upper = FloatProperty(
-        name = "upper",
-        default = 0.0,
-        description = "upper constraint of the joint")
+        name="upper",
+        default=0.0,
+        description="upper constraint of the joint")
 
     maxeffort = FloatProperty(
-        name = "max effort (N or Nm)",
-        default = 0.0,
-        description = "maximum effort of the joint")
+        name="max effort (N or Nm)",
+        default=0.0,
+        description="maximum effort of the joint")
 
     maxvelocity = FloatProperty(
-        name = "max velocity (m/s or rad/s",
-        default = 0.0,
-        description = "maximum velocity of the joint")
+        name="max velocity (m/s or rad/s",
+        default=0.0,
+        description="maximum velocity of the joint")
 
     passive = BoolProperty(
         name='passive',
@@ -335,35 +340,35 @@ class AttachMotorOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     P = FloatProperty(
-        name = "P",
-        default = 0.0,
-        description = "P-value")
+        name="P",
+        default=0.0,
+        description="P-value")
 
     I = FloatProperty(
-        name = "I",
-        default = 0.0,
-        description = "I-value")
+        name="I",
+        default=0.0,
+        description="I-value")
 
     D = FloatProperty(
-        name = "D",
-        default = 0.0,
-        description = "D-value")
+        name="D",
+        default=0.0,
+        description="D-value")
 
     vmax = FloatProperty(
-        name = "maximum velocity [rpm]",
-        default = 1.0,
-        description = "maximum turning velocity of the motor")
+        name="maximum velocity [rpm]",
+        default=1.0,
+        description="maximum turning velocity of the motor")
 
     taumax = FloatProperty(
-        name = "maximum torque [Nm]",
-        default = 0.1,
-        description = "maximum torque a motor can apply")
+        name="maximum torque [Nm]",
+        default=0.1,
+        description="maximum torque a motor can apply")
 
     motortype = EnumProperty(
-        name = 'motor_type',
-        default = 'servo',
-        description = "type of the motor",
-        items = defs.motortypes)
+        name='motor_type',
+        default='servo',
+        description="type of the motor",
+        items=defs.motortypes)
 
     def execute(self, context):
         for joint in bpy.context.selected_objects:

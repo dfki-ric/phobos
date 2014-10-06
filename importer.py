@@ -38,15 +38,18 @@ from . import joints
 
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
-defaults = Defaults(0.001, # mass
-                    [0.0, 0.0, 0.0] # idtransform
+defaults = Defaults(0.001,  # mass
+                    [0.0, 0.0, 0.0]  # idtransform
                     )
+
 
 def register():
     print("Registering importer...")
 
+
 def unregister():
     print("Unregistering importer...")
+
 
 def cleanUpScene():
     # select all objects
@@ -88,7 +91,7 @@ class RobotModelParser():
             # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
             parentLink = bpy.data.objects[parent['name']]
             childLink = bpy.data.objects[child['name']]
-            bpy.ops.object.select_all(action="DESELECT") #bpy.context.selected_objects = []
+            bpy.ops.object.select_all(action="DESELECT")  # bpy.context.selected_objects = []
             childLink.select = True
             parentLink.select = True
             bpy.context.scene.objects.active = parentLink
@@ -375,7 +378,7 @@ class URDFModelParser(RobotModelParser):
         with open(self.filepath+'_debug.yml', 'w') as outputfile:
             outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
-        materiallist = [] #TODO: build dictionary entry for materials
+        materiallist = []  # TODO: build dictionary entry for materials
         print("\n\nParsing materials..")
         for material in self.root.iter('material'):
             newmaterial = {a: material.attrib[a] for a in material.attrib}
@@ -454,6 +457,7 @@ class URDFModelParser(RobotModelParser):
         #mimic
         #safety_controller
         return newjoint, pose
+
 
 class SMURFModelParser(RobotModelParser):
     """Class derived from RobotModelParser which parses a SMURF model"""
