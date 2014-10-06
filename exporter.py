@@ -284,7 +284,7 @@ def exportModelToURDF(model, filepath):
                     if model['materials'][vis['material']]['users'] == 0: #FIXME: change back to 1 when implemented in urdfloader
                         mat = model['materials'][vis['material']]
                         output.append(indent*4+'<material name="' + mat['name'] + '">\n')
-                        color = mat['diffuseFront']
+                        color = mat['diffuseColor']
                         output.append(indent*5+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(mat["transparency"]) + '"/>\n')
                         if 'texturename' in mat:
                             output.append(indent*5+'<texture filename="'+mat['texturename']+'"/>\n')
@@ -318,7 +318,7 @@ def exportModelToURDF(model, filepath):
     for m in model['materials']:
         if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
             output.append(indent*2+'<material name="' + m + '">\n')
-            color = model['materials'][m]['diffuseFront']
+            color = model['materials'][m]['diffuseColor']
             transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
             output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(1.0-transparency) + '"/>\n')
             if 'texturename' in model['materials'][m]:
