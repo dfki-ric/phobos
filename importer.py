@@ -406,24 +406,23 @@ class URDFModelParser(RobotModelParser):
             newlink['inertial']['name'] = 'inertial_' + newlink['name']
 
         #parse visual and collision objects
-        for type in ['visual', 'collision']:
-            newlink[type] = {}
-            i=0
-            for xmlelement in link.iter(type):
+        for objtype in ['visual', 'collision']:
+            newlink[objtype] = {}
+            i = 0
+            for xmlelement in link.iter(objtype):
                 try:
                     elementname = xmlelement.attrib['name']
                 except KeyError:
-                    elementname = type + '_' + str(i) + '_' + newlink['name']
+                    elementname = objtype + '_' + str(i) + '_' + newlink['name']
                     i += 1
-                newlink[type][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
-                dictelement = newlink[type][elementname]
+                newlink[objtype][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
+                dictelement = newlink[objtype][elementname]
                 dictelement['name'] = elementname
                 dictelement['pose'] = self.parsePose(xmlelement.find('origin'))
                 geometry = xmlelement.find('geometry')
                 if geometry is not None:
                     dictelement['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
                     dictelement['geometry']['type'] = geometry[0].tag
-                    novisual = False
                     if geometry[0].tag == 'mesh':
                         dictelement['geometry']['filename'] = geometry[0].attrib['filename']
                         try:
