@@ -6,22 +6,21 @@ This is going to be the first ever 'release', resulting in a newly created branc
 
 | branch  | designated push date |
 | ------------- | ------------- |
-| next  | 01.10.2014  |
-| stable | 03.10.2014  |
+| next  | 08.10.2014  |
+| stable | 10.10.2014  |
 
 ### Features still incomplete or missing
 
 - import of MARS scenes
-- urdf import:
-    - set joint constraints
-    - set axes correctly
-    - set layers correctly
-- documentation of basic features
+- Documentation
+    - general workflow
+    - cheat sheet
+    - example scene
+    - internal dictionary structure
 
 ### Issues
 
-- installation has to work for local and global Blender, as well as for Blender import (YAML installation?)
 - refactor import (classes?)
 - calculate inertia of entire link without re-calculating individual inertias 
 - check if decimal place rounding still works with inertia tensors (exception?) or should be different
-- inertias are not exported if visuals are not selected
+- inertias are not exported if visuals are not selected (?)
