@@ -56,7 +56,7 @@ class CreateCollisionObjects(Operator):
 
         visuals = []
         for obj in bpy.context.selected_objects:
-            if obj.MARStype == "visual":
+            if obj.phobostype == "visual":
                 visuals.append(obj)
             obj.select = False
 
@@ -114,7 +114,7 @@ class CreateCollisionObjects(Operator):
             elif self.property_colltype == 'mesh':
                 pass
                 #TODO: copy mesh!!
-            ob.MARStype = "collision"
+            ob.phobostype = "collision"
             ob["geometry/type"] = self.property_colltype
             if vis.parent:
                 ob.select = True
@@ -143,7 +143,7 @@ class CreateCollisionObjects(Operator):
         @classmethod
         def poll(self, context):
             for obj in context.selected_objects:
-                if obj.MARStype == 'collision':
+                if obj.phobostype == 'collision':
                     return True
             return False
 
@@ -157,7 +157,7 @@ class CreateCollisionObjects(Operator):
         def execute(self, context):
             active_object = context.active_object
             for obj in context.selected_objects:
-                if obj.MARStype == 'collision':
+                if obj.phobostype == 'collision':
                     try:
                         obj.rigid_body.collision_groups = self.groups
                     except AttributeError:

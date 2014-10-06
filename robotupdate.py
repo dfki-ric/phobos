@@ -40,7 +40,7 @@ from . import inertia
 def convertOldModel():
     for obj in bpy.data.objects:
         if "type" in obj:
-            obj.MARStype = str(obj["type"])
+            obj.phobostype = str(obj["type"])
             del obj["type"]
 
 def setDefault(obj, key, value):
@@ -57,7 +57,7 @@ def createLinkProperties(self, obj):
 def updateObject(obj, fix = False):
     notifications = []
     faulty_objects = []
-    if obj.MARStype == 'link':
+    if obj.phobostype == 'link':
         inertials = utility.getImmediateChildren(obj, ['inertial'])
         if len(inertials) == 0:
             notifications.append("Warning, link '" + obj.name + "' has no inertial object.")
@@ -82,11 +82,11 @@ def updateObject(obj, fix = False):
                 #if fix:
                 #    inertial['mass'] = mass
                 #    inertial['masschanged'] = dt.now().isoformat()
-    elif obj.MARStype == 'inertial':
+    elif obj.phobostype == 'inertial':
         if fix:
             if not obj.name.startswith('inertial_'):
                 obj.name = 'inertial_' + obj.name
-    elif obj.MARStype == 'visual':
+    elif obj.phobostype == 'visual':
         if fix:
             if not "geometry/type" in obj:
                 notifications.append("Warning, visual '" + obj.name + "' has no geometry/type.")
@@ -95,13 +95,13 @@ def updateObject(obj, fix = False):
                 obj.name = 'visual_' + obj.name
             if not 'masschanged' in obj:
                 obj['masschanged'] = dt.now().isoformat()
-    elif obj.MARStype == 'collision':
+    elif obj.phobostype == 'collision':
         if fix:
             if not obj.name.startswith('collision_'):
                 obj.name = 'collision_' + obj.name
             if not 'masschanged' in obj:
                 obj['masschanged'] = dt.now().isoformat()
-    elif obj.MARStype == 'sensor':
+    elif obj.phobostype == 'sensor':
         pass
     return notifications, faulty_objects
 

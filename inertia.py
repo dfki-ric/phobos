@@ -141,9 +141,9 @@ def getInertiaRelevantObjects(link):
     inertiaobjects = []
     for obj in tmpobjects:
         if 'mass' in obj:
-            if obj.MARStype == 'collision':
+            if obj.phobostype == 'collision':
                 inertiaobjects.append(obj)
-            elif obj.MARStype == 'visual':
+            elif obj.phobostype == 'visual':
                 collision = obj.name.replace('visual_', 'collision_')
                 if not collision in objlist:
                     inertiaobjects.append(obj)
@@ -179,19 +179,19 @@ def fuseInertiaData(inertials):
 def createInertial(obj):
     '''Creates an empty inertial object with the same world transform as the corresponding
     object and parents it to the correct link.'''
-    if obj.MARStype == 'link':
+    if obj.phobostype == 'link':
         #name = obj.name
         parent = obj
     else:
-        #name = obj.name.replace(obj.MARStype+'_', '')
+        #name = obj.name.replace(obj.phobostype+'_', '')
         parent = obj.parent
-    size = (0.04, 0.04, 0.04) if obj.MARStype == 'link' else (0.02, 0.02, 0.02)
+    size = (0.04, 0.04, 0.04) if obj.phobostype == 'link' else (0.02, 0.02, 0.02)
     rotation = obj.matrix_world.to_euler()
     center = obj.matrix_world.to_translation()
     inertial = utility.createPrimitive('inertial_' + obj.name, 'box', size,
                                    defs.layerTypes["inertial"], 'inertial', center, rotation)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    inertial.MARStype = 'inertial'
+    inertial.phobostype = 'inertial'
     bpy.ops.object.select_all(action="DESELECT")
     #utility.selectObjects([inertial], True, 0)
 

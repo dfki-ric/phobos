@@ -28,9 +28,9 @@ Then import your stl files by clicking Files -> Import -> stl. You can of course
 
 ![After the import](img/afterImport.PNG)
 
-The next step is depending on your import. When you select your robot you may see that all the objects origins are at the worlds origin. We want them to be in the objects center of mass. We can achieve this by using the Object -> Transform -> Origin to Center of Mass operation. Please keep in mind that this operation will only be performed on selected objects! Our next step is to set the proper MARStype of our visuals. We can do this by selecting all visual objects and then using the Set MARStype operation from our phobos toolbar. Choose *visual* for our visual objects. 
+The next step is depending on your import. When you select your robot you may see that all the objects origins are at the worlds origin. We want them to be in the objects center of mass. We can achieve this by using the Object -> Transform -> Origin to Center of Mass operation. Please keep in mind that this operation will only be performed on selected objects! Our next step is to set the proper phobostype of our visuals. We can do this by selecting all visual objects and then using the Set phobostype operation from our phobos toolbar. Choose *visual* for our visual objects. 
 
-![Set MARStype](img/setMARStype.PNG)
+![Set phobostype](img/setphobostype.PNG)
 
 
 ### Step 3 - Links and Joints
@@ -43,7 +43,7 @@ Can you see the antenna? Thats our bone. In phobos the z-axis is used to rotate 
 
 ![outliner](img/outliner.PNG)
 
-The next step is to set the MARStype of our bone. You already know how to do it. Set the MARStype of the bone to *link*. We're almost done. The last part for this new link is to set its constraints. There is also an operation for that in the phobos toolbar named *Define Joint Constraints*. Select it and set the constraints you want. For now we will allow Bill to look from -90° to 90° and set it to a revolute joint type.
+The next step is to set the phobostype of our bone. You already know how to do it. Set the phobostype of the bone to *link*. We're almost done. The last part for this new link is to set its constraints. There is also an operation for that in the phobos toolbar named *Define Joint Constraints*. Select it and set the constraints you want. For now we will allow Bill to look from -90° to 90° and set it to a revolute joint type.
 
 ![joint constraints](img/defineCons.PNG)
 

@@ -34,11 +34,11 @@ from . import utility
 
 def register():
     print("Registering gui...")
-    bpy.types.Object.MARStype = EnumProperty(
+    bpy.types.Object.phobostype = EnumProperty(
             items = defs.marstypes,
             name = "type",
             description = "MARS object type")
-    print("    Added 'MARStype' to Object properties.")
+    print("    Added 'phobostype' to Object properties.")
     #bpy.types.Object.lastchanged = StringProperty(
     #        default = '',
     #        name = "lastchanged",
@@ -170,7 +170,7 @@ def useDefaultLayers(self, context):
 #         types = {}
 #         n_indicators = 0
 #         for obj in bpy.context.selected_objects:
-#             if obj.MARStype == "joint":
+#             if obj.phobostype == "joint":
 #                 if "spec_motor" in obj:
 #                     if not (obj["spec_motor"] in types):
 #                         n_indicators += 1
@@ -181,7 +181,7 @@ def useDefaultLayers(self, context):
 #         bpy.data.scenes[0].update()
 #     else:
 #         for obj in bpy.context.selected_objects:
-#             if obj.MARStype == "joint":
+#             if obj.phobostype == "joint":
 #                 obj.data.materials.append(bpy.data.materials["Joint Discs"])
 #                 obj.data.materials.pop(0, update_data=True)
 #     bpy.data.scenes[0].update()
@@ -228,7 +228,7 @@ class PhobosPanel(bpy.types.Panel):
         sc1.operator('object.phobos_select_root', text = 'Select Root')
         sc1.operator('object.phobos_select_model', text = 'Select Robot')
         sc2 = sinlayout.column(align = True)
-        sc2.operator('object.phobos_select_objects_by_marstype', text = "Select by MARStype")
+        sc2.operator('object.phobos_select_objects_by_marstype', text = "Select by phobostype")
         sc2.operator('object.phobos_select_objects_by_name', text = "Select by Name")
 
         #for root in utility.getRoots():
@@ -252,7 +252,7 @@ class PhobosModelPanel(bpy.types.Panel):
 
         inlayout = layout.split()
         c1 = inlayout.column(align = True)
-        c1.operator('object.phobos_set_marstype', text = 'Set MARStype')
+        c1.operator('object.phobos_set_marstype', text = 'Set phobostype')
         c1.operator('object.phobos_set_geometry_type', text = "Set Geometry Type(s)")
         c1.operator('object.create_collision_objects', text = "Create Collision Object(s)")
         c1.operator('object.create_inertial_objects', text = "Create Inertial Object(s)")
@@ -414,20 +414,20 @@ class PhobosObjectPanel(bpy.types.Panel):
         row_type = layout.row()
         row_type.label(icon="OBJECT_DATA")
         #row_type.prop_enum(bpy.context.active_object, '["type"]', "node")
-        #row_type.prop_enum(bpy.context.active_object, 'MARStype')
-        row_type.prop(bpy.context.active_object, 'MARStype')
+        #row_type.prop_enum(bpy.context.active_object, 'phobostype')
+        row_type.prop(bpy.context.active_object, 'phobostype')
 
         box_props = layout.box()
 
         try:
-            for prop in defs.type_properties[bpy.context.active_object.MARStype]:
+            for prop in defs.type_properties[bpy.context.active_object.phobostype]:
                 #box_props.label(prop)
                 if prop in bpy.context.active_object:
                     box_props.prop(bpy.context.active_object, '["'+prop+'"]')
         except KeyError:
             print("Key could not be found.")
                 #else:
-            #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.MARStype+"_default"]
+            #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.phobostype+"_default"]
 
 
 

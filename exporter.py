@@ -569,7 +569,7 @@ def export(typetags=False):
             wm.progress_begin(0, total)
             i = 1
         for obj in bpy.context.selected_objects:
-            if ((obj.MARStype == 'visual' or obj.MARStype == 'collision')
+            if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
                     and obj['geometry/type'] == 'mesh' and 'filename' not in obj):
                 if objexp:
                     exportObj(outpath, obj)

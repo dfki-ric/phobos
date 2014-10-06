@@ -217,7 +217,7 @@ def createJointSphere(joint, psize):
     #bpy.context.scene.objects.active = joint.parent
     #bpy.ops.object.parent_set() #makes active object parent of selected object
     ball['coll_bitmask'] = 0
-    ball.MARStype = "body"
+    ball.phobostype = "body"
     ball['mass'] = 0
     #adapt the child limb
     limb = bpy.context.scene.objects[joint['node2']] #TODO: this is an elegant trick that should be used everywhere, maybe even bpy.data.objects[name]
@@ -256,7 +256,7 @@ class AddJointsOperator(Operator):
         bpy.data.worlds[0].showJoints = True
         nodes = []
         for obj in bpy.context.selected_objects:
-            if obj.MARStype == "link":
+            if obj.phobostype == "link":
                 nodes.append(obj)
                 obj.select = False
 
@@ -312,7 +312,7 @@ def createJoint(name, jtype, scale, location, rotation = (0, 0, 0)):
     elif jtype == 'planar':
         j1 = mtutility.createPrimitive(name+'_1', 'box', (d1*scale, d1*scale, d2*scale), mtdefs.layerTypes["joint"], 'joint', location, rotation)
     j1['jointType'] = jtype
-    j1.MARStype = 'joint'
+    j1.phobostype = 'joint'
     j1['anchor'] = 'node2'
     j1['node2'] = ''
     #now add joint orientation
@@ -341,7 +341,7 @@ class DeriveJointSpheresOperator(Operator):
         js_layers = 20*[False]
         js_layers[2] = True
         for joint in bpy.context.selected_objects:
-            if joint.MARStype == "joint":
+            if joint.phobostype == "joint":
                 createJointSphere(joint, self.joint_scale/5.0)
         return{'FINISHED'}
 

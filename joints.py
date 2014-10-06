@@ -146,7 +146,7 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0):
     bpy.ops.object.mode_set(mode='POSE')
     for c in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(c)
-    if joint.MARStype == 'link':
+    if joint.phobostype == 'link':
         if jointtype == 'revolute':
             # fix location
             bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
@@ -372,7 +372,7 @@ class AttachMotorOperator(Operator):
 
     def execute(self, context):
         for joint in bpy.context.selected_objects:
-            if joint.MARStype == "link":
+            if joint.phobostype == "link":
                 #TODO: these keys have to be adapted
                 joint['motor/p'] = self.P
                 joint['motor/i'] = self.I

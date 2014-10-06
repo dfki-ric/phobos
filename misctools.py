@@ -111,7 +111,7 @@ class SetMassOperator(Operator):
     @classmethod
     def poll(cls, context):
         for obj in context.selected_objects:
-            if obj.MARStype in ['visual', 'collision', 'inertial']:
+            if obj.phobostype in ['visual', 'collision', 'inertial']:
                 return True
         return False
 
@@ -124,7 +124,7 @@ class SetMassOperator(Operator):
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
-            if obj.MARStype in ['visual', 'collision', 'inertial']:
+            if obj.phobostype in ['visual', 'collision', 'inertial']:
                 try:
                     oldmass = obj['mass']
                 except KeyError:
@@ -168,12 +168,12 @@ class SyncMassesOperator(Operator):
         sourcelist = []
         targetlist = []
         processed = []
-        links = [obj.name for obj in bpy.context.selected_objects if obj.MARStype == 'link']
+        links = [obj.name for obj in bpy.context.selected_objects if obj.phobostype == 'link']
         t = dt.now()
         objdict = {obj.name: obj for obj in bpy.context.selected_objects}
         for obj in objdict.keys():
-            if objdict[obj].MARStype in ['visual', 'collision']:
-                basename = obj.replace(objdict[obj].MARStype+'_', '')
+            if objdict[obj].phobostype in ['visual', 'collision']:
+                basename = obj.replace(objdict[obj].phobostype+'_', '')
                 if (objdict[obj].parent.name in links
                     and basename not in processed
                     and 'visual_' + basename in objdict.keys()
@@ -289,7 +289,7 @@ class SetXRayOperator(Operator):
         elif self.objects == 'by name':
             objlist = [obj for obj in bpy.data.objects if obj.name.find(self.namepart) >= 0]
         else:
-            objlist = [obj for obj in bpy.data.objects if obj.MARStype == self.objects]
+            objlist = [obj for obj in bpy.data.objects if obj.phobostype == self.objects]
         for obj in objlist:
             obj.show_x_ray = self.show
         return {'FINISHED'}
@@ -315,19 +315,19 @@ class NameModelOperator(Operator):
 class SelectObjectsByMARSType(Operator):
     """SelectObjectsByType"""
     bl_idname = "object.phobos_select_objects_by_marstype"
-    bl_label = "Select objects in the scene by MARStype"
+    bl_label = "Select objects in the scene by phobostype"
     bl_options = {'REGISTER', 'UNDO'}
 
     seltype = EnumProperty (
             items = defs.marstypes,
-            name = "MARStype",
+            name = "phobostype",
             default = "link",
             description = "MARS object type")
 
     def execute(self, context):
         objlist = []
         for obj in bpy.data.objects:
-            if obj.MARStype == self.seltype:
+            if obj.phobostype == self.seltype:
                 objlist.append(obj)
         utility.selectObjects(objlist, True)
         return {'FINISHED'}
@@ -425,20 +425,20 @@ class UpdateMarsModelsOperator(Operator):
 
 
 class SetMARSType(Operator):
-    """Set MARStype Operator"""
+    """Set phobostype Operator"""
     bl_idname = "object.phobos_set_marstype"
-    bl_label = "Edit MARStype of selected object(s)"
+    bl_label = "Edit phobostype of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     marstype = EnumProperty (
             items = defs.marstypes,
-            name = "MARStype",
+            name = "phobostype",
             default = "undefined",
-            description = "MARStype")
+            description = "phobostype")
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
-            obj.MARStype = self.marstype
+            obj.phobostype = self.marstype
         return {'FINISHED'}
 
     @classmethod
@@ -569,7 +569,7 @@ class SetGeometryType(Operator):
     def execute(self, context):
 
         for obj in bpy.context.selected_objects:
-            if obj.MARStype == 'collision' or obj.MARStype == 'visual':
+            if obj.phobostype == 'collision' or obj.phobostype == 'visual':
                 obj['geometry/type'] = self.geomType
         return {'FINISHED'}
 
@@ -610,14 +610,14 @@ class EditInertia(Operator):
         #inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
         #obj['inertia'] = ' '.join(inertialist)
         for obj in context.selected_objects:
-            if obj.MARStype == 'inertial':
+            if obj.phobostype == 'inertial':
                 obj['inertia'] = self.inertiavector#' '.join([str(i) for i in self.inertiavector])
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT' and ob.MARStype == 'inertial' and len(context.selected_objects) > 0
+        return ob is not None and ob.mode == 'OBJECT' and ob.phobostype == 'inertial' and len(context.selected_objects) > 0
 
 
 class PartialRename(Operator):
@@ -752,9 +752,9 @@ class CreateInertialOperator(Operator):
         links = []
         viscols = set()
         for obj in context.selected_objects:
-            if obj.MARStype == 'link':
+            if obj.phobostype == 'link':
                 links.append(obj)
-            elif obj.MARStype in ['visual', 'collision']:
+            elif obj.phobostype in ['visual', 'collision']:
                 viscols.add(obj)
         if self.include_children:
             for link in links:

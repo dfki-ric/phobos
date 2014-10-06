@@ -61,19 +61,19 @@ class AddControllerOperator(Operator):
         objects = []
         controllers = []
         for obj in bpy.context.selected_objects:
-            if obj.MARStype == "controller":
+            if obj.phobostype == "controller":
                 controllers.append(obj)
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
             utility.createPrimitive("controller", "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
-            bpy.context.scene.objects.active.MARStype = "controller"
+            bpy.context.scene.objects.active.phobostype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
         #empty index list so enable robotupdate of controller
         for ctrl in controllers:
-            sensors = [obj.name for obj in objects if obj.MARStype == 'sensor']
-            motors = [obj.name for obj in objects if obj.MARStype == 'motor']
+            sensors = [obj.name for obj in objects if obj.phobostype == 'sensor']
+            motors = [obj.name for obj in objects if obj.phobostype == 'motor']
             ctrl['sensors'] = sorted(sensors, key=str.lower)
             ctrl['motors'] = sorted(motors, key=str.lower)
         print("Added joints to (new) controller(s).")
@@ -99,13 +99,13 @@ class AddLegacyControllerOperator(Operator):
         objects = []
         controllers = []
         for obj in bpy.context.selected_objects:
-            if obj.MARStype == "controller":
+            if obj.phobostype == "controller":
                 controllers.append(obj)
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
             utility.createPrimitive("controller", "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
-            bpy.context.scene.objects.active.MARStype = "controller"
+            bpy.context.scene.objects.active.phobostype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
         #empty index list so enable robotupdate of controller
@@ -116,7 +116,7 @@ class AddLegacyControllerOperator(Operator):
                     print("Deleting " + key + " in " + ctrl.name)
             i = 1
             for obj in objects:
-                if obj.MARStype == "link":
+                if obj.phobostype == "link":
                     ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                     i += 1
         print("Added joints to (new) controller(s).")

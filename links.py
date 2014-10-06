@@ -42,7 +42,7 @@ def unregister():
 def createLink(joints):
     '''Creates an empty link (bone) at the current 3D cursor position.'''
     link = bpy.ops.object.empty_add(type='ARROWS', location = bpy.context.scene.cursor_location)
-    link.MARStype = 'link'
+    link.phobostype = 'link'
     return link
 
 def deriveLinksfromJoints():

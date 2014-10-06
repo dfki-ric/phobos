@@ -200,7 +200,7 @@ class RobotModelParser():
                 newgeom.select = True
                 bpy.ops.object.transform_apply(scale=True)
             if newgeom is not None:
-                newgeom.MARStype = geomsrc
+                newgeom.phobostype = geomsrc
                 newgeom['geometry/type'] = geomtype
                 if geomsrc == 'visual':
                     try:
@@ -218,7 +218,7 @@ class RobotModelParser():
         for prop in inertial:
             if prop not in ['pose'] and inertial[prop] is not None:
                 inert[prop] = inertial[prop]
-        inert.MARStype = 'inertial'
+        inert.phobostype = 'inertial'
         return inert
 
     def createLink(self, link):
@@ -232,7 +232,7 @@ class RobotModelParser():
         newlink.location = (0.0, 0.0, 0.0)
         newlink.scale = (0.3, 0.3, 0.3) #TODO: make this depend on the largest visual or collision object
         bpy.ops.object.transform_apply(scale=True)
-        newlink.MARStype = 'link'
+        newlink.phobostype = 'link'
         if newlink.name != link['name']:
             print("Warning, name conflict!")
         # place inertial

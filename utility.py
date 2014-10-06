@@ -190,7 +190,7 @@ def returnObjectList(marstype):
     """Returns list of all objects in the current scene matching marstype"""
     objlist = []
     for obj in bpy.context.scene.objects:
-        if obj.MARStype == marstype:
+        if obj.phobostype == marstype:
             objlist.append(obj)
     return objlist
 
@@ -210,7 +210,7 @@ def getImmediateChildren(obj, marstypes=['None']):
     for child in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
         if child.parent == obj:
             if marstypes != ['None']:
-                if child.MARStype in marstypes:
+                if child.phobostype in marstypes:
                     children.append(child)
             else:
                 children.append(child)
@@ -233,7 +233,7 @@ def getRoots():
     """Returns a list of all roots (=objects without parent) present in the scene"""
     roots = []
     for obj in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
-        if not obj.parent and obj.MARStype == "link":
+        if not obj.parent and obj.phobostype == "link":
             roots.append(obj)
 
     if roots == []:

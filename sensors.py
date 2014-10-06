@@ -69,23 +69,23 @@ class AddSensorOperator(Operator):
                 objects = []
                 sensors = []
                 for obj in bpy.context.selected_objects:
-                    if obj.MARStype == "sensor":
+                    if obj.phobostype == "sensor":
                         sensors.append(obj)
                         self.sensor_type = obj["sensor/type"]
                     else:
                         objects.append(obj)
                 if len(sensors) <= 0:
                     sense = utility.createPrimitive(self.sensor_type, "sphere", self.sensor_scale, defs.layerTypes["sensor"], "sensor", location)
-                    sense.MARStype = "sensor"
+                    sense.phobostype = "sensor"
                     sense.name = self.sensor_name if self.sensor_name != '' else 'new_' + self.sensor_type
                     sense["sensor/type"] = self.sensor_type
                     sensors.append(sense)
                     sense.parent = utility.getRoot(objects[0])
                 for sensor in sensors:
                     if "Node" in sensor["sensor/type"]:
-                        sensor['nodes'] = [obj for obj in objects if obj.MARStype == 'collision']
+                        sensor['nodes'] = [obj for obj in objects if obj.phobostype == 'collision']
                     elif "Joint" in sensor["sensor/type"] or "Motor" in sensor["sensor/type"]:
-                        sensor['joints'] = [obj for obj in objects if obj.MARStype == 'link']
+                        sensor['joints'] = [obj for obj in objects if obj.phobostype == 'link']
             else: #visual sensor
                 if self.sensor_type in ["RaySensor", "RotatingRaySensor", "ScanningSonar"]:
                     print("Added nodes to new " + self.sensor_type)
@@ -123,7 +123,7 @@ class AddLegacySensorOperator(Operator):
                 objects = []
                 sensors = []
                 for obj in bpy.context.selected_objects:
-                    if obj.MARStype == "sensor":
+                    if obj.phobostype == "sensor":
                         sensors.append(obj)
                         self.sensor_type = obj["sensor/type"]
                     else:
@@ -131,7 +131,7 @@ class AddLegacySensorOperator(Operator):
                 if len(sensors) <= 0:
                     utility.createPrimitive(self.sensor_type, "sphere", self.sensor_scale, defs.layerTypes["sensor"], "sensor", location)
                     sense = bpy.context.scene.objects.active
-                    sense.MARStype = "sensor"
+                    sense.phobostype = "sensor"
                     sense.name = self.sensor_type
                     sense["sensor/type"] = self.sensor_type
                     sensors.append(sense)
@@ -143,13 +143,13 @@ class AddLegacySensorOperator(Operator):
                     i = 1
                     if "Node" in sensor["sensor/type"]:
                         for obj in objects:
-                            if obj.MARStype == "collision":
+                            if obj.phobostype == "collision":
                                 sensor["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                                 i += 1
                         print("Added nodes to new " + self.sensor_type)
                     elif "Joint" in sensor["sensor/type"] or "Motor" in sensor["sensor/type"]:
                         for obj in objects:
-                            if obj.MARStype == "link":
+                            if obj.phobostype == "link":
                                 sensor["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                                 i += 1
                         print("Added nodes to new " + self.sensor_type)

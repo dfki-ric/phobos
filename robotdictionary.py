@@ -44,7 +44,7 @@ def register():
 def collectMaterials(objectlist):
     materials = {}
     for obj in objectlist:
-        if obj.MARStype == 'visual' and obj.data.materials:
+        if obj.phobostype == 'visual' and obj.data.materials:
             mat = obj.data.materials[0]  # simply grab the first material
             if mat.name not in materials:
                 materials[mat.name] = deriveMaterial(mat)
@@ -264,7 +264,7 @@ def initObjectProperties(obj, marstype=None, ignoretypes=[]):
 
 # def cleanObjectProperties(props):
 #     """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
-#     getridof = ['MARStype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
+#     getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
 #     if props:
 #         for key in getridof:
 #             if key in props:
@@ -277,23 +277,23 @@ def deriveDictEntry(obj):
     props = None
     parent = None
     try:
-        if obj.MARStype == 'inertial':
+        if obj.phobostype == 'inertial':
             props, parent = deriveInertial(obj)
-        elif obj.MARStype == 'visual':
+        elif obj.phobostype == 'visual':
             props, parent = deriveVisual(obj)
-        elif obj.MARStype == 'collision':
+        elif obj.phobostype == 'collision':
             props, parent = deriveCollision(obj)
-        elif obj.MARStype == 'approxsphere':
+        elif obj.phobostype == 'approxsphere':
             props, parent = deriveApproxsphere(obj)
-        elif obj.MARStype == 'sensor':
+        elif obj.phobostype == 'sensor':
             props = deriveSensor(obj)
-        #elif obj.MARStype == 'motor':
+        #elif obj.phobostype == 'motor':
         #    props, parent = deriveMotor(obj)
-        elif obj.MARStype == 'controller':
+        elif obj.phobostype == 'controller':
             props = deriveController(obj)
     except KeyError:
         print('phobos: A KeyError occurred, likely due to missing information in the model:\n    ', sys.exc_info()[0])
-    if obj.MARStype in ['sensor', 'controller']:
+    if obj.phobostype in ['sensor', 'controller']:
         return props
     else:
         return props, parent
@@ -303,12 +303,12 @@ def deriveGroupEntry(group, typetags):
     links = []
     #joints = []
     for obj in group.objects:
-        if obj.MARStype == 'link':
+        if obj.phobostype == 'link':
             links.append({'type': 'link', 'name': obj.name})
             #joint = deriveJoint(obj, typetags)
             #joints.append({'type': 'joint', 'name': joint['name']})
         else:
-            print("### Error: group " + group.name + " contains " + obj.MARStype + ': ' + obj.name)
+            print("### Error: group " + group.name + " contains " + obj.phobostype + ': ' + obj.name)
     return links #+ joints
 
 
@@ -356,7 +356,7 @@ def buildRobotDictionary(typetags=False):
     #save timestamped version of model
     robot["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
     root = getRoot(bpy.context.selected_objects[0])
-    if root.MARStype != 'link':
+    if root.phobostype != 'link':
         raise Exception("Found no 'link' object as root of the robot model.")
     else:
         if 'modelname' in root:
@@ -367,7 +367,7 @@ def buildRobotDictionary(typetags=False):
     # digest all the links to derive link and joint information
     print('\nParsing links, joints and motors...')
     for obj in bpy.context.selected_objects:
-        if obj.MARStype == 'link':
+        if obj.phobostype == 'link':
             link, joint, motor = deriveKinematics(obj, typetags)
             robot['links'][obj.name] = link # it's important that this is really the object's name
             if joint: # joint can be None if link is a root
@@ -409,11 +409,11 @@ def buildRobotDictionary(typetags=False):
     # complete link information by parsing visuals and collision objects
     print('\n\nParsing visual and collision (approximation) objects...')
     for obj in bpy.context.selected_objects:
-        if obj.MARStype in ['visual', 'collision']:
+        if obj.phobostype in ['visual', 'collision']:
             props, parent = deriveDictEntry(obj)
-            robot['links'][parent.name][obj.MARStype][obj.name] = props
+            robot['links'][parent.name][obj.phobostype][obj.name] = props
             obj.select = False
-        elif obj.MARStype == 'approxsphere':
+        elif obj.phobostype == 'approxsphere':
             props, parent = deriveDictEntry(obj)
             robot['links'][parent.name]['approxcollision'].append(props)
             obj.select = False
@@ -432,15 +432,15 @@ def buildRobotDictionary(typetags=False):
     # parse sensors and controllers
     print('\n\nParsing sensors and controllers...')
     for obj in bpy.context.selected_objects:
-        if obj.MARStype in ['sensor', 'controller']:
-            robot[obj.MARStype+'s'][obj.name] = deriveDictEntry(obj)
+        if obj.phobostype in ['sensor', 'controller']:
+            robot[obj.phobostype+'s'][obj.name] = deriveDictEntry(obj)
             obj.select = False
 
     # parse materials
     print('\n\nParsing materials...')
     robot['materials'] = collectMaterials(objectlist)
     for obj in objectlist:
-        if obj.MARStype == 'visual' and len(obj.data.materials) > 0:
+        if obj.phobostype == 'visual' and len(obj.data.materials) > 0:
             mat = obj.data.materials[0]
             if not mat.name in robot['materials']:
                 robot['materials'][mat.name] = deriveMaterial(mat) #this should actually never happen
@@ -456,7 +456,7 @@ def buildRobotDictionary(typetags=False):
     print('\n\nParsing chains...')
     chains = []
     for obj in bpy.data.objects:
-        if obj.MARStype == 'link' and 'endChain' in obj:
+        if obj.phobostype == 'link' and 'endChain' in obj:
             chains.extend(deriveChainEntry(obj))
     for chain in chains:
         robot['chains'][chain['name']] = chain
