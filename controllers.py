@@ -73,9 +73,9 @@ class AddControllerOperator(Operator):
         #empty index list so enable robotupdate of controller
         for ctrl in controllers:
             sensors = [obj.name for obj in objects if obj.phobostype == 'sensor']
-            motors = [obj.name for obj in objects if obj.phobostype == 'motor']
+            joints = [obj.name for obj in objects if obj.phobostype == 'link' and not 'joint/passive' in obj]
             ctrl['sensors'] = sorted(sensors, key=str.lower)
-            ctrl['motors'] = sorted(motors, key=str.lower)
+            ctrl['joints'] = sorted(joints, key=str.lower)
         print("Added joints to (new) controller(s).")
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
