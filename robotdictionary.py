@@ -380,7 +380,7 @@ def buildRobotDictionary(typetags=False):
     print('\n\nParsing inertials...')
     for l in robot['links']:
         link = bpy.data.objects[l]
-        inertials = getImmediateChildren(link, 'inertial')
+        inertials = getImmediateChildren(link, ['inertial'])
         if len(inertials) == 1:
             props, parent = deriveDictEntry(inertials[0])
             if not (props is None or parent is None):  # this may be the case if there is inertia information missing
