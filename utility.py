@@ -204,13 +204,13 @@ def getChildren(root):
     return children
 
 
-def getImmediateChildren(obj, marstypes=['None']):
+def getImmediateChildren(obj, phobostypes=None):
     """Finds all immediate children for a given object"""
     children = []
     for child in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
         if child.parent == obj:
-            if marstypes != ['None']:
-                if child.phobostype in marstypes:
+            if phobostypes is not None:
+                if child.phobostype in phobostypes:
                     children.append(child)
             else:
                 children.append(child)
