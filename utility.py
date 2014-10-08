@@ -176,6 +176,13 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
     return obj
 
 
+def toggleLayer(index, value=None):
+    if value:
+        bpy.context.scene.layers[index] = value
+    else:
+        bpy.context.scene.layers[index] = not bpy.context.scene.layers[index]
+
+
 def defLayers(layerlist):
     """Returns a list of 20 elements encoding the visible layers according to layerlist"""
     if type(layerlist) is not list:
