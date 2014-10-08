@@ -62,7 +62,7 @@ def createLink(scale, position=None, orientation=None, name=''):
     return link
 
 
-def deriveLinkfromObject(obj, scale=0.2, parenting=True, namepartindices=[], separator='_', prefix='link'):
+def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, namepartindices=[], separator='_', prefix='link'):
     """Derives a link from an object that defines a joint through its position, orientation
     and parent-child relationships."""
     print('Deriving link from', obj.name)
@@ -89,6 +89,8 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, namepartindices=[], sep
             else:
                 bpy.ops.object.parent_set(type='OBJECT')
         children = utility.getImmediateChildren(obj)
+        if parentobjects:
+            children.append(obj)
         for child in children:
             utility.selectObjects([child], True, 0)
             bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
@@ -122,6 +124,12 @@ class CreateLinkOperator(Operator):
         description='parent associated objects to created links?'
     )
 
+    parentobject = BoolProperty(
+        name='parent object(s)',
+        default=False,
+        description='parent objects to newly created links?'
+    )
+
     namepartindices = StringProperty(
         name="name segment indices",
         description="allows reusing parts of objects' names, specified as e.g. '2 3'",
@@ -146,7 +154,7 @@ class CreateLinkOperator(Operator):
         else:
             for obj in bpy.context.selected_objects:
                 tmpnamepartindices = [int(p) for p in self.namepartindices.split()]
-                deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting,
+                deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting, parentobjects=self.parentobject,
                                      namepartindices=tmpnamepartindices, separator=self.separator,
                                      prefix=self.prefix)
         return {'FINISHED'}
