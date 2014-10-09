@@ -26,6 +26,7 @@ Created on 6 Jan 2014
 """
 
 import bpy
+from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty, StringProperty
 from . import defs
 
 
