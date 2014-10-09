@@ -5,7 +5,7 @@ Blender
 
 It is way beyond the scope of this documentation to give you an introduction to Blender, especially since more knowledgable people have done so in other places, such as the [manual on Blender wiki](http://wiki.blender.org/index.php/Doc:2.6/Manual). First, try to get [started with Blender's GUI](http://wiki.blender.org/index.php/Doc:2.6/Manual#Starting) and then have a look at how to [work with objects](http://wiki.blender.org/index.php/Doc:2.6/Manual#Modeling). Don't worry, Blender is a really powerful piece of software and can seem daunting for a beginner, but the functions you really need to know to use it for your robot modelling purposes are comparably limited.
 
-The best piece of advice we can give you as a Blender beginner: right click on anything you don't understand. Chances are there will be a pop-up menu with hyperlinks to both the user manual and the API documentation (not in the 3D editing window, though, there right-clicking is what you would normally expect left-clicking to be).
+The best piece of advice we can give you as a Blender beginner: **RMB** on anything you don't understand. Chances are there will be a pop-up menu with hyperlinks to both the user manual and the API documentation (not in the 3D editing window, though, there **RMB** is what you would normally expect **LMB** to be).
 
 ![linktodocs](img/blender/linktodocs.png)
 

@@ -25,6 +25,11 @@ As of the current version of Phobos (1.0), this documentation is still far from 
 ### Tutorials
 
 - [Basic modelling](basicmodelling.md)
+- [Editing masses and inertia](tutorial_massandinertia.md)
+
+## Conventions
+
+Throughout this documentation, when referring to working with Phobos in Blender, we will use **this** format for buttons, e.g. **A** means hitting the 'A' key. Mouse buttons are referred to as **LMB** and **RMB** for left and right mouse buttons.
 
 ## Overview <a name="overview"></a>
 

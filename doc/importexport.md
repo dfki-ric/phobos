@@ -7,6 +7,8 @@ Import and Export
 
 Model data can be exported with Phobos in a number of formats: YAML, URDF, SMURF.
 
+If you're done with editing, you can export the model by again selecting all relevant layers (which in this case will be the first five), then select all objects (hitting 'A' twice will do the trick) and then click on the "Export Robot Model" button on the very bottom of the tools panel on the left. Make sure to check the options that you need, that is, whether or not the meshes should be exported and if yes, in which format. It's not necessary to export the meshes every time you export the robot (just make sure that if you change the type of the meshes - which will be used to write the file names into URDF - is not changed without exporting the meshes in that type, otherwise URDF will not find the meshes).
+
 ## Custom property handling
 
 When exporting a model to smurf, it is not intrinsically obvious what to do with all the custom properties defined in the model's objects. This is why we introduced a 'category system' in the names of custom properties.
