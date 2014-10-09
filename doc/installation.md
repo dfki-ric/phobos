@@ -8,7 +8,7 @@ This document aims to provide an instruction to set up Blender and install the P
 ### Linux
 The simplest way to install blender in a linux environment is to use your favourite package manager. In Ubuntu for example just type `apt-get install blender` into a terminal with root permissions. However, you may want to check which version of Blender is available in the repository for your linux version. Phobos has been developed for Blender versions >= 2.69 and works best with 2.71. Some functionality might not work properly on earlier versions. Thus it might be necessary that you get the latest Blender version yourself from [Blender's website](http://www.blender.org) as a tarball. Extract the archive and place it where you want blender to be installed. Please notice that you have to have *glibc* installed on your system to run blender properly.
 
-###Windows
+### Windows
 Installing blender on windows is as simple as downloading the installer from [Blender's website](http://www.blender.org) and run it. Alternatively, you can download a zip file and extract it to your preferred location.
 
 ## Phobos installation
@@ -33,13 +33,13 @@ To install the addon, start blender, open File -> User Preferences, switch to th
 
 To activate Phobos in Blender, go to Files -> User Preferences -> Addons and search for "Phobos" (it's in the "Development" category). Then activate phobos by ticking the checkbox on the right and make sure you also save your user settings in the lower left corner - this is important, as Blender will otherwise not run Phobos again when you start Blender next time. If blender displays any errors at this point, you might want to check if you got the above steps right.
 
-![Phobos activation](img/userPrefs.png)
+![Phobos activation](img/installation/userPrefs.png)
 
 *Find Phobos in Blender's user preferences*
 
 If everything worked fine you can now find the Phobos toolbar as a tab in the left toolbar panel (if you don't see the panel, hit *T*).
 
-![Phobos toolbar](img/toolbar.png)
+![Phobos toolbar](img/installation/toolbar.png)
 
 ###Troubleshooting
 
