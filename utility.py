@@ -136,7 +136,9 @@ def parse_text(s):
         return parse_number(s)
 
 
-def printMatrices(info, obj):
+def printMatrices(obj, info=None):
+    if not info:
+        info = obj.name
     print("\n----------------", info, "---------------------\n",
           "local:\n", obj.matrix_local,
           "\n\nworld:\n", obj.matrix_world,
