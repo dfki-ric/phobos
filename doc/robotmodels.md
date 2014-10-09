@@ -1,13 +1,6 @@
 Robot Model
 ===========
 
-## Model Structure info
-
-- if 'filename' exists in a visual or collision and it is of 'geometry/type' mesh, then
-  that filename is written to the urdf, but the mesh is not exported
-- names such as sensor:blub are reduced to blub when the object of type sensor is exported,
-  which makes it possible to have the same names for a link and an attached sensor
-
 ### Structure of robot models
 
 To understand how Phobos represents robots in Blender, it's informative to take a look at URDF first, the format to which the kinematic data of our Phobos models will ultimately be exported. URDF is a very well-documented format and wherever the information provided here may be missing something or not make intuitive sense, you can have a look at URDF's [documentation](http://wiki.ros.org/urdf/XML/model) to get a better idea of how it works.
