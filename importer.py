@@ -35,6 +35,8 @@ from phobos.utility import *
 from . import defs
 from . import materials
 from . import joints
+from . import sensors
+from . import controllers
 
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
@@ -273,6 +275,27 @@ class RobotModelParser():
             upper = 0.0
         joints.setJointConstraints(link, joint['type'], lower, upper)
 
+    def createMotor(self, motor):
+        try:
+            joint = bpy.data.objects[motor['joint']]
+            for prop in motor:
+                if prop != 'joint':
+                    joint['motor/'+prop] = motor[prop]
+        except KeyError:
+            print("###ERROR: joint", motor['joint'], "does not exist")
+
+    def createSensor(self, sensor):
+        sensors.createSensor(sensor)
+
+    def createController(self, controller):
+        pass
+
+    def createGroup(self, group):
+        pass
+
+    def createChain(self, chain):
+        pass
+
     def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model."""
         print("\n\nCreating Blender model...")
@@ -288,6 +311,11 @@ class RobotModelParser():
             joint = self.robot['joints'][j]
             self.createJoint(joint)
 
+        print("\n\nCreating sensors...")
+        for s in self.robot['sensors']:
+            sensor = self.robot['sensors'][s]
+            self.createSensor(sensor)
+
         #build tree recursively and correct translation & rotation on the fly
         for l in self.robot['links']:
             if not 'parent' in self.robot['links'][l]:
@@ -302,6 +330,26 @@ class RobotModelParser():
             print("### Error: Could not assign model name to root link.")
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
+
+        print("\n\nCreating motors...")
+        for m in self.robot['motors']:
+            motor = self.robot['motors'][m]
+            self.createMotor(motor)
+
+        print("\n\nCreating controllers...")
+        for c in self.robot['sensors']:
+            controller = self.robot['controllers'][c]
+            self.createController(controller)
+
+        print("\n\nCreating groups...")
+        for g in self.robot['groups']:
+            group = self.robot['groups'][g]
+            self.createGroup(group)
+
+        print("\n\nCreating chains...")
+        for ch in self.robot['chains']:
+            chain = self.robot['chains'][ch]
+            self.createChain(chain)
 
 
 class MARSModelParser(RobotModelParser):
@@ -469,6 +517,10 @@ class SMURFModelParser(RobotModelParser):
 
     def parseModel(self):
         print("Parsing SMURF model...")
+        urdfpath =\
+        urdfparser = URDFModelParser(urdfpath)
+        self.robot = urdfparser.robot
+        del urdfparser
 
 
 class RobotModelImporter(bpy.types.Operator):
