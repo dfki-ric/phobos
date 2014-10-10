@@ -396,15 +396,35 @@ def exportModelToSRDF(model, path):
             output.append(xmlline(3, 'sphere', ('center', 'radius'), ('0.0 0.0 0.0', '0')))
             output.append(indent*2+'</link_sphere_approximation>\n\n')
     #calculate collision-exclusive links
+    collisionExclusives = []
     for combination in itertools.combinations(model['links'], 2):
         link1 = model['links'][combination[0]]
         link2 = model['links'][combination[1]]
         # TODO: we might want to automatically add parent/child link combinations
         try:
             if link1['collision_bitmask'] & link2['collision_bitmask'] == 0:
-                output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (link1['name'], link2['name'])))
+                #output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (link1['name'], link2['name'])))
+                collisionExclusives.append((link1['name'], link2['name']))
         except KeyError:
             pass
+    def addPCCombinations (mother):
+        '''Function to add parent/child link combinations for all parents an children that are not already set via collision bitmask'''
+        children = getImmediateChildren(mother, 'link')
+        if len(children) > 0:
+            for child in children:
+                #output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (mother.name, child.name)))
+                if ((mother, child) not in collisionExclusives) or ((child, mother) not in collisionExclusives):
+                    collisionExclusives.append((mother.name, child.name))
+                addPCCombinations(child)
+             
+    roots = getRoots()
+    for root in roots:
+        if root.name == 'root':
+            addPCCombinations(root)
+            
+    for pair in collisionExclusives:
+        output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (pair[0], pair[1])))
+                
     output.append('\n')
     #finish the export
     output.append(xmlFooter)
