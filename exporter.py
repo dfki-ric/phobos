@@ -37,6 +37,7 @@ from bpy.props import BoolProperty
 from phobos.utility import *
 from . import marssceneexport as mse
 from . import robotdictionary
+from . import defs
 
 
 def register():
@@ -47,7 +48,7 @@ def unregister():
     print("Unregistering export...")
 
 indent = '  '
-xmlHeader = '<?xml version="1.0"?>\n'
+xmlHeader = '<!-- created with Phobos ' + defs.version + ' -->\n<?xml version="1.0"?>\n'
 xmlFooter = indent+'</robot>\n'
 
 
@@ -202,7 +203,8 @@ def exportStl(path, obj):
 def exportModelToYAML(model, filepath):
     print("phobos YAML export: Writing model data to", filepath )
     with open(filepath, 'w') as outputfile:
-        outputfile.write('#YAML dump of robot model "'+model['modelname']+'", '+datetime.now().strftime("%Y%m%d_%H:%M")+"\n\n")
+        outputfile.write('# YAML dump of robot model "'+model['modelname']+'", '+datetime.now().strftime("%Y%m%d_%H:%M")+"\n")
+        outputfile.write("# created with Phobos" + defs.version + " - https://github.com/rock-simulation/phobos\n\n")
         outputfile.write(yaml.dump(model)) # default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 
@@ -469,7 +471,8 @@ def exportModelToSMURF(model, path):
     modeldata["date"] = model["date"]
     modeldata["files"] = [urdf_filename] + [filenames[f] for f in filenames if export[f]]
     with open(path + smurf_filename, 'w') as op:
-        op.write('#main SMURF file of model "'+model['modelname']+'"\n\n')
+        op.write('# main SMURF file of model "'+model['modelname']+'"\n')
+        op.write('# created with Phobos ' + defs.version + ' - https://github.com/rock-simulation/phobos\n\n')
         op.write("modelname: "+model['modelname']+"\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
 

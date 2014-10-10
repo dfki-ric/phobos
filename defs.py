@@ -33,6 +33,9 @@ in the future.
 
 #TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below
+
+version = '0.5'
+
 marstypes = (('undefined',)*3,
              ('link',)*3,
              ('inertial',)*3,

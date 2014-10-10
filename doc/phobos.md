@@ -5,7 +5,7 @@ Phobos is an open-source Add-On for Blender which simplifies creating and editin
 
 Check out the Phobos [Roadmap](roadmap.md) if you're interested in its further development.
 
-As of the current version of Phobos (1.0), this documentation is still far from extensive. There are probably a lot of difficulties for Blender beginners that we have overlooked and there are certainly features in Phobos that we have not covered at all or at least not comprehensively enough. We therefore appreciate if you contact as about issues you have with Phobos. Either we have not explained it well enough or you have stumbled upon a bug - both cases are something we would like to know.
+As of the current version of Phobos (0.5), this documentation is still far from extensive. There are probably a lot of difficulties for Blender beginners that we have overlooked and there are certainly features in Phobos that we have not covered at all or at least not comprehensively enough. We therefore appreciate if you contact as about issues you have with Phobos. Either we have not explained it well enough or you have stumbled upon a bug - both cases are something we would like to know.
 
 ## Contents
 
