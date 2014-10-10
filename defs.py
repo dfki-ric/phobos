@@ -31,54 +31,53 @@ This module may well be imported and used outside of the MARS Blender Tools
 in the future.
 """
 
-#TODO: the following definitions for enum properties in blender should be
+# TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below
 
 version = '0.5'
 
-marstypes = (('undefined',)*3,
-             ('link',)*3,
-             ('inertial',)*3,
-             ('visual',)*3,
-             ('collision',)*3,
-             ('sensor',)*3,
-             ('controller',)*3,
-             ('approxsphere',)*3)
+marstypes = (('undefined',) * 3,
+             ('link',) * 3,
+             ('inertial',) * 3,
+             ('visual',) * 3,
+             ('collision',) * 3,
+             ('sensor',) * 3,
+             ('controller',) * 3,
+             ('approxsphere',) * 3)
 
-jointtypes = (('revolute',)*3,
-              ('continuous',)*3,
-              ('prismatic',)*3,
-              ('fixed',)*3,
-              ('floating',)*3,
-              ('planar',)*3)
+jointtypes = (('revolute',) * 3,
+              ('continuous',) * 3,
+              ('prismatic',) * 3,
+              ('fixed',) * 3,
+              ('floating',) * 3,
+              ('planar',) * 3)
 
-motortypes = (('servo',)*3,
-               ('DC',)*3)
+motortypes = (('servo',) * 3,
+              ('DC',) * 3)
 
-geometrytypes = (('box',)*3,
-            ('cylinder',)*3,
-            ('sphere',)*3,
-            ('capsule',)*3,
-            ('mesh',)*3)
+geometrytypes = (('box',) * 3,
+                 ('cylinder',) * 3,
+                 ('sphere',) * 3,
+                 ('capsule',) * 3,
+                 ('mesh',) * 3)
 
-type_properties = {
-    "undefined": (),
-    "undefined_default": (),
-    "link": ('name'),
-    "link_default": ('new_node'),
-    "inertial": ('name'),
-    "inertial_default": ('new_node'),
-    "visual": ('name', 'visual/type'),
-    "visual_default": ('new_node', 'box'),
-    "collision": ('name', 'collision/type', 'bitmask'),
-    "collision_default": ('new_node', 'box', '65536'),
-    "approxsphere": (),
-    "approxsphere_default": (),
-    "sensor": ('name', 'sensor/type'),
-    "sensor_default": ("new_sensor", "RaySensor"),
-    "controller": ('name',),
-    "controller_default": ("controller")
-    }
+type_properties = {"undefined": (),
+                   "undefined_default": (),
+                   "link": ('name',),
+                   "link_default": ('new_node',),
+                   "inertial": ('name',),
+                   "inertial_default": ('new_node',),
+                   "visual": ('name', 'visual/type'),
+                   "visual_default": ('new_node', 'box'),
+                   "collision": ('name', 'collision/type', 'bitmask'),
+                   "collision_default": ('new_node', 'box', '65536'),
+                   "approxsphere": (),
+                   "approxsphere_default": (),
+                   "sensor": ('name', 'sensor/type'),
+                   "sensor_default": ("new_sensor", "RaySensor"),
+                   "controller": ('name',),
+                   "controller_default": ("controller",)
+                   }
 
 # definition of node types
 nodeTypes = ("undefined",
@@ -90,7 +89,7 @@ nodeTypes = ("undefined",
              "plane",
              "terrain",
              "reference"
-            )
+             )
 
 # definition of joint types
 #jointTypes = ("undefined",
@@ -123,37 +122,37 @@ sensortypes = ("RaySensor",
                "NodeVelocity",
                "NodeAngularVelocity",
                "MotorCurrent"
-              )
+               )
 
 sensorProperties = {"RaySensor": {"width": 144},
-               "CameraSensor": {"width": 640, "height": 480},
-               "ScanningSonar": {},
-               "JointPosition": {},
-               "JointVelocity": {},
-               "JointLoad": {},
-               "JointTorque": {},
-               "JointAVGTorque": {},
-               "Joint6DOF": {},
-               "NodeContact": {},
-               "NodePosition": {},
-               "NodeRotation": {},
-               "NodeContactForce": {},
-               "NodeCOM": {},
-               "NodeVelocity": {},
-               "NodeAngularVelocity": {},
-               "MotorCurrent": {}
-              }
+                    "CameraSensor": {"width": 640, "height": 480},
+                    "ScanningSonar": {},
+                    "JointPosition": {},
+                    "JointVelocity": {},
+                    "JointLoad": {},
+                    "JointTorque": {},
+                    "JointAVGTorque": {},
+                    "Joint6DOF": {},
+                    "NodeContact": {},
+                    "NodePosition": {},
+                    "NodeRotation": {},
+                    "NodeContactForce": {},
+                    "NodeCOM": {},
+                    "NodeVelocity": {},
+                    "NodeAngularVelocity": {},
+                    "MotorCurrent": {}
+                    }
 
 #definitions of which elements live on which layers by default
 layerTypes = {
-              "link": 0,
-              'inertial': 1,
-              "visual": 2,
-              "collision": 3,
-              "sensor": 4,
-              "decoration": 5,
-              "approxsphere": 13
-              }
+    "link": 0,
+    'inertial': 1,
+    "visual": 2,
+    "collision": 3,
+    "sensor": 4,
+    "decoration": 5,
+    "approxsphere": 13
+}
 
 MARSlegacydict = {'specularColor': 'specularFront',
                   'diffuseColor': 'diffuseFront'
