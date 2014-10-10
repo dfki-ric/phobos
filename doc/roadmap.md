@@ -1,26 +1,21 @@
 # Phobos Roadmap
 
-## 1.0
+We've decided to put the version number 0.5 on our first ever versioned release. This is due to the feeling that we're "halfway there".
 
-This is going to be the first ever 'release', resulting in a newly created branch 'stable'.
+## 0.5
 
 | branch  | designated push date |
 | ------------- | ------------- |
-| next  | 08.10.2014  |
-| stable | 10.10.2014  |
+| next  | 10.10.2014  |
+| stable | 13.10.2014  |
 
-### Features still incomplete or missing
+This is our first ever release and will support all basic editing functions. Some features are still missing, some features only work for special cases. This is to be viewed as a first beta version that will still need lots of bugfixing and changes based on user feedback.
 
-- import of MARS scenes
-- Documentation
-    - general workflow
-    - cheat sheet
-    - example scene
-    - internal dictionary structure
+## 0.6
 
-### Issues
+| branch  | designated push date |
+| ------------- | ------------- |
+| next  | 29.10.2014  |
+| stable | 31.10.2014  |
 
-- refactor import (classes?)
-- calculate inertia of entire link without re-calculating individual inertias 
-- check if decimal place rounding still works with inertia tensors (exception?) or should be different
-- inertias are not exported if visuals are not selected (?)
+This release will have better support for sensors and controllers as well as allow for the import of MARS scene files.
