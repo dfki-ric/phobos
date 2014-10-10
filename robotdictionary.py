@@ -229,6 +229,7 @@ def deriveApproxsphere(obj):
 
 def deriveSensor(obj):
     props = initObjectProperties(obj, marstype='sensor')
+    props['pose'] = deriveObjectPose(obj)
     return props
 
 

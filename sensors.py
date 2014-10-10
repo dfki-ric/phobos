@@ -37,8 +37,33 @@ from . import utility
 def register():
     print("Registering sensors...")
 
+
 def unregister():
     print("Unregistering sensors...")
+
+
+def createSensor(sensor):
+    if sensor['type'] == 'Camera':
+        bpy.ops.object.add(type='CAMERA', location=sensor['pose']['translation'],
+                           rotation=sensor['pose']['rotation'],
+                           layers=utility.defLayers([defs.layerTypes['sensor']]))
+        newsensor = bpy.context.active_object
+    elif sensor['type'] in ["RaySensor", "RotatingRaySensor", "ScanningSonar"]:
+        pass
+    else:  # contact, force and torque sensors (or unknown sensors)
+        newsensor = utility.createPrimitive(sensor['type'], 'sphere', 0.05,
+                                            defs.layerTypes['sensor'], 'sensor',
+                                            sensor['pose']['translation'], sensor['pose']['rotation'])
+        newsensor.phobostype = 'sensor'
+        newsensor.name = sensor['name'] if sensor['name'] != '' else 'new_' + sensor['type']
+    # TODO: use defaults?
+    #for prop in defs.sensorProperties[sensor['type']]:
+    #    sensor[prop] = defs.sensorProperties[sensor['type']][prop]
+    for prop in sensor:
+        if prop not in ['name', 'pose']
+    if sensor['type'] not in defs.sensortypes:
+        print("### Warning: sensor", sensor['name'], "is of unknown type.")
+    return newsensor
 
 
 class AddSensorOperator(Operator):
@@ -52,51 +77,37 @@ class AddSensorOperator(Operator):
         default = "",
         description = "type of the sensor to be created")
 
-    sensor_scale = FloatProperty(
-        name = "sensor_scale",
-        default = 0.05,
-        description = "scale of the sensor visualization")
-
     sensor_name = StringProperty(
         name = "sensor_name",
         default = 'new_sensor',
         description = "name of the sensor")
 
     def execute(self, context):
-        location = bpy.context.scene.cursor_location
-        if self.sensor_type in defs.sensortypes:
-            if "Node" in self.sensor_type or "Joint" in self.sensor_type or "Motor" in self.sensor_type:
-                objects = []
-                sensors = []
-                for obj in bpy.context.selected_objects:
-                    if obj.phobostype == "sensor":
-                        sensors.append(obj)
-                        self.sensor_type = obj["sensor/type"]
-                    else:
-                        objects.append(obj)
-                if len(sensors) <= 0:
-                    sense = utility.createPrimitive(self.sensor_type, "sphere", self.sensor_scale, defs.layerTypes["sensor"], "sensor", location)
-                    sense.phobostype = "sensor"
-                    sense.name = self.sensor_name if self.sensor_name != '' else 'new_' + self.sensor_type
-                    sense["sensor/type"] = self.sensor_type
-                    sensors.append(sense)
-                    sense.parent = utility.getRoot(objects[0])
-                for sensor in sensors:
-                    if "Node" in sensor["sensor/type"]:
-                        sensor['nodes'] = [obj for obj in objects if obj.phobostype == 'collision']
-                    elif "Joint" in sensor["sensor/type"] or "Motor" in sensor["sensor/type"]:
-                        sensor['joints'] = [obj for obj in objects if obj.phobostype == 'link']
-            else: #visual sensor
-                if self.sensor_type in ["RaySensor", "RotatingRaySensor", "ScanningSonar"]:
-                    print("Added nodes to new " + self.sensor_type)
-                elif self.sensor_type == "CameraSensor":
-                    bpy.ops.object.add(type='CAMERA', location=bpy.context.scene.cursor_location)
-                    sensor = bpy.context.active_object
-                    print("Added nodes to new " + self.sensor_type)
-            for prop in defs.sensorProperties[self.sensor_type]:
-                sensor[prop] = defs.sensorProperties[self.sensor_type][prop]
+        sensors = []
+        if 'Node' in self.sensor_type or 'Joint' in self.sensor_type or 'Motor' in self.sensor_type:
+            objects = []
+            sensorobjects = []
+            for obj in bpy.context.selected_objects:
+                if obj.phobostype == 'sensor':
+                    sensorobjects.append(obj)
+                    sensor['type'] = obj['sensor/type']
+                else:
+                    objects.append(obj)
+            if len(sensorobjects) > 0:
+                for sensor in sensorobjects:
+                    if 'Node' in sensor['sensor/type']:
+                        sensor['sensor/nodes'] = [obj.name for obj in objects if obj.phobostype == 'collision']
+                    elif 'Joint' in sensor['sensor/type'] or "Motor" in sensor['sensor/type']:
+                        sensor['sensor/joints'] = [obj.name for obj in objects if obj.phobostype == 'link']
+
+                sensor['pose'] = {'translation': list(location), 'rotation': [0, 0, 0]}
         else:
-            print("Error: Sensor could not be created: unknown sensor type.")
+            sensor = {'type': self.sensor_type, 'name': self.sensor_name,
+                      'pose': {'translation': list(bpy.context.scene.cursor_location),
+                               'rotation': [0, 0, 0]}}
+            sensors.append(sensor)
+        for sensor in sensors:
+            createSensor(sensor)
         return {'FINISHED'}
 
 
