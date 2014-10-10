@@ -120,8 +120,8 @@ def deriveJoint(obj, typetags=False):
 
 
 def deriveJointState(joint):
-    '''Calculates the state of a joint from the state of the link armature.
-    Note that this is the current state and not the zero state.'''
+    """Calculates the state of a joint from the state of the link armature.
+    Note that this is the current state and not the zero state."""
     state = {}
     state['matrix'] = [list(vector) for vector in list(joint.pose.bones[0].matrix_basis)]
     state['translation'] = list(joint.pose.bones[0].matrix_basis.to_translation())
@@ -219,6 +219,7 @@ def deriveCollision(obj):
         pass
     return collision, obj.parent
 
+
 def deriveApproxsphere(obj):
     sphere = initObjectProperties(obj)
     sphere['radius'] = obj.dimensions[0]/2
@@ -287,8 +288,6 @@ def deriveDictEntry(obj):
             props, parent = deriveApproxsphere(obj)
         elif obj.phobostype == 'sensor':
             props = deriveSensor(obj)
-        #elif obj.phobostype == 'motor':
-        #    props, parent = deriveMotor(obj)
         elif obj.phobostype == 'controller':
             props = deriveController(obj)
     except KeyError:
@@ -350,8 +349,7 @@ def buildRobotDictionary(typetags=False):
             'controllers': {},
             'materials': {},
             'groups': {},
-            'chains': {},
-            'simulation': {}
+            'chains': {}
             }
     #save timestamped version of model
     robot["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
