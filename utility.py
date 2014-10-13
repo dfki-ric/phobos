@@ -246,9 +246,9 @@ def getRoots():
             roots.append(obj)
 
     if roots == []:
-        print("MARStools: No root objects found.")
+        print("Phobos: No root objects found.")
     else:
-        print("MARStools: Found", len(roots), "root object(s)", [root.name + "; " for root in roots])
+        print("Phobos: Found", len(roots), "root object(s)", [root.name + "; " for root in roots])
     return roots  # TODO: Should we change this and all other list return values in a tuple or generator expression?
 
 

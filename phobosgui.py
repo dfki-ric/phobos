@@ -33,7 +33,7 @@ from . import defs
 def register():
     print("Registering gui...")
     bpy.types.Object.phobostype = EnumProperty(
-        items=defs.marstypes,
+        items=defs.phobostypes,
         name="type",
         description="MARS object type")
     print("    Added 'phobostype' to Object properties.")

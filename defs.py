@@ -36,7 +36,7 @@ in the future.
 
 version = '0.5'
 
-marstypes = (('undefined',) * 3,
+phobostypes = (('undefined',) * 3,
              ('link',) * 3,
              ('inertial',) * 3,
              ('visual',) * 3,

@@ -255,7 +255,7 @@ class SetXRayOperator(Operator):
     objects = EnumProperty(
         name = "show objects:",
         default = 'selected',
-        items = (('all',)*3, ('selected',)*3, ('by name',)*3) + defs.marstypes,
+        items = (('all',)*3, ('selected',)*3, ('by name',)*3) + defs.phobostypes,
         description = "show objects via x-ray")
 
     show = BoolProperty(
@@ -319,7 +319,7 @@ class SelectObjectsByMARSType(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     seltype = EnumProperty (
-            items = defs.marstypes,
+            items = defs.phobostypes,
             name = "phobostype",
             default = "link",
             description = "MARS object type")
@@ -419,7 +419,7 @@ class UpdateMarsModelsOperator(Operator):
     print("phobos: Updating MARS properties for selected objects...")
 
     def execute(self, context):
-        materials.createMARSMaterials() #TODO: this should move to initialization
+        materials.createPhobosMaterials() #TODO: this should move to initialization
         robotupdate.updateModels(utility.getRoots(), self.property_fix)
         return {'FINISHED'}
 
@@ -431,7 +431,7 @@ class SetMARSType(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     marstype = EnumProperty (
-            items = defs.marstypes,
+            items = defs.phobostypes,
             name = "phobostype",
             default = "undefined",
             description = "phobostype")

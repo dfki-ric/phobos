@@ -121,10 +121,10 @@ def updateModels(roots = None, fix = False):
     if roots == None:
         roots = utility.getRoots()
     for root in roots:
-        print("MARStools: Updating properties for model", root.name)
+        print("Phobos: Updating properties for model", root.name)
         if not "modelname" in root:
             root["modelname"] = root.name
-            print("MARStools: new root detected, setting modelname to", root.name)
+            print("Phobos: new root detected, setting modelname to", root.name)
         n, f = updateModel(root, fix)
         notifications.extend(n)
         faulty_objects.extend(f)

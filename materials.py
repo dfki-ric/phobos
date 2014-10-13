@@ -42,8 +42,8 @@ def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=
         pass
     return mat
 
-def createMARSMaterials():
-    """Uses makeMaterial() to create a list of standard materials used in MARStools"""
+def createPhobosMaterials():
+    """Uses makeMaterial() to create a list of standard materials used in Phobos"""
     materials = bpy.data.materials.keys()
     #if not 'joint_sphere' in materials:
     #    makeMaterial('joint_sphere', (0, 1, 0), (1, 1, 1), 1)
