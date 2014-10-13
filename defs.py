@@ -121,7 +121,8 @@ sensortypes = ("RaySensor",
                "NodeCOM",
                "NodeVelocity",
                "NodeAngularVelocity",
-               "MotorCurrent"
+               "MotorCurrent",
+               "Custom"
                )
 
 sensorProperties = {"RaySensor": {"width": 144},
