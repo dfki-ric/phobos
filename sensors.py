@@ -45,7 +45,7 @@ def unregister():
 def createSensor(sensor):
     if 'Camera' in sensor['type']:
         bpy.ops.object.add(type='CAMERA', location=sensor['pose']['translation'],
-                           rotation=sensor['pose']['rotation'],
+                           rotation=sensor['pose']['rotation_euler'],
                            layers=utility.defLayers([defs.layerTypes['sensor']]))
         newsensor = bpy.context.active_object
     elif sensor['type'] in ["RaySensor", "RotatingRaySensor", "ScanningSonar"]:
@@ -115,11 +115,11 @@ class AddSensorOperator(Operator):
             else:
                 sensor = {'type': sensortype, 'name': self.sensor_name,
                           'pose': {'translation': list(context.scene.cursor_location),
-                                   'rotation': [0, 0, 0]}}
+                                   'rotation_euler': [0, 0, 0]}}
         else:
             sensor = {'type': sensortype, 'name': self.sensor_name,
                       'pose': {'translation': list(context.scene.cursor_location),
-                               'rotation': [0, 0, 0]}}
+                               'rotation_euler': [0, 0, 0]}}
         if sensor is not None:
             createSensor(sensor)
         return {'FINISHED'}
