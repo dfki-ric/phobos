@@ -48,7 +48,8 @@ def unregister():
     print("Unregistering export...")
 
 indent = '  '
-xmlHeader = '<!-- created with Phobos ' + defs.version + ' -->\n<?xml version="1.0"?>\n'
+#xmlHeader = '<!-- created with Phobos ' + defs.version + ' -->\n<?xml version="1.0"?>\n'
+xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
 xmlFooter = indent+'</robot>\n'
 
 
