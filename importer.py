@@ -200,6 +200,10 @@ class RobotModelParser():
                     except KeyError:
                         print('No material for obj', viscol['name'])
             #FIXME: place empty coordinate system and return...what? Error handling of file import!
+        for prop in viscol:
+            if prop.startswith('$'):
+                for tag in viscol[prop]:
+                    newgeom[prop[1:]+'/'+tag] = viscol[prop][tag]
         return newgeom
 
     def createInertial(self, name, inertial):
@@ -209,7 +213,11 @@ class RobotModelParser():
         bpy.ops.object.transform_apply(scale=True)
         for prop in inertial:
             if prop not in ['pose'] and inertial[prop] is not None:
-                inert[prop] = inertial[prop]
+                if not prop.startswith('$'):
+                    inert[prop] = inertial[prop]
+                else:
+                    for tag in inertial[prop]:
+                        inert[prop[1:]+'/'+tag] = inertial[prop][tag]
         inert.phobostype = 'inertial'
         return inert
 
@@ -242,6 +250,10 @@ class RobotModelParser():
                 collision = link['collision'][c]
                 if 'geometry' in collision:
                     self.createGeometry(collision, 'collision')
+        for prop in link:
+            if prop.startswith('$'):
+                for tag in link[prop]:
+                    newlink['link/'+prop[1:]+'/'+tag] = link[prop][tag]
         return newlink
 
     def createJoint(self, joint):
@@ -274,18 +286,26 @@ class RobotModelParser():
             lower = 0.0
             upper = 0.0
         joints.setJointConstraints(link, joint['type'], lower, upper)
+        for prop in joint:
+            if prop.startswith('$'):
+                for tag in joint[prop]:
+                    link['joint/'+prop[1:]+'/'+tag] = joint[prop][tag]
 
     def createMotor(self, motor):
         try:
             joint = bpy.data.objects[motor['joint']]
             for prop in motor:
                 if prop != 'joint':
-                    joint['motor/'+prop] = motor[prop]
+                    if not prop.startswith('$'):
+                        joint['motor/'+prop] = motor[prop]
+                    else:
+                        for tag in motor[prop]:
+                            joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
         except KeyError:
             print("###ERROR: joint", motor['joint'], "does not exist")
 
     def createSensor(self, sensor):
-        sensors.createSensor(sensor)
+        newsensor = sensors.createSensor(sensor)
 
     def createController(self, controller):
         pass
@@ -337,7 +357,7 @@ class RobotModelParser():
             self.createMotor(motor)
 
         print("\n\nCreating controllers...")
-        for c in self.robot['sensors']:
+        for c in self.robot['controllers']:
             controller = self.robot['controllers'][c]
             self.createController(controller)
 
@@ -513,14 +533,88 @@ class SMURFModelParser(RobotModelParser):
     """Class derived from RobotModelParser which parses a SMURF model"""
 
     def __init__(self, filepath):
-        RobotModelParser.__init__(filepath)
+        RobotModelParser.__init__(self, filepath)
 
     def parseModel(self):
         print("Parsing SMURF model...")
-        urdfpath =\
-        urdfparser = URDFModelParser(urdfpath)
+        #smurf = None
+        with open(self.filepath, 'r') as smurffile:
+            smurf = yaml.load(smurffile)
+        if smurf is None:
+            print('###Error: No valid SMURF file.')
+            return None
+        urdffile = None
+        ymlfiles = [f for f in smurf['files'] if f.endswith('.yml') or f.endswith('.yaml')]
+        for f in smurf['files']:
+            if f.endswith('.urdf'):
+                urdffile = f
+        # get URDF info
+        if urdffile is None:
+            print("###Error: Did not find URDF file associated with SMURF.")
+            return None
+        urdfparser = URDFModelParser(os.path.join(self.path, urdffile))
+        urdfparser.parseModel()
         self.robot = urdfparser.robot
-        del urdfparser
+        # make sure all types exist
+        typelist = ['links', 'joints', 'materials', 'sensors', 'motors', 'controllers', 'groups', 'chains']
+        for key in typelist:
+            if key not in self.robot:
+                self.robot[key] = {}
+        #add the smurf information
+        custom_dicts = {}
+        for yml in ymlfiles:
+            with open(os.path.join(self.path, yml), 'r') as ymlfile:
+                ymldict = yaml.load(ymlfile)
+            for key in ymldict:
+                print(key)
+                if key in ['materials', 'sensors', 'motors', 'controllers']:
+                    for element in ymldict[key]:
+                        if element['name'] not in self.robot[key]:
+                            self.robot[key][element['name']] = element
+                        else:
+                            for tag in element:
+                                self.robot[key][element['name']][tag] = element[tag]
+                elif key in 'state':
+                    pass  # TODO: handle state
+                else:
+                    custom_dicts[key] = ymldict[key]
+
+        for key in custom_dicts:
+            print('assign custom properties:', key, custom_dicts[key])
+            for element in custom_dicts[key]:  # iterate over list with custom annotations
+                print(element)
+                try:
+                    objtype = element['type']
+                except KeyError:
+                    print("###ERROR: could not find 'type' in custom annotation:", element)
+                try:
+                    objname = element['name']
+                except KeyError:
+                    print("###ERROR: could not find 'name' in custom annotation:", element)
+                try:
+                    if objtype+'s' in typelist:  #FIXME: this is a total hack!
+                        objtype += 's'
+                    else:
+                        raise TypeError(objtype)
+                    if objname in self.robot[objtype]:
+                        for tag in element:
+                            if tag not in ['type', 'name']:
+                                if not '$'+key in self.robot[objtype][objname]:
+                                    self.robot[objtype][objname]['$'+key] = {tag: element[tag]}
+                                else:
+                                    self.robot[objtype][objname]['$'+key][tag] = element[tag]
+                    else:
+                        raise NameError(objname)
+                except TypeError:
+                    print("###ERROR: could not find 'type' or 'name' in custom annotation", objtype, objname)
+                except NameError:
+                    print("###ERROR: element", objname, "of type", objtype, "does not exist in this model.")
+
+        #now some debug output
+        with open(self.filepath+'_SMURF_debug.yml', 'w') as outputfile:
+            outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
+
+
 
 
 class RobotModelImporter(bpy.types.Operator):

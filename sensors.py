@@ -52,19 +52,23 @@ def createSensor(sensor):
         # TODO: create a proper ray sensor scanning layer disc here
         newsensor = utility.createPrimitive(sensor['name'], 'disc', (0.5, 36),
                                             defs.layerTypes['sensor'], 'phobos_laserscanner',
-                                            sensor['pose']['translation'], sensor['pose']['rotation'])
+                                            sensor['pose']['translation'], sensor['pose']['rotation_euler'])
     else:  # contact, force and torque sensors (or unknown sensors)
         newsensor = utility.createPrimitive(sensor['name'], 'sphere', 0.05,
                                             defs.layerTypes['sensor'], 'phobos_sensor',
-                                            sensor['pose']['translation'], sensor['pose']['rotation'])
-        newsensor.phobostype = 'sensor'
-        #newsensor.name = sensor['name'] if sensor['name'] != '' else 'new_' + sensor['type']
+                                            sensor['pose']['translation'], sensor['pose']['rotation_euler'])
+    newsensor.phobostype = 'sensor'
+    #newsensor.name = sensor['name'] if sensor['name'] != '' else 'new_' + sensor['type']
     # TODO: use defaults?
     #for prop in defs.sensorProperties[sensor['type']]:
     #    sensor[prop] = defs.sensorProperties[sensor['type']][prop]
     for prop in sensor:
         if prop not in ['name', 'pose']:
-            newsensor[prop] = sensor[prop]
+            if prop.startswith('$'):
+                for tag in sensor[prop]:
+                    newsensor[prop[1:]+'/'+tag] = sensor[prop][tag]
+            else:
+                newsensor[prop] = sensor[prop]
     if sensor['type'] not in defs.sensortypes:
         print("### Warning: sensor", sensor['name'], "is of unknown type.")
     return newsensor
