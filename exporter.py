@@ -423,15 +423,15 @@ def exportModelToSRDF(model, path):
                 if ((mother, child) not in collisionExclusives) or ((child, mother) not in collisionExclusives):
                     collisionExclusives.append((mother.name, child.name))
                 addPCCombinations(child)
-             
+
     roots = getRoots()
     for root in roots:
         if root.name == 'root':
             addPCCombinations(root)
-            
+
     for pair in collisionExclusives:
         output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (pair[0], pair[1])))
-                
+
     output.append('\n')
     #finish the export
     output.append(xmlFooter)
@@ -442,24 +442,20 @@ def exportModelToSRDF(model, path):
 
 
 def exportModelToSMURF(model, path):
-    export = {#'semantics': model['groups'] != {} or model['chains'] != {},,
-              'state': False,  #model['state'] != {}, #TODO: handle state
+    export = {'state': False,  #model['state'] != {}, #TODO: handle state
               'materials': model['materials'] != {},
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'simulation': model['simulation'] != {}
               }
     #create all filenames
     smurf_filename = model['modelname'] + ".smurf"
     urdf_filename =  model['modelname'] + ".urdf"
-    filenames = {#'semantics': model['modelname'] + "_semantics.yml",
-                 'state': model['modelname'] + "_state.yml",
+    filenames = {'state': model['modelname'] + "_state.yml",
                  'materials': model['modelname'] + "_materials.yml",
                  'sensors': model['modelname'] + "_sensors.yml",
                  'motors': model['modelname'] + "_motors.yml",
                  'controllers': model['modelname'] + "_controllers.yml",
-                 'simulation': model['modelname'] + "_simulation.yml"
                  }
 
     annotationdict = gatherAnnotations(model)
