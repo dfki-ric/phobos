@@ -154,6 +154,24 @@ layerTypes = {
     "approxsphere": 13
 }
 
+#default materials used: Phobos
+defaultmaterials = {
+    'phobos_joint': {'diffuse': (0, 0, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
+    'phobos_name': {'diffuse': (1, 1, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
+    'phobos_laserscanner': {'diffuse': (1.0, 0.08, 0.08), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 1.0},
+    'phobos_camera': {'diffuse': (0.13, 0.4, 1), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 0.8},
+    'phobos_tof-camera': {'diffuse': (0.44, 1, 0.735), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 0.7},
+    'phobos_inertial': {'diffuse': (1, 0.18, 0), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 0.7},
+    'phobos_sensor': {'diffuse': (0.8, 0.75, 0), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 0.7},
+    'phobos_controller': {'diffuse': (0.518, 0.364, 0.8), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 0.7},
+    'phobos_indicator1': {'diffuse': (1, 0, 0), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
+    'phobos_indicator2': {'diffuse': (0, 1, 0), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
+    'phobos_indicator3': {'diffuse': (0, 0, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
+    'phobos_indicator4': {'diffuse': (1, 0, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
+    'phobos_indicator5': {'diffuse': (1, 1, 0), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
+    'phobos_indicator6': {'diffuse': (0, 1, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
+}
+
 MARSlegacydict = {'specularColor': 'specularFront',
                   'diffuseColor': 'diffuseFront'
                   }

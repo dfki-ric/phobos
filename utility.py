@@ -30,6 +30,7 @@ import bpy
 import mathutils
 from datetime import datetime
 from . import defs
+from . import materials
 
 
 def register():
@@ -146,6 +147,18 @@ def printMatrices(obj, info=None):
           "\n\nbasis:\n", obj.matrix_basis)
 
 
+def assignMaterial(obj, materialname):
+    if materialname not in bpy.data.materials:
+        if materialname in defs.defaultmaterials:
+            materials.createPhobosMaterials()
+        else:
+            print("###ERROR: material to be assigned does not exist.")
+            return None
+    obj.data.materials.append(bpy.data.materials[materialname])
+    if bpy.data.materials[materialname].use_transparency:
+        obj.show_transparent = True
+
+
 def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(0, 0, 0), protation=(0, 0, 0),
                     verbose=False):
     """Generates the primitive specified by the input parameters"""
@@ -170,11 +183,12 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
     elif ptype == "cone":
         bpy.ops.mesh.primitive_cone_add(vertices=32, radius=psize[0], depth=psize[1], cap_end=True, layers=players,
                                         location=plocation, rotation=protation)
+    elif ptype == 'disc':
+        bpy.ops.mesh.primitive_circle_add(vertices=psize[1], radius=psize[0], fill_type='TRIFAN', location=plocation, rotation=protation, layers=players)
     obj = bpy.context.object
     obj.name = pname
     if pmaterial != 'None':
-        if pmaterial in bpy.data.materials:
-            obj.data.materials.append(bpy.data.materials[pmaterial])
+        assignMaterial(obj, pmaterial)
     return obj
 
 
