@@ -232,19 +232,23 @@ def gatherAnnotations(model):
     annotations = {}
     types = ('links', 'joints', 'sensors', 'motors', 'controllers', 'materials')
     #fixme: collision / visual??
-    for type in types:
-        for elementname in model[type]:
-            element = model[type][elementname]
-            for key in element:
+    for objtype in types:
+        for elementname in model[objtype]:
+            element = model[objtype][elementname]
+            delkeys = []
+            for key in element.keys():
                 if key.startswith('$'):
                     category = key[1:]
                     print(elementname, category)
                     if category not in annotations:
                         annotations[category] = []
                     tmpdict = {k: element[key][k] for k in element[key]}
-                    tmpdict['type'] = type[:-1]
+                    tmpdict['type'] = objtype[:-1]
                     tmpdict['name'] = elementname
                     annotations[category].append(tmpdict)
+                    delkeys.append(key)
+            for key in delkeys:
+                del element[key]
     return annotations
 
 
