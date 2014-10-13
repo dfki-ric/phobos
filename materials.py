@@ -28,6 +28,7 @@ Created on 7 Jan 2014
 import bpy
 from . import defs
 
+
 def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
     """Returns a Blender material specified by the input parameters"""
     mat = bpy.data.materials.new(name)
@@ -45,6 +46,7 @@ def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=
         # TODO: implement textures properly
         pass
     return mat
+
 
 def createPhobosMaterials():
     """Uses makeMaterial() to create a list of standard materials used in Phobos"""
