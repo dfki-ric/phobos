@@ -24,7 +24,7 @@ As of the current version of Phobos (0.5), this documentation is still far from 
 
 ### Tutorials
 
-- [Basic modelling](basicmodelling.md)
+- [Basic modelling](tutorial_basicmodelling.md)
 - [Editing masses and inertia](tutorial_massandinertia.md)
 
 ## Conventions

@@ -26,7 +26,7 @@ Layer  | Type
 3 | collisions
 4 | sensors / controllers
 
-and will determine on which layers objects are placed upon import or created by various operators. While you can arrange your model on layers as you wish, this might interfer with the function of some operators in a way hardly predictable way. We are planning to give users more flexibility in their layer management in future versions.
+and will determine on which layers objects are placed upon import or created by various operators. While you can arrange your model on layers as you wish, this might interfer with the function of some operators in a way hardly predictable. We are planning to give users more flexibility in their layer management in future versions.
 Nevertheless, if your model is nicely layered by types, it's possible to isolate certain types of objects by clicking on the layers below the viewing window (hold SHIFT down to select multiple layers). To move selected objects to a different layer, hit **M**. 
 
 ## Links & Joints
@@ -37,9 +37,13 @@ Links are represented in Blender as armatures containing one single bone. At the
 
 You can manually create an armature using the 'Create' toolbar and set its *phobostype* to *link*, or transform existing armatures into links by setting the type. The easiest way to create new links however is the *Create link(s)* operator in the *Object editing* category of Phobos' tools. This will allow you to either create one single link at the position of the 3D cursor or multiple links at the positions (and in the orientations) of the selected objects.
 
-Links can be connected - with joints - by setting up parent-child relationships between them. Blender knows a number of different parenting types depending on the objects to be related. For Phobos, it is essential that you always use the *Bone Relative* parenting type. Hitting **CTRL** + **P** will show a context menu for parenting which presents the available parenting types, with the one we want to choose at the very bottom. Note that the two types *Bone* and *Bone Relative* are not discriminated between in the *Relations* section of the properties panel on the right. Thus the only way of making sure two objects use the correct parenting type is to parent them again to one another with the correct type (or use the *Update robot model* operator, which will do the trick for you).
-The reason for this is the following: As stated before, the axis of rotation of a joint is determined by the orientation of a bone. However Blender treats bones as essentially two objects in one: a *pose bone* and an *edit bone*. You might be thinking "Come on, not ANOTHER object!", but this is actually a pretty cool feature. It allows to define a *rest position* of an armature that equals the transform of the edit bones, and a *pose position* that defines an actual pose. Consequently, if you're turning the pose bone, all objects attached to it will turn with it. Not so with the edit bone: If this is changed, you simply change the bone itself and the relations to all attached objects are altered by Blender so they can remain where they are. This, however, only works in the *Bone Relative* parenting mode. Consequently, if you wish to change the rotation axis of a joint after your model has been completed, you simply change the edit bone and that's that - the bone's children will NOT get moved and the rest of your model stays intact. This is pretty handy when constantly having to adapt your robot model to ongoing mechanical design.
+Links can be connected - with joints - by setting up parent-child relationships between them. Blender knows a number of different parenting types depending on the objects to be related. For Phobos, it is essential that you always use the *Bone Relative* parenting type. The reason for this is the following: As stated before, the axis of rotation of a joint is determined by the orientation of a bone. However Blender treats bones as essentially two objects in one: a *pose bone* and an *edit bone*. You might be thinking "Come on, not ANOTHER object!", but this is actually a pretty cool feature. It allows to define a *rest position* of an armature that equals the transform of the edit bones, and a *pose position* that defines an actual pose. Consequently, if you're turning the pose bone, all objects attached to it will turn with it. Not so with the edit bone: If this is changed, you simply change the bone itself and the relations to all attached objects are altered by Blender so they can remain where they are. This, however, only works in the *Bone Relative* parenting mode. Consequently, if you wish to change the rotation axis of a joint after your model has been completed, you simply change the edit bone and that's that - the bone's children will NOT get moved and the rest of your model stays intact. This is pretty handy when constantly having to adapt your robot model to ongoing mechanical design.
 When an armature is selected in blender, you can switch from "Object Mode" to "Edit Mode" or "Pose Mode" in the toolbar below the 3D view, allowing you to change the edit bone and pose bone.
+
+----
+
+Hitting **CTRL** + **P** will show a context menu for parenting which presents the available parenting types, with the one we want to choose at the very bottom.
+Note that the two types *Bone* and *Bone Relative* are not discriminated between in the *Relations* section of the properties panel on the right. Thus the only way of making sure two objects use the correct parenting type is to parent them again to one another with the correct type.
 
 ## Visual & collision objects
 
@@ -56,6 +60,6 @@ If an inertial has to be moved - this is the case if it is not created at the CO
 
 ## Sensors
 
-Sensors are currently rudimentarily supported, allowing for legacy sensor types of the MARS scene format to be used. No sensor-related data is exported to URDF and there are hardly any pre-defined custom properties for the different sensor types. Thus it falls to the user to set the custom properties according to the requirements. These issues however are top of the list for future releases of Phobos.
+Sensors are currently rudimentarily supported, allowing for legacy sensor types of the MARS scene format to be used. No sensor-related data is exported to URDF and there are hardly any pre-defined custom properties for the different sensor types. Thus it falls to the user to set the custom properties according to the requirements. This issue however is top of the list for future releases of Phobos.
 
 

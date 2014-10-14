@@ -299,10 +299,11 @@ class PhobosSenConPanel(bpy.types.Panel):
         self.layout.label(icon='GAME')
 
     def draw(self, context):
-        row_sensors = self.layout
+        slayout = self.layout.split()
+        sc1 = slayout.column(align=True)
         # create sensor creation buttons
         #row_sensors.label(text="Add Sensors / Controllers")
-        row_sensors.operator('object.phobos_add_sensor', text="Add/Edit Sensor")
+        sc1.operator('object.phobos_add_sensor', text="Add/Edit Sensor")
         #sensor_split = row_sensors.split()
         #n_sensortypes = int(len(defs.sensortypes))
         #half_n_sensortypes = int(n_sensortypes / 2)
@@ -316,7 +317,8 @@ class PhobosSenConPanel(bpy.types.Panel):
         #    sensor = defs.sensortypes[i + half_n_sensortypes]
         #    col_sensor_2.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
         #    #col_sensor_2.operator('object.phobos_add_sensor_'+sensor, text=sensor)
-        row_sensors.operator("object.phobos_add_controller", text="Add Controller")
+        sc2 = slayout.column(align=True)
+        sc2.operator("object.phobos_add_controller", text="Add Controller")
 
 
 # class PhobosVisPanel(bpy.types.Panel):
