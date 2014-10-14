@@ -474,40 +474,41 @@ def check_geometry(geometry, owner_type, owner_key, link_key):
         note = "CheckModel: Error, geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'type'."
         notifications += note + "\n"
         print(note)
-    elif geometry['type'] == 'box' or geometry['type'] == 'plane':
-        if not 'size' in geometry:
-            note = "CheckModel: Error, box / plane type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'size'."
-            notifications += note + "\n"
-            print(note)
-    elif geometry['type'] == 'sphere':
-        if not 'radius' in geometry:
-            note = "CheckModel: Error, sphere type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'radius'."
-            notifications += note + "\n"
-            print(note)
-    elif geometry['type'] == 'cylinder':
-        if not 'radius' in geometry:
-            note = "CheckModel: Error, cylinder type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'radius'."
-            notifications += note + "\n"
-            print(note)
-        if not 'length' in geometry:
-            note = "CheckModel: Error, cylinder type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'length'."
-            notifications += note + "\n"
-            print(note)
-    elif geometry['type'] == 'mesh':
-        if not 'size' in geometry:
-            note = "CheckModel: Error, mesh type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'size'."
-            notifications += note + "\n"
-            print(note)
-        if not 'filename' in geometry:
-            note = "CheckModel: Error, mesh type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'filename'."
-            notifications += note + "\n"
-            print(note)
     else:
-        note = "CheckModel: Error, geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has invalid value for attribute 'type': '" + geometry['type'] + "'."
-        notifications += note + "\n"
-        print(note)
+        if geometry['type'] == 'box' or geometry['type'] == 'plane':
+            if not 'size' in geometry:
+                note = "CheckModel: Error, box / plane type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'size'."
+                notifications += note + "\n"
+                print(note)
+        elif geometry['type'] == 'sphere':
+            if not 'radius' in geometry:
+                note = "CheckModel: Error, sphere type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'radius'."
+                notifications += note + "\n"
+                print(note)
+        elif geometry['type'] == 'cylinder':
+            if not 'radius' in geometry:
+                note = "CheckModel: Error, cylinder type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'radius'."
+                notifications += note + "\n"
+                print(note)
+            if not 'length' in geometry:
+                note = "CheckModel: Error, cylinder type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'length'."
+                notifications += note + "\n"
+                print(note)
+        elif geometry['type'] == 'mesh':
+            if not 'size' in geometry:
+                note = "CheckModel: Error, mesh type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'size'."
+                notifications += note + "\n"
+                print(note)
+            if not 'filename' in geometry:
+                note = "CheckModel: Error, mesh type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'filename'."
+                notifications += note + "\n"
+                print(note)
+        else:
+            note = "CheckModel: Error, geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has invalid value for attribute 'type': '" + geometry['type'] + "'."
+            notifications += note + "\n"
+            print(note)
     return notifications
-
+    
 
 def check_visuals(visuals, link_key):
     """
@@ -517,6 +518,10 @@ def check_visuals(visuals, link_key):
         visual = visuals[visual_key]
         if not 'pose' in visual:
             note = "CheckModel: Error, visual '" + visual_key + "' of link '" + link_key + "' has no attribute 'pose'."
+            notifications += note + "\n"
+            print(note)
+        if not 'name' in visual:
+            note = "CheckModel: Error, visual '" + visual_key + "' of link '" + link_key + "' has no attribute 'name'."
             notifications += note + "\n"
             print(note)
         if not 'material' in visual:
@@ -568,6 +573,10 @@ def check_collisions(collisions, link_key):
             note = "CheckModel: Warning, collision '" + collision_key + "' has no attribute 'bitmask'."
             notifications += note + "\n"
             print(note)
+        if not 'name' in collision:
+            note = "CheckModel: Warning, collision '" + collision_key + "' has no attribute 'name'."
+            notifications += note + "\n"
+            print(note)
         if not 'geometry' in collision:
             note = "CheckModel: Error, collision '" + collision_key + "' of link '" + link_key + "' has no attribute 'geometry'."
             notifications += note + "\n"
@@ -595,12 +604,20 @@ def check_links(links):
     notifications = ''
     for link_key in links.keys():
         link = links[link_key]
-        if not 'filename' in link:
+        '''if not 'filename' in link:
             note = "CheckModel: Error, link '" + link_key + "' has no attribute 'filename'."
             notifications += note + "\n"
-            print(note)
+            print(note)'''#not included in the model - date 13.10.2014
         if not 'pose' in link:
             note = "CheckModel: Error, link '" + link_key + "' has no attribute 'pose'."
+            notifications += note + "\n"
+            print(note)
+        if not 'name' in link:
+            note = "CheckModel: Error, link '" + link_key + "' has no attribute 'name'."
+            notifications += note + "\n"
+            print(note)
+        if not 'parent' in link:
+            note = "CheckModel: Error, link '" + link_key + "' has no attribute 'parent'."
             notifications += note + "\n"
             print(note)
         if not 'visual' in link:
@@ -638,6 +655,18 @@ def check_joints(joints):
     notifications = ''
     for joint_key in joints.keys():
         joint = joints[joint_key]
+        if not'axis' in joint:
+            note = "CheckModel: Error, joint '" + joint_key + "' has no attribute 'axis'."
+            notifications += note + "\n"
+            print(note)
+        if not'limits' in joint:
+            note = "CheckModel: Error, joint '" + joint_key + "' has no attribute 'limits'."
+            notifications += note + "\n"
+            print(note)
+        if not'name' in joint:
+            note = "CheckModel: Error, joint '" + joint_key + "' has no attribute 'name'."
+            notifications += note + "\n"
+            print(note)
         if not 'parent' in joint:
             note = "CheckModel: Error, joint '" + joint_key + "' has no attribute 'parent'."
             notifications += note + "\n"
