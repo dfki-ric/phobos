@@ -1,56 +1,88 @@
-## Phobos Tutorial ##
-In this tutorial you will learn how to use the brand new phobos plugin for blender and create your own little robot. You will also learn how to export it to several formats like smurf or urdf.
+Getting started with a model
+============================
 
-### Requirements ###
-To get through this tutorial you need a working blender setup with the phobos plugin installed. This tutorial uses blender version 2.71, but it will also work fine with 2.69.
-<!-- The next requirement will be eliminated, when we add a Step called Blender Basics -->
-The tutorial supposes you know the blender basics, so you can navigate in the 3D View and do simple manipulations like scaling and transforming on objects.
+In this tutorial we will take a look at how to get started with building a new model in Blender using the Phobos tools. We will of course need a working [installation](installation.md) of Blender and Phobos. Also, it certainly does not hurt if you've spend a bit of time before to get the general idea of the Blender user interface.
 
-### Step 1 - Blender setup ###
+## Blender overview
 
-Here you can see blenders start screen. If you started blender for the first time you will see a new project containing a camera, a light and a cube. We will handle them later. First we have to make sure that the phobos plugin works properly and is activated.
+When Blender starts up, it loads a default scene with a single cube, a camera and a light. We need none of these, so hit **A** and **del** to get rid of them. Besides the now empty scene in the middle, there are various toolbars (check the Blender tutorials of your fancy for details), but important is that there is an *object tree* on the top right, an *object property panel* on the bottom right and the tools panel on the left. **T** shows and hides this panel, which is essential, as all Phobos operators are found here. Newbie tip: To select an item in Blender, use the **RMB**, the **LMB** only moves the *world cursor*, which will come handy later.
 
-![Blender Start Screen](img/blenderStartScreen.png)
+## Getting our visuals together
 
-### Step 2 - Import your visuals ###
+Once you get the idea of how everything works with Blender and Phobos, you will find that there are numerous approaches to putting together a robot. One of the simplest ones is to start with the visual objects, as these usually are the most precise representation of an actual robot system and thus get all the dimensions right.
 
-Most robots will have some visual components. You can get them in many different ways, like creating them on your own directly in blender. This tutorial uses a bunch of stl files you may obtain from a CAD-Software or something similar. We got our robot, named Bill, from [blendswap](http://www.blendswap.com/ "blendswap"). The whole license can be read in the [license.txt](robot/license.txt "license.txt").
-The visuals will be the starting point from where we will create all other components like joints and collsion objects. Before importing them into our scene let us tidy up our workspace by deleting the cube and move light and camera to the last layer available.
-Then import your stl files by clicking Files -> Import -> stl. You can of course use the example robot you can find in the robot folder of the documentation. This robot contains just a few meshes and will be very limited in its movements without any further editing, but it will be enough for this tutorial. 
+There are two scenarios how to end up with nice-looking robot visuals. Either you can build the robot from scratch in Blender or you can import visual objects that were for instance exported from the CAD software used in your project. We will not cover building a robot from scratch here, as there are many tutorials out there explaining how to use Blender to model objects, so feel free to dive into them. We will however shortly cover the process of importing.
 
-![After the import](img/afterImport.png)
+One of the nice features of most CAD software is that you can export a part consisting of a number of smaller parts into an equal number of 3D files, for instance STL, in a common coordinate system. This means that when imported, the objects themselves all rest at the world origin, only the vertices of their meshes are moved thus that the whole object exported from CAD looks exactly the same way in Blender.
 
-The next step is depending on your import. When you select your robot you may see that all the objects origins are at the worlds origin. We want them to be in the objects center of mass. We can achieve this by using the Object -> Transform -> Origin to Center of Mass operation. Please keep in mind that this operation will only be performed on selected objects! Our next step is to set the proper phobostype of our visuals. We can do this by selecting all visual objects and then using the Set phobostype operation from our phobos toolbar. Choose *visual* for our visual objects. 
+![imported](img/tutorials/basicmodelling/spaceclimber_imported.png)
 
-![Set phobostype](img/setphobostype.png)
+*The meshes are placed in correct relation to one another when exported as a group from CAD, however each part's origin is at the global origin of Blender.*
+
+The origins of the individual parts can then be moved to the individual objects' center of mass (COM), center of geometry etc.:
+
+![imported](img/tutorials/basicmodelling/origin_to_com.png)
+
+*Moving the origins of the objects to their approximated COM.*
+
+![imported](img/tutorials/basicmodelling/spaceclimber_origin_reset.png)
+*Now every part has it's own origin, which will be important for adding collision objects etc.*
+
+Note that the COM thus calculated of course assumes a homogenous mass distribution throughout the volume of a mesh, which will rarely be the case for real robots. To obtain a precise model, you will therefore at some point have to adjust the COM of the robot's parts (for which there is an operator, of course).
+Another possibility is to export every part from CAD with the mesh's origin at the actual center of mass of that part (for which it is necessary to create coordinate systems in CAD residing at the COM). This however leads to the problem of then placing the individually exported parts correctly with respect to one another in blender. 
+Either way, you can import the meshes of your choice by clicking clicking File -> Import -> \*, with \* being stl, obj etc.
+
+For the purposes of this tutorial, we're not going to bother with a complex robot such as the [SpaceClimber](http://robotik.dfki-bremen.de/en/research/projects/spaceclimber-1.html), but instead a very simple walker we built from scratch:
+
+![testwalker_import](img/tutorials/basicmodelling/testwalker_start.png)
+
+Our next step after the visuals are in place is to set the proper *phobostype* of our visuals. We can do this by selecting all visual objects and then using the *Set phobostype* operation from our Phobos toolbar. Choose *visual* for our visual objects. Make sure to "finish" the operator e.g. by hitting **A** again. Otherwise it will continue to be operating and undo the changes done before when you change your selection etc.
 
 
-### Step 3 - Links and Joints
+## Adding Links and Joints
 
-Links and joints are handled as bones in phobos. The transform property will serve as the link and the bone represents the joint and its constraints. We want to allow Bill to move his head to look around. For that we need to create a new Armature. New objects will be created at the 3D-Cursors position. Using that we can position our new Armature very appropriate by setting the Cursor to the necks origin. Just select the neck and use the Object -> Snap (or Shift+S) -> Cursor to selected. Now we can add our bone by using the Add (Shift+A) -> Armature -> Single Bone. The result should look like this:
+Links and joints are handled as Blender armatures and bones in Phobos, as explained [elsewhere](editmodels.md). As stated before, it is entirely possible to position the 3D cursor at a specific location (**LMB** or 3D Cursor values displayed in the transform panel to the right of the 3D view), create a Blender armature and set the *phobostype* to 'link'. It's however easier to use Phobos' `Create Link(s)`  operator for that.
 
-![new bone added](img/antenna.png)
+![addlinks_3dcursor](img/tutorials/basicmodelling/addlinks_3dcursor.png)
 
-Can you see the antenna? Thats our bone. In phobos the z-axis is used to rotate on a joint. Just keep it in mind. The next step is to assign all visual parts that should move with the new bone to it. For that we use the so named *bone related* relationship between objects in blender. Just select all visuals you want to assign to the new link (in our case its the neck and the head). Make sure the last object you select is the bone itself. That makes the bone also the *active* object. Now we can press Strg+P and choose the *bone relative* operation. In the outliner (upper right corner per default) you can see a new hierarchy, where the Armature is the parent of our neck and head. Thats perfect!
+As you might have noticed, the operator can do more than simply place a link at the 3D cursor. For instance, you can select all visuals and choose `selected objects` for the 'location' in the operator. This will place links in the position and with the orientation of all selected visuals:
 
-![outliner](img/outliner.png)
+![addlinks_selected_objects](img/tutorials/basicmodelling/addlinks_selected_objects.png)
 
-The next step is to set the phobostype of our bone. You already know how to do it. Set the phobostype of the bone to *link*. We're almost done. The last part for this new link is to set its constraints. There is also an operation for that in the phobos toolbar named *Define Joint Constraints*. Select it and set the constraints you want. For now we will allow Bill to look from -90° to 90° and set it to a revolute joint type.
+Now we could proceed parenting the bones to one another and the visuals to the respective bones using the `BONE_RELATIVE` parenting method. However, in our case, we have arranged our visuals in parent-child relationships already:
 
-![joint constraints](img/defineCons.png)
+![addlinks_selected_objects](img/tutorials/basicmodelling/testwalker_object_tree.png)
 
-To test your result switch from object mode to pose mode (Beneath the 3D Window) if not already done and select your link. Then press *r* to rotate and *z* to rotate around the z-axis only. You can see that you can rotate Bills head within the given bounds.
+so that we can now mark both the `parenting` and `parent object(s)` options of the operator, set the indices (in the example, only one) of name parts that we would like to reuse to create names for our links and behold the robot structure unfold: 
 
-### Step 4 - Collision objects ###
+![addlinks_all_options](img/tutorials/basicmodelling/testwalker_create_links_full_options.png)
 
-Another important thing a robot has to have is its physical representation. We can provide this with collision objects. To create a collision object select an object you want a collider for and use the *Create Collision Object* operation from the phobos toolbar. This operation automatically creates a cube that tries to fit the object as tight as possible, but includes all vertices. You can change the collision object type and move and scale it as you want. We just have to scale it a bit down for the moment.
+For the moment, we don't really want to have the 'link_' prefix, so we simply delete the field and get rid of that, but this of course depends on your own taste or needs for robot part nomenclature. Finish the operator by hitting **A**. As you will notice, all our newly-created bones are already set to *phobostype* 'link'.
 
-![add collision object](img/collisionadd.png)
+## Constraints
 
-Try to add a collision object for the neck too. You can use a cylinder for that purpose.
+So we have a robot skeleton with attached visuals now, but we have not really defined how the robot can move. For this, we have to fully define the joints. We have already implicitly defined the joints via the orientation of the links: most joints rotate around (or slide along) the long axis of the associated bone. If you select a bone, switch to *Pose Mode* and hit **R** twice to enter local rotating mode around Y, you can turn your joint around its axis:
 
-### Step 5 - Export your robot ###
+![testwalker_turn_head](img/tutorials/basicmodelling/testwalker_turn_head.png)
 
-Exporting your robot in your favourite file format is very easy with phobos. Just select any component you want to be exported (in most situations you want to export the whole robot) and select the formats you want your robot exported to. Then start the export and you're done.
+Note that the long axis of pose bones is always their local Y axis. That being said, let's restrict the head's movement by selecting the bone and start the `Define Joint Constraints` operator. We can the contraints defined in URDF and will witness the associated bone constraints being added to the bone object in Blender:
 
-We hope that tutorial helped you getting started with phobos. Enjoy your now fully visual robot making!
+![testwalker_joint_constraints](img/tutorials/basicmodelling/testwalker_joint_constraints.png)
+
+This will restrict the way *pose bone* can be rotated in Blender to the same degree as on the actual robot.
+
+## Collision objects
+
+After we've corrected the axis orientation on all the *edit bones* and set the joint constraints, we have completed the kinematic model of the robot. However, we also want to have objects representing collision in our model. Nothing simpler than that with the help of Phobos' `Create Collision Object(s)` operator. We start by selecting the *visual* of our robot's head, then execute the operator. Choosing the option 'box' for 'coll_type' and ending the operator will automatically place a box with the same dimensions as the visual on the layer for collision objects:
+
+![testwalker_collision_head](img/tutorials/basicmodelling/testwalker_collision_head.png)
+
+We can also select multiple objects and create automatically correctly oriented collision objects for them, for instance we could choose to represent the cylindric shapes of the body and legs with collision boxes for some reason
+
+![testwalker_more_collisions](img/tutorials/basicmodelling/testwalker_more_collisions.png)
+
+though 'cylinder' would surely be a more appropriate type here. Anyway, we can add the collision objects as necessary for our purposes and directly visually check if they are appropriately sized with repspect to the visuals. Of course the operator only allows to automate the process for simple shapes; if you have more complicated visuals, you should consider approximating them with a number of collision objects that you can create yourself, rotate and scale at will and parent (`BONE_RELATIVE`!) to the link as you please. Just make sure to enter the `geometry/type` properly in the custom properties of your custom collision objects and change the *phobostype* to 'collision'.
+
+## Inertial objects
+
+to do
