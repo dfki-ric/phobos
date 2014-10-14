@@ -26,7 +26,8 @@ There are two options to get phobos: cloning the repository or downloading the r
 Important note: the install script will ask you about your version of Blender, as we cannot tell which version you'd like to use with Phobos. This is important as you might have several versions installed on your system (e.g. for backwards-compatibility) and they use different folders for addons. However, this is only asked once and saved for running the installs script again.
 
 ### Installation via zip file (any platform)
-Blender allows to directly install addons from zip files, however the zip file you can download from GitHub has all its contents in a subfolder called 'phobos' while Blender expects no such subfolder. You can therefore either download the zip, extract it and zip everything within the extracted phobos folder, using this new file for installation, or you can download a stable version of phobos from [here](http://XXXXX "pobos download"). Please note that some new features may be missing from these stable versions.
+Blender allows to directly install addons from zip files, however the zip file you can download from GitHub has all its contents in a subfolder called 'phobos' while Blender expects no such subfolder. You can therefore either download the zip, extract it and zip everything within the extracted phobos folder, using this new file for installation (we may provide a zip file with the stable version for download in the future).
+
 To install the addon, start blender, open File -> User Preferences, switch to the "Addons" tab and use the *Install from zip file* operation.
 
 ### Activating Phobos in Blender
