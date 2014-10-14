@@ -389,7 +389,7 @@ def exportModelToSRDF(model, path):
     for joint in model['joints']:
         try:
             if model['joints'][joint]['passive']:
-                output.append(indent*2+'<passive_joint name="'+model['links'][joint]['name']+'">\n\n')
+                output.append(indent*2+'<passive_joint name="'+model['links'][joint]['name']+'"/>\n\n')
         except KeyError:
             pass
     for link in model['links']:
