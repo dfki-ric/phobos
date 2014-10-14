@@ -259,7 +259,7 @@ def writeURDFGeometry(output, element):
     if element['type'] == 'box':
         output.append(xmlline(5, 'box', ['size'], [l2str(element['size'])]))
     elif element['type'] == "cylinder":
-        output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['height']]))
+        output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['length']]))
     elif element['type'] == "sphere":
         output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
     elif element['type'] in ['capsule', 'mesh']:  # capsules are not supported in URDF and are emulated using meshes

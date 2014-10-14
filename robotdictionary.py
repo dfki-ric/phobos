@@ -155,8 +155,8 @@ def deriveGeometry(obj):
         if gt == 'box':
             geometry['size'] = list(obj.dimensions)
         elif gt == 'cylinder':
-            geometry["radius"] = obj.dimensions[0]/2
-            geometry["height"] = obj.dimensions[2]
+            geometry['radius'] = obj.dimensions[0]/2
+            geometry['length'] = obj.dimensions[2]
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':

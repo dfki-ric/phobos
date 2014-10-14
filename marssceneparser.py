@@ -144,8 +144,8 @@ class MARS_Scene_Parser(object):
             radius = round_float(size.find('x').text) / 2.0
             geometry_dict['radius'] = radius
             if geometry_type == 'cylinder' or geometry_type == 'capsule':
-                height = round_float(size.find('z').text)
-                geometry_dict['height'] = height
+                length = round_float(size.find('z').text)
+                geometry_dict['length'] = length
         elif geometry_type == 'plane':
             x = round_float(size.find('x').text)
             y = round_float(size.find('y').text)

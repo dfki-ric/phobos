@@ -62,7 +62,7 @@ def calculateInertia(mass, geometry):
     if gt == 'box':
         inertia = calculateBoxInertia(mass, geometry['size'])
     elif gt == 'cylinder':
-        inertia = calculateCylinderInertia(mass, geometry["radius"], geometry["height"])
+        inertia = calculateCylinderInertia(mass, geometry['radius'], geometry['length'])
     elif gt == 'sphere':
         inertia = calculateSphereInertia(mass, geometry['radius'])
     elif gt == 'mesh':

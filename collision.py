@@ -77,10 +77,10 @@ class CreateCollisionObjects(Operator):
                 axes = ('X', 'Y', 'Z')
                 long_side = axes[size.index(max(size))]
                 #xyequal = (size[0] - size[1])
-                height = max(size)
-                radii = [s for s in size if s != height]
-                radius = max(radii)/2 if radii != [] else height/2
-                size = (radius, height)
+                length = max(size)
+                radii = [s for s in size if s != length]
+                radius = max(radii)/2 if radii != [] else length/2
+                size = (radius, length)
                 if long_side == 'X':
                     rotation = Matrix.Rotation(math.pi/2, 4, 'Y')
                 elif long_side == 'Y':
@@ -95,9 +95,9 @@ class CreateCollisionObjects(Operator):
                                                defs.layerTypes['collision'], materialname, center,
                                                rotation_euler)
             elif self.property_colltype == 'capsule':
-                height = max(height-2*radius, 0.001) #prevent height from turning negative
-                size = (radius, height)
-                zshift = height/2
+                length = max(length-2*radius, 0.001) #prevent length from turning negative
+                size = (radius, length)
+                zshift = length/2
                 ob = utility.createPrimitive(collname, 'cylinder', size,
                                defs.layerTypes['collision'], materialname, center,
                                rotation_euler)
@@ -109,7 +109,7 @@ class CreateCollisionObjects(Operator):
                                rotation_euler)
                 utility.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
-                ob['height'] = height
+                ob['length'] = length
                 ob['radius'] = radius
             elif self.property_colltype == 'mesh':
                 pass
