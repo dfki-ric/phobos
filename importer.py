@@ -80,7 +80,15 @@ class RobotModelParser():
     def __init__(self, filepath):
         self.filepath = filepath
         self.path, self.filename = os.path.split(self.filepath)
-        self.robot = {}
+        self.robot = {'links': {},
+                      'joints': {},
+                      'sensors': {},
+                      'motors': {},
+                      'controllers': {},
+                      'materials': {},
+                      'groups': {},
+                      'chains': {}
+                      }
 
     def scaleLink(self, link, newlink):
         """Scales newly-created armatures depending on the link's largest collision object."""
