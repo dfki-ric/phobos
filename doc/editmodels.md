@@ -43,7 +43,7 @@ When an armature is selected in blender, you can switch from "Object Mode" to "E
 
 ## Visual & collision objects
 
-Visual and collision objects are much simpler than links and joints. They are mere 3D-objects containing meshes. Like they were meant to in Blender, you can assign colored and textured materials to visual objects and essentially get a WYSIWYG experience with your model. You can also assign materials to collision objects if you wish, which often makes it easier to identify which visuals they relate to.
+Visual and [collision](collisions.md) objects are much simpler than links and joints. They are mere 3D-objects containing meshes. Like they were meant to in Blender, you can assign colored and textured materials to visual objects and essentially get a WYSIWYG experience with your model. You can also assign materials to collision objects if you wish, which often makes it easier to identify which visuals they relate to.
 There still remain some important details, though. While you can create cubes and spheres etc. in Blender, Blender only keeps track of their geometrical shape upon creation and then forgets about it: all such objects are essentially meshes built from vertices. In order to write the correct geometry type when exporting your robot, we need to assign custom properties to the objects defining their type. This is specified in the custom property `geometry/*`, where `*` stands for one of the geometric types defined in URDF ('box', 'sphere'...). 
 
 

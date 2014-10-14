@@ -372,6 +372,14 @@ def exportModelToSRDF(model, path):
     As one large sphere can be explicitly added by the user and should be if that is what he intends (WYSIWYG),
     we add a sphere of radius 0 by default if no sphere is specified.
 
+    <passive_joint>
+    Marks a joint as passive.
+
+    <disable_collisions>
+    Disables collisions between pairs of links to simplify collision checking and avoid collisions
+    of parents and children at their joints.
+
+
     Currently not supported:
     - <group_state>
     - <virtual_joint>
