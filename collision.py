@@ -47,10 +47,10 @@ class CreateCollisionObjects(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     property_colltype = EnumProperty(
-        name = 'coll_type',
-        default = 'box',
-        description = "collision type",
-        items = defs.geometrytypes)
+        name='coll_type',
+        default='box',
+        description="collision type",
+        items=defs.geometrytypes)
 
     def execute(self, context):
 
@@ -60,7 +60,7 @@ class CreateCollisionObjects(Operator):
                 visuals.append(obj)
             obj.select = False
 
-        if visuals == []:
+        if not visuals:
             bpy.ops.error.message('INVOKE_DEFAULT', type="CreateCollisions Error", message="Not enough bodies selected.")
             return{'CANCELLED'}
         for vis in visuals:
@@ -92,20 +92,20 @@ class CreateCollisionObjects(Operator):
             center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion()*center
             if self.property_colltype != 'capsule':
                 ob = utility.createPrimitive(collname, self.property_colltype, size,
-                                               defs.layerTypes["collision"], materialname, center,
+                                               defs.layerTypes['collision'], materialname, center,
                                                rotation_euler)
             elif self.property_colltype == 'capsule':
                 height = max(height-2*radius, 0.001) #prevent height from turning negative
                 size = (radius, height)
                 zshift = height/2
                 ob = utility.createPrimitive(collname, 'cylinder', size,
-                               defs.layerTypes["collision"], materialname, center,
+                               defs.layerTypes['collision'], materialname, center,
                                rotation_euler)
                 sph1 = utility.createPrimitive('tmpsph1', 'sphere', radius,
-                               defs.layerTypes["collision"], materialname, center + rotation * Vector((0,0,zshift)),
+                               defs.layerTypes['collision'], materialname, center + rotation * Vector((0,0,zshift)),
                                rotation_euler)
                 sph2 = utility.createPrimitive('tmpsph2', 'sphere', radius,
-                               defs.layerTypes["collision"], materialname, center - rotation * Vector((0,0,zshift)),
+                               defs.layerTypes['collision'], materialname, center - rotation * Vector((0,0,zshift)),
                                rotation_euler)
                 utility.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
@@ -114,8 +114,8 @@ class CreateCollisionObjects(Operator):
             elif self.property_colltype == 'mesh':
                 pass
                 #TODO: copy mesh!!
-            ob.phobostype = "collision"
-            ob["geometry/type"] = self.property_colltype
+            ob.phobostype = 'collision'
+            ob['geometry/type'] = self.property_colltype
             if vis.parent:
                 ob.select = True
                 bpy.ops.object.transform_apply(scale=True)
