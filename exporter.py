@@ -47,15 +47,16 @@ def register():
 def unregister():
     print("Unregistering export...")
 
+
 indent = '  '
-#xmlHeader = '<!-- created with Phobos ' + defs.version + ' -->\n<?xml version="1.0"?>\n'
+# xmlHeader = '<!-- created with Phobos ' + defs.version + ' -->\n<?xml version="1.0"?>\n'
 xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
-xmlFooter = indent+'</robot>\n'
+xmlFooter = indent + '</robot>\n'
 
 
 def exportBobj(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
-    obj.select = True#
+    obj.select = True
     bpy.context.scene.objects.active = obj
     #TODO: make this exception-handled
     totverts = totuvco = totno = 1
@@ -144,7 +145,8 @@ def exportBobj(path, obj):
             if faceuv:
                 if f_smooth:  # Smoothed, use vertex normals
                     for vi, v in f_v:
-                        out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], globalNormals[roundVector(v.normal, 6)]))
+                        out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi],
+                                              globalNormals[roundVector(v.normal, 6)]))
                 else:  # No smoothing, face normals
                     no = globalNormals[roundVector(f.normal, 6)]
                     for vi, v in f_v:
@@ -202,18 +204,19 @@ def exportStl(path, obj):
 
 
 def exportModelToYAML(model, filepath):
-    print("phobos YAML export: Writing model data to", filepath )
+    print("phobos YAML export: Writing model data to", filepath)
     with open(filepath, 'w') as outputfile:
-        outputfile.write('# YAML dump of robot model "'+model['modelname']+'", '+datetime.now().strftime("%Y%m%d_%H:%M")+"\n")
+        outputfile.write('# YAML dump of robot model "' + model['modelname'] + '", ' + datetime.now().strftime(
+            "%Y%m%d_%H:%M") + "\n")
         outputfile.write("# created with Phobos" + defs.version + " - https://github.com/rock-simulation/phobos\n\n")
-        outputfile.write(yaml.dump(model)) # default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
+        outputfile.write(yaml.dump(
+            model))  # default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 
 def xmlline(ind, tag, names, values):
-    line = []
-    line.append(indent*ind+'<'+tag)
+    line = [indent * ind + '<' + tag]
     for i in range(len(names)):
-        line.append(' '+names[i]+'="'+str(values[i])+'"')
+        line.append(' ' + names[i] + '="' + str(values[i]) + '"')
     line.append('/>\n')
     return ''.join(line)
 
@@ -223,7 +226,7 @@ def l2str(items, start=-1, end=-1):
     i = start if start >= 0 else 0
     maxi = end if end >= 0 else len(items)
     while i < maxi:
-        line.append(str(items[i])+' ')
+        line.append(str(items[i]) + ' ')
         i += 1
     return ''.join(line)[0:-1]
 
@@ -239,7 +242,6 @@ def gatherAnnotations(model):
             for key in element.keys():
                 if key.startswith('$'):
                     category = key[1:]
-                    print(elementname, category)
                     if category not in annotations:
                         annotations[category] = []
                     tmpdict = {k: element[key][k] for k in element[key]}
@@ -253,90 +255,98 @@ def gatherAnnotations(model):
 
 
 def writeURDFGeometry(output, element):
-    output.append(indent*4+'<geometry>\n')
+    output.append(indent * 4 + '<geometry>\n')
     if element['type'] == 'box':
         output.append(xmlline(5, 'box', ['size'], [l2str(element['size'])]))
     elif element['type'] == "cylinder":
         output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['height']]))
     elif element['type'] == "sphere":
         output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
-    elif element['type'] in ['capsule', 'mesh']: # capsules are not supported in URDF and are emulated using meshes
+    elif element['type'] in ['capsule', 'mesh']:  # capsules are not supported in URDF and are emulated using meshes
         output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], l2str(element['scale'])]))
-    output.append(indent*4+'</geometry>\n')
+    output.append(indent * 4 + '</geometry>\n')
 
 
 def exportModelToURDF(model, filepath):
-    output = []
-    output.append(xmlHeader)
-    output.append(indent+'<robot name="'+model['modelname']+'">\n\n')
+    output = [xmlHeader, indent + '<robot name="' + model['modelname'] + '">\n\n']
     #export link information
     for l in model['links'].keys():
         link = model['links'][l]
-        output.append(indent*2+'<link name="'+l+'">\n')
+        output.append(indent * 2 + '<link name="' + l + '">\n')
         if 'mass' in link['inertial'] and 'inertia' in link['inertial']:
-            output.append(indent*3+'<inertial>\n')
+            output.append(indent * 3 + '<inertial>\n')
             if 'pose' in link['inertial']:
-                output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['inertial']['pose']['translation']), l2str(link['inertial']['pose']['rotation_euler'])]))
+                output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['inertial']['pose']['translation']),
+                                                                    l2str(link['inertial']['pose']['rotation_euler'])]))
             output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
-            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'], [str(i) for i in link['inertial']['inertia']]))
-            output.append(indent*3+'</inertial>\n')
+            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'],
+                                  [str(i) for i in link['inertial']['inertia']]))
+            output.append(indent * 3 + '</inertial>\n')
         #visual object
         if link['visual']:
             for v in link['visual']:
                 vis = link['visual'][v]
-                output.append(indent*3+'<visual name="' + vis['name'] + '">\n')
-                output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
+                output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
+                output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
+                                      [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
                 writeURDFGeometry(output, vis['geometry'])
                 if 'material' in vis:
-                    if model['materials'][vis['material']]['users'] == 0: #FIXME: change back to 1 when implemented in urdfloader
+                    if model['materials'][vis['material']][
+                        'users'] == 0:  #FIXME: change back to 1 when implemented in urdfloader
                         mat = model['materials'][vis['material']]
-                        output.append(indent*4+'<material name="' + mat['name'] + '">\n')
+                        output.append(indent * 4 + '<material name="' + mat['name'] + '">\n')
                         color = mat['diffuseColor']
-                        output.append(indent*5+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(mat["transparency"]) + '"/>\n')
+                        output.append(
+                            indent * 5 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
+                                mat["transparency"]) + '"/>\n')
                         if 'texturename' in mat:
-                            output.append(indent*5+'<texture filename="'+mat['texturename']+'"/>\n')
-                        output.append(indent*4+'</material>\n')
+                            output.append(indent * 5 + '<texture filename="' + mat['texturename'] + '"/>\n')
+                        output.append(indent * 4 + '</material>\n')
                     else:
-                        output.append(indent*4+'<material name="' + vis["material"] + '"/>\n')
-                output.append(indent*3+'</visual>\n')
+                        output.append(indent * 4 + '<material name="' + vis["material"] + '"/>\n')
+                output.append(indent * 3 + '</visual>\n')
         #collision object
         if link['collision']:
             for c in link['collision']:
                 col = link['collision'][c]
-                output.append(indent*3+'<collision name="' + col['name'] + '">\n')
-                output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
+                output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
+                output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
+                                      [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
                 writeURDFGeometry(output, col['geometry'])
-                output.append(indent*3+'</collision>\n')
-        output.append(indent*2+'</link>\n\n')
+                output.append(indent * 3 + '</collision>\n')
+        output.append(indent * 2 + '</link>\n\n')
     #export joint information
     for j in model['joints']:
         joint = model['joints'][j]
-        output.append(indent*2+'<joint name="'+joint['name']+'" type="'+joint["type"]+'">\n')
+        output.append(indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n')
         child = model['links'][joint["child"]]
-        output.append(xmlline(3, 'origin', ['xyz', 'rpy'], [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])]))
-        output.append(indent*3+'<parent link="'+joint["parent"]+'"/>\n')
-        output.append(indent*3+'<child link="'+joint["child"]+'"/>\n')
+        output.append(xmlline(3, 'origin', ['xyz', 'rpy'],
+                              [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])]))
+        output.append(indent * 3 + '<parent link="' + joint["parent"] + '"/>\n')
+        output.append(indent * 3 + '<child link="' + joint["child"] + '"/>\n')
         if 'axis' in joint:
-            output.append(indent*3+'<axis xyz="'+l2str(joint['axis'])+'"/>\n')
+            output.append(indent * 3 + '<axis xyz="' + l2str(joint['axis']) + '"/>\n')
         if 'limits' in joint:
-            output.append(xmlline(3, 'limit', [p for p in joint['limits']], [joint['limits'][p] for p in joint['limits']]))
-        output.append(indent*2+'</joint>\n\n')
+            output.append(
+                xmlline(3, 'limit', [p for p in joint['limits']], [joint['limits'][p] for p in joint['limits']]))
+        output.append(indent * 2 + '</joint>\n\n')
     #export material information
     for m in model['materials']:
         if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
-            output.append(indent*2+'<material name="' + m + '">\n')
+            output.append(indent * 2 + '<material name="' + m + '">\n')
             color = model['materials'][m]['diffuseColor']
             transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
-            output.append(indent*3+'<color rgba="'+l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(1.0-transparency) + '"/>\n')
+            output.append(indent * 3 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
+                1.0 - transparency) + '"/>\n')
             if 'texturename' in model['materials'][m]:
-                            output.append(indent*3+'<texture filename="'+model['materials'][m]['texturename']+'"/>\n')
-            output.append(indent*2+'</material>\n\n')
+                output.append(indent * 3 + '<texture filename="' + model['materials'][m]['texturename'] + '"/>\n')
+            output.append(indent * 2 + '</material>\n\n')
     #finish the export
     output.append(xmlFooter)
     with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))
     # problem of different joint transformations needed for fixed joints
-    print("phobos URDF export: Writing model data to", filepath )
+    print("phobos URDF export: Writing model data to", filepath)
 
 
 def exportModelToSRDF(model, path):
@@ -372,36 +382,36 @@ def exportModelToSRDF(model, path):
     """
     output = []
     output.append(xmlHeader)
-    output.append(indent+'<robot name="'+model['modelname']+'">\n\n')
+    output.append(indent + '<robot name="' + model['modelname'] + '">\n\n')
     for groupname in model['groups']:
-        output.append(indent*2 + '<group name="'+groupname+'">\n')
+        output.append(indent * 2 + '<group name="' + groupname + '">\n')
         for member in model['groups'][groupname]:
-            output.append(indent*3+'<'+member['type']+' name="'+member['name']+'" />\n')
-        output.append(indent*2 + '</group>\n\n')
+            output.append(indent * 3 + '<' + member['type'] + ' name="' + member['name'] + '" />\n')
+        output.append(indent * 2 + '</group>\n\n')
     for chainname in model['chains']:
-        output.append(indent*2 + '<group name="'+chainname+'">\n')
+        output.append(indent * 2 + '<group name="' + chainname + '">\n')
         chain = model['chains'][chainname]
-        output.append(indent*3 + '<chain base_link="'+chain['start']+'" tip_link="'+chain['end']+'" />\n')
-        output.append(indent*2 + '</group>\n\n')
+        output.append(indent * 3 + '<chain base_link="' + chain['start'] + '" tip_link="' + chain['end'] + '" />\n')
+        output.append(indent * 2 + '</group>\n\n')
     #for joint in model['state']['joints']:
     #    pass
     #passive joints
     for joint in model['joints']:
         try:
             if model['joints'][joint]['passive']:
-                output.append(indent*2+'<passive_joint name="'+model['links'][joint]['name']+'"/>\n\n')
+                output.append(indent * 2 + '<passive_joint name="' + model['links'][joint]['name'] + '"/>\n\n')
         except KeyError:
             pass
     for link in model['links']:
         if len(model['links'][link]['approxcollision']) > 0:
-            output.append(indent*2+'<link_sphere_approximation link="'+model['links'][link]['name']+'">\n')
+            output.append(indent * 2 + '<link_sphere_approximation link="' + model['links'][link]['name'] + '">\n')
             for sphere in model['links'][link]['approxcollision']:
                 output.append(xmlline(3, 'sphere', ('center', 'radius'), (l2str(sphere['center']), sphere['radius'])))
-            output.append(indent*2+'</link_sphere_approximation>\n\n')
+            output.append(indent * 2 + '</link_sphere_approximation>\n\n')
         else:
-            output.append(indent*2+'<link_sphere_approximation link="'+model['links'][link]['name']+'">\n')
+            output.append(indent * 2 + '<link_sphere_approximation link="' + model['links'][link]['name'] + '">\n')
             output.append(xmlline(3, 'sphere', ('center', 'radius'), ('0.0 0.0 0.0', '0')))
-            output.append(indent*2+'</link_sphere_approximation>\n\n')
+            output.append(indent * 2 + '</link_sphere_approximation>\n\n')
     #calculate collision-exclusive links
     collisionExclusives = []
     for combination in itertools.combinations(model['links'], 2):
@@ -414,8 +424,9 @@ def exportModelToSRDF(model, path):
                 collisionExclusives.append((link1['name'], link2['name']))
         except KeyError:
             pass
-    def addPCCombinations (parent):
-        '''Function to add parent/child link combinations for all parents an children that are not already set via collision bitmask'''
+
+    def addPCCombinations(parent):
+        """Function to add parent/child link combinations for all parents an children that are not already set via collision bitmask"""
         children = getImmediateChildren(parent, 'link')
         if len(children) > 0:
             for child in children:
@@ -442,7 +453,7 @@ def exportModelToSRDF(model, path):
 
 
 def exportModelToSMURF(model, path):
-    export = {'state': False,  #model['state'] != {}, #TODO: handle state
+    export = {'state': False,  # model['state'] != {}, # TODO: handle state
               'materials': model['materials'] != {},
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
@@ -450,7 +461,7 @@ def exportModelToSMURF(model, path):
               }
     #create all filenames
     smurf_filename = model['modelname'] + ".smurf"
-    urdf_filename =  model['modelname'] + ".urdf"
+    urdf_filename = model['modelname'] + ".urdf"
     filenames = {'state': model['modelname'] + "_state.yml",
                  'materials': model['modelname'] + "_materials.yml",
                  'sensors': model['modelname'] + "_sensors.yml",
@@ -459,22 +470,20 @@ def exportModelToSMURF(model, path):
                  }
 
     annotationdict = gatherAnnotations(model)
-    print(annotationdict)
     for category in annotationdict:
-        filenames[category] = model['modelname'] + '_'+category+'.yml'
+        filenames[category] = model['modelname'] + '_' + category + '.yml'
         export[category] = True
 
-    infostring = ' definition SMURF file for "'+model['modelname']+'", '+model["date"]+"\n\n"
+    infostring = ' definition SMURF file for "' + model['modelname'] + '", ' + model["date"] + "\n\n"
 
     #write model information
     print('Writing SMURF information to', smurf_filename)
-    modeldata = {}
-    modeldata["date"] = model["date"]
-    modeldata["files"] = [urdf_filename] + [filenames[f] for f in filenames if export[f]]
+    modeldata = {"date": model["date"], "files": [urdf_filename] + [filenames[f] for f in filenames if export[f]]}
     with open(path + smurf_filename, 'w') as op:
-        op.write('# main SMURF file of model "'+model['modelname']+'"\n')
+        op.write('# main SMURF file of model "' + model['modelname'] + '"\n')
         op.write('# created with Phobos ' + defs.version + ' - https://github.com/rock-simulation/phobos\n\n')
-        op.write("modelname: "+model['modelname']+"\n")
+        op.write("SMURF version: " + defs.version + "\n")
+        op.write("modelname: " + model['modelname'] + "\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
     #write urdf
@@ -503,9 +512,9 @@ def exportModelToSMURF(model, path):
                 tmpstate['name'] = jointname
                 states.append(joint['state'])
         with open(path + filenames['state'], 'w') as op:
-            op.write('#state'+infostring)
-            op.write("modelname: "+model['modelname']+'\n')
-            op.write(yaml.dump(states))#, default_flow_style=False))
+            op.write('#state' + infostring)
+            op.write("modelname: " + model['modelname'] + '\n')
+            op.write(yaml.dump(states))  #, default_flow_style=False))
 
     #write materials, sensors, motors & controllers
     for data in ['materials', 'sensors', 'motors', 'controllers']:
@@ -514,7 +523,7 @@ def exportModelToSMURF(model, path):
                 op.write('#' + data + infostring)
                 op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
-#write additional information
+    #write additional information
     for data in annotationdict.keys():
         if export[data]:
             with open(path + filenames[data], 'w') as op:
@@ -532,7 +541,7 @@ def exportModelToMARS(model, path):
     mse.exportModelToMARS(model, path)
 
 
-def securepath(path): #TODO: this is totally not error-handled!
+def securepath(path):  #TODO: this is totally not error-handled!
     if not os.path.exists(path):
         os.makedirs(path)
     return os.path.expanduser(path)
@@ -545,10 +554,10 @@ class ExportModelOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     typetags = BoolProperty(
-                name = 'typetags',
-                default = False,
-                description = 'add link/joint typetags'
-                )
+        name='typetags',
+        default=False,
+        description='add link/joint typetags'
+    )
 
     def execute(self, context):
         export(self.typetags)
@@ -594,7 +603,7 @@ def export(typetags=False):
             i = 1
         for obj in bpy.context.selected_objects:
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                    and obj['geometry/type'] == 'mesh' and 'filename' not in obj):
+                and obj['geometry/type'] == 'mesh' and 'filename' not in obj):
                 if objexp:
                     exportObj(outpath, obj)
                 if bobjexp:
