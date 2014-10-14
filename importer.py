@@ -82,9 +82,28 @@ class RobotModelParser():
         self.path, self.filename = os.path.split(self.filepath)
         self.robot = {}
 
+    def scaleLink(self, link, newlink):
+        """Scales newly-created armatures depending on the link's largest collision object."""
+        newscale = 0.3
+        if len(link['collision']) > 0:
+            sizes = []
+            for collname in link['collision']:
+                collobj = link['collision'][collname]
+                colltype = collobj['geometry']['type']
+                if colltype == 'sphere':
+                    sizes.append(collobj['geometry']['radius'])
+                elif colltype == 'cylinder':
+                    sizes.append(max(collobj['geometry']['radius'], collobj['geometry']['length']))
+                elif colltype == 'mesh':
+                    sizes.append(max(collobj['geometry']['scale']))  # TODO: this alone is not very informative
+                else:
+                    sizes.append(max(collobj['geometry']['size']))
+            newscale = max(sizes)
+        newlink.scale = (newscale, newscale, newscale)
+
     def placeChildLinks(self, parent):
         bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
-        print(parent['name']+ ', ', end='')
+        print(parent['name'] + ', ', end='')
         children = []
         for l in self.robot['links']:
             if 'parent' in self.robot['links'][l] and self.robot['links'][l]['parent'] == parent['name']:
