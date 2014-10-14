@@ -414,14 +414,14 @@ def exportModelToSRDF(model, path):
                 collisionExclusives.append((link1['name'], link2['name']))
         except KeyError:
             pass
-    def addPCCombinations (mother):
+    def addPCCombinations (parent):
         '''Function to add parent/child link combinations for all parents an children that are not already set via collision bitmask'''
-        children = getImmediateChildren(mother, 'link')
+        children = getImmediateChildren(parent, 'link')
         if len(children) > 0:
             for child in children:
                 #output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (mother.name, child.name)))
-                if ((mother, child) not in collisionExclusives) or ((child, mother) not in collisionExclusives):
-                    collisionExclusives.append((mother.name, child.name))
+                if ((parent, child) not in collisionExclusives) or ((child, parent) not in collisionExclusives):
+                    collisionExclusives.append((parent.name, child.name))
                 addPCCombinations(child)
 
     roots = getRoots()
