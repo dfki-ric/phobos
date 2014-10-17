@@ -56,6 +56,31 @@ class CalculateMassOperator(Operator):
         mass = utility.calculateSum(bpy.context.selected_objects, 'mass')
         bpy.ops.error.message('INVOKE_DEFAULT', type="mass", message=str(mass))
         return {'FINISHED'}
+        
+class SortObjectsToLayersOperator(Operator):
+    """SortObjectsToLayersOperator"""
+    bl_idname = "object.phobos_sort_objects_to_layers"
+    bl_label = "Sorts all selected objects to their according layers"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    def execute(self, context):
+        for obj in context.selected_objects:
+            try:
+                phobosType = obj.phobostype
+                if phobosType != 'controller' and phobosType != 'undefined':
+                    layers = 20*[False]
+                    layers[defs.layerTypes[phobosType]] = True
+                    obj.layers = layers
+            except AttributeError:
+                pass
+        return {'FINISHED'}
+        
+    @classmethod
+    def poll(cls, context):
+        if len(context.selected_objects) > 0:
+            return True
+        else:
+            return False
 
 
 class AddChainOperator(Operator):
