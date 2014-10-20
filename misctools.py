@@ -56,13 +56,13 @@ class CalculateMassOperator(Operator):
         mass = utility.calculateSum(bpy.context.selected_objects, 'mass')
         bpy.ops.error.message('INVOKE_DEFAULT', type="mass", message=str(mass))
         return {'FINISHED'}
-        
+
 class SortObjectsToLayersOperator(Operator):
     """SortObjectsToLayersOperator"""
     bl_idname = "object.phobos_sort_objects_to_layers"
     bl_label = "Sorts all selected objects to their according layers"
     bl_options = {'REGISTER', 'UNDO'}
-    
+
     def execute(self, context):
         for obj in context.selected_objects:
             try:
@@ -74,7 +74,7 @@ class SortObjectsToLayersOperator(Operator):
             except AttributeError:
                 pass
         return {'FINISHED'}
-        
+
     @classmethod
     def poll(cls, context):
         if len(context.selected_objects) > 0:
@@ -519,9 +519,7 @@ class CopyCustomProperties(Operator):
     def execute(self, context):
         slaves = context.selected_objects
         master = context.active_object
-        print(slaves)
         slaves.remove(master)
-        print(slaves)
         props = robotdictionary.cleanObjectProperties(dict(master.items()))
         for obj in slaves:
             if self.empty_properties:
