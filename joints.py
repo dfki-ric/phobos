@@ -281,6 +281,18 @@ class DefineJointConstraintsOperator(Operator):
     bl_label = "Adds Bone Constraints to the joint (link)"
     bl_options = {'REGISTER', 'UNDO'}
 
+    passive = BoolProperty(
+        name='passive',
+        default=False,
+        description='makes the joint passive (no actuation)'
+    )
+
+    degrees = BoolProperty(
+        name='degrees',
+        default=False,
+        description='use degrees or rad for revolute joints'
+    )
+
     joint_type = EnumProperty(
         name='joint_type',
         default='revolute',
@@ -307,17 +319,15 @@ class DefineJointConstraintsOperator(Operator):
         default=0.0,
         description="maximum velocity of the joint")
 
-    passive = BoolProperty(
-        name='passive',
-        default=False,
-        description='makes the joint passive (no actuation)'
-    )
-
     # TODO: invoke function to read all values in
 
     def execute(self, context):
-        lower = math.radians(self.lower)
-        upper = math.radians(self.upper)
+        if self.degrees:
+            lower = math.radians(self.lower)
+            upper = math.radians(self.upper)
+        else:
+            lower = self.lower
+            upper = self.upper
         for link in context.selected_objects:
             bpy.context.scene.objects.active = link
             setJointConstraints(link, self.joint_type, lower, upper)
