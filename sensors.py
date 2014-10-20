@@ -44,10 +44,12 @@ def unregister():
 
 def createSensor(sensor):
     if 'Camera' in sensor['type']:
+        bpy.context.scene.layers[defs.layerTypes['sensor']] = True
         bpy.ops.object.add(type='CAMERA', location=sensor['pose']['translation'],
                            rotation=sensor['pose']['rotation_euler'],
                            layers=utility.defLayers([defs.layerTypes['sensor']]))
         newsensor = bpy.context.active_object
+        newsensor.name = sensor['name']
     elif sensor['type'] in ["RaySensor", "RotatingRaySensor", "ScanningSonar"]:
         # TODO: create a proper ray sensor scanning layer disc here
         newsensor = utility.createPrimitive(sensor['name'], 'disc', (0.5, 36),

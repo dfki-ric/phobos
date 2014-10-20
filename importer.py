@@ -172,6 +172,24 @@ class RobotModelParser():
                     except KeyError:
                         pass
 
+    def attachSensor(self, sensor):
+        bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
+        try:
+            parentLink = bpy.data.objects[sensor['link']]
+            if 'pose' in sensor:
+                urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
+                urdf_geom_rot = mathutils.Euler(tuple(sensor['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+            else:
+                urdf_geom_loc = mathutils.Matrix.Identity(4)
+                urdf_geom_rot = mathutils.Matrix.Identity(4)
+            sensorobj = bpy.data.objects[sensor['name']]
+            selectObjects([sensorobj, parentLink], True, 1)
+            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            sensorobj.matrix_local = urdf_geom_loc * urdf_geom_rot
+        except KeyError:
+            print('###ERROR: inconsisent data on sensor:', sensor['name'])
+
+
     def createGeometry(self, viscol, geomsrc):
         newgeom = None
         if viscol['geometry'] is not {}:
@@ -377,6 +395,9 @@ class RobotModelParser():
             print("### Error: Could not assign model name to root link.")
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
+        for sensorname in self.robot['sensors']:
+            sensor = self.robot['sensors'][sensorname]
+            self.attachSensor(sensor)
 
         print("\n\nCreating motors...")
         for m in self.robot['motors']:
