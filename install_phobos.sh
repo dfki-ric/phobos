@@ -66,7 +66,7 @@ osys = platform.system()
 if osys == "Linux":
     f.write("addonpath=$HOME/.config/blender/$blenderversion/scripts/addons")
 elif osys == "Darwin":
-    f.write("addonpath=$HOME/Library/Application Support/Blender/$blenderversion/scripts/addons")
+    f.write("addonpath=$HOME/Library/Application\ Support/Blender/$blenderversion/scripts/addons")
 f.close()
 END
     ###END PYTHON SNIPPET###
