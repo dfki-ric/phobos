@@ -583,8 +583,68 @@ class SRDFModelParser(RobotModelParser):
         RobotModelParser.__init__(self, filepath)
         
     def parseModel(self, robot):
-        return robot
+        print("\nParsing SRDF extensions from", self.filepath)
+        self.tree = ET.parse(self.filepath)
+        self.root = self.tree.getroot()
+        
+        collision_exclusives = []
+        for disabled_coll in self.root.iter('disable_collisions'):
+            collision_exclusives.append((disabled_coll.attrib['link1'], disabled_coll.attrib['link2']))
+            
+        collision_Dic = buildCollisionDictionary(collision_exclusives)
+        collision_Groups = buildCollisionGroups(collision_Dic)
+        
+    def buildCollisionDictionary(collision_exclusives):
+        dic = {}
+        for pair in collision_exclusives:
+            if pair[0] not in dic:
+                dic[pair[0]]=[]
+                dic[pair[0]].append(pair[1])
+            else:
+                if pair[1] not in dic[pair[0]]:
+                    dic[pair[0]].append(pair[1])
+            if pair[1] not in dic:
+                dic[pair[1]]=[]
+                dic[pair[1]].append(pair[0])
+            else:
+                if pair[0] not in dic[pair[1]]:
+                dic[pair[1]].append(pair[0])
+        return dic
+                
+    def checkGroup(group, colls):
+    cut = []
+    for elem in group:
+        if elem in colls:
+            cut.append(elem)
+    if len(cut) == len(group):
+        return cut
+    else:
+        return []
 
+def processGroup(group, link, colls):
+    if link in group:
+            for coll in colls:
+                if coll in group:
+                    colls.remove(coll)
+    else:
+        cut = checkGroup(group, colls)
+        if len(cut) > 0:
+            group.append(link)
+            for l in cut:
+                colls.remove(l)
+                
+    def buildCollisionGroups(dic):
+        groups=[]
+        for link in dic:
+            colls = dic[link]
+            for group in groups:
+                processGroup(group, link, colls)
+            while len(colls) > 0:
+                newgroup = [link, colls.pop()]
+                groups.append(newgroup)
+                processGroup(newgroup, link, colls)
+        return groups
+        
 
 class SMURFModelParser(RobotModelParser):
     """Class derived from RobotModelParser which parses a SMURF model"""
