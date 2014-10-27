@@ -575,6 +575,15 @@ class URDFModelParser(RobotModelParser):
         #mimic
         #safety_controller
         return newjoint, pose
+    
+class SRDFModelParser(RobotModelParser):
+    """Class derived from RobotModelParser wich parses a SRDF extension file for URDF"""
+    
+    def __init__(self, filepath):
+        RobotModelParser.__init__(self, filepath)
+        
+    def parseModel(self, robot):
+        return robot
 
 
 class SMURFModelParser(RobotModelParser):
@@ -592,17 +601,24 @@ class SMURFModelParser(RobotModelParser):
             print('###Error: No valid SMURF file.')
             return None
         urdffile = None
+        srdffile = None
         ymlfiles = [f for f in smurf['files'] if f.endswith('.yml') or f.endswith('.yaml')]
         for f in smurf['files']:
             if f.endswith('.urdf'):
                 urdffile = f
+            if f.endswith('.srdf'):
+                srdffile = f
         # get URDF info
         if urdffile is None:
             print("###Error: Did not find URDF file associated with SMURF.")
             return None
         urdfparser = URDFModelParser(os.path.join(self.path, urdffile))
         urdfparser.parseModel()
-        self.robot = urdfparser.robot
+        if srdffile not None:
+            srdfparser = SRDFModelParser(os.path.join(self.path, srdffile))
+            self.robot = srdfparser.parseModel(urdfparser.robot)
+        else:
+            self.robot = urdfparser.robot
         # make sure all types exist
         typelist = ['links', 'joints', 'materials', 'sensors', 'motors', 'controllers', 'groups', 'chains']
         for key in typelist:
