@@ -583,72 +583,90 @@ class SRDFModelParser(RobotModelParser):
         RobotModelParser.__init__(self, filepath)
         
     def parseModel(self, robot):
+        collision_Exclusives = self.buildCollisionExclusives()
+        collision_Dic = self.buildCollisionDictionary(collision_Exclusives, robot)
+        collision_Groups = self.buildCollisionGroups(collision_Dic)
+        robot = self.buildBitmasks(collision_Groups, robot)
+        return robot
+        
+    def buildBitmasks(self, collision_Groups, robot):
+        for i in range (0,len(collision_Groups)):
+            #print(i)
+            pass
+        return robot
+    
+    def buildCollisionExclusives(self):
         print("\nParsing SRDF extensions from", self.filepath)
         self.tree = ET.parse(self.filepath)
         self.root = self.tree.getroot()
         
-        collision_exclusives = []
+        collision_Exclusives = []
         for disabled_coll in self.root.iter('disable_collisions'):
-            collision_exclusives.append((disabled_coll.attrib['link1'], disabled_coll.attrib['link2']))
-            
-        collision_Dic = buildCollisionDictionary(collision_exclusives)
-        collision_Groups = buildCollisionGroups(collision_Dic)
-        buildBitmasks(collision_Groups, robot)
+            pair = (disabled_coll.attrib['link1'], disabled_coll.attrib['link2'])
+            collision_Exclusives.append(pair)
+            #print("Append ", pair, " to collision Exclusives")
+        return collision_Exclusives
         
-        
-    def buildBitmasks(collision_Groups, robot):
-        pass
     
-    
-    def buildCollisionDictionary(collision_exclusives):
+    def buildCollisionDictionary(self, collision_exclusives, robot):
         dic = {}
         for pair in collision_exclusives:
-            if pair[0] not in dic:
-                dic[pair[0]]=[]
-                dic[pair[0]].append(pair[1])
-            else:
-                if pair[1] not in dic[pair[0]]:
+            if 'root' in pair or (pair[0] != robot['joints'][pair[1]]['parent'] and pair[1] != robot['joints'][pair[0]]['parent']):
+                if pair[0] not in dic:
+                    dic[pair[0]]=[]
                     dic[pair[0]].append(pair[1])
-            if pair[1] not in dic:
-                dic[pair[1]]=[]
-                dic[pair[1]].append(pair[0])
+                else:
+                    if pair[1] not in dic[pair[0]]:
+                        dic[pair[0]].append(pair[1])
+                if pair[1] not in dic:
+                    dic[pair[1]]=[]
+                    dic[pair[1]].append(pair[0])
+                else:
+                    if pair[0] not in dic[pair[1]]:
+                        dic[pair[1]].append(pair[0])
             else:
-                if pair[0] not in dic[pair[1]]:
-                dic[pair[1]].append(pair[0])
+                pass
+                #print("Pair: ", pair, " not included")
+        print("Collision Dictionary:\n", dic)
         return dic
                 
-    def checkGroup(group, colls):
-    cut = []
-    for elem in group:
-        if elem in colls:
-            cut.append(elem)
-    if len(cut) == len(group):
-        return cut
-    else:
-        return []
+    def checkGroup(self, group, colls):
+        cut = []
+        for elem in group:
+            if elem in colls:
+                cut.append(elem)
+        if len(cut) == len(group):
+            return cut
+        else:
+            return []
 
-def processGroup(group, link, colls):
-    if link in group:
+    def processGroup(self, group, link, colls):
+        if link in group:
             for coll in colls:
                 if coll in group:
                     colls.remove(coll)
-    else:
-        cut = checkGroup(group, colls)
-        if len(cut) > 0:
-            group.append(link)
-            for l in cut:
-                colls.remove(l)
+        else:
+            cut = self.checkGroup(group, colls)
+            if len(cut) > 0:
+                group.append(link)
+                for l in cut:
+                    colls.remove(l)
                 
-    def buildCollisionGroups(dic):
+    def buildCollisionGroups(self, dic):
         groups=[]
         for link in dic:
+            #rint("Current link: ", link)
             colls = dic[link]
+            #print("Current colls: ", colls)
             for group in groups:
-                processGroup(group, link, colls)
+                #print("Current group: ", group)
+                self.processGroup(group, link, colls)
             while len(colls) > 0:
                 newgroup = [link, colls.pop()]
                 groups.append(newgroup)
-                processGroup(newgroup, link, colls)
+                self.processGroup(newgroup, link, colls)
+        print ("Number of collision Groups: ", len(groups))
+        #print ("Collision Groups:\n", groups)
         return groups
         
 
@@ -680,7 +698,7 @@ class SMURFModelParser(RobotModelParser):
             return None
         urdfparser = URDFModelParser(os.path.join(self.path, urdffile))
         urdfparser.parseModel()
-        if srdffile not None:
+        if srdffile is not None:
             srdfparser = SRDFModelParser(os.path.join(self.path, srdffile))
             self.robot = srdfparser.parseModel(urdfparser.robot)
         else:
