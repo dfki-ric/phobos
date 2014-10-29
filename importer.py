@@ -593,7 +593,13 @@ class SRDFModelParser(RobotModelParser):
             
         collision_Dic = buildCollisionDictionary(collision_exclusives)
         collision_Groups = buildCollisionGroups(collision_Dic)
+        buildBitmasks(collision_Groups, robot)
         
+        
+    def buildBitmasks(collision_Groups, robot):
+        pass
+    
+    
     def buildCollisionDictionary(collision_exclusives):
         dic = {}
         for pair in collision_exclusives:
