@@ -590,9 +590,18 @@ class SRDFModelParser(RobotModelParser):
         return robot
         
     def buildBitmasks(self, collision_Groups, robot):
-        for i in range (0,len(collision_Groups)):
-            #print(i)
-            pass
+        bits = len(collision_Groups)
+        if bits > 20:
+            print("The blender bitmask is not capable of more than 20 bit. The bitmask will be cutted!")
+            bits = 20
+        for link in robot['links']:
+            for i in range(0, bits):
+                if link in collision_Groups[i]:
+                    for coll in link['collision']:
+                        try:
+                            coll['bitmask'] += 2**i
+                        except KeyError:
+                            coll['bitmask'] = 2**i
         return robot
     
     def buildCollisionExclusives(self):
