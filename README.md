@@ -5,6 +5,8 @@ Phobos is an add-on for the open-source 3D modeling software [Blender](http://ww
 
 Phobos was initiated and is currently developed at the [Robotics Innovation Center](http://robotik.dfki-bremen.de/en/startpage.html) of the [German Research Center for Artificial Intelligence (DFKI)](http://www.dfki.de) in Bremen, together with the [robotics group](http://www.informatik.uni-bremen.de/robotik/index_en.php) of the [University of Bremen](http://www.uni-bremen.de/en.html).
 
+You can find the [documentation](doc/phobos.md) in the *doc* folder.
+
 ![Model of the SpaceClimber robot in Blender, next to the Phobos toolbar displayed on the left.](doc/img/phobos_spaceclimber.png)
 
 *Model of the [SpaceClimber](http://robotik.dfki-bremen.de/en/research/projects/spaceclimber-1.html) robot in Blender, next to the Phobos toolbar displayed on the left.*
