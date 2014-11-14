@@ -575,7 +575,109 @@ class URDFModelParser(RobotModelParser):
         #mimic
         #safety_controller
         return newjoint, pose
+    
+class SRDFModelParser(RobotModelParser):
+    """Class derived from RobotModelParser wich parses a SRDF extension file for URDF"""
+    
+    def __init__(self, filepath):
+        RobotModelParser.__init__(self, filepath)
+        
+    def parseModel(self, robot):
+        collision_Exclusives = self.buildCollisionExclusives()
+        collision_Dic = self.buildCollisionDictionary(collision_Exclusives, robot)
+        collision_Groups = self.buildCollisionGroups(collision_Dic)
+        robot = self.buildBitmasks(collision_Groups, robot)
+        return robot
+        
+    def buildBitmasks(self, collision_Groups, robot):
+        bits = len(collision_Groups)
+        if bits > 20:
+            print("The blender bitmask is not capable of more than 20 bit. The bitmask will be cutted!")
+            bits = 20
+        for link in robot['links']:
+            for i in range(0, bits):
+                if link in collision_Groups[i]:
+                    for coll in link['collision']:
+                        try:
+                            coll['bitmask'] += 2**i
+                        except KeyError:
+                            coll['bitmask'] = 2**i
+        return robot
+    
+    def buildCollisionExclusives(self):
+        print("\nParsing SRDF extensions from", self.filepath)
+        self.tree = ET.parse(self.filepath)
+        self.root = self.tree.getroot()
+        
+        collision_Exclusives = []
+        for disabled_coll in self.root.iter('disable_collisions'):
+            pair = (disabled_coll.attrib['link1'], disabled_coll.attrib['link2'])
+            collision_Exclusives.append(pair)
+            #print("Append ", pair, " to collision Exclusives")
+        return collision_Exclusives
+        
+    
+    def buildCollisionDictionary(self, collision_exclusives, robot):
+        dic = {}
+        for pair in collision_exclusives:
+            if 'root' in pair or (pair[0] != robot['joints'][pair[1]]['parent'] and pair[1] != robot['joints'][pair[0]]['parent']):
+                if pair[0] not in dic:
+                    dic[pair[0]]=[]
+                    dic[pair[0]].append(pair[1])
+                else:
+                    if pair[1] not in dic[pair[0]]:
+                        dic[pair[0]].append(pair[1])
+                if pair[1] not in dic:
+                    dic[pair[1]]=[]
+                    dic[pair[1]].append(pair[0])
+                else:
+                    if pair[0] not in dic[pair[1]]:
+                        dic[pair[1]].append(pair[0])
+            else:
+                pass
+                #print("Pair: ", pair, " not included")
+        print("Collision Dictionary:\n", dic)
+        return dic
+                
+    def checkGroup(self, group, colls):
+        cut = []
+        for elem in group:
+            if elem in colls:
+                cut.append(elem)
+        if len(cut) == len(group):
+            return cut
+        else:
+            return []
 
+    def processGroup(self, group, link, colls):
+        if link in group:
+            for coll in colls:
+                if coll in group:
+                    colls.remove(coll)
+        else:
+            cut = self.checkGroup(group, colls)
+            if len(cut) > 0:
+                group.append(link)
+                for l in cut:
+                    colls.remove(l)
+                
+    def buildCollisionGroups(self, dic):
+        groups=[]
+        for link in dic:
+            #rint("Current link: ", link)
+            colls = dic[link]
+            #print("Current colls: ", colls)
+            for group in groups:
+                #print("Current group: ", group)
+                self.processGroup(group, link, colls)
+            while len(colls) > 0:
+                newgroup = [link, colls.pop()]
+                groups.append(newgroup)
+                self.processGroup(newgroup, link, colls)
+        print ("Number of collision Groups: ", len(groups))
+        #print ("Collision Groups:\n", groups)
+        return groups
+        
 
 class SMURFModelParser(RobotModelParser):
     """Class derived from RobotModelParser which parses a SMURF model"""
@@ -592,17 +694,24 @@ class SMURFModelParser(RobotModelParser):
             print('###Error: No valid SMURF file.')
             return None
         urdffile = None
+        srdffile = None
         ymlfiles = [f for f in smurf['files'] if f.endswith('.yml') or f.endswith('.yaml')]
         for f in smurf['files']:
             if f.endswith('.urdf'):
                 urdffile = f
+            if f.endswith('.srdf'):
+                srdffile = f
         # get URDF info
         if urdffile is None:
             print("###Error: Did not find URDF file associated with SMURF.")
             return None
         urdfparser = URDFModelParser(os.path.join(self.path, urdffile))
         urdfparser.parseModel()
-        self.robot = urdfparser.robot
+        if srdffile is not None:
+            srdfparser = SRDFModelParser(os.path.join(self.path, srdffile))
+            self.robot = srdfparser.parseModel(urdfparser.robot)
+        else:
+            self.robot = urdfparser.robot
         # make sure all types exist
         typelist = ['links', 'joints', 'materials', 'sensors', 'motors', 'controllers', 'groups', 'chains']
         for key in typelist:
