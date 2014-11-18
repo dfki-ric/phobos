@@ -165,7 +165,7 @@ def exportBobj(path, obj):
 def exportObj(path, obj):
     objname = obj.name
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+    tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = os.path.join(path, objname) + '.obj'
     bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
@@ -193,7 +193,7 @@ def exportObj(path, obj):
 def exportStl(path, obj):
     objname = obj.name
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
+    tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = os.path.join(path, objname) + '.stl'
     bpy.ops.export_mesh.stl(filepath=outpath)
