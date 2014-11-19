@@ -597,11 +597,11 @@ class SRDFModelParser(RobotModelParser):
         for link in robot['links']:
             for i in range(0, bits):
                 if link in collision_Groups[i]:
-                    for coll in link['collision']:
+                    for coll in robot['links'][link]['collision']:
                         try:
-                            coll['bitmask'] += 2**i
+                            robot['links'][link]['collision'][coll]['bitmask'] += 2**i
                         except KeyError:
-                            coll['bitmask'] = 2**i
+                            robot['links'][link]['collision'][coll]['bitmask'] = 2**i
         return robot
     
     def buildCollisionExclusives(self):
