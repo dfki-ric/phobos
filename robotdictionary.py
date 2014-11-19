@@ -183,7 +183,8 @@ def deriveGeometry(obj):
 
 def deriveInertial(obj):
     """Derives a dictionary entry of an inertial object."""
-    props = initObjectProperties(obj, marstype='inertial')
+    #props = initObjectProperties(obj, marstype='inertial')
+    props = initObjectProperties(obj)
     #inertia = props['inertia'].split()
     props['inertia'] = list(map(float, obj['inertia']))
     props['pose'] = deriveObjectPose(obj)
@@ -509,7 +510,7 @@ def check_geometry(geometry, owner_type, owner_key, link_key):
             notifications += note + "\n"
             print(note)
     return notifications
-    
+
 
 def check_visuals(visuals, link_key):
     """
