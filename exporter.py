@@ -254,6 +254,17 @@ def gatherAnnotations(model):
     return annotations
 
 
+def gatherCollisionBitmasks(model):
+    bitmasks = {}
+    for linkname in model['links']:
+        for elementname in model['links'][linkname]['collision']:
+            element = model['links'][linkname]['collision'][elementname]
+            if 'bitmask' in element:
+                bitmask = {'name': elementname, 'link': linkname, 'bitmask': element['bitmask']}
+                bitmasks[elementname] = bitmask
+    return bitmasks
+
+
 def writeURDFGeometry(output, element):
     output.append(indent * 4 + '<geometry>\n')
     if element['type'] == 'box':
@@ -466,6 +477,7 @@ def exportModelToSMURF(model, path):
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
+              'collision': True
               }
     #create all filenames
     smurf_filename = model['modelname'] + ".smurf"
@@ -475,6 +487,7 @@ def exportModelToSMURF(model, path):
                  'sensors': model['modelname'] + "_sensors.yml",
                  'motors': model['modelname'] + "_motors.yml",
                  'controllers': model['modelname'] + "_controllers.yml",
+                 'collision': model['modelname'] + "_collision.yml",
                  }
 
     annotationdict = gatherAnnotations(model)
@@ -530,6 +543,13 @@ def exportModelToSMURF(model, path):
             with open(path + filenames[data], 'w') as op:
                 op.write('#' + data + infostring)
                 op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
+
+    #write collision bitmask information
+    if export['collision']:
+        bitmasks = gatherCollisionBitmasks(model)
+        with open(path + filenames['collision'], 'w') as op:
+            op.write('#collision data' + infostring)
+            op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
 
     #write additional information
     for data in annotationdict.keys():
