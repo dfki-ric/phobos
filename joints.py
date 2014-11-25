@@ -387,7 +387,7 @@ class AttachMotorOperator(Operator):
                 joint['motor/p'] = self.P
                 joint['motor/i'] = self.I
                 joint['motor/d'] = self.D
-                joint['motor/motorMaxSpeed'] = self.vmax*2*math.pi
-                joint['motor/motorMaxForce'] = self.taumax
-                joint['type'] = 1 if self.motortype == 'servo' else 2
+                joint['motor/maxSpeed'] = self.vmax*2*math.pi
+                joint['motor/maxEffort'] = self.taumax
+                joint['motor/type'] = 1 if self.motortype == 'servo' else 2
         return{'FINISHED'}
