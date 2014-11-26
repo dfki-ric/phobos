@@ -351,7 +351,7 @@ class AttachMotorOperator(Operator):
 
     P = FloatProperty(
         name="P",
-        default=0.0,
+        default=1.0,
         description="P-value")
 
     I = FloatProperty(
@@ -371,12 +371,12 @@ class AttachMotorOperator(Operator):
 
     taumax = FloatProperty(
         name="maximum torque [Nm]",
-        default=0.1,
+        default=1.0,
         description="maximum torque a motor can apply")
 
     motortype = EnumProperty(
         name='motor_type',
-        default=defs.motortypes[0],
+        default='PID',
         description="type of the motor",
         items=defs.motortypes)
 
@@ -384,10 +384,12 @@ class AttachMotorOperator(Operator):
         for joint in bpy.context.selected_objects:
             if joint.phobostype == "link":
                 #TODO: these keys have to be adapted
-                joint['motor/p'] = self.P
-                joint['motor/i'] = self.I
-                joint['motor/d'] = self.D
+                if self.motortype == 'PID':
+                    joint['motor/p'] = self.P
+                    joint['motor/i'] = self.I
+                    joint['motor/d'] = self.D
                 joint['motor/maxSpeed'] = self.vmax*2*math.pi
                 joint['motor/maxEffort'] = self.taumax
+                #joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
                 joint['motor/type'] = self.motortype
         return{'FINISHED'}
