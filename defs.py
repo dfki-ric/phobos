@@ -52,7 +52,7 @@ jointtypes = (('revolute',) * 3,
               ('floating',) * 3,
               ('planar',) * 3)
 
-motortypes = (('servo',) * 3,
+motortypes = (('PID',) * 3,
               ('DC',) * 3)
 
 geometrytypes = (('box',) * 3,

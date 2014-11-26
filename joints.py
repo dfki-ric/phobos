@@ -376,7 +376,7 @@ class AttachMotorOperator(Operator):
 
     motortype = EnumProperty(
         name='motor_type',
-        default='servo',
+        default=defs.motortypes[0],
         description="type of the motor",
         items=defs.motortypes)
 
@@ -389,5 +389,5 @@ class AttachMotorOperator(Operator):
                 joint['motor/d'] = self.D
                 joint['motor/maxSpeed'] = self.vmax*2*math.pi
                 joint['motor/maxEffort'] = self.taumax
-                joint['motor/type'] = 1 if self.motortype == 'servo' else 2
+                joint['motor/type'] = self.motortype
         return{'FINISHED'}
