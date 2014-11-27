@@ -106,6 +106,8 @@ nodeTypes = ("undefined",
 
 # definition of sensor types
 sensortypes = ("RaySensor",
+               "RotatingRaySensor",
+               "MultiLevelLaserRangeFinder",
                "CameraSensor",
                "ScanningSonar",
                "JointPosition",
@@ -125,9 +127,49 @@ sensortypes = ("RaySensor",
                "Custom"
                )
 
-sensorProperties = {"RaySensor": {"width": 144},
-                    "CameraSensor": {"width": 640, "height": 480},
-                    "ScanningSonar": {},
+sensorProperties = {"RaySensor": {
+                        'width': 144,
+                        'height': 1,
+                        'opening_width': 0.5*math.pi,
+                        'opening_height': 0.5*math.pi,
+                        'maxDistance': 100.0,
+                        'draw_rays': True
+                    },
+                    "RotatingRaySensor": {
+                        'bands': 16,
+                        'lasers': 32,
+                        'maxDistance': 100.0,
+                        'draw_rays': True,
+                        'horizontal_resolution': (1.0/180.0)*math.pi,
+                        'horizontal_offset':  0.0,
+                        'vertical_offset':  0.0
+                    },
+                    "CameraSensor": {
+                        'width': 640,
+                        'height': 480,
+                        'show_cam': True,
+                        'opening_width': 90,
+                        'opening_height': 90,
+                        'hud_pos': 0,
+                        'hud_width': 320,
+                        'hud_height': 240,
+                        'depthImage': False
+                    },
+                    "ScanningSonar": {
+                        'width': 64,
+                        'height': 512,
+                        'resolution': 0.1,
+                        'maxDist': 100.0,
+                        'hud_pos': 0,
+                        'updateRate': 10,
+                        'gain': 1,
+                        'show_cam': False,
+                        'only_ray': False,
+                        'extension': (0.010000, 0.004000, 0.004000),
+                        'left_limit': math.pi,
+                        'right_limit': -math.pi,
+                        'ping_pong_mode': False,
+                    },
                     "JointPosition": {},
                     "JointVelocity": {},
                     "JointLoad": {},
@@ -141,8 +183,17 @@ sensorProperties = {"RaySensor": {"width": 144},
                     "NodeCOM": {},
                     "NodeVelocity": {},
                     "NodeAngularVelocity": {},
-                    "MotorCurrent": {}
+                    "MotorCurrent": {},
+                    "MultiLevelLaserRangeFinder": {
+                        'numRaysVertical': 32,
+                        'numRaysHorizontal': 1900,
+                        'rttResolutionX':  128 * 4,
+                        'rttResolutionY':  128 * 2,
+                        'verticalOpeningAngle': 40 / 180.0 * math.pi,
+                        'horizontalOpeningAngle': 2 * math.pi * 1899 / 1900,
+                        'maxDistance':  100.0
                     }
+}
 
 #definitions of which elements live on which layers by default
 layerTypes = {
