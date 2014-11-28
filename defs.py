@@ -31,19 +31,21 @@ This module may well be imported and used outside of the MARS Blender Tools
 in the future.
 """
 
+import math
+
 # TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below
 
 version = '0.5'
 
 phobostypes = (('undefined',) * 3,
-             ('link',) * 3,
-             ('inertial',) * 3,
-             ('visual',) * 3,
-             ('collision',) * 3,
-             ('sensor',) * 3,
-             ('controller',) * 3,
-             ('approxsphere',) * 3)
+               ('link',) * 3,
+               ('inertial',) * 3,
+               ('visual',) * 3,
+               ('collision',) * 3,
+               ('sensor',) * 3,
+               ('controller',) * 3,
+               ('approxsphere',) * 3)
 
 jointtypes = (('revolute',) * 3,
               ('continuous',) * 3,
@@ -77,7 +79,7 @@ type_properties = {"undefined": (),
                    "sensor_default": ("new_sensor", "RaySensor"),
                    "controller": ('name',),
                    "controller_default": ("controller",)
-                   }
+}
 
 # definition of node types
 nodeTypes = ("undefined",
@@ -89,10 +91,10 @@ nodeTypes = ("undefined",
              "plane",
              "terrain",
              "reference"
-             )
+)
 
 # definition of joint types
-#jointTypes = ("undefined",
+# jointTypes = ("undefined",
 #              "revolute",
 #              "continuous",
 #              "prismatic",
@@ -210,12 +212,14 @@ layerTypes = {
 defaultmaterials = {
     'phobos_joint': {'diffuse': (0, 0, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
     'phobos_name': {'diffuse': (1, 1, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
-    'phobos_laserscanner': {'diffuse': (1.0, 0.08, 0.08), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 1.0},
+    'phobos_laserscanner': {'diffuse': (1.0, 0.08, 0.08), 'specular': (1, 1, 1), 'alpha': 0.3,
+                            'diffuse_intensity': 1.0},
     #'phobos_camera': {'diffuse': (0.13, 0.4, 1), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 0.8},
     'phobos_tof-camera': {'diffuse': (0.44, 1, 0.735), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 0.7},
     'phobos_inertial': {'diffuse': (1, 0.18, 0), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
     'phobos_sensor': {'diffuse': (0.8, 0.75, 0), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
-    'phobos_controller': {'diffuse': (0.518, 0.364, 0.8), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 0.7},
+    'phobos_controller': {'diffuse': (0.518, 0.364, 0.8), 'specular': (1, 1, 1), 'alpha': 0.3,
+                          'diffuse_intensity': 0.7},
     'phobos_indicator1': {'diffuse': (1, 0, 0), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
     'phobos_indicator2': {'diffuse': (0, 1, 0), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
     'phobos_indicator3': {'diffuse': (0, 0, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
@@ -226,4 +230,4 @@ defaultmaterials = {
 
 MARSlegacydict = {'specularColor': 'specularFront',
                   'diffuseColor': 'diffuseFront'
-                  }
+}
