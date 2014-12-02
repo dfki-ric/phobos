@@ -35,6 +35,8 @@ from phobos.utility import *
 from . import defs
 from . import materials
 
+import phobos.bobj_import as bobj_import
+
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
 defaults = Defaults(0.001, #mass
@@ -206,6 +208,12 @@ def get_axis_rotation_matrix(axis, angle):
 
     return mathutils.Matrix(rotation_matrix).to_4x4()
 
+def import_bobj(filepath):
+    """
+    """
+    bobj_import.load(filepath)
+
+
 class RobotModelParser():
     """Base class for a robot model file parser of a specific type"""
 
@@ -255,7 +263,11 @@ class RobotModelParser():
             print(link['name'], link['inertial'])
             print(link['inertial']['name'])
             geoname = link['inertial']['name'] #g
-            geom = bpy.data.objects[geoname]
+            try:
+                geom = bpy.data.objects[geoname]
+            except:
+                print('ERROR: missing subelement')
+                return
             bpy.ops.object.select_all(action="DESELECT")
             geom.select = True
             parentLink.select = True
@@ -275,7 +287,11 @@ class RobotModelParser():
                         urdf_geom_loc = mathutils.Matrix.Identity(4)
                         urdf_geom_rot = mathutils.Matrix.Identity(4)
                     geoname = geom['name'] #g
-                    geom = bpy.data.objects[geoname]
+                    try:
+                        geom = bpy.data.objects[geoname]
+                    except:
+                        print('ERROR: missing subelement')
+                        break
                     bpy.ops.object.select_all(action="DESELECT")
                     geom.select = True
                     parentLink.select = True
@@ -302,8 +318,13 @@ class RobotModelParser():
                     bpy.ops.import_mesh.stl(filepath=os.path.join(self.path, geom['filename']))
                 # hack for test:
                 elif filetype == 'bobj' or filetype == 'BOBJ':
-                    filename = 'visual_' + geom['filename'].split('.')[0] + '.obj'
-                    bpy.ops.import_scene.obj(filepath=os.path.join(self.path, filename))
+                    import_bobj(os.path.join(self.path, geom['filename']))
+                    #filename = geom['filename'].split('.')[0] + '.obj'
+                    #try:
+                    #    bpy.ops.import_scene.obj(filepath=os.path.join(self.path, filename))
+                    #except:
+                    #    print('ERROR: Missing object.')
+                    #    return
                 else:
                     print('ERROR: Could not import object.')
                 # find the newly imported obj
@@ -412,15 +433,15 @@ class RobotModelParser():
             self.placeLinkSubelements(self.robot['links'][link])
         print('Done!')
 
-        for obj in bpy.data.objects:
-            print('name:', obj.name)
-            matrix = obj.matrix_local
-            loc, rot, scale = matrix.decompose()
-            print('rotation:')
-            print('\tx:', rot.x, '\n\ty:', rot.y, '\n\tz:', rot.z, '\n\tw:', rot.w)
-            print('location:')
-            print('\tx:', loc.x, '\n\ty:', loc.y, '\n\tz:', loc.z)
-            print('-------------------')
+        #for obj in bpy.data.objects:
+        #    print('name:', obj.name)
+        #    matrix = obj.matrix_local
+        #    loc, rot, scale = matrix.decompose()
+            #print('rotation:')
+            #print('\tx:', rot.x, '\n\ty:', rot.y, '\n\tz:', rot.z, '\n\tw:', rot.w)
+            #print('location:')
+            #print('\tx:', loc.x, '\n\ty:', loc.y, '\n\tz:', loc.z)
+            #print('-------------------')
             
         
     def _debug_output(self):
@@ -625,7 +646,8 @@ class MARSModelParser(RobotModelParser):
             geometry_dict['radius'] = radius
             if geometry_type == 'cylinder' or geometry_type == 'capsule':
                 height = round_float(size.find('z').text)
-                geometry_dict['height'] = height
+                geometry_dict['length'] = height
+                # geometry_dict['height'] = height
         elif geometry_type == 'plane':
             x = round_float(size.find('x').text)
             y = round_float(size.find('y').text)
@@ -647,7 +669,9 @@ class MARSModelParser(RobotModelParser):
         index = int(node.find('index').text)
         
         visual_dict['pose'] = self.applied_rel_id_poses[index]
-        
+        print('visual:', name)
+        print(visual_dict['pose'])
+
         mat_index = int(node.find('material_id').text)
         visual_dict['material'] = self.material_indices[mat_index]
         
@@ -709,6 +733,8 @@ class MARSModelParser(RobotModelParser):
             inertial_dict['pose'] = calc_pose_formats(position, rotation)
             inertial_dict['name'] = self._get_distinct_name('inertial_' + node.get('name'))
             link_dict['inertial'] = inertial_dict
+
+        return inertial_dict
      
     def _get_distinct_name(self, name):
         '''
@@ -762,7 +788,8 @@ class MARSModelParser(RobotModelParser):
                 link_dict['collision'] = collisions_dict
                 
                 inertial_dict = self._parse_inertial(link_dict, node)
-                
+                link_dict['inertial'] = inertial_dict
+
                 if rel_id is not None:
                     link_dict['parent'] = int(rel_id.text)
                 
@@ -806,11 +833,7 @@ class MARSModelParser(RobotModelParser):
                 else:
                     parent_id = rel_id
                 link['parent'] = self.link_index_dict[parent_id]
-                
-                #else:
-                #    print('--------------')
-                #    print('| WTF-ERROR! |')
-                #    print('--------------')
+
         
     def _parse_additional_visuals_and_collisions(self, model, nodes):
         '''
@@ -915,7 +938,7 @@ class MARSModelParser(RobotModelParser):
             to_delete = []
             # check for infinite loop (happens if referenced node does not exist):
             if len(relative_poses) == num_rel_poses:
-                print('Error: non-existant relative id')
+                print('Error: non-existent relative id')
                 break
             num_rel_poses = len(relative_poses)
             for index in relative_poses:
