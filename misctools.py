@@ -67,6 +67,7 @@ class SortObjectsToLayersOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        pl.logger.startLog(self)
         for obj in context.selected_objects:
             try:
                 phobosType = obj.phobostype
@@ -74,8 +75,11 @@ class SortObjectsToLayersOperator(Operator):
                     layers = 20*[False]
                     layers[defs.layerTypes[phobosType]] = True
                     obj.layers = layers
+                if phobosType == 'undefined':
+                    pl.logger.log("The phobostype of the object '" + obj.name + "' is undefined")
             except AttributeError:
-                pass
+                pl.logger.log("The object '" + obj.name + "' has no phobostype", "ERROR") #Handle this as error or warning?
+        pl.logger.endLog()
         return {'FINISHED'}
 
     @classmethod
@@ -148,27 +152,32 @@ class SetMassOperator(Operator):
             self.mass = context.active_object['mass']
         except KeyError:
             self.mass = 0.001
+            #Todo: Need more detailed message here
+            pl.logger.log("KeyError occured in invoking of setMassOperator. Fallback: mass=0.001")
         return self.execute(context)
 
     def execute(self, context):
+        pl.logger.startLog(self)
         for obj in bpy.context.selected_objects:
             if obj.phobostype in ['visual', 'collision', 'inertial']:
                 try:
                     oldmass = obj['mass']
                 except KeyError:
-                    #TODO: Is this the correct default value? - Ole
+                    pl.logger.log("The object '" + obj.name + "' has no mass")
                     oldmass = None
                 if self.userbmass:
                     try:
                         obj['mass'] = obj.rigid_body.mass
                     except AttributeError:
                         obj['mass'] = 0.001
-                        print("### Error: object has no rigid body properties.")
+                        #print("### Error: object has no rigid body properties.")
+                        pl.logger.log("The object '" + obj.name + "' has no rigid body properties. Set mass to 0.001", "ERROR")
                 else:
                     obj['mass'] = self.mass
                 if obj['mass'] != oldmass:
                     t = dt.now()
                     obj['masschanged'] = t.isoformat()
+        pl.logger.endLog()
         return {'FINISHED'}
 
 
@@ -335,8 +344,13 @@ class NameModelOperator(Operator):
         description = "name of the robot model to be assigned")
 
     def execute(self, context):
+        pl.logger.startLog(self)
         root = utility.getRoot(bpy.context.active_object)
+        if root == None:
+            pl.logger.log("Could not set modelname due to missing root link. No name was set.", "ERROR")
+            return {'FINISHED'}
         root["modelname"] = self.modelname
+        pl.logger.endLog()
         return {'FINISHED'}
 
 
@@ -391,6 +405,7 @@ class SelectRootOperator(Operator):
     bl_label = "Select root object(s) of currently selected object(s)"
 
     def execute(self, context):
+        pl.logger.startLog(self)
         roots = set()
         for obj in bpy.context.selected_objects:
             roots.add(utility.getRoot(obj))
@@ -398,7 +413,9 @@ class SelectRootOperator(Operator):
             utility.selectObjects(list(roots), True)
             bpy.context.scene.objects.active = list(roots)[0]
         else:
-            bpy.ops.error.message('INVOKE_DEFAULT', type="ERROR", message="Couldn't find any root object.")
+            #bpy.ops.error.message('INVOKE_DEFAULT', type="ERROR", message="Couldn't find any root object.")
+            pl.logger.log("Couldn't find any root object.", "ERROR")
+        pl.logger.endLog()
         return {'FINISHED'}
 
 
@@ -562,16 +579,20 @@ class RenameCustomProperty(Operator):
     )
 
     def execute(self, context):
+        pl.logger.startLog(self)
         for obj in context.selected_objects:
             if self.find in obj and self.replace != '':
                 if self.replace in obj:
-                    print("### Error: property", self.replace, "already present in object", obj.name)
+                    #print("### Error: property", self.replace, "already present in object", obj.name)
+                    pl.logger.log("Property '" + self.replace + "' already present in object '" + obj.name + "'", "ERROR")
                     if self.overwrite:
+                        pl.logger.log("Replace property, because overwrite option was set")
                         obj[self.replace] = obj[self.find]
                         del obj[self.find]
                 else:
                     obj[self.replace] = obj[self.find]
                     del obj[self.find]
+        pl.logger.endLog()
         return {'FINISHED'}
 
     @classmethod

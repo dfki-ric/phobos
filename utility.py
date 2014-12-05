@@ -248,6 +248,9 @@ def getRoot(obj=None):
             if (anobj.select):
                 obj = anobj
     child = obj
+    if child == None:
+        pl.logger.log("No root object found! Check your object selection", "ERROR")
+        return None
     while child.parent != None:
         child = child.parent
     return child
