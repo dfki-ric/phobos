@@ -31,6 +31,7 @@ import mathutils
 from datetime import datetime
 from . import defs
 from . import materials
+from . import phoboslogger as pl
 
 
 def register():
@@ -315,7 +316,7 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            pass
+            pl.logger.log("The object '" + obj.name + "' has not property '" + numeric_prop + "'")
     return numsum
 
 

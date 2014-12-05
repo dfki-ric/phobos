@@ -37,6 +37,7 @@ from . import utility
 from . import defs
 from . import inertia
 from . import robotdictionary
+from . import phoboslogger as pl
 
 
 def register():
@@ -53,8 +54,10 @@ class CalculateMassOperator(Operator):
     bl_label = "Display mass of the selected objects in a pop-up window."
 
     def execute(self, context):
+        pl.logger.startLog(self)
         mass = utility.calculateSum(bpy.context.selected_objects, 'mass')
-        bpy.ops.error.message('INVOKE_DEFAULT', type="mass", message=str(mass))
+        pl.logger.log("The calculated mass is: " + str(mass), "INFO")
+        pl.logger.endLog()
         return {'FINISHED'}
 
 class SortObjectsToLayersOperator(Operator):
