@@ -614,10 +614,13 @@ class SetGeometryType(Operator):
             description = "MARS geometry type")
 
     def execute(self, context):
-
+        pl.logger.startLog(self)
         for obj in bpy.context.selected_objects:
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
                 obj['geometry/type'] = self.geomType
+            else:
+                pl.logger.log("The object '" + obj.name + "' is no collision or visual")
+        pl.logger.endLog()
         return {'FINISHED'}
 
     @classmethod
