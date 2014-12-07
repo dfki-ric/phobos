@@ -30,7 +30,7 @@ class PhobosLogger(object):
 
     def __init__(self):
         self.__operator = None
-        self.__enabled = True
+        self.__levels = {"ALL": True, "ERROR": True, "WARNING": True, "INFO": True}
 
     def startLog(self, operator):
         self.__operator = operator
@@ -38,12 +38,13 @@ class PhobosLogger(object):
     def endLog(self):
         self.__operator = None
 
-    def allowLog(self, isEnabled):
-        self.__enabled = isEnabled
+    def adjustLevel(self, type, isEnabled):
+        if type in self.__levels:
+            self.__levels[type] = isEnabled
 
     def log(self, msg, logType="WARNING"):
-        if self.__enabled:
-            if self.__operator != None:
+        if self.__levels['ALL'] or logType == "INFO":
+            if self.__operator != None and (logType in self.__levels) and self.__levels[logType] == True:
                 self.__operator.report ({logType}, msg)
             else:
                 print ("LOGGER: ", "Log without bound operator: ", msg)

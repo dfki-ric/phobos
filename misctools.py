@@ -848,6 +848,36 @@ class AddGravityVector(Operator):
         bpy.ops.transform.rotate(value=(math.pi), axis=(1.0, 0.0, 0.0))
         return {'FINISHED'}
 
+class SetLogSettings(Operator):
+    """Adjust Logging Settings for phobos"""
+    bl_idname = 'object.phobos_adjust_logger'
+    bl_label = "Change the detail of the phobos logger"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    isEnabled = BoolProperty(
+        name = "Enable logging",
+        default = True,
+        description = "Enable log messages (INFOS will still appear)"
+    )
+
+    errors = BoolProperty(
+        name = "Show Errors",
+        default = True,
+        description = "Show errors in log"
+    )
+
+    warnings = BoolProperty(
+        name = "Show Warnings",
+        default = True,
+        description = "Show warnings in log"
+    )
+
+    def execute(self, context):
+        pl.logger.adjustLevel("ALL", self.isEnabled)
+        pl.logger.adjustLevel("ERROR", self.errors)
+        pl.logger.adjustLevel("WARNING", self.warnings)
+        return {'FINISHED'}
+
 # the following code is used to directly add buttons to current operator menu
 # - we don't need that if we create a custom toolbar with pre-defined buttons
 # def add_object_button(self, context):
