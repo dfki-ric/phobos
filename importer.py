@@ -37,6 +37,7 @@ from . import materials
 from . import joints
 from . import sensors
 from . import controllers
+from . import phoboslogger as pl
 
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
@@ -231,7 +232,7 @@ class RobotModelParser():
             elif geomtype == 'sphere':
                 dimensions = geom['radius']
             else:
-                print("### ERROR: Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.')
+                pl.logger.log("Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.', "ERROR")
             if dimensions:  # if a standard primitive type is found, create the object
                 newgeom = createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
                 newgeom.select = True
@@ -243,7 +244,7 @@ class RobotModelParser():
                     try:
                         newgeom.data.materials.append(bpy.data.materials[viscol['material']['name']])
                     except KeyError:
-                        print('No material for obj', viscol['name'])
+                        pl.logger.log('No material for obj', viscol['name'])
             #FIXME: place empty coordinate system and return...what? Error handling of file import!
         for prop in viscol:
             if prop.startswith('$'):
@@ -279,7 +280,7 @@ class RobotModelParser():
         bpy.ops.object.transform_apply(scale=True)
         newlink.phobostype = 'link'
         if newlink.name != link['name']:
-            print("Warning, name conflict!")
+            pl.logger.log("Warning, name conflict!")
         # place inertial
         if 'inertial' in link:
             self.createInertial(link['name'], link['inertial'])
@@ -323,7 +324,7 @@ class RobotModelParser():
             try:
                 link['joint/max'+param] = joint['limits'][param]
             except KeyError:
-                pass
+                pl.logger.log("Key Error in adding joint constraints") #Todo: more details
         try:
             lower = joint['limits']['lower']
             upper = joint['limits']['upper']
@@ -347,7 +348,7 @@ class RobotModelParser():
                         for tag in motor[prop]:
                             joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
         except KeyError:
-            print("###ERROR: joint", motor['joint'], "does not exist")
+            pl.logger.log("Joint " + motor['joint'] + " does not exist", "ERROR")
 
     def createSensor(self, sensor):
         newsensor = sensors.createSensor(sensor)
@@ -392,7 +393,7 @@ class RobotModelParser():
             rootlink = getRoot(bpy.data.objects[root['name']])
             rootlink['modelname'] = self.robot['name']
         except KeyError:
-            print("### Error: Could not assign model name to root link.")
+            pl.logger.link("Could not assign model name to root link.", "ERROR")
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
         for sensorname in self.robot['sensors']:
@@ -691,7 +692,7 @@ class SMURFModelParser(RobotModelParser):
         with open(self.filepath, 'r') as smurffile:
             smurf = yaml.load(smurffile)
         if smurf is None:
-            print('###Error: No valid SMURF file.')
+            pl.logger.log('No valid SMURF file.', "ERROR")
             return None
         urdffile = None
         srdffile = None
@@ -703,7 +704,7 @@ class SMURFModelParser(RobotModelParser):
                 srdffile = f
         # get URDF info
         if urdffile is None:
-            print("###Error: Did not find URDF file associated with SMURF.")
+            pl.logger.log("Did not find URDF file associated with SMURF.", "ERROR")
             return None
         urdfparser = URDFModelParser(os.path.join(self.path, urdffile))
         urdfparser.parseModel()
@@ -743,11 +744,11 @@ class SMURFModelParser(RobotModelParser):
                 try:
                     objtype = element['type']
                 except KeyError:
-                    print("###ERROR: could not find 'type' in custom annotation:", element)
+                    pl.logger.log("Could not find 'type' in custom annotation: " + str(element), "ERROR")
                 try:
                     objname = element['name']
                 except KeyError:
-                    print("###ERROR: could not find 'name' in custom annotation:", element)
+                    pl.logger.log("Could not find 'name' in custom annotation: " + str(element), "ERROR")
                 try:
                     if objtype+'s' in typelist:  #FIXME: this is a total hack!
                         objtype += 's'
@@ -765,7 +766,7 @@ class SMURFModelParser(RobotModelParser):
                 except TypeError:
                     print("###ERROR: could not find 'type' or 'name' in custom annotation", objtype, objname)
                 except NameError:
-                    print("###ERROR: element", objname, "of type", objtype, "does not exist in this model.")
+                    pl.logger.log("Element " + str(objname) + " of type " + str(objtype) + " does not exist in this model.", "ERROR")
 
         #now some debug output
         with open(self.filepath+'_SMURF_debug.yml', 'w') as outputfile:

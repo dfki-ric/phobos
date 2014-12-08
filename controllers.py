@@ -30,6 +30,7 @@ from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatProperty
 from . import defs
 from . import utility
+from . import phoboslogger as pl
 
 
 def register():
@@ -57,6 +58,7 @@ class AddControllerOperator(Operator):
         description = "name of the controller")
 
     def execute(self, context):
+        pl.logger.startLog(self)
         location = bpy.context.scene.cursor_location
         objects = []
         controllers = []
@@ -76,10 +78,11 @@ class AddControllerOperator(Operator):
             joints = [obj.name for obj in objects if obj.phobostype == 'link' and not 'joint/passive' in obj]
             ctrl['sensors'] = sorted(sensors, key=str.lower)
             ctrl['joints'] = sorted(joints, key=str.lower)
-        print("Added joints to (new) controller(s).")
+        pl.logger.log("Added joints to (new) controller(s).", "INFO")
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
+        pl.logger.endLog()
         return {'FINISHED'}
 
 
@@ -95,6 +98,7 @@ class AddLegacyControllerOperator(Operator):
         description = "scale of the controller visualization")
 
     def execute(self, context):
+        pl.logger.startLog(self)
         location = bpy.context.scene.cursor_location
         objects = []
         controllers = []
@@ -113,14 +117,15 @@ class AddLegacyControllerOperator(Operator):
             for key in ctrl.keys():
                 if key.find("index") >= 0:
                     del ctrl[key]
-                    print("Deleting " + key + " in " + ctrl.name)
+                    pl.logger.log("Deleting " + str(key) + " in " + ctrl.name, "INFO")
             i = 1
             for obj in objects:
                 if obj.phobostype == "link":
                     ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                     i += 1
-        print("Added joints to (new) controller(s).")
+        pl.logger.log("Added joints to (new) controller(s).", "INFO")
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
+        pl.logger.endLog()
         return {'FINISHED'}

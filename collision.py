@@ -31,6 +31,7 @@ from mathutils import Vector, Matrix
 from . import materials
 from . import utility
 from . import defs
+from . import phoboslogger as pl
 
 
 def register():
@@ -54,6 +55,7 @@ class CreateCollisionObjects(Operator):
 
     def execute(self, context):
 
+        pl.logger.startLog(self)
         visuals = []
         for obj in bpy.context.selected_objects:
             if obj.phobostype == "visual":
@@ -61,7 +63,8 @@ class CreateCollisionObjects(Operator):
             obj.select = False
 
         if not visuals:
-            bpy.ops.error.message('INVOKE_DEFAULT', type="CreateCollisions Error", message="Not enough bodies selected.")
+            #bpy.ops.error.message('INVOKE_DEFAULT', type="CreateCollisions Error", message="Not enough bodies selected.")
+            pl.logger.log("Not enough bodies selected.", "ERROR")
             return{'CANCELLED'}
         for vis in visuals:
             nameparts = vis.name.split('_')
@@ -124,6 +127,7 @@ class CreateCollisionObjects(Operator):
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
                 #ob.parent_type = vis.parent_type
                 #ob.parent_bone = vis.parent_bone
+        pl.logger.endLog()
         return{'FINISHED'}
 
 
