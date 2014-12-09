@@ -189,7 +189,7 @@ def createInertial(obj):
     rotation = obj.matrix_world.to_euler()
     center = obj.matrix_world.to_translation()
     inertial = utility.createPrimitive('inertial_' + obj.name, 'box', size,
-                                   defs.layerTypes["inertial"], 'inertial', center, rotation)
+                                   defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     inertial.phobostype = 'inertial'
     bpy.ops.object.select_all(action="DESELECT")
