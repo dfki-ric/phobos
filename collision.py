@@ -163,6 +163,7 @@ class CreateCollisionObjects(Operator):
                     except AttributeError:
                         context.scene.objects.active = obj
                         bpy.ops.rigidbody.object_add(type='ACTIVE')
+                        obj.rigid_body.kinematic = True
                         obj.rigid_body.collision_groups = self.groups
             context.scene.objects.active = active_object
             return {'FINISHED'}
