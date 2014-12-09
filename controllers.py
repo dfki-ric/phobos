@@ -56,6 +56,11 @@ class AddControllerOperator(Operator):
         default = 'controller',
         description = "name of the controller")
 
+    controller_rate = FloatProperty(
+        name = "rate",
+        default = 10,
+        description = "rate of the controller [Hz]")
+
     def execute(self, context):
         location = bpy.context.scene.cursor_location
         objects = []
@@ -74,9 +79,10 @@ class AddControllerOperator(Operator):
         for ctrl in controllers:
             sensors = [obj.name for obj in objects if obj.phobostype == 'sensor']
             joints = [obj.name for obj in objects if obj.phobostype == 'link' and not 'joint/passive' in obj]
-            ctrl['sensors'] = sorted(sensors, key=str.lower)
-            ctrl['joints'] = sorted(joints, key=str.lower)
-        print("Added joints to (new) controller(s).")
+            ctrl['controller/sensors'] = sorted(sensors, key=str.lower)
+            ctrl['controller/motors'] = sorted(joints, key=str.lower)
+            ctrl['controller/rate'] = self.controller_rate
+        print("Added joints/motors to (new) controller(s).")
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
