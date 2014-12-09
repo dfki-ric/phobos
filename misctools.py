@@ -786,11 +786,12 @@ class CreateInertialOperator(Operator):
             if self.auto_compute:
                 mass = obj['mass'] if 'mass' in obj else None
                 geometry = robotdictionary.deriveGeometry(obj)
-                inert = inertia.calculateInertia(mass, geometry)
-                if mass is not None and inert is not None:
-                    inertial = inertia.createInertial(obj)
-                    inertial['mass'] = mass
-                    inertial['inertia'] = inert
+                if mass is not None:
+                    inert = inertia.calculateInertia(mass, geometry)
+                    if inert is not None:
+                        inertial = inertia.createInertial(obj)
+                        inertial['mass'] = mass
+                        inertial['inertia'] = inert
             else:
                 inertia.createInertial(obj)
         for link in links:
