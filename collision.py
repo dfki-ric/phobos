@@ -31,7 +31,7 @@ from mathutils import Vector, Matrix
 from . import materials
 from . import utility
 from . import defs
-from . import phoboslogger as pl
+from . import logging as pl
 
 
 def register():

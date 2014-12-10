@@ -18,35 +18,33 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
-File phoboslogger.py
+File logging.py
 
 Created on 05 Dec 2014
 
 @author: Ole Schwiegert
 """
 
+levels = {"ALL": True, "ERROR": True, "WARNING": True, "INFO": True}
+operator = None
 
-class PhobosLogger(object):
+def startLog(pOperator):
+    global operator
+    operator = pOperator
 
-    def __init__(self):
-        self.__operator = None
-        self.__levels = {"ALL": True, "ERROR": True, "WARNING": True, "INFO": True}
+def endLog():
+    global operator
+    operator = None
 
-    def startLog(self, operator):
-        self.__operator = operator
+def adjustLevel(type, isEnabled):
+    global levels
+    if type in levels:
+        levels[type] = isEnabled
 
-    def endLog(self):
-        self.__operator = None
-
-    def adjustLevel(self, type, isEnabled):
-        if type in self.__levels:
-            self.__levels[type] = isEnabled
-
-    def log(self, msg, logType="WARNING"):
-        if self.__levels['ALL'] or logType == "INFO":
-            if self.__operator != None and (logType in self.__levels) and self.__levels[logType] == True:
-                self.__operator.report ({logType}, msg)
-            else:
-                print ("LOGGER: ", "Log without bound operator: ", msg)
-
-logger = PhobosLogger()
+def log(msg, logType="WARNING"):
+    global levels, operator
+    if levels['ALL'] or logType == "INFO":
+        if operator != None and (logType in levels) and levels[logType] == True:
+            operator.report ({logType}, msg)
+        else:
+            print ("LOGGER: ", "Log without bound operator: ", msg)

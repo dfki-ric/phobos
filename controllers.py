@@ -30,7 +30,7 @@ from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatProperty
 from . import defs
 from . import utility
-from . import phoboslogger as pl
+from . import logging as pl
 
 
 def register():
