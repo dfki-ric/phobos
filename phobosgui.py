@@ -403,6 +403,26 @@ class PhobosExportPanel(bpy.types.Panel):
         layout.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
         layout.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
 
+class PhobosSettingsPanel(bpy.types.Panel):
+    """A Custom Panel in the Viewport Toolbar for Phobos settings"""
+    bl_idname = "TOOLS_SETTINGS_PT_PHOBOS"
+    bl_label = "phobos: Settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
+
+    def draw_header(self, context):
+        self.layout.label(icon='SMOOTH')
+
+    def draw(self, context):
+        layout = self.layout
+
+        inlayout = layout.split()
+        c1 = inlayout.column(align=True)
+        c1.operator('object.phobos_adjust_logger', text='Adjust logging settings')
+        #c2 = inlayout.column(align=True)
+        #c2.operator('object.phobos_partial_rename', text="Partial Rename")
+
 
 class PhobosObjectPanel(bpy.types.Panel):
     bl_idname = "OBJECT_PT_PHOBOS"

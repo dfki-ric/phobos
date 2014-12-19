@@ -31,6 +31,7 @@ import mathutils
 from datetime import datetime
 from . import defs
 from . import materials
+from phobos.logging import *
 
 
 def register():
@@ -56,6 +57,7 @@ def is_int(s):
         int(s)
         return True
     except ValueError:
+        pl.logger.log("Value is no Integer", "ERROR")
         return False
 
 
@@ -96,7 +98,7 @@ def find_in_list(alist, prop, value):
                 n = i
                 break
         except KeyError:
-            pass
+            pl.logger.log("The object at index " + str(i) + " has no property " + str(prop))
     return n
 
 
@@ -110,7 +112,7 @@ def retrieve_from_list(alist, prop, value):
                 n = i
                 break
         except KeyError:
-            pass
+            pl.logger.log("The object at index " + str(i) + " has no property " + str(prop))
     if n >= 0:
         return alist[n][prop]
     else:
@@ -152,7 +154,8 @@ def assignMaterial(obj, materialname):
         if materialname in defs.defaultmaterials:
             materials.createPhobosMaterials()
         else:
-            print("###ERROR: material to be assigned does not exist.")
+            #print("###ERROR: material to be assigned does not exist.")
+            pl.logger.log("Material to be assigned does not exist.", "ERROR")
             return None
     obj.data.materials.append(bpy.data.materials[materialname])
     if bpy.data.materials[materialname].use_transparency:
@@ -247,6 +250,9 @@ def getRoot(obj=None):
             if (anobj.select):
                 obj = anobj
     child = obj
+    if child == None:
+        pl.logger.log("No root object found! Check your object selection", "ERROR")
+        return None
     while child.parent != None:
         child = child.parent
     return child
@@ -315,7 +321,7 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            pass
+            log("The object '" + obj.name + "' has not property '" + numeric_prop + "'")
     return numsum
 
 
