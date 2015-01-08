@@ -489,6 +489,7 @@ def exportModelToSMURF(model, path):
                  'controllers': model['modelname'] + "_controllers.yml",
                  'collision': model['modelname'] + "_collision.yml",
                  }
+    fileorder = ['collision', 'materials', 'motors', 'sensors', 'controllers', 'state']
 
     annotationdict = gatherAnnotations(model)
     for category in annotationdict:
@@ -499,7 +500,7 @@ def exportModelToSMURF(model, path):
 
     #write model information
     print('Writing SMURF information to', smurf_filename)
-    modeldata = {"date": model["date"], "files": [urdf_filename] + [filenames[f] for f in filenames if export[f]]}
+    modeldata = {"date": model["date"], "files": [urdf_filename] + [f for f in fileorder if export[f]]}
     with open(path + smurf_filename, 'w') as op:
         op.write('# main SMURF file of model "' + model['modelname'] + '"\n')
         op.write('# created with Phobos ' + defs.version + ' - https://github.com/rock-simulation/phobos\n\n')
