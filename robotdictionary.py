@@ -127,7 +127,7 @@ def deriveJointState(joint):
 def deriveMotor(obj):
     props = initObjectProperties(obj, marstype='motor', ignoretypes=['link', 'joint'])
     #props['name'] = obj.name
-    props['joint'] = obj.name
+    props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
     return props#, obj.parent
 
 
