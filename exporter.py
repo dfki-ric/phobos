@@ -500,7 +500,7 @@ def exportModelToSMURF(model, path):
 
     #write model information
     print('Writing SMURF information to', smurf_filename)
-    modeldata = {"date": model["date"], "files": [urdf_filename] + [f for f in fileorder if export[f]]}
+    modeldata = {"date": model["date"], "files": [urdf_filename] + [filenames[f] for f in fileorder if export[f]]}
     with open(path + smurf_filename, 'w') as op:
         op.write('# main SMURF file of model "' + model['modelname'] + '"\n')
         op.write('# created with Phobos ' + defs.version + ' - https://github.com/rock-simulation/phobos\n\n')
