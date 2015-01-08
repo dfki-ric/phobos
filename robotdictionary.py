@@ -72,7 +72,7 @@ def deriveMaterial(mat):
     return material
 
 
-def deriveLink(obj, typetags=False):
+def deriveLink(obj):
     props = initObjectProperties(obj, marstype='link', ignoretypes=['joint', 'motor'])
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
@@ -82,15 +82,8 @@ def deriveLink(obj, typetags=False):
     return props
 
 
-def deriveJoint(obj, typetags=False):
+def deriveJoint(obj):
     props = initObjectProperties(obj, marstype='joint', ignoretypes=['link', 'motor'])
-    if typetags:
-        if not '/' in obj.name:
-            props['name'] = obj.name + '_joint'
-        else:
-            props['name'] = obj.name.replace('/', '/joint')
-    else:
-        props['name'] = obj.name
     props['parent'] = obj.parent.name
     props['child'] = obj.name
     props['type'], crot = joints.deriveJointType(obj, True)
@@ -133,17 +126,17 @@ def deriveJointState(joint):
 
 def deriveMotor(obj):
     props = initObjectProperties(obj, marstype='motor', ignoretypes=['link', 'joint'])
-    props['name'] = obj.name
+    #props['name'] = obj.name
     props['joint'] = obj.name
     return props#, obj.parent
 
 
-def deriveKinematics(obj, typetags=False):
-    link = deriveLink(obj, typetags)
+def deriveKinematics(obj):
+    link = deriveLink(obj)
     joint = None
     motor = None
     if obj.parent:
-        joint = deriveJoint(obj, typetags)
+        joint = deriveJoint(obj)
         motor = deriveMotor(obj)
     return link, joint, motor
 
@@ -301,17 +294,14 @@ def deriveDictEntry(obj):
         return props, parent
 
 
-def deriveGroupEntry(group, typetags):
+def deriveGroupEntry(group):
     links = []
-    #joints = []
     for obj in group.objects:
         if obj.phobostype == 'link':
             links.append({'type': 'link', 'name': obj.name})
-            #joint = deriveJoint(obj, typetags)
-            #joints.append({'type': 'joint', 'name': joint['name']})
         else:
             print("### Error: group " + group.name + " contains " + obj.phobostype + ': ' + obj.name)
-    return links #+ joints
+    return links
 
 
 def deriveChainEntry(obj):
@@ -340,7 +330,7 @@ def deriveChainEntry(obj):
     return returnchains
 
 
-def buildRobotDictionary(typetags=False):
+def buildRobotDictionary():
     """Builds a python dictionary representation of a Blender robot model for export and inspection."""
     objectlist = bpy.context.selected_objects
     #notifications, faulty_objects = robotupdate.updateModel(bpy.context.selected_objects)
@@ -369,9 +359,9 @@ def buildRobotDictionary(typetags=False):
     print('\nParsing links, joints and motors...')
     for obj in bpy.context.selected_objects:
         if obj.phobostype == 'link':
-            link, joint, motor = deriveKinematics(obj, typetags)
-            robot['links'][obj.name] = link # it's important that this is really the object's name
-            if joint: # joint can be None if link is a root
+            link, joint, motor = deriveKinematics(obj)
+            robot['links'][obj.name] = link  # it's important that this is really the object's name
+            if joint:  # joint can be None if link is a root
                 robot['joints'][joint['name']] = joint
             if motor:
                 robot['motors'][joint['name']] = motor
@@ -451,7 +441,7 @@ def buildRobotDictionary(typetags=False):
     print('\n\nParsing groups...')
     for group in bpy.data.groups:  # TODO: get rid of the "data" part
         if len(group.objects) > 0 and group.name != "RigidBodyWorld":
-            robot['groups'][group.name] = deriveGroupEntry(group, typetags)
+            robot['groups'][group.name] = deriveGroupEntry(group)
 
     # gather information on chains of objects
     print('\n\nParsing chains...')
