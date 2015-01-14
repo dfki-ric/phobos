@@ -232,25 +232,53 @@ def l2str(items, start=-1, end=-1):
 
 
 def gatherAnnotations(model):
+    """
+    This function gathers custom properties annotating elements of the robot
+    across the model. These annotations were created in the robotdictionary.py
+    module and are marked with a leading '$'.
+    :param model: The robot model dictionary.
+    :return: A dictionary of the gathered annotations.
+    """
     annotations = {}
+    elementlist = []
     types = ('links', 'joints', 'sensors', 'motors', 'controllers', 'materials')
-    #fixme: collision / visual??
+    # gather information from directly accessible types
     for objtype in types:
         for elementname in model[objtype]:
-            element = model[objtype][elementname]
-            delkeys = []
-            for key in element.keys():
-                if key.startswith('$'):
-                    category = key[1:]
-                    if category not in annotations:
-                        annotations[category] = []
-                    tmpdict = {k: element[key][k] for k in element[key]}
-                    tmpdict['type'] = objtype[:-1]
-                    tmpdict['name'] = elementname
-                    annotations[category].append(tmpdict)
-                    delkeys.append(key)
-            for key in delkeys:
-                del element[key]
+            tmpdict = model[objtype][elementname].copy()
+            tmpdict['type'] = objtype[:-1]
+            elementlist.append(model[objtype][elementname])
+    # add information from types hidden in links
+    for linkname in model['links']:
+        for objtype in ('collision', 'visual'):
+            if objtype in model['links'][linkname]:
+                for elementname in model['links'][linkname][objtype]:
+                    tmpdict = model['links'][linkname][objtype][elementname].copy()
+                    tmpdict['link'] = linkname
+                    tmpdict['type'] = objtype
+                    elementlist.append(tmpdict)
+        if 'inertial' in model['links'][linkname]:
+            tmpdict = model['links'][linkname]['inertial'].copy()
+            tmpdict['link'] = linkname
+            tmpdict['type'] = 'inertial'
+            elementlist.append(tmpdict)
+    # loop through the list of annotated elements and categorize the data
+    for element in elementlist:
+        delkeys = []
+        for key in element.keys():
+            if key.startswith('$'):
+                category = key[1:]
+                if category not in annotations:
+                    annotations[category] = {}
+                if element['type'] not in annotations[category]:
+                    annotations[category][element['type']] = []
+                tmpdict = {k: element[key][k] for k in element[key]}
+                tmpdict['name'] = element['name']
+                tmpdict['link'] = element['link']
+                annotations[category][element['type']].append(tmpdict)
+                delkeys.append(key)
+        for key in delkeys:
+            del element[key]
     return annotations
 
 
@@ -494,6 +522,7 @@ def exportModelToSMURF(model, path):
     annotationdict = gatherAnnotations(model)
     for category in annotationdict:
         filenames[category] = model['modelname'] + '_' + category + '.yml'
+        fileorder.append(category)
         export[category] = True
 
     infostring = ' definition SMURF file for "' + model['modelname'] + '", ' + model["date"] + "\n\n"
@@ -553,11 +582,15 @@ def exportModelToSMURF(model, path):
             op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
 
     #write additional information
-    for data in annotationdict.keys():
-        if export[data]:
-            with open(path + filenames[data], 'w') as op:
-                op.write('#' + data + infostring)
-                op.write(yaml.dump({data: annotationdict[data]}, default_flow_style=False))
+    for category in annotationdict.keys():
+        if export[category]:
+            outstring = '#' + category + infostring
+            for elementtype in annotationdict[category]:
+                outstring += elementtype + ':\n'
+                outstring += yaml.dump(annotationdict[category][elementtype],
+                                       default_flow_style=False) + "\n"
+            with open(path + filenames[category], 'w') as op:
+                op.write(outstring)
 
 
 def exportSceneToSMURF(path):
