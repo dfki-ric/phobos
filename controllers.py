@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 """
+..module:: phobos.controllers
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+..moduleauthor:: Kai von Szadowski
+
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -21,8 +27,6 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 File controllers.py
 
 Created on 30 Jan 2014
-
-@author: Kai von Szadkowski
 """
 
 import bpy
@@ -34,15 +38,29 @@ from . import logging as pl
 
 
 def register():
+    """This function registers this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Registering controllers...")
 
 
 def unregister():
+    """This function unregisters this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Unregistering controllers...")
 
 
 class AddControllerOperator(Operator):
-    """AddControllerOperator"""
+    """This operator adds a node-dependent controller to the robot.
+
+    """
     bl_idname = "object.phobos_add_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
@@ -63,6 +81,12 @@ class AddControllerOperator(Operator):
         description = "rate of the controller [Hz]")
 
     def execute(self, context):
+        """This function executes this blender operator and adds a controller to the robot.
+
+        :param context: The blender context this operator should work with.
+        :return: set -- the blender specific return set.
+
+        """
         pl.logger.startLog(self)
         location = bpy.context.scene.cursor_location
         objects = []
@@ -93,7 +117,9 @@ class AddControllerOperator(Operator):
 
 
 class AddLegacyControllerOperator(Operator):
-    """AddControllerOperator"""
+    """This Operator adds a node-dependent legacy controller to the robot.
+
+    """
     bl_idname = "object.phobos_add_legacy_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
@@ -104,6 +130,11 @@ class AddLegacyControllerOperator(Operator):
         description = "scale of the controller visualization")
 
     def execute(self, context):
+        """This function executes this operator and adds a legacy controller to the robot.
+
+        :param context: The blender context this operator should work with.
+        :return: set -- the blender specific return set.
+        """
         pl.logger.startLog(self)
         location = bpy.context.scene.cursor_location
         objects = []

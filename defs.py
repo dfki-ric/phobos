@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 """
+..module:: phobos.defs
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+..moduleauthor:: Kai von Szadowski
+
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -21,8 +27,6 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 File defs.py
 
 Created on 7 Jan 2014
-
-@author: Kai von Szadkowski
 
 NOTE: This module is used to provide a number of global definitions which
 are used by the other modules. If you make changes to this module,
