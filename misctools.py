@@ -828,8 +828,8 @@ class CreateInertialOperator(Operator):
                     inertial = inertia.createInertial(link)
                     com_translate = mathutils.Matrix.Translation(com)
                     inertial.matrix_local = com_translate
-                    inertial['mass'] = mass
-                    inertial['inertia'] = inertia.inertiaMatrixToList(inert)
+                    inertial['inertial/mass'] = mass
+                    inertial['inertial/inertia'] = inertia.inertiaMatrixToList(inert)
             else:
                 inertia.createInertial(link)
         return {'FINISHED'}

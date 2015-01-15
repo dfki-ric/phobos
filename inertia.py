@@ -22,7 +22,7 @@ File inertia.py
 
 Created on 13 Feb 2014
 
-@author: Kai von Szadkowski
+@author: Kai von Szadkowski, Bertold Bongarth
 """
 
 import bpy

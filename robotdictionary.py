@@ -177,7 +177,7 @@ def deriveGeometry(obj):
 def deriveInertial(obj):
     """Derives a dictionary entry of an inertial object."""
     props = initObjectProperties(obj, marstype='inertial')
-    props['inertia'] = list(map(float, obj['inertia']))
+    props['inertia'] = list(map(float, obj['inertial/inertia']))
     props['pose'] = deriveObjectPose(obj)
     return props, obj.parent
 
