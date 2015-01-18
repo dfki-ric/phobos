@@ -618,7 +618,7 @@ def exportModelToSMURF(model, path):
     :param path: The path you want to save the smurf file *without file name!*
     :type param: String.
     :return: Nothing.
-    
+
     """
     export = {'state': False,  # model['state'] != {}, # TODO: handle state
               'materials': model['materials'] != {},
@@ -719,18 +719,41 @@ def exportSceneToSMURF(path):
 
 
 def exportModelToMARS(model, path):
-    """Exports selected robot as a MARS scene"""
+    """Exports selected robot as a MARS scene
+
+    :param model: The robot model you want to export.
+    :type model: dict.
+    :param path: The path you want the MARS file to be located
+    :type path: String.
+    :return: Nothing.
+
+    """
+
     mse.exportModelToMARS(model, path)
 
 
 def securepath(path):  #TODO: this is totally not error-handled!
+    #TODO: write doc
+    """----
+
+    :param path:
+    :return:
+    """
+
     if not os.path.exists(path):
         os.makedirs(path)
     return os.path.expanduser(path)
 
 
 class ExportModelOperator(Operator):
-    """ExportModelOperator"""
+    """This blender operator exports the robot model to chosen formats.
+    You can choose one or more of the following file formats:
+    - SMURF
+    - SRDF
+    - YAML
+    - MARS
+
+    """
     bl_idname = "object.phobos_export_robot"
     bl_label = "Export the selected model(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -741,6 +764,10 @@ class ExportModelOperator(Operator):
 
 
 def export():
+    """This function does the actual exporting of the robot model.
+
+    :return: Nothing.
+    """
     #TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
     if bpy.data.worlds[0].relativePath:
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
