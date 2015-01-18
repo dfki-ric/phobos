@@ -364,6 +364,12 @@ def gatherAnnotations(model):
 
 
 def gatherCollisionBitmasks(model):
+    """This function collects all collision bitmasks in a given model.
+
+    :param model: The robot model to search in.
+    :return: dict -- a dictionary containing all bitmasks with corresponding element name (key).
+
+    """
     bitmasks = {}
     for linkname in model['links']:
         for elementname in model['links'][linkname]['collision']:
@@ -375,6 +381,15 @@ def gatherCollisionBitmasks(model):
 
 
 def writeURDFGeometry(output, element):
+    """This functions writes the URDF geometry for a given element at the end of a given String.
+
+    :param output: The String to append the URDF output string on.
+    :type outpute: String.
+    :param element: A certain element to parse into URDF.
+    :type element: dict.
+    :return: String -- The extended String
+
+    """
     output.append(indent * 4 + '<geometry>\n')
     if element['type'] == 'box':
         output.append(xmlline(5, 'box', ['size'], [l2str(element['size'])]))
@@ -388,6 +403,16 @@ def writeURDFGeometry(output, element):
 
 
 def exportModelToURDF(model, filepath):
+    """This functions writes the URDF of a given model into a file at the given filepath.
+    All of the files content will be overwritten in this process.
+
+    :param model: The model you want to convert into URDF.
+    :type model: dict.
+    :param filepath: The filepath you want to export the URDF to.
+    :type filepath: String.
+    :return: Nothing.
+
+    """
     output = [xmlHeader, indent + '<robot name="' + model['modelname'] + '">\n\n']
     #export link information
     for l in model['links'].keys():
@@ -470,9 +495,8 @@ def exportModelToURDF(model, filepath):
 
 
 def exportModelToSRDF(model, path):
-    """
-    This function exports the SRDF-relevant data from the dictionary to a specified path. Further detail on different
-    elements of SRDF:
+    """This function exports the SRDF-relevant data from the dictionary to a specified path.
+    Further detail on different elements of SRDF:
 
     <group>
     Groups in SRDF can contain *links*, *joints*, *chains* and other *groups* (the latter two of which have to be specified
@@ -504,9 +528,10 @@ def exportModelToSRDF(model, path):
     - <group_state>
     - <virtual_joint>
 
-    :param model: a robot model dictionary
-    :param path: the outpath for the file
-    :return: None
+    :param model: a robot model dictionary.
+    :param path: the outpath for the file.
+    :return: Nothing.
+
     """
     output = []
     output.append(xmlHeader)
@@ -554,7 +579,12 @@ def exportModelToSRDF(model, path):
             pass
 
     def addPCCombinations(parent):
-        """Function to add parent/child link combinations for all parents an children that are not already set via collision bitmask"""
+        """Function to add parent/child link combinations for all parents an children that are not already set via collision bitmask.
+
+        :param parent: This is the parent object.
+        :type parent: dict.
+
+        """
         children = getImmediateChildren(parent, 'link')
         if len(children) > 0:
             for child in children:
@@ -581,6 +611,15 @@ def exportModelToSRDF(model, path):
 
 
 def exportModelToSMURF(model, path):
+    """This function exports a given model to a specific path as a smurf representation.
+
+    :param model: The model you want to export.
+    :type model: dict.
+    :param path: The path you want to save the smurf file *without file name!*
+    :type param: String.
+    :return: Nothing.
+    
+    """
     export = {'state': False,  # model['state'] != {}, # TODO: handle state
               'materials': model['materials'] != {},
               'sensors': model['sensors'] != {},
