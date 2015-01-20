@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
 """
-..module:: phobos.exporter
+.. module:: phobos.exporter
     :platform: Unix, Windows, Mac
     :synopsis: TODO: INSERT TEXT HERE
 
-..moduleauthor:: Kai von Szadowski
+.. moduleauthor:: Kai von Szadowski
 
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
@@ -733,11 +733,13 @@ def exportModelToMARS(model, path):
 
 
 def securepath(path):  #TODO: this is totally not error-handled!
-    #TODO: write doc
-    """----
+    """This function checks whether a path exists or not.
+    If it doesn't the functions creates the path.
 
-    :param path:
-    :return:
+    :param path: The path you want to check for existence *DIRECTIONS ONLY*
+    :type path: String.
+    :return: String -- the path given as parameter, but secured by expanding ~ constructs.
+
     """
 
     if not os.path.exists(path):

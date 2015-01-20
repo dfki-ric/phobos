@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 """
+.. module:: phobos.exporter
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+.. moduleauthor:: Kai von Szadowski
+
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -22,7 +28,6 @@ File importer.py
 
 Created on 28 Feb 2014
 
-@author: Kai von Szadkowski
 """
 
 import bpy
@@ -47,14 +52,35 @@ defaults = Defaults(0.001,  # mass
 
 
 def register():
+    """
+    This function registers this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Registering importer...")
 
 
 def unregister():
+    """
+    This function unregisters this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
+
     print("Unregistering importer...")
 
 
 def cleanUpScene():
+    """This function cleans up the scene
+    and removes all blender objects, meshes, materials and lights.
+
+    :return: Nothing.
+
+    """
     # select all objects
     bpy.ops.object.select_all(action="SELECT")
 
