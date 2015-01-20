@@ -96,7 +96,7 @@ def pos_rot_tree_to_lists(position, rotation):
         
     return [px, py, pz], [rw, rx, ry, rz]
         
-def calc_pose_formats(position, rotation, angle_offset=0.0, axis=[1.0, 0.0, 0.0]):
+def calc_pose_formats(position, rotation):
     '''
     Create a dictionary containing various representations of the pose
     represented by 'position' and 'rotation':
@@ -113,11 +113,13 @@ def calc_pose_formats(position, rotation, angle_offset=0.0, axis=[1.0, 0.0, 0.0]
         rot = mathutils.Quaternion(rotation)
 
     #TODO: make prettier
-    if angle_offset is not 0.0:
-        offset_matrix = get_axis_rotation_matrix(axis, angle_offset)
-        rot_matrix = rot.to_matrix().to_4x4()
-        applied_matrix = rot_matrix * offset_matrix
-        rot = applied_matrix.to_quaternion()
+    #if angle_offset is not 0.0:
+    #    axis_vec = mathutils.Vector(axis)
+
+    #    offset_matrix = mathutils.Matrix.Rotation(angle_offset, 4, axis_vec) #get_axis_rotation_matrix(axis, angle_offset)
+    #    rot_matrix = rot.to_matrix().to_4x4()
+    #    applied_matrix = rot_matrix * offset_matrix
+    #    rot = applied_matrix.to_quaternion()
 
     rw, rx, ry, rz = rot
     pose_dict = {}
@@ -125,7 +127,7 @@ def calc_pose_formats(position, rotation, angle_offset=0.0, axis=[1.0, 0.0, 0.0]
     translation = [px, py, pz]
     quaternion = mathutils.Quaternion([rw, rx, ry, rz])
     euler = quaternion.to_euler()
-    print(euler)
+    #print(euler)
     pose_dict['translation'] = translation
     pose_dict['rotation_quaternion'] = [rw, rx, ry, rz]
     pose_dict['rotation_euler'] = [euler.x, euler.y, euler.z]
@@ -155,13 +157,13 @@ def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
     I hope it was meant like that ...
     '''
     if no_visual_geo or no_collision_geo:
-        print("\n### WARNING: Missing geometry information in", newlink['name'], ".")
+        print("\n### WARNING: Missing geometry information in", link_dict['name'], ".")
     if no_visual_geo:
         print('Affected visual elements are:', no_visual_geo, '.\n\
                 Trying to get missing information from collision elements.')
         for visual in no_visual_geo:
             try:
-                link_dict['visual'][visual]['geometry'] = link_dict['collision']['collision' + geo[len('visual'):]]['geometry']
+                link_dict['visual'][visual]['geometry'] = link_dict['collision']['collision' + no_visual_geo[len('visual'):]]['geometry']
             except:
                 pass # TODO: print something?
     elif no_collision_geo:
@@ -169,44 +171,48 @@ def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
                 Trying to get missing information from visual elements.')
         for collision in no_collision_geo:
             try:
-                link_dict['collision'][collision]['geometry'] = link_dict['visual']['visual' + geo[len('collision'):]]['geometry']
+                link_dict['collision'][collision]['geometry'] = link_dict['visual']['visual' + no_collision_geo[len('collision'):]]['geometry']
             except:
                 pass # TODO: print something?
 
 
-def get_axis_rotation_matrix(axis, angle):
-    import math
-
-    u, v, w = axis
-    u_sqr = u**2
-    v_sqr = v**2
-    w_sqr = w**2
-    sin_theta = math.sin(angle)
-    cos_theta = math.cos(angle)
-
-    a11 = u_sqr + (v_sqr + w_sqr) * cos_theta
-    a12 = u * v * (1 - cos_theta) - w * sin_theta
-    a13 = u * w * (1 - cos_theta) + v * sin_theta
-    a14 = 0.0
-    a21 = u * v * (1 - cos_theta) + w * sin_theta
-    a22 = v_sqr + (u_sqr + w_sqr) * cos_theta
-    a23 = v * w * (1 - cos_theta) - u * sin_theta
-    a24 = 0.0
-    a31 = u * w * (1 - cos_theta) - v * sin_theta
-    a32 = v * w * (1 - cos_theta) + u * sin_theta
-    a33 = w_sqr + (u_sqr + v_sqr) * cos_theta
-    a34 = 0.0
-    a41 = 0.0
-    a42 = 0.0
-    a43 = 0.0
-    a44 = 1.0
-
-    rotation_matrix = [[a11, a12, a13, a14],
-                       [a21, a22, a23, a24],
-                       [a31, a32, a33, a34],
-                       [a41, a42, a43, a44]]
-
-    return mathutils.Matrix(rotation_matrix).to_4x4()
+# def get_axis_rotation_matrix(axis, angle):
+#     '''
+#     unnecessary
+#     '''
+#
+#     import math
+#
+#     u, v, w = axis
+#     u_sqr = u**2
+#     v_sqr = v**2
+#     w_sqr = w**2
+#     sin_theta = math.sin(angle)
+#     cos_theta = math.cos(angle)
+#
+#     a11 = u_sqr + (v_sqr + w_sqr) * cos_theta
+#     a12 = u * v * (1 - cos_theta) - w * sin_theta
+#     a13 = u * w * (1 - cos_theta) + v * sin_theta
+#     a14 = 0.0
+#     a21 = u * v * (1 - cos_theta) + w * sin_theta
+#     a22 = v_sqr + (u_sqr + w_sqr) * cos_theta
+#     a23 = v * w * (1 - cos_theta) - u * sin_theta
+#     a24 = 0.0
+#     a31 = u * w * (1 - cos_theta) - v * sin_theta
+#     a32 = v * w * (1 - cos_theta) + u * sin_theta
+#     a33 = w_sqr + (u_sqr + v_sqr) * cos_theta
+#     a34 = 0.0
+#     a41 = 0.0
+#     a42 = 0.0
+#     a43 = 0.0
+#     a44 = 1.0
+#
+#     rotation_matrix = [[a11, a12, a13, a14],
+#                        [a21, a22, a23, a24],
+#                        [a31, a32, a33, a34],
+#                        [a41, a42, a43, a44]]
+#
+#     return mathutils.Matrix(rotation_matrix).to_4x4()
 
 def import_bobj(filepath):
     """
@@ -239,6 +245,15 @@ class RobotModelParser():
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             # 2: move to parents origin by setting the world matrix to the parents world matrix
             childLink.matrix_world = parentLink.matrix_world        # removing this line does not seem to make a difference
+
+            # #bpy.context.scene.objects.active = childLink
+            # if 'pivot' in child:
+            #     pivot = child['pivot']
+            #     cursor_location = bpy.context.scene.cursor_location
+            #     bpy.context.scene.cursor_location = mathutils.Vector((-pivot[0]*0.3, -pivot[1]*0.3, -pivot[2]*0.3))
+            #     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+            #     bpy.context.scene.cursor_location = cursor_location
+
             # 3: apply local transform as saved in urdf (change matrix_local from identity to urdf)
             location = mathutils.Matrix.Translation(child['pose']['translation'])
             rotation = mathutils.Euler(tuple(child['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
@@ -275,6 +290,7 @@ class RobotModelParser():
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             #geom.matrix_world = parentLink.matrix_world #FIXME: this applies the scale of the parent, making boxes BIIIG
             geom.matrix_local = urdf_geom_loc * urdf_geom_rot
+            #bpy.types.SpaceView3D.pivot_point = 'INDIVIDUAL_ORIGINS'
         for geomsrc in ['visual', 'collision']:
             if geomsrc in link:
                 for g in link[geomsrc]:
@@ -292,12 +308,30 @@ class RobotModelParser():
                     except:
                         print('ERROR: missing subelement')
                         break
+
+                    bpy.ops.object.select_all(action="DESELECT")
+                    geom.select = True
+                    bpy.context.scene.objects.active = geom
+                    #if 'pivot' in link:
+                    #    pivot = link['pivot']
+                    #    #object_location = geom.location
+                    #    cursor_location = bpy.context.scene.cursor_location
+                    #    bpy.context.scene.cursor_location = mathutils.Vector((pivot[0],
+                    #                                                          pivot[1],
+                    #                                                          pivot[2]))
+                    #   # print('loc:', object_location)
+                    #   # print('piv:', pivot)
+                    #    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+                    #    bpy.context.scene.cursor_location = cursor_location
+
                     bpy.ops.object.select_all(action="DESELECT")
                     geom.select = True
                     parentLink.select = True
                     bpy.context.scene.objects.active = parentLink
                     bpy.ops.object.parent_set(type='BONE_RELATIVE')
                     geom.matrix_world = parentLink.matrix_world
+                    # here:
+
                     geom.matrix_local = urdf_geom_loc * urdf_geom_rot
 
     def createGeometry(self, viscol, geomsrc):
@@ -326,7 +360,6 @@ class RobotModelParser():
                     #    print('ERROR: Missing object.')
                     #    return
                 else:
-                    print('ERROR: Could not import object.')
                 # find the newly imported obj
                 for obj in bpy.data.objects:
                     if not obj.tag:
@@ -414,6 +447,73 @@ class RobotModelParser():
                     self.createGeometry(collision, 'collision')
         return newlink
 
+    def _set_origin(self, pivot):
+        '''
+        '''
+        pass
+
+    def _get_object(self, link_name):
+        """
+        """
+        objects = bpy.context.scene.objects
+        obj = objects[link_name]
+        return obj
+
+    def _apply_joint_angle_offsets(self):
+        '''
+        '''
+        links = self.robot['links']
+        for link_name in links:
+            link = links[link_name]
+            obj = self._get_object(link_name)
+            if 'pivot' in link:
+                # move visual's pivot about pivot
+                pass
+            if 'axis1' in link:
+                # move edit bone y axis to axis1
+                #bpy.ops.object.mode_set(mode='EDIT')
+                #bones = obj.data.edit_bones
+                #print(bones)
+
+                #TODO >>> bpy.data.objects['joint_sphere_body_joint1'].data.bones.active.vector
+
+                #bpy.ops.object.mode_set(mode='OBJECT')
+                pass
+            if 'angle_offset' in link:
+                #angle = link['angle_offset']
+                ##axis = link['axis']
+                #obj = self._get_object(link_name)
+                #object_matrix = obj.matrix_world
+                #loc, rotation, scale = object_matrix.decompose()
+                #z_axis = mathutils.Vector([0, 0, 1])
+                #axis_vec = rotation.to_matrix() * z_axis
+
+                #offset_matrix = mathutils.Matrix.Rotation(angle, 4, axis_vec)
+                #obj.matrix_world = offset_matrix * object_matrix
+
+
+                angle = -(link['angle_offset'])
+                bpy.ops.object.mode_set(mode='POSE')
+                pose_bone = obj.pose.bones['Bone']
+                bpy.ops.pose.armature_apply()
+                bpy.ops.object.mode_set(mode='OBJECT')
+                y_axis = mathutils.Vector([0, 1, 0])
+                bone_matrix = pose_bone.matrix
+                loc, rot, scale = bone_matrix.decompose()
+                axis = rot * y_axis
+                offset_matrix = mathutils.Matrix.Rotation(angle, 4, axis)
+                pose_bone.matrix = offset_matrix * bone_matrix
+
+
+                #angle = link['angle_offset']
+                #obj = self._get_object(link_name)
+                #obj_matrix = obj.matrix_local
+                #loc, rot, scale = obj_matrix.decompose()
+                #z_axis = mathutils.Vector([0, 0, 1])
+                #offset_matrix = mathutils.Matrix.Rotation(angle, 4, z_axis)
+                #combined_matrix = obj_matrix * offset_matrix
+                #obj.matrix_local = combined_matrix
+
     def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model."""
         print("\n\nCreating Blender model...")
@@ -431,6 +531,9 @@ class RobotModelParser():
         self.placeChildLinks(root)
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
+
+        self._apply_joint_angle_offsets()
+
         print('Done!')
 
         #for obj in bpy.data.objects:
@@ -506,14 +609,14 @@ class MARSModelParser(RobotModelParser):
         sensors = root.find('sensorlist')
         motors = root.find('motorlist')
         controllers = root.find('controllerlist')
-        materials = root.find('materiallist')
+        material_list = root.find('materiallist')
 
 
         self._parse_joints(joints)
         self._get_links(nodes, joints)
         self._apply_relative_ids(nodes)
 
-        self._parse_materials(materials)
+        self._parse_materials(material_list)
         
         links = self._parse_links(nodes)
         #self._add_parent_links(links)
@@ -531,7 +634,7 @@ class MARSModelParser(RobotModelParser):
         self.robot['states'] = self.robot_states
 
         self._debug_output()
-        
+
         #print(self.link_groups_link_order)
         #print()
         #print(self.vis_coll_groups)
@@ -561,7 +664,7 @@ class MARSModelParser(RobotModelParser):
         for joint_name in self.joint_info:
             joint = self.joint_info[joint_name]
             joint_dict = {}
-            for info in ['name', 'type', 'angle_offset', 'axis']:
+            for info in ['name', 'type', 'angle_offset', 'axis1']:
                 joint_dict[info] = joint[info]
             joint_dict['parent'] = self.link_index_dict[joint['parent_index']]
             joint_dict['child'] = self.link_index_dict[joint['child_index']]
@@ -667,10 +770,18 @@ class MARSModelParser(RobotModelParser):
         name = self._get_distinct_name('visual_' + node.get('name'))
         visual_dict['name'] = name
         index = int(node.find('index').text)
-        
-        visual_dict['pose'] = self.applied_rel_id_poses[index]
-        print('visual:', name)
-        print(visual_dict['pose'])
+
+        base_pose = self.applied_vis_col_poses[index]
+        base_pos = base_pose['translation']
+        rot = base_pose['rotation_quaternion']
+        pivot_xml = node.find('pivot')
+        if pivot_xml is not None:
+            pivot = [float(pivot_xml.find('x').text), float(pivot_xml.find('y').text), float(pivot_xml.find('z').text)]
+        else:
+            pivot = [0.0, 0.0, 0.0]
+
+        pos = base_pos
+        visual_dict['pose'] = calc_pose_formats(pos, rot)
 
         mat_index = int(node.find('material_id').text)
         visual_dict['material'] = self.material_indices[mat_index]
@@ -689,7 +800,11 @@ class MARSModelParser(RobotModelParser):
         collision_dict['name'] = name
         index = int(node.find('index').text)        
         
-        collision_dict['pose'] = self.applied_rel_id_poses[index]
+        #if name.startswith('collision_joint_sphere'):
+        #    position, rotation = pos_rot_tree_to_lists(None, None)
+        #    collision_dict['pose'] = calc_pose_formats(position, rotation)
+        #else:
+        collision_dict['pose'] = self.applied_vis_col_poses[index]
         
         bitmask = int(float(node.find('coll_bitmask').text))
         collision_dict['bitmask'] = bitmask
@@ -778,7 +893,7 @@ class MARSModelParser(RobotModelParser):
                 
                 pose = self.applied_rel_id_poses[index]
                 link_dict['pose'] = pose
-                
+
                 visuals_dict = {}
                 #self._parse_visual(visuals_dict, node, missing_vis_geo)
                 link_dict['visual'] = visuals_dict
@@ -790,13 +905,27 @@ class MARSModelParser(RobotModelParser):
                 inertial_dict = self._parse_inertial(link_dict, node)
                 link_dict['inertial'] = inertial_dict
 
+                pivot = node.find('pivot')
+                if pivot is not None:
+                    x = float(pivot.find('x').text)
+                    y = float(pivot.find('y').text)
+                    z = float(pivot.find('z').text)
+                    link_dict['pivot'] = [x, y, z]
+
                 if rel_id is not None:
                     link_dict['parent'] = int(rel_id.text)
                 
                 links_dict[name] = link_dict
                 self.missing_vis_geos[name] = missing_vis_geo
                 self.missing_coll_geos[name] = missing_coll_geo
-        
+
+                if index in self.parent_joint_dict:
+                    joint = self.joint_info[self.parent_joint_dict[index]]
+                    axis = joint['axis1']
+                    angle = joint['angle_offset']
+                    link_dict['axis1'] = axis
+                    link_dict['angle_offset'] = angle
+
         for group_index in self.link_groups_group_order:
             group = self.link_groups_group_order[group_index]
             for node in group:
@@ -851,13 +980,14 @@ class MARSModelParser(RobotModelParser):
                 group = self.link_groups_link_order[link_index]
                 for group_node in group:
                     if group_node['index'] == link_index:
-                        visuals_dict = model['links'][group_node['name']]['visual']
-                        self._parse_visual(visuals_dict, node, self.missing_vis_geos[group_node['name']])
-                        model['links'][group_node['name']]['visual'] = visuals_dict
+                        name = group_node['name']
+                        visuals_dict = model['links'][name]['visual']
+                        self._parse_visual(visuals_dict, node, self.missing_vis_geos[name])
+                        model['links'][name]['visual'] = visuals_dict
                         
-                        collisions_dict = model['links'][group_node['name']]['collision']
-                        self._parse_collision(collisions_dict, node, self.missing_coll_geos[group_node['name']])
-                        model['links'][group_node['name']]['collision'] = collisions_dict
+                        collisions_dict = model['links'][name]['collision']
+                        self._parse_collision(collisions_dict, node, self.missing_coll_geos[name])
+                        model['links'][name]['collision'] = collisions_dict
                         
                         break
         
@@ -899,7 +1029,7 @@ class MARSModelParser(RobotModelParser):
             else:
                 dict_axis = [0.0, 0.0, 0.0]
 
-            joint_dict['axis'] = dict_axis
+            joint_dict['axis1'] = dict_axis
 
             self.joint_info[name] = joint_dict
 
@@ -908,26 +1038,27 @@ class MARSModelParser(RobotModelParser):
 
     def _apply_relative_ids(self, nodes):
         absolute_poses = {}
-        link_poses = {}
+        absolute_vis_coll_poses = {}
         relative_poses = {}
         for node in nodes:
             index = int(node.find('index').text)
             xml_position = node.find('position')
             xml_rotation = node.find('rotation')
             position, rotation = pos_rot_tree_to_lists(xml_position, xml_rotation)
-            if index in self.parent_joint_dict:
-                joint = self.joint_info[self.parent_joint_dict[index]]
-                axis = joint['axis']
-                angle = joint['angle_offset']
-                pose = calc_pose_formats(position, rotation, angle, axis)
-            else:
-                pose = calc_pose_formats(position, rotation)
+            #if index in self.parent_joint_dict:
+            #    joint = self.joint_info[self.parent_joint_dict[index]]
+            #    axis = joint['axis']
+            #    angle = joint['angle_offset']
+            #    pose = calc_pose_formats(position, rotation, angle, axis)
+            #else:
+            pose = calc_pose_formats(position, rotation)
 
             rel_id_xml = node.find('relativeid')
             #if index in self.link_indices:
             #    link_poses[index] = pose
             if rel_id_xml is None:
                 absolute_poses[index] = pose
+                absolute_vis_coll_poses[index] = pose
                 root = index
             else:
                 rel_id = int(rel_id_xml.text)
@@ -945,11 +1076,12 @@ class MARSModelParser(RobotModelParser):
                 #print('link_poses:', link_poses)
                 relative_pose = relative_poses[index]
                 rel_id = relative_pose['rel_id']
-                if rel_id in link_poses or rel_id in absolute_poses:
+                if rel_id in absolute_poses:
                     #print('index:', index)
                     #print('rel_id:', rel_id)
                     if rel_id in self.link_indices and rel_id is not root:
                         absolute_poses[index] = relative_pose['pose']
+                        absolute_vis_coll_poses[index] = relative_pose['pose']
                     else:
                         reference_pose = absolute_poses[rel_id]
                         rel_matrix = mathutils.Matrix(relative_pose['pose']['matrix']).to_4x4()
@@ -965,10 +1097,15 @@ class MARSModelParser(RobotModelParser):
                         applied_pos = [loc.x, loc.y, loc.z]
                         applied_rot = [rot.w, rot.x, rot.y, rot.z]
                         absolute_poses[index] = calc_pose_formats(applied_pos, applied_rot)
+                        absolute_vis_coll_poses[index] = calc_pose_formats(applied_pos, applied_rot)
+                    if index in self.link_indices:
+                        pos, rot = pos_rot_tree_to_lists(None, None)
+                        absolute_vis_coll_poses[index] = calc_pose_formats(pos, rot)
                     to_delete.append(index)
             for index in to_delete:
                 del relative_poses[index]
         self.applied_rel_id_poses = absolute_poses
+        self.applied_vis_col_poses = absolute_vis_coll_poses
 
 
 
@@ -1007,11 +1144,12 @@ class MARSModelParser(RobotModelParser):
         don't know yet what controllers look like
         '''
         controllers_dict = {}
-        for controller in controllers:
-            controller_dict = {}
-            name = controller.get('name')
+        if controllers:
+            for controller in controllers:
+                controller_dict = {}
+                name = controller.get('name')
 
-            controllers_dict[name] = controller_dict
+                controllers_dict[name] = controller_dict
 
         return controllers_dict
 
