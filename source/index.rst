@@ -132,7 +132,7 @@ Contents:
    Operators
    Basic Modelling
    Mass and Inertia
-
+   SourceCode
 
 
 
@@ -141,5 +141,6 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`modindex`
+* :ref:`SourceCode`
 * :ref:`search`
 
