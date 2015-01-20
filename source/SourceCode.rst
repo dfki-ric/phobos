@@ -7,7 +7,7 @@ Phobos Source Code Documentation
 ==================================
 
 .. automodule:: phobos
-	:members: exporter
+	:members:
 	:undoc-members:
 
 Indices and tables
