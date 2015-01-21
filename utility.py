@@ -343,6 +343,16 @@ def outerProduct(v, u):
     return mathutils.Matrix(lines)
 
 
+
+def cleanObjectProperties(props):
+    """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
+    getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
+    if props:
+        for key in getridof:
+            if key in props:
+                del props[key]
+    return props
+
 # def useLegacyNames(data):
 #    if type(data) is str:
 #        print(data, end=': ')
