@@ -343,6 +343,19 @@ def outerProduct(v, u):
     return mathutils.Matrix(lines)
 
 
+def createNewTextfile(textfilename, contents):
+    for text in bpy.data.texts:
+        text.tag = True
+    bpy.ops.text.new()
+    newtext = None
+    for text in bpy.data.texts:
+        if not text.tag:
+            newtext = text
+    for text in bpy.data.texts:
+        text.tag = False
+    newtext.name = textfilename
+    bpy.data.texts[textfilename].write(contents)
+
 
 def cleanObjectProperties(props):
     """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
