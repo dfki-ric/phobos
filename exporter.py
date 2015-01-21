@@ -247,19 +247,19 @@ def gatherAnnotations(model):
         for elementname in model[objtype]:
             tmpdict = model[objtype][elementname].copy()
             tmpdict['type'] = objtype[:-1]
-            elementlist.append(model[objtype][elementname])
+            elementlist.append(tmpdict)
     # add information from types hidden in links
     for linkname in model['links']:
         for objtype in ('collision', 'visual'):
             if objtype in model['links'][linkname]:
                 for elementname in model['links'][linkname][objtype]:
                     tmpdict = model['links'][linkname][objtype][elementname].copy()
-                    tmpdict['link'] = linkname
+                    #tmpdict['link'] = linkname
                     tmpdict['type'] = objtype
                     elementlist.append(tmpdict)
         if 'inertial' in model['links'][linkname]:
             tmpdict = model['links'][linkname]['inertial'].copy()
-            tmpdict['link'] = linkname
+            #tmpdict['link'] = linkname
             tmpdict['type'] = 'inertial'
             elementlist.append(tmpdict)
     # loop through the list of annotated elements and categorize the data
@@ -274,7 +274,6 @@ def gatherAnnotations(model):
                     annotations[category][element['type']] = []
                 tmpdict = {k: element[key][k] for k in element[key]}
                 tmpdict['name'] = element['name']
-                tmpdict['link'] = element['link']
                 annotations[category][element['type']].append(tmpdict)
                 delkeys.append(key)
         for key in delkeys:
