@@ -38,6 +38,7 @@ from . import defs
 from . import inertia
 from . import robotdictionary
 from phobos.logging import *
+import yaml
 
 
 def register():
@@ -881,6 +882,38 @@ class SetLogSettings(Operator):
         adjustLevel("ERROR", self.errors)
         adjustLevel("WARNING", self.warnings)
         return {'FINISHED'}
+
+class EditYAMLDictionary(Operator):
+    """Edit a dictionary as YAML in text file."""
+    bl_idname = 'object.phobos_edityamldictionary'
+    bl_label = "Edit object dictionary as YAML"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        ob = context.active_object
+        textfilename = ob.name + dt.now().strftime("%Y%m%d_%H:%M")
+        variablename = ob.name + "_data"
+        tmpdict = dict(ob.items())
+        for key in tmpdict:
+            if hasattr(tmpdict[key], 'to_list'):
+                tmpdict[key] = list(tmpdict[key])
+        contents = [variablename + ' = """',
+                    yaml.dump(utility.cleanObjectProperties(tmpdict),
+                              default_flow_style=False) + '"""\n',
+                    "# ------- Hit 'Run Script' to save your changes --------",
+                    "import yaml", "import bpy",
+                    "tmpdata = yaml.load(" + variablename + ")",
+                    "for key, value in tmpdata.items():",
+                    "    bpy.context.active_object[key] = value",
+                    "bpy.ops.text.unlink()"
+                    ]
+        utility.createNewTextfile(textfilename, '\n'.join(contents))
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
 # the following code is used to directly add buttons to current operator menu
 # - we don't need that if we create a custom toolbar with pre-defined buttons

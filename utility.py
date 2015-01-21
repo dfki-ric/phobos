@@ -343,6 +343,29 @@ def outerProduct(v, u):
     return mathutils.Matrix(lines)
 
 
+def createNewTextfile(textfilename, contents):
+    for text in bpy.data.texts:
+        text.tag = True
+    bpy.ops.text.new()
+    newtext = None
+    for text in bpy.data.texts:
+        if not text.tag:
+            newtext = text
+    for text in bpy.data.texts:
+        text.tag = False
+    newtext.name = textfilename
+    bpy.data.texts[textfilename].write(contents)
+
+
+def cleanObjectProperties(props):
+    """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
+    getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
+    if props:
+        for key in getridof:
+            if key in props:
+                del props[key]
+    return props
+
 # def useLegacyNames(data):
 #    if type(data) is str:
 #        print(data, end=': ')
