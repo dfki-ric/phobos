@@ -562,6 +562,13 @@ class URDFModelParser(RobotModelParser):
         RobotModelParser.__init__(self, filepath)
 
     def parsePose(self, origin):
+        """This function parses the robot models pose and returns it as a dictionary.
+
+        :param origin: The origin blender object to parse the pose from.
+        :type orign: blender object.
+        :return: dict -- The origins pose.
+
+        """
         pose = {}
         if origin is not None:
             pose['translation'] = parse_text(origin.attrib['xyz'])
@@ -572,6 +579,13 @@ class URDFModelParser(RobotModelParser):
         return pose
 
     def parseModel(self):
+        """This function parses the whole URDF representation of the robot and builds the robot dictionary from it.
+        The created robot is stored in the robot value of the parser and the URDF file is specified by the filepath
+        given to the Parser.
+
+        :return: Nothing.
+
+        """
         print("\nParsing URDF model from", self.filepath)
         self.tree = ET.parse(self.filepath)
         self.root = self.tree.getroot()#[0]
@@ -631,6 +645,12 @@ class URDFModelParser(RobotModelParser):
             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) #TODO: handle duplicate names? urdf_robotname_xxx?
 
     def parseLink(self, link):
+        """This function parses the link from the given link dict object.
+
+        :param link: The link you want to
+        :return:
+
+        """
         print(link.attrib['name'] + ', ', end='')
         newlink = {a: link.attrib[a] for a in link.attrib}
 

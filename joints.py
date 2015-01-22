@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 """
+.. module:: phobos.exporter
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+.. moduleauthor:: Kai von Szadowski
+
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -21,8 +27,6 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 File joints.py
 
 Created on 7 Jan 2014
-
-@author: Kai von Szadkowski
 """
 
 import bpy
@@ -32,20 +36,42 @@ import math
 import mathutils
 import warnings
 from . import defs
+from phobos.logging import *
 
 
 def register():
+    """
+    This function registers this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Registering joints...")
 
 
 def unregister():
+    """
+    This function unregisters this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Unregistering joints...")
 
 
 def deriveJointType(joint, adjust=False):
     """ Derives the type of the joint defined by the armature object 'joint' based on the constraints defined in the joint.
-    The parameter 'adjust' decides whether or not the type of the joint is adjusted after detecting (without checking whether
-    the property "type" was previously defined in the armature or not)."""
+
+    :param joint: The joint you want to derive its type from.
+    :type joint: blender object.
+    :param adjust: Decides whether or not the type of the joint is adjusted after detecting (without checking whether
+    the property "type" was previously defined in the armature or not).
+    :type adjust: bool.
+    :return: tuple(2) -- jtype, crot
+
+    """
     jtype = 'floating'  # 'universal' in MARS nomenclature
     cloc = None
     crot = None
@@ -85,7 +111,13 @@ def deriveJointType(joint, adjust=False):
 
 
 def getJointConstraints(joint):
-    """ Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'."""
+    """ Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'.
+
+    :param joint: The joint you want to get the constraints from.
+    :type joint: blender object.
+    :return: tuple -- containing the axis and limits lists.
+
+    """
     jt, crot = deriveJointType(joint, adjust = True)
     axis = None
     limits = None
@@ -135,6 +167,13 @@ def getJointConstraints(joint):
 
 
 def getJointConstraint(joint, ctype):
+    """This function gets the constraints out of a given joint.
+
+    :param joint: The joint you want to extract the constraints from.
+    :param ctype: Specifies the constraint type you want to extract.
+    :return: blender constraints object.
+
+    """
     con = None
     for c in joint.pose.bones[0].constraints:
         if c.type == ctype:
@@ -143,6 +182,24 @@ def getJointConstraint(joint, ctype):
 
 
 def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0):
+    """This function sets the constraints for a given joint and jointtype.
+
+    :param joint: The joint you want to set the constraints for.
+    :type joint: blender object.
+    :param jointtype: The joints type. its one of the following:
+        - revolute
+        - continuous
+        - prismatic
+        - fixed
+        - floating
+    :type jointtype: string.
+    :param lower: The constraints lower limit.
+    :type lower: float.
+    :param upper: The constraints upper limit.
+    :type upper:float.
+    :return: Nothing.
+
+    """
     bpy.ops.object.mode_set(mode='POSE')
     for c in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(c)
@@ -270,13 +327,15 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0):
             crot.max_z = 0
             crot.owner_space = 'LOCAL'
         else:
-            print("Error: Unknown joint type")
+            log("Unknown joint type", "ERROR")
         joint['joint/type'] = jointtype
         bpy.ops.object.mode_set(mode='OBJECT')
 
 
 class DefineJointConstraintsOperator(Operator):
-    """DefineJointConstraintsOperator"""
+    """DefineJointConstraintsOperator
+
+    """
     bl_idname = "object.define_joint_constraints"
     bl_label = "Adds Bone Constraints to the joint (link)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -322,6 +381,11 @@ class DefineJointConstraintsOperator(Operator):
     # TODO: invoke function to read all values in
 
     def execute(self, context):
+        """This function executes this operator and sets the constraints and joint type for all selected links.
+
+        :param context: The blender context this operator works with.
+        :return: Blender result.
+        """
         if self.degrees:
             lower = math.radians(self.lower)
             upper = math.radians(self.upper)
@@ -344,7 +408,9 @@ class DefineJointConstraintsOperator(Operator):
 
 
 class AttachMotorOperator(Operator):
-    """AttachMotorOperator"""
+    """AttachMotorOperator
+
+    """
     bl_idname = "object.attach_motor"
     bl_label = "Attaches motor values to selected joints"
     bl_options = {'REGISTER', 'UNDO'}
