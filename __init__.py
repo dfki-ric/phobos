@@ -1,6 +1,11 @@
 #!/usr/bin/python
 
 """
+..module:: phobos
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+..moduleauthor:: Kai von Szadowski, Ole Schwiegert
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -22,7 +27,6 @@ File __init__.py
 
 Created on 6 Jan 2014
 
-@author: Kai von Szadkowski, Ole Schwiegert
 """
 
 
@@ -83,6 +87,11 @@ import bpy
 
 
 def register():
+    """This function registers all modules to blender.
+
+    :return: Nothing
+
+    """
     links.register()
     controllers.register()
     exporter.register()
@@ -97,6 +106,11 @@ def register():
     bpy.utils.register_module(__name__)
 
 def unregister():
+    """This function unregisters all modules to blender.
+
+    :return: Nothing
+
+    """
     links.unregister()
     controllers.unregister()
     exporter.unregister()
