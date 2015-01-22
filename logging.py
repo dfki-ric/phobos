@@ -1,6 +1,13 @@
 #!/usr/bin/python
 
 """
+.. module:: phobos.logging
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: This module offers a simple way to log messages from phobos and uses blender integrated tools
+    to display them.
+
+.. moduleauthor:: Ole Schwiegert
+
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -22,26 +29,56 @@ File logging.py
 
 Created on 05 Dec 2014
 
-@author: Ole Schwiegert
 """
 
 levels = {"ALL": True, "ERROR": True, "WARNING": True, "INFO": True}
 operator = None
 
 def startLog(pOperator):
+    """This function starts logging for a specified operator.
+
+    :param pOperator: The operator you want to log for.
+    :type pOperator: Blender operator.
+    :return: Nothing.
+
+    """
     global operator
     operator = pOperator
 
 def endLog():
+    """This function ends the logging for a former registered operator.
+
+    :return: Nothing.
+
+    """
     global operator
     operator = None
 
 def adjustLevel(type, isEnabled):
+    """This function adjusts the visibility for a certain logging level.
+
+    :param type: The log level you want to enable or disable.
+    :type type: string -- One of ALL, ERROR, WARNING or INFO.
+    :param isEnabled: Sets whether logs with the specified level are visible or not.
+    :type isEnabled: bool.
+    :return: Nothing.
+
+    """
     global levels
     if type in levels:
         levels[type] = isEnabled
 
 def log(msg, logType="WARNING"):
+    """Logs a given message and a given log level.
+    If there is a registered operator its report function is used, else its printed to the console.
+
+    :param msg: The message to log.
+    :type msg: string.
+    :param logType: The log level you want to log the message with.
+    :type logType: string -- one of ERROR, WARNING or INFO.
+    :return: Nothing.
+
+    """
     global levels, operator
     if levels['ALL'] or logType == "INFO":
         if operator != None and (logType in levels) and levels[logType] == True:

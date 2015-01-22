@@ -385,6 +385,7 @@ class DefineJointConstraintsOperator(Operator):
 
         :param context: The blender context this operator works with.
         :return: Blender result.
+
         """
         if self.degrees:
             lower = math.radians(self.lower)
@@ -447,6 +448,12 @@ class AttachMotorOperator(Operator):
         items=defs.motortypes)
 
     def execute(self, context):
+        """This function executes this operator and attaches a motor to all selected links.
+
+        :param context: The blender context this operator works with.
+        :return:Blender result.
+
+        """
         for joint in bpy.context.selected_objects:
             if joint.phobostype == "link":
                 #TODO: these keys have to be adapted
