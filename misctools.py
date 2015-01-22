@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 """
+.. module:: phobos.misctool
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+.. moduleauthor:: Kai von Szadowski
+
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -22,7 +28,6 @@ File misctools.py
 
 Created on 6 Jan 2014
 
-@author: Kai von Szadkowski
 """
 
 import bpy
@@ -41,15 +46,32 @@ from phobos.logging import *
 
 
 def register():
+    """
+    This function registers this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Registering misctools...")
 
 
 def unregister():
+    """
+    This function unregisters this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
+
     print("Unregistering misctools...")
 
 
 class CalculateMassOperator(Operator):
-    """CalculateMassOperator"""
+    """CalculateMassOperator
+
+    """
     bl_idname = "object.phobos_calculate_mass"
     bl_label = "Display mass of the selected objects in a pop-up window."
 
@@ -61,7 +83,9 @@ class CalculateMassOperator(Operator):
         return {'FINISHED'}
 
 class SortObjectsToLayersOperator(Operator):
-    """SortObjectsToLayersOperator"""
+    """SortObjectsToLayersOperator
+
+    """
     bl_idname = "object.phobos_sort_objects_to_layers"
     bl_label = "Sorts all selected objects to their according layers"
     bl_options = {'REGISTER', 'UNDO'}
@@ -91,7 +115,9 @@ class SortObjectsToLayersOperator(Operator):
 
 
 class AddChainOperator(Operator):
-    """AddChainOperator"""
+    """AddChainOperator
+
+    """
     bl_idname = "object.phobos_add_chain"
     bl_label = "Adds a chain between two selected objects."
     bl_options = {'REGISTER', 'UNDO'}
@@ -125,7 +151,9 @@ class AddChainOperator(Operator):
 
 
 class SetMassOperator(Operator):
-    """SetMassOperator"""
+    """SetMassOperator
+
+    """
     bl_idname = "object.phobos_set_mass"
     bl_label = "Sets the mass of the selected object(s)."
     bl_options = {'REGISTER', 'UNDO'}
@@ -182,7 +210,9 @@ class SetMassOperator(Operator):
 
 
 class SyncMassesOperator(Operator):
-    """SyncMassesOperator"""
+    """SyncMassesOperator
+
+    """
     bl_idname = "object.phobos_sync_masses"
     bl_label = "Synchronize masses among the selected object(s)."
     bl_options = {'REGISTER', 'UNDO'}
@@ -256,7 +286,9 @@ class SyncMassesOperator(Operator):
 
 
 class ShowDistanceOperator(Operator):
-    """ShowDistanceOperator"""
+    """ShowDistanceOperator
+
+    """
     bl_idname = "object.phobos_show_distance"
     bl_label = "Shows distance between two selected objects in world coordinates."
     bl_options = {'REGISTER', 'UNDO'}
@@ -284,7 +316,9 @@ class ShowDistanceOperator(Operator):
 
 
 class SetXRayOperator(Operator):
-    """SetXrayOperator"""
+    """SetXrayOperator
+
+    """
     bl_idname = "object.phobos_set_xray"
     bl_label = "Shows the selected/chosen objects via X-Ray."
     bl_options = {'REGISTER', 'UNDO'}
@@ -333,7 +367,9 @@ class SetXRayOperator(Operator):
 
 
 class NameModelOperator(Operator):
-    """NameModelOperator"""
+    """NameModelOperator
+
+    """
     bl_idname = "object.phobos_name_model"
     bl_label = "Name model by assigning 'modelname' property to root node "
     bl_options = {'REGISTER', 'UNDO'}
@@ -355,7 +391,9 @@ class NameModelOperator(Operator):
 
 
 class SelectObjectsByMARSType(Operator):
-    """SelectObjectsByType"""
+    """SelectObjectsByType
+
+    """
     bl_idname = "object.phobos_select_objects_by_marstype"
     bl_label = "Select objects in the scene by phobostype"
     bl_options = {'REGISTER', 'UNDO'}
@@ -380,7 +418,9 @@ class SelectObjectsByMARSType(Operator):
 
 
 class SelectObjectsByName(Operator):
-    """SelectObjectsByName"""
+    """SelectObjectsByName
+
+    """
     bl_idname = "object.phobos_select_objects_by_name"
     bl_label = "Select objects in the scene by their name"
     bl_options = {'REGISTER', 'UNDO'}
@@ -400,7 +440,9 @@ class SelectObjectsByName(Operator):
 
 
 class SelectRootOperator(Operator):
-    """SelectRootOperator"""
+    """SelectRootOperator
+
+    """
     bl_idname = "object.phobos_select_root"
     bl_label = "Select root object(s) of currently selected object(s)"
 
@@ -420,7 +462,9 @@ class SelectRootOperator(Operator):
 
 
 class SelectModelOperator(Operator):
-    """SelectModelOperator"""
+    """SelectModelOperator
+
+    """
     bl_idname = "object.phobos_select_model"
     bl_label = "Select all objects of model(s) containing the currently selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -451,7 +495,9 @@ class SelectModelOperator(Operator):
 
 
 class UpdateMarsModelsOperator(Operator):
-    """UpdateMarsModelsOperator"""
+    """UpdateMarsModelsOperator
+
+    """
     bl_idname = "object.phobos_update_models"
     bl_label = "Update MARS properties for all objects"
     bl_options = {'REGISTER', 'UNDO'}
@@ -470,7 +516,9 @@ class UpdateMarsModelsOperator(Operator):
 
 
 class SetMARSType(Operator):
-    """Set phobostype Operator"""
+    """Set phobostype Operator
+
+    """
     bl_idname = "object.phobos_set_marstype"
     bl_label = "Edit phobostype of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -493,7 +541,9 @@ class SetMARSType(Operator):
 
 
 class BatchEditPropertyOperator(Operator):
-    """Batch-Edit Property Operator"""
+    """Batch-Edit Property Operator
+
+    """
     bl_idname = "object.phobos_batch_property"
     bl_label = "Edit custom property of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -526,7 +576,9 @@ class BatchEditPropertyOperator(Operator):
 
 
 class CopyCustomProperties(Operator):
-    """Copy Custom Properties Operator"""
+    """Copy Custom Properties Operator
+
+    """
     bl_idname = "object.phobos_copy_props"
     bl_label = "Edit custom property of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -557,7 +609,9 @@ class CopyCustomProperties(Operator):
 
 
 class RenameCustomProperty(Operator):
-    """Rename Custom Properties Operator"""
+    """Rename Custom Properties Operator
+
+    """
     bl_idname = "object.phobos_rename_custom_property"
     bl_label = "Edit custom property of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -602,7 +656,9 @@ class RenameCustomProperty(Operator):
 
 
 class SetGeometryType(Operator):
-    """Set Geometry Type Operator"""
+    """Set Geometry Type Operator
+
+    """
     bl_idname = "object.phobos_set_geometry_type"
     bl_label = "Edit geometry type of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -630,7 +686,9 @@ class SetGeometryType(Operator):
 
 
 class EditInertia(Operator):
-    """Edit Inertia Operator"""
+    """Edit Inertia Operator
+
+    """
     bl_idname = "object.phobos_edit_inertia"
     bl_label = "Edit inertia of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -671,7 +729,9 @@ class EditInertia(Operator):
 
 
 class PartialRename(Operator):
-    """Partial Rename Operator"""
+    """Partial Rename Operator
+
+    """
     bl_idname = "object.phobos_partial_rename"
     bl_label = "Replace part of the name of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -698,7 +758,9 @@ class PartialRename(Operator):
 
 
 class SmoothenSurfaceOperator(Operator):
-    """SmoothenSurfaceOperator"""
+    """SmoothenSurfaceOperator
+
+    """
     bl_idname = "object.phobos_smoothen_surface"
     bl_label = "Smoothen Selected Objects"
     bl_options = {'REGISTER', 'UNDO'}
@@ -734,7 +796,9 @@ class SmoothenSurfaceOperator(Operator):
 
 
 class SetOriginToCOMOperator(Operator):
-    """SetOriginToCOMOperator"""
+    """SetOriginToCOMOperator
+
+    """
     bl_idname = "object.phobos_set_origin_to_com"
     bl_label = "Set Origin to COM"
     bl_options = {'REGISTER', 'UNDO'}
@@ -781,7 +845,9 @@ class SetOriginToCOMOperator(Operator):
 
 
 class CreateInertialOperator(Operator):
-    """CreateInertialOperator"""
+    """CreateInertialOperator
+
+    """
     bl_idname = "object.create_inertial_objects"
     bl_label = "Creates inertial objects based on existing objects"
     bl_options = {'REGISTER', 'UNDO'}
@@ -836,7 +902,9 @@ class CreateInertialOperator(Operator):
 
 
 class AddGravityVector(Operator):
-    """Add Gravity Operator"""
+    """Add Gravity Operator
+
+    """
     bl_idname = "object.phobos_add_gravity"
     bl_label = "Add a vector representing gravity in the scene"
     bl_options = {'REGISTER', 'UNDO'}
@@ -853,7 +921,9 @@ class AddGravityVector(Operator):
         return {'FINISHED'}
 
 class SetLogSettings(Operator):
-    """Adjust Logging Settings for phobos"""
+    """Adjust Logging Settings for phobos
+
+    """
     bl_idname = 'object.phobos_adjust_logger'
     bl_label = "Change the detail of the phobos logger"
     bl_options = {'REGISTER', 'UNDO'}
