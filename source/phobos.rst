@@ -1,12 +1,6 @@
 phobos package
 ==============
 
-Subpackages
------------
-
-.. toctree::
-
-
 Submodules
 ----------
 

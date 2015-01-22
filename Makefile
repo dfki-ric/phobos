@@ -26,13 +26,13 @@ gh-pages:
 	git checkout gh-pages
 	rm -rf build _sources _static
 	git checkout pyDoc $(GH_PAGES_SOURCES)
-	git clone https://github.com/rock-simulation/phobos.wiki.git
-	mv -fv phobos.wiki/*.rst source/
-	mv -fv phobos.wiki/img source/
+	#git clone https://github.com/rock-simulation/phobos.wiki.git
+	#mv -fv phobos.wiki/*.rst source/
+	#mv -fv phobos.wiki/img source/
 	git reset HEAD
 	make html
 	mv -fv build/html/* ./
-	rm -rf $(GH_PAGES_SOURCES) build phobos.wiki
+	rm -rf $(GH_PAGES_SOURCES) build #phobos.wiki
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
