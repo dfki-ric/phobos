@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 """
+.. module:: phobos.materials
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+.. moduleauthor:: Kai von Szadowski
+
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -22,7 +28,6 @@ File materials.py
 
 Created on 7 Jan 2014
 
-@author: Kai von Szadkowski
 """
 
 import bpy
@@ -30,7 +35,22 @@ from . import defs
 
 
 def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
-    """Returns a Blender material specified by the input parameters"""
+    """Returns a Blender material specified by the input parameters
+
+    :param name: The name of the new material.
+    :type name: string.
+    :param diffuse: The color of the new material.
+    :type diffuse: float array with 3 elements.
+    :param specular: The specular color of the new material.
+    :type specular: float array with 3 elements.
+    :param alpha: The transparency of the material.
+    :type alpha: float in [0,1.0].
+    :param diffuse_intensity: The amount of diffuse reflection. The default is 1.0.
+    :type diffuse_intensity: float in [0,1.0].
+    :param texture: NOT IMPEMENTED YET.
+    :type texture: NOT IMPLEMENTED YET.
+    :return: the new material.
+    """
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = diffuse
     mat.diffuse_shader = 'LAMBERT'
@@ -49,7 +69,10 @@ def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=
 
 
 def createPhobosMaterials():
-    """Uses makeMaterial() to create a list of standard materials used in Phobos"""
+    """Uses makeMaterial() to create a list of standard materials used in Phobos
+
+    :return: Nothing.
+    """
     materials = bpy.data.materials.keys()
     for material in defs.defaultmaterials:
         mat = defs.defaultmaterials[material]
