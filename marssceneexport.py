@@ -96,8 +96,8 @@ def createNodes(model):
         #            'collision_bitmask': col['collision_bitmask'] if "coll_bitmask" in col else '65535'}
         #    if 'radius' in col['geometry']:
         #        node['radius': str(col['geometry']['radius'])]
-        #    if 'height' in col['geometry']:
-        #        node['radius': str(col['geometry']['height'])]
+        #    if 'length' in col['geometry']:
+        #        node['radius': str(col['geometry']['length'])]
         #    node['matID'] = model['materials'][vis['material']['name']]['id']
         #    nodes.append(node)
     return nodes
@@ -117,9 +117,9 @@ def writeNode(node):
     #    geom = node['obj']['geometry']
     #    ext = [geom['size'][i] * geom['scale'][i] for i in range(3)]
     #    radius = geom['radius'] if 'radius' in geom else 0
-    #    height = geom['height'] if 'height' in geom else 0
+    #    length = geom['length'] if 'length' in geom else 0
     #    ext[0] = radius if radius > 0. else geom['scale'][0]
-    #    ext[1] = height if height > 0. else geom['scale'][1]
+    #    ext[1] = length if length > 0. else geom['scale'][1]
     #    pivot = utility.calcBoundingBoxCenter(obj.bound_box)
     #    parent = obj.parent
     #    parentPos = parent.matrix_world * utility.calcBoundingBoxCenter(parent.bound_box)

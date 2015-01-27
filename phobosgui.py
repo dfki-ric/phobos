@@ -33,7 +33,7 @@ from . import defs
 def register():
     print("Registering gui...")
     bpy.types.Object.phobostype = EnumProperty(
-        items=defs.marstypes,
+        items=defs.phobostypes,
         name="type",
         description="MARS object type")
     print("    Added 'phobostype' to Object properties.")
@@ -266,6 +266,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c1.operator("object.phobos_create_link", text="Create Link(s)")
         c1.operator('object.define_joint_constraints', text="Define Joint Constraints")
         c1.operator('object.phobos_set_origin_to_com', text="Set Origin to COM")
+        c1.operator('object.phobos_sort_objects_to_layers', text="Set Objects to Layers")
         c2 = inlayout.column(align=True)
         c2.operator('object.phobos_partial_rename', text="Partial Rename")
         c2.operator('object.attach_motor', text="Attach motor")
@@ -299,24 +300,26 @@ class PhobosSenConPanel(bpy.types.Panel):
         self.layout.label(icon='GAME')
 
     def draw(self, context):
-        row_sensors = self.layout
+        slayout = self.layout.split()
+        sc1 = slayout.column(align=True)
         # create sensor creation buttons
-        row_sensors.label(text="Add Sensors / Controllers")
-        sensor_split = row_sensors.split()
-
-        n_sensortypes = int(len(defs.sensortypes))
-        half_n_sensortypes = int(n_sensortypes / 2)
-        col_sensor_1 = sensor_split.column(align=True)
-        for i in range(half_n_sensortypes):  #sensor in defs.sensorTypes:
-            sensor = defs.sensortypes[i]
-            #col_sensor_1.operator('object.phobos_add_sensor_'+sensor, text=sensor)
-            col_sensor_1.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
-        col_sensor_2 = sensor_split.column(align=True)
-        for i in range(n_sensortypes - half_n_sensortypes):
-            sensor = defs.sensortypes[i + half_n_sensortypes]
-            col_sensor_2.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
-            #col_sensor_2.operator('object.phobos_add_sensor_'+sensor, text=sensor)
-        row_sensors.operator("object.phobos_add_controller", text="Controller")
+        #row_sensors.label(text="Add Sensors / Controllers")
+        sc1.operator('object.phobos_add_sensor', text="Add/Edit Sensor")
+        #sensor_split = row_sensors.split()
+        #n_sensortypes = int(len(defs.sensortypes))
+        #half_n_sensortypes = int(n_sensortypes / 2)
+        #col_sensor_1 = sensor_split.column(align=True)
+        #for i in range(half_n_sensortypes):  #sensor in defs.sensorTypes:
+        #    sensor = defs.sensortypes[i]
+        #    #col_sensor_1.operator('object.phobos_add_sensor_'+sensor, text=sensor)
+        #    col_sensor_1.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
+        #col_sensor_2 = sensor_split.column(align=True)
+        #for i in range(n_sensortypes - half_n_sensortypes):
+        #    sensor = defs.sensortypes[i + half_n_sensortypes]
+        #    col_sensor_2.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
+        #    #col_sensor_2.operator('object.phobos_add_sensor_'+sensor, text=sensor)
+        sc2 = slayout.column(align=True)
+        sc2.operator("object.phobos_add_controller", text="Add Controller")
 
 
 # class PhobosVisPanel(bpy.types.Panel):
@@ -399,6 +402,26 @@ class PhobosExportPanel(bpy.types.Panel):
         layout.label(text="Export/Import")
         layout.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
         layout.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
+
+class PhobosSettingsPanel(bpy.types.Panel):
+    """A Custom Panel in the Viewport Toolbar for Phobos settings"""
+    bl_idname = "TOOLS_SETTINGS_PT_PHOBOS"
+    bl_label = "phobos: Settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
+
+    def draw_header(self, context):
+        self.layout.label(icon='SMOOTH')
+
+    def draw(self, context):
+        layout = self.layout
+
+        inlayout = layout.split()
+        c1 = inlayout.column(align=True)
+        c1.operator('object.phobos_adjust_logger', text='Adjust logging settings')
+        #c2 = inlayout.column(align=True)
+        #c2.operator('object.phobos_partial_rename', text="Partial Rename")
 
 
 class PhobosObjectPanel(bpy.types.Panel):

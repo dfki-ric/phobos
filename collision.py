@@ -31,6 +31,7 @@ from mathutils import Vector, Matrix
 from . import materials
 from . import utility
 from . import defs
+from phobos.logging import *
 
 
 def register():
@@ -47,21 +48,23 @@ class CreateCollisionObjects(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     property_colltype = EnumProperty(
-        name = 'coll_type',
-        default = 'box',
-        description = "collision type",
-        items = defs.geometrytypes)
+        name='coll_type',
+        default='box',
+        description="collision type",
+        items=defs.geometrytypes)
 
     def execute(self, context):
 
+        startLog(self)
         visuals = []
         for obj in bpy.context.selected_objects:
             if obj.phobostype == "visual":
                 visuals.append(obj)
             obj.select = False
 
-        if visuals == []:
-            bpy.ops.error.message('INVOKE_DEFAULT', type="CreateCollisions Error", message="Not enough bodies selected.")
+        if not visuals:
+            #bpy.ops.error.message('INVOKE_DEFAULT', type="CreateCollisions Error", message="Not enough bodies selected.")
+            log("Not enough bodies selected.", "ERROR")
             return{'CANCELLED'}
         for vis in visuals:
             nameparts = vis.name.split('_')
@@ -77,10 +80,10 @@ class CreateCollisionObjects(Operator):
                 axes = ('X', 'Y', 'Z')
                 long_side = axes[size.index(max(size))]
                 #xyequal = (size[0] - size[1])
-                height = max(size)
-                radii = [s for s in size if s != height]
-                radius = max(radii)/2 if radii != [] else height/2
-                size = (radius, height)
+                length = max(size)
+                radii = [s for s in size if s != length]
+                radius = max(radii)/2 if radii != [] else length/2
+                size = (radius, length)
                 if long_side == 'X':
                     rotation = Matrix.Rotation(math.pi/2, 4, 'Y')
                 elif long_side == 'Y':
@@ -92,30 +95,30 @@ class CreateCollisionObjects(Operator):
             center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion()*center
             if self.property_colltype != 'capsule':
                 ob = utility.createPrimitive(collname, self.property_colltype, size,
-                                               defs.layerTypes["collision"], materialname, center,
+                                               defs.layerTypes['collision'], materialname, center,
                                                rotation_euler)
             elif self.property_colltype == 'capsule':
-                height = max(height-2*radius, 0.001) #prevent height from turning negative
-                size = (radius, height)
-                zshift = height/2
+                length = max(length-2*radius, 0.001) #prevent length from turning negative
+                size = (radius, length)
+                zshift = length/2
                 ob = utility.createPrimitive(collname, 'cylinder', size,
-                               defs.layerTypes["collision"], materialname, center,
+                               defs.layerTypes['collision'], materialname, center,
                                rotation_euler)
                 sph1 = utility.createPrimitive('tmpsph1', 'sphere', radius,
-                               defs.layerTypes["collision"], materialname, center + rotation * Vector((0,0,zshift)),
+                               defs.layerTypes['collision'], materialname, center + rotation * Vector((0,0,zshift)),
                                rotation_euler)
                 sph2 = utility.createPrimitive('tmpsph2', 'sphere', radius,
-                               defs.layerTypes["collision"], materialname, center - rotation * Vector((0,0,zshift)),
+                               defs.layerTypes['collision'], materialname, center - rotation * Vector((0,0,zshift)),
                                rotation_euler)
                 utility.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
-                ob['height'] = height
+                ob['length'] = length
                 ob['radius'] = radius
             elif self.property_colltype == 'mesh':
                 pass
                 #TODO: copy mesh!!
-            ob.phobostype = "collision"
-            ob["geometry/type"] = self.property_colltype
+            ob.phobostype = 'collision'
+            ob['geometry/type'] = self.property_colltype
             if vis.parent:
                 ob.select = True
                 bpy.ops.object.transform_apply(scale=True)
@@ -124,6 +127,7 @@ class CreateCollisionObjects(Operator):
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
                 #ob.parent_type = vis.parent_type
                 #ob.parent_bone = vis.parent_bone
+        endLog()
         return{'FINISHED'}
 
 
@@ -163,6 +167,7 @@ class CreateCollisionObjects(Operator):
                     except AttributeError:
                         context.scene.objects.active = obj
                         bpy.ops.rigidbody.object_add(type='ACTIVE')
+                        obj.rigid_body.kinematic = True
                         obj.rigid_body.collision_groups = self.groups
             context.scene.objects.active = active_object
             return {'FINISHED'}

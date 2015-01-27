@@ -72,7 +72,7 @@ def deriveMaterial(mat):
     return material
 
 
-def deriveLink(obj, typetags=False):
+def deriveLink(obj):
     props = initObjectProperties(obj, marstype='link', ignoretypes=['joint', 'motor'])
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
@@ -82,15 +82,8 @@ def deriveLink(obj, typetags=False):
     return props
 
 
-def deriveJoint(obj, typetags=False):
+def deriveJoint(obj):
     props = initObjectProperties(obj, marstype='joint', ignoretypes=['link', 'motor'])
-    if typetags:
-        if not '/' in obj.name:
-            props['name'] = obj.name + '_joint'
-        else:
-            props['name'] = obj.name.replace('/', '/joint')
-    else:
-        props['name'] = obj.name
     props['parent'] = obj.parent.name
     props['child'] = obj.name
     props['type'], crot = joints.deriveJointType(obj, True)
@@ -120,8 +113,8 @@ def deriveJoint(obj, typetags=False):
 
 
 def deriveJointState(joint):
-    '''Calculates the state of a joint from the state of the link armature.
-    Note that this is the current state and not the zero state.'''
+    """Calculates the state of a joint from the state of the link armature.
+    Note that this is the current state and not the zero state."""
     state = {}
     state['matrix'] = [list(vector) for vector in list(joint.pose.bones[0].matrix_basis)]
     state['translation'] = list(joint.pose.bones[0].matrix_basis.to_translation())
@@ -133,17 +126,17 @@ def deriveJointState(joint):
 
 def deriveMotor(obj):
     props = initObjectProperties(obj, marstype='motor', ignoretypes=['link', 'joint'])
-    props['name'] = obj.name
-    props['joint'] = obj.name
+    #props['name'] = obj.name
+    props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
     return props#, obj.parent
 
 
-def deriveKinematics(obj, typetags=False):
-    link = deriveLink(obj, typetags)
+def deriveKinematics(obj):
+    link = deriveLink(obj)
     joint = None
     motor = None
     if obj.parent:
-        joint = deriveJoint(obj, typetags)
+        joint = deriveJoint(obj)
         motor = deriveMotor(obj)
     return link, joint, motor
 
@@ -155,8 +148,8 @@ def deriveGeometry(obj):
         if gt == 'box':
             geometry['size'] = list(obj.dimensions)
         elif gt == 'cylinder':
-            geometry["radius"] = obj.dimensions[0]/2
-            geometry["height"] = obj.dimensions[2]
+            geometry['radius'] = obj.dimensions[0]/2
+            geometry['length'] = obj.dimensions[2]
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
@@ -184,8 +177,7 @@ def deriveGeometry(obj):
 def deriveInertial(obj):
     """Derives a dictionary entry of an inertial object."""
     props = initObjectProperties(obj, marstype='inertial')
-    #inertia = props['inertia'].split()
-    props['inertia'] = list(map(float, obj['inertia']))
+    props['inertia'] = list(map(float, obj['inertial/inertia']))
     props['pose'] = deriveObjectPose(obj)
     return props, obj.parent
 
@@ -219,6 +211,7 @@ def deriveCollision(obj):
         pass
     return collision, obj.parent
 
+
 def deriveApproxsphere(obj):
     sphere = initObjectProperties(obj)
     sphere['radius'] = obj.dimensions[0]/2
@@ -228,6 +221,8 @@ def deriveApproxsphere(obj):
 
 def deriveSensor(obj):
     props = initObjectProperties(obj, marstype='sensor')
+    #props['pose'] = deriveObjectPose(obj)
+    props['link'] = obj.parent.name
     return props
 
 
@@ -262,14 +257,14 @@ def initObjectProperties(obj, marstype=None, ignoretypes=[]):
     return props
 
 
-# def cleanObjectProperties(props):
-#     """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
-#     getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
-#     if props:
-#         for key in getridof:
-#             if key in props:
-#                 del props[key]
-#     return props
+def cleanObjectProperties(props):
+    """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
+    getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
+    if props:
+        for key in getridof:
+            if key in props:
+                del props[key]
+    return props
 
 
 def deriveDictEntry(obj):
@@ -287,8 +282,6 @@ def deriveDictEntry(obj):
             props, parent = deriveApproxsphere(obj)
         elif obj.phobostype == 'sensor':
             props = deriveSensor(obj)
-        #elif obj.phobostype == 'motor':
-        #    props, parent = deriveMotor(obj)
         elif obj.phobostype == 'controller':
             props = deriveController(obj)
     except KeyError:
@@ -299,17 +292,14 @@ def deriveDictEntry(obj):
         return props, parent
 
 
-def deriveGroupEntry(group, typetags):
+def deriveGroupEntry(group):
     links = []
-    #joints = []
     for obj in group.objects:
         if obj.phobostype == 'link':
             links.append({'type': 'link', 'name': obj.name})
-            #joint = deriveJoint(obj, typetags)
-            #joints.append({'type': 'joint', 'name': joint['name']})
         else:
             print("### Error: group " + group.name + " contains " + obj.phobostype + ': ' + obj.name)
-    return links #+ joints
+    return links
 
 
 def deriveChainEntry(obj):
@@ -338,7 +328,7 @@ def deriveChainEntry(obj):
     return returnchains
 
 
-def buildRobotDictionary(typetags=False):
+def buildRobotDictionary():
     """Builds a python dictionary representation of a Blender robot model for export and inspection."""
     objectlist = bpy.context.selected_objects
     #notifications, faulty_objects = robotupdate.updateModel(bpy.context.selected_objects)
@@ -350,8 +340,7 @@ def buildRobotDictionary(typetags=False):
             'controllers': {},
             'materials': {},
             'groups': {},
-            'chains': {},
-            'simulation': {}
+            'chains': {}
             }
     #save timestamped version of model
     robot["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
@@ -368,9 +357,9 @@ def buildRobotDictionary(typetags=False):
     print('\nParsing links, joints and motors...')
     for obj in bpy.context.selected_objects:
         if obj.phobostype == 'link':
-            link, joint, motor = deriveKinematics(obj, typetags)
-            robot['links'][obj.name] = link # it's important that this is really the object's name
-            if joint: # joint can be None if link is a root
+            link, joint, motor = deriveKinematics(obj)
+            robot['links'][obj.name] = link  # it's important that this is really the object's name
+            if joint:  # joint can be None if link is a root
                 robot['joints'][joint['name']] = joint
             if motor:
                 robot['motors'][joint['name']] = motor
@@ -450,7 +439,7 @@ def buildRobotDictionary(typetags=False):
     print('\n\nParsing groups...')
     for group in bpy.data.groups:  # TODO: get rid of the "data" part
         if len(group.objects) > 0 and group.name != "RigidBodyWorld":
-            robot['groups'][group.name] = deriveGroupEntry(group, typetags)
+            robot['groups'][group.name] = deriveGroupEntry(group)
 
     # gather information on chains of objects
     print('\n\nParsing chains...')
@@ -475,38 +464,39 @@ def check_geometry(geometry, owner_type, owner_key, link_key):
         note = "CheckModel: Error, geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'type'."
         notifications += note + "\n"
         print(note)
-    elif geometry['type'] == 'box' or geometry['type'] == 'plane':
-        if not 'size' in geometry:
-            note = "CheckModel: Error, box / plane type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'size'."
-            notifications += note + "\n"
-            print(note)
-    elif geometry['type'] == 'sphere':
-        if not 'radius' in geometry:
-            note = "CheckModel: Error, sphere type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'radius'."
-            notifications += note + "\n"
-            print(note)
-    elif geometry['type'] == 'cylinder':
-        if not 'radius' in geometry:
-            note = "CheckModel: Error, cylinder type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'radius'."
-            notifications += note + "\n"
-            print(note)
-        if not 'length' in geometry:
-            note = "CheckModel: Error, cylinder type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'length'."
-            notifications += note + "\n"
-            print(note)
-    elif geometry['type'] == 'mesh':
-        if not 'size' in geometry:
-            note = "CheckModel: Error, mesh type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'size'."
-            notifications += note + "\n"
-            print(note)
-        if not 'filename' in geometry:
-            note = "CheckModel: Error, mesh type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'filename'."
-            notifications += note + "\n"
-            print(note)
     else:
-        note = "CheckModel: Error, geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has invalid value for attribute 'type': '" + geometry['type'] + "'."
-        notifications += note + "\n"
-        print(note)
+        if geometry['type'] == 'box' or geometry['type'] == 'plane':
+            if not 'size' in geometry:
+                note = "CheckModel: Error, box / plane type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'size'."
+                notifications += note + "\n"
+                print(note)
+        elif geometry['type'] == 'sphere':
+            if not 'radius' in geometry:
+                note = "CheckModel: Error, sphere type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'radius'."
+                notifications += note + "\n"
+                print(note)
+        elif geometry['type'] == 'cylinder':
+            if not 'radius' in geometry:
+                note = "CheckModel: Error, cylinder type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'radius'."
+                notifications += note + "\n"
+                print(note)
+            if not 'length' in geometry:
+                note = "CheckModel: Error, cylinder type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'length'."
+                notifications += note + "\n"
+                print(note)
+        elif geometry['type'] == 'mesh':
+            if not 'size' in geometry:
+                note = "CheckModel: Error, mesh type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'size'."
+                notifications += note + "\n"
+                print(note)
+            if not 'filename' in geometry:
+                note = "CheckModel: Error, mesh type geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has no attribute 'filename'."
+                notifications += note + "\n"
+                print(note)
+        else:
+            note = "CheckModel: Error, geometry of " + owner_type + " '" + owner_key + "' of link '" + link_key + "' has invalid value for attribute 'type': '" + geometry['type'] + "'."
+            notifications += note + "\n"
+            print(note)
     return notifications
 
 
@@ -518,6 +508,10 @@ def check_visuals(visuals, link_key):
         visual = visuals[visual_key]
         if not 'pose' in visual:
             note = "CheckModel: Error, visual '" + visual_key + "' of link '" + link_key + "' has no attribute 'pose'."
+            notifications += note + "\n"
+            print(note)
+        if not 'name' in visual:
+            note = "CheckModel: Error, visual '" + visual_key + "' of link '" + link_key + "' has no attribute 'name'."
             notifications += note + "\n"
             print(note)
         if not 'material' in visual:
@@ -569,6 +563,10 @@ def check_collisions(collisions, link_key):
             note = "CheckModel: Warning, collision '" + collision_key + "' has no attribute 'bitmask'."
             notifications += note + "\n"
             print(note)
+        if not 'name' in collision:
+            note = "CheckModel: Warning, collision '" + collision_key + "' has no attribute 'name'."
+            notifications += note + "\n"
+            print(note)
         if not 'geometry' in collision:
             note = "CheckModel: Error, collision '" + collision_key + "' of link '" + link_key + "' has no attribute 'geometry'."
             notifications += note + "\n"
@@ -596,12 +594,20 @@ def check_links(links):
     notifications = ''
     for link_key in links.keys():
         link = links[link_key]
-        if not 'filename' in link:
+        '''if not 'filename' in link:
             note = "CheckModel: Error, link '" + link_key + "' has no attribute 'filename'."
             notifications += note + "\n"
-            print(note)
+            print(note)'''#not included in the model - date 13.10.2014
         if not 'pose' in link:
             note = "CheckModel: Error, link '" + link_key + "' has no attribute 'pose'."
+            notifications += note + "\n"
+            print(note)
+        if not 'name' in link:
+            note = "CheckModel: Error, link '" + link_key + "' has no attribute 'name'."
+            notifications += note + "\n"
+            print(note)
+        if not 'parent' in link:
+            note = "CheckModel: Error, link '" + link_key + "' has no attribute 'parent'."
             notifications += note + "\n"
             print(note)
         if not 'visual' in link:
@@ -639,6 +645,18 @@ def check_joints(joints):
     notifications = ''
     for joint_key in joints.keys():
         joint = joints[joint_key]
+        if not'axis' in joint:
+            note = "CheckModel: Error, joint '" + joint_key + "' has no attribute 'axis'."
+            notifications += note + "\n"
+            print(note)
+        if not'limits' in joint:
+            note = "CheckModel: Error, joint '" + joint_key + "' has no attribute 'limits'."
+            notifications += note + "\n"
+            print(note)
+        if not'name' in joint:
+            note = "CheckModel: Error, joint '" + joint_key + "' has no attribute 'name'."
+            notifications += note + "\n"
+            print(note)
         if not 'parent' in joint:
             note = "CheckModel: Error, joint '" + joint_key + "' has no attribute 'parent'."
             notifications += note + "\n"

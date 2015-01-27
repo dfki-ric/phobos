@@ -37,6 +37,7 @@ from . import utility
 from . import defs
 from . import inertia
 from . import robotdictionary
+from phobos.logging import *
 
 
 def register():
@@ -53,9 +54,40 @@ class CalculateMassOperator(Operator):
     bl_label = "Display mass of the selected objects in a pop-up window."
 
     def execute(self, context):
+        startLog(self)
         mass = utility.calculateSum(bpy.context.selected_objects, 'mass')
-        bpy.ops.error.message('INVOKE_DEFAULT', type="mass", message=str(mass))
+        log("The calculated mass is: " + str(mass), "INFO")
+        endLog()
         return {'FINISHED'}
+
+class SortObjectsToLayersOperator(Operator):
+    """SortObjectsToLayersOperator"""
+    bl_idname = "object.phobos_sort_objects_to_layers"
+    bl_label = "Sorts all selected objects to their according layers"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        startLog(self)
+        for obj in context.selected_objects:
+            try:
+                phobosType = obj.phobostype
+                if phobosType != 'controller' and phobosType != 'undefined':
+                    layers = 20*[False]
+                    layers[defs.layerTypes[phobosType]] = True
+                    obj.layers = layers
+                if phobosType == 'undefined':
+                    log("The phobostype of the object '" + obj.name + "' is undefined")
+            except AttributeError:
+                log("The object '" + obj.name + "' has no phobostype", "ERROR") #Handle this as error or warning?
+        endLog()
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        if len(context.selected_objects) > 0:
+            return True
+        else:
+            return False
 
 
 class AddChainOperator(Operator):
@@ -120,27 +152,32 @@ class SetMassOperator(Operator):
             self.mass = context.active_object['mass']
         except KeyError:
             self.mass = 0.001
+            #Todo: Need more detailed message here
+            log("KeyError occured in invoking of setMassOperator. Fallback: mass=0.001")
         return self.execute(context)
 
     def execute(self, context):
+        startLog(self)
         for obj in bpy.context.selected_objects:
             if obj.phobostype in ['visual', 'collision', 'inertial']:
                 try:
                     oldmass = obj['mass']
                 except KeyError:
-                    #TODO: Is this the correct default value? - Ole
+                    log("The object '" + obj.name + "' has no mass")
                     oldmass = None
                 if self.userbmass:
                     try:
                         obj['mass'] = obj.rigid_body.mass
                     except AttributeError:
                         obj['mass'] = 0.001
-                        print("### Error: object has no rigid body properties.")
+                        #print("### Error: object has no rigid body properties.")
+                        log("The object '" + obj.name + "' has no rigid body properties. Set mass to 0.001", "ERROR")
                 else:
                     obj['mass'] = self.mass
                 if obj['mass'] != oldmass:
                     t = dt.now()
                     obj['masschanged'] = t.isoformat()
+        endLog()
         return {'FINISHED'}
 
 
@@ -255,7 +292,7 @@ class SetXRayOperator(Operator):
     objects = EnumProperty(
         name = "show objects:",
         default = 'selected',
-        items = (('all',)*3, ('selected',)*3, ('by name',)*3) + defs.marstypes,
+        items = (('all',)*3, ('selected',)*3, ('by name',)*3) + defs.phobostypes,
         description = "show objects via x-ray")
 
     show = BoolProperty(
@@ -307,8 +344,13 @@ class NameModelOperator(Operator):
         description = "name of the robot model to be assigned")
 
     def execute(self, context):
+        startLog(self)
         root = utility.getRoot(bpy.context.active_object)
+        if root == None:
+            log("Could not set modelname due to missing root link. No name was set.", "ERROR")
+            return {'FINISHED'}
         root["modelname"] = self.modelname
+        endLog()
         return {'FINISHED'}
 
 
@@ -319,7 +361,7 @@ class SelectObjectsByMARSType(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     seltype = EnumProperty (
-            items = defs.marstypes,
+            items = defs.phobostypes,
             name = "phobostype",
             default = "link",
             description = "MARS object type")
@@ -363,6 +405,7 @@ class SelectRootOperator(Operator):
     bl_label = "Select root object(s) of currently selected object(s)"
 
     def execute(self, context):
+        startLog(self)
         roots = set()
         for obj in bpy.context.selected_objects:
             roots.add(utility.getRoot(obj))
@@ -370,7 +413,9 @@ class SelectRootOperator(Operator):
             utility.selectObjects(list(roots), True)
             bpy.context.scene.objects.active = list(roots)[0]
         else:
-            bpy.ops.error.message('INVOKE_DEFAULT', type="ERROR", message="Couldn't find any root object.")
+            #bpy.ops.error.message('INVOKE_DEFAULT', type="ERROR", message="Couldn't find any root object.")
+            log("Couldn't find any root object.", "ERROR")
+        endLog()
         return {'FINISHED'}
 
 
@@ -419,7 +464,7 @@ class UpdateMarsModelsOperator(Operator):
     print("phobos: Updating MARS properties for selected objects...")
 
     def execute(self, context):
-        materials.createMARSMaterials() #TODO: this should move to initialization
+        materials.createPhobosMaterials() #TODO: this should move to initialization
         robotupdate.updateModels(utility.getRoots(), self.property_fix)
         return {'FINISHED'}
 
@@ -431,7 +476,7 @@ class SetMARSType(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     marstype = EnumProperty (
-            items = defs.marstypes,
+            items = defs.phobostypes,
             name = "phobostype",
             default = "undefined",
             description = "phobostype")
@@ -494,9 +539,7 @@ class CopyCustomProperties(Operator):
     def execute(self, context):
         slaves = context.selected_objects
         master = context.active_object
-        print(slaves)
         slaves.remove(master)
-        print(slaves)
         props = robotdictionary.cleanObjectProperties(dict(master.items()))
         for obj in slaves:
             if self.empty_properties:
@@ -536,16 +579,20 @@ class RenameCustomProperty(Operator):
     )
 
     def execute(self, context):
+        startLog(self)
         for obj in context.selected_objects:
             if self.find in obj and self.replace != '':
                 if self.replace in obj:
-                    print("### Error: property", self.replace, "already present in object", obj.name)
+                    #print("### Error: property", self.replace, "already present in object", obj.name)
+                    log("Property '" + self.replace + "' already present in object '" + obj.name + "'", "ERROR")
                     if self.overwrite:
+                        log("Replace property, because overwrite option was set")
                         obj[self.replace] = obj[self.find]
                         del obj[self.find]
                 else:
                     obj[self.replace] = obj[self.find]
                     del obj[self.find]
+        endLog()
         return {'FINISHED'}
 
     @classmethod
@@ -567,10 +614,13 @@ class SetGeometryType(Operator):
             description = "MARS geometry type")
 
     def execute(self, context):
-
+        startLog(self)
         for obj in bpy.context.selected_objects:
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
                 obj['geometry/type'] = self.geomType
+            else:
+                log("The object '" + obj.name + "' is no collision or visual")
+        endLog()
         return {'FINISHED'}
 
     @classmethod
@@ -763,11 +813,12 @@ class CreateInertialOperator(Operator):
             if self.auto_compute:
                 mass = obj['mass'] if 'mass' in obj else None
                 geometry = robotdictionary.deriveGeometry(obj)
-                inert = inertia.calculateInertia(mass, geometry)
-                if mass is not None and inert is not None:
-                    inertial = inertia.createInertial(obj)
-                    inertial['mass'] = mass
-                    inertial['inertia'] = inert
+                if mass is not None:
+                    inert = inertia.calculateInertia(mass, geometry)
+                    if inert is not None:
+                        inertial = inertia.createInertial(obj)
+                        inertial['mass'] = mass
+                        inertial['inertia'] = inert
             else:
                 inertia.createInertial(obj)
         for link in links:
@@ -777,8 +828,8 @@ class CreateInertialOperator(Operator):
                     inertial = inertia.createInertial(link)
                     com_translate = mathutils.Matrix.Translation(com)
                     inertial.matrix_local = com_translate
-                    inertial['mass'] = mass
-                    inertial['inertia'] = inertia.inertiaMatrixToList(inert)
+                    inertial['inertial/mass'] = mass
+                    inertial['inertial/inertia'] = inertia.inertiaMatrixToList(inert)
             else:
                 inertia.createInertial(link)
         return {'FINISHED'}
@@ -799,6 +850,36 @@ class AddGravityVector(Operator):
         bpy.ops.object.empty_add(type='SINGLE_ARROW')
         bpy.context.active_object.name = "gravity"
         bpy.ops.transform.rotate(value=(math.pi), axis=(1.0, 0.0, 0.0))
+        return {'FINISHED'}
+
+class SetLogSettings(Operator):
+    """Adjust Logging Settings for phobos"""
+    bl_idname = 'object.phobos_adjust_logger'
+    bl_label = "Change the detail of the phobos logger"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    isEnabled = BoolProperty(
+        name = "Enable logging",
+        default = True,
+        description = "Enable log messages (INFOS will still appear)"
+    )
+
+    errors = BoolProperty(
+        name = "Show Errors",
+        default = True,
+        description = "Show errors in log"
+    )
+
+    warnings = BoolProperty(
+        name = "Show Warnings",
+        default = True,
+        description = "Show warnings in log"
+    )
+
+    def execute(self, context):
+        adjustLevel("ALL", self.isEnabled)
+        adjustLevel("ERROR", self.errors)
+        adjustLevel("WARNING", self.warnings)
         return {'FINISHED'}
 
 # the following code is used to directly add buttons to current operator menu

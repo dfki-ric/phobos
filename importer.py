@@ -36,6 +36,10 @@ from . import defs
 from . import materials
 
 import phobos.bobj_import as bobj_import
+from . import joints
+from . import sensors
+from . import controllers
+from phobos.logging import *
 
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
@@ -96,7 +100,7 @@ def pos_rot_tree_to_lists(position, rotation):
         
     return [px, py, pz], [rw, rx, ry, rz]
         
-def calc_pose_formats(position, rotation):
+def calc_pose_formats(position, rotation, pivot=[0,0,0]):
     '''
     Create a dictionary containing various representations of the pose
     represented by 'position' and 'rotation':
@@ -112,7 +116,6 @@ def calc_pose_formats(position, rotation):
     else:
         rot = mathutils.Quaternion(rotation)
 
-    #TODO: make prettier
     #if angle_offset is not 0.0:
     #    axis_vec = mathutils.Vector(axis)
 
@@ -123,22 +126,51 @@ def calc_pose_formats(position, rotation):
 
     rw, rx, ry, rz = rot
     pose_dict = {}
-    
-    translation = [px, py, pz]
-    quaternion = mathutils.Quaternion([rw, rx, ry, rz])
-    euler = quaternion.to_euler()
-    #print(euler)
-    pose_dict['translation'] = translation
-    pose_dict['rotation_quaternion'] = [rw, rx, ry, rz]
-    pose_dict['rotation_euler'] = [euler.x, euler.y, euler.z]
-    rm = quaternion.to_matrix()
-    matrix = [[rm[0][0], rm[0][1], rm[0][2], px],
-              [rm[1][0], rm[1][1], rm[1][2], py],
-              [rm[2][0], rm[2][1], rm[2][2], pz],
-              [0.0,      0.0,      0.0,      1.0]]
-    
+
+    neg_pivot_translation = mathutils.Matrix.Translation((-pivot[0], -pivot[1], -pivot[2]))
+    pivot_translation = mathutils.Matrix.Translation(pivot)
+    rotation_matrix = mathutils.Quaternion(rot).to_matrix().to_4x4()
+    translation = mathutils.Matrix.Translation(position)
+    print()
+    print("translation:", translation)
+    print("neg_pivot_translation:", neg_pivot_translation)
+    print("rotation_matrix:", rotation_matrix)
+    print("pivot_translation", pivot_translation)
+    print()
+    transformation_matrix = translation * neg_pivot_translation * rotation_matrix * pivot_translation
+
+    rm = transformation_matrix
+    #TODO: this is not good
+    matrix = [[rm[0][0], rm[0][1], rm[0][2], rm[0][3]],
+              [rm[1][0], rm[1][1], rm[1][2], rm[1][3]],
+              [rm[2][0], rm[2][1], rm[2][2], rm[2][3]],
+              [rm[3][0], rm[3][1], rm[3][2], rm[3][3]]]
     pose_dict['matrix'] = matrix
-    
+    loc, rot, sca = transformation_matrix.decompose()
+    pose_dict['translation'] = [loc.x, loc.y, loc.z]
+    pose_dict['rotation_quaternion'] = [rot.w, rot.x, rot.y, rot.z]
+    euler = rot.to_euler()
+    pose_dict['rotation_euler'] = [euler.x, euler.y, euler.z]
+
+    #translation = [px, py, pz]
+    #quaternion = mathutils.Quaternion([rw, rx, ry, rz])
+    #euler = quaternion.to_euler()
+    ##print(euler)
+    #pose_dict['translation'] = translation
+    ##pose_dict['rotation_quaternion'] = [rw, rx, ry, rz]
+    #pose_dict['rotation_euler'] = [euler.x, euler.y, euler.z]
+    #rm = quaternion.to_matrix()
+    #matrix = [[rm[0][0], rm[0][1], rm[0][2], px],
+    #          [rm[1][0], rm[1][1], rm[1][2], py],
+    #          [rm[2][0], rm[2][1], rm[2][2], pz],
+    #          [0.0,      0.0,      0.0,      1.0]]
+   #
+   # pose_dict['matrix'] = matrix
+
+    print()
+    print('pose_dict:', pose_dict)
+    print()
+
     return pose_dict
     
 def add_quaternion(rot1, rot2):
@@ -226,10 +258,38 @@ class RobotModelParser():
     def __init__(self, filepath):
         self.filepath = filepath
         self.path, self.filename = os.path.split(self.filepath)
-        self.robot = {}
+        self.robot = {'links': {},
+                      'joints': {},
+                      'sensors': {},
+                      'motors': {},
+                      'controllers': {},
+                      'materials': {},
+                      'groups': {},
+                      'chains': {}
+                      }
+
+    def scaleLink(self, link, newlink):
+        """Scales newly-created armatures depending on the link's largest collision object."""
+        newscale = 0.3
+        if len(link['collision']) > 0:
+            sizes = []
+            for collname in link['collision']:
+                collobj = link['collision'][collname]
+                colltype = collobj['geometry']['type']
+                if colltype == 'sphere':
+                    sizes.append(collobj['geometry']['radius'])
+                elif colltype == 'cylinder':
+                    sizes.append(max(collobj['geometry']['radius'], collobj['geometry']['length']))
+                elif colltype == 'mesh':
+                    sizes.append(max(collobj['geometry']['scale']))  # TODO: this alone is not very informative
+                else:
+                    sizes.append(max(collobj['geometry']['size']))
+            newscale = max(sizes)
+        newlink.scale = (newscale, newscale, newscale)
 
     def placeChildLinks(self, parent):
-        print(parent['name']+ ', ', end='')
+        bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
+        print(parent['name'] + ', ', end='')
         children = []
         for l in self.robot['links']:
             if 'parent' in self.robot['links'][l] and self.robot['links'][l]['parent'] == parent['name']:
@@ -238,10 +298,7 @@ class RobotModelParser():
             # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
             parentLink = bpy.data.objects[parent['name']]
             childLink = bpy.data.objects[child['name']]
-            bpy.ops.object.select_all(action="DESELECT") #bpy.context.selected_objects = []
-            childLink.select = True
-            parentLink.select = True
-            bpy.context.scene.objects.active = parentLink
+            selectObjects([childLink, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             # 2: move to parents origin by setting the world matrix to the parents world matrix
             childLink.matrix_world = parentLink.matrix_world        # removing this line does not seem to make a difference
@@ -264,9 +321,7 @@ class RobotModelParser():
             self.placeChildLinks(child)
 
     def placeLinkSubelements(self, link):
-        #urdf_sca = #TODO: solve problem with scale
-        # 3.2: make sure to take into account visual information #TODO: also take into account inertial and joint axis (for joint sphere) and collision (bounding box)
-        #* urdf_visual_loc * urdf_visual_rot #*urdf_sca
+        bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
         parentLink = bpy.data.objects[link['name']]
         if 'inertial' in link:
             if 'pose' in link['inertial']:
@@ -283,35 +338,36 @@ class RobotModelParser():
             except:
                 print('ERROR: missing subelement')
                 return
-            bpy.ops.object.select_all(action="DESELECT")
-            geom.select = True
-            parentLink.select = True
-            bpy.context.scene.objects.active = parentLink
+            inertialname = link['inertial']['name']
+            inertialobj = bpy.data.objects[inertialname]
+            selectObjects([inertialobj, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            #geom.matrix_world = parentLink.matrix_world #FIXME: this applies the scale of the parent, making boxes BIIIG
-            geom.matrix_local = urdf_geom_loc * urdf_geom_rot
-            #bpy.types.SpaceView3D.pivot_point = 'INDIVIDUAL_ORIGINS'
+            inertialobj.matrix_local = urdf_geom_loc * urdf_geom_rot
         for geomsrc in ['visual', 'collision']:
             if geomsrc in link:
                 for g in link[geomsrc]:
-                    geom = link[geomsrc][g]
-                    print([key for key in geom])
-                    if 'pose' in geom:
-                        urdf_geom_loc = mathutils.Matrix.Translation(geom['pose']['translation'])
-                        urdf_geom_rot = mathutils.Euler(tuple(geom['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+                    geomelement = link[geomsrc][g]
+                    if 'pose' in geomelement:
+                        urdf_geom_loc = mathutils.Matrix.Translation(geomelement['pose']['translation'])
+                        urdf_geom_rot = mathutils.Euler(tuple(geomelement['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
                     else:
                         urdf_geom_loc = mathutils.Matrix.Identity(4)
                         urdf_geom_rot = mathutils.Matrix.Identity(4)
-                    geoname = geom['name'] #g
+                    geoname = geomelement['name']
+                    geom = bpy.data.objects[geoname]
+                    # FIXME: this does not do anything - how to set basis matrix to local?
+                    #geom.matrix_world = parentLink.matrix_world
+                    #selectObjects([geom], True, 0)
+                    #bpy.ops.object.transform_apply(location=True, rotation=True)
+                    selectObjects([geom, parentLink], True, 1)
+                    bpy.ops.object.parent_set(type='BONE_RELATIVE')
+                    geom.matrix_local = urdf_geom_loc * urdf_geom_rot
                     try:
-                        geom = bpy.data.objects[geoname]
-                    except:
-                        print('ERROR: missing subelement')
-                        break
+                        geom.scale = geomelement['geometry']['scale']
+                    except KeyError:
+                        pass
 
-                    bpy.ops.object.select_all(action="DESELECT")
-                    geom.select = True
-                    bpy.context.scene.objects.active = geom
+                    selectObjects([geom, parentLink], True, 1)
                     #if 'pivot' in link:
                     #    pivot = link['pivot']
                     #    #object_location = geom.location
@@ -324,27 +380,38 @@ class RobotModelParser():
                     #    bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
                     #    bpy.context.scene.cursor_location = cursor_location
 
-                    bpy.ops.object.select_all(action="DESELECT")
-                    geom.select = True
-                    parentLink.select = True
-                    bpy.context.scene.objects.active = parentLink
-                    bpy.ops.object.parent_set(type='BONE_RELATIVE')
-                    geom.matrix_world = parentLink.matrix_world
-                    # here:
 
-                    geom.matrix_local = urdf_geom_loc * urdf_geom_rot
+    def attachSensor(self, sensor):
+        bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
+        try:
+            parentLink = bpy.data.objects[sensor['link']]
+            if 'pose' in sensor:
+                urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
+                urdf_geom_rot = mathutils.Euler(tuple(sensor['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+            else:
+                urdf_geom_loc = mathutils.Matrix.Identity(4)
+                urdf_geom_rot = mathutils.Matrix.Identity(4)
+            sensorobj = bpy.data.objects[sensor['name']]
+            selectObjects([sensorobj, parentLink], True, 1)
+            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            sensorobj.matrix_local = urdf_geom_loc * urdf_geom_rot
+        except KeyError:
+            print('###ERROR: inconsisent data on sensor:', sensor['name'])
+
 
     def createGeometry(self, viscol, geomsrc):
         newgeom = None
         if viscol['geometry'] is not {}:
+            dimensions = None
             bpy.ops.object.select_all(action='DESELECT')
             geom = viscol['geometry']
-            geomtype = geom['geometryType']
+            geomtype = geom['type']
             # create the Blender object
             # tag all objects
             for obj in bpy.data.objects:
                 obj.tag = True
             if geomtype == 'mesh':
+                bpy.context.scene.layers = defLayers(defs.layerTypes[geomsrc])
                 filetype = geom['filename'].split('.')[-1]
                 if filetype == 'obj' or filetype == 'OBJ':
                     bpy.ops.import_scene.obj(filepath=os.path.join(self.path, geom['filename']))
@@ -359,7 +426,6 @@ class RobotModelParser():
                     #except:
                     #    print('ERROR: Missing object.')
                     #    return
-                else:
                 # find the newly imported obj
                 for obj in bpy.data.objects:
                     if not obj.tag:
@@ -371,36 +437,36 @@ class RobotModelParser():
                             newgeom.select = True
                             bpy.ops.object.transform_apply(rotation=True)
                 newgeom.name = viscol['name']
-                #newgeom.layers = defLayers([defs.layerTypes[geomsrc]])
+                newgeom['filename'] = geom['filename']
+                #newgeom.select = True
+                #if 'scale' in geom:
+                #    newgeom.scale = geom['scale']
+                #bpy.ops.object.transform_apply(scale=True)
             elif geomtype == 'box':
-                newgeom = createPrimitive(viscol['name'],
-                                          geomtype,
-                                          geom['size'],
-                                          defs.layerTypes[geomsrc]
-                                          )
+                dimensions = geom['size']
             elif geomtype == 'cylinder':
-                newgeom = createPrimitive(viscol['name'],
-                                          geomtype,
-                                          (geom['radius'], geom['length']),
-                                          defs.layerTypes[geomsrc]
-                                          )
+                dimensions = (geom['radius'], geom['length'])
             elif geomtype == 'sphere':
-                newgeom = createPrimitive(viscol['name'],
-                                          geomtype,
-                                          geom['radius'], #tuple would cause problem here
-                                          defs.layerTypes[geomsrc]
-                                          )
+                dimensions = geom['radius']
             else:
-                print("### ERROR: Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.')
+                log("Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.', "ERROR")
+            if dimensions:  # if a standard primitive type is found, create the object
+                newgeom = createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
+                newgeom.select = True
+                bpy.ops.object.transform_apply(scale=True)
             if newgeom is not None:
                 newgeom.phobostype = geomsrc
-                newgeom.select = True
-                if 'scale' in geom:
-                    newgeom.scale = geom['scale']
-                bpy.ops.object.transform_apply(scale=True)
-                newgeom['geometryType'] = geomtype
-                #TODO: which other properties remain?
-            #FIXME: place empty coordinate system and return...what?
+                newgeom['geometry/type'] = geomtype
+                if geomsrc == 'visual':
+                    try:
+                        newgeom.data.materials.append(bpy.data.materials[viscol['material']['name']])
+                    except KeyError:
+                        log('No material for obj', viscol['name'])
+            #FIXME: place empty coordinate system and return...what? Error handling of file import!
+        for prop in viscol:
+            if prop.startswith('$'):
+                for tag in viscol[prop]:
+                    newgeom[prop[1:]+'/'+tag] = viscol[prop][tag]
         return newgeom
 
     def createInertial(self, name, inertial):
@@ -408,16 +474,18 @@ class RobotModelParser():
         inert = createPrimitive('inertial_'+name, 'sphere', 0.01, 0, 'None', (0, 0, 0))
         inert.select = True
         bpy.ops.object.transform_apply(scale=True)
-        #obj = bpy.context.object
-        #obj.name = name
         for prop in inertial:
             if prop not in ['pose'] and inertial[prop] is not None:
-                inert[prop] = inertial[prop]
+                if not prop.startswith('$'):
+                    inert[prop] = inertial[prop]
+                else:
+                    for tag in inertial[prop]:
+                        inert[prop[1:]+'/'+tag] = inertial[prop][tag]
         inert.phobostype = 'inertial'
         return inert
 
     def createLink(self, link):
-        print("Creating link", link['name'])
+        bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
         #create base object ( =armature)
         bpy.ops.object.select_all(action='DESELECT')
         #bpy.ops.view3d.snap_cursor_to_center()
@@ -429,7 +497,7 @@ class RobotModelParser():
         bpy.ops.object.transform_apply(scale=True)
         newlink.phobostype = 'link'
         if newlink.name != link['name']:
-            print("Warning, name conflict!")
+            log("Warning, name conflict!")
         # place inertial
         if 'inertial' in link:
             self.createInertial(link['name'], link['inertial'])
@@ -445,12 +513,11 @@ class RobotModelParser():
                 collision = link['collision'][c]
                 if 'geometry' in collision:
                     self.createGeometry(collision, 'collision')
+        for prop in link:
+            if prop.startswith('$'):
+                for tag in link[prop]:
+                    newlink['link/'+prop[1:]+'/'+tag] = link[prop][tag]
         return newlink
-
-    def _set_origin(self, pivot):
-        '''
-        '''
-        pass
 
     def _get_object(self, link_name):
         """
@@ -465,19 +532,18 @@ class RobotModelParser():
         links = self.robot['links']
         for link_name in links:
             link = links[link_name]
-            obj = self._get_object(link_name)
-            if 'pivot' in link:
-                # move visual's pivot about pivot
-                pass
             if 'axis1' in link:
                 # move edit bone y axis to axis1
-                #bpy.ops.object.mode_set(mode='EDIT')
-                #bones = obj.data.edit_bones
-                #print(bones)
+                bpy.ops.object.mode_set(mode='EDIT')
 
-                #TODO >>> bpy.data.objects['joint_sphere_body_joint1'].data.bones.active.vector
+                axis_vec = mathutils.Vector(link['axis1'])
+                bpy.data.objects[link_name].data.bones.active.tail = axis_vec
 
-                #bpy.ops.object.mode_set(mode='OBJECT')
+                print()
+                print('link name:', link_name)
+                print("axis:", axis_vec)
+
+                bpy.ops.object.mode_set(mode='OBJECT')
                 pass
             if 'angle_offset' in link:
                 #angle = link['angle_offset']
@@ -492,6 +558,7 @@ class RobotModelParser():
                 #obj.matrix_world = offset_matrix * object_matrix
 
 
+                obj = self._get_object(link_name)
                 angle = -(link['angle_offset'])
                 bpy.ops.object.mode_set(mode='POSE')
                 pose_bone = obj.pose.bones['Bone']
@@ -513,6 +580,66 @@ class RobotModelParser():
                 #offset_matrix = mathutils.Matrix.Rotation(angle, 4, z_axis)
                 #combined_matrix = obj_matrix * offset_matrix
                 #obj.matrix_local = combined_matrix
+    def createJoint(self, joint):
+        bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
+        link = bpy.data.objects[joint['child']]
+        # add joint information
+        # link['joint/type'] = joint['type']
+
+        # set axis
+        selectObjects([link], clear=True, active=0)
+        bpy.ops.object.mode_set(mode='EDIT')
+        editbone = link.data.edit_bones[0]
+        #oldaxis = editbone.vector
+        length = editbone.length
+        if 'axis' in joint:
+            axis = mathutils.Vector(tuple(joint['axis']))
+            #oldaxis.cross(axis) # rotation axis
+            editbone.tail = editbone.head + axis.normalized() * length
+
+        # add constraints
+        for param in ['effort', 'velocity']:
+            try:
+                link['joint/max'+param] = joint['limits'][param]
+            except KeyError:
+                log("Key Error in adding joint constraints") #Todo: more details
+        try:
+            lower = joint['limits']['lower']
+            upper = joint['limits']['upper']
+        except KeyError:
+            lower = 0.0
+            upper = 0.0
+        joints.setJointConstraints(link, joint['type'], lower, upper)
+        for prop in joint:
+            if prop.startswith('$'):
+                for tag in joint[prop]:
+                    link['joint/'+prop[1:]+'/'+tag] = joint[prop][tag]
+
+    def createMotor(self, motor):
+        try:
+            joint = bpy.data.objects[motor['joint']]
+            for prop in motor:
+                if prop != 'joint':
+                    if not prop.startswith('$'):
+                        joint['motor/'+prop] = motor[prop]
+                    else:
+                        for tag in motor[prop]:
+                            joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
+        except KeyError:
+            pass #log("Joint " + motor['joint'] + " does not exist", "ERROR")
+
+    def createSensor(self, sensor):
+        #newsensor = sensors.createSensor(sensor)
+        pass
+
+    def createController(self, controller):
+        pass
+
+    def createGroup(self, group):
+        pass
+
+    def createChain(self, chain):
+        pass
 
     def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model."""
@@ -523,14 +650,57 @@ class RobotModelParser():
             #print(link['name'])
             self.createLink(link)
 
+        print("\n\nCreating joints...")
+        for j in self.robot['joints']:
+            print(j + ', ', end='')
+            joint = self.robot['joints'][j]
+            self.createJoint(joint)
+
+        print("\n\nCreating sensors...")
+        for s in self.robot['sensors']:
+            sensor = self.robot['sensors'][s]
+            self.createSensor(sensor)
+
         #build tree recursively and correct translation & rotation on the fly
         for l in self.robot['links']:
             if not 'parent' in self.robot['links'][l]:
                 root = self.robot['links'][l]
         print("\n\nPlacing links...")
         self.placeChildLinks(root)
+        print("\n\nAssigning model name...")
+        try:
+            print('ROOT:', root)
+            rootlink = getRoot(bpy.data.objects[root['name']])
+            rootlink['modelname'] = self.robot['name']
+        except KeyError:
+            print('ROOT:', root)
+            print("Could not assign model name to root link.", "ERROR")
+            assert False
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
+        for sensorname in self.robot['sensors']:
+            sensor = self.robot['sensors'][sensorname]
+            self.attachSensor(sensor)
+
+        print("\n\nCreating motors...")
+        for m in self.robot['motors']:
+            motor = self.robot['motors'][m]
+            self.createMotor(motor)
+
+        print("\n\nCreating controllers...")
+        for c in self.robot['controllers']:
+            controller = self.robot['controllers'][c]
+            self.createController(controller)
+
+        print("\n\nCreating groups...")
+        for g in self.robot['groups']:
+            group = self.robot['groups'][g]
+            self.createGroup(group)
+
+        print("\n\nCreating chains...")
+        for ch in self.robot['chains']:
+            chain = self.robot['chains'][ch]
+            self.createChain(chain)
 
         self._apply_joint_angle_offsets()
 
@@ -620,6 +790,7 @@ class MARSModelParser(RobotModelParser):
         
         links = self._parse_links(nodes)
         #self._add_parent_links(links)
+        self.robot['name'] = self.filepath.split('.')[0]
         self.robot['links'] = links
         self.robot['joints'] = self._create_joints_dict()
         self.robot['sensors'] = self._parse_sensors(sensors)
@@ -734,7 +905,7 @@ class MARSModelParser(RobotModelParser):
             geometry_type = node.find('physicmode').text
         
         geometry_dict = {}
-        geometry_dict['geometryType'] = geometry_type
+        geometry_dict['type'] = geometry_type
         
         if geometry_type == 'box' or geometry_type == 'mesh':
             x = round_float(size.find('x').text)
@@ -781,8 +952,8 @@ class MARSModelParser(RobotModelParser):
             pivot = [0.0, 0.0, 0.0]
 
         pos = base_pos
+        #visual_dict['pose'] = calc_pose_formats(pos, rot, pivot=pivot)
         visual_dict['pose'] = calc_pose_formats(pos, rot)
-
         mat_index = int(node.find('material_id').text)
         visual_dict['material'] = self.material_indices[mat_index]
         
@@ -1160,6 +1331,16 @@ class URDFModelParser(RobotModelParser):
     def __init__(self, filepath):
         RobotModelParser.__init__(self, filepath)
 
+    def parsePose(self, origin):
+        pose = {}
+        if origin is not None:
+            pose['translation'] = parse_text(origin.attrib['xyz'])
+            pose['rotation_euler'] = parse_text(origin.attrib['rpy'])
+        else:
+            pose['translation'] = defaults.idtransform
+            pose['rotation_euler'] = defaults.idtransform
+        return pose
+
     def parseModel(self):
         print("\nParsing URDF model from", self.filepath)
         self.tree = ET.parse(self.filepath)
@@ -1175,7 +1356,6 @@ class URDFModelParser(RobotModelParser):
             newlink = self.parseLink(link)
             #write link to list
             links[newlink['name']] = newlink
-            #print(newlink)
         self.robot['links'] = links
 
         #write joints to dictionary
@@ -1186,15 +1366,12 @@ class URDFModelParser(RobotModelParser):
                 newjoint, pose = self.parseJoint(joint)
                 self.robot['links'][newjoint['child']]['pose'] = pose
                 joints[newjoint['name']] = newjoint
-                #print(newjoint)
         self.robot['joints'] = joints
 
         #find any links that still have no pose (most likely because they had no parent)
         for link in links:
             if not 'pose' in links[link]:
-                position, rotation = pos_rot_tree_to_lists(None, None)
-                links[link]['pose'] = calc_pose_formats(position, rotation)
-            #print(link, links[link]['pose'])
+                links[link]['pose'] = self.parsePose(None)
 
         #write parent-child information to nodes
         print("\n\nWriting parent-child information to nodes..")
@@ -1212,10 +1389,42 @@ class URDFModelParser(RobotModelParser):
         newlink = {a: link.attrib[a] for a in link.attrib}
 
         self.parseInertial(newlink, link)
-        no_visual_geo = self.parseVisual(newlink, link)
-        no_collision_geo = self.parseCollision(newlink, link)
-        handle_missing_geometry(no_visual_geo, no_collision_geo, newlink)
-        
+        #no_visual_geo = self.parseVisual(newlink, link)
+        #no_collision_geo = self.parseCollision(newlink, link)
+        #handle_missing_geometry(no_visual_geo, no_collision_geo, newlink)
+        #parse visual and collision objects
+        for objtype in ['visual', 'collision']:
+            newlink[objtype] = {}
+            i = 0
+            for xmlelement in link.iter(objtype):
+                try:
+                    elementname = xmlelement.attrib['name']
+                except KeyError:
+                    elementname = objtype + '_' + str(i) + '_' + newlink['name']
+                    i += 1
+                newlink[objtype][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
+                dictelement = newlink[objtype][elementname]
+                dictelement['name'] = elementname
+                dictelement['pose'] = self.parsePose(xmlelement.find('origin'))
+                geometry = xmlelement.find('geometry')
+                if geometry is not None:
+                    dictelement['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+                    dictelement['geometry']['type'] = geometry[0].tag
+                    if geometry[0].tag == 'mesh':
+                        dictelement['geometry']['filename'] = geometry[0].attrib['filename']
+                        try:
+                            dictelement['geometry']['scale'] = parse_text(geometry[0].attrib['scale'])
+                        except KeyError:
+                            dictelement['geometry']['scale'] = [1.0, 1.0, 1.0]
+                material = xmlelement.find('material')
+                if material is not None:
+                    dictelement['material'] = {'name': material.attrib['name']}
+                    # We don't need to do the following, as any material with color or texture
+                    # will be parsed in the parsing of materials in parseModel
+                    # This might be necessary if there are name conflicts etc.
+                    #color = material.find('color')
+                    #if color is not None:
+                    #    dictelement['material']['color'] = parse_text(color.attrib['rgba'])
         if newlink == {}:
             print("\n### WARNING:", newlink['name'], "is empty.")
         return newlink
@@ -1224,127 +1433,33 @@ class URDFModelParser(RobotModelParser):
         '''
         '''
         inertial = link_xml.find('inertial')
-        if inertial is not None: # !!! 'if Element' yields none if the Element contains no children, thus this notation !!!
-            inertial_dict = {}
-            origin = inertial.find('origin')
-            if origin is not None:
-                raw_pose = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-                inertial_dict['pose'] = calc_pose_formats(raw_pose[:3], raw_pose[3:])
-            else:
-                position, rotation = pos_rot_tree_to_lists(None, None)
-                inertial_dict['pose'] = calc_pose_formats(position, rotation)
+        if inertial is not None: # 'if Element' yields none if the Element contains no children, thus this notation
+            link_dict['inertial'] = {}
+            link_dict['inertial']['pose'] = self.parsePose(inertial.find('origin'))
             mass = inertial.find('mass')
             if mass is not None:
-                inertial_dict['mass'] = float(mass.attrib['value'])
+                link_dict['inertial']['mass'] = float(mass.attrib['value'])
             inertia = inertial.find('inertia')
             if inertia is not None:
                 values = []
-                inertial_dict['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
-            inertial_dict['name'] = 'inertial_' + link_dict['name']
+                link_dict['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
+            link_dict['inertial']['name'] = 'inertial_' + link_dict['name']
             
-            link_dict['inertial'] = inertial_dict
-            
-    def parseVisual(self, link_dict, link_xml):
-        '''
-        '''
-        visual_dict = {}
-        no_vis_geo = []
-        i=0
-        for visual_xml in link_xml.iter('visual'):
-            try:
-                visname = visual_xml.attrib['name']
-            except KeyError:
-                visname = 'visual_' + str(i) + '_' + link_dict['name']
-                i += 1
-            visual_dict[visname] = {a: visual_xml.attrib[a] for a in visual_xml.attrib}
-            vis_dict = visual_dict[visname]
-            vis_dict['name'] = visname
-            origin = visual_xml.find('origin')
-            if origin is not None:
-                 raw_pose = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-                 vis_dict['pose'] = calc_pose_formats(raw_pose[:3], raw_pose[3:])
-            else:
-                vis_dict['pose'] = calc_pose_formats(None, None)
-                
-            if not self.parseGeometry(vis_dict, visual_xml):
-                no_vis_geo.append(visname)
-            
-            material = visual_xml.find('material')
-            if material is not None:
-                vis_dict['material'] = {'name': material.attrib['name']}
-                color = material.find('color')
-                if color is not None:
-                    vis_dict['material']['color'] = parse_text(color.attrib['rgba'])
-            else:
-                vis_dict['material'] = {'name':'None'} #TODO: this is a hack!
-                print("\n### Warning: No material provided for link", link_dict['name'])
-                
-        if visual_dict == {}: #'else' cannot be used as we don't use a break
-            print("\n### WARNING: No visual information provided for link", link_dict['name'])
-        else:
-            link_dict['visual'] = visual_dict
-        return no_vis_geo
-        
-    def parseCollision(self, link_dict, link_xml):
-        '''
-        '''
-        collision_dict = {}
-        no_coll_geo = []
-        i=0
-        for collision_xml in link_xml.iter('collision'):
-            try:
-                colname = collision_xml.attrib['name']
-            except KeyError:
-                colname = 'collision_' + str(i) + '_' + link_dict['name']
-                i += 1
-            collision_dict[colname] = {a: collision_xml.attrib[a] for a in collision_xml.attrib}
-            col_dict = collision_dict[colname]
-            col_dict['name'] = colname
-            origin = collision_xml.find('origin')
-            if origin is not None:
-                raw_pose = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-                col_dict['pose'] = calc_pose_formats(raw_pose[:3], raw_pose[3:])
-            else:
-                col_dict['pose'] = calc_pose_formats(None, None)
-
-            if not self.parseGeometry(col_dict, collision_xml):
-                no_coll_geo.append(colname)
-            
-            if collision_dict == {}:
-               print("\n### WARNING: No collision information provided for link", link_dict['name'])
-            else:
-                link_dict['collision'] = collision_dict
-        return no_coll_geo
-        
-    def parseGeometry(self, vis_coll_dict, vis_coll_xml):
-        '''
-        '''
-        geometry_xml = vis_coll_xml.find('geometry')
-        if geometry_xml is not None:
-            got_geometry = True
-            geometry_dict = {a: parse_text(geometry_xml[0].attrib[a]) for a in geometry_xml[0].attrib}
-            geometry_dict['geometryType'] = geometry_xml[0].tag
-            if geometry_xml[0].tag == 'mesh':
-                geometry_dict['filename'] = geometry_xml[0].attrib['filename'] #TODO: remove this, also from export, as it is double
-            vis_coll_dict['geometry'] = geometry_dict
-        else:
-            no_geometry = False
-        return got_geometry
+  
         
 
     def parseJoint(self, joint):
         #print(joint.attrib['name']+', ', end='')
         newjoint = {a: joint.attrib[a] for a in joint.attrib}
-        try:
-            origin = joint.find('origin')
-            origindict = {'xyz': origin.attrib['xyz'].split(), 'rpy': origin.attrib['rpy'].split()}
-        except AttributeError:
-            origindict = {'xyz': [0, 0, 0], 'rpy': [0, 0, 0]}
+        pose = self.parsePose(joint.find('origin'))
         newjoint['parent'] = joint.find('parent').attrib['link']
         newjoint['child'] = joint.find('child').attrib['link']
-        raw_pose = [float(num) for num in (origin.attrib['xyz'].split() + origin.attrib['rpy'].split())]
-        pose = calc_pose_formats(raw_pose[:3], raw_pose[3:])
-        #axis
+        axis = joint.find('axis')
+        if axis is not None:
+            newjoint['axis'] = parse_text(axis.attrib['xyz'])
+        limit = joint.find('limit')
+        if limit is not None:
+            newjoint['limits'] = {a: parse_text(limit.attrib[a]) for a in limit.attrib}
         #calibration
         #dynamics
         #limit
@@ -1366,6 +1481,109 @@ class URDFModelParser(RobotModelParser):
         for m in material_list:
             #TODO: handle duplicate names? urdf_robotname_xxx?
             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) 
+    
+class SRDFModelParser(RobotModelParser):
+    """Class derived from RobotModelParser wich parses a SRDF extension file for URDF"""
+    
+    def __init__(self, filepath):
+        RobotModelParser.__init__(self, filepath)
+        
+    def parseModel(self, robot):
+        collision_Exclusives = self.buildCollisionExclusives()
+        collision_Dic = self.buildCollisionDictionary(collision_Exclusives, robot)
+        collision_Groups = self.buildCollisionGroups(collision_Dic)
+        robot = self.buildBitmasks(collision_Groups, robot)
+        return robot
+        
+    def buildBitmasks(self, collision_Groups, robot):
+        bits = len(collision_Groups)
+        if bits > 20:
+            print("The blender bitmask is not capable of more than 20 bit. The bitmask will be cutted!")
+            bits = 20
+        for link in robot['links']:
+            for i in range(0, bits):
+                if link in collision_Groups[i]:
+                    for coll in robot['links'][link]['collision']:
+                        try:
+                            robot['links'][link]['collision'][coll]['bitmask'] += 2**i
+                        except KeyError:
+                            robot['links'][link]['collision'][coll]['bitmask'] = 2**i
+        return robot
+    
+    def buildCollisionExclusives(self):
+        print("\nParsing SRDF extensions from", self.filepath)
+        self.tree = ET.parse(self.filepath)
+        self.root = self.tree.getroot()
+        
+        collision_Exclusives = []
+        for disabled_coll in self.root.iter('disable_collisions'):
+            pair = (disabled_coll.attrib['link1'], disabled_coll.attrib['link2'])
+            collision_Exclusives.append(pair)
+            #print("Append ", pair, " to collision Exclusives")
+        return collision_Exclusives
+        
+    
+    def buildCollisionDictionary(self, collision_exclusives, robot):
+        dic = {}
+        for pair in collision_exclusives:
+            if 'root' in pair or (pair[0] != robot['joints'][pair[1]]['parent'] and pair[1] != robot['joints'][pair[0]]['parent']):
+                if pair[0] not in dic:
+                    dic[pair[0]]=[]
+                    dic[pair[0]].append(pair[1])
+                else:
+                    if pair[1] not in dic[pair[0]]:
+                        dic[pair[0]].append(pair[1])
+                if pair[1] not in dic:
+                    dic[pair[1]]=[]
+                    dic[pair[1]].append(pair[0])
+                else:
+                    if pair[0] not in dic[pair[1]]:
+                        dic[pair[1]].append(pair[0])
+            else:
+                pass
+                #print("Pair: ", pair, " not included")
+        print("Collision Dictionary:\n", dic)
+        return dic
+                
+    def checkGroup(self, group, colls):
+        cut = []
+        for elem in group:
+            if elem in colls:
+                cut.append(elem)
+        if len(cut) == len(group):
+            return cut
+        else:
+            return []
+
+    def processGroup(self, group, link, colls):
+        if link in group:
+            for coll in colls:
+                if coll in group:
+                    colls.remove(coll)
+        else:
+            cut = self.checkGroup(group, colls)
+            if len(cut) > 0:
+                group.append(link)
+                for l in cut:
+                    colls.remove(l)
+                
+    def buildCollisionGroups(self, dic):
+        groups=[]
+        for link in dic:
+            #rint("Current link: ", link)
+            colls = dic[link]
+            #print("Current colls: ", colls)
+            for group in groups:
+                #print("Current group: ", group)
+                self.processGroup(group, link, colls)
+            while len(colls) > 0:
+                newgroup = [link, colls.pop()]
+                groups.append(newgroup)
+                self.processGroup(newgroup, link, colls)
+        print ("Number of collision Groups: ", len(groups))
+        #print ("Collision Groups:\n", groups)
+        return groups
+        
 
 class SMURFModelParser(RobotModelParser):
     """Class derived from RobotModelParser which parses a SMURF model"""
@@ -1375,17 +1593,89 @@ class SMURFModelParser(RobotModelParser):
 
     def parseModel(self):
         print("Parsing SMURF model...")
-        stream = open(self.filepath, 'r')
-        smurf_spec = yaml.load(stream)
-        smurf_files = smurf_spec['files']
-        for smurf_file in smurf_files:
-            if smurf_file.split('.')[-1] == 'urdf':
-                urdf_parser = URDFModelParser(os.path.dirname(self.filepath) + '/' + smurf_file)
-                urdf_parser.parseModel()
-                self.robot = urdf_parser.robot
-            elif smurf_file.split('.')[-1] in ['yml', 'yaml']:
-                pass
-                # TODO
+        #smurf = None
+        with open(self.filepath, 'r') as smurffile:
+            smurf = yaml.load(smurffile)
+        if smurf is None:
+            log('No valid SMURF file.', "ERROR")
+            return None
+        urdffile = None
+        srdffile = None
+        ymlfiles = [f for f in smurf['files'] if f.endswith('.yml') or f.endswith('.yaml')]
+        for f in smurf['files']:
+            if f.endswith('.urdf'):
+                urdffile = f
+            if f.endswith('.srdf'):
+                srdffile = f
+        # get URDF info
+        if urdffile is None:
+            log("Did not find URDF file associated with SMURF.", "ERROR")
+            return None
+        urdfparser = URDFModelParser(os.path.join(self.path, urdffile))
+        urdfparser.parseModel()
+        if srdffile is not None:
+            srdfparser = SRDFModelParser(os.path.join(self.path, srdffile))
+            self.robot = srdfparser.parseModel(urdfparser.robot)
+        else:
+            self.robot = urdfparser.robot
+        # make sure all types exist
+        typelist = ['links', 'joints', 'materials', 'sensors', 'motors', 'controllers', 'groups', 'chains']
+        for key in typelist:
+            if key not in self.robot:
+                self.robot[key] = {}
+        #add the smurf information
+        custom_dicts = {}
+        for yml in ymlfiles:
+            with open(os.path.join(self.path, yml), 'r') as ymlfile:
+                ymldict = yaml.load(ymlfile)
+            for key in ymldict:
+                print(key)
+                if key in ['materials', 'sensors', 'motors', 'controllers']:
+                    for element in ymldict[key]:
+                        if element['name'] not in self.robot[key]:
+                            self.robot[key][element['name']] = element
+                        else:
+                            for tag in element:
+                                self.robot[key][element['name']][tag] = element[tag]
+                elif key in 'state':
+                    pass  # TODO: handle state
+                else:
+                    custom_dicts[key] = ymldict[key]
+
+        for key in custom_dicts:
+            print('assign custom properties:', key, custom_dicts[key])
+            for element in custom_dicts[key]:  # iterate over list with custom annotations
+                print(element)
+                try:
+                    objtype = element['type']
+                except KeyError:
+                    log("Could not find 'type' in custom annotation: " + str(element), "ERROR")
+                try:
+                    objname = element['name']
+                except KeyError:
+                    log("Could not find 'name' in custom annotation: " + str(element), "ERROR")
+                try:
+                    if objtype+'s' in typelist:  #FIXME: this is a total hack!
+                        objtype += 's'
+                    else:
+                        raise TypeError(objtype)
+                    if objname in self.robot[objtype]:
+                        for tag in element:
+                            if tag not in ['type', 'name']:
+                                if not '$'+key in self.robot[objtype][objname]:
+                                    self.robot[objtype][objname]['$'+key] = {tag: element[tag]}
+                                else:
+                                    self.robot[objtype][objname]['$'+key][tag] = element[tag]
+                    else:
+                        raise NameError(objname)
+                except TypeError:
+                    print("###ERROR: could not find 'type' or 'name' in custom annotation", objtype, objname)
+                except NameError:
+                    log("Element " + str(objname) + " of type " + str(objtype) + " does not exist in this model.", "ERROR")
+
+        #now some debug output
+        with open(self.filepath+'_SMURF_debug.yml', 'w') as outputfile:
+            outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 
 class RobotModelImporter(bpy.types.Operator):

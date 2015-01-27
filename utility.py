@@ -30,6 +30,8 @@ import bpy
 import mathutils
 from datetime import datetime
 from . import defs
+from . import materials
+from phobos.logging import *
 
 
 def register():
@@ -55,6 +57,7 @@ def is_int(s):
         int(s)
         return True
     except ValueError:
+        #pl.logger.log("Value is no Integer", "ERROR")
         return False
 
 
@@ -95,7 +98,7 @@ def find_in_list(alist, prop, value):
                 n = i
                 break
         except KeyError:
-            pass
+            pl.logger.log("The object at index " + str(i) + " has no property " + str(prop))
     return n
 
 
@@ -109,7 +112,7 @@ def retrieve_from_list(alist, prop, value):
                 n = i
                 break
         except KeyError:
-            pass
+            pl.logger.log("The object at index " + str(i) + " has no property " + str(prop))
     if n >= 0:
         return alist[n][prop]
     else:
@@ -146,6 +149,19 @@ def printMatrices(obj, info=None):
           "\n\nbasis:\n", obj.matrix_basis)
 
 
+def assignMaterial(obj, materialname):
+    if materialname not in bpy.data.materials:
+        if materialname in defs.defaultmaterials:
+            materials.createPhobosMaterials()
+        else:
+            #print("###ERROR: material to be assigned does not exist.")
+            pl.logger.log("Material to be assigned does not exist.", "ERROR")
+            return None
+    obj.data.materials.append(bpy.data.materials[materialname])
+    if bpy.data.materials[materialname].use_transparency:
+        obj.show_transparent = True
+
+
 def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(0, 0, 0), protation=(0, 0, 0),
                     verbose=False):
     """Generates the primitive specified by the input parameters"""
@@ -170,11 +186,12 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
     elif ptype == "cone":
         bpy.ops.mesh.primitive_cone_add(vertices=32, radius=psize[0], depth=psize[1], cap_end=True, layers=players,
                                         location=plocation, rotation=protation)
+    elif ptype == 'disc':
+        bpy.ops.mesh.primitive_circle_add(vertices=psize[1], radius=psize[0], fill_type='TRIFAN', location=plocation, rotation=protation, layers=players)
     obj = bpy.context.object
     obj.name = pname
     if pmaterial != 'None':
-        if pmaterial in bpy.data.materials:
-            obj.data.materials.append(bpy.data.materials[pmaterial])
+        assignMaterial(obj, pmaterial)
     return obj
 
 
@@ -233,6 +250,9 @@ def getRoot(obj=None):
             if (anobj.select):
                 obj = anobj
     child = obj
+    if child == None:
+        pl.logger.log("No root object found! Check your object selection", "ERROR")
+        return None
     while child.parent != None:
         child = child.parent
     return child
@@ -246,9 +266,9 @@ def getRoots():
             roots.append(obj)
 
     if roots == []:
-        print("MARStools: No root objects found.")
+        print("Phobos: No root objects found.")
     else:
-        print("MARStools: Found", len(roots), "root object(s)", [root.name + "; " for root in roots])
+        print("Phobos: Found", len(roots), "root object(s)", [root.name + "; " for root in roots])
     return roots  # TODO: Should we change this and all other list return values in a tuple or generator expression?
 
 
@@ -301,7 +321,7 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            pass
+            log("The object '" + obj.name + "' has not property '" + numeric_prop + "'")
     return numsum
 
 

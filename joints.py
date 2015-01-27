@@ -281,6 +281,18 @@ class DefineJointConstraintsOperator(Operator):
     bl_label = "Adds Bone Constraints to the joint (link)"
     bl_options = {'REGISTER', 'UNDO'}
 
+    passive = BoolProperty(
+        name='passive',
+        default=False,
+        description='makes the joint passive (no actuation)'
+    )
+
+    degrees = BoolProperty(
+        name='degrees',
+        default=False,
+        description='use degrees or rad for revolute joints'
+    )
+
     joint_type = EnumProperty(
         name='joint_type',
         default='revolute',
@@ -307,17 +319,15 @@ class DefineJointConstraintsOperator(Operator):
         default=0.0,
         description="maximum velocity of the joint")
 
-    passive = BoolProperty(
-        name='passive',
-        default=False,
-        description='makes the joint passive (no actuation)'
-    )
-
     # TODO: invoke function to read all values in
 
     def execute(self, context):
-        lower = math.radians(self.lower)
-        upper = math.radians(self.upper)
+        if self.degrees:
+            lower = math.radians(self.lower)
+            upper = math.radians(self.upper)
+        else:
+            lower = self.lower
+            upper = self.upper
         for link in context.selected_objects:
             bpy.context.scene.objects.active = link
             setJointConstraints(link, self.joint_type, lower, upper)
@@ -341,7 +351,7 @@ class AttachMotorOperator(Operator):
 
     P = FloatProperty(
         name="P",
-        default=0.0,
+        default=1.0,
         description="P-value")
 
     I = FloatProperty(
@@ -361,12 +371,12 @@ class AttachMotorOperator(Operator):
 
     taumax = FloatProperty(
         name="maximum torque [Nm]",
-        default=0.1,
+        default=1.0,
         description="maximum torque a motor can apply")
 
     motortype = EnumProperty(
         name='motor_type',
-        default='servo',
+        default='PID',
         description="type of the motor",
         items=defs.motortypes)
 
@@ -374,10 +384,12 @@ class AttachMotorOperator(Operator):
         for joint in bpy.context.selected_objects:
             if joint.phobostype == "link":
                 #TODO: these keys have to be adapted
-                joint['motor/p'] = self.P
-                joint['motor/i'] = self.I
-                joint['motor/d'] = self.D
-                joint['motor/motorMaxSpeed'] = self.vmax*2*math.pi
-                joint['motor/motorMaxForce'] = self.taumax
-                joint['type'] = 1 if self.motortype == 'servo' else 2
+                if self.motortype == 'PID':
+                    joint['motor/p'] = self.P
+                    joint['motor/i'] = self.I
+                    joint['motor/d'] = self.D
+                joint['motor/maxSpeed'] = self.vmax*2*math.pi
+                joint['motor/maxEffort'] = self.taumax
+                #joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
+                joint['motor/type'] = self.motortype
         return{'FINISHED'}
