@@ -1,4 +1,10 @@
 """
+..module:: phobos.collision
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+..moduleauthor:: Kai von Szadowski
+
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -19,8 +25,6 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 File collision.py
 
 Created on 7 Jan 2014
-
-@author: Kai von Szadkowski
 """
 
 import bpy
@@ -35,14 +39,28 @@ from phobos.logging import *
 
 
 def register():
+    """This function registers this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Registering collision...")
 
 
 def unregister():
+    """This function unregisters this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Unregistering collision...")
 
 class CreateCollisionObjects(Operator):
-    """Select n bodies to create collision objects for."""
+    """Select n bodies to create collision objects for.
+
+    """
     bl_idname = "object.create_collision_objects"
     bl_label = "Create collision objects for all selected Links"
     bl_options = {'REGISTER', 'UNDO'}
@@ -54,6 +72,13 @@ class CreateCollisionObjects(Operator):
         items=defs.geometrytypes)
 
     def execute(self, context):
+        """Executes this blender operator and creates collision objects for the selected bodies.
+
+        :param context: The blender context this function should work with.
+
+        :return: set -- the blender specific return set.
+
+        """
 
         startLog(self)
         visuals = []
@@ -132,7 +157,9 @@ class CreateCollisionObjects(Operator):
 
 
     class SetCollisionGroupOperator(Operator):
-        """SetCollisionGroupOperator"""
+        """Sets the collision group of the selected object(s).
+
+        """
         bl_idname = "object.phobos_set_collision_group"
         bl_label = "Sets the collision group of the selected object(s)."
         bl_options = {'REGISTER', 'UNDO'}
@@ -146,12 +173,25 @@ class CreateCollisionObjects(Operator):
 
         @classmethod
         def poll(self, context):
+            """This function checks if the context is valid in terms of executing this operator.
+
+            :param context: The blender context to check.
+            :return: bool -- Whether the context is valid or not.
+
+            """
             for obj in context.selected_objects:
                 if obj.phobostype == 'collision':
                     return True
             return False
 
         def invoke(self, context, event):
+            """This function invokes this operator.
+
+            :param context: The blender context this operator should work with.
+            :param event: Blender specific event *not used in this function*
+            :return: set -- the blender specific return set.
+
+            """
             try:
                 self.groups = context.active_object.rigid_body.collision_groups
             except AttributeError:
@@ -159,6 +199,12 @@ class CreateCollisionObjects(Operator):
             return self.execute(context)
 
         def execute(self, context):
+            """This function executes this blender operator and sets the collision groups for the selected object(s).
+
+            :param context: The blender context this operator should work with.
+            :return: set -- the blender specific return set.
+
+            """
             active_object = context.active_object
             for obj in context.selected_objects:
                 if obj.phobostype == 'collision':
@@ -171,5 +217,3 @@ class CreateCollisionObjects(Operator):
                         obj.rigid_body.collision_groups = self.groups
             context.scene.objects.active = active_object
             return {'FINISHED'}
-
-
