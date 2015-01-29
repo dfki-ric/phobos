@@ -34,7 +34,7 @@ from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatProperty
 from . import defs
 from . import utility
-from . import logging as pl
+from phobos.logging import *
 
 
 def register():
@@ -87,7 +87,7 @@ class AddControllerOperator(Operator):
         :return: set -- the blender specific return set.
 
         """
-        pl.logger.startLog(self)
+        startLog(self)
         location = bpy.context.scene.cursor_location
         objects = []
         controllers = []
@@ -112,7 +112,7 @@ class AddControllerOperator(Operator):
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        pl.logger.endLog()
+        endLog()
         return {'FINISHED'}
 
 
@@ -135,7 +135,7 @@ class AddLegacyControllerOperator(Operator):
         :param context: The blender context this operator should work with.
         :return: set -- the blender specific return set.
         """
-        pl.logger.startLog(self)
+        startLog(self)
         location = bpy.context.scene.cursor_location
         objects = []
         controllers = []
@@ -154,15 +154,15 @@ class AddLegacyControllerOperator(Operator):
             for key in ctrl.keys():
                 if key.find("index") >= 0:
                     del ctrl[key]
-                    pl.logger.log("Deleting " + str(key) + " in " + ctrl.name, "INFO")
+                    log("Deleting " + str(key) + " in " + ctrl.name, "INFO")
             i = 1
             for obj in objects:
                 if obj.phobostype == "link":
                     ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
                     i += 1
-        pl.logger.log("Added joints to (new) controller(s).", "INFO")
+        log("Added joints to (new) controller(s).", "INFO")
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        pl.logger.endLog()
+        endLog()
         return {'FINISHED'}

@@ -31,7 +31,7 @@ import mathutils
 from datetime import datetime
 from . import defs
 from . import materials
-from phobos.logging import *
+from phobos.logging import log
 
 
 def register():
@@ -57,7 +57,6 @@ def is_int(s):
         int(s)
         return True
     except ValueError:
-        pl.logger.log("Value is no Integer", "ERROR")
         return False
 
 
@@ -98,7 +97,7 @@ def find_in_list(alist, prop, value):
                 n = i
                 break
         except KeyError:
-            pl.logger.log("The object at index " + str(i) + " has no property " + str(prop))
+            log("The object at index " + str(i) + " has no property " + str(prop))
     return n
 
 
@@ -112,7 +111,7 @@ def retrieve_from_list(alist, prop, value):
                 n = i
                 break
         except KeyError:
-            pl.logger.log("The object at index " + str(i) + " has no property " + str(prop))
+            log("The object at index " + str(i) + " has no property " + str(prop))
     if n >= 0:
         return alist[n][prop]
     else:
@@ -155,7 +154,7 @@ def assignMaterial(obj, materialname):
             materials.createPhobosMaterials()
         else:
             #print("###ERROR: material to be assigned does not exist.")
-            pl.logger.log("Material to be assigned does not exist.", "ERROR")
+            log("Material to be assigned does not exist.", "ERROR")
             return None
     obj.data.materials.append(bpy.data.materials[materialname])
     if bpy.data.materials[materialname].use_transparency:
@@ -251,7 +250,7 @@ def getRoot(obj=None):
                 obj = anobj
     child = obj
     if child == None:
-        pl.logger.log("No root object found! Check your object selection", "ERROR")
+        log("No root object found! Check your object selection", "ERROR")
         return None
     while child.parent != None:
         child = child.parent
