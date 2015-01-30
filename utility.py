@@ -278,8 +278,8 @@ def calcBoundingBoxCenter(boundingbox):
 
 
 def selectObjects(objects, clear=True, active=-1):
-    '''Selects all objects provided in list, clears current selection if clear is True
-    and sets one of the objects the active objects if a valid index is provided.'''
+    """Selects all objects provided in list, clears current selection if clear is True
+    and sets one of the objects the active objects if a valid index is provided."""
     if clear:
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
