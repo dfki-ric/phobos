@@ -592,6 +592,7 @@ def exportModelToSRDF(model, path):
                     collisionExclusives.append((parent.name, child.name))
                 addPCCombinations(child)
 
+    # FIXME: Do we need this?
     roots = getRoots()
     for root in roots:
         if root.name == 'root':
@@ -712,9 +713,72 @@ def exportModelToSMURF(model, path):
                 op.write(outstring)
 
 
-def exportSceneToSMURF(path):
-    """Exports all robots in a scene to separate SMURF folders."""
-    pass
+class ExportSceneOperator(Operator):
+    """This Blender operator exports the selected robot models in the current
+     Blender scene as a SMURF scene (*.smurfs).
+    """
+    bl_idname = "object.phobos_export_scene"
+    bl_label = "Export the selected model(s) in a scene."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        exportSMURFsScene()
+        return {'FINISHED'}
+
+
+def exportSMURFsScene(selected_only=True, subfolders=True):
+    """Exports all robots in a scene in *.smurfs format.
+    :param selected_only: Decides if only models with selected root links are exported.
+    :param subfolders: If True, the export is structured with subfolders for each model.
+    """
+    objects = {}
+    models = {}  # models to be exported by name
+    for root in getRoots():
+        if ('modelname' in root) and (not (selected_only and not root.select)):
+            objects[root['modelname']] = getChildren(root)
+            if not root['modelname'] in models:
+                models[root['modelname']] = [root]
+            else:
+                models[root['modelname']].append(root)
+
+    smurfs = []
+    scenedict = {}
+    for modelname in models:
+        entitylist = models[modelname]
+        unnamed_entities = 0
+        for entity in entitylist:
+            if 'entityname' in entity:
+                entityname = entity['entityname']
+            else:
+                entityname = entity['modelname']+'_'+str(unnamed_entities)
+                unnamed_entities += 1
+            entitypose = robotdictionary.deriveObjectPose(entitylist[0])
+            scenedict = {'name': entityname,
+                         'type': 'smurf',
+                         'URI': modelname+'.smurf',
+                         'anchor': 'none',  # TODO: implement anchor points
+                         'position': entitypose['translation'],
+                         'rotation': entitypose['rotation_quaternion'],
+                         'pose': 'default'}  # TODO: implement multiple poses
+            smurfs.append(scenedict)
+
+    if bpy.data.worlds[0].relativePath:
+        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+    else:
+        outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+
+    with open(os.path.join(outpath, bpy.data.worlds['World'].sceneName + '.smurfs'),
+              'w') as outputfile:
+        outputfile.write("# SMURF scene: '" + bpy.data.worlds['World'].sceneName
+                         + "'; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n")
+        outputfile.write("# created with Phobos " + defs.version
+                         + " - https://github.com/rock-simulation/phobos\n\n")
+        outputfile.write(yaml.dump({'smurfs': smurfs}))
+
+    for modelname in models:
+        smurf_outpath = securepath(os.path.join(outpath, modelname) if subfolders else outpath)
+        selectObjects(objects[modelname], True)
+        export(smurf_outpath)
 
 
 def exportModelToMARS(model, path):
@@ -764,16 +828,21 @@ class ExportModelOperator(Operator):
         return {'FINISHED'}
 
 
-def export():
+def export(path=''):
     """This function does the actual exporting of the robot model.
 
     :return: Nothing.
     """
     #TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
-    if bpy.data.worlds[0].relativePath:
-        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+    if path == '':
+        if bpy.data.worlds[0].relativePath:
+            outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+        else:
+            outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
     else:
-        outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+        outpath = path
+    if not outpath.endswith(os.path.sep):
+        outpath += os.path.sep
     yaml = bpy.data.worlds[0].exportYAML
     urdf = bpy.data.worlds[0].exportURDF
     srdf = bpy.data.worlds[0].exportSRDF
@@ -797,7 +866,7 @@ def export():
             exportModelToSMURF(robot, outpath)
         elif urdf:
             exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
-    selectObjects(objectlist, True)
+    selectObjects(objectlist, True)  # FIXME: does this make sense, as it is already the list of selected objects?
     if meshexp:
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
         if show_progress:

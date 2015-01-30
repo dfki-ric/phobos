@@ -68,6 +68,7 @@ def register():
     bpy.types.World.exportURDF = BoolProperty(name="exportURDF", default=True, update=updateExportOptions)
     bpy.types.World.exportSRDF = BoolProperty(name="exportSRDF", default=True)
     bpy.types.World.exportYAML = BoolProperty(name="exportYAML", update=updateExportOptions)
+    bpy.types.World.sceneName = StringProperty(name="sceneName")
 
     #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
 
@@ -403,6 +404,13 @@ class PhobosExportPanel(bpy.types.Panel):
         layout.label(text="Export/Import")
         layout.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
         layout.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
+
+        layout.separator()
+
+        layout.label(text="Export Scene")
+        self.layout.prop(bpy.data.worlds[0], "sceneName", text="name")
+        layout.operator("object.phobos_export_scene", text="Export SMURF Scene", icon="WORLD_DATA")
+
 
 class PhobosSettingsPanel(bpy.types.Panel):
     """A Custom Panel in the Viewport Toolbar for Phobos settings"""
