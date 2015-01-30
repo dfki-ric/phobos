@@ -73,7 +73,7 @@ def deriveMaterial(mat):
 
 
 def deriveLink(obj):
-    props = initObjectProperties(obj, marstype='link', ignoretypes=['joint', 'motor'])
+    props = initObjectProperties(obj, phobostype='link', ignoretypes=['joint', 'motor'])
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
     props["visual"] = {}
@@ -83,7 +83,7 @@ def deriveLink(obj):
 
 
 def deriveJoint(obj):
-    props = initObjectProperties(obj, marstype='joint', ignoretypes=['link', 'motor'])
+    props = initObjectProperties(obj, phobostype='joint', ignoretypes=['link', 'motor'])
     props['parent'] = obj.parent.name
     props['child'] = obj.name
     props['type'], crot = joints.deriveJointType(obj, True)
@@ -125,7 +125,7 @@ def deriveJointState(joint):
 
 
 def deriveMotor(obj):
-    props = initObjectProperties(obj, marstype='motor', ignoretypes=['link', 'joint'])
+    props = initObjectProperties(obj, phobostype='motor', ignoretypes=['link', 'joint'])
     #props['name'] = obj.name
     props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
     return props#, obj.parent
@@ -176,7 +176,7 @@ def deriveGeometry(obj):
 
 def deriveInertial(obj):
     """Derives a dictionary entry of an inertial object."""
-    props = initObjectProperties(obj, marstype='inertial')
+    props = initObjectProperties(obj, phobostype='inertial')
     props['inertia'] = list(map(float, obj['inertial/inertia']))
     props['pose'] = deriveObjectPose(obj)
     return props, obj.parent
@@ -193,7 +193,7 @@ def deriveObjectPose(obj):
 
 
 def deriveVisual(obj):
-    visual = initObjectProperties(obj, marstype='visual', ignoretypes='geometry')
+    visual = initObjectProperties(obj, phobostype='visual', ignoretypes='geometry')
     visual['geometry'] = deriveGeometry(obj)
     visual['pose'] = deriveObjectPose(obj)
     #if obj.data.materials:
@@ -202,7 +202,7 @@ def deriveVisual(obj):
 
 
 def deriveCollision(obj):
-    collision = initObjectProperties(obj, marstype='collision', ignoretypes='geometry')
+    collision = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
     collision['geometry'] = deriveGeometry(obj)
     collision['pose'] = deriveObjectPose(obj)
     try:
@@ -220,35 +220,35 @@ def deriveApproxsphere(obj):
 
 
 def deriveSensor(obj):
-    props = initObjectProperties(obj, marstype='sensor')
+    props = initObjectProperties(obj, phobostype='sensor')
     #props['pose'] = deriveObjectPose(obj)
     props['link'] = obj.parent.name
     return props
 
 
 def deriveController(obj):
-    props = initObjectProperties(obj, marstype='controller')
+    props = initObjectProperties(obj, phobostype='controller')
     return props
 
 
-def initObjectProperties(obj, marstype=None, ignoretypes=[]):
+def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
     props = {'name': obj.name.split(':')[-1]}  #allow duplicated names differentiated by types
-    if not marstype:
+    if not phobostype:
         for key, value in obj.items():
             props[key] = value
     else:
         for key, value in obj.items():
             if '/' in key:
-                if marstype+'/' in key:
+                if phobostype+'/' in key:
                     specs = key.split('/')[1:]
                     if len(specs) == 1:
-                        props[key.replace(marstype+'/', '')] = value
+                        props[key.replace(phobostype+'/', '')] = value
                     elif len(specs) == 2:
                         category, specifier = specs
                         if '$'+category not in props:
                             props['$'+category] = {}
                         props['$'+category][specifier] = value
-                elif key.count('/') == 1: #ignore two-level specifiers if marstype is not present
+                elif key.count('/') == 1: #ignore two-level specifiers if phobostype is not present
                     category, specifier = key.split('/')
                     if category not in ignoretypes:
                         if '$'+category not in props:

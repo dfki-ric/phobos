@@ -211,11 +211,11 @@ def defLayers(layerlist):
     return layers
 
 
-def returnObjectList(marstype):
-    """Returns list of all objects in the current scene matching marstype"""
+def returnObjectList(phobostype):
+    """Returns list of all objects in the current scene matching phobostype"""
     objlist = []
     for obj in bpy.context.scene.objects:
-        if obj.phobostype == marstype:
+        if obj.phobostype == phobostype:
             objlist.append(obj)
     return objlist
 

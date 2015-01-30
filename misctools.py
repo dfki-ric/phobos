@@ -224,7 +224,7 @@ class SyncMassesOperator(Operator):
                      ("lto", "latest to oldest", "latest to oldest")),
             name = "synctype",
             default = "vtc",
-            description = "MARS object type")
+            description = "Phobos object type")
 
     writeinertial = BoolProperty(
                 name = 'robotupdate inertial',
@@ -391,11 +391,11 @@ class NameModelOperator(Operator):
         return {'FINISHED'}
 
 
-class SelectObjectsByMARSType(Operator):
-    """SelectObjectsByType
+class SelectObjectsByPhobosType(Operator):
+    """SelectObjectsByPhobosType
 
     """
-    bl_idname = "object.phobos_select_objects_by_marstype"
+    bl_idname = "object.phobos_select_objects_by_phobostype"
     bl_label = "Select objects in the scene by phobostype"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -403,7 +403,7 @@ class SelectObjectsByMARSType(Operator):
             items = defs.phobostypes,
             name = "phobostype",
             default = "link",
-            description = "MARS object type")
+            description = "Phobos object type")
 
     def execute(self, context):
         objlist = []
@@ -429,7 +429,7 @@ class SelectObjectsByName(Operator):
     namefragment = StringProperty (
             name = "name contains",
             default = '',
-            description = "part of a MARS object name")
+            description = "part of a Phobos object name")
 
     def execute(self, context):
         objlist = []
@@ -495,12 +495,12 @@ class SelectModelOperator(Operator):
         return {'FINISHED'}
 
 
-class UpdateMarsModelsOperator(Operator):
-    """UpdateMarsModelsOperator
+class UpdatePhobosModelsOperator(Operator):
+    """UpdatePhobosModelsOperator
 
     """
     bl_idname = "object.phobos_update_models"
-    bl_label = "Update MARS properties for all objects"
+    bl_label = "Update Phobos properties for all objects"
     bl_options = {'REGISTER', 'UNDO'}
 
     property_fix = BoolProperty(
@@ -508,7 +508,7 @@ class UpdateMarsModelsOperator(Operator):
         default = False,
         description = "try to fix detected errors?")
 
-    print("phobos: Updating MARS properties for selected objects...")
+    print("phobos: Updating Phobos properties for selected objects...")
 
     def execute(self, context):
         materials.createPhobosMaterials() #TODO: this should move to initialization
@@ -516,15 +516,15 @@ class UpdateMarsModelsOperator(Operator):
         return {'FINISHED'}
 
 
-class SetMARSType(Operator):
+class SetPhobosType(Operator):
     """Set phobostype Operator
 
     """
-    bl_idname = "object.phobos_set_marstype"
+    bl_idname = "object.phobos_set_phobostype"
     bl_label = "Edit phobostype of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    marstype = EnumProperty (
+    phobostype = EnumProperty (
             items = defs.phobostypes,
             name = "phobostype",
             default = "undefined",
@@ -532,7 +532,7 @@ class SetMARSType(Operator):
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
-            obj.phobostype = self.marstype
+            obj.phobostype = self.phobostype
         return {'FINISHED'}
 
     @classmethod
@@ -668,7 +668,7 @@ class SetGeometryType(Operator):
             items = defs.geometrytypes,
             name = "type",
             default = "box",
-            description = "MARS geometry type")
+            description = "Phobos geometry type")
 
     def execute(self, context):
         startLog(self)
