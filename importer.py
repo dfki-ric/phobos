@@ -910,7 +910,8 @@ class SMURFModelParser(RobotModelParser):
                 except TypeError:
                     print("###ERROR: could not find 'type' or 'name' in custom annotation", objtype, objname)
                 except NameError:
-                    log("Element " + str(objname) + " of type " + str(objtype) + " does not exist in this model.", "ERROR")
+                    #Got following error:UnboundLocalError: local variable 'objtype' referenced before assignment
+                    log("Element " + str(objname) + " of type " + str("Unknown type") + " does not exist in this model.", "ERROR")
 
         #now some debug output
         with open(self.filepath+'_SMURF_debug.yml', 'w') as outputfile:
