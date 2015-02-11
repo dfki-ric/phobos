@@ -153,7 +153,17 @@ def deriveGeometry(obj):
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
-            if 'filename' in obj:
+            if 'geometry/unified' in obj:
+                filename = obj['geometry/unified']
+                if bpy.data.worlds[0].useObj:
+                    filename += ".obj"
+                elif bpy.data.worlds[0].useBobj:
+                    filename += ".bobj"
+                elif bpy.data.worlds[0].useStl:
+                    filename += ".stl"
+                else:
+                    filename += ".obj"
+            elif 'filename' in obj:
                 filename = obj['filename']
             else:
                 filename = obj.name.replace('/', '_')
