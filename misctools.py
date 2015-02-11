@@ -86,6 +86,11 @@ class UnifyMeshes(Operator):
         description='The name for the unified mesh.')
 
     def execute(self, context):
+        """Executes the operator and unifies the selected objects meshes
+
+        :param context: The blender context to work with
+        :return: Blender result
+        """
         objects = context.selected_objects
         source = context.active_object
         newName = self.newMeshName if self.newMeshName != "meshName" else source.name
