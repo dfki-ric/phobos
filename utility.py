@@ -355,6 +355,12 @@ def createNewTextfile(textfilename, contents):
     newtext.name = textfilename
     bpy.data.texts[textfilename].write(contents)
 
+def openScriptInEditor(scriptname):
+    if scriptname in bpy.data.texts:
+        for area in bpy.context.screen.areas:
+            if area.type == 'TEXT_EDITOR':
+                area.spaces.active.text = bpy.data.texts[scriptname]
+    else: log("There is no script named " + scriptname + "!", "ERROR")
 
 def cleanObjectProperties(props):
     """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
