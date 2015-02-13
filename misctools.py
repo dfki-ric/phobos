@@ -70,20 +70,15 @@ def unregister():
     print("Unregistering misctools...")
 
 
-class UnifyMeshes(Operator):
-    """UnifyMeshesOperator
+class ShareMesh(Operator):
+    """ShareMeshOperator
     This operator takes the data block of the active element and sets it for all other selected elements.
     It also tags the objects with an visual/export/unifiedMesh custom property telling the meshes name.
 
     """
 
-    bl_idname = "object.phobos_unify_meshes"
+    bl_idname = "object.phobos_share_mesh"
     bl_label = "Unifies the selected objects meshes by setting all meshes to the active objects one"
-
-    newMeshName = StringProperty(
-        name='meshName',
-        default='meshName',
-        description='The name for the unified mesh.')
 
     def execute(self, context):
         """Executes the operator and unifies the selected objects meshes
@@ -91,13 +86,20 @@ class UnifyMeshes(Operator):
         :param context: The blender context to work with
         :return: Blender result
         """
+        startLog(self)
         objects = context.selected_objects
         source = context.active_object
-        newName = self.newMeshName if self.newMeshName != "meshName" else source.name
+        sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
+        newName = source.name
+        log(source.name, "INFO")
         for obj in objects:
-            if 'phobostype' in obj and obj.phobostype in ("visual", "collision"):
+            if 'phobostype' in obj and obj.phobostype in ("visual", "collision") and obj.name != source.name:
+                log("Setting data for: " + obj.name, "INFO")
                 obj.data = source.data
-                obj['geometry/unified'] = newName
+                obj[sMProp] = newName
+        if sMProp in source: del obj[sMProp]
+        log("Successfully shared the meshes for selected objects!" ,"INFO")
+        endLog()
         return {'FINISHED'}
 
 

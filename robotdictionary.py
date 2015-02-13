@@ -153,28 +153,21 @@ def deriveGeometry(obj):
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
-            if 'geometry/unified' in obj:
-                filename = obj['geometry/unified']
-                if bpy.data.worlds[0].useObj:
-                    filename += ".obj"
-                elif bpy.data.worlds[0].useBobj:
-                    filename += ".bobj"
-                elif bpy.data.worlds[0].useStl:
-                    filename += ".stl"
-                else:
-                    filename += ".obj"
+            sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
+            if sMProp in obj:
+                filename = obj[sMProp]
             elif 'filename' in obj:
                 filename = obj['filename']
             else:
                 filename = obj.name.replace('/', '_')
-                if bpy.data.worlds[0].useObj:
-                    filename += ".obj"
-                elif bpy.data.worlds[0].useBobj:
-                    filename += ".bobj"
-                elif bpy.data.worlds[0].useStl:
-                    filename += ".stl"
-                else:
-                    filename += ".obj"
+            if bpy.data.worlds[0].useObj:
+                filename += ".obj"
+            elif bpy.data.worlds[0].useBobj:
+                filename += ".bobj"
+            elif bpy.data.worlds[0].useStl:
+                filename += ".stl"
+            else:
+                filename += ".obj"
             geometry['filename'] = filename
             geometry['scale'] = list(obj.scale)
             geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia

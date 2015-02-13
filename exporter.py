@@ -807,7 +807,7 @@ def export():
             i = 1
         for obj in bpy.context.selected_objects:
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and obj['geometry/type'] == 'mesh' and 'filename' not in obj):
+                and obj['geometry/type'] == 'mesh' and 'filename' not in obj and 'geometry/'+defs.reservedProperties['SHAREDMESH'] not in obj):
                 if objexp:
                     exportObj(outpath, obj)
                 if bobjexp:

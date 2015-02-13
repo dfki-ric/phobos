@@ -85,6 +85,12 @@ type_properties = {"undefined": (),
                    "controller_default": ("controller",)
 }
 
+# definition of phobos specific custom properties
+reservedProperties ={
+    #saves the filename of a shared mesh for visual and collision objects. It lives in the geometry category.
+    "SHAREDMESH": "sharedMeshFile"
+}
+
 # definition of node types
 nodeTypes = ("undefined",
              "mesh",
