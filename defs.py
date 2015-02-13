@@ -37,6 +37,20 @@ in the future.
 
 import math
 
+def updateDefs(defsFolderPath):
+    """Updates the defs with all yml files in the given folder
+
+    :param defsFolderPath: The path to the folder with the defs yaml files
+    :return: Nothing
+    """
+    for root, dirs, files in os.walk(defsFolderPath):
+        for file in files:
+            if file.endswith(".yml"):
+                f = open(file, 'r')
+                for line in f:
+                    print(f)
+                f.close()
+
 # TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below
 

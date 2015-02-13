@@ -1,0 +1,66 @@
+#If you want to evaluate numeric expressions in this yaml file, just praefix your expression with '$_'. In that simple expressions you can use the python math module.
+
+Sensors:
+    RaySensor:
+        width: 144
+        height: 1
+        opening_width: $_mathf.pi # 0.5*pi
+        opening_height: 1.5707963267948966 # 0.5*pi
+        maxDistance: 100
+    RotatingRaySensor:
+        bands: 16
+        lasers: 32
+        maxDistance: 100.0
+        draw_rays: True
+        horizontal_resolution: 0.017453292519943295 # (1/180)*pi
+        horizontal_offset:  0.0
+        vertical_offset:  0.0
+    CameraSensor:
+        width: 640
+        height: 480
+        show_cam: True
+        opening_width: 90
+        opening_height: 90
+        hud_pos: 0
+        hud_width: 320
+        hud_height: 240
+        depthImage: False
+    ScanningSonar:
+        width: 64
+        height: 512
+        resolution: 0.1
+        maxDist: 100.0
+        hud_pos: 0
+        updateRate: 10
+        gain: 1
+        show_cam: False
+        only_ray: False
+        extension:
+            - 0.010000
+            - 0.004000
+            - 0.004000
+        left_limit: 3.141592653589793 # pi
+        right_limit: -3.141592653589793 # pi
+        ping_pong_mode: False
+    MultiLevelLaserRangeFinder:
+        numRaysVertical: 32
+        numRaysHorizontal: 1900
+        rttResolutionX:  512 # 128*4
+        rttResolutionY:  256 # 128 * 2
+        verticalOpeningAngle: 0.6981317007977318 # 40 / 180.0 * math.pi
+        horizontalOpeningAngle: 6.279878367544228 #  2 * math.pi * 1899 / 1900
+        maxDistance:  100.0
+    #JointPosition
+    #JointVelocity
+    #JointLoad
+    #JointTorque
+    #JointAVGTorque
+    #Joint6DOF
+    #NodeContact
+    #NodePosition
+    #NodeRotation
+    #NodeContactForce
+    #NodeCOM
+    #NodeVelocity
+    #NodeAngularVelocity
+    #MotorCurrent
