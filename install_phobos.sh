@@ -92,6 +92,7 @@ installPhobos() {
     then
         echo "Phobos installation found and updated."
         cp *.py $phobospath
+        cp -R definitions $phobospath
         installed=1
     else
         echo "Phobos folder does not exist, create phobos folder in $addonpath ? (y/n)"

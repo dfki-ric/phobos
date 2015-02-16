@@ -998,6 +998,7 @@ class EditYAMLDictionary(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        startLog(self)
         ob = context.active_object
         textfilename = ob.name + dt.now().strftime("%Y%m%d_%H:%M")
         variablename = ob.name + "_data"
@@ -1016,6 +1017,8 @@ class EditYAMLDictionary(Operator):
                     "bpy.ops.text.unlink()"
         ]
         utility.createNewTextfile(textfilename, '\n'.join(contents))
+        utility.openScriptInEditor(textfilename)
+        endLog()
         return {'FINISHED'}
 
     @classmethod
