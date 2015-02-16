@@ -44,7 +44,7 @@ bl_info = {
 
 import sys
 import os.path
-yamlconfpath=sys.path[0]+"/phobos/yamlpath.conf"
+yamlconfpath=os.path.dirname(__file__)+"/yamlpath.conf"
 if (os.path.isfile(yamlconfpath)):
     f = open(yamlconfpath)
     path = f.read()
@@ -61,6 +61,12 @@ else:
     sys.path.insert(0, sys.path[0]+"/phobos")
     import yaml
     print("Importing yaml module")
+
+#prepare defs module
+from . import defs
+import os
+print("Using following folder for defs: " + os.path.dirname(__file__)+"/definitions")
+defs.updateDefs(os.path.dirname(__file__)+"/definitions")
 
 if "bpy" in locals():
     import imp
