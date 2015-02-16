@@ -60,8 +60,7 @@ jointtypes = (('revolute',) * 3,
               ('floating',) * 3,
               ('planar',) * 3)
 
-motortypes = (('PID',) * 3,
-              ('DC',) * 3)
+motortypes = []
 
 geometrytypes = (('box',) * 3,
                  ('cylinder',) * 3,
@@ -171,6 +170,9 @@ def updateDefs(defsFolderPath):
             for sens in entry['Sensors']:
                 sensortypes.append(sens)
                 sensorProperties[sens] = entry['Sensors'][sens]
+        if 'Motors'in entry:
+            for motor in entry['Motors']:
+                motortypes.append((motor,) * 3)
 
 def __parseAllYAML(path):
     """This functions reads all .yml files in the given path and loads them.
