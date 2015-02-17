@@ -756,7 +756,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
             scenedict = {'name': entityname,
                          'type': 'smurf',
                          'URI': modelname+'.smurf',
-                         'anchor': 'none',  # TODO: implement anchor points
+                         'anchor': root['anchor'] if 'anchor' in root else 'none',
                          'position': entitypose['translation'],
                          'rotation': entitypose['rotation_quaternion'],
                          'pose': 'default'}  # TODO: implement multiple poses
