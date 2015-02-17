@@ -136,6 +136,11 @@ def deriveKinematics(obj):
     joint = None
     motor = None
     if obj.parent:
+        # TODO: here we have to identify root joints and write their properties to SMURF!
+        # --> namespacing parent = "blub::blublink1"
+        # --> how to mark separate smurfs in phobos (simply modelname?)
+        # -> cut models in pieces but adding modelnames
+        # -> automatic namespacing
         joint = deriveJoint(obj)
         motor = deriveMotor(obj)
     return link, joint, motor
