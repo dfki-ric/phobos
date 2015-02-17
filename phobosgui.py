@@ -268,6 +268,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c1.operator('object.define_joint_constraints', text="Define Joint Constraints")
         c1.operator('object.phobos_set_origin_to_com', text="Set Origin to COM")
         c1.operator('object.phobos_sort_objects_to_layers', text="Set Objects to Layers")
+        c1.operator('object.phobos_share_mesh', text="Share meshes")
         c2 = inlayout.column(align=True)
         c2.operator('object.phobos_partial_rename', text="Partial Rename")
         c2.operator('object.attach_motor', text="Attach motor")

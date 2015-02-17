@@ -32,10 +32,11 @@ Created on 6 Jan 2014
 
 import bpy
 import math
+from datetime import datetime as dt
+
 import mathutils
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty, FloatProperty
-from datetime import datetime as dt
 from . import robotupdate
 from . import materials
 from . import utility
@@ -69,6 +70,39 @@ def unregister():
     print("Unregistering misctools...")
 
 
+class ShareMesh(Operator):
+    """ShareMeshOperator
+    This operator takes the data block of the active element and sets it for all other selected elements.
+    It also tags the objects with an visual/export/unifiedMesh custom property telling the meshes name.
+
+    """
+
+    bl_idname = "object.phobos_share_mesh"
+    bl_label = "Unifies the selected objects meshes by setting all meshes to the active objects one"
+
+    def execute(self, context):
+        """Executes the operator and unifies the selected objects meshes
+
+        :param context: The blender context to work with
+        :return: Blender result
+        """
+        startLog(self)
+        objects = context.selected_objects
+        source = context.active_object
+        sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
+        newName = source.name
+        log(source.name, "INFO")
+        for obj in objects:
+            if 'phobostype' in obj and obj.phobostype in ("visual", "collision") and obj.name != source.name:
+                log("Setting data for: " + obj.name, "INFO")
+                obj.data = source.data
+                obj[sMProp] = newName
+        if sMProp in source: del obj[sMProp]
+        log("Successfully shared the meshes for selected objects!" ,"INFO")
+        endLog()
+        return {'FINISHED'}
+
+
 class CalculateMassOperator(Operator):
     """CalculateMassOperator
 
@@ -82,6 +116,7 @@ class CalculateMassOperator(Operator):
         log("The calculated mass is: " + str(mass), "INFO")
         endLog()
         return {'FINISHED'}
+
 
 class SortObjectsToLayersOperator(Operator):
     """SortObjectsToLayersOperator
@@ -97,13 +132,13 @@ class SortObjectsToLayersOperator(Operator):
             try:
                 phobosType = obj.phobostype
                 if phobosType != 'controller' and phobosType != 'undefined':
-                    layers = 20*[False]
+                    layers = 20 * [False]
                     layers[defs.layerTypes[phobosType]] = True
                     obj.layers = layers
                 if phobosType == 'undefined':
                     log("The phobostype of the object '" + obj.name + "' is undefined")
             except AttributeError:
-                log("The object '" + obj.name + "' has no phobostype", "ERROR") #Handle this as error or warning?
+                log("The object '" + obj.name + "' has no phobostype", "ERROR")  # Handle this as error or warning?
         endLog()
         return {'FINISHED'}
 
@@ -124,9 +159,9 @@ class AddChainOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     chainname = StringProperty(
-        name = 'chainname',
-        default = 'new_chain',
-        description = 'name of the chain to be created')
+        name='chainname',
+        default='new_chain',
+        description='name of the chain to be created')
 
     def execute(self, context):
         endobj = context.active_object
@@ -160,9 +195,9 @@ class SetMassOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     mass = FloatProperty(
-        name = 'mass',
-        default = 0.001,
-        description = 'mass (of active object) in kg')
+        name='mass',
+        default=0.001,
+        description='mass (of active object) in kg')
 
     userbmass = BoolProperty(
         name='use rigid body mass',
@@ -181,7 +216,7 @@ class SetMassOperator(Operator):
             self.mass = context.active_object['mass']
         except KeyError:
             self.mass = 0.001
-            #Todo: Need more detailed message here
+            # Todo: Need more detailed message here
             log("KeyError occured in invoking of setMassOperator. Fallback: mass=0.001")
         return self.execute(context)
 
@@ -199,7 +234,7 @@ class SetMassOperator(Operator):
                         obj['mass'] = obj.rigid_body.mass
                     except AttributeError:
                         obj['mass'] = 0.001
-                        #print("### Error: object has no rigid body properties.")
+                        # print("### Error: object has no rigid body properties.")
                         log("The object '" + obj.name + "' has no rigid body properties. Set mass to 0.001", "ERROR")
                 else:
                     obj['mass'] = self.mass
@@ -218,19 +253,19 @@ class SyncMassesOperator(Operator):
     bl_label = "Synchronize masses among the selected object(s)."
     bl_options = {'REGISTER', 'UNDO'}
 
-    synctype = EnumProperty (
-            items = (("vtc", "visual to collision", "visual to collision"),
-                     ("ctv", "collision to visual", "collision to visual"),
-                     ("lto", "latest to oldest", "latest to oldest")),
-            name = "synctype",
-            default = "vtc",
-            description = "Phobos object type")
+    synctype = EnumProperty(
+        items=(("vtc", "visual to collision", "visual to collision"),
+               ("ctv", "collision to visual", "collision to visual"),
+               ("lto", "latest to oldest", "latest to oldest")),
+        name="synctype",
+        default="vtc",
+        description="Phobos object type")
 
     writeinertial = BoolProperty(
-                name = 'robotupdate inertial',
-                default = True,
-                description = 'write mass to inertial'
-                )
+        name='robotupdate inertial',
+        default=True,
+        description='write mass to inertial'
+    )
 
     def execute(self, context):
         sourcelist = []
@@ -241,11 +276,11 @@ class SyncMassesOperator(Operator):
         objdict = {obj.name: obj for obj in bpy.context.selected_objects}
         for obj in objdict.keys():
             if objdict[obj].phobostype in ['visual', 'collision']:
-                basename = obj.replace(objdict[obj].phobostype+'_', '')
+                basename = obj.replace(objdict[obj].phobostype + '_', '')
                 if (objdict[obj].parent.name in links
                     and basename not in processed
                     and 'visual_' + basename in objdict.keys()
-                    and 'collision_' + basename in objdict.keys()): #if both partners are present
+                    and 'collision_' + basename in objdict.keys()):  # if both partners are present
                     processed.append(basename)
         for basename in processed:
             if self.synctype == "vtc":
@@ -254,10 +289,10 @@ class SyncMassesOperator(Operator):
             elif self.synctype == "ctv":
                 targetlist.append('visual_' + basename)
                 sourcelist.append('collision_' + basename)
-            else: #latest to oldest
-                tv = utility.datetimeFromIso(objdict['visual_'+basename]['masschanged'])
-                tc = utility.datetimeFromIso(objdict['collision_'+basename]['masschanged'])
-                if tc < tv: #if collision information is older than visual information
+            else:  # latest to oldest
+                tv = utility.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
+                tc = utility.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
+                if tc < tv:  #if collision information is older than visual information
                     sourcelist.append('visual_' + basename)
                     targetlist.append('collision_' + basename)
                 else:
@@ -295,21 +330,21 @@ class ShowDistanceOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     distance = FloatProperty(
-        name = "distance",
-        default = 0.0,
-        subtype = 'DISTANCE',
-        unit = 'LENGTH',
-        precision = 6,
-        description = "distance between objects")
+        name="distance",
+        default=0.0,
+        subtype='DISTANCE',
+        unit='LENGTH',
+        precision=6,
+        description="distance between objects")
 
     distVector = FloatVectorProperty(
-        name = "distanceVector",
-        default = (0.0, 0.0, 0.0,),
-        subtype = 'TRANSLATION',
-        unit = 'LENGTH',
-        size = 3,
-        precision = 6,
-        description = "distance between objects")
+        name="distanceVector",
+        default=(0.0, 0.0, 0.0,),
+        subtype='TRANSLATION',
+        unit='LENGTH',
+        size=3,
+        precision=6,
+        description="distance between objects")
 
     def execute(self, context):
         self.distance, self.distVector = utility.distance(bpy.context.selected_objects)
@@ -325,20 +360,20 @@ class SetXRayOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     objects = EnumProperty(
-        name = "show objects:",
-        default = 'selected',
-        items = (('all',)*3, ('selected',)*3, ('by name',)*3) + defs.phobostypes,
-        description = "show objects via x-ray")
+        name="show objects:",
+        default='selected',
+        items=(('all',) * 3, ('selected',) * 3, ('by name',) * 3) + defs.phobostypes,
+        description="show objects via x-ray")
 
     show = BoolProperty(
-        name = "show",
-        default = True,
-        description = "set to")
+        name="show",
+        default=True,
+        description="set to")
 
     namepart = StringProperty(
-        name = "name contains",
-        default = "",
-        description = "part of a name for objects to be selected in 'by name' mode")
+        name="name contains",
+        default="",
+        description="part of a name for objects to be selected in 'by name' mode")
 
     @classmethod
     def poll(cls, context):
@@ -376,9 +411,9 @@ class NameModelOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     modelname = StringProperty(
-        name = "modelname",
-        default = "",
-        description = "name of the robot model to be assigned")
+        name="modelname",
+        default="",
+        description="name of the robot model to be assigned")
 
     def execute(self, context):
         startLog(self)
@@ -399,11 +434,11 @@ class SelectObjectsByPhobosType(Operator):
     bl_label = "Select objects in the scene by phobostype"
     bl_options = {'REGISTER', 'UNDO'}
 
-    seltype = EnumProperty (
-            items = defs.phobostypes,
-            name = "phobostype",
-            default = "link",
-            description = "Phobos object type")
+    seltype = EnumProperty(
+        items=defs.phobostypes,
+        name="phobostype",
+        default="link",
+        description="Phobos object type")
 
     def execute(self, context):
         objlist = []
@@ -456,7 +491,7 @@ class SelectRootOperator(Operator):
             utility.selectObjects(list(roots), True)
             bpy.context.scene.objects.active = list(roots)[0]
         else:
-            #bpy.ops.error.message('INVOKE_DEFAULT', type="ERROR", message="Couldn't find any root object.")
+            # bpy.ops.error.message('INVOKE_DEFAULT', type="ERROR", message="Couldn't find any root object.")
             log("Couldn't find any root object.", "ERROR")
         endLog()
         return {'FINISHED'}
@@ -471,9 +506,9 @@ class SelectModelOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     modelname = StringProperty(
-        name = "modelname",
-        default = "",
-        description = "name of the model to be selected")
+        name="modelname",
+        default="",
+        description="name of the model to be selected")
 
     def execute(self, context):
         selection = []
@@ -511,7 +546,7 @@ class UpdatePhobosModelsOperator(Operator):
     print("phobos: Updating Phobos properties for selected objects...")
 
     def execute(self, context):
-        materials.createPhobosMaterials() #TODO: this should move to initialization
+        materials.createPhobosMaterials()  # TODO: this should move to initialization
         robotupdate.updateModels(utility.getRoots(), self.property_fix)
         return {'FINISHED'}
 
@@ -550,14 +585,14 @@ class BatchEditPropertyOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     property_name = StringProperty(
-        name = "property_name",
-        default = "",
-        description = "custom property name")
+        name="property_name",
+        default="",
+        description="custom property name")
 
     property_value = StringProperty(
-        name = "property_value",
-        default = "",
-        description = "custom property value")
+        name="property_value",
+        default="",
+        description="custom property value")
 
     def execute(self, context):
         value = utility.parse_number(self.property_value)
@@ -585,9 +620,9 @@ class CopyCustomProperties(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     empty_properties = BoolProperty(
-        name = 'empty',
-        default = False,
-        description = "empty properties?")
+        name='empty',
+        default=False,
+        description="empty properties?")
 
     def execute(self, context):
         slaves = context.selected_objects
@@ -638,7 +673,7 @@ class RenameCustomProperty(Operator):
         for obj in context.selected_objects:
             if self.find in obj and self.replace != '':
                 if self.replace in obj:
-                    #print("### Error: property", self.replace, "already present in object", obj.name)
+                    # print("### Error: property", self.replace, "already present in object", obj.name)
                     log("Property '" + self.replace + "' already present in object '" + obj.name + "'", "ERROR")
                     if self.overwrite:
                         log("Replace property, because overwrite option was set")
@@ -665,10 +700,10 @@ class SetGeometryType(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     geomType = EnumProperty (
-            items = defs.geometrytypes,
-            name = "type",
-            default = "box",
-            description = "Phobos geometry type")
+            items=defs.geometrytypes,
+            name="type",
+            default="box",
+            description="Phobos geometry type")
 
     def execute(self, context):
         startLog(self)
@@ -694,20 +729,20 @@ class EditInertia(Operator):
     bl_label = "Edit inertia of selected object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    #inertiamatrix = FloatVectorProperty (
+    # inertiamatrix = FloatVectorProperty (
     #        name = "inertia",
     #        default = [0, 0, 0, 0, 0, 0, 0, 0, 0],
     #        subtype = 'MATRIX',
     #        size = 9,
     #        description = "set inertia for a link")
 
-    inertiavector = FloatVectorProperty (
-            name = "inertiavec",
-            default = [0, 0, 0, 0, 0, 0],
-            subtype = 'NONE',
-            size = 6,
-            description = "set inertia for a link"
-            )
+    inertiavector = FloatVectorProperty(
+        name="inertiavec",
+        default=[0, 0, 0, 0, 0, 0],
+        subtype='NONE',
+        size=6,
+        description="set inertia for a link"
+    )
 
     def invoke(self, context, event):
         if 'inertia' in context.active_object:
@@ -720,13 +755,14 @@ class EditInertia(Operator):
         #obj['inertia'] = ' '.join(inertialist)
         for obj in context.selected_objects:
             if obj.phobostype == 'inertial':
-                obj['inertia'] = self.inertiavector#' '.join([str(i) for i in self.inertiavector])
+                obj['inertia'] = self.inertiavector  #' '.join([str(i) for i in self.inertiavector])
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT' and ob.phobostype == 'inertial' and len(context.selected_objects) > 0
+        return ob is not None and ob.mode == 'OBJECT' and ob.phobostype == 'inertial' and len(
+            context.selected_objects) > 0
 
 
 class PartialRename(Operator):
@@ -738,14 +774,14 @@ class PartialRename(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     find = StringProperty(
-        name = "find",
-        default = "",
-        description = "find string")
+        name="find",
+        default="",
+        description="find string")
 
     replace = StringProperty(
-        name = "replace",
-        default = "",
-        description = "replace with")
+        name="replace",
+        default="",
+        description="replace with")
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
@@ -777,10 +813,10 @@ class SmoothenSurfaceOperator(Operator):
             if obj.type != 'MESH':
                 continue
             bpy.context.scene.objects.active = obj
-            bpy.ops.object.mode_set(mode = 'EDIT')
+            bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.select_all()
             bpy.ops.mesh.normals_make_consistent()
-            bpy.ops.object.mode_set(mode = 'OBJECT')
+            bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.shade_smooth()
             bpy.ops.object.modifier_add(type='EDGE_SPLIT')
             if show_progress:
@@ -854,16 +890,16 @@ class CreateInertialOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     include_children = BoolProperty(
-                name = 'include_children',
-                default = True,
-                description = 'use link child objects'
-                )
+        name='include_children',
+        default=True,
+        description='use link child objects'
+    )
 
     auto_compute = BoolProperty(
-                name = 'auto_compute',
-                default = True,
-                description = 'auto-compute inertia'
-                )
+        name='auto_compute',
+        default=True,
+        description='auto-compute inertia'
+    )
 
     def execute(self, context):
         links = []
@@ -875,7 +911,7 @@ class CreateInertialOperator(Operator):
                 viscols.add(obj)
         if self.include_children:
             for link in links:
-                viscols.update(inertia.getInertiaRelevantObjects(link)) #union?
+                viscols.update(inertia.getInertiaRelevantObjects(link))  # union?
         for obj in viscols:
             if self.auto_compute:
                 mass = obj['mass'] if 'mass' in obj else None
@@ -911,15 +947,16 @@ class AddGravityVector(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     property_name = FloatVectorProperty(
-        name = "gravity_vector",
-        default = (0, 0, -9.81),
-        description = "gravity vector")
+        name="gravity_vector",
+        default=(0, 0, -9.81),
+        description="gravity vector")
 
     def execute(self, context):
         bpy.ops.object.empty_add(type='SINGLE_ARROW')
         bpy.context.active_object.name = "gravity"
         bpy.ops.transform.rotate(value=(math.pi), axis=(1.0, 0.0, 0.0))
         return {'FINISHED'}
+
 
 class SetLogSettings(Operator):
     """Adjust Logging Settings for phobos
@@ -930,21 +967,21 @@ class SetLogSettings(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     isEnabled = BoolProperty(
-        name = "Enable logging",
-        default = True,
-        description = "Enable log messages (INFOS will still appear)"
+        name="Enable logging",
+        default=True,
+        description="Enable log messages (INFOS will still appear)"
     )
 
     errors = BoolProperty(
-        name = "Show Errors",
-        default = True,
-        description = "Show errors in log"
+        name="Show Errors",
+        default=True,
+        description="Show errors in log"
     )
 
     warnings = BoolProperty(
-        name = "Show Warnings",
-        default = True,
-        description = "Show warnings in log"
+        name="Show Warnings",
+        default=True,
+        description="Show warnings in log"
     )
 
     def execute(self, context):
@@ -953,6 +990,7 @@ class SetLogSettings(Operator):
         adjustLevel("WARNING", self.warnings)
         return {'FINISHED'}
 
+
 class EditYAMLDictionary(Operator):
     """Edit a dictionary as YAML in text file."""
     bl_idname = 'object.phobos_edityamldictionary'
@@ -960,6 +998,7 @@ class EditYAMLDictionary(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        startLog(self)
         ob = context.active_object
         textfilename = ob.name + dt.now().strftime("%Y%m%d_%H:%M")
         variablename = ob.name + "_data"
@@ -978,6 +1017,8 @@ class EditYAMLDictionary(Operator):
                     "bpy.ops.text.unlink()"
                     ]
         utility.createNewTextfile(textfilename, '\n'.join(contents))
+        utility.openScriptInEditor(textfilename)
+        endLog()
         return {'FINISHED'}
 
     @classmethod

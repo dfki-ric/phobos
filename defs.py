@@ -36,6 +36,8 @@ in the future.
 """
 
 import math
+import math, os, yaml, re
+
 
 # TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below
@@ -58,8 +60,7 @@ jointtypes = (('revolute',) * 3,
               ('floating',) * 3,
               ('planar',) * 3)
 
-motortypes = (('PID',) * 3,
-              ('DC',) * 3)
+motortypes = []
 
 geometrytypes = (('box',) * 3,
                  ('cylinder',) * 3,
@@ -83,6 +84,12 @@ type_properties = {"undefined": (),
                    "sensor_default": ("new_sensor", "RaySensor"),
                    "controller": ('name',),
                    "controller_default": ("controller",)
+}
+
+# definition of phobos specific custom properties
+reservedProperties ={
+    #saves the filename of a shared mesh for visual and collision objects. It lives in the geometry category.
+    "SHAREDMESH": "sharedMeshFile"
 }
 
 # definition of node types
@@ -111,95 +118,9 @@ nodeTypes = ("undefined",
 #             )
 
 # definition of sensor types
-sensortypes = ("RaySensor",
-               "RotatingRaySensor",
-               "MultiLevelLaserRangeFinder",
-               "CameraSensor",
-               "ScanningSonar",
-               "JointPosition",
-               "JointVelocity",
-               "JointLoad",
-               "JointTorque",
-               "JointAVGTorque",
-               "Joint6DOF",
-               "NodeContact",
-               "NodePosition",
-               "NodeRotation",
-               "NodeContactForce",
-               "NodeCOM",
-               "NodeVelocity",
-               "NodeAngularVelocity",
-               "MotorCurrent",
-               "Custom"
-               )
+sensortypes = []
 
-sensorProperties = {"RaySensor": {
-                        'width': 144,
-                        'height': 1,
-                        'opening_width': 0.5*math.pi,
-                        'opening_height': 0.5*math.pi,
-                        'maxDistance': 100.0,
-                        'draw_rays': True
-                    },
-                    "RotatingRaySensor": {
-                        'bands': 16,
-                        'lasers': 32,
-                        'maxDistance': 100.0,
-                        'draw_rays': True,
-                        'horizontal_resolution': (1.0/180.0)*math.pi,
-                        'horizontal_offset':  0.0,
-                        'vertical_offset':  0.0
-                    },
-                    "CameraSensor": {
-                        'width': 640,
-                        'height': 480,
-                        'show_cam': True,
-                        'opening_width': 90,
-                        'opening_height': 90,
-                        'hud_pos': 0,
-                        'hud_width': 320,
-                        'hud_height': 240,
-                        'depthImage': False
-                    },
-                    "ScanningSonar": {
-                        'width': 64,
-                        'height': 512,
-                        'resolution': 0.1,
-                        'maxDist': 100.0,
-                        'hud_pos': 0,
-                        'updateRate': 10,
-                        'gain': 1,
-                        'show_cam': False,
-                        'only_ray': False,
-                        'extension': (0.010000, 0.004000, 0.004000),
-                        'left_limit': math.pi,
-                        'right_limit': -math.pi,
-                        'ping_pong_mode': False,
-                    },
-                    "JointPosition": {},
-                    "JointVelocity": {},
-                    "JointLoad": {},
-                    "JointTorque": {},
-                    "JointAVGTorque": {},
-                    "Joint6DOF": {},
-                    "NodeContact": {},
-                    "NodePosition": {},
-                    "NodeRotation": {},
-                    "NodeContactForce": {},
-                    "NodeCOM": {},
-                    "NodeVelocity": {},
-                    "NodeAngularVelocity": {},
-                    "MotorCurrent": {},
-                    "MultiLevelLaserRangeFinder": {
-                        'numRaysVertical': 32,
-                        'numRaysHorizontal': 1900,
-                        'rttResolutionX':  128 * 4,
-                        'rttResolutionY':  128 * 2,
-                        'verticalOpeningAngle': 40 / 180.0 * math.pi,
-                        'horizontalOpeningAngle': 2 * math.pi * 1899 / 1900,
-                        'maxDistance':  100.0
-                    }
-}
+sensorProperties = {}
 
 #definitions of which elements live on which layers by default
 layerTypes = {
@@ -235,3 +156,64 @@ defaultmaterials = {
 MARSlegacydict = {'specularColor': 'specularFront',
                   'diffuseColor': 'diffuseFront'
 }
+
+def updateDefs(defsFolderPath):
+    """Updates the definitions with all yml files in the given folder
+
+    :param defsFolderPath: The path to the folder with the definitions yaml files
+    :return: Nothing
+    """
+    print("Parsing YAML files for updating defs")
+    dicts = __parseAllYAML(defsFolderPath)
+    for entry in dicts:
+        if 'Sensors' in entry:
+            for sens in entry['Sensors']:
+                sensortypes.append(sens)
+                sensorProperties[sens] = entry['Sensors'][sens]
+        if 'Motors'in entry:
+            for motor in entry['Motors']:
+                motortypes.append((motor,) * 3)
+
+def __parseAllYAML(path):
+    """This functions reads all .yml files in the given path and loads them.
+    It also evaluates the by & enclosed expressions in this file.
+
+    :param path: The path to open all files in.
+    :type path: String.
+    :return:The dictionary with all parsed YAML files.
+    """
+    #TODO: Better Exception handling!
+    dicts = []
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            print("Parsing "+ file)
+            if file.endswith(".yml"):
+                try:
+                    f = open(path+'/'+file, 'r') #TODO: Better way to handle filepath and avoid double '/'?
+                    tmpString = f.read()
+                    f.close()
+                    try:
+                        tmpYAML = yaml.load(__evaluateString(tmpString))
+                        dicts.append(tmpYAML)
+                    except(yaml.scanner.ScannerError):
+                        log("Error while parsing YAML file", "ERROR")
+                except(FileNotFoundError):
+                    log("The file "+file+" was not found.", "ERROR")
+    return dicts
+
+def __evaluateString(s):
+    """This functions evaluates a string by searching for mathematical expressions enclosed in &
+    and evaluating the inner string as python code.
+
+    :param s: The string to evaluate.
+    :type s: String.
+    :return:String - the evaluated string.
+    """
+    p = re.compile('&.*&')
+    for ma in p.findall(s):
+        try:
+            s = s.replace(ma, str(eval(ma[1:-1])))
+        except():
+            log("The expression " + ma + " could not be evaluated. Ignoring file", "ERROR")
+            return ""
+    return s
