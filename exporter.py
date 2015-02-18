@@ -625,7 +625,7 @@ def exportModelToSMURF(model, path):
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'collision': True
+              'collision': False #If there are collision bitmask information it will be set to True
               }
     #create all filenames
     smurf_filename = model['modelname'] + ".smurf"
@@ -695,8 +695,9 @@ def exportModelToSMURF(model, path):
                 op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
     #write collision bitmask information
+    bitmasks = gatherCollisionBitmasks(model)
+    export['collision'] = len(bitmasks) != 0 #Should we get rid of the collision field in export list at all?
     if export['collision']:
-        bitmasks = gatherCollisionBitmasks(model)
         with open(path + filenames['collision'], 'w') as op:
             op.write('#collision data' + infostring)
             op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
