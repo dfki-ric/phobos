@@ -79,6 +79,12 @@ class ShareMesh(Operator):
 
     bl_idname = "object.phobos_share_mesh"
     bl_label = "Unifies the selected objects meshes by setting all meshes to the active objects one"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    meshName = StringProperty (
+            name = "shared Meshes Name",
+            default = '',
+            description = "The shared meshes name")
 
     def execute(self, context):
         """Executes the operator and unifies the selected objects meshes
@@ -90,14 +96,14 @@ class ShareMesh(Operator):
         objects = context.selected_objects
         source = context.active_object
         sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
-        newName = source.name
+        newName = source.name if self.meshName == "" else self.meshName
         log(source.name, "INFO")
         for obj in objects:
-            if 'phobostype' in obj and obj.phobostype in ("visual", "collision") and obj.name != source.name:
+            if 'phobostype' in obj and obj.phobostype in ("visual", "collision"):
                 log("Setting data for: " + obj.name, "INFO")
                 obj.data = source.data
                 obj[sMProp] = newName
-        if sMProp in source: del obj[sMProp]
+        #if sMProp in source: del obj[sMProp]
         log("Successfully shared the meshes for selected objects!" ,"INFO")
         endLog()
         return {'FINISHED'}
