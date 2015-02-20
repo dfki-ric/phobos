@@ -126,9 +126,11 @@ def deriveJointState(joint):
 
 def deriveMotor(obj):
     props = initObjectProperties(obj, phobostype='motor', ignoretypes=['link', 'joint'])
-    #props['name'] = obj.name
-    props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
-    return props#, obj.parent
+    if len(props) > 1:  # if there are any 'motor' tags and not only a name
+        props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
+        return props
+    else:
+        return None  # return None if no motor is attached
 
 
 def deriveKinematics(obj):
