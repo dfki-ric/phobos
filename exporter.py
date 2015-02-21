@@ -111,7 +111,7 @@ def exportBobj(path, obj):
 
     me_verts = mesh.vertices[:]
 
-    out = open(os.path.join(path, obj.name) + '.bobj', "wb")
+    out = open(determineMeshOutpath(obj, obj.name, 'bobj', path), "wb")
 
     for v in mesh.vertices:
         out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
@@ -203,7 +203,7 @@ def exportObj(path, obj):
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
     tmpobject.data = obj.data  # copy the mesh here
-    outpath = os.path.join(path, objname) + '.obj'
+    outpath = determineMeshOutpath(obj, objname, 'obj', path)
     bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
@@ -240,7 +240,7 @@ def exportStl(path, obj):
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
-    outpath = os.path.join(path, objname) + '.stl'
+    outpath = determineMeshOutpath(obj, objname, 'stl', path)
     bpy.ops.export_mesh.stl(filepath=outpath)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
@@ -795,6 +795,21 @@ def exportModelToMARS(model, path):
 
     mse.exportModelToMARS(model, path)
 
+def determineMeshOutpath(obj, alternative: str, exporttype: str, path: str) -> str:
+    """Determines the meshes filename for a specific object
+
+    :param obj: The object you want to export the mesh from
+    :param alternative: The alternativ name if the object has no geometry/sharedMesh tag
+    :param exporttype: The filetype you want export to (without leading .)
+    :param path: The path you want the mesh export to
+    :return: str - Returns the filepath to export the mesh to
+    """
+    if "geometry/"+defs.reservedProperties["SHAREDMESH"] in obj:
+        return os.path.join(path, obj[("geometry/"+defs.reservedProperties["SHAREDMESH"])]) + '.' + exporttype
+    else:
+        return os.path.join(path, alternative) + '.' + exporttype
+
+
 
 def securepath(path):  #TODO: this is totally not error-handled!
     """This function checks whether a path exists or not.
@@ -877,7 +892,7 @@ def export(path=''):
             i = 1
         for obj in bpy.context.selected_objects:
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and obj['geometry/type'] == 'mesh' and 'filename' not in obj and 'geometry/'+defs.reservedProperties['SHAREDMESH'] not in obj):
+                and obj['geometry/type'] == 'mesh' and 'filename' not in obj):
                 if objexp:
                     exportObj(outpath, obj)
                 if bobjexp:
