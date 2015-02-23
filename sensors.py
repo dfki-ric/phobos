@@ -175,17 +175,19 @@ class AddSensorOperator(Operator):
                   'type': self.custom_type if self.sensor_type == 'Custom' else self.sensor_type,
                   'props': {}
                  }
+        parent = context.active_object
         for key in defs.sensorProperties[self.sensor_type]:
             sensor['props'][key] = getattr(self, key)
         # type-specific settings
         if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
                               'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
+            sensorObj = createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
             if self.add_link:
-                parent = context.active_object
                 link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(), name='link_'+self.sensor_name)
                 utility.selectObjects([parent, link], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
+                utility.selectObjects([link, sensorObj], clear=True, active=0)
+                bpy.ops.object.parent_set(type='BONE_RELATIVE')
         elif 'Node' in sensor['type']:
             createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
                          mathutils.Matrix.Translation(context.scene.cursor_location))
