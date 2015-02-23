@@ -278,6 +278,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c2.operator('object.phobos_copy_props', text='Copy Custom Property', icon='GREASEPENCIL')
         c2.operator('object.phobos_rename_custom_property', text='Rename Custom Property', icon='GREASEPENCIL')
         c2.operator('object.phobos_edityamldictionary', text='Edit Object Dictionary', icon='TEXT')
+        c2.operator('object.phobos_undo_share_mesh', text="Undo Share meshes")
 
         #Mass Menu
         layout.separator()

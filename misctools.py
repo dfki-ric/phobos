@@ -108,6 +108,28 @@ class ShareMesh(Operator):
         endLog()
         return {'FINISHED'}
 
+class UndoShareMesh(Operator):
+    """UndoShareMeshOperator
+    This operator undos the mesh sharing of all selected objects by delinking all objects mesh data and deleting the
+    geometry/sharedMeshFile tags.
+    """
+
+    bl_idname = "object.phobos_undo_share_mesh"
+    bl_label = "Undos the shared mesh operation on all selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        """Executes the operator and undos all mesh sharing
+
+        :param context: The blender context to work with
+        :return: Blender result.
+        """
+        bpy.ops.object.make_single_user(type='SELECTED_OBJECTS', object=True, obdata=True)
+        sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
+        for obj in context.selected_objects:
+            if sMProp in obj:
+                del obj[sMProp]
+        return {'FINISHED'}
 
 class CalculateMassOperator(Operator):
     """CalculateMassOperator
