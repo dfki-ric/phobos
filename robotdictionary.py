@@ -163,6 +163,8 @@ def deriveGeometry(obj):
             sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
             if sMProp in obj:
                 filename = obj[sMProp]
+            elif 'geometry/filename' in obj:
+                filename = obj['geometry/filename']
             elif 'filename' in obj:
                 filename = obj['filename']
             else:
