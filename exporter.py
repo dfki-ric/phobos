@@ -621,12 +621,15 @@ def exportModelToSMURF(model, path):
     :return: Nothing.
 
     """
+
+    bitmasks = gatherCollisionBitmasks(model)
+
     export = {'state': False,  # model['state'] != {}, # TODO: handle state
               'materials': model['materials'] != {},
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'collision': False #If there are collision bitmask information it will be set to True
+              'collision': bitmasks != {}
               }
     #create all filenames
     smurf_filename = model['modelname'] + ".smurf"
@@ -696,8 +699,6 @@ def exportModelToSMURF(model, path):
                 op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
     #write collision bitmask information
-    bitmasks = gatherCollisionBitmasks(model)
-    export['collision'] = len(bitmasks) != 0 #Should we get rid of the collision field in export list at all?
     if export['collision']:
         with open(path + filenames['collision'], 'w') as op:
             op.write('#collision data' + infostring)
