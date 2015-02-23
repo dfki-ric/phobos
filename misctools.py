@@ -99,11 +99,12 @@ class ShareMesh(Operator):
         newName = source.name if self.meshName == "" else self.meshName
         log(source.name, "INFO")
         for obj in objects:
-            if 'phobostype' in obj and obj.phobostype in ("visual", "collision"):
+            if 'phobostype' in obj and obj.phobostype in ("visual", "collision") and obj != source:
                 log("Setting data for: " + obj.name, "INFO")
                 obj.data = source.data
                 obj[sMProp] = newName
-        #if sMProp in source: del obj[sMProp]
+        if sMProp in source: del obj[sMProp]
+        source['geometry/filename'] = newName
         log("Successfully shared the meshes for selected objects!" ,"INFO")
         endLog()
         return {'FINISHED'}
@@ -129,6 +130,8 @@ class UndoShareMesh(Operator):
         for obj in context.selected_objects:
             if sMProp in obj:
                 del obj[sMProp]
+            if 'geometry/filename' in obj:
+                del obj['geometry/filename']
         return {'FINISHED'}
 
 class CalculateMassOperator(Operator):

@@ -237,6 +237,7 @@ def exportStl(path, obj):
 
     """
     objname = obj.name
+    print("OBJNAME: " + objname)
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
@@ -804,8 +805,8 @@ def determineMeshOutpath(obj, alternative: str, exporttype: str, path: str) -> s
     :param path: The path you want the mesh export to
     :return: str - Returns the filepath to export the mesh to
     """
-    if "geometry/"+defs.reservedProperties["SHAREDMESH"] in obj:
-        return os.path.join(path, obj[("geometry/"+defs.reservedProperties["SHAREDMESH"])]) + '.' + exporttype
+    if "geometry/filename" in obj:
+        return os.path.join(path, obj["geometry/filename"] + '.' + exporttype)
     else:
         return os.path.join(path, alternative) + '.' + exporttype
 
@@ -892,7 +893,7 @@ def export(path=''):
             i = 1
         for obj in bpy.context.selected_objects:
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and obj['geometry/type'] == 'mesh' and 'filename' not in obj):
+                and obj['geometry/type'] == 'mesh' and 'filename' not in obj and 'geometry/'+defs.reservedProperties['SHAREDMESH'] not in obj):
                 if objexp:
                     exportObj(outpath, obj)
                 if bobjexp:
