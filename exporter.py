@@ -744,7 +744,6 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
                 models[root['modelname']].append(root)
 
     smurfs = []
-    scenedict = {}
     for modelname in models:
         entitylist = models[modelname]
         unnamed_entities = 0
@@ -755,9 +754,10 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
                 entityname = entity['modelname']+'_'+str(unnamed_entities)
                 unnamed_entities += 1
             entitypose = robotdictionary.deriveObjectPose(entitylist[0])
+            uri = os.path.join(modelname, modelname+'.smurf') if subfolders else modelname+'.smurf'
             scenedict = {'name': entityname,
                          'type': 'smurf',
-                         'URI': modelname+'.smurf',
+                         'URI': uri,
                          'anchor': root['anchor'] if 'anchor' in root else 'none',
                          'position': entitypose['translation'],
                          'rotation': entitypose['rotation_quaternion'],
