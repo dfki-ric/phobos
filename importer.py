@@ -664,8 +664,7 @@ class URDFModelParser(RobotModelParser):
                 newlink['inertial']['mass'] = float(mass.attrib['value'])
             inertia = inertial.find('inertia')
             if inertia is not None:
-                values = []
-                newlink['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
+                newlink['inertial']['inertia'] = [float(inertia.attrib[a]) for a in inertia.attrib]
             newlink['inertial']['name'] = 'inertial_' + newlink['name']
 
         #parse visual and collision objects
