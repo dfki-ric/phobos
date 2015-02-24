@@ -50,17 +50,17 @@ Sensors:
         verticalOpeningAngle: &40/180.0 * math.pi&
         horizontalOpeningAngle: &2*math.pi*1899/ 1900&
         maxDistance:  100.0
-    JointPosition:
-    JointVelocity:
-    JointLoad:
-    JointTorque:
-    JointAVGTorque:
-    Joint6DOF:
-    NodeContact:
-    NodePosition:
-    NodeRotation:
-    NodeContactForce:
-    NodeCOM:
-    NodeVelocity:
-    NodeAngularVelocity:
-    MotorCurrent:
+    JointPosition: {}
+    JointVelocity: {}
+    JointLoad: {}
+    JointTorque: {}
+    JointAVGTorque: {}
+    Joint6DOF: {}
+    NodeContact: {}
+    NodePosition: {}
+    NodeRotation: {}
+    NodeContactForce: {}
+    NodeCOM: {}
+    NodeVelocity: {}
+    NodeAngularVelocity: {}
+    MotorCurrent: {}
