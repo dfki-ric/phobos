@@ -124,10 +124,13 @@ def deriveJointState(joint):
     return state
 
 
-def deriveMotor(obj):
+def deriveMotor(obj, joint):
     props = initObjectProperties(obj, phobostype='motor', ignoretypes=['link', 'joint'])
     if len(props) > 1:  # if there are any 'motor' tags and not only a name
         props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
+        if 'limits' in joint:
+            props['minPos'] = joint['limits']['lower']
+            props['maxPos'] = joint['limits']['upper']
         return props
     else:
         return None  # return None if no motor is attached
@@ -144,7 +147,7 @@ def deriveKinematics(obj):
         # -> cut models in pieces but adding modelnames
         # -> automatic namespacing
         joint = deriveJoint(obj)
-        motor = deriveMotor(obj)
+        motor = deriveMotor(obj, joint)
     return link, joint, motor
 
 
