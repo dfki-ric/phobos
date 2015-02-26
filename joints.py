@@ -144,11 +144,11 @@ def getJointConstraints(joint):
                 if sum(freeloc) == 2:
                     #axis = mathutils.Vector([int(not i) for i in freeloc])
                     axis = joint.data.bones[0].vector.normalized() #vector along axis of bone (Y axis of pose bone) in obect space
-                    if freeloc[0]:
+                    if not freeloc[0]:
                         limits = (c.min_x, c.max_x)
-                    elif freeloc[1]:
+                    elif not freeloc[1]:
                         limits = (c.min_y, c.max_y)
-                    elif freeloc[2]:
+                    elif not freeloc[2]:
                         limits = (c.min_z, c.max_z)
                 else:
                     raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
