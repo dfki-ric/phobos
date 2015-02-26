@@ -128,9 +128,9 @@ def deriveMotor(obj, joint):
     props = initObjectProperties(obj, phobostype='motor', ignoretypes=['link', 'joint'])
     if len(props) > 1:  # if there are any 'motor' tags and not only a name
         props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
-        if 'limits' in joint:
-            props['minPos'] = joint['limits']['lower']
-            props['maxPos'] = joint['limits']['upper']
+        if 'limits' in joint and props['type'] == 'PID':
+            props['minValue'] = joint['limits']['lower']
+            props['maxValue'] = joint['limits']['upper']
         return props
     else:
         return None  # return None if no motor is attached
