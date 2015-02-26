@@ -42,7 +42,7 @@ import math, os, yaml, re
 # TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below
 
-version = '0.5'
+version = '0.6'
 
 phobostypes = (('undefined',) * 3,
                ('link',) * 3,

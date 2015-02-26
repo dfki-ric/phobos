@@ -1,4 +1,4 @@
-Phobos (0.5)
+Phobos (0.6)
 ============
 
 Phobos is an add-on for the open-source 3D modeling software [Blender](http://www.blender.org). It uses Blender's powerful Python scripting API to extend Blender with GUI-supported tools that simplify the creation and modification of robot models for use in real-time simulations such as MARS or Gazebo. It is both possible to create robots from scratch as well as to derive them from exported CAD data - and Phobos allows to export completed models in formats such as URDF (widely used in ROS) and SMURF (the DFKI's versatile robot data format based on URDF). Meshes can currently be exported as .stl, Wavefront (.obj) and binary Wavefront (.bobj) for quicker importing into the MARS Simulation.
