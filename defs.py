@@ -168,11 +168,15 @@ def updateDefs(defsFolderPath):
     for entry in dicts:
         if 'Sensors' in entry:
             for sens in entry['Sensors']:
-                sensortypes.append(sens)
-                sensorProperties[sens] = entry['Sensors'][sens]
+                if sens not in sensortypes:
+                    sensortypes.append(sens)
+                    sensorProperties[sens] = entry['Sensors'][sens]
+        global motortypes
+        motortypes = []
         if 'Motors'in entry:
             for motor in entry['Motors']:
-                motortypes.append((motor,) * 3)
+                if motor not in motortypes:
+                    motortypes.append((motor,) * 3)
 
 def __parseAllYAML(path):
     """This functions reads all .yml files in the given path and loads them.
