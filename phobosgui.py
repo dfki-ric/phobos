@@ -35,7 +35,7 @@ def register():
     bpy.types.Object.phobostype = EnumProperty(
         items=defs.phobostypes,
         name="type",
-        description="MARS object type")
+        description="Phobos object type")
     print("    Added 'phobostype' to Object properties.")
     # bpy.types.Object.lastchanged = StringProperty(
     #        default = '',
@@ -68,6 +68,7 @@ def register():
     bpy.types.World.exportURDF = BoolProperty(name="exportURDF", default=True, update=updateExportOptions)
     bpy.types.World.exportSRDF = BoolProperty(name="exportSRDF", default=True)
     bpy.types.World.exportYAML = BoolProperty(name="exportYAML", update=updateExportOptions)
+    bpy.types.World.sceneName = StringProperty(name="sceneName")
 
     #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
 
@@ -92,7 +93,7 @@ class MessageOperator(bpy.types.Operator):
         return wm.invoke_popup(self, width=400, height=200)
 
     def draw(self, context):
-        self.layout.label("MARS Tools")
+        self.layout.label("Phobos")
         row = self.layout  # .split(0.25)
         row.prop(self, "type")
         row.prop(self, "message")
@@ -120,7 +121,7 @@ def updateExportPath(self, context):
 
 
 def SetVisibleLayers(self, context):
-    """Set active Layers according to MARS world data."""
+    """Set active Layers according to Phobos world data."""
     layers = [False] * 20
     layers[0] = bpy.data.worlds[0].showBodies
     layers[1] = bpy.data.worlds[0].showJoints
@@ -195,7 +196,7 @@ def useDefaultLayers(self, context):
 
 
 class PhobosPanel(bpy.types.Panel):
-    """A Custom Panel in the Viewport Toolbar for MARS options"""
+    """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_PT_PHOBOS"
     bl_label = "phobos: Model editing"
     bl_space_type = 'VIEW_3D'
@@ -235,7 +236,7 @@ class PhobosPanel(bpy.types.Panel):
         sc1.operator('object.phobos_select_root', text='Select Root')
         sc1.operator('object.phobos_select_model', text='Select Robot')
         sc2 = sinlayout.column(align=True)
-        sc2.operator('object.phobos_select_objects_by_marstype', text="Select by phobostype")
+        sc2.operator('object.phobos_select_objects_by_phobostype', text="Select by phobostype")
         sc2.operator('object.phobos_select_objects_by_name', text="Select by Name")
 
         #for root in utility.getRoots():
@@ -244,7 +245,7 @@ class PhobosPanel(bpy.types.Panel):
 
 
 class PhobosModelPanel(bpy.types.Panel):
-    """A Custom Panel in the Viewport Toolbar for MARS options"""
+    """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_MODEL_PT_PHOBOS"
     bl_label = "phobos: Object editing"
     bl_space_type = 'VIEW_3D'
@@ -259,13 +260,15 @@ class PhobosModelPanel(bpy.types.Panel):
 
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
-        c1.operator('object.phobos_set_marstype', text='Set phobostype')
+        c1.operator('object.phobos_set_phobostype', text='Set phobostype')
         c1.operator('object.phobos_set_geometry_type', text="Set Geometry Type(s)")
         c1.operator('object.create_collision_objects', text="Create Collision Object(s)")
         c1.operator('object.create_inertial_objects', text="Create Inertial Object(s)")
         c1.operator("object.phobos_create_link", text="Create Link(s)")
         c1.operator('object.define_joint_constraints', text="Define Joint Constraints")
         c1.operator('object.phobos_set_origin_to_com', text="Set Origin to COM")
+        c1.operator('object.phobos_sort_objects_to_layers', text="Set Objects to Layers")
+        c1.operator('object.phobos_share_mesh', text="Share meshes")
         c2 = inlayout.column(align=True)
         c2.operator('object.phobos_partial_rename', text="Partial Rename")
         c2.operator('object.attach_motor', text="Attach motor")
@@ -274,6 +277,8 @@ class PhobosModelPanel(bpy.types.Panel):
         c2.operator('object.phobos_batch_property', text='Edit Custom Property', icon='GREASEPENCIL')
         c2.operator('object.phobos_copy_props', text='Copy Custom Property', icon='GREASEPENCIL')
         c2.operator('object.phobos_rename_custom_property', text='Rename Custom Property', icon='GREASEPENCIL')
+        c2.operator('object.phobos_edityamldictionary', text='Edit Object Dictionary', icon='TEXT')
+        c2.operator('object.phobos_undo_share_mesh', text="Undo Share meshes")
 
         #Mass Menu
         layout.separator()
@@ -288,7 +293,7 @@ class PhobosModelPanel(bpy.types.Panel):
 
 
 class PhobosSenConPanel(bpy.types.Panel):
-    """A Custom Panel in the Viewport Toolbar for MARS options"""
+    """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_SENCON_PT_PHOBOS"
     bl_label = "phobos: Sensors & Controllers"
     bl_space_type = 'VIEW_3D'
@@ -322,7 +327,7 @@ class PhobosSenConPanel(bpy.types.Panel):
 
 
 # class PhobosVisPanel(bpy.types.Panel):
-#     """A Custom Panel in the Viewport Toolbar for MARS options"""
+#     """A Custom Panel in the Phobos viewport toolbar"""
 #     bl_idname = "TOOLS_VIS_PT_PHOBOS"
 #     bl_label = "phobos: Visibility"
 #     bl_space_type = 'VIEW_3D'
@@ -348,7 +353,7 @@ class PhobosSenConPanel(bpy.types.Panel):
 
 
 class PhobosExportPanel(bpy.types.Panel):
-    """A Custom Panel in the Viewport Toolbar for MARS options"""
+    """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_EXPORT_PT_PHOBOS"
     bl_label = "phobos: Export & Import"
     bl_space_type = 'VIEW_3D'
@@ -401,6 +406,33 @@ class PhobosExportPanel(bpy.types.Panel):
         layout.label(text="Export/Import")
         layout.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
         layout.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
+
+        layout.separator()
+
+        layout.label(text="Export Scene")
+        self.layout.prop(bpy.data.worlds[0], "sceneName", text="name")
+        layout.operator("object.phobos_export_scene", text="Export SMURF Scene", icon="WORLD_DATA")
+
+
+class PhobosSettingsPanel(bpy.types.Panel):
+    """A Custom Panel in the Viewport Toolbar for Phobos settings"""
+    bl_idname = "TOOLS_SETTINGS_PT_PHOBOS"
+    bl_label = "phobos: Settings"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
+
+    def draw_header(self, context):
+        self.layout.label(icon='SMOOTH')
+
+    def draw(self, context):
+        layout = self.layout
+
+        inlayout = layout.split()
+        c1 = inlayout.column(align=True)
+        c1.operator('object.phobos_adjust_logger', text='Adjust logging settings')
+        #c2 = inlayout.column(align=True)
+        #c2.operator('object.phobos_partial_rename', text="Partial Rename")
 
 
 class PhobosObjectPanel(bpy.types.Panel):

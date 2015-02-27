@@ -72,8 +72,8 @@ def deriveMaterial(mat):
     return material
 
 
-def deriveLink(obj, typetags=False):
-    props = initObjectProperties(obj, marstype='link', ignoretypes=['joint', 'motor'])
+def deriveLink(obj):
+    props = initObjectProperties(obj, phobostype='link', ignoretypes=['joint', 'motor'])
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
     props["visual"] = {}
@@ -82,15 +82,8 @@ def deriveLink(obj, typetags=False):
     return props
 
 
-def deriveJoint(obj, typetags=False):
-    props = initObjectProperties(obj, marstype='joint', ignoretypes=['link', 'motor'])
-    if typetags:
-        if not '/' in obj.name:
-            props['name'] = obj.name + '_joint'
-        else:
-            props['name'] = obj.name.replace('/', '/joint')
-    else:
-        props['name'] = obj.name
+def deriveJoint(obj):
+    props = initObjectProperties(obj, phobostype='joint', ignoretypes=['link', 'motor'])
     props['parent'] = obj.parent.name
     props['child'] = obj.name
     props['type'], crot = joints.deriveJointType(obj, True)
@@ -131,20 +124,30 @@ def deriveJointState(joint):
     return state
 
 
-def deriveMotor(obj):
-    props = initObjectProperties(obj, marstype='motor', ignoretypes=['link', 'joint'])
-    props['name'] = obj.name
-    props['joint'] = obj.name
-    return props#, obj.parent
+def deriveMotor(obj, joint):
+    props = initObjectProperties(obj, phobostype='motor', ignoretypes=['link', 'joint'])
+    if len(props) > 1:  # if there are any 'motor' tags and not only a name
+        props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
+        if 'limits' in joint and props['type'] == 'PID':
+            props['minValue'] = joint['limits']['lower']
+            props['maxValue'] = joint['limits']['upper']
+        return props
+    else:
+        return None  # return None if no motor is attached
 
 
-def deriveKinematics(obj, typetags=False):
-    link = deriveLink(obj, typetags)
+def deriveKinematics(obj):
+    link = deriveLink(obj)
     joint = None
     motor = None
     if obj.parent:
-        joint = deriveJoint(obj, typetags)
-        motor = deriveMotor(obj)
+        # TODO: here we have to identify root joints and write their properties to SMURF!
+        # --> namespacing parent = "blub::blublink1"
+        # --> how to mark separate smurfs in phobos (simply modelname?)
+        # -> cut models in pieces but adding modelnames
+        # -> automatic namespacing
+        joint = deriveJoint(obj)
+        motor = deriveMotor(obj, joint)
     return link, joint, motor
 
 
@@ -160,18 +163,23 @@ def deriveGeometry(obj):
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
-            if 'filename' in obj:
+            sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
+            if sMProp in obj:
+                filename = obj[sMProp]
+            elif 'geometry/filename' in obj:
+                filename = obj['geometry/filename']
+            elif 'filename' in obj:
                 filename = obj['filename']
             else:
                 filename = obj.name.replace('/', '_')
-                if bpy.data.worlds[0].useObj:
-                    filename += ".obj"
-                elif bpy.data.worlds[0].useBobj:
-                    filename += ".bobj"
-                elif bpy.data.worlds[0].useStl:
-                    filename += ".stl"
-                else:
-                    filename += ".obj"
+            if bpy.data.worlds[0].useObj:
+                filename += ".obj"
+            elif bpy.data.worlds[0].useBobj:
+                filename += ".bobj"
+            elif bpy.data.worlds[0].useStl:
+                filename += ".stl"
+            else:
+                filename += ".obj"
             geometry['filename'] = filename
             geometry['scale'] = list(obj.scale)
             geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
@@ -183,9 +191,8 @@ def deriveGeometry(obj):
 
 def deriveInertial(obj):
     """Derives a dictionary entry of an inertial object."""
-    props = initObjectProperties(obj, marstype='inertial')
-    #inertia = props['inertia'].split()
-    props['inertia'] = list(map(float, obj['inertia']))
+    props = initObjectProperties(obj, phobostype='inertial')
+    props['inertia'] = list(map(float, obj['inertial/inertia']))
     props['pose'] = deriveObjectPose(obj)
     return props, obj.parent
 
@@ -201,7 +208,7 @@ def deriveObjectPose(obj):
 
 
 def deriveVisual(obj):
-    visual = initObjectProperties(obj, marstype='visual', ignoretypes='geometry')
+    visual = initObjectProperties(obj, phobostype='visual', ignoretypes='geometry')
     visual['geometry'] = deriveGeometry(obj)
     visual['pose'] = deriveObjectPose(obj)
     #if obj.data.materials:
@@ -210,7 +217,7 @@ def deriveVisual(obj):
 
 
 def deriveCollision(obj):
-    collision = initObjectProperties(obj, marstype='collision', ignoretypes='geometry')
+    collision = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
     collision['geometry'] = deriveGeometry(obj)
     collision['pose'] = deriveObjectPose(obj)
     try:
@@ -228,50 +235,41 @@ def deriveApproxsphere(obj):
 
 
 def deriveSensor(obj):
-    props = initObjectProperties(obj, marstype='sensor')
-    props['pose'] = deriveObjectPose(obj)
+    props = initObjectProperties(obj, phobostype='sensor')
+    #props['pose'] = deriveObjectPose(obj)
+    props['link'] = obj.parent.name
     return props
 
 
 def deriveController(obj):
-    props = initObjectProperties(obj, marstype='controller')
+    props = initObjectProperties(obj, phobostype='controller')
     return props
 
 
-def initObjectProperties(obj, marstype=None, ignoretypes=[]):
+def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
     props = {'name': obj.name.split(':')[-1]}  #allow duplicated names differentiated by types
-    if not marstype:
+    if not phobostype:
         for key, value in obj.items():
             props[key] = value
     else:
         for key, value in obj.items():
             if '/' in key:
-                if marstype+'/' in key:
+                if phobostype+'/' in key:
                     specs = key.split('/')[1:]
                     if len(specs) == 1:
-                        props[key.replace(marstype+'/', '')] = value
+                        props[key.replace(phobostype+'/', '')] = value
                     elif len(specs) == 2:
                         category, specifier = specs
                         if '$'+category not in props:
                             props['$'+category] = {}
                         props['$'+category][specifier] = value
-                elif key.count('/') == 1: #ignore two-level specifiers if marstype is not present
+                elif key.count('/') == 1: #ignore two-level specifiers if phobostype is not present
                     category, specifier = key.split('/')
                     if category not in ignoretypes:
                         if '$'+category not in props:
                             props['$'+category] = {}
                         props['$'+category][specifier] = value
     return props
-
-
-# def cleanObjectProperties(props):
-#     """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
-#     getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
-#     if props:
-#         for key in getridof:
-#             if key in props:
-#                 del props[key]
-#     return props
 
 
 def deriveDictEntry(obj):
@@ -299,17 +297,14 @@ def deriveDictEntry(obj):
         return props, parent
 
 
-def deriveGroupEntry(group, typetags):
+def deriveGroupEntry(group):
     links = []
-    #joints = []
     for obj in group.objects:
         if obj.phobostype == 'link':
             links.append({'type': 'link', 'name': obj.name})
-            #joint = deriveJoint(obj, typetags)
-            #joints.append({'type': 'joint', 'name': joint['name']})
         else:
             print("### Error: group " + group.name + " contains " + obj.phobostype + ': ' + obj.name)
-    return links #+ joints
+    return links
 
 
 def deriveChainEntry(obj):
@@ -338,7 +333,7 @@ def deriveChainEntry(obj):
     return returnchains
 
 
-def buildRobotDictionary(typetags=False):
+def buildRobotDictionary():
     """Builds a python dictionary representation of a Blender robot model for export and inspection."""
     objectlist = bpy.context.selected_objects
     #notifications, faulty_objects = robotupdate.updateModel(bpy.context.selected_objects)
@@ -367,9 +362,9 @@ def buildRobotDictionary(typetags=False):
     print('\nParsing links, joints and motors...')
     for obj in bpy.context.selected_objects:
         if obj.phobostype == 'link':
-            link, joint, motor = deriveKinematics(obj, typetags)
-            robot['links'][obj.name] = link # it's important that this is really the object's name
-            if joint: # joint can be None if link is a root
+            link, joint, motor = deriveKinematics(obj)
+            robot['links'][obj.name] = link  # it's important that this is really the object's name
+            if joint:  # joint can be None if link is a root
                 robot['joints'][joint['name']] = joint
             if motor:
                 robot['motors'][joint['name']] = motor
@@ -449,7 +444,7 @@ def buildRobotDictionary(typetags=False):
     print('\n\nParsing groups...')
     for group in bpy.data.groups:  # TODO: get rid of the "data" part
         if len(group.objects) > 0 and group.name != "RigidBodyWorld":
-            robot['groups'][group.name] = deriveGroupEntry(group, typetags)
+            robot['groups'][group.name] = deriveGroupEntry(group)
 
     # gather information on chains of objects
     print('\n\nParsing chains...')
@@ -508,7 +503,7 @@ def check_geometry(geometry, owner_type, owner_key, link_key):
             notifications += note + "\n"
             print(note)
     return notifications
-    
+
 
 def check_visuals(visuals, link_key):
     """

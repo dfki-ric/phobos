@@ -1,6 +1,12 @@
 #!/usr/bin/python
 
 """
+.. module:: phobos.exporter
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+.. moduleauthor:: Kai von Szadowski
+
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -22,7 +28,6 @@ File importer.py
 
 Created on 28 Feb 2014
 
-@author: Kai von Szadkowski
 """
 
 import bpy
@@ -37,6 +42,7 @@ from . import materials
 from . import joints
 from . import sensors
 from . import controllers
+from phobos.logging import *
 
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
@@ -46,14 +52,35 @@ defaults = Defaults(0.001,  # mass
 
 
 def register():
+    """
+    This function registers this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Registering importer...")
 
 
 def unregister():
+    """
+    This function unregisters this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
+
     print("Unregistering importer...")
 
 
 def cleanUpScene():
+    """This function cleans up the scene
+    and removes all blender objects, meshes, materials and lights.
+
+    :return: Nothing.
+
+    """
     # select all objects
     bpy.ops.object.select_all(action="SELECT")
 
@@ -75,9 +102,18 @@ def cleanUpScene():
 
 
 class RobotModelParser():
-    """Base class for a robot model file parser of a specific type"""
+    """Base class for a robot model file parser of a specific type
+
+    """
 
     def __init__(self, filepath):
+        """This init saves the filepath splitted into path and filename and creates an initial empty robot dictionary.
+
+        :param filepath: The filepath you want to export the robot to *WITH FILENAME*
+        :type filepath: String.
+        :return: Nothing.
+
+        """
         self.filepath = filepath
         self.path, self.filename = os.path.split(self.filepath)
         self.robot = {'links': {},
@@ -91,7 +127,16 @@ class RobotModelParser():
                       }
 
     def scaleLink(self, link, newlink):
-        """Scales newly-created armatures depending on the link's largest collision object."""
+        """Scales newly-created armatures depending on the link's largest collision object.
+        The function is very simple and could be improved to scale the links even more appropriate.
+
+        :param link: the link containing the collision objects
+         :type link: dict.
+        :param newlink: the link you want to scale
+        :type newlink: dict.
+        :return: Nothing.
+
+        """
         newscale = 0.3
         if len(link['collision']) > 0:
             sizes = []
@@ -110,6 +155,13 @@ class RobotModelParser():
         newlink.scale = (newscale, newscale, newscale)
 
     def placeChildLinks(self, parent):
+        """This function creates the parent-child-lationship for a given parent and all existing children in blender.
+
+        :param parent: This is the parent link you want to set the children for.
+        :type: dict.
+        :return: Nothing.
+
+        """
         bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
         print(parent['name'] + ', ', end='')
         children = []
@@ -134,6 +186,13 @@ class RobotModelParser():
             self.placeChildLinks(child)
 
     def placeLinkSubelements(self, link):
+        """This function finds all subelements for a given link and sets the appropriate relations.
+        In this case subelements are interials, visuals and collisions.
+
+        :param link: The parent link you want to set the subelements for
+        :return: Nothing.
+
+        """
         bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
         parentLink = bpy.data.objects[link['name']]
         if 'inertial' in link:
@@ -172,7 +231,33 @@ class RobotModelParser():
                     except KeyError:
                         pass
 
+    def attachSensor(self, sensor):
+        """This function attaches a given sensor to its parent link.
+
+        :param sensor: The sensor you want to attach to its parent link.
+        :type sensor: dict.
+        :return: Nothing.
+
+        """
+        bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
+        try:
+            parentLink = bpy.data.objects[sensor['link']]
+            if 'pose' in sensor:
+                urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
+                urdf_geom_rot = mathutils.Euler(tuple(sensor['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+            else:
+                urdf_geom_loc = mathutils.Matrix.Identity(4)
+                urdf_geom_rot = mathutils.Matrix.Identity(4)
+            sensorobj = bpy.data.objects[sensor['name']]
+            selectObjects([sensorobj, parentLink], True, 1)
+            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            sensorobj.matrix_local = urdf_geom_loc * urdf_geom_rot
+        except KeyError:
+            log("inconsistent data on sensor: "+ sensor['name'], "ERROR")
+
+
     def createGeometry(self, viscol, geomsrc):
+        #TODO: Write doc
         newgeom = None
         if viscol['geometry'] is not {}:
             dimensions = None
@@ -213,7 +298,7 @@ class RobotModelParser():
             elif geomtype == 'sphere':
                 dimensions = geom['radius']
             else:
-                print("### ERROR: Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.')
+                log("Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.', "ERROR")
             if dimensions:  # if a standard primitive type is found, create the object
                 newgeom = createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
                 newgeom.select = True
@@ -225,7 +310,7 @@ class RobotModelParser():
                     try:
                         newgeom.data.materials.append(bpy.data.materials[viscol['material']['name']])
                     except KeyError:
-                        print('No material for obj', viscol['name'])
+                        log('No material for obj', viscol['name'])
             #FIXME: place empty coordinate system and return...what? Error handling of file import!
         for prop in viscol:
             if prop.startswith('$'):
@@ -234,6 +319,15 @@ class RobotModelParser():
         return newgeom
 
     def createInertial(self, name, inertial):
+        """This function creates the blender representation of a given intertial.
+
+        :param name: The intertials name.
+        :param type: String.
+        :param inertial: The intertial you want to create in blender form.
+        :type intertial: dict.
+        :return: Blender object -- the newly created blender intertial object.
+
+        """
         bpy.ops.object.select_all(action='DESELECT')
         inert = createPrimitive('inertial_'+name, 'box', [0.04, 0.04, 0.04], player='inertial')
         inert.select = True
@@ -249,6 +343,13 @@ class RobotModelParser():
         return inert
 
     def createLink(self, link):
+        """This function creates the blender representation of a given link
+
+        :param link: The link you want to create a representation of.
+        :type link: dict.
+        :return: Blender object -- the newly created blender link object.
+
+        """
         bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
         #create base object ( =armature)
         bpy.ops.object.select_all(action='DESELECT')
@@ -261,7 +362,7 @@ class RobotModelParser():
         bpy.ops.object.transform_apply(scale=True)
         newlink.phobostype = 'link'
         if newlink.name != link['name']:
-            print("Warning, name conflict!")
+            log("Warning, name conflict!")
         # place inertial
         if 'inertial' in link:
             self.createInertial(link['name'], link['inertial'])
@@ -284,6 +385,13 @@ class RobotModelParser():
         return newlink
 
     def createJoint(self, joint):
+        """This function creates the blender representation of a given joint.
+
+        :param joint: The joint you want to create a blender object from.
+        :type joint: dict.
+        :return: Nothing.
+
+        """
         bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
         link = bpy.data.objects[joint['child']]
         # add joint information
@@ -305,7 +413,7 @@ class RobotModelParser():
             try:
                 link['joint/max'+param] = joint['limits'][param]
             except KeyError:
-                pass
+                log("Key Error in adding joint constraints") #Todo: more details
         try:
             lower = joint['limits']['lower']
             upper = joint['limits']['upper']
@@ -319,6 +427,13 @@ class RobotModelParser():
                     link['joint/'+prop[1:]+'/'+tag] = joint[prop][tag]
 
     def createMotor(self, motor):
+        """This function creates the motor properties in the motors joint object.
+
+        :param motor: The motor you want to create the properties from.
+        :type motor: dict.
+        :return: Nothing.
+
+        """
         try:
             joint = bpy.data.objects[motor['joint']]
             for prop in motor:
@@ -329,7 +444,7 @@ class RobotModelParser():
                         for tag in motor[prop]:
                             joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
         except KeyError:
-            print("###ERROR: joint", motor['joint'], "does not exist")
+            log("Joint " + motor['joint'] + " does not exist", "ERROR")
 
     def createSensor(self, sensor):
         newsensor = sensors.createSensor(sensor)
@@ -344,7 +459,12 @@ class RobotModelParser():
         pass
 
     def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
-        """Creates the blender object representation of the imported model."""
+        """Creates the blender object representation of the imported model.
+        For that purpose it uses the former specified robot model dictionary.
+
+        :return: Nothing.
+
+        """
         print("\n\nCreating Blender model...")
         print("Creating links...")
         for l in self.robot['links']:
@@ -374,9 +494,12 @@ class RobotModelParser():
             rootlink = getRoot(bpy.data.objects[root['name']])
             rootlink['modelname'] = self.robot['name']
         except KeyError:
-            print("### Error: Could not assign model name to root link.")
+            link("Could not assign model name to root link.", "ERROR")
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
+        for sensorname in self.robot['sensors']:
+            sensor = self.robot['sensors'][sensorname]
+            self.attachSensor(sensor)
 
         print("\n\nCreating motors...")
         for m in self.robot['motors']:
@@ -400,22 +523,52 @@ class RobotModelParser():
 
 
 class MARSModelParser(RobotModelParser):
-    """Class derived from RobotModelParser which parses a MARS scene"""
+    """Class derived from RobotModelParser which parses a MARS scene
+
+    """
 
     def __init__(self, filepath):
+        """Inits the Parser with the MARS scene file location
+
+        :param filepath: The filepath where the MARS scene lies.
+        :type filepath: String.
+        :return: Nothing.
+
+        """
         RobotModelParser.__init__(filepath)
 
     def parseModel(self):
+        """This function parses the MARS Scene.
+        In fact it isn't implemented yet..
+
+        :return: Nothing.
+        """
         print("Parsing MARS scene...")
 
 
 class URDFModelParser(RobotModelParser):
-    """Class derived from RobotModelParser which parses a URDF model"""
+    """Class derived from RobotModelParser which parses a URDF model
+
+    """
 
     def __init__(self, filepath):
+        """Inits the Parser with the URDF file location
+
+        :param filepath: The filepath where the URDF lies.
+        :type filepath: String.
+        :return: Nothing.
+
+        """
         RobotModelParser.__init__(self, filepath)
 
     def parsePose(self, origin):
+        """This function parses the robot models pose and returns it as a dictionary.
+
+        :param origin: The origin blender object to parse the pose from.
+        :type orign: blender object.
+        :return: dict -- The origins pose.
+
+        """
         pose = {}
         if origin is not None:
             pose['translation'] = parse_text(origin.attrib['xyz'])
@@ -426,6 +579,13 @@ class URDFModelParser(RobotModelParser):
         return pose
 
     def parseModel(self):
+        """This function parses the whole URDF representation of the robot and builds the robot dictionary from it.
+        The created robot is stored in the robot value of the parser and the URDF file is specified by the filepath
+        given to the Parser.
+
+        :return: Nothing.
+
+        """
         print("\nParsing URDF model from", self.filepath)
         self.tree = ET.parse(self.filepath)
         self.root = self.tree.getroot()#[0]
@@ -485,6 +645,12 @@ class URDFModelParser(RobotModelParser):
             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) #TODO: handle duplicate names? urdf_robotname_xxx?
 
     def parseLink(self, link):
+        """This function parses the link from the given link dict object.
+
+        :param link: The link you want to
+        :return:
+
+        """
         print(link.attrib['name'] + ', ', end='')
         newlink = {a: link.attrib[a] for a in link.attrib}
 
@@ -498,8 +664,7 @@ class URDFModelParser(RobotModelParser):
                 newlink['inertial']['mass'] = float(mass.attrib['value'])
             inertia = inertial.find('inertia')
             if inertia is not None:
-                values = []
-                newlink['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
+                newlink['inertial']['inertia'] = [float(inertia.attrib[a]) for a in inertia.attrib]
             newlink['inertial']['name'] = 'inertial_' + newlink['name']
 
         #parse visual and collision objects
@@ -554,7 +719,109 @@ class URDFModelParser(RobotModelParser):
         #mimic
         #safety_controller
         return newjoint, pose
+    
+class SRDFModelParser(RobotModelParser):
+    """Class derived from RobotModelParser wich parses a SRDF extension file for URDF"""
+    
+    def __init__(self, filepath):
+        RobotModelParser.__init__(self, filepath)
+        
+    def parseModel(self, robot):
+        collision_Exclusives = self.buildCollisionExclusives()
+        collision_Dic = self.buildCollisionDictionary(collision_Exclusives, robot)
+        collision_Groups = self.buildCollisionGroups(collision_Dic)
+        robot = self.buildBitmasks(collision_Groups, robot)
+        return robot
+        
+    def buildBitmasks(self, collision_Groups, robot):
+        bits = len(collision_Groups)
+        if bits > 20:
+            print("The blender bitmask is not capable of more than 20 bit. The bitmask will be cutted!")
+            bits = 20
+        for link in robot['links']:
+            for i in range(0, bits):
+                if link in collision_Groups[i]:
+                    for coll in robot['links'][link]['collision']:
+                        try:
+                            robot['links'][link]['collision'][coll]['bitmask'] += 2**i
+                        except KeyError:
+                            robot['links'][link]['collision'][coll]['bitmask'] = 2**i
+        return robot
+    
+    def buildCollisionExclusives(self):
+        print("\nParsing SRDF extensions from", self.filepath)
+        self.tree = ET.parse(self.filepath)
+        self.root = self.tree.getroot()
+        
+        collision_Exclusives = []
+        for disabled_coll in self.root.iter('disable_collisions'):
+            pair = (disabled_coll.attrib['link1'], disabled_coll.attrib['link2'])
+            collision_Exclusives.append(pair)
+            #print("Append ", pair, " to collision Exclusives")
+        return collision_Exclusives
+        
+    
+    def buildCollisionDictionary(self, collision_exclusives, robot):
+        dic = {}
+        for pair in collision_exclusives:
+            if 'root' in pair or (pair[0] != robot['joints'][pair[1]]['parent'] and pair[1] != robot['joints'][pair[0]]['parent']):
+                if pair[0] not in dic:
+                    dic[pair[0]]=[]
+                    dic[pair[0]].append(pair[1])
+                else:
+                    if pair[1] not in dic[pair[0]]:
+                        dic[pair[0]].append(pair[1])
+                if pair[1] not in dic:
+                    dic[pair[1]]=[]
+                    dic[pair[1]].append(pair[0])
+                else:
+                    if pair[0] not in dic[pair[1]]:
+                        dic[pair[1]].append(pair[0])
+            else:
+                pass
+                #print("Pair: ", pair, " not included")
+        print("Collision Dictionary:\n", dic)
+        return dic
+                
+    def checkGroup(self, group, colls):
+        cut = []
+        for elem in group:
+            if elem in colls:
+                cut.append(elem)
+        if len(cut) == len(group):
+            return cut
+        else:
+            return []
 
+    def processGroup(self, group, link, colls):
+        if link in group:
+            for coll in colls:
+                if coll in group:
+                    colls.remove(coll)
+        else:
+            cut = self.checkGroup(group, colls)
+            if len(cut) > 0:
+                group.append(link)
+                for l in cut:
+                    colls.remove(l)
+                
+    def buildCollisionGroups(self, dic):
+        groups=[]
+        for link in dic:
+            #rint("Current link: ", link)
+            colls = dic[link]
+            #print("Current colls: ", colls)
+            for group in groups:
+                #print("Current group: ", group)
+                self.processGroup(group, link, colls)
+            while len(colls) > 0:
+                newgroup = [link, colls.pop()]
+                groups.append(newgroup)
+                self.processGroup(newgroup, link, colls)
+        print ("Number of collision Groups: ", len(groups))
+        #print ("Collision Groups:\n", groups)
+        return groups
+        
 
 class SMURFModelParser(RobotModelParser):
     """Class derived from RobotModelParser which parses a SMURF model"""
@@ -568,20 +835,27 @@ class SMURFModelParser(RobotModelParser):
         with open(self.filepath, 'r') as smurffile:
             smurf = yaml.load(smurffile)
         if smurf is None:
-            print('###Error: No valid SMURF file.')
+            log('No valid SMURF file.', "ERROR")
             return None
         urdffile = None
+        srdffile = None
         ymlfiles = [f for f in smurf['files'] if f.endswith('.yml') or f.endswith('.yaml')]
         for f in smurf['files']:
             if f.endswith('.urdf'):
                 urdffile = f
+            if f.endswith('.srdf'):
+                srdffile = f
         # get URDF info
         if urdffile is None:
-            print("###Error: Did not find URDF file associated with SMURF.")
+            log("Did not find URDF file associated with SMURF.", "ERROR")
             return None
         urdfparser = URDFModelParser(os.path.join(self.path, urdffile))
         urdfparser.parseModel()
-        self.robot = urdfparser.robot
+        if srdffile is not None:
+            srdfparser = SRDFModelParser(os.path.join(self.path, srdffile))
+            self.robot = srdfparser.parseModel(urdfparser.robot)
+        else:
+            self.robot = urdfparser.robot
         # make sure all types exist
         typelist = ['links', 'joints', 'materials', 'sensors', 'motors', 'controllers', 'groups', 'chains']
         for key in typelist:
@@ -613,11 +887,11 @@ class SMURFModelParser(RobotModelParser):
                 try:
                     objtype = element['type']
                 except KeyError:
-                    print("###ERROR: could not find 'type' in custom annotation:", element)
+                    log("Could not find 'type' in custom annotation: " + str(element), "ERROR")
                 try:
                     objname = element['name']
                 except KeyError:
-                    print("###ERROR: could not find 'name' in custom annotation:", element)
+                    log("Could not find 'name' in custom annotation: " + str(element), "ERROR")
                 try:
                     if objtype+'s' in typelist:  #FIXME: this is a total hack!
                         objtype += 's'
@@ -635,7 +909,8 @@ class SMURFModelParser(RobotModelParser):
                 except TypeError:
                     print("###ERROR: could not find 'type' or 'name' in custom annotation", objtype, objname)
                 except NameError:
-                    print("###ERROR: element", objname, "of type", objtype, "does not exist in this model.")
+                    #Got following error:UnboundLocalError: local variable 'objtype' referenced before assignment
+                    log("Element " + str(objname) + " of type " + str("Unknown type") + " does not exist in this model.", "ERROR")
 
         #now some debug output
         with open(self.filepath+'_SMURF_debug.yml', 'w') as outputfile:

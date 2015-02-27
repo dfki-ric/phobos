@@ -1,6 +1,11 @@
 #!/usr/bin/python
 
 """
+.. module:: phobos.exporter
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+.. moduleauthor:: Kai von Szadowski
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -21,8 +26,6 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 File inertia.py
 
 Created on 13 Feb 2014
-
-@author: Kai von Szadkowski
 """
 
 import bpy
@@ -31,32 +34,61 @@ from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty, FloatProperty
 from . import defs
 from . import utility
+from phobos.logging import *
 
 
 def register():
+    """
+    This function registers this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Registering inertia...")
 
 
 def unregister():
+    """
+    This function unregisters this module.
+    At the moment it does nothing.
+
+    :return: Nothing
+
+    """
     print("Unregistering inertia...")
 
 
 def calculateMassOfLink(link):
-    '''Calculates the masses of visual and collision objects found in a link, compares it to mass
-    in link inertial object if present and returns the max of both, warning if they are not equal.'''
+    """Calculates the masses of visual and collision objects found in a link,
+    compares it to mass in link inertial object if present and returns the max of both, warning if they are not equal.
+
+    :param link: The link you want to calculate the visuals and collision objects mass of.
+    :type link: dict.
+    :return: double.
+
+    """
     objects = getInertiaRelevantObjects(link, ['visual', 'collision'])
     inertials = utility.getImmediateChildren(link, ['inertial'])
     objectsmass = utility.calculateSum(objects, 'mass')
     if len(inertials) == 1:
         inertialmass = inertials[0]['mass'] if 'mass' in inertials[0] else 0
     if objectsmass != inertialmass:
-        print("Warning: Masses are inconsistent, sync masses of link!")
+        log("Warning: Masses are inconsistent, sync masses of link!", "WARNING")
     return max(objectsmass, inertialmass)
 
 
 def calculateInertia(mass, geometry):
-    '''Calculates the inertia of an object given its *geometry* and *mass* and
-    returns the upper diagonal of the inertia 3x3 inertia tensor.'''
+    """Calculates the inertia of an object given its *geometry* and *mass* and
+    returns the upper diagonal of the inertia 3x3 inertia tensor.
+
+    :param mass: The objects mass.
+    :type mass: double.
+    :param geometry: The object dictionaries geometry part.
+    :type geometry: dict.
+    :return: tuple(6).
+
+    """
     inertia = None
     gt = geometry['type']
     if gt == 'box':
@@ -71,7 +103,15 @@ def calculateInertia(mass, geometry):
 
 
 def calculateBoxInertia(mass, size):
-    '''Returns upper diagonal of inertia tensor of a box as tuple.'''
+    """Returns upper diagonal of inertia tensor of a box as tuple.
+
+    :param mass: The box' mass.
+    :type mass: double.
+    :param size: The box' size.
+    :type size: double.
+    :return: tuple(6).
+
+    """
     i = mass / 12
     ixx = i*(size[1]**2 + size[2]**2)
     ixy = 0
@@ -83,7 +123,17 @@ def calculateBoxInertia(mass, size):
 
 
 def calculateCylinderInertia(mass, r, h):
-    '''Returns upper diagonal of inertia tensor of a cylinder as tuple.'''
+    """Returns upper diagonal of inertia tensor of a cylinder as tuple.
+
+    :param mass: The cylinders mass.
+    :type mass: double.
+    :param r: The cylinders radius.
+    :type r: double.
+    :param h: The cylinders height.
+    :type h: double.
+    :return: tuple(6).
+
+    """
     i = mass / 12 * (3 * r**2 + h**2)
     ixx = i
     ixy = 0
@@ -95,7 +145,15 @@ def calculateCylinderInertia(mass, r, h):
 
 
 def calculateSphereInertia(mass, r):
-    '''Returns upper diagonal of inertia tensor of a sphere as tuple.'''
+    """Returns upper diagonal of inertia tensor of a sphere as tuple.
+
+    :param mass: The spheres mass.
+    :type mass: double.
+    :param r: The spheres radius.
+    :type r: double.
+    :return: tuple(6).
+
+    """
     i = 0.4 * mass * r**2
     ixx = i
     ixy = 0
@@ -107,7 +165,15 @@ def calculateSphereInertia(mass, r):
 
 
 def calculateEllipsoidInertia(mass, size):
-    '''Returns upper diagonal of inertia tensor of an ellisoid as tuple.'''
+    """Returns upper diagonal of inertia tensor of an ellipsoid as tuple.
+
+    :param mass: The ellipsoids mass.
+    :type mass: double.
+    :param size: The ellipsoids size.
+    :type r: double.
+    :return: tuple(6).
+
+    """
     i = mass / 5
     ixx = i*(size[1]**2 + size[2]**2)
     ixy = 0
@@ -119,23 +185,40 @@ def calculateEllipsoidInertia(mass, size):
 
 
 def inertiaListToMatrix(il):
-    '''Takes a tuple or list representing the upper diagonal of a 3x3 inertia
-    tensor and returns the full tensor.'''
+    """Takes a tuple or list representing the upper diagonal of a 3x3 inertia tensor and returns the full tensor.
+
+    :param il: The upper diagonal of a 3x3 inertia tensor
+    :type il: tuple(6) or list[6].
+    :return: blender matrix.
+
+    """
     inertia = [[il[0], il[1], il[2]],
                [0.0, il[3], il[4]],
                [0.0, 0.0, il[5]]]
     return mathutils.Matrix(inertia)
 
 def inertiaMatrixToList(im):
-    '''Takes a full 3x3 inertia tensor and returns a tuple representing the
-    upper diagonal.'''
+    """Takes a full 3x3 inertia tensor and returns a tuple representing the upper diagonal.
+    
+    :param im: The inertia tensor matrix.
+    :type im: blender matrix
+    :return: tuple(6)
+    
+    """
     return (im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2][2],)
 
 
 def getInertiaRelevantObjects(link):
-    '''Returns a list of visual and collision objects of a link. If name-pairs of visual and collision
-    objects are detected, the visual objects are omitted to prevent redundant information. The function
-    does not check whether mass information within pairs is consistent.'''
+    """Returns a list of visual and collision objects of a link.
+    If name-pairs of visual and collision objects are detected,
+    the visual objects are omitted to prevent redundant information. The function
+    does not check whether mass information within pairs is consistent.
+
+    :param link: The link you want to gather the inertia relevant objects for.
+    :type link: dict.
+    :return: list.
+
+    """
     tmpobjects = utility.getImmediateChildren(link, ['visual', 'collision'])
     objlist = [obj.name for obj in tmpobjects]
     inertiaobjects = []
@@ -151,10 +234,17 @@ def getInertiaRelevantObjects(link):
 
 
 def fuseInertiaData(inertials):
-    '''Returns mass, center of mass and inertia of a link as a whole, taking a list of inertials.
-    *mass*: double
+    """Returns mass, center of mass and inertia of a link as a whole, taking a list of inertials.
+
+    *mass*: double.
     *com*: mathutils:Vector(3)
-    *inertia*: mathutils:Matrix(3)'''
+    *inertia*: mathutils:Matrix(3)
+
+    :param inertials: The alist of objects relevant for the inertia of a link.
+    :type inertials: list.
+    :return: tuple(3) -- see description for content.
+
+    """
     objects = []
     for o in inertials:
         objdict = None
@@ -177,8 +267,14 @@ def fuseInertiaData(inertials):
 
 
 def createInertial(obj):
-    '''Creates an empty inertial object with the same world transform as the corresponding
-    object and parents it to the correct link.'''
+    """Creates an empty inertial object with the same world transform as the corresponding
+    object and parents it to the correct link.
+
+    :param obj: The object you want to copy the world transform from.
+    :type obj: blender object.
+    :return: blender object -- the newly created inertia.
+
+    """
     if obj.phobostype == 'link':
         #name = obj.name
         parent = obj
@@ -189,7 +285,7 @@ def createInertial(obj):
     rotation = obj.matrix_world.to_euler()
     center = obj.matrix_world.to_translation()
     inertial = utility.createPrimitive('inertial_' + obj.name, 'box', size,
-                                   defs.layerTypes["inertial"], 'inertial', center, rotation)
+                                   defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     inertial.phobostype = 'inertial'
     bpy.ops.object.select_all(action="DESELECT")
@@ -208,10 +304,10 @@ def createInertial(obj):
 # From here on we have code modified from Berti's implementation
 
 
-def combine_cog_3x3(objects) :
-    '''
+def combine_cog_3x3(objects):
+    """
     combine center the COG of a list of bodies given with their masses and their centers of gravity
-    '''
+    """
     if objects == []:
         return 0.0, mathutils.Vector((0.0,)*3)
     combined_com = mathutils.Vector((0.0,)*3)
@@ -223,8 +319,8 @@ def combine_cog_3x3(objects) :
     return (combined_mass, combined_com)
 
 
-def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.0,)*3)) :
-    '''
+def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.0,)*3)):
+    """
     shift inertia matrix, steiner theorem / parallel axis theorem, private method
 
     - without changing the orientation  -
@@ -238,7 +334,7 @@ def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.
         \mathbf{J} = \mathbf{I} + m \left[\left(\mathbf{R} \cdot \mathbf{R}\right) \mathbf{E}_{3} - \mathbf{R} \otimes \mathbf{R} \right],
 
         This was necessary as previous calculations founded on math libraries of cad2sim.
-    '''
+    """
     # diff_vec
     c               = cog - ref_point
     c_outer         = utility.outerProduct(c, c)
@@ -247,8 +343,8 @@ def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.
     return inertia_ref
 
 
-def spin_inertia_3x3(inertia_3x3, rotmat, passive=True) :
-    '''
+def spin_inertia_3x3(inertia_3x3, rotmat, passive=True):
+    """
     rotate the inertia matrix
 
     active and passive interpretation
@@ -262,7 +358,7 @@ def spin_inertia_3x3(inertia_3x3, rotmat, passive=True) :
          passive    -- consistent with   N'  =  (H^T)       *  N  *  H
 
     WHERE IS a COMBINED METHOD of shifted and rotated inertia ? does it exist ?
-    '''
+    """
     R   = rotmat
     R_T = rotmat.transposed() #unlike .transpose(), this yields a new matrix and does not reset the original
     I   = inertia_3x3
@@ -279,9 +375,9 @@ def spin_inertia_3x3(inertia_3x3, rotmat, passive=True) :
 
 
 def compound_inertia_analysis_3x3(objects):
-    '''
+    """
     Computes total mass, common center of mass and inertia matrix at CCOM
-    '''
+    """
     total_mass, common_cog = combine_cog_3x3(objects)
 
     shifted_inertias = list()

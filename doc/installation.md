@@ -13,15 +13,17 @@ Installing blender on windows is as simple as downloading the installer from [Bl
 
 ## Phobos installation
 
+### YAML
+Phobos uses the YAML language for some of its output formats. As Blender uses Python 3, this means that if you want it to use the most current package version, you need to install [python3](https://www.python.org/) and the python module [yaml](http://www.yaml.org/) on your machine. Most of the major distributions offer packages for yaml (in Ubuntu for example the package is named `python3-yaml`). You can also use [pip](https://pypi.python.org/pypi/pip) to install yaml into your python environment. However, we distribute the yaml package with Phobos (under its own license, of course), and may update that version occasionally if there are important bugfixes on the module (lately, there haven't been).
+
+### Getting Phobos
+
+There are two options to get phobos: cloning the repository or downloading the repository as a zip. The first option, naturally, is the best for developers. To clone the phobos [git repository](https://github.com/rock-simulation/phobos), run `git clone https://github.com/rock-simulation/phobos.git` in a terminal and phobos should be checked out in a subfolder called *phobos*. For that you of course need to have [git](http://git-scm.com/) installed. Alternatively, you can download a zip file directly from our GitHub page and extract it somewhere. 
+
 ### Installation via installscript (Linux & Mac)
 Using the installscript is the most convenient way to install Phobos for developers, as it allows to update the plugin in Blender to test your latest changes.
 
-#### YAML
-Phobos uses the YAML language for some of its output formats. As Blender uses Python 3, this means that if you want it to use the most current package version, you need to install [python3](https://www.python.org/) and the python module [yaml](http://www.yaml.org/) on your machine. Most of the major distributions offer packages for yaml (in Ubuntu for example the package is named `python3-yaml`). You can also use [pip](https://pypi.python.org/pypi/pip) to install yaml into your python environment. However, we distribute the yaml package with Phobos (under its own license, of course), and may update that version occasionally if there are important bugfixes on the module (lately, there haven't been).
-
-#### Getting Phobos
-
-There are two options to get phobos: cloning the repository or downloading the repository as a zip. The first option, naturally, is the best for developers. To clone the phobos [git repository](https://github.com/rock-simulation/phobos), run `git clone https://github.com/rock-simulation/phobos.git` in a terminal and phobos should be checked out in a subfolder called *phobos*. For that you of course need to have [git](http://git-scm.com/) installed. Alternatively, you can download a zip file directly from our GitHub page and extract it somewhere. Once you have phobos on your harddrive, navigate to its folder, run the shell script *install_phobos.sh* and follow the instructions on your terminal window.
+Once you have phobos on your harddrive, navigate to its folder, run the shell script *install_phobos.sh* and follow the instructions on your terminal window.
 
 Important note: the install script will ask you about your version of Blender, as we cannot tell which version you'd like to use with Phobos. This is important as you might have several versions installed on your system (e.g. for backwards-compatibility) and they use different folders for addons. However, this is only asked once and saved for running the installs script again.
 

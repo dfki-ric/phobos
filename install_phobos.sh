@@ -66,7 +66,7 @@ osys = platform.system()
 if osys == "Linux":
     f.write("addonpath=$HOME/.config/blender/$blenderversion/scripts/addons")
 elif osys == "Darwin":
-    f.write("addonpath=$HOME/Library/Application Support/Blender/$blenderversion/scripts/addons")
+    f.write("addonpath=$HOME/Library/Application\ Support/Blender/$blenderversion/scripts/addons")
 f.close()
 END
     ###END PYTHON SNIPPET###
@@ -92,6 +92,7 @@ installPhobos() {
     then
         echo "Phobos installation found and updated."
         cp *.py $phobospath
+        cp -R definitions $phobospath
         installed=1
     else
         echo "Phobos folder does not exist, create phobos folder in $addonpath ? (y/n)"

@@ -31,6 +31,7 @@ import mathutils
 from datetime import datetime
 from . import defs
 from . import materials
+from phobos.logging import log
 
 
 def register():
@@ -96,7 +97,7 @@ def find_in_list(alist, prop, value):
                 n = i
                 break
         except KeyError:
-            pass
+            log("The object at index " + str(i) + " has no property " + str(prop))
     return n
 
 
@@ -110,7 +111,7 @@ def retrieve_from_list(alist, prop, value):
                 n = i
                 break
         except KeyError:
-            pass
+            log("The object at index " + str(i) + " has no property " + str(prop))
     if n >= 0:
         return alist[n][prop]
     else:
@@ -152,7 +153,8 @@ def assignMaterial(obj, materialname):
         if materialname in defs.defaultmaterials:
             materials.createPhobosMaterials()
         else:
-            print("###ERROR: material to be assigned does not exist.")
+            #print("###ERROR: material to be assigned does not exist.")
+            log("Material to be assigned does not exist.", "ERROR")
             return None
     obj.data.materials.append(bpy.data.materials[materialname])
     if bpy.data.materials[materialname].use_transparency:
@@ -209,11 +211,11 @@ def defLayers(layerlist):
     return layers
 
 
-def returnObjectList(marstype):
-    """Returns list of all objects in the current scene matching marstype"""
+def returnObjectList(phobostype):
+    """Returns list of all objects in the current scene matching phobostype"""
     objlist = []
     for obj in bpy.context.scene.objects:
-        if obj.phobostype == marstype:
+        if obj.phobostype == phobostype:
             objlist.append(obj)
     return objlist
 
@@ -247,6 +249,9 @@ def getRoot(obj=None):
             if (anobj.select):
                 obj = anobj
     child = obj
+    if child == None:
+        log("No root object found! Check your object selection", "ERROR")
+        return None
     while child.parent != None:
         child = child.parent
     return child
@@ -273,8 +278,8 @@ def calcBoundingBoxCenter(boundingbox):
 
 
 def selectObjects(objects, clear=True, active=-1):
-    '''Selects all objects provided in list, clears current selection if clear is True
-    and sets one of the objects the active objects if a valid index is provided.'''
+    """Selects all objects provided in list, clears current selection if clear is True
+    and sets one of the objects the active objects if a valid index is provided."""
     if clear:
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
@@ -315,7 +320,7 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            pass
+            log("The object '" + obj.name + "' has not property '" + numeric_prop + "'")
     return numsum
 
 
@@ -336,6 +341,35 @@ def outerProduct(v, u):
         lines.append([vi * ui for ui in u])
     return mathutils.Matrix(lines)
 
+
+def createNewTextfile(textfilename, contents):
+    for text in bpy.data.texts:
+        text.tag = True
+    bpy.ops.text.new()
+    newtext = None
+    for text in bpy.data.texts:
+        if not text.tag:
+            newtext = text
+    for text in bpy.data.texts:
+        text.tag = False
+    newtext.name = textfilename
+    bpy.data.texts[textfilename].write(contents)
+
+def openScriptInEditor(scriptname):
+    if scriptname in bpy.data.texts:
+        for area in bpy.context.screen.areas:
+            if area.type == 'TEXT_EDITOR':
+                area.spaces.active.text = bpy.data.texts[scriptname]
+    else: log("There is no script named " + scriptname + "!", "ERROR")
+
+def cleanObjectProperties(props):
+    """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
+    getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
+    if props:
+        for key in getridof:
+            if key in props:
+                del props[key]
+    return props
 
 # def useLegacyNames(data):
 #    if type(data) is str:

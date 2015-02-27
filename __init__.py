@@ -1,6 +1,11 @@
 #!/usr/bin/python
 
 """
+..module:: phobos
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+..moduleauthor:: Kai von Szadowski, Ole Schwiegert
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -22,7 +27,6 @@ File __init__.py
 
 Created on 6 Jan 2014
 
-@author: Kai von Szadkowski, Ole Schwiegert
 """
 
 
@@ -40,7 +44,7 @@ bl_info = {
 
 import sys
 import os.path
-yamlconfpath=sys.path[0]+"/phobos/yamlpath.conf"
+yamlconfpath=os.path.dirname(__file__)+"/yamlpath.conf"
 if (os.path.isfile(yamlconfpath)):
     f = open(yamlconfpath)
     path = f.read()
@@ -57,6 +61,12 @@ else:
     sys.path.insert(0, sys.path[0]+"/phobos")
     import yaml
     print("Importing yaml module")
+
+#prepare defs module
+from . import defs
+import os
+print("Using following folder for defs: " + os.path.dirname(__file__)+"/definitions")
+defs.updateDefs(os.path.dirname(__file__)+"/definitions")
 
 if "bpy" in locals():
     import imp
@@ -83,6 +93,11 @@ import bpy
 
 
 def register():
+    """This function registers all modules to blender.
+
+    :return: Nothing
+
+    """
     links.register()
     controllers.register()
     exporter.register()
@@ -97,6 +112,11 @@ def register():
     bpy.utils.register_module(__name__)
 
 def unregister():
+    """This function unregisters all modules to blender.
+
+    :return: Nothing
+
+    """
     links.unregister()
     controllers.unregister()
     exporter.unregister()
