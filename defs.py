@@ -171,11 +171,9 @@ def updateDefs(defsFolderPath):
                 if sens not in sensortypes:
                     sensortypes.append(sens)
                     sensorProperties[sens] = entry['Sensors'][sens]
-        global motortypes
-        motortypes = []
         if 'Motors'in entry:
             for motor in entry['Motors']:
-                if motor not in motortypes:
+                if (motor,) * 3 not in motortypes:
                     motortypes.append((motor,) * 3)
 
 def __parseAllYAML(path):
