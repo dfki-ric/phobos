@@ -42,7 +42,7 @@ import math, os, yaml, re
 # TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below
 
-version = '0.5'
+version = '0.6'
 
 phobostypes = (('undefined',) * 3,
                ('link',) * 3,
@@ -168,11 +168,13 @@ def updateDefs(defsFolderPath):
     for entry in dicts:
         if 'Sensors' in entry:
             for sens in entry['Sensors']:
-                sensortypes.append(sens)
-                sensorProperties[sens] = entry['Sensors'][sens]
+                if sens not in sensortypes:
+                    sensortypes.append(sens)
+                    sensorProperties[sens] = entry['Sensors'][sens]
         if 'Motors'in entry:
             for motor in entry['Motors']:
-                motortypes.append((motor,) * 3)
+                if (motor,) * 3 not in motortypes:
+                    motortypes.append((motor,) * 3)
 
 def __parseAllYAML(path):
     """This functions reads all .yml files in the given path and loads them.
