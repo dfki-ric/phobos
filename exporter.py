@@ -327,22 +327,25 @@ def gatherAnnotations(model):
     # gather information from directly accessible types
     for objtype in types:
         for elementname in model[objtype]:
-            tmpdict = model[objtype][elementname].copy()
-            tmpdict['type'] = objtype[:-1]
+            #tmpdict = model[objtype][elementname].copy()
+            tmpdict = model[objtype][elementname]
+            tmpdict['temp_type'] = objtype[:-1]
             elementlist.append(tmpdict)
     # add information from types hidden in links
     for linkname in model['links']:
         for objtype in ('collision', 'visual'):
             if objtype in model['links'][linkname]:
                 for elementname in model['links'][linkname][objtype]:
-                    tmpdict = model['links'][linkname][objtype][elementname].copy()
+                    #tmpdict = model['links'][linkname][objtype][elementname].copy()
+                    tmpdict = model['links'][linkname][objtype][elementname]
                     #tmpdict['link'] = linkname
-                    tmpdict['type'] = objtype
+                    tmpdict['temp_type'] = objtype
                     elementlist.append(tmpdict)
         if 'inertial' in model['links'][linkname]:
-            tmpdict = model['links'][linkname]['inertial'].copy()
+            #tmpdict = model['links'][linkname]['inertial'].copy()
+            tmpdict = model['links'][linkname]['inertial']
             #tmpdict['link'] = linkname
-            tmpdict['type'] = 'inertial'
+            tmpdict['temp_type'] = 'inertial'
             elementlist.append(tmpdict)
     # loop through the list of annotated elements and categorize the data
     for element in elementlist:
@@ -352,14 +355,21 @@ def gatherAnnotations(model):
                 category = key[1:]
                 if category not in annotations:
                     annotations[category] = {}
-                if element['type'] not in annotations[category]:
-                    annotations[category][element['type']] = []
+                if element['temp_type'] not in annotations[category]:
+                    annotations[category][element['temp_type']] = []
                 tmpdict = {k: element[key][k] for k in element[key]}
                 tmpdict['name'] = element['name']
-                annotations[category][element['type']].append(tmpdict)
+                annotations[category][element['temp_type']].append(tmpdict)
                 delkeys.append(key)
+        delkeys.append('temp_type')
+        print('element:', element)
         for key in delkeys:
+            print(key)
             del element[key]
+    #print('annotations:', annotations)
+    #for category in annotations:
+    #    for element in annotations[category]:
+    #        del element['type']
     return annotations
 
 
