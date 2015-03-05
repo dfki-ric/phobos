@@ -249,6 +249,31 @@ def exportStl(path, obj):
     obj.name = objname
 
 
+def exportDae(path, obj):
+    """This function exports a specific object to a chosen path as a .dae
+
+    :param path: The path you want the object exported to. *without filename!*
+    :type path: String
+    :param obj: The blender object you want to export.
+    :type obj: bpy.types.Object
+    :return: Nothing.
+
+    """
+    objname = obj.name
+    print("OBJNAME: " + objname)
+    obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
+    tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+    tmpobject.data = obj.data  # copy the mesh here
+    outpath = determineMeshOutpath(obj, objname, 'dae', path)
+    bpy.ops.object.select_all(action='DESELECT')
+    tmpobject.select = True
+    bpy.ops.wm.collada_export(filepath=outpath, selected=True)
+    bpy.ops.object.select_all(action='DESELECT')
+    tmpobject.select = True
+    bpy.ops.object.delete()
+    obj.name = objname
+
+
 def exportModelToYAML(model, filepath):
     """This function exports a given robot model to a specified filepath as YAML.
 
@@ -880,6 +905,7 @@ def export(path=''):
     objexp = bpy.data.worlds[0].useObj
     bobjexp = bpy.data.worlds[0].useBobj
     stlexp = bpy.data.worlds[0].useStl
+    daeexp = bpy.data.worlds[0].useDae
     objectlist = bpy.context.selected_objects
 
     if yaml or urdf or smurf or mars:
@@ -911,6 +937,8 @@ def export(path=''):
                     exportBobj(outpath, obj)
                 if stlexp:
                     exportStl(outpath, obj)
+                if daeexp:
+                    exportDae(outpath, obj)
             if show_progress:
                 wm.progress_update(i)
                 i += 1

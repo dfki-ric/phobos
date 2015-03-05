@@ -178,6 +178,8 @@ def deriveGeometry(obj):
                 filename += ".bobj"
             elif bpy.data.worlds[0].useStl:
                 filename += ".stl"
+            elif bpy.data.worlds[0].useDae:
+                filename += ".dae"
             else:
                 filename += ".obj"
             geometry['filename'] = filename

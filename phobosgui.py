@@ -62,6 +62,7 @@ def register():
     bpy.types.World.useBobj = BoolProperty(name="useBobj", update=updateExportOptions)
     bpy.types.World.useObj = BoolProperty(name="useObj", update=updateExportOptions)
     bpy.types.World.useStl = BoolProperty(name="useStl", update=updateExportOptions)
+    bpy.types.World.useDae = BoolProperty(name="useDae", update=updateExportOptions)
     bpy.types.World.exportMesh = BoolProperty(name="exportMesh", update=updateExportOptions)
     bpy.types.World.exportMARSscene = BoolProperty(name="exportMARSscene", update=updateExportOptions)
     bpy.types.World.exportSMURF = BoolProperty(name="exportSMURF", default=True, update=updateExportOptions)
@@ -384,12 +385,15 @@ class PhobosExportPanel(bpy.types.Panel):
         c1.prop(bpy.data.worlds[0], "useBobj", text="use .bobj format")
         c1.prop(bpy.data.worlds[0], "useObj", text="use .obj format")
         c1.prop(bpy.data.worlds[0], "useStl", text="use .stl format")
+        c1.prop(bpy.data.worlds[0], "useDae", text="use .dae format")
         if bpy.data.worlds[0].useObj:
             labeltext = ".obj is used"
         elif bpy.data.worlds[0].useBobj:
             labeltext = ".bobj is used"
         elif bpy.data.worlds[0].useStl:
             labeltext = ".stl is used"
+        elif bpy.data.worlds[0].useDae:
+            labeltext = ".dae is used"
         else:
             labeltext = ".obj is used"
         c1.label(text=labeltext)
