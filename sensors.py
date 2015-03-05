@@ -64,6 +64,12 @@ def createSensor(sensor, reference, origin):
         if reference is not None and reference != []:
             utility.selectObjects([newsensor, bpy.data.objects[reference]], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    elif sensor['type'] in ['Joint6DOF']:
+        newsensor = utility.createPrimitive(sensor['name'], 'sphere', 0.05,
+                                            defs.layerTypes['sensor'], 'phobos_sensor',
+                                            origin.to_translation(), protation=origin.to_euler())
+        utility.selectObjects([newsensor, reference], clear=True, active=1)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:  # contact, force and torque sensors (or unknown sensors)
         newsensor = utility.createPrimitive(sensor['name'], 'sphere', 0.05,
                                             defs.layerTypes['sensor'], 'phobos_sensor',
@@ -188,6 +194,8 @@ class AddSensorOperator(Operator):
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
                 utility.selectObjects([link, sensorObj], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        elif sensor['type'] in ['Joint6DOF']:
+            createSensor(sensor, context.active_object, context.active_object.matrix_world)
         elif 'Node' in sensor['type']:
             createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
                          mathutils.Matrix.Translation(context.scene.cursor_location))
