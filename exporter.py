@@ -42,6 +42,7 @@ from phobos.utility import *
 from . import marssceneexport as mse
 from . import robotdictionary
 from . import defs
+from . import logging as logger
 
 
 def register():
@@ -510,17 +511,21 @@ def exportModelToURDF(model, filepath):
         if 'limits' in joint:
             for limit_value in ['effort', 'velocity']:
                 if limit_value not in joint['limits']:
-                    print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
+                    #print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
+                    logger.log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
                     missing_values = True
             output.append(
                 xmlline(3, 'limit', [p for p in joint['limits']], [joint['limits'][p] for p in joint['limits']]))
         elif joint['type'] in ['revolute', 'prismatic']:
-            print("\n###WARNING: joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!###\n")
+            #print("\n###WARNING: joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!###\n")
+            logger.log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
             missing_values = True
         output.append(indent * 2 + '</joint>\n\n')
     #export material information
     if missing_values:
-        print("\n###WARNING: Created URDF is invalid due to missing values!###")
+        #print("\n###WARNING: Created URDF is invalid due to missing values!###")
+        logger.log("Created URDF is invalid due to missing values!")
+        bpy.ops.tools.phobos_error_dialog('INVOKE_DEFAULT')
     for m in model['materials']:
         if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
             output.append(indent * 2 + '<material name="' + m + '">\n')
@@ -537,6 +542,7 @@ def exportModelToURDF(model, filepath):
         outputfile.write(''.join(output))
     # problem of different joint transformations needed for fixed joints
     print("phobos URDF export: Writing model data to", filepath)
+    #logger.log("phobos URDF export: Writing model data to " + filepath, level='ALL')
 
 
 def exportModelToSRDF(model, path):
@@ -887,7 +893,27 @@ class ExportModelOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        logger.startLog(self)
         export()
+        logger.endLog()
+        return {'FINISHED'}
+
+
+class ErrorDialogOperator(Operator):
+    """
+    """
+    bl_idname = "tools.phobos_error_dialog"
+    bl_label = "Show an error dialog."
+
+    message = bpy.props.StringProperty(name="Warning")
+
+    def invoke(self, context, event):
+        # to check whether this is being called:
+        self.report({'WARNING'}, "CALLED")
+        return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        print(self.message)
         return {'FINISHED'}
 
 
@@ -954,3 +980,6 @@ def export(path=''):
                 i += 1
         if show_progress:
             wm.progress_end()
+
+
+bpy.utils.register_class(ErrorDialogOperator)
