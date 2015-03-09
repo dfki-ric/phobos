@@ -177,7 +177,11 @@ class AddSensorOperator(Operator):
                  }
         parent = context.active_object
         for key in defs.sensorProperties[self.sensor_type]:
-            sensor['props'][key] = getattr(self, key)
+            if type(defs.sensorProperties[self.sensor_type][key]) == type(True):
+                value = getattr(self, key)
+                sensor['props'][key] = '$true' if value else '$false'
+            else:
+                sensor['props'][key] = getattr(self, key)
         # type-specific settings
         if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
                               'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
