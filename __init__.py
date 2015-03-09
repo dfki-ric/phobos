@@ -79,6 +79,13 @@ def bool_representer(dumper, data):
 
 yaml.add_representer(str, bool_representer)
 
+def bool_constructor(self, node):
+    value = self.construct_yaml_bool(node)
+    return '$true' if value else '$false'
+
+yaml.Loader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
+yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
+
 if "bpy" in locals():
     import imp
     imp.reload(robotupdate)
