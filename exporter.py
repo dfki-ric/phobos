@@ -525,7 +525,7 @@ def exportModelToURDF(model, filepath):
     if missing_values:
         #print("\n###WARNING: Created URDF is invalid due to missing values!###")
         logger.log("Created URDF is invalid due to missing values!")
-        bpy.ops.tools.phobos_error_dialog('INVOKE_DEFAULT')
+        bpy.ops.tools.phobos_warning_dialog('INVOKE_DEFAULT', message="Created URDF is invalid due to missing values!")
     for m in model['materials']:
         if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
             output.append(indent * 2 + '<material name="' + m + '">\n')
@@ -899,24 +899,6 @@ class ExportModelOperator(Operator):
         return {'FINISHED'}
 
 
-class ErrorDialogOperator(Operator):
-    """
-    """
-    bl_idname = "tools.phobos_error_dialog"
-    bl_label = "Show an error dialog."
-
-    message = bpy.props.StringProperty(name="Warning")
-
-    def invoke(self, context, event):
-        # to check whether this is being called:
-        self.report({'WARNING'}, "CALLED")
-        return context.window_manager.invoke_props_dialog(self)
-
-    def execute(self, context):
-        print(self.message)
-        return {'FINISHED'}
-
-
 def export(path=''):
     """This function does the actual exporting of the robot model.
 
@@ -980,6 +962,3 @@ def export(path=''):
                 i += 1
         if show_progress:
             wm.progress_end()
-
-
-bpy.utils.register_class(ErrorDialogOperator)
