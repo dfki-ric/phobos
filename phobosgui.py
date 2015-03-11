@@ -399,7 +399,7 @@ class PhobosExportPanel(bpy.types.Panel):
         c1.label(text=labeltext)
         c2 = inlayout.column(align=True)
         c2.label(text="Robot data export")
-        c2.prop(bpy.data.worlds[0], "exportMARSscene", text="as MARS scene")
+        #c2.prop(bpy.data.worlds[0], "exportMARSscene", text="as MARS scene")
         c2.prop(bpy.data.worlds[0], "exportSMURF", text="as SMURF")
         c2.prop(bpy.data.worlds[0], "exportURDF", text="as URDF")
         c2.prop(bpy.data.worlds[0], "exportSRDF", text="with SRDF")
