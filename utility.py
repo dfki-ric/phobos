@@ -270,6 +270,21 @@ def getRoots():
         print("Phobos: Found", len(roots), "root object(s)", [root.name + "; " for root in roots])
     return roots  # TODO: Should we change this and all other list return values in a tuple or generator expression?
 
+def getObjectName(obj, phobostype=None):
+    """This function returns the objects valid name.
+
+    :param obj: The object you want the name for.
+    :param phobostype: The phobostype you want this objects name for.
+    :return: The objects name.
+
+    """
+    type=None
+    if "phobostype" in obj and phobostype==None:
+        type = obj.phobostype
+    if type and type+"/name" in obj:
+        return obj[type+"/name"]
+    else:
+        return obj.name
 
 def calcBoundingBoxCenter(boundingbox):
     """Calculates the center of a bounding box"""
