@@ -220,14 +220,14 @@ def getInertiaRelevantObjects(link):
 
     """
     tmpobjects = utility.getImmediateChildren(link, ['visual', 'collision'])
-    objlist = [obj.name for obj in tmpobjects]
+    objlist = [utility.getObjectName(obj) for obj in tmpobjects]
     inertiaobjects = []
     for obj in tmpobjects:
         if 'mass' in obj:
             if obj.phobostype == 'collision':
                 inertiaobjects.append(obj)
             elif obj.phobostype == 'visual':
-                collision = obj.name.replace('visual_', 'collision_')
+                collision = utility.getObjectName(obj).replace('visual_', 'collision_')
                 if not collision in objlist:
                     inertiaobjects.append(obj)
     return inertiaobjects
@@ -276,15 +276,15 @@ def createInertial(obj):
 
     """
     if obj.phobostype == 'link':
-        #name = obj.name
+        #name = utility.getObjectName(obj)
         parent = obj
     else:
-        #name = obj.name.replace(obj.phobostype+'_', '')
+        #name = utility.getObjectName(obj).replace(obj.phobostype+'_', '')
         parent = obj.parent
     size = (0.04, 0.04, 0.04) if obj.phobostype == 'link' else (0.02, 0.02, 0.02)
     rotation = obj.matrix_world.to_euler()
     center = obj.matrix_world.to_translation()
-    inertial = utility.createPrimitive('inertial_' + obj.name, 'box', size,
+    inertial = utility.createPrimitive('inertial_' + utility.getObjectName(obj), 'box', size,
                                    defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     inertial.phobostype = 'inertial'

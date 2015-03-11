@@ -96,11 +96,11 @@ class ShareMesh(Operator):
         objects = context.selected_objects
         source = context.active_object
         sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
-        newName = source.name if self.meshName == "" else self.meshName
+        newName = utility.getObjectName(source, source.phobostype) if self.meshName == "" else self.meshName
         log(source.name, "INFO")
         for obj in objects:
             if 'phobostype' in obj and obj.phobostype in ("visual", "collision") and obj != source:
-                log("Setting data for: " + obj.name, "INFO")
+                log("Setting data for: " + utility.getObjectName(obj, phobostype=obj.phobostype), "INFO")
                 obj.data = source.data
                 obj[sMProp] = newName
         if sMProp in source: del obj[sMProp]
@@ -167,9 +167,9 @@ class SortObjectsToLayersOperator(Operator):
                     layers[defs.layerTypes[phobosType]] = True
                     obj.layers = layers
                 if phobosType == 'undefined':
-                    log("The phobostype of the object '" + obj.name + "' is undefined")
+                    log("The phobostype of the object '" + utility.getObjectName(obj) + "' is undefined")
             except AttributeError:
-                log("The object '" + obj.name + "' has no phobostype", "ERROR")  # Handle this as error or warning?
+                log("The object '" + utility.getObjectName(obj) + "' has no phobostype", "ERROR")  # Handle this as error or warning?
         endLog()
         return {'FINISHED'}
 
@@ -258,7 +258,7 @@ class SetMassOperator(Operator):
                 try:
                     oldmass = obj['mass']
                 except KeyError:
-                    log("The object '" + obj.name + "' has no mass")
+                    log("The object '" + utility.getObjectName(obj) + "' has no mass")
                     oldmass = None
                 if self.userbmass:
                     try:
@@ -266,7 +266,7 @@ class SetMassOperator(Operator):
                     except AttributeError:
                         obj['mass'] = 0.001
                         # print("### Error: object has no rigid body properties.")
-                        log("The object '" + obj.name + "' has no rigid body properties. Set mass to 0.001", "ERROR")
+                        log("The object '" + utility.getObjectName(obj) + "' has no rigid body properties. Set mass to 0.001", "ERROR")
                 else:
                     obj['mass'] = self.mass
                 if obj['mass'] != oldmass:
@@ -302,9 +302,9 @@ class SyncMassesOperator(Operator):
         sourcelist = []
         targetlist = []
         processed = []
-        links = [obj.name for obj in bpy.context.selected_objects if obj.phobostype == 'link']
+        links = [utility.getObjectName(obj) for obj in bpy.context.selected_objects if obj.phobostype == 'link']
         t = dt.now()
-        objdict = {obj.name: obj for obj in bpy.context.selected_objects}
+        objdict = {utility.getObjectName(obj): obj for obj in bpy.context.selected_objects}
         for obj in objdict.keys():
             if objdict[obj].phobostype in ['visual', 'collision']:
                 basename = obj.replace(objdict[obj].phobostype + '_', '')
@@ -425,7 +425,7 @@ class SetXRayOperator(Operator):
         elif self.objects == 'selected':
             objlist = bpy.context.selected_objects
         elif self.objects == 'by name':
-            objlist = [obj for obj in bpy.data.objects if obj.name.find(self.namepart) >= 0]
+            objlist = [obj for obj in bpy.data.objects if utility.getObjectName(obj).find(self.namepart) >= 0]
         else:
             objlist = [obj for obj in bpy.data.objects if obj.phobostype == self.objects]
         for obj in objlist:
@@ -500,7 +500,7 @@ class SelectObjectsByName(Operator):
     def execute(self, context):
         objlist = []
         for obj in bpy.data.objects:
-            if self.namefragment in obj.name:
+            if self.namefragment in utility.getObjectName(obj):
                 objlist.append(obj)
         utility.selectObjects(objlist, True)
         return {'FINISHED'}
@@ -704,8 +704,8 @@ class RenameCustomProperty(Operator):
         for obj in context.selected_objects:
             if self.find in obj and self.replace != '':
                 if self.replace in obj:
-                    # print("### Error: property", self.replace, "already present in object", obj.name)
-                    log("Property '" + self.replace + "' already present in object '" + obj.name + "'", "ERROR")
+                    # print("### Error: property", self.replace, "already present in object", utility.getObjectName(obj))
+                    log("Property '" + self.replace + "' already present in object '" + utility.getObjectName(obj) + "'", "ERROR")
                     if self.overwrite:
                         log("Replace property, because overwrite option was set")
                         obj[self.replace] = obj[self.find]
@@ -742,7 +742,7 @@ class SetGeometryType(Operator):
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
                 obj['geometry/type'] = self.geomType
             else:
-                log("The object '" + obj.name + "' is no collision or visual")
+                log("The object '" + utility.getObjectName(obj) + "' is no collision or visual")
         endLog()
         return {'FINISHED'}
 

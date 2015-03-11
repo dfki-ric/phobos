@@ -140,7 +140,7 @@ def parse_text(s):
 
 def printMatrices(obj, info=None):
     if not info:
-        info = obj.name
+        info = getObjectName(obj)
     print("\n----------------", info, "---------------------\n",
           "local:\n", obj.matrix_local,
           "\n\nworld:\n", obj.matrix_world,
@@ -335,7 +335,7 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            log("The object '" + obj.name + "' has not property '" + numeric_prop + "'")
+            log("The object '" + getObjectName(obj) + "' has not property '" + numeric_prop + "'")
     return numsum
 
 

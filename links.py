@@ -112,20 +112,20 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
     :return: Nothing.
 
     """
-    print('Deriving link from', obj.name)
-    nameparts = obj.name.split('_')
+    print('Deriving link from', utility.getObjectName(obj))
+    nameparts = utility.getObjectName(obj).split('_')
     rotation = obj.matrix_world.to_euler()
     if 'invertAxis' in obj and obj['invertAxis'] == 1:
         rotation.x += math.pi if rotation.x < 0 else -math.pi
-    tmpname = obj.name
+    tmpname = utility.getObjectName(obj)
     if namepartindices:
         try:
             tmpname = separator.join([nameparts[p] for p in namepartindices])
         except IndexError:
-            print('Wrong name segment indices given for obj', obj.name)
+            print('Wrong name segment indices given for obj', utility.getObjectName(obj))
     if prefix != '':
         tmpname = prefix + separator + tmpname
-    if tmpname == obj.name:
+    if tmpname == utility.getObjectName(obj):
         obj.name += '*'
     link = createLink(scale, obj.matrix_world.to_translation(), obj.matrix_world.to_euler(), tmpname)
     if parenting:

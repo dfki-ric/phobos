@@ -92,7 +92,7 @@ def exportBobj(path, obj):
 
     # ignore dupli children
     if obj.parent and obj.parent.dupli_type in {'VERTS', 'FACES'}:
-        print(obj.name, 'is a dupli child - ignoring')
+        print(utility.getObjectName(obj), 'is a dupli child - ignoring')
         return
 
     mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW')
@@ -111,7 +111,7 @@ def exportBobj(path, obj):
 
     me_verts = mesh.vertices[:]
 
-    out = open(determineMeshOutpath(obj, obj.name, 'bobj', path), "wb")
+    out = open(determineMeshOutpath(obj, utility.getObjectName(obj), 'bobj', path), "wb")
 
     for v in mesh.vertices:
         out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
@@ -199,7 +199,8 @@ def exportObj(path, obj):
     :return: Nothing.
 
     """
-    objname = obj.name
+    objname = utility.getObjectName(obj)
+    oldBlenderObjName = obj.name
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
     tmpobject.data = obj.data  # copy the mesh here
@@ -208,12 +209,12 @@ def exportObj(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
-    obj.name = objname
+    obj.name = oldBlenderObjName
 
     #This is the old implementation which did not work properly (08.08.2014)
     #bpy.ops.object.select_all(action='DESELECT')
     #obj.select = True
-    #outpath = os.path.join(path, obj.name) + '.obj'
+    #outpath = os.path.join(path, utility.getObjectName(obj)) + '.obj'
     #world_matrix = obj.matrix_world.copy()
     ##inverse_local_rotation = obj.matrix_local.to_euler().to_matrix().inverted()
     ##world_scale = world_matrix.to_scale() TODO: implement scale
@@ -236,7 +237,8 @@ def exportStl(path, obj):
     :return: Nothing.
 
     """
-    objname = obj.name
+    objname = utility.getObjectName(obj)
+    oldBlenderObjectName = obj.name
     print("OBJNAME: " + objname)
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
@@ -246,7 +248,7 @@ def exportStl(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
-    obj.name = objname
+    obj.name = oldBlenderObjectName
 
 
 def exportDae(path, obj):
@@ -259,7 +261,8 @@ def exportDae(path, obj):
     :return: Nothing.
 
     """
-    objname = obj.name
+    objname = utility.getObjectName(obj)
+    oldBlenderObjectName = obj.name
     print("OBJNAME: " + objname)
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
@@ -271,7 +274,7 @@ def exportDae(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
-    obj.name = objname
+    obj.name = oldBlenderObjectName
 
 
 def exportModelToYAML(model, filepath):
