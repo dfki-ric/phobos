@@ -137,7 +137,8 @@ def calc_pose_formats(position, rotation, pivot=[0,0,0]):
     print("rotation_matrix:", rotation_matrix)
     print("pivot_translation", pivot_translation)
     print()
-    transformation_matrix = translation * neg_pivot_translation * rotation_matrix * pivot_translation
+    #transformation_matrix = translation * neg_pivot_translation * rotation_matrix * pivot_translation
+    transformation_matrix = translation * rotation_matrix * neg_pivot_translation
 
     rm = transformation_matrix
     #TODO: this is not good
@@ -702,7 +703,7 @@ class RobotModelParser():
             chain = self.robot['chains'][ch]
             self.createChain(chain)
 
-        self._apply_joint_angle_offsets()
+        #self._apply_joint_angle_offsets()
 
         print('Done!')
 
@@ -729,7 +730,7 @@ class MARSModelParser(RobotModelParser):
     """Class derived from RobotModelParser which parses a MARS scene"""
 
     def __init__(self, filepath):
-        '''
+        """
         Initialise a 'MARSModelParser' object and a number of containers
         used to keep track of the parsed information and to apply it in
         the right places.
@@ -748,7 +749,8 @@ class MARSModelParser(RobotModelParser):
                 {link/visual/collision/material name:
                  amount of how often the name already has been given to
                  something (plus index for distinction)}
-        '''
+        """
+
         RobotModelParser.__init__(self, filepath)
         
         self.xml_tree = None
@@ -780,7 +782,6 @@ class MARSModelParser(RobotModelParser):
         motors = root.find('motorlist')
         controllers = root.find('controllerlist')
         material_list = root.find('materiallist')
-
 
         self._parse_joints(joints)
         self._get_links(nodes, joints)
@@ -933,7 +934,7 @@ class MARSModelParser(RobotModelParser):
             vis_coll_dict['geometry'] = geometry_dict
             return True
     
-    def _parse_visual(self, visuals_dict, node, missing_vis_geo):
+    def _parse_visual(self, visuals_dict, node, missing_vis_geo, root_child=False):
         '''
         Parse a visual object.
         '''
@@ -946,14 +947,14 @@ class MARSModelParser(RobotModelParser):
         base_pos = base_pose['translation']
         rot = base_pose['rotation_quaternion']
         pivot_xml = node.find('pivot')
-        if pivot_xml is not None:
+        if pivot_xml is not None and not root_child:
             pivot = [float(pivot_xml.find('x').text), float(pivot_xml.find('y').text), float(pivot_xml.find('z').text)]
         else:
             pivot = [0.0, 0.0, 0.0]
 
         pos = base_pos
-        #visual_dict['pose'] = calc_pose_formats(pos, rot, pivot=pivot)
-        visual_dict['pose'] = calc_pose_formats(pos, rot)
+        visual_dict['pose'] = calc_pose_formats(pos, rot, pivot=pivot)
+        #visual_dict['pose'] = calc_pose_formats(pos, rot)
         mat_index = int(node.find('material_id').text)
         visual_dict['material'] = self.material_indices[mat_index]
         
@@ -1146,6 +1147,11 @@ class MARSModelParser(RobotModelParser):
         
         for node in nodes:
             index = int(node.find('index').text)
+            rel_id = node.find('relativeid')
+            if rel_id is None:           # check if node is root
+                root_child = True
+            else:
+                root_child = False
             if index in self.vis_coll_groups:
                 link_index = self.vis_coll_groups[index]
                 group = self.link_groups_link_order[link_index]
@@ -1153,7 +1159,7 @@ class MARSModelParser(RobotModelParser):
                     if group_node['index'] == link_index:
                         name = group_node['name']
                         visuals_dict = model['links'][name]['visual']
-                        self._parse_visual(visuals_dict, node, self.missing_vis_geos[name])
+                        self._parse_visual(visuals_dict, node, self.missing_vis_geos[name], root_child)
                         model['links'][name]['visual'] = visuals_dict
                         
                         collisions_dict = model['links'][name]['collision']
