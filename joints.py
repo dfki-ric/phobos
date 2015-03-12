@@ -346,10 +346,10 @@ class DefineJointConstraintsOperator(Operator):
         description='makes the joint passive (no actuation)'
     )
 
-    degrees = BoolProperty(
-        name='degrees',
-        default=False,
-        description='use degrees or rad for revolute joints'
+    useRadian = BoolProperty(
+        name='useRadian',
+        default=True,
+        description='use degrees or rad for joints'
     )
 
     joint_type = EnumProperty(
@@ -374,9 +374,9 @@ class DefineJointConstraintsOperator(Operator):
         description="maximum effort of the joint")
 
     maxvelocity = FloatProperty(
-        name="max velocity (m/s or rad/s",
+        name="max velocity (m/s or rad/s)",
         default=0.0,
-        description="maximum velocity of the joint")
+        description="maximum velocity of the joint. If you dechecked radian, you can enter rpm here")
 
     # TODO: invoke function to read all values in
 
@@ -384,11 +384,13 @@ class DefineJointConstraintsOperator(Operator):
         layout = self.layout
         layout.prop(self, "joint_type", text="joint_type")
         layout.prop(self, "passive", text="makes the joint passive (no actuation)")
+        layout.prop(self, "useRadian", text="use radian")
+        if self.joint_type != 'fixed':
+            layout.prop(self, "maxeffort", text="max effort (N or Nm)")
+            layout.prop(self, "maxvelocity", text="max velocity (m/s or rad/s")
         if self.joint_type in ('revolute', 'prismatic'):
             layout.prop(self, "lower", text="lower")
             layout.prop(self, "upper", text="upper")
-            layout.prop(self, "maxeffort", text="max effort (N or Nm)")
-            layout.prop(self, "maxvelocity", text="max velocity (m/s or rad/s")
 
 
     def execute(self, context):
@@ -400,19 +402,24 @@ class DefineJointConstraintsOperator(Operator):
         """
         lower=0
         upper=0
+        velocity=0
         if self.joint_type in ('revolute', 'prismatic'):
-            if self.degrees:
+            if not self.useRadian:
                 lower = math.radians(self.lower)
                 upper = math.radians(self.upper)
             else:
                 lower = self.lower
                 upper = self.upper
+        if not self.useRadian:
+            velocity = self.maxvelocity * 0.1047 # from rpm to rad/s
+        else:
+            velocity = self.maxvelocity
         for link in context.selected_objects:
             bpy.context.scene.objects.active = link
             setJointConstraints(link, self.joint_type, lower, upper)
-            if self.joint_type in ('revolute', 'prismatic'):
+            if self.joint_type != 'fixed':
                 link['joint/maxeffort'] = self.maxeffort
-                link['joint/maxvelocity'] = self.maxvelocity
+                link['joint/maxvelocity'] = velocity
             else:
                 if "joint/maxeffort" in link: del link["joint/maxeffort"]
                 if "joint/maxvelocity" in link: del link["joint/maxvelocity"]
