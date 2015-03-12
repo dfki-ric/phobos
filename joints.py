@@ -380,6 +380,17 @@ class DefineJointConstraintsOperator(Operator):
 
     # TODO: invoke function to read all values in
 
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "joint_type", text="joint_type")
+        layout.prop(self, "passive", text="makes the joint passive (no actuation)")
+        if self.joint_type in ('revolute', 'prismatic'):
+            layout.prop(self, "lower", text="lower")
+            layout.prop(self, "upper", text="upper")
+            layout.prop(self, "maxeffort", text="max effort (N or Nm)")
+            layout.prop(self, "maxvelocity", text="max velocity (m/s or rad/s")
+
+
     def execute(self, context):
         """This function executes this operator and sets the constraints and joint type for all selected links.
 
@@ -387,18 +398,24 @@ class DefineJointConstraintsOperator(Operator):
         :return: Blender result.
 
         """
-        if self.degrees:
-            lower = math.radians(self.lower)
-            upper = math.radians(self.upper)
-        else:
-            lower = self.lower
-            upper = self.upper
+        lower=0
+        upper=0
+        if self.joint_type in ('revolute', 'prismatic'):
+            if self.degrees:
+                lower = math.radians(self.lower)
+                upper = math.radians(self.upper)
+            else:
+                lower = self.lower
+                upper = self.upper
         for link in context.selected_objects:
             bpy.context.scene.objects.active = link
             setJointConstraints(link, self.joint_type, lower, upper)
-            if self.joint_type != 'fixed':
+            if self.joint_type in ('revolute', 'prismatic'):
                 link['joint/maxeffort'] = self.maxeffort
                 link['joint/maxvelocity'] = self.maxvelocity
+            else:
+                if "joint/maxeffort" in link: del link["joint/maxeffort"]
+                if "joint/maxvelocity" in link: del link["joint/maxvelocity"]
             if self.passive:
                 link['joint/passive'] = True
             else:
