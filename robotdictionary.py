@@ -31,9 +31,7 @@ import sys
 import datetime
 import warnings
 import phobos.defs as defs
-import phobos.utility as utility
 import phobos.joints as joints
-import phobos.inertia as inertia
 from phobos.utility import *
 
 
