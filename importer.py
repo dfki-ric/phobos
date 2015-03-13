@@ -47,6 +47,10 @@ defaults = Defaults(0.001, #mass
                     [0.0, 0.0, 0.0]  # idtransform
                     )
 
+# more?
+MARScolordict = {'diffuseFront': 'diffuseColor',
+                 'specularFront': 'specularColor'}
+
 def register():
     print("Registering importer...")
 
@@ -460,7 +464,10 @@ class RobotModelParser():
                 newgeom['geometry/type'] = geomtype
                 if geomsrc == 'visual':
                     try:
-                        newgeom.data.materials.append(bpy.data.materials[viscol['material']['name']])
+                        if 'name' in viscol['material']:
+                            newgeom.data.materials.append(bpy.data.materials[viscol['material']['name']])
+                        else:
+                            newgeom.data.materials.append(bpy.data.materials[viscol['material']])
                     except KeyError:
                         log('No material for obj', viscol['name'])
             #FIXME: place empty coordinate system and return...what? Error handling of file import!
@@ -787,7 +794,7 @@ class MARSModelParser(RobotModelParser):
         self._get_links(nodes, joints)
         self._apply_relative_ids(nodes)
 
-        self._parse_materials(material_list)
+        self.robot['materials'] = self._parse_materials(material_list)
         
         links = self._parse_links(nodes)
         #self._add_parent_links(links)
@@ -846,10 +853,9 @@ class MARSModelParser(RobotModelParser):
     def _parse_materials(self, materials_tree):
         '''
         Parse the materials from the MARS scene.
-        
-        TODO: change 'materials' so that superfluous 'color' entry is not needed
+
         '''
-        material_list = []
+        materials_dict = {}
         for material in materials_tree:
             material_dict = {}
             mat_id = int(material.find('id').text)
@@ -861,18 +867,17 @@ class MARSModelParser(RobotModelParser):
                 name = 'material_' + str(mat_id)
             material_dict['name'] = name
 
-            #TODO: fix later
-
-            #for xml_colour in defs.MARSrevlegdict:
-            #    colour = material.find(xml_colour)
-            #    if colour is not None:
-            #        r = round_float(colour.find('r').text)
-            #        g = round_float(colour.find('g').text)
-            #        b = round_float(colour.find('b').text)
-            #        a = round_float(colour.find('a').text)
-            #        py_colour = defs.MARSrevlegdict[xml_colour]
-            #        material_dict[py_colour] = [r, g, b, a]
-            #        # for now:
+            print('DEFS:', dir(defs))
+            for xml_colour in MARScolordict:
+                colour = material.find(xml_colour)
+                if colour is not None:
+                    r = round_float(colour.find('r').text)
+                    g = round_float(colour.find('g').text)
+                    b = round_float(colour.find('b').text)
+                    a = round_float(colour.find('a').text)
+                    py_colour = MARScolordict[xml_colour]
+                    material_dict[py_colour] = [r, g, b, a]
+                    # for now:
             #        material_dict['color'] = [r, g, b, a]
             
             
@@ -883,11 +888,12 @@ class MARSModelParser(RobotModelParser):
                 material_dict['transparency'] = 0.0
                 
             material_dict['shininess'] = round_float(material.find('shininess').text)
-            self.material_indices[mat_id] = material_dict
-            material_list.append(material_dict)
-            
-        #for m in material_list:
-        #    materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1])
+            self.material_indices[mat_id] = name
+            materials_dict[name] = material_dict
+
+            materials.makeMaterial(name, tuple(material_dict['diffuseColor'][0:3]), (1, 1, 1), material_dict['diffuseColor'][-1])
+
+        return materials_dict
     
     def _parse_geometry(self, vis_coll_dict, node, mode):
         '''
