@@ -322,7 +322,7 @@ class SyncMassesOperator(Operator):
             else:  # latest to oldest
                 tv = utility.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
                 tc = utility.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
-                if tc < tv:  #if collision information is older than visual information
+                if tc < tv:  # if collision information is older than visual information
                     sourcelist.append('visual_' + basename)
                     targetlist.append('collision_' + basename)
                 else:
@@ -914,9 +914,15 @@ class CreateInertialOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     auto_compute = BoolProperty(
-        name='auto_compute',
+        name='calculate automatically',
         default=True,
-        description='auto-compute inertia'
+        description='calculate inertia automatically'
+    )
+
+    preserve_children = BoolProperty(
+        name='preserve child inertials',
+        default=False,
+        description='preserve child inertials'
     )
 
     def execute(self, context):
@@ -928,7 +934,7 @@ class CreateInertialOperator(Operator):
             wm.progress_begin(0, total)
             i = 1
         for link in links:
-            inertia.createInertials(link, not self.auto_compute)
+            inertia.createInertials(link, not self.auto_compute, self.preserve_children)
             if show_progress:
                 wm.progress_update(i)
                 i += 1

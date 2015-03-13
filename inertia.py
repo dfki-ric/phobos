@@ -312,26 +312,33 @@ def createInertial(obj):
     return inertial
 
 
-def createInertials(link, empty=False):
+def createInertials(link, empty=False, preserve_children=False):
     # create inertial representations for visual and collision objects in link
     viscols = getInertiaRelevantObjects(link)
     # clean existing data
-    oldinertials = utility.getImmediateChildren(link, ['inertial'])
-    if len(oldinertials) > 0:
+    if not preserve_children:
+        oldinertials = utility.getImmediateChildren(link, ['inertial'])
+    else:
+        try:
+            oldinertials = [bpy.data.objects['inertial_'+link.name]]
+        except KeyError:
+            oldinertials = None
+    if oldinertials:
         utility.selectObjects(oldinertials, clear=True, active=0)
         bpy.ops.object.delete()
-    for obj in viscols:
-        if not empty:
-            mass = obj['mass'] if 'mass' in obj else None
-            geometry = robotdictionary.deriveGeometry(obj)
-            if mass is not None:
-                inert = calculateInertia(mass, geometry)
-                if inert is not None:
-                    inertial = createInertial(obj)
-                    inertial['mass'] = mass
-                    inertial['inertia'] = inert
-        else:
-            createInertial(obj)
+    if not preserve_children:
+        for obj in viscols:
+            if not empty:
+                mass = obj['mass'] if 'mass' in obj else None
+                geometry = robotdictionary.deriveGeometry(obj)
+                if mass is not None:
+                    inert = calculateInertia(mass, geometry)
+                    if inert is not None:
+                        inertial = createInertial(obj)
+                        inertial['mass'] = mass
+                        inertial['inertia'] = inert
+            else:
+                createInertial(obj)
     # compose inertial object for link
     if not empty:
         mass, com, inert = fuseInertiaData(utility.getImmediateChildren(link, ['inertial']))
