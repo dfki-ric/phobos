@@ -784,7 +784,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
             else:
                 models[root['modelname']].append(root)
 
-    smurfs = []
+    entities = []
     for modelname in models:
         entitylist = models[modelname]
         unnamed_entities = 0
@@ -798,12 +798,12 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
             uri = os.path.join(modelname, modelname+'.smurf') if subfolders else modelname+'.smurf'
             scenedict = {'name': entityname,
                          'type': 'smurf',
-                         'URI': uri,
+                         'file': uri,
                          'anchor': root['anchor'] if 'anchor' in root else 'none',
                          'position': entitypose['translation'],
                          'rotation': entitypose['rotation_quaternion'],
                          'pose': 'default'}  # TODO: implement multiple poses
-            smurfs.append(scenedict)
+            entities.append(scenedict)
 
     if bpy.data.worlds[0].relativePath:
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
@@ -816,7 +816,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
                          + "'; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n")
         outputfile.write("# created with Phobos " + defs.version
                          + " - https://github.com/rock-simulation/phobos\n\n")
-        outputfile.write(yaml.dump({'smurfs': smurfs}))
+        outputfile.write(yaml.dump({'entities': entities}))
 
     for modelname in models:
         smurf_outpath = securepath(os.path.join(outpath, modelname) if subfolders else outpath)
