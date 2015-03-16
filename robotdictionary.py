@@ -167,7 +167,7 @@ def deriveGeometry(obj):
             geometry['length'] = obj.dimensions[2]
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
-        elif gt == 'mesh':
+        elif gt in ['mesh', 'capsule']:
             sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
             if sMProp in obj:
                 filename = obj[sMProp]
