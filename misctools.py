@@ -304,8 +304,8 @@ class SyncMassesOperator(Operator):
         processed = set()
         links = [obj.name for obj in bpy.context.selected_objects if obj.phobostype == 'link']
         t = dt.now()
-        objdict = {obj.name: obj for obj in bpy.data.objects if obj.parent.name in links
-                   and obj.phobostype in ['visual', 'collision']}
+        objdict = {obj.name: obj for obj in bpy.data.objects if obj.phobostype in ['visual', 'collision']
+                   and obj.parent.name in links}
         # gather all name bases of objects for which both visual and collision are present
         for obj in objdict.keys():
             basename = obj.replace(objdict[obj].phobostype + '_', '')
@@ -335,13 +335,14 @@ class SyncMassesOperator(Operator):
 
         for linkname in links:
             masssum = 0.0
-            viscols = inertia.getInertiaRelevantObjects(objdict[linkname])
+            link = bpy.data.objects[linkname]
+            viscols = inertia.getInertiaRelevantObjects(link)
             for obj in viscols:
                 masssum += obj['mass']
-            links[linkname]['mass'] = masssum
-            links[linkname]['masschanged'] = t.isoformat()
+            link['mass'] = masssum
+            link['masschanged'] = t.isoformat()
             if self.updateinertial:
-                inertia.createInertials(links[linkname])
+                inertia.createInertials(link)
         return {'FINISHED'}
 
 
