@@ -479,6 +479,16 @@ class AttachMotorOperator(Operator):
         description="type of the motor",
         items=defs.motortypes)
 
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "motortype", text="motor_type")
+        layout.prop(self, "taumax", text="maximum torque [Nm]")
+        layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
+        if self.motortype == 'PID':
+            layout.prop(self, "P", text="P")
+            layout.prop(self, "I", text="I")
+            layout.prop(self, "D", text="D")
+
     def invoke(self, context, event):
         aObject = context.active_object
         if 'motor/type' not in aObject and 'joint/type' in aObject and aObject['joint/type'] != 'fixed':
