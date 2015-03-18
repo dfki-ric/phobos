@@ -376,7 +376,7 @@ class DefineJointConstraintsOperator(Operator):
     maxvelocity = FloatProperty(
         name="max velocity (m/s or rad/s)",
         default=0.0,
-        description="maximum velocity of the joint. If you dechecked radian, you can enter rpm here")
+        description="maximum velocity of the joint. If you uncheck radian, you can enter °/sec here")
 
     # TODO: invoke function to read all values in
 
@@ -395,6 +395,7 @@ class DefineJointConstraintsOperator(Operator):
 
     def execute(self, context):
         """This function executes this operator and sets the constraints and joint type for all selected links.
+        rad/s is the default unit. rpm will be transformed into rad/s
 
         :param context: The blender context this operator works with.
         :return: Blender result.
@@ -411,7 +412,7 @@ class DefineJointConstraintsOperator(Operator):
                 lower = self.lower
                 upper = self.upper
         if not self.useRadian:
-            velocity = self.maxvelocity * 0.1047 # from rpm to rad/s
+            velocity = self.maxvelocity * ((2*math.pi) / 360) # from °/s to rad/s
         else:
             velocity = self.maxvelocity
         for link in context.selected_objects:
@@ -456,7 +457,7 @@ class AttachMotorOperator(Operator):
         description="D-value")
 
     vmax = FloatProperty(
-        name="maximum velocity [rpm]",
+        name="maximum velocity [m/s] or [rad/s]",
         default=1.0,
         description="maximum turning velocity of the motor")
 
@@ -485,7 +486,7 @@ class AttachMotorOperator(Operator):
                     joint['motor/p'] = self.P
                     joint['motor/i'] = self.I
                     joint['motor/d'] = self.D
-                joint['motor/maxSpeed'] = self.vmax*2*math.pi
+                joint['motor/maxSpeed'] = self.vmax
                 joint['motor/maxEffort'] = self.taumax
                 #joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
                 joint['motor/type'] = self.motortype
