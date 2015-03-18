@@ -68,6 +68,24 @@ import os
 print("Using following folder for defs: " + os.path.dirname(__file__)+"/definitions")
 defs.updateDefs(os.path.dirname(__file__)+"/definitions")
 
+#Add custom YAML (de-)serializer
+def bool_representer(dumper, data):
+    if data == '$true':
+        return dumper.represent_bool(True)
+    elif data == '$false':
+        return dumper.represent_bool(False)
+    else:
+        return dumper.represent_str(str(data))
+
+yaml.add_representer(str, bool_representer)
+
+def bool_constructor(self, node):
+    value = self.construct_yaml_bool(node)
+    return '$true' if value else '$false'
+
+yaml.Loader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
+yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
+
 if "bpy" in locals():
     import imp
     imp.reload(robotupdate)
