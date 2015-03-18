@@ -256,6 +256,17 @@ def import_bobj(filepath):
     """
     bobj_import.load(filepath)
 
+def get_phobos_joint_name(mars_name, has_limits):
+    """
+    """
+    if mars_name == 'hinge':
+        if has_limits:
+            return 'revolute'
+        return 'continuous'
+    if mars_name == 'slider':
+        return 'prismatic'
+    return 'fixed'
+
 
 class RobotModelParser():
     """Base class for a robot model file parser of a specific type"""
@@ -401,7 +412,7 @@ class RobotModelParser():
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             sensorobj.matrix_local = urdf_geom_loc * urdf_geom_rot
         except KeyError:
-            print('###ERROR: inconsisent data on sensor:', sensor['name'])
+            print('###ERROR: inconsistent data on sensor:', sensor['name'])
 
 
     def createGeometry(self, viscol, geomsrc):
@@ -637,8 +648,21 @@ class RobotModelParser():
             pass #log("Joint " + motor['joint'] + " does not exist", "ERROR")
 
     def createSensor(self, sensor):
-        #newsensor = sensors.createSensor(sensor)
-        pass
+        if 'link' in sensor:
+            reference = sensor['link']
+        elif 'joint' in sensor:
+            # TODO: maybe this is not an issue
+            pass
+        elif 'links' in sensor:
+            reference = sensor['links']
+        elif 'joints' in sensor:
+            reference = sensor['joints']
+        elif 'motors' in sensor:
+            reference = sensor['motors']
+        else:
+            reference = None
+
+        sensors.createSensor(sensor, reference)
 
     def createController(self, controller):
         pass
@@ -762,6 +786,8 @@ class MARSModelParser(RobotModelParser):
         
         self.xml_tree = None
         self.link_index_dict = {}
+        self.joint_index_dict = {}
+        self.motor_index_dict = {}
         self.link_groups_group_order = {}
         self.link_groups_link_order = {}
         self.link_indices = set([])
@@ -801,8 +827,9 @@ class MARSModelParser(RobotModelParser):
         self.robot['name'] = self.filepath.split('.')[0]
         self.robot['links'] = links
         self.robot['joints'] = self._create_joints_dict()
-        self.robot['sensors'] = self._parse_sensors(sensors)
+        print(self.robot)
         self.robot['motors'] = self._parse_motors(motors)
+        self.robot['sensors'] = self._parse_sensors(sensors)
         self.robot['controllers'] = self._parse_controllers(controllers)
         self.robot['groups'] = self.link_groups_group_order
         self._parse_additional_visuals_and_collisions(self.robot, nodes)
@@ -843,7 +870,7 @@ class MARSModelParser(RobotModelParser):
         for joint_name in self.joint_info:
             joint = self.joint_info[joint_name]
             joint_dict = {}
-            for info in ['name', 'type', 'angle_offset', 'axis1']:
+            for info in ['name', 'type', 'angle_offset', 'axis1', 'limits']:
                 joint_dict[info] = joint[info]
             joint_dict['parent'] = self.link_index_dict[joint['parent_index']]
             joint_dict['child'] = self.link_index_dict[joint['child_index']]
@@ -1183,8 +1210,30 @@ class MARSModelParser(RobotModelParser):
             joint_dict = {}
             name = joint.get('name')
             joint_dict['name'] = name
-            joint_dict['type'] = joint.find('type').text
-            
+            mars_type = joint.find('type').text
+
+            lower_limit = None
+            xml_lower_limit = joint.find('lowStopAxis1')
+            if xml_lower_limit is not None:
+                lower_limit = float(xml_lower_limit.text)
+            upper_limit = None
+            xml_upper_limit = joint.find('highStopAxis1')
+            if xml_upper_limit is not None:
+                upper_limit = float
+
+            limit_dict = {}
+            if upper_limit or lower_limit:
+                has_limits = True
+                if upper_limit:
+                    limit_dict['upper'] = upper_limit
+                if lower_limit:
+                    limit_dict['lower'] = lower_limit
+            else:
+                has_limits = False
+            joint_dict['limits'] = limit_dict
+
+            joint_dict['type'] = get_phobos_joint_name(mars_type, has_limits)
+
             parent_index = int(joint.find('nodeindex1').text)
             joint_dict['parent_index'] = parent_index
             #joint_dict['parent'] = self.link_index_dict[parent_index]
@@ -1215,6 +1264,7 @@ class MARSModelParser(RobotModelParser):
             joint_dict['axis1'] = dict_axis
 
             self.joint_info[name] = joint_dict
+            self.joint_index_dict[int(joint.find('index').text)] = name
 
         self.robot_states['start'] = state_dict
 
@@ -1290,33 +1340,71 @@ class MARSModelParser(RobotModelParser):
         self.applied_rel_id_poses = absolute_poses
         self.applied_vis_col_poses = absolute_vis_coll_poses
 
-
-
-    
     def _parse_sensors(self, sensors):
         '''
-        'link' is missing in manual
         '''
         sensors_dict = {}
         for sensor in sensors:
             sensor_dict = {}
             name = sensor.get('name')
             sensor_dict['name'] = name
-            xml_link = sensor.find('attached_node')
+
+            xml_rate = sensor.find('rate')
+            if xml_rate is not None:
+                sensor_dict['rate'] = float(xml_rate.text)
+
+            xml_link = sensor.find('nodeID')
             if xml_link is not None:
-                 sensor_dict['link'] = self.link_index_dict[int(xml_link.text)]
-            sensor_dict['type'] = sensor.get('type')
+                sensor_dict['link'] = self.link_index_dict[int(xml_link.text)]
+
+            xml_joint = sensor.find('jointID')
+            if xml_joint is not None:
+                sensor_dict['joint'] = self.joint_index_dict[int(xml_joint.text)]
+
+            type = sensor.get('type')
+            sensor_dict['type'] = type
+
+            if type in ['JointArray', 'JointAVGTorque', 'JointLoad', 'JointPosition', 'JointTorque', 'JointVelocity']:
+                sensor_dict['joints'] = []
+                for xml_id in sensor.findall('id'):
+                    sensor_dict['joints'].append(self.joint_index_dict[int(xml_id.text)])
+            elif type == 'MotorCurrent':
+                sensor_dict['motors'] = []
+                for xml_id in sensor.findall('id'):
+                    sensor_dict['motors'].append(self.motor_index_dict[int(xml_id.text)])
+            elif type in ['NodeAngularVelocity', 'NodeCOM', 'NodeContactForce', 'NodePosition', 'NodeRotation', 'NodeVelocity']:
+                sensor_dict['links'] = []
+                for xml_id in sensor.findall('id'):
+                    sensor_dict['links'].append(self.link_index_dict[int(xml_id.text)])
+
             sensors_dict[name] = sensor_dict
         return sensors_dict
     
     def _parse_motors(self, motors):
         '''
-        don't know yet what motors look like
         '''
         motors_dict = {}
         for motor in motors:
             motor_dict = {}
             name = motor.get('name')
+            motor_dict['name'] = name
+
+            joint_index = int(motor.find('jointIndex').text)
+            joint_name = self.joint_index_dict[joint_index]
+            motor_dict['joint'] = joint_name
+            max_velocity = float(motor.find('maximumVelocity').text)
+            max_effort = float(motor.find('motorMaxForce').text)
+            joint = self.robot['joints'][joint_name]
+            joint['limits']['velocity'] = max_velocity
+            joint['limits']['effort'] = max_effort
+
+            type_num = int(joint.find('type').text)
+            if type_num == 1:
+                motor_dict['type'] = 'servo'
+            elif type_num == 2:
+                motor_dict['type'] = 'electric_motor'
+
+            self.motor_index_dict[int(motor.find('index').text)] = name
 
             motors_dict[name] = motor_dict
 
