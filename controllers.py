@@ -103,8 +103,8 @@ class AddControllerOperator(Operator):
             controllers.append(bpy.context.scene.objects.active)
         #empty index list so enable robotupdate of controller
         for ctrl in controllers:
-            sensors = [obj.name for obj in objects if obj.phobostype == 'sensor']
-            joints = [obj.name for obj in objects if obj.phobostype == 'link' and not 'joint/passive' in obj]
+            sensors = [getObjectName(obj) for obj in objects if obj.phobostype == 'sensor']
+            joints = [getObjectName(obj) for obj in objects if obj.phobostype == 'link' and not 'joint/passive' in obj]
             ctrl['controller/sensors'] = sorted(sensors, key=str.lower)
             ctrl['controller/motors'] = sorted(joints, key=str.lower)
             ctrl['controller/rate'] = self.controller_rate
@@ -158,7 +158,7 @@ class AddLegacyControllerOperator(Operator):
             i = 1
             for obj in objects:
                 if obj.phobostype == "link":
-                    ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = obj.name
+                    ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = getObjectName(obj)
                     i += 1
         log("Added joints to (new) controller(s).", "INFO")
         #for prop in defs.controllerProperties[self.controller_type]:

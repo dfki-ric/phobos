@@ -424,7 +424,7 @@ class DefineJointConstraintsOperator(Operator):
                 if "joint/maxeffort" in link: del link["joint/maxeffort"]
                 if "joint/maxvelocity" in link: del link["joint/maxvelocity"]
             if self.passive:
-                link['joint/passive'] = True
+                link['joint/passive'] = "$true"
             else:
                 pass  # FIXME: add default motor here or upon export?
                       # upon export might have the advantage of being able

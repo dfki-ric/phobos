@@ -75,9 +75,9 @@ def createSensor(sensor, reference, origin):
                                             defs.layerTypes['sensor'], 'phobos_sensor',
                                             origin.to_translation(), protation=origin.to_euler())
         if 'Node' in sensor['type']:
-            newsensor['sensor/nodes'] = sorted([obj.name for obj in reference])
+            newsensor['sensor/nodes'] = sorted([utility.getObjectName(obj) for obj in reference])
         elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
-            newsensor['sensor/joints'] = sorted([obj.name for obj in reference])
+            newsensor['sensor/joints'] = sorted([utility.getObjectName(obj) for obj in reference])
         if reference is not None and reference != []:
             utility.selectObjects([newsensor, utility.getRoot(reference[0])], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
@@ -183,7 +183,11 @@ class AddSensorOperator(Operator):
                  }
         parent = context.active_object
         for key in defs.sensorProperties[self.sensor_type]:
-            sensor['props'][key] = getattr(self, key)
+            if type(defs.sensorProperties[self.sensor_type][key]) == type(True):
+                value = getattr(self, key)
+                sensor['props'][key] = '$true' if value else '$false'
+            else:
+                sensor['props'][key] = getattr(self, key)
         # type-specific settings
         if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
                               'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:

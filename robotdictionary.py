@@ -31,9 +31,7 @@ import sys
 import datetime
 import warnings
 import phobos.defs as defs
-import phobos.utility as utility
 import phobos.joints as joints
-import phobos.inertia as inertia
 from phobos.utility import *
 
 
@@ -85,7 +83,7 @@ def deriveLink(obj):
 def deriveJoint(obj):
     props = initObjectProperties(obj, phobostype='joint', ignoretypes=['link', 'motor'])
     props['parent'] = obj.parent.name
-    props['child'] = obj.name
+    props['child'] = getObjectName(obj)
     props['type'], crot = joints.deriveJointType(obj, True)
     axis, minmax = joints.getJointConstraints(obj)
     if axis:
@@ -128,9 +126,16 @@ def deriveMotor(obj, joint):
     props = initObjectProperties(obj, phobostype='motor', ignoretypes=['link', 'joint'])
     if len(props) > 1:  # if there are any 'motor' tags and not only a name
         props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
-        if 'limits' in joint and props['type'] == 'PID':
-            props['minValue'] = joint['limits']['lower']
-            props['maxValue'] = joint['limits']['upper']
+        try:
+            if props['type'] == 'PID':
+                if 'limits' in joint:
+                    props['minValue'] = joint['limits']['lower']
+                    props['maxValue'] = joint['limits']['upper']
+            elif props['type'] == 'DC':
+                props['minValue'] = 0
+                props['maxValue'] = props["maxSpeed"]
+        except KeyError:
+            print("###WARNING: no lower and/or upper limit defined for joint", props['joint'])
         return props
     else:
         return None  # return None if no motor is attached
@@ -162,7 +167,7 @@ def deriveGeometry(obj):
             geometry['length'] = obj.dimensions[2]
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
-        elif gt == 'mesh':
+        elif gt in ['mesh', 'capsule']:
             sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
             if sMProp in obj:
                 filename = obj[sMProp]
@@ -171,7 +176,7 @@ def deriveGeometry(obj):
             elif 'filename' in obj:
                 filename = obj['filename']
             else:
-                filename = obj.name.replace('/', '_')
+                filename = getObjectName(obj).replace('/', '_')
             if bpy.data.worlds[0].useObj:
                 filename += ".obj"
             elif bpy.data.worlds[0].useBobj:
@@ -187,7 +192,7 @@ def deriveGeometry(obj):
             geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
         return geometry
     else:
-        warnings.warn("No geometry/type found for object "+obj.name+".")
+        warnings.warn("No geometry/type found for object "+getObjectName(obj)+".")
         return None
 
 
@@ -249,7 +254,7 @@ def deriveController(obj):
 
 
 def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
-    props = {'name': obj.name.split(':')[-1]}  #allow duplicated names differentiated by types
+    props = {'name': getObjectName(obj).split(':')[-1]}  #allow duplicated names differentiated by types
     if not phobostype:
         for key, value in obj.items():
             props[key] = value
@@ -275,7 +280,7 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
 
 
 def deriveDictEntry(obj):
-    print(obj.name, end=', ')
+    print(getObjectName(obj), end=', ')
     props = None
     parent = None
     try:
@@ -303,9 +308,9 @@ def deriveGroupEntry(group):
     links = []
     for obj in group.objects:
         if obj.phobostype == 'link':
-            links.append({'type': 'link', 'name': obj.name})
+            links.append({'type': 'link', 'name': getObjectName(obj)})
         else:
-            print("### Error: group " + group.name + " contains " + obj.phobostype + ': ' + obj.name)
+            print("### Error: group " + group.name + " contains " + obj.phobostype + ': ' + getObjectName(obj))
     return links
 
 
@@ -316,7 +321,7 @@ def deriveChainEntry(obj):
     for chainName in chainlist:
         chainclosed = False
         parent = obj
-        chain = {'name': chainName, 'start': '', 'end': obj.name, 'elements': []}
+        chain = {'name': chainName, 'start': '', 'end': getObjectName(obj), 'elements': []}
         while not chainclosed:
             if parent.parent is None:
                 print('### Error: Unclosed chain, aborting parsing chain', chainName)
@@ -407,7 +412,7 @@ def buildRobotDictionary():
     for obj in bpy.context.selected_objects:
         if obj.phobostype in ['visual', 'collision']:
             props, parent = deriveDictEntry(obj)
-            robot['links'][parent.name][obj.phobostype][obj.name] = props
+            robot['links'][parent.name][obj.phobostype][getObjectName(obj)] = props
             obj.select = False
         elif obj.phobostype == 'approxsphere':
             props, parent = deriveDictEntry(obj)
@@ -429,7 +434,7 @@ def buildRobotDictionary():
     print('\n\nParsing sensors and controllers...')
     for obj in bpy.context.selected_objects:
         if obj.phobostype in ['sensor', 'controller']:
-            robot[obj.phobostype+'s'][obj.name] = deriveDictEntry(obj)
+            robot[obj.phobostype+'s'][getObjectName(obj)] = deriveDictEntry(obj)
             obj.select = False
 
     # parse materials
@@ -440,7 +445,7 @@ def buildRobotDictionary():
             mat = obj.data.materials[0]
             if not mat.name in robot['materials']:
                 robot['materials'][mat.name] = deriveMaterial(mat) #this should actually never happen
-            robot['links'][obj.parent.name]['visual'][obj.name]['material'] = mat.name
+            robot['links'][obj.parent.name]['visual'][getObjectName(obj)]['material'] = mat.name
 
     # gather information on groups of objects
     print('\n\nParsing groups...')

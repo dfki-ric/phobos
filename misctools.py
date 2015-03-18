@@ -292,27 +292,26 @@ class SyncMassesOperator(Operator):
         default="vtc",
         description="Phobos object type")
 
-    writeinertial = BoolProperty(
+    updateinertial = BoolProperty(
         name='robotupdate inertial',
         default=True,
-        description='write mass to inertial'
+        description='update inertials'
     )
 
     def execute(self, context):
         sourcelist = []
         targetlist = []
-        processed = []
+        processed = set()
         links = [obj.name for obj in bpy.context.selected_objects if obj.phobostype == 'link']
         t = dt.now()
-        objdict = {obj.name: obj for obj in bpy.context.selected_objects}
+        objdict = {obj.name: obj for obj in bpy.data.objects if obj.phobostype in ['visual', 'collision']
+                   and obj.parent.name in links}
+        # gather all name bases of objects for which both visual and collision are present
         for obj in objdict.keys():
-            if objdict[obj].phobostype in ['visual', 'collision']:
-                basename = obj.replace(objdict[obj].phobostype + '_', '')
-                if (objdict[obj].parent.name in links
-                    and basename not in processed
-                    and 'visual_' + basename in objdict.keys()
-                    and 'collision_' + basename in objdict.keys()):  # if both partners are present
-                    processed.append(basename)
+            basename = obj.replace(objdict[obj].phobostype + '_', '')
+            if 'visual_' + basename in objdict.keys() and 'collision_' + basename in objdict.keys():
+                processed.add(basename)
+        # fill source and target lists for syncing
         for basename in processed:
             if self.synctype == "vtc":
                 sourcelist.append('visual_' + basename)
@@ -329,26 +328,21 @@ class SyncMassesOperator(Operator):
                 else:
                     targetlist.append('visual_' + basename)
                     sourcelist.append('collision_' + basename)
+        # sync the mass values
         for i in range(len(sourcelist)):
             objdict[targetlist[i]]['mass'] = objdict[sourcelist[i]]['mass']
             objdict[targetlist[i]]['masschanged'] = objdict[sourcelist[i]]['masschanged']
+
         for linkname in links:
             masssum = 0.0
-            collision_children = inertia.getInertiaRelevantObjects(objdict[linkname])
-            for coll in collision_children:
-                masssum += coll['mass']
-            if self.writeinertial:
-                try:
-                    inertial = bpy.data.objects['inertial_' + linkname]
-                    if not 'mass' in inertial or inertial['mass'] != masssum:
-                        inertial['mass'] = masssum
-                        inertial['masschanged'] = t.isoformat()
-                except KeyError:
-                    print("###Warning: no inertial object for link", linkname)
-            else:
-                links[linkname]['mass'] = masssum
-                links[linkname]['masschanged'] = t.isoformat()
-
+            link = bpy.data.objects[linkname]
+            viscols = inertia.getInertiaRelevantObjects(link)
+            for obj in viscols:
+                masssum += obj['mass']
+            link['mass'] = masssum
+            link['masschanged'] = t.isoformat()
+            if self.updateinertial:
+                inertia.createInertials(link)
         return {'FINISHED'}
 
 
@@ -920,52 +914,33 @@ class CreateInertialOperator(Operator):
     bl_label = "Creates inertial objects based on existing objects"
     bl_options = {'REGISTER', 'UNDO'}
 
-    include_children = BoolProperty(
-        name='include_children',
+    auto_compute = BoolProperty(
+        name='calculate automatically',
         default=True,
-        description='use link child objects'
+        description='calculate inertia automatically'
     )
 
-    auto_compute = BoolProperty(
-        name='auto_compute',
-        default=True,
-        description='auto-compute inertia'
+    preserve_children = BoolProperty(
+        name='preserve child inertials',
+        default=False,
+        description='preserve child inertials'
     )
 
     def execute(self, context):
-        links = []
-        viscols = set()
-        for obj in context.selected_objects:
-            if obj.phobostype == 'link':
-                links.append(obj)
-            elif obj.phobostype in ['visual', 'collision']:
-                viscols.add(obj)
-        if self.include_children:
-            for link in links:
-                viscols.update(inertia.getInertiaRelevantObjects(link))  # union?
-        for obj in viscols:
-            if self.auto_compute:
-                mass = obj['mass'] if 'mass' in obj else None
-                geometry = robotdictionary.deriveGeometry(obj)
-                if mass is not None:
-                    inert = inertia.calculateInertia(mass, geometry)
-                    if inert is not None:
-                        inertial = inertia.createInertial(obj)
-                        inertial['mass'] = mass
-                        inertial['inertia'] = inert
-            else:
-                inertia.createInertial(obj)
+        links = [obj for obj in bpy.context.selected_objects if obj.phobostype == 'link']
+        show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
+        if show_progress:
+            wm = bpy.context.window_manager
+            total = float(len(links))
+            wm.progress_begin(0, total)
+            i = 1
         for link in links:
-            if self.auto_compute:
-                mass, com, inert = inertia.fuseInertiaData(utility.getImmediateChildren(link, ['inertial']))
-                if mass and com and inert:
-                    inertial = inertia.createInertial(link)
-                    com_translate = mathutils.Matrix.Translation(com)
-                    inertial.matrix_local = com_translate
-                    inertial['inertial/mass'] = mass
-                    inertial['inertial/inertia'] = inertia.inertiaMatrixToList(inert)
-            else:
-                inertia.createInertial(link)
+            inertia.createInertials(link, not self.auto_compute, self.preserve_children)
+            if show_progress:
+                wm.progress_update(i)
+                i += 1
+        if show_progress:
+            wm.progress_end()
         return {'FINISHED'}
 
 

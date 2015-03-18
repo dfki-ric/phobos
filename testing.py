@@ -27,6 +27,7 @@ Created on 28 Feb 2014
 
 import bpy
 import mathutils
+from . import utility
 import struct
 
 # This is module is a test module to test and understand the data structure of Blender's transforms and to check whether the original
@@ -74,7 +75,7 @@ def writeNode(obj):
         child_rot = obj.matrix_local.to_quaternion()    #output: rotation
 
 def printMatrices(obj):
-    print("Transformation Matrices for object:", obj.name)
+    print("Transformation Matrices for object:", utility.getObjectName(obj))
     print("World", sep)
     print(obj.matrix_world)
     print("Local", sep)
@@ -86,7 +87,7 @@ def printMatrices(obj):
     print("\n\n")
 
 def printRotLoc(obj):
-    print("Location/Rotation for object:", obj.name)
+    print("Location/Rotation for object:", utility.getObjectName(obj))
     print("rotation_euler", sep)
     print(obj.rotation_euler)
     print("rotation_quaternion", sep)
@@ -96,7 +97,7 @@ def printRotLoc(obj):
     print("\n\n")
 
 def printBoundBox(obj):
-    print("Bounding box for object:", obj.name)
+    print("Bounding box for object:", utility.getObjectName(obj))
     for vector in obj.bound_box:
         for value in vector:
             print(value, end="")
