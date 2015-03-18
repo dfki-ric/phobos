@@ -393,6 +393,13 @@ class DefineJointConstraintsOperator(Operator):
             layout.prop(self, "upper", text="upper")
 
 
+    def invoke(self, context, event):
+        aObject = context.active_object
+        if 'joint/type' not in aObject and 'motor/type' in aObject:
+            self.maxvelocity = aObject['motor/maxSpeed']
+            self.maxeffort = aObject['motor/maxEffort']
+        return self.execute(context)
+
     def execute(self, context):
         """This function executes this operator and sets the constraints and joint type for all selected links.
         rad/s is the default unit. rpm will be transformed into rad/s
@@ -471,6 +478,13 @@ class AttachMotorOperator(Operator):
         default='PID',
         description="type of the motor",
         items=defs.motortypes)
+
+    def invoke(self, context, event):
+        aObject = context.active_object
+        if 'motor/type' not in aObject and 'joint/type' in aObject and aObject['joint/type'] != 'fixed':
+            self.taumax = aObject['joint/maxeffort']
+            self.vmax = aObject['joint/maxvelocity']
+        return self.execute(context)
 
     def execute(self, context):
         """This function executes this operator and attaches a motor to all selected links.
