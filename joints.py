@@ -346,10 +346,10 @@ class DefineJointConstraintsOperator(Operator):
         description='makes the joint passive (no actuation)'
     )
 
-    degrees = BoolProperty(
-        name='degrees',
-        default=False,
-        description='use degrees or rad for revolute joints'
+    useRadian = BoolProperty(
+        name='useRadian',
+        default=True,
+        description='use degrees or rad for joints'
     )
 
     joint_type = EnumProperty(
@@ -374,31 +374,63 @@ class DefineJointConstraintsOperator(Operator):
         description="maximum effort of the joint")
 
     maxvelocity = FloatProperty(
-        name="max velocity (m/s or rad/s",
+        name="max velocity (m/s or rad/s)",
         default=0.0,
-        description="maximum velocity of the joint")
+        description="maximum velocity of the joint. If you uncheck radian, you can enter °/sec here")
 
     # TODO: invoke function to read all values in
 
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "joint_type", text="joint_type")
+        layout.prop(self, "passive", text="makes the joint passive (no actuation)")
+        layout.prop(self, "useRadian", text="use radian")
+        if self.joint_type != 'fixed':
+            layout.prop(self, "maxeffort", text="max effort (N or Nm)")
+            layout.prop(self, "maxvelocity", text="max velocity (m/s or rad/s")
+        if self.joint_type in ('revolute', 'prismatic'):
+            layout.prop(self, "lower", text="lower")
+            layout.prop(self, "upper", text="upper")
+
+
+    def invoke(self, context, event):
+        aObject = context.active_object
+        if 'joint/type' not in aObject and 'motor/type' in aObject:
+            self.maxvelocity = aObject['motor/maxSpeed']
+            self.maxeffort = aObject['motor/maxEffort']
+        return self.execute(context)
+
     def execute(self, context):
         """This function executes this operator and sets the constraints and joint type for all selected links.
+        rad/s is the default unit. rpm will be transformed into rad/s
 
         :param context: The blender context this operator works with.
         :return: Blender result.
 
         """
-        if self.degrees:
-            lower = math.radians(self.lower)
-            upper = math.radians(self.upper)
+        lower=0
+        upper=0
+        velocity=0
+        if self.joint_type in ('revolute', 'prismatic'):
+            if not self.useRadian:
+                lower = math.radians(self.lower)
+                upper = math.radians(self.upper)
+            else:
+                lower = self.lower
+                upper = self.upper
+        if not self.useRadian:
+            velocity = self.maxvelocity * ((2*math.pi) / 360) # from °/s to rad/s
         else:
-            lower = self.lower
-            upper = self.upper
+            velocity = self.maxvelocity
         for link in context.selected_objects:
             bpy.context.scene.objects.active = link
             setJointConstraints(link, self.joint_type, lower, upper)
             if self.joint_type != 'fixed':
                 link['joint/maxeffort'] = self.maxeffort
-                link['joint/maxvelocity'] = self.maxvelocity
+                link['joint/maxvelocity'] = velocity
+            else:
+                if "joint/maxeffort" in link: del link["joint/maxeffort"]
+                if "joint/maxvelocity" in link: del link["joint/maxvelocity"]
             if self.passive:
                 link['joint/passive'] = "$true"
             else:
@@ -432,7 +464,7 @@ class AttachMotorOperator(Operator):
         description="D-value")
 
     vmax = FloatProperty(
-        name="maximum velocity [rpm]",
+        name="maximum velocity [m/s] or [rad/s]",
         default=1.0,
         description="maximum turning velocity of the motor")
 
@@ -446,6 +478,23 @@ class AttachMotorOperator(Operator):
         default='PID',
         description="type of the motor",
         items=defs.motortypes)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "motortype", text="motor_type")
+        layout.prop(self, "taumax", text="maximum torque [Nm]")
+        layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
+        if self.motortype == 'PID':
+            layout.prop(self, "P", text="P")
+            layout.prop(self, "I", text="I")
+            layout.prop(self, "D", text="D")
+
+    def invoke(self, context, event):
+        aObject = context.active_object
+        if 'motor/type' not in aObject and 'joint/type' in aObject and aObject['joint/type'] != 'fixed':
+            self.taumax = aObject['joint/maxeffort']
+            self.vmax = aObject['joint/maxvelocity']
+        return self.execute(context)
 
     def execute(self, context):
         """This function executes this operator and attaches a motor to all selected links.
@@ -461,7 +510,7 @@ class AttachMotorOperator(Operator):
                     joint['motor/p'] = self.P
                     joint['motor/i'] = self.I
                     joint['motor/d'] = self.D
-                joint['motor/maxSpeed'] = self.vmax*2*math.pi
+                joint['motor/maxSpeed'] = self.vmax
                 joint['motor/maxEffort'] = self.taumax
                 #joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
                 joint['motor/type'] = self.motortype
