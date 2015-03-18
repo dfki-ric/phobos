@@ -2,3 +2,5 @@ installconfig.txt
 yamlpath.conf
 .idea/*
 phobos.wiki/
+/.project
+/.pydevproject
