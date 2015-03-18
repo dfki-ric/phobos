@@ -322,7 +322,7 @@ class SyncMassesOperator(Operator):
             else:  # latest to oldest
                 tv = utility.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
                 tc = utility.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
-                if tc < tv:  # if collision information is older than visual information
+                if tc < tv:  #if collision information is older than visual information
                     sourcelist.append('visual_' + basename)
                     targetlist.append('collision_' + basename)
                 else:
