@@ -199,17 +199,30 @@ def exportObj(path, obj):
     :return: Nothing.
 
     """
+    
+    mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW') # Test by Jan Paul
+    
     objname = getObjectName(obj)
     oldBlenderObjName = obj.name
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
+    
     tmpobject.data = obj.data  # copy the mesh here
+    
+    #tmpobject = obj.modifiers
+    tmpobject.data = mesh # Test by Jan Paul
+    
+    bpy.ops.object.select_all(action='DESELECT')
+    tmpobject.select=True
     outpath = determineMeshOutpath(obj, objname, 'obj', path)
     bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
-    bpy.ops.object.delete()
+    bpy.ops.object.delete() # Jan Paul: currently, if this object is deleted and there are more than one robot in the scene, an error occurs
     obj.name = oldBlenderObjName
+    
+    bpy.ops.object.select_all(action='DESELECT')
+    #obj.select=True
 
     #This is the old implementation which did not work properly (08.08.2014)
     #bpy.ops.object.select_all(action='DESELECT')
