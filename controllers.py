@@ -27,10 +27,10 @@ Created on 30 Jan 2014
 
 import bpy
 from bpy.types import Operator
-from bpy.props import StringProperty, BoolProperty, FloatProperty
+from bpy.props import StringProperty, BoolProperty, FloatProperty, CollectionProperty, IntProperty
 from . import defs
 from . import utility
-from . import logging as pl
+from phobos import logging as pl
 
 
 def register():
@@ -39,6 +39,16 @@ def register():
 
 def unregister():
     print("Unregistering controllers...")
+
+sensors = []
+motors = []
+
+
+class ListItem(bpy.types.PropertyGroup):
+    """
+    """
+    name = StringProperty(name='name')
+    value = IntProperty(default=0)
 
 
 class AddControllerOperator(Operator):
@@ -62,8 +72,20 @@ class AddControllerOperator(Operator):
         default = 10,
         description = "rate of the controller [Hz]")
 
+    #controller_sensors = CollectionProperty(
+    #    name='sensors',
+    #    type=ListItem,
+    #    description='list of sensors')
+
+    #controller_motors = CollectionProperty(
+    #    name='motors',
+    #    type=ListProperty,
+    #    description='list of motors')
+
     def execute(self, context):
-        pl.logger.startLog(self)
+        #pl.logger.startLog(self)
+        global sensors
+        global motors
         location = bpy.context.scene.cursor_location
         objects = []
         controllers = []
@@ -73,22 +95,22 @@ class AddControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            utility.createPrimitive("controller", "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
+            utility.createPrimitive(self.name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
             bpy.context.scene.objects.active.phobostype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
         #empty index list so enable robotupdate of controller
         for ctrl in controllers:
-            sensors = [obj.name for obj in objects if obj.phobostype == 'sensor']
-            joints = [obj.name for obj in objects if obj.phobostype == 'link' and not 'joint/passive' in obj]
+            #sensors = [obj.name for obj in objects if obj.phobostype == 'sensor']
+            #joints = [obj.name for obj in objects if obj.phobostype == 'link' and not 'joint/passive' in obj]
             ctrl['controller/sensors'] = sorted(sensors, key=str.lower)
-            ctrl['controller/motors'] = sorted(joints, key=str.lower)
+            ctrl['controller/motors'] = sorted(motors, key=str.lower)
             ctrl['controller/rate'] = self.controller_rate
         print("Added joints/motors to (new) controller(s).")
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        pl.logger.endLog()
+        #pl.logger.endLog()
         return {'FINISHED'}
 
 
@@ -135,3 +157,15 @@ class AddLegacyControllerOperator(Operator):
         #        ctrl[prop] = defs.controllerProperties[prop]
         pl.logger.endLog()
         return {'FINISHED'}
+
+
+
+def addController(controller):
+    """
+    """
+    global sensors
+    global motors
+    sensors = controller['sensors']
+    motors = controller['motors']
+    bpy.ops.object.phobos_add_controller(controller_name=controller['name'],
+                                         controller_rate=controller['rate'])

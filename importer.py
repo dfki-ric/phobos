@@ -28,6 +28,7 @@ Created on 28 Feb 2014
 import bpy
 import mathutils
 import os
+#from utility import selectObjects
 import yaml
 from collections import namedtuple
 import xml.etree.ElementTree as ET
@@ -628,6 +629,7 @@ class RobotModelParser():
         except KeyError:
             lower = 0.0
             upper = 0.0
+        print(joint)
         joints.setJointConstraints(link, joint['type'], lower, upper)
         for prop in joint:
             if prop.startswith('$'):
@@ -635,17 +637,31 @@ class RobotModelParser():
                     link['joint/'+prop[1:]+'/'+tag] = joint[prop][tag]
 
     def createMotor(self, motor):
-        try:
-            joint = bpy.data.objects[motor['joint']]
-            for prop in motor:
-                if prop != 'joint':
-                    if not prop.startswith('$'):
-                        joint['motor/'+prop] = motor[prop]
-                    else:
-                        for tag in motor[prop]:
-                            joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
-        except KeyError:
-            pass #log("Joint " + motor['joint'] + " does not exist", "ERROR")
+        #try:
+        link = bpy.data.objects[self.robot['joints'][motor['joint']]['child']]
+        selectObjects([link])
+        motor_type = motor['type']
+        if motor_type == 'PID':
+            print(motor)
+            bpy.ops.object.attach_motor(motortype=motor_type,
+                                        vmax=motor['velocity'],
+                                        taumax=motor['effort'],
+                                        P=motor['p'],
+                                        I=motor['i'],
+                                        D=motor['d'])
+        elif motor_type == 'DC':
+            bpy.ops.object.attach_motor(motortype=motor_type,
+                                        vmax=motor['velocity'],
+                                        taumax=motor['effort'])
+            #for prop in motor:
+            #    if prop != 'joint':
+            #        if not prop.startswith('$'):
+            #            joint['motor/'+prop] = motor[prop]
+            #        else:
+            #            for tag in motor[prop]:
+            #                joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
+        #except KeyError:
+            #print("Joint " + motor['joint'] + " does not exist", "ERROR")
 
     def createSensor(self, sensor):
         if 'link' in sensor:
@@ -665,7 +681,7 @@ class RobotModelParser():
         sensors.createSensor(sensor, reference)
 
     def createController(self, controller):
-        pass
+        controllers.addController(controller)
 
     def createGroup(self, group):
         pass
@@ -788,6 +804,7 @@ class MARSModelParser(RobotModelParser):
         self.link_index_dict = {}
         self.joint_index_dict = {}
         self.motor_index_dict = {}
+        self.sensor_index_dict = {}
         self.link_groups_group_order = {}
         self.link_groups_link_order = {}
         self.link_indices = set([])
@@ -801,6 +818,7 @@ class MARSModelParser(RobotModelParser):
         self.robot_states = {}
         self.joint_info = {}
         self.parent_joint_dict = {}
+        self.controller_counter = 1
 
     def parseModel(self):
         '''
@@ -871,7 +889,8 @@ class MARSModelParser(RobotModelParser):
             joint = self.joint_info[joint_name]
             joint_dict = {}
             for info in ['name', 'type', 'angle_offset', 'axis1', 'limits']:
-                joint_dict[info] = joint[info]
+                if info in joint:
+                    joint_dict[info] = joint[info]
             joint_dict['parent'] = self.link_index_dict[joint['parent_index']]
             joint_dict['child'] = self.link_index_dict[joint['child_index']]
             joints_dict[joint_name] = joint_dict
@@ -1228,9 +1247,9 @@ class MARSModelParser(RobotModelParser):
                     limit_dict['upper'] = upper_limit
                 if lower_limit:
                     limit_dict['lower'] = lower_limit
+                joint_dict['limits'] = limit_dict
             else:
                 has_limits = False
-            joint_dict['limits'] = limit_dict
 
             joint_dict['type'] = get_phobos_joint_name(mars_type, has_limits)
 
@@ -1348,6 +1367,8 @@ class MARSModelParser(RobotModelParser):
             sensor_dict = {}
             name = sensor.get('name')
             sensor_dict['name'] = name
+            index = int(sensor.find('index').text)
+            self.sensor_index_dict[index] = name
 
             xml_rate = sensor.find('rate')
             if xml_rate is not None:
@@ -1392,17 +1413,19 @@ class MARSModelParser(RobotModelParser):
             joint_index = int(motor.find('jointIndex').text)
             joint_name = self.joint_index_dict[joint_index]
             motor_dict['joint'] = joint_name
-            max_velocity = float(motor.find('maximumVelocity').text)
-            max_effort = float(motor.find('motorMaxForce').text)
-            joint = self.robot['joints'][joint_name]
-            joint['limits']['velocity'] = max_velocity
-            joint['limits']['effort'] = max_effort
+            #joint = self.robot['joints'][joint_name]
+            #joint['limits']['velocity'] = max_velocity
+            #joint['limits']['effort'] = max_effort
+            motor_dict['velocity'] = float(motor.find('maximumVelocity').text)
+            motor_dict['effort'] = float(motor.find('motorMaxForce').text)
 
-            type_num = int(joint.find('type').text)
+            type_num = int(motor.find('type').text)
             if type_num == 1:
-                motor_dict['type'] = 'servo'
+                motor_dict['type'] = 'PID'
+                for value in ['p', 'i', 'd']:
+                    motor_dict[value] = float(motor.find(value).text)
             elif type_num == 2:
-                motor_dict['type'] = 'electric_motor'
+                motor_dict['type'] = 'DC'
 
             self.motor_index_dict[int(motor.find('index').text)] = name
 
@@ -1412,13 +1435,25 @@ class MARSModelParser(RobotModelParser):
     
     def _parse_controllers(self, controllers):
         '''
-        don't know yet what controllers look like
         '''
         controllers_dict = {}
         if controllers:
             for controller in controllers:
                 controller_dict = {}
-                name = controller.get('name')
+                name = 'controller_%i'%self.controller_counter   #controller.get('name')
+                self.controller_counter += 1
+                controller_dict['name'] = name
+                controller_dict['rate'] = float(controller.find('rate').text)
+                sensor_list = []
+                for id in controller.findall('sensorid'):
+                    sensor_list.append(self.sensor_index_dict[int(id.text)])
+                if sensor_list != []:
+                    controller_dict['sensors'] = sensor_list
+                motor_list = []
+                for id in controller.findall('motorid'):
+                    motor_list.append(self.motor_index_dict[int(id.text)])
+                if motor_list != []:
+                    controller_dict['motors'] = motor_list
 
                 controllers_dict[name] = controller_dict
 

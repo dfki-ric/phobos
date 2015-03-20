@@ -154,8 +154,8 @@ def assignMaterial(obj, materialname):
         if materialname in defs.defaultmaterials:
             materials.createPhobosMaterials()
         else:
-            #print("###ERROR: material to be assigned does not exist.")
-            pl.logger.log("Material to be assigned does not exist.", "ERROR")
+            print("###ERROR: material to be assigned does not exist.")
+            #pl.logger.log("Material to be assigned does not exist.", "ERROR")
             return None
     obj.data.materials.append(bpy.data.materials[materialname])
     if bpy.data.materials[materialname].use_transparency:
