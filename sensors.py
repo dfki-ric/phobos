@@ -43,22 +43,6 @@ def register():
 def unregister():
     print("Unregistering sensors...")
 
-def lockRotPos(object, origin):
-    utility.selectObjects([object], clear=True, active=0)
-    bpy.ops.object.constraint_add(type='COPY_TRANSFORMS')
-    object.constraints["Copy Transforms"].target = origin
-
-    bpy.ops.object.constraint_add(type='LIMIT_ROTATION')
-    object.constraints["Limit Rotation"].use_limit_x = True
-    object.constraints["Limit Rotation"].use_limit_y = True
-    object.constraints["Limit Rotation"].use_limit_z = True
-    object.constraints["Limit Rotation"].min_y = object.rotation_euler[1]-1.5708
-    object.constraints["Limit Rotation"].max_y = object.rotation_euler[1]-1.5708
-    object.constraints["Limit Rotation"].min_z = object.rotation_euler[2]+1.5708
-    object.constraints["Limit Rotation"].max_z = object.rotation_euler[2]+1.5708
-    object.constraints["Limit Rotation"].owner_space = 'LOCAL'
-
-
 
 def createSensor(sensor, reference, origin):
     utility.toggleLayer(defs.layerTypes['sensor'], value=True)
