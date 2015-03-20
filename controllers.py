@@ -95,9 +95,9 @@ class AddControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            utility.createPrimitive(self.name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
+            utility.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
             bpy.context.scene.objects.active.phobostype = "controller"
-            bpy.context.scene.objects.active.name = "controller"
+            bpy.context.scene.objects.active.name = self.controller_name
             controllers.append(bpy.context.scene.objects.active)
         #empty index list so enable robotupdate of controller
         for ctrl in controllers:
