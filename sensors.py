@@ -43,6 +43,22 @@ def register():
 def unregister():
     print("Unregistering sensors...")
 
+def lockRotPos(object, origin):
+    utility.selectObjects([object], clear=True, active=0)
+    bpy.ops.object.constraint_add(type='COPY_TRANSFORMS')
+    object.constraints["Copy Transforms"].target = origin
+
+    bpy.ops.object.constraint_add(type='LIMIT_ROTATION')
+    object.constraints["Limit Rotation"].use_limit_x = True
+    object.constraints["Limit Rotation"].use_limit_y = True
+    object.constraints["Limit Rotation"].use_limit_z = True
+    object.constraints["Limit Rotation"].min_y = object.rotation_euler[1]-1.5708
+    object.constraints["Limit Rotation"].max_y = object.rotation_euler[1]-1.5708
+    object.constraints["Limit Rotation"].min_z = object.rotation_euler[2]+1.5708
+    object.constraints["Limit Rotation"].max_z = object.rotation_euler[2]+1.5708
+    object.constraints["Limit Rotation"].owner_space = 'LOCAL'
+
+
 
 def createSensor(sensor, reference, origin):
     utility.toggleLayer(defs.layerTypes['sensor'], value=True)
@@ -191,9 +207,12 @@ class AddSensorOperator(Operator):
         # type-specific settings
         if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
                               'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            sensorObj = createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
             if self.add_link:
                 link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(), name='link_'+self.sensor_name)
+                sensorObj = createSensor(sensor, link.name, link.matrix_world)
+            else:
+                sensorObj = createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
+            if self.add_link:
                 utility.selectObjects([parent, link], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
                 utility.selectObjects([link, sensorObj], clear=True, active=0)
