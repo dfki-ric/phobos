@@ -219,10 +219,11 @@ def exportObj(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete() # Jan Paul: currently, if this object is deleted and there are more than one robot in the scene, an error occurs
+                            # probably an outer loop that does not like index changes that could happen when objects are created and deleted temporarily
     obj.name = oldBlenderObjName
     
-    bpy.ops.object.select_all(action='DESELECT')
-    #obj.select=True
+    #bpy.ops.object.select_all(action='DESELECT')
+    obj.select=True
 
     #This is the old implementation which did not work properly (08.08.2014)
     #bpy.ops.object.select_all(action='DESELECT')
