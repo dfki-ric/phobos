@@ -42,6 +42,7 @@ from phobos.utility import *
 from . import marssceneexport as mse
 from . import robotdictionary
 from . import defs
+from builtins import True
 
 
 def register():
@@ -200,6 +201,17 @@ def exportObj(path, obj):
 
     """
     
+    print("Exporting Object <" + (obj.name) + "> ...")
+    
+    #bpy.ops.object.select_all(action='DESELECT')
+    #obj.select = True
+    #if bpy.ops.object.convert.poll():
+    #    bpy.ops.object.convert(target='MESH')
+    
+    #for mod in obj.modifiers:
+    #    print (" applying modifier <" + mod.name + ">")
+    #    bpy.ops.object.modifier_apply(modifier = mod.name)
+    
     mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW') # Test by Jan Paul
     
     objname = getObjectName(obj)
@@ -212,12 +224,22 @@ def exportObj(path, obj):
     
     #bpy.ops.object.select_all(action='DESELECT')
     #tmpobject.select=True
+    
+    bpy.ops.object.select_all(action='DESELECT')
+    obj.select=True
+    
     outpath = determineMeshOutpath(obj, objname, 'obj', path)
-    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
+    
+    #print(" Updating Scene ...")
+    #bpy.types.Scene(bpy.data.scenes[0]).update()
+    print(" Calling export_scene ...")
+    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False, use_mesh_modifiers=False, use_triangles=True)
+    print(" Done export_scene ...")
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
-    bpy.ops.object.delete() # Jan Paul: currently, if this object is deleted and there are more than one robot in the scene, an error occurs
-                            # probably an outer loop that does not like index changes that could happen when objects are created and deleted temporarily
+    print(" Deleting temp object ...")
+    bpy.ops.object.delete()
+    print(" Deleted temp object ...")
     obj.name = oldBlenderObjName
     
     #bpy.ops.object.select_all(action='DESELECT')
