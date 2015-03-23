@@ -44,6 +44,23 @@ def unregister():
     print("Unregistering sensors...")
 
 
+def cameraRotLock(object):
+    utility.selectObjects([object], active=0)
+    bpy.ops.transform.rotate(value=-1.5708, axis=(-1, -1.97559e-27, 6.71544e-07), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+    bpy.ops.transform.rotate(value=1.5708, axis=(7.54979e-08, -1, -6.39758e-07), constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+    bpy.ops.object.constraint_add(type='LIMIT_ROTATION')
+    object.constraints["Limit Rotation"].use_limit_x = True
+    object.constraints["Limit Rotation"].use_limit_y = True
+    object.constraints["Limit Rotation"].use_limit_z = True
+    object.constraints["Limit Rotation"].min_x = object.rotation_euler[0]
+    object.constraints["Limit Rotation"].max_x = object.rotation_euler[0]
+    object.constraints["Limit Rotation"].min_y = object.rotation_euler[1]
+    object.constraints["Limit Rotation"].max_y = object.rotation_euler[1]
+    object.constraints["Limit Rotation"].min_z = object.rotation_euler[2]
+    object.constraints["Limit Rotation"].max_z = object.rotation_euler[2]
+
+
+
 def createSensor(sensor, reference, origin):
     utility.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object
@@ -191,13 +208,17 @@ class AddSensorOperator(Operator):
         # type-specific settings
         if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
                               'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            sensorObj = createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
             if self.add_link:
                 link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(), name='link_'+self.sensor_name)
+                sensorObj = createSensor(sensor, link.name, link.matrix_world)
+            else:
+                sensorObj = createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
+            if self.add_link:
                 utility.selectObjects([parent, link], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
                 utility.selectObjects([link, sensorObj], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            cameraRotLock(sensorObj)
         elif sensor['type'] in ['Joint6DOF']:
             createSensor(sensor, context.active_object, context.active_object.matrix_world)
         elif 'Node' in sensor['type']:
