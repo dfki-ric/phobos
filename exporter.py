@@ -207,13 +207,11 @@ def exportObj(path, obj):
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
     
-    tmpobject.data = obj.data  # copy the mesh here
+    #tmpobject.data = obj.data  # copy the mesh here # Jan Paul: then, modifiers and their results are missing
+    tmpobject.data = mesh # Alternative to above command by Jan Paul
     
-    #tmpobject = obj.modifiers
-    tmpobject.data = mesh # Test by Jan Paul
-    
-    bpy.ops.object.select_all(action='DESELECT')
-    tmpobject.select=True
+    #bpy.ops.object.select_all(action='DESELECT')
+    #tmpobject.select=True
     outpath = determineMeshOutpath(obj, objname, 'obj', path)
     bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
     bpy.ops.object.select_all(action='DESELECT')
@@ -223,7 +221,7 @@ def exportObj(path, obj):
     obj.name = oldBlenderObjName
     
     #bpy.ops.object.select_all(action='DESELECT')
-    obj.select=True
+    #obj.select=True
 
     #This is the old implementation which did not work properly (08.08.2014)
     #bpy.ops.object.select_all(action='DESELECT')
