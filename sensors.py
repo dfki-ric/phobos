@@ -46,8 +46,8 @@ def unregister():
 
 def cameraRotLock(object):
     utility.selectObjects([object], active=0)
-    bpy.ops.transform.rotate(value=-1.5708, axis=(-1, -1.97559e-27, 6.71544e-07), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-    bpy.ops.transform.rotate(value=1.5708, axis=(7.54979e-08, -1, -6.39758e-07), constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+    bpy.ops.transform.rotate(value=-1.5708, axis=(-1, 0, 0), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+    bpy.ops.transform.rotate(value=1.5708, axis=(0, -1, 0), constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     bpy.ops.object.constraint_add(type='LIMIT_ROTATION')
     object.constraints["Limit Rotation"].use_limit_x = True
     object.constraints["Limit Rotation"].use_limit_y = True
