@@ -55,6 +55,7 @@ def register():
     bpy.types.World.linkLayer = IntProperty(name="link", update=manageLayers)
 
     bpy.types.World.path = StringProperty(name='path', default='.', update=updateExportPath)
+    bpy.types.World.meshpath = StringProperty(name="meshpath", default="meshes/")
     bpy.types.World.decimalPlaces = IntProperty(name="decimalPlaces",
                                                 description="number of decimal places to export",
                                                 default=6)
@@ -370,6 +371,7 @@ class PhobosExportPanel(bpy.types.Panel):
         #export robot model options
         self.layout.label(text="General")
         self.layout.prop(bpy.data.worlds[0], "path")
+        self.layout.prop(bpy.data.worlds[0], "meshpath")
         ginlayout = self.layout.split()
         g1 = ginlayout.column(align=True)
         g1.prop(bpy.data.worlds[0], "relativePath")
