@@ -929,7 +929,6 @@ def export(path=''):
             exportModelToSMURF(robot, outpath)
         elif urdf:
             exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
-    selectObjects(objectlist, True)  # FIXME: does this make sense, as it is already the list of selected objects?
     if meshexp:
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
         if show_progress:
@@ -937,7 +936,7 @@ def export(path=''):
             total = float(len(objectlist))
             wm.progress_begin(0, total)
             i = 1
-        for obj in bpy.context.selected_objects:
+        for obj in objectlist:
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
                 and obj['geometry/type'] == 'mesh' and 'filename' not in obj and 'geometry/'+defs.reservedProperties['SHAREDMESH'] not in obj):
                 if objexp:
