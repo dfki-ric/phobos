@@ -904,6 +904,7 @@ def export(path=''):
         outpath = path
     if not outpath.endswith(os.path.sep):
         outpath += os.path.sep
+    meshoutpath = securepath(os.path.join(outpath, bpy.data.worlds[0].meshpath))
     yaml = bpy.data.worlds[0].exportYAML
     urdf = bpy.data.worlds[0].exportURDF
     srdf = bpy.data.worlds[0].exportSRDF
@@ -940,13 +941,13 @@ def export(path=''):
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
                 and obj['geometry/type'] == 'mesh' and 'filename' not in obj and 'geometry/'+defs.reservedProperties['SHAREDMESH'] not in obj):
                 if objexp:
-                    exportObj(outpath, obj)
+                    exportObj(meshoutpath, obj)
                 if bobjexp:
-                    exportBobj(outpath, obj)
+                    exportBobj(meshoutpath, obj)
                 if stlexp:
-                    exportStl(outpath, obj)
+                    exportStl(meshoutpath, obj)
                 if daeexp:
-                    exportDae(outpath, obj)
+                    exportDae(meshoutpath, obj)
             if show_progress:
                 wm.progress_update(i)
                 i += 1
