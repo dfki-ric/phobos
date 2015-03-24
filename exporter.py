@@ -212,6 +212,7 @@ def exportObj(path, obj):
     #    bpy.ops.object.modifier_apply(modifier = mod.name)
     
     mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW', True) # Test by Jan Paul
+    #obj.to_mesh(scene, apply_modifiers, settings, calc_tessface)
     
     objname = getObjectName(obj)
     oldBlenderObjName = obj.name
@@ -221,20 +222,20 @@ def exportObj(path, obj):
     #tmpobject.data = obj.data  # copy the mesh here # Jan Paul: then, modifiers and their results are missing
     tmpobject.data = mesh # Alternative to above command by Jan Paul
     
-    #bpy.ops.object.select_all(action='DESELECT')
-    #tmpobject.select=True
-    
     bpy.ops.object.select_all(action='DESELECT')
-    obj.select=True
+    tmpobject.select=True
+    
+    #bpy.ops.object.select_all(action='DESELECT')
+    #obj.select=True
     
     outpath = determineMeshOutpath(obj, objname, 'obj', path)
     
     #print(" Updating Scene ...")
     #bpy.types.Scene(bpy.data.scenes[0]).update()
     print(" Calling export_scene ...")
-    for i in range (1 , 200):
-        #bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False, use_mesh_modifiers=False, use_triangles=True)
-        bpy.ops.export_scene.obj(check_existing=False, filepath=outpath, filter_glob="*.obj;*.mtl", use_selection=True, use_animation=False, use_mesh_modifiers=False, use_edges=False, use_normals=False, use_uvs=False, use_materials=False, use_triangles=True, use_nurbs=False, use_vertex_groups=True, use_blen_objects=False, group_by_object=False, group_by_material=False, keep_vertex_order=True, global_scale=1.0, axis_forward='-Z', axis_up='Y', path_mode='AUTO')
+    #for i in range (1 , 200):
+    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False, use_mesh_modifiers=False)
+    #bpy.ops.export_scene.obj(check_existing=False, filepath=outpath, filter_glob="*.obj;*.mtl", use_selection=True, use_animation=False, use_mesh_modifiers=False, use_edges=False, use_normals=False, use_uvs=True, use_materials=False, use_triangles=True, use_nurbs=False, use_vertex_groups=True, use_blen_objects=False, group_by_object=False, group_by_material=False, keep_vertex_order=True, global_scale=1.0, axis_forward='-Z', axis_up='Y', path_mode='AUTO')
     print(" Done export_scene ...")
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
