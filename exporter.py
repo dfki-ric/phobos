@@ -499,7 +499,7 @@ def exportModelToURDF(model, filepath):
                 output.append(indent * 3 + '</collision>\n')
         output.append(indent * 2 + '</link>\n\n')
     #export joint information
-    missing_maxeffort = False
+    missing_values = False
     for j in model['joints']:
         joint = model['joints'][j]
         output.append(indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n')
@@ -511,14 +511,19 @@ def exportModelToURDF(model, filepath):
         if 'axis' in joint:
             output.append(indent * 3 + '<axis xyz="' + l2str(joint['axis']) + '"/>\n')
         if 'limits' in joint:
-            if 'effort' not in joint['limits']:
-                print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum effort!###")
-                missing_maxeffort = True
+            for limit_value in ['effort', 'velocity']:
+                if limit_value not in joint['limits']:
+                    print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
+                    missing_values = True
             output.append(
                 xmlline(3, 'limit', [p for p in joint['limits']], [joint['limits'][p] for p in joint['limits']]))
+        elif joint['type'] in ['revolute', 'prismatic']:
+            print("\n###WARNING: joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!###\n")
+            missing_values = True
         output.append(indent * 2 + '</joint>\n\n')
     #export material information
-    print("\n###WARNING: Created URDF is invalid due to missing values!###")
+    if missing_values:
+        print("\n###WARNING: Created URDF is invalid due to missing values!###")
     for m in model['materials']:
         if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
             output.append(indent * 2 + '<material name="' + m + '">\n')
