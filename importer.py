@@ -718,7 +718,7 @@ class RobotModelParser():
         selectObjects([link])
         motor_type = motor['type']
         if motor_type == 'PID':
-            print(motor)
+            #print(motor)
             bpy.ops.object.attach_motor(motortype=motor_type,
                                         vmax=motor['velocity'],
                                         taumax=motor['effort'],

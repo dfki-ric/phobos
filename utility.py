@@ -324,6 +324,7 @@ def epsilonToZero(data, epsilon, decimals):
     elif type(data) is list:
         return [epsilonToZero(a, epsilon, decimals) for a in data]
     elif type(data) is dict:
+        print(data)
         return {key: epsilonToZero(value, epsilon, decimals) for key, value in data.items()}
     else:  # any other type, such as string
         return data

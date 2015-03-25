@@ -78,7 +78,7 @@ class AddControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            utility.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
+            utility.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "phobos_controller", location)
             bpy.context.scene.objects.active.phobostype = "controller"
             bpy.context.scene.objects.active.name = self.controller_name
             controllers.append(bpy.context.scene.objects.active)
@@ -91,7 +91,7 @@ class AddControllerOperator(Operator):
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        pl.logger.endLog()
+        pl.endLog()
         return {'FINISHED'}
 
 
@@ -107,7 +107,7 @@ class AddLegacyControllerOperator(Operator):
         description = "scale of the controller visualization")
 
     def execute(self, context):
-        pl.logger.startLog(self)
+        pl.startLog(self)
         location = bpy.context.scene.cursor_location
         objects = []
         controllers = []
@@ -126,17 +126,17 @@ class AddLegacyControllerOperator(Operator):
             for key in ctrl.keys():
                 if key.find("index") >= 0:
                     del ctrl[key]
-                    pl.logger.log("Deleting " + str(key) + " in " + ctrl.name, "INFO")
+                    pl.log("Deleting " + str(key) + " in " + ctrl.name, "INFO")
             i = 1
             for obj in objects:
                 if obj.phobostype == "link":
                     ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = getObjectName(obj)
                     i += 1
-        pl.logger.log("Added joints to (new) controller(s).", "INFO")
+        pl.log("Added joints to (new) controller(s).", "INFO")
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        pl.logger.endLog()
+        pl.endLog()
         return {'FINISHED'}
 
 
