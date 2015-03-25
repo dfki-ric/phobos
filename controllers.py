@@ -1,12 +1,6 @@
 #!/usr/bin/python
 
 """
-..module:: phobos.controllers
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-..moduleauthor:: Kai von Szadowski
-
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -27,6 +21,8 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 File controllers.py
 
 Created on 30 Jan 2014
+
+@author: Kai von Szadkowski
 """
 
 import bpy
@@ -34,33 +30,22 @@ from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatProperty
 from . import defs
 from . import utility
-from phobos.logging import *
+from . import logging as pl
 
 
 def register():
-    """This function registers this module.
-    At the moment it does nothing.
-
-    :return: Nothing
-
-    """
     print("Registering controllers...")
 
 
 def unregister():
-    """This function unregisters this module.
-    At the moment it does nothing.
-
-    :return: Nothing
-
-    """
     print("Unregistering controllers...")
+
+sensors = []
+motors = []
 
 
 class AddControllerOperator(Operator):
-    """This operator adds a node-dependent controller to the robot.
-
-    """
+    """AddControllerOperator"""
     bl_idname = "object.phobos_add_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
@@ -81,13 +66,9 @@ class AddControllerOperator(Operator):
         description = "rate of the controller [Hz]")
 
     def execute(self, context):
-        """This function executes this blender operator and adds a controller to the robot.
-
-        :param context: The blender context this operator should work with.
-        :return: set -- the blender specific return set.
-
-        """
-        startLog(self)
+        pl.startLog(self)
+        global sensors
+        global motors
         location = bpy.context.scene.cursor_location
         objects = []
         controllers = []
@@ -97,29 +78,25 @@ class AddControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            utility.createPrimitive("controller", "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
+            utility.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
             bpy.context.scene.objects.active.phobostype = "controller"
-            bpy.context.scene.objects.active.name = "controller"
+            bpy.context.scene.objects.active.name = self.controller_name
             controllers.append(bpy.context.scene.objects.active)
         #empty index list so enable robotupdate of controller
         for ctrl in controllers:
-            sensors = [getObjectName(obj) for obj in objects if obj.phobostype == 'sensor']
-            joints = [getObjectName(obj) for obj in objects if obj.phobostype == 'link' and not 'joint/passive' in obj]
             ctrl['controller/sensors'] = sorted(sensors, key=str.lower)
-            ctrl['controller/motors'] = sorted(joints, key=str.lower)
+            ctrl['controller/motors'] = sorted(motors, key=str.lower)
             ctrl['controller/rate'] = self.controller_rate
         print("Added joints/motors to (new) controller(s).")
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        endLog()
+        pl.logger.endLog()
         return {'FINISHED'}
 
 
 class AddLegacyControllerOperator(Operator):
-    """This Operator adds a node-dependent legacy controller to the robot.
-
-    """
+    """AddControllerOperator"""
     bl_idname = "object.phobos_add_legacy_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
@@ -130,12 +107,7 @@ class AddLegacyControllerOperator(Operator):
         description = "scale of the controller visualization")
 
     def execute(self, context):
-        """This function executes this operator and adds a legacy controller to the robot.
-
-        :param context: The blender context this operator should work with.
-        :return: set -- the blender specific return set.
-        """
-        startLog(self)
+        pl.logger.startLog(self)
         location = bpy.context.scene.cursor_location
         objects = []
         controllers = []
@@ -154,15 +126,27 @@ class AddLegacyControllerOperator(Operator):
             for key in ctrl.keys():
                 if key.find("index") >= 0:
                     del ctrl[key]
-                    log("Deleting " + str(key) + " in " + ctrl.name, "INFO")
+                    pl.logger.log("Deleting " + str(key) + " in " + ctrl.name, "INFO")
             i = 1
             for obj in objects:
                 if obj.phobostype == "link":
                     ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = getObjectName(obj)
                     i += 1
-        log("Added joints to (new) controller(s).", "INFO")
+        pl.logger.log("Added joints to (new) controller(s).", "INFO")
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        endLog()
+        pl.logger.endLog()
         return {'FINISHED'}
+
+
+
+def addController(controller):
+    """
+    """
+    global sensors
+    global motors
+    sensors = controller['sensors']
+    motors = controller['motors']
+    bpy.ops.object.phobos_add_controller(controller_name=controller['name'],
+                                         controller_rate=controller['rate'])

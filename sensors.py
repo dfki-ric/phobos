@@ -61,7 +61,7 @@ def cameraRotLock(object):
 
 
 
-def createSensor(sensor, reference, origin):
+def createSensor(sensor, reference, origin=mathutils.Matrix()):
     utility.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object
     if 'Camera' in sensor['type']:
@@ -81,35 +81,29 @@ def createSensor(sensor, reference, origin):
         if reference is not None and reference != []:
             utility.selectObjects([newsensor, bpy.data.objects[reference]], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
-    elif sensor['type'] in ['Joint6DOF']:
-        newsensor = utility.createPrimitive(sensor['name'], 'sphere', 0.05,
-                                            defs.layerTypes['sensor'], 'phobos_sensor',
-                                            origin.to_translation(), protation=origin.to_euler())
-        utility.selectObjects([newsensor, reference], clear=True, active=1)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:  # contact, force and torque sensors (or unknown sensors)
         newsensor = utility.createPrimitive(sensor['name'], 'sphere', 0.05,
                                             defs.layerTypes['sensor'], 'phobos_sensor',
                                             origin.to_translation(), protation=origin.to_euler())
         if 'Node' in sensor['type']:
-            newsensor['sensor/nodes'] = sorted([utility.getObjectName(obj) for obj in reference])
+            newsensor['sensor/nodes'] = sorted(reference)
         elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
-            newsensor['sensor/joints'] = sorted([utility.getObjectName(obj) for obj in reference])
+            newsensor['sensor/joints'] = sorted(reference)
         if reference is not None and reference != []:
-            utility.selectObjects([newsensor, utility.getRoot(reference[0])], clear=True, active=1)
+            utility.selectObjects([newsensor, utility.getRoot(bpy.data.objects[0])], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     # set sensor properties
     newsensor.phobostype = 'sensor'
     newsensor.name = sensor['name']
     newsensor['sensor/type'] = sensor['type']
-    for prop in sensor['props']:
-        newsensor['sensor/'+prop] = sensor['props'][prop]
+    #for prop in sensor['props']:
+    #    newsensor['sensor/'+prop] = sensor['props'][prop]
 
     # add custom properties
-    for prop in sensor:
-        if prop.startswith('$'):
-            for tag in sensor[prop]:
-                newsensor[prop[1:]+'/'+tag] = sensor[prop][tag]
+    #for prop in sensor:
+    #    if prop.startswith('$'):
+    #        for tag in sensor[prop]:
+    #            newsensor[prop[1:]+'/'+tag] = sensor[prop][tag]
 
     # throw warning if type is not known
     if sensor['type'] not in defs.sensortypes:
