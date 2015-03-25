@@ -30,6 +30,7 @@ import mathutils
 import os
 #from utility import selectObjects
 import yaml
+#import os
 from collections import namedtuple
 import xml.etree.ElementTree as ET
 from phobos.utility import *
@@ -741,9 +742,9 @@ class RobotModelParser():
 
     def createSensor(self, sensor):
         if 'link' in sensor:
-            reference = sensor['link']
+            reference = [sensor['link']]
         elif 'joint' in sensor:
-            # TODO: maybe this is not an issue
+            reference = [sensor['joint']]
             pass
         elif 'links' in sensor:
             reference = sensor['links']
@@ -913,7 +914,7 @@ class MARSModelParser(RobotModelParser):
         
         links = self._parse_links(nodes)
         #self._add_parent_links(links)
-        self.robot['name'] = self.filepath.split('.')[0]
+        self.robot['name'] = os.path.basename(self.filepath).split('.')[0]
         self.robot['links'] = links
         self.robot['joints'] = self._create_joints_dict()
         print(self.robot)
@@ -939,6 +940,7 @@ class MARSModelParser(RobotModelParser):
         #print(self.link_indices)
         
        # assert False
+        print(self.joint_index_dict)
     
     def _get_links(self, nodes, joints):
         '''
@@ -1309,16 +1311,16 @@ class MARSModelParser(RobotModelParser):
             upper_limit = None
             xml_upper_limit = joint.find('highStopAxis1')
             if xml_upper_limit is not None:
-                upper_limit = float
+                upper_limit = float(xml_lower_limit.text)
 
-            limit_dict = {}
             if upper_limit or lower_limit:
+                if 'limits' not in joint_dict:
+                    joint_dict['limits'] = {}
                 has_limits = True
                 if upper_limit:
-                    limit_dict['upper'] = upper_limit
+                    joint_dict['limits']['upper'] = upper_limit
                 if lower_limit:
-                    limit_dict['lower'] = lower_limit
-                joint_dict['limits'] = limit_dict
+                    joint_dict['limits']['lower'] = lower_limit
             else:
                 has_limits = False
 
@@ -1484,11 +1486,17 @@ class MARSModelParser(RobotModelParser):
             joint_index = int(motor.find('jointIndex').text)
             joint_name = self.joint_index_dict[joint_index]
             motor_dict['joint'] = joint_name
-            #joint = self.robot['joints'][joint_name]
-            #joint['limits']['velocity'] = max_velocity
-            #joint['limits']['effort'] = max_effort
-            motor_dict['velocity'] = float(motor.find('maximumVelocity').text)
-            motor_dict['effort'] = float(motor.find('motorMaxForce').text)
+            joint = self.robot['joints'][joint_name]
+            if not 'limits' in joint:
+                joint['limits'] = {}
+            velocity = float(motor.find('maximumVelocity').text)
+            effort = float(motor.find('motorMaxForce').text)
+            joint['limits']['velocity'] = velocity
+            joint['limits']['effort'] = effort
+            motor_dict['velocity'] = velocity
+            motor_dict['effort'] = effort
+            #motor_dict['velocity'] = float(motor.find('maximumVelocity').text)
+            #motor_dict['effort'] = float(motor.find('motorMaxForce').text)
 
             type_num = int(motor.find('type').text)
             if type_num == 1:

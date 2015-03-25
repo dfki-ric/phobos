@@ -452,6 +452,7 @@ def exportModelToURDF(model, filepath):
     :return: Nothing.
 
     """
+    print(filepath)
     output = [xmlHeader, indent + '<robot name="' + model['modelname'] + '">\n\n']
     #export link information
     for l in model['links'].keys():
@@ -716,6 +717,9 @@ def exportModelToSMURF(model, path):
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
     #write urdf
+    logger.startLog(None)
+    logger.log('name', model['modelname'])
+    logger.endLog()
     exportModelToURDF(model, path + urdf_filename)
 
     # #write semantics (SRDF information in YML format)
