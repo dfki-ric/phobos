@@ -1032,6 +1032,25 @@ class EditYAMLDictionary(Operator):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
+
+class WarningDialogOperator(Operator):
+    """
+    Display a warning inside a dialog.
+    """
+    bl_idname = "tools.phobos_warning_dialog"
+    bl_label = "Warning."
+
+    message = bpy.props.StringProperty(name="Message")
+
+    def invoke(self, context, event):
+        # to check whether this is being called:
+        #self.report({'WARNING'}, "CALLED")
+        return context.window_manager.invoke_props_dialog(self, width=len(self.message)*15)
+
+    def execute(self, context):
+        #print(self.message)
+        return {'FINISHED'}
+
 # the following code is used to directly add buttons to current operator menu
 # - we don't need that if we create a custom toolbar with pre-defined buttons
 # def add_object_button(self, context):
