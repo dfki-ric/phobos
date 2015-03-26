@@ -44,9 +44,6 @@ from . import robotdictionary
 from . import defs
 from . import logging as logger
 
-import gc #Test by Jan Paul
-import time #Test by Jan Paul
-
 
 def register():
     """
