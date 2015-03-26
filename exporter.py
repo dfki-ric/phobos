@@ -123,7 +123,7 @@ def exportBobj(path, obj):
         out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
 
     if faceuv:
-        print ("faceuv")
+        #print ("faceuv")
         uv = uvkey = uv_dict = f_index = uv_index = None
 
         #uv_face_mapping = [[0, 0, 0, 0]] * len(face_index_pairs)  # a bit of a waste for tri's :/
@@ -139,9 +139,9 @@ def exportBobj(path, obj):
                 uvkey = round(uv[0], 6), round(uv[1], 6)
                 try:
                     uv_face_mapping[f_index][uv_index] = uv_dict[uvkey]
-                    print ("try OK")
+                    #print ("try OK")
                 except:  # TODO: what can really go wrong here?
-                    print ("try Exception")
+                    #print ("try Exception")
                     uv_face_mapping[f_index][uv_index] = uv_dict[uvkey] = len(uv_dict)
                     out.write(struct.pack('iff', 2, uv[0], uv[1]))
 
@@ -190,23 +190,23 @@ def exportBobj(path, obj):
             out.write(da)
 
             if faceuv:
-                print ("faceuv")
+                #print ("faceuv")
                 if f_smooth:  # Smoothed, use vertex normals
-                    print ("f_smooth")
+                    #print ("f_smooth")
                     for vi, v in f_v:
                         #out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi],
                         #                      globalNormals[roundVector(v.normal, 6)]))
                         da = struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], globalNormals[veckey3d(v.normal)]) #Jan Paul: New, transferred from MARS code
                         out.write(da)  # vert, uv, normal #Jan Paul: New, transferred from MARS code
                 else:  # No smoothing, face normals
-                    print ("hard")
+                    #print ("hard")
                     no = globalNormals[roundVector(f.normal, 6)]
                     for vi, v in f_v:
                         #out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], no))
                         da = struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], no) #Jan Paul: New, transferred from MARS code
                         out.write(da)  # vert, uv, normal #Jan Paul: New, transferred from MARS code
             else:  # No UV's
-                print ("no UVs")
+                #print ("no UVs")
                 if f_smooth:  # Smoothed, use vertex normals
                     for vi, v in f_v:
                         #out.write(struct.pack('iii', v.index + totverts, 0, globalNormals[roundVector(v.normal, 6)]))
