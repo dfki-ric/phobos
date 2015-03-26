@@ -43,9 +43,6 @@ from . import marssceneexport as mse
 from . import robotdictionary
 from . import defs
 
-import gc #Test by Jan Paul
-import time #Test by Jan Paul
-
 
 def register():
     """
