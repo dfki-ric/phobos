@@ -1,4 +1,4 @@
-ModelConstraints:
+DictConstraints:
     state:
         isReference: true
         matrix:

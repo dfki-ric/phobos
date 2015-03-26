@@ -36,7 +36,7 @@ def check_dict_alg(dic, validator, entry_list, messages, whole_validator):
     for node in validator:
         new_list = dc(entry_list)
         node_value = validator[node]
-        if not ('isReference'in node_value and len(entry_list) == 0):
+        if not ('isReference' in node_value and len(entry_list) == 0):
             if is_operator(node):
                 handle_operator(node, dic, validator, new_list, messages, whole_validator)
             elif is_leaf(node_value):
@@ -67,6 +67,7 @@ def check_leaf(leaf_value, dic, entry_list, messages):
     if value is not None and not isinstance(value, required_type):
         messages.append("The required value in " + str(entry_list) + " doesn't match expected type " + str(required_type))
         print("The required value in " + str(entry_list) + " doesn't match expected type " + str(required_type))
+
 
 def handle_operator(node, dic, validator, entry_list, messages, whole_validator):
     if node == '$reference':
