@@ -235,92 +235,17 @@ def exportObj(path, obj):
     :return: Nothing.
 
     """
-    
-    print("V1.2")
-    print("Exporting Object <" + (obj.name) + "> ...")
-    
-    #bpy.ops.object.select_all(action='DESELECT')
-    #obj.select = True
-    #if bpy.ops.object.convert.poll():
-    #    bpy.ops.object.convert(target='MESH')
-    
-    #for mod in obj.modifiers:
-    #    print (" applying modifier <" + mod.name + ">")
-    #    bpy.ops.object.modifier_apply(modifier = mod.name)
-        
-    gc.collect()
-    mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW', True) # Test by Jan Paul
-    gc.collect()
-    #obj.to_mesh(scene, apply_modifiers, settings, calc_tessface)
-    
     objname = getObjectName(obj)
     oldBlenderObjName = obj.name
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    gc.collect()
     tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
-    gc.collect()
-    
+    tmpobject.data = obj.data  # copy the mesh here
     outpath = determineMeshOutpath(obj, objname, 'obj', path)
-    
-    #bpy.ops.object.select_all(action='DESELECT')
-    #tmpobject.select=True
-    #print(" Calling export_scene on temp box ...")
-    #for i in range (1 , 200):
-    #bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False, use_mesh_modifiers=False)
-    #bpy.ops.export_scene.obj(check_existing=False, filepath=outpath, filter_glob="*.obj;*.mtl", use_selection=True, use_animation=False, use_mesh_modifiers=False, use_edges=False, use_normals=False, use_uvs=True, use_materials=False, use_triangles=True, use_nurbs=False, use_vertex_groups=True, use_blen_objects=False, group_by_object=False, group_by_material=False, keep_vertex_order=True, global_scale=1.0, axis_forward='-Z', axis_up='Y', path_mode='AUTO')
-    #print(" Done export_scene on temp box.")
-    
-    #tmpobject.data = obj.data  # copy the mesh here # Jan Paul: then, modifiers and their results are missing
-    tmpobject.data = mesh # Alternative to above command by Jan Paul
-    
-    print ("Deleting <" + outpath + "> ...")
-    if os.path.isfile(outpath):
-        os.remove(outpath)
-        print ("Deleted <" + outpath + ">.")
-    else:
-        print ("<" + outpath + "> did not exist.") 
-    
-#    bpy.ops.object.select_all(action='DESELECT')
-    
-    #print(" Calling empty export_scene ...")
-    #bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False, use_mesh_modifiers=False)
-    #print(" Done empty export_scene ...")
-    
-#    tmpobject.select=True
-    
-    #bpy.ops.object.select_all(action='DESELECT')
-    #obj.select=True
-    
-    #print(" Updating Scene ...")
-    #bpy.types.Scene(bpy.data.scenes[0]).update()
-    gc.collect()
-    #print(" Waiting ...")
-    #time.sleep(10)
-    print(" Calling export_scene ...")
-    #for i in range (1 , 200):
-    bpy.data.scenes[0].update()
-    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False, use_mesh_modifiers=False)
-    bpy.data.scenes[0].update()
-    #bpy.ops.export_scene.obj(check_existing=False, filepath=outpath, filter_glob="*.obj;*.mtl", use_selection=True, use_animation=False, use_mesh_modifiers=False, use_edges=False, use_normals=False, use_uvs=True, use_materials=False, use_triangles=True, use_nurbs=False, use_vertex_groups=True, use_blen_objects=False, group_by_object=False, group_by_material=False, keep_vertex_order=True, global_scale=1.0, axis_forward='-Z', axis_up='Y', path_mode='AUTO')
-    print(" Done export_scene.")
-    gc.collect()
- #   bpy.ops.object.select_all(action='DESELECT')
- #   tmpobject.select = True
-    print(" Deleting temp object ...")
+    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
+    bpy.ops.object.select_all(action='DESELECT')
+    tmpobject.select = True
     bpy.ops.object.delete()
-    gc.collect()
-    print(" Deleted temp object.")
-    bpy.data.meshes.remove(mesh)
-    print(" Deleted temp MESH.")
     obj.name = oldBlenderObjName
-    
-    tmpobject=None
-    mesh=None
-    outpath=None
-    gc.collect()
-    
-    #bpy.ops.object.select_all(action='DESELECT')
-    #obj.select=True
 
     #This is the old implementation which did not work properly (08.08.2014)
     #bpy.ops.object.select_all(action='DESELECT')
