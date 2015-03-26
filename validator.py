@@ -29,10 +29,37 @@ from copy import deepcopy as dc
 
 
 def check_dict(dic, validator, messages):
+    """ This function validates a given dictionary against a validator.
+    It writes all messages to the given messages list
+
+    :param dic: The dictionary you want to validate.
+    :type dic: dict
+    :param validator: The validator you want to validate against.
+    :type validator: dict
+    :param messages: The message list you want to append the error messages to.
+    :type messages: list
+    :return: Nothing.
+
+    """
     check_dict_alg(dic, validator, [], messages, validator)
 
 
 def check_dict_alg(dic, validator, entry_list, messages, whole_validator):
+    """This function does the real validation work by working through the validator.
+
+    :param dic: The dictionary you want to validate.
+    :type dic: dict
+    :param validator: The validator you want to validate against.
+    :type validator: dict
+    :param entry_list: This list contains all keys you have to traverse to get the correct value in the dictionary.
+    :type entry_list: list
+    :param messages: The message list you want to append the error messages to.
+    :type messages: list
+    :param whole_validator: This is a copy of the whole validator needed when referencing to a top level key.
+    :type whole_validator: dict
+    :return: Nothing.
+
+    """
     for node in validator:
         new_list = dc(entry_list)
         node_value = validator[node]
@@ -48,28 +75,71 @@ def check_dict_alg(dic, validator, entry_list, messages, whole_validator):
 
 
 def is_leaf(node_value):
+    """This function checks whether a validation node is a leaf or not.
+
+    :param node_value: The value of the node you want to check.
+    :type node_value: dict
+    :return: bool
+
+    """
     return isinstance(node_value, dict) and 'required' in node_value
 
 
 def is_operator(node):
+    """This function checks whether a validation node is an operator or not.
+
+    :param node: The node key you want to check.
+    :type node: str
+    :return: bool
+
+    """
     return node.startswith('$')
 
 
 def check_leaf(leaf_value, dic, entry_list, messages):
+    """This function checks the dictionary against a specific validation leaf and entry_list. Writing the
+    messages into the given list.
+
+    :param leaf_value: The leaf value used for validation.
+    :type leaf_value: dict
+    :param dic: The dictionary you want to validate.
+    :type dic: dict
+    :param entry_list: The keys navigating you to the dictionary value to validate against the validation leaf.
+    :type entry_list: list
+    :param messages: The list you want to append the messages to.
+    :type messages: list
+    :return: Nothing.
+
+    """
     value = traverse_dict(dic, entry_list)
     default_value = leaf_value['default']
     required_type = type(default_value)
     required = leaf_value['required']
-    print("Checking leaf " + str(entry_list))
+    messages.append("Checking leaf " + str(entry_list))
     if required and value is None:
         messages.append("The required value in " + str(entry_list) + " cannot be found!")
-        print("The required value in " + str(entry_list) + " cannot be found!")
     if value is not None and not isinstance(value, required_type):
         messages.append("The required value in " + str(entry_list) + " doesn't match expected type " + str(required_type))
-        print("The required value in " + str(entry_list) + " doesn't match expected type " + str(required_type))
 
 
 def handle_operator(node, dic, validator, entry_list, messages, whole_validator):
+    """This function handles an operator and decides how to continue the validation process.
+
+    :param node: The operator to handle.
+    :type node: str
+    :param dic: The dict you want to validate.
+    :type dic: dict
+    :param validator: The validator you want to validate the dic with.
+    :type validator: dict
+    :param entry_list: The list of keys to navigate to the value in the dictionary.
+    :type entry_list: list
+    :param messages: The list to append the messages to.
+    :type messages: list
+    :param whole_validator: The whole validator to reach top level keys in case of a reference operator.
+     :type whole_validator: dict
+    :return: Nothing
+
+    """
     if node == '$reference':
         new_list = dc(entry_list)
         new_list.append(validator[node])
@@ -84,6 +154,16 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator)
 
 
 def traverse_dict(dic, entry_list):
+    """This function traverses a dictionary with a given list of keys and returns the value or None if the
+    keys are not found.
+
+    :param dic: The dictionary to traverse.
+    :type dic: dict
+    :param entry_list: The list of keys you want to traverse with.
+     :type entry_list: list
+    :return: dict
+
+    """
     length = len(entry_list)
     if length > 0:
         element = entry_list[0]
