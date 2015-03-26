@@ -44,6 +44,9 @@ from . import robotdictionary
 from . import defs
 from . import logging as logger
 
+import gc #Test by Jan Paul
+import time #Test by Jan Paul
+
 
 def register():
     """
@@ -72,6 +75,8 @@ indent = '  '
 xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
 xmlFooter = indent + '</robot>\n'
 
+def veckey3d(v):
+    return round(v.x, 6), round(v.y, 6), round(v.z, 6)
 
 def exportBobj(path, obj):
     """This function exports an object to the specified path as a .bobj
@@ -89,6 +94,8 @@ def exportBobj(path, obj):
     #TODO: make this exception-handled
     totverts = totuvco = totno = 1
 
+    face_vert_index = 1 #Jan Paul: New, transferred from MARS code
+    
     globalNormals = {}
 
     # ignore dupli children
@@ -96,12 +103,14 @@ def exportBobj(path, obj):
         print(getObjectName(obj), 'is a dupli child - ignoring')
         return
 
-    mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW')
+    mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW') #Jan Paul: ", True)": calculate tesselation faces added as test
     #mesh.transform(obj.matrix_world)
 
+    write_uv = False #Jan Paul: New, transferred from MARS code
     faceuv = len(mesh.uv_textures)
     if faceuv:
         uv_layer = mesh.uv_textures.active.data[:]
+        write_uv = True #Jan Paul: New, transferred from MARS code
 
     if bpy.app.version[0] * 100 + bpy.app.version[1] >= 265:
         face_index_pairs = [(face, index) for index, face in enumerate(mesh.tessfaces)]
@@ -118,10 +127,12 @@ def exportBobj(path, obj):
         out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
 
     if faceuv:
+        print ("faceuv")
         uv = uvkey = uv_dict = f_index = uv_index = None
 
-        uv_face_mapping = [[0, 0, 0, 0] for i in range(len(face_index_pairs))] # a bit of a waste for tri's :/
-
+        #uv_face_mapping = [[0, 0, 0, 0]] * len(face_index_pairs)  # a bit of a waste for tri's :/
+        uv_face_mapping = [[0, 0, 0, 0] for i in range(len(face_index_pairs))]  # a bit of a waste for tri's :/  #Jan Paul: New, transferred from MARS code
+        
         uv_dict = {}  # could use a set() here
         if bpy.app.version[1] >= 65:
             uv_layer = mesh.tessface_uv_textures.active.data[:]
@@ -132,31 +143,43 @@ def exportBobj(path, obj):
                 uvkey = round(uv[0], 6), round(uv[1], 6)
                 try:
                     uv_face_mapping[f_index][uv_index] = uv_dict[uvkey]
+                    print ("try OK")
                 except:  # TODO: what can really go wrong here?
+                    print ("try Exception")
                     uv_face_mapping[f_index][uv_index] = uv_dict[uvkey] = len(uv_dict)
                     out.write(struct.pack('iff', 2, uv[0], uv[1]))
 
+        uv_unique_count = len(uv_dict) #Jan Paul: New, transferred from MARS code
+        
         del uv, uvkey, uv_dict, f_index, uv_index
 
     for f, f_index in face_index_pairs:
         if f.use_smooth:
             for v_idx in f.vertices:
                 v = me_verts[v_idx]
-                noKey = roundVector(v.normal, 6)
+                #noKey = roundVector(v.normal, 6)
+                noKey = veckey3d(v.normal) #Jan Paul: New, transferred from MARS code
                 if noKey not in globalNormals:
                     globalNormals[noKey] = totno
                     totno += 1
-                    out.write(struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2]))
+                    #out.write(struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2]))
+                    da = struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2]) #Jan Paul: New, transferred from MARS code
+                    out.write(da) #Jan Paul: New, transferred from MARS code
         else:
             # Hard, 1 normal from the face.
-            noKey = roundVector(f.normal, 6)
+            #noKey = roundVector(f.normal, 6)
+            noKey = veckey3d(f.normal) #Jan Paul: New, transferred from MARS code
             if noKey not in globalNormals:
                 globalNormals[noKey] = totno
                 totno += 1
-                out.write(struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2]))
+                #out.write(struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2]))
+                da = struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2]) #Jan Paul: New, transferred from MARS code
+                out.write(da)
 
     for f, f_index in face_index_pairs:
         f_smooth = f.use_smooth
+        if faceuv: #Jan Paul: New, transferred from MARS code
+            tface = uv_layer[f_index] #Jan Paul: New, transferred from MARS code
         # write smooth info for face?
 
         f_v_orig = [(vi, me_verts[v_idx]) for vi, v_idx in enumerate(f.vertices)]
@@ -171,22 +194,35 @@ def exportBobj(path, obj):
             out.write(da)
 
             if faceuv:
+                print ("faceuv")
                 if f_smooth:  # Smoothed, use vertex normals
+                    print ("f_smooth")
                     for vi, v in f_v:
-                        out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi],
-                                              globalNormals[roundVector(v.normal, 6)]))
+                        #out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi],
+                        #                      globalNormals[roundVector(v.normal, 6)]))
+                        da = struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], globalNormals[veckey3d(v.normal)]) #Jan Paul: New, transferred from MARS code
+                        out.write(da)  # vert, uv, normal #Jan Paul: New, transferred from MARS code
                 else:  # No smoothing, face normals
+                    print ("hard")
                     no = globalNormals[roundVector(f.normal, 6)]
                     for vi, v in f_v:
-                        out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], no))
+                        #out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], no))
+                        da = struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], no) #Jan Paul: New, transferred from MARS code
+                        out.write(da)  # vert, uv, normal #Jan Paul: New, transferred from MARS code
             else:  # No UV's
+                print ("no UVs")
                 if f_smooth:  # Smoothed, use vertex normals
                     for vi, v in f_v:
-                        out.write(struct.pack('iii', v.index + totverts, 0, globalNormals[roundVector(v.normal, 6)]))
+                        #out.write(struct.pack('iii', v.index + totverts, 0, globalNormals[roundVector(v.normal, 6)]))
+                        da = struct.pack('iii', v.index + totverts, 0, globalNormals[veckey3d(v.normal)]) #Jan Paul: New, transferred from MARS code
+                        out.write(da)  # vert, uv, normal #Jan Paul: New, transferred from MARS code
                 else:  # No smoothing, face normals
-                    no = globalNormals[roundVector(f.normal, 6)]
+                    #no = globalNormals[roundVector(f.normal, 6)]
+                    no = globalNormals[veckey3d(f.normal)] #Jan Paul: New, transferred from MARS code
                     for vi, v in f_v:
-                        out.write(struct.pack('iii', v.index + totverts, 0, no))
+                        #out.write(struct.pack('iii', v.index + totverts, 0, no))
+                        da = struct.pack('iii', v.index + totverts, 0, no) #Jan Paul: New, transferred from MARS code
+                        out.write(da)  # vert, uv, normal #Jan Paul: New, transferred from MARS code
     out.close()
 
 
