@@ -122,6 +122,8 @@ sensortypes = []
 
 sensorProperties = {}
 
+modelConstraints = {}
+
 #definitions of which elements live on which layers by default
 layerTypes = {
     "link": 0,
@@ -171,6 +173,10 @@ def updateDefs(defsFolderPath):
                 if sens not in sensortypes:
                     sensortypes.append(sens)
                     sensorProperties[sens] = entry['Sensors'][sens]
+        if 'ModelConstraints' in entry:
+            for cons in entry['ModelConstraints']:
+                if cons not in modelConstraints:
+                    modelConstraints[cons] = entry['ModelConstraints'][cons]
         if 'Motors'in entry:
             for motor in entry['Motors']:
                 if (motor,) * 3 not in motortypes:

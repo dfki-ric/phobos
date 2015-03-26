@@ -1,0 +1,34 @@
+ModelConstraints:
+    state:
+        isReference: true
+        matrix:
+            required: true
+            default:
+                - [1.0, 0.0, 0.0, 0.0]
+                - [0.0, 1.0, 0.0, 0.0]
+                - [0.0, 0.0, 1.0, 0.0]
+                - [0.0, 0.0, 0.0, 1.0]
+        rotation_euler:
+            required: true
+            default: [0.0, 0.0, 0.0]
+        rotation_quaternion:
+            required: true
+            default: [1.0, 0.0, 0.0, 0.0]
+        translation:
+            required: true
+            default: [0.0, 0.0, 0.0]
+    joints:
+        $forElem:
+            $reference: state
+            child:
+                required: true
+                default: 'jointChild'
+            name:
+                required: true
+                default: 'jointName'
+            parent:
+                required: true
+                default: 'jointParent'
+            type:
+                required: true
+                default: 'floating'
