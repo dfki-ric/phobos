@@ -158,12 +158,12 @@ def calc_pose_formats(position, rotation, pivot=[0,0,0]):
     pivot_translation = mathutils.Matrix.Translation(pivot)
     rotation_matrix = mathutils.Quaternion(rot).to_matrix().to_4x4()
     translation = mathutils.Matrix.Translation(position)
-    print()
-    print("translation:", translation)
-    print("neg_pivot_translation:", neg_pivot_translation)
-    print("rotation_matrix:", rotation_matrix)
-    print("pivot_translation", pivot_translation)
-    print()
+    #print()
+    #print("translation:", translation)
+    #print("neg_pivot_translation:", neg_pivot_translation)
+    #print("rotation_matrix:", rotation_matrix)
+    #print("pivot_translation", pivot_translation)
+    #print()
     #transformation_matrix = translation * neg_pivot_translation * rotation_matrix * pivot_translation
     transformation_matrix = translation * rotation_matrix * neg_pivot_translation
 
@@ -195,9 +195,9 @@ def calc_pose_formats(position, rotation, pivot=[0,0,0]):
    #
    # pose_dict['matrix'] = matrix
 
-    print()
-    print('pose_dict:', pose_dict)
-    print()
+    #print()
+    #print('pose_dict:', pose_dict)
+    #print()
 
     return pose_dict
     
@@ -447,20 +447,24 @@ class RobotModelParser():
 
         """
         bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
-        try:
+        #try:
+        if 'pose' in sensor:
+            urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
+            urdf_geom_rot = mathutils.Euler(tuple(sensor['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+        else:
+            urdf_geom_loc = mathutils.Matrix.Identity(4)
+            urdf_geom_rot = mathutils.Matrix.Identity(4)
+        sensorobj = bpy.data.objects[sensor['name']]
+        if 'link' in sensor:
             parentLink = bpy.data.objects[sensor['link']]
-            if 'pose' in sensor:
-                urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
-                urdf_geom_rot = mathutils.Euler(tuple(sensor['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
-            else:
-                urdf_geom_loc = mathutils.Matrix.Identity(4)
-                urdf_geom_rot = mathutils.Matrix.Identity(4)
-            sensorobj = bpy.data.objects[sensor['name']]
             selectObjects([sensorobj, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            sensorobj.matrix_local = urdf_geom_loc * urdf_geom_rot
-        except KeyError:
-            log("inconsistent data on sensor: "+ sensor['name'], "ERROR")
+        else:
+            #TODO: what?
+            pass
+        sensorobj.matrix_local = urdf_geom_loc * urdf_geom_rot
+        #except KeyError:
+        #    log("inconsistent data on sensor: "+ sensor['name'], "ERROR")
 
 
     def createGeometry(self, viscol, geomsrc):
@@ -691,9 +695,10 @@ class RobotModelParser():
         # add constraints
         for param in ['effort', 'velocity']:
             try:
-                link['joint/max'+param] = joint['limits'][param]
+                if 'limits' in joint:
+                    link['joint/max'+param] = joint['limits'][param]
             except KeyError:
-                log("Key Error in adding joint constraints") #Todo: more details
+                log("Key Error in adding joint constraints for joint", joint['name']) #Todo: more details
         try:
             lower = joint['limits']['lower']
             upper = joint['limits']['upper']
@@ -917,7 +922,7 @@ class MARSModelParser(RobotModelParser):
         self.robot['name'] = os.path.basename(self.filepath).split('.')[0]
         self.robot['links'] = links
         self.robot['joints'] = self._create_joints_dict()
-        print(self.robot)
+        #print(self.robot)
         self.robot['motors'] = self._parse_motors(motors)
         self.robot['sensors'] = self._parse_sensors(sensors)
         self.robot['controllers'] = self._parse_controllers(controllers)
@@ -931,15 +936,6 @@ class MARSModelParser(RobotModelParser):
 
         self._debug_output()
 
-        #print(self.link_groups_link_order)
-        #print()
-        #print(self.vis_coll_groups)
-        #print()
-        #print(self.link_index_dict)
-        #print()
-        #print(self.link_indices)
-        
-       # assert False
         print(self.joint_index_dict)
     
     def _get_links(self, nodes, joints):
@@ -986,7 +982,7 @@ class MARSModelParser(RobotModelParser):
                 name = 'material_' + str(mat_id)
             material_dict['name'] = name
 
-            print('DEFS:', dir(defs))
+            #print('DEFS:', dir(defs))
             for xml_colour in MARScolordict:
                 colour = material.find(xml_colour)
                 if colour is not None:
@@ -1333,7 +1329,6 @@ class MARSModelParser(RobotModelParser):
             joint_dict['child_index'] = child_index
             self.parent_joint_dict[child_index] = name
             #joint_dict['child'] = self.link_index_dict[child_index]
-
 
             xml_offset = joint.find('angle1_offset')
             if xml_offset is not None:
