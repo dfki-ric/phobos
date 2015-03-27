@@ -395,13 +395,14 @@ class MARS_Scene_Parser(object):
 
 # ---
 
+# TODO: jpaul: msp is not found!:
 def test_read_scene():
     '''
     '''
     tree = msp._read_scene('kai_car_4.scene')
     root = tree.getroot()
     print(root.tag)
-
+ 
 def test_xml_tree_handling():
     '''
     '''
