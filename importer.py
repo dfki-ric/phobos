@@ -580,7 +580,8 @@ class RobotModelParser():
         bpy.ops.object.armature_add(layers=defLayers(0))
         newlink = bpy.context.active_object #print(bpy.context.object) #print(bpy.context.scene.objects.active) #bpy.context.selected_objects[0]
         newlink.name = link['name']
-        newlink.location = (0.0, 0.0, 0.0)
+        #newlink.location = (0.0, 0.0, 0.0)
+        newlink.location = link['pose']['translation']
         newlink.scale = (0.3, 0.3, 0.3) #TODO: make this depend on the largest visual or collision object
         bpy.ops.object.transform_apply(scale=True)
         newlink.phobostype = 'link'
@@ -634,18 +635,6 @@ class RobotModelParser():
                 bpy.ops.object.mode_set(mode='OBJECT')
                 pass
             if 'angle_offset' in link:
-                #angle = link['angle_offset']
-                ##axis = link['axis']
-                #obj = self._get_object(link_name)
-                #object_matrix = obj.matrix_world
-                #loc, rotation, scale = object_matrix.decompose()
-                #z_axis = mathutils.Vector([0, 0, 1])
-                #axis_vec = rotation.to_matrix() * z_axis
-
-                #offset_matrix = mathutils.Matrix.Rotation(angle, 4, axis_vec)
-                #obj.matrix_world = offset_matrix * object_matrix
-
-
                 obj = self._get_object(link_name)
                 angle = -(link['angle_offset'])
                 bpy.ops.object.mode_set(mode='POSE')
@@ -660,14 +649,6 @@ class RobotModelParser():
                 pose_bone.matrix = offset_matrix * bone_matrix
 
 
-                #angle = link['angle_offset']
-                #obj = self._get_object(link_name)
-                #obj_matrix = obj.matrix_local
-                #loc, rot, scale = obj_matrix.decompose()
-                #z_axis = mathutils.Vector([0, 0, 1])
-                #offset_matrix = mathutils.Matrix.Rotation(angle, 4, z_axis)
-                #combined_matrix = obj_matrix * offset_matrix
-                #obj.matrix_local = combined_matrix
     def createJoint(self, joint):
         """This function creates the blender representation of a given joint.
 
@@ -798,17 +779,17 @@ class RobotModelParser():
             self.createSensor(sensor)
 
         #build tree recursively and correct translation & rotation on the fly
+        print("\n\nPlacing links...")
         for l in self.robot['links']:
             if not 'parent' in self.robot['links'][l]:
                 root = self.robot['links'][l]
-        print("\n\nPlacing links...")
-        self.placeChildLinks(root)
-        print("\n\nAssigning model name...")
-        try:
-            rootlink = getRoot(bpy.data.objects[root['name']])
-            rootlink['modelname'] = self.robot['name']
-        except KeyError:
-            link("Could not assign model name to root link.", "ERROR")
+                self.placeChildLinks(root)
+                print("\n\nAssigning model name...")
+                try:
+                    rootlink = getRoot(bpy.data.objects[root['name']])
+                    rootlink['modelname'] = self.robot['name']
+                except KeyError:
+                    link("Could not assign model name to root link.", "ERROR")
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
         for sensorname in self.robot['sensors']:
@@ -1068,7 +1049,7 @@ class MARSModelParser(RobotModelParser):
         base_pos = base_pose['translation']
         rot = base_pose['rotation_quaternion']
         pivot_xml = node.find('pivot')
-        if pivot_xml is not None and not root_child:
+        if pivot_xml is not None: # and not root_child:
             pivot = [float(pivot_xml.find('x').text), float(pivot_xml.find('y').text), float(pivot_xml.find('z').text)]
         else:
             pivot = [0.0, 0.0, 0.0]
@@ -1376,10 +1357,12 @@ class MARSModelParser(RobotModelParser):
             rel_id_xml = node.find('relativeid')
             #if index in self.link_indices:
             #    link_poses[index] = pose
+            roots =[]
             if rel_id_xml is None:
                 absolute_poses[index] = pose
-                absolute_vis_coll_poses[index] = pose
-                root = index
+                #absolute_vis_coll_poses[index] = pose
+                roots.append(index)
+                relative_poses[index] = {'pose': pose, 'rel_id': -1}
             else:
                 rel_id = int(rel_id_xml.text)
                 relative_poses[index] = {'pose': pose, 'rel_id': rel_id}
@@ -1396,10 +1379,10 @@ class MARSModelParser(RobotModelParser):
                 #print('link_poses:', link_poses)
                 relative_pose = relative_poses[index]
                 rel_id = relative_pose['rel_id']
-                if rel_id in absolute_poses:
+                if rel_id in absolute_poses or rel_id == -1:
                     #print('index:', index)
                     #print('rel_id:', rel_id)
-                    if rel_id in self.link_indices and rel_id is not root:
+                    if rel_id in self.link_indices or rel_id == -1: # and rel_id not in roots:
                         absolute_poses[index] = relative_pose['pose']
                         absolute_vis_coll_poses[index] = relative_pose['pose']
                     else:
