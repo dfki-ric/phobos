@@ -64,7 +64,6 @@ def check_dict_alg(dic, validator, entry_list, messages, whole_validator):
         new_list = dc(entry_list)
         node_value = validator[node]
         if node != 'isReference':
-            print(node_value)
             if not ('isReference' in node_value and len(entry_list) == 0):
                 if is_operator(node):
                     handle_operator(node, dic, validator, new_list, messages, whole_validator)
