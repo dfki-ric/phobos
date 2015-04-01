@@ -43,6 +43,7 @@ from . import utility
 from . import defs
 from . import inertia
 from . import robotdictionary
+from . import validator
 from phobos.logging import *
 import yaml
 
@@ -68,6 +69,31 @@ def unregister():
     """
 
     print("Unregistering misctools...")
+
+
+class CheckDict(Operator):
+    """CheckDictOperator
+
+    """
+
+    bl_idname = "object.phobos_check_dict"
+    bl_label = "Checks the robotdictionary"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        """Executes the operator and unifies the selected objects meshes
+
+        :param context: The blender context to work with
+        :return: Blender result
+        """
+        startLog(self)
+        messages = []
+        dic = robotdictionary.buildRobotDictionary()
+        validator.check_dict(dic, defs.dictConstraints, messages)
+        for entry in messages:
+            log(entry, 'INFO')
+        endLog()
+        return {'FINISHED'}
 
 
 class ShareMesh(Operator):
