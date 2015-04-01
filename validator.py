@@ -63,15 +63,17 @@ def check_dict_alg(dic, validator, entry_list, messages, whole_validator):
     for node in validator:
         new_list = dc(entry_list)
         node_value = validator[node]
-        if not ('isReference' in node_value and len(entry_list) == 0):
-            if is_operator(node):
-                handle_operator(node, dic, validator, new_list, messages, whole_validator)
-            elif is_leaf(node_value):
-                new_list.append(node)
-                check_leaf(node_value, dic, new_list, messages)
-            else:
-                new_list.append(node)
-                check_dict_alg(dic, node_value, new_list, messages, whole_validator)
+        if node != 'isReference':
+            print(node_value)
+            if not ('isReference' in node_value and len(entry_list) == 0):
+                if is_operator(node):
+                    handle_operator(node, dic, validator, new_list, messages, whole_validator)
+                elif is_leaf(node_value):
+                    new_list.append(node)
+                    check_leaf(node_value, dic, new_list, messages)
+                else:
+                    new_list.append(node)
+                    check_dict_alg(dic, node_value, new_list, messages, whole_validator)
 
 
 def is_leaf(node_value):
@@ -115,7 +117,7 @@ def check_leaf(leaf_value, dic, entry_list, messages):
     default_value = leaf_value['default']
     required_type = type(default_value)
     required = leaf_value['required']
-    messages.append("Checking leaf " + str(entry_list))
+    # messages.append("Checking leaf " + str(entry_list))
     if required and value is None:
         messages.append("The required value in " + str(entry_list) + " cannot be found!")
     if value is not None and not isinstance(value, required_type):
@@ -145,12 +147,21 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator)
         new_list.append(validator[node])
         check_dict_alg(dic, whole_validator[validator[node]], new_list, messages, whole_validator)
     elif node == '$forElem':
-        for elem in traverse_dict(dic, entry_list):
-            new_list = dc(entry_list)
-            new_list.append(elem)
-            check_dict_alg(dic, validator['$forElem'], new_list, messages, whole_validator)
+        traversed_dic = traverse_dict(dic, entry_list)
+        if traversed_dic is not None:
+            for elem in traversed_dic:
+                new_list = dc(entry_list)
+                new_list.append(elem)
+                check_dict_alg(dic, validator['$forElem'], new_list, messages, whole_validator)
     elif node.startswith('$selection__'):
-        pass
+        select_type = node.split('__')[1]
+        select_dic = traverse_dict(dic, entry_list)
+        if select_type in select_dic:
+            select = select_dic[select_type]
+            rest_validator = validator[node][select]
+            check_dict_alg(dic, rest_validator, entry_list, messages, whole_validator)
+        else:
+            messages.append("Could not find " + select_type + " in " + str(entry_list))
 
 
 def traverse_dict(dic, entry_list):
