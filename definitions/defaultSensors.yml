@@ -16,15 +16,33 @@ Sensors:
         horizontal_offset:  0.0
         vertical_offset:  0.0
     CameraSensor:
-        width: 640
-        height: 480
-        show_cam: True
-        opening_width: 90
-        opening_height: 90
-        hud_pos: 0
-        hud_width: 320
-        hud_height: 240
-        depthImage: False
+        width:
+            required: true
+            default: 640
+        height:
+            required: true
+            default: 480
+        show_cam:
+            required: true
+            default: true
+        opening_width:
+            required: true
+            default: 90
+        opening_height:
+            required: true
+            default: 90
+        hud_pos:
+            required: true
+            default: 0
+        hud_width:
+            required: true
+            default: 320
+        hud_height:
+            required: true
+            default: 240
+        depthImage:
+            required: true
+            default: false
     ScanningSonar:
         width: 64
         height: 512
