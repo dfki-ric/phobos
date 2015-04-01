@@ -181,6 +181,8 @@ def updateDefs(defsFolderPath):
             for motor in entry['Motors']:
                 if (motor,) * 3 not in motortypes:
                     motortypes.append((motor,) * 3)
+    # Extending dictConstraints
+    dictConstraints['sensors']['$forElem']['$selection__type'] = sensorProperties
 
 def __parseAllYAML(path):
     """This functions reads all .yml files in the given path and loads them.
