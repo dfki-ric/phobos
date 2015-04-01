@@ -65,8 +65,6 @@ else:
 #prepare defs module
 from . import defs
 import os
-print("Using following folder for defs: " + os.path.dirname(__file__)+"/definitions")
-defs.updateDefs(os.path.dirname(__file__)+"/definitions")
 
 #Add custom YAML (de-)serializer
 def bool_representer(dumper, data):
@@ -85,6 +83,9 @@ def bool_constructor(self, node):
 
 yaml.Loader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
+
+print("Using following folder for defs: " + os.path.dirname(__file__)+"/definitions")
+defs.updateDefs(os.path.dirname(__file__)+"/definitions")
 
 if "bpy" in locals():
     import imp
