@@ -44,7 +44,24 @@ def unregister():
     print("Unregistering sensors...")
 
 
-def createSensor(sensor, reference, origin):
+def cameraRotLock(object):
+    utility.selectObjects([object], active=0)
+    bpy.ops.transform.rotate(value=-1.5708, axis=(-1, 0, 0), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+    bpy.ops.transform.rotate(value=1.5708, axis=(0, -1, 0), constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+    bpy.ops.object.constraint_add(type='LIMIT_ROTATION')
+    object.constraints["Limit Rotation"].use_limit_x = True
+    object.constraints["Limit Rotation"].use_limit_y = True
+    object.constraints["Limit Rotation"].use_limit_z = True
+    object.constraints["Limit Rotation"].min_x = object.rotation_euler[0]
+    object.constraints["Limit Rotation"].max_x = object.rotation_euler[0]
+    object.constraints["Limit Rotation"].min_y = object.rotation_euler[1]
+    object.constraints["Limit Rotation"].max_y = object.rotation_euler[1]
+    object.constraints["Limit Rotation"].min_z = object.rotation_euler[2]
+    object.constraints["Limit Rotation"].max_z = object.rotation_euler[2]
+
+
+
+def createSensor(sensor, reference, origin=mathutils.Matrix()):
     utility.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object
     if 'Camera' in sensor['type']:
@@ -53,7 +70,7 @@ def createSensor(sensor, reference, origin):
                            rotation=origin.to_euler(),
                            layers=utility.defLayers([defs.layerTypes['sensor']]))
         newsensor = bpy.context.active_object
-        if reference is not None and reference != []:
+        if reference is not None:
             utility.selectObjects([newsensor, bpy.data.objects[reference]], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     elif sensor['type'] in ['RaySensor', 'RotatingRaySensor', 'ScanningSonar', 'MultiLevelLaserRangeFinder']:
@@ -62,31 +79,31 @@ def createSensor(sensor, reference, origin):
                                             defs.layerTypes['sensor'], 'phobos_laserscanner',
                                             origin.to_translation(), protation=origin.to_euler())
         if reference is not None and reference != []:
-            utility.selectObjects([newsensor, bpy.data.objects[reference]], clear=True, active=1)
+            utility.selectObjects([newsensor, bpy.data.objects[reference[0]]], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:  # contact, force and torque sensors (or unknown sensors)
         newsensor = utility.createPrimitive(sensor['name'], 'sphere', 0.05,
                                             defs.layerTypes['sensor'], 'phobos_sensor',
                                             origin.to_translation(), protation=origin.to_euler())
         if 'Node' in sensor['type']:
-            newsensor['sensor/nodes'] = sorted([obj.name for obj in reference])
+            newsensor['sensor/nodes'] = sorted(reference)
         elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
-            newsensor['sensor/joints'] = sorted([obj.name for obj in reference])
+            newsensor['sensor/joints'] = sorted(reference)
         if reference is not None and reference != []:
-            utility.selectObjects([newsensor, utility.getRoot(reference[0])], clear=True, active=1)
+            utility.selectObjects([newsensor, utility.getRoot(bpy.data.objects[0])], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     # set sensor properties
     newsensor.phobostype = 'sensor'
     newsensor.name = sensor['name']
     newsensor['sensor/type'] = sensor['type']
-    for prop in sensor['props']:
-        newsensor['sensor/'+prop] = sensor['props'][prop]
+    #for prop in sensor['props']:
+    #    newsensor['sensor/'+prop] = sensor['props'][prop]
 
     # add custom properties
-    for prop in sensor:
-        if prop.startswith('$'):
-            for tag in sensor[prop]:
-                newsensor[prop[1:]+'/'+tag] = sensor[prop][tag]
+    #for prop in sensor:
+    #    if prop.startswith('$'):
+    #        for tag in sensor[prop]:
+    #            newsensor[prop[1:]+'/'+tag] = sensor[prop][tag]
 
     # throw warning if type is not known
     if sensor['type'] not in defs.sensortypes:
@@ -177,17 +194,27 @@ class AddSensorOperator(Operator):
                  }
         parent = context.active_object
         for key in defs.sensorProperties[self.sensor_type]:
-            sensor['props'][key] = getattr(self, key)
+            if type(defs.sensorProperties[self.sensor_type][key]) == type(True):
+                value = getattr(self, key)
+                sensor['props'][key] = '$true' if value else '$false'
+            else:
+                sensor['props'][key] = getattr(self, key)
         # type-specific settings
         if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
                               'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            sensorObj = createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
             if self.add_link:
                 link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(), name='link_'+self.sensor_name)
+                sensorObj = createSensor(sensor, link.name, link.matrix_world)
+            else:
+                sensorObj = createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
+            if self.add_link:
                 utility.selectObjects([parent, link], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
                 utility.selectObjects([link, sensorObj], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            cameraRotLock(sensorObj)
+        elif sensor['type'] in ['Joint6DOF']:
+            createSensor(sensor, context.active_object, context.active_object.matrix_world)
         elif 'Node' in sensor['type']:
             createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
                          mathutils.Matrix.Translation(context.scene.cursor_location))

@@ -30,10 +30,9 @@ Created on 13 Feb 2014
 
 import bpy
 import mathutils
-from bpy.types import Operator
-from bpy.props import StringProperty, BoolProperty, FloatVectorProperty, EnumProperty, FloatProperty
 from . import defs
 from . import utility
+from . import robotdictionary
 from phobos.logging import *
 
 
@@ -197,13 +196,14 @@ def inertiaListToMatrix(il):
                [0.0, 0.0, il[5]]]
     return mathutils.Matrix(inertia)
 
+
 def inertiaMatrixToList(im):
     """Takes a full 3x3 inertia tensor and returns a tuple representing the upper diagonal.
-    
+
     :param im: The inertia tensor matrix.
     :type im: blender matrix
     :return: tuple(6)
-    
+
     """
     return (im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2][2],)
 
@@ -211,25 +211,41 @@ def inertiaMatrixToList(im):
 def getInertiaRelevantObjects(link):
     """Returns a list of visual and collision objects of a link.
     If name-pairs of visual and collision objects are detected,
-    the visual objects are omitted to prevent redundant information. The function
-    does not check whether mass information within pairs is consistent.
+    the one with the latest change-date is used. If this is not clear,
+    visual objects are omitted in favor of collision objects.
 
     :param link: The link you want to gather the inertia relevant objects for.
-    :type link: dict.
+    :type link: Blender object.
     :return: list.
 
     """
-    tmpobjects = utility.getImmediateChildren(link, ['visual', 'collision'])
-    objlist = [obj.name for obj in tmpobjects]
+    objdict = {obj.name: obj for obj in utility.getImmediateChildren(link, ['visual', 'collision'])}
+    basenames = set()
     inertiaobjects = []
-    for obj in tmpobjects:
-        if 'mass' in obj:
-            if obj.phobostype == 'collision':
-                inertiaobjects.append(obj)
-            elif obj.phobostype == 'visual':
-                collision = obj.name.replace('visual_', 'collision_')
-                if not collision in objlist:
-                    inertiaobjects.append(obj)
+    for objname in objdict.keys():
+        if 'mass' in objdict[objname]:
+            if not objname.startswith('visual_') and not objname.startswith('collision_'):
+                inertiaobjects.append(objdict[objname])
+            else:
+                basename = objname.replace(objdict[objname].phobostype + '_', '')
+                if not basename in basenames:
+                    basenames.add(basename)
+                    collision = 'collision_'+basename if 'collision_'+basename in objdict.keys()\
+                        and 'mass' in objdict['collision_'+basename] else None
+                    visual = 'visual_'+basename if 'visual_'+basename in objdict.keys()\
+                        and 'mass' in objdict['visual_'+basename] else None
+                    if visual and collision:
+                        try:
+                            tv = utility.datetimeFromIso(objdict[visual]['masschanged'])
+                            tc = utility.datetimeFromIso(objdict[collision]['masschanged'])
+                            if tc < tv:  # if collision information is older than visual information
+                                inertiaobjects.append(objdict[visual])
+                            else:
+                                inertiaobjects.append(objdict[collision])
+                        except KeyError:  # if masschanged not present in both
+                            inertiaobjects.append(objdict[collision])
+                    else:
+                        inertiaobjects.append(objdict[collision] if collision else objdict[visual])
     return inertiaobjects
 
 
@@ -276,12 +292,11 @@ def createInertial(obj):
 
     """
     if obj.phobostype == 'link':
-        #name = obj.name
         parent = obj
+        size = (0.04, 0.04, 0.04)
     else:
-        #name = obj.name.replace(obj.phobostype+'_', '')
         parent = obj.parent
-    size = (0.04, 0.04, 0.04) if obj.phobostype == 'link' else (0.02, 0.02, 0.02)
+        size = (0.02, 0.02, 0.02)
     rotation = obj.matrix_world.to_euler()
     center = obj.matrix_world.to_translation()
     inertial = utility.createPrimitive('inertial_' + obj.name, 'box', size,
@@ -294,10 +309,47 @@ def createInertial(obj):
     utility.selectObjects([parent, inertial], True, 0)
     #bpy.context.scene.objects.active = parent.pose.bones[0]
     bpy.ops.object.parent_set(type='BONE_RELATIVE')
-    #TODO: sync masses (invoke operator?)
-    #TODO: set inertia (invoke operator?)
-    #TODO: invoke setmass operator if mass not present
     return inertial
+
+
+def createInertials(link, empty=False, preserve_children=False):
+    # create inertial representations for visual and collision objects in link
+    viscols = getInertiaRelevantObjects(link)
+    # clean existing data
+    if not preserve_children:
+        oldinertials = utility.getImmediateChildren(link, ['inertial'])
+    else:
+        try:
+            oldinertials = [bpy.data.objects['inertial_'+link.name]]
+        except KeyError:
+            oldinertials = None
+    if oldinertials:
+        utility.selectObjects(oldinertials, clear=True, active=0)
+        bpy.ops.object.delete()
+    if not preserve_children:
+        for obj in viscols:
+            if not empty:
+                mass = obj['mass'] if 'mass' in obj else None
+                geometry = robotdictionary.deriveGeometry(obj)
+                if mass is not None:
+                    inert = calculateInertia(mass, geometry)
+                    if inert is not None:
+                        inertial = createInertial(obj)
+                        inertial['mass'] = mass
+                        inertial['inertia'] = inert
+            else:
+                createInertial(obj)
+    # compose inertial object for link
+    if not empty:
+        mass, com, inert = fuseInertiaData(utility.getImmediateChildren(link, ['inertial']))
+        if mass and com and inert:
+            inertial = createInertial(link)
+            com_translate = mathutils.Matrix.Translation(com)
+            inertial.matrix_local = com_translate
+            inertial['inertial/mass'] = mass
+            inertial['inertial/inertia'] = inertiaMatrixToList(inert)
+    else:
+        createInertial(link)
 
 
 ################################################################################

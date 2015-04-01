@@ -140,7 +140,7 @@ def parse_text(s):
 
 def printMatrices(obj, info=None):
     if not info:
-        info = obj.name
+        info = getObjectName(obj)
     print("\n----------------", info, "---------------------\n",
           "local:\n", obj.matrix_local,
           "\n\nworld:\n", obj.matrix_world,
@@ -270,6 +270,21 @@ def getRoots():
         print("Phobos: Found", len(roots), "root object(s)", [root.name + "; " for root in roots])
     return roots  # TODO: Should we change this and all other list return values in a tuple or generator expression?
 
+def getObjectName(obj, phobostype=None):
+    """This function returns the objects valid name.
+
+    :param obj: The object you want the name for.
+    :param phobostype: The phobostype you want this objects name for.
+    :return: The objects name.
+
+    """
+    type=None
+    if "phobostype" in obj and phobostype==None:
+        type = obj.phobostype
+    if type and type+"/name" in obj:
+        return obj[type+"/name"]
+    else:
+        return obj.name
 
 def calcBoundingBoxCenter(boundingbox):
     """Calculates the center of a bounding box"""
@@ -280,6 +295,7 @@ def calcBoundingBoxCenter(boundingbox):
 def selectObjects(objects, clear=True, active=-1):
     """Selects all objects provided in list, clears current selection if clear is True
     and sets one of the objects the active objects if a valid index is provided."""
+    bpy.ops.object.mode_set(mode='OBJECT')
     if clear:
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
@@ -308,6 +324,7 @@ def epsilonToZero(data, epsilon, decimals):
     elif type(data) is list:
         return [epsilonToZero(a, epsilon, decimals) for a in data]
     elif type(data) is dict:
+        print(data)
         return {key: epsilonToZero(value, epsilon, decimals) for key, value in data.items()}
     else:  # any other type, such as string
         return data
@@ -320,7 +337,7 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            log("The object '" + obj.name + "' has not property '" + numeric_prop + "'")
+            log("The object '" + getObjectName(obj) + "' has not property '" + numeric_prop + "'")
     return numsum
 
 

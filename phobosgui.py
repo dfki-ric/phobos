@@ -55,6 +55,7 @@ def register():
     bpy.types.World.linkLayer = IntProperty(name="link", update=manageLayers)
 
     bpy.types.World.path = StringProperty(name='path', default='.', update=updateExportPath)
+    bpy.types.World.meshpath = StringProperty(name="meshpath", default="meshes/")
     bpy.types.World.decimalPlaces = IntProperty(name="decimalPlaces",
                                                 description="number of decimal places to export",
                                                 default=6)
@@ -62,6 +63,7 @@ def register():
     bpy.types.World.useBobj = BoolProperty(name="useBobj", update=updateExportOptions)
     bpy.types.World.useObj = BoolProperty(name="useObj", update=updateExportOptions)
     bpy.types.World.useStl = BoolProperty(name="useStl", update=updateExportOptions)
+    bpy.types.World.useDae = BoolProperty(name="useDae", update=updateExportOptions)
     bpy.types.World.exportMesh = BoolProperty(name="exportMesh", update=updateExportOptions)
     bpy.types.World.exportMARSscene = BoolProperty(name="exportMARSscene", update=updateExportOptions)
     bpy.types.World.exportSMURF = BoolProperty(name="exportSMURF", default=True, update=updateExportOptions)
@@ -369,6 +371,7 @@ class PhobosExportPanel(bpy.types.Panel):
         #export robot model options
         self.layout.label(text="General")
         self.layout.prop(bpy.data.worlds[0], "path")
+        self.layout.prop(bpy.data.worlds[0], "meshpath")
         ginlayout = self.layout.split()
         g1 = ginlayout.column(align=True)
         g1.prop(bpy.data.worlds[0], "relativePath")
@@ -384,18 +387,21 @@ class PhobosExportPanel(bpy.types.Panel):
         c1.prop(bpy.data.worlds[0], "useBobj", text="use .bobj format")
         c1.prop(bpy.data.worlds[0], "useObj", text="use .obj format")
         c1.prop(bpy.data.worlds[0], "useStl", text="use .stl format")
+        c1.prop(bpy.data.worlds[0], "useDae", text="use .dae format")
         if bpy.data.worlds[0].useObj:
             labeltext = ".obj is used"
         elif bpy.data.worlds[0].useBobj:
             labeltext = ".bobj is used"
         elif bpy.data.worlds[0].useStl:
             labeltext = ".stl is used"
+        elif bpy.data.worlds[0].useDae:
+            labeltext = ".dae is used"
         else:
             labeltext = ".obj is used"
         c1.label(text=labeltext)
         c2 = inlayout.column(align=True)
         c2.label(text="Robot data export")
-        c2.prop(bpy.data.worlds[0], "exportMARSscene", text="as MARS scene")
+        #c2.prop(bpy.data.worlds[0], "exportMARSscene", text="as MARS scene")
         c2.prop(bpy.data.worlds[0], "exportSMURF", text="as SMURF")
         c2.prop(bpy.data.worlds[0], "exportURDF", text="as URDF")
         c2.prop(bpy.data.worlds[0], "exportSRDF", text="with SRDF")

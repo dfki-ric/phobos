@@ -42,6 +42,7 @@ from phobos.utility import *
 from . import marssceneexport as mse
 from . import robotdictionary
 from . import defs
+from . import logging as logger
 
 
 def register():
@@ -92,7 +93,7 @@ def exportBobj(path, obj):
 
     # ignore dupli children
     if obj.parent and obj.parent.dupli_type in {'VERTS', 'FACES'}:
-        print(obj.name, 'is a dupli child - ignoring')
+        print(getObjectName(obj), 'is a dupli child - ignoring')
         return
 
     mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW')
@@ -111,7 +112,7 @@ def exportBobj(path, obj):
 
     me_verts = mesh.vertices[:]
 
-    out = open(determineMeshOutpath(obj, obj.name, 'bobj', path), "wb")
+    out = open(determineMeshOutpath(obj, getObjectName(obj), 'bobj', path), "wb")
 
     for v in mesh.vertices:
         out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
@@ -119,7 +120,7 @@ def exportBobj(path, obj):
     if faceuv:
         uv = uvkey = uv_dict = f_index = uv_index = None
 
-        uv_face_mapping = [[0, 0, 0, 0]] * len(face_index_pairs)  # a bit of a waste for tri's :/
+        uv_face_mapping = [[0, 0, 0, 0] for i in range(len(face_index_pairs))] # a bit of a waste for tri's :/
 
         uv_dict = {}  # could use a set() here
         if bpy.app.version[1] >= 65:
@@ -199,7 +200,8 @@ def exportObj(path, obj):
     :return: Nothing.
 
     """
-    objname = obj.name
+    objname = getObjectName(obj)
+    oldBlenderObjName = obj.name
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
     tmpobject.data = obj.data  # copy the mesh here
@@ -208,12 +210,12 @@ def exportObj(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
-    obj.name = objname
+    obj.name = oldBlenderObjName
 
     #This is the old implementation which did not work properly (08.08.2014)
     #bpy.ops.object.select_all(action='DESELECT')
     #obj.select = True
-    #outpath = os.path.join(path, obj.name) + '.obj'
+    #outpath = os.path.join(path, getObjectName(obj)) + '.obj'
     #world_matrix = obj.matrix_world.copy()
     ##inverse_local_rotation = obj.matrix_local.to_euler().to_matrix().inverted()
     ##world_scale = world_matrix.to_scale() TODO: implement scale
@@ -236,7 +238,8 @@ def exportStl(path, obj):
     :return: Nothing.
 
     """
-    objname = obj.name
+    objname = getObjectName(obj)
+    oldBlenderObjectName = obj.name
     print("OBJNAME: " + objname)
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
@@ -246,7 +249,33 @@ def exportStl(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
-    obj.name = objname
+    obj.name = oldBlenderObjectName
+
+
+def exportDae(path, obj):
+    """This function exports a specific object to a chosen path as a .dae
+
+    :param path: The path you want the object exported to. *without filename!*
+    :type path: String
+    :param obj: The blender object you want to export.
+    :type obj: bpy.types.Object
+    :return: Nothing.
+
+    """
+    objname = getObjectName(obj)
+    oldBlenderObjectName = obj.name
+    print("OBJNAME: " + objname)
+    obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
+    tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+    tmpobject.data = obj.data  # copy the mesh here
+    outpath = determineMeshOutpath(obj, objname, 'dae', path)
+    bpy.ops.object.select_all(action='DESELECT')
+    tmpobject.select = True
+    bpy.ops.wm.collada_export(filepath=outpath, selected=True)
+    bpy.ops.object.select_all(action='DESELECT')
+    tmpobject.select = True
+    bpy.ops.object.delete()
+    obj.name = oldBlenderObjectName
 
 
 def exportModelToYAML(model, filepath):
@@ -327,22 +356,25 @@ def gatherAnnotations(model):
     # gather information from directly accessible types
     for objtype in types:
         for elementname in model[objtype]:
-            tmpdict = model[objtype][elementname].copy()
-            tmpdict['type'] = objtype[:-1]
+            #tmpdict = model[objtype][elementname].copy()
+            tmpdict = model[objtype][elementname]
+            tmpdict['temp_type'] = objtype[:-1]
             elementlist.append(tmpdict)
     # add information from types hidden in links
     for linkname in model['links']:
         for objtype in ('collision', 'visual'):
             if objtype in model['links'][linkname]:
                 for elementname in model['links'][linkname][objtype]:
-                    tmpdict = model['links'][linkname][objtype][elementname].copy()
+                    #tmpdict = model['links'][linkname][objtype][elementname].copy()
+                    tmpdict = model['links'][linkname][objtype][elementname]
                     #tmpdict['link'] = linkname
-                    tmpdict['type'] = objtype
+                    tmpdict['temp_type'] = objtype
                     elementlist.append(tmpdict)
         if 'inertial' in model['links'][linkname]:
-            tmpdict = model['links'][linkname]['inertial'].copy()
+            #tmpdict = model['links'][linkname]['inertial'].copy()
+            tmpdict = model['links'][linkname]['inertial']
             #tmpdict['link'] = linkname
-            tmpdict['type'] = 'inertial'
+            tmpdict['temp_type'] = 'inertial'
             elementlist.append(tmpdict)
     # loop through the list of annotated elements and categorize the data
     for element in elementlist:
@@ -352,14 +384,21 @@ def gatherAnnotations(model):
                 category = key[1:]
                 if category not in annotations:
                     annotations[category] = {}
-                if element['type'] not in annotations[category]:
-                    annotations[category][element['type']] = []
+                if element['temp_type'] not in annotations[category]:
+                    annotations[category][element['temp_type']] = []
                 tmpdict = {k: element[key][k] for k in element[key]}
                 tmpdict['name'] = element['name']
-                annotations[category][element['type']].append(tmpdict)
+                annotations[category][element['temp_type']].append(tmpdict)
                 delkeys.append(key)
+        delkeys.append('temp_type')
+        print('element:', element)
         for key in delkeys:
+            print(key)
             del element[key]
+    #print('annotations:', annotations)
+    #for category in annotations:
+    #    for element in annotations[category]:
+    #        del element['type']
     return annotations
 
 
@@ -413,6 +452,7 @@ def exportModelToURDF(model, filepath):
     :return: Nothing.
 
     """
+    print(filepath)
     output = [xmlHeader, indent + '<robot name="' + model['modelname'] + '">\n\n']
     #export link information
     for l in model['links'].keys():
@@ -461,6 +501,7 @@ def exportModelToURDF(model, filepath):
                 output.append(indent * 3 + '</collision>\n')
         output.append(indent * 2 + '</link>\n\n')
     #export joint information
+    missing_values = False
     for j in model['joints']:
         joint = model['joints'][j]
         output.append(indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n')
@@ -472,10 +513,23 @@ def exportModelToURDF(model, filepath):
         if 'axis' in joint:
             output.append(indent * 3 + '<axis xyz="' + l2str(joint['axis']) + '"/>\n')
         if 'limits' in joint:
+            for limit_value in ['effort', 'velocity']:
+                if limit_value not in joint['limits']:
+                    #print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
+                    logger.log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
+                    missing_values = True
             output.append(
                 xmlline(3, 'limit', [p for p in joint['limits']], [joint['limits'][p] for p in joint['limits']]))
+        elif joint['type'] in ['revolute', 'prismatic']:
+            #print("\n###WARNING: joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!###\n")
+            logger.log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
+            missing_values = True
         output.append(indent * 2 + '</joint>\n\n')
     #export material information
+    if missing_values:
+        #print("\n###WARNING: Created URDF is invalid due to missing values!###")
+        logger.log("Created URDF is invalid due to missing values!")
+        bpy.ops.tools.phobos_warning_dialog('INVOKE_DEFAULT', message="Created URDF is invalid due to missing values!")
     for m in model['materials']:
         if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
             output.append(indent * 2 + '<material name="' + m + '">\n')
@@ -492,6 +546,7 @@ def exportModelToURDF(model, filepath):
         outputfile.write(''.join(output))
     # problem of different joint transformations needed for fixed joints
     print("phobos URDF export: Writing model data to", filepath)
+    #logger.log("phobos URDF export: Writing model data to " + filepath, level='ALL')
 
 
 def exportModelToSRDF(model, path):
@@ -662,6 +717,9 @@ def exportModelToSMURF(model, path):
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
     #write urdf
+    logger.startLog(None)
+    logger.log('name', model['modelname'])
+    logger.endLog()
     exportModelToURDF(model, path + urdf_filename)
 
     # #write semantics (SRDF information in YML format)
@@ -744,7 +802,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
             else:
                 models[root['modelname']].append(root)
 
-    smurfs = []
+    entities = []
     for modelname in models:
         entitylist = models[modelname]
         unnamed_entities = 0
@@ -758,12 +816,12 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
             uri = os.path.join(modelname, modelname+'.smurf') if subfolders else modelname+'.smurf'
             scenedict = {'name': entityname,
                          'type': 'smurf',
-                         'URI': uri,
+                         'file': uri,
                          'anchor': root['anchor'] if 'anchor' in root else 'none',
                          'position': entitypose['translation'],
                          'rotation': entitypose['rotation_quaternion'],
                          'pose': 'default'}  # TODO: implement multiple poses
-            smurfs.append(scenedict)
+            entities.append(scenedict)
 
     if bpy.data.worlds[0].relativePath:
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
@@ -776,7 +834,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
                          + "'; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n")
         outputfile.write("# created with Phobos " + defs.version
                          + " - https://github.com/rock-simulation/phobos\n\n")
-        outputfile.write(yaml.dump({'smurfs': smurfs}))
+        outputfile.write(yaml.dump({'entities': entities}))
 
     for modelname in models:
         smurf_outpath = securepath(os.path.join(outpath, modelname) if subfolders else outpath)
@@ -842,7 +900,9 @@ class ExportModelOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        logger.startLog(self)
         export()
+        logger.endLog()
         return {'FINISHED'}
 
 
@@ -861,6 +921,7 @@ def export(path=''):
         outpath = path
     if not outpath.endswith(os.path.sep):
         outpath += os.path.sep
+    meshoutpath = securepath(os.path.join(outpath, bpy.data.worlds[0].meshpath))
     yaml = bpy.data.worlds[0].exportYAML
     urdf = bpy.data.worlds[0].exportURDF
     srdf = bpy.data.worlds[0].exportSRDF
@@ -870,6 +931,7 @@ def export(path=''):
     objexp = bpy.data.worlds[0].useObj
     bobjexp = bpy.data.worlds[0].useBobj
     stlexp = bpy.data.worlds[0].useStl
+    daeexp = bpy.data.worlds[0].useDae
     objectlist = bpy.context.selected_objects
 
     if yaml or urdf or smurf or mars:
@@ -884,7 +946,6 @@ def export(path=''):
             exportModelToSMURF(robot, outpath)
         elif urdf:
             exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
-    selectObjects(objectlist, True)  # FIXME: does this make sense, as it is already the list of selected objects?
     if meshexp:
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
         if show_progress:
@@ -892,15 +953,17 @@ def export(path=''):
             total = float(len(objectlist))
             wm.progress_begin(0, total)
             i = 1
-        for obj in bpy.context.selected_objects:
+        for obj in objectlist:
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
                 and obj['geometry/type'] == 'mesh' and 'filename' not in obj and 'geometry/'+defs.reservedProperties['SHAREDMESH'] not in obj):
                 if objexp:
-                    exportObj(outpath, obj)
+                    exportObj(meshoutpath, obj)
                 if bobjexp:
-                    exportBobj(outpath, obj)
+                    exportBobj(meshoutpath, obj)
                 if stlexp:
-                    exportStl(outpath, obj)
+                    exportStl(meshoutpath, obj)
+                if daeexp:
+                    exportDae(meshoutpath, obj)
             if show_progress:
                 wm.progress_update(i)
                 i += 1
