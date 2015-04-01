@@ -25,6 +25,7 @@ Created on 28 Jul 2014
 @author: Kai von Szadkowski, Stefan Rahms
 """
 
+import os
 import bpy
 import mathutils
 import sys
@@ -187,7 +188,7 @@ def deriveGeometry(obj):
                 filename += ".dae"
             else:
                 filename += ".obj"
-            geometry['filename'] = filename
+            geometry['filename'] = os.path.join(bpy.data.worlds[0].meshpath, filename)
             geometry['scale'] = list(obj.scale)
             geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
         return geometry
