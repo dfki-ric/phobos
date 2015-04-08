@@ -291,6 +291,17 @@ def get_phobos_joint_name(mars_name, has_limits):
     return 'fixed'
 
 
+def find_name(node):
+    name = node.get('name')
+    if name is None:
+        name = node.find('name')
+        if name is None:
+            name = 'node_' + node.find('index').text
+        else:
+            name = name.text
+    return name
+
+
 class RobotModelParser():
     """Base class for a robot model file parser of a specific type
 
@@ -924,9 +935,10 @@ class MARSModelParser(RobotModelParser):
         Collect the indices of all nodes that are links inside
         'self.link_indices'.
         '''
-        for joint in joints:
-            child = int(joint.find('nodeindex2').text)
-            self.link_indices.update([child])
+        if joints is not None:
+            for joint in joints:
+                child = int(joint.find('nodeindex2').text)
+                self.link_indices.update([child])
         for node in nodes:
             if node.find('relativeid') is None:
                 self.link_indices.update([int(node.find('index').text)])
@@ -982,12 +994,15 @@ class MARSModelParser(RobotModelParser):
                 material_dict['transparency'] = round_float(transparency.text)
             else:
                 material_dict['transparency'] = 0.0
-                
-            material_dict['shininess'] = round_float(material.find('shininess').text)
+
+            shininess = material.find('shininess')
+            if shininess is not None:
+                material_dict['shininess'] = round_float(shininess.text)
             self.material_indices[mat_id] = name
             materials_dict[name] = material_dict
 
-            materials.makeMaterial(name, tuple(material_dict['diffuseColor'][0:3]), (1, 1, 1), material_dict['diffuseColor'][-1])
+            if 'diffuseColor' in material_dict:
+                materials.makeMaterial(name, tuple(material_dict['diffuseColor'][0:3]), (1, 1, 1), material_dict['diffuseColor'][-1])
 
         return materials_dict
     
@@ -1120,7 +1135,8 @@ class MARSModelParser(RobotModelParser):
             # inertial pose is always origin for now
             position, rotation = pos_rot_tree_to_lists(None, None)
             inertial_dict['pose'] = calc_pose_formats(position, rotation)
-            inertial_dict['name'] = self._get_distinct_name('inertial_' + node.get('name'))
+            name = find_name(node)
+            inertial_dict['name'] = self._get_distinct_name('inertial_' + name)
             link_dict['inertial'] = inertial_dict
 
         return inertial_dict
@@ -1150,14 +1166,16 @@ class MARSModelParser(RobotModelParser):
             name = self._get_distinct_name(node.get('name'))
                 
             self.link_index_dict[index] = name
-            
-            group = int(node.find('groupid').text)
-            node_group_dict = {'name': name,
-                               'index': index}
-            if group in self.link_groups_group_order:
-                self.link_groups_group_order[group].append(node_group_dict)
-            else:
-                self.link_groups_group_order[group] = [node_group_dict]
+
+            group_id = node.find('groupid')
+            if group_id is not None:
+                group = int(group_id.text)
+                node_group_dict = {'name': name,
+                                   'index': index}
+                if group in self.link_groups_group_order:
+                    self.link_groups_group_order[group].append(node_group_dict)
+                else:
+                    self.link_groups_group_order[group] = [node_group_dict]
             
             rel_id = node.find('relativeid')
             if index in self.link_indices:
@@ -1275,6 +1293,8 @@ class MARSModelParser(RobotModelParser):
         Parse the joints of the MARS scene.
         '''
         state_dict = {}
+        if joints is None:
+            return
         for joint in joints:
             joint_dict = {}
             name = joint.get('name')
@@ -1456,6 +1476,8 @@ class MARSModelParser(RobotModelParser):
         '''
         '''
         motors_dict = {}
+        if motors is None:
+            return motors_dict
         for motor in motors:
             motor_dict = {}
             name = motor.get('name')
