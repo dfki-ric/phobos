@@ -516,6 +516,7 @@ class RobotModelParser():
                             bpy.ops.object.select_all(action='DESELECT')
                             newgeom.select = True
                             bpy.ops.object.transform_apply(rotation=True)
+                print(viscol)
                 newgeom.name = viscol['name']
                 newgeom['filename'] = geom['filename']
                 #newgeom.select = True
@@ -1013,6 +1014,8 @@ class MARSModelParser(RobotModelParser):
         size = None
         if mode == 'visual':
             size = node.find('visualsize')
+            if size is None:
+                size = node.find('extend')
             mesh_file = node.find('filename')
             if mesh_file is not None:
                 geometry_type = 'mesh'
@@ -1024,7 +1027,6 @@ class MARSModelParser(RobotModelParser):
         
         geometry_dict = {}
         geometry_dict['type'] = geometry_type
-        
         if geometry_type == 'box' or geometry_type == 'mesh':
             x = round_float(size.find('x').text)
             y = round_float(size.find('y').text)
@@ -1095,8 +1097,9 @@ class MARSModelParser(RobotModelParser):
         #else:
         collision_dict['pose'] = self.applied_vis_col_poses[index]
         
-        bitmask = int(float(node.find('coll_bitmask').text))
-        collision_dict['bitmask'] = bitmask
+        bitmask = node.find('coll_bitmask')
+        if bitmask is not None:
+            collision_dict['bitmask'] = int(float(bitmask.text))
         
         if not self._parse_geometry(collision_dict, node, 'collision'):
             missing_coll_geo.append(name)
@@ -1163,7 +1166,10 @@ class MARSModelParser(RobotModelParser):
             missing_vis_geo = []
             missing_coll_geo = []
             index = int(node.find('index').text)
-            name = self._get_distinct_name(node.get('name'))
+            xml_name = node.get('name')
+            if xml_name is None:
+                xml_name = node.find('name').text
+            name = self._get_distinct_name(xml_name)
                 
             self.link_index_dict[index] = name
 
@@ -1438,8 +1444,9 @@ class MARSModelParser(RobotModelParser):
             sensor_dict = {}
             name = sensor.get('name')
             sensor_dict['name'] = name
-            index = int(sensor.find('index').text)
-            self.sensor_index_dict[index] = name
+            index = sensor.find('index')
+            if index is not None:
+                self.sensor_index_dict[int(index.text)] = name
 
             xml_rate = sensor.find('rate')
             if xml_rate is not None:
@@ -1537,6 +1544,73 @@ class MARSModelParser(RobotModelParser):
                 controllers_dict[name] = controller_dict
 
         return controllers_dict
+
+    def _parse_lights(self, lights):
+        """
+        """
+        lights_dict = {}
+        if lights:
+            for light in lights:
+                light_dict = {}
+                name = self._get_distinct_name(light.get('light'))
+                light_dict['name'] = name
+
+                position = light.find('position')
+                if position is not None:
+                    position_dict = {}
+                    for dim_str in ['x', 'y', 'z']:
+                        position_dict[dim_str] = float(position.find(dim_str).text)
+                    light_dict['position'] = position_dict
+
+                    look_at = light.find('lookat')
+                    if look_at is not None:
+                        direction_dict = {}
+                        for dim_str in ['x', 'y', 'z']:
+                            direction_dict[dim_str] = float(look_at.find(dim_str).text) - position_dict[dim_str]
+                        light_dict['direction'] = direction_dict
+
+                colours_dict = {}
+                for colour_str in ['ambient', 'diffuse', 'specular']:
+                    colour = light.find(colour_str)
+                    if colour is not None:
+                        colour_dict = {}
+                        for value in ['a', 'r', 'g', 'b']:
+                            colour_dict[value] = float(colour.text)
+                        colours_dict[colour_str] = colour_dict
+                if colours_dict is not {}:
+                    light_dict['color'] = colours_dict
+
+                attenuation_dict = {}
+                for att_str in ['constant', 'linear', 'quadratic']:
+                    att = light.find(att_str + 'Attenuation')
+                    if att is not None:
+                        attenuation_dict['constant'] = float(att.text)
+                if attenuation_dict is not {}:
+                    light_dict['attenuation'] = attenuation_dict
+
+                for value_str in ['angle', 'exponent']:
+                    value = light.find(value_str)
+                    if value is not None:
+                        light_dict[value_str] = float(value.text)
+
+                light_type = light.find('type')
+                if light_type is not None:
+                    type_num = int(light_type.text)
+                    if type_num == 1:
+                        light_dict['type'] = 'omnilight'
+                    elif type_num == 2:
+                        light_dict['type'] = 'spotlight'
+
+                directional = light.find('directional')
+                if directional is not None:
+                    light_dict['directional'] = bool(directional.text)
+
+                lights_dict[name] = light_dict
+
+        return lights_dict
+
+
+
 
 
 class URDFModelParser(RobotModelParser):
