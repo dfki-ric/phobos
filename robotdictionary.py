@@ -253,6 +253,10 @@ def deriveController(obj):
     props = initObjectProperties(obj, phobostype='controller')
     return props
 
+def deriveLight(obj):
+    light = initObjectProperties(obj, phobostype='light')
+    # TODO: fill
+    return light
 
 def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
     props = {'name': getObjectName(obj).split(':')[-1]}  #allow duplicated names differentiated by types
@@ -381,7 +385,8 @@ def buildRobotDictionary():
             'controllers': {},
             'materials': {},
             'groups': {},
-            'chains': {}
+            'chains': {},
+            'lights': {}
             }
     #save timestamped version of model
     robot["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
@@ -490,6 +495,12 @@ def buildRobotDictionary():
             chains.extend(deriveChainEntry(obj))
     for chain in chains:
         robot['chains'][chain['name']] = chain
+
+    # gather information on global lights
+    print('\n\nParsing lights...')
+    for obj in bpy.context.selected_objects:
+        if obj.phobostype == 'light':
+            robot['lights'][getObjectName(obj)] = deriveLight(obj)
 
     robot['poses'] = deriveStoredPoses()
 

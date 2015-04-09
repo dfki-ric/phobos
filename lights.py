@@ -58,6 +58,7 @@ def addLight(light_dict):
         light_data.type = 'SPOT'
     elif light_dict['type'] == 'omnilight':
         light_data.type = 'POINT'
+    light.phobostype = 'light'
     return light
 
 
