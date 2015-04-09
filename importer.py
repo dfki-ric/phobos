@@ -41,6 +41,7 @@ import phobos.bobj_import as bobj_import
 from . import joints
 from . import sensors
 from . import controllers
+from . import lights
 from phobos.logging import *
 
 #This is a really nice pythonic approach to creating a list of constants
@@ -289,17 +290,6 @@ def get_phobos_joint_name(mars_name, has_limits):
     if mars_name == 'slider':
         return 'prismatic'
     return 'fixed'
-
-
-def find_name(node):
-    name = node.get('name')
-    if name is None:
-        name = node.find('name')
-        if name is None:
-            name = 'node_' + node.find('index').text
-        else:
-            name = name.text
-    return name
 
 
 class RobotModelParser():
@@ -758,6 +748,9 @@ class RobotModelParser():
     def createController(self, controller):
         controllers.addController(controller)
 
+    def createLight(self, light):
+        lights.addLight(light)
+
     def createGroup(self, group):
         pass
 
@@ -827,6 +820,10 @@ class RobotModelParser():
         for ch in self.robot['chains']:
             chain = self.robot['chains'][ch]
             self.createChain(chain)
+
+        print("\n\nCreating lights...")
+        for light in self.robot['lights']:
+            self.createLight(self.robot['lights'][light])
 
         #self._apply_joint_angle_offsets()
 
@@ -902,6 +899,7 @@ class MARSModelParser(RobotModelParser):
         sensors = root.find('sensorlist')
         motors = root.find('motorlist')
         controllers = root.find('controllerlist')
+        lights = root.find('lightlist')
         material_list = root.find('materiallist')
 
         self._parse_joints(joints)
@@ -921,6 +919,7 @@ class MARSModelParser(RobotModelParser):
         self.robot['controllers'] = self._parse_controllers(controllers)
         self.robot['groups'] = self.link_groups_group_order
         self._parse_additional_visuals_and_collisions(self.robot, nodes)
+        self.robot['lights'] = self._parse_lights(lights)
         
         for link in self.robot['links']:
             handle_missing_geometry(self.missing_vis_geos[link], self.missing_coll_geos[link], self.robot['links'][link])
@@ -930,7 +929,23 @@ class MARSModelParser(RobotModelParser):
         self._debug_output()
 
         print(self.joint_index_dict)
-    
+
+    def _find_name(self, struct, prefix='', emerg='link'):
+        name = struct.get('name')
+        if name is None:
+            name_xml = struct.find('name')
+            if name_xml is None:
+                index = struct.find('index')
+                if index is None:
+                    name = emerg
+                else:
+                    name = emerg + '_' + index.text
+            else:
+                name = name_xml.text
+        if prefix is not '':
+            prefix += '_'
+        return self._get_distinct_name(prefix + name)
+
     def _get_links(self, nodes, joints):
         '''
         Collect the indices of all nodes that are links inside
@@ -1058,7 +1073,7 @@ class MARSModelParser(RobotModelParser):
         Parse a visual object.
         '''
         visual_dict = {}
-        name = self._get_distinct_name('visual_' + node.get('name'))
+        name = self._find_name(node, prefix='visual')
         visual_dict['name'] = name
         index = int(node.find('index').text)
 
@@ -1087,7 +1102,7 @@ class MARSModelParser(RobotModelParser):
         Parse a collision object.
         '''
         collision_dict = {}
-        name = self._get_distinct_name('collision_' + node.get('name'))
+        name = self._find_name(node, prefix='collision')
         collision_dict['name'] = name
         index = int(node.find('index').text)        
         
@@ -1138,8 +1153,7 @@ class MARSModelParser(RobotModelParser):
             # inertial pose is always origin for now
             position, rotation = pos_rot_tree_to_lists(None, None)
             inertial_dict['pose'] = calc_pose_formats(position, rotation)
-            name = find_name(node)
-            inertial_dict['name'] = self._get_distinct_name('inertial_' + name)
+            inertial_dict['name'] = self._find_name(node, prefix='inertial')
             link_dict['inertial'] = inertial_dict
 
         return inertial_dict
@@ -1166,22 +1180,21 @@ class MARSModelParser(RobotModelParser):
             missing_vis_geo = []
             missing_coll_geo = []
             index = int(node.find('index').text)
-            xml_name = node.get('name')
-            if xml_name is None:
-                xml_name = node.find('name').text
-            name = self._get_distinct_name(xml_name)
+            name = self._find_name(node)
                 
             self.link_index_dict[index] = name
 
             group_id = node.find('groupid')
             if group_id is not None:
                 group = int(group_id.text)
-                node_group_dict = {'name': name,
-                                   'index': index}
-                if group in self.link_groups_group_order:
-                    self.link_groups_group_order[group].append(node_group_dict)
-                else:
-                    self.link_groups_group_order[group] = [node_group_dict]
+            else:
+                group = 0
+            node_group_dict = {'name': name,
+                               'index': index}
+            if group in self.link_groups_group_order:
+                self.link_groups_group_order[group].append(node_group_dict)
+            else:
+                self.link_groups_group_order[group] = [node_group_dict]
             
             rel_id = node.find('relativeid')
             if index in self.link_indices:
@@ -1279,9 +1292,11 @@ class MARSModelParser(RobotModelParser):
             else:
                 root_child = False
             if index in self.vis_coll_groups:
+                print('YUP')
                 link_index = self.vis_coll_groups[index]
                 group = self.link_groups_link_order[link_index]
                 for group_node in group:
+                    print('group node', group_node)
                     if group_node['index'] == link_index:
                         name = group_node['name']
                         visuals_dict = model['links'][name]['visual']
@@ -1303,7 +1318,7 @@ class MARSModelParser(RobotModelParser):
             return
         for joint in joints:
             joint_dict = {}
-            name = joint.get('name')
+            name = self._find_name(joint, emerg='joint')
             joint_dict['name'] = name
             mars_type = joint.find('type').text
 
@@ -1442,7 +1457,7 @@ class MARSModelParser(RobotModelParser):
         sensors_dict = {}
         for sensor in sensors:
             sensor_dict = {}
-            name = sensor.get('name')
+            name = self._find_name(sensor, emerg='sensor')
             sensor_dict['name'] = name
             index = sensor.find('index')
             if index is not None:
@@ -1487,7 +1502,7 @@ class MARSModelParser(RobotModelParser):
             return motors_dict
         for motor in motors:
             motor_dict = {}
-            name = motor.get('name')
+            name = self._find_name(motor, emerg='motor')
             motor_dict['name'] = name
 
             joint_index = int(motor.find('jointIndex').text)
@@ -1526,7 +1541,7 @@ class MARSModelParser(RobotModelParser):
         if controllers:
             for controller in controllers:
                 controller_dict = {}
-                name = 'controller_%i'%self.controller_counter   #controller.get('name')
+                name = self._find_name(controller, emerg='controller')
                 self.controller_counter += 1
                 controller_dict['name'] = name
                 controller_dict['rate'] = float(controller.find('rate').text)
@@ -1552,7 +1567,7 @@ class MARSModelParser(RobotModelParser):
         if lights:
             for light in lights:
                 light_dict = {}
-                name = self._get_distinct_name(light.get('light'))
+                name = self._find_name(light, emerg='light')
                 light_dict['name'] = name
 
                 position = light.find('position')
@@ -1575,7 +1590,7 @@ class MARSModelParser(RobotModelParser):
                     if colour is not None:
                         colour_dict = {}
                         for value in ['a', 'r', 'g', 'b']:
-                            colour_dict[value] = float(colour.text)
+                            colour_dict[value] = float(colour.find(value).text)
                         colours_dict[colour_str] = colour_dict
                 if colours_dict is not {}:
                     light_dict['color'] = colours_dict
