@@ -261,6 +261,8 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
             props[key] = value
     else:
         for key, value in obj.items():
+            if hasattr(value, 'to_list'):  # transform Blender id_arrays into lists
+                value = list(value)
             if '/' in key:
                 if phobostype+'/' in key:
                     specs = key.split('/')[1:]

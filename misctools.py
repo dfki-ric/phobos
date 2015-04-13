@@ -1011,7 +1011,7 @@ class EditYAMLDictionary(Operator):
                        + "_data"
         tmpdict = dict(ob.items())
         for key in tmpdict:
-            if hasattr(tmpdict[key], 'to_list'):
+            if hasattr(tmpdict[key], 'to_list'):  # transform Blender id_arrays into lists
                 tmpdict[key] = list(tmpdict[key])
         contents = [variablename + ' = """',
                     yaml.dump(utility.cleanObjectProperties(tmpdict),
