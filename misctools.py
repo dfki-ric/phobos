@@ -1007,7 +1007,8 @@ class EditYAMLDictionary(Operator):
         startLog(self)
         ob = context.active_object
         textfilename = ob.name + dt.now().strftime("%Y%m%d_%H:%M")
-        variablename = ob.name + "_data"
+        variablename = ob.name.translate({ord(c): "_" for c in "!@#$%^&*()[]{};:,./<>?\|`~-=+"})\
+                       + "_data"
         tmpdict = dict(ob.items())
         for key in tmpdict:
             if hasattr(tmpdict[key], 'to_list'):
