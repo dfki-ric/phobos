@@ -214,10 +214,10 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
                 log("No Blender Rigid Body World present, only adding custom properties.", "ERROR")
             # we should make sure that the rigid body constraints gets changed
             # if the values below are changed manually by the user
-            joint['joint/springStiffness'] = spring
-            joint['joint/springDamping'] = damping
-            joint['joint/spring_const_constraint_axis1'] = spring  # FIXME: this is a hack
-            joint['joint/damping_const_constraint_axis1'] = damping  # FIXME: this is a hack, too
+            joint['joint/dynamics/springStiffness'] = spring
+            joint['joint/dynamics/springDamping'] = damping
+            joint['joint/dynamics/spring_const_constraint_axis1'] = spring  # FIXME: this is a hack
+            joint['joint/dynamics/damping_const_constraint_axis1'] = damping  # FIXME: this is a hack, too
         # add constraints
         if jointtype == 'revolute':
             # fix location
