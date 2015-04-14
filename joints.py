@@ -206,9 +206,12 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
     if joint.phobostype == 'link':
         # add spring & damping
         if jointtype in ['revolute', 'prismatic'] and (spring or damping):
-            bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
-            bpy.context.object.rigid_body_constraint.spring_stiffness_y = spring
-            bpy.context.object.rigid_body_constraint.spring_damping_y = damping
+            try:
+                bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
+                bpy.context.object.rigid_body_constraint.spring_stiffness_y = spring
+                bpy.context.object.rigid_body_constraint.spring_damping_y = damping
+            except RuntimeError:
+                log("No Blender Rigid Body World present, only adding custom properties.", "ERROR")
             # we should make sure that the rigid body constraints gets changed
             # if the values below are changed manually by the user
             joint['joint/springStiffness'] = spring
