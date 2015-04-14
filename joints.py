@@ -181,7 +181,7 @@ def getJointConstraint(joint, ctype):
     return con
 
 
-def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0):
+def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damping=0.0):
     """This function sets the constraints for a given joint and jointtype.
 
     :param joint: The joint you want to set the constraints for.
@@ -204,6 +204,18 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0):
     for c in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(c)
     if joint.phobostype == 'link':
+        # add spring & damping
+        if jointtype in ['revolute', 'prismatic'] and (spring or damping):
+            bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
+            bpy.context.object.rigid_body_constraint.spring_stiffness_y = spring
+            bpy.context.object.rigid_body_constraint.spring_damping_y = damping
+            # we should make sure that the rigid body constraints gets changed
+            # if the values below are changed manually by the user
+            joint['joint/springStiffness'] = spring
+            joint['joint/springDamping'] = damping
+            joint['joint/spring_const_constraint_axis1'] = spring  # FIXME: this is a hack
+            joint['joint/damping_const_constraint_axis1'] = damping  # FIXME: this is a hack, too
+        # add constraints
         if jointtype == 'revolute':
             # fix location
             bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
@@ -378,6 +390,16 @@ class DefineJointConstraintsOperator(Operator):
         default=0.0,
         description="maximum velocity of the joint. If you uncheck radian, you can enter °/sec here")
 
+    spring = FloatProperty(
+        name="spring constant",
+        default=0.0,
+        description="spring constant of the joint")
+
+    damping = FloatProperty(
+        name="damping constant",
+        default=0.0,
+        description="damping constant of the joint")
+
     # TODO: invoke function to read all values in
 
     def draw(self, context):
@@ -391,6 +413,8 @@ class DefineJointConstraintsOperator(Operator):
         if self.joint_type in ('revolute', 'prismatic'):
             layout.prop(self, "lower", text="lower")
             layout.prop(self, "upper", text="upper")
+            layout.prop(self, "spring", text="spring constant [N/m]")
+            layout.prop(self, "damping", text="damping constant")
 
 
     def invoke(self, context, event):
@@ -424,7 +448,7 @@ class DefineJointConstraintsOperator(Operator):
             velocity = self.maxvelocity
         for link in context.selected_objects:
             bpy.context.scene.objects.active = link
-            setJointConstraints(link, self.joint_type, lower, upper)
+            setJointConstraints(link, self.joint_type, lower, upper, self.spring, self.damping)
             if self.joint_type != 'fixed':
                 link['joint/maxeffort'] = self.maxeffort
                 link['joint/maxvelocity'] = velocity
