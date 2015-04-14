@@ -85,7 +85,7 @@ def deriveJoint(obj):
     props = initObjectProperties(obj, phobostype='joint', ignoretypes=['link', 'motor'])
     props['parent'] = obj.parent.name
     props['child'] = getObjectName(obj)
-    props['type'], crot = joints.deriveJointType(obj, True)
+    # props['type'], crot = joints.deriveJointType(obj, True)  # FIXME: make this a manual check
     axis, minmax = joints.getJointConstraints(obj)
     if axis:
         props['axis'] = list(axis)

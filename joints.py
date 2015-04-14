@@ -118,7 +118,7 @@ def getJointConstraints(joint):
     :return: tuple -- containing the axis and limits lists.
 
     """
-    jt, crot = deriveJointType(joint, adjust = True)
+    jt, crot = deriveJointType(joint)
     axis = None
     limits = None
     if jt not in ['floating', 'fixed']:
