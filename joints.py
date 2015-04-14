@@ -37,6 +37,7 @@ import mathutils
 import warnings
 from . import defs
 from phobos.logging import *
+from phobos.utility import getObjectName
 
 
 def register():
@@ -102,11 +103,9 @@ def deriveJointType(joint, adjust=False):
             jtype = 'prismatic'
         elif ncloc == 1:
             jtype = 'planar'
-    if 'joint/type' in joint and joint['joint/type'] != jtype:
-        warnings.warn("Type of joint "+joint.name+" does not match constraints!", Warning) #TODO: this goes to sys.stderr, i.e. nirvana
-        if(adjust):
-            joint['joint/type'] = jtype
-            print("Changed type of joint'" + joint.name, 'to', jtype + "'.")
+    if adjust:
+        joint['joint/type'] = jtype
+        log("Set type of joint '" + getObjectName(joint) + "'to '" + jtype + "'.", "INFO")
     return jtype, crot
 
 
