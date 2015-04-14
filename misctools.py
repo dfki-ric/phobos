@@ -294,7 +294,7 @@ class SyncMassesOperator(Operator):
 
     updateinertial = BoolProperty(
         name='robotupdate inertial',
-        default=True,
+        default=False,
         description='update inertials'
     )
 
