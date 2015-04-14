@@ -243,12 +243,8 @@ class SetMassOperator(Operator):
         return False
 
     def invoke(self, context, event):
-        try:
+        if 'mass' in context.active_object:
             self.mass = context.active_object['mass']
-        except KeyError:
-            self.mass = 0.001
-            # Todo: Need more detailed message here
-            log("KeyError occured in invoking of setMassOperator. Fallback: mass=0.001")
         return self.execute(context)
 
     def execute(self, context):
