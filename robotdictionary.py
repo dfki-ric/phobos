@@ -258,7 +258,6 @@ def deriveLight(obj):
     data = obj.data
     light['color'] = {}
     light['color']['diffuse'] = data.color
-    #light['direction'] =
     if data.type == 'SPOT':
         light['type'] = 'omnilight'
     elif data.type == 'POINT':
@@ -267,8 +266,9 @@ def deriveLight(obj):
         #TODO: error
         pass
     light['position'] = obj.location
-    rotation = obj.rotation_euler
-    # TODO: calculate direction
+    rotation = mathutils.Vector(obj.rotation_euler).to_matrix()
+    direction = mathutils.Vector((1, 0, 0)) * rotation
+    light['direction'] = direction
     light['attenuation'] = {}
     light['attenuation']['linear'] = data.linear_attenuation
     light['attenuation']['quadratic'] = data.quadratic_attenuation
