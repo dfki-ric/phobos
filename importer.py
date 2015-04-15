@@ -1599,7 +1599,7 @@ class MARSModelParser(RobotModelParser):
                 for att_str in ['constant', 'linear', 'quadratic']:
                     att = light.find(att_str + 'Attenuation')
                     if att is not None:
-                        attenuation_dict['constant'] = float(att.text)
+                        attenuation_dict[att_str] = float(att.text)
                 if attenuation_dict is not {}:
                     light_dict['attenuation'] = attenuation_dict
 
