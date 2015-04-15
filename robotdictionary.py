@@ -255,7 +255,23 @@ def deriveController(obj):
 
 def deriveLight(obj):
     light = initObjectProperties(obj, phobostype='light')
-    # TODO: fill
+    data = obj.data
+    light['color'] = {}
+    light['color']['diffuse'] = data.color
+    #light['direction'] =
+    if data.type == 'SPOT':
+        light['type'] = 'omnilight'
+    elif data.type == 'POINT':
+        light['type'] = 'spotlight'
+    else:
+        #TODO: error
+        pass
+    light['position'] = obj.location
+    rotation = obj.rotation_euler
+    # TODO: calculate direction
+    light['attenuation'] = {}
+    light['attenuation']['linear'] = data.linear_attenuation
+    light['attenuation']['quadratic'] = data.quadratic_attenuation
     return light
 
 def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
