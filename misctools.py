@@ -87,11 +87,13 @@ class CheckDict(Operator):
         :return: Blender result
         """
         startLog(self)
-        messages = []
+        messages = {}
         dic = robotdictionary.buildRobotDictionary()
         validator.check_dict(dic, defs.dictConstraints, messages)
         for entry in messages:
-            log(entry, 'INFO')
+            log("Errors in object " + entry + ":", 'INFO')
+            for error in messages[entry]:
+                log(error, 'INFO')
         endLog()
         return {'FINISHED'}
 

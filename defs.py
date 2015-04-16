@@ -35,8 +35,8 @@ This module may well be imported and used outside of the MARS Blender Tools
 in the future.
 """
 
-import math
 import math, os, yaml, re
+from copy import deepcopy as dc
 
 
 # TODO: the following definitions for enum properties in blender should be
@@ -186,7 +186,7 @@ def updateDefs(defsFolderPath):
                 if (motor,) * 3 not in motortypes:
                     motortypes.append((motor,) * 3)
     # Extending dictConstraints
-    dictConstraints['sensors']['$forElem']['$selection__type'] = sensorProperties
+    dictConstraints['sensors']['$forElem']['q$selection__type'] = sensorProperties
 
 def __parseAllYAML(path):
     """This functions reads all .yml files in the given path and loads them.

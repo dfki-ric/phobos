@@ -37,14 +37,14 @@ def check_dict(dic, validator, messages):
     :param validator: The validator you want to validate against.
     :type validator: dict
     :param messages: The message list you want to append the error messages to.
-    :type messages: list
+    :type messages: dict
     :return: Nothing.
 
     """
-    check_dict_alg(dic, validator, [], messages, validator)
+    check_dict_alg(dic, validator, [], messages, validator, "NoObject")
 
 
-def check_dict_alg(dic, validator, entry_list, messages, whole_validator):
+def check_dict_alg(dic, validator, entry_list, messages, whole_validator, current_elem):
     """This function does the real validation work by working through the validator.
 
     :param dic: The dictionary you want to validate.
@@ -54,25 +54,28 @@ def check_dict_alg(dic, validator, entry_list, messages, whole_validator):
     :param entry_list: This list contains all keys you have to traverse to get the correct value in the dictionary.
     :type entry_list: list
     :param messages: The message list you want to append the error messages to.
-    :type messages: list
+    :type messages: dict
     :param whole_validator: This is a copy of the whole validator needed when referencing to a top level key.
     :type whole_validator: dict
+    :param current_elem: The current element the alg is checking.
+    :type current_elem: str
     :return: Nothing.
 
     """
     for node in validator:
+        print("Checking node ", node)
         new_list = dc(entry_list)
         node_value = validator[node]
         if node != 'isReference':
             if not ('isReference' in node_value and len(entry_list) == 0):
                 if is_operator(node):
-                    handle_operator(node, dic, validator, new_list, messages, whole_validator)
+                    handle_operator(node, dic, validator, new_list, messages, whole_validator, current_elem)
                 elif is_leaf(node_value):
                     new_list.append(node)
-                    check_leaf(node_value, dic, new_list, messages)
+                    check_leaf(node_value, dic, new_list, messages, current_elem)
                 else:
                     new_list.append(node)
-                    check_dict_alg(dic, node_value, new_list, messages, whole_validator)
+                    check_dict_alg(dic, node_value, new_list, messages, whole_validator, current_elem)
 
 
 def is_leaf(node_value):
@@ -97,7 +100,7 @@ def is_operator(node):
     return node.startswith('$')
 
 
-def check_leaf(leaf_value, dic, entry_list, messages):
+def check_leaf(leaf_value, dic, entry_list, messages, current_elem):
     """This function checks the dictionary against a specific validation leaf and entry_list. Writing the
     messages into the given list.
 
@@ -108,7 +111,7 @@ def check_leaf(leaf_value, dic, entry_list, messages):
     :param entry_list: The keys navigating you to the dictionary value to validate against the validation leaf.
     :type entry_list: list
     :param messages: The list you want to append the messages to.
-    :type messages: list
+    :type messages: dict
     :return: Nothing.
 
     """
@@ -118,12 +121,12 @@ def check_leaf(leaf_value, dic, entry_list, messages):
     required = leaf_value['required']
     # messages.append("Checking leaf " + str(entry_list))
     if required and value is None:
-        messages.append("The required value in " + str(entry_list) + " cannot be found!")
+        add_message(messages, current_elem, "The required value in " + str(entry_list) + " cannot be found!")
     if value is not None and not isinstance(value, required_type):
-        messages.append("The required value in " + str(entry_list) + " doesn't match expected type " + str(required_type))
+        add_message(messages, current_elem, "The required value in " + str(entry_list) + " doesn't match expected type " + str(required_type))
 
 
-def handle_operator(node, dic, validator, entry_list, messages, whole_validator):
+def handle_operator(node, dic, validator, entry_list, messages, whole_validator, current_elem):
     """This function handles an operator and decides how to continue the validation process.
 
     :param node: The operator to handle.
@@ -135,7 +138,7 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator)
     :param entry_list: The list of keys to navigate to the value in the dictionary.
     :type entry_list: list
     :param messages: The list to append the messages to.
-    :type messages: list
+    :type messages: dict
     :param whole_validator: The whole validator to reach top level keys in case of a reference operator.
      :type whole_validator: dict
     :return: Nothing
@@ -144,23 +147,27 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator)
     if node == '$reference':
         new_list = dc(entry_list)
         new_list.append(validator[node])
-        check_dict_alg(dic, whole_validator[validator[node]], new_list, messages, whole_validator)
+        check_dict_alg(dic, whole_validator[validator[node]], new_list, messages, whole_validator, current_elem)
     elif node == '$forElem':
         traversed_dic = traverse_dict(dic, entry_list)
         if traversed_dic is not None:
             for elem in traversed_dic:
                 new_list = dc(entry_list)
                 new_list.append(elem)
-                check_dict_alg(dic, validator['$forElem'], new_list, messages, whole_validator)
+                check_dict_alg(dic, validator['$forElem'], new_list, messages, whole_validator, elem)
+        else:
+            add_message(messages, current_elem, "Error in traversing dict!")
     elif node.startswith('$selection__'):
         select_type = node.split('__')[1]
         select_dic = traverse_dict(dic, entry_list)
         if select_type in select_dic:
             select = select_dic[select_type]
             rest_validator = validator[node][select]
-            check_dict_alg(dic, rest_validator, entry_list, messages, whole_validator)
+            check_dict_alg(dic, rest_validator, entry_list, messages, whole_validator, current_elem)
         else:
-            messages.append("Could not find " + select_type + " in " + str(entry_list))
+            add_message(messages, current_elem, "Could not find " + select_type + " in " + str(entry_list))
+    elif node.startswith('$exists__'):
+        pass
 
 
 def traverse_dict(dic, entry_list):
@@ -182,3 +189,10 @@ def traverse_dict(dic, entry_list):
         elif isinstance(dic, dict) and length == 1 and element in dic:
             return dic[element]
     return None
+
+
+def add_message(messages, key, message):
+    if key in messages:
+        messages[key].append(message)
+    else:
+        messages[key] = [message]
