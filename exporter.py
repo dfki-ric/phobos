@@ -120,7 +120,7 @@ def exportBobj(path, obj):
     if faceuv:
         uv = uvkey = uv_dict = f_index = uv_index = None
 
-        uv_face_mapping = [[0, 0, 0, 0]] * len(face_index_pairs)  # a bit of a waste for tri's :/
+        uv_face_mapping = [[0, 0, 0, 0] for i in range(len(face_index_pairs))] # a bit of a waste for tri's :/
 
         uv_dict = {}  # could use a set() here
         if bpy.app.version[1] >= 65:

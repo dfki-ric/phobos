@@ -25,6 +25,7 @@ Created on 28 Jul 2014
 @author: Kai von Szadkowski, Stefan Rahms
 """
 
+import os
 import bpy
 import mathutils
 import sys
@@ -81,10 +82,11 @@ def deriveLink(obj):
 
 
 def deriveJoint(obj):
+    if not 'joint/type' in obj.keys():
+        jt, crot = joints.deriveJointType(obj, adjust=True)
     props = initObjectProperties(obj, phobostype='joint', ignoretypes=['link', 'motor'])
     props['parent'] = obj.parent.name
     props['child'] = getObjectName(obj)
-    props['type'], crot = joints.deriveJointType(obj, True)
     axis, minmax = joints.getJointConstraints(obj)
     if axis:
         props['axis'] = list(axis)
@@ -187,7 +189,7 @@ def deriveGeometry(obj):
                 filename += ".dae"
             else:
                 filename += ".obj"
-            geometry['filename'] = filename
+            geometry['filename'] = os.path.join(bpy.data.worlds[0].meshpath, filename)
             geometry['scale'] = list(obj.scale)
             geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
         return geometry
@@ -260,6 +262,8 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
             props[key] = value
     else:
         for key, value in obj.items():
+            if hasattr(value, 'to_list'):  # transform Blender id_arrays into lists
+                value = list(value)
             if '/' in key:
                 if phobostype+'/' in key:
                     specs = key.split('/')[1:]

@@ -70,8 +70,8 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
                            rotation=origin.to_euler(),
                            layers=utility.defLayers([defs.layerTypes['sensor']]))
         newsensor = bpy.context.active_object
-        if reference is not None and reference != []:
-            utility.selectObjects([newsensor, bpy.data.objects[reference[0]]], clear=True, active=1)
+        if reference is not None:
+            utility.selectObjects([newsensor, bpy.data.objects[reference]], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     elif sensor['type'] in ['RaySensor', 'RotatingRaySensor', 'ScanningSonar', 'MultiLevelLaserRangeFinder']:
         # TODO: create a proper ray sensor scanning layer disc here
