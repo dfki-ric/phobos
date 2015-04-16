@@ -127,6 +127,11 @@ sensorProperties = {}
 
 dictConstraints = {}
 
+checkMessages = {"NoObject": []}
+
+def generateCheckMessages(param1, param2):#FIXME: Parameter?
+        return [(x,)*3 for x in list(checkMessages.keys())]
+
 #definitions of which elements live on which layers by default
 layerTypes = {
     "link": 0,
@@ -186,7 +191,7 @@ def updateDefs(defsFolderPath):
                 if (motor,) * 3 not in motortypes:
                     motortypes.append((motor,) * 3)
     # Extending dictConstraints
-    dictConstraints['sensors']['$forElem']['q$selection__type'] = sensorProperties
+    dictConstraints['sensors']['$forElem']['$selection__type'] = sensorProperties
 
 def __parseAllYAML(path):
     """This functions reads all .yml files in the given path and loads them.

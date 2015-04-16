@@ -71,6 +71,28 @@ def unregister():
     print("Unregistering misctools...")
 
 
+class SelectError(Operator):
+    """SelectErrorOperator
+
+    """
+    bl_idname = "object.phobos_select_error"
+    bl_label = "Selects an object with check errors"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    errorObj = EnumProperty(
+        name="Error containing objects",
+        items=defs.generateCheckMessages,
+        description="The objects containing errors.")
+
+    def execute(self, context):
+        startLog(self)
+        utility.selectByName(self.errorObj)
+        for message in defs.checkMessages[self.errorObj]:
+            log(message, 'INFO')
+        endLog()
+
+        return {'FINISHED'}
+
 class CheckDict(Operator):
     """CheckDictOperator
 
@@ -90,6 +112,7 @@ class CheckDict(Operator):
         messages = {}
         dic = robotdictionary.buildRobotDictionary()
         validator.check_dict(dic, defs.dictConstraints, messages)
+        defs.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
         for entry in messages:
             log("Errors in object " + entry + ":", 'INFO')
             for error in messages[entry]:
@@ -523,11 +546,7 @@ class SelectObjectsByName(Operator):
             description = "part of a Phobos object name")
 
     def execute(self, context):
-        objlist = []
-        for obj in bpy.data.objects:
-            if self.namefragment in obj.name:
-                objlist.append(obj)
-        utility.selectObjects(objlist, True)
+        utility.selectByName(self.namefragment)
         return {'FINISHED'}
 
 

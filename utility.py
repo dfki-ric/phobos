@@ -388,6 +388,13 @@ def cleanObjectProperties(props):
                 del props[key]
     return props
 
+def selectByName(namefragment):
+    objlist = []
+    for obj in bpy.data.objects:
+        if namefragment in obj.name:
+            objlist.append(obj)
+    selectObjects(objlist, True)
+
 # def useLegacyNames(data):
 #    if type(data) is str:
 #        print(data, end=': ')
