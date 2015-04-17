@@ -56,6 +56,7 @@ def addLight(light_dict):
     light_data.color = [colour_data[v] for v in ['r', 'g', 'b']]
     if light_dict['type'] == 'spotlight':
         light_data.type = 'SPOT'
+        light_data.spot_size = light_dict['angle']
     elif light_dict['type'] == 'omnilight':
         light_data.type = 'POINT'
 
@@ -74,6 +75,7 @@ def addLight(light_dict):
     light_data.falloff_type = falloff
 
     light.phobostype = 'light'
+    light['light/exponent'] = light_dict['exponent']
     return light
 
 
