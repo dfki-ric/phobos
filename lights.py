@@ -58,6 +58,21 @@ def addLight(light_dict):
         light_data.type = 'SPOT'
     elif light_dict['type'] == 'omnilight':
         light_data.type = 'POINT'
+
+    #if light_dict['attenuation']['constant'] > 0:
+    light_data.energy = light_dict['attenuation']['constant']
+    falloff = 'CONSTANT'
+    if light_dict['attenuation']['linear'] > 0:
+        light_data.linear_attenuation = light_dict['attenuation']['linear']
+        falloff = 'INVERSE_LINEAR'
+    if light_dict['attenuation']['quadratic'] > 0:
+        light_data.quadratic_attenuation = light_dict['attenuation']['quadratic']
+        if falloff == 'INVERSE_LINEAR':
+            falloff = 'LINEAR_QUADRATIC_WEIGHTED'
+        else:
+            falloff = 'INVERSE_SQUARE'
+    light_data.falloff_type = falloff
+
     light.phobostype = 'light'
     return light
 
