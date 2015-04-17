@@ -243,12 +243,8 @@ class SetMassOperator(Operator):
         return False
 
     def invoke(self, context, event):
-        try:
+        if 'mass' in context.active_object:
             self.mass = context.active_object['mass']
-        except KeyError:
-            self.mass = 0.001
-            # Todo: Need more detailed message here
-            log("KeyError occured in invoking of setMassOperator. Fallback: mass=0.001")
         return self.execute(context)
 
     def execute(self, context):
@@ -294,7 +290,7 @@ class SyncMassesOperator(Operator):
 
     updateinertial = BoolProperty(
         name='robotupdate inertial',
-        default=True,
+        default=False,
         description='update inertials'
     )
 
@@ -320,18 +316,25 @@ class SyncMassesOperator(Operator):
                 targetlist.append('visual_' + basename)
                 sourcelist.append('collision_' + basename)
             else:  # latest to oldest
-                tv = utility.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
-                tc = utility.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
-                if tc < tv:  #if collision information is older than visual information
-                    sourcelist.append('visual_' + basename)
-                    targetlist.append('collision_' + basename)
-                else:
-                    targetlist.append('visual_' + basename)
-                    sourcelist.append('collision_' + basename)
+                try:
+                    tv = utility.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
+                    tc = utility.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
+                    if tc < tv:  #if collision information is older than visual information
+                        sourcelist.append('visual_' + basename)
+                        targetlist.append('collision_' + basename)
+                    else:
+                        targetlist.append('visual_' + basename)
+                        sourcelist.append('collision_' + basename)
+                except KeyError:
+                    print(basename, "has insufficient data for time-based synchronisation of masses.")
         # sync the mass values
         for i in range(len(sourcelist)):
-            objdict[targetlist[i]]['mass'] = objdict[sourcelist[i]]['mass']
-            objdict[targetlist[i]]['masschanged'] = objdict[sourcelist[i]]['masschanged']
+            try:
+                objdict[targetlist[i]]['mass'] = objdict[sourcelist[i]]['mass']
+            except KeyError:
+                print("No mass information in object", targetlist[i])
+            if self.synctype != "vtc" and self.synctype != "ctv":
+                objdict[targetlist[i]]['masschanged'] = objdict[sourcelist[i]]['masschanged']
 
         for linkname in links:
             masssum = 0.0
@@ -1007,10 +1010,11 @@ class EditYAMLDictionary(Operator):
         startLog(self)
         ob = context.active_object
         textfilename = ob.name + dt.now().strftime("%Y%m%d_%H:%M")
-        variablename = ob.name + "_data"
+        variablename = ob.name.translate({ord(c): "_" for c in "!@#$%^&*()[]{};:,./<>?\|`~-=+"})\
+                       + "_data"
         tmpdict = dict(ob.items())
         for key in tmpdict:
-            if hasattr(tmpdict[key], 'to_list'):
+            if hasattr(tmpdict[key], 'to_list'):  # transform Blender id_arrays into lists
                 tmpdict[key] = list(tmpdict[key])
         contents = [variablename + ' = """',
                     yaml.dump(utility.cleanObjectProperties(tmpdict),

@@ -51,7 +51,8 @@ phobostypes = (('undefined',) * 3,
                ('collision',) * 3,
                ('sensor',) * 3,
                ('controller',) * 3,
-               ('approxsphere',) * 3)
+               ('approxsphere',) * 3,
+               ('light',) * 3)
 
 jointtypes = (('revolute',) * 3,
               ('continuous',) * 3,
@@ -83,7 +84,9 @@ type_properties = {"undefined": (),
                    "sensor": ('name', 'sensor/type'),
                    "sensor_default": ("new_sensor", "RaySensor"),
                    "controller": ('name',),
-                   "controller_default": ("controller",)
+                   "controller_default": ("controller",),
+                   "light": ('name', 'light/directional'),
+                   "light_default": ('new_light', 'true')
 }
 
 # definition of phobos specific custom properties
@@ -130,6 +133,7 @@ layerTypes = {
     "collision": 3,
     "sensor": 4,
     "decoration": 5,
+    "light": 6,
     "approxsphere": 13
 }
 

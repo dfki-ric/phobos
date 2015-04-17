@@ -76,6 +76,8 @@ def addLight(light_dict):
 
     light.phobostype = 'light'
     light['light/exponent'] = light_dict['exponent']
+    light.phobostype = 'light'
+    light['light/directional'] = light_dict['directional']
     return light
 
 

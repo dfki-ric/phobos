@@ -82,10 +82,11 @@ def deriveLink(obj):
 
 
 def deriveJoint(obj):
+    if not 'joint/type' in obj.keys():
+        jt, crot = joints.deriveJointType(obj, adjust=True)
     props = initObjectProperties(obj, phobostype='joint', ignoretypes=['link', 'motor'])
     props['parent'] = obj.parent.name
     props['child'] = getObjectName(obj)
-    props['type'], crot = joints.deriveJointType(obj, True)
     axis, minmax = joints.getJointConstraints(obj)
     if axis:
         props['axis'] = list(axis)
@@ -281,6 +282,8 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
             props[key] = value
     else:
         for key, value in obj.items():
+            if hasattr(value, 'to_list'):  # transform Blender id_arrays into lists
+                value = list(value)
             if '/' in key:
                 if phobostype+'/' in key:
                     specs = key.split('/')[1:]
