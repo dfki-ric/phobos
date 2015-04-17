@@ -256,12 +256,13 @@ def deriveController(obj):
 
 def deriveLight(obj):
     light = initObjectProperties(obj, phobostype='light')
-    data = obj.data
+    light_data = obj.data
     light['color'] = {}
-    light['color']['diffuse'] = data.color
-    if data.type == 'SPOT':
+    light['color']['diffuse'] = light_data.color
+    if light_data.type == 'SPOT':
         light['type'] = 'omnilight'
-    elif data.type == 'POINT':
+        light['angle'] = light_data.spot_size
+    elif light_data.type == 'POINT':
         light['type'] = 'spotlight'
     else:
         #TODO: error
@@ -270,10 +271,13 @@ def deriveLight(obj):
     rotation = mathutils.Vector(obj.rotation_euler).to_matrix()
     direction = mathutils.Vector((1, 0, 0)) * rotation
     light['direction'] = direction
+
     light['attenuation'] = {}
-    light['attenuation']['linear'] = data.linear_attenuation
-    light['attenuation']['quadratic'] = data.quadratic_attenuation
-    return light
+    light['attenuation']['linear'] = light_data.linear_attenuation
+    light['attenuation']['quadratic'] = light_data.quadratic_attenuation
+    light['attenuation']['constant'] = light_data.energy
+
+    return light, obj.parent
 
 def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
     props = {'name': getObjectName(obj).split(':')[-1]}  #allow duplicated names differentiated by types
@@ -320,6 +324,8 @@ def deriveDictEntry(obj):
             props = deriveSensor(obj)
         elif obj.phobostype == 'controller':
             props = deriveController(obj)
+        elif obj.phobostype == 'light':
+            props, parent = deriveLight(obj)
     except KeyError:
         print('phobos: A KeyError occurred, likely due to missing information in the model:\n    ', sys.exc_info()[0])
     if obj.phobostype in ['sensor', 'controller']:

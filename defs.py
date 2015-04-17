@@ -85,8 +85,8 @@ type_properties = {"undefined": (),
                    "sensor_default": ("new_sensor", "RaySensor"),
                    "controller": ('name',),
                    "controller_default": ("controller",),
-                   "light": ('name', 'light/directional'),
-                   "light_default": ('new_light', 'true')
+                   "light": ('name', 'light/directional', 'light/exponent'),
+                   "light_default": ('new_light', 'true', '1.0')
 }
 
 # definition of phobos specific custom properties

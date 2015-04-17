@@ -31,6 +31,7 @@ import os
 #from utility import selectObjects
 import yaml
 #import os
+import math
 from collections import namedtuple
 import xml.etree.ElementTree as ET
 from phobos.utility import *
@@ -506,7 +507,7 @@ class RobotModelParser():
                             bpy.ops.object.select_all(action='DESELECT')
                             newgeom.select = True
                             bpy.ops.object.transform_apply(rotation=True)
-                print(viscol)
+                #print(viscol)
                 newgeom.name = viscol['name']
                 newgeom['filename'] = geom['filename']
                 #newgeom.select = True
@@ -630,9 +631,9 @@ class RobotModelParser():
                 axis_vec = mathutils.Vector(link['axis1'])
                 bpy.data.objects[link_name].data.bones.active.tail = axis_vec
 
-                print()
-                print('link name:', link_name)
-                print("axis:", axis_vec)
+                #print()
+                #print('link name:', link_name)
+                #print("axis:", axis_vec)
 
                 bpy.ops.object.mode_set(mode='OBJECT')
                 pass
@@ -919,7 +920,7 @@ class MARSModelParser(RobotModelParser):
         self.robot['controllers'] = self._parse_controllers(controllers)
         self.robot['groups'] = self.link_groups_group_order
         self._parse_additional_visuals_and_collisions(self.robot, nodes)
-        self.robot['lights'] = self._parse_lights(lights)
+        self.robot['lights'] = self._parse_lights(lights, links)
         
         for link in self.robot['links']:
             handle_missing_geometry(self.missing_vis_geos[link], self.missing_coll_geos[link], self.robot['links'][link])
@@ -928,7 +929,7 @@ class MARSModelParser(RobotModelParser):
 
         self._debug_output()
 
-        print(self.joint_index_dict)
+        #print(self.joint_index_dict)
 
     def _find_name(self, struct, prefix='', emerg='link'):
         name = struct.get('name')
@@ -1292,11 +1293,11 @@ class MARSModelParser(RobotModelParser):
             else:
                 root_child = False
             if index in self.vis_coll_groups:
-                print('YUP')
+                #print('YUP')
                 link_index = self.vis_coll_groups[index]
                 group = self.link_groups_link_order[link_index]
                 for group_node in group:
-                    print('group node', group_node)
+                    #print('group node', group_node)
                     if group_node['index'] == link_index:
                         name = group_node['name']
                         visuals_dict = model['links'][name]['visual']
@@ -1398,7 +1399,7 @@ class MARSModelParser(RobotModelParser):
             rel_id_xml = node.find('relativeid')
             #if index in self.link_indices:
             #    link_poses[index] = pose
-            roots =[]
+            roots = []
             if rel_id_xml is None:
                 absolute_poses[index] = pose
                 #absolute_vis_coll_poses[index] = pose
@@ -1560,7 +1561,7 @@ class MARSModelParser(RobotModelParser):
 
         return controllers_dict
 
-    def _parse_lights(self, lights):
+    def _parse_lights(self, lights, links):
         """
         """
         lights_dict = {}
@@ -1570,19 +1571,36 @@ class MARSModelParser(RobotModelParser):
                 name = self._find_name(light, emerg='light')
                 light_dict['name'] = name
 
-                position = light.find('position')
-                if position is not None:
-                    position_dict = {}
-                    for dim_str in ['x', 'y', 'z']:
-                        position_dict[dim_str] = float(position.find(dim_str).text)
-                    light_dict['position'] = position_dict
+                dims = ['x', 'y', 'z']
+                position_xml = light.find('position')
+                position = [float(position_xml.find(dim).text) for dim in dims]
 
-                    look_at = light.find('lookat')
-                    if look_at is not None:
-                        direction_dict = {}
-                        for dim_str in ['x', 'y', 'z']:
-                            direction_dict[dim_str] = float(look_at.find(dim_str).text) - position_dict[dim_str]
-                        light_dict['direction'] = direction_dict
+                look_at = light.find('lookat')
+                direction = [float(look_at.find(dim).text) - position[i] for (i, dim) in zip(range(len(position)), dims)]
+                rotation = mathutils.Vector((1, 0, 0)).rotation_difference(direction).to_euler()
+                rel_pose = calc_pose_formats(position, rotation)
+
+                node_index_xml = light.find('nodeIndex')
+                if node_index_xml is not None:
+                    node_index = int(node_index_xml.text)
+                    if node_index in self.link_index_dict:
+                        parent = self.link_index_dict[node_index]
+                        light_dict['parent'] = parent
+                        base_matrix = mathutils.Matrix(links[parent]['pose']['matrix']).to_4x4()
+                        abs_matrix = base_matrix * mathutils.Matrix(rel_pose['matrix']).to_4x4()
+                        loc, rot, scale = abs_matrix.decompose()
+                        applied_pos = [loc.x, loc.y, loc.z]
+                        applied_rot = [rot.w, rot.x, rot.y, rot.z]
+                        abs_pose = calc_pose_formats(applied_pos, applied_rot)
+                    else:
+                        log("Node with index", node_index, "is not a link. Light '" + light + "' was not attached to a node.\n" \
+                            + "The light's pose will differ from the specification.")
+                        abs_pose = rel_pose
+                else:
+                    abs_pose = rel_pose
+
+
+                light_dict['pose'] = abs_pose
 
                 colours_dict = {}
                 for colour_str in ['ambient', 'diffuse', 'specular']:
@@ -1603,10 +1621,17 @@ class MARSModelParser(RobotModelParser):
                 if attenuation_dict is not {}:
                     light_dict['attenuation'] = attenuation_dict
 
-                for value_str in ['angle', 'exponent']:
-                    value = light.find(value_str)
-                    if value is not None:
-                        light_dict[value_str] = float(value.text)
+                #for value_str in ['angle', 'exponent']:
+                    #value = light.find(value_str)
+                    #if value is not None:
+                    #    light_dict[value_str] = float(value.text)
+
+                angle = light.find('angle')
+                if angle is not None:
+                    light_dict['angle'] = math.radians(float(angle.text))
+                exponent = light.find('exponent')
+                if exponent is not None:
+                    light_dict['exponent'] = float(exponent.text)
 
                 light_type = light.find('type')
                 if light_type is not None:

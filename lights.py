@@ -26,9 +26,8 @@ Created on 9 Apr 2015
 """
 
 import bpy
-import mathutils
 
-from bpy.props import StringProperty, EnumProperty
+from . import utility
 
 
 def register():
@@ -41,24 +40,30 @@ def unregister():
 
 
 def addLight(light_dict):
-    dims = ['x', 'y', 'z']
-    position = light_dict['position']
-    direction = mathutils.Vector([light_dict['direction'][dim] for dim in dims])
-    rotation = mathutils.Vector((1, 0, 0)).rotation_difference(direction).to_euler()
 
-    bpy.ops.object.add(type='LAMP',
-                       location=[position[dim] for dim in dims],
-                       rotation=[rotation.x, rotation.y, rotation.z])
-    light = bpy.context.object
-    light.name = light_dict['name']
+    if light_dict['type'] == 'spotlight':
+        light_type = 'SPOT'
+    elif light_dict['type'] == 'omnilight':
+        light_type = 'POINT'
+
+    position = light_dict['pose']['translation']
+    rotation = light_dict['pose']['rotation_euler']
+
+    bpy.ops.object.lamp_add(type=light_type,
+                           location=position,
+                           rotation=rotation)
+    light = bpy.context.active_object
+    if 'parent' in light_dict:
+        utility.selectObjects([light, bpy.data.objects[light_dict['parent']]], clear=True, active=1)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+
     light_data = light.data
+    light.name = light_dict['name']
     colour_data = light_dict['color']['diffuse']
     light_data.color = [colour_data[v] for v in ['r', 'g', 'b']]
-    if light_dict['type'] == 'spotlight':
-        light_data.type = 'SPOT'
+
+    if type == 'SPOT':
         light_data.spot_size = light_dict['angle']
-    elif light_dict['type'] == 'omnilight':
-        light_data.type = 'POINT'
 
     #if light_dict['attenuation']['constant'] > 0:
     light_data.energy = light_dict['attenuation']['constant']
