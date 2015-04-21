@@ -96,7 +96,7 @@ def exportBobj(path, obj):
         print(getObjectName(obj), 'is a dupli child - ignoring')
         return
 
-    mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW')
+    mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW') #Jan Paul: ", True)": calculate tesselation faces added as test
     #mesh.transform(obj.matrix_world)
 
     faceuv = len(mesh.uv_textures)
@@ -118,9 +118,10 @@ def exportBobj(path, obj):
         out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
 
     if faceuv:
-        uv = uvkey = uv_dict = f_index = uv_index = None
+        uv = uvkey = f_index = uv_index = None
 
-        uv_face_mapping = [[0, 0, 0, 0] for i in range(len(face_index_pairs))] # a bit of a waste for tri's :/
+        #uv_face_mapping = [[0, 0, 0, 0]] * len(face_index_pairs)  # a bit of a waste for tri's :/
+        uv_face_mapping = [[0, 0, 0, 0] for i in range(len(face_index_pairs))]
 
         uv_dict = {}  # could use a set() here
         if bpy.app.version[1] >= 65:
