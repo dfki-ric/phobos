@@ -29,6 +29,7 @@ Created on 6 Jan 2014
 
 """
 
+from phobos import *
 
 bl_info = {
     "name": "Phobos",

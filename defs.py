@@ -38,6 +38,7 @@ in the future.
 import math
 import math, os, yaml, re
 
+from phobos.logging import *
 
 # TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below

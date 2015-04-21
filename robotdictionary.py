@@ -598,7 +598,7 @@ def check_visuals(visuals, link_key):
             notifications += note + "\n"
             print(note)
         else:
-            material = visual[material_key]
+            material = visual[material_key] # TODO: jpaul: this is defined nowhere!:
             if not 'name' in material:
                 note = "CheckModel: Warning, material of visual '" + visual_key + "' of link '" + link_key + "' has no attribute 'name'."
                 notifications += note + "\n"
