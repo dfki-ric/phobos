@@ -295,7 +295,13 @@ def calcBoundingBoxCenter(boundingbox):
 def selectObjects(objects, clear=True, active=-1):
     """Selects all objects provided in list, clears current selection if clear is True
     and sets one of the objects the active objects if a valid index is provided."""
-    bpy.ops.object.mode_set(mode='OBJECT')
+
+    ##Jan Paul: solution to "context is incorrect" error from
+    ##doc/python_api/examples/bpy.ops.py:
+    ## check poll() to avoid exception:
+    #if bpy.ops.object.mode_set.poll():
+    #    bpy.ops.object.mode_set(mode='OBJECT')
+
     if clear:
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
