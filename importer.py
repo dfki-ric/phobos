@@ -34,6 +34,8 @@ import yaml
 import math
 from collections import namedtuple
 import xml.etree.ElementTree as ET
+import zipfile
+
 from phobos.utility import *
 from . import defs
 from . import materials
@@ -482,6 +484,13 @@ class RobotModelParser():
             for obj in bpy.data.objects:
                 obj.tag = True
             if geomtype == 'mesh':
+                if hasattr(self, 'zipped'):
+                    if self.zipped:
+                        print('ZIPPED!')
+                    else:
+                        print('NOT ZIPPED!')
+                else:
+                    print("I AIN'T GOT NO ZIPPED!")
                 bpy.context.scene.layers = defLayers(defs.layerTypes[geomsrc])
                 filetype = geom['filename'].split('.')[-1]
                 if filetype == 'obj' or filetype == 'OBJ':
@@ -844,7 +853,7 @@ class MARSModelParser(RobotModelParser):
 
     """
 
-    def __init__(self, filepath):
+    def __init__(self, filepath, zipped=False):
         """
         Initialise a 'MARSModelParser' object and a number of containers
         used to keep track of the parsed information and to apply it in
@@ -869,6 +878,7 @@ class MARSModelParser(RobotModelParser):
         RobotModelParser.__init__(self, filepath)
         
         self.xml_tree = None
+
         self.link_index_dict = {}
         self.joint_index_dict = {}
         self.motor_index_dict = {}
@@ -886,14 +896,33 @@ class MARSModelParser(RobotModelParser):
         self.robot_states = {}
         self.joint_info = {}
         self.parent_joint_dict = {}
+
         self.controller_counter = 1
+
+        self.zipped = zipped
 
     def parseModel(self):
         '''
         '''
         print("\nParsing MARS scene from", self.filepath)
-        self.tree = ET.parse(self.filepath)
-        root = self.tree.getroot()
+
+        if self.zipped:
+            filename = os.path.basename(self.filepath).split('.')[0] + '.scene'
+            archive = zipfile.ZipFile(self.filepath)
+            zipfiles = archive.namelist()
+            if filename not in zipfiles:
+                for zf in zipfiles:
+                    if zf.endswith('.scene'):
+                        filename = zf
+                        break
+                else:
+                    print('Failed to read from archive', self.filename + "."
+                          + "No scene file found.")
+            self.xml_tree = ET.parse(archive.open(filename))
+        else:
+            self.xml_tree = ET.parse(self.filepath)
+
+        root = self.xml_tree.getroot()
         
         nodes = root.find('nodelist')
         joints = root.find('jointlist')
@@ -2063,6 +2092,8 @@ class RobotModelImporter(bpy.types.Operator):
             importer = URDFModelParser(self.filepath)
         elif modeltype == 'smurf' or modeltype == 'yml' or modeltype == 'yaml':
             importer = SMURFModelParser(self.filepath)
+        elif modeltype == 'scn':
+            importer = MARSModelParser(self.filepath, zipped=True)
         else:
             print("Unknown model format, aborting import...")
 
