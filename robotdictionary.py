@@ -258,7 +258,9 @@ def deriveLight(obj):
     light = initObjectProperties(obj, phobostype='light')
     light_data = obj.data
     light['color'] = {}
-    light['color']['diffuse'] = light_data.color
+    light['color']['diffuse'] = {}
+    for index, value in zip(range(len('rgb')), 'rgb'):
+        light['color']['diffuse'][value] = light_data.color[index]
     if light_data.type == 'SPOT':
         light['type'] = 'omnilight'
         light['angle'] = light_data.spot_size
@@ -267,10 +269,15 @@ def deriveLight(obj):
     else:
         #TODO: error
         pass
-    light['position'] = obj.location
-    rotation = mathutils.Vector(obj.rotation_euler).to_matrix()
+    light['position'] = {}
+    for index, dim in zip(range(len('xyz')), 'xyz'):
+        light['position'][dim] = obj.location[index]
+
+    rotation = mathutils.Euler(obj.rotation_euler).to_matrix()
     direction = mathutils.Vector((1, 0, 0)) * rotation
-    light['direction'] = direction
+    light['direction'] = {}
+    for index, dim in zip(range(len('xyz')), 'xyz'):
+        light['direction'][dim] = direction[index]
 
     light['attenuation'] = {}
     light['attenuation']['linear'] = light_data.linear_attenuation
