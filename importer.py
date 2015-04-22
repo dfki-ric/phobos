@@ -1733,6 +1733,8 @@ class URDFModelParser(RobotModelParser):
             
         self.parseMaterials()
 
+        self.robot['lights'] = {}
+
         self._debug_output()
 
     def parseLink(self, link):
@@ -1837,7 +1839,7 @@ class URDFModelParser(RobotModelParser):
                 material_list.append(newmaterial)
         for m in material_list:
             #TODO: handle duplicate names? urdf_robotname_xxx?
-            materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1]) 
+            materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1])
     
 class SRDFModelParser(RobotModelParser):
     """Class derived from RobotModelParser wich parses a SRDF extension file for URDF"""
