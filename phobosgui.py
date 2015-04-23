@@ -227,8 +227,10 @@ class PhobosPanel(bpy.types.Panel):
         iinlayout = layout.split()
         ic1 = iinlayout.column(align=True)
         ic1.operator('object.phobos_show_distance', text='Measure distance')
+        ic1.operator('object.phobos_check_dict', text='Check Robot dictionary')
         ic2 = iinlayout.column(align=True)
         ic2.operator('object.phobos_set_xray', text='X-Ray view')
+        ic2.operator('object.phobos_select_error', text="Select error containing object")
 
         # Selection Menu
         layout.separator()
