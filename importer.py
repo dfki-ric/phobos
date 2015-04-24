@@ -322,6 +322,12 @@ class RobotModelParser():
                       'groups': {},
                       'chains': {}
                       }
+        if os.access(self.path, os.W_OK):
+            self.tmp_path = self.path
+        elif os.access(os.path.expanduser('.'), os.W_OK):
+            self.tmp_path = os.path.expanduser('.')
+        else:
+            raise Exception('WTF? No write permission for home dir.')
 
     def scaleLink(self, link, newlink):
         """Scales newly-created armatures depending on the link's largest collision object.
@@ -488,11 +494,11 @@ class RobotModelParser():
                 obj.tag = True
             if geomtype == 'mesh':
                 if hasattr(self, 'zipped') and self.zipped:
-                    if not os.path.isdir(tmp_dir_name):
-                        os.mkdir(tmp_dir_name)
+                    if not os.path.isdir(os.path.join(self.tmp_path, tmp_dir_name)):
+                        os.mkdir(os.path.join(self.tmp_path, tmp_dir_name))
                     archive = zipfile.ZipFile(self.filepath)
-                    archive.extract(geom['filename'], path=tmp_dir_name)
-                    geom_path = os.path.join(os.path.abspath(tmp_dir_name), geom['filename'])
+                    archive.extract(geom['filename'], path=os.path.join(self.tmp_path, tmp_dir_name))
+                    geom_path = os.path.join(os.path.abspath(os.path.join(self.tmp_path, tmp_dir_name)), geom['filename'])
                 else:
                     geom_path = os.path.join(self.path, geom['filename'])
 
@@ -843,8 +849,8 @@ class RobotModelParser():
         #self._apply_joint_angle_offsets()
 
         # remove tmp dir containing extracted object files
-        if os.path.isdir(tmp_dir_name):
-            shutil.rmtree(tmp_dir_name)
+        if os.path.isdir(os.path.join(self.tmp_path, tmp_dir_name)):
+            shutil.rmtree(os.path.join(self.tmp_path, tmp_dir_name))
 
         print('Done!')
 
