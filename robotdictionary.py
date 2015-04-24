@@ -261,14 +261,19 @@ def deriveLight(obj):
     light['color']['diffuse'] = {}
     for index, value in zip(range(len('rgb')), 'rgb'):
         light['color']['diffuse'][value] = light_data.color[index]
+    if light_data.use_specular:
+        light['color']['specular'] = light['color']['diffuse']
     if light_data.type == 'SPOT':
         light['type'] = 'omnilight'
         light['angle'] = light_data.spot_size
     elif light_data.type == 'POINT':
         light['type'] = 'spotlight'
-    else:
-        #TODO: error
-        pass
+    elif light_data.type == 'SUN':
+        light['type'] = 'sun'
+    elif light_data.type == 'HEMI':
+        light['type'] = 'hemi'
+    elif light_data.type == 'AREA':
+        light['type'] = 'area'
     light['position'] = {}
     for index, dim in zip(range(len('xyz')), 'xyz'):
         light['position'][dim] = obj.location[index]
@@ -284,7 +289,10 @@ def deriveLight(obj):
     light['attenuation']['quadratic'] = light_data.quadratic_attenuation
     light['attenuation']['constant'] = light_data.energy
 
-    return light, obj.parent
+    if obj.parent is not None:
+        light['parent'] = obj.parent.name
+
+    return light
 
 def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
     props = {'name': getObjectName(obj).split(':')[-1]}  #allow duplicated names differentiated by types

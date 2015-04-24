@@ -392,9 +392,9 @@ def gatherAnnotations(model):
                 annotations[category][element['temp_type']].append(tmpdict)
                 delkeys.append(key)
         delkeys.append('temp_type')
-        print('element:', element)
+        #print('element:', element)
         for key in delkeys:
-            print(key)
+            #print(key)
             del element[key]
     #print('annotations:', annotations)
     #for category in annotations:
