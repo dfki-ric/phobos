@@ -59,8 +59,14 @@ def addLight(light_dict):
 
     light_data = light.data
     light.name = light_dict['name']
+
+    colour_vals = ['r', 'g', 'b']
     colour_data = light_dict['color']['diffuse']
-    light_data.color = [colour_data[v] for v in ['r', 'g', 'b']]
+    light_data.color = [colour_data[v] for v in colour_vals]
+    for v in colour_vals:
+        if light_dict['color']['specular'][v] > 0:
+            light_data.use_specular = True
+            break
 
     if type == 'SPOT':
         light_data.spot_size = light_dict['angle']
