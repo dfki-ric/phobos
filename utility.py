@@ -278,8 +278,8 @@ def getObjectName(obj, phobostype=None):
     :return: The objects name.
 
     """
-    type=None
-    if "phobostype" in obj and phobostype==None:
+    type = phobostype
+    if "phobostype" in obj and type==None:
         type = obj.phobostype
     if type and type+"/name" in obj:
         return obj[type+"/name"]
@@ -398,6 +398,8 @@ def selectByName(namefragment):
     objlist = []
     for obj in bpy.data.objects:
         if namefragment in obj.name:
+            objlist.append(obj)
+        elif "phobostype" in obj and obj.phobostype+"/name" in obj and namefragment in obj[obj.phobostype+"/name"]:
             objlist.append(obj)
     selectObjects(objlist, True)
 
