@@ -859,8 +859,13 @@ class PartialRename(Operator):
         description="replace with")
 
     def execute(self, context):
+        types = defs.subtypes
         for obj in bpy.context.selected_objects:
             obj.name = obj.name.replace(self.find, self.replace)
+            for type in types:
+                nametag = type+"/name"
+                if nametag in obj:
+                    obj[nametag] = obj[nametag].replace(self.find, self.replace)
         return {'FINISHED'}
 
     @classmethod
