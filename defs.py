@@ -54,6 +54,8 @@ phobostypes = (('undefined',) * 3,
                ('approxsphere',) * 3,
                ('light',) * 3)
 
+subtypes = ("visual", "joint", "motor", "collision", "sensor", "link", "inertial", "controller", "light", "approxsphere")
+
 jointtypes = (('revolute',) * 3,
               ('continuous',) * 3,
               ('prismatic',) * 3,
