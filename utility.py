@@ -278,7 +278,7 @@ def getObjectName(obj, phobostype=None):
     :return: The objects name.
 
     """
-    type = phobostype
+    type=phobostype
     if "phobostype" in obj and type==None:
         type = obj.phobostype
     if type and type+"/name" in obj:
@@ -394,14 +394,21 @@ def cleanObjectProperties(props):
                 del props[key]
     return props
 
-def selectByName(namefragment):
+def getObjectByName(namefragment):
     objlist = []
     for obj in bpy.data.objects:
         if namefragment in obj.name:
             objlist.append(obj)
-        elif "phobostype" in obj and obj.phobostype+"/name" in obj and namefragment in obj[obj.phobostype+"/name"]:
-            objlist.append(obj)
-    selectObjects(objlist, True)
+        else:
+            for type in defs.subtypes:
+                nameTag = type+"/name"
+                if nameTag in obj and namefragment in obj[nameTag]:
+                    objlist.append(obj)
+                    break
+    return objlist
+
+def selectByName(namefragment):
+    selectObjects(getObjectByName(namefragment), True)
 
 def addNamespace(obj):
     types = defs.subtypes
