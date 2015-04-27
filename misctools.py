@@ -70,6 +70,38 @@ def unregister():
 
     print("Unregistering misctools...")
 
+class ToggleNamespaces(Operator):
+    """ToggleNamespacesOperater
+
+    """
+    bl_idname = "object.phobos_toggle_namespaces"
+    bl_label = "Toggles the use of namespaces for the selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    complete = BoolProperty(
+        name="Converting complete robot",
+        default=False
+    )
+
+    def execute(self, context):
+        startLog(self)
+        objlist = context.selected_objects
+        if self.complete:
+            roots = list(set([utility.getRoot(obj) for obj in context.selected_objects]))
+            if None in roots:
+                roots.remove(None)
+            objlist = [elem for sublist in [utility.getChildren(root) for root in roots] for elem in sublist]
+        objnames = [o.name for o in bpy.data.objects]
+        for obj in objlist:
+            if "::" in obj.name:
+                if utility.namesAreExplicit({obj.name.split("::")[-1]}, objnames):
+                    utility.removeNamespace(obj)
+                else:
+                    log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit", "ERROR")
+            else:
+                utility.addNamespace(obj)
+        endLog()
+        return {'FINISHED'}
 
 class SelectError(Operator):
     """SelectErrorOperator

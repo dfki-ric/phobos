@@ -409,7 +409,7 @@ def addNamespace(obj):
     root = getRoot(obj)
     namespace = root["modelname"] if root != None and "modelname" in root else None
     if not namespace:
-        log("The obj " + getObjectName(obj) + "has no namespace to append to. Aborting.")
+        log("The obj " + getObjectName(obj) + "has no namespace to append to. Aborting.", "ERROR")
         return
     obj.name = namespace + "::" + name
     for pType in types:
@@ -427,6 +427,9 @@ def removeNamespace(obj):
         nameTag = pType+"/name"
         if nameTag in obj and obj[nameTag] == name:
             del obj[nameTag]
+
+def namesAreExplicit(nameset, objnames):
+    return len(nameset.intersection(objnames)) == 0
 
 # def useLegacyNames(data):
 #    if type(data) is str:
