@@ -403,6 +403,31 @@ def selectByName(namefragment):
             objlist.append(obj)
     selectObjects(objlist, True)
 
+def addNamespace(obj):
+    types = defs.subtypes
+    name = obj.name
+    root = getRoot(obj)
+    namespace = root["modelname"] if root != None and "modelname" in root else None
+    if not namespace:
+        log("The obj " + getObjectName(obj) + "has no namespace to append to. Aborting.")
+        return
+    obj.name = namespace + "::" + name
+    for pType in types:
+        typeTag = pType+"/type"
+        nameTag = pType+"/name"
+        if (typeTag in obj or ("phobostype" in obj and obj.phobostype == pType)) and nameTag not in obj:
+            obj[nameTag] = name
+
+
+def removeNamespace(obj):
+    types = defs.subtypes
+    name = obj.name.split("::")[-1]
+    obj.name = name
+    for pType in types:
+        nameTag = pType+"/name"
+        if nameTag in obj and obj[nameTag] == name:
+            del obj[nameTag]
+
 # def useLegacyNames(data):
 #    if type(data) is str:
 #        print(data, end=': ')
