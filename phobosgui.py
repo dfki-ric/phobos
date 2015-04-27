@@ -220,6 +220,7 @@ class PhobosPanel(bpy.types.Panel):
         rc1.operator('object.phobos_add_chain', text='Define kinematic chain', icon='CONSTRAINT')
         rc2 = inlayout.column(align=True)
         rc2.operator('object.phobos_name_model', text='Name Robot')
+        rc2.operator('object.phobos_toggle_namespaces', text='Toggle Namespaces')
 
         # Inspection Menu
         layout.separator()
