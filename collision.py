@@ -113,7 +113,6 @@ class CreateCollisionObjects(Operator):
                     rotation = Matrix.Rotation(math.pi/2, 4, 'Y')
                 elif long_side == 'Y':
                     rotation = Matrix.Rotation(math.pi/2, 4, 'X')
-                #FIXME: apply rotation for moved cylinder object?
             elif self.property_colltype == 'sphere':
                 size = max(size)/2
             rotation_euler = (vis.matrix_world*rotation).to_euler()
@@ -126,19 +125,23 @@ class CreateCollisionObjects(Operator):
                 length = max(length-2*radius, 0.001) #prevent length from turning negative
                 size = (radius, length)
                 zshift = length/2
+                tmpsph1_location = center + rotation_euler.to_matrix().to_4x4() * Vector((0,0,zshift))
+                tmpsph2_location = center - rotation_euler.to_matrix().to_4x4() * Vector((0,0,zshift))
                 ob = utility.createPrimitive(collname, 'cylinder', size,
                                defs.layerTypes['collision'], materialname, center,
                                rotation_euler)
                 sph1 = utility.createPrimitive('tmpsph1', 'sphere', radius,
-                               defs.layerTypes['collision'], materialname, center + rotation * Vector((0,0,zshift)),
+                               defs.layerTypes['collision'], materialname, tmpsph1_location,
                                rotation_euler)
                 sph2 = utility.createPrimitive('tmpsph2', 'sphere', radius,
-                               defs.layerTypes['collision'], materialname, center - rotation * Vector((0,0,zshift)),
+                               defs.layerTypes['collision'], materialname, tmpsph2_location,
                                rotation_euler)
                 utility.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
                 ob['length'] = length
                 ob['radius'] = radius
+                ob['sph1_location'] = tmpsph1_location
+                ob['sph2_location'] = tmpsph2_location
             elif self.property_colltype == 'mesh':
                 pass
                 #TODO: copy mesh!!
