@@ -169,7 +169,7 @@ def deriveGeometry(obj):
             geometry['length'] = obj.dimensions[2]
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
-        elif gt in ['mesh', 'capsule']:
+        elif gt == 'mesh':
             sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
             if sMProp in obj:
                 filename = obj[sMProp]
@@ -234,6 +234,46 @@ def deriveCollision(obj):
     except AttributeError:
         pass
     return collision, obj.parent
+
+
+def deriveCapsule(obj, mode):
+    viscol_list = []
+    capsule_pose = deriveObjectPose(obj)
+    rotation = capsule_pose['rotation_euler']
+    capsule_radius = obj['radius']
+    for part in ['sphere1', 'cylinder', 'sphere2']:
+        viscol = initObjectProperties(obj, phobostype=mode, ignoretypes='geometry')
+        viscol['name'] = getObjectName(obj).split(':')[-1] + '_' + part
+        geometry = {}
+        pose = {}
+        geometry['radius'] = capsule_radius
+        if part == 'cylinder':
+            geometry['length'] = obj['length']
+            geometry['type'] = 'cylinder'
+            pose = capsule_pose
+        else:
+            geometry['type'] = 'sphere'
+            if part == 'sphere1':
+                location = obj['sph1_location']
+            else:
+                location = obj['sph2_location']
+            pose['translation'] = location
+            pose['rotation_euler'] = rotation
+            loc_mu = mathutils.Matrix.Translation(location)
+            rot_mu = mathutils.Euler(rotation).to_quaternion()
+            pose['rotation_quaternion'] = list(rot_mu)
+            matrix = loc_mu * rot_mu.to_matrix().to_4x4()
+            print(list(matrix))
+            pose['matrix'] = [list(vector) for vector in list(matrix)]
+        viscol['geometry'] = geometry
+        viscol['pose'] = pose
+        try:
+            viscol['bitmask'] = int(''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups]), 2)
+        except AttributeError:
+            pass
+        viscol_list.append(viscol)
+    return viscol_list, obj.parent
+
 
 
 def deriveApproxsphere(obj):
@@ -330,9 +370,15 @@ def deriveDictEntry(obj):
         if obj.phobostype == 'inertial':
             props, parent = deriveInertial(obj)
         elif obj.phobostype == 'visual':
-            props, parent = deriveVisual(obj)
+            if obj['geometry/type'] == 'capsule':
+                props, parent = deriveCapsule(obj, 'visual')
+            else:
+                props, parent = deriveVisual(obj)
         elif obj.phobostype == 'collision':
-            props, parent = deriveCollision(obj)
+            if obj['geometry/type'] == 'capsule':
+                props, parent = deriveCapsule(obj, 'collision')
+            else:
+                props, parent = deriveCollision(obj)
         elif obj.phobostype == 'approxsphere':
             props, parent = deriveApproxsphere(obj)
         elif obj.phobostype == 'sensor':
@@ -485,8 +531,13 @@ def buildRobotDictionary():
     print('\n\nParsing visual and collision (approximation) objects...')
     for obj in bpy.context.selected_objects:
         if obj.phobostype in ['visual', 'collision']:
+            # TODO: props may be a list
             props, parent = deriveDictEntry(obj)
-            robot['links'][parent.name][obj.phobostype][getObjectName(obj)] = props
+            if type(props) == list:     # this is the case with simulated capsules
+                for p in props:
+                    robot['links'][parent.name][obj.phobostype][p['name']] = p
+            else:
+                robot['links'][parent.name][obj.phobostype][getObjectName(obj)] = props
             obj.select = False
         elif obj.phobostype == 'approxsphere':
             props, parent = deriveDictEntry(obj)
