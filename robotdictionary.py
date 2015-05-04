@@ -464,9 +464,9 @@ def buildRobotDictionary():
             inertials[0].select = False
         elif len(inertials) > 1:
             for i in inertials:
-                if getObjectName(i, phobostype="intertial") == 'inertial_' + l:
+                if getObjectName(i, phobostype="inertial") == 'inertial_' + l:
                     props, parent = deriveDictEntry(i)
-                    robot['links'][parent.name]['inertial'] = props
+                    robot['links'][getObjectName(parent, phobostype="link")]['inertial'] = props
             # FIXME: this has to be re-implemented
             #if linkinertial == None:
             #    mass, com, inertia = inertia.fuseInertiaData(inertials)
