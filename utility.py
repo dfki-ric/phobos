@@ -278,8 +278,8 @@ def getObjectName(obj, phobostype=None):
     :return: The objects name.
 
     """
-    type=None
-    if "phobostype" in obj and phobostype==None:
+    type=phobostype
+    if "phobostype" in obj and type==None:
         type = obj.phobostype
     if type and type+"/name" in obj:
         return obj[type+"/name"]
@@ -394,12 +394,49 @@ def cleanObjectProperties(props):
                 del props[key]
     return props
 
-def selectByName(namefragment):
+def getObjectByName(name):
     objlist = []
     for obj in bpy.data.objects:
-        if namefragment in obj.name:
+        if name == obj.name:
             objlist.append(obj)
-    selectObjects(objlist, True)
+        else:
+            for type in defs.subtypes:
+                nameTag = type+"/name"
+                if nameTag in obj and name == obj[nameTag]:
+                    objlist.append(obj)
+                    break
+    return objlist
+
+def selectByName(name):
+    selectObjects(getObjectByName(name), True)
+
+def addNamespace(obj):
+    types = defs.subtypes
+    name = obj.name
+    root = getRoot(obj)
+    namespace = root["modelname"] if root != None and "modelname" in root else None
+    if not namespace:
+        log("The obj " + getObjectName(obj) + "has no namespace to append to. Aborting.", "ERROR")
+        return
+    obj.name = namespace + "::" + name
+    for pType in types:
+        typeTag = pType+"/type"
+        nameTag = pType+"/name"
+        if (typeTag in obj or ("phobostype" in obj and obj.phobostype == pType)) and nameTag not in obj:
+            obj[nameTag] = name
+
+
+def removeNamespace(obj):
+    types = defs.subtypes
+    name = obj.name.split("::")[-1]
+    obj.name = name
+    for pType in types:
+        nameTag = pType+"/name"
+        if nameTag in obj and obj[nameTag] == name:
+            del obj[nameTag]
+
+def namesAreExplicit(nameset, objnames):
+    return len(nameset.intersection(objnames)) == 0
 
 # def useLegacyNames(data):
 #    if type(data) is str:
