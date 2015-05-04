@@ -394,21 +394,21 @@ def cleanObjectProperties(props):
                 del props[key]
     return props
 
-def getObjectByName(namefragment):
+def getObjectByName(name):
     objlist = []
     for obj in bpy.data.objects:
-        if namefragment in obj.name:
+        if name == obj.name:
             objlist.append(obj)
         else:
             for type in defs.subtypes:
                 nameTag = type+"/name"
-                if nameTag in obj and namefragment in obj[nameTag]:
+                if nameTag in obj and name == obj[nameTag]:
                     objlist.append(obj)
                     break
     return objlist
 
-def selectByName(namefragment):
-    selectObjects(getObjectByName(namefragment), True)
+def selectByName(name):
+    selectObjects(getObjectByName(name), True)
 
 def addNamespace(obj):
     types = defs.subtypes
