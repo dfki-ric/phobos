@@ -437,7 +437,8 @@ def writeURDFGeometry(output, element):
         output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['length']]))
     elif element['type'] == "sphere":
         output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
-    elif element['type'] in ['capsule', 'mesh']:  # capsules are not supported in URDF and are emulated using meshes
+    #elif element['type'] in ['capsule', 'mesh']:  # capsules are not supported in URDF and are emulated using meshes
+    elif element['type'] == "mesh":         # capsules are now converted into a cylinder with two spheres and thus need not be handled here
         output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], l2str(element['scale'])]))
     output.append(indent * 4 + '</geometry>\n')
 
@@ -496,6 +497,8 @@ def exportModelToURDF(model, filepath):
             for c in link['collision']:
                 col = link['collision'][c]
                 output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
+                if 'comment' in col:
+                    output.append(indent * 4 + '<!-- ' + col['comment'] + ' -->\n')       # TODO: change if better solution is available
                 output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                       [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
                 writeURDFGeometry(output, col['geometry'])
