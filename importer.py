@@ -541,7 +541,6 @@ class RobotModelParser():
                             newgeom.select = True
                             bpy.ops.object.transform_apply(rotation=True)
                 #print(viscol)
-                newgeom.name = viscol['name']
                 newgeom['filename'] = geom['filename']
                 #newgeom.select = True
                 #if 'scale' in geom:
@@ -575,6 +574,8 @@ class RobotModelParser():
             if prop.startswith('$'):
                 for tag in viscol[prop]:
                     newgeom[prop[1:]+'/'+tag] = viscol[prop][tag]
+        newgeom.name = self.praefixNames(viscol['name'], geomsrc)
+        newgeom[geomsrc+"/name"] = viscol['name']
         return newgeom
 
     def createInertial(self, name, inertial):
