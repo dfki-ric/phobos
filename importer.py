@@ -739,7 +739,7 @@ class RobotModelParser():
 
         """
         #try:
-        link = bpy.data.objects[self.robot['joints'][motor['joint']]['child']]
+        link = bpy.data.objects[self.praefixNames(self.robot['joints'][motor['joint']]['child'], "link")]
         selectObjects([link])
         motor_type = motor['type']
         if motor_type == 'PID':
