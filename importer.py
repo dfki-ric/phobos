@@ -448,7 +448,7 @@ class RobotModelParser():
                     else:
                         urdf_geom_loc = mathutils.Matrix.Identity(4)
                         urdf_geom_rot = mathutils.Matrix.Identity(4)
-                    geoname = geomelement['name']
+                    geoname = self.praefixNames(geomelement['name'], geomsrc)
                     geom = bpy.data.objects[geoname]
                     # FIXME: this does not do anything - how to set basis matrix to local?
                     #geom.matrix_world = parentLink.matrix_world
