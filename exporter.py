@@ -497,8 +497,8 @@ def exportModelToURDF(model, filepath):
             for c in link['collision']:
                 col = link['collision'][c]
                 output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
-                if 'comment' in col:
-                    output.append(indent * 4 + '<!-- ' + col['comment'] + ' -->\n')       # TODO: change if better solution is available
+                #if 'comment' in col:
+                #    output.append(indent * 4 + '<!-- ' + col['comment'] + ' -->\n')       # TODO: change if better solution is available
                 output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                       [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
                 writeURDFGeometry(output, col['geometry'])
@@ -688,7 +688,7 @@ def exportModelToSMURF(model, path):
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'collision': bitmasks != {},
+              'collision': bitmasks != {} or model['capsules'] != {},
               'lights': model['lights'] != {}
               }
     #create all filenames
@@ -767,6 +767,7 @@ def exportModelToSMURF(model, path):
         with open(path + filenames['collision'], 'w') as op:
             op.write('#collision data' + infostring)
             op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
+            op.write(yaml.dump({'capsules': model['capsules']}, default_flow_style=False))
 
     #write additional information
     for category in annotationdict.keys():
