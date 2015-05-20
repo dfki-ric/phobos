@@ -88,7 +88,7 @@ initConfig() {
 installPhobos() {
     echo "Check for phobos installation..."
     phobospath="$addonpath/phobos"
-    if [ -d $phobospath ]
+    if [ -d "$phobospath" ]
     then
         echo "Phobos installation found and updated."
         cp *.py "$phobospath"
