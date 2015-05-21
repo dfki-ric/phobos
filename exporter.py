@@ -815,7 +815,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
             else:
                 entityname = entity['modelname']+'_'+str(unnamed_entities)
                 unnamed_entities += 1
-            entitypose = robotdictionary.deriveObjectPose(entitylist[0])
+            entitypose = robotdictionary.deriveObjectPose(entity)
             uri = os.path.join(modelname, modelname+'.smurf') if subfolders else modelname+'.smurf'
             scenedict = {'name': entityname,
                          'type': 'smurf',
