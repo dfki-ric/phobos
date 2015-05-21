@@ -278,6 +278,33 @@ def exportDae(path, obj):
     bpy.ops.object.delete()
     obj.name = oldBlenderObjectName
 
+def bakeModel(objlist, path, modelname):
+    visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
+    selectObjects(visuals, active=0)
+    log("Copying objects for joining...", "INFO")
+    print("Copying objects for joining...")
+    bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
+    log("joining...", "INFO")
+    print("joining...")
+    bpy.ops.object.join()
+    obj = bpy.context.active_object
+    log("Adding modifier...", "INFO")
+    print("Adding modifier...")
+    bpy.ops.object.modifier_add(type='DECIMATE')
+    bpy.context.object.modifiers["Decimate"].decimate_type = 'DISSOLVE'
+    log("Applying modifier...", "INFO")
+    print("Applying modifier...")
+    bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+
+    obj.name = modelname
+    obj["visual/name"] = modelname
+    obj["geometry/filename"] = modelname
+    exportObj(path, obj)
+    obj.select = True
+    bpy.ops.object.delete()
+    log("Done baking...", "INFO")
+    print("Done baking...")
+
 
 def exportModelToYAML(model, filepath):
     """This function exports a given robot model to a specified filepath as YAML.
@@ -932,14 +959,14 @@ def export(path=''):
     smurf = bpy.data.worlds[0].exportSMURF
     mars = bpy.data.worlds[0].exportMARSscene
     meshexp = bpy.data.worlds[0].exportMesh
+    bake = bpy.data.worlds[0].exportMesh
     objexp = bpy.data.worlds[0].useObj
     bobjexp = bpy.data.worlds[0].useBobj
     stlexp = bpy.data.worlds[0].useStl
     daeexp = bpy.data.worlds[0].useDae
     objectlist = bpy.context.selected_objects
-
+    robot = robotdictionary.buildRobotDictionary()
     if yaml or urdf or smurf or mars:
-        robot = robotdictionary.buildRobotDictionary()
         if yaml:
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
         if mars:
@@ -952,6 +979,8 @@ def export(path=''):
             exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
     if meshexp:
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
+        if bake:
+            bakeModel(objectlist, meshoutpath, robot["modelname"])
         if show_progress:
             wm = bpy.context.window_manager
             total = float(len(objectlist))
