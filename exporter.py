@@ -295,10 +295,10 @@ def bakeModel(objlist, path, modelname):
     log("Applying modifier...", "INFO")
     print("Applying modifier...")
     bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
-
-    obj.name = modelname
-    obj["visual/name"] = modelname
-    obj["geometry/filename"] = modelname
+    name = modelname+"_bake"
+    obj.name = name
+    obj["visual/name"] = name
+    obj["geometry/filename"] = name
     exportObj(path, obj)
     obj.select = True
     bpy.ops.object.delete()
