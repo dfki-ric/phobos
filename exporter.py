@@ -799,7 +799,8 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
     models = {}  # models to be exported by name
     for root in getRoots():
         if ('modelname' in root) and (not (selected_only and not root.select)):
-            objects[root['modelname']] = getChildren(root)
+            if 'reference' not in root:
+                objects[root['modelname']] = getChildren(root)
             if not root['modelname'] in models:
                 models[root['modelname']] = [root]
             else:
