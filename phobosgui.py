@@ -65,7 +65,6 @@ def register():
     bpy.types.World.useStl = BoolProperty(name="useStl", update=updateExportOptions)
     bpy.types.World.useDae = BoolProperty(name="useDae", update=updateExportOptions)
     bpy.types.World.exportMesh = BoolProperty(name="exportMesh", update=updateExportOptions)
-    bpy.types.World.bakeModel = BoolProperty(name="bakeModel", update=updateExportOptions)
     bpy.types.World.exportMARSscene = BoolProperty(name="exportMARSscene", update=updateExportOptions)
     bpy.types.World.exportSMURF = BoolProperty(name="exportSMURF", default=True, update=updateExportOptions)
     bpy.types.World.exportURDF = BoolProperty(name="exportURDF", default=True, update=updateExportOptions)
@@ -388,7 +387,6 @@ class PhobosExportPanel(bpy.types.Panel):
         c1 = inlayout.column(align=True)
         c1.label(text="Mesh export")
         c1.prop(bpy.data.worlds[0], "exportMesh", text="export meshes")
-        c1.prop(bpy.data.worlds[0], "bakeModel", text="bake model")
         c1.prop(bpy.data.worlds[0], "useBobj", text="use .bobj format")
         c1.prop(bpy.data.worlds[0], "useObj", text="use .obj format")
         c1.prop(bpy.data.worlds[0], "useStl", text="use .stl format")
@@ -416,6 +414,7 @@ class PhobosExportPanel(bpy.types.Panel):
 
         layout.label(text="Export/Import")
         layout.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
+        layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="PASTEDOWN")
         layout.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
 
         layout.separator()

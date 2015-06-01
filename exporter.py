@@ -32,6 +32,9 @@ Created on 13 Feb 2014
 import bpy
 import mathutils
 import os
+import tempfile
+import zipfile
+import shutil
 from datetime import datetime
 import yaml
 import struct
@@ -302,7 +305,7 @@ def bakeModel(objlist, path, modelname):
     log("Applying modifier...", "INFO")
     print("Applying modifier...")
     bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
-    name = modelname+"_bake.stl"
+    name = modelname+".stl"
     obj.name = name
     bpy.ops.export_mesh.stl(filepath=os.path.join(path, name))
     obj.select = True
@@ -941,8 +944,36 @@ class ExportModelOperator(Operator):
         logger.endLog()
         return {'FINISHED'}
 
+class ExportBakeOperator(Operator):
 
-def export(path=''):
+    bl_idname = "object.phobos_export_bake"
+    bl_label = "Bakes the selected model"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        logger.startLog(self)
+        objs = context.selected_objects
+        robot = robotdictionary.buildRobotDictionary()
+        selectObjects(objs)
+        tmpdir = tempfile.gettempdir()
+        expPath = path=os.path.join(tmpdir, robot["modelname"]+"_bake")
+        export(path=expPath, robotmodel=robot)
+        bakeModel(objs, expPath, robot["modelname"])
+        zipfilename = os.path.join(tmpdir, robot["modelname"]+".bake")
+        file = zipfile.ZipFile(zipfilename, mode="w")
+        for filename in os.listdir(expPath):
+            file.write(os.path.join(expPath, filename), arcname=filename)
+        file.close()
+        outpath = ""
+        if bpy.data.worlds[0].relativePath:
+            outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+        else:
+            outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+        shutil.move(zipfilename, outpath)
+        logger.endLog()
+        return {'FINISHED'}
+
+def export(path='', robotmodel=None):
     """This function does the actual exporting of the robot model.
 
     :return: Nothing.
@@ -964,13 +995,12 @@ def export(path=''):
     smurf = bpy.data.worlds[0].exportSMURF
     mars = bpy.data.worlds[0].exportMARSscene
     meshexp = bpy.data.worlds[0].exportMesh
-    bake = bpy.data.worlds[0].bakeModel
     objexp = bpy.data.worlds[0].useObj
     bobjexp = bpy.data.worlds[0].useBobj
     stlexp = bpy.data.worlds[0].useStl
     daeexp = bpy.data.worlds[0].useDae
     objectlist = bpy.context.selected_objects
-    robot = robotdictionary.buildRobotDictionary()
+    robot = robotmodel if robotmodel else robotdictionary.buildRobotDictionary()
     if yaml or urdf or smurf or mars:
         if yaml:
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
@@ -984,8 +1014,6 @@ def export(path=''):
             exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
     if meshexp:
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
-        if bake:
-            bakeModel(objectlist, meshoutpath, robot["modelname"])
         if show_progress:
             wm = bpy.context.window_manager
             total = float(len(objectlist))
