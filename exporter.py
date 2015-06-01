@@ -288,6 +288,13 @@ def bakeModel(objlist, path, modelname):
     print("joining...")
     bpy.ops.object.join()
     obj = bpy.context.active_object
+    log("Deleting vertices...", "INFO")
+    print("Deleting vertices...")
+    bpy.ops.object.editmode_toggle()
+    bpy.ops.mesh.select_all(action='TOGGLE')
+    bpy.ops.mesh.select_all(action='TOGGLE')
+    bpy.ops.mesh.remove_doubles()
+    bpy.ops.object.editmode_toggle()
     log("Adding modifier...", "INFO")
     print("Adding modifier...")
     bpy.ops.object.modifier_add(type='DECIMATE')
@@ -295,11 +302,9 @@ def bakeModel(objlist, path, modelname):
     log("Applying modifier...", "INFO")
     print("Applying modifier...")
     bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
-    name = modelname+"_bake"
+    name = modelname+"_bake.stl"
     obj.name = name
-    obj["visual/name"] = name
-    obj["geometry/filename"] = name
-    exportObj(path, obj)
+    bpy.ops.export_mesh.stl(filepath=os.path.join(path, name))
     obj.select = True
     bpy.ops.object.delete()
     log("Done baking...", "INFO")
