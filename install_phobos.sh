@@ -94,12 +94,18 @@ installPhobos() {
         cp *.py "$phobospath"
         cp -R definitions "$phobospath"
         installed=1
+        if [ -d "$phobospath/lib" ]
+        then
+        echo ""
+        else
+            mkdir "$phobospath/lib"
+        fi
     else
         echo "Phobos folder does not exist, create phobos folder in $addonpath ? (y/n)"
         read YN
         case $YN in
             y|Y )
-                mkdir -p "$phobospath"
+                mkdir -p "$phobospath/lib"
                 cp *.py "$phobospath"
 		cp -R definitions "$phobospath"
                 installed=1

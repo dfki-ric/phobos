@@ -32,6 +32,8 @@ Created on 6 Jan 2014
 
 import bpy
 import math
+import shutil
+import os
 from datetime import datetime as dt
 
 import mathutils
@@ -69,6 +71,32 @@ def unregister():
     """
 
     print("Unregistering misctools...")
+
+class ImportLibRobot(Operator):
+    """ImportLibRobotOperator
+
+    """
+    bl_idname = "object.phobos_import_lib_robot"
+    bl_label = "Imports a baked robot into the robot library."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        startLog(self)
+        file = self.filepath.split("/")[-1]
+        if self.filepath.endswith(".bake"):
+            shutil.copy(self.filepath, os.path.join(os.path.dirname(__file__), "lib", file))
+        else:
+            log("This is no robot bake!", "ERROR")
+        endLog()
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        # create the open file dialog
+        context.window_manager.fileselect_add(self)
+
+        return {'RUNNING_MODAL'}
 
 class ToggleNamespaces(Operator):
     """ToggleNamespacesOperater

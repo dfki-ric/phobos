@@ -441,6 +441,7 @@ class PhobosSettingsPanel(bpy.types.Panel):
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
         c1.operator('object.phobos_adjust_logger', text='Adjust logging settings')
+        c1.operator('object.phobos_import_lib_robot', text="Import Robot bake")
         #c2 = inlayout.column(align=True)
         #c2.operator('object.phobos_partial_rename', text="Partial Rename")
 
