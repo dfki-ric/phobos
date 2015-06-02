@@ -33,6 +33,7 @@ Created on 6 Jan 2014
 import bpy
 import math
 import shutil
+import zipfile
 import os
 from datetime import datetime as dt
 
@@ -81,12 +82,14 @@ class ImportLibRobot(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+    libpath = os.path.join(os.path.dirname(__file__), "lib")
 
     def execute(self, context):
         startLog(self)
         file = self.filepath.split("/")[-1]
         if self.filepath.endswith(".bake"):
-            shutil.copy(self.filepath, os.path.join(os.path.dirname(__file__), "lib", file))
+            zipF = zipfile.ZipFile(self.filepath, mode="r")
+            zipF.extractall(path=os.path.join(self.libpath, file.split(".")[0]))
         else:
             log("This is no robot bake!", "ERROR")
         endLog()
