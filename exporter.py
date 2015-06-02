@@ -825,22 +825,28 @@ class ExportSceneOperator(Operator):
         return {'FINISHED'}
 
 
-def exportSMURFsScene(selected_only=True, subfolders=True):
+def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring needed!!!
     """Exports all robots in a scene in *.smurfs format.
     :param selected_only: Decides if only models with selected root links are exported.
     :param subfolders: If True, the export is structured with subfolders for each model.
     """
     objects = {}
     models = {}  # models to be exported by name
+    instances = [] #the instances to export
     for root in getRoots():
-        if ('modelname' in root) and (not (selected_only and not root.select)):
-            if 'reference' not in root:
+        if (not (selected_only and not root.select)):
+            if "modelname" in root:
                 objects[root['modelname']] = getChildren(root)
-            if not root['modelname'] in models:
-                models[root['modelname']] = [root]
-            else:
-                models[root['modelname']].append(root)
-
+                if not root['modelname'] in models:
+                    models[root['modelname']] = [root]
+                else:
+                    models[root['modelname']].append(root)
+            elif "reference" in root:
+                instances.append(root["reference"])
+                if not root['reference'] in models:
+                    models[root['reference']] = [root]
+                else:
+                    models[root['reference']].append(root)
     entities = []
     for modelname in models:
         entitylist = models[modelname]
@@ -875,11 +881,14 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
                          + " - https://github.com/rock-simulation/phobos\n\n")
         outputfile.write(yaml.dump({'entities': entities}))
 
-    for modelname in models:
+    for modelname in objects:
         smurf_outpath = securepath(os.path.join(outpath, modelname) if subfolders else outpath)
         selectObjects(objects[modelname], True)
         export(smurf_outpath)
 
+    for instance in set(instances).difference(set(objects)):
+        libpath = os.path.join(os.path.dirname(__file__), "lib")
+        shutil.copy(os.path.join(libpath, instance), outpath)
 
 def exportModelToMARS(model, path):
     """Exports selected robot as a MARS scene
