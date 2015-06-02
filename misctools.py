@@ -134,6 +134,30 @@ class ToggleNamespaces(Operator):
         endLog()
         return {'FINISHED'}
 
+class CreateRobotInstance(Operator):
+    """CreateRobotInstance
+
+    """
+    bl_idname = "object.phobos_create_robot_instance"
+    bl_label = "Creates a new instance of the selected robot lib entry"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    bakeObj = EnumProperty(
+        name="Robot lib entries",
+        items=defs.generateLibEntries,
+        description="The Robot lib entries.")
+
+    libFolder = os.path.join(os.path.dirname(__file__), "lib")
+
+    def execute(self, context):
+        bpy.ops.import_mesh.stl(filepath=os.path.join(self.libFolder, self.bakeObj, "bake.stl"))
+        bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+        obj = context.active_object
+        obj.name = self.bakeObj + "::instance"
+        obj.phobostype = "link"
+        obj["reference"] = self.bakeObj
+        return {"FINISHED"}
+
 class SelectError(Operator):
     """SelectErrorOperator
 

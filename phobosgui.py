@@ -415,6 +415,7 @@ class PhobosExportPanel(bpy.types.Panel):
         layout.label(text="Export/Import")
         layout.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
         layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="PASTEDOWN")
+        layout.operator("object.phobos_create_robot_instance", text="Create Robot lib instance", icon="COPYDOWN")
         layout.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
 
         layout.separator()
