@@ -305,7 +305,7 @@ def bakeModel(objlist, path, modelname):
     log("Applying modifier...", "INFO")
     print("Applying modifier...")
     bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
-    name = modelname+".stl"
+    name = "bake.stl"
     obj.name = name
     bpy.ops.export_mesh.stl(filepath=os.path.join(path, name))
     obj.select = True
@@ -956,7 +956,7 @@ class ExportBakeOperator(Operator):
         robot = robotdictionary.buildRobotDictionary()
         selectObjects(objs)
         tmpdir = tempfile.gettempdir()
-        expPath = path=os.path.join(tmpdir, robot["modelname"]+"_bake")
+        expPath = os.path.join(tmpdir, robot["modelname"]+"_bake")
         export(path=expPath, robotmodel=robot)
         bakeModel(objs, expPath, robot["modelname"])
         zipfilename = os.path.join(tmpdir, robot["modelname"]+".bake")
@@ -964,12 +964,13 @@ class ExportBakeOperator(Operator):
         for filename in os.listdir(expPath):
             file.write(os.path.join(expPath, filename), arcname=filename)
         file.close()
+        shutil.rmtree(expPath)
         outpath = ""
         if bpy.data.worlds[0].relativePath:
             outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
         else:
             outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
-        shutil.move(zipfilename, outpath)
+        shutil.copy(zipfilename, outpath)
         logger.endLog()
         return {'FINISHED'}
 
