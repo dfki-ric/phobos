@@ -414,6 +414,8 @@ class PhobosExportPanel(bpy.types.Panel):
 
         layout.label(text="Export/Import")
         layout.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
+        layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="PASTEDOWN")
+        layout.operator("object.phobos_create_robot_instance", text="Create Robot lib instance", icon="COPYDOWN")
         layout.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
 
         layout.separator()
@@ -440,6 +442,7 @@ class PhobosSettingsPanel(bpy.types.Panel):
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
         c1.operator('object.phobos_adjust_logger', text='Adjust logging settings')
+        c1.operator('object.phobos_import_lib_robot', text="Import Robot bake")
         #c2 = inlayout.column(align=True)
         #c2.operator('object.phobos_partial_rename', text="Partial Rename")
 

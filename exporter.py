@@ -32,6 +32,9 @@ Created on 13 Feb 2014
 import bpy
 import mathutils
 import os
+import tempfile
+import zipfile
+import shutil
 from datetime import datetime
 import yaml
 import struct
@@ -277,6 +280,38 @@ def exportDae(path, obj):
     tmpobject.select = True
     bpy.ops.object.delete()
     obj.name = oldBlenderObjectName
+
+def bakeModel(objlist, path, modelname):
+    visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
+    selectObjects(visuals, active=0)
+    log("Copying objects for joining...", "INFO")
+    print("Copying objects for joining...")
+    bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
+    log("joining...", "INFO")
+    print("joining...")
+    bpy.ops.object.join()
+    obj = bpy.context.active_object
+    log("Deleting vertices...", "INFO")
+    print("Deleting vertices...")
+    bpy.ops.object.editmode_toggle()
+    bpy.ops.mesh.select_all(action='TOGGLE')
+    bpy.ops.mesh.select_all(action='TOGGLE')
+    bpy.ops.mesh.remove_doubles()
+    bpy.ops.object.editmode_toggle()
+    log("Adding modifier...", "INFO")
+    print("Adding modifier...")
+    bpy.ops.object.modifier_add(type='DECIMATE')
+    bpy.context.object.modifiers["Decimate"].decimate_type = 'DISSOLVE'
+    log("Applying modifier...", "INFO")
+    print("Applying modifier...")
+    bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+    name = "bake.stl"
+    obj.name = name
+    bpy.ops.export_mesh.stl(filepath=os.path.join(path, name))
+    obj.select = True
+    bpy.ops.object.delete()
+    log("Done baking...", "INFO")
+    print("Done baking...")
 
 
 def exportModelToYAML(model, filepath):
@@ -790,21 +825,28 @@ class ExportSceneOperator(Operator):
         return {'FINISHED'}
 
 
-def exportSMURFsScene(selected_only=True, subfolders=True):
+def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring needed!!!
     """Exports all robots in a scene in *.smurfs format.
     :param selected_only: Decides if only models with selected root links are exported.
     :param subfolders: If True, the export is structured with subfolders for each model.
     """
     objects = {}
     models = {}  # models to be exported by name
+    instances = [] #the instances to export
     for root in getRoots():
-        if ('modelname' in root) and (not (selected_only and not root.select)):
-            objects[root['modelname']] = getChildren(root)
-            if not root['modelname'] in models:
-                models[root['modelname']] = [root]
-            else:
-                models[root['modelname']].append(root)
-
+        if (not (selected_only and not root.select)):
+            if "modelname" in root:
+                objects[root['modelname']] = getChildren(root)
+                if not root['modelname'] in models:
+                    models[root['modelname']] = [root]
+                else:
+                    models[root['modelname']].append(root)
+            elif "reference" in root:
+                instances.append(root["reference"])
+                if not root['reference'] in models:
+                    models[root['reference']] = [root]
+                else:
+                    models[root['reference']].append(root)
     entities = []
     for modelname in models:
         entitylist = models[modelname]
@@ -813,7 +855,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
             if 'entityname' in entity:
                 entityname = entity['entityname']
             else:
-                entityname = entity['modelname']+'_'+str(unnamed_entities)
+                entityname = modelname+'_'+str(unnamed_entities)
                 unnamed_entities += 1
             entitypose = robotdictionary.deriveObjectPose(entity)
             uri = os.path.join(modelname, modelname+'.smurf') if subfolders else modelname+'.smurf'
@@ -839,11 +881,16 @@ def exportSMURFsScene(selected_only=True, subfolders=True):
                          + " - https://github.com/rock-simulation/phobos\n\n")
         outputfile.write(yaml.dump({'entities': entities}))
 
-    for modelname in models:
+    for modelname in objects:
         smurf_outpath = securepath(os.path.join(outpath, modelname) if subfolders else outpath)
         selectObjects(objects[modelname], True)
         export(smurf_outpath)
 
+    for instance in set(instances).difference(set(objects)):
+        libpath = os.path.join(os.path.dirname(__file__), "lib")
+        if os.path.isdir(os.path.join(outpath, instance)):
+            shutil.rmtree(os.path.join(outpath, instance))
+        shutil.copytree(os.path.join(libpath, instance), os.path.join(outpath, instance))
 
 def exportModelToMARS(model, path):
     """Exports selected robot as a MARS scene
@@ -908,8 +955,37 @@ class ExportModelOperator(Operator):
         logger.endLog()
         return {'FINISHED'}
 
+class ExportBakeOperator(Operator):
 
-def export(path=''):
+    bl_idname = "object.phobos_export_bake"
+    bl_label = "Bakes the selected model"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        logger.startLog(self)
+        objs = context.selected_objects
+        robot = robotdictionary.buildRobotDictionary()
+        selectObjects(objs)
+        tmpdir = tempfile.gettempdir()
+        expPath = os.path.join(tmpdir, robot["modelname"]+"_bake")
+        export(path=expPath, robotmodel=robot)
+        bakeModel(objs, expPath, robot["modelname"])
+        zipfilename = os.path.join(tmpdir, robot["modelname"]+".bake")
+        file = zipfile.ZipFile(zipfilename, mode="w")
+        for filename in os.listdir(expPath):
+            file.write(os.path.join(expPath, filename), arcname=filename)
+        file.close()
+        shutil.rmtree(expPath)
+        outpath = ""
+        if bpy.data.worlds[0].relativePath:
+            outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+        else:
+            outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+        shutil.copy(zipfilename, outpath)
+        logger.endLog()
+        return {'FINISHED'}
+
+def export(path='', robotmodel=None):
     """This function does the actual exporting of the robot model.
 
     :return: Nothing.
@@ -936,9 +1012,8 @@ def export(path=''):
     stlexp = bpy.data.worlds[0].useStl
     daeexp = bpy.data.worlds[0].useDae
     objectlist = bpy.context.selected_objects
-
+    robot = robotmodel if robotmodel else robotdictionary.buildRobotDictionary()
     if yaml or urdf or smurf or mars:
-        robot = robotdictionary.buildRobotDictionary()
         if yaml:
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
         if mars:
