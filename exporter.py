@@ -855,7 +855,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring n
             if 'entityname' in entity:
                 entityname = entity['entityname']
             else:
-                entityname = entity['modelname']+'_'+str(unnamed_entities)
+                entityname = modelname+'_'+str(unnamed_entities)
                 unnamed_entities += 1
             entitypose = robotdictionary.deriveObjectPose(entity)
             uri = os.path.join(modelname, modelname+'.smurf') if subfolders else modelname+'.smurf'
@@ -888,7 +888,9 @@ def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring n
 
     for instance in set(instances).difference(set(objects)):
         libpath = os.path.join(os.path.dirname(__file__), "lib")
-        shutil.copy(os.path.join(libpath, instance), outpath)
+        if os.path.isdir(os.path.join(outpath, instance)):
+            shutil.rmtree(os.path.join(outpath, instance))
+        shutil.copytree(os.path.join(libpath, instance), os.path.join(outpath, instance))
 
 def exportModelToMARS(model, path):
     """Exports selected robot as a MARS scene
