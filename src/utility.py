@@ -44,20 +44,12 @@ def unregister():
 
 def is_float(s):
     """Tests if an input variable (string) is a float number."""
-    try:
-        float(s)
-        return True
-    except (ValueError, TypeError):
-        return False
+    return type(s).__name__ == "float"
 
 
 def is_int(s):
-    """Tests is an input variable (string) is an int number."""
-    try:
-        int(s)
-        return True
-    except ValueError:
-        return False
+    """Tests if an input variable (string) is an int number."""
+    return type(s).__name__ == "int"
 
 
 def parse_number(s):
@@ -450,5 +442,3 @@ def namesAreExplicit(nameset, objnames):
 #    elif type(data) is dict:
 #        tmpdict = {useLegacyNames(key): value for key, value in data.items()}
 #        return {key: useLegacyNames(value) for key, value in tmpdict.items()}
-
-
