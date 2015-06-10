@@ -329,6 +329,19 @@ class RobotModelParser():
         else:
             raise Exception('WTF? No write permission for home dir.')
 
+    def praefixNames(self, name, praefix):
+        """This function takes a name and a praefix and praefixes the name with it if its not already praefixed with it.
+
+        :param name: The name to praefix
+        :param praefix:  The praefix to use
+        :return: The praefixed name
+        """
+        prae = praefix + "_"
+        if (name.startswith(prae)):
+            return name
+        else:
+            return prae+name
+
     def scaleLink(self, link, newlink):
         """Scales newly-created armatures depending on the link's largest collision object.
         The function is very simple and could be improved to scale the links even more appropriate.
@@ -373,8 +386,8 @@ class RobotModelParser():
                 children.append(self.robot['links'][l])
         for child in children:
             # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
-            parentLink = bpy.data.objects[parent['name']]
-            childLink = bpy.data.objects[child['name']]
+            parentLink = bpy.data.objects[self.praefixNames(parent['name'], "link")]
+            childLink = bpy.data.objects[self.praefixNames(child['name'], "link")]
             selectObjects([childLink, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             # 2: move to parents origin by setting the world matrix to the parents world matrix
@@ -406,7 +419,7 @@ class RobotModelParser():
 
         """
         bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
-        parentLink = bpy.data.objects[link['name']]
+        parentLink = bpy.data.objects[self.praefixNames(link['name'], "link")]
         if 'inertial' in link:
             if 'pose' in link['inertial']:
                 urdf_geom_loc = mathutils.Matrix.Translation(link['inertial']['pose']['translation'])
@@ -435,7 +448,7 @@ class RobotModelParser():
                     else:
                         urdf_geom_loc = mathutils.Matrix.Identity(4)
                         urdf_geom_rot = mathutils.Matrix.Identity(4)
-                    geoname = geomelement['name']
+                    geoname = self.praefixNames(geomelement['name'], geomsrc)
                     geom = bpy.data.objects[geoname]
                     # FIXME: this does not do anything - how to set basis matrix to local?
                     #geom.matrix_world = parentLink.matrix_world
@@ -528,7 +541,6 @@ class RobotModelParser():
                             newgeom.select = True
                             bpy.ops.object.transform_apply(rotation=True)
                 #print(viscol)
-                newgeom.name = viscol['name']
                 newgeom['filename'] = geom['filename']
                 #newgeom.select = True
                 #if 'scale' in geom:
@@ -562,6 +574,8 @@ class RobotModelParser():
             if prop.startswith('$'):
                 for tag in viscol[prop]:
                     newgeom[prop[1:]+'/'+tag] = viscol[prop][tag]
+        newgeom.name = self.praefixNames(viscol['name'], geomsrc)
+        newgeom[geomsrc+"/name"] = viscol['name']
         return newgeom
 
     def createInertial(self, name, inertial):
@@ -602,13 +616,14 @@ class RobotModelParser():
         #bpy.ops.view3d.snap_cursor_to_center()
         bpy.ops.object.armature_add(layers=defLayers(0))
         newlink = bpy.context.active_object #print(bpy.context.object) #print(bpy.context.scene.objects.active) #bpy.context.selected_objects[0]
-        newlink.name = link['name']
+        newlink["link/name"] = link['name']
+        newlink.name = self.praefixNames(link['name'], "link")
         #newlink.location = (0.0, 0.0, 0.0)
         newlink.location = link['pose']['translation']
         newlink.scale = (0.3, 0.3, 0.3) #TODO: make this depend on the largest visual or collision object
         bpy.ops.object.transform_apply(scale=True)
         newlink.phobostype = 'link'
-        if newlink.name != link['name']:
+        if newlink.name != self.praefixNames(link['name'], "link"):
             log("Warning, name conflict!")
         # place inertial
         if 'inertial' in link:
@@ -681,7 +696,7 @@ class RobotModelParser():
 
         """
         bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
-        link = bpy.data.objects[joint['child']]
+        link = bpy.data.objects[self.praefixNames(joint['child'], "link")]
         # add joint information
         # link['joint/type'] = joint['type']
 
@@ -724,7 +739,7 @@ class RobotModelParser():
 
         """
         #try:
-        link = bpy.data.objects[self.robot['joints'][motor['joint']]['child']]
+        link = bpy.data.objects[self.praefixNames(self.robot['joints'][motor['joint']]['child'], "link")]
         selectObjects([link])
         motor_type = motor['type']
         if motor_type == 'PID':
@@ -812,10 +827,10 @@ class RobotModelParser():
                 self.placeChildLinks(root)
                 print("\n\nAssigning model name...")
                 try:
-                    rootlink = getRoot(bpy.data.objects[root['name']])
+                    rootlink = getRoot(bpy.data.objects[self.praefixNames(root['name'], "link")])
                     rootlink['modelname'] = self.robot['name']
                 except KeyError:
-                    link("Could not assign model name to root link.", "ERROR")
+                    log("Could not assign model name to root link.", "ERROR")
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
         for sensorname in self.robot['sensors']:

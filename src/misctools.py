@@ -32,6 +32,9 @@ Created on 6 Jan 2014
 
 import bpy
 import math
+import shutil
+import zipfile
+import os
 from datetime import datetime as dt
 
 import mathutils
@@ -70,6 +73,90 @@ def unregister():
 
     print("Unregistering misctools...")
 
+class ImportLibRobot(Operator):
+    """ImportLibRobotOperator
+
+    """
+    bl_idname = "object.phobos_import_lib_robot"
+    bl_label = "Imports a baked robot into the robot library."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+    libpath = os.path.join(os.path.dirname(__file__), "lib")
+
+    def execute(self, context):
+        startLog(self)
+        file = self.filepath.split("/")[-1]
+        if self.filepath.endswith(".bake"):
+            zipF = zipfile.ZipFile(self.filepath, mode="r")
+            zipF.extractall(path=os.path.join(self.libpath, file.split(".")[0]))
+        else:
+            log("This is no robot bake!", "ERROR")
+        endLog()
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        # create the open file dialog
+        context.window_manager.fileselect_add(self)
+
+        return {'RUNNING_MODAL'}
+
+class ToggleNamespaces(Operator):
+    """ToggleNamespacesOperater
+
+    """
+    bl_idname = "object.phobos_toggle_namespaces"
+    bl_label = "Toggles the use of namespaces for the selected objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    complete = BoolProperty(
+        name="Converting complete robot",
+        default=False
+    )
+
+    def execute(self, context):
+        startLog(self)
+        objlist = context.selected_objects
+        if self.complete:
+            roots = list(set([utility.getRoot(obj) for obj in context.selected_objects]))
+            if None in roots:
+                roots.remove(None)
+            objlist = [elem for sublist in [utility.getChildren(root) for root in roots] for elem in sublist]
+        objnames = [o.name for o in bpy.data.objects]
+        for obj in objlist:
+            if "::" in obj.name:
+                if utility.namesAreExplicit({obj.name.split("::")[-1]}, objnames):
+                    utility.removeNamespace(obj)
+                else:
+                    log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit", "ERROR")
+            else:
+                utility.addNamespace(obj)
+        endLog()
+        return {'FINISHED'}
+
+class CreateRobotInstance(Operator):
+    """CreateRobotInstance
+
+    """
+    bl_idname = "object.phobos_create_robot_instance"
+    bl_label = "Creates a new instance of the selected robot lib entry"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    bakeObj = EnumProperty(
+        name="Robot lib entries",
+        items=defs.generateLibEntries,
+        description="The Robot lib entries.")
+
+    libFolder = os.path.join(os.path.dirname(__file__), "lib")
+
+    def execute(self, context):
+        bpy.ops.import_mesh.stl(filepath=os.path.join(self.libFolder, self.bakeObj, "bake.stl"))
+        bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+        obj = context.active_object
+        obj.name = self.bakeObj + "::instance"
+        obj.phobostype = "link"
+        obj["reference"] = self.bakeObj
+        return {"FINISHED"}
 
 class SelectError(Operator):
     """SelectErrorOperator
@@ -859,8 +946,13 @@ class PartialRename(Operator):
         description="replace with")
 
     def execute(self, context):
+        types = defs.subtypes
         for obj in bpy.context.selected_objects:
             obj.name = obj.name.replace(self.find, self.replace)
+            for type in types:
+                nametag = type+"/name"
+                if nametag in obj:
+                    obj[nametag] = obj[nametag].replace(self.find, self.replace)
         return {'FINISHED'}
 
     @classmethod

@@ -65,9 +65,9 @@ def deriveMaterial(mat):
     if mat.use_transparency:
         material['transparency'] = 1.0-mat.alpha
     try:
-        material['texturename'] = mat.texture_slots[0].texture.image.name # grab the first texture
+        material['texturename'] = getObjectName(mat.texture_slots[0].texture.image) # grab the first texture
     except (KeyError, AttributeError):
-        print('None or incomplete texture data for material ' + mat.name + '.')
+        print('None or incomplete texture data for material ' + getObjectName(mat) + '.')
     return material
 
 
@@ -85,7 +85,7 @@ def deriveJoint(obj):
     if not 'joint/type' in obj.keys():
         jt, crot = joints.deriveJointType(obj, adjust=True)
     props = initObjectProperties(obj, phobostype='joint', ignoretypes=['link', 'motor'])
-    props['parent'] = obj.parent.name
+    props['parent'] = getObjectName(obj.parent)
     props['child'] = getObjectName(obj)
     axis, minmax = joints.getJointConstraints(obj)
     if axis:
@@ -289,7 +289,7 @@ def deriveApproxsphere(obj):
 def deriveSensor(obj):
     props = initObjectProperties(obj, phobostype='sensor')
     #props['pose'] = deriveObjectPose(obj)
-    props['link'] = obj.parent.name
+    props['link'] = getObjectName(obj.parent)
     return props
 
 
@@ -333,7 +333,7 @@ def deriveLight(obj):
     light['attenuation']['constant'] = light_data.energy
 
     if obj.parent is not None:
-        light['parent'] = obj.parent.name
+        light['parent'] = getObjectName(obj.parent,phobostype="link")
 
     return light
 
@@ -404,7 +404,7 @@ def deriveGroupEntry(group):
         if obj.phobostype == 'link':
             links.append({'type': 'link', 'name': getObjectName(obj)})
         else:
-            print("### Error: group " + group.name + " contains " + obj.phobostype + ': ' + getObjectName(obj))
+            print("### Error: group " + getObjectName(group) + " contains " + obj.phobostype + ': ' + getObjectName(obj))
     return links
 
 
@@ -426,8 +426,8 @@ def deriveChainEntry(obj):
             if 'startChain' in parent:
                 startChain = parent['startChain']
                 if chainName in startChain:
-                    chain['start'] = parent.name
-                    chain['elements'].append(parent.name)
+                    chain['start'] = getObjectName(parent)
+                    chain['elements'].append(getObjectName(parent))
                     chainclosed = True
         if chain is not None:
             returnchains.append(chain)
@@ -493,7 +493,7 @@ def buildRobotDictionary():
     for obj in bpy.context.selected_objects:
         if obj.phobostype == 'link':
             link, joint, motor = deriveKinematics(obj)
-            robot['links'][obj.name] = link  # it's important that this is really the object's name
+            robot['links'][getObjectName(obj, phobostype="link")] = link  # it's important that this is really the object's name
             if joint:  # joint can be None if link is a root
                 robot['joints'][joint['name']] = joint
             if motor:
@@ -503,18 +503,19 @@ def buildRobotDictionary():
     # add inertial information to link
     print('\n\nParsing inertials...')
     for l in robot['links']:
-        link = bpy.data.objects[l]
+        #link = bpy.data.objects[l] NEW NAMING!
+        link = getObjectByName(l)[0] if getObjectByName(l) is not None else "ERROR!"
         inertials = getImmediateChildren(link, ['inertial'])
         if len(inertials) == 1:
             props, parent = deriveDictEntry(inertials[0])
             if not (props is None or parent is None):  # this may be the case if there is inertia information missing
-                robot['links'][parent.name]['inertial'] = props
+                robot['links'][getObjectName(parent)]['inertial'] = props
             inertials[0].select = False
         elif len(inertials) > 1:
             for i in inertials:
-                if i.name == 'inertial_' + l:
+                if getObjectName(i, phobostype="inertial") == 'inertial_' + l:
                     props, parent = deriveDictEntry(i)
-                    robot['links'][parent.name]['inertial'] = props
+                    robot['links'][getObjectName(parent, phobostype="link")]['inertial'] = props
             # FIXME: this has to be re-implemented
             #if linkinertial == None:
             #    mass, com, inertia = inertia.fuseInertiaData(inertials)
@@ -534,6 +535,7 @@ def buildRobotDictionary():
     print('\n\nParsing visual and collision (approximation) objects...')
     capsules_dict = {}
     for obj in bpy.context.selected_objects:
+        print("Parsing object " + getObjectName(obj))
         if obj.phobostype in ['visual', 'collision']:
             props, parent = deriveDictEntry(obj)
             if all([key in props for key in ['cylinder', 'sphere1', 'sphere2']]):     # this is the case with simulated capsules
@@ -541,13 +543,13 @@ def buildRobotDictionary():
                                               'sphere1': props['sphere1']['name'],
                                               'sphere2': props['sphere2']['name']}
                 for key in props:
-                    robot['links'][parent.name][obj.phobostype][props[key]['name']] = props[key]
+                    robot['links'][getObjectName(parent, phobostype="link")][obj.phobostype][getObjectName(obj, phobostype=obj.phobostype)] = props[key]
             else:
-                robot['links'][parent.name][obj.phobostype][getObjectName(obj)] = props
+                robot['links'][getObjectName(parent, phobostype="link")][obj.phobostype][getObjectName(obj, phobostype=obj.phobostype)] = props
             obj.select = False
         elif obj.phobostype == 'approxsphere':
             props, parent = deriveDictEntry(obj)
-            robot['links'][parent.name]['approxcollision'].append(props)
+            robot['links'][getObjectName(parent)]['approxcollision'].append(props)
             obj.select = False
 
     robot['capsules'] = capsules_dict
@@ -576,15 +578,15 @@ def buildRobotDictionary():
     for obj in objectlist:
         if obj.phobostype == 'visual' and len(obj.data.materials) > 0:
             mat = obj.data.materials[0]
-            if not mat.name in robot['materials']:
-                robot['materials'][mat.name] = deriveMaterial(mat) #this should actually never happen
-            robot['links'][obj.parent.name]['visual'][getObjectName(obj)]['material'] = mat.name
+            if not getObjectName(mat) in robot['materials']:
+                robot['materials'][getObjectName(mat)] = deriveMaterial(mat) #this should actually never happen
+            robot['links'][getObjectName(obj.parent)]['visual'][getObjectName(obj, phobostype="visual")]['material'] = getObjectName(mat)
 
     # gather information on groups of objects
     print('\n\nParsing groups...')
     for group in bpy.data.groups:  # TODO: get rid of the "data" part
-        if len(group.objects) > 0 and group.name != "RigidBodyWorld":
-            robot['groups'][group.name] = deriveGroupEntry(group)
+        if len(group.objects) > 0 and getObjectName(group) != "RigidBodyWorld":
+            robot['groups'][getObjectName(group)] = deriveGroupEntry(group)
 
     # gather information on chains of objects
     print('\n\nParsing chains...')

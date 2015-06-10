@@ -88,19 +88,26 @@ initConfig() {
 installPhobos() {
     echo "Check for phobos installation..."
     phobospath="$addonpath/phobos"
-    if [ -d $phobospath ]
+    if [ -d "$phobospath" ]
     then
         echo "Phobos installation found and updated."
-        cp *.py $phobospath
-        cp -R definitions $phobospath
+        cp src/*.py "$phobospath"
+        cp -R definitions "$phobospath"
         installed=1
+        if [ -d "$phobospath/lib" ]
+        then
+        echo ""
+        else
+            mkdir "$phobospath/lib"
+        fi
     else
         echo "Phobos folder does not exist, create phobos folder in $addonpath ? (y/n)"
         read YN
         case $YN in
             y|Y )
-                mkdir -p "$phobospath"
-                cp *.py "$phobospath"
+                mkdir -p "$phobospath/lib"
+                cp src/*.py "$phobospath"
+		cp -R definitions "$phobospath"
                 installed=1
                 echo "Copied phobos to $phobospath"
                 ;;
