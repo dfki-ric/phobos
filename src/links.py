@@ -145,74 +145,7 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
 
-class CreateLinkOperator(Operator):
-    """Create Link Operator
 
-    """
-    bl_idname = "object.phobos_create_link"
-    bl_label = "Create link(s), optionally based on existing objects"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    type = EnumProperty(
-        items=(('3D cursor',)*3,
-               ('selected objects',)*3),
-        default='selected objects',
-        name='location',
-        description='Where to create new link(s)?'
-    )
-
-    size = FloatProperty(
-        name="visual link size",
-        default=0.2,
-        description="size of the created link"
-    )
-
-    parenting = BoolProperty(
-        name='parenting',
-        default=False,
-        description='parent associated objects to created links?'
-    )
-
-    parentobject = BoolProperty(
-        name='parent object(s)',
-        default=False,
-        description='parent objects to newly created links?'
-    )
-
-    namepartindices = StringProperty(
-        name="name segment indices",
-        description="allows reusing parts of objects' names, specified as e.g. '2 3'",
-        default=''
-    )
-
-    separator = StringProperty(
-        name="separator",
-        description="seperator to split object names with, e.g. '_'",
-        default='_'
-    )
-
-    prefix = StringProperty(
-        name="prefix",
-        description="prefix to put before names, e.g. 'link'",
-        default='link'
-    )
-
-    def execute(self, context):
-        """This function executes the operator and creates a link.
-
-        :param context: The blender context this operator works with.
-        :type context: Blender context.
-        :return: Blender result.
-        """
-        if self.type == '3D cursor':
-            createLink(self.size)
-        else:
-            for obj in bpy.context.selected_objects:
-                tmpnamepartindices = [int(p) for p in self.namepartindices.split()]
-                deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting, parentobjects=self.parentobject,
-                                     namepartindices=tmpnamepartindices, separator=self.separator,
-                                     prefix=self.prefix)
-        return {'FINISHED'}
 
 
 # TODO: evaluate the parenting method below

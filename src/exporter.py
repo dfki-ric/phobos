@@ -812,17 +812,7 @@ def exportModelToSMURF(model, path):
                 op.write(outstring)
 
 
-class ExportSceneOperator(Operator):
-    """This Blender operator exports the selected robot models in the current
-     Blender scene as a SMURF scene (*.smurfs).
-    """
-    bl_idname = "object.phobos_export_scene"
-    bl_label = "Export the selected model(s) in a scene."
-    bl_options = {'REGISTER', 'UNDO'}
 
-    def execute(self, context):
-        exportSMURFsScene()
-        return {'FINISHED'}
 
 
 def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring needed!!!
@@ -936,54 +926,6 @@ def securepath(path):  #TODO: this is totally not error-handled!
     return os.path.expanduser(path)
 
 
-class ExportModelOperator(Operator):
-    """This blender operator exports the robot model to chosen formats.
-    You can choose one or more of the following file formats:
-    - SMURF
-    - SRDF
-    - YAML
-    - MARS
-
-    """
-    bl_idname = "object.phobos_export_robot"
-    bl_label = "Export the selected model(s)"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        logger.startLog(self)
-        export()
-        logger.endLog()
-        return {'FINISHED'}
-
-class ExportBakeOperator(Operator):
-
-    bl_idname = "object.phobos_export_bake"
-    bl_label = "Bakes the selected model"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        logger.startLog(self)
-        objs = context.selected_objects
-        robot = robotdictionary.buildRobotDictionary()
-        selectObjects(objs)
-        tmpdir = tempfile.gettempdir()
-        expPath = os.path.join(tmpdir, robot["modelname"]+"_bake")
-        export(path=expPath, robotmodel=robot)
-        bakeModel(objs, expPath, robot["modelname"])
-        zipfilename = os.path.join(tmpdir, robot["modelname"]+".bake")
-        file = zipfile.ZipFile(zipfilename, mode="w")
-        for filename in os.listdir(expPath):
-            file.write(os.path.join(expPath, filename), arcname=filename)
-        file.close()
-        shutil.rmtree(expPath)
-        outpath = ""
-        if bpy.data.worlds[0].relativePath:
-            outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
-        else:
-            outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
-        shutil.copy(zipfilename, outpath)
-        logger.endLog()
-        return {'FINISHED'}
 
 def export(path='', robotmodel=None):
     """This function does the actual exporting of the robot model.

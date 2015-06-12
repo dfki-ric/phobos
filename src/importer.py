@@ -2096,50 +2096,7 @@ class SMURFModelParser(RobotModelParser):
             outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 
-class RobotModelImporter(bpy.types.Operator):
-    """Importer for MARS-compatible model or scene files"""
-    bl_idname = "obj.import_robot_model"
-    bl_label = "Import robot model file from various formats"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'FILE'
 
-    # creating property for storing the path to the .scn file
-    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
-
-    # set a filter to only consider .scn files (only used internally)
-    #filter_glob = bpy.props.StringProperty(default="*.*",options={'HIDDEN'})
-
-    @classmethod
-    def poll(cls, context):
-        return context is not None
-
-    def execute(self, context):
-        # get the chosen file path
-        #directory, filename = os.path.split(self.filepath)
-        modeltype = self.filepath.split('.')[-1]
-
-        if modeltype == 'scene':
-            importer = MARSModelParser(self.filepath)
-        elif modeltype == 'urdf':
-            importer = URDFModelParser(self.filepath)
-        elif modeltype == 'smurf' or modeltype == 'yml' or modeltype == 'yaml':
-            importer = SMURFModelParser(self.filepath)
-        elif modeltype == 'scn':
-            importer = MARSModelParser(self.filepath, zipped=True)
-        else:
-            print("Unknown model format, aborting import...")
-
-        cleanUpScene()
-        importer.parseModel()
-        importer.createBlenderModel()
-
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        # create the open file dialog
-        context.window_manager.fileselect_add(self)
-
-        return {'RUNNING_MODAL'}
 
 # Register and add to the file selector
 bpy.utils.register_class(RobotModelImporter)

@@ -545,7 +545,7 @@ class EditInertia(Operator):
     # inertiamatrix = FloatVectorProperty (
     # name = "inertia",
     # default = [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    #        subtype = 'MATRIX',
+    # subtype = 'MATRIX',
     #        size = 9,
     #        description = "set inertia for a link")
 
@@ -816,7 +816,7 @@ class CreateCollisionObjects(Operator):
                     rotation = Matrix.Rotation(math.pi / 2, 4, 'Y')
                 elif long_side == 'Y':
                     rotation = Matrix.Rotation(math.pi / 2, 4, 'X')
-                    #FIXME: apply rotation for moved cylinder object?
+                    # FIXME: apply rotation for moved cylinder object?
             elif self.property_colltype == 'sphere':
                 size = max(size) / 2
             rotation_euler = (vis.matrix_world * rotation).to_euler()
@@ -856,7 +856,7 @@ class CreateCollisionObjects(Operator):
                 bpy.context.scene.objects.active = vis.parent
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
                 # ob.parent_type = vis.parent_type
-                #ob.parent_bone = vis.parent_bone
+                # ob.parent_bone = vis.parent_bone
         endLog()
         return {'FINISHED'}
 
@@ -921,4 +921,389 @@ class SetCollisionGroupOperator(Operator):
                     obj.rigid_body.kinematic = True
                     obj.rigid_body.collision_groups = self.groups
         context.scene.objects.active = active_object
+        return {'FINISHED'}
+
+
+class DefineJointConstraintsOperator(Operator):
+    """DefineJointConstraintsOperator
+
+    """
+    bl_idname = "object.define_joint_constraints"
+    bl_label = "Adds Bone Constraints to the joint (link)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    passive = BoolProperty(
+        name='passive',
+        default=False,
+        description='makes the joint passive (no actuation)'
+    )
+
+    useRadian = BoolProperty(
+        name='useRadian',
+        default=True,
+        description='use degrees or rad for joints'
+    )
+
+    joint_type = EnumProperty(
+        name='joint_type',
+        default='revolute',
+        description="type of the joint",
+        items=defs.jointtypes)
+
+    lower = FloatProperty(
+        name="lower",
+        default=0.0,
+        description="lower constraint of the joint")
+
+    upper = FloatProperty(
+        name="upper",
+        default=0.0,
+        description="upper constraint of the joint")
+
+    maxeffort = FloatProperty(
+        name="max effort (N or Nm)",
+        default=0.0,
+        description="maximum effort of the joint")
+
+    maxvelocity = FloatProperty(
+        name="max velocity (m/s or rad/s)",
+        default=0.0,
+        description="maximum velocity of the joint. If you uncheck radian, you can enter °/sec here")
+
+    spring = FloatProperty(
+        name="spring constant",
+        default=0.0,
+        description="spring constant of the joint")
+
+    damping = FloatProperty(
+        name="damping constant",
+        default=0.0,
+        description="damping constant of the joint")
+
+    # TODO: invoke function to read all values in
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "joint_type", text="joint_type")
+        layout.prop(self, "passive", text="makes the joint passive (no actuation)")
+        layout.prop(self, "useRadian", text="use radian")
+        if self.joint_type != 'fixed':
+            layout.prop(self, "maxeffort",
+                        text="max effort [" + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'))
+            if self.joint_type in ['revolute', 'continuous']:
+                layout.prop(self, "maxvelocity", text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"))
+            else:
+                layout.prop(self, "maxvelocity", text="max velocity [m/s]")
+        if self.joint_type in ('revolute', 'prismatic'):
+            layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
+            layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
+            layout.prop(self, "spring", text="spring constant [N/m]")
+            layout.prop(self, "damping", text="damping constant")
+
+
+    def invoke(self, context, event):
+        aObject = context.active_object
+        if 'joint/type' not in aObject and 'motor/type' in aObject:
+            self.maxvelocity = aObject['motor/maxSpeed']
+            self.maxeffort = aObject['motor/maxEffort']
+        return self.execute(context)
+
+    def execute(self, context):
+        """This function executes this operator and sets the constraints and joint type for all selected links.
+        rad/s is the default unit. rpm will be transformed into rad/s
+
+        :param context: The blender context this operator works with.
+        :return: Blender result.
+
+        """
+        lower = 0
+        upper = 0
+        velocity = 0
+        if self.joint_type in ('revolute', 'prismatic'):
+            if not self.useRadian:
+                lower = math.radians(self.lower)
+                upper = math.radians(self.upper)
+            else:
+                lower = self.lower
+                upper = self.upper
+        if not self.useRadian:
+            velocity = self.maxvelocity * ((2 * math.pi) / 360)  # from °/s to rad/s
+        else:
+            velocity = self.maxvelocity
+        for link in context.selected_objects:
+            bpy.context.scene.objects.active = link
+            setJointConstraints(link, self.joint_type, lower, upper, self.spring, self.damping)
+            if self.joint_type != 'fixed':
+                link['joint/maxeffort'] = self.maxeffort
+                link['joint/maxvelocity'] = velocity
+            else:
+                if "joint/maxeffort" in link: del link["joint/maxeffort"]
+                if "joint/maxvelocity" in link: del link["joint/maxvelocity"]
+            if self.passive:
+                link['joint/passive'] = "$true"
+            else:
+                pass  # FIXME: add default motor here or upon export?
+                # upon export might have the advantage of being able
+                # to check for missing motors in the model checking
+        return {'FINISHED'}
+
+
+class AttachMotorOperator(Operator):
+    """AttachMotorOperator
+
+    """
+    bl_idname = "object.attach_motor"
+    bl_label = "Attaches motor values to selected joints"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    P = FloatProperty(
+        name="P",
+        default=1.0,
+        description="P-value")
+
+    I = FloatProperty(
+        name="I",
+        default=0.0,
+        description="I-value")
+
+    D = FloatProperty(
+        name="D",
+        default=0.0,
+        description="D-value")
+
+    vmax = FloatProperty(
+        name="maximum velocity [m/s] or [rad/s]",
+        default=1.0,
+        description="maximum turning velocity of the motor")
+
+    taumax = FloatProperty(
+        name="maximum torque [Nm]",
+        default=1.0,
+        description="maximum torque a motor can apply")
+
+    motortype = EnumProperty(
+        name='motor_type',
+        default='PID',
+        description="type of the motor",
+        items=defs.motortypes)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "motortype", text="motor_type")
+        layout.prop(self, "taumax", text="maximum torque [Nm]")
+        layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
+        if self.motortype == 'PID':
+            layout.prop(self, "P", text="P")
+            layout.prop(self, "I", text="I")
+            layout.prop(self, "D", text="D")
+
+    def invoke(self, context, event):
+        aObject = context.active_object
+        if 'motor/type' not in aObject and 'joint/type' in aObject and aObject['joint/type'] != 'fixed':
+            self.taumax = aObject['joint/maxeffort']
+            self.vmax = aObject['joint/maxvelocity']
+        return self.execute(context)
+
+    def execute(self, context):
+        """This function executes this operator and attaches a motor to all selected links.
+
+        :param context: The blender context this operator works with.
+        :return:Blender result.
+
+        """
+        for joint in bpy.context.selected_objects:
+            if joint.phobostype == "link":
+                # TODO: these keys have to be adapted
+                if self.motortype == 'PID':
+                    joint['motor/p'] = self.P
+                    joint['motor/i'] = self.I
+                    joint['motor/d'] = self.D
+                joint['motor/maxSpeed'] = self.vmax
+                joint['motor/maxEffort'] = self.taumax
+                #joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
+                joint['motor/type'] = self.motortype
+        return {'FINISHED'}
+
+
+class CreateLinkOperator(Operator):
+    """Create Link Operator
+
+    """
+    bl_idname = "object.phobos_create_link"
+    bl_label = "Create link(s), optionally based on existing objects"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    type = EnumProperty(
+        items=(('3D cursor',) * 3,
+               ('selected objects',) * 3),
+        default='selected objects',
+        name='location',
+        description='Where to create new link(s)?'
+    )
+
+    size = FloatProperty(
+        name="visual link size",
+        default=0.2,
+        description="size of the created link"
+    )
+
+    parenting = BoolProperty(
+        name='parenting',
+        default=False,
+        description='parent associated objects to created links?'
+    )
+
+    parentobject = BoolProperty(
+        name='parent object(s)',
+        default=False,
+        description='parent objects to newly created links?'
+    )
+
+    namepartindices = StringProperty(
+        name="name segment indices",
+        description="allows reusing parts of objects' names, specified as e.g. '2 3'",
+        default=''
+    )
+
+    separator = StringProperty(
+        name="separator",
+        description="seperator to split object names with, e.g. '_'",
+        default='_'
+    )
+
+    prefix = StringProperty(
+        name="prefix",
+        description="prefix to put before names, e.g. 'link'",
+        default='link'
+    )
+
+    def execute(self, context):
+        """This function executes the operator and creates a link.
+
+        :param context: The blender context this operator works with.
+        :type context: Blender context.
+        :return: Blender result.
+        """
+        if self.type == '3D cursor':
+            createLink(self.size)
+        else:
+            for obj in bpy.context.selected_objects:
+                tmpnamepartindices = [int(p) for p in self.namepartindices.split()]
+                deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting, parentobjects=self.parentobject,
+                                     namepartindices=tmpnamepartindices, separator=self.separator,
+                                     prefix=self.prefix)
+        return {'FINISHED'}
+
+
+class AddSensorOperator(Operator):
+    """AddSensorOperator"""
+    bl_idname = "object.phobos_add_sensor"
+    bl_label = "Add/Update a sensor"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    sensor_type = EnumProperty(
+        name="sensor_type",
+        default="CameraSensor",
+        items=tuple([(type,) * 3 for type in defs.sensortypes]),
+        description="tyoe of the sensor to be created"
+    )
+
+    custom_type = StringProperty(
+        name="custom_type",
+        default='',
+        description="type of the custom sensor to be created"
+    )
+
+    sensor_name = StringProperty(
+        name="sensor_name",
+        default='new_sensor',
+        description="name of the sensor"
+    )
+
+    add_link = BoolProperty(name="add_link", default=True, description="add additional link as sensor mounting")
+
+    # the following is a set of all properties that exist within MARS' sensors
+    # TODO: we should get rid of gui-settings such as hud and rename stuff (eg. maxDistance - maxDist)
+    width = IntProperty(name='width', default=0, description='width')
+    height = IntProperty(name='height', default=0, description='height')
+    resolution = FloatProperty(name='resolution', default=0, description='resolution')
+    horizontal_resolution = FloatProperty(name='horizontal_resolution', default=0, description='horizontal_resolution')
+    opening_width = FloatProperty(name='opening_width', default=0, description='opening_width')
+    opening_height = FloatProperty(name='opening_height', default=0, description='opening_height')
+    maxDistance = FloatProperty(name='maxDistance', default=0, description='maxDistance')
+    maxDist = FloatProperty(name='maxDist', default=0, description='maxDist')
+    verticalOpeningAngle = FloatProperty(name='verticalOpeningAngle', default=0, description='verticalOpeningAngle')
+    horizontalOpeningAngle = FloatProperty(name='horizontalOpeningAngle', default=0,
+                                           description='horizontalOpeningAngle')
+    hud_pos = IntProperty(name='hud_pos', default=0, description='hud_pos')
+    hud_width = IntProperty(name='hud_width', default=0, description='hud_width')
+    hud_height = IntProperty(name='hud_height', default=0, description='hud_height')
+    updateRate = FloatProperty(name='updateRate', default=0, description='updateRate')
+    vertical_offset = FloatProperty(name='vertical_offset', default=0, description='vertical_offset')
+    horizontal_offset = FloatProperty(name='horizontal_offset', default=0, description='horizontal_offset')
+    gain = FloatProperty(name='gain', default=0, description='gain')
+    left_limit = FloatProperty(name='left_limit', default=0, description='left_limit')
+    right_limit = FloatProperty(name='right_limit', default=0, description='right_limit')
+    rttResolutionX = FloatProperty(name='rttResolutionX', default=0, description='rttResolutionX')
+    rttResolutionY = FloatProperty(name='rttResolutionY', default=0, description='rttResolutionY')
+    numRaysHorizontal = FloatProperty(name='numRaysHorizontal', default=0, description='numRaysHorizontal')
+    numRaysVertical = FloatProperty(name='numRaysVertical', default=0, description='numRaysVertical')
+    draw_rays = BoolProperty(name='draw_rays', default=False, description='draw_rays')
+    depthImage = BoolProperty(name='depthImage', default=False, description='depthImage')
+    show_cam = BoolProperty(name='show_cam', default=False, description='show_cam')
+    only_ray = BoolProperty(name='only_ray', default=False, description='only_ray')
+    ping_pong_mode = BoolProperty(name='ping_pong_mode', default=False, description='ping_pong_mode')
+    bands = IntProperty(name='bands', default=0, description='bands')
+    lasers = IntProperty(name='lasers', default=0, description='lasers')
+    extension = FloatVectorProperty(name='extension', default=(0, 0, 0), description='extension')
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "sensor_name", text="name of the sensor")
+        layout.prop(self, "sensor_type", text="sensor type")
+        if self.sensor_type in ['CameraSensor', 'ScanningSonar', 'RaySensor',
+                                'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
+            layout.prop(self, "add_link", "attach sensor to new link?")
+        if self.sensor_type == "custom":
+            layout.prop(self, "custom_type", text="enter custom type")
+        else:
+            for key in defs.sensorProperties[self.sensor_type]:
+                layout.prop(self, key, text=key)
+
+    def execute(self, context):
+        # create a dictionary holding the sensor definition
+        sensor = {'name': self.sensor_name,
+                  'type': self.custom_type if self.sensor_type == 'Custom' else self.sensor_type,
+                  'props': {}
+                  }
+        parent = context.active_object
+        for key in defs.sensorProperties[self.sensor_type]:
+            if type(defs.sensorProperties[self.sensor_type][key]) == type(True):
+                value = getattr(self, key)
+                sensor['props'][key] = '$true' if value else '$false'
+            else:
+                sensor['props'][key] = getattr(self, key)
+        # type-specific settings
+        if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
+                              'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
+            if self.add_link:
+                link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(),
+                                        name='link_' + self.sensor_name)
+                sensorObj = createSensor(sensor, link.name, link.matrix_world)
+            else:
+                sensorObj = createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
+            if self.add_link:
+                utility.selectObjects([parent, link], clear=True, active=0)
+                bpy.ops.object.parent_set(type='BONE_RELATIVE')
+                utility.selectObjects([link, sensorObj], clear=True, active=0)
+                bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            cameraRotLock(sensorObj)
+        elif sensor['type'] in ['Joint6DOF']:
+            createSensor(sensor, context.active_object, context.active_object.matrix_world)
+        elif 'Node' in sensor['type']:
+            createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
+                         mathutils.Matrix.Translation(context.scene.cursor_location))
+        elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
+            createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
+                         mathutils.Matrix.Translation(context.scene.cursor_location))
         return {'FINISHED'}
