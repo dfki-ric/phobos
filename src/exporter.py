@@ -475,6 +475,43 @@ def get_sorted_keys(dictionary):
     """
     return sort_urdf_elements(dictionary.keys())
 
+
+def sort_for_yaml_dump(structure, category):
+    """
+    :param structure:
+    :param category:
+    :return:
+    """
+    if category in ['materials', 'motors', 'sensors']:
+        return {category: sort_dict_list(structure[category], 'name')}
+    elif category == 'simulation':
+        return_dict = {}
+        for viscol in ['collision', 'visual']:
+            return_dict[viscol] = sort_dict_list(structure[viscol], 'name')
+        return return_dict
+    else:
+        return structure
+
+
+def sort_dict_list(dict_list, sort_key):
+    """
+    :param dict_list:
+    :param sort_key:
+    :return:
+    """
+    sorted_dict_list = []
+    sort_key_values = []
+    for dictionary in dict_list:
+        sort_key_values.append(dictionary[sort_key])
+    for value in sort_urdf_elements(sort_key_values):
+        for dictionary in dict_list:
+            if dictionary[sort_key] == value:
+                sorted_dict_list.append(dictionary)
+                break
+        # TODO: delete found dictionary to save time
+    return sorted_dict_list
+
+
 def writeURDFGeometry(output, element):
     """This functions writes the URDF geometry for a given element at the end of a given String.
 
@@ -573,7 +610,7 @@ def exportModelToURDF(model, filepath):
         if 'axis' in joint:
             output.append(indent * 3 + '<axis xyz="' + l2str(joint['axis']) + '"/>\n')
         if 'limits' in joint:
-            for limit_value in sort_urdf_elements['effort', 'velocity']:
+            for limit_value in sort_urdf_elements(['effort', 'velocity']):
                 if limit_value not in joint['limits']:
                     #print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
                     logger.log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
@@ -823,7 +860,8 @@ def exportModelToSMURF(model, path):
         if export[data]:
             with open(path + filenames[data], 'w') as op:
                 op.write('#' + data + infostring)
-                op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
+                op.write(yaml.dump(sort_for_yaml_dump({data: list(model[data].values())}, data), default_flow_style=False))
+                #op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
     #write collision bitmask information
     if export['collision']:
