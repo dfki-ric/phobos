@@ -25,6 +25,16 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import bpy
+from bpy.props import BoolProperty, FloatProperty, FloatVectorProperty, EnumProperty
+from bpy.types import Operator
+from phobos.logging import adjustLevel, startLog, endLog, log
+import phobos.defs as defs
+import phobos.utils.selection as selectionUtils
+import phobos.robotdictionary as robotdictionary
+import phobos.validator as validator
+import phobos.utils.general as generalUtils
+
 
 class SelectError(Operator):
     """SelectErrorOperator
@@ -41,7 +51,7 @@ class SelectError(Operator):
 
     def execute(self, context):
         startLog(self)
-        utility.selectByName(self.errorObj)
+        selectionUtils.selectByName(self.errorObj)
         for message in defs.checkMessages[self.errorObj]:
             log(message, 'INFO')
         endLog()
@@ -86,7 +96,7 @@ class CalculateMassOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        mass = utility.calculateSum(bpy.context.selected_objects, 'mass')
+        mass = generalUtils.calculateSum(bpy.context.selected_objects, 'mass')
         log("The calculated mass is: " + str(mass), "INFO")
         endLog()
         return {'FINISHED'}
@@ -118,7 +128,7 @@ class ShowDistanceOperator(Operator):
         description="distance between objects")
 
     def execute(self, context):
-        self.distance, self.distVector = utility.distance(bpy.context.selected_objects)
+        self.distance, self.distVector = generalUtils.distance(bpy.context.selected_objects)
         return {'FINISHED'}
 
 
