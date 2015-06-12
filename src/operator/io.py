@@ -25,6 +25,20 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from phobos.logging import startLog, endLog, log
+import phobos.defs as defs
+import phobos.exporter as exporter
+import phobos.importer as importer
+import bpy
+import zipfile
+import os
+import shutil
+import tempfile
+import phobos.utils.selection as selectionUtils
+import phobos.robotdictionary as robotdictionary
+from bpy.types import Operator
+from bpy.props import EnumProperty
+
 
 class ImportLibRobot(Operator):
     """ImportLibRobotOperator
@@ -89,7 +103,7 @@ class ExportSceneOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        exportSMURFsScene()
+        exporter.exportSMURFsScene()
         return {'FINISHED'}
 
 
@@ -107,9 +121,9 @@ class ExportModelOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        logger.startLog(self)
-        export()
-        logger.endLog()
+        startLog(self)
+        exporter.export()
+        endLog()
         return {'FINISHED'}
 
 
@@ -119,14 +133,14 @@ class ExportBakeOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        logger.startLog(self)
+        startLog(self)
         objs = context.selected_objects
         robot = robotdictionary.buildRobotDictionary()
-        selectObjects(objs)
+        selectionUtils.selectObjects(objs)
         tmpdir = tempfile.gettempdir()
         expPath = os.path.join(tmpdir, robot["modelname"] + "_bake")
-        export(path=expPath, robotmodel=robot)
-        bakeModel(objs, expPath, robot["modelname"])
+        exporter.export(path=expPath, robotmodel=robot)
+        exporter.bakeModel(objs, expPath, robot["modelname"])
         zipfilename = os.path.join(tmpdir, robot["modelname"] + ".bake")
         file = zipfile.ZipFile(zipfilename, mode="w")
         for filename in os.listdir(expPath):
@@ -135,11 +149,11 @@ class ExportBakeOperator(Operator):
         shutil.rmtree(expPath)
         outpath = ""
         if bpy.data.worlds[0].relativePath:
-            outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+            outpath = exporter.securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
         else:
-            outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+            outpath = exporter.securepath(os.path.expanduser(bpy.data.worlds[0].path))
         shutil.copy(zipfilename, outpath)
-        logger.endLog()
+        endLog()
         return {'FINISHED'}
 
 class RobotModelImporter(bpy.types.Operator):
@@ -165,19 +179,19 @@ class RobotModelImporter(bpy.types.Operator):
         modeltype = self.filepath.split('.')[-1]
 
         if modeltype == 'scene':
-            importer = MARSModelParser(self.filepath)
+            imp = importer.MARSModelParser(self.filepath)
         elif modeltype == 'urdf':
-            importer = URDFModelParser(self.filepath)
+            imp = importer.URDFModelParser(self.filepath)
         elif modeltype == 'smurf' or modeltype == 'yml' or modeltype == 'yaml':
-            importer = SMURFModelParser(self.filepath)
+            imp = importer.SMURFModelParser(self.filepath)
         elif modeltype == 'scn':
-            importer = MARSModelParser(self.filepath, zipped=True)
+            imp= importer.MARSModelParser(self.filepath, zipped=True)
         else:
             print("Unknown model format, aborting import...")
 
-        cleanUpScene()
-        importer.parseModel()
-        importer.createBlenderModel()
+        importer.cleanUpScene()
+        imp.parseModel()
+        imp.createBlenderModel()
 
         return {'FINISHED'}
 
