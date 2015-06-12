@@ -44,12 +44,20 @@ def unregister():
 
 def is_float(s):
     """Tests if an input variable (string) is a float number."""
-    return type(s).__name__ == "float"
+    try:
+        float(s)
+        return True
+    except (ValueError, TypeError):
+        return False
 
 
 def is_int(s):
     """Tests if an input variable (string) is an int number."""
-    return type(s).__name__ == "int"
+    try:
+        int(s)
+        return True
+    except ValueError:
+        return False
 
 
 def parse_number(s):
