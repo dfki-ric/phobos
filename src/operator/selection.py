@@ -25,6 +25,13 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import bpy
+from bpy.types import Operator
+from bpy.props import EnumProperty, StringProperty
+import phobos.utils.selection as selectionUtils
+import phobos.defs as defs
+from phobos.logging import startLog, endLog, log
+
 
 class SelectObjectsByPhobosType(Operator):
     """SelectObjectsByPhobosType
@@ -45,7 +52,7 @@ class SelectObjectsByPhobosType(Operator):
         for obj in bpy.data.objects:
             if obj.phobostype == self.seltype:
                 objlist.append(obj)
-        utility.selectObjects(objlist, True)
+        selectionUtils.selectObjects(objlist, True)
         return {'FINISHED'}
 
     @classmethod
@@ -67,7 +74,7 @@ class SelectObjectsByName(Operator):
         description="part of a Phobos object name")
 
     def execute(self, context):
-        utility.selectByName(self.namefragment)
+        selectionUtils.selectByName(self.namefragment)
         return {'FINISHED'}
 
 
@@ -82,9 +89,9 @@ class SelectRootOperator(Operator):
         startLog(self)
         roots = set()
         for obj in bpy.context.selected_objects:
-            roots.add(utility.getRoot(obj))
+            roots.add(selectionUtils.getRoot(obj))
         if len(roots) > 0:
-            utility.selectObjects(list(roots), True)
+            selectionUtils.selectObjects(list(roots), True)
             bpy.context.scene.objects.active = list(roots)[0]
         else:
             # bpy.ops.error.message('INVOKE_DEFAULT', type="ERROR", message="Couldn't find any root object.")
@@ -110,17 +117,17 @@ class SelectModelOperator(Operator):
         selection = []
         if self.modelname:
             print("phobos: Selecting model", self.modelname)
-            roots = utility.getRoots()
+            roots = selectionUtils.getRoots()
             for root in roots:
                 if root["modelname"] == self.modelname:
-                    selection = utility.getChildren(root)
+                    selection = selectionUtils.getChildren(root)
         else:
             print("phobos: No model name provided, deriving from selection...")
             roots = set()
             for obj in bpy.context.selected_objects:
-                print("Selecting", utility.getRoot(obj).name)
-                roots.add(utility.getRoot(obj))
+                print("Selecting", selectionUtils.getRoot(obj).name)
+                roots.add(selectionUtils.getRoot(obj))
             for root in list(roots):
-                selection.extend(utility.getChildren(root))
-        utility.selectObjects(list(selection), True)
+                selection.extend(selectionUtils.getChildren(root))
+        selectionUtils.selectObjects(list(selection), True)
         return {'FINISHED'}
