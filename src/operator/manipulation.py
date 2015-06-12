@@ -25,6 +25,25 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import phobos.defs as defs
+import bpy
+import math
+import yaml
+import mathutils
+import datetime
+import phobos.inertia as inertia
+import phobos.materials as materials
+import phobos.utils.selection as selectionUtils
+import phobos.utils.general as generalUtils
+import phobos.robotupdate as robotupdate
+import phobos.robodictionary as robotdictionary
+import phobos.utils.blender as blenderUtils
+import phobos.joints as joints
+import phobos.sensors as sensors
+import phobos.links as links
+from phobos.logging import startLog, endLog, log
+from bpy.types import Operator
+from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, EnumProperty, FloatVectorProperty, BoolVectorProperty
 
 class ShareMesh(Operator):
     """ShareMeshOperator
@@ -209,7 +228,7 @@ class SetMassOperator(Operator):
                 else:
                     obj['mass'] = self.mass
                 if obj['mass'] != oldmass:
-                    t = dt.now()
+                    t = datetime.now()
                     obj['masschanged'] = t.isoformat()
         endLog()
         return {'FINISHED'}
@@ -242,7 +261,7 @@ class SyncMassesOperator(Operator):
         targetlist = []
         processed = set()
         links = [obj.name for obj in bpy.context.selected_objects if obj.phobostype == 'link']
-        t = dt.now()
+        t = datetime.now()
         objdict = {obj.name: obj for obj in bpy.data.objects if obj.phobostype in ['visual', 'collision']
                    and obj.parent.name in links}
         # gather all name bases of objects for which both visual and collision are present
@@ -260,8 +279,8 @@ class SyncMassesOperator(Operator):
                 sourcelist.append('collision_' + basename)
             else:  # latest to oldest
                 try:
-                    tv = utility.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
-                    tc = utility.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
+                    tv = generalUtils.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
+                    tc = generalUtils.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
                     if tc < tv:  # if collision information is older than visual information
                         sourcelist.append('visual_' + basename)
                         targetlist.append('collision_' + basename)
@@ -360,7 +379,7 @@ class UpdatePhobosModelsOperator(Operator):
 
     def execute(self, context):
         materials.createPhobosMaterials()  # TODO: this should move to initialization
-        robotupdate.updateModels(utility.getRoots(), self.property_fix)
+        robotupdate.updateModels(selectionUtils.getRoots(), self.property_fix)
         return {'FINISHED'}
 
 
@@ -408,7 +427,7 @@ class BatchEditPropertyOperator(Operator):
         description="custom property value")
 
     def execute(self, context):
-        value = utility.parse_number(self.property_value)
+        value = generalUtils.parse_number(self.property_value)
         if value == '':
             for obj in bpy.context.selected_objects:
                 if self.property_name in obj:
@@ -648,10 +667,10 @@ class SetOriginToCOMOperator(Operator):
         to_cadorigin = self.cursor_location - master.matrix_world.to_translation()
         com_shift_world = to_cadorigin + self.com_shift
         for s in slaves:
-            utility.selectObjects([s], True, 0)
+            selectionUtils.selectObjects([s], True, 0)
             context.scene.cursor_location = s.matrix_world.to_translation() + com_shift_world
             bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-        utility.selectObjects(slaves, True, slaves.index(master))
+        selectionUtils.selectObjects(slaves, True, slaves.index(master))
         context.scene.cursor_location = self.cursor_location.copy()
         return {'FINISHED'}
 
@@ -732,7 +751,7 @@ class EditYAMLDictionary(Operator):
     def execute(self, context):
         startLog(self)
         ob = context.active_object
-        textfilename = ob.name + dt.now().strftime("%Y%m%d_%H:%M")
+        textfilename = ob.name + datetime.now().strftime("%Y%m%d_%H:%M")
         variablename = ob.name.translate({ord(c): "_" for c in "!@#$%^&*()[]{};:,./<>?\|`~-=+"}) \
                        + "_data"
         tmpdict = dict(ob.items())
@@ -740,7 +759,7 @@ class EditYAMLDictionary(Operator):
             if hasattr(tmpdict[key], 'to_list'):  # transform Blender id_arrays into lists
                 tmpdict[key] = list(tmpdict[key])
         contents = [variablename + ' = """',
-                    yaml.dump(utility.cleanObjectProperties(tmpdict),
+                    yaml.dump(blenderUtils.cleanObjectProperties(tmpdict),
                               default_flow_style=False) + '"""\n',
                     "# ------- Hit 'Run Script' to save your changes --------",
                     "import yaml", "import bpy",
@@ -749,8 +768,8 @@ class EditYAMLDictionary(Operator):
                     "    bpy.context.active_object[key] = value",
                     "bpy.ops.text.unlink()"
                     ]
-        utility.createNewTextfile(textfilename, '\n'.join(contents))
-        utility.openScriptInEditor(textfilename)
+        blenderUtils.createNewTextfile(textfilename, '\n'.join(contents))
+        blenderUtils.openScriptInEditor(textfilename)
         endLog()
         return {'FINISHED'}
 
@@ -801,8 +820,8 @@ class CreateCollisionObjects(Operator):
             collname = '_'.join(nameparts)
             materialname = vis.data.materials[0].name if len(vis.data.materials) > 0 else "None"
             bBox = vis.bound_box
-            center = utility.calcBoundingBoxCenter(bBox)
-            rotation = Matrix.Identity(4)
+            center = generalUtils.calcBoundingBoxCenter(bBox)
+            rotation = mathutils.Matrix.Identity(4)
             size = list(vis.dimensions)
             if self.property_colltype in ['cylinder', 'capsule']:
                 axes = ('X', 'Y', 'Z')
@@ -813,34 +832,34 @@ class CreateCollisionObjects(Operator):
                 radius = max(radii) / 2 if radii != [] else length / 2
                 size = (radius, length)
                 if long_side == 'X':
-                    rotation = Matrix.Rotation(math.pi / 2, 4, 'Y')
+                    rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'Y')
                 elif long_side == 'Y':
-                    rotation = Matrix.Rotation(math.pi / 2, 4, 'X')
+                    rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'X')
                     # FIXME: apply rotation for moved cylinder object?
             elif self.property_colltype == 'sphere':
                 size = max(size) / 2
             rotation_euler = (vis.matrix_world * rotation).to_euler()
             center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion() * center
             if self.property_colltype != 'capsule':
-                ob = utility.createPrimitive(collname, self.property_colltype, size,
+                ob = blenderUtils.createPrimitive(collname, self.property_colltype, size,
                                              defs.layerTypes['collision'], materialname, center,
                                              rotation_euler)
             elif self.property_colltype == 'capsule':
                 length = max(length - 2 * radius, 0.001)  # prevent length from turning negative
                 size = (radius, length)
                 zshift = length / 2
-                ob = utility.createPrimitive(collname, 'cylinder', size,
+                ob = blenderUtils.createPrimitive(collname, 'cylinder', size,
                                              defs.layerTypes['collision'], materialname, center,
                                              rotation_euler)
-                sph1 = utility.createPrimitive('tmpsph1', 'sphere', radius,
+                sph1 = blenderUtils.createPrimitive('tmpsph1', 'sphere', radius,
                                                defs.layerTypes['collision'], materialname,
-                                               center + rotation * Vector((0, 0, zshift)),
+                                               center + rotation * mathutils.Vector((0, 0, zshift)),
                                                rotation_euler)
-                sph2 = utility.createPrimitive('tmpsph2', 'sphere', radius,
+                sph2 = blenderUtils.createPrimitive('tmpsph2', 'sphere', radius,
                                                defs.layerTypes['collision'], materialname,
-                                               center - rotation * Vector((0, 0, zshift)),
+                                               center - rotation * mathutils.Vector((0, 0, zshift)),
                                                rotation_euler)
-                utility.selectObjects([ob, sph1, sph2], True, 0)
+                selectionUtils.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
                 ob['length'] = length
                 ob['radius'] = radius
@@ -1032,7 +1051,7 @@ class DefineJointConstraintsOperator(Operator):
             velocity = self.maxvelocity
         for link in context.selected_objects:
             bpy.context.scene.objects.active = link
-            setJointConstraints(link, self.joint_type, lower, upper, self.spring, self.damping)
+            joints.setJointConstraints(link, self.joint_type, lower, upper, self.spring, self.damping)
             if self.joint_type != 'fixed':
                 link['joint/maxeffort'] = self.maxeffort
                 link['joint/maxvelocity'] = velocity
@@ -1185,11 +1204,11 @@ class CreateLinkOperator(Operator):
         :return: Blender result.
         """
         if self.type == '3D cursor':
-            createLink(self.size)
+            links.createLink(self.size)
         else:
             for obj in bpy.context.selected_objects:
                 tmpnamepartindices = [int(p) for p in self.namepartindices.split()]
-                deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting, parentobjects=self.parentobject,
+                links.deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting, parentobjects=self.parentobject,
                                      namepartindices=tmpnamepartindices, separator=self.separator,
                                      prefix=self.prefix)
         return {'FINISHED'}
@@ -1289,21 +1308,21 @@ class AddSensorOperator(Operator):
             if self.add_link:
                 link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(),
                                         name='link_' + self.sensor_name)
-                sensorObj = createSensor(sensor, link.name, link.matrix_world)
+                sensorObj = sensors.createSensor(sensor, link.name, link.matrix_world)
             else:
-                sensorObj = createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
+                sensorObj = sensors.createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
             if self.add_link:
-                utility.selectObjects([parent, link], clear=True, active=0)
+                selectionUtils.selectObjects([parent, link], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
-                utility.selectObjects([link, sensorObj], clear=True, active=0)
+                selectionUtils.selectObjects([link, sensorObj], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            cameraRotLock(sensorObj)
+            sensors.cameraRotLock(sensorObj)
         elif sensor['type'] in ['Joint6DOF']:
-            createSensor(sensor, context.active_object, context.active_object.matrix_world)
+            sensors.createSensor(sensor, context.active_object, context.active_object.matrix_world)
         elif 'Node' in sensor['type']:
-            createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
+            sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
                          mathutils.Matrix.Translation(context.scene.cursor_location))
         elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
-            createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
+            sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
                          mathutils.Matrix.Translation(context.scene.cursor_location))
         return {'FINISHED'}
