@@ -325,7 +325,7 @@ def roundVector(v, n):
 def epsilonToZero(data, epsilon, decimals):
     """Recursively loops through a dictionary and sets all floating values
      < epsilon equal to zero."""
-    if is_float(data):
+    if type(data) is float:
         return 0 if abs(data) < epsilon else round(data, decimals)
     elif type(data) is list:
         return [epsilonToZero(a, epsilon, decimals) for a in data]
