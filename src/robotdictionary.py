@@ -229,8 +229,9 @@ def deriveCollision(obj):
     collision = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
     collision['geometry'] = deriveGeometry(obj)
     collision['pose'] = deriveObjectPose(obj)
+    # the bitmask is cut to length = 16 and reverted for int parsing
     try:
-        collision['bitmask'] = int(''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups]), 2)
+        collision['bitmask'] = int(''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[::-1], 2)
     except AttributeError:
         pass
     return collision, obj.parent
