@@ -473,7 +473,10 @@ def writeURDFGeometry(output, element):
     elif element['type'] == "sphere":
         output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
     elif element['type'] in ['capsule', 'mesh']:  # capsules are not supported in URDF and are emulated using meshes
-        output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], l2str(element['scale'])]))
+        if bpy.data.worlds[0].structureExport:
+            output.append(xmlline(5, 'mesh', ['filename', 'scale'], ["../" + element['filename'], l2str(element['scale'])]))
+        else:
+            output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], l2str(element['scale'])]))
     output.append(indent * 4 + '</geometry>\n')
 
 
@@ -725,7 +728,10 @@ def exportModelToSMURF(model, path):
               }
     #create all filenames
     smurf_filename = model['modelname'] + ".smurf"
-    urdf_filename = model['modelname'] + ".urdf"
+    if bpy.data.worlds[0].structureExport:
+        urdf_filename = "../urdf/" + model['modelname'] + ".urdf"
+    else:
+        urdf_filename = model['modelname'] + ".urdf"
     filenames = {'state': model['modelname'] + "_state.yml",
                  'materials': model['modelname'] + "_materials.yml",
                  'sensors': model['modelname'] + "_sensors.yml",
@@ -747,7 +753,7 @@ def exportModelToSMURF(model, path):
     #write model information
     print('Writing SMURF information to', smurf_filename)
     modeldata = {"date": model["date"], "files": [urdf_filename] + [filenames[f] for f in fileorder if export[f]]}
-    with open(path + smurf_filename, 'w') as op:
+    with open(os.path.join(path, smurf_filename), 'w') as op:
         op.write('# main SMURF file of model "' + model['modelname'] + '"\n')
         op.write('# created with Phobos ' + defs.version + ' - https://github.com/rock-simulation/phobos\n\n')
         op.write("SMURF version: " + defs.version + "\n")
@@ -758,7 +764,7 @@ def exportModelToSMURF(model, path):
     logger.startLog(None)
     logger.log('name', model['modelname'])
     logger.endLog()
-    exportModelToURDF(model, path + urdf_filename)
+    exportModelToURDF(model, os.path.join(path, urdf_filename))
 
     # #write semantics (SRDF information in YML format)
     # if export['semantics']:
@@ -1021,9 +1027,18 @@ def export(path='', robotmodel=None):
         if srdf:
             exportModelToSRDF(robot, outpath + robot["modelname"] + ".srdf")
         if smurf:
-            exportModelToSMURF(robot, outpath)
+            if bpy.data.worlds[0].structureExport:
+                securepath(os.path.join(outpath, 'smurf'))
+                securepath(os.path.join(outpath, 'urdf'))
+                exportModelToSMURF(robot, os.path.join(outpath, 'smurf/'))
+            else:
+                exportModelToSMURF(robot, outpath)
         elif urdf:
-            exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
+            if bpy.data.worlds[0].structureExport:
+                securepath(os.path.join(outpath, 'urdf'))
+                exportModelToURDF(robot, os.path.join(outpath, 'urdf', robot["modelname"] + ".urdf"))
+            else:
+                exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
     if meshexp:
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
         if show_progress:
@@ -1031,6 +1046,7 @@ def export(path='', robotmodel=None):
             total = float(len(objectlist))
             wm.progress_begin(0, total)
             i = 1
+        print("Exporting meshes to " + meshoutpath + "...\n")
         for obj in objectlist:
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
                 and obj['geometry/type'] == 'mesh' and 'filename' not in obj and 'geometry/'+defs.reservedProperties['SHAREDMESH'] not in obj):

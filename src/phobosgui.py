@@ -70,6 +70,7 @@ def register():
     bpy.types.World.exportURDF = BoolProperty(name="exportURDF", default=True, update=updateExportOptions)
     bpy.types.World.exportSRDF = BoolProperty(name="exportSRDF", default=True)
     bpy.types.World.exportYAML = BoolProperty(name="exportYAML", update=updateExportOptions)
+    bpy.types.World.structureExport = BoolProperty(name="structureExport", default=False, description="create structured subfolders")
     bpy.types.World.sceneName = StringProperty(name="sceneName")
 
     #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
@@ -409,6 +410,7 @@ class PhobosExportPanel(bpy.types.Panel):
         c2.prop(bpy.data.worlds[0], "exportURDF", text="as URDF")
         c2.prop(bpy.data.worlds[0], "exportSRDF", text="with SRDF")
         c2.prop(bpy.data.worlds[0], "exportYAML", text="as YAML dump")
+        c2.prop(bpy.data.worlds[0], "structureExport", text="structure export")
 
         layout.separator()
 
