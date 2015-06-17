@@ -455,6 +455,63 @@ def gatherCollisionBitmasks(model):
     return bitmasks
 
 
+def sort_urdf_elements(elems):
+    """
+    Sort a collection of elements. By default, this method simply wraps the standard 'sorted()' method.
+    This is done in order to be able to easily change the element ordering.
+
+    :param elems: a collection
+    :return: sorted colletion
+    """
+    return sorted(elems)
+
+
+def get_sorted_keys(dictionary):
+    """
+    Sort a dictionary's keys.
+
+    :param dictionary: a dictionary
+    :return: the dictionary's sorted keys
+    """
+    return sort_urdf_elements(dictionary.keys())
+
+
+def sort_for_yaml_dump(structure, category):
+    """
+    :param structure:
+    :param category:
+    :return:
+    """
+    if category in ['materials', 'motors', 'sensors']:
+        return {category: sort_dict_list(structure[category], 'name')}
+    elif category == 'simulation':
+        return_dict = {}
+        for viscol in ['collision', 'visual']:
+            return_dict[viscol] = sort_dict_list(structure[viscol], 'name')
+        return return_dict
+    else:
+        return structure
+
+
+def sort_dict_list(dict_list, sort_key):
+    """
+    :param dict_list:
+    :param sort_key:
+    :return:
+    """
+    sorted_dict_list = []
+    sort_key_values = []
+    for dictionary in dict_list:
+        sort_key_values.append(dictionary[sort_key])
+    for value in sort_urdf_elements(sort_key_values):
+        for dictionary in dict_list:
+            if dictionary[sort_key] == value:
+                sorted_dict_list.append(dictionary)
+                break
+        # TODO: delete found dictionary to save time
+    return sorted_dict_list
+
+
 def writeURDFGeometry(output, element):
     """This functions writes the URDF geometry for a given element at the end of a given String.
 
@@ -492,9 +549,27 @@ def exportModelToURDF(model, filepath):
 
     """
     print(filepath)
+
+    #print('##############################')
+    #print(model['modelname'] + '_urdf_order')
+    #if model['modelname'] + '_urdf_order' in bpy.data.texts:
+    #    print('GOT FILE!')
+    #else:
+    #    print('NO FILE!')
+    #print('##############################')
+
+    stored_element_order = None
+    order_file_name = model['modelname'] + '_urdf_order'
+    if order_file_name in bpy.data.texts:
+        stored_element_order = yaml.load(bpy.data.texts[order_file_name].as_string())
+
     output = [xmlHeader, indent + '<robot name="' + model['modelname'] + '">\n\n']
     #export link information
-    for l in model['links'].keys():
+    if stored_element_order is None:
+        sorted_link_keys = get_sorted_keys(model['links'])
+    else:
+        sorted_link_keys = stored_element_order['links']    #TODO: are names and keys of links ALWAYS identical?
+    for l in sorted_link_keys:
         link = model['links'][l]
         output.append(indent * 2 + '<link name="' + l + '">\n')
         if 'mass' in link['inertial'] and 'inertia' in link['inertial']:
@@ -508,7 +583,11 @@ def exportModelToURDF(model, filepath):
             output.append(indent * 3 + '</inertial>\n')
         #visual object
         if link['visual']:
-            for v in link['visual']:
+            if stored_element_order is None:
+                sorted_visual_keys = get_sorted_keys(link['visual'])
+            else:
+                sorted_visual_keys = stored_element_order['viscol'][link['name']]['visual']
+            for v in sorted_visual_keys:
                 vis = link['visual'][v]
                 output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
                 output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
@@ -531,7 +610,11 @@ def exportModelToURDF(model, filepath):
                 output.append(indent * 3 + '</visual>\n')
         #collision object
         if link['collision']:
-            for c in link['collision']:
+            if stored_element_order is None:
+                sorted_collision_keys = get_sorted_keys(link['collision'])
+            else:
+                sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
+            for c in sorted_collision_keys:
                 col = link['collision'][c]
                 output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
                 output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
@@ -541,7 +624,11 @@ def exportModelToURDF(model, filepath):
         output.append(indent * 2 + '</link>\n\n')
     #export joint information
     missing_values = False
-    for j in model['joints']:
+    if stored_element_order is None:
+        sorted_joint_keys = get_sorted_keys(model['joints'])
+    else:
+        sorted_joint_keys = stored_element_order['joints']      #TODO: are names and keys of links ALWAYS identical?
+    for j in sorted_joint_keys:
         joint = model['joints'][j]
         output.append(indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n')
         child = model['links'][joint["child"]]
@@ -552,7 +639,7 @@ def exportModelToURDF(model, filepath):
         if 'axis' in joint:
             output.append(indent * 3 + '<axis xyz="' + l2str(joint['axis']) + '"/>\n')
         if 'limits' in joint:
-            for limit_value in ['effort', 'velocity']:
+            for limit_value in sort_urdf_elements(['effort', 'velocity']):
                 if limit_value not in joint['limits']:
                     #print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
                     logger.log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
@@ -569,7 +656,8 @@ def exportModelToURDF(model, filepath):
         #print("\n###WARNING: Created URDF is invalid due to missing values!###")
         logger.log("Created URDF is invalid due to missing values!")
         bpy.ops.tools.phobos_warning_dialog('INVOKE_DEFAULT', message="Created URDF is invalid due to missing values!")
-    for m in model['materials']:
+    sorted_material_keys = get_sorted_keys(model['materials'])
+    for m in sorted_material_keys:
         if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
             output.append(indent * 2 + '<material name="' + m + '">\n')
             color = model['materials'][m]['diffuseColor']
@@ -630,12 +718,15 @@ def exportModelToSRDF(model, path):
     output = []
     output.append(xmlHeader)
     output.append(indent + '<robot name="' + model['modelname'] + '">\n\n')
-    for groupname in model['groups']:
+    sorted_group_keys = get_sorted_keys(model['groups'])
+    for groupname in sorted_group_keys:
         output.append(indent * 2 + '<group name="' + groupname + '">\n')
+        # TODO: once groups are implemented, this should be sorted aswell:
         for member in model['groups'][groupname]:
             output.append(indent * 3 + '<' + member['type'] + ' name="' + member['name'] + '" />\n')
         output.append(indent * 2 + '</group>\n\n')
-    for chainname in model['chains']:
+    sorted_chain_keys = get_sorted_keys(model['chains'])
+    for chainname in sorted_chain_keys:
         output.append(indent * 2 + '<group name="' + chainname + '">\n')
         chain = model['chains'][chainname]
         output.append(indent * 3 + '<chain base_link="' + chain['start'] + '" tip_link="' + chain['end'] + '" />\n')
@@ -643,15 +734,18 @@ def exportModelToSRDF(model, path):
     #for joint in model['state']['joints']:
     #    pass
     #passive joints
-    for joint in model['joints']:
+    sorted_joint_keys = get_sorted_keys(model['joints'])
+    for joint in sorted_joint_keys:
         try:
             if model['joints'][joint]['passive']:
                 output.append(indent * 2 + '<passive_joint name="' + model['links'][joint]['name'] + '"/>\n\n')
         except KeyError:
             pass
-    for link in model['links']:
+    sorted_link_keys = get_sorted_keys(model['links'])
+    for link in sorted_link_keys:
         if len(model['links'][link]['approxcollision']) > 0:
             output.append(indent * 2 + '<link_sphere_approximation link="' + model['links'][link]['name'] + '">\n')
+            # TODO: there does not seem to be a way to sort the spheres if there are multiple
             for sphere in model['links'][link]['approxcollision']:
                 output.append(xmlline(3, 'sphere', ('center', 'radius'), (l2str(sphere['center']), sphere['radius'])))
             output.append(indent * 2 + '</link_sphere_approximation>\n\n')
@@ -798,7 +892,8 @@ def exportModelToSMURF(model, path):
         if export[data]:
             with open(path + filenames[data], 'w') as op:
                 op.write('#' + data + infostring)
-                op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
+                op.write(yaml.dump(sort_for_yaml_dump({data: list(model[data].values())}, data), default_flow_style=False))
+                #op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
     #write collision bitmask information
     if export['collision']:
