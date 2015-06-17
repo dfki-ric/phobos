@@ -546,9 +546,26 @@ def exportModelToURDF(model, filepath):
 
     """
     print(filepath)
+
+    #print('##############################')
+    #print(model['modelname'] + '_urdf_order')
+    #if model['modelname'] + '_urdf_order' in bpy.data.texts:
+    #    print('GOT FILE!')
+    #else:
+    #    print('NO FILE!')
+    #print('##############################')
+
+    stored_element_order = None
+    order_file_name = model['modelname'] + '_urdf_order'
+    if order_file_name in bpy.data.texts:
+        stored_element_order = yaml.load(bpy.data.texts[order_file_name].as_string())
+
     output = [xmlHeader, indent + '<robot name="' + model['modelname'] + '">\n\n']
     #export link information
-    sorted_link_keys = get_sorted_keys(model['links'])
+    if stored_element_order is None:
+        sorted_link_keys = get_sorted_keys(model['links'])
+    else:
+        sorted_link_keys = stored_element_order['links']    #TODO: are names and keys of links ALWAYS identical?
     for l in sorted_link_keys:
         link = model['links'][l]
         output.append(indent * 2 + '<link name="' + l + '">\n')
@@ -563,7 +580,10 @@ def exportModelToURDF(model, filepath):
             output.append(indent * 3 + '</inertial>\n')
         #visual object
         if link['visual']:
-            sorted_visual_keys = get_sorted_keys(link['visual'])
+            if stored_element_order is None:
+                sorted_visual_keys = get_sorted_keys(link['visual'])
+            else:
+                sorted_visual_keys = stored_element_order['viscol'][link['name']]['visual']
             for v in sorted_visual_keys:
                 vis = link['visual'][v]
                 output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
@@ -587,7 +607,10 @@ def exportModelToURDF(model, filepath):
                 output.append(indent * 3 + '</visual>\n')
         #collision object
         if link['collision']:
-            sorted_collision_keys = get_sorted_keys(link['collision'])
+            if stored_element_order is None:
+                sorted_collision_keys = get_sorted_keys(link['collision'])
+            else:
+                sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
             for c in sorted_collision_keys:
                 col = link['collision'][c]
                 output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
@@ -598,7 +621,10 @@ def exportModelToURDF(model, filepath):
         output.append(indent * 2 + '</link>\n\n')
     #export joint information
     missing_values = False
-    sorted_joint_keys = get_sorted_keys(model['joints'])
+    if stored_element_order is None:
+        sorted_joint_keys = get_sorted_keys(model['joints'])
+    else:
+        sorted_joint_keys = stored_element_order['joints']      #TODO: are names and keys of links ALWAYS identical?
     for j in sorted_joint_keys:
         joint = model['joints'][j]
         output.append(indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n')

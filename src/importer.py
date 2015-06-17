@@ -107,6 +107,38 @@ def cleanUpScene():
     for lamp in bpy.data.lamps:
         bpy.data.lamps.remove(lamp)
 
+def store_element_order(element_order, path):
+    """
+    :param model:
+    :return:
+    """
+    #element_order = {}
+    #link_order = []
+    #viscol_order = {}
+    #for link_key in model['links']:
+    #    link = model['links'][link_key]
+    #    link_element_order = {}
+    #    link_order.append(link['name'])
+    #    visual_order = []
+    #    for visual_key in link['visual']:
+    #        visual_order.append(link['visual'][visual_key]['name'])
+    #    link_element_order['visual'] = visual_order
+    #    collision_order = []
+    #    for collision_key in link['collision']:
+    #        collision_order.append(link['collision'][collision_key]['name'])
+    #    link_element_order['collision'] = collision_order
+    #    viscol_order[link['name']] = link_element_order
+    #element_order['viscol'] = viscol_order
+    #element_order['links'] = link_order
+    #joint_order = []
+    #for joint_key in model['joints']:
+    #    joint_order.append(model['joints'][joint_key]['name'])
+    #element_order['joints'] = joint_order
+
+    stream = open(path + '_element_order_debug.yml', 'w')
+    stream.write(yaml.dump(element_order))
+    stream.close()
+
 def round_float(float_as_str, decimal=6):
     '''
     Cast 'float_as_str' to float and round to 'decimal' decimal places.
@@ -814,11 +846,6 @@ class RobotModelParser():
             joint = self.robot['joints'][j]
             self.createJoint(joint)
 
-        print("\n\nCreating sensors...")
-        for s in self.robot['sensors']:
-            sensor = self.robot['sensors'][s]
-            self.createSensor(sensor)
-
         #build tree recursively and correct translation & rotation on the fly
         print("\n\nPlacing links...")
         for l in self.robot['links']:
@@ -833,6 +860,13 @@ class RobotModelParser():
                     log("Could not assign model name to root link.", "ERROR")
         for link in self.robot['links']:
             self.placeLinkSubelements(self.robot['links'][link])
+
+
+        print("\n\nCreating sensors...")
+        for s in self.robot['sensors']:
+            sensor = self.robot['sensors'][s]
+            self.createSensor(sensor)
+
         for sensorname in self.robot['sensors']:
             sensor = self.robot['sensors'][sensorname]
             self.attachSensor(sensor)
@@ -1726,6 +1760,9 @@ class URDFModelParser(RobotModelParser):
 
         """
         RobotModelParser.__init__(self, filepath)
+        self.element_order = {'links': [],
+                              'joints': [],
+                              'viscol': {}}
 
     def parsePose(self, origin):
         """This function parses the robot models pose and returns it as a dictionary.
@@ -1794,6 +1831,12 @@ class URDFModelParser(RobotModelParser):
 
         self.robot['lights'] = {}
 
+        #print('#############################')
+        #print(self.robot['name'] + '_urdf_order')
+        #print('#############################')
+        createNewTextfile(self.robot['name'] + '_urdf_order', yaml.dump(self.element_order))
+        #openScriptInEditor('element_order')
+
         self._debug_output()
 
     def parseLink(self, link):
@@ -1805,6 +1848,11 @@ class URDFModelParser(RobotModelParser):
         """
         #print(link.attrib['name'] + ', ', end='')
         newlink = {a: link.attrib[a] for a in link.attrib}
+
+        link_name = link.attrib['name']
+        self.element_order['links'].append(link_name)
+        viscol_order = {'visual': [],
+                        'collision': []}
 
         self.parseInertial(newlink, link)
         #no_visual_geo = self.parseVisual(newlink, link)
@@ -1822,6 +1870,7 @@ class URDFModelParser(RobotModelParser):
                     i += 1
                 newlink[objtype][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
                 dictelement = newlink[objtype][elementname]
+                viscol_order[objtype].append(elementname)
                 dictelement['name'] = elementname
                 dictelement['pose'] = self.parsePose(xmlelement.find('origin'))
                 geometry = xmlelement.find('geometry')
@@ -1843,6 +1892,7 @@ class URDFModelParser(RobotModelParser):
                     #color = material.find('color')
                     #if color is not None:
                     #    dictelement['material']['color'] = parse_text(color.attrib['rgba'])
+        self.element_order['viscol'][link_name] = viscol_order
         if newlink == {}:
             print("\n### WARNING:", newlink['name'], "is empty.")
         return newlink
@@ -1869,6 +1919,7 @@ class URDFModelParser(RobotModelParser):
     def parseJoint(self, joint):
         #print(joint.attrib['name']+', ', end='')
         newjoint = {a: joint.attrib[a] for a in joint.attrib}
+        self.element_order['joints'].append(joint.attrib['name'])
         pose = self.parsePose(joint.find('origin'))
         newjoint['parent'] = joint.find('parent').attrib['link']
         newjoint['child'] = joint.find('child').attrib['link']
