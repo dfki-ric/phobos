@@ -36,7 +36,6 @@ in the future.
 """
 
 import math, os, yaml, re
-from copy import deepcopy as dc
 
 
 # TODO: the following definitions for enum properties in blender should be
