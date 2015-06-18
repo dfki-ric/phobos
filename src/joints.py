@@ -30,14 +30,9 @@ Created on 7 Jan 2014
 """
 
 import bpy
-from bpy.types import Operator
-from bpy.props import FloatProperty, EnumProperty, BoolProperty
-import math
 import mathutils
-import warnings
-from . import defs
-from phobos.logging import *
-from phobos.utility import getObjectName
+from phobos.logging import log
+import phobos.utils.naming as namingUtils
 
 
 def register():
@@ -105,7 +100,7 @@ def deriveJointType(joint, adjust=False):
             jtype = 'planar'
     if adjust:
         joint['joint/type'] = jtype
-        log("Set type of joint '" + getObjectName(joint) + "'to '" + jtype + "'.", "INFO")
+        log("Set type of joint '" + namingUtils.getObjectName(joint) + "'to '" + jtype + "'.", "INFO")
     return jtype, crot
 
 
