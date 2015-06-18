@@ -28,12 +28,10 @@ Created on 6 Jan 2014
 
 import bpy
 import mathutils
-from bpy.types import Operator
-from bpy.props import StringProperty, FloatProperty, EnumProperty, IntProperty, BoolProperty, FloatVectorProperty
-from . import materials
 from . import defs
-from . import utility
-from . import links
+import phobos.utils.blender as blenderUtils
+import phobos.utils.selection as selectionUtils
+
 
 
 def register():
@@ -45,7 +43,7 @@ def unregister():
 
 
 def cameraRotLock(object):
-    utility.selectObjects([object], active=0)
+    selectionUtils.selectObjects([object], active=0)
     bpy.ops.transform.rotate(value=-1.5708, axis=(-1, 0, 0), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     bpy.ops.transform.rotate(value=1.5708, axis=(0, -1, 0), constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     bpy.ops.object.constraint_add(type='LIMIT_ROTATION')
@@ -62,27 +60,27 @@ def cameraRotLock(object):
 
 
 def createSensor(sensor, reference, origin=mathutils.Matrix()):
-    utility.toggleLayer(defs.layerTypes['sensor'], value=True)
+    blenderUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object
     if 'Camera' in sensor['type']:
         bpy.context.scene.layers[defs.layerTypes['sensor']] = True
         bpy.ops.object.add(type='CAMERA', location=origin.to_translation(),
                            rotation=origin.to_euler(),
-                           layers=utility.defLayers([defs.layerTypes['sensor']]))
+                           layers=blenderUtils.defLayers([defs.layerTypes['sensor']]))
         newsensor = bpy.context.active_object
         if reference is not None:
-            utility.selectObjects([newsensor, bpy.data.objects[reference]], clear=True, active=1)
+            selectionUtils.selectObjects([newsensor, bpy.data.objects[reference]], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     elif sensor['type'] in ['RaySensor', 'RotatingRaySensor', 'ScanningSonar', 'MultiLevelLaserRangeFinder']:
         # TODO: create a proper ray sensor scanning layer disc here
-        newsensor = utility.createPrimitive(sensor['name'], 'disc', (0.5, 36),
+        newsensor = blenderUtils.createPrimitive(sensor['name'], 'disc', (0.5, 36),
                                             defs.layerTypes['sensor'], 'phobos_laserscanner',
                                             origin.to_translation(), protation=origin.to_euler())
         if reference is not None and reference != []:
-            utility.selectObjects([newsensor, bpy.data.objects[reference[0]]], clear=True, active=1)
+            selectionUtils.selectObjects([newsensor, bpy.data.objects[reference[0]]], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:  # contact, force and torque sensors (or unknown sensors)
-        newsensor = utility.createPrimitive(sensor['name'], 'sphere', 0.05,
+        newsensor = blenderUtils.createPrimitive(sensor['name'], 'sphere', 0.05,
                                             defs.layerTypes['sensor'], 'phobos_sensor',
                                             origin.to_translation(), protation=origin.to_euler())
         if 'Node' in sensor['type']:
@@ -90,7 +88,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
         elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
             newsensor['sensor/joints'] = sorted(reference)
         if reference is not None and reference != []:
-            utility.selectObjects([newsensor, utility.getRoot(bpy.data.objects[0])], clear=True, active=1)
+            selectionUtils.selectObjects([newsensor, selectionUtils.getRoot(bpy.data.objects[0])], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     # set sensor properties
     newsensor.phobostype = 'sensor'
@@ -108,7 +106,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     # throw warning if type is not known
     if sensor['type'] not in defs.sensortypes:
         print("### Warning: sensor", sensor['name'], "is of unknown/custom type.")
-    utility.selectObjects([newsensor], clear=False, active=0)
+    selectionUtils.selectObjects([newsensor], clear=False, active=0)
     return newsensor
 
 
