@@ -27,8 +27,7 @@ Created on 28 Feb 2014
 
 import bpy
 import mathutils
-from . import utility
-import struct
+import phobos.utils.naming as namingUtils
 
 # This is module is a test module to test and understand the data structure of Blender's transforms and to check whether the original
 # export code is valid or redundant. One of the points to check is whether or not the "apply transform" option does make a whole lot of sense
@@ -75,7 +74,7 @@ def writeNode(obj):
         child_rot = obj.matrix_local.to_quaternion()    #output: rotation
 
 def printMatrices(obj):
-    print("Transformation Matrices for object:", utility.getObjectName(obj))
+    print("Transformation Matrices for object:", namingUtils.getObjectName(obj))
     print("World", sep)
     print(obj.matrix_world)
     print("Local", sep)
@@ -87,7 +86,7 @@ def printMatrices(obj):
     print("\n\n")
 
 def printRotLoc(obj):
-    print("Location/Rotation for object:", utility.getObjectName(obj))
+    print("Location/Rotation for object:", namingUtils.getObjectName(obj))
     print("rotation_euler", sep)
     print(obj.rotation_euler)
     print("rotation_quaternion", sep)
@@ -97,7 +96,7 @@ def printRotLoc(obj):
     print("\n\n")
 
 def printBoundBox(obj):
-    print("Bounding box for object:", utility.getObjectName(obj))
+    print("Bounding box for object:", namingUtils.getObjectName(obj))
     for vector in obj.bound_box:
         for value in vector:
             print(value, end="")
