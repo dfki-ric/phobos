@@ -31,9 +31,7 @@ Created on 7 Jan 2014
 #                 on joint axis of node2
 
 import bpy
-import os
-import mathutils
-from . import utility
+import phobos.utils.naming as namingUtils
 
 class IdGenerator(object):
     def __init__(self, initValue=0):
@@ -44,7 +42,7 @@ class IdGenerator(object):
 
 def getID(name):
     for obj in bpy.data.objects:
-        if utility.getObjectName(obj) == name:
+        if namingUtils.getObjectName(obj) == name:
             return obj["id"] if "id" in obj else 0
     return 0
 
