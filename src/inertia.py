@@ -30,10 +30,12 @@ Created on 13 Feb 2014
 
 import bpy
 import mathutils
-from . import defs
-from . import utility
-from . import robotdictionary
-from phobos.logging import *
+import phobos.defs as defs
+import phobos.robotdictionary as robotdictionary
+import phobos.utils.general as generalUtils
+import phobos.utils.selection as selectionUtils
+import phobos.utils.blender as blenderUtils
+from phobos.logging import log
 
 
 def register():
@@ -68,8 +70,8 @@ def calculateMassOfLink(link):
 
     """
     objects = getInertiaRelevantObjects(link, ['visual', 'collision'])
-    inertials = utility.getImmediateChildren(link, ['inertial'])
-    objectsmass = utility.calculateSum(objects, 'mass')
+    inertials = selectionUtils.getImmediateChildren(link, ['inertial'])
+    objectsmass = selectionUtils.calculateSum(objects, 'mass')
     if len(inertials) == 1:
         inertialmass = inertials[0]['mass'] if 'mass' in inertials[0] else 0
     if objectsmass != inertialmass:
@@ -219,7 +221,7 @@ def getInertiaRelevantObjects(link):
     :return: list.
 
     """
-    objdict = {obj.name: obj for obj in utility.getImmediateChildren(link, ['visual', 'collision'])}
+    objdict = {obj.name: obj for obj in selectionUtils.getImmediateChildren(link, ['visual', 'collision'])}
     basenames = set()
     inertiaobjects = []
     for objname in objdict.keys():
@@ -236,8 +238,8 @@ def getInertiaRelevantObjects(link):
                         and 'mass' in objdict['visual_'+basename] else None
                     if visual and collision:
                         try:
-                            tv = utility.datetimeFromIso(objdict[visual]['masschanged'])
-                            tc = utility.datetimeFromIso(objdict[collision]['masschanged'])
+                            tv = generalUtils.datetimeFromIso(objdict[visual]['masschanged'])
+                            tc = generalUtils.datetimeFromIso(objdict[collision]['masschanged'])
                             if tc < tv:  # if collision information is older than visual information
                                 inertiaobjects.append(objdict[visual])
                             else:
@@ -299,14 +301,14 @@ def createInertial(obj):
         size = (0.02, 0.02, 0.02)
     rotation = obj.matrix_world.to_euler()
     center = obj.matrix_world.to_translation()
-    inertial = utility.createPrimitive('inertial_' + obj.name, 'box', size,
+    inertial = blenderUtils.createPrimitive('inertial_' + obj.name, 'box', size,
                                    defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     inertial.phobostype = 'inertial'
     bpy.ops.object.select_all(action="DESELECT")
     #utility.selectObjects([inertial], True, 0)
 
-    utility.selectObjects([parent, inertial], True, 0)
+    selectionUtils.selectObjects([parent, inertial], True, 0)
     #bpy.context.scene.objects.active = parent.pose.bones[0]
     bpy.ops.object.parent_set(type='BONE_RELATIVE')
     return inertial
@@ -317,14 +319,14 @@ def createInertials(link, empty=False, preserve_children=False):
     viscols = getInertiaRelevantObjects(link)
     # clean existing data
     if not preserve_children:
-        oldinertials = utility.getImmediateChildren(link, ['inertial'])
+        oldinertials = selectionUtils.getImmediateChildren(link, ['inertial'])
     else:
         try:
             oldinertials = [bpy.data.objects['inertial_'+link.name]]
         except KeyError:
             oldinertials = None
     if oldinertials:
-        utility.selectObjects(oldinertials, clear=True, active=0)
+        selectionUtils.selectObjects(oldinertials, clear=True, active=0)
         bpy.ops.object.delete()
     if not preserve_children:
         for obj in viscols:
@@ -341,7 +343,7 @@ def createInertials(link, empty=False, preserve_children=False):
                 createInertial(obj)
     # compose inertial object for link
     if not empty:
-        mass, com, inert = fuseInertiaData(utility.getImmediateChildren(link, ['inertial']))
+        mass, com, inert = fuseInertiaData(selectionUtils.getImmediateChildren(link, ['inertial']))
         if mass and com and inert:
             inertial = createInertial(link)
             com_translate = mathutils.Matrix.Translation(com)
@@ -389,7 +391,7 @@ def shift_cog_inertia_3x3(mass, cog, inertia_cog, ref_point=mathutils.Vector((0.
     """
     # diff_vec
     c               = cog - ref_point
-    c_outer         = utility.outerProduct(c, c)
+    c_outer         = generalUtils.outerProduct(c, c)
     inertia_ref    = inertia_cog + mass * (c.dot(c) * mathutils.Matrix.Identity(3) - c_outer)
 
     return inertia_ref
