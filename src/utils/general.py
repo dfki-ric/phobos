@@ -26,7 +26,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from phobos.logging import log
-import phobos.selection as selection
+import phobos.utils.selection as selection
 import datetime
 import re
 import mathutils

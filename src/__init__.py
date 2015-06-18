@@ -29,7 +29,6 @@ Created on 6 Jan 2014
 
 """
 
-
 bl_info = {
     "name": "Phobos",
     "description": "A set of tools to enable editing of MARS robot models in Blender.",
@@ -40,11 +39,12 @@ bl_info = {
     "warning": "",
     "wiki_url": "",
     "category": "Development"
-    }
+}
 
 import sys
 import os.path
-yamlconfpath=os.path.dirname(__file__)+"/yamlpath.conf"
+
+yamlconfpath = os.path.dirname(__file__) + "/yamlpath.conf"
 if (os.path.isfile(yamlconfpath)):
     f = open(yamlconfpath)
     path = f.read()
@@ -58,15 +58,16 @@ if (os.path.isfile(yamlconfpath)):
 else:
     print("Could not find yamlpath.conf")
     print("Using distributed package instead!")
-    sys.path.insert(0, sys.path[0]+"/phobos")
+    sys.path.insert(0, sys.path[0] + "/phobos")
     import yaml
+
     print("Importing yaml module")
 
-#prepare defs module
-from . import defs
+# prepare defs module
+import phobos.defs as defs
 import os
 
-#Add custom YAML (de-)serializer
+# Add custom YAML (de-)serializer
 def bool_representer(dumper, data):
     if data == '$true':
         return dumper.represent_bool(True)
@@ -75,37 +76,54 @@ def bool_representer(dumper, data):
     else:
         return dumper.represent_str(str(data))
 
+
 yaml.add_representer(str, bool_representer)
+
 
 def bool_constructor(self, node):
     value = self.construct_yaml_bool(node)
     return '$true' if value else '$false'
 
+
 yaml.Loader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 
-print("Using following folder for defs: " + os.path.dirname(__file__)+"/definitions")
-defs.updateDefs(os.path.dirname(__file__)+"/definitions")
+print("Using following folder for defs: " + os.path.dirname(__file__) + "/definitions")
+defs.updateDefs(os.path.dirname(__file__) + "/definitions")
 
 if "bpy" in locals():
     import imp
-    imp.reload(robotupdate)
-    imp.reload(robotdictionary)
-    imp.reload(controllers)
-    imp.reload(exporter)
-    imp.reload(importer)
-    imp.reload(phobosgui)
-    imp.reload(joints)
-    imp.reload(links)
-    imp.reload(misctools)
-    imp.reload(sensors)
-    imp.reload(utility)
+
+    imp.reload(phobos.robotupdate)
+    imp.reload(phobos.robotdictionary)
+    imp.reload(phobos.controllers)
+    imp.reload(phobos.exporter)
+    imp.reload(phobos.importer)
+    imp.reload(phobos.phobosgui)
+    imp.reload(phobos.joints)
+    imp.reload(phobos.links)
+    imp.reload(phobos.sensors)
+    imp.reload(phobos.logging)
+    imp.reload(phobos.utils.blender)
+    imp.reload(phobos.utils.general)
+    imp.reload(phobos.utils.selection)
+    imp.reload(phobos.utils.naming)
+    imp.reload(phobos.operator.io)
+    imp.reload(phobos.operator.manipulation)
+    imp.reload(phobos.operator.misc)
+    imp.reload(phobos.operator.naming)
+    imp.reload(phobos.operator.selection)
     imp.reload(collision)
     imp.reload(inertia)
     imp.reload(marssceneexport)
     print("Reloading Phobos.")
 else:
-    from . import robotupdate, links, marssceneexport, robotdictionary, controllers, exporter, importer, joints, misctools, sensors, utility, collision, inertia, phobosgui
+    import phobos.robotupdate, phobos.links, phobos.marssceneexport, phobos.robotdictionary, phobos.controllers, \
+        phobos.exporter, phobos.importer, phobos.joints, phobos.sensors, phobos.collision, phobos.inertia, \
+        phobos.phobosgui, phobos.utils.naming, phobos.utils.blender, phobos.utils.general, phobos.utils.selection, \
+        phobos.operator.io, phobos.operator.manipulation, phobos.operator.misc, phobos.operator.naming, \
+        phobos.operator.selection, phobos.logging
+
     print("Importing Phobos modules.")
 
 import bpy
@@ -123,12 +141,11 @@ def register():
     phobosgui.register()
     importer.register()
     joints.register()
-    misctools.register()
     sensors.register()
-    utility.register()
     collision.register()
     inertia.register()
     bpy.utils.register_module(__name__)
+
 
 def unregister():
     """This function unregisters all modules to blender.
@@ -149,5 +166,5 @@ def unregister():
     inertia.register()
     bpy.utils.unregister_module(__name__)
 
-#if __name__ == "__main__":
+# if __name__ == "__main__":
 #    register()

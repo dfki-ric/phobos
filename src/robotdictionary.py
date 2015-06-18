@@ -29,7 +29,7 @@ import os
 import bpy
 import mathutils
 import sys
-import datetime
+from datetime import datetime
 import warnings
 import phobos.defs as defs
 import phobos.joints as joints
@@ -457,7 +457,7 @@ def buildRobotDictionary():
     print('\n\nParsing inertials...')
     for l in robot['links']:
         #link = bpy.data.objects[l] NEW NAMING!
-        link = namingUtils.getObjectByName(l)[0] if namingUtils.getObjectByName(l) is not None else "ERROR!"
+        link = selectionUtils.getObjectByName(l)[0] if selectionUtils.getObjectByName(l) is not None else "ERROR!"
         inertials = selectionUtils.getImmediateChildren(link, ['inertial'])
         if len(inertials) == 1:
             props, parent = deriveDictEntry(inertials[0])

@@ -28,7 +28,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 import bpy
 from phobos.logging import log
 import phobos.defs as defs
-import phobos.selection as selection
+import phobos.utils.selection as selection
 
 
 def getObjectName(obj, phobostype=None):

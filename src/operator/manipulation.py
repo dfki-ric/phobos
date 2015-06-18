@@ -36,7 +36,7 @@ import phobos.materials as materials
 import phobos.utils.selection as selectionUtils
 import phobos.utils.general as generalUtils
 import phobos.robotupdate as robotupdate
-import phobos.robodictionary as robotdictionary
+import phobos.robotdictionary as robotdictionary
 import phobos.utils.blender as blenderUtils
 import phobos.joints as joints
 import phobos.sensors as sensors
