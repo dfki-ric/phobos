@@ -26,11 +26,10 @@ Created on 7 Jan 2014
 """
 
 import bpy
-import os, glob
-import mathutils
 from datetime import datetime as dt
-from . import utility
-from . import inertia
+import phobos.utils.naming as namingUtils
+import phobos.utils.selection as selectionUtils
+import phobos.utils.general as generalUtils
 
 
 #editmode = Blender.Window.EditMode()
@@ -58,9 +57,9 @@ def updateObject(obj, fix = False):
     notifications = []
     faulty_objects = []
     if obj.phobostype == 'link':
-        inertials = utility.getImmediateChildren(obj, ['inertial'])
+        inertials = selectionUtils.getImmediateChildren(obj, ['inertial'])
         if len(inertials) == 0:
-            notifications.append("Warning, link '" + utility.getObjectName(obj) + "' has no inertial object.")
+            notifications.append("Warning, link '" + namingUtils.getObjectName(obj) + "' has no inertial object.")
             #if fix:
             #    inertia.createInertial(obj)
         elif len(inertials) > 1:
@@ -68,16 +67,16 @@ def updateObject(obj, fix = False):
         elif len(inertials) == 1:
             pass
         # checking whether masses add up if we have an inertial by now
-        mass = utility.calculateSum(utility.getImmediateChildren(obj), 'mass')
+        mass = generalUtils.calculateSum(selectionUtils.getImmediateChildren(obj), 'mass')
         #FIXME: inertia.calculateMassOfLink???
         if not mass > 0:
-            notifications.append("Warning, link '" + utility.getObjectName(obj) + "' has no mass.")
+            notifications.append("Warning, link '" + namingUtils.getObjectName(obj) + "' has no mass.")
         for inertial in inertials:
             print('Checking inertial: ' + inertial.name)
             if not 'inertia' in inertial:
-                notifications.append("Error, inertial of link '" + utility.getObjectName(obj) + "' has no inertia.")
+                notifications.append("Error, inertial of link '" + namingUtils.getObjectName(obj) + "' has no inertia.")
             if not 'mass' in inertial or not inertial['mass'] > 0:
-                notifications.append("Error, inertial of link '" + utility.getObjectName(obj) + "' has no attribute 'mass' or zero mass.")
+                notifications.append("Error, inertial of link '" + namingUtils.getObjectName(obj) + "' has no attribute 'mass' or zero mass.")
                 faulty_objects.append(obj)
                 #if fix:
                 #    inertial['mass'] = mass
@@ -89,7 +88,7 @@ def updateObject(obj, fix = False):
     elif obj.phobostype == 'visual':
         if fix:
             if not "geometry/type" in obj:
-                notifications.append("Warning, visual '" + utility.getObjectName(obj) + "' has no geometry/type.")
+                notifications.append("Warning, visual '" + namingUtils.getObjectName(obj) + "' has no geometry/type.")
                 obj["geometry/type"] = "mesh"
             if not obj.name.startswith('visual_'):
                 obj.name = 'visual_' + obj.name
@@ -108,7 +107,7 @@ def updateObject(obj, fix = False):
 def updateModel(root, fix = False):
     notifications = []
     faulty_objects = []
-    children = utility.getChildren(root)
+    children = selectionUtils.getChildren(root)
     for obj in children:
         n, f = updateObject(obj, fix)
         notifications.extend(n)
@@ -119,7 +118,7 @@ def updateModels(roots = None, fix = False):
     notifications = []
     faulty_objects = []
     if roots == None:
-        roots = utility.getRoots()
+        roots = selectionUtils.getRoots()
     for root in roots:
         print("Phobos: Updating properties for model", root.name)
         if not "modelname" in root:
