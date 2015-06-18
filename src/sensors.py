@@ -28,12 +28,10 @@ Created on 6 Jan 2014
 
 import bpy
 import mathutils
-from bpy.types import Operator
-from bpy.props import StringProperty, FloatProperty, EnumProperty, IntProperty, BoolProperty, FloatVectorProperty
-from . import materials
 from . import defs
-from . import utility
-from . import links
+import phobos.utils.blender as blenderUtils
+import phobos.utils.selection as selectionUtils
+
 
 
 def register():
@@ -45,7 +43,7 @@ def unregister():
 
 
 def cameraRotLock(object):
-    utility.selectObjects([object], active=0)
+    selectionUtils.selectObjects([object], active=0)
     bpy.ops.transform.rotate(value=-1.5708, axis=(-1, 0, 0), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     bpy.ops.transform.rotate(value=1.5708, axis=(0, -1, 0), constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     bpy.ops.object.constraint_add(type='LIMIT_ROTATION')
@@ -62,27 +60,27 @@ def cameraRotLock(object):
 
 
 def createSensor(sensor, reference, origin=mathutils.Matrix()):
-    utility.toggleLayer(defs.layerTypes['sensor'], value=True)
+    blenderUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object
     if 'Camera' in sensor['type']:
         bpy.context.scene.layers[defs.layerTypes['sensor']] = True
         bpy.ops.object.add(type='CAMERA', location=origin.to_translation(),
                            rotation=origin.to_euler(),
-                           layers=utility.defLayers([defs.layerTypes['sensor']]))
+                           layers=blenderUtils.defLayers([defs.layerTypes['sensor']]))
         newsensor = bpy.context.active_object
         if reference is not None:
-            utility.selectObjects([newsensor, bpy.data.objects[reference]], clear=True, active=1)
+            selectionUtils.selectObjects([newsensor, bpy.data.objects[reference]], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     elif sensor['type'] in ['RaySensor', 'RotatingRaySensor', 'ScanningSonar', 'MultiLevelLaserRangeFinder']:
         # TODO: create a proper ray sensor scanning layer disc here
-        newsensor = utility.createPrimitive(sensor['name'], 'disc', (0.5, 36),
+        newsensor = blenderUtils.createPrimitive(sensor['name'], 'disc', (0.5, 36),
                                             defs.layerTypes['sensor'], 'phobos_laserscanner',
                                             origin.to_translation(), protation=origin.to_euler())
         if reference is not None and reference != []:
-            utility.selectObjects([newsensor, bpy.data.objects[reference[0]]], clear=True, active=1)
+            selectionUtils.selectObjects([newsensor, bpy.data.objects[reference[0]]], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:  # contact, force and torque sensors (or unknown sensors)
-        newsensor = utility.createPrimitive(sensor['name'], 'sphere', 0.05,
+        newsensor = blenderUtils.createPrimitive(sensor['name'], 'sphere', 0.05,
                                             defs.layerTypes['sensor'], 'phobos_sensor',
                                             origin.to_translation(), protation=origin.to_euler())
         if 'Node' in sensor['type']:
@@ -90,7 +88,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
         elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
             newsensor['sensor/joints'] = sorted(reference)
         if reference is not None and reference != []:
-            utility.selectObjects([newsensor, utility.getRoot(bpy.data.objects[0])], clear=True, active=1)
+            selectionUtils.selectObjects([newsensor, selectionUtils.getRoot(bpy.data.objects[0])], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     # set sensor properties
     newsensor.phobostype = 'sensor'
@@ -108,120 +106,11 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     # throw warning if type is not known
     if sensor['type'] not in defs.sensortypes:
         print("### Warning: sensor", sensor['name'], "is of unknown/custom type.")
-    utility.selectObjects([newsensor], clear=False, active=0)
+    selectionUtils.selectObjects([newsensor], clear=False, active=0)
     return newsensor
 
 
-class AddSensorOperator(Operator):
-    """AddSensorOperator"""
-    bl_idname = "object.phobos_add_sensor"
-    bl_label = "Add/Update a sensor"
-    bl_options = {'REGISTER', 'UNDO'}
 
-    sensor_type = EnumProperty(
-        name="sensor_type",
-        default="CameraSensor",
-        items=tuple([(type,)*3 for type in defs.sensortypes]),
-        description="tyoe of the sensor to be created"
-    )
-
-    custom_type = StringProperty(
-        name="custom_type",
-        default='',
-        description="type of the custom sensor to be created"
-    )
-
-    sensor_name = StringProperty(
-        name="sensor_name",
-        default='new_sensor',
-        description="name of the sensor"
-    )
-
-    add_link = BoolProperty(name="add_link", default=True, description="add additional link as sensor mounting")
-
-# the following is a set of all properties that exist within MARS' sensors
-    # TODO: we should get rid of gui-settings such as hud and rename stuff (eg. maxDistance - maxDist)
-    width = IntProperty(name='width', default=0, description='width')
-    height = IntProperty(name='height', default=0, description='height')
-    resolution = FloatProperty(name='resolution', default=0, description='resolution')
-    horizontal_resolution = FloatProperty(name='horizontal_resolution', default=0, description='horizontal_resolution')
-    opening_width = FloatProperty(name='opening_width', default=0, description='opening_width')
-    opening_height = FloatProperty(name='opening_height', default=0, description='opening_height')
-    maxDistance = FloatProperty(name='maxDistance', default=0, description='maxDistance')
-    maxDist = FloatProperty(name='maxDist', default=0, description='maxDist')
-    verticalOpeningAngle = FloatProperty(name='verticalOpeningAngle', default=0, description='verticalOpeningAngle')
-    horizontalOpeningAngle = FloatProperty(name='horizontalOpeningAngle', default=0, description='horizontalOpeningAngle')
-    hud_pos = IntProperty(name='hud_pos', default=0, description='hud_pos')
-    hud_width = IntProperty(name='hud_width', default=0, description='hud_width')
-    hud_height = IntProperty(name='hud_height', default=0, description='hud_height')
-    updateRate = FloatProperty(name='updateRate', default=0, description='updateRate')
-    vertical_offset = FloatProperty(name='vertical_offset', default=0, description='vertical_offset')
-    horizontal_offset = FloatProperty(name='horizontal_offset', default=0, description='horizontal_offset')
-    gain = FloatProperty(name='gain', default=0, description='gain')
-    left_limit = FloatProperty(name='left_limit', default=0, description='left_limit')
-    right_limit = FloatProperty(name='right_limit', default=0, description='right_limit')
-    rttResolutionX = FloatProperty(name='rttResolutionX', default=0, description='rttResolutionX')
-    rttResolutionY = FloatProperty(name='rttResolutionY', default=0, description='rttResolutionY')
-    numRaysHorizontal = FloatProperty(name='numRaysHorizontal', default=0, description='numRaysHorizontal')
-    numRaysVertical = FloatProperty(name='numRaysVertical', default=0, description='numRaysVertical')
-    draw_rays = BoolProperty(name='draw_rays', default=False, description='draw_rays')
-    depthImage = BoolProperty(name='depthImage', default=False, description='depthImage')
-    show_cam = BoolProperty(name='show_cam', default=False, description='show_cam')
-    only_ray = BoolProperty(name='only_ray', default=False, description='only_ray')
-    ping_pong_mode = BoolProperty(name='ping_pong_mode', default=False, description='ping_pong_mode')
-    bands = IntProperty(name='bands', default=0, description='bands')
-    lasers = IntProperty(name='lasers', default=0, description='lasers')
-    extension = FloatVectorProperty(name='extension', default=(0, 0, 0), description='extension')
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "sensor_name", text="name of the sensor")
-        layout.prop(self, "sensor_type", text="sensor type")
-        if self.sensor_type in ['CameraSensor', 'ScanningSonar', 'RaySensor',
-                                  'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            layout.prop(self, "add_link", "attach sensor to new link?")
-        if self.sensor_type == "custom":
-            layout.prop(self, "custom_type", text="enter custom type")
-        else:
-            for key in defs.sensorProperties[self.sensor_type]:
-                layout.prop(self, key, text=key)
-
-    def execute(self, context):
-        # create a dictionary holding the sensor definition
-        sensor = {'name': self.sensor_name,
-                  'type': self.custom_type if self.sensor_type == 'Custom' else self.sensor_type,
-                  'props': {}
-                 }
-        parent = context.active_object
-        for key in defs.sensorProperties[self.sensor_type]:
-            if type(defs.sensorProperties[self.sensor_type][key]) == type(True):
-                value = getattr(self, key)
-                sensor['props'][key] = '$true' if value else '$false'
-            else:
-                sensor['props'][key] = getattr(self, key)
-        # type-specific settings
-        if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
-                              'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            if self.add_link:
-                link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(), name='link_'+self.sensor_name)
-                sensorObj = createSensor(sensor, link.name, link.matrix_world)
-            else:
-                sensorObj = createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
-            if self.add_link:
-                utility.selectObjects([parent, link], clear=True, active=0)
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
-                utility.selectObjects([link, sensorObj], clear=True, active=0)
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            cameraRotLock(sensorObj)
-        elif sensor['type'] in ['Joint6DOF']:
-            createSensor(sensor, context.active_object, context.active_object.matrix_world)
-        elif 'Node' in sensor['type']:
-            createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
-                         mathutils.Matrix.Translation(context.scene.cursor_location))
-        elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
-            createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
-                         mathutils.Matrix.Translation(context.scene.cursor_location))
-        return {'FINISHED'}
 
 
 # class AddLegacySensorOperator(Operator):

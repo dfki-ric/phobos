@@ -31,7 +31,7 @@ Created on 7 Jan 2014
 """
 
 import bpy
-from . import defs
+import phobos.defs as defs
 
 
 def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):

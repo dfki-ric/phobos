@@ -91,7 +91,7 @@ installPhobos() {
     if [ -d "$phobospath" ]
     then
         echo "Phobos installation found and updated."
-        cp src/*.py "$phobospath"
+        cp -R src/* "$phobospath"
         cp -R definitions "$phobospath"
         installed=1
         if [ -d "$phobospath/lib" ]
@@ -106,7 +106,7 @@ installPhobos() {
         case $YN in
             y|Y )
                 mkdir -p "$phobospath/lib"
-                cp src/*.py "$phobospath"
+                cp -R src/* "$phobospath"
 		cp -R definitions "$phobospath"
                 installed=1
                 echo "Copied phobos to $phobospath"

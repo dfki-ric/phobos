@@ -30,14 +30,9 @@ Created on 7 Jan 2014
 """
 
 import bpy
-from bpy.types import Operator
-from bpy.props import FloatProperty, EnumProperty, BoolProperty
-import math
 import mathutils
-import warnings
-from . import defs
-from phobos.logging import *
-from phobos.utility import getObjectName
+from phobos.logging import log
+import phobos.utils.naming as namingUtils
 
 
 def register():
@@ -105,7 +100,7 @@ def deriveJointType(joint, adjust=False):
             jtype = 'planar'
     if adjust:
         joint['joint/type'] = jtype
-        log("Set type of joint '" + getObjectName(joint) + "'to '" + jtype + "'.", "INFO")
+        log("Set type of joint '" + namingUtils.getObjectName(joint) + "'to '" + jtype + "'.", "INFO")
     return jtype, crot
 
 
@@ -346,201 +341,4 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
         bpy.ops.object.mode_set(mode='OBJECT')
 
 
-class DefineJointConstraintsOperator(Operator):
-    """DefineJointConstraintsOperator
 
-    """
-    bl_idname = "object.define_joint_constraints"
-    bl_label = "Adds Bone Constraints to the joint (link)"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    passive = BoolProperty(
-        name='passive',
-        default=False,
-        description='makes the joint passive (no actuation)'
-    )
-
-    useRadian = BoolProperty(
-        name='useRadian',
-        default=True,
-        description='use degrees or rad for joints'
-    )
-
-    joint_type = EnumProperty(
-        name='joint_type',
-        default='revolute',
-        description="type of the joint",
-        items=defs.jointtypes)
-
-    lower = FloatProperty(
-        name="lower",
-        default=0.0,
-        description="lower constraint of the joint")
-
-    upper = FloatProperty(
-        name="upper",
-        default=0.0,
-        description="upper constraint of the joint")
-
-    maxeffort = FloatProperty(
-        name="max effort (N or Nm)",
-        default=0.0,
-        description="maximum effort of the joint")
-
-    maxvelocity = FloatProperty(
-        name="max velocity (m/s or rad/s)",
-        default=0.0,
-        description="maximum velocity of the joint. If you uncheck radian, you can enter °/sec here")
-
-    spring = FloatProperty(
-        name="spring constant",
-        default=0.0,
-        description="spring constant of the joint")
-
-    damping = FloatProperty(
-        name="damping constant",
-        default=0.0,
-        description="damping constant of the joint")
-
-    # TODO: invoke function to read all values in
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "joint_type", text="joint_type")
-        layout.prop(self, "passive", text="makes the joint passive (no actuation)")
-        layout.prop(self, "useRadian", text="use radian")
-        if self.joint_type != 'fixed':
-            layout.prop(self, "maxeffort", text="max effort [" + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'))
-            if self.joint_type in ['revolute', 'continuous']:
-                layout.prop(self, "maxvelocity", text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"))
-            else:
-                layout.prop(self, "maxvelocity", text="max velocity [m/s]")
-        if self.joint_type in ('revolute', 'prismatic'):
-            layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
-            layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
-            layout.prop(self, "spring", text="spring constant [N/m]")
-            layout.prop(self, "damping", text="damping constant")
-
-
-    def invoke(self, context, event):
-        aObject = context.active_object
-        if 'joint/type' not in aObject and 'motor/type' in aObject:
-            self.maxvelocity = aObject['motor/maxSpeed']
-            self.maxeffort = aObject['motor/maxEffort']
-        return self.execute(context)
-
-    def execute(self, context):
-        """This function executes this operator and sets the constraints and joint type for all selected links.
-        rad/s is the default unit. rpm will be transformed into rad/s
-
-        :param context: The blender context this operator works with.
-        :return: Blender result.
-
-        """
-        lower=0
-        upper=0
-        velocity=0
-        if self.joint_type in ('revolute', 'prismatic'):
-            if not self.useRadian:
-                lower = math.radians(self.lower)
-                upper = math.radians(self.upper)
-            else:
-                lower = self.lower
-                upper = self.upper
-        if not self.useRadian:
-            velocity = self.maxvelocity * ((2*math.pi) / 360) # from °/s to rad/s
-        else:
-            velocity = self.maxvelocity
-        for link in context.selected_objects:
-            bpy.context.scene.objects.active = link
-            setJointConstraints(link, self.joint_type, lower, upper, self.spring, self.damping)
-            if self.joint_type != 'fixed':
-                link['joint/maxeffort'] = self.maxeffort
-                link['joint/maxvelocity'] = velocity
-            else:
-                if "joint/maxeffort" in link: del link["joint/maxeffort"]
-                if "joint/maxvelocity" in link: del link["joint/maxvelocity"]
-            if self.passive:
-                link['joint/passive'] = "$true"
-            else:
-                pass  # FIXME: add default motor here or upon export?
-                      # upon export might have the advantage of being able
-                      # to check for missing motors in the model checking
-        return{'FINISHED'}
-
-
-class AttachMotorOperator(Operator):
-    """AttachMotorOperator
-
-    """
-    bl_idname = "object.attach_motor"
-    bl_label = "Attaches motor values to selected joints"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    P = FloatProperty(
-        name="P",
-        default=1.0,
-        description="P-value")
-
-    I = FloatProperty(
-        name="I",
-        default=0.0,
-        description="I-value")
-
-    D = FloatProperty(
-        name="D",
-        default=0.0,
-        description="D-value")
-
-    vmax = FloatProperty(
-        name="maximum velocity [m/s] or [rad/s]",
-        default=1.0,
-        description="maximum turning velocity of the motor")
-
-    taumax = FloatProperty(
-        name="maximum torque [Nm]",
-        default=1.0,
-        description="maximum torque a motor can apply")
-
-    motortype = EnumProperty(
-        name='motor_type',
-        default='PID',
-        description="type of the motor",
-        items=defs.motortypes)
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "motortype", text="motor_type")
-        layout.prop(self, "taumax", text="maximum torque [Nm]")
-        layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
-        if self.motortype == 'PID':
-            layout.prop(self, "P", text="P")
-            layout.prop(self, "I", text="I")
-            layout.prop(self, "D", text="D")
-
-    def invoke(self, context, event):
-        aObject = context.active_object
-        if 'motor/type' not in aObject and 'joint/type' in aObject and aObject['joint/type'] != 'fixed':
-            self.taumax = aObject['joint/maxeffort']
-            self.vmax = aObject['joint/maxvelocity']
-        return self.execute(context)
-
-    def execute(self, context):
-        """This function executes this operator and attaches a motor to all selected links.
-
-        :param context: The blender context this operator works with.
-        :return:Blender result.
-
-        """
-        for joint in bpy.context.selected_objects:
-            if joint.phobostype == "link":
-                #TODO: these keys have to be adapted
-                if self.motortype == 'PID':
-                    joint['motor/p'] = self.P
-                    joint['motor/i'] = self.I
-                    joint['motor/d'] = self.D
-                joint['motor/maxSpeed'] = self.vmax
-                joint['motor/maxEffort'] = self.taumax
-                #joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
-                joint['motor/type'] = self.motortype
-        return{'FINISHED'}

@@ -28,25 +28,25 @@ Created on 28 Feb 2014
 import bpy
 import mathutils
 import os
-#from utility import selectObjects
 import yaml
-#import os
 import math
 from collections import namedtuple
 import xml.etree.ElementTree as ET
 import zipfile
 import shutil
 
-from phobos.utility import *
-from . import defs
-from . import materials
+import phobos.defs as defs
+import phobos.materials as materials
 
 import phobos.bobj_import as bobj_import
-from . import joints
-from . import sensors
-from . import controllers
-from . import lights
-from phobos.logging import *
+import phobos.joints as joints
+import phobos.sensors as sensors
+import phobos.controllers as controllers
+import phobos.lights as lights
+import phobos.utils.selection as selectionUtils
+import phobos.utils.blender as blenderUtils
+import phobos.utils.general as generalUtils
+from phobos.logging import log
 
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
@@ -410,7 +410,7 @@ class RobotModelParser():
         :return: Nothing.
 
         """
-        bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
+        bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
         print(parent['name'] + ', ', end='')
         children = []
         for l in self.robot['links']:
@@ -420,7 +420,7 @@ class RobotModelParser():
             # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
             parentLink = bpy.data.objects[self.praefixNames(parent['name'], "link")]
             childLink = bpy.data.objects[self.praefixNames(child['name'], "link")]
-            selectObjects([childLink, parentLink], True, 1)
+            selectionUtils.selectObjects([childLink, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             # 2: move to parents origin by setting the world matrix to the parents world matrix
             childLink.matrix_world = parentLink.matrix_world        # removing this line does not seem to make a difference
@@ -450,7 +450,7 @@ class RobotModelParser():
         :return: Nothing.
 
         """
-        bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
+        bpy.context.scene.layers = blenderUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
         parentLink = bpy.data.objects[self.praefixNames(link['name'], "link")]
         if 'inertial' in link:
             if 'pose' in link['inertial']:
@@ -467,7 +467,7 @@ class RobotModelParser():
                 return
             inertialname = link['inertial']['name']
             inertialobj = bpy.data.objects[inertialname]
-            selectObjects([inertialobj, parentLink], True, 1)
+            selectionUtils.selectObjects([inertialobj, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             inertialobj.matrix_local = urdf_geom_loc * urdf_geom_rot
         for geomsrc in ['visual', 'collision']:
@@ -486,7 +486,7 @@ class RobotModelParser():
                     #geom.matrix_world = parentLink.matrix_world
                     #selectObjects([geom], True, 0)
                     #bpy.ops.object.transform_apply(location=True, rotation=True)
-                    selectObjects([geom, parentLink], True, 1)
+                    selectionUtils.selectObjects([geom, parentLink], True, 1)
                     bpy.ops.object.parent_set(type='BONE_RELATIVE')
                     geom.matrix_local = urdf_geom_loc * urdf_geom_rot
                     try:
@@ -494,7 +494,7 @@ class RobotModelParser():
                     except KeyError:
                         pass
 
-                    selectObjects([geom, parentLink], True, 1)
+                    selectionUtils.selectObjects([geom, parentLink], True, 1)
 
     def attachSensor(self, sensor):
         """This function attaches a given sensor to its parent link.
@@ -504,7 +504,7 @@ class RobotModelParser():
         :return: Nothing.
 
         """
-        bpy.context.scene.layers = defLayers([defs.layerTypes[t] for t in defs.layerTypes])
+        bpy.context.scene.layers = blenderUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
         #try:
         if 'pose' in sensor:
             urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
@@ -515,7 +515,7 @@ class RobotModelParser():
         sensorobj = bpy.data.objects[sensor['name']]
         if 'link' in sensor:
             parentLink = bpy.data.objects[sensor['link']]
-            selectObjects([sensorobj, parentLink], True, 1)
+            selectionUtils.selectObjects([sensorobj, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
         else:
             #TODO: what?
@@ -547,7 +547,7 @@ class RobotModelParser():
                 else:
                     geom_path = os.path.join(self.path, geom['filename'])
 
-                bpy.context.scene.layers = defLayers(defs.layerTypes[geomsrc])
+                bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes[geomsrc])
                 filetype = geom['filename'].split('.')[-1]
                 if filetype == 'obj' or filetype == 'OBJ':
                     bpy.ops.import_scene.obj(filepath=geom_path)
@@ -587,7 +587,7 @@ class RobotModelParser():
             else:
                 log("Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.', "ERROR")
             if dimensions:  # if a standard primitive type is found, create the object
-                newgeom = createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
+                newgeom = blenderUtils.createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
                 newgeom.select = True
                 bpy.ops.object.transform_apply(scale=True)
             if newgeom is not None:
@@ -621,7 +621,7 @@ class RobotModelParser():
 
         """
         bpy.ops.object.select_all(action='DESELECT')
-        inert = createPrimitive('inertial_'+name, 'box', [0.04, 0.04, 0.04], player='inertial')
+        inert = blenderUtils.createPrimitive('inertial_'+name, 'box', [0.04, 0.04, 0.04], player='inertial')
         inert.select = True
         bpy.ops.object.transform_apply(scale=True)
         for prop in inertial:
@@ -642,11 +642,11 @@ class RobotModelParser():
         :return: Blender object -- the newly created blender link object.
 
         """
-        bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
+        bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
         #create base object ( =armature)
         bpy.ops.object.select_all(action='DESELECT')
         #bpy.ops.view3d.snap_cursor_to_center()
-        bpy.ops.object.armature_add(layers=defLayers(0))
+        bpy.ops.object.armature_add(layers=blenderUtils.defLayers(0))
         newlink = bpy.context.active_object #print(bpy.context.object) #print(bpy.context.scene.objects.active) #bpy.context.selected_objects[0]
         newlink["link/name"] = link['name']
         newlink.name = self.praefixNames(link['name'], "link")
@@ -727,13 +727,13 @@ class RobotModelParser():
         :return: Nothing.
 
         """
-        bpy.context.scene.layers = defLayers(defs.layerTypes['link'])
+        bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
         link = bpy.data.objects[self.praefixNames(joint['child'], "link")]
         # add joint information
         # link['joint/type'] = joint['type']
 
         # set axis
-        selectObjects([link], clear=True, active=0)
+        selectionUtils.selectObjects([link], clear=True, active=0)
         bpy.ops.object.mode_set(mode='EDIT')
         editbone = link.data.edit_bones[0]
         #oldaxis = editbone.vector
@@ -772,7 +772,7 @@ class RobotModelParser():
         """
         #try:
         link = bpy.data.objects[self.praefixNames(self.robot['joints'][motor['joint']]['child'], "link")]
-        selectObjects([link])
+        selectionUtils.selectObjects([link])
         motor_type = motor['type']
         if motor_type == 'PID':
             #print(motor)
@@ -854,7 +854,7 @@ class RobotModelParser():
                 self.placeChildLinks(root)
                 print("\n\nAssigning model name...")
                 try:
-                    rootlink = getRoot(bpy.data.objects[self.praefixNames(root['name'], "link")])
+                    rootlink = selectionUtils.getRoot(bpy.data.objects[self.praefixNames(root['name'], "link")])
                     rootlink['modelname'] = self.robot['name']
                 except KeyError:
                     log("Could not assign model name to root link.", "ERROR")
@@ -1774,8 +1774,8 @@ class URDFModelParser(RobotModelParser):
         """
         pose = {}
         if origin is not None:
-            pose['translation'] = parse_text(origin.attrib['xyz'])
-            pose['rotation_euler'] = parse_text(origin.attrib['rpy'])
+            pose['translation'] = generalUtils.parse_text(origin.attrib['xyz'])
+            pose['rotation_euler'] = generalUtils.parse_text(origin.attrib['rpy'])
         else:
             pose['translation'] = defaults.idtransform
             pose['rotation_euler'] = defaults.idtransform
@@ -1875,12 +1875,12 @@ class URDFModelParser(RobotModelParser):
                 dictelement['pose'] = self.parsePose(xmlelement.find('origin'))
                 geometry = xmlelement.find('geometry')
                 if geometry is not None:
-                    dictelement['geometry'] = {a: parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+                    dictelement['geometry'] = {a: generalUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
                     dictelement['geometry']['type'] = geometry[0].tag
                     if geometry[0].tag == 'mesh':
                         dictelement['geometry']['filename'] = geometry[0].attrib['filename']
                         try:
-                            dictelement['geometry']['scale'] = parse_text(geometry[0].attrib['scale'])
+                            dictelement['geometry']['scale'] = generalUtils.parse_text(geometry[0].attrib['scale'])
                         except KeyError:
                             dictelement['geometry']['scale'] = [1.0, 1.0, 1.0]
                 material = xmlelement.find('material')
@@ -1925,10 +1925,10 @@ class URDFModelParser(RobotModelParser):
         newjoint['child'] = joint.find('child').attrib['link']
         axis = joint.find('axis')
         if axis is not None:
-            newjoint['axis'] = parse_text(axis.attrib['xyz'])
+            newjoint['axis'] = generalUtils.parse_text(axis.attrib['xyz'])
         limit = joint.find('limit')
         if limit is not None:
-            newjoint['limits'] = {a: parse_text(limit.attrib[a]) for a in limit.attrib}
+            newjoint['limits'] = {a: generalUtils.parse_text(limit.attrib[a]) for a in limit.attrib}
         #calibration
         #dynamics
         #limit
@@ -1945,7 +1945,7 @@ class URDFModelParser(RobotModelParser):
             newmaterial = {a: material.attrib[a] for a in material.attrib}
             color = material.find('color')
             if color is not None:
-                newmaterial['color'] = parse_text(color.attrib['rgba'])
+                newmaterial['color'] = generalUtils.parse_text(color.attrib['rgba'])
                 material_list.append(newmaterial)
         for m in material_list:
             #TODO: handle duplicate names? urdf_robotname_xxx?
@@ -2147,53 +2147,10 @@ class SMURFModelParser(RobotModelParser):
             outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 
-class RobotModelImporter(bpy.types.Operator):
-    """Importer for MARS-compatible model or scene files"""
-    bl_idname = "obj.import_robot_model"
-    bl_label = "Import robot model file from various formats"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'FILE'
 
-    # creating property for storing the path to the .scn file
-    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
-
-    # set a filter to only consider .scn files (only used internally)
-    #filter_glob = bpy.props.StringProperty(default="*.*",options={'HIDDEN'})
-
-    @classmethod
-    def poll(cls, context):
-        return context is not None
-
-    def execute(self, context):
-        # get the chosen file path
-        #directory, filename = os.path.split(self.filepath)
-        modeltype = self.filepath.split('.')[-1]
-
-        if modeltype == 'scene':
-            importer = MARSModelParser(self.filepath)
-        elif modeltype == 'urdf':
-            importer = URDFModelParser(self.filepath)
-        elif modeltype == 'smurf' or modeltype == 'yml' or modeltype == 'yaml':
-            importer = SMURFModelParser(self.filepath)
-        elif modeltype == 'scn':
-            importer = MARSModelParser(self.filepath, zipped=True)
-        else:
-            print("Unknown model format, aborting import...")
-
-        cleanUpScene()
-        importer.parseModel()
-        importer.createBlenderModel()
-
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        # create the open file dialog
-        context.window_manager.fileselect_add(self)
-
-        return {'RUNNING_MODAL'}
 
 # Register and add to the file selector
-bpy.utils.register_class(RobotModelImporter)
+#bpy.utils.register_class(RobotModelImporter)
 
 
 #def apply_rel_ids_old(self, nodes):

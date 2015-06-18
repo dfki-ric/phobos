@@ -39,13 +39,14 @@ from datetime import datetime
 import yaml
 import struct
 import itertools
-from bpy.types import Operator
-from bpy.props import BoolProperty
-from phobos.utility import *
-from . import marssceneexport as mse
-from . import robotdictionary
-from . import defs
-from . import logging as logger
+import phobos.marssceneexport as mse
+import phobos.robotdictionary as robotdictionary
+import phobos.defs as defs
+import phobos.utils.blender as blenderUtils
+import phobos.utils.selection as selectionUtils
+import phobos.utils.general as generalUtils
+import phobos.utils.naming as namingUtils
+from phobos.logging import log
 
 
 def register():
@@ -96,7 +97,7 @@ def exportBobj(path, obj):
 
     # ignore dupli children
     if obj.parent and obj.parent.dupli_type in {'VERTS', 'FACES'}:
-        print(getObjectName(obj), 'is a dupli child - ignoring')
+        print(namingUtils.getObjectName(obj), 'is a dupli child - ignoring')
         return
 
     mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW') #Jan Paul: ", True)": calculate tesselation faces added as test
@@ -115,7 +116,7 @@ def exportBobj(path, obj):
 
     me_verts = mesh.vertices[:]
 
-    out = open(determineMeshOutpath(obj, getObjectName(obj), 'bobj', path), "wb")
+    out = open(determineMeshOutpath(obj, namingUtils.getObjectName(obj), 'bobj', path), "wb")
 
     for v in mesh.vertices:
         out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
@@ -146,14 +147,14 @@ def exportBobj(path, obj):
         if f.use_smooth:
             for v_idx in f.vertices:
                 v = me_verts[v_idx]
-                noKey = roundVector(v.normal, 6)
+                noKey = generalUtils.roundVector(v.normal, 6)
                 if noKey not in globalNormals:
                     globalNormals[noKey] = totno
                     totno += 1
                     out.write(struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2]))
         else:
             # Hard, 1 normal from the face.
-            noKey = roundVector(f.normal, 6)
+            noKey = generalUtils.roundVector(f.normal, 6)
             if noKey not in globalNormals:
                 globalNormals[noKey] = totno
                 totno += 1
@@ -178,17 +179,17 @@ def exportBobj(path, obj):
                 if f_smooth:  # Smoothed, use vertex normals
                     for vi, v in f_v:
                         out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi],
-                                              globalNormals[roundVector(v.normal, 6)]))
+                                              globalNormals[generalUtils.roundVector(v.normal, 6)]))
                 else:  # No smoothing, face normals
-                    no = globalNormals[roundVector(f.normal, 6)]
+                    no = globalNormals[generalUtils.roundVector(f.normal, 6)]
                     for vi, v in f_v:
                         out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], no))
             else:  # No UV's
                 if f_smooth:  # Smoothed, use vertex normals
                     for vi, v in f_v:
-                        out.write(struct.pack('iii', v.index + totverts, 0, globalNormals[roundVector(v.normal, 6)]))
+                        out.write(struct.pack('iii', v.index + totverts, 0, globalNormals[generalUtils.roundVector(v.normal, 6)]))
                 else:  # No smoothing, face normals
-                    no = globalNormals[roundVector(f.normal, 6)]
+                    no = globalNormals[generalUtils.roundVector(f.normal, 6)]
                     for vi, v in f_v:
                         out.write(struct.pack('iii', v.index + totverts, 0, no))
     out.close()
@@ -204,10 +205,10 @@ def exportObj(path, obj):
     :return: Nothing.
 
     """
-    objname = getObjectName(obj)
+    objname = namingUtils.getObjectName(obj)
     oldBlenderObjName = obj.name
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
+    tmpobject = blenderUtils.createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = determineMeshOutpath(obj, objname, 'obj', path)
     bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
@@ -242,11 +243,11 @@ def exportStl(path, obj):
     :return: Nothing.
 
     """
-    objname = getObjectName(obj)
+    objname = namingUtils.getObjectName(obj)
     oldBlenderObjectName = obj.name
     print("OBJNAME: " + objname)
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+    tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = determineMeshOutpath(obj, objname, 'stl', path)
     bpy.ops.export_mesh.stl(filepath=outpath)
@@ -266,11 +267,11 @@ def exportDae(path, obj):
     :return: Nothing.
 
     """
-    objname = getObjectName(obj)
+    objname = namingUtils.getObjectName(obj)
     oldBlenderObjectName = obj.name
     print("OBJNAME: " + objname)
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+    tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = determineMeshOutpath(obj, objname, 'dae', path)
     bpy.ops.object.select_all(action='DESELECT')
@@ -283,7 +284,7 @@ def exportDae(path, obj):
 
 def bakeModel(objlist, path, modelname):
     visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
-    selectObjects(visuals, active=0)
+    selectionUtils.selectObjects(visuals, active=0)
     log("Copying objects for joining...", "INFO")
     print("Copying objects for joining...")
     bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
@@ -642,19 +643,19 @@ def exportModelToURDF(model, filepath):
             for limit_value in sort_urdf_elements(['effort', 'velocity']):
                 if limit_value not in joint['limits']:
                     #print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
-                    logger.log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
+                    log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
                     missing_values = True
             output.append(
                 xmlline(3, 'limit', [p for p in joint['limits']], [joint['limits'][p] for p in joint['limits']]))
         elif joint['type'] in ['revolute', 'prismatic']:
             #print("\n###WARNING: joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!###\n")
-            logger.log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
+            log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
             missing_values = True
         output.append(indent * 2 + '</joint>\n\n')
     #export material information
     if missing_values:
         #print("\n###WARNING: Created URDF is invalid due to missing values!###")
-        logger.log("Created URDF is invalid due to missing values!")
+        log("Created URDF is invalid due to missing values!")
         bpy.ops.tools.phobos_warning_dialog('INVOKE_DEFAULT', message="Created URDF is invalid due to missing values!")
     sorted_material_keys = get_sorted_keys(model['materials'])
     for m in sorted_material_keys:
@@ -773,7 +774,7 @@ def exportModelToSRDF(model, path):
         :type parent: dict.
 
         """
-        children = getImmediateChildren(parent, 'link')
+        children = selectionUtils.getImmediateChildren(parent, 'link')
         if len(children) > 0:
             for child in children:
                 #output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (mother.name, child.name)))
@@ -782,7 +783,7 @@ def exportModelToSRDF(model, path):
                 addPCCombinations(child)
 
     # FIXME: Do we need this?
-    roots = getRoots()
+    roots = selectionUtils.getRoots()
     for root in roots:
         if root.name == 'root':
             addPCCombinations(root)
@@ -855,9 +856,7 @@ def exportModelToSMURF(model, path):
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
     #write urdf
-    logger.startLog(None)
-    logger.log('name', model['modelname'])
-    logger.endLog()
+    log('name', model['modelname'])
     exportModelToURDF(model, os.path.join(path, urdf_filename))
 
     # #write semantics (SRDF information in YML format)
@@ -934,10 +933,10 @@ def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring n
     objects = {}
     models = {}  # models to be exported by name
     instances = [] #the instances to export
-    for root in getRoots():
+    for root in selectionUtils.getRoots():
         if (not (selected_only and not root.select)):
             if "modelname" in root:
-                objects[root['modelname']] = getChildren(root)
+                objects[root['modelname']] = selectionUtils.getChildren(root)
                 if not root['modelname'] in models:
                     models[root['modelname']] = [root]
                 else:
@@ -984,7 +983,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring n
 
     for modelname in objects:
         smurf_outpath = securepath(os.path.join(outpath, modelname) if subfolders else outpath)
-        selectObjects(objects[modelname], True)
+        selectionUtils.selectObjects(objects[modelname], True)
         export(smurf_outpath)
 
     for instance in set(instances).difference(set(objects)):
@@ -1037,54 +1036,6 @@ def securepath(path):  #TODO: this is totally not error-handled!
     return os.path.expanduser(path)
 
 
-class ExportModelOperator(Operator):
-    """This blender operator exports the robot model to chosen formats.
-    You can choose one or more of the following file formats:
-    - SMURF
-    - SRDF
-    - YAML
-    - MARS
-
-    """
-    bl_idname = "object.phobos_export_robot"
-    bl_label = "Export the selected model(s)"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        logger.startLog(self)
-        export()
-        logger.endLog()
-        return {'FINISHED'}
-
-class ExportBakeOperator(Operator):
-
-    bl_idname = "object.phobos_export_bake"
-    bl_label = "Bakes the selected model"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        logger.startLog(self)
-        objs = context.selected_objects
-        robot = robotdictionary.buildRobotDictionary()
-        selectObjects(objs)
-        tmpdir = tempfile.gettempdir()
-        expPath = os.path.join(tmpdir, robot["modelname"]+"_bake")
-        export(path=expPath, robotmodel=robot)
-        bakeModel(objs, expPath, robot["modelname"])
-        zipfilename = os.path.join(tmpdir, robot["modelname"]+".bake")
-        file = zipfile.ZipFile(zipfilename, mode="w")
-        for filename in os.listdir(expPath):
-            file.write(os.path.join(expPath, filename), arcname=filename)
-        file.close()
-        shutil.rmtree(expPath)
-        outpath = ""
-        if bpy.data.worlds[0].relativePath:
-            outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
-        else:
-            outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
-        shutil.copy(zipfilename, outpath)
-        logger.endLog()
-        return {'FINISHED'}
 
 def export(path='', robotmodel=None):
     """This function does the actual exporting of the robot model.

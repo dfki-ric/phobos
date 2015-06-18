@@ -30,12 +30,11 @@ Created on 14 Apr 2014
 """
 
 import bpy
-from bpy.types import Operator
-from bpy.props import FloatProperty, BoolProperty, EnumProperty, StringProperty
 import math
-import warnings
-from . import utility
-from . import defs
+import phobos.defs as defs
+import phobos.utils.naming as namingUtils
+import phobos.utils.blender as blenderUtils
+import phobos.utils.selection as selectionUtils
 
 
 def register():
@@ -74,15 +73,15 @@ def createLink(scale, position=None, orientation=None, name=''):
     :return: blender object
 
     """
-    utility.toggleLayer(defs.layerTypes['link'], True)
+    blenderUtils.toggleLayer(defs.layerTypes['link'], True)
     if position is None and orientation is None:
-        bpy.ops.object.armature_add(layers=utility.defLayers([0]))
+        bpy.ops.object.armature_add(layers=blenderUtils.defLayers([0]))
     elif position is None:
-        bpy.ops.object.armature_add(rotation=orientation, layers=utility.defLayers([0]))
+        bpy.ops.object.armature_add(rotation=orientation, layers=blenderUtils.defLayers([0]))
     elif orientation is None:
-        bpy.ops.object.armature_add(location=position, layers=utility.defLayers([0]))
+        bpy.ops.object.armature_add(location=position, layers=blenderUtils.defLayers([0]))
     else:
-        bpy.ops.object.armature_add(location=position, rotation=orientation, layers=utility.defLayers([0]))
+        bpy.ops.object.armature_add(location=position, rotation=orientation, layers=blenderUtils.defLayers([0]))
     link = bpy.context.active_object
     link.scale = [scale, scale, scale]
     bpy.ops.object.transform_apply(scale=True)
@@ -112,107 +111,40 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
     :return: Nothing.
 
     """
-    print('Deriving link from', utility.getObjectName(obj))
-    nameparts = utility.getObjectName(obj).split('_')
+    print('Deriving link from', namingUtils.getObjectName(obj))
+    nameparts = namingUtils.getObjectName(obj).split('_')
     rotation = obj.matrix_world.to_euler()
     if 'invertAxis' in obj and obj['invertAxis'] == 1:
         rotation.x += math.pi if rotation.x < 0 else -math.pi
-    tmpname = utility.getObjectName(obj)
+    tmpname = namingUtils.getObjectName(obj)
     if namepartindices:
         try:
             tmpname = separator.join([nameparts[p] for p in namepartindices])
         except IndexError:
-            print('Wrong name segment indices given for obj', utility.getObjectName(obj))
+            print('Wrong name segment indices given for obj', namingUtils.getObjectName(obj))
     if prefix != '':
         tmpname = prefix + separator + tmpname
-    if tmpname == utility.getObjectName(obj):
+    if tmpname == namingUtils.getObjectName(obj):
         obj.name += '*'
     link = createLink(scale, obj.matrix_world.to_translation(), obj.matrix_world.to_euler(), tmpname)
     if parenting:
         if obj.parent:
-            utility.selectObjects([link, obj.parent], True, 1)
+            selectionUtils.selectObjects([link, obj.parent], True, 1)
             if obj.parent.phobostype == 'link':
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
             else:
                 bpy.ops.object.parent_set(type='OBJECT')
-        children = utility.getImmediateChildren(obj)
+        children = selectionUtils.getImmediateChildren(obj)
         if parentobjects:
             children.append(obj)
         for child in children:
-            utility.selectObjects([child], True, 0)
+            selectionUtils.selectObjects([child], True, 0)
             bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-            utility.selectObjects([child, link], True, 1)
+            selectionUtils.selectObjects([child, link], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
 
-class CreateLinkOperator(Operator):
-    """Create Link Operator
 
-    """
-    bl_idname = "object.phobos_create_link"
-    bl_label = "Create link(s), optionally based on existing objects"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    type = EnumProperty(
-        items=(('3D cursor',)*3,
-               ('selected objects',)*3),
-        default='selected objects',
-        name='location',
-        description='Where to create new link(s)?'
-    )
-
-    size = FloatProperty(
-        name="visual link size",
-        default=0.2,
-        description="size of the created link"
-    )
-
-    parenting = BoolProperty(
-        name='parenting',
-        default=False,
-        description='parent associated objects to created links?'
-    )
-
-    parentobject = BoolProperty(
-        name='parent object(s)',
-        default=False,
-        description='parent objects to newly created links?'
-    )
-
-    namepartindices = StringProperty(
-        name="name segment indices",
-        description="allows reusing parts of objects' names, specified as e.g. '2 3'",
-        default=''
-    )
-
-    separator = StringProperty(
-        name="separator",
-        description="seperator to split object names with, e.g. '_'",
-        default='_'
-    )
-
-    prefix = StringProperty(
-        name="prefix",
-        description="prefix to put before names, e.g. 'link'",
-        default='link'
-    )
-
-    def execute(self, context):
-        """This function executes the operator and creates a link.
-
-        :param context: The blender context this operator works with.
-        :type context: Blender context.
-        :return: Blender result.
-        """
-        if self.type == '3D cursor':
-            createLink(self.size)
-        else:
-            for obj in bpy.context.selected_objects:
-                tmpnamepartindices = [int(p) for p in self.namepartindices.split()]
-                deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting, parentobjects=self.parentobject,
-                                     namepartindices=tmpnamepartindices, separator=self.separator,
-                                     prefix=self.prefix)
-        return {'FINISHED'}
 
 
 # TODO: evaluate the parenting method below

@@ -29,8 +29,9 @@ import bpy
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatProperty
 from . import defs
-from . import utility
-from . import logging as pl
+from phobos.logging import startLog, endLog, log
+import phobos.utils.blender as blenderUtils
+import phobos.utils.naming as namingUtils
 
 
 def register():
@@ -66,7 +67,7 @@ class AddControllerOperator(Operator):
         description = "rate of the controller [Hz]")
 
     def execute(self, context):
-        pl.startLog(self)
+        startLog(self)
         global sensors
         global motors
         location = bpy.context.scene.cursor_location
@@ -78,7 +79,7 @@ class AddControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            utility.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "phobos_controller", location)
+            blenderUtils.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "phobos_controller", location)
             bpy.context.scene.objects.active.phobostype = "controller"
             bpy.context.scene.objects.active.name = self.controller_name
             controllers.append(bpy.context.scene.objects.active)
@@ -91,7 +92,7 @@ class AddControllerOperator(Operator):
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        pl.endLog()
+        endLog()
         return {'FINISHED'}
 
 
@@ -107,7 +108,7 @@ class AddLegacyControllerOperator(Operator):
         description = "scale of the controller visualization")
 
     def execute(self, context):
-        pl.startLog(self)
+        startLog(self)
         location = bpy.context.scene.cursor_location
         objects = []
         controllers = []
@@ -117,7 +118,7 @@ class AddLegacyControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            utility.createPrimitive("controller", "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
+            blenderUtils.createPrimitive("controller", "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
             bpy.context.scene.objects.active.phobostype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
@@ -126,17 +127,17 @@ class AddLegacyControllerOperator(Operator):
             for key in ctrl.keys():
                 if key.find("index") >= 0:
                     del ctrl[key]
-                    pl.log("Deleting " + str(key) + " in " + ctrl.name, "INFO")
+                    log("Deleting " + str(key) + " in " + ctrl.name, "INFO")
             i = 1
             for obj in objects:
                 if obj.phobostype == "link":
-                    ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = getObjectName(obj)
+                    ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = namingUtils.getObjectName(obj)
                     i += 1
-        pl.log("Added joints to (new) controller(s).", "INFO")
+        log("Added joints to (new) controller(s).", "INFO")
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        pl.endLog()
+        endLog()
         return {'FINISHED'}
 
 
