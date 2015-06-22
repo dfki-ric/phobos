@@ -912,19 +912,6 @@ def exportModelToSMURF(model, path):
                 op.write(outstring)
 
 
-class ExportSceneOperator(Operator):
-    """This Blender operator exports the selected robot models in the current
-     Blender scene as a SMURF scene (*.smurfs).
-    """
-    bl_idname = "object.phobos_export_scene"
-    bl_label = "Export the selected model(s) in a scene."
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        exportSMURFsScene()
-        return {'FINISHED'}
-
-
 def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring needed!!!
     """Exports all robots in a scene in *.smurfs format.
     :param selected_only: Decides if only models with selected root links are exported.

@@ -64,7 +64,7 @@ else:
     print("Importing yaml module")
 
 # prepare defs module
-import phobos.defs as defs
+from . import defs
 import os
 
 # Add custom YAML (de-)serializer

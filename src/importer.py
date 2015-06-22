@@ -1834,9 +1834,8 @@ class URDFModelParser(RobotModelParser):
         #print('#############################')
         #print(self.robot['name'] + '_urdf_order')
         #print('#############################')
-        createNewTextfile(self.robot['name'] + '_urdf_order', yaml.dump(self.element_order))
+        blenderUtils.createNewTextfile(self.robot['name'] + '_urdf_order', yaml.dump(self.element_order))
         #openScriptInEditor('element_order')
-
         self._debug_output()
 
     def parseLink(self, link):

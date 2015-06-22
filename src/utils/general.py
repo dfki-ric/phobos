@@ -26,7 +26,8 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from phobos.logging import log
-import phobos.utils.selection as selection
+import phobos.utils.selection as selectionUtils
+import phobos.utils.naming as namingUtils
 import datetime
 import re
 import mathutils
@@ -160,7 +161,7 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            log("The object '" + selection.getObjectName(obj) + "' has not property '" + numeric_prop + "'")
+            log("The object '" + namingUtils.getObjectName(obj) + "' has not property '" + numeric_prop + "'")
     return numsum
 
 

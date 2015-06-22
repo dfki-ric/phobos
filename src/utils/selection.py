@@ -27,6 +27,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
 import phobos.defs as defs
+from phobos.logging import log
 
 
 def returnObjectList(phobostype):
