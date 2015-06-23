@@ -119,7 +119,7 @@ if "bpy" in locals():
     print("Reloading Phobos.")
 else:
     import phobos.robotupdate, phobos.links, phobos.marssceneexport, phobos.robotdictionary, phobos.controllers, \
-        phobos.exporter, phobos.importer, phobos.joints, phobos.sensors, phobos.collision, phobos.inertia, \
+        phobos.exporter, phobos.importer, phobos.joints, phobos.sensors, phobos.inertia, \
         phobos.phobosgui, phobos.utils.naming, phobos.utils.blender, phobos.utils.general, phobos.utils.selection, \
         phobos.operator.io, phobos.operator.manipulation, phobos.operator.misc, phobos.operator.naming, \
         phobos.operator.selection, phobos.logging
@@ -142,7 +142,6 @@ def register():
     importer.register()
     joints.register()
     sensors.register()
-    collision.register()
     inertia.register()
     bpy.utils.register_module(__name__)
 
@@ -162,7 +161,6 @@ def unregister():
     misctools.unregister()
     sensors.unregister()
     utility.unregister()
-    collision.unregister()
     inertia.register()
     bpy.utils.unregister_module(__name__)
 
