@@ -113,7 +113,6 @@ if "bpy" in locals():
     imp.reload(phobos.operator.misc)
     imp.reload(phobos.operator.naming)
     imp.reload(phobos.operator.selection)
-    imp.reload(collision)
     imp.reload(inertia)
     imp.reload(marssceneexport)
     print("Reloading Phobos.")
