@@ -113,8 +113,8 @@ if "bpy" in locals():
     imp.reload(phobos.operator.misc)
     imp.reload(phobos.operator.naming)
     imp.reload(phobos.operator.selection)
-    imp.reload(inertia)
-    imp.reload(marssceneexport)
+    imp.reload(phobos.inertia)
+    imp.reload(phobos.marssceneexport)
     print("Reloading Phobos.")
 else:
     import phobos.robotupdate, phobos.links, phobos.marssceneexport, phobos.robotdictionary, phobos.controllers, \
@@ -134,14 +134,14 @@ def register():
     :return: Nothing
 
     """
-    links.register()
-    controllers.register()
-    exporter.register()
-    phobosgui.register()
-    importer.register()
-    joints.register()
-    sensors.register()
-    inertia.register()
+    phobos.links.register()
+    phobos.controllers.register()
+    phobos.exporter.register()
+    phobos.phobosgui.register()
+    phobos.importer.register()
+    phobos.joints.register()
+    phobos.sensors.register()
+    phobos.inertia.register()
     bpy.utils.register_module(__name__)
 
 
@@ -151,16 +151,14 @@ def unregister():
     :return: Nothing
 
     """
-    links.unregister()
-    controllers.unregister()
-    exporter.unregister()
-    phobosgui.unregister()
-    importer.unregister()
-    joints.unregister()
-    misctools.unregister()
-    sensors.unregister()
-    utility.unregister()
-    inertia.register()
+    phobos.links.unregister()
+    phobos.controllers.unregister()
+    phobos.exporter.unregister()
+    phobos.phobosgui.unregister()
+    phobos.importer.unregister()
+    phobos.joints.unregister()
+    phobos.sensors.unregister()
+    phobos.inertia.register()
     bpy.utils.unregister_module(__name__)
 
 # if __name__ == "__main__":
