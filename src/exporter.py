@@ -625,11 +625,11 @@ def exportModelToURDF(model, filepath):
         output.append(indent * 2 + '</link>\n\n')
     #export joint information
     missing_values = False
-    if stored_element_order is None:
-        sorted_joint_keys = get_sorted_keys(model['joints'])
-    else:
-        sorted_joint_keys = stored_element_order['joints']      #TODO: are names and keys of links ALWAYS identical?
-    for j in sorted_joint_keys:
+    #if stored_element_order is None:                           #FIXME: sorting joints causes problems right now
+    #    sorted_joint_keys = get_sorted_keys(model['joints'])
+    #else:
+    #    sorted_joint_keys = stored_element_order['joints']      #TODO: are names and keys of links ALWAYS identical?
+    for j in model['joints']:
         joint = model['joints'][j]
         output.append(indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n')
         child = model['links'][joint["child"]]
