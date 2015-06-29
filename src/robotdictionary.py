@@ -171,7 +171,7 @@ def deriveGeometry(obj):
             geometry['length'] = obj.dimensions[2]
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
-        elif gt in ['mesh', 'capsule']:
+        elif gt == 'mesh':
             sMProp = 'geometry/'+defs.reservedProperties['SHAREDMESH']
             if sMProp in obj:
                 filename = obj[sMProp]
@@ -237,6 +237,49 @@ def deriveCollision(obj):
     except AttributeError:
         pass
     return collision, obj.parent
+
+
+def deriveCapsule(obj):
+    viscol_dict = {}
+    capsule_pose = deriveObjectPose(obj)
+    rotation = capsule_pose['rotation_euler']
+    capsule_radius = obj['radius']
+    for part in ['sphere1', 'cylinder', 'sphere2']:
+        viscol = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
+        viscol['name'] = getObjectName(obj).split(':')[-1] + '_' + part
+        geometry = {}
+        pose = {}
+        geometry['radius'] = capsule_radius
+        if part == 'cylinder':
+            geometry['length'] = obj['length']
+            geometry['type'] = 'cylinder'
+            pose = capsule_pose
+            #comment = 'capsule'     # TODO: change if there is a better solution
+        else:
+            geometry['type'] = 'sphere'
+            if part == 'sphere1':
+                location = obj['sph1_location']
+            else:
+                location = obj['sph2_location']
+            pose['translation'] = location
+            pose['rotation_euler'] = rotation
+            loc_mu = mathutils.Matrix.Translation(location)
+            rot_mu = mathutils.Euler(rotation).to_quaternion()
+            pose['rotation_quaternion'] = list(rot_mu)
+            matrix = loc_mu * rot_mu.to_matrix().to_4x4()
+            print(list(matrix))
+            pose['matrix'] = [list(vector) for vector in list(matrix)]
+            #comment = 'no import'
+        viscol['geometry'] = geometry
+        viscol['pose'] = pose
+        #viscol['comment'] = comment
+        try:
+            viscol['bitmask'] = int(''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups]), 2)
+        except AttributeError:
+            pass
+        viscol_dict[part] = viscol
+    return viscol_dict, obj.parent
+
 
 
 def deriveApproxsphere(obj):
@@ -335,7 +378,10 @@ def deriveDictEntry(obj):
         elif obj.phobostype == 'visual':
             props, parent = deriveVisual(obj)
         elif obj.phobostype == 'collision':
-            props, parent = deriveCollision(obj)
+            if obj['geometry/type'] == 'capsule':
+                props, parent = deriveCapsule(obj)
+            else:
+                props, parent = deriveCollision(obj)
         elif obj.phobostype == 'approxsphere':
             props, parent = deriveApproxsphere(obj)
         elif obj.phobostype == 'sensor':

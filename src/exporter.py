@@ -530,7 +530,7 @@ def writeURDFGeometry(output, element):
         output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['length']]))
     elif element['type'] == "sphere":
         output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
-    elif element['type'] in ['capsule', 'mesh']:  # capsules are not supported in URDF and are emulated using meshes
+    elif element['type'] == "mesh":         # capsules are now converted into a cylinder with two spheres and thus need not be handled here
         if bpy.data.worlds[0].structureExport:
             output.append(xmlline(5, 'mesh', ['filename', 'scale'], ["../" + element['filename'], l2str(element['scale'])]))
         else:

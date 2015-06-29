@@ -840,7 +840,7 @@ class CreateCollisionObjects(Operator):
                 size = max(size) / 2
             rotation_euler = (vis.matrix_world * rotation).to_euler()
             center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion() * center
-            if self.property_colltype != 'capsule':
+            if self.property_colltype != 'capsule' and self.property_colltype != 'mesh':
                 ob = blenderUtils.createPrimitive(collname, self.property_colltype, size,
                                              defs.layerTypes['collision'], materialname, center,
                                              rotation_euler)
@@ -863,6 +863,8 @@ class CreateCollisionObjects(Operator):
                 bpy.ops.object.join()
                 ob['length'] = length
                 ob['radius'] = radius
+                ob['sph1_location'] = tmpsph1_location
+                ob['sph2_location'] = tmpsph2_location
             elif self.property_colltype == 'mesh':
                 pass
                 # TODO: copy mesh!!
