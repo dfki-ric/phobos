@@ -848,6 +848,8 @@ class CreateCollisionObjects(Operator):
                 length = max(length - 2 * radius, 0.001)  # prevent length from turning negative
                 size = (radius, length)
                 zshift = length / 2
+                tmpsph1_location = center + rotation_euler.to_matrix().to_4x4() * mathutils.Vector((0,0,zshift))
+                tmpsph2_location = center - rotation_euler.to_matrix().to_4x4() * mathutils.Vector((0,0,zshift))
                 ob = blenderUtils.createPrimitive(collname, 'cylinder', size,
                                              defs.layerTypes['collision'], materialname, center,
                                              rotation_euler)

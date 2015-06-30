@@ -246,7 +246,7 @@ def deriveCapsule(obj):
     capsule_radius = obj['radius']
     for part in ['sphere1', 'cylinder', 'sphere2']:
         viscol = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
-        viscol['name'] = getObjectName(obj).split(':')[-1] + '_' + part
+        viscol['name'] = namingUtils.getObjectName(obj).split(':')[-1] + '_' + part
         geometry = {}
         pose = {}
         geometry['radius'] = capsule_radius
@@ -533,16 +533,29 @@ def buildRobotDictionary():
 
     # complete link information by parsing visuals and collision objects
     print('\n\nParsing visual and collision (approximation) objects...')
+    capsules_list = []
     for obj in bpy.context.selected_objects:
         print("Parsing object " + namingUtils.getObjectName(obj))
         if obj.phobostype in ['visual', 'collision']:
             props, parent = deriveDictEntry(obj)
-            robot['links'][namingUtils.getObjectName(parent, phobostype="link")][obj.phobostype][namingUtils.getObjectName(obj, phobostype=obj.phobostype)] = props
+            if all([key in props for key in ['cylinder', 'sphere1', 'sphere2']]):     # this is the case with simulated capsules
+                capsules_list.append({'link': parent.name,
+                                      'name': props['cylinder']['name'][:-len('_cylinder')],
+                                      'radius': props['cylinder']['geometry']['radius'],
+                                      'length': props['cylinder']['geometry']['length'] + 2*props['cylinder']['geometry']['radius'],
+                                      #'bitmask': props['cylinder']['bitmask']
+                                    })
+                for key in props:
+                    robot['links'][namingUtils.getObjectName(parent, phobostype="link")][obj.phobostype][namingUtils.getObjectName(obj, phobostype=obj.phobostype)] = props[key]
+            else:
+                robot['links'][namingUtils.getObjectName(parent, phobostype="link")][obj.phobostype][namingUtils.getObjectName(obj, phobostype=obj.phobostype)] = props
             obj.select = False
         elif obj.phobostype == 'approxsphere':
             props, parent = deriveDictEntry(obj)
             robot['links'][namingUtils.getObjectName(parent)]['approxcollision'].append(props)
             obj.select = False
+
+    robot['capsules'] = capsules_list
 
     # combine collision information for links
     for linkname in robot['links']:
