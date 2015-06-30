@@ -614,7 +614,8 @@ def exportModelToURDF(model, filepath):
             if stored_element_order is None:
                 sorted_collision_keys = get_sorted_keys(link['collision'])
             else:
-                sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
+                #sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
+                sorted_collision_keys = link['collision'].keys()
             for c in sorted_collision_keys:
                 col = link['collision'][c]
                 output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')

@@ -546,7 +546,7 @@ def buildRobotDictionary():
                                       #'bitmask': props['cylinder']['bitmask']
                                     })
                 for key in props:
-                    robot['links'][namingUtils.getObjectName(parent, phobostype="link")][obj.phobostype][namingUtils.getObjectName(obj, phobostype=obj.phobostype)] = props[key]
+                    robot['links'][namingUtils.getObjectName(parent, phobostype="link")][obj.phobostype][key] = props[key]
             else:
                 robot['links'][namingUtils.getObjectName(parent, phobostype="link")][obj.phobostype][namingUtils.getObjectName(obj, phobostype=obj.phobostype)] = props
             obj.select = False
