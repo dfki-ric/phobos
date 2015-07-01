@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-.. module:: phobos.operator.io
+.. module:: phobos.operators.io
     :platform: Unix, Windows, Mac
     :synopsis: This module contains operators import/export
 

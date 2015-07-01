@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-.. module:: phobos.operator.naming
+.. module:: phobos.operators.naming
     :platform: Unix, Windows, Mac
     :synopsis: This module contains operators for naming objects
 

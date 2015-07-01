@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-.. module:: phobos.operator.misc
+.. module:: phobos.operators.misc
     :platform: Unix, Windows, Mac
     :synopsis: This module contains operators general purposes.
 

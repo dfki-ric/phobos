@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-.. module:: phobos.operator.manipulation
+.. module:: phobos.operators.editing
     :platform: Unix, Windows, Mac
     :synopsis: This module contains operators to manipulate blender objects
 

@@ -108,11 +108,11 @@ if "bpy" in locals():
     imp.reload(phobos.utils.general)
     imp.reload(phobos.utils.selection)
     imp.reload(phobos.utils.naming)
-    imp.reload(phobos.operator.io)
-    imp.reload(phobos.operator.manipulation)
-    imp.reload(phobos.operator.misc)
-    imp.reload(phobos.operator.naming)
-    imp.reload(phobos.operator.selection)
+    imp.reload(phobos.operators.io)
+    imp.reload(phobos.operators.editing)
+    imp.reload(phobos.operators.misc)
+    imp.reload(phobos.operators.naming)
+    imp.reload(phobos.operators.selection)
     imp.reload(phobos.inertia)
     imp.reload(phobos.marssceneexport)
     print("Reloading Phobos.")
@@ -120,8 +120,8 @@ else:
     import phobos.robotupdate, phobos.links, phobos.marssceneexport, phobos.robotdictionary, phobos.controllers, \
         phobos.exporter, phobos.importer, phobos.joints, phobos.sensors, phobos.inertia, \
         phobos.phobosgui, phobos.utils.naming, phobos.utils.blender, phobos.utils.general, phobos.utils.selection, \
-        phobos.operator.io, phobos.operator.manipulation, phobos.operator.misc, phobos.operator.naming, \
-        phobos.operator.selection, phobos.logging
+        phobos.operators.io, phobos.operators.editing, phobos.operators.misc, phobos.operators.naming, \
+        phobos.operators.selection, phobos.logging
 
     print("Importing Phobos modules.")
 

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 """
-.. module:: phobos.operator.selection
+.. module:: phobos.operators.selection
     :platform: Unix, Windows, Mac
     :synopsis: This module contains operators for selecting and finding objects.
 
