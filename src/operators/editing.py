@@ -25,19 +25,20 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import phobos.defs as defs
 import bpy
 import math
 import yaml
 import mathutils
 import datetime
+import phobos.defs as defs
 import phobos.inertia as inertia
 import phobos.materials as materials
 import phobos.utils.selection as selectionUtils
 import phobos.utils.general as generalUtils
+import phobos.utils.blender as blenderUtils
+import phobos.utils.naming as nameUtils
 import phobos.robotupdate as robotupdate
 import phobos.robotdictionary as robotdictionary
-import phobos.utils.blender as blenderUtils
 import phobos.joints as joints
 import phobos.sensors as sensors
 import phobos.links as links
@@ -1330,3 +1331,36 @@ class AddSensorOperator(Operator):
             sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
                          mathutils.Matrix.Translation(context.scene.cursor_location))
         return {'FINISHED'}
+
+
+class CreateMimicJointOperator(Operator):
+    """CreateMimicJointOperator
+
+    """
+    bl_idname = "object.phobos_create_mimic_joint"
+    bl_label = "Make a number of joints follow a specified joint."
+    bl_options = {'REGISTER', 'UNDO'}
+
+    multiplier = FloatProperty(
+        name="multiplier",
+        default=1.0,
+        description="multiplier for joint mimickry")
+
+    offset = FloatProperty(
+        name="offset",
+        default=0.0,
+        description="offset for joint mimickry")
+
+    def execute(self, context):
+        masterjoint = bpy.context.active_object
+        for obj in bpy.context.selected_objects:
+            if obj.name != masterjoint.name:
+                obj["motor/mimic_motor"] = nameUtils.getObjectName(masterjoint, 'motor')
+                obj["motor/mimic_multiplier"] = self.multiplier
+                obj["motor/mimic_offset"] = self.offset
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob is not None and ob.phobostype == 'link'
