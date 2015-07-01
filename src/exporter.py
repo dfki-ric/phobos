@@ -905,7 +905,8 @@ def exportModelToSMURF(model, path):
         with open(path + filenames['collision'], 'w') as op:
             op.write('#collision data' + infostring)
             op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
-            op.write(yaml.dump({'capsules': model['capsules']}, default_flow_style=False))
+            if model['capsules']:
+                op.write(yaml.dump({'capsules': model['capsules']}, default_flow_style=False))
 
     #write additional information
     for category in annotationdict.keys():
