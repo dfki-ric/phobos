@@ -614,15 +614,20 @@ def exportModelToURDF(model, filepath):
             if stored_element_order is None:
                 sorted_collision_keys = get_sorted_keys(link['collision'])
             else:
-                #sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
-                sorted_collision_keys = link['collision'].keys()
+                sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
+                new_keys = []
+                for col_key in link['collision']:
+                    if col_key not in sorted_collision_keys:
+                        new_keys.append(col_key)
+                sorted_collision_keys += sort_urdf_elements(new_keys)
             for c in sorted_collision_keys:
-                col = link['collision'][c]
-                output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
-                output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
-                                      [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
-                writeURDFGeometry(output, col['geometry'])
-                output.append(indent * 3 + '</collision>\n')
+                if c in link['collision']:
+                    col = link['collision'][c]
+                    output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
+                    output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
+                                          [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
+                    writeURDFGeometry(output, col['geometry'])
+                    output.append(indent * 3 + '</collision>\n')
         output.append(indent * 2 + '</link>\n\n')
     #export joint information
     missing_values = False
