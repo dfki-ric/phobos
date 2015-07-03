@@ -569,102 +569,119 @@ def exportModelToURDF(model, filepath):
     if stored_element_order is None:
         sorted_link_keys = get_sorted_keys(model['links'])
     else:
-        sorted_link_keys = stored_element_order['links']    #TODO: are names and keys of links ALWAYS identical?
+        sorted_link_keys = stored_element_order['links']
+        new_keys = []
+        for link_key in model['links']:
+            if link_key not in sorted_link_keys:
+                new_keys.append(link_key)
+        sorted_link_keys += sort_urdf_elements(new_keys)
     for l in sorted_link_keys:
-        link = model['links'][l]
-        output.append(indent * 2 + '<link name="' + l + '">\n')
-        if 'mass' in link['inertial'] and 'inertia' in link['inertial']:
-            output.append(indent * 3 + '<inertial>\n')
-            if 'pose' in link['inertial']:
-                output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['inertial']['pose']['translation']),
-                                                                    l2str(link['inertial']['pose']['rotation_euler'])]))
-            output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
-            output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'],
-                                  [str(i) for i in link['inertial']['inertia']]))
-            output.append(indent * 3 + '</inertial>\n')
-        #visual object
-        if link['visual']:
-            if stored_element_order is None:
-                sorted_visual_keys = get_sorted_keys(link['visual'])
-            else:
-                sorted_visual_keys = stored_element_order['viscol'][link['name']]['visual']
-            for v in sorted_visual_keys:
-                vis = link['visual'][v]
-                output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
-                output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
-                                      [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
-                writeURDFGeometry(output, vis['geometry'])
-                if 'material' in vis:
-                    if model['materials'][vis['material']][
-                        'users'] == 0:  #FIXME: change back to 1 when implemented in urdfloader
-                        mat = model['materials'][vis['material']]
-                        output.append(indent * 4 + '<material name="' + mat['name'] + '">\n')
-                        color = mat['diffuseColor']
-                        output.append(
-                            indent * 5 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
-                                mat["transparency"]) + '"/>\n')
-                        if 'texturename' in mat:
-                            output.append(indent * 5 + '<texture filename="' + mat['texturename'] + '"/>\n')
-                        output.append(indent * 4 + '</material>\n')
-                    else:
-                        output.append(indent * 4 + '<material name="' + vis["material"] + '"/>\n')
-                output.append(indent * 3 + '</visual>\n')
-        #collision object
-        if link['collision']:
-            if stored_element_order is None:
-                sorted_collision_keys = get_sorted_keys(link['collision'])
-            else:
-                sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
-                new_keys = []
-                for col_key in link['collision']:
-                    if col_key not in sorted_collision_keys:
-                        new_keys.append(col_key)
-                sorted_collision_keys += sort_urdf_elements(new_keys)
-            for c in sorted_collision_keys:
-                if c in link['collision']:
-                    col = link['collision'][c]
-                    output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
-                    output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
-                                          [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
-                    writeURDFGeometry(output, col['geometry'])
-                    output.append(indent * 3 + '</collision>\n')
-        output.append(indent * 2 + '</link>\n\n')
+        if l in model['links']:
+            link = model['links'][l]
+            output.append(indent * 2 + '<link name="' + l + '">\n')
+            if 'mass' in link['inertial'] and 'inertia' in link['inertial']:
+                output.append(indent * 3 + '<inertial>\n')
+                if 'pose' in link['inertial']:
+                    output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['inertial']['pose']['translation']),
+                                                                        l2str(link['inertial']['pose']['rotation_euler'])]))
+                output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
+                output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'],
+                                      [str(i) for i in link['inertial']['inertia']]))
+                output.append(indent * 3 + '</inertial>\n')
+            #visual object
+            if link['visual']:
+                if stored_element_order is None:
+                    sorted_visual_keys = get_sorted_keys(link['visual'])
+                else:
+                    sorted_visual_keys = stored_element_order['viscol'][link['name']]['visual']
+                    new_keys = []
+                    for vis_key in link['visual']:
+                        if vis_key not in sorted_visual_keys:
+                            new_keys.append(vis_key)
+                    sorted_visual_keys += sort_urdf_elements(new_keys)
+                for v in sorted_visual_keys:
+                    if v in link['visual']:
+                        vis = link['visual'][v]
+                        output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
+                        output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
+                                              [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
+                        writeURDFGeometry(output, vis['geometry'])
+                        if 'material' in vis:
+                            if model['materials'][vis['material']][
+                                'users'] == 0:  #FIXME: change back to 1 when implemented in urdfloader
+                                mat = model['materials'][vis['material']]
+                                output.append(indent * 4 + '<material name="' + mat['name'] + '">\n')
+                                color = mat['diffuseColor']
+                                output.append(
+                                    indent * 5 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
+                                        mat["transparency"]) + '"/>\n')
+                                if 'texturename' in mat:
+                                    output.append(indent * 5 + '<texture filename="' + mat['texturename'] + '"/>\n')
+                                output.append(indent * 4 + '</material>\n')
+                            else:
+                                output.append(indent * 4 + '<material name="' + vis["material"] + '"/>\n')
+                        output.append(indent * 3 + '</visual>\n')
+            #collision object
+            if link['collision']:
+                if stored_element_order is None:
+                    sorted_collision_keys = get_sorted_keys(link['collision'])
+                else:
+                    sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
+                    new_keys = []
+                    for col_key in link['collision']:
+                        if col_key not in sorted_collision_keys:
+                            new_keys.append(col_key)
+                    sorted_collision_keys += sort_urdf_elements(new_keys)
+                for c in sorted_collision_keys:
+                    if c in link['collision']:
+                        col = link['collision'][c]
+                        output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
+                        output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
+                                              [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
+                        writeURDFGeometry(output, col['geometry'])
+                        output.append(indent * 3 + '</collision>\n')
+            output.append(indent * 2 + '</link>\n\n')
     #export joint information
     missing_values = False
-    if stored_element_order is None:                           #FIXME: sorting joints causes problems right now
+    if stored_element_order is None:
         sorted_joint_keys = get_sorted_keys(model['joints'])
     else:
-        sorted_joint_keys = stored_element_order['joints']      #TODO: are names and keys of links ALWAYS identical?
-    print('##########\njoints:', model['joints'].keys(), '\n##########')
+        sorted_joint_keys = stored_element_order['joints']
+        new_keys = []
+        for joint_key in model['joints']:
+            if joint_key not in sorted_joint_keys:
+                new_keys.append(joint_key)
+        sorted_joint_keys += sort_urdf_elements(new_keys)
     for j in sorted_joint_keys:
-        joint = model['joints'][j]
-        output.append(indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n')
-        child = model['links'][joint["child"]]
-        output.append(xmlline(3, 'origin', ['xyz', 'rpy'],
-                              [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])]))
-        output.append(indent * 3 + '<parent link="' + joint["parent"] + '"/>\n')
-        output.append(indent * 3 + '<child link="' + joint["child"] + '"/>\n')
-        if 'axis' in joint:
-            output.append(indent * 3 + '<axis xyz="' + l2str(joint['axis']) + '"/>\n')
-        if 'limits' in joint:
-            for limit_value in sort_urdf_elements(['effort', 'velocity']):
-                if limit_value not in joint['limits']:
-                    #print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
-                    log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
-                    missing_values = True
-            output.append(
-                xmlline(3, 'limit', [p for p in joint['limits']], [joint['limits'][p] for p in joint['limits']]))
-        elif joint['type'] in ['revolute', 'prismatic']:
-            #print("\n###WARNING: joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!###\n")
-            log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
-            missing_values = True
-        output.append(indent * 2 + '</joint>\n\n')
+        if j in model['joints']:
+            joint = model['joints'][j]
+            output.append(indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n')
+            child = model['links'][joint["child"]]
+            output.append(xmlline(3, 'origin', ['xyz', 'rpy'],
+                                  [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])]))
+            output.append(indent * 3 + '<parent link="' + joint["parent"] + '"/>\n')
+            output.append(indent * 3 + '<child link="' + joint["child"] + '"/>\n')
+            if 'axis' in joint:
+                output.append(indent * 3 + '<axis xyz="' + l2str(joint['axis']) + '"/>\n')
+            if 'limits' in joint:
+                for limit_value in sort_urdf_elements(['effort', 'velocity']):
+                    if limit_value not in joint['limits']:
+                        #print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
+                        log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
+                        missing_values = True
+                output.append(
+                    xmlline(3, 'limit', [p for p in joint['limits']], [joint['limits'][p] for p in joint['limits']]))
+            elif joint['type'] in ['revolute', 'prismatic']:
+                #print("\n###WARNING: joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!###\n")
+                log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
+                missing_values = True
+            output.append(indent * 2 + '</joint>\n\n')
     #export material information
     if missing_values:
         #print("\n###WARNING: Created URDF is invalid due to missing values!###")
         log("Created URDF is invalid due to missing values!")
         bpy.ops.tools.phobos_warning_dialog('INVOKE_DEFAULT', message="Created URDF is invalid due to missing values!")
-    sorted_material_keys = get_sorted_keys(model['materials'])
+    sorted_material_keys = get_sorted_keys(model['materials'])      #TODO: get previous material order from imported urdf
     for m in sorted_material_keys:
         if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
             output.append(indent * 2 + '<material name="' + m + '">\n')
