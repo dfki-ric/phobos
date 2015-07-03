@@ -1765,7 +1765,8 @@ class URDFModelParser(RobotModelParser):
         RobotModelParser.__init__(self, filepath)
         self.element_order = {'links': [],
                               'joints': [],
-                              'viscol': {}}
+                              'viscol': {},
+                              'materials': []}
 
     def parsePose(self, origin):
         """This function parses the robot models pose and returns it as a dictionary.
@@ -1952,6 +1953,7 @@ class URDFModelParser(RobotModelParser):
         for m in material_list:
             #TODO: handle duplicate names? urdf_robotname_xxx?
             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1])
+            self.element_order['materials'].append(m['name'])
     
 class SRDFModelParser(RobotModelParser):
     """Class derived from RobotModelParser wich parses a SRDF extension file for URDF"""

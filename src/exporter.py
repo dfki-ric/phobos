@@ -681,17 +681,26 @@ def exportModelToURDF(model, filepath):
         #print("\n###WARNING: Created URDF is invalid due to missing values!###")
         log("Created URDF is invalid due to missing values!")
         bpy.ops.tools.phobos_warning_dialog('INVOKE_DEFAULT', message="Created URDF is invalid due to missing values!")
-    sorted_material_keys = get_sorted_keys(model['materials'])      #TODO: get previous material order from imported urdf
+    if stored_element_order is None:
+        sorted_material_keys = get_sorted_keys(model['materials'])
+    else:
+        sorted_material_keys = stored_element_order['materials']
+        new_keys = []
+        for material_key in model['materials']:
+            if material_key not in sorted_material_keys:
+                new_keys.append(material_key)
+        sorted_material_keys += sort_urdf_elements(new_keys)
     for m in sorted_material_keys:
-        if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
-            output.append(indent * 2 + '<material name="' + m + '">\n')
-            color = model['materials'][m]['diffuseColor']
-            transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
-            output.append(indent * 3 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
-                1.0 - transparency) + '"/>\n')
-            if 'texturename' in model['materials'][m]:
-                output.append(indent * 3 + '<texture filename="' + model['materials'][m]['texturename'] + '"/>\n')
-            output.append(indent * 2 + '</material>\n\n')
+        if m in model['materials']:
+            if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
+                output.append(indent * 2 + '<material name="' + m + '">\n')
+                color = model['materials'][m]['diffuseColor']
+                transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
+                output.append(indent * 3 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
+                    1.0 - transparency) + '"/>\n')
+                if 'texturename' in model['materials'][m]:
+                    output.append(indent * 3 + '<texture filename="' + model['materials'][m]['texturename'] + '"/>\n')
+                output.append(indent * 2 + '</material>\n\n')
     #finish the export
     output.append(xmlFooter)
     with open(filepath, 'w') as outputfile:
