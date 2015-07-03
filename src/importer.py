@@ -730,6 +730,9 @@ class RobotModelParser():
         bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
         link = bpy.data.objects[self.praefixNames(joint['child'], "link")]
         # add joint information
+        if 'name' in joint:
+            link['joint/name'] = joint['name']
+
         # link['joint/type'] = joint['type']
 
         # set axis
