@@ -30,11 +30,13 @@ import phobos.defs as defs
 import phobos.exporter as exporter
 import phobos.importer as importer
 import bpy
+import yaml
 import zipfile
 import os
 import shutil
 import tempfile
 import phobos.utils.selection as selectionUtils
+import phobos.utils.blender as blenderUtils
 import phobos.robotdictionary as robotdictionary
 from bpy.types import Operator
 from bpy.props import EnumProperty
@@ -49,14 +51,16 @@ class ImportLibRobot(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
-    libpath = os.path.join(os.path.dirname(__file__), "lib")
 
     def execute(self, context):
         startLog(self)
-        file = self.filepath.split("/")[-1]
-        if self.filepath.endswith(".bake"):
-            zipF = zipfile.ZipFile(self.filepath, mode="r")
-            zipF.extractall(path=os.path.join(self.libpath, file.split(".")[0]))
+        path, file = os.path.split(self.filepath)
+        if file.endswith(".bake"):
+            with open(self.filepath, "r") as f:
+                info = yaml.load(f.read())
+            robot_lib = yaml.load(blenderUtils.readTextFile("RobotLib"))
+            robot_lib[info["name"]] = path
+            blenderUtils.updateTextFile("RobotLib", yaml.dump(robot_lib))
         else:
             log("This is no robot bake!", "ERROR")
         endLog()
