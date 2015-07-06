@@ -42,7 +42,8 @@ from bpy.types import Operator
 from bpy.props import EnumProperty
 
 def generateLibEntries(param1, param2): #FIXME: parameter?
-    return [(entry,)*3 for entry in yaml.load(blenderUtils.readTextFile("RobotLib"))]
+    with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
+        return [(entry,)*3 for entry in yaml.load(f.read())]
 
 class ImportLibRobot(Operator):
     """ImportLibRobotOperator
@@ -56,14 +57,20 @@ class ImportLibRobot(Operator):
 
     def execute(self, context):
         startLog(self)
+        libPath = os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml")
         path, file = os.path.split(self.filepath)
         if file.endswith(".bake"):
             with open(self.filepath, "r") as f:
                 info = yaml.load(f.read())
-            robot_lib = yaml.load(blenderUtils.readTextFile("RobotLib"))
-            robot_lib = robot_lib if robot_lib is not None else {}
-            robot_lib[info["name"]] = path
-            blenderUtils.updateTextFile("RobotLib", yaml.dump(robot_lib))
+            if not os.path.isfile(libPath):
+                open(libPath, "a").close()
+            with open(libPath, "r+") as f:
+                robot_lib = yaml.load(f.read())
+                robot_lib = robot_lib if robot_lib is not None else {}
+                robot_lib[info["name"]] = path
+                f.seek(0)
+                f.write(yaml.dump(robot_lib))
+                f.truncate()
         else:
             log("This is no robot bake!", "ERROR")
         endLog()
@@ -90,7 +97,8 @@ class CreateRobotInstance(Operator):
         description="The Robot lib entries.")
 
     def execute(self, context):
-        robot_lib = yaml.load(blenderUtils.readTextFile("RobotLib"))
+        with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
+            robot_lib = yaml.load(f.read())
         bpy.ops.import_mesh.stl(filepath=os.path.join(robot_lib[self.bakeObj], "bake.stl"))
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
         obj = context.active_object
@@ -98,6 +106,10 @@ class CreateRobotInstance(Operator):
         obj.phobostype = "link"
         obj["reference"] = self.bakeObj
         return {"FINISHED"}
+
+    @classmethod
+    def poll(self, context):
+        return os.path.isfile(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"))
 
 
 class ExportSceneOperator(Operator):
