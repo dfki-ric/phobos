@@ -144,6 +144,8 @@ class ExportBakeOperator(Operator):
         expPath = os.path.join(tmpdir, robot["modelname"] + "_bake")
         exporter.export(path=expPath, robotmodel=robot)
         exporter.bakeModel(objs, expPath, robot["modelname"])
+        with open(os.path.join(expPath, "info.bake"), "w") as f:
+            f.write(yaml.dump({"name": robot["modelname"]}))
         zipfilename = os.path.join(tmpdir, robot["modelname"] + ".bake")
         file = zipfile.ZipFile(zipfilename, mode="w")
         for filename in os.listdir(expPath):
