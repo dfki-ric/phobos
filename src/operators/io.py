@@ -148,10 +148,10 @@ class ExportBakeOperator(Operator):
             outpath = exporter.securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
         else:
             outpath = exporter.securepath(os.path.expanduser(bpy.data.worlds[0].path))
-        expPath = os.path.join(outpath, robot["modelname"] + "_bake")
-        exporter.export(path=expPath, robotmodel=robot)
-        exporter.bakeModel(objs, expPath, robot["modelname"])
-        with open(os.path.join(expPath, "info.bake"), "w") as f:
+        #expPath = os.path.join(outpath, robot["modelname"] + "_bake")
+        #exporter.export(path=expPath, robotmodel=robot)
+        exporter.bakeModel(objs, outpath, robot["modelname"])
+        with open(os.path.join(outpath, "info.bake"), "w") as f:
             f.write(yaml.dump({"name": robot["modelname"]}))
         endLog()
         return {'FINISHED'}
