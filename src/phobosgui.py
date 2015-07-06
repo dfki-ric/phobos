@@ -259,7 +259,7 @@ class PhobosModelPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
-        self.layout.label(icon='MOD_ARMATURE')
+        self.layout.label(icon='GROUP')
 
     def draw(self, context):
         layout = self.layout
@@ -368,13 +368,13 @@ class PhobosExportPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
-        self.layout.label(icon='SMOOTH')
+        self.layout.label(icon='FILESEL')
 
     def draw(self, context):
         layout = self.layout
 
         #export robot model options
-        self.layout.label(text="General")
+        self.layout.label(text="Model Export Settings")
         self.layout.prop(bpy.data.worlds[0], "path")
         self.layout.prop(bpy.data.worlds[0], "meshpath")
         ginlayout = self.layout.split()
@@ -417,8 +417,8 @@ class PhobosExportPanel(bpy.types.Panel):
 
         layout.label(text="Export/Import")
         layout.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
-        layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="PASTEDOWN")
-        layout.operator("object.phobos_create_robot_instance", text="Create Robot lib instance", icon="COPYDOWN")
+        layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
+        layout.operator("object.phobos_create_robot_instance", text="Create Robot lib instance", icon="RENDERLAYERS")
         layout.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
 
         layout.separator()
