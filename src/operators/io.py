@@ -41,6 +41,8 @@ import phobos.robotdictionary as robotdictionary
 from bpy.types import Operator
 from bpy.props import EnumProperty
 
+def generateLibEntries(param1, param2): #FIXME: parameter?
+    return [(entry,)*3 for entry in yaml.load(blenderUtils.readTextFile("RobotLib"))]
 
 class ImportLibRobot(Operator):
     """ImportLibRobotOperator
@@ -59,6 +61,7 @@ class ImportLibRobot(Operator):
             with open(self.filepath, "r") as f:
                 info = yaml.load(f.read())
             robot_lib = yaml.load(blenderUtils.readTextFile("RobotLib"))
+            robot_lib = robot_lib if robot_lib is not None else {}
             robot_lib[info["name"]] = path
             blenderUtils.updateTextFile("RobotLib", yaml.dump(robot_lib))
         else:
@@ -83,7 +86,7 @@ class CreateRobotInstance(Operator):
 
     bakeObj = EnumProperty(
         name="Robot lib entries",
-        items=defs.generateLibEntries,
+        items=generateLibEntries,
         description="The Robot lib entries.")
 
     def execute(self, context):
