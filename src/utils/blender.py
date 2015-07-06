@@ -105,6 +105,19 @@ def defLayers(layerlist):
         layers[layer] = True
     return layers
 
+def updateTextFile(textfilename, newContent):
+    try:
+        bpy.data.texts.remove(bpy.data.texts[textfilename])
+    except KeyError:
+        pass #Not important. Just create.
+    createNewTextfile(textfilename, newContent)
+
+def readTextFile(textfilename):
+    try:
+        return "\n".join([l.body for l in bpy.data.texts[textfilename].lines])
+    except KeyError:
+        log("No text file " + textfilename + " found. Setting", "INFO")
+        return ""
 
 def createNewTextfile(textfilename, contents):
     for text in bpy.data.texts:
