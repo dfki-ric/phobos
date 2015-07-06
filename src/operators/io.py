@@ -86,10 +86,9 @@ class CreateRobotInstance(Operator):
         items=defs.generateLibEntries,
         description="The Robot lib entries.")
 
-    libFolder = os.path.join(os.path.dirname(__file__), "lib")
-
     def execute(self, context):
-        bpy.ops.import_mesh.stl(filepath=os.path.join(self.libFolder, self.bakeObj, "bake.stl"))
+        robot_lib = yaml.load(blenderUtils.readTextFile("RobotLib"))
+        bpy.ops.import_mesh.stl(filepath=os.path.join(robot_lib[self.bakeObj], "bake.stl"))
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
         obj = context.active_object
         obj.name = self.bakeObj + "::instance"
