@@ -1351,16 +1351,32 @@ class CreateMimicJointOperator(Operator):
         default=0.0,
         description="offset for joint mimickry")
 
+    mimicjoint = BoolProperty(
+        name="mimic joint",
+        default=True,
+        description="create joint mimickry")
+
+    mimicmotor = BoolProperty(
+        name="mimic motor",
+        default=False,
+        description="create motor mimickry")
+
     def execute(self, context):
         masterjoint = bpy.context.active_object
         for obj in bpy.context.selected_objects:
             if obj.name != masterjoint.name:
-                obj["motor/mimic_motor"] = nameUtils.getObjectName(masterjoint, 'motor')
-                obj["motor/mimic_multiplier"] = self.multiplier
-                obj["motor/mimic_offset"] = self.offset
+                if self.mimicjoint:
+                    obj["joint/mimic_joint"] = nameUtils.getObjectName(masterjoint, 'joint')
+                    obj["joint/mimic_multiplier"] = self.multiplier
+                    obj["joint/mimic_offset"] = self.offset
+                if self.mimicmotor:
+                    obj["motor/mimic_motor"] = nameUtils.getObjectName(masterjoint, 'motor')
+                    obj["motor/mimic_multiplier"] = self.multiplier
+                    obj["motor/mimic_offset"] = self.offset
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob is not None and ob.phobostype == 'link'
+        return (ob is not None and ob.phobostype == 'link'
+            and len(bpy.context.selected_objects) > 1)
