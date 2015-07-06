@@ -105,6 +105,12 @@ def defLayers(layerlist):
         layers[layer] = True
     return layers
 
+def updateTextFile(textfilename, newContent):
+    bpy.data.texts.remove(bpy.data.texts[textfilename])
+    createNewTextfile(textfilename, newContent)
+
+def readTextFile(textfilename):
+    return "\n".join([l.body for l in bpy.data.texts[textfilename].lines])
 
 def createNewTextfile(textfilename, contents):
     for text in bpy.data.texts:
