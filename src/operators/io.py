@@ -143,24 +143,16 @@ class ExportBakeOperator(Operator):
         objs = context.selected_objects
         robot = robotdictionary.buildRobotDictionary()
         selectionUtils.selectObjects(objs)
-        tmpdir = tempfile.gettempdir()
-        expPath = os.path.join(tmpdir, robot["modelname"] + "_bake")
-        exporter.export(path=expPath, robotmodel=robot)
-        exporter.bakeModel(objs, expPath, robot["modelname"])
-        with open(os.path.join(expPath, "info.bake"), "w") as f:
-            f.write(yaml.dump({"name": robot["modelname"]}))
-        zipfilename = os.path.join(tmpdir, robot["modelname"] + ".bake")
-        file = zipfile.ZipFile(zipfilename, mode="w")
-        for filename in os.listdir(expPath):
-            file.write(os.path.join(expPath, filename), arcname=filename)
-        file.close()
-        shutil.rmtree(expPath)
         outpath = ""
         if bpy.data.worlds[0].relativePath:
             outpath = exporter.securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
         else:
             outpath = exporter.securepath(os.path.expanduser(bpy.data.worlds[0].path))
-        shutil.copy(zipfilename, outpath)
+        expPath = os.path.join(outpath, robot["modelname"] + "_bake")
+        exporter.export(path=expPath, robotmodel=robot)
+        exporter.bakeModel(objs, expPath, robot["modelname"])
+        with open(os.path.join(expPath, "info.bake"), "w") as f:
+            f.write(yaml.dump({"name": robot["modelname"]}))
         endLog()
         return {'FINISHED'}
 
