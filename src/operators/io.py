@@ -30,15 +30,19 @@ import phobos.defs as defs
 import phobos.exporter as exporter
 import phobos.importer as importer
 import bpy
+import yaml
 import zipfile
 import os
 import shutil
 import tempfile
 import phobos.utils.selection as selectionUtils
+import phobos.utils.blender as blenderUtils
 import phobos.robotdictionary as robotdictionary
 from bpy.types import Operator
 from bpy.props import EnumProperty
 
+def generateLibEntries(param1, param2): #FIXME: parameter?
+    return [(entry,)*3 for entry in yaml.load(blenderUtils.readTextFile("RobotLib"))]
 
 class ImportLibRobot(Operator):
     """ImportLibRobotOperator
@@ -49,14 +53,17 @@ class ImportLibRobot(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
-    libpath = os.path.join(os.path.dirname(__file__), "lib")
 
     def execute(self, context):
         startLog(self)
-        file = self.filepath.split("/")[-1]
-        if self.filepath.endswith(".bake"):
-            zipF = zipfile.ZipFile(self.filepath, mode="r")
-            zipF.extractall(path=os.path.join(self.libpath, file.split(".")[0]))
+        path, file = os.path.split(self.filepath)
+        if file.endswith(".bake"):
+            with open(self.filepath, "r") as f:
+                info = yaml.load(f.read())
+            robot_lib = yaml.load(blenderUtils.readTextFile("RobotLib"))
+            robot_lib = robot_lib if robot_lib is not None else {}
+            robot_lib[info["name"]] = path
+            blenderUtils.updateTextFile("RobotLib", yaml.dump(robot_lib))
         else:
             log("This is no robot bake!", "ERROR")
         endLog()
@@ -79,13 +86,12 @@ class CreateRobotInstance(Operator):
 
     bakeObj = EnumProperty(
         name="Robot lib entries",
-        items=defs.generateLibEntries,
+        items=generateLibEntries,
         description="The Robot lib entries.")
 
-    libFolder = os.path.join(os.path.dirname(__file__), "lib")
-
     def execute(self, context):
-        bpy.ops.import_mesh.stl(filepath=os.path.join(self.libFolder, self.bakeObj, "bake.stl"))
+        robot_lib = yaml.load(blenderUtils.readTextFile("RobotLib"))
+        bpy.ops.import_mesh.stl(filepath=os.path.join(robot_lib[self.bakeObj], "bake.stl"))
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
         obj = context.active_object
         obj.name = self.bakeObj + "::instance"
@@ -137,22 +143,16 @@ class ExportBakeOperator(Operator):
         objs = context.selected_objects
         robot = robotdictionary.buildRobotDictionary()
         selectionUtils.selectObjects(objs)
-        tmpdir = tempfile.gettempdir()
-        expPath = os.path.join(tmpdir, robot["modelname"] + "_bake")
-        exporter.export(path=expPath, robotmodel=robot)
-        exporter.bakeModel(objs, expPath, robot["modelname"])
-        zipfilename = os.path.join(tmpdir, robot["modelname"] + ".bake")
-        file = zipfile.ZipFile(zipfilename, mode="w")
-        for filename in os.listdir(expPath):
-            file.write(os.path.join(expPath, filename), arcname=filename)
-        file.close()
-        shutil.rmtree(expPath)
         outpath = ""
         if bpy.data.worlds[0].relativePath:
             outpath = exporter.securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
         else:
             outpath = exporter.securepath(os.path.expanduser(bpy.data.worlds[0].path))
-        shutil.copy(zipfilename, outpath)
+        expPath = os.path.join(outpath, robot["modelname"] + "_bake")
+        exporter.export(path=expPath, robotmodel=robot)
+        exporter.bakeModel(objs, expPath, robot["modelname"])
+        with open(os.path.join(expPath, "info.bake"), "w") as f:
+            f.write(yaml.dump({"name": robot["modelname"]}))
         endLog()
         return {'FINISHED'}
 

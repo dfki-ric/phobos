@@ -133,9 +133,6 @@ checkMessages = {"NoObject": []}
 def generateCheckMessages(param1, param2):#FIXME: Parameter?
         return [(x,)*3 for x in list(checkMessages.keys())]
 
-def generateLibEntries(param1, param2): #FIXME: parameter?
-    return [(entry,)*3 for entry in os.listdir(os.path.join(os.path.dirname(__file__), "lib"))]
-
 #definitions of which elements live on which layers by default
 layerTypes = {
     "link": 0,
