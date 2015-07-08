@@ -77,7 +77,11 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
                                             defs.layerTypes['sensor'], 'phobos_laserscanner',
                                             origin.to_translation(), protation=origin.to_euler())
         if reference is not None and reference != []:
-            selectionUtils.selectObjects([newsensor, bpy.data.objects[reference[0]]], clear=True, active=1)
+            if type(reference) == str:
+                key = reference
+            else:
+                key = reference[0]
+            selectionUtils.selectObjects([newsensor, bpy.data.objects[key]], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:  # contact, force and torque sensors (or unknown sensors)
         newsensor = blenderUtils.createPrimitive(sensor['name'], 'sphere', 0.05,
@@ -94,8 +98,8 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     newsensor.phobostype = 'sensor'
     newsensor.name = sensor['name']
     newsensor['sensor/type'] = sensor['type']
-    #for prop in sensor['props']:
-    #    newsensor['sensor/'+prop] = sensor['props'][prop]
+    for prop in sensor['props']:
+        newsensor['sensor/'+prop] = sensor['props'][prop]
 
     # add custom properties
     #for prop in sensor:
