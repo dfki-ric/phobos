@@ -960,6 +960,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring n
     """
     objects = {}
     models = {}  # models to be exported by name
+    lights = {}
     instances = [] #the instances to export
     for root in selectionUtils.getRoots():
         if (not (selected_only and not root.select)):
@@ -976,6 +977,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring n
                 else:
                     models[root['reference']].append(root)
     entities = []
+    # add robot models / environments models to entities
     for modelname in models:
         entitylist = models[modelname]
         unnamed_entities = 0
@@ -995,6 +997,14 @@ def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring n
                          'rotation': entitypose['rotation_quaternion'],
                          'pose': 'default'}  # TODO: implement multiple poses
             entities.append(scenedict)
+    # add lights to entities
+    lights = [obj for obj in bpy.data.objects if obj.phobostype == 'light' and not obj.parent]
+    print('####################################################', lights)
+    for light in lights:
+        lightdict = robotdictionary.deriveLight(light)
+        lightdict['light_type'] = lightdict['type']
+        lightdict['type'] = 'light'
+        entities.append(lightdict)
 
     if bpy.data.worlds[0].relativePath:
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))

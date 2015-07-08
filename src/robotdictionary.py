@@ -28,6 +28,7 @@ Created on 28 Jul 2014
 import os
 import bpy
 import mathutils
+import copy
 import sys
 from datetime import datetime
 import warnings
@@ -303,37 +304,25 @@ def deriveController(obj):
 def deriveLight(obj):
     light = initObjectProperties(obj, phobostype='light')
     light_data = obj.data
-    light['color'] = {}
-    light['color']['diffuse'] = {}
-    for index, value in zip(range(len('rgb')), 'rgb'):
-        light['color']['diffuse'][value] = light_data.color[index]
+    if light_data.use_diffuse:
+        light['color_diffuse'] = list(light_data.color)
     if light_data.use_specular:
-        light['color']['specular'] = light['color']['diffuse']
-    if light_data.type == 'SPOT':
-        light['type'] = 'omnilight'
-        light['angle'] = light_data.spot_size
-    elif light_data.type == 'POINT':
-        light['type'] = 'spotlight'
-    elif light_data.type == 'SUN':
-        light['type'] = 'sun'
-    elif light_data.type == 'HEMI':
-        light['type'] = 'hemi'
-    elif light_data.type == 'AREA':
-        light['type'] = 'area'
-    light['position'] = {}
-    for index, dim in zip(range(len('xyz')), 'xyz'):
-        light['position'][dim] = obj.location[index]
-
-    rotation = mathutils.Euler(obj.rotation_euler).to_matrix()
-    direction = mathutils.Vector((1, 0, 0)) * rotation
-    light['direction'] = {}
-    for index, dim in zip(range(len('xyz')), 'xyz'):
-        light['direction'][dim] = direction[index]
-
-    light['attenuation'] = {}
-    light['attenuation']['linear'] = light_data.linear_attenuation
-    light['attenuation']['quadratic'] = light_data.quadratic_attenuation
-    light['attenuation']['constant'] = light_data.energy
+        light['color_specular'] = copy.copy(light['color_diffuse'])
+    light['type'] = light_data.type.lower()
+    if light['type'] == 'SPOT':
+        light['size'] = light_data.size
+    light['position'] =  list(obj.matrix_local.to_translation())
+    light['rotation'] = list(obj.matrix_local.to_euler())
+    try:
+        light['attenuation_linear'] = float(light_data.linear_attenuation)
+    except AttributeError:
+        pass
+    try:
+        light['attenuation_quadratic'] = float(light_data.quadratic_attenuation)
+    except AttributeError:
+        pass
+    if light_data.energy:
+        light['attenuation_constant'] = float(light_data.energy)
 
     if obj.parent is not None:
         light['parent'] = namingUtils.getObjectName(obj.parent,phobostype="link")
