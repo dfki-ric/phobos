@@ -266,26 +266,33 @@ class PhobosModelPanel(bpy.types.Panel):
 
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
-        c1.operator('object.phobos_set_phobostype', text='Set phobostype')
-        c1.operator('object.phobos_set_geometry_type', text="Set Geometry Type(s)")
-        c1.operator('object.create_collision_objects', text="Create Collision Object(s)")
-        c1.operator('object.create_inertial_objects', text="Create Inertial Object(s)")
-        c1.operator("object.phobos_create_link", text="Create Link(s)")
-        c1.operator('object.define_joint_constraints', text="Define Joint Constraints")
-        c1.operator('object.phobos_set_origin_to_com', text="Set Origin to COM")
-        c1.operator('object.phobos_sort_objects_to_layers', text="Set Objects to Layers")
-        c1.operator('object.phobos_share_mesh', text="Share meshes")
-        c1.operator("object.phobos_create_mimic_joint", text="Mimic Joint")
         c2 = inlayout.column(align=True)
+        c1.operator('object.phobos_set_phobostype', text='Set phobostype')
+        c1.operator('object.phobos_sort_objects_to_layers', text="Set Objects to Layers", icon='IMGDISPLAY')
+        c1.operator('object.phobos_share_mesh', text="Share meshes")
+        c1.operator('object.phobos_undo_share_mesh', text="Undo Share meshes")
+        c1.operator('object.phobos_smoothen_surface', text="Smoothen Surface")
+
         c2.operator('object.phobos_partial_rename', text="Partial Rename")
-        c2.operator('object.attach_motor', text="Attach motor")
-        c2.operator('object.phobos_smoothen_surface', text="Smoothen Surface")
-        c2.operator('object.phobos_set_collision_group', text="Set Collision Group")
         c2.operator('object.phobos_batch_property', text='Edit Custom Property', icon='GREASEPENCIL')
-        c2.operator('object.phobos_copy_props', text='Copy Custom Property', icon='GREASEPENCIL')
-        c2.operator('object.phobos_rename_custom_property', text='Rename Custom Property', icon='GREASEPENCIL')
+        c2.operator('object.phobos_copy_props', text='Copy Custom Property', icon='GHOST')
+        c2.operator('object.phobos_rename_custom_property', text='Rename Custom Property', icon='SYNTAX_OFF')
         c2.operator('object.phobos_edityamldictionary', text='Edit Object Dictionary', icon='TEXT')
-        c2.operator('object.phobos_undo_share_mesh', text="Undo Share meshes")
+
+        layout.separator()
+        layout.label(text='Kinematics', icon='POSE_DATA')
+        kinlayout = layout.split()
+        kc1 = kinlayout.column(align=True)
+        kc2 = kinlayout.column(align=True)
+        kc1.operator("object.phobos_create_link", text="Create Link(s)")
+        kc1.operator('object.create_inertial_objects', text="Create Inertial Object(s)")
+        kc1.operator('object.create_collision_objects', text="Create Collision Object(s)")
+        kc1.operator('object.phobos_set_origin_to_com', text="Set Origin to COM")
+        kc1.operator("object.phobos_create_mimic_joint", text="Mimic Joint")
+        kc2.operator('object.define_joint_constraints', text="Define Joint Constraints")
+        kc2.operator('object.attach_motor', text="Attach motor")
+        kc2.operator('object.phobos_set_geometry_type', text="Set Geometry Type(s)")
+        kc2.operator('object.phobos_set_collision_group', text="Set Collision Group")
 
         #Mass Menu
         layout.separator()
@@ -376,10 +383,10 @@ class PhobosExportPanel(bpy.types.Panel):
         #export robot model options
         self.layout.label(text="Model Export Settings")
         self.layout.prop(bpy.data.worlds[0], "path")
-        self.layout.prop(bpy.data.worlds[0], "meshpath")
         ginlayout = self.layout.split()
         g1 = ginlayout.column(align=True)
         g1.prop(bpy.data.worlds[0], "relativePath")
+        g1.prop(bpy.data.worlds[0], "structureExport", text="structure export")
         g2 = ginlayout.column(align=True)
         g2.prop(bpy.data.worlds[0], "decimalPlaces")
 
@@ -412,16 +419,18 @@ class PhobosExportPanel(bpy.types.Panel):
         c2.prop(bpy.data.worlds[0], "exportURDF", text="as URDF")
         c2.prop(bpy.data.worlds[0], "exportSRDF", text="with SRDF")
         c2.prop(bpy.data.worlds[0], "exportYAML", text="as YAML dump")
-        c2.prop(bpy.data.worlds[0], "structureExport", text="structure export")
         c2.prop(bpy.data.worlds[0], "exportTextures", text="export textures")
 
-        layout.separator()
+        ec1 = layout.column(align=True)
+        ec1.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
+        ec2 = layout.column(align=True)
+        ec2.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
 
-        layout.label(text="Export/Import")
-        layout.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
+        layout.separator()
+        layout.label(text="Baking")
         layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
         layout.operator("object.phobos_create_robot_instance", text="Create Robot lib instance", icon="RENDERLAYERS")
-        layout.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
+        layout.operator('object.phobos_import_lib_robot', text="Import Robot bake", icon="COPYDOWN")
 
         layout.separator()
 
@@ -439,7 +448,7 @@ class PhobosSettingsPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
-        self.layout.label(icon='SMOOTH')
+        self.layout.label(icon='MODIFIER')
 
     def draw(self, context):
         layout = self.layout
@@ -447,7 +456,6 @@ class PhobosSettingsPanel(bpy.types.Panel):
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
         c1.operator('object.phobos_adjust_logger', text='Adjust logging settings')
-        c1.operator('object.phobos_import_lib_robot', text="Import Robot bake")
         #c2 = inlayout.column(align=True)
         #c2.operator('object.phobos_partial_rename', text="Partial Rename")
 
@@ -486,29 +494,6 @@ class PhobosObjectPanel(bpy.types.Panel):
             print("Key could not be found.")
             #else:
             #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.phobostype+"_default"]
-
-
-# class PhobosWorldPanel(bpy.types.Panel):
-#     bl_idname = "WORLD_PT_Phobos"
-#     bl_label = "MARS"
-#     bl_space_type = 'PROPERTIES'
-#     bl_region_type = 'WINDOW'
-#     bl_context = "world"
-#
-#     def draw_header(self, context):
-#         self.layout.label(icon = 'SMOOTH')
-#
-#     def draw(self, context):
-#
-#         layout = self.layout
-#
-# #         layout.label(text="Export the Model:")
-# #         group_export = layout.box()
-# #         group_export.prop(bpy.data.worlds[0], "path")
-# #         group_export.prop(bpy.data.worlds[0], "filename")
-# #         group_export.prop(bpy.data.worlds[0], "exportBobj")
-# #         group_export.prop(bpy.data.worlds[0], "exportMesh")
-# #         group_export.operator("object.phobos_export_robot", text = "Export Robot Model", icon = "PASTEDOWN")
 
 
 # if script is run directly, register contained classes
