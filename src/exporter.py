@@ -1045,7 +1045,7 @@ def determineMeshOutpath(obj, alternative: str, exporttype: str, path: str) -> s
     if "geometry/filename" in obj:
         return os.path.join(path, obj["geometry/filename"] + '.' + exporttype)
     else:
-        return os.path.join(path, alternative) + '.' + exporttype
+        return os.path.join(path, alternative + '.' + exporttype)
 
 
 
@@ -1080,13 +1080,13 @@ def export(path='', robotmodel=None):
         outpath = path
     if not outpath.endswith(os.path.sep):
         outpath += os.path.sep
-    meshoutpath = securepath(os.path.join(outpath, bpy.data.worlds[0].meshpath))
+    meshoutpath = securepath(os.path.join(outpath, 'meshes'))
     yaml = bpy.data.worlds[0].exportYAML
     urdf = bpy.data.worlds[0].exportURDF
     srdf = bpy.data.worlds[0].exportSRDF
     smurf = bpy.data.worlds[0].exportSMURF
     mars = bpy.data.worlds[0].exportMARSscene
-    meshexp = bpy.data.worlds[0].exportMesh
+    meshexp = bpy.data.worlds[0].exportMeshes
     texexp = bpy.data.worlds[0].exportTextures
     objexp = bpy.data.worlds[0].useObj
     bobjexp = bpy.data.worlds[0].useBobj

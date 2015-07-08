@@ -55,7 +55,6 @@ def register():
     bpy.types.World.linkLayer = IntProperty(name="link", update=manageLayers)
 
     bpy.types.World.path = StringProperty(name='path', default='.', update=updateExportPath)
-    bpy.types.World.meshpath = StringProperty(name="meshpath", default="meshes/")
     bpy.types.World.decimalPlaces = IntProperty(name="decimalPlaces",
                                                 description="number of decimal places to export",
                                                 default=6)
@@ -64,7 +63,7 @@ def register():
     bpy.types.World.useObj = BoolProperty(name="useObj", update=updateExportOptions)
     bpy.types.World.useStl = BoolProperty(name="useStl", update=updateExportOptions)
     bpy.types.World.useDae = BoolProperty(name="useDae", update=updateExportOptions)
-    bpy.types.World.exportMesh = BoolProperty(name="exportMesh", update=updateExportOptions)
+    bpy.types.World.exportMeshes = BoolProperty(name="exportMeshes", update=updateExportOptions)
     bpy.types.World.exportTextures = BoolProperty(name="exportTextures", update=updateExportOptions)
     bpy.types.World.exportMARSscene = BoolProperty(name="exportMARSscene", update=updateExportOptions)
     bpy.types.World.exportSMURF = BoolProperty(name="exportSMURF", default=True, update=updateExportOptions)
@@ -389,7 +388,8 @@ class PhobosExportPanel(bpy.types.Panel):
         inlayout = self.layout.split()
         c1 = inlayout.column(align=True)
         c1.label(text="Mesh export")
-        c1.prop(bpy.data.worlds[0], "exportMesh", text="export meshes")
+        c1.prop(bpy.data.worlds[0], "exportMeshes", text="export meshes")
+
         c1.prop(bpy.data.worlds[0], "useBobj", text="use .bobj format")
         c1.prop(bpy.data.worlds[0], "useObj", text="use .obj format")
         c1.prop(bpy.data.worlds[0], "useStl", text="use .stl format")

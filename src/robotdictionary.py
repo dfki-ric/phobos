@@ -191,7 +191,7 @@ def deriveGeometry(obj):
                 filename += ".dae"
             else:
                 filename += ".obj"
-            geometry['filename'] = os.path.join(bpy.data.worlds[0].meshpath, filename)
+            geometry['filename'] = os.path.join('meshes', filename)
             geometry['scale'] = list(obj.scale)
             geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
         return geometry
