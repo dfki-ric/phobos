@@ -67,7 +67,7 @@ def deriveMaterial(mat):
     if mat.use_transparency:
         material['transparency'] = 1.0-mat.alpha
     try:
-        material['texturename'] = namingUtils.getObjectName(mat.texture_slots[0].texture.image) # grab the first texture
+        material['texturename'] = mat.texture_slots[0].texture.image.filepath.replace('//', '') # grab the first texture
     except (KeyError, AttributeError):
         print('None or incomplete texture data for material ' + namingUtils.getObjectName(mat) + '.')
     return material

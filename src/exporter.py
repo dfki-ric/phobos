@@ -32,6 +32,7 @@ Created on 13 Feb 2014
 import bpy
 import mathutils
 import os
+import shutil
 import tempfile
 import zipfile
 import shutil
@@ -1086,6 +1087,7 @@ def export(path='', robotmodel=None):
     smurf = bpy.data.worlds[0].exportSMURF
     mars = bpy.data.worlds[0].exportMARSscene
     meshexp = bpy.data.worlds[0].exportMesh
+    texexp = bpy.data.worlds[0].exportTextures
     objexp = bpy.data.worlds[0].useObj
     bobjexp = bpy.data.worlds[0].useBobj
     stlexp = bpy.data.worlds[0].useStl
@@ -1136,3 +1138,15 @@ def export(path='', robotmodel=None):
                 i += 1
         if show_progress:
             wm.progress_end()
+
+    if texexp:
+        print("Exporting textures to " + os.path.join(outpath, 'textures') + "...\n")
+        securepath(os.path.join(outpath, 'textures'))
+        for materialname in robot['materials']:
+            mat = robot['materials'][materialname]
+            if 'texturename' in mat:
+                texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat['texturename'])
+                if os.path.isfile(texpath):
+                    shutil.copy(texpath, os.path.join(outpath, 'textures', os.path.basename(mat['texturename'])))
+
+
