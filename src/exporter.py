@@ -877,11 +877,19 @@ def exportModelToSMURF(model, path):
         fileorder.append(category)
         export[category] = True
 
+    customtexts = []
+    for text in bpy.data.texts:
+        if text.name.startswith(model['modelname']) and text.name.endswith('.yml'):
+            customtexts.append(text)
+
     infostring = ' definition SMURF file for "' + model['modelname'] + '", ' + model["date"] + "\n\n"
 
     #write model information
     print('Writing SMURF information to', smurf_filename)
     modeldata = {"date": model["date"], "files": [urdf_filename] + [filenames[f] for f in fileorder if export[f]]}
+    # append custom data
+    for text in customtexts:
+        modeldata['files'].append(text.name)
     with open(os.path.join(path, smurf_filename), 'w') as op:
         op.write('# main SMURF file of model "' + model['modelname'] + '"\n')
         op.write('# created with Phobos ' + defs.version + ' - https://github.com/rock-simulation/phobos\n\n')
@@ -951,6 +959,13 @@ def exportModelToSMURF(model, path):
                                        default_flow_style=False) + "\n"
             with open(path + filenames[category], 'w') as op:
                 op.write(outstring)
+
+    # write custom yml files
+    if bpy.data.worlds[0].exportCustomData:
+        print("Exporting custom files to to " + path + "...\n")
+        for text in customtexts:
+            with open(os.path.join(path, text.name), 'w') as op:
+                op.write('\n'.join(line.body for line in text.lines))
 
 
 def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring needed!!!

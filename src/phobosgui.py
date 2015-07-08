@@ -65,6 +65,7 @@ def register():
     bpy.types.World.useDae = BoolProperty(name="useDae", update=updateExportOptions)
     bpy.types.World.exportMeshes = BoolProperty(name="exportMeshes", update=updateExportOptions)
     bpy.types.World.exportTextures = BoolProperty(name="exportTextures", update=updateExportOptions)
+    bpy.types.World.exportCustomData = BoolProperty(name="exportCustomData", update=updateExportOptions)
     bpy.types.World.exportMARSscene = BoolProperty(name="exportMARSscene", update=updateExportOptions)
     bpy.types.World.exportSMURF = BoolProperty(name="exportSMURF", default=True, update=updateExportOptions)
     bpy.types.World.exportURDF = BoolProperty(name="exportURDF", default=True, update=updateExportOptions)
@@ -420,6 +421,7 @@ class PhobosExportPanel(bpy.types.Panel):
         c2.prop(bpy.data.worlds[0], "exportSRDF", text="with SRDF")
         c2.prop(bpy.data.worlds[0], "exportYAML", text="as YAML dump")
         c2.prop(bpy.data.worlds[0], "exportTextures", text="export textures")
+        c2.prop(bpy.data.worlds[0], "exportCustomData", text="export custom data")
 
         ec1 = layout.column(align=True)
         ec1.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
