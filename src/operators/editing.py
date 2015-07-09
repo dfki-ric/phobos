@@ -44,7 +44,9 @@ import phobos.sensors as sensors
 import phobos.links as links
 from phobos.logging import startLog, endLog, log
 from bpy.types import Operator
-from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, EnumProperty, FloatVectorProperty, BoolVectorProperty
+from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, EnumProperty, FloatVectorProperty, \
+    BoolVectorProperty
+
 
 class ShareMesh(Operator):
     """ShareMeshOperator
@@ -85,6 +87,12 @@ class ShareMesh(Operator):
         endLog()
         return {'FINISHED'}
 
+    @classmethod
+    def poll(self, context):
+        return len(list(filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision"),
+                               context.selected_objects))) >= 2 and "phobostype" in context.active_object and context.active_object.phobostype in (
+        "visual", "collision") and 'geometry/' + defs.reservedProperties['SHAREDMESH'] not in context.active_object
+
 
 class UndoShareMesh(Operator):
     """UndoShareMeshOperator
@@ -122,17 +130,15 @@ class SortObjectsToLayersOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        for obj in context.selected_objects:
-            try:
-                phobosType = obj.phobostype
-                if phobosType != 'controller' and phobosType != 'undefined':
-                    layers = 20 * [False]
-                    layers[defs.layerTypes[phobosType]] = True
-                    obj.layers = layers
-                if phobosType == 'undefined':
-                    log("The phobostype of the object '" + obj.name + "' is undefined")
-            except AttributeError:
-                log("The object '" + obj.name + "' has no phobostype", "ERROR")  # Handle this as error or warning?
+        objs = filter(lambda e: "phobostype" in e, context.selected_objects)
+        for obj in objs:
+            phobosType = obj.phobostype
+            if phobosType != 'controller' and phobosType != 'undefined':
+                layers = 20 * [False]
+                layers[defs.layerTypes[phobosType]] = True
+                obj.layers = layers
+            if phobosType == 'undefined':
+                log("The phobostype of the object '" + obj.name + "' is undefined", "INFO")
         endLog()
         return {'FINISHED'}
 
@@ -583,12 +589,12 @@ class EditInertia(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        #m = self.inertiamatrix
-        #inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
-        #obj['inertia'] = ' '.join(inertialist)
+        # m = self.inertiamatrix
+        # inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
+        # obj['inertia'] = ' '.join(inertialist)
         for obj in context.selected_objects:
             if obj.phobostype == 'inertial':
-                obj['inertia'] = self.inertiavector  #' '.join([str(i) for i in self.inertiavector])
+                obj['inertia'] = self.inertiavector  # ' '.join([str(i) for i in self.inertiavector])
         return {'FINISHED'}
 
     @classmethod
@@ -1024,7 +1030,6 @@ class DefineJointConstraintsOperator(Operator):
             layout.prop(self, "spring", text="spring constant [N/m]")
             layout.prop(self, "damping", text="damping constant")
 
-
     def invoke(self, context, event):
         aObject = context.active_object
         if 'joint/type' not in aObject and 'motor/type' in aObject:
@@ -1144,7 +1149,7 @@ class AttachMotorOperator(Operator):
                     joint['motor/d'] = self.D
                 joint['motor/maxSpeed'] = self.vmax
                 joint['motor/maxEffort'] = self.taumax
-                #joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
+                # joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
                 joint['motor/type'] = self.motortype
         return {'FINISHED'}
 
@@ -1379,7 +1384,8 @@ class CreateMimicJointOperator(Operator):
     def poll(cls, context):
         ob = context.active_object
         return (ob is not None and ob.phobostype == 'link'
-            and len(bpy.context.selected_objects) > 1)
+                and len(bpy.context.selected_objects) > 1)
+
 
 # This allows you to right click on a button and link to the manual
 def add_editing_manual_map():
@@ -1411,8 +1417,9 @@ def add_editing_manual_map():
         ("bpy.ops.object.phobos_create_link", "create-links"),
         ("bpy.ops.object.phobos_add_sensor", "addedit-sensor"),
         ("bpy.ops.object.phobos_create_mimic_joint", "mimic-joint"),
-        )
+    )
     return url_manual_prefix, url_manual_mapping
+
 
 def register():
     print("Registering operators.editing...")
@@ -1443,6 +1450,7 @@ def register():
     bpy.utils.register_class(CreateLinkOperator)
     bpy.utils.register_class(AddSensorOperator)
     bpy.utils.register_class(CreateMimicJointOperator)
+
 
 def unregister():
     print("Unregistering operators.editing...")
