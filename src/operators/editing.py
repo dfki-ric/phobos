@@ -583,9 +583,9 @@ class EditInertia(Operator):
         # m = self.inertiamatrix
         # inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
         # obj['inertia'] = ' '.join(inertialist)
-        for obj in context.selected_objects:
-            if obj.phobostype == 'inertial':
-                obj['inertia'] = self.inertiavector  # ' '.join([str(i) for i in self.inertiavector])
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "inertial", context.selected_objects)
+        for obj in objs:
+            obj['inertia'] = self.inertiavector  # ' '.join([str(i) for i in self.inertiavector])
         return {'FINISHED'}
 
     @classmethod
