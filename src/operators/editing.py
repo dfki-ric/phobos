@@ -605,14 +605,13 @@ class SmoothenSurfaceOperator(Operator):
 
     def execute(self, context):
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269;
+        objs = filter(lambda e: e.type == "MESH", context.selected_objects)
         if show_progress:
             wm = bpy.context.window_manager
             total = float(len(bpy.context.selected_objects))
             wm.progress_begin(0, total)
             i = 1
-        for obj in bpy.context.selected_objects:
-            if obj.type != 'MESH':
-                continue
+        for obj in objs:
             bpy.context.scene.objects.active = obj
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.select_all()
