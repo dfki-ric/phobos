@@ -89,7 +89,7 @@ class ShareMesh(Operator):
 
     @classmethod
     def poll(self, context):
-        return len(list(filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision"),
+        return context.active_object and len(list(filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision"),
                                context.selected_objects))) >= 2 and "phobostype" in context.active_object and context.active_object.phobostype in (
         "visual", "collision") and 'geometry/' + defs.reservedProperties['SHAREDMESH'] not in context.active_object
 
@@ -202,10 +202,8 @@ class SetMassOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        for obj in context.selected_objects:
-            if obj.phobostype in ['visual', 'collision', 'inertial']:
-                return True
-        return False
+        return context.active_object and len(list(filter(lambda e: "phobostype" in e and
+            e.phobostype in ("visual", "collision", "inertial"), context.selected_objects))) >= 1
 
     def invoke(self, context, event):
         if 'mass' in context.active_object:
@@ -214,25 +212,25 @@ class SetMassOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        for obj in bpy.context.selected_objects:
-            if obj.phobostype in ['visual', 'collision', 'inertial']:
+        objs = filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision", "inertial"), context.selected_objects)
+        for obj in objs:
+            try:
+                oldmass = obj['mass']
+            except KeyError:
+                log("The object '" + obj.name + "' has no mass")
+                oldmass = None
+            if self.userbmass:
                 try:
-                    oldmass = obj['mass']
-                except KeyError:
-                    log("The object '" + obj.name + "' has no mass")
-                    oldmass = None
-                if self.userbmass:
-                    try:
-                        obj['mass'] = obj.rigid_body.mass
-                    except AttributeError:
-                        obj['mass'] = 0.001
-                        # print("### Error: object has no rigid body properties.")
-                        log("The object '" + obj.name + "' has no rigid body properties. Set mass to 0.001", "ERROR")
-                else:
-                    obj['mass'] = self.mass
-                if obj['mass'] != oldmass:
-                    t = datetime.now()
-                    obj['masschanged'] = t.isoformat()
+                    obj['mass'] = obj.rigid_body.mass
+                except AttributeError:
+                    obj['mass'] = 0.001
+                    # print("### Error: object has no rigid body properties.")
+                    log("The object '" + obj.name + "' has no rigid body properties. Set mass to 0.001", "ERROR")
+            else:
+                obj['mass'] = self.mass
+            if obj['mass'] != oldmass:
+                t = datetime.now()
+                obj['masschanged'] = t.isoformat()
         endLog()
         return {'FINISHED'}
 
