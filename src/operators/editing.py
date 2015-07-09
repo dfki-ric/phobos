@@ -144,11 +144,7 @@ class SortObjectsToLayersOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        if len(context.selected_objects) > 0:
-            return True
-        else:
-            return False
-
+        return len(context.selected_objects) > 0
 
 class AddChainOperator(Operator):
     """AddChainOperator
