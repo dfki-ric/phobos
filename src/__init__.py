@@ -143,6 +143,7 @@ def register():
     phobos.joints.register()
     phobos.sensors.register()
     phobos.inertia.register()
+    phobos.operators.editing.register()
     bpy.utils.register_module(__name__)
 
 
@@ -160,6 +161,7 @@ def unregister():
     phobos.joints.unregister()
     phobos.sensors.unregister()
     phobos.inertia.register()
+    phobos.operators.editing.unregister()
     bpy.utils.unregister_module(__name__)
 
 # if __name__ == "__main__":
