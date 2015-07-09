@@ -503,15 +503,11 @@ class RenameCustomProperty(Operator):
 
     def execute(self, context):
         startLog(self)
-        for obj in context.selected_objects:
-            if self.find in obj and self.replace != '':
-                if self.replace in obj:
-                    # print("### Error: property", self.replace, "already present in object", obj.name)
+        objs = filter(lambda e: self.find in e, context.selected_objects)
+        if self.replace != "":
+            for obj in objs:
+                if self.replace in obj and not self.overwrite:
                     log("Property '" + self.replace + "' already present in object '" + obj.name + "'", "ERROR")
-                    if self.overwrite:
-                        log("Replace property, because overwrite option was set")
-                        obj[self.replace] = obj[self.find]
-                        del obj[self.find]
                 else:
                     obj[self.replace] = obj[self.find]
                     del obj[self.find]
