@@ -536,7 +536,8 @@ class SetGeometryType(Operator):
 
     def execute(self, context):
         startLog(self)
-        for obj in bpy.context.selected_objects:
+        objs = filter(lambda e: "phobostype" in e, context.selected_objects)
+        for obj in objs:
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
                 obj['geometry/type'] = self.geomType
             else:
