@@ -1380,3 +1380,96 @@ class CreateMimicJointOperator(Operator):
         ob = context.active_object
         return (ob is not None and ob.phobostype == 'link'
             and len(bpy.context.selected_objects) > 1)
+
+# This allows you to right click on a button and link to the manual
+def add_editing_manual_map():
+    url_manual_prefix = "https://github.com/rock-simulation/phobos/wiki/Operators#"
+    url_manual_mapping = (
+        ("bpy.ops.object.phobos_share_mesh", "share-meshes"),
+        ("bpy.ops.object.phobos_undo_share_mesh", "undo-share-meshes"),
+        ("bpy.ops.object.phobos_sort_objects_to_layers", "set-objects-to-layers"),
+        ("bpy.ops.object.phobos_add_chain", "define-kinematic-chain"),
+        ("bpy.ops.object.phobos_set_mass", "set-mass"),
+        ("bpy.ops.object.phobos_sync_masses", "sync-masses"),
+        ("bpy.ops.object.phobos_set_xray", "x-ray-view"),
+        ("bpy.ops.object.phobos_update_models", "update-robot-model"),
+        ("bpy.ops.object.phobos_set_phobostype", "set-phobostype"),
+        ("bpy.ops.object.phobos_batch_property", "edit-custom-property"),
+        ("bpy.ops.object.phobos_copy_props", "copy-custom-property"),
+        ("bpy.ops.object.phobos_rename_custom_property", "rename-custom-property"),
+        ("bpy.ops.object.phobos_set_geometry_type", "set-geometry-types"),
+        ("bpy.ops.object.phobos_edit_inertia", "edit-inertia"),
+        ("bpy.ops.object.phobos_smoothen_surface", "smoothen-surface"),
+        ("bpy.ops.object.phobos_set_origin_to_com", "set-origin-to-com"),
+        ("bpy.ops.object.create_inertial_objects", "create-inertial-objects"),
+        ("bpy.ops.object.phobos_add_gravity", ""),
+        ("bpy.ops.object.phobos_edityamldictionary", "edit-object-dictionary"),
+        ("bpy.ops.object.create_collision_objects", "create-collision-objects"),
+        ("bpy.ops.object.phobos_set_collision_group", "set-collision-group"),
+        ("bpy.ops.object.define_joint_constraints", "define-joint-constraints"),
+        ("bpy.ops.object.attach_motor", "attach-motor"),
+        ("bpy.ops.object.phobos_create_link", "create-links"),
+        ("bpy.ops.object.phobos_add_sensor", "addedit-sensor"),
+        ("bpy.ops.object.phobos_create_mimic_joint", "mimic-joint"),
+        )
+    return url_manual_prefix, url_manual_mapping
+
+def register():
+    print("Registering operators.editing...")
+    bpy.utils.register_manual_map(add_editing_manual_map)
+    bpy.utils.register_class(ShareMesh)
+    bpy.utils.register_class(UndoShareMesh)
+    bpy.utils.register_class(SortObjectsToLayersOperator)
+    bpy.utils.register_class(AddChainOperator)
+    bpy.utils.register_class(SetMassOperator)
+    bpy.utils.register_class(SyncMassesOperator)
+    bpy.utils.register_class(SetXRayOperator)
+    bpy.utils.register_class(UpdatePhobosModelsOperator)
+    bpy.utils.register_class(SetPhobosType)
+    bpy.utils.register_class(BatchEditPropertyOperator)
+    bpy.utils.register_class(CopyCustomProperties)
+    bpy.utils.register_class(RenameCustomProperty)
+    bpy.utils.register_class(SetGeometryType)
+    bpy.utils.register_class(EditInertia)
+    bpy.utils.register_class(SmoothenSurfaceOperator)
+    bpy.utils.register_class(SetOriginToCOMOperator)
+    bpy.utils.register_class(CreateInertialOperator)
+    bpy.utils.register_class(AddGravityVector)
+    bpy.utils.register_class(EditYAMLDictionary)
+    bpy.utils.register_class(CreateCollisionObjects)
+    bpy.utils.register_class(SetCollisionGroupOperator)
+    bpy.utils.register_class(DefineJointConstraintsOperator)
+    bpy.utils.register_class(AttachMotorOperator)
+    bpy.utils.register_class(CreateLinkOperator)
+    bpy.utils.register_class(AddSensorOperator)
+    bpy.utils.register_class(CreateMimicJointOperator)
+
+def unregister():
+    print("Unregistering operators.editing...")
+    bpy.utils.unregister_manual_map(add_editing_manual_map)
+    bpy.utils.unregister_class(ShareMesh)
+    bpy.utils.unregister_class(UndoShareMesh)
+    bpy.utils.unregister_class(SortObjectsToLayersOperator)
+    bpy.utils.unregister_class(AddChainOperator)
+    bpy.utils.unregister_class(SetMassOperator)
+    bpy.utils.unregister_class(SyncMassesOperator)
+    bpy.utils.unregister_class(SetXRayOperator)
+    bpy.utils.unregister_class(UpdatePhobosModelsOperator)
+    bpy.utils.unregister_class(SetPhobosType)
+    bpy.utils.unregister_class(BatchEditPropertyOperator)
+    bpy.utils.unregister_class(CopyCustomProperties)
+    bpy.utils.unregister_class(RenameCustomProperty)
+    bpy.utils.unregister_class(SetGeometryType)
+    bpy.utils.unregister_class(EditInertia)
+    bpy.utils.unregister_class(SmoothenSurfaceOperator)
+    bpy.utils.unregister_class(SetOriginToCOMOperator)
+    bpy.utils.unregister_class(CreateInertialOperator)
+    bpy.utils.unregister_class(AddGravityVector)
+    bpy.utils.unregister_class(EditYAMLDictionary)
+    bpy.utils.unregister_class(CreateCollisionObjects)
+    bpy.utils.unregister_class(SetCollisionGroupOperator)
+    bpy.utils.unregister_class(DefineJointConstraintsOperator)
+    bpy.utils.unregister_class(AttachMotorOperator)
+    bpy.utils.unregister_class(CreateLinkOperator)
+    bpy.utils.unregister_class(AddSensorOperator)
+    bpy.utils.unregister_class(CreateMimicJointOperator)
