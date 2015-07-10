@@ -852,7 +852,7 @@ def exportModelToSMURF(model, path):
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'collision': bitmasks != {},
+              'collision': bitmasks != {} or model['capsules'] != [],
               'lights': model['lights'] != {}
               }
     #create all filenames
@@ -938,6 +938,7 @@ def exportModelToSMURF(model, path):
 
     #write collision bitmask information
     if export['collision']:
+        print('capsules:', model['capsules'])
         capsules = model['capsules']
         for capsule in capsules:
             if capsule['name'] in bitmasks:
