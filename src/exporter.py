@@ -665,13 +665,17 @@ def exportModelToURDF(model, filepath):
             if 'axis' in joint:
                 output.append(indent * 3 + '<axis xyz="' + l2str(joint['axis']) + '"/>\n')
             if 'limits' in joint:
-                for limit_value in sort_urdf_elements(['effort', 'velocity']):
+                for limit_value in ['effort', 'velocity']:
                     if limit_value not in joint['limits']:
                         #print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
                         log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
                         missing_values = True
+                used_limits = []
+                for limit in ['lower', 'upper', 'effort', 'velocity']:
+                    if limit in joint['limits']:
+                        used_limits.append(limit)
                 output.append(
-                    xmlline(3, 'limit', [p for p in joint['limits']], [joint['limits'][p] for p in joint['limits']]))
+                    xmlline(3, 'limit', used_limits, [joint['limits'][p] for p in used_limits]))
             elif joint['type'] in ['revolute', 'prismatic']:
                 #print("\n###WARNING: joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!###\n")
                 log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
