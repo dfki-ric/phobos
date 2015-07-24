@@ -301,33 +301,68 @@ def deriveController(obj):
     props = initObjectProperties(obj, phobostype='controller')
     return props
 
+# MARS-compatible solution:
 def deriveLight(obj):
     light = initObjectProperties(obj, phobostype='light')
     light_data = obj.data
     if light_data.use_diffuse:
-        light['color_diffuse'] = list(light_data.color)
+        light['diffuse'] = {key: value for (key, value) in zip('rgb', list(light_data.color))}
     if light_data.use_specular:
-        light['color_specular'] = copy.copy(light['color_diffuse'])
+        light['specular'] = copy.copy(light['diffuse'])
     light['type'] = light_data.type.lower()
-    if light['type'] == 'SPOT':
-        light['size'] = light_data.size
-    light['position'] =  list(obj.matrix_local.to_translation())
-    light['rotation'] = list(obj.matrix_local.to_euler())
+    if light['type'] == 'spot':
+        light['angle'] = light_data.spot_size
+    position = obj.matrix_local.to_translation()
+    light['position'] = {key: value for (key, value) in zip('xyz', list(position))}
+    rotation = obj.matrix_local
+    direction = mathutils.Vector((1, 0, 0)) * rotation
+    lookat = position + direction
+    lookat.normalize()
+    light['lookat'] = {key: value for (key, value) in zip('xyz', list(lookat))}
     try:
-        light['attenuation_linear'] = float(light_data.linear_attenuation)
+        light['constantAttenuation'] = float(light_data.linear_attenuation)
     except AttributeError:
         pass
     try:
-        light['attenuation_quadratic'] = float(light_data.quadratic_attenuation)
+        light['quadraticAttenuation'] = float(light_data.quadratic_attenuation)
     except AttributeError:
         pass
     if light_data.energy:
-        light['attenuation_constant'] = float(light_data.energy)
+        light['constantAttenuation'] = float(light_data.energy)
 
     if obj.parent is not None:
-        light['parent'] = namingUtils.getObjectName(obj.parent,phobostype="link")
+        light['parent'] = namingUtils.getObjectName(obj.parent, phobostype="link")
 
     return light
+
+# old cpp-yaml-compatible solution:
+#def deriveLight(obj):
+#    light = initObjectProperties(obj, phobostype='light')
+#    light_data = obj.data
+#    if light_data.use_diffuse:
+#        light['color_diffuse'] = list(light_data.color)
+#    if light_data.use_specular:
+#        light['color_specular'] = copy.copy(light['color_diffuse'])
+#    light['type'] = light_data.type.lower()
+#    if light['type'] == 'SPOT':
+#        light['size'] = light_data.size
+#    light['position'] =  list(obj.matrix_local.to_translation())
+#    light['rotation'] = list(obj.matrix_local.to_euler())
+#    try:
+#        light['attenuation_linear'] = float(light_data.linear_attenuation)
+#    except AttributeError:
+#        pass
+#    try:
+#        light['attenuation_quadratic'] = float(light_data.quadratic_attenuation)
+#    except AttributeError:
+#        pass
+#    if light_data.energy:
+#        light['attenuation_constant'] = float(light_data.energy)
+
+#    if obj.parent is not None:
+#        light['parent'] = namingUtils.getObjectName(obj.parent,phobostype="link")
+#
+#    return light
 
 def initObjectProperties(obj, phobostype=None, ignoretypes=[]):
     props = {'name': namingUtils.getObjectName(obj).split(':')[-1]}  #allow duplicated names differentiated by types
