@@ -134,6 +134,10 @@ class ShowDistanceOperator(Operator):
         endLog()
         return {'FINISHED'}
 
+    @classmethod
+    def poll(self, context):
+        return len(context.selected_objects) == 2
+
 
 class SetLogSettings(Operator):
     """Adjust Logging Settings for phobos
