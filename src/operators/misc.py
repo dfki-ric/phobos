@@ -128,7 +128,10 @@ class ShowDistanceOperator(Operator):
         description="distance between objects")
 
     def execute(self, context):
+        startLog(self)
         self.distance, self.distVector = generalUtils.distance(bpy.context.selected_objects)
+        log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO")
+        endLog()
         return {'FINISHED'}
 
 
