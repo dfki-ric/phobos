@@ -29,7 +29,7 @@ import bpy
 import math
 import yaml
 import mathutils
-import datetime
+from datetime import datetime
 import phobos.defs as defs
 import phobos.inertia as inertia
 import phobos.materials as materials
