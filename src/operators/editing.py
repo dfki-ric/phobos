@@ -1131,17 +1131,17 @@ class AttachMotorOperator(Operator):
         :return:Blender result.
 
         """
-        for joint in bpy.context.selected_objects:
-            if joint.phobostype == "link":
-                # TODO: these keys have to be adapted
-                if self.motortype == 'PID':
-                    joint['motor/p'] = self.P
-                    joint['motor/i'] = self.I
-                    joint['motor/d'] = self.D
-                joint['motor/maxSpeed'] = self.vmax
-                joint['motor/maxEffort'] = self.taumax
-                # joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
-                joint['motor/type'] = self.motortype
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
+        for joint in objs:
+            # TODO: these keys have to be adapted
+            if self.motortype == 'PID':
+                joint['motor/p'] = self.P
+                joint['motor/i'] = self.I
+                joint['motor/d'] = self.D
+            joint['motor/maxSpeed'] = self.vmax
+            joint['motor/maxEffort'] = self.taumax
+            # joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
+            joint['motor/type'] = self.motortype
         return {'FINISHED'}
 
 
