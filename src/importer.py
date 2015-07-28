@@ -1778,8 +1778,14 @@ class URDFModelParser(RobotModelParser):
         """
         pose = {}
         if origin is not None:
-            pose['translation'] = generalUtils.parse_text(origin.attrib['xyz'])
-            pose['rotation_euler'] = generalUtils.parse_text(origin.attrib['rpy'])
+            try:
+                pose['translation'] = generalUtils.parse_text(origin.attrib['xyz'])
+            except KeyError:
+                pose['translation'] = defaults.idtransform
+            try:
+                pose['rotation_euler'] = generalUtils.parse_text(origin.attrib['rpy'])
+            except KeyError:
+                pose['rotation_euler'] = defaults.idtransform
         else:
             pose['translation'] = defaults.idtransform
             pose['rotation_euler'] = defaults.idtransform
