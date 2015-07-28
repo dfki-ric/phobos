@@ -99,8 +99,9 @@ installPhobos() {
         read YN
         case $YN in
             y|Y )
+                mkdir -p "$phobospath"
                 cp -R src/* "$phobospath"
-		cp -R definitions "$phobospath"
+		        cp -R definitions "$phobospath"
                 installed=1
                 echo "Copied phobos to $phobospath"
                 ;;
