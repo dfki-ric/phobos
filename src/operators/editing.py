@@ -89,7 +89,7 @@ class ShareMesh(Operator):
 
     @classmethod
     def poll(self, context):
-        return len(list(filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision"),
+        return context.active_object and len(list(filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision"),
                                context.selected_objects))) >= 2 and "phobostype" in context.active_object and context.active_object.phobostype in (
         "visual", "collision") and 'geometry/' + defs.reservedProperties['SHAREDMESH'] not in context.active_object
 
@@ -202,10 +202,8 @@ class SetMassOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        for obj in context.selected_objects:
-            if obj.phobostype in ['visual', 'collision', 'inertial']:
-                return True
-        return False
+        return context.active_object and len(list(filter(lambda e: "phobostype" in e and
+            e.phobostype in ("visual", "collision", "inertial"), context.selected_objects))) >= 1
 
     def invoke(self, context, event):
         if 'mass' in context.active_object:
@@ -214,25 +212,25 @@ class SetMassOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        for obj in bpy.context.selected_objects:
-            if obj.phobostype in ['visual', 'collision', 'inertial']:
+        objs = filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision", "inertial"), context.selected_objects)
+        for obj in objs:
+            try:
+                oldmass = obj['mass']
+            except KeyError:
+                log("The object '" + obj.name + "' has no mass")
+                oldmass = None
+            if self.userbmass:
                 try:
-                    oldmass = obj['mass']
-                except KeyError:
-                    log("The object '" + obj.name + "' has no mass")
-                    oldmass = None
-                if self.userbmass:
-                    try:
-                        obj['mass'] = obj.rigid_body.mass
-                    except AttributeError:
-                        obj['mass'] = 0.001
-                        # print("### Error: object has no rigid body properties.")
-                        log("The object '" + obj.name + "' has no rigid body properties. Set mass to 0.001", "ERROR")
-                else:
-                    obj['mass'] = self.mass
-                if obj['mass'] != oldmass:
-                    t = datetime.now()
-                    obj['masschanged'] = t.isoformat()
+                    obj['mass'] = obj.rigid_body.mass
+                except AttributeError:
+                    obj['mass'] = 0.001
+                    # print("### Error: object has no rigid body properties.")
+                    log("The object '" + obj.name + "' has no rigid body properties. Set mass to 0.001", "ERROR")
+            else:
+                obj['mass'] = self.mass
+            if obj['mass'] != oldmass:
+                t = datetime.now()
+                obj['masschanged'] = t.isoformat()
         endLog()
         return {'FINISHED'}
 
@@ -431,12 +429,12 @@ class BatchEditPropertyOperator(Operator):
 
     def execute(self, context):
         value = generalUtils.parse_number(self.property_value)
+        objs = filter(lambda e: self.property_name in e, context.selected_objects)
         if value == '':
-            for obj in bpy.context.selected_objects:
-                if self.property_name in obj:
-                    del (obj[self.property_name])
+            for obj in objs:
+                del (obj[self.property_name])
         else:
-            for obj in bpy.context.selected_objects:
+            for obj in objs:
                 obj[self.property_name] = value
         return {'FINISHED'}
 
@@ -505,15 +503,11 @@ class RenameCustomProperty(Operator):
 
     def execute(self, context):
         startLog(self)
-        for obj in context.selected_objects:
-            if self.find in obj and self.replace != '':
-                if self.replace in obj:
-                    # print("### Error: property", self.replace, "already present in object", obj.name)
+        objs = filter(lambda e: self.find in e, context.selected_objects)
+        if self.replace != "":
+            for obj in objs:
+                if self.replace in obj and not self.overwrite:
                     log("Property '" + self.replace + "' already present in object '" + obj.name + "'", "ERROR")
-                    if self.overwrite:
-                        log("Replace property, because overwrite option was set")
-                        obj[self.replace] = obj[self.find]
-                        del obj[self.find]
                 else:
                     obj[self.replace] = obj[self.find]
                     del obj[self.find]
@@ -542,7 +536,8 @@ class SetGeometryType(Operator):
 
     def execute(self, context):
         startLog(self)
-        for obj in bpy.context.selected_objects:
+        objs = filter(lambda e: "phobostype" in e, context.selected_objects)
+        for obj in objs:
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
                 obj['geometry/type'] = self.geomType
             else:
@@ -588,9 +583,9 @@ class EditInertia(Operator):
         # m = self.inertiamatrix
         # inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
         # obj['inertia'] = ' '.join(inertialist)
-        for obj in context.selected_objects:
-            if obj.phobostype == 'inertial':
-                obj['inertia'] = self.inertiavector  # ' '.join([str(i) for i in self.inertiavector])
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "inertial", context.selected_objects)
+        for obj in objs:
+            obj['inertia'] = self.inertiavector  # ' '.join([str(i) for i in self.inertiavector])
         return {'FINISHED'}
 
     @classmethod
@@ -610,14 +605,13 @@ class SmoothenSurfaceOperator(Operator):
 
     def execute(self, context):
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269;
+        objs = filter(lambda e: e.type == "MESH", context.selected_objects)
         if show_progress:
             wm = bpy.context.window_manager
             total = float(len(bpy.context.selected_objects))
             wm.progress_begin(0, total)
             i = 1
-        for obj in bpy.context.selected_objects:
-            if obj.type != 'MESH':
-                continue
+        for obj in objs:
             bpy.context.scene.objects.active = obj
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.select_all()
@@ -767,6 +761,8 @@ class EditYAMLDictionary(Operator):
                     "# ------- Hit 'Run Script' to save your changes --------",
                     "import yaml", "import bpy",
                     "tmpdata = yaml.load(" + variablename + ")",
+                    "for key in dict(bpy.context.active_object.items()):",
+                    "   del bpy.context.active_object[key]",
                     "for key, value in tmpdata.items():",
                     "    bpy.context.active_object[key] = value",
                     "bpy.ops.text.unlink()"
@@ -902,19 +898,6 @@ class SetCollisionGroupOperator(Operator):
         default=(False,) * 20,
         description='collision groups')
 
-    @classmethod
-    def poll(self, context):
-        """This function checks if the context is valid in terms of executing this operator.
-
-        :param context: The blender context to check.
-        :return: bool -- Whether the context is valid or not.
-
-        """
-        for obj in context.selected_objects:
-            if obj.phobostype == 'collision':
-                return True
-        return False
-
     def invoke(self, context, event):
         """This function invokes this operator.
 
@@ -936,16 +919,16 @@ class SetCollisionGroupOperator(Operator):
         :return: set -- the blender specific return set.
 
         """
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "collision", context.selected_objects)
         active_object = context.active_object
-        for obj in context.selected_objects:
-            if obj.phobostype == 'collision':
-                try:
-                    obj.rigid_body.collision_groups = self.groups
-                except AttributeError:
-                    context.scene.objects.active = obj
-                    bpy.ops.rigidbody.object_add(type='ACTIVE')
-                    obj.rigid_body.kinematic = True
-                    obj.rigid_body.collision_groups = self.groups
+        for obj in objs:
+            try:
+                obj.rigid_body.collision_groups = self.groups
+            except AttributeError:
+                context.scene.objects.active = obj
+                bpy.ops.rigidbody.object_add(type='ACTIVE')
+                obj.rigid_body.kinematic = True
+                obj.rigid_body.collision_groups = self.groups
         context.scene.objects.active = active_object
         return {'FINISHED'}
 
@@ -1055,7 +1038,8 @@ class DefineJointConstraintsOperator(Operator):
             velocity = self.maxvelocity * ((2 * math.pi) / 360)  # from °/s to rad/s
         else:
             velocity = self.maxvelocity
-        for link in context.selected_objects:
+            objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
+        for link in objs:
             bpy.context.scene.objects.active = link
             joints.setJointConstraints(link, self.joint_type, lower, upper, self.spring, self.damping)
             if self.joint_type != 'fixed':
@@ -1136,17 +1120,17 @@ class AttachMotorOperator(Operator):
         :return:Blender result.
 
         """
-        for joint in bpy.context.selected_objects:
-            if joint.phobostype == "link":
-                # TODO: these keys have to be adapted
-                if self.motortype == 'PID':
-                    joint['motor/p'] = self.P
-                    joint['motor/i'] = self.I
-                    joint['motor/d'] = self.D
-                joint['motor/maxSpeed'] = self.vmax
-                joint['motor/maxEffort'] = self.taumax
-                # joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
-                joint['motor/type'] = self.motortype
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
+        for joint in objs:
+            # TODO: these keys have to be adapted
+            if self.motortype == 'PID':
+                joint['motor/p'] = self.P
+                joint['motor/i'] = self.I
+                joint['motor/d'] = self.D
+            joint['motor/maxSpeed'] = self.vmax
+            joint['motor/maxEffort'] = self.taumax
+            # joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
+            joint['motor/type'] = self.motortype
         return {'FINISHED'}
 
 
