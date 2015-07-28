@@ -29,7 +29,7 @@ import bpy
 import math
 import yaml
 import mathutils
-import datetime
+from datetime import datetime
 import phobos.defs as defs
 import phobos.inertia as inertia
 import phobos.materials as materials
@@ -761,6 +761,8 @@ class EditYAMLDictionary(Operator):
                     "# ------- Hit 'Run Script' to save your changes --------",
                     "import yaml", "import bpy",
                     "tmpdata = yaml.load(" + variablename + ")",
+                    "for key in dict(bpy.context.active_object.items()):",
+                    "   del bpy.context.active_object[key]",
                     "for key, value in tmpdata.items():",
                     "    bpy.context.active_object[key] = value",
                     "bpy.ops.text.unlink()"
