@@ -502,7 +502,7 @@ def buildRobotDictionary():
             inertials[0].select = False
         elif len(inertials) > 1:
             for i in inertials:
-                if namingUtils.getObjectName(i, phobostype="inertial") == 'inertial_' + l:
+                if i.name == 'inertial_' + l:
                     props, parent = deriveDictEntry(i)
                     robot['links'][namingUtils.getObjectName(parent, phobostype="link")]['inertial'] = props
             # FIXME: this has to be re-implemented
