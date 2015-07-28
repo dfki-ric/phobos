@@ -896,19 +896,6 @@ class SetCollisionGroupOperator(Operator):
         default=(False,) * 20,
         description='collision groups')
 
-    @classmethod
-    def poll(self, context):
-        """This function checks if the context is valid in terms of executing this operator.
-
-        :param context: The blender context to check.
-        :return: bool -- Whether the context is valid or not.
-
-        """
-        for obj in context.selected_objects:
-            if obj.phobostype == 'collision':
-                return True
-        return False
-
     def invoke(self, context, event):
         """This function invokes this operator.
 
@@ -930,16 +917,16 @@ class SetCollisionGroupOperator(Operator):
         :return: set -- the blender specific return set.
 
         """
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "collision", context.selected_objects)
         active_object = context.active_object
-        for obj in context.selected_objects:
-            if obj.phobostype == 'collision':
-                try:
-                    obj.rigid_body.collision_groups = self.groups
-                except AttributeError:
-                    context.scene.objects.active = obj
-                    bpy.ops.rigidbody.object_add(type='ACTIVE')
-                    obj.rigid_body.kinematic = True
-                    obj.rigid_body.collision_groups = self.groups
+        for obj in objs:
+            try:
+                obj.rigid_body.collision_groups = self.groups
+            except AttributeError:
+                context.scene.objects.active = obj
+                bpy.ops.rigidbody.object_add(type='ACTIVE')
+                obj.rigid_body.kinematic = True
+                obj.rigid_body.collision_groups = self.groups
         context.scene.objects.active = active_object
         return {'FINISHED'}
 
