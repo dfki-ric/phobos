@@ -116,6 +116,10 @@ def calculateBoxInertia(mass, size):
     :return: tuple(6).
 
     """
+    print('###########################')
+    print('calculating box inertia')
+    print('###########################')
+
     i = mass / 12
     ixx = i*(size[1]**2 + size[2]**2)
     ixy = 0
@@ -138,6 +142,10 @@ def calculateCylinderInertia(mass, r, h):
     :return: tuple(6).
 
     """
+    print('###########################')
+    print('calculating cylinder inertia')
+    print('###########################')
+
     i = mass / 12 * (3 * r**2 + h**2)
     ixx = i
     ixy = 0
@@ -158,6 +166,10 @@ def calculateSphereInertia(mass, r):
     :return: tuple(6).
 
     """
+    print('###########################')
+    print('calculating sphere inertia')
+    print('###########################')
+
     i = 0.4 * mass * r**2
     ixx = i
     ixy = 0
@@ -174,6 +186,10 @@ def calculateCapsuleInertia(mass, radius, length):
     :param length:
     :return:
     """
+    print('###########################')
+    print('calculating capsule inertia')
+    print('###########################')
+
     cylinder_volume = math.pi * radius**2 * length
     hemisphere_volume = ((4/3) * math.pi * radius**3) / 2
     volume = cylinder_volume + 2*hemisphere_volume
@@ -204,6 +220,10 @@ def calculateEllipsoidInertia(mass, size):
     :return: tuple(6).
 
     """
+    print('###########################')
+    print('calculating ellipsoid inertia')
+    print('###########################')
+
     i = mass / 5
     ixx = i*(size[1]**2 + size[2]**2)
     ixy = 0
