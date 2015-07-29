@@ -30,6 +30,7 @@ Created on 13 Feb 2014
 
 import bpy
 import mathutils
+import math
 import phobos.defs as defs
 import phobos.robotdictionary as robotdictionary
 import phobos.utils.general as generalUtils
@@ -98,6 +99,8 @@ def calculateInertia(mass, geometry):
         inertia = calculateCylinderInertia(mass, geometry['radius'], geometry['length'])
     elif gt == 'sphere':
         inertia = calculateSphereInertia(mass, geometry['radius'])
+    elif gt == 'capsule':
+        inertia = calculateCapsuleInertia(mass, geometry['radius'], geometry['length'])
     elif gt == 'mesh':
         inertia = calculateEllipsoidInertia(mass, geometry['size'])
     return inertia
@@ -164,6 +167,32 @@ def calculateSphereInertia(mass, r):
     izz = i
     return (ixx, ixy, ixz, iyy, iyz, izz,)
 
+def calculateCapsuleInertia(mass, radius, length):
+    """
+    :param mass:
+    :param radius:
+    :param length:
+    :return:
+    """
+    cylinder_volume = math.pi * radius**2 * length
+    hemisphere_volume = ((4/3) * math.pi * radius**3) / 2
+    volume = cylinder_volume + 2*hemisphere_volume
+
+    cylinder_mass = mass / (volume / cylinder_volume)
+    hemisphere_mass = mass / (volume / hemisphere_volume)
+
+    temp0 = hemisphere_mass * 2.0 * radius**2 / 5.0
+    temp1 = length * 0.5
+    temp2 = temp0 + hemisphere_mass * (temp1**2 + 0.375 * length * radius)
+
+    ixx = (radius**2 * cylinder_mass / 2.0) / 2.0 + cylinder_mass * length**2 / 12.0 + temp2 * 2.0
+    ixy = 0
+    ixz = 0
+    iyy = radius**2 * cylinder_mass / 2.0 + temp0 * 2.0
+    iyz = 0
+    izz = ixx
+
+    return (ixx, ixy, ixz, iyy, iyz, izz,)
 
 def calculateEllipsoidInertia(mass, size):
     """Returns upper diagonal of inertia tensor of an ellipsoid as tuple.
