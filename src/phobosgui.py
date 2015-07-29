@@ -246,6 +246,15 @@ class PhobosPanel(bpy.types.Panel):
         sc2.operator('object.phobos_select_objects_by_phobostype', text="Select by phobostype")
         sc2.operator('object.phobos_select_objects_by_name', text="Select by Name")
 
+        # Pose Menu
+        layout.separator()
+        layout.label(text="Poses")
+        pinlayout = layout.split()
+        pc1 = pinlayout.column(align=True)
+        pc1.operator('object.store_pose', text='Store Current Pose')
+        pc2 = pinlayout.column(align=True)
+        pc2.operator('object.load_pose', text='Load Pose')
+        
         #for root in utility.getRoots():
         #    linspect1.operator('object.phobos_select_model', text=root["modelname"]).modelname = \
         #     root["modelname"] if "modelname" in root else root.name
@@ -294,8 +303,6 @@ class PhobosModelPanel(bpy.types.Panel):
         kc2.operator('object.attach_motor', text="Attach motor")
         kc2.operator('object.phobos_set_geometry_type', text="Set Geometry Type(s)")
         kc2.operator('object.phobos_set_collision_group', text="Set Collision Group")
-        kc2.operator('object.store_pose', text='Store Current Pose')
-        kc2.operator('object.load_pose', text='Load Pose')
 
         #Mass Menu
         layout.separator()
