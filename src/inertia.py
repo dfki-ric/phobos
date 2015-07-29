@@ -348,6 +348,7 @@ def createInertials(link, empty=False, preserve_children=False):
             inertial = createInertial(link)
             com_translate = mathutils.Matrix.Translation(com)
             inertial.matrix_local = com_translate
+            bpy.ops.transform.translate(value=(0, 0, 0))  # FIXME: this is a trick to force Blender to apply matrix_local
             inertial['inertial/mass'] = mass
             inertial['inertial/inertia'] = inertiaMatrixToList(inert)
     else:
