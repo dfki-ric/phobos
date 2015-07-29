@@ -854,11 +854,11 @@ class CreateCollisionObjects(Operator):
                                              rotation_euler)
                 sph1 = blenderUtils.createPrimitive('tmpsph1', 'sphere', radius,
                                                defs.layerTypes['collision'], materialname,
-                                               center + rotation * mathutils.Vector((0, 0, zshift)),
+                                               tmpsph1_location,
                                                rotation_euler)
                 sph2 = blenderUtils.createPrimitive('tmpsph2', 'sphere', radius,
                                                defs.layerTypes['collision'], materialname,
-                                               center - rotation * mathutils.Vector((0, 0, zshift)),
+                                               tmpsph2_location,
                                                rotation_euler)
                 selectionUtils.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
