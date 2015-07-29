@@ -436,7 +436,7 @@ def deriveStoredPoses():
     for pose in poses:
         new_pose = {}
         new_pose['name'] = pose
-        new_pose['y-values'] = poses[pose]
+        new_pose['joints'] = poses[pose]
         pose_dict[pose] = new_pose
     return pose_dict
 
