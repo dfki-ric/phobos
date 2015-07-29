@@ -432,7 +432,13 @@ def deriveStoredPoses():
     if poses_file == '':
         return {}
     poses = yaml.load(poses_file)
-    return poses
+    pose_dict = {}
+    for pose in poses:
+        new_pose = {}
+        new_pose['name'] = pose
+        new_pose['y-values'] = poses[pose]
+        pose_dict[pose] = new_pose
+    return pose_dict
 
 
     #poses_dict = {}
