@@ -30,6 +30,7 @@ import bpy
 import mathutils
 import copy
 import sys
+import yaml
 from datetime import datetime
 import warnings
 import phobos.defs as defs
@@ -37,6 +38,7 @@ import phobos.joints as joints
 import phobos.utils.naming as namingUtils
 import phobos.utils.selection as selectionUtils
 import phobos.utils.general as generalUtils
+import phobos.utils.blender as blenderUtils
 
 
 def register():
@@ -426,29 +428,36 @@ def deriveChainEntry(obj):
 def deriveStoredPoses():
     """
     """
-    poses_dict = {}
-    if len(bpy.data.actions) == 0:
+    poses_file = blenderUtils.readTextFile('robot_poses')
+    if poses_file == '':
         return {}
-    pose_lib_name = bpy.data.actions.keys()[0]
-    some_obj = bpy.context.scene.objects.active
-    bpy.ops.object.mode_set(mode='OBJECT')
-    for pose_name, i in zip(bpy.data.actions[pose_lib_name].pose_markers.keys(), range(len(bpy.data.actions[pose_lib_name].pose_markers.keys()))):
-        selectionUtils.selectObjects([selectionUtils.getRoot(some_obj)], clear=True, active=0)
-        pose_dict = {}
-        bpy.ops.object.mode_set(mode='POSE')
-        bpy.ops.poselib.apply_pose(pose_index=i)
-        bpy.ops.object.mode_set(mode='OBJECT')
-        for obj in bpy.context.scene.objects:
-            if obj.phobostype == 'link':
-                selectionUtils.selectObjects([obj], clear=True, active=0)
-                bpy.ops.object.mode_set(mode='POSE')
-                obj.pose.bones['Bone'].rotation_mode = 'XYZ'
-                y_angle = obj.pose.bones['Bone'].rotation_euler.y
-                bpy.ops.object.mode_set(mode='OBJECT')
-                pose_dict[obj.name] = y_angle
-        poses_dict[pose_name] = pose_dict
+    poses = yaml.load(poses_file)
+    return poses
 
-    return poses_dict
+
+    #poses_dict = {}
+    #if len(bpy.data.actions) == 0:
+    #    return {}
+    #pose_lib_name = bpy.data.actions.keys()[0]
+    #some_obj = bpy.context.scene.objects.active
+    #bpy.ops.object.mode_set(mode='OBJECT')
+    #for pose_name, i in zip(bpy.data.actions[pose_lib_name].pose_markers.keys(), range(len(bpy.data.actions[pose_lib_name].pose_markers.keys()))):
+    #    selectionUtils.selectObjects([selectionUtils.getRoot(some_obj)], clear=True, active=0)
+    #    pose_dict = {}
+    #    bpy.ops.object.mode_set(mode='POSE')
+    #    bpy.ops.poselib.apply_pose(pose_index=i)
+    #    bpy.ops.object.mode_set(mode='OBJECT')
+    #    for obj in bpy.context.scene.objects:
+    #        if obj.phobostype == 'link':
+    #            selectionUtils.selectObjects([obj], clear=True, active=0)
+    #            bpy.ops.object.mode_set(mode='POSE')
+    #            obj.pose.bones['Bone'].rotation_mode = 'XYZ'
+    #            y_angle = obj.pose.bones['Bone'].rotation_euler.y
+    #            bpy.ops.object.mode_set(mode='OBJECT')
+    #            pose_dict[obj.name] = y_angle
+    #    poses_dict[pose_name] = pose_dict
+    #
+    #return poses_dict
 
 
 def buildRobotDictionary():

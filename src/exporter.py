@@ -857,7 +857,8 @@ def exportModelToSMURF(model, path):
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
               'collision': bitmasks != {} or model['capsules'] != [],
-              'lights': model['lights'] != {}
+              'lights': model['lights'] != {},
+              'poses': model['poses'] != {}
               }
     #create all filenames
     smurf_filename = model['modelname'] + ".smurf"
@@ -871,9 +872,10 @@ def exportModelToSMURF(model, path):
                  'motors': model['modelname'] + "_motors.yml",
                  'controllers': model['modelname'] + "_controllers.yml",
                  'collision': model['modelname'] + "_collision.yml",
-                 'lights': model['modelname'] + "_lights.yml"
+                 'lights': model['modelname'] + "_lights.yml",
+                 'poses': model['modelname'] + "_poses.yml"
                  }
-    fileorder = ['collision', 'materials', 'motors', 'sensors', 'controllers', 'state', 'lights']
+    fileorder = ['collision', 'materials', 'motors', 'sensors', 'controllers', 'state', 'lights', 'poses']
 
     annotationdict = gatherAnnotations(model)
     for category in annotationdict:
@@ -933,7 +935,7 @@ def exportModelToSMURF(model, path):
             op.write(yaml.dump(states))  #, default_flow_style=False))
 
     #write materials, sensors, motors & controllers
-    for data in ['materials', 'sensors', 'motors', 'controllers', 'lights']:
+    for data in ['materials', 'sensors', 'motors', 'controllers', 'lights', 'poses']:
         if export[data]:
             with open(path + filenames[data], 'w') as op:
                 op.write('#' + data + infostring)
