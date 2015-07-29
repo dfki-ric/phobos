@@ -31,6 +31,8 @@ import phobos.materials as materials
 import bpy
 from phobos.logging import log
 
+import yaml
+
 
 def printMatrices(obj, info=None):
     if not info:
@@ -150,3 +152,40 @@ def cleanObjectProperties(props):
             if key in props:
                 del props[key]
     return props
+
+
+def storePose(pose_name):
+    load_file = readTextFile('robot_poses')
+    if load_file == '':
+        poses = {}
+    else:
+        poses = yaml.load(load_file)
+    new_pose = {}
+    links = selection.returnObjectList('link')
+    prev_mode = bpy.context.mode
+    bpy.ops.object.mode_set(mode='POSE')
+    for link in links:
+        link.pose.bones['Bone'].rotation_mode = 'XYZ'
+        new_pose[link.name] = link.pose.bones['Bone'].rotation_euler.y
+    bpy.ops.object.mode_set(mode=prev_mode)
+    poses[pose_name] = new_pose
+    updateTextFile('robot_poses', yaml.dump(poses))
+
+
+def loadPose(pose_name):
+    load_file = readTextFile('robot_poses')
+    if load_file == '':
+        log('No poses stored.', 'ERROR')
+        return
+    poses = yaml.load(load_file)
+    if pose_name in poses:
+        links = selection.returnObjectList('link')
+        prev_mode = bpy.context.mode
+        bpy.ops.object.mode_set(mode='POSE')
+        for link in links:
+            if link.name in poses[pose_name]:
+                link.pose.bones['Bone'].rotation_mode = 'XYZ'
+                link.pose.bones['Bone'].rotation_euler.y = poses[pose_name][link.name]
+        bpy.ops.object.mode_set(mode=prev_mode)
+    else:
+        log('No pose with name ' + pose_name + ' stored.', 'ERROR')
