@@ -294,6 +294,8 @@ class PhobosModelPanel(bpy.types.Panel):
         kc2.operator('object.attach_motor', text="Attach motor")
         kc2.operator('object.phobos_set_geometry_type', text="Set Geometry Type(s)")
         kc2.operator('object.phobos_set_collision_group', text="Set Collision Group")
+        kc2.operator('object.store_pose', text='Store Current Pose')
+        kc2.operator('object.load_pose', text='Load Pose')
 
         #Mass Menu
         layout.separator()

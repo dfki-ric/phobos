@@ -26,7 +26,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import bpy
-from bpy.props import BoolProperty, FloatProperty, FloatVectorProperty, EnumProperty
+from bpy.props import BoolProperty, FloatProperty, FloatVectorProperty, EnumProperty, StringProperty
 from bpy.types import Operator
 from phobos.logging import adjustLevel, startLog, endLog, log
 import phobos.defs as defs
@@ -34,6 +34,7 @@ import phobos.utils.selection as selectionUtils
 import phobos.robotdictionary as robotdictionary
 import phobos.validator as validator
 import phobos.utils.general as generalUtils
+import phobos.utils.blender as blenderUtils
 
 
 class SelectError(Operator):
@@ -162,4 +163,40 @@ class SetLogSettings(Operator):
         adjustLevel("ALL", self.isEnabled)
         adjustLevel("ERROR", self.errors)
         adjustLevel("WARNING", self.warnings)
+        return {'FINISHED'}
+
+
+class StorePoseOperator(Operator):
+    """
+    """
+    bl_idname = 'object.store_pose'
+    bl_label = "Store the robot's current pose"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    pose_name = StringProperty(
+        name="Pose Name",
+        default="New Pose",
+        description="Name of new pose"
+    )
+
+    def execute(self, context):
+        blenderUtils.storePose(self.pose_name)
+        return {'FINISHED'}
+
+
+class LoadPoseOperator(Operator):
+    """
+    """
+    bl_idname = 'object.load_pose'
+    bl_label = "Load a pose for the robot"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    pose_name = StringProperty(
+        name="Pose Name",
+        default="New Pose",
+        description="Name of pose to load"
+    )
+
+    def execute(self, context):
+        blenderUtils.loadPose(self.pose_name)
         return {'FINISHED'}
