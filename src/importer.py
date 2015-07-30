@@ -548,30 +548,36 @@ class RobotModelParser():
                     geom_path = os.path.join(self.path, geom['filename'])
 
                 bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes[geomsrc])
-                filetype = geom['filename'].split('.')[-1]
-                if filetype == 'obj' or filetype == 'OBJ':
-                    bpy.ops.import_scene.obj(filepath=geom_path)
-                elif filetype == 'stl' or filetype == 'STL':
-                    bpy.ops.import_mesh.stl(filepath=geom_path)
-                # hack for test:
-                elif filetype == 'bobj' or filetype == 'BOBJ':
-                    import_bobj(geom_path)
-                    #filename = geom['filename'].split('.')[0] + '.obj'
-                    #try:
-                    #    bpy.ops.import_scene.obj(filepath=os.path.join(self.path, filename))
-                    #except:
-                    #    print('ERROR: Missing object.')
-                    #    return
-                # find the newly imported obj
-                for obj in bpy.data.objects:
-                    if not obj.tag:
-                        newgeom = obj
-                        #with obj file import, blender only turns the object, not the vertices,
-                        #leaving a rotation in the matrix_basis, which we here get rid of
-                        if filetype == 'obj':
-                            bpy.ops.object.select_all(action='DESELECT')
-                            newgeom.select = True
-                            bpy.ops.object.transform_apply(rotation=True)
+                meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
+                if meshname in bpy.data.meshes:
+                    bpy.ops.object.add(type='MESH')
+                    newgeom = bpy.context.object
+                    newgeom.data = bpy.data.meshes[meshname]
+                else:
+                    filetype = geom['filename'].split('.')[-1]
+                    if filetype == 'obj' or filetype == 'OBJ':
+                        bpy.ops.import_scene.obj(filepath=geom_path)
+                    elif filetype == 'stl' or filetype == 'STL':
+                        bpy.ops.import_mesh.stl(filepath=geom_path)
+                    # hack for test:
+                    elif filetype == 'bobj' or filetype == 'BOBJ':
+                        import_bobj(geom_path)
+                        #filename = geom['filename'].split('.')[0] + '.obj'
+                        #try:
+                        #    bpy.ops.import_scene.obj(filepath=os.path.join(self.path, filename))
+                        #except:
+                        #    print('ERROR: Missing object.')
+                        #    return
+                    # find the newly imported obj
+                    for obj in bpy.data.objects:
+                        if not obj.tag:
+                            newgeom = obj
+                            #with obj file import, blender only turns the object, not the vertices,
+                            #leaving a rotation in the matrix_basis, which we here get rid of
+                            if filetype == 'obj':
+                                bpy.ops.object.select_all(action='DESELECT')
+                                newgeom.select = True
+                                bpy.ops.object.transform_apply(rotation=True)
                 #print(viscol)
                 newgeom['filename'] = geom['filename']
                 #newgeom.select = True
