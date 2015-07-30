@@ -117,7 +117,7 @@ def exportBobj(path, obj):
 
     me_verts = mesh.vertices[:]
 
-    out = open(determineMeshOutpath(obj, namingUtils.getObjectName(obj), 'bobj', path), "wb")
+    out = open(determineMeshOutpath(obj, 'bobj', path), "wb")
 
     for v in mesh.vertices:
         out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
@@ -211,7 +211,7 @@ def exportObj(path, obj):
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
     tmpobject.data = obj.data  # copy the mesh here
-    outpath = determineMeshOutpath(obj, objname, 'obj', path)
+    outpath = determineMeshOutpath(obj, 'obj', path)
     bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
@@ -250,7 +250,7 @@ def exportStl(path, obj):
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
-    outpath = determineMeshOutpath(obj, objname, 'stl', path)
+    outpath = determineMeshOutpath(obj, 'stl', path)
     bpy.ops.export_mesh.stl(filepath=outpath)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
@@ -274,7 +274,7 @@ def exportDae(path, obj):
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
-    outpath = determineMeshOutpath(obj, objname, 'dae', path)
+    outpath = determineMeshOutpath(obj, 'dae', path)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.wm.collada_export(filepath=outpath, selected=True)
@@ -1065,20 +1065,21 @@ def exportModelToMARS(model, path):
 
     mse.exportModelToMARS(model, path)
 
-def determineMeshOutpath(obj, alternative: str, exporttype: str, path: str) -> str:
+def hasNoImportLock(obj, filetype):
+    if "filename" in obj:
+        return "meshes/" + obj.data.name + "." + filetype != obj["filename"]
+    else:
+        return True
+
+def determineMeshOutpath(obj, exporttype: str, path: str) -> str:
     """Determines the meshes filename for a specific object
 
     :param obj: The object you want to export the mesh from
-    :param alternative: The alternativ name if the object has no geometry/sharedMesh tag
     :param exporttype: The filetype you want export to (without leading .)
     :param path: The path you want the mesh export to
     :return: str - Returns the filepath to export the mesh to
     """
-    if "geometry/filename" in obj:
-        return os.path.join(path, obj["geometry/filename"] + '.' + exporttype)
-    else:
-        return os.path.join(path, alternative + '.' + exporttype)
-
+    return os.path.join(path, obj.data.name + "." + exporttype)
 
 
 def securepath(path):  #TODO: this is totally not error-handled!
@@ -1154,16 +1155,18 @@ def export(path='', robotmodel=None):
             wm.progress_begin(0, total)
             i = 1
         print("Exporting meshes to " + meshoutpath + "...\n")
+        exported = []
         for obj in objectlist:
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and obj['geometry/type'] == 'mesh' and 'filename' not in obj and 'geometry/'+defs.reservedProperties['SHAREDMESH'] not in obj):
-                if objexp:
+                and obj['geometry/type'] == 'mesh' and obj.data.name not in exported):
+                exported.append(obj.data.name)
+                if objexp and hasNoImportLock(obj, "obj"):
                     exportObj(meshoutpath, obj)
-                if bobjexp:
+                if bobjexp and hasNoImportLock(obj, "bobj"):
                     exportBobj(meshoutpath, obj)
-                if stlexp:
+                if stlexp and hasNoImportLock(obj, "stl"):
                     exportStl(meshoutpath, obj)
-                if daeexp:
+                if daeexp and hasNoImportLock(obj, "dae"):
                     exportDae(meshoutpath, obj)
             if show_progress:
                 wm.progress_update(i)

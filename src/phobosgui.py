@@ -279,8 +279,6 @@ class PhobosModelPanel(bpy.types.Panel):
         c2 = inlayout.column(align=True)
         c1.operator('object.phobos_set_phobostype', text='Set phobostype')
         c1.operator('object.phobos_sort_objects_to_layers', text="Set Objects to Layers", icon='IMGDISPLAY')
-        c1.operator('object.phobos_share_mesh', text="Share meshes")
-        c1.operator('object.phobos_undo_share_mesh', text="Undo Share meshes")
         c1.operator('object.phobos_smoothen_surface', text="Smoothen Surface")
 
         c2.operator('object.phobos_partial_rename', text="Partial Rename")
