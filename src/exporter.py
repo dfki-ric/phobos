@@ -1067,7 +1067,7 @@ def exportModelToMARS(model, path):
 
 def hasNoImportLock(obj, filetype):
     if "filename" in obj:
-        return obj.data.name + "." + filetype != obj["filename"]
+        return "meshes/" + obj.data.name + "." + filetype != obj["filename"]
     else:
         return True
 
