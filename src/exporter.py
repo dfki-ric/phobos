@@ -1065,6 +1065,12 @@ def exportModelToMARS(model, path):
 
     mse.exportModelToMARS(model, path)
 
+def hasNoImportLock(obj, filetype):
+    if "filename" in obj:
+        return obj.data.name + "." + filetype != obj["filename"]
+    else:
+        return True
+
 def determineMeshOutpath(obj, exporttype: str, path: str) -> str:
     """Determines the meshes filename for a specific object
 
@@ -1152,15 +1158,15 @@ def export(path='', robotmodel=None):
         exported = []
         for obj in objectlist:
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and obj['geometry/type'] == 'mesh' and 'filename' not in obj and obj.data.name not in exported):
+                and obj['geometry/type'] == 'mesh' and obj.data.name not in exported):
                 exported.append(obj.data.name)
-                if objexp:
+                if objexp and hasNoImportLock(obj, "obj"):
                     exportObj(meshoutpath, obj)
-                if bobjexp:
+                if bobjexp and hasNoImportLock(obj, "bobj"):
                     exportBobj(meshoutpath, obj)
-                if stlexp:
+                if stlexp and hasNoImportLock(obj, "stl"):
                     exportStl(meshoutpath, obj)
-                if daeexp:
+                if daeexp and hasNoImportLock(obj, "dae"):
                     exportDae(meshoutpath, obj)
             if show_progress:
                 wm.progress_update(i)
