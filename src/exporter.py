@@ -1149,9 +1149,11 @@ def export(path='', robotmodel=None):
             wm.progress_begin(0, total)
             i = 1
         print("Exporting meshes to " + meshoutpath + "...\n")
+        exported = []
         for obj in objectlist:
             if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and obj['geometry/type'] == 'mesh' and 'filename' not in obj and 'geometry/'+defs.reservedProperties['SHAREDMESH'] not in obj):
+                and obj['geometry/type'] == 'mesh' and 'filename' not in obj and obj.data.name not in exported):
+                exported.append(obj.data.name)
                 if objexp:
                     exportObj(meshoutpath, obj)
                 if bobjexp:
