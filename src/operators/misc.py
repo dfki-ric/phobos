@@ -187,7 +187,7 @@ class StorePoseOperator(Operator):
     )
 
     def execute(self, context):
-        blenderUtils.storePose(self.pose_name)
+        robotdictionary.storePose(self.pose_name)
         return {'FINISHED'}
 
 

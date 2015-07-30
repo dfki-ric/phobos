@@ -417,6 +417,41 @@ def deriveChainEntry(obj):
     return returnchains
 
 
+def storePose(pose_name):
+    load_file = blenderUtils.readTextFile('robot_poses')
+    if load_file == '':
+        poses = {}
+    else:
+        poses = yaml.load(load_file)
+    new_pose = {}
+    prev_mode = bpy.context.mode
+    bpy.ops.object.mode_set(mode='POSE')
+    for obj in selectionUtils.returnObjectList('link'):
+        obj.pose.bones['Bone'].rotation_mode = 'XYZ'
+        new_pose[namingUtils.getObjectName(obj, 'joint')] = obj.pose.bones['Bone'].rotation_euler.y
+    bpy.ops.object.mode_set(mode=prev_mode)
+    poses[pose_name] = new_pose
+    blenderUtils.updateTextFile('robot_poses', yaml.dump(poses))
+
+
+def loadPose(pose_name):
+    load_file = blenderUtils.readTextFile('robot_poses')
+    if load_file == '':
+        log('No poses stored.', 'ERROR')
+        return
+    poses = yaml.load(load_file)
+    if pose_name in poses:
+        prev_mode = bpy.context.mode
+        bpy.ops.object.mode_set(mode='POSE')
+        for obj in selectionUtils.returnObjectList('link'):
+            if namingUtils.getObjectName(obj, 'joint') in poses[pose_name]:
+                obj.pose.bones['Bone'].rotation_mode = 'XYZ'
+                obj.pose.bones['Bone'].rotation_euler.y = poses[pose_name][namingUtils.getObjectName(obj, 'joint')]
+        bpy.ops.object.mode_set(mode=prev_mode)
+    else:
+        log('No pose with name ' + pose_name + ' stored.', 'ERROR')
+
+
 def deriveStoredPoses():
     """
     """
