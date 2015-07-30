@@ -1299,8 +1299,6 @@ class CreateMimicJointOperator(Operator):
 def add_editing_manual_map():
     url_manual_prefix = "https://github.com/rock-simulation/phobos/wiki/Operators#"
     url_manual_mapping = (
-        ("bpy.ops.object.phobos_share_mesh", "share-meshes"),
-        ("bpy.ops.object.phobos_undo_share_mesh", "undo-share-meshes"),
         ("bpy.ops.object.phobos_sort_objects_to_layers", "set-objects-to-layers"),
         ("bpy.ops.object.phobos_add_chain", "define-kinematic-chain"),
         ("bpy.ops.object.phobos_set_mass", "set-mass"),
@@ -1332,8 +1330,6 @@ def add_editing_manual_map():
 def register():
     print("Registering operators.editing...")
     bpy.utils.register_manual_map(add_editing_manual_map)
-    bpy.utils.register_class(ShareMesh)
-    bpy.utils.register_class(UndoShareMesh)
     bpy.utils.register_class(SortObjectsToLayersOperator)
     bpy.utils.register_class(AddChainOperator)
     bpy.utils.register_class(SetMassOperator)
@@ -1363,8 +1359,6 @@ def register():
 def unregister():
     print("Unregistering operators.editing...")
     bpy.utils.unregister_manual_map(add_editing_manual_map)
-    bpy.utils.unregister_class(ShareMesh)
-    bpy.utils.unregister_class(UndoShareMesh)
     bpy.utils.unregister_class(SortObjectsToLayersOperator)
     bpy.utils.unregister_class(AddChainOperator)
     bpy.utils.unregister_class(SetMassOperator)
