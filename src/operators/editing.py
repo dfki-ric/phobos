@@ -1295,6 +1295,77 @@ class CreateMimicJointOperator(Operator):
                 and len(bpy.context.selected_objects) > 1)
 
 
+class RefineLevelOfDetailOperator(Operator):
+    """RefineLevelOfDetail
+
+    """
+    bl_idname = "object.phobos_refine_lod"
+    bl_label = "Refines LoD settings with minimum distances"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    startdistances = FloatVectorProperty(name="startDistances",
+        description="minimum distances", size=5)
+
+    enddistances = FloatVectorProperty(name="endDistances",
+        description="maximum distances", size=5)
+
+    def draw(self, context):
+        layout = self.layout
+        inlayout = layout.split()
+        c1 = inlayout.column(align=True)
+        c2 = inlayout.column(align=True)
+        c3 = inlayout.column(align=True)
+
+        lodlist = [lod.object.name for lod in context.active_object.lod_levels]
+        while len(lodlist) < len(self.startdistances):
+            lodlist.append('not assigned')
+
+        c1.label("Level of Detail objects:")
+        for lodname in lodlist:
+            c1.label(text=lodname)
+        c2.prop(self, 'startdistances')
+        c3.prop(self, 'enddistances')
+
+
+    def invoke(self, context, event):
+        #nlod = len(context.active_object.lod_levels)
+        #self.startdistances = FloatVectorProperty(name="startDistances", description="minimum distances", size=nlod)
+        #self.enddistances = FloatVectorProperty(name="endDistances", description="maximum distances", size=nlod)
+        lodlist = [0.0]*5
+        for lod in range(len(context.active_object.lod_levels)):
+            lodlist[lod] = context.active_object.lod_levels[lod].distance
+        self.enddistances = tuple(lodlist)
+        lodlist = [0.0]*5
+        for lod in range(len(context.active_object.lod_levels)-1):
+            lodlist[lod+1] = context.active_object.lod_levels[lod].distance
+        self.startdistances = tuple(lodlist)
+
+    #    obj = context.active_object
+    #    #self.mindistances = tuple(obj[a] for a in obj.keys() if a.startswith('visual/lod'))
+    #    self.mindistances = tuple(lod.distance for lod in obj.lod_levels)
+        return self.execute(context)
+
+    def execute(self, context):
+        """This function executes this operator and attaches a motor to all selected links.
+
+        :param context: The blender context this operator works with.
+        :return:Blender result.
+
+        """
+        for dist in range(len(context.active_object.lod_levels)):
+            context.active_object['lod/' + str(dist) + '_start'] = self.startdistances[dist]
+            context.active_object.lod_levels[dist].distance = self.enddistances[dist]
+            context.active_object['lod/' + str(dist) + '_end'] = context.active_object.lod_levels[dist].distance
+            context.active_object['lod/' + str(dist) + '_mesh'] = context.active_object.lod_levels[dist].object.name
+
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob is not None and ob.phobostype == 'visual'
+
+
 # This allows you to right click on a button and link to the manual
 def add_editing_manual_map():
     url_manual_prefix = "https://github.com/rock-simulation/phobos/wiki/Operators#"
@@ -1323,6 +1394,7 @@ def add_editing_manual_map():
         ("bpy.ops.object.phobos_create_link", "create-links"),
         ("bpy.ops.object.phobos_add_sensor", "addedit-sensor"),
         ("bpy.ops.object.phobos_create_mimic_joint", "mimic-joint"),
+        ("bpy.ops.object.phobos_refine_lod", "refine-lod"),
     )
     return url_manual_prefix, url_manual_mapping
 
@@ -1354,6 +1426,7 @@ def register():
     bpy.utils.register_class(CreateLinkOperator)
     bpy.utils.register_class(AddSensorOperator)
     bpy.utils.register_class(CreateMimicJointOperator)
+    bpy.utils.register_class(RefineLevelOfDetailOperator)
 
 
 def unregister():
@@ -1383,3 +1456,4 @@ def unregister():
     bpy.utils.unregister_class(CreateLinkOperator)
     bpy.utils.unregister_class(AddSensorOperator)
     bpy.utils.unregister_class(CreateMimicJointOperator)
+    bpy.utils.unregister_class(RefineLevelOfDetailOperator)

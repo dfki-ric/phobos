@@ -254,7 +254,7 @@ class PhobosPanel(bpy.types.Panel):
         pc1.operator('object.store_pose', text='Store Current Pose')
         pc2 = pinlayout.column(align=True)
         pc2.operator('object.load_pose', text='Load Pose')
-        
+
         #for root in utility.getRoots():
         #    linspect1.operator('object.phobos_select_model', text=root["modelname"]).modelname = \
         #     root["modelname"] if "modelname" in root else root.name
@@ -280,6 +280,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c1.operator('object.phobos_set_phobostype', text='Set phobostype')
         c1.operator('object.phobos_sort_objects_to_layers', text="Set Objects to Layers", icon='IMGDISPLAY')
         c1.operator('object.phobos_smoothen_surface', text="Smoothen Surface")
+        c1.operator('object.phobos_refine_lod', text="Refine LoD")
 
         c2.operator('object.phobos_partial_rename', text="Partial Rename")
         c2.operator('object.phobos_batch_property', text='Edit Custom Property', icon='GREASEPENCIL')
