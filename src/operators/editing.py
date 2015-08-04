@@ -357,12 +357,12 @@ class BatchEditPropertyOperator(Operator):
 
     def execute(self, context):
         value = generalUtils.parse_number(self.property_value)
-        objs = filter(lambda e: self.property_name in e, context.selected_objects)
         if value == '':
+            objs = filter(lambda e: self.property_name in e, context.selected_objects)
             for obj in objs:
                 del (obj[self.property_name])
         else:
-            for obj in objs:
+            for obj in context.selected_objects:
                 obj[self.property_name] = value
         return {'FINISHED'}
 
