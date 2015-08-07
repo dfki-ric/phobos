@@ -37,23 +37,49 @@ import phobos.utils.general as generalUtils
 
 #TODO: this has to be massively extended
 def convertOldModel():
+    """This function converts an old model to the new phobos model.
+    At the moment it justs removes the type custom property of every object and stores its value in the phobostype field.
+
+    """
     for obj in bpy.data.objects:
         if "type" in obj:
             obj.phobostype = str(obj["type"])
             del obj["type"]
 
 def setDefault(obj, key, value):
+    """This function adds a key value pair to the given object if its not already present
+    and returns the value afterwards.
+
+    :param obj: The object to add the key value pair to.
+    :type obj: bpy_types.Object
+    :param key: The key to add to the object.
+    :param value: The new keys value
+
+    """
     if key not in obj:
         obj[key] = value
     return obj[key]
 
 def createLinkProperties(self, obj):
+    """This function checks for mass and density properties in an object
+    and adds a default mass value if they're not present. Seems to be deprecated.
+
+    :param obj: The object to create the link properties for.
+    :type obj: bpy_types.Object
+
+    """
     if "mass" not in obj and "density" not in obj:
         setDefault(obj, "mass", 0.001)
     #TODO_ make collision bitmask a string in binary format
     #if "collision_bitmask" in obj and obj["collision_bitmask"]
 
 def updateObject(obj, fix = False):
+    """TODO: Is this function deprecated?
+
+    :param obj:
+    :param fix:
+
+    """
     notifications = []
     faulty_objects = []
     if obj.phobostype == 'link':
@@ -105,6 +131,13 @@ def updateObject(obj, fix = False):
     return notifications, faulty_objects
 
 def updateModel(root, fix = False):
+    """TODO: Is this function deprecated?
+
+    :param root:
+    :param fix:
+    :return:
+
+    """
     notifications = []
     faulty_objects = []
     children = selectionUtils.getChildren(root)
@@ -115,6 +148,13 @@ def updateModel(root, fix = False):
     return notifications, faulty_objects
 
 def updateModels(roots = None, fix = False):
+    """Is this function deprecated?
+
+    :param roots:
+    :param fix:
+    :return:
+
+    """
     notifications = []
     faulty_objects = []
     if roots == None:
