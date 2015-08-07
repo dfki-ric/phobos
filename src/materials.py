@@ -38,7 +38,7 @@ def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=
     """Returns a Blender material specified by the input parameters
 
     :param name: The name of the new material.
-    :type name: string.
+    :type name: str
     :param diffuse: The color of the new material.
     :type diffuse: float array with 3 elements.
     :param specular: The specular color of the new material.
@@ -49,7 +49,8 @@ def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=
     :type diffuse_intensity: float in [0,1.0].
     :param texture: NOT IMPEMENTED YET.
     :type texture: NOT IMPLEMENTED YET.
-    :return: the new material.
+    :return: bpy.types.Material
+
     """
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = diffuse
@@ -71,7 +72,6 @@ def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=
 def createPhobosMaterials():
     """Uses makeMaterial() to create a list of standard materials used in Phobos
 
-    :return: Nothing.
     """
     materials = bpy.data.materials.keys()
     for material in defs.defaultmaterials:
