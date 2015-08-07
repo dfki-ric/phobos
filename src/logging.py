@@ -38,8 +38,7 @@ def startLog(pOperator):
     """This function starts logging for a specified operator.
 
     :param pOperator: The operator you want to log for.
-    :type pOperator: Blender operator.
-    :return: Nothing.
+    :type pOperator: bpy.types.Operator
 
     """
     global operator
@@ -47,8 +46,6 @@ def startLog(pOperator):
 
 def endLog():
     """This function ends the logging for a former registered operator.
-
-    :return: Nothing.
 
     """
     global operator
@@ -58,10 +55,9 @@ def adjustLevel(type, isEnabled):
     """This function adjusts the visibility for a certain logging level.
 
     :param type: The log level you want to enable or disable.
-    :type type: string -- One of ALL, ERROR, WARNING or INFO.
+    :type type: str -- One of ALL, ERROR, WARNING or INFO.
     :param isEnabled: Sets whether logs with the specified level are visible or not.
     :type isEnabled: bool.
-    :return: Nothing.
 
     """
     global levels
@@ -73,10 +69,9 @@ def log(msg, logType="WARNING"):
     If there is a registered operator its report function is used, else its printed to the console.
 
     :param msg: The message to log.
-    :type msg: string.
+    :type msg: str
     :param logType: The log level you want to log the message with.
-    :type logType: string -- one of ERROR, WARNING or INFO.
-    :return: Nothing.
+    :type logType: str -- one of ERROR, WARNING or INFO.
 
     """
     global levels, operator
