@@ -53,11 +53,21 @@ import phobos.utils.naming as namingUtils
 sep = "------------------------------------------------------"
 
 def calcCenter(bound_box):
-    """returns a mathutils.Vector for the bounding box's center point"""
+    """Returns a mathutils.Vector for the bounding box's center point
+
+    :param bound_box: The bounding box to return the mathutil.Vector for.
+    :return: The calculated Vector for the bounding box.
+
+    """
     c = sum((mathutils.Vector(b) for b in bound_box), mathutils.Vector())
     return c / 8
 
 def writeNode(obj):
+    """TODO: PLEASE ADD DOC AS FAST AS POSSIBLE!
+
+    :param obj:
+    :return:
+    """
     size = obj.dimensions
 
     #get pivot
@@ -74,6 +84,12 @@ def writeNode(obj):
         child_rot = obj.matrix_local.to_quaternion()    #output: rotation
 
 def printMatrices(obj):
+    """This function prints a blender objects matrices to the console.
+
+    :param obj: The object to print the matrices for.
+    :type obj: bpy_types.Object
+
+    """
     print("Transformation Matrices for object:", namingUtils.getObjectName(obj))
     print("World", sep)
     print(obj.matrix_world)
@@ -86,6 +102,12 @@ def printMatrices(obj):
     print("\n\n")
 
 def printRotLoc(obj):
+    """This function prints an objects rotation and location to the console.
+
+    :param obj: The object to print the location and rotation for.
+    :type obj: bpy_types.Object
+
+    """
     print("Location/Rotation for object:", namingUtils.getObjectName(obj))
     print("rotation_euler", sep)
     print(obj.rotation_euler)
@@ -96,6 +118,12 @@ def printRotLoc(obj):
     print("\n\n")
 
 def printBoundBox(obj):
+    """This function prints an objects bounding box to the console.
+
+    :param obj: The object to print the bounding box for.
+    :type obj: bpy_types.Object
+
+    """
     print("Bounding box for object:", namingUtils.getObjectName(obj))
     for vector in obj.bound_box:
         for value in vector:
@@ -103,6 +131,9 @@ def printBoundBox(obj):
         print()
 
 def main():
+    """This main function prints the matrices, location, rotation and bounding boxes for all selected objects to the console.
+
+    """
     for obj in bpy.context.selected_objects:
         printMatrices(obj)
         printRotLoc(obj)
