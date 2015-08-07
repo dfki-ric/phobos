@@ -38,22 +38,14 @@ import phobos.utils.selection as selectionUtils
 
 
 def register():
-    """
-    This function registers this module.
-    At the moment it does nothing.
-
-    :return: Nothing
+    """This function is called when this module is registered to blender.
 
     """
     print("Registering links...")
 
 
 def unregister():
-    """
-    This function unregisters this module.
-    At the moment it does nothing.
-
-    :return: Nothing
+    """This function is called when this module is unregistered from blender.
 
     """
     print("Unregistering links...")
@@ -69,8 +61,8 @@ def createLink(scale, position=None, orientation=None, name=''):
     :param orientation: This specifies the rotation of the newly created link. When not given its (0.0,0.0,0.0)
     :type orientation:Float array with 3 elements.
     :param name: This sets the name for the new link. When not given the link is nameless.
-    :type name: string.
-    :return: blender object
+    :type name: str
+    :return: bpy_types.Object
 
     """
     blenderUtils.toggleLayer(defs.layerTypes['link'], True)
@@ -95,9 +87,9 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
     """Derives a link from an object that defines a joint through its position, orientation and parent-child relationships.
 
     :param obj: The object you want to derive your link from.
-    :type obj: Blender object.
+    :type obj: bpy_types.Object
     :param scale: The scale you want to apply to the link.
-    :type scale: float.
+    :type scale: float
     :param parenting: Whether you want to automate the parenting of the new link or not.
     :type parenting: bool.
     :param parentobjects: Whether you want to parent all the objects to the new link or not.
@@ -105,10 +97,9 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
     :param namepartindices: Parts of the objects name you want to reuse in the links name.
     :type namepartindices: list with two elements.
     :param separator: The separator you want to use to separate the links name with. Its '_' per default
-    :type separator: string.
+    :type separator: str
     :param prefix: The prefix you want to use for the new links name. Its 'link' per default.
-    :type prefix: string.
-    :return: Nothing.
+    :type prefix: str
 
     """
     print('Deriving link from', namingUtils.getObjectName(obj))
