@@ -36,22 +36,14 @@ import phobos.utils.naming as namingUtils
 
 
 def register():
-    """
-    This function registers this module.
-    At the moment it does nothing.
-
-    :return: Nothing
+    """This function is called when this module is registrered to blender.
 
     """
     print("Registering joints...")
 
 
 def unregister():
-    """
-    This function unregisters this module.
-    At the moment it does nothing.
-
-    :return: Nothing
+    """This function is called when this module is unregistered from blender.
 
     """
     print("Unregistering joints...")
@@ -61,7 +53,7 @@ def deriveJointType(joint, adjust=False):
     """ Derives the type of the joint defined by the armature object 'joint' based on the constraints defined in the joint.
 
     :param joint: The joint you want to derive its type from.
-    :type joint: blender object.
+    :type joint: bpy_types.Object
     :param adjust: Decides whether or not the type of the joint is adjusted after detecting (without checking whether
     the property "type" was previously defined in the armature or not).
     :type adjust: bool.
@@ -108,7 +100,7 @@ def getJointConstraints(joint):
     """ Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'.
 
     :param joint: The joint you want to get the constraints from.
-    :type joint: blender object.
+    :type joint: bpy_types.Object
     :return: tuple -- containing the axis and limits lists.
 
     """
@@ -164,8 +156,8 @@ def getJointConstraint(joint, ctype):
     """This function gets the constraints out of a given joint.
 
     :param joint: The joint you want to extract the constraints from.
+    :type joint: bpy_types.Object
     :param ctype: Specifies the constraint type you want to extract.
-    :return: blender constraints object.
 
     """
     con = None
@@ -179,19 +171,18 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
     """This function sets the constraints for a given joint and jointtype.
 
     :param joint: The joint you want to set the constraints for.
-    :type joint: blender object.
+    :type joint: bpy_types.Object
     :param jointtype: The joints type. its one of the following:
         - revolute
         - continuous
         - prismatic
         - fixed
         - floating
-    :type jointtype: string.
+    :type jointtype: str
     :param lower: The constraints lower limit.
-    :type lower: float.
+    :type lower: float
     :param upper: The constraints upper limit.
-    :type upper:float.
-    :return: Nothing.
+    :type upper:float
 
     """
     bpy.ops.object.mode_set(mode='POSE')
