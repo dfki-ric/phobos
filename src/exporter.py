@@ -616,8 +616,8 @@ def exportModelToURDF(model, filepath):
                                 output.append(
                                     indent * 5 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
                                         mat["transparency"]) + '"/>\n')
-                                if 'texturename' in mat:
-                                    output.append(indent * 5 + '<texture filename="' + mat['texturename'] + '"/>\n')
+                                if 'diffuseTexture' in mat:
+                                    output.append(indent * 5 + '<texture filename="' + mat['diffuseTexture'] + '"/>\n')
                                 output.append(indent * 4 + '</material>\n')
                             else:
                                 output.append(indent * 4 + '<material name="' + vis["material"] + '"/>\n')
@@ -703,8 +703,8 @@ def exportModelToURDF(model, filepath):
                 transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
                 output.append(indent * 3 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
                     1.0 - transparency) + '"/>\n')
-                if 'texturename' in model['materials'][m]:
-                    output.append(indent * 3 + '<texture filename="' + model['materials'][m]['texturename'] + '"/>\n')
+                if 'diffuseTexture' in model['materials'][m]:
+                    output.append(indent * 3 + '<texture filename="' + model['materials'][m]['diffuseTexture'] + '"/>\n')
                 output.append(indent * 2 + '</material>\n\n')
     #finish the export
     output.append(xmlFooter)
@@ -1179,9 +1179,10 @@ def export(path='', robotmodel=None):
         securepath(os.path.join(outpath, 'textures'))
         for materialname in robot['materials']:
             mat = robot['materials'][materialname]
-            if 'texturename' in mat:
-                texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat['texturename'])
-                if os.path.isfile(texpath):
-                    shutil.copy(texpath, os.path.join(outpath, 'textures', os.path.basename(mat['texturename'])))
+            for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
+                if texturetype in mat:
+                    texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
+                    if os.path.isfile(texpath):
+                        shutil.copy(texpath, os.path.join(outpath, 'textures', os.path.basename(mat[texturetype])))
 
 

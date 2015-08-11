@@ -340,8 +340,8 @@ def writeMaterial(material):
         out.append('      </emissionFront>');
     out.append('      <shininess>'+str(material['shininess'])+'</shininess>');
     out.append('      <transparency>'+str(material['transparency'])+'</transparency>');
-    if "texturename" in material:
-        out.append('      <texturename>'+str(material["texturename"])+'</texturename>');
+    if "diffuseTexture" in material:
+        out.append('      <texturename>'+str(material["diffuseTexture"])+'</texturename>');
     out.append('    </material>')
     return out
 

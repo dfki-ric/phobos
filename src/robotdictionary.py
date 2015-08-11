@@ -69,10 +69,17 @@ def deriveMaterial(mat):
     material['shininess'] = mat.specular_hardness/2
     if mat.use_transparency:
         material['transparency'] = 1.0-mat.alpha
-    try:
-        material['texturename'] = mat.texture_slots[0].texture.image.filepath.replace('//', '') # grab the first texture
-    except (KeyError, AttributeError):
-        print('None or incomplete texture data for material ' + namingUtils.getObjectName(mat) + '.')
+    for tex in mat.texture_slots:  # there are always 18 slots, regardless of whether they are filled or not
+        if tex is not None:
+            try:
+                if tex.use_map_color_diffuse:  # regular diffuse color texture
+                    material['diffuseTexture'] = mat.texture_slots[0].texture.image.filepath.replace('//', '') # grab the first texture
+                if tex.use_map_normal:  # normal map
+                    material['normalTexture'] = mat.texture_slots[0].texture.image.filepath.replace('//', '') # grab the first texture
+                if tex.use_map_displacement:  # displacement map
+                    material['displacementTexture'] = mat.texture_slots[0].texture.image.filepath.replace('//', '') # grab the first texture
+            except (KeyError, AttributeError):
+                print('None or incomplete texture data for material ' + namingUtils.getObjectName(mat) + '.')
     return material
 
 
