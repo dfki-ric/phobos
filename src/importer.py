@@ -1222,8 +1222,9 @@ class MARSModelParser(RobotModelParser):
         else:
             vis_coll_dict['geometry'] = geometry_dict
             return True
-    
-    def _parse_visual(self, visuals_dict, node, missing_vis_geo, root_child=False):
+
+    #def _parse_visual(self, visuals_dict, node, missing_vis_geo, root_child):
+    def _parse_visual(self, visuals_dict, node, missing_vis_geo):
         '''
         Parse information for a visual object from a 'node' element.
         If no information for the visual's geometry can be parsed, indicate this by
@@ -1247,7 +1248,7 @@ class MARSModelParser(RobotModelParser):
         base_pos = base_pose['translation']
         rot = base_pose['rotation_quaternion']
         pivot_xml = node.find('pivot')
-        if pivot_xml is not None: # and not root_child:
+        if pivot_xml is not None:   # and not root_child:
             pivot = [float(pivot_xml.find('x').text), float(pivot_xml.find('y').text), float(pivot_xml.find('z').text)]
         else:
             pivot = [0.0, 0.0, 0.0]
@@ -1465,10 +1466,10 @@ class MARSModelParser(RobotModelParser):
         for node in nodes:
             index = int(node.find('index').text)
             rel_id = node.find('relativeid')
-            if rel_id is None:           # check if node is root
-                root_child = True
-            else:
-                root_child = False
+            #if rel_id is None:           # check if node is root
+            #    root_child = True
+            #else:
+            #    root_child = False
             if index in self.vis_coll_groups:
                 #print('YUP')
                 link_index = self.vis_coll_groups[index]
@@ -1478,7 +1479,8 @@ class MARSModelParser(RobotModelParser):
                     if group_node['index'] == link_index:
                         name = group_node['name']
                         visuals_dict = model['links'][name]['visual']
-                        self._parse_visual(visuals_dict, node, self.missing_vis_geos[name], root_child)
+                        #self._parse_visual(visuals_dict, node, self.missing_vis_geos[name], root_child)
+                        self._parse_visual(visuals_dict, node, self.missing_vis_geos[name])
                         model['links'][name]['visual'] = visuals_dict
                         
                         collisions_dict = model['links'][name]['collision']
