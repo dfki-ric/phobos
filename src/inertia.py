@@ -204,9 +204,9 @@ def calculateCapsuleInertia(mass, radius, length):
     ixx = (radius**2 * cylinder_mass / 2.0) / 2.0 + cylinder_mass * length**2 / 12.0 + temp2 * 2.0
     ixy = 0
     ixz = 0
-    iyy = radius**2 * cylinder_mass / 2.0 + temp0 * 2.0
+    iyy = ixx
     iyz = 0
-    izz = ixx
+    izz = radius**2 * cylinder_mass / 2.0 + temp0 * 2.0
 
     return (ixx, ixy, ixz, iyy, iyz, izz,)
 
