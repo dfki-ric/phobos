@@ -922,8 +922,11 @@ class RobotModelParser():
 
 
 class MARSModelParser(RobotModelParser):
-    """Class derived from RobotModelParser which parses a MARS scene
+    """
+    Class derived from RobotModelParser which parses a MARS scene.
 
+    Parsing MARS scenes is still experimental, so that the user may have to
+    adapt the scene in Blender after import.
     """
 
     def __init__(self, filepath, zipped=False):
@@ -946,6 +949,10 @@ class MARSModelParser(RobotModelParser):
                 {link/visual/collision/material name:
                  amount of how often the name already has been given to
                  something (plus index for distinction)}
+
+        :param zipped: Indicate whether or not the file to parse from is zipped.
+        :type zipped: bool.
+        :return: Nothing.
         """
 
         RobotModelParser.__init__(self, filepath)
@@ -976,6 +983,11 @@ class MARSModelParser(RobotModelParser):
 
     def parseModel(self):
         '''
+        Parse a MARS scene from a '.scene' file.
+
+        Zipped '.scn' files will be handled accordingly.
+
+        :return: Nothing.
         '''
         print("\nParsing MARS scene from", self.filepath)
 
@@ -1034,6 +1046,20 @@ class MARSModelParser(RobotModelParser):
         #print(self.joint_index_dict)
 
     def _find_name(self, struct, prefix='', emerg='link'):
+        """
+        Find the name of an XML structure. If neither an attribute nor a tag named 'name'
+        is present, construct a new name using the 'emerg' parameter and the structure's
+        'index' tag, if present. A prefix is optional. If necessary, the name will be made
+        distinct by adding an index.
+
+        :param struct: The XML structure to find a name in.
+        :type struct: xml.etree.ElementTree.Element.
+        :param prefix: An optional prefix to add to the name.
+        :type prefix: str.
+        :param emerg: A string used to construct a name if none is found.
+        :type emerg: str.
+        :return: A name for the XML structure.
+        """
         name = struct.get('name')
         if name is None:
             name_xml = struct.find('name')
@@ -1053,6 +1079,12 @@ class MARSModelParser(RobotModelParser):
         '''
         Collect the indices of all nodes that are links inside
         'self.link_indices'.
+
+        :param nodes: The 'nodes' element of the currently parsed scene.
+        :type nodes: xml.etree.ElementTree.Element.
+        :param joints: The 'joints' element of the currently parsed scene.
+        :type joints: xml.etree.ElementTree.Element
+        :return: Nothing.
         '''
         if joints is not None:
             for joint in joints:
@@ -1064,6 +1096,11 @@ class MARSModelParser(RobotModelParser):
 
     def _create_joints_dict(self):
         '''
+        Create a dictionary containing the necessary information for the robot
+        dictionary. Use the previously parsed information in 'self.joint_info'
+        and 'self.link_index_dict' for this.
+
+        :return: The created dictionary.
         '''
         joints_dict = {}
         for joint_name in self.joint_info:
@@ -1081,6 +1118,10 @@ class MARSModelParser(RobotModelParser):
         '''
         Parse the materials from the MARS scene.
 
+        :param materials_tree: The 'materiallist' element from the currently
+        parsed scene.
+        :type materials_tree: xml.etree.ElementTree.Element.
+        :return: A dictionary containing the parsed information.
         '''
         materials_dict = {}
         for material in materials_tree:
@@ -1127,7 +1168,18 @@ class MARSModelParser(RobotModelParser):
     
     def _parse_geometry(self, vis_coll_dict, node, mode):
         '''
-        Parse the geometry of a visual or collision object.
+        Parse the geometry of a visual or collision object and add it to a the
+        respective existing dictionary.
+
+        :param vis_coll_dict: The visual or collision dictionary the parsed
+        information should be added to.
+        :type vis_coll_dict: dict.
+        :param node: The 'node' element the information should be parsed from.
+        :type node: xml.etree.ElementTree.Element.
+        :param mode: Indicate whether the geometry dictionary is supposed to
+        a visual or a collision dictionary; options are 'visual' and 'collision'.
+        :return: True if geometry information has been found in 'node', False
+        else.
         '''
         size = None
         if mode == 'visual':
@@ -1173,7 +1225,18 @@ class MARSModelParser(RobotModelParser):
     
     def _parse_visual(self, visuals_dict, node, missing_vis_geo, root_child=False):
         '''
-        Parse a visual object.
+        Parse information for a visual object from a 'node' element.
+        If no information for the visual's geometry can be parsed, indicate this by
+        adding the visual's name to 'missing_vis_geo'.
+
+        :param visuals_dict: The dictionary the parsed information should be added to.
+        :type visuals_dict: dict.
+        :param node: The 'node' element the information should be parsed from.
+        :type node: xml.etree.ElementTree.Element.
+        :param missing_vis_geo: A list of the names of visuals that do not have geometry
+        information.
+        :type missing_vis_geo: list.
+        :return: Nothing.
         '''
         visual_dict = {}
         name = self._find_name(node, prefix='visual')
@@ -1202,7 +1265,18 @@ class MARSModelParser(RobotModelParser):
         
     def _parse_collision(self, collisions_dict, node, missing_coll_geo):
         '''
-        Parse a collision object.
+        Parse information for a collision object from a 'node' element.
+        If no information for the collision's geometry can be parsed, indicate this by
+        adding the collision's name to 'missing_coll_geo'.
+
+        :param collisions_dict: The dictionary the parsed information should be added to.
+        :type collisions_dict: dict.
+        :param node: The 'node' element the information should be parsed from.
+        :type node: xml.etree.ElementTree.Element.
+        :param missing_coll_geo: A list of the names of collisions that do not have geometry
+        information.
+        :type missing_coll_geo: list.
+        :return: Nothing.
         '''
         collision_dict = {}
         name = self._find_name(node, prefix='collision')
@@ -1229,11 +1303,11 @@ class MARSModelParser(RobotModelParser):
         collisions_dict[name] = collision_dict
         
     def _parse_inertial(self, link_dict, node):
-        '''
+        """
         Parse an inertial.
         
         Note: Pose in inertia does not seem to be available.
-        '''
+        """
         inertial_dict = {}
         
         mass = node.find('mass')
@@ -1262,9 +1336,10 @@ class MARSModelParser(RobotModelParser):
         return inertial_dict
      
     def _get_distinct_name(self, name):
-        '''
-        Create a name that has not been used yet in this model.
-        '''
+        """
+        Create a name that has not been used yet in this model by adding
+        an index to the existing name if necessary.
+        """
         if name in self.name_counter_dict:
             name_counter = self.name_counter_dict[name]
             distinct_name = name + '_' + str(name_counter)
