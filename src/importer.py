@@ -61,31 +61,19 @@ MARScolordict = {'diffuseFront': 'diffuseColor',
 tmp_dir_name = 'phobos_magic_zip_tmp_dir'
 
 def register():
-    """
-    This function registers this module.
-    At the moment it does nothing.
-
-    :return: Nothing
+    """This function is called when this module is registered to blender.
 
     """
     print("Registering importer...")
 
 def unregister():
-    """
-    This function unregisters this module.
-    At the moment it does nothing.
-
-    :return: Nothing
+    """This function is called when this module is unregistered from blender.
 
     """
-
     print("Unregistering importer...")
 
 def cleanUpScene():
-    """This function cleans up the scene
-    and removes all blender objects, meshes, materials and lights.
-
-    :return: Nothing.
+    """This function cleans up the scene and removes all blender objects, meshes, materials and lights.
 
     """
     # select all objects
@@ -108,9 +96,14 @@ def cleanUpScene():
         bpy.data.lamps.remove(lamp)
 
 def store_element_order(element_order, path):
-    """
-    :param model:
-    :return:
+    """This function dumps whatever pythonic yaml structure to a given filepath and appends *_element_order_debug.yml*
+    to the end of path.
+
+    :param element_order: The dictionary you want to dump into a yaml file.
+    :type element_order: dict
+    :param path: The path you want to write the yaml dump to.
+    :type path: str
+
     """
     #element_order = {}
     #link_order = []
@@ -140,16 +133,29 @@ def store_element_order(element_order, path):
     stream.close()
 
 def round_float(float_as_str, decimal=6):
-    '''
-    Cast 'float_as_str' to float and round to 'decimal' decimal places.
-    '''
+    """Casts 'float_as_str' to float and round to 'decimal' decimal places. The possible exception **ValueError** is
+    not handled in the function itself!
+
+    :param float_as_str: The string you want to cast into a float.
+    :type float_as_str: str
+    :param decimal: The number of decimal places you want to round to. Its default is 6.
+    :type decimal: int
+    :return: float
+
+    """
     return round(float(float_as_str), decimal)
     
 def pos_rot_tree_to_lists(position, rotation):
-    '''
-    Convert the xml representations of a position and a rotation to
-    lists. If either is 'None', return a list of zeroes instead.
-    '''
+    """Convert the xml representations of a position and a rotation to lists.
+    If either is 'None', return a list of zeroes instead.
+
+    :param position: The xml representation of a position.
+    :type position: str
+    :param rotation: The xml representation of a rotation.
+    :type rotation: str
+    :return: tuple of two lists
+
+    """
     if position:
         px = round_float(position.find('x').text)
         py = round_float(position.find('y').text)
@@ -167,14 +173,22 @@ def pos_rot_tree_to_lists(position, rotation):
     return [px, py, pz], [rw, rx, ry, rz]
         
 def calc_pose_formats(position, rotation, pivot=[0,0,0]):
-    '''
-    Create a dictionary containing various representations of the pose
+    """Create a dictionary containing various representations of the pose
     represented by 'position' and 'rotation':
         - translation == position
-        - rotation_quaternion ==n rotation
+        - rotation_quaternion == rotation
         - rotation_euler: euler angles
         - matrix: position and rotation in 4x4 matrix form
-    '''
+
+    :param position: The position to include in the dictionary.
+    :type position: list
+    :param rotation: The rotation to include into the dictionary. It can either be an euler angle or a quaternion.
+    :type rotation: list
+    :param pivot: The pivot point.
+    :type pivot: list
+    :return: dict
+
+    """
     px, py, pz = position
     if len(rotation) == 3:
         rot = mathutils.Euler(rotation).to_quaternion()
@@ -241,9 +255,15 @@ def calc_pose_formats(position, rotation, pivot=[0,0,0]):
     return pose_dict
     
 def add_quaternion(rot1, rot2):
-    '''
-    Add two rotations in quaternion format.
-    '''
+    """Adds two rotations in quaternion format and returns the result as tuple.
+
+    :param rot1: The first summand.
+    :type rot1: list
+    :param rot2: The second summand.
+    :type rot2: list
+    :return: tuple
+
+    """
     quat1 = mathutils.Quaternion(rot1)
     quat2 = mathutils.Quaternion(rot2)
     quat_sum = quat1 * quat2
@@ -314,12 +334,23 @@ def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
 #     return mathutils.Matrix(rotation_matrix).to_4x4()
 
 def import_bobj(filepath):
-    """
+    """This function calls the bobj import function with the given filepath and no other parameters.
+
+    :param filepath: The path to the bobj file.
+    :type filepath: str
+
     """
     bobj_import.load(filepath)
 
 def get_phobos_joint_name(mars_name, has_limits):
-    """
+    """This function gets a mars joint name and returns the corresponding urdf joint type.
+
+    :param mars_name: The mars name for the joint.
+    :type mars_name: str
+    :param has_limits: Additional information to determine correct urdf joint name if mars_name is *hinge*.
+    :type has_limits: bool
+    :return: str
+
     """
     if mars_name == 'hinge':
         if has_limits:
@@ -339,8 +370,7 @@ class RobotModelParser():
         """This init saves the filepath splitted into path and filename and creates an initial empty robot dictionary.
 
         :param filepath: The filepath you want to export the robot to *WITH FILENAME*
-        :type filepath: String.
-        :return: Nothing.
+        :type filepath: str
 
         """
         self.filepath = filepath
@@ -364,9 +394,12 @@ class RobotModelParser():
     def praefixNames(self, name, praefix):
         """This function takes a name and a praefix and praefixes the name with it if its not already praefixed with it.
 
-        :param name: The name to praefix
-        :param praefix:  The praefix to use
-        :return: The praefixed name
+        :param name: The name to praefix.
+        :type name: str
+        :param praefix:  The praefix to use.
+        :type praefix: str
+        :return: str - The praefixed name
+
         """
         prae = praefix + "_"
         if (name.startswith(prae)):
@@ -379,10 +412,9 @@ class RobotModelParser():
         The function is very simple and could be improved to scale the links even more appropriate.
 
         :param link: the link containing the collision objects
-         :type link: dict.
-        :param newlink: the link you want to scale
-        :type newlink: dict.
-        :return: Nothing.
+        :type link: dict
+        :param newlink: the link you want to scale.
+        :type newlink: dict
 
         """
         newscale = 0.3
@@ -403,11 +435,10 @@ class RobotModelParser():
         newlink.scale = (newscale, newscale, newscale)
 
     def placeChildLinks(self, parent):
-        """This function creates the parent-child-lationship for a given parent and all existing children in blender.
+        """This function creates the parent-child-relationship for a given parent and all existing children in blender.
 
         :param parent: This is the parent link you want to set the children for.
-        :type: dict.
-        :return: Nothing.
+        :type: dict
 
         """
         bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
@@ -447,7 +478,7 @@ class RobotModelParser():
         In this case subelements are interials, visuals and collisions.
 
         :param link: The parent link you want to set the subelements for
-        :return: Nothing.
+        :type link: dict
 
         """
         bpy.context.scene.layers = blenderUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
@@ -500,8 +531,7 @@ class RobotModelParser():
         """This function attaches a given sensor to its parent link.
 
         :param sensor: The sensor you want to attach to its parent link.
-        :type sensor: dict.
-        :return: Nothing.
+        :type sensor: dict
 
         """
         bpy.context.scene.layers = blenderUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
@@ -526,6 +556,14 @@ class RobotModelParser():
 
 
     def createGeometry(self, viscol, geomsrc):
+        """This function takes a visual or collision object and creates the geometry for it.
+
+        :param viscol: The visual/collision object you want to create the geometry for.
+        :type viscol: dict
+        :param geomsrc: The new viscols phobostype.
+        :type geomsrc: str
+
+        """
         #TODO: Write doc
         newgeom = None
         if viscol['geometry'] is not {}:
@@ -620,10 +658,10 @@ class RobotModelParser():
         """This function creates the blender representation of a given intertial.
 
         :param name: The intertials name.
-        :param type: String.
+        :param type: str
         :param inertial: The intertial you want to create in blender form.
-        :type intertial: dict.
-        :return: Blender object -- the newly created blender intertial object.
+        :type intertial: dict
+        :return: bpy_types.Object -- the newly created blender inertial object.
 
         """
         bpy.ops.object.select_all(action='DESELECT')
@@ -644,8 +682,8 @@ class RobotModelParser():
         """This function creates the blender representation of a given link
 
         :param link: The link you want to create a representation of.
-        :type link: dict.
-        :return: Blender object -- the newly created blender link object.
+        :type link: dict
+        :return: bpy_types.Object -- the newly created blender link object.
 
         """
         bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
@@ -692,8 +730,9 @@ class RobotModelParser():
         return obj
 
     def _apply_joint_angle_offsets(self):
-        '''
-        '''
+        """This function applies joint angle offsets in blender to all links in self.robot.
+
+        """
         links = self.robot['links']
         for link_name in links:
             link = links[link_name]
@@ -729,8 +768,7 @@ class RobotModelParser():
         """This function creates the blender representation of a given joint.
 
         :param joint: The joint you want to create a blender object from.
-        :type joint: dict.
-        :return: Nothing.
+        :type joint: dict
 
         """
         bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
@@ -775,8 +813,7 @@ class RobotModelParser():
         """This function creates the motor properties in the motors joint object.
 
         :param motor: The motor you want to create the properties from.
-        :type motor: dict.
-        :return: Nothing.
+        :type motor: dict
 
         """
         #try:
@@ -823,22 +860,42 @@ class RobotModelParser():
         sensors.createSensor(sensor, reference)
 
     def createController(self, controller):
+        """This function creates a specified controller.
+
+        :param controller: The controller to create.
+        :type controller: dict
+
+        """
         controllers.addController(controller)
 
     def createLight(self, light):
+        """This function creates a specified light.
+
+        :param light: The light to create.
+        :type light: dict
+
+        """
         lights.addLight(light)
 
     def createGroup(self, group):
+        """
+
+        :param group:
+
+        """
         pass
 
     def createChain(self, chain):
+        """
+
+        :param chain:
+
+        """
         pass
 
     def createBlenderModel(self): #TODO: solve problem with duplicated links (linklist...namespaced via robotname?)
         """Creates the blender object representation of the imported model.
         For that purpose it uses the former specified robot model dictionary.
-
-        :return: Nothing.
 
         """
         print("\n\nCreating Blender model...")
@@ -914,9 +971,9 @@ class RobotModelParser():
 
         
     def _debug_output(self):
-        '''
-        Write the robot dictionary to a yaml file in the source file's directory
-        '''
+        """Writes the robot dictionary to a yaml file in the source file's directory
+
+        """
         with open(self.filepath + '_ref_debug.yml', 'w') as outputfile:
             outputfile.write(yaml.dump(self.robot)) #last parameter prevents inline formatting for lists and dictionaries
 
@@ -975,8 +1032,9 @@ class MARSModelParser(RobotModelParser):
         self.zipped = zipped
 
     def parseModel(self):
-        '''
-        '''
+        """This function parses mars scene and creates a blender representation from it.
+
+        """
         print("\nParsing MARS scene from", self.filepath)
 
         if self.zipped:
@@ -1034,6 +1092,16 @@ class MARSModelParser(RobotModelParser):
         #print(self.joint_index_dict)
 
     def _find_name(self, struct, prefix='', emerg='link'):
+        """This function extracts a name out of a given struct and returns it. It can be prefixed.
+
+        :param struct: The struct to extract the name from.
+        :param prefix: The prefix to modify the name with.
+        :type prefix: str
+        :param emerg: The optional name if none is found.
+        :type emerg: str
+        :return: str - the found (and modified) name.
+
+        """
         name = struct.get('name')
         if name is None:
             name_xml = struct.find('name')
@@ -1050,10 +1118,14 @@ class MARSModelParser(RobotModelParser):
         return self._get_distinct_name(prefix + name)
 
     def _get_links(self, nodes, joints):
-        '''
-        Collect the indices of all nodes that are links inside
-        'self.link_indices'.
-        '''
+        """Collects the indices of all nodes that are links inside 'self.link_indices'.
+
+        :param nodes:
+        :type nodes: list
+        :param joints:
+        :type joints: list
+
+        """
         if joints is not None:
             for joint in joints:
                 child = int(joint.find('nodeindex2').text)
@@ -1063,8 +1135,9 @@ class MARSModelParser(RobotModelParser):
                 self.link_indices.update([int(node.find('index').text)])
 
     def _create_joints_dict(self):
-        '''
-        '''
+        """PLEASE DOC ASAP
+
+        """
         joints_dict = {}
         for joint_name in self.joint_info:
             joint = self.joint_info[joint_name]
@@ -1078,10 +1151,9 @@ class MARSModelParser(RobotModelParser):
         return joints_dict
         
     def _parse_materials(self, materials_tree):
-        '''
-        Parse the materials from the MARS scene.
+        """Parses the materials from the MARS scene.
 
-        '''
+        """
         materials_dict = {}
         for material in materials_tree:
             material_dict = {}
@@ -1126,9 +1198,9 @@ class MARSModelParser(RobotModelParser):
         return materials_dict
     
     def _parse_geometry(self, vis_coll_dict, node, mode):
-        '''
-        Parse the geometry of a visual or collision object.
-        '''
+        """Parses the geometry of a visual or collision object.
+
+        """
         size = None
         if mode == 'visual':
             size = node.find('visualsize')
@@ -1172,9 +1244,8 @@ class MARSModelParser(RobotModelParser):
             return True
     
     def _parse_visual(self, visuals_dict, node, missing_vis_geo, root_child=False):
-        '''
-        Parse a visual object.
-        '''
+        """Parses a visual object.
+        """
         visual_dict = {}
         name = self._find_name(node, prefix='visual')
         visual_dict['name'] = name
@@ -1201,9 +1272,8 @@ class MARSModelParser(RobotModelParser):
         visuals_dict[name] = visual_dict
         
     def _parse_collision(self, collisions_dict, node, missing_coll_geo):
-        '''
-        Parse a collision object.
-        '''
+        """Parses a collision object.
+        """
         collision_dict = {}
         name = self._find_name(node, prefix='collision')
         collision_dict['name'] = name
@@ -1229,11 +1299,12 @@ class MARSModelParser(RobotModelParser):
         collisions_dict[name] = collision_dict
         
     def _parse_inertial(self, link_dict, node):
-        '''
-        Parse an inertial.
+        """
+        Parses an inertial.
         
         Note: Pose in inertia does not seem to be available.
-        '''
+
+        """
         inertial_dict = {}
         
         mass = node.find('mass')
@@ -1262,9 +1333,8 @@ class MARSModelParser(RobotModelParser):
         return inertial_dict
      
     def _get_distinct_name(self, name):
-        '''
-        Create a name that has not been used yet in this model.
-        '''
+        """Creates a name that has not been used yet in this model.
+        """
         if name in self.name_counter_dict:
             name_counter = self.name_counter_dict[name]
             distinct_name = name + '_' + str(name_counter)
@@ -1275,9 +1345,9 @@ class MARSModelParser(RobotModelParser):
         return distinct_name
         
     def _parse_links(self, nodes):
-        '''
-        Parse the links of the MARS scene.
-        '''
+        """Parses the links of the MARS scene.
+
+        """
         links_dict = {}
         for node in nodes:
             missing_vis_geo = []
@@ -1361,12 +1431,12 @@ class MARSModelParser(RobotModelParser):
         return links_dict
         
     def _add_parent_links(self, links):
-        '''
-        Replace parent indices (not actually parent indices!) with parent names inside the link
+        """Replaces parent indices (not actually parent indices!) with parent names inside the link
         dictionaries.
         
         TODO: There is a better solution, surely.
-        '''
+
+        """
         for link_name in links:
             link = links[link_name]
             if 'parent' in link:
@@ -1379,10 +1449,10 @@ class MARSModelParser(RobotModelParser):
 
         
     def _parse_additional_visuals_and_collisions(self, model, nodes):
-        '''
-        Parse nodes that are no links as additional visual and collision
+        """Parses nodes that are no links as additional visual and collision
         objects for the already parsed links.
-        '''
+
+        """
         for link in self.link_groups_link_order:
             for node in self.link_groups_link_order[link]:
                 self.vis_coll_groups[node['index']] = link
@@ -1413,9 +1483,9 @@ class MARSModelParser(RobotModelParser):
                         break
         
     def _parse_joints(self, joints):
-        '''
-        Parse the joints of the MARS scene.
-        '''
+        """Parses the joints of the MARS scene.
+
+        """
         state_dict = {}
         if joints is None:
             return
