@@ -61,7 +61,7 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
                     verbose=False):
     """Generates the primitive specified by the input parameters"""
     if verbose:
-        print(ptype, psize)
+        log(ptype + psize, "INFO", "createPrimitive")
     try:
         # n_layer = bpy.context.scene.active_layer
         n_layer = int(player)
