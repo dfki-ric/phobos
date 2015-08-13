@@ -68,7 +68,7 @@ def adjustLevel(type, isEnabled):
     if type in levels:
         levels[type] = isEnabled
 
-def log(msg, logType="WARNING"):
+def log(msg, logType="WARNING", parent=""):
     """Logs a given message and a given log level.
     If there is a registered operator its report function is used, else its printed to the console.
 
