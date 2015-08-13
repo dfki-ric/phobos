@@ -39,22 +39,14 @@ from phobos.logging import log
 
 
 def register():
-    """
-    This function registers this module.
-    At the moment it does nothing.
-
-    :return: Nothing
+    """This function is called when this module is registered to blender.
 
     """
     print("Registering inertia...")
 
 
 def unregister():
-    """
-    This function unregisters this module.
-    At the moment it does nothing.
-
-    :return: Nothing
+    """This function is called when this module is unregistered from blender.
 
     """
     print("Unregistering inertia...")
@@ -65,8 +57,8 @@ def calculateMassOfLink(link):
     compares it to mass in link inertial object if present and returns the max of both, warning if they are not equal.
 
     :param link: The link you want to calculate the visuals and collision objects mass of.
-    :type link: dict.
-    :return: double.
+    :type link: dict
+    :return: double
 
     """
     objects = getInertiaRelevantObjects(link, ['visual', 'collision'])
@@ -84,10 +76,10 @@ def calculateInertia(mass, geometry):
     returns the upper diagonal of the inertia 3x3 inertia tensor.
 
     :param mass: The objects mass.
-    :type mass: double.
+    :type mass: double
     :param geometry: The object dictionaries geometry part.
-    :type geometry: dict.
-    :return: tuple(6).
+    :type geometry: dict
+    :return: tuple(6)
 
     """
     inertia = None
@@ -107,10 +99,10 @@ def calculateBoxInertia(mass, size):
     """Returns upper diagonal of inertia tensor of a box as tuple.
 
     :param mass: The box' mass.
-    :type mass: double.
+    :type mass: double
     :param size: The box' size.
-    :type size: double.
-    :return: tuple(6).
+    :type size: double
+    :return: tuple(6)
 
     """
     i = mass / 12
@@ -127,12 +119,12 @@ def calculateCylinderInertia(mass, r, h):
     """Returns upper diagonal of inertia tensor of a cylinder as tuple.
 
     :param mass: The cylinders mass.
-    :type mass: double.
+    :type mass: double
     :param r: The cylinders radius.
-    :type r: double.
+    :type r: double
     :param h: The cylinders height.
-    :type h: double.
-    :return: tuple(6).
+    :type h: double
+    :return: tuple(6)
 
     """
     i = mass / 12 * (3 * r**2 + h**2)
@@ -149,10 +141,10 @@ def calculateSphereInertia(mass, r):
     """Returns upper diagonal of inertia tensor of a sphere as tuple.
 
     :param mass: The spheres mass.
-    :type mass: double.
+    :type mass: double
     :param r: The spheres radius.
-    :type r: double.
-    :return: tuple(6).
+    :type r: double
+    :return: tuple(6)
 
     """
     i = 0.4 * mass * r**2
@@ -169,10 +161,10 @@ def calculateEllipsoidInertia(mass, size):
     """Returns upper diagonal of inertia tensor of an ellipsoid as tuple.
 
     :param mass: The ellipsoids mass.
-    :type mass: double.
+    :type mass: double
     :param size: The ellipsoids size.
-    :type r: double.
-    :return: tuple(6).
+    :type r: double
+    :return: tuple(6)
 
     """
     i = mass / 5
@@ -188,9 +180,9 @@ def calculateEllipsoidInertia(mass, size):
 def inertiaListToMatrix(il):
     """Takes a tuple or list representing the upper diagonal of a 3x3 inertia tensor and returns the full tensor.
 
-    :param il: The upper diagonal of a 3x3 inertia tensor
-    :type il: tuple(6) or list[6].
-    :return: blender matrix.
+    :param il: The upper diagonal of a 3x3 inertia tensor.
+    :type il: tuple(6) or list[6]
+    :return: mathutil.Matrix
 
     """
     inertia = [[il[0], il[1], il[2]],
@@ -203,7 +195,7 @@ def inertiaMatrixToList(im):
     """Takes a full 3x3 inertia tensor and returns a tuple representing the upper diagonal.
 
     :param im: The inertia tensor matrix.
-    :type im: blender matrix
+    :type im: mathutil.Matrix
     :return: tuple(6)
 
     """
@@ -217,8 +209,8 @@ def getInertiaRelevantObjects(link):
     visual objects are omitted in favor of collision objects.
 
     :param link: The link you want to gather the inertia relevant objects for.
-    :type link: Blender object.
-    :return: list.
+    :type link: bpy_types.Object
+    :return: list
 
     """
     objdict = {obj.name: obj for obj in selectionUtils.getImmediateChildren(link, ['visual', 'collision'])}
@@ -254,12 +246,12 @@ def getInertiaRelevantObjects(link):
 def fuseInertiaData(inertials):
     """Returns mass, center of mass and inertia of a link as a whole, taking a list of inertials.
 
-    *mass*: double.
+    *mass*: double
     *com*: mathutils:Vector(3)
     *inertia*: mathutils:Matrix(3)
 
     :param inertials: The alist of objects relevant for the inertia of a link.
-    :type inertials: list.
+    :type inertials: list
     :return: tuple(3) -- see description for content.
 
     """
@@ -289,8 +281,8 @@ def createInertial(obj):
     object and parents it to the correct link.
 
     :param obj: The object you want to copy the world transform from.
-    :type obj: blender object.
-    :return: blender object -- the newly created inertia.
+    :type obj: bpy_types.Object
+    :return: bpy_types.Object -- the newly created inertia.
 
     """
     if obj.phobostype == 'link':
@@ -315,7 +307,17 @@ def createInertial(obj):
 
 
 def createInertials(link, empty=False, preserve_children=False):
-    # create inertial representations for visual and collision objects in link
+    """Creates inertial representations for visual and collision objects in link.
+
+    :param link: The link you want to create the inertial for.
+    :type link: bpy_types.Object
+    :param empty: If set to True the new inertial object will contain no information.
+    :type empty: bool
+    :param preserve_children: If set to False already existent inertial objects will be deleted.
+    :type preserve_children: bool
+
+    """
+    #
     viscols = getInertiaRelevantObjects(link)
     # clean existing data
     if not preserve_children:
@@ -360,8 +362,11 @@ def createInertials(link, empty=False, preserve_children=False):
 
 
 def combine_cog_3x3(objects):
-    """
-    combine center the COG of a list of bodies given with their masses and their centers of gravity
+    """Combines center the COG of a list of bodies given with their masses and their centers of gravity
+
+    :param objects: The list of objects you want to combine the COG.
+    :type objects: list containing phobos dicts
+
     """
     if objects == []:
         return 0.0, mathutils.Vector((0.0,)*3)
