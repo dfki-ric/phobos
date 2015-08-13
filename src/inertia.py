@@ -36,6 +36,7 @@ import phobos.robotdictionary as robotdictionary
 import phobos.utils.general as generalUtils
 import phobos.utils.selection as selectionUtils
 import phobos.utils.blender as blenderUtils
+import phobos.utils.naming as namingUtils
 from phobos.logging import log
 
 
@@ -350,7 +351,7 @@ def createInertial(obj):
         size = (0.02, 0.02, 0.02)
     rotation = obj.matrix_world.to_euler()
     center = obj.matrix_world.to_translation()
-    inertial = blenderUtils.createPrimitive('inertial_' + obj.name, 'box', size,
+    inertial = blenderUtils.createPrimitive('inertial_' + namingUtils.getObjectName(obj, phobostype="link"), 'box', size,
                                    defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     inertial.phobostype = 'inertial'
