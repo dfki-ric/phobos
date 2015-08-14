@@ -1073,7 +1073,7 @@ class MARSModelParser(RobotModelParser):
                 name = name_xml.text
         if prefix is not '':
             prefix += '_'
-        return self._get_distinct_name(prefix + name)
+        return self._get_unique_name(prefix + name)
 
     def _get_links(self, nodes, joints):
         """
@@ -1129,10 +1129,7 @@ class MARSModelParser(RobotModelParser):
             mat_id = int(material.find('id').text)
             
             # check needs to be explicit for future versions
-            if material.find('name') is not None:
-                name = self._get_distinct_name(material.find('name').text)
-            else:
-                name = 'material_' + str(mat_id)
+            name = self._find_name(material, emerg='material')
             material_dict['name'] = name
 
             #print('DEFS:', dir(defs))
@@ -1147,7 +1144,6 @@ class MARSModelParser(RobotModelParser):
                     material_dict[py_colour] = [r, g, b, a]
                     # for now:
             #        material_dict['color'] = [r, g, b, a]
-            
             
             transparency = material.find('transparency')
             if transparency is not None:
@@ -1339,10 +1335,8 @@ class MARSModelParser(RobotModelParser):
             inertial_dict['pose'] = calc_pose_formats(position, rotation)
             inertial_dict['name'] = self._find_name(node, prefix='inertial')
             link_dict['inertial'] = inertial_dict
-
-        return inertial_dict
      
-    def _get_distinct_name(self, name):
+    def _get_unique_name(self, name):
         """
         Create a name that has not been used yet in the currently parsed scene
         by adding an index to the original name if necessary.
@@ -1406,8 +1400,7 @@ class MARSModelParser(RobotModelParser):
                 #self._parse_collision(collisions_dict, node, missing_coll_geo)
                 link_dict['collision'] = collisions_dict
                 
-                inertial_dict = self._parse_inertial(link_dict, node)
-                link_dict['inertial'] = inertial_dict
+                self._parse_inertial(link_dict, node)
 
                 pivot = node.find('pivot')
                 if pivot is not None:
@@ -1469,7 +1462,6 @@ class MARSModelParser(RobotModelParser):
                     parent_id = rel_id
                 link['parent'] = self.link_index_dict[parent_id]
 
-        
     def _parse_additional_visuals_and_collisions(self, model, nodes):
         """
         Parse nodes that are no links as additional visual and collision
@@ -1487,17 +1479,15 @@ class MARSModelParser(RobotModelParser):
         
         for node in nodes:
             index = int(node.find('index').text)
-            rel_id = node.find('relativeid')
+            #rel_id = node.find('relativeid')
             #if rel_id is None:           # check if node is root
             #    root_child = True
             #else:
             #    root_child = False
             if index in self.vis_coll_groups:
-                #print('YUP')
                 link_index = self.vis_coll_groups[index]
                 group = self.link_groups_link_order[link_index]
                 for group_node in group:
-                    #print('group node', group_node)
                     if group_node['index'] == link_index:
                         name = group_node['name']
                         visuals_dict = model['links'][name]['visual']
@@ -1880,8 +1870,6 @@ class MARSModelParser(RobotModelParser):
                 lights_dict[name] = light_dict
 
         return lights_dict
-
-
 
 
 
