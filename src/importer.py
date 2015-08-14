@@ -914,9 +914,9 @@ class RobotModelParser():
 
         
     def _debug_output(self):
-        '''
+        """
         Write the robot dictionary to a yaml file in the source file's directory
-        '''
+        """
         with open(self.filepath + '_ref_debug.yml', 'w') as outputfile:
             outputfile.write(yaml.dump(self.robot)) #last parameter prevents inline formatting for lists and dictionaries
 
@@ -982,13 +982,13 @@ class MARSModelParser(RobotModelParser):
         self.zipped = zipped
 
     def parseModel(self):
-        '''
+        """
         Parse a MARS scene from a '.scene' file.
 
         Zipped '.scn' files will be handled accordingly.
 
         :return: Nothing.
-        '''
+        """
         print("\nParsing MARS scene from", self.filepath)
 
         if self.zipped:
@@ -1076,7 +1076,7 @@ class MARSModelParser(RobotModelParser):
         return self._get_distinct_name(prefix + name)
 
     def _get_links(self, nodes, joints):
-        '''
+        """
         Collect the indices of all nodes that are links inside
         'self.link_indices'.
 
@@ -1085,7 +1085,7 @@ class MARSModelParser(RobotModelParser):
         :param joints: The 'joints' element of the currently parsed scene.
         :type joints: xml.etree.ElementTree.Element
         :return: Nothing.
-        '''
+        """
         if joints is not None:
             for joint in joints:
                 child = int(joint.find('nodeindex2').text)
@@ -1095,13 +1095,13 @@ class MARSModelParser(RobotModelParser):
                 self.link_indices.update([int(node.find('index').text)])
 
     def _create_joints_dict(self):
-        '''
+        """
         Create a dictionary containing the necessary information for the robot
         dictionary. Use the previously parsed information in 'self.joint_info'
         and 'self.link_index_dict' for this.
 
         :return: The created dictionary.
-        '''
+        """
         joints_dict = {}
         for joint_name in self.joint_info:
             joint = self.joint_info[joint_name]
@@ -1115,14 +1115,14 @@ class MARSModelParser(RobotModelParser):
         return joints_dict
         
     def _parse_materials(self, materials_tree):
-        '''
+        """
         Parse the materials from the MARS scene.
 
         :param materials_tree: The 'materiallist' element from the currently
         parsed scene.
         :type materials_tree: xml.etree.ElementTree.Element.
         :return: A dictionary containing the parsed information.
-        '''
+        """
         materials_dict = {}
         for material in materials_tree:
             material_dict = {}
@@ -1167,7 +1167,7 @@ class MARSModelParser(RobotModelParser):
         return materials_dict
     
     def _parse_geometry(self, vis_coll_dict, node, mode):
-        '''
+        """
         Parse the geometry of a visual or collision object and add it to a the
         respective existing dictionary.
 
@@ -1180,7 +1180,7 @@ class MARSModelParser(RobotModelParser):
         a visual or a collision dictionary; options are 'visual' and 'collision'.
         :return: True if geometry information has been found in 'node', False
         else.
-        '''
+        """
         size = None
         if mode == 'visual':
             size = node.find('visualsize')
@@ -1225,7 +1225,7 @@ class MARSModelParser(RobotModelParser):
 
     #def _parse_visual(self, visuals_dict, node, missing_vis_geo, root_child):
     def _parse_visual(self, visuals_dict, node, missing_vis_geo):
-        '''
+        """
         Parse information for a visual object from a 'node' element.
         If no information for the visual's geometry can be parsed, indicate this by
         adding the visual's name to 'missing_vis_geo'.
@@ -1238,7 +1238,7 @@ class MARSModelParser(RobotModelParser):
         information.
         :type missing_vis_geo: list.
         :return: Nothing.
-        '''
+        """
         visual_dict = {}
         name = self._find_name(node, prefix='visual')
         visual_dict['name'] = name
@@ -1265,7 +1265,7 @@ class MARSModelParser(RobotModelParser):
         visuals_dict[name] = visual_dict
         
     def _parse_collision(self, collisions_dict, node, missing_coll_geo):
-        '''
+        """
         Parse information for a collision object from a 'node' element.
         If no information for the collision's geometry can be parsed, indicate this by
         adding the collision's name to 'missing_coll_geo'.
@@ -1278,7 +1278,7 @@ class MARSModelParser(RobotModelParser):
         information.
         :type missing_coll_geo: list.
         :return: Nothing.
-        '''
+        """
         collision_dict = {}
         name = self._find_name(node, prefix='collision')
         collision_dict['name'] = name
@@ -1305,9 +1305,15 @@ class MARSModelParser(RobotModelParser):
         
     def _parse_inertial(self, link_dict, node):
         """
-        Parse an inertial.
+        Parse the inertial information of a node and write it into the
+        respective link's dictionary.
         
-        Note: Pose in inertia does not seem to be available.
+        :param link_dict: The dictionary of for the link the inertial
+        information should be written to.
+        :type link_dict: dict.
+        :param node: The 'node' element the information should be parsed from.
+        :type node: xml.etree.ElementTree.Element.
+        :return: Nothing.
         """
         inertial_dict = {}
         
@@ -1338,8 +1344,12 @@ class MARSModelParser(RobotModelParser):
      
     def _get_distinct_name(self, name):
         """
-        Create a name that has not been used yet in this model by adding
-        an index to the existing name if necessary.
+        Create a name that has not been used yet in the currently parsed scene
+        by adding an index to the original name if necessary.
+
+        :param name: The original name.
+        :type name: str.
+        :return: A unique version of the original name.
         """
         if name in self.name_counter_dict:
             name_counter = self.name_counter_dict[name]
@@ -1351,9 +1361,13 @@ class MARSModelParser(RobotModelParser):
         return distinct_name
         
     def _parse_links(self, nodes):
-        '''
-        Parse the links of the MARS scene.
-        '''
+        """
+        Parse information for the links from the currently parsed scene.
+
+        :param nodes: The 'nodelist' element of the MARS scene.
+        :type nodes: xml.etree.ElementTree.Element.
+        :return: A dictionary containing the parsed information.
+        """
         links_dict = {}
         for node in nodes:
             missing_vis_geo = []
@@ -1437,12 +1451,14 @@ class MARSModelParser(RobotModelParser):
         return links_dict
         
     def _add_parent_links(self, links):
-        '''
-        Replace parent indices (not actually parent indices!) with parent names inside the link
-        dictionaries.
-        
-        TODO: There is a better solution, surely.
-        '''
+        """
+        Replace the 'parent' place holders inside the parsed links with the
+        actual parent names.
+
+        :param links: A dictionary containing the parsed link information.
+        :type links: dict.
+        :return: Nothing.
+        """
         for link_name in links:
             link = links[link_name]
             if 'parent' in link:
@@ -1455,10 +1471,16 @@ class MARSModelParser(RobotModelParser):
 
         
     def _parse_additional_visuals_and_collisions(self, model, nodes):
-        '''
+        """
         Parse nodes that are no links as additional visual and collision
         objects for the already parsed links.
-        '''
+
+        :param model: The current scene's already parsed information.
+        :type model: dict.
+        :param nodes: The 'nodelist' element of the currently parse scene.
+        :type nodes: xml.etree.ElementTree.Element.
+        :return: Nothing.
+        """
         for link in self.link_groups_link_order:
             for node in self.link_groups_link_order[link]:
                 self.vis_coll_groups[node['index']] = link
@@ -1490,9 +1512,13 @@ class MARSModelParser(RobotModelParser):
                         break
         
     def _parse_joints(self, joints):
-        '''
-        Parse the joints of the MARS scene.
-        '''
+        """
+        Parse the joint information from the currently parsed scene.
+
+        :param joints: The 'jointlist' element of the currently parsed scene.
+        :type joints: xml.etree.ElementTree.Element.
+        :return: Nothing.
+        """
         state_dict = {}
         if joints is None:
             return
@@ -1557,8 +1583,16 @@ class MARSModelParser(RobotModelParser):
 
         self.robot_states['start'] = state_dict
 
-
     def _apply_relative_ids(self, nodes):
+        """
+        Calculate absolute poses from the relative ones given in the scene by
+        using the nodes' 'relativeid' tags. Store these poses into
+        'self.applied_vis_col_poses'.
+
+        :param nodes: The 'nodelist' element of the currently parse scene.
+        :type nodes: xml.etree.ElementTree.Element.
+        :return: Nothing.
+        """
         absolute_poses = {}
         absolute_vis_coll_poses = {}
         relative_poses = {}
@@ -1632,8 +1666,13 @@ class MARSModelParser(RobotModelParser):
         self.applied_vis_col_poses = absolute_vis_coll_poses
 
     def _parse_sensors(self, sensors):
-        '''
-        '''
+        """
+        Parse the sensor information from the currently parsed scene.
+
+        :param sensors: The scene's 'sensorlist' element.
+        :type sensors: xml.etree.ElementTree.Element.
+        :return: A dictionary containing the parsed information.
+        """
         sensors_dict = {}
         for sensor in sensors:
             sensor_dict = {}
@@ -1675,8 +1714,13 @@ class MARSModelParser(RobotModelParser):
         return sensors_dict
     
     def _parse_motors(self, motors):
-        '''
-        '''
+        """
+        Parse the motor information from the currently parsed scene.
+
+        :param motors: The scene's 'motorlist' element.
+        :type motors: xml.etree.ElementTree.Element.
+        :return: A dictionary containing the parsed information.
+        """
         motors_dict = {}
         if motors is None:
             return motors_dict
@@ -1715,8 +1759,13 @@ class MARSModelParser(RobotModelParser):
         return motors_dict
     
     def _parse_controllers(self, controllers):
-        '''
-        '''
+        """
+        Parse the controller information from the currently parsed scene.
+
+        :param controllers: The scene's 'controllerlist' element.
+        :type controllers: xml.etree.ElementTree.Element.
+        :return: A dictionary containing the parsed information.
+        """
         controllers_dict = {}
         if controllers:
             for controller in controllers:
@@ -1742,6 +1791,11 @@ class MARSModelParser(RobotModelParser):
 
     def _parse_lights(self, lights, links):
         """
+        Parse the light information from the currently parsed scene.
+
+        :param lights: The scene's 'lightlist' element.
+        :type lights: xml.etree.ElementTree.Element.
+        :return: A dictionary containing the parsed information.
         """
         lights_dict = {}
         if lights:
@@ -1777,7 +1831,6 @@ class MARSModelParser(RobotModelParser):
                         abs_pose = rel_pose
                 else:
                     abs_pose = rel_pose
-
 
                 light_dict['pose'] = abs_pose
 
