@@ -179,36 +179,43 @@ def calculateSphereInertia(mass, r):
     izz = i
     return (ixx, ixy, ixz, iyy, iyz, izz,)
 
-def calculateCapsuleInertia(mass, radius, length):
+
+def calculateCapsuleInertia(mass, r, h):
     """
-    :param mass:
-    :param radius:
-    :param length:
-    :return:
+    Returns upper diagonal of inertia tensor of a capsule as tuple.
+
+    Code adapted from http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856
+
+    :param mass: The capsule's mass.
+    :type mass: float.
+    :param r: The capsule's radius.
+    :param h: float.
+    :return: tuple(6).
     """
     print('###########################')
     print('calculating capsule inertia')
     print('###########################')
 
-    cylinder_volume = math.pi * radius**2 * length
-    hemisphere_volume = ((4/3) * math.pi * radius**3) / 2
+    cylinder_volume = math.pi * r**2 * h
+    hemisphere_volume = ((4/3) * math.pi * r**3) / 2
     volume = cylinder_volume + 2*hemisphere_volume
 
     cylinder_mass = mass / (volume / cylinder_volume)
     hemisphere_mass = mass / (volume / hemisphere_volume)
 
-    temp0 = hemisphere_mass * 2.0 * radius**2 / 5.0
-    temp1 = length * 0.5
-    temp2 = temp0 + hemisphere_mass * (temp1**2 + 0.375 * length * radius)
+    temp0 = hemisphere_mass * 2.0 * r**2 / 5.0
+    temp1 = h * 0.5
+    temp2 = temp0 + hemisphere_mass * (temp1**2 + 0.375 * h * r)
 
-    ixx = (radius**2 * cylinder_mass / 2.0) / 2.0 + cylinder_mass * length**2 / 12.0 + temp2 * 2.0
+    ixx = (r**2 * cylinder_mass / 2.0) / 2.0 + cylinder_mass * h**2 / 12.0 + temp2 * 2.0
     ixy = 0
     ixz = 0
     iyy = ixx
     iyz = 0
-    izz = radius**2 * cylinder_mass / 2.0 + temp0 * 2.0
+    izz = r**2 * cylinder_mass / 2.0 + temp0 * 2.0
 
     return (ixx, ixy, ixz, iyy, iyz, izz,)
+
 
 def calculateEllipsoidInertia(mass, size):
     """Returns upper diagonal of inertia tensor of an ellipsoid as tuple.
