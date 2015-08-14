@@ -58,7 +58,6 @@ def cameraRotLock(object):
     object.constraints["Limit Rotation"].max_z = object.rotation_euler[2]
 
 
-
 def createSensor(sensor, reference, origin=mathutils.Matrix()):
     blenderUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object
@@ -91,15 +90,14 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
             newsensor['sensor/nodes'] = sorted(reference)
         elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
             newsensor['sensor/joints'] = sorted(reference)
-        if reference is not None and reference != []:
-            selectionUtils.selectObjects([newsensor, selectionUtils.getRoot(bpy.data.objects[0])], clear=True, active=1)
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
     # set sensor properties
     newsensor.phobostype = 'sensor'
     newsensor.name = sensor['name']
     newsensor['sensor/type'] = sensor['type']
-    for prop in sensor['props']:
-        newsensor['sensor/'+prop] = sensor['props'][prop]
+
+    #for prop in ['link', 'joint', 'links', 'joints', 'motors']:
+    #    if prop in sensor:
+    #        newsensor['sensor/'+prop] = sensor[prop]
 
     # add custom properties
     #for prop in sensor:

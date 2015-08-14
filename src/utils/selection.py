@@ -122,5 +122,14 @@ def getObjectByName(name):
     return objlist
 
 
+def getObjectByNameAndType(name, type):
+    nameTag = type + "/name"
+    for obj in bpy.data.objects:
+        if nameTag in obj and name == obj[nameTag]:
+            return obj
+    log("No object of type " + type + " with name " + name + " found.", "WARNING")
+    return None
+
+
 def selectByName(name):
     selectObjects(getObjectByName(name), True)

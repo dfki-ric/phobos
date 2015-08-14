@@ -514,7 +514,8 @@ class RobotModelParser():
             urdf_geom_rot = mathutils.Matrix.Identity(4)
         sensorobj = bpy.data.objects[sensor['name']]
         if 'link' in sensor:
-            parentLink = bpy.data.objects[sensor['link']]
+            parentLink = selectionUtils.getObjectByNameAndType(sensor['link'], 'link')
+            #parentLink = bpy.data.objects['link_' + sensor['link']]
             selectionUtils.selectObjects([sensorobj, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
         else:
