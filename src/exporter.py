@@ -40,7 +40,6 @@ from datetime import datetime
 import yaml
 import struct
 import itertools
-import phobos.marssceneexport as mse
 import phobos.robotdictionary as robotdictionary
 import phobos.defs as defs
 import phobos.utils.blender as blenderUtils
