@@ -34,7 +34,21 @@ import phobos.utils.selection as selectionUtils
 import phobos.robotdictionary as robotdictionary
 import phobos.validator as validator
 import phobos.utils.general as generalUtils
-import phobos.utils.blender as blenderUtils
+
+
+current_robot_name = ''
+
+
+def get_robot_names(scene, context):
+    robot_names = [(root['modelname'],)*3 for root in selectionUtils.getRoots()]
+    return robot_names
+
+
+def get_pose_names(scene, context):
+    poses = robotdictionary.get_poses(current_robot_name)
+    pose_items = [(pose,)*3 for pose in poses]
+    return pose_items
+
 
 
 class SelectError(Operator):
@@ -175,10 +189,17 @@ class SetLogSettings(Operator):
 
 class StorePoseOperator(Operator):
     """
+    Store the current pose of selected links in one of the scene's robots.
     """
     bl_idname = 'object.store_pose'
     bl_label = "Store the robot's current pose"
     bl_options = {'REGISTER', 'UNDO'}
+
+    robot_name = EnumProperty(
+        items=get_robot_names,
+        name="Robot",
+        description="Robot to store pose for"
+    )
 
     pose_name = StringProperty(
         name="Pose Name",
@@ -187,23 +208,32 @@ class StorePoseOperator(Operator):
     )
 
     def execute(self, context):
-        robotdictionary.storePose(self.pose_name)
+        robotdictionary.storePose(self.robot_name, self.pose_name)
         return {'FINISHED'}
 
 
 class LoadPoseOperator(Operator):
     """
+    Load a previously stored pose for one of the scene's robots.
     """
     bl_idname = 'object.load_pose'
     bl_label = "Load a pose for the robot"
     bl_options = {'REGISTER', 'UNDO'}
 
-    pose_name = StringProperty(
+    robot_name = EnumProperty(
+        items=get_robot_names,
+        name="Robot Name",
+        description="Robot to load a pose for"
+    )
+
+    pose_name = EnumProperty(
+        items=get_pose_names,
         name="Pose Name",
-        default="New Pose",
         description="Name of pose to load"
     )
 
     def execute(self, context):
-        blenderUtils.loadPose(self.pose_name)
+        global current_robot_name
+        current_robot_name = self.robot_name
+        robotdictionary.loadPose(self.robot_name, self.pose_name)
         return {'FINISHED'}

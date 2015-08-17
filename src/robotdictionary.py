@@ -444,8 +444,19 @@ def deriveChainEntry(obj):
     return returnchains
 
 
-def storePose(pose_name):
-    load_file = blenderUtils.readTextFile('robot_poses')
+def storePose(robot_name, pose_name):
+    """
+    Store the current pose of all of a robot's selected links.
+    Existing poses of the same name will be overwritten.
+
+    :param robot_name: The robot the pose belongs to.
+    :type robot_name: str.
+    :param pose_name: The name the pose will be stored under.
+    :type pose_name: str.
+    :return: Nothing.
+    """
+    file_name = 'robot_poses_' + robot_name
+    load_file = blenderUtils.readTextFile(file_name)
     if load_file == '':
         poses = {}
     else:
@@ -453,16 +464,29 @@ def storePose(pose_name):
     new_pose = {}
     prev_mode = bpy.context.mode
     bpy.ops.object.mode_set(mode='POSE')
-    for obj in selectionUtils.returnObjectList('link'):
-        obj.pose.bones['Bone'].rotation_mode = 'XYZ'
-        new_pose[namingUtils.getObjectName(obj, 'joint')] = obj.pose.bones['Bone'].rotation_euler.y
+    for root in selectionUtils.getRoots():
+        if root['modelname'] == robot_name:
+            links = selectionUtils.getChildren(root)
+            for link in links:
+                if link.select and link.phobostype == 'link':
+                    link.pose.bones['Bone'].rotation_mode = 'XYZ'
+                    new_pose[namingUtils.getObjectName(link, 'joint')] = link.pose.bones['Bone'].rotation_euler.y
     bpy.ops.object.mode_set(mode=prev_mode)
     poses[pose_name] = new_pose
-    blenderUtils.updateTextFile('robot_poses', yaml.dump(poses))
+    blenderUtils.updateTextFile(file_name, yaml.dump(poses))
 
 
-def loadPose(pose_name):
-    load_file = blenderUtils.readTextFile('robot_poses')
+def loadPose(robot_name, pose_name):
+    """
+    Load and apply a robot's stored pose.
+
+    :param robot_name: The robot's name.
+    :type robot_name: str.
+    :param pose_name: The name the pose is stored under.
+    :type pose_name: str.
+    :return Nothing.
+    """
+    load_file = blenderUtils.readTextFile('robot_poses_' + robot_name)
     if load_file == '':
         log('No poses stored.', 'ERROR')
         return
@@ -477,47 +501,43 @@ def loadPose(pose_name):
         bpy.ops.object.mode_set(mode=prev_mode)
     else:
         log('No pose with name ' + pose_name + ' stored.', 'ERROR')
+def get_poses(robot_name):
+    """
+    Get the names of the poses that have been stored for a robot.
+
+    :param robot_name: The robot's name.
+    :return: A list containing the poses' names.
+    """
+    load_file = blenderUtils.readTextFile('robot_poses_' + robot_name)
+    if load_file == '':
+        return []
+    poses = yaml.load(load_file)
+    return poses.keys()
 
 
 def deriveStoredPoses():
     """
+    Collect the poses that have been stored for the scene's robots.
+
+    :return: A dictionary containing the poses.
     """
-    poses_file = blenderUtils.readTextFile('robot_poses')
-    if poses_file == '':
-        return {}
-    poses = yaml.load(poses_file)
-    pose_dict = {}
-    for pose in poses:
-        new_pose = {}
-        new_pose['name'] = pose
-        new_pose['joints'] = poses[pose]
-        pose_dict[pose] = new_pose
-    return pose_dict
-
-
-    #poses_dict = {}
-    #if len(bpy.data.actions) == 0:
-    #    return {}
-    #pose_lib_name = bpy.data.actions.keys()[0]
-    #some_obj = bpy.context.scene.objects.active
-    #bpy.ops.object.mode_set(mode='OBJECT')
-    #for pose_name, i in zip(bpy.data.actions[pose_lib_name].pose_markers.keys(), range(len(bpy.data.actions[pose_lib_name].pose_markers.keys()))):
-    #    selectionUtils.selectObjects([selectionUtils.getRoot(some_obj)], clear=True, active=0)
-    #    pose_dict = {}
-    #    bpy.ops.object.mode_set(mode='POSE')
-    #    bpy.ops.poselib.apply_pose(pose_index=i)
-    #    bpy.ops.object.mode_set(mode='OBJECT')
-    #    for obj in bpy.context.scene.objects:
-    #        if obj.phobostype == 'link':
-    #            selectionUtils.selectObjects([obj], clear=True, active=0)
-    #            bpy.ops.object.mode_set(mode='POSE')
-    #            obj.pose.bones['Bone'].rotation_mode = 'XYZ'
-    #            y_angle = obj.pose.bones['Bone'].rotation_euler.y
-    #            bpy.ops.object.mode_set(mode='OBJECT')
-    #            pose_dict[obj.name] = y_angle
-    #    poses_dict[pose_name] = pose_dict
-    #
-    #return poses_dict
+    poses_dict = {}
+    for file_name in bpy.data.texts:
+        if file_name.startswith('robot_poses_'):
+            robot_name = file_name[len('robot_poses_'):]
+            poses_file = blenderUtils.readTextFile(file_name)
+            if poses_file == '':
+                poses_dict[robot_name] = {}
+                break
+            poses = yaml.load(poses_file)
+            pose_dict = {}
+            for pose in poses:
+                new_pose = {}
+                new_pose['name'] = pose
+                new_pose['joints'] = poses[pose]
+                pose_dict[pose] = new_pose
+            poses_dict[robot_name] = pose_dict
+    return poses_dict
 
 
 def buildRobotDictionary():
