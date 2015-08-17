@@ -39,6 +39,7 @@ import phobos.utils.naming as namingUtils
 import phobos.utils.selection as selectionUtils
 import phobos.utils.general as generalUtils
 import phobos.utils.blender as blenderUtils
+import phobos.logging as log
 
 
 def register():
@@ -276,7 +277,6 @@ def deriveCapsule(obj):
             geometry['length'] = obj['length']
             geometry['type'] = 'cylinder'
             pose = capsule_pose
-            #comment = 'capsule'     # TODO: change if there is a better solution
         else:
             geometry['type'] = 'sphere'
             if part == 'sphere1':
@@ -291,10 +291,8 @@ def deriveCapsule(obj):
             matrix = loc_mu * rot_mu.to_matrix().to_4x4()
             print(list(matrix))
             pose['matrix'] = [list(vector) for vector in list(matrix)]
-            #comment = 'no import'
         viscol['geometry'] = geometry
         viscol['pose'] = pose
-        #viscol['comment'] = comment
         try:
             viscol['bitmask'] = int(''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups]), 2)
         except AttributeError:
@@ -499,8 +497,10 @@ def loadPose(robot_name, pose_name):
                 obj.pose.bones['Bone'].rotation_mode = 'XYZ'
                 obj.pose.bones['Bone'].rotation_euler.y = poses[pose_name][namingUtils.getObjectName(obj, 'joint')]
         bpy.ops.object.mode_set(mode=prev_mode)
-    else:
-        log('No pose with name ' + pose_name + ' stored.', 'ERROR')
+    #else:
+    #    log('No pose with name ' + pose_name + ' stored for robot ' + robot_name + '.', 'ERROR')
+
+
 def get_poses(robot_name):
     """
     Get the names of the poses that have been stored for a robot.
