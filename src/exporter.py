@@ -457,6 +457,22 @@ def gatherCollisionBitmasks(model):
     return bitmasks
 
 
+def gatherLevelOfDetailSettings(model):
+    """This function collects all level of detail settings in a given model.
+
+    :param model: The robot model to search in.
+    :return: dict -- a dictionary containing all bitmasks with corresponding element name (key).
+
+    """
+    lods = {}
+    for linkname in model['links']:
+        for elementname in model['links'][linkname]['visual']:
+            element = model['links'][linkname]['visual'][elementname]
+            if 'lod' in element:
+                lods[elementname] = {'name': elementname, 'lod': element['lod']}
+    return lods
+
+
 def sort_urdf_elements(elems):
     """
     Sort a collection of elements. By default, this method simply wraps the standard 'sorted()' method.
@@ -850,6 +866,7 @@ def exportModelToSMURF(model, path):
     """
 
     bitmasks = gatherCollisionBitmasks(model)
+    lodsettings = gatherLevelOfDetailSettings(model)
 
     export = {'state': False,  # model['state'] != {}, # TODO: handle state
               'materials': model['materials'] != {},
@@ -857,6 +874,7 @@ def exportModelToSMURF(model, path):
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
               'collision': bitmasks != {} or model['capsules'] != [],
+              'visuals': lodsettings != {},
               'lights': model['lights'] != {},
               'poses': model['poses'] != {}
               }
@@ -872,10 +890,11 @@ def exportModelToSMURF(model, path):
                  'motors': model['modelname'] + "_motors.yml",
                  'controllers': model['modelname'] + "_controllers.yml",
                  'collision': model['modelname'] + "_collision.yml",
+                 'visuals': model['modelname'] + "_visuals.yml",
                  'lights': model['modelname'] + "_lights.yml",
                  'poses': model['modelname'] + "_poses.yml"
                  }
-    fileorder = ['collision', 'materials', 'motors', 'sensors', 'controllers', 'state', 'lights', 'poses']
+    fileorder = ['collision', 'visuals', 'materials', 'motors', 'sensors', 'controllers', 'state', 'lights', 'poses']
 
     annotationdict = gatherAnnotations(model)
     for category in annotationdict:
@@ -955,6 +974,12 @@ def exportModelToSMURF(model, path):
             op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
             if model['capsules']:
                 op.write(yaml.dump({'capsules': model['capsules']}, default_flow_style=False))
+
+    # write visual information (level of detail, ...)
+    if export['visuals']:
+        with open(path + filenames['visuals'], 'w') as op:
+            op.write('#visual data' + infostring)
+            op.write(yaml.dump({'visuals': list(lodsettings.values())}, default_flow_style=False))
 
     #write additional information
     for category in annotationdict.keys():
@@ -1065,12 +1090,6 @@ def exportModelToMARS(model, path):
 
     mse.exportModelToMARS(model, path)
 
-def hasNoImportLock(obj, filetype):
-    if "filename" in obj:
-        return "meshes/" + obj.data.name + "." + filetype != obj["filename"]
-    else:
-        return True
-
 def determineMeshOutpath(obj, exporttype: str, path: str) -> str:
     """Determines the meshes filename for a specific object
 
@@ -1155,19 +1174,27 @@ def export(path='', robotmodel=None):
             wm.progress_begin(0, total)
             i = 1
         print("Exporting meshes to " + meshoutpath + "...\n")
-        exported = []
+        meshes = set()
+        exportobjects = set()
         for obj in objectlist:
-            if ((obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and obj['geometry/type'] == 'mesh' and obj.data.name not in exported):
-                exported.append(obj.data.name)
-                if objexp and hasNoImportLock(obj, "obj"):
-                    exportObj(meshoutpath, obj)
-                if bobjexp and hasNoImportLock(obj, "bobj"):
-                    exportBobj(meshoutpath, obj)
-                if stlexp and hasNoImportLock(obj, "stl"):
-                    exportStl(meshoutpath, obj)
-                if daeexp and hasNoImportLock(obj, "dae"):
-                    exportDae(meshoutpath, obj)
+            if obj.phobostype == 'visual' or obj.phobostype == 'collision':
+                if obj['geometry/type'] == 'mesh':
+                    if not obj.data.name in meshes:
+                        meshes.add(obj.data.name)
+                        exportobjects.add(obj)
+                        for lod in obj.lod_levels:
+                            if lod.object.data.name not in meshes:
+                                meshes.add(lod.object.data.name)
+                                exportobjects.add(lod.object)
+        for expobj in exportobjects:
+            if objexp:
+                exportObj(meshoutpath, expobj)
+            if bobjexp:
+                exportBobj(meshoutpath, expobj)
+            if stlexp:
+                exportStl(meshoutpath, expobj)
+            if daeexp:
+                exportDae(meshoutpath, expobj)
             if show_progress:
                 wm.progress_update(i)
                 i += 1

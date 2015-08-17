@@ -224,6 +224,26 @@ def deriveVisual(obj):
     visual = initObjectProperties(obj, phobostype='visual', ignoretypes='geometry')
     visual['geometry'] = deriveGeometry(obj)
     visual['pose'] = deriveObjectPose(obj)
+    if obj.lod_levels:
+        if 'lodmaxdistances' in obj:
+            maxdlist = obj['lodmaxdistances']
+        else:
+            maxdlist=[obj.lod_levels[i+1].distance for i in range(len(obj.lod_levels)-1)]+[100.0]
+        lodlist = []
+        for i in range(len(obj.lod_levels)):
+            filename = obj.lod_levels[i].object.data.name
+            if bpy.data.worlds[0].useObj:
+                filename += ".obj"
+            elif bpy.data.worlds[0].useBobj:
+                filename += ".bobj"
+            elif bpy.data.worlds[0].useStl:
+                filename += ".stl"
+            elif bpy.data.worlds[0].useDae:
+                filename += ".dae"
+            else:
+                filename += ".obj"
+            lodlist.append({'start': obj.lod_levels[i].distance, 'end': maxdlist[i], 'filename': os.path.join('meshes', filename)})
+        visual['lod'] = lodlist
     #if obj.data.materials:
     #    visual['material'] = deriveMaterial(obj.data.materials[0]) #this is now centralized!
     return visual, obj.parent
