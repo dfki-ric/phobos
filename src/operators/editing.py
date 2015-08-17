@@ -358,9 +358,9 @@ class BatchEditPropertyOperator(Operator):
     def execute(self, context):
         value = generalUtils.parse_number(self.property_value)
         if value == '':
-            objs = filter(lambda e: self.property_name in e, context.selected_objects)
-            for obj in objs:
-                del (obj[self.property_name])
+            for obj in context.selected_objects:
+                if self.property_name in obj.keys():
+                    del(obj[self.property_name])
         else:
             for obj in context.selected_objects:
                 obj[self.property_name] = value
@@ -1296,18 +1296,18 @@ class CreateMimicJointOperator(Operator):
 
 
 class RefineLevelOfDetailOperator(Operator):
-    """RefineLevelOfDetail
+    """Allows to set more specific LoD settings than the standard Blender implementation.
 
     """
     bl_idname = "object.phobos_refine_lod"
     bl_label = "Refines LoD settings with minimum distances"
     bl_options = {'REGISTER', 'UNDO'}
 
-    startdistances = FloatVectorProperty(name="startDistances",
-        description="minimum distances", size=5)
-
-    enddistances = FloatVectorProperty(name="endDistances",
+    maxdistances = FloatVectorProperty(name="maxDistances",
         description="maximum distances", size=5)
+
+    mindistances = FloatVectorProperty(name="minDistances",
+        description="minimum distances", size=5)
 
     def draw(self, context):
         layout = self.layout
@@ -1316,29 +1316,28 @@ class RefineLevelOfDetailOperator(Operator):
         c2 = inlayout.column(align=True)
         c3 = inlayout.column(align=True)
 
-        lodlist = [lod.object.name for lod in context.active_object.lod_levels]
-        while len(lodlist) < len(self.startdistances):
+        lodlist = [lod.object.data.name for lod in context.active_object.lod_levels]
+        while len(lodlist) < len(self.maxdistances):
             lodlist.append('not assigned')
 
         c1.label("Level of Detail objects:")
         for lodname in lodlist:
             c1.label(text=lodname)
-        c2.prop(self, 'startdistances')
-        c3.prop(self, 'enddistances')
-
+        c2.prop(self, 'mindistances')
+        c3.prop(self, 'maxdistances')
 
     def invoke(self, context, event):
         #nlod = len(context.active_object.lod_levels)
         #self.startdistances = FloatVectorProperty(name="startDistances", description="minimum distances", size=nlod)
         #self.enddistances = FloatVectorProperty(name="endDistances", description="maximum distances", size=nlod)
         lodlist = [0.0]*5
-        for lod in range(len(context.active_object.lod_levels)):
+        for lod in range(min(5, len(context.active_object.lod_levels))):
             lodlist[lod] = context.active_object.lod_levels[lod].distance
-        self.enddistances = tuple(lodlist)
+        self.mindistances = tuple(lodlist)
         lodlist = [0.0]*5
-        for lod in range(len(context.active_object.lod_levels)-1):
-            lodlist[lod+1] = context.active_object.lod_levels[lod].distance
-        self.startdistances = tuple(lodlist)
+        for lod in range(min(4, len(context.active_object.lod_levels)-1)):
+            lodlist[lod] = context.active_object.lod_levels[lod+1].distance
+        self.maxdistances = tuple(lodlist)
 
     #    obj = context.active_object
     #    #self.mindistances = tuple(obj[a] for a in obj.keys() if a.startswith('visual/lod'))
@@ -1346,18 +1345,28 @@ class RefineLevelOfDetailOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        """This function executes this operator and attaches a motor to all selected links.
-
-        :param context: The blender context this operator works with.
-        :return:Blender result.
-
-        """
-        for dist in range(len(context.active_object.lod_levels)):
-            context.active_object['lod/' + str(dist) + '_start'] = self.startdistances[dist]
-            context.active_object.lod_levels[dist].distance = self.enddistances[dist]
-            context.active_object['lod/' + str(dist) + '_end'] = context.active_object.lod_levels[dist].distance
-            context.active_object['lod/' + str(dist) + '_mesh'] = context.active_object.lod_levels[dist].object.name
-
+        sourceobj = context.active_object
+        selobjects = context.selected_objects
+        n = len(sourceobj.lod_levels)
+        for obj in selobjects:
+            if obj.phobostype in ['visual', 'collision']:
+                if obj != sourceobj:
+                    selectionUtils.selectObjects([obj], clear=True, active=0)
+                    bpy.ops.object.lod_clear_all()
+                    for i in range(n-1):
+                        bpy.ops.object.lod_add()
+                        obj.lod_levels[i+1].distance = sourceobj.lod_levels[i+1].distance
+                        obj.lod_levels[i+1].object = sourceobj.lod_levels[i+1].object
+                for i in range(n):
+                    lodlist = []
+                    #loddict = {'start': self.startdistances[dist], 'end': self.enddistances[dist],
+                    #           'filename': sourceobj.lod_levels[dist].object.data.name}
+                    #obj['lod/' + str(dist) + '_start'] = self.startdistances[dist]
+                    obj.lod_levels[i].distance = self.mindistances[i]
+                    #obj['lod/' + str(dist) + '_end'] = sourceobj.lod_levels[dist].distance
+                    #obj['lod/' + str(dist) + '_mesh'] = sourceobj.lod_levels[dist].object.data.name
+                    #obj['lod/lod'] = loddict
+                obj['lodmaxdistances'] = list(self.maxdistances[:len(obj.lod_levels)])
         return {'FINISHED'}
 
     @classmethod
