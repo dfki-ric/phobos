@@ -242,6 +242,99 @@ def calculateEllipsoidInertia(mass, size):
     return (ixx, ixy, ixz, iyy, iyz, izz,)
 
 
+def calculateMeshInertia(reference, triangles, mass):
+    """
+
+    Implemented after http://number-none.com/blow/inertia/body_i.html
+    and http://www.iue.tuwien.ac.at/phd/wessner/node39.html.
+
+    :param reference:
+    :param triangles:
+    :param mass:
+    :return:
+    """
+    tetrahedra = []
+    mesh_volume = 0
+    for tri in triangles:
+        U = (tri[0] - tri[1]).length
+        V = (tri[1] - tri[2]).length
+        W = (tri[2] - tri[0]).length
+        u = (tri[2] - reference).length
+        v = (tri[0] - reference).length
+        w = (tri[1] - reference).length
+
+        X = (w - U + v) * (U + v + w)
+        x = (U - v + w) * (v - w + U)
+        Y = (u - V + w) * (V + w + u)
+        y = (V - w + u) * (w - u + V)
+        Z = (v - W + u) * (W + u + v)
+        z = (W - u + v) * (u + v + W)
+
+        a = math.sqrt(x*Y*Z)
+        b = math.sqrt(X*y*Z)
+        c = math.sqrt(X*Y*z)
+        d = math.sqrt(x*y*z)
+
+        # TODO: make volume negative where appropriate
+        volume = (math.sqrt((-a+b+c+d)*(a-b+c+d)*(a+b-c+d)*(a+b+c-d))) / 192*u*v*w
+
+        my_x = (tri[0].x + tri[1].x + tri[2].x + reference.x) / 4
+        my_y = (tri[0].y + tri[1].y + tri[2].y + reference.y) / 4
+        my_z = (tri[0].z + tri[1].z + tri[2].z + reference.z) / 4
+        x_bar = mathutils.Vector(tri[0].x-my_x, tri[1].x-my_x, tri[2].x-my_x, reference.x-my_x)
+        y_bar = mathutils.Vector(tri[0].y-my_y, tri[1].y-my_y, tri[2].y-my_y, reference.y-my_y)
+        z_bar = mathutils.Vector(tri[0].z-my_z, tri[1].z-my_z, tri[2].z-my_z, reference.z-my_z)
+        covar_matrix = mathutils.Matrix(cov(x_bar, x_bar), cov(x_bar, y_bar), cov(x_bar, z_bar),
+                                        cov(y_bar, x_bar), cov(y_bar, y_bar), cov(y_bar, z_bar),
+                                        cov(z_bar, x_bar), cov(z_bar, y_bar), cov(z_bar, z_bar))
+
+        tetrahedra.append({'volume': volume, 'covar_matrix': covar_matrix})
+        mesh_volume += volume
+
+    for tetrahedron in tetrahedra:
+        tetra_mass = mass / (mesh_volume / tetrahedron['volume'])
+        tetrahedron['mass'] = tetra_mass
+
+        centre_of_mass = mathutils.Vector((tri[0].x + tri[1].x + tri[2].x + reference.x) / 4,
+                                          (tri[0].y + tri[1].y + tri[2].y + reference.y) / 4,
+                                          (tri[0].z + tri[1].z + tri[2].z + reference.z) / 4)
+        tetrahedron['centre_of_mass'] = centre_of_mass
+
+        # TODO: combine bodies iteratively into one, then calculate inertia
+
+
+def combine_bodies(b1, b2):
+    m1 = b1['mass']
+    m2 = b2['mass']
+    m3 = m1 + m2
+    x1 = b1['centre_of_mass']
+    x2 = b2['centre_of_mass']
+    x3 = (x1*m1 + x2*m2) / m3
+
+    c1 = b1['covar_matrix']
+    trans1 = x3 - x1
+    c1_bar = mathutils.Matrix(c1.xx + trans1.x, c1.xy + trans1.x, c1.xz + trans1.x,
+                              c1.yx + trans1.y, c1.yy + trans1.y, c1.yz + trans1.y,
+                              c1.zx + trans1.z, c1.zy + trans1.z, c1.zz + trans1.z)
+    c2 = b2['covar_matrix']
+    trans2 = x3 - x2
+    c2_bar = mathutils.Matrix(c2.xx + trans2.x, c2.xy + trans1.x, c1.xz + trans1.x,
+                              c2.yx + trans2.y, c2.yy + trans1.y, c1.yz + trans1.y,
+                              c2.zx + trans2.z, c2.zy + trans1.z, c1.zz + trans1.z)
+    c3 = c1_bar + c2_bar
+
+    b3 = {'mass': m3, 'centre_of_mass': x3, 'covar_matrix': c3}
+    return b3
+
+
+def cov(x, y):
+    n = len(x)
+    covariance = 0
+    for i in range(n):
+        covariance += x[i] * y[i] / n
+    return covariance
+
+
 def inertiaListToMatrix(il):
     """Takes a tuple or list representing the upper diagonal of a 3x3 inertia tensor and returns the full tensor.
 
