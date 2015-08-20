@@ -668,7 +668,9 @@ class AddGravityVector(Operator):
 
 
 class EditYAMLDictionary(Operator):
-    """Edit a dictionary as YAML in text file."""
+    """Edit a dictionary as YAML in text file.
+
+    """
     bl_idname = 'object.phobos_edityamldictionary'
     bl_label = "Edit object dictionary as YAML"
     bl_options = {'REGISTER', 'UNDO'}
@@ -721,13 +723,6 @@ class CreateCollisionObjects(Operator):
         items=defs.geometrytypes)
 
     def execute(self, context):
-        """Executes this blender operator and creates collision objects for the selected bodies.
-
-        :param context: The blender context this function should work with.
-
-        :return: set -- the blender specific return set.
-
-        """
 
         startLog(self)
         visuals = []
@@ -827,13 +822,7 @@ class SetCollisionGroupOperator(Operator):
         description='collision groups')
 
     def invoke(self, context, event):
-        """This function invokes this operator.
 
-        :param context: The blender context this operator should work with.
-        :param event: Blender specific event *not used in this function*
-        :return: set -- the blender specific return set.
-
-        """
         try:
             self.groups = context.active_object.rigid_body.collision_groups
         except AttributeError:
@@ -945,13 +934,7 @@ class DefineJointConstraintsOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        """This function executes this operator and sets the constraints and joint type for all selected links.
-        rad/s is the default unit. rpm will be transformed into rad/s
 
-        :param context: The blender context this operator works with.
-        :return: Blender result.
-
-        """
         lower = 0
         upper = 0
         velocity = 0
@@ -1042,12 +1025,7 @@ class AttachMotorOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        """This function executes this operator and attaches a motor to all selected links.
 
-        :param context: The blender context this operator works with.
-        :return:Blender result.
-
-        """
         objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
         for joint in objs:
             # TODO: these keys have to be adapted
@@ -1115,12 +1093,7 @@ class CreateLinkOperator(Operator):
     )
 
     def execute(self, context):
-        """This function executes the operator and creates a link.
 
-        :param context: The blender context this operator works with.
-        :type context: Blender context.
-        :return: Blender result.
-        """
         if self.type == '3D cursor':
             links.createLink(self.size)
         else:
@@ -1133,7 +1106,9 @@ class CreateLinkOperator(Operator):
 
 
 class AddSensorOperator(Operator):
-    """AddSensorOperator"""
+    """AddSensorOperator
+
+    """
     bl_idname = "object.phobos_add_sensor"
     bl_label = "Add/Update a sensor"
     bl_options = {'REGISTER', 'UNDO'}
@@ -1346,12 +1321,7 @@ class RefineLevelOfDetailOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        """This function executes this operator and attaches a motor to all selected links.
 
-        :param context: The blender context this operator works with.
-        :return:Blender result.
-
-        """
         for dist in range(len(context.active_object.lod_levels)):
             context.active_object['lod/' + str(dist) + '_start'] = self.startdistances[dist]
             context.active_object.lod_levels[dist].distance = self.enddistances[dist]
@@ -1366,8 +1336,12 @@ class RefineLevelOfDetailOperator(Operator):
         return ob is not None and ob.phobostype == 'visual'
 
 
-# This allows you to right click on a button and link to the manual
 def add_editing_manual_map():
+    """This allows you to right click on a button and link to the manual
+
+    :return: tuple
+
+    """
     url_manual_prefix = "https://github.com/rock-simulation/phobos/wiki/Operators#"
     url_manual_mapping = (
         ("bpy.ops.object.phobos_sort_objects_to_layers", "set-objects-to-layers"),
@@ -1400,6 +1374,9 @@ def add_editing_manual_map():
 
 
 def register():
+    """This function is called when this module is registered to blender.
+
+    """
     print("Registering operators.editing...")
     bpy.utils.register_manual_map(add_editing_manual_map)
     bpy.utils.register_class(SortObjectsToLayersOperator)
@@ -1430,6 +1407,9 @@ def register():
 
 
 def unregister():
+    """ This function is called when this module is unregistered from blender.
+
+    """
     print("Unregistering operators.editing...")
     bpy.utils.unregister_manual_map(add_editing_manual_map)
     bpy.utils.unregister_class(SortObjectsToLayersOperator)
