@@ -51,22 +51,14 @@ from phobos.logging import log
 
 
 def register():
-    """
-    This function registers this module.
-    At the moment it does nothing.
-
-    :return: Nothing
+    """This function is called when this module is registered to blender.
 
     """
     print("Registering export...")
 
 
 def unregister():
-    """
-    This function unregisters this module.
-    At the moment it does nothing.
-
-    :return: Nothing
+    """This function is called when this module is unregistered from blender.
 
     """
     print("Unregistering export...")
@@ -82,10 +74,9 @@ def exportBobj(path, obj):
     """This function exports an object to the specified path as a .bobj
 
     :param path: The path to export the object to. *without filename!*
-    :type path: String
+    :type path: str
     :param obj: The blender object you want to export.
     :type: bpy.types.Object
-    :return: Nothing.
 
     """
     bpy.ops.object.select_all(action='DESELECT')
@@ -200,10 +191,9 @@ def exportObj(path, obj):
     """This function exports a specific object to a chosen path as an .obj
 
     :param path: The path you want the object export to. *without the filename!*
-    :type path: String
+    :type path: str
     :param obj: The blender object you want to export.
     :type obj: bpy.types.Object
-    :return: Nothing.
 
     """
     objname = namingUtils.getObjectName(obj)
@@ -238,10 +228,9 @@ def exportStl(path, obj):
     """This function exports a specific object to a chosen path as a .stl
 
     :param path: The path you want the object exported to. *without filename!*
-    :type path: String
+    :type path: str
     :param obj: The blender object you want to export.
     :type obj: bpy.types.Object
-    :return: Nothing.
 
     """
     objname = namingUtils.getObjectName(obj)
@@ -262,10 +251,9 @@ def exportDae(path, obj):
     """This function exports a specific object to a chosen path as a .dae
 
     :param path: The path you want the object exported to. *without filename!*
-    :type path: String
+    :type path: str
     :param obj: The blender object you want to export.
     :type obj: bpy.types.Object
-    :return: Nothing.
 
     """
     objname = namingUtils.getObjectName(obj)
@@ -284,6 +272,16 @@ def exportDae(path, obj):
     obj.name = oldBlenderObjectName
 
 def bakeModel(objlist, path, modelname):
+    """This function gets a list of objects and creates a single, simplified mesh from it and exports it to .stl.
+
+    :param objlist: The list of blender objects to join and export as simplified stl file.
+    :type objlist: list
+    :param path: The path to export the stl file to *without filename*
+    :type path: str
+    :param modelname: The new models name and filename.
+    :type modelname: str
+
+    """
     visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
     selectionUtils.selectObjects(visuals, active=0)
     log("Copying objects for joining...", "INFO")
@@ -320,10 +318,9 @@ def exportModelToYAML(model, filepath):
     """This function exports a given robot model to a specified filepath as YAML.
 
     :param model: The robot model to export
-    :type model: dict -- the generated robot model dictionary.
+    :type model: dict -- the generated robot model dictionary
     :param filepath:  The filepath to export the robot to. *WITH filename!*
-    :type filepath: String
-    :return: Nothing.
+    :type filepath: str
 
     """
     print("phobos YAML export: Writing model data to", filepath)
@@ -365,9 +362,11 @@ def l2str(items, start=-1, end=-1):
     :param items: The list of elements you want to generate a String from. *Make sure the elements can be cast to
     Strings with str().*
     :type items: list
-    :param start:
-    :param end:
-    :return:
+    :param start: The inclusive start index to iterate the list from. If negative it defaults to 0.
+    :type start: int
+    :param end: The exclusive end to iterate the list to. If negative its defaults to len(items).
+    :type end: int
+    :return: str - the generated string.
 
     """
     line = []
@@ -385,6 +384,7 @@ def gatherAnnotations(model):
     module and are marked with a leading '$'.
 
     :param model: The robot model dictionary.
+    :type model: dict
     :return: dict -- A dictionary of the gathered annotations.
 
     """
@@ -444,6 +444,7 @@ def gatherCollisionBitmasks(model):
     """This function collects all collision bitmasks in a given model.
 
     :param model: The robot model to search in.
+    :type model: dict
     :return: dict -- a dictionary containing all bitmasks with corresponding element name (key).
 
     """
@@ -469,20 +470,22 @@ def sort_urdf_elements(elems):
 
 
 def get_sorted_keys(dictionary):
-    """
-    Sort a dictionary's keys.
+    """Sorts a dictionaries keys.
 
-    :param dictionary: a dictionary
+    :param dictionary: The dictionary to sort the keys from
+    :type dictionary: dict
     :return: the dictionary's sorted keys
+
     """
     return sort_urdf_elements(dictionary.keys())
 
 
 def sort_for_yaml_dump(structure, category):
-    """
+    """Please add doc ASAP
     :param structure:
     :param category:
     :return:
+
     """
     if category in ['materials', 'motors', 'sensors']:
         return {category: sort_dict_list(structure[category], 'name')}
@@ -496,10 +499,11 @@ def sort_for_yaml_dump(structure, category):
 
 
 def sort_dict_list(dict_list, sort_key):
-    """
+    """Please add doc ASAP
     :param dict_list:
     :param sort_key:
     :return:
+
     """
     sorted_dict_list = []
     sort_key_values = []
@@ -518,10 +522,10 @@ def writeURDFGeometry(output, element):
     """This functions writes the URDF geometry for a given element at the end of a given String.
 
     :param output: The String to append the URDF output string on.
-    :type outpute: String.
+    :type outpute: str
     :param element: A certain element to parse into URDF.
-    :type element: dict.
-    :return: String -- The extended String
+    :type element: dict
+    :return: str -- The extended String
 
     """
     output.append(indent * 4 + '<geometry>\n')
@@ -544,10 +548,9 @@ def exportModelToURDF(model, filepath):
     All of the files content will be overwritten in this process.
 
     :param model: The model you want to convert into URDF.
-    :type model: dict.
+    :type model: dict
     :param filepath: The filepath you want to export the URDF to.
-    :type filepath: String.
-    :return: Nothing.
+    :type filepath: str
 
     """
     print(filepath)
@@ -750,8 +753,9 @@ def exportModelToSRDF(model, path):
     - <virtual_joint>
 
     :param model: a robot model dictionary.
+    :type model: dict
     :param path: the outpath for the file.
-    :return: Nothing.
+    :type path: str
 
     """
     output = []
@@ -809,7 +813,7 @@ def exportModelToSRDF(model, path):
         """Function to add parent/child link combinations for all parents an children that are not already set via collision bitmask.
 
         :param parent: This is the parent object.
-        :type parent: dict.
+        :type parent: dict
 
         """
         children = selectionUtils.getImmediateChildren(parent, 'link')
@@ -842,10 +846,9 @@ def exportModelToSMURF(model, path):
     """This function exports a given model to a specific path as a smurf representation.
 
     :param model: The model you want to export.
-    :type model: dict.
+    :type model: dict
     :param path: The path you want to save the smurf file *without file name!*
-    :type param: String.
-    :return: Nothing.
+    :type param: str
 
     """
 
@@ -977,8 +980,12 @@ def exportModelToSMURF(model, path):
 
 def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring needed!!!
     """Exports all robots in a scene in *.smurfs format.
+
     :param selected_only: Decides if only models with selected root links are exported.
+    :type selected_only: bool
     :param subfolders: If True, the export is structured with subfolders for each model.
+    :type subfolders: bool
+
     """
     objects = {}
     models = {}  # models to be exported by name
@@ -1056,16 +1063,24 @@ def exportModelToMARS(model, path):
     """Exports selected robot as a MARS scene
 
     :param model: The robot model you want to export.
-    :type model: dict.
+    :type model: dict
     :param path: The path you want the MARS file to be located
-    :type path: String.
-    :return: Nothing.
+    :type path: str
 
     """
-
     mse.exportModelToMARS(model, path)
 
 def hasNoImportLock(obj, filetype):
+    """This function gets an phobos object and returns whether the objects meshes desired filename matches the one saved
+    in the objects *filename* property or not.
+
+    :param obj: The phobos object to check.
+    :type obj: bpy.types.Object
+    :param filetype: The filetype the object will be exported as.
+    :type filetype: str
+    :return: bool
+
+    """
     if "filename" in obj:
         return "meshes/" + obj.data.name + "." + filetype != obj["filename"]
     else:
@@ -1075,9 +1090,13 @@ def determineMeshOutpath(obj, exporttype: str, path: str) -> str:
     """Determines the meshes filename for a specific object
 
     :param obj: The object you want to export the mesh from
-    :param exporttype: The filetype you want export to (without leading .)
-    :param path: The path you want the mesh export to
+    :type obj: bpy.types.Object
+    :param exporttype: The filetype you want export to *without leading .*
+    :type exporttype: str
+    :param path: The path you want the mesh export to.
+    :type path: str
     :return: str - Returns the filepath to export the mesh to
+
     """
     return os.path.join(path, obj.data.name + "." + exporttype)
 
@@ -1086,8 +1105,8 @@ def securepath(path):  #TODO: this is totally not error-handled!
     """This function checks whether a path exists or not.
     If it doesn't the functions creates the path.
 
-    :param path: The path you want to check for existence *DIRECTIONS ONLY*
-    :type path: String.
+    :param path: The path you want to check for existence *DIRECTORIES ONLY*
+    :type path: str
     :return: String -- the path given as parameter, but secured by expanding ~ constructs.
 
     """
@@ -1101,7 +1120,11 @@ def securepath(path):  #TODO: this is totally not error-handled!
 def export(path='', robotmodel=None):
     """This function does the actual exporting of the robot model.
 
-    :return: Nothing.
+    :param path: The path to export the robot to.
+    :type path: str
+    :param robotmodel: The robotmodel you want to export.
+    :type robotmodel: dict
+
     """
     #TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
     if path == '':
