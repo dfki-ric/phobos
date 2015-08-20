@@ -31,7 +31,9 @@ from phobos.logging import log
 
 
 def returnObjectList(phobostype):
-    """Returns list of all objects in the current scene matching phobostype"""
+    """Returns list of all objects in the current scene matching phobostype
+
+    """
     objlist = []
     for obj in bpy.context.scene.objects:
         if obj.phobostype == phobostype:
@@ -40,7 +42,9 @@ def returnObjectList(phobostype):
 
 
 def getChildren(root):
-    """Finds all children for a given root"""
+    """Finds all children for a given root
+
+    """
     children = []
     for obj in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
         if getRoot(obj) == root:
@@ -49,7 +53,9 @@ def getChildren(root):
 
 
 def getImmediateChildren(obj, phobostypes=None):
-    """Finds all immediate children for a given object"""
+    """Finds all immediate children for a given object
+
+    """
     children = []
     for child in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
         if child.parent == obj:
@@ -62,7 +68,9 @@ def getImmediateChildren(obj, phobostypes=None):
 
 
 def getRoot(obj=None):
-    """Finds the root object of a model given one of the model elements is selected or provided"""
+    """Finds the root object of a model given one of the model elements is selected or provided
+
+    """
     if obj == None:
         for anobj in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
             if (anobj.select):
@@ -77,7 +85,9 @@ def getRoot(obj=None):
 
 
 def getRoots():
-    """Returns a list of all roots (=objects without parent) present in the scene"""
+    """Returns a list of all roots (=objects without parent) present in the scene
+
+    """
     roots = []
     for obj in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
         if not obj.parent and obj.phobostype == "link":
@@ -92,7 +102,9 @@ def getRoots():
 
 def selectObjects(objects, clear=True, active=-1):
     """Selects all objects provided in list, clears current selection if clear is True
-    and sets one of the objects the active objects if a valid index is provided."""
+    and sets one of the objects the active objects if a valid index is provided.
+
+    """
 
     ##Jan Paul: solution to "context is incorrect" error from
     ##doc/python_api/examples/bpy.ops.py:
@@ -109,6 +121,12 @@ def selectObjects(objects, clear=True, active=-1):
 
 
 def getObjectByName(name):
+    """Gets blender object by its name (blender objects name or subtypes name).
+
+    :param name: The exact objects name to find.
+    :return: list - containing all found objects.
+
+    """
     objlist = []
     for obj in bpy.data.objects:
         if name == obj.name:
@@ -123,4 +141,7 @@ def getObjectByName(name):
 
 
 def selectByName(name):
+    """Uses getObjectByName to select the found objects.
+
+    """
     selectObjects(getObjectByName(name), True)
