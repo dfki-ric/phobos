@@ -35,6 +35,14 @@ import yaml
 
 
 def printMatrices(obj, info=None):
+    """This function prints the matrices of an object to the screen.
+
+    :param obj: The object to print the matrices from.
+    :type obj: bpy.types.Object
+    :param info: If True the objects name will be included into the printed info.
+    :type info: bool
+
+    """
     if not info:
         info = selection.getObjectName(obj)
     print("\n----------------", info, "---------------------\n",
@@ -45,6 +53,14 @@ def printMatrices(obj, info=None):
 
 
 def assignMaterial(obj, materialname):
+    """This function assigns a material to an objects mesh.
+
+    :param obj: The object to assign the material to.
+    :type obj: bpy.types.Object
+    :param materialname: The materials name.
+    :type materialname: str
+
+    """
     if materialname not in bpy.data.materials:
         if materialname in defs.defaultmaterials:
             materials.createPhobosMaterials()
@@ -59,7 +75,23 @@ def assignMaterial(obj, materialname):
 
 def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(0, 0, 0), protation=(0, 0, 0),
                     verbose=False):
-    """Generates the primitive specified by the input parameters"""
+    """Generates the primitive specified by the input parameters
+
+    :param pname: The primitives new name.
+    :type pname: str
+    :param ptype: The new primitives type. Can be one of *box, sphere, cylinder, cone, disc*
+    :type ptype: str
+    :param psize: The new primitives size. Depending on the ptype it can be either a single float or a tuple.
+    :type psize: float or list
+    :param player: The layer bitmask for the new blender object.
+    :param pmaterial: The new primitives material.
+    :param plocation: The new primitives location.
+    :type plocation: tuple
+    :param protation: The new primitives rotation.
+    :type protation: tuple
+    :return: bpy.types.Object - the new blender object.
+
+    """
     if verbose:
         print(ptype, psize)
     try:
@@ -92,6 +124,14 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
 
 
 def toggleLayer(index, value=None):
+    """ This function toggles a specific layer or sets it to a desired value.
+
+    :param index: The layer index you want to change.
+    :type index: int
+    :param value: True if visible, None for toggle.
+    :type value: bool
+
+    """
     if value:
         bpy.context.scene.layers[index] = value
     else:
@@ -99,7 +139,9 @@ def toggleLayer(index, value=None):
 
 
 def defLayers(layerlist):
-    """Returns a list of 20 elements encoding the visible layers according to layerlist"""
+    """Returns a list of 20 elements encoding the visible layers according to layerlist
+
+    """
     if type(layerlist) is not list:
         layerlist = [layerlist]
     layers = 20 * [False]
@@ -108,6 +150,14 @@ def defLayers(layerlist):
     return layers
 
 def updateTextFile(textfilename, newContent):
+    """This function updates a blender textfile or creates a new one if it is not existent.
+
+    :param textfilename: The blender textfiles file name.
+    :type textfilename: str
+    :param newContent: The textfiles new content.
+    :type newContent: str
+
+    """
     try:
         bpy.data.texts.remove(bpy.data.texts[textfilename])
     except KeyError:
@@ -115,6 +165,13 @@ def updateTextFile(textfilename, newContent):
     createNewTextfile(textfilename, newContent)
 
 def readTextFile(textfilename):
+    """This function returns the content of a specified text file.
+
+    :param textfilename: The blender textfiles name.
+    :type textfilename: str
+    :return: str - the textfiles content.
+
+    """
     try:
         return "\n".join([l.body for l in bpy.data.texts[textfilename].lines])
     except KeyError:
@@ -122,6 +179,14 @@ def readTextFile(textfilename):
         return ""
 
 def createNewTextfile(textfilename, contents):
+    """This function creates a new blender text file with the given content.
+
+    :param textfilename: The new blender texts name.
+    :type textfilename: str
+    :param contents: The new textfiles content.
+    :type contents: str
+
+    """
     for text in bpy.data.texts:
         text.tag = True
     bpy.ops.text.new()
@@ -136,6 +201,13 @@ def createNewTextfile(textfilename, contents):
 
 
 def openScriptInEditor(scriptname):
+    """This function opens a script/textfile in an open blender text window. Nothing happens if there is no
+    available text window.
+
+    :param scriptname: The scripts name.
+    :type scriptname: str
+
+    """
     if scriptname in bpy.data.texts:
         for area in bpy.context.screen.areas:
             if area.type == 'TEXT_EDITOR':
@@ -145,7 +217,9 @@ def openScriptInEditor(scriptname):
 
 
 def cleanObjectProperties(props):
-    """Cleans a predefined list of Blender-specific or other properties from the dictionary."""
+    """Cleans a predefined list of Blender-specific or other properties from the dictionary.
+
+    """
     getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
     if props:
         for key in getridof:

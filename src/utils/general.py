@@ -34,7 +34,9 @@ import mathutils
 
 
 def is_float(s):
-    """Tests if an input variable (string) is a float number."""
+    """Tests if an input variable (string) is a float number.
+
+    """
     try:
         float(s)
         return True
@@ -43,7 +45,9 @@ def is_float(s):
 
 
 def is_int(s):
-    """Tests if an input variable (string) is an int number."""
+    """Tests if an input variable (string) is an int number.
+
+    """
     try:
         int(s)
         return True
@@ -53,7 +57,9 @@ def is_int(s):
 
 def parse_number(s):
     """Takes an input variable (string) and determines whether it represents
-    a float number, int or string"""
+    a float number, int or string
+
+    """
     if is_int(s):
         return int(s)
     elif is_float(s):
@@ -63,7 +69,9 @@ def parse_number(s):
 
 
 def only_contains_int(stringlist):
-    """Checks if a list of strings contains int numbers exclusively."""
+    """Checks if a list of strings contains int numbers exclusively.
+
+    """
     for num in stringlist:
         if not is_int(num):
             return False
@@ -71,7 +79,9 @@ def only_contains_int(stringlist):
 
 
 def only_contains_float(stringlist):
-    """Checks if a list of strings contains float numbers exclusively."""
+    """Checks if a list of strings contains float numbers exclusively.
+
+    """
     for num in stringlist:
         if not is_float(num):
             return False
@@ -80,7 +90,9 @@ def only_contains_float(stringlist):
 
 def find_in_list(alist, prop, value):
     """Returns the index of the first object in a list which has a field
-    named *prop* with value *value*. If no such object is found, returns -1."""
+    named *prop* with value *value*. If no such object is found, returns -1.
+
+    """
     n = -1
     for i in range(len(alist)):
         try:
@@ -94,7 +106,9 @@ def find_in_list(alist, prop, value):
 
 def retrieve_from_list(alist, prop, value):
     """Returns the first object in a list which has a field named
-    *prop* with value *value*. If no such object is found, returns "None"."""
+    *prop* with value *value*. If no such object is found, returns 'None'.
+
+    """
     n = -1
     for i in range(len(alist)):
         try:
@@ -112,7 +126,9 @@ def retrieve_from_list(alist, prop, value):
 def parse_text(s):
     """Parses a text by splitting up elements separated by whitespace. The elements are then
     try to be parsed as lists of floats, ints or strings or, if only one element is found,
-    are tried to be parsed using the function parse_number()."""
+    are tried to be parsed using the function parse_number().
+
+    """
     numstrings = s.split()
     if numstrings == []:
         return None
@@ -130,19 +146,25 @@ def parse_text(s):
 
 
 def calcBoundingBoxCenter(boundingbox):
-    """Calculates the center of a bounding box"""
+    """Calculates the center of a bounding box
+
+    """
     c = sum((mathutils.Vector(b) for b in boundingbox), mathutils.Vector())
     return c / 8
 
 
 def roundVector(v, n):
-    """Returns a mathutils.Vector with its components rounded to n digits."""
+    """Returns a mathutils.Vector with its components rounded to n digits.
+
+    """
     return round(v.x, n), round(v.y, n), round(v.z, n)
 
 
 def epsilonToZero(data, epsilon, decimals):
     """Recursively loops through a dictionary and sets all floating values
-     < epsilon equal to zero."""
+     < epsilon equal to zero.
+
+     """
     if is_float(data):
         return 0 if abs(data) < epsilon else round(data, decimals)
     elif type(data) is list:
@@ -155,7 +177,9 @@ def epsilonToZero(data, epsilon, decimals):
 
 
 def calculateSum(objects, numeric_prop):
-    """Returns sum of *numeric_prop* in *objects*."""
+    """Returns sum of *numeric_prop* in *objects*.
+
+    """
     numsum = 0
     for obj in objects:
         try:
@@ -166,17 +190,27 @@ def calculateSum(objects, numeric_prop):
 
 
 def datetimeFromIso(iso):
-    """Accepts a date-time string in iso format and returns a datetime object."""
+    """Accepts a date-time string in iso format and returns a datetime object.
+
+    """
     return datetime(*[int(a) for a in re.split(":|-|T|\.", iso)])
 
 
 def distance(objects):
+    """ Returns the distance between two blender objects.
+
+    :param objects: The two objects to calculate the distance for.
+    :type objects: list -- with exactly two elements
+
+    """
     v = objects[0].matrix_world.to_translation() - objects[1].matrix_world.to_translation()
     return v.length, v
 
 
 def outerProduct(v, u):
-    """Returns a mathutils.Matrix representing the outer product of vectors v and u."""
+    """Returns a mathutils.Matrix representing the outer product of vectors v and u.
+
+    """
     lines = []
     for vi in v:
         lines.append([vi * ui for ui in u])

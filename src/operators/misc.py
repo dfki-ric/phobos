@@ -84,11 +84,7 @@ class CheckDict(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        """Executes the operator and unifies the selected objects meshes
 
-        :param context: The blender context to work with
-        :return: Blender result
-        """
         startLog(self)
         messages = {}
         dic = robotdictionary.buildRobotDictionary()

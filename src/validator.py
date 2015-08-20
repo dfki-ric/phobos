@@ -38,7 +38,6 @@ def check_dict(dic, validator, messages):
     :type validator: dict
     :param messages: The message list you want to append the error messages to.
     :type messages: dict
-    :return: Nothing.
 
     """
     check_dict_alg(dic, validator, [], messages, validator, "NoObject")
@@ -59,7 +58,6 @@ def check_dict_alg(dic, validator, entry_list, messages, whole_validator, curren
     :type whole_validator: dict
     :param current_elem: The current element the alg is checking.
     :type current_elem: str
-    :return: Nothing.
 
     """
     for node in validator:
@@ -112,7 +110,6 @@ def check_leaf(leaf_value, dic, entry_list, messages, current_elem):
     :type entry_list: list
     :param messages: The list you want to append the messages to.
     :type messages: dict
-    :return: Nothing.
 
     """
     value = traverse_dict(dic, entry_list)
@@ -141,7 +138,6 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator,
     :type messages: dict
     :param whole_validator: The whole validator to reach top level keys in case of a reference operator.
      :type whole_validator: dict
-    :return: Nothing
 
     """
     if node == '$reference':
@@ -192,6 +188,13 @@ def traverse_dict(dic, entry_list):
 
 
 def add_message(messages, key, message):
+    """This function adds a message to the messages dictionary.
+
+    :param messages: The dictionary containing the messages.
+    :param key: The messages corresponding key (node name).
+    :param message: The message to append to a specific key.
+
+    """
     if key in messages:
         messages[key].append(message)
     else:

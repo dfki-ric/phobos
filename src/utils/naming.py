@@ -35,8 +35,9 @@ def getObjectName(obj, phobostype=None):
     """This function returns the objects valid name.
 
     :param obj: The object you want the name for.
+    :type obj: bpy.types.Object
     :param phobostype: The phobostype you want this objects name for.
-    :return: The objects name.
+    :return: str -- The objects name.
 
     """
     type = phobostype
@@ -49,13 +50,21 @@ def getObjectName(obj, phobostype=None):
 
 
 def replaceNameElement(prop, old, new):
-    """For all selected elements in Blender, replace an *old* part of a string *prop*erty with *new*."""
+    """For all selected elements in Blender, replace an *old* part of a string *prop*erty with *new*.
+
+    """
     for obj in bpy.context.selected_objects:
         if prop in obj and obj[prop].find(old) > -1:
             obj[prop] = obj[prop].replace(old, new)
 
 
 def addNamespace(obj):
+    """This function namespaces a given blender object.
+
+    :param obj: The object to namespace.
+    :type obj: bpy.types.Object
+
+    """
     types = defs.subtypes
     name = obj.name
     root = selection.getRoot(obj)
@@ -72,6 +81,12 @@ def addNamespace(obj):
 
 
 def removeNamespace(obj):
+    """This function removes the namespace from an object if present.
+
+    :param obj: The object to remove the namespace from.
+    :type obj: bpy.types.Object
+
+    """
     types = defs.subtypes
     name = obj.name.split("::")[-1]
     obj.name = name
@@ -82,4 +97,7 @@ def removeNamespace(obj):
 
 
 def namesAreExplicit(nameset, objnames):
+    """This function checks whether two sets of names have equal names.
+
+    """
     return len(nameset.intersection(objnames)) == 0

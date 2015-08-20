@@ -131,7 +131,10 @@ dictConstraints = {}
 checkMessages = {"NoObject": []}
 
 def generateCheckMessages(param1, param2):#FIXME: Parameter?
-        return [(x,)*3 for x in list(checkMessages.keys())]
+    """This function is just for generating a blender friendly list for an operator.
+
+    """
+    return [(x,)*3 for x in list(checkMessages.keys())]
 
 #definitions of which elements live on which layers by default
 layerTypes = {
@@ -172,8 +175,9 @@ MARSlegacydict = {'specularColor': 'specularFront',
 def updateDefs(defsFolderPath):
     """Updates the definitions with all yml files in the given folder
 
-    :param defsFolderPath: The path to the folder with the definitions yaml files
-    :return: Nothing
+    :param defsFolderPath: The path to the folder with the definitions yaml files.
+    :type defsFolderPath: str
+
     """
     print("Parsing YAML files for updating defs")
     dicts = __parseAllYAML(defsFolderPath)
@@ -199,8 +203,9 @@ def __parseAllYAML(path):
     It also evaluates the by & enclosed expressions in this file.
 
     :param path: The path to open all files in.
-    :type path: String.
-    :return:The dictionary with all parsed YAML files.
+    :type path: str
+    :return: dict -- The dictionary with all parsed YAML files.
+
     """
     #TODO: Better Exception handling!
     dicts = []
@@ -226,8 +231,8 @@ def __evaluateString(s):
     and evaluating the inner string as python code.
 
     :param s: The string to evaluate.
-    :type s: String.
-    :return:String - the evaluated string.
+    :type s: str
+    :return: str -- the evaluated string.
     """
     p = re.compile('&.*&')
     for ma in p.findall(s):

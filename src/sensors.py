@@ -35,14 +35,26 @@ import phobos.utils.selection as selectionUtils
 
 
 def register():
+    """This function is called when this module is registered to blender
+
+    """
     print("Registering sensors...")
 
 
 def unregister():
+    """This function is called when this module is unregistered to blender
+
+    """
     print("Unregistering sensors...")
 
 
 def cameraRotLock(object):
+    """TODO: PLEASE ADD PYDOC. What should this do exactly?
+
+    :param object: The object to lock the rotation for
+    :type object: bpy_types.Object
+
+    """
     selectionUtils.selectObjects([object], active=0)
     bpy.ops.transform.rotate(value=-1.5708, axis=(-1, 0, 0), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     bpy.ops.transform.rotate(value=1.5708, axis=(0, -1, 0), constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
@@ -59,6 +71,17 @@ def cameraRotLock(object):
 
 
 def createSensor(sensor, reference, origin=mathutils.Matrix()):
+    """This function creates a new sensor specified by its parameters.
+
+    :param sensor: The phobos representation of the new sensor.
+    :type sensor: dict
+    :param reference: This is an object to add a parent relationship to.
+    :type reference: bpy_types.Object
+    :param origin: The new sensors origin.
+    :type origin: mathutils.Matrix
+    :return: The newly created sensor object
+
+    """
     blenderUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object
     if 'Camera' in sensor['type']:
