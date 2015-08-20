@@ -379,7 +379,7 @@ def deriveCapsule(obj):
             rot_mu = mathutils.Euler(rotation).to_quaternion()
             pose['rotation_quaternion'] = list(rot_mu)
             matrix = loc_mu * rot_mu.to_matrix().to_4x4()
-            print(list(matrix))
+            #print(list(matrix))
             pose['matrix'] = [list(vector) for vector in list(matrix)]
         viscol['geometry'] = geometry
         viscol['pose'] = pose
@@ -671,7 +671,8 @@ def deriveStoredPoses():
     :return: A dictionary containing the poses.
     """
     poses_dict = {}
-    for file_name in bpy.data.texts:
+    for text in bpy.data.texts:
+        file_name = text.name
         if file_name.startswith('robot_poses_'):
             robot_name = file_name[len('robot_poses_'):]
             poses_file = blenderUtils.readTextFile(file_name)
