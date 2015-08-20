@@ -70,11 +70,7 @@ class CheckDict(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        """Executes the operator and unifies the selected objects meshes
 
-        :param context: The blender context to work with
-        :return: Blender result
-        """
         startLog(self)
         messages = {}
         dic = robotdictionary.buildRobotDictionary()
@@ -174,7 +170,8 @@ class SetLogSettings(Operator):
 
 
 class StorePoseOperator(Operator):
-    """
+    """StorePoseOperator
+
     """
     bl_idname = 'object.store_pose'
     bl_label = "Store the robot's current pose"
@@ -192,7 +189,8 @@ class StorePoseOperator(Operator):
 
 
 class LoadPoseOperator(Operator):
-    """
+    """LoadPoseOperator
+
     """
     bl_idname = 'object.load_pose'
     bl_label = "Load a pose for the robot"
