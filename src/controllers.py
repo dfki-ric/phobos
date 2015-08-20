@@ -35,10 +35,16 @@ import phobos.utils.naming as namingUtils
 
 
 def register():
+    """This function is called when this module is registered to blender
+
+    """
     print("Registering controllers...")
 
 
 def unregister():
+    """This function is called when this module is unregistered from blender.
+
+    """
     print("Unregistering controllers...")
 
 sensors = []
@@ -46,7 +52,9 @@ motors = []
 
 
 class AddControllerOperator(Operator):
-    """AddControllerOperator"""
+    """AddControllerOperator
+
+    """
     bl_idname = "object.phobos_add_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
@@ -97,7 +105,9 @@ class AddControllerOperator(Operator):
 
 
 class AddLegacyControllerOperator(Operator):
-    """AddControllerOperator"""
+    """AddLegacyControllerOperator
+
+    """
     bl_idname = "object.phobos_add_legacy_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
@@ -143,7 +153,8 @@ class AddLegacyControllerOperator(Operator):
 
 
 def addController(controller):
-    """
+    """This function inits and calls the phobos_add_controller operator.
+
     """
     global sensors
     global motors
