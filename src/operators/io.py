@@ -169,7 +169,9 @@ class ExportBakeOperator(Operator):
         return {'FINISHED'}
 
 class RobotModelImporter(bpy.types.Operator):
-    """Importer for MARS-compatible model or scene files"""
+    """Importer for MARS-compatible model or scene files
+
+    """
     bl_idname = "obj.import_robot_model"
     bl_label = "Import robot model file from various formats"
     bl_space_type = 'VIEW_3D'
