@@ -32,7 +32,6 @@ import mathutils
 from datetime import datetime
 import phobos.defs as defs
 import phobos.inertia as inertia
-import phobos.materials as materials
 import phobos.utils.selection as selectionUtils
 import phobos.utils.general as generalUtils
 import phobos.utils.blender as blenderUtils
@@ -289,28 +288,6 @@ class SetXRayOperator(Operator):
         for obj in objlist:
             obj.show_x_ray = self.show
         return {'FINISHED'}
-
-
-class UpdatePhobosModelsOperator(Operator):
-    """UpdatePhobosModelsOperator
-
-    """
-    bl_idname = "object.phobos_update_models"
-    bl_label = "Update Phobos properties for all objects"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    property_fix = BoolProperty(
-        name='fix',
-        default=False,
-        description="try to fix detected errors?")
-
-    print("phobos: Updating Phobos properties for selected objects...")
-
-    def execute(self, context):
-        materials.createPhobosMaterials()  # TODO: this should move to initialization
-        robotupdate.updateModels(selectionUtils.getRoots(), self.property_fix)
-        return {'FINISHED'}
-
 
 class SetPhobosType(Operator):
     """Set phobostype Operator
@@ -1363,7 +1340,6 @@ def add_editing_manual_map():
         ("bpy.ops.object.phobos_set_mass", "set-mass"),
         ("bpy.ops.object.phobos_sync_masses", "sync-masses"),
         ("bpy.ops.object.phobos_set_xray", "x-ray-view"),
-        ("bpy.ops.object.phobos_update_models", "update-robot-model"),
         ("bpy.ops.object.phobos_set_phobostype", "set-phobostype"),
         ("bpy.ops.object.phobos_batch_property", "edit-custom-property"),
         ("bpy.ops.object.phobos_copy_props", "copy-custom-property"),
@@ -1398,7 +1374,6 @@ def register():
     bpy.utils.register_class(SetMassOperator)
     bpy.utils.register_class(SyncMassesOperator)
     bpy.utils.register_class(SetXRayOperator)
-    bpy.utils.register_class(UpdatePhobosModelsOperator)
     bpy.utils.register_class(SetPhobosType)
     bpy.utils.register_class(BatchEditPropertyOperator)
     bpy.utils.register_class(CopyCustomProperties)
@@ -1431,7 +1406,6 @@ def unregister():
     bpy.utils.unregister_class(SetMassOperator)
     bpy.utils.unregister_class(SyncMassesOperator)
     bpy.utils.unregister_class(SetXRayOperator)
-    bpy.utils.unregister_class(UpdatePhobosModelsOperator)
     bpy.utils.unregister_class(SetPhobosType)
     bpy.utils.unregister_class(BatchEditPropertyOperator)
     bpy.utils.unregister_class(CopyCustomProperties)

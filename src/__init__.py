@@ -94,7 +94,6 @@ defs.updateDefs(os.path.dirname(__file__) + "/definitions")
 if "bpy" in locals():
     import imp
 
-    imp.reload(phobos.robotupdate)
     imp.reload(phobos.robotdictionary)
     imp.reload(phobos.controllers)
     imp.reload(phobos.exporter)
@@ -117,7 +116,7 @@ if "bpy" in locals():
     imp.reload(phobos.defs)
     print("Reloading Phobos.")
 else:
-    import phobos.robotupdate, phobos.links, phobos.robotdictionary, phobos.controllers, \
+    import phobos.links, phobos.robotdictionary, phobos.controllers, \
         phobos.exporter, phobos.importer, phobos.joints, phobos.sensors, phobos.inertia, \
         phobos.phobosgui, phobos.utils.naming, phobos.utils.blender, phobos.utils.general, phobos.utils.selection, \
         phobos.operators.io, phobos.operators.editing, phobos.operators.misc, phobos.operators.naming, \
@@ -126,7 +125,6 @@ else:
     print("Importing Phobos modules.")
 
 import bpy
-
 
 def register():
     """This function registers all modules to blender.
