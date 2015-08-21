@@ -102,8 +102,8 @@ def calculateInertia(mass, geometry):
         inertia = calculateSphereInertia(mass, geometry['radius'])
     elif gt == 'capsule':
         inertia = calculateCapsuleInertia(mass, geometry['radius'], geometry['length'])
-    elif gt == 'mesh':
-        inertia = calculateEllipsoidInertia(mass, geometry['size'])
+    #elif gt == 'mesh':
+    #    inertia = calculateEllipsoidInertia(mass, geometry['size'])
     return inertia
 
 
@@ -242,26 +242,44 @@ def calculateEllipsoidInertia(mass, size):
     return (ixx, ixy, ixz, iyy, iyz, izz,)
 
 
-def calculateMeshInertia(reference, triangles, mass):
+def calculateMeshInertia(reference, data, mass):
     """
+    Calculate the inertia tensor of arbitrary mesh objects.
 
     Implemented after http://number-none.com/blow/inertia/body_i.html
     and http://www.iue.tuwien.ac.at/phd/wessner/node39.html.
 
-    :param reference:
-    :param triangles:
-    :param mass:
-    :return:
+    :param reference: An arbitrary reference point. Smart choices
+    may possibly reduce time complexity.
+    :type reference: mathutils.Vector.
+    :param data: The mesh object's data.
+    :type data: bpy.types.BlendData.
+    :param mass: The object's mass.
+    :type mass: float.
+    :return: tuple(6)
     """
+
+    print('###########################')
+    print('calculating mesh inertia')
+    print('###########################')
+
     tetrahedra = []
     mesh_volume = 0
-    for tri in triangles:
-        U = (tri[0] - tri[1]).length
-        V = (tri[1] - tri[2]).length
-        W = (tri[2] - tri[0]).length
-        u = (tri[2] - reference).length
-        v = (tri[0] - reference).length
-        w = (tri[1] - reference).length
+
+    vertices = data.vertices
+    polygons = data.polygons
+
+    for triangle in polygons:
+        verts = [vertices[index].co for index in triangle.vertices]
+        #print('verts:', verts)
+        U = (verts[0] - verts[1]).length
+        V = (verts[1] - verts[2]).length
+        W = (verts[2] - verts[0]).length
+        u = (verts[2] - reference).length
+        v = (verts[0] - reference).length
+        w = (verts[1] - reference).length
+
+        #print(U, V, W, u, v, w)
 
         X = (w - U + v) * (U + v + w)
         x = (U - v + w) * (v - w + U)
@@ -275,35 +293,63 @@ def calculateMeshInertia(reference, triangles, mass):
         c = math.sqrt(X*Y*z)
         d = math.sqrt(x*y*z)
 
-        # TODO: make volume negative where appropriate
-        volume = (math.sqrt((-a+b+c+d)*(a-b+c+d)*(a+b-c+d)*(a+b+c-d))) / 192*u*v*w
+        # TODO: make volume negative where appropriate in order to make this work for non-convex meshes
+        # triangle.normal
+        #print((-a+b+c+d)*(a-b+c+d)*(a+b-c+d)*(a+b+c-d))
+        # FIXME: the abs() should probably not be necessary if everything works correctly
+        volume = (math.sqrt(abs((-a+b+c+d)*(a-b+c+d)*(a+b-c+d)*(a+b+c-d)))) / 192*u*v*w
+        #print(4*u**2*v**2*w**2 - u**2*(v**2 + w**2 - U**2)**2 - v**2*(w**2 + u**2 - V**2)**2
+        #                    - w**2*(u**2 + v**2 - W**2)**2 + (v**2 + w**2 - U**2)*(v**2 + w**2 - U**2)*(w**2 + u**2 - V**2))
+        #volume = math.sqrt(4*u**2*v**2*w**2 - u**2*(v**2 + w**2 - U**2)**2 - v**2*(w**2 + u**2 - V**2)**2
+        #                    - w**2*(u**2 + v**2 - W**2)**2 + (v**2 + w**2 - U**2)*(v**2 + w**2 - U**2)*(w**2 + u**2 - V**2)) / 12
 
-        my_x = (tri[0].x + tri[1].x + tri[2].x + reference.x) / 4
-        my_y = (tri[0].y + tri[1].y + tri[2].y + reference.y) / 4
-        my_z = (tri[0].z + tri[1].z + tri[2].z + reference.z) / 4
-        x_bar = mathutils.Vector(tri[0].x-my_x, tri[1].x-my_x, tri[2].x-my_x, reference.x-my_x)
-        y_bar = mathutils.Vector(tri[0].y-my_y, tri[1].y-my_y, tri[2].y-my_y, reference.y-my_y)
-        z_bar = mathutils.Vector(tri[0].z-my_z, tri[1].z-my_z, tri[2].z-my_z, reference.z-my_z)
-        covar_matrix = mathutils.Matrix(cov(x_bar, x_bar), cov(x_bar, y_bar), cov(x_bar, z_bar),
-                                        cov(y_bar, x_bar), cov(y_bar, y_bar), cov(y_bar, z_bar),
-                                        cov(z_bar, x_bar), cov(z_bar, y_bar), cov(z_bar, z_bar))
+        my_x = (verts[0].x + verts[1].x + verts[2].x + reference.x) / 4
+        my_y = (verts[0].y + verts[1].y + verts[2].y + reference.y) / 4
+        my_z = (verts[0].z + verts[1].z + verts[2].z + reference.z) / 4
+        x_bar = mathutils.Vector((verts[0].x-my_x, verts[1].x-my_x, verts[2].x-my_x, reference.x-my_x))
+        y_bar = mathutils.Vector((verts[0].y-my_y, verts[1].y-my_y, verts[2].y-my_y, reference.y-my_y))
+        z_bar = mathutils.Vector((verts[0].z-my_z, verts[1].z-my_z, verts[2].z-my_z, reference.z-my_z))
+        covar_matrix = mathutils.Matrix(((cov(x_bar, x_bar), cov(x_bar, y_bar), cov(x_bar, z_bar)),
+                                         (cov(y_bar, x_bar), cov(y_bar, y_bar), cov(y_bar, z_bar)),
+                                         (cov(z_bar, x_bar), cov(z_bar, y_bar), cov(z_bar, z_bar))))
 
-        tetrahedra.append({'volume': volume, 'covar_matrix': covar_matrix})
+        centre_of_mass = mathutils.Vector(((verts[0].x + verts[1].x + verts[2].x + reference.x) / 4,
+                                          (verts[0].y + verts[1].y + verts[2].y + reference.y) / 4,
+                                          (verts[0].z + verts[1].z + verts[2].z + reference.z) / 4))
+
+        tetrahedra.append({'volume': volume, 'covar_matrix': covar_matrix, 'centre_of_mass': centre_of_mass})
         mesh_volume += volume
 
+    current_body = {}
+    first = True
     for tetrahedron in tetrahedra:
         tetra_mass = mass / (mesh_volume / tetrahedron['volume'])
         tetrahedron['mass'] = tetra_mass
 
-        centre_of_mass = mathutils.Vector((tri[0].x + tri[1].x + tri[2].x + reference.x) / 4,
-                                          (tri[0].y + tri[1].y + tri[2].y + reference.y) / 4,
-                                          (tri[0].z + tri[1].z + tri[2].z + reference.z) / 4)
-        tetrahedron['centre_of_mass'] = centre_of_mass
+        if first:
+            current_body = tetrahedron
+            first = False
+        else:
+            current_body = combine_bodies(current_body, tetrahedron)
 
-        # TODO: combine bodies iteratively into one, then calculate inertia
+    C = current_body['covar_matrix']
+    i = mathutils.Matrix.Identity(3) * trace(C) - C
+
+    #print('mesh inertia:', i)
+    return (i[0][0], i[0][1], i[0][2], i[1][1], i[1][2], i[2][2])
 
 
 def combine_bodies(b1, b2):
+    """
+    Combine two bodies defined by mass, centre of mass and covariance
+    matrix into one.
+
+    :param b1: A body.
+    :type b1: dict.
+    :param b2: Another body.
+    :type b2: dict.
+    :return: The combined body as dictionary.
+    """
     m1 = b1['mass']
     m2 = b2['mass']
     m3 = m1 + m2
@@ -313,14 +359,14 @@ def combine_bodies(b1, b2):
 
     c1 = b1['covar_matrix']
     trans1 = x3 - x1
-    c1_bar = mathutils.Matrix(c1.xx + trans1.x, c1.xy + trans1.x, c1.xz + trans1.x,
-                              c1.yx + trans1.y, c1.yy + trans1.y, c1.yz + trans1.y,
-                              c1.zx + trans1.z, c1.zy + trans1.z, c1.zz + trans1.z)
+    c1_bar = mathutils.Matrix(((c1[0][0] + trans1.x, c1[0][1] + trans1.x, c1[0][2] + trans1.x),
+                               (c1[1][0] + trans1.y, c1[1][1] + trans1.y, c1[1][2] + trans1.y),
+                               (c1[2][0] + trans1.z, c1[2][1] + trans1.z, c1[2][2] + trans1.z)))
     c2 = b2['covar_matrix']
     trans2 = x3 - x2
-    c2_bar = mathutils.Matrix(c2.xx + trans2.x, c2.xy + trans1.x, c1.xz + trans1.x,
-                              c2.yx + trans2.y, c2.yy + trans1.y, c1.yz + trans1.y,
-                              c2.zx + trans2.z, c2.zy + trans1.z, c1.zz + trans1.z)
+    c2_bar = mathutils.Matrix(((c2[0][0] + trans2.x, c2[0][1] + trans2.x, c2[0][2] + trans2.x),
+                               (c2[1][0] + trans2.y, c2[1][1] + trans2.y, c2[1][2] + trans2.y),
+                               (c2[2][0] + trans2.z, c2[2][1] + trans2.z, c2[2][2] + trans2.z)))
     c3 = c1_bar + c2_bar
 
     b3 = {'mass': m3, 'centre_of_mass': x3, 'covar_matrix': c3}
@@ -328,11 +374,35 @@ def combine_bodies(b1, b2):
 
 
 def cov(x, y):
+    """
+    Calculate two values' covariance.
+
+    :param x: A value.
+    :type x: float.
+    :param y: Another value.
+    :type y: float.
+    :return: The two values' covariance as float.
+    """
     n = len(x)
     covariance = 0
     for i in range(n):
         covariance += x[i] * y[i] / n
     return covariance
+
+
+def trace(matrix):
+    """
+    Calculate trace for a square matrix.
+
+    :param matrix: A matrix.
+    :type matrix: mathutils.Matrix.
+    :return: Trace value as float.
+    """
+    tr = 0.0
+    for row in matrix:
+        for elem in row:
+            tr += elem
+    return tr
 
 
 def inertiaListToMatrix(il):
@@ -484,7 +554,14 @@ def createInertials(link, empty=False, preserve_children=False):
                 mass = obj['mass'] if 'mass' in obj else None
                 geometry = robotdictionary.deriveGeometry(obj)
                 if mass is not None:
-                    inert = calculateInertia(mass, geometry)
+                    if geometry['type'] == 'mesh':
+                        # bpy.ops.mesh.quads_convert_to_tris(use_beauty=True)
+                        # TODO: reference point should be arbitrary but there may be smarter choices
+                        inert = calculateMeshInertia(mathutils.Vector((0, 0, 0)), obj.data, mass)
+                        print('mesh:', inert)
+                        print('ellipsoid:', calculateEllipsoidInertia(mass, geometry['size']))
+                    else:
+                        inert = calculateInertia(mass, geometry)
                     if inert is not None:
                         inertial = createInertial(obj)
                         inertial['mass'] = mass
