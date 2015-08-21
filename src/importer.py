@@ -588,6 +588,9 @@ class RobotModelParser():
 
                 bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes[geomsrc])
                 meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
+                if not os.path.isfile(geom_path):
+                    log(geom_path + " is no file. Object " + self.praefixNames(viscol['name'], geomsrc) + " will have empty mesh!", "ERROR", "importer:createGeometry")
+                    bpy.data.meshes.new(meshname)
                 if meshname in bpy.data.meshes:
                     bpy.ops.object.add(type='MESH')
                     newgeom = bpy.context.object
