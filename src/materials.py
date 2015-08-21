@@ -66,6 +66,7 @@ def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=
     if texture is not None:
         # TODO: implement textures properly
         pass
+    mat.use_fake_user = True
     return mat
 
 
