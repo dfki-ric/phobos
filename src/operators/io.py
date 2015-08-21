@@ -43,7 +43,7 @@ from bpy.props import EnumProperty
 
 def generateLibEntries(param1, param2): #FIXME: parameter?
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
-        return [(entry,)*3 for entry in yaml.load(f.read())]
+        return [("None",)*3] + [(entry,)*3 for entry in yaml.load(f.read())]
 
 class ImportLibRobot(Operator):
     """ImportLibRobotOperator
@@ -97,6 +97,8 @@ class CreateRobotInstance(Operator):
         description="The Robot lib entries.")
 
     def execute(self, context):
+        if self.bakeObj == "None":
+            return {"FINISHED"}
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
             robot_lib = yaml.load(f.read())
         bpy.ops.import_mesh.stl(filepath=os.path.join(robot_lib[self.bakeObj], "bake.stl"))
