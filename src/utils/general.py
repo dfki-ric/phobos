@@ -166,6 +166,9 @@ def epsilonToZero(data, epsilon, decimals):
 
      """
     if is_float(data):
+        if type(data) == str:
+            log("The number " + data +  " is skipped during rounding due to its type 'str'", "WARNING")
+            return data
         return 0 if abs(data) < epsilon else round(data, decimals)
     elif type(data) is list:
         return [epsilonToZero(a, epsilon, decimals) for a in data]
