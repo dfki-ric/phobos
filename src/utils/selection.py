@@ -68,32 +68,44 @@ def getImmediateChildren(obj, phobostypes=None):
 
 
 def getRoot(obj=None):
-    """Finds the root object of a model given one of the model elements is selected or provided
-
     """
-    if obj == None:
+    Find the root of an object, i.e. the first going up the tree containing a
+    model name or entity name. If there is no such object up the tree, the
+    tree's top-most object is returned.
+    If no object is given, find root of the active object. If there is no
+    active object, throw an error.
+
+    :param obj: The object to find the root for.
+    :type obj: bpy.types.Object.
+    :return: The root object.
+    """
+    if not obj:
         for anobj in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
-            if (anobj.select):
+            if bpy.context.scene.objects.active == anobj:
                 obj = anobj
+                break
+        else:
+            log("No root object found! Check your object selection", "ERROR")
+            return None
     child = obj
-    if child == None:
-        log("No root object found! Check your object selection", "ERROR")
-        return None
-    while child.parent != None:
+    while child.parent and not ('modelname' in child or 'entityname' in child):
         child = child.parent
     return child
 
 
 def getRoots():
-    """Returns a list of all roots (=objects without parent) present in the scene
+    """
+    Find all of the scene's root links, i.e. links containing a model name or
+    entity name.
 
+    :return: List of all root links.
     """
     roots = []
     for obj in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
-        if not obj.parent and obj.phobostype == "link":
+        if ('modelname' in obj or 'entityname' in obj) and obj.phobostype == "link":
             roots.append(obj)
 
-    if roots == []:
+    if not roots:
         log("Phobos: No root objects found.", "WARNING", "getRoots")
     else:
         log("Phobos: Found " + str(len(roots)) + " root object(s)", "INFO", "getRoots")
