@@ -267,41 +267,30 @@ def calculateMeshInertia(reference, data, mass):
     mesh_volume = 0
 
     vertices = data.vertices
+    prev_mode = bpy.context.mode
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED')
+    bpy.ops.object.mode_set(mode=prev_mode)
     polygons = data.polygons
 
     for triangle in polygons:
         verts = [vertices[index].co for index in triangle.vertices]
-        #print('verts:', verts)
-        U = (verts[0] - verts[1]).length
-        V = (verts[1] - verts[2]).length
-        W = (verts[2] - verts[0]).length
-        u = (verts[2] - reference).length
-        v = (verts[0] - reference).length
-        w = (verts[1] - reference).length
 
-        #print(U, V, W, u, v, w)
+        tri_normal = triangle.normal
+        tri_centre = triangle.center
+        ref_tri_vector = tri_centre - reference
+        normal_angle = ref_tri_vector.angle(tri_normal, 90)
+        if normal_angle > 90:
+            sign = -1
+        elif normal_angle == 90:
+            sign = 0
+        else:
+            sign = 1
 
-        X = (w - U + v) * (U + v + w)
-        x = (U - v + w) * (v - w + U)
-        Y = (u - V + w) * (V + w + u)
-        y = (V - w + u) * (w - u + V)
-        Z = (v - W + u) * (W + u + v)
-        z = (W - u + v) * (u + v + W)
-
-        a = math.sqrt(x*Y*Z)
-        b = math.sqrt(X*y*Z)
-        c = math.sqrt(X*Y*z)
-        d = math.sqrt(x*y*z)
-
-        # TODO: make volume negative where appropriate in order to make this work for non-convex meshes
-        # triangle.normal
-        #print((-a+b+c+d)*(a-b+c+d)*(a+b-c+d)*(a+b+c-d))
-        # FIXME: the abs() should probably not be necessary if everything works correctly
-        volume = (math.sqrt(abs((-a+b+c+d)*(a-b+c+d)*(a+b-c+d)*(a+b+c-d)))) / 192*u*v*w
-        #print(4*u**2*v**2*w**2 - u**2*(v**2 + w**2 - U**2)**2 - v**2*(w**2 + u**2 - V**2)**2
-        #                    - w**2*(u**2 + v**2 - W**2)**2 + (v**2 + w**2 - U**2)*(v**2 + w**2 - U**2)*(w**2 + u**2 - V**2))
-        #volume = math.sqrt(4*u**2*v**2*w**2 - u**2*(v**2 + w**2 - U**2)**2 - v**2*(w**2 + u**2 - V**2)**2
-        #                    - w**2*(u**2 + v**2 - W**2)**2 + (v**2 + w**2 - U**2)*(v**2 + w**2 - U**2)*(w**2 + u**2 - V**2)) / 12
+        volume = sign * 1/6 * abs(mathutils.Matrix(((verts[0][0], verts[0][1], verts[0][2], 1),
+                                                (verts[1][0], verts[1][1], verts[1][2], 1),
+                                                (verts[2][0], verts[2][1], verts[2][2], 1),
+                                                (reference[0], reference[1], reference[2], 1))).determinant())
 
         my_x = (verts[0].x + verts[1].x + verts[2].x + reference.x) / 4
         my_y = (verts[0].y + verts[1].y + verts[2].y + reference.y) / 4
@@ -335,7 +324,7 @@ def calculateMeshInertia(reference, data, mass):
     C = current_body['covar_matrix']
     i = mathutils.Matrix.Identity(3) * trace(C) - C
 
-    #print('mesh inertia:', i)
+    print('mesh inertia:', i)
     return (i[0][0], i[0][1], i[0][2], i[1][1], i[1][2], i[2][2])
 
 
@@ -555,11 +544,13 @@ def createInertials(link, empty=False, preserve_children=False):
                 geometry = robotdictionary.deriveGeometry(obj)
                 if mass is not None:
                     if geometry['type'] == 'mesh':
-                        # bpy.ops.mesh.quads_convert_to_tris(use_beauty=True)
                         # TODO: reference point should be arbitrary but there may be smarter choices
+                        selectionUtils.selectObjects([obj])
+                        bpy.context.scene.objects.active = obj
                         inert = calculateMeshInertia(mathutils.Vector((0, 0, 0)), obj.data, mass)
                         print('mesh:', inert)
-                        print('ellipsoid:', calculateEllipsoidInertia(mass, geometry['size']))
+                        #print('ellipsoid:', calculateEllipsoidInertia(mass, geometry['size']))
+                        print('box:', calculateBoxInertia(mass, geometry['size']))
                     else:
                         inert = calculateInertia(mass, geometry)
                     if inert is not None:
