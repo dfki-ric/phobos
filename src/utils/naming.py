@@ -68,7 +68,7 @@ def addNamespace(obj):
     types = defs.subtypes
     name = obj.name
     root = selection.getRoot(obj)
-    namespace = root["modelname"] if root != None and "modelname" in root else None
+    namespace = root["entityname"] if root != None and "modelname" in root else None
     if not namespace:
         log("The obj " + getObjectName(obj) + "has no namespace to append to. Aborting.", "ERROR")
         return
