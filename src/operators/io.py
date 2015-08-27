@@ -29,6 +29,7 @@ from phobos.logging import startLog, endLog, log
 import phobos.defs as defs
 import phobos.exporter as exporter
 import phobos.importer as importer
+import phobos.links as links
 import bpy
 import yaml
 import zipfile
@@ -106,13 +107,16 @@ class CreateRobotInstance(Operator):
             return {"FINISHED"}
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
             robot_lib = yaml.load(f.read())
+        root = links.createLink(1.0, name=self.robName + "::" + self.bakeObj)
+        root["modelname"] = self.bakeObj
+        root["entityname"] = self.robName
         bpy.ops.import_mesh.stl(filepath=os.path.join(robot_lib[self.bakeObj], "bake.stl"))
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
         obj = context.active_object
-        obj.name = self.robName + "::" + self.bakeObj
-        obj.phobostype = "link"
-        obj["reference"] = self.bakeObj
-        obj["entityname"] = self.robName
+        obj.name = self.robName + "::visual"
+        obj.phobostype = "visual"
+        selectionUtils.selectObjects([root, obj], clear=True, active=0)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
         return {"FINISHED"}
 
     @classmethod
