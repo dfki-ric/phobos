@@ -39,7 +39,7 @@ import phobos.utils.selection as selectionUtils
 import phobos.utils.blender as blenderUtils
 import phobos.robotdictionary as robotdictionary
 from bpy.types import Operator
-from bpy.props import EnumProperty
+from bpy.props import EnumProperty, StringProperty
 
 def generateLibEntries(param1, param2): #FIXME: parameter?
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
@@ -96,6 +96,11 @@ class CreateRobotInstance(Operator):
         items=generateLibEntries,
         description="The Robot lib entries.")
 
+    robName = StringProperty(
+        name="instances name",
+        default="instance"
+    )
+
     def execute(self, context):
         if self.bakeObj == "None":
             return {"FINISHED"}
@@ -104,9 +109,10 @@ class CreateRobotInstance(Operator):
         bpy.ops.import_mesh.stl(filepath=os.path.join(robot_lib[self.bakeObj], "bake.stl"))
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
         obj = context.active_object
-        obj.name = self.bakeObj + "::instance"
+        obj.name = self.robName + "::" + self.bakeObj
         obj.phobostype = "link"
         obj["reference"] = self.bakeObj
+        obj["entityname"] = self.robName
         return {"FINISHED"}
 
     @classmethod
