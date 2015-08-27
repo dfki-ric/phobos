@@ -1001,16 +1001,87 @@ def exportModelToSMURF(model, path):
             with open(os.path.join(path, text.name), 'w') as op:
                 op.write('\n'.join(line.body for line in text.lines))
 
+def exportSMURFsScene(selected_only=True, subfolder=True):
+    """Exports an arranged scene into SMURFS. It will export only entities
+    with a valid entityname, and entitytype property.
 
-def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring needed!!!
-    """Exports all robots in a scene in *.smurfs format.
+    :param selected_only: If True only selected entities get exported.
+    :type selected_only: bool
+    :param subfolder: If True the models are exported into separate subfolders
+    :type subfolder: bool
+
+    """
+
+    entitiesList = []
+
+    #Creates filter object containing all root links considered as entities to export to SMURFS
+    entities = filter(lambda r: "entityname" in r and "entitytype" in r and False if (selected_only and not r.select) else True, selectionUtils.getRoots())
+    for entity in entities:
+        if entity[entitytype] == "smurf":
+            entry = handleScene_smurf(entity, subfolder)
+        elif entity[entitytype] == "light":
+            entry = handleScene_light(entity, subfolder)
+        elif entity[entitytype] == "heightmap":
+            entry = handleScene_heightmap(entity, subfolder)
+        entitiesList.append(entry)
+
+    if bpy.data.worlds[0].relativePath:
+        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+    else:
+        outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+
+    with open(os.path.join(outpath, bpy.data.worlds['World'].sceneName + '.smurfs'),
+              'w') as outputfile:
+        sceneInfo = "# SMURF scene " + bpy.data.worlds['World'].sceneName + "; created" + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
+        sceneInfo += "# created with Phobos " + defs.version + " - https://github.com/rock-simulation/phobos\n\n"
+        outputfile.write(sceneInfo)
+        outputfile.write(yaml.dump({'entities': entitiesList}))
+
+
+def handleScene_smurf(smurf, subfolders):
+    """This function handles a smurf entity in a scene to export it
+
+    :param smurf: The smurfs root object.
+    :type smurf: bpy.types.Object
+    :param subfolders: If True data will be exported into subfolders.
+    :type subfolders: bool
+    :return: dict - An entry for the scenes entitiesList
+
+    """
+    log("Exporting " + smurf["entityname"] + " as a smurf entity", "INFO")
+
+def handleScene_light(light, subfolders):
+    """This function handles a light entity in a scene to export it
+
+    :param smurf: The lights root object.
+    :type smurf: bpy.types.Object
+    :param subfolders: If True data will be exported into subfolders.
+    :type subfolders: bool
+    :return: dict - An entry for the scenes entitiesList
+
+    """
+    log("Exporting " + light["entityname"] + " as a light entity", "INFO")
+
+def handleScene_heightmap(heightmap, subfolders):
+    """This function handles a heightmap entity in a scene to export it
+
+    :param smurf: The heightmap root object.
+    :type smurf: bpy.types.Object
+    :param subfolders: If True data will be exported into subfolders.
+    :type subfolders: bool
+    :return: dict - An entry for the scenes entitiesList
+
+    """
+    log("Exporting " + heightmap["entityname"] + " as a heightmap entity", "INFO")
+
+
+"""def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring needed!!!
+    Exports all robots in a scene in *.smurfs format.
 
     :param selected_only: Decides if only models with selected root links are exported.
     :type selected_only: bool
     :param subfolders: If True, the export is structured with subfolders for each model.
     :type subfolders: bool
-
-    """
     objects = {}
     models = {}  # models to be exported by name
     lights = {}
@@ -1082,7 +1153,7 @@ def exportSMURFsScene(selected_only=True, subfolders=True): #TODO: Refactoring n
         if os.path.isdir(os.path.join(outpath, instance)):
             shutil.rmtree(os.path.join(outpath, instance))
         shutil.copytree(os.path.join(libpath, instance), os.path.join(outpath, instance))
-
+"""
 def exportModelToMARS(model, path):
     """Exports selected robot as a MARS scene
 
@@ -1239,5 +1310,3 @@ def export(path='', robotmodel=None):
                     texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
                     if os.path.isfile(texpath):
                         shutil.copy(texpath, os.path.join(outpath, 'textures', os.path.basename(mat[texturetype])))
-
-
