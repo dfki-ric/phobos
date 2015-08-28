@@ -59,6 +59,7 @@ def register():
                                                 description="number of decimal places to export",
                                                 default=6)
     bpy.types.World.relativePath = BoolProperty(name='relative path', default=True)
+    bpy.types.World.heightmapMesh = BoolProperty(name='export heightmap as mesh', default=False)
     bpy.types.World.useBobj = BoolProperty(name="useBobj", update=updateExportOptions)
     bpy.types.World.useObj = BoolProperty(name="useObj", update=updateExportOptions)
     bpy.types.World.useStl = BoolProperty(name="useStl", update=updateExportOptions)
@@ -445,6 +446,7 @@ class PhobosExportPanel(bpy.types.Panel):
 
         layout.label(text="Export Scene")
         self.layout.prop(bpy.data.worlds[0], "sceneName", text="name")
+        self.layout.prop(bpy.data.worlds[0], "heightmapMesh", text="export heightmap as mesh")
         layout.operator("object.phobos_export_scene", text="Export SMURF Scene", icon="WORLD_DATA")
 
 
