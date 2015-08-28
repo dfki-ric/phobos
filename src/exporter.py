@@ -1016,41 +1016,80 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
 
     #Creates filter object containing all root links considered as entities to export to SMURFS
     entities = filter(lambda r: "entityname" in r and "entitytype" in r and False if (selected_only and not r.select) else True, selectionUtils.getRoots())
-    for entity in entities:
-        if entity[entitytype] == "smurf":
-            entry = handleScene_smurf(entity, subfolder)
-        elif entity[entitytype] == "light":
-            entry = handleScene_light(entity, subfolder)
-        elif entity[entitytype] == "heightmap":
-            entry = handleScene_heightmap(entity, subfolder)
-        entitiesList.append(entry)
-
+    #Determine outpath for this scene
     if bpy.data.worlds[0].relativePath:
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
     else:
         outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+    for entity in entities:
+        log("Exporting " + str(entity) + " to SMURFS", "INFO")
+        if entity["entitytype"] == "smurf":
+            #Determine outpath for the smurf export
+            smurf_outpath = securepath(os.path.join(outpath, entity["modelname"]) if subfolder else outpath)
+            entry = handleScene_smurf(entity, smurf_outpath, subfolder)
+        elif entity["entitytype"] == "light":
+            entry = handleScene_light(entity)
+        elif entity["entitytype"] == "heightmap":
+            entry = handleScene_heightmap(entity)
+        entitiesList.append(entry)
 
     with open(os.path.join(outpath, bpy.data.worlds['World'].sceneName + '.smurfs'),
               'w') as outputfile:
-        sceneInfo = "# SMURF scene " + bpy.data.worlds['World'].sceneName + "; created" + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
+        sceneInfo = "# SMURF scene " + bpy.data.worlds['World'].sceneName + "; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
         sceneInfo += "# created with Phobos " + defs.version + " - https://github.com/rock-simulation/phobos\n\n"
         outputfile.write(sceneInfo)
         outputfile.write(yaml.dump({'entities': entitiesList}))
 
 
-def handleScene_smurf(smurf, subfolders):
+def handleScene_smurf(smurf, outpath, subfolder):
     """This function handles a smurf entity in a scene to export it
 
     :param smurf: The smurfs root object.
     :type smurf: bpy.types.Object
-    :param subfolders: If True data will be exported into subfolders.
-    :type subfolders: bool
+    :param outpath: The path to export the smurf to.
+    :type outpath: str
+    :param subfolder: If True the export path has a subfolder for this smurf entity.
+    :type subfolder: bool
     :return: dict - An entry for the scenes entitiesList
 
     """
-    log("Exporting " + smurf["entityname"] + " as a smurf entity", "INFO")
+    log("Exporting " + smurf["entityname"] + " as a smurf entity to " + outpath, "INFO")
+    #The smurf path without subfolders in the export.
+    normalSmurf = os.path.join(outpath, smurf["modelname"]+".smurf")
+    #Thre smurf path inside a smurf subfolder.
+    subSmurf = os.path.join(outpath, "smurf", smurf["modelname"]+".smurf")
+    #Praefix for uri depending on subfolder
+    praefix = smurf["modelname"] if subfolder else ""
+    entry = {}
+    #To differentiate between complete robot and dummy aka 'reference'
+    if "isReference" in smurf:
+        with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
+            robots = yaml.load(f.read())
+            sourcePath = robots[smurf["modelname"]]
+            for filename in os.listdir(sourcePath):
+                fullPath = os.path.join(sourcePath, filename)
+                if os.path.isfile(fullPath):
+                    shutil.copy2(fullPath, os.path.join(outpath, filename))
+                else:
+                    #Remove old folders to prevent errors in copytree
+                    shutil.rmtree(os.path.join(outpath, filename), True)
+                    shutil.copytree(fullPath, os.path.join(outpath, filename))
+    else:
+        selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)
+        robot = robotdictionary.buildRobotDictionary()
+        export(outpath, robotmodel=robot)
+    entitypose = robotdictionary.deriveObjectPose(smurf)
+    entry =     {'name': smurf['entityname'],
+                 'type': 'smurf',
+                 'file': os.path.join(praefix, smurf["modelname"]+".smurf") if os.path.isfile(normalSmurf)
+                    else os.path.join(praefix, "smurf", smurf["modelname"]+".smurf"),
+                 'anchor': smurf["anchor"] if "anchor" in smurf else "none",
+                 "position": entitypose["translation"],
+                 "rotation": entitypose["rotation_quaternion"],
+                 "pose": smurf["entitypose"] if "entitypose" in smurf else "default"}
+    return entry
 
-def handleScene_light(light, subfolders):
+def handleScene_light(light):
     """This function handles a light entity in a scene to export it
 
     :param smurf: The lights root object.
@@ -1062,7 +1101,7 @@ def handleScene_light(light, subfolders):
     """
     log("Exporting " + light["entityname"] + " as a light entity", "INFO")
 
-def handleScene_heightmap(heightmap, subfolders):
+def handleScene_heightmap(heightmap):
     """This function handles a heightmap entity in a scene to export it
 
     :param smurf: The heightmap root object.
