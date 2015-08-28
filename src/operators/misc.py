@@ -207,10 +207,6 @@ class StorePoseOperator(Operator):
         robotdictionary.storePose(self.robot_name, self.pose_name)
         return {'FINISHED'}
 
-    @classmethod
-    def poll(self, context):
-        return len(context.selected_objects) == 0
-
 
 class LoadPoseOperator(Operator):
     """
@@ -237,7 +233,3 @@ class LoadPoseOperator(Operator):
         current_robot_name = self.robot_name
         robotdictionary.loadPose(self.robot_name, self.pose_name)
         return {'FINISHED'}
-
-    @classmethod
-    def poll(self, context):
-        return len(context.selected_objects) == 0
