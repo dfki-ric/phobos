@@ -228,6 +228,7 @@ class PhobosPanel(bpy.types.Panel):
         layout.label(text="Scene Editing", icon="WORLD")
         iinlayout = layout.split()
         ic1 = iinlayout.column(align=True)
+        ic1.operator("object.phobos_add_heightmap", text="Create Heightmap")
         ic2 = iinlayout.column(align=True)
 
         # Inspection Menu
