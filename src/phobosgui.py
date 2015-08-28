@@ -223,6 +223,13 @@ class PhobosPanel(bpy.types.Panel):
         rc2.operator('object.phobos_name_model', text='Name Robot')
         rc2.operator('object.phobos_toggle_namespaces', text='Toggle Namespaces')
 
+        #Scene Menu
+        layout.separator()
+        layout.label(text="Scene Editing", icon="WORLD")
+        iinlayout = layout.split()
+        ic1 = iinlayout.column(align=True)
+        ic2 = iinlayout.column(align=True)
+
         # Inspection Menu
         layout.separator()
         layout.label(text="Inspect Robot", icon='VIEWZOOM')
