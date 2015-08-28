@@ -110,6 +110,7 @@ class CreateRobotInstance(Operator):
         root = links.createLink(1.0, name=self.robName + "::" + self.bakeObj)
         root["modelname"] = self.bakeObj
         root["entityname"] = self.robName
+        root["isInstance"] = True
         bpy.ops.import_mesh.stl(filepath=os.path.join(robot_lib[self.bakeObj], "bake.stl"))
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
         obj = context.active_object
