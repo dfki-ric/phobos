@@ -133,7 +133,9 @@ class ExportSceneOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        startLog(self)
         exporter.exportSMURFsScene()
+        endLog()
         return {'FINISHED'}
 
 
