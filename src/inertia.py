@@ -244,10 +244,15 @@ def calculateEllipsoidInertia(mass, size):
 
 def calculateMeshInertia(reference, data, mass):
     """
-    Calculate the inertia tensor of arbitrary mesh objects.
+    Calculate the approximate (!) inertia tensor of arbitrary mesh objects.
 
-    Implemented after http://number-none.com/blow/inertia/body_i.html
-    and http://www.iue.tuwien.ac.at/phd/wessner/node39.html.
+    Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
+    Simply and Quickly' (2004) by Jonathan Blow (1)
+    with formulas for tetrahedron inertia from 'Explicit Exact Formulas for the 3-D Tetrahedron
+    Inertia Tensor in Terms of its Vertex Coordinates' (2004) by F. Tonon. (2)
+
+    Links: (1) http://number-none.com/blow/inertia/body_i.html
+           (2) http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf
 
     :param reference: An arbitrary reference point. Smart choices
     may possibly reduce time complexity.
@@ -287,111 +292,87 @@ def calculateMeshInertia(reference, data, mass):
         else:
             sign = 1
 
-        volume = sign * 1/6 * abs(mathutils.Matrix(((verts[0][0], verts[0][1], verts[0][2], 1),
-                                                (verts[1][0], verts[1][1], verts[1][2], 1),
-                                                (verts[2][0], verts[2][1], verts[2][2], 1),
-                                                (reference[0], reference[1], reference[2], 1))).determinant())
+        J = mathutils.Matrix(((verts[0][0], verts[0][1], verts[0][2], 1),
+                              (verts[1][0], verts[1][1], verts[1][2], 1),
+                              (verts[2][0], verts[2][1], verts[2][2], 1),
+                              (reference[0], reference[1], reference[2], 1)))
 
-        my_x = (verts[0].x + verts[1].x + verts[2].x + reference.x) / 4
-        my_y = (verts[0].y + verts[1].y + verts[2].y + reference.y) / 4
-        my_z = (verts[0].z + verts[1].z + verts[2].z + reference.z) / 4
-        x_bar = mathutils.Vector((verts[0].x-my_x, verts[1].x-my_x, verts[2].x-my_x, reference.x-my_x))
-        y_bar = mathutils.Vector((verts[0].y-my_y, verts[1].y-my_y, verts[2].y-my_y, reference.y-my_y))
-        z_bar = mathutils.Vector((verts[0].z-my_z, verts[1].z-my_z, verts[2].z-my_z, reference.z-my_z))
-        covar_matrix = mathutils.Matrix(((cov(x_bar, x_bar), cov(x_bar, y_bar), cov(x_bar, z_bar)),
-                                         (cov(y_bar, x_bar), cov(y_bar, y_bar), cov(y_bar, z_bar)),
-                                         (cov(z_bar, x_bar), cov(z_bar, y_bar), cov(z_bar, z_bar))))
+        det_J = J.determinant()
 
-        centre_of_mass = mathutils.Vector(((verts[0].x + verts[1].x + verts[2].x + reference.x) / 4,
-                                          (verts[0].y + verts[1].y + verts[2].y + reference.y) / 4,
-                                          (verts[0].z + verts[1].z + verts[2].z + reference.z) / 4))
+        volume = sign * abs(det_J) / 6
 
-        tetrahedra.append({'volume': volume, 'covar_matrix': covar_matrix, 'centre_of_mass': centre_of_mass})
+        centre_of_mass = mathutils.Vector(((verts[0][0] + verts[1][0] + verts[2][0] + reference[0]) / 4,
+                                           (verts[0][1] + verts[1][1] + verts[2][1] + reference[1]) / 4,
+                                           (verts[0][2] + verts[1][2] + verts[2][2] + reference[2]) / 4))
+
+        tetrahedra.append({'volume': volume, 'det(J)': det_J, 'J': J, 'centre_of_mass': centre_of_mass})
         mesh_volume += volume
 
+    d = mass / mesh_volume
     current_body = {}
     first = True
     for tetrahedron in tetrahedra:
         tetra_mass = mass / (mesh_volume / tetrahedron['volume'])
         tetrahedron['mass'] = tetra_mass
 
+        J = tetrahedron['J']
+        x1 = J[0][0]
+        y1 = J[0][1]
+        z1 = J[0][2]
+        x2 = J[1][0]
+        y2 = J[1][1]
+        z2 = J[1][2]
+        x3 = J[2][0]
+        y3 = J[2][1]
+        z3 = J[2][2]
+        x4 = J[3][0]
+        y4 = J[3][1]
+        z4 = J[3][2]
+
+        abs_det_J = abs(tetrahedron['det(J)'])
+
+        a = d * abs_det_J * (y1**2 + y1*y2 + y2**2 + y1*y3 + y2*y3 + y3**2
+            + y1*y4 + y2*y4 + y3*y4 + y4**2 + z1**2 + z1*z2 + z2**2 + z1*z3
+            + z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
+
+        b = d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2
+            + x1*x4 + x2*x4 + x3*x4 + x4**2 + z1**2 + z1*z2 + z2**2 + z1*z3
+            + z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
+
+        c = d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2
+            + x1*x4 + x2*x4 + x3*x4 + x4**2 + y1**2 + y1*y2 + y2**2 + y1*y3
+            + y2*y3 + y3**2 + y1*y4 + y2*y4 + y3*y4 + y4**2) / 60
+
+        a_bar = d * abs_det_J * (2*y1*z1 + y2*z1 + y3*z1 + y4*z1 + y1*z2
+                + 2*y2*z2 + y3*z2 + y4*z2 + y1*z3 + y2*z3 + 2*y3*z3
+                + y4*z3 + y1*z4 + y2*z4 + y3*z4 + 2*y4*z4) / 120
+
+        b_bar = d * abs_det_J * (2*x1*z1 + x2*z1 + x3*z1 + x4*z1 + x1*z2
+                + 2*x2*z2 + x3*x2 + x4*z2 + x1*z3 + x2*z3 + 2*x3*z3
+                + x4*z3 + x1*z4 + x2*z4 + x3*z4 + 2*x4*z4) / 120
+
+        c_bar = d * abs_det_J * (2*x1*y1 + x2*y1 + x3*y1 + x4*y1 + x1*y2
+                + 2*x2*y2 + x3*y2 + x4*y2 + x1*y3 + x2*y3 + 2*x3*y3
+                + x4*y3 + x1*y4 + x2*y4 + x3*y4 + 2*x4*y4) / 120
+
+        #tetrahedron['inertia'] = inertiaListToMatrix([a, -b_bar, -c_bar, b, -a_bar, c])
+        tetrahedron['inertia'] = [a, -b_bar, -c_bar, b, -a_bar, c]
+
         if first:
             current_body = tetrahedron
             first = False
         else:
-            current_body = combine_bodies(current_body, tetrahedron)
+            mass, cog, inertia = compound_inertia_analysis_3x3([{'mass': current_body['mass'],
+                                                                 'com': current_body['centre_of_mass'],
+                                                                 'inertia': current_body['inertia']},
+                                                                {'mass': tetrahedron['mass'],
+                                                                 'com': tetrahedron['centre_of_mass'],
+                                                                 'inertia': tetrahedron['inertia']}])
 
-    C = current_body['covar_matrix']
-    i = mathutils.Matrix.Identity(3) * trace(C) - C
+            current_body = {'mass': mass, 'centre_of_mass': cog, 'inertia': inertia}
 
-    print('mesh inertia:', i)
-    return (i[0][0], i[0][1], i[0][2], i[1][1], i[1][2], i[2][2])
-
-
-def combine_bodies(b1, b2):
-    """
-    Combine two bodies defined by mass, centre of mass and covariance
-    matrix into one.
-
-    :param b1: A body.
-    :type b1: dict.
-    :param b2: Another body.
-    :type b2: dict.
-    :return: The combined body as dictionary.
-    """
-    m1 = b1['mass']
-    m2 = b2['mass']
-    m3 = m1 + m2
-    x1 = b1['centre_of_mass']
-    x2 = b2['centre_of_mass']
-    x3 = (x1*m1 + x2*m2) / m3
-
-    c1 = b1['covar_matrix']
-    trans1 = x3 - x1
-    c1_bar = mathutils.Matrix(((c1[0][0] + trans1.x, c1[0][1] + trans1.x, c1[0][2] + trans1.x),
-                               (c1[1][0] + trans1.y, c1[1][1] + trans1.y, c1[1][2] + trans1.y),
-                               (c1[2][0] + trans1.z, c1[2][1] + trans1.z, c1[2][2] + trans1.z)))
-    c2 = b2['covar_matrix']
-    trans2 = x3 - x2
-    c2_bar = mathutils.Matrix(((c2[0][0] + trans2.x, c2[0][1] + trans2.x, c2[0][2] + trans2.x),
-                               (c2[1][0] + trans2.y, c2[1][1] + trans2.y, c2[1][2] + trans2.y),
-                               (c2[2][0] + trans2.z, c2[2][1] + trans2.z, c2[2][2] + trans2.z)))
-    c3 = c1_bar + c2_bar
-
-    b3 = {'mass': m3, 'centre_of_mass': x3, 'covar_matrix': c3}
-    return b3
-
-
-def cov(x, y):
-    """
-    Calculate two values' covariance.
-
-    :param x: A value.
-    :type x: float.
-    :param y: Another value.
-    :type y: float.
-    :return: The two values' covariance as float.
-    """
-    n = len(x)
-    covariance = 0
-    for i in range(n):
-        covariance += x[i] * y[i] / n
-    return covariance
-
-
-def trace(matrix):
-    """
-    Calculate trace for a square matrix.
-
-    :param matrix: A matrix.
-    :type matrix: mathutils.Matrix.
-    :return: Trace value as float.
-    """
-    tr = 0.0
-    for row in matrix:
-        for elem in row:
-            tr += elem
-    return tr
+    i = current_body['inertia']
+    return i[0][0], i[0][1], i[0][2], i[1][1], i[1][2], i[2][2]
 
 
 def inertiaListToMatrix(il):
@@ -402,6 +383,8 @@ def inertiaListToMatrix(il):
     :return: blender matrix.
 
     """
+    if type(il) == mathutils.Matrix:
+        return il
     inertia = [[il[0], il[1], il[2]],
                [0.0, il[3], il[4]],
                [0.0, 0.0, il[5]]]
@@ -414,7 +397,6 @@ def inertiaMatrixToList(im):
     :param im: The inertia tensor matrix.
     :type im: blender matrix
     :return: tuple(6)
-
     """
     return (im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2][2],)
 
@@ -544,13 +526,13 @@ def createInertials(link, empty=False, preserve_children=False):
                 geometry = robotdictionary.deriveGeometry(obj)
                 if mass is not None:
                     if geometry['type'] == 'mesh':
-                        # TODO: reference point should be arbitrary but there may be smarter choices
                         selectionUtils.selectObjects([obj])
                         bpy.context.scene.objects.active = obj
+                        # TODO: reference point should be arbitrary but there may be smarter choices
                         inert = calculateMeshInertia(mathutils.Vector((0, 0, 0)), obj.data, mass)
-                        print('mesh:', inert)
+                        #print('mesh:', inert)
                         #print('ellipsoid:', calculateEllipsoidInertia(mass, geometry['size']))
-                        print('box:', calculateBoxInertia(mass, geometry['size']))
+                        #print('box:', calculateBoxInertia(mass, geometry['size']))
                     else:
                         inert = calculateInertia(mass, geometry)
                     if inert is not None:
@@ -655,7 +637,7 @@ def compound_inertia_analysis_3x3(objects):
 
     shifted_inertias = list()
     for obj in objects:
-        if not obj['rot'] == mathutils.Matrix.Identity(3): #if object is rotated in local space
+        if 'rot' in obj and not obj['rot'] == mathutils.Matrix.Identity(3): #if object is rotated in local space
             objinertia = spin_inertia_3x3(inertiaListToMatrix(obj['inertia']), obj['rot']) #transform inertia to link space
         else:
             objinertia = inertiaListToMatrix(obj['inertia']) # keep inertia
