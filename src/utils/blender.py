@@ -116,6 +116,7 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
     elif ptype == 'disc':
         bpy.ops.mesh.primitive_circle_add(vertices=psize[1], radius=psize[0], fill_type='TRIFAN', location=plocation,
                                           rotation=protation, layers=players)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj = bpy.context.object
     obj.name = pname
     if pmaterial != 'None':

@@ -198,7 +198,7 @@ def exportObj(path, obj):
     objname = namingUtils.getObjectName(obj)
     oldBlenderObjName = obj.name
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = blenderUtils.createPrimitive(objname, 'box', (2.0, 2.0, 2.0))
+    tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = determineMeshOutpath(obj, 'obj', path)
     bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
