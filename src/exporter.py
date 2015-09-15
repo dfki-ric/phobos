@@ -1030,7 +1030,8 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
         elif entity["entitytype"] == "light":
             entry = handleScene_light(entity)
         elif entity["entitytype"] == "heightmap":
-            entry = handleScene_heightmap(entity)
+            heightmap_outpath = securepath(os.path.join(outpath, "heightmaps") if subfolder else outpath)
+            entry = handleScene_heightmap(entity, heightmap_outpath, subfolder)
         entitiesList.append(entry)
 
     with open(os.path.join(outpath, bpy.data.worlds['World'].sceneName + '.smurfs'),
@@ -1101,7 +1102,7 @@ def handleScene_light(light):
     """
     log("Exporting " + light["entityname"] + " as a light entity", "INFO")
 
-def handleScene_heightmap(heightmap):
+def handleScene_heightmap(heightmap, outpath, subfolder):
     """This function handles a heightmap entity in a scene to export it
 
     :param smurf: The heightmap root object.
@@ -1112,6 +1113,26 @@ def handleScene_heightmap(heightmap):
 
     """
     log("Exporting " + heightmap["entityname"] + " as a heightmap entity", "INFO")
+    entry = {}
+    entitypose = robotdictionary.deriveObjectPose(heightmap)
+    if bpy.data.worlds[0].heightmapMesh:
+        log("Heightmap as mesh is not implemented yet. Skipping heightmap", "ERROR")
+    else:
+        imagepath = os.path.abspath(os.path.join(os.path.split(bpy.data.filepath)[0], heightmap["image"]))
+        shutil.copy2(imagepath, outpath)
+        heightmapMesh = selectionUtils.getImmediateChildren(heightmap)[0]
+        entry = {"name": heightmap["entityname"],
+                "type": "heightmap",
+                "file": os.path.join("heightmaps", os.path.basename(imagepath)),
+                "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
+                "width": heightmapMesh.dimensions[1],
+                "length": heightmapMesh.dimensions[0],
+                "height": heightmapMesh.dimensions[2], #TODO: This is the height of the original plane, not the Heightmap.
+                "position": entitypose["translation"],
+                "rotation": entitypose["rotation_quaternion"]
+                }
+    return entry
+
 
 def exportModelToMARS(model, path):
     """Exports selected robot as a MARS scene
