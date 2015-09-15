@@ -1377,6 +1377,7 @@ class AddHeightmapOperator(Operator):
         root = links.createLink(1.0, name=self.name + "::heightmap")
         root["entitytype"] = "heightmap"
         root["entityname"] = self.name
+        root["image"] = os.path.relpath(os.path.basename(self.filepath), bpy.data.filepath) #relative path to blender file
         root["anchor"] = "world"
         #Create Parenting
         selectionUtils.selectObjects([root, plane], clear=True, active=0)
