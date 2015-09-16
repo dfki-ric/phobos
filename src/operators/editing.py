@@ -365,7 +365,7 @@ class CopyCustomProperties(Operator):
         slaves = context.selected_objects
         master = context.active_object
         slaves.remove(master)
-        props = robotdictionary.cleanObjectProperties(dict(master.items()))
+        props = blenderUtils.cleanObjectProperties(dict(master.items()))
         for obj in slaves:
             if self.empty_properties:
                 for key in obj.keys():
