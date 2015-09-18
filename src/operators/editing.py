@@ -925,7 +925,7 @@ class DefineJointConstraintsOperator(Operator):
             velocity = self.maxvelocity * ((2 * math.pi) / 360)  # from °/s to rad/s
         else:
             velocity = self.maxvelocity
-            objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
         for link in objs:
             bpy.context.scene.objects.active = link
             joints.setJointConstraints(link, self.joint_type, lower, upper, self.spring, self.damping)

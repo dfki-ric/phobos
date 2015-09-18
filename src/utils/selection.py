@@ -200,7 +200,7 @@ def getObjectByNameAndType(name, phobostype):
     return None
 
 
-def selectByName(name, match_case):
+def selectByName(name, match_case=False):
     """Uses getObjectByName to select the found objects.
 
     """
