@@ -27,7 +27,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
 from bpy.types import Operator
-from bpy.props import EnumProperty, StringProperty
+from bpy.props import EnumProperty, StringProperty, BoolProperty
 import phobos.utils.selection as selectionUtils
 import phobos.defs as defs
 from phobos.logging import startLog, endLog, log
@@ -71,10 +71,16 @@ class SelectObjectsByName(Operator):
     namefragment = StringProperty(
         name="name contains",
         default='',
-        description="part of a Phobos object name")
+        description="Part of a Phobos object name")
+
+    match_case = BoolProperty(
+        name='match case',
+        default=False,
+        description='Match case when looking for name?'
+    )
 
     def execute(self, context):
-        selectionUtils.selectByName(self.namefragment)
+        selectionUtils.selectByName(self.namefragment, self.match_case)
         return {'FINISHED'}
 
 
