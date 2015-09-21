@@ -34,7 +34,7 @@ import phobos.utils.selection as selectionUtils
 import phobos.utils.naming as namingUtils
 
 class ToggleNamespaces(Operator):
-    """ToggleNamespacesOperater
+    """ToggleNamespacesOperator
 
     """
     bl_idname = "object.phobos_toggle_namespaces"
