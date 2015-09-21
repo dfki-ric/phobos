@@ -47,11 +47,11 @@ from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, 
 
 
 class SortObjectsToLayersOperator(Operator):
-    """SortObjectsToLayersOperator
-
+    """
+    Sort all selected objects to their according layers
     """
     bl_idname = "object.phobos_sort_objects_to_layers"
-    bl_label = "Sorts all selected objects to their according layers"
+    bl_label = "Sort Objects to Layers"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -72,18 +72,19 @@ class SortObjectsToLayersOperator(Operator):
     def poll(cls, context):
         return len(context.selected_objects) > 0
 
-class AddChainOperator(Operator):
-    """AddChainOperator
 
+class AddChainOperator(Operator):
+    """
+    Add a chain between two selected objects
     """
     bl_idname = "object.phobos_add_chain"
-    bl_label = "Adds a chain between two selected objects."
+    bl_label = "Add Chain"
     bl_options = {'REGISTER', 'UNDO'}
 
     chainname = StringProperty(
-        name='chainname',
+        name='Chain Name',
         default='new_chain',
-        description='name of the chain to be created')
+        description='Name of the chain to be created')
 
     def execute(self, context):
         endobj = context.active_object
@@ -109,22 +110,22 @@ class AddChainOperator(Operator):
 
 
 class SetMassOperator(Operator):
-    """SetMassOperator
-
+    """
+    Set the mass of the selected object(s)
     """
     bl_idname = "object.phobos_set_mass"
-    bl_label = "Sets the mass of the selected object(s)."
+    bl_label = "Set Mass"
     bl_options = {'REGISTER', 'UNDO'}
 
     mass = FloatProperty(
-        name='mass',
+        name='Mass',
         default=0.001,
-        description='mass (of active object) in kg')
+        description='Mass (of active object) in kg')
 
     userbmass = BoolProperty(
-        name='use rigid body mass',
+        name='Use Rigid Body Mass',
         default=False,
-        description='If True, mass entry from rigid body data is used.')
+        description='If true, mass entry from rigid body data is used')
 
     @classmethod
     def poll(cls, context):
@@ -162,11 +163,11 @@ class SetMassOperator(Operator):
 
 
 class SyncMassesOperator(Operator):
-    """SyncMassesOperator
-
+    """
+    Synchronize masses among the selected object(s)
     """
     bl_idname = "object.phobos_sync_masses"
-    bl_label = "Synchronize masses among the selected object(s)."
+    bl_label = "Synchronize Masses"
     bl_options = {'REGISTER', 'UNDO'}
 
     synctype = EnumProperty(
@@ -180,7 +181,7 @@ class SyncMassesOperator(Operator):
     updateinertial = BoolProperty(
         name='robotupdate inertial',
         default=False,
-        description='update inertials'
+        description='Update inertials'
     )
 
     def execute(self, context):
@@ -239,28 +240,28 @@ class SyncMassesOperator(Operator):
 
 
 class SetXRayOperator(Operator):
-    """SetXrayOperator
-
+    """
+    Show the selected/chosen objects via X-ray
     """
     bl_idname = "object.phobos_set_xray"
-    bl_label = "Shows the selected/chosen objects via X-Ray."
+    bl_label = "Set X-Ray View"
     bl_options = {'REGISTER', 'UNDO'}
 
     objects = EnumProperty(
-        name="show objects:",
+        name="Show Objects:",
         default='selected',
         items=(('all',) * 3, ('selected',) * 3, ('by name',) * 3) + defs.phobostypes,
-        description="show objects via x-ray")
+        description="Show objects via x-ray")
 
     show = BoolProperty(
-        name="show",
+        name="Show",
         default=True,
-        description="set to")
+        description="Set to")
 
     namepart = StringProperty(
-        name="name contains",
+        name="Name Contains",
         default="",
-        description="part of a name for objects to be selected in 'by name' mode")
+        description="Part of a name for objects to be selected in 'by name' mode")
 
     @classmethod
     def poll(cls, context):
@@ -268,12 +269,12 @@ class SetXRayOperator(Operator):
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text="Select Items for X-Ray view")
+        layout.label(text="Select items for X-ray view")
 
-        layout.prop(self, "objects")
-        layout.prop(self, "show", text="x-ray enabled" if self.show else "x-ray disabled")
+        layout.prop(self, "Objects")
+        layout.prop(self, "Show", text="X-Ray Enabled" if self.show else "X-Ray Disabled")
         if self.objects == 'by name':
-            layout.prop(self, "namepart")
+            layout.prop(self, "Name Part")
 
     def execute(self, context):
         if self.objects == 'all':
@@ -288,19 +289,20 @@ class SetXRayOperator(Operator):
             obj.show_x_ray = self.show
         return {'FINISHED'}
 
-class SetPhobosType(Operator):
-    """Set phobostype Operator
 
+class SetPhobosType(Operator):
+    """
+    Edit phobostype of selected object(s)
     """
     bl_idname = "object.phobos_set_phobostype"
-    bl_label = "Edit phobostype of selected object(s)"
+    bl_label = "Set Phobostype"
     bl_options = {'REGISTER', 'UNDO'}
 
     phobostype = EnumProperty(
         items=defs.phobostypes,
-        name="phobostype",
+        name="Phobostype",
         default="undefined",
-        description="phobostype")
+        description="Phobostype")
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
@@ -314,22 +316,22 @@ class SetPhobosType(Operator):
 
 
 class BatchEditPropertyOperator(Operator):
-    """Batch-Edit Property Operator
-
+    """
+    Edit custom property of selected object(s)
     """
     bl_idname = "object.phobos_batch_property"
-    bl_label = "Edit custom property of selected object(s)"
+    bl_label = "Edit Custom Property"
     bl_options = {'REGISTER', 'UNDO'}
 
     property_name = StringProperty(
-        name="property_name",
+        name="Name",
         default="",
-        description="custom property name")
+        description="Custom property name")
 
     property_value = StringProperty(
-        name="property_value",
+        name="Value",
         default="",
-        description="custom property value")
+        description="Custom property value")
 
     def execute(self, context):
         value = generalUtils.parse_number(self.property_value)
@@ -349,11 +351,11 @@ class BatchEditPropertyOperator(Operator):
 
 
 class CopyCustomProperties(Operator):
-    """Copy Custom Properties Operator
-
+    """
+    Copy custom properties of selected object(s)
     """
     bl_idname = "object.phobos_copy_props"
-    bl_label = "Edit custom property of selected object(s)"
+    bl_label = "Copy Custom Properties"
     bl_options = {'REGISTER', 'UNDO'}
 
     empty_properties = BoolProperty(
@@ -382,25 +384,25 @@ class CopyCustomProperties(Operator):
 
 
 class RenameCustomProperty(Operator):
-    """Rename Custom Properties Operator
-
+    """
+    Rename custom property of selected object(s)
     """
     bl_idname = "object.phobos_rename_custom_property"
-    bl_label = "Edit custom property of selected object(s)"
+    bl_label = "Rename Custom Property"
     bl_options = {'REGISTER', 'UNDO'}
 
     find = StringProperty(
-        name="find property name:",
+        name="Find Property Name",
         default='',
-        description="name to be searched for")
+        description="Name to be searched for")
 
     replace = StringProperty(
-        name="replacement name:",
+        name="Replacement Name",
         default='',
-        description="new name to be replaced with")
+        description="New name to be replaced with")
 
     overwrite = BoolProperty(
-        name='overwrite existing properties',
+        name='Overwrite Existing Properties',
         default=False,
         description="If a property of the specified replacement name exists, overwrite it?"
     )
@@ -425,16 +427,16 @@ class RenameCustomProperty(Operator):
 
 
 class SetGeometryType(Operator):
-    """Set Geometry Type Operator
-
+    """
+    Edit geometry type of selected object(s)
     """
     bl_idname = "object.phobos_set_geometry_type"
-    bl_label = "Edit geometry type of selected object(s)"
+    bl_label = "Edit Geometry"
     bl_options = {'REGISTER', 'UNDO'}
 
     geomType = EnumProperty(
         items=defs.geometrytypes,
-        name="type",
+        name="Type",
         default="box",
         description="Phobos geometry type")
 
@@ -456,11 +458,11 @@ class SetGeometryType(Operator):
 
 
 class EditInertia(Operator):
-    """Edit Inertia Operator
-
+    """
+    Edit inertia of selected object(s)
     """
     bl_idname = "object.phobos_edit_inertia"
-    bl_label = "Edit inertia of selected object(s)"
+    bl_label = "Edit Inertia"
     bl_options = {'REGISTER', 'UNDO'}
 
     # inertiamatrix = FloatVectorProperty (
@@ -471,11 +473,11 @@ class EditInertia(Operator):
     #        description = "set inertia for a link")
 
     inertiavector = FloatVectorProperty(
-        name="inertiavec",
+        name="Inertia Vector",
         default=[0, 0, 0, 0, 0, 0],
         subtype='NONE',
         size=6,
-        description="set inertia for a link"
+        description="Set inertia for a link"
     )
 
     def invoke(self, context, event):
@@ -1208,22 +1210,22 @@ class CreateMimicJointOperator(Operator):
     multiplier = FloatProperty(
         name="multiplier",
         default=1.0,
-        description="multiplier for joint mimickry")
+        description="multiplier for joint mimicry")
 
     offset = FloatProperty(
         name="offset",
         default=0.0,
-        description="offset for joint mimickry")
+        description="offset for joint mimicry")
 
     mimicjoint = BoolProperty(
         name="mimic joint",
         default=True,
-        description="create joint mimickry")
+        description="create joint mimicry")
 
     mimicmotor = BoolProperty(
         name="mimic motor",
         default=False,
-        description="create motor mimickry")
+        description="create motor mimicry")
 
     def execute(self, context):
         masterjoint = bpy.context.active_object
