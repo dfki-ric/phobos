@@ -1127,7 +1127,7 @@ def handleScene_heightmap(heightmap, outpath, subfolder):
                 "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
                 "width": heightmapMesh.dimensions[1],
                 "length": heightmapMesh.dimensions[0],
-                "height": heightmapMesh.dimensions[2], #TODO: This is the height of the original plane, not the Heightmap.
+                "height": heightmapMesh.modifiers["displace_heightmap"].strength,
                 "position": entitypose["translation"],
                 "rotation": entitypose["rotation_quaternion"]
                 }
