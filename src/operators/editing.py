@@ -28,6 +28,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 import bpy
 import math
 import yaml
+import os
 import mathutils
 from datetime import datetime
 import phobos.defs as defs
@@ -1325,6 +1326,72 @@ class RefineLevelOfDetailOperator(Operator):
         ob = context.active_object
         return ob is not None and ob.phobostype == 'visual'
 
+class AddHeightmapOperator(Operator):
+    """Adds an heightmap object to the 3D-Cursors location.
+
+    """
+    bl_idname = "object.phobos_add_heightmap"
+    bl_label = "Adds a heightmap object to the 3D-Cursors location"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    name = StringProperty(
+        name = "name",
+        description = "New heightmaps name",
+        default = "heightmap"
+    )
+
+    cutNo = IntProperty(
+        name = "noOfCuts",
+        description = "Number of cuts for subdivide",
+        default = 100
+    )
+
+    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        startLog(self)
+        if os.path.basename(self.filepath) not in bpy.data.images:
+            try:
+                img = bpy.data.images.load(self.filepath)
+            except:
+                log("Cannot load image from file! Aborting.", "ERROR")
+                return {"FINISHED"}
+        else:
+            log("Image already imported. Using cached version.", "INFO")
+            img  = bpy.data.images[os.path.basename(self.filepath)]
+        #Create Texture
+        h_tex = bpy.data.textures.new(self.name, type = 'IMAGE')
+        h_tex.image = img
+        #Add plane, subdivide and create displacement
+        prev_mode = bpy.context.mode
+        bpy.ops.mesh.primitive_plane_add(view_align=False, enter_editmode=False)
+        plane = context.active_object
+        plane["phobostype"] = "visual"
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.subdivide(number_cuts=self.cutNo)
+        bpy.ops.object.mode_set(mode=prev_mode)
+        plane.modifiers.new("displace_heightmap", "DISPLACE")
+        plane.modifiers["displace_heightmap"].texture = h_tex
+        plane.name = self.name+"_visual::heightmap"
+        #Add root link for heightmap
+        root = links.createLink(1.0, name=self.name + "::heightmap")
+        root["entitytype"] = "heightmap"
+        root["entityname"] = self.name
+        root["image"] = os.path.relpath(os.path.basename(self.filepath), bpy.data.filepath) #relative path to blender file
+        root["anchor"] = "world"
+        #Create Parenting
+        selectionUtils.selectObjects([root, plane], clear=True, active=0)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        endLog()
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        # create the open file dialog
+        context.window_manager.fileselect_add(self)
+
+        return {'RUNNING_MODAL'}
+
+
 
 def add_editing_manual_map():
     """This allows you to right click on a button and link to the manual
@@ -1358,6 +1425,7 @@ def add_editing_manual_map():
         ("bpy.ops.object.phobos_add_sensor", "addedit-sensor"),
         ("bpy.ops.object.phobos_create_mimic_joint", "mimic-joint"),
         ("bpy.ops.object.phobos_refine_lod", "refine-lod"),
+        ("object.phobos_add_heightmap", "add-heightmap"),
     )
     return url_manual_prefix, url_manual_mapping
 
@@ -1392,6 +1460,7 @@ def register():
     bpy.utils.register_class(AddSensorOperator)
     bpy.utils.register_class(CreateMimicJointOperator)
     bpy.utils.register_class(RefineLevelOfDetailOperator)
+    bpy.utils.register_class(AddHeightmapOperator)
 
 
 def unregister():
@@ -1424,3 +1493,4 @@ def unregister():
     bpy.utils.unregister_class(AddSensorOperator)
     bpy.utils.unregister_class(CreateMimicJointOperator)
     bpy.utils.unregister_class(RefineLevelOfDetailOperator)
+    bpy.utils.unregister_class(AddHeightmapOperator)
