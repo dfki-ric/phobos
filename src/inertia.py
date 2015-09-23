@@ -348,7 +348,7 @@ def calculateMeshInertia(reference, data, mass):
                 + y4*z3 + y1*z4 + y2*z4 + y3*z4 + 2*y4*z4) / 120
 
         b_bar = d * abs_det_J * (2*x1*z1 + x2*z1 + x3*z1 + x4*z1 + x1*z2
-                + 2*x2*z2 + x3*x2 + x4*z2 + x1*z3 + x2*z3 + 2*x3*z3
+                + 2*x2*z2 + x3*z2 + x4*z2 + x1*z3 + x2*z3 + 2*x3*z3
                 + x4*z3 + x1*z4 + x2*z4 + x3*z4 + 2*x4*z4) / 120
 
         c_bar = d * abs_det_J * (2*x1*y1 + x2*y1 + x3*y1 + x4*y1 + x1*y2
