@@ -1101,6 +1101,23 @@ def handleScene_light(light):
 
     """
     log("Exporting " + light["entityname"] + " as a light entity", "INFO")
+    entitypose = robotdictionary.deriveObjectPose(light)
+    lightObj = selectionUtils.getImmediateChildren(light)[0]
+    color = lightObj.data.color
+    entry = {"name": light["entityname"],
+            "type": "light",
+            "light_type": "spotlight" if lightObj.data.type == "SPOT" else "omnilight",
+            "anchor": light["anchor"] if "anchor" in light else "none",
+            "color": {
+                "diffuse": [color.r, color.g, color.b],
+                "use_specular": lightObj.data.use_specular #We have no other specular information at the moment.
+            },
+            "position": entitypose["translation"],
+            "rotation": entitypose["rotation_quaternion"]
+            }
+    if entry["light_type"] == "spotlight":
+        entry["angle"] = lightObj.data.spot_size
+    return entry
 
 def handleScene_heightmap(heightmap, outpath, subfolder):
     """This function handles a heightmap entity in a scene to export it
