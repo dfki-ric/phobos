@@ -46,12 +46,11 @@ def generateLibEntries(param1, param2): #FIXME: parameter?
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
         return [("None",)*3] + [(entry,)*3 for entry in yaml.load(f.read())]
 
-class ImportLibRobot(Operator):
-    """ImportLibRobotOperator
 
-    """
+class ImportLibRobot(Operator):
+    """Import a baked robot into the robot library"""
     bl_idname = "object.phobos_import_lib_robot"
-    bl_label = "Imports a baked robot into the robot library."
+    bl_label = "Import Baked Robot"
     bl_options = {'REGISTER', 'UNDO'}
 
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
@@ -85,21 +84,20 @@ class ImportLibRobot(Operator):
 
 
 class CreateRobotInstance(Operator):
-    """CreateRobotInstance
-
-    """
+    """Create a new instance of the selected robot lib entry"""
     bl_idname = "object.phobos_create_robot_instance"
-    bl_label = "Creates a new instance of the selected robot lib entry"
+    bl_label = "Create Robot Instance"
     bl_options = {'REGISTER', 'UNDO'}
 
     bakeObj = EnumProperty(
-        name="Robot lib entries",
+        name="Robot Lib Entries",
         items=generateLibEntries,
-        description="The Robot lib entries.")
+        description="The robot lib entries")
 
     robName = StringProperty(
-        name="instances name",
-        default="instance"
+        name="Instance Name",
+        default="instance",
+        description="The instance's name"
     )
 
     def execute(self, context):
@@ -126,11 +124,9 @@ class CreateRobotInstance(Operator):
 
 
 class ExportSceneOperator(Operator):
-    """This Blender operator exports the selected robot models in the current
-     Blender scene as a SMURF scene (*.smurfs).
-    """
+    """Export the selected model(s) in a scene"""
     bl_idname = "object.phobos_export_scene"
-    bl_label = "Export the selected model(s) in a scene."
+    bl_label = "Export Scene"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -139,16 +135,9 @@ class ExportSceneOperator(Operator):
 
 
 class ExportModelOperator(Operator):
-    """This blender operator exports the robot model to chosen formats.
-    You can choose one or more of the following file formats:
-    - SMURF
-    - SRDF
-    - YAML
-    - MARS
-
-    """
+    """Export the selected model(s)"""
     bl_idname = "object.phobos_export_robot"
-    bl_label = "Export the selected model(s)"
+    bl_label = "Export Model"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -159,8 +148,9 @@ class ExportModelOperator(Operator):
 
 
 class ExportBakeOperator(Operator):
+    """Bake the selected model"""
     bl_idname = "object.phobos_export_bake"
-    bl_label = "Bakes the selected model"
+    bl_label = "Export Bake"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -181,12 +171,11 @@ class ExportBakeOperator(Operator):
         endLog()
         return {'FINISHED'}
 
-class RobotModelImporter(bpy.types.Operator):
-    """Importer for MARS-compatible model or scene files
 
-    """
+class RobotModelImporter(bpy.types.Operator):
+    """Import robot model file from various formats"""
     bl_idname = "obj.import_robot_model"
-    bl_label = "Import robot model file from various formats"
+    bl_label = ""
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'FILE'
 
