@@ -33,17 +33,17 @@ from bpy.props import BoolProperty, StringProperty
 import phobos.utils.selection as selectionUtils
 import phobos.utils.naming as namingUtils
 
-class ToggleNamespaces(Operator):
-    """ToggleNamespacesOperater
 
-    """
+class ToggleNamespaces(Operator):
+    """Toggle the use of namespaces for the selected objects"""
     bl_idname = "object.phobos_toggle_namespaces"
-    bl_label = "Toggles the use of namespaces for the selected objects"
+    bl_label = "Toggle Namespaces"
     bl_options = {'REGISTER', 'UNDO'}
 
     complete = BoolProperty(
-        name="Converting complete robot",
-        default=False
+        name="Convert Complete Robot",
+        default=False,
+        description="Convert the complete robot"
     )
 
     def execute(self, context):
@@ -68,17 +68,15 @@ class ToggleNamespaces(Operator):
 
 
 class NameModelOperator(Operator):
-    """NameModelOperator
-
-    """
+    """Name model by assigning 'modelname' property to root node"""
     bl_idname = "object.phobos_name_model"
-    bl_label = "Name model by assigning 'modelname' property to root node "
+    bl_label = "Name Model"
     bl_options = {'REGISTER', 'UNDO'}
 
     modelname = StringProperty(
-        name="modelname",
+        name="Model Name",
         default="",
-        description="name of the robot model to be assigned")
+        description="Name of the robot model to be assigned")
 
     def execute(self, context):
         startLog(self)
@@ -92,22 +90,20 @@ class NameModelOperator(Operator):
 
 
 class PartialRename(Operator):
-    """Partial Rename Operator
-
-    """
+    """Replace part of the name of selected object(s)"""
     bl_idname = "object.phobos_partial_rename"
-    bl_label = "Replace part of the name of selected object(s)"
+    bl_label = "Partial Rename"
     bl_options = {'REGISTER', 'UNDO'}
 
     find = StringProperty(
-        name="find",
+        name="Find",
         default="",
-        description="find string")
+        description="Find string")
 
     replace = StringProperty(
-        name="replace",
+        name="Replace",
         default="",
-        description="replace with")
+        description="Replace with")
 
     def execute(self, context):
         types = defs.subtypes

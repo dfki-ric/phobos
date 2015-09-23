@@ -1326,24 +1326,23 @@ class RefineLevelOfDetailOperator(Operator):
         ob = context.active_object
         return ob is not None and ob.phobostype == 'visual'
 
-class AddHeightmapOperator(Operator):
-    """Adds an heightmap object to the 3D-Cursors location.
 
-    """
+class AddHeightmapOperator(Operator):
+    """Add a heightmap object to the 3D-Cursors location"""
     bl_idname = "object.phobos_add_heightmap"
     bl_label = "Adds a heightmap object to the 3D-Cursors location"
     bl_options = {'REGISTER', 'UNDO'}
 
     name = StringProperty(
-        name = "name",
-        description = "New heightmaps name",
-        default = "heightmap"
+        name="Name",
+        description="The new heightmap's name",
+        default="heightmap"
     )
 
     cutNo = IntProperty(
-        name = "noOfCuts",
-        description = "Number of cuts for subdivide",
-        default = 100
+        name="Number of Cuts",
+        description="Number of cuts for subdivide",
+        default=100
     )
 
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
@@ -1358,9 +1357,9 @@ class AddHeightmapOperator(Operator):
                 return {"FINISHED"}
         else:
             log("Image already imported. Using cached version.", "INFO")
-            img  = bpy.data.images[os.path.basename(self.filepath)]
+            img = bpy.data.images[os.path.basename(self.filepath)]
         #Create Texture
-        h_tex = bpy.data.textures.new(self.name, type = 'IMAGE')
+        h_tex = bpy.data.textures.new(self.name, type='IMAGE')
         h_tex.image = img
         #Add plane, subdivide and create displacement
         prev_mode = bpy.context.mode
@@ -1390,7 +1389,6 @@ class AddHeightmapOperator(Operator):
         context.window_manager.fileselect_add(self)
 
         return {'RUNNING_MODAL'}
-
 
 
 def add_editing_manual_map():
