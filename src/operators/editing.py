@@ -47,9 +47,7 @@ from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, 
 
 
 class SortObjectsToLayersOperator(Operator):
-    """
-    Sort all selected objects to their according layers
-    """
+    """Sort all selected objects to their according layers"""
     bl_idname = "object.phobos_sort_objects_to_layers"
     bl_label = "Sort Objects to Layers"
     bl_options = {'REGISTER', 'UNDO'}
@@ -74,9 +72,7 @@ class SortObjectsToLayersOperator(Operator):
 
 
 class AddChainOperator(Operator):
-    """
-    Add a chain between two selected objects
-    """
+    """Add a chain between two selected objects"""
     bl_idname = "object.phobos_add_chain"
     bl_label = "Add Chain"
     bl_options = {'REGISTER', 'UNDO'}
@@ -110,9 +106,7 @@ class AddChainOperator(Operator):
 
 
 class SetMassOperator(Operator):
-    """
-    Set the mass of the selected object(s)
-    """
+    """Set the mass of the selected object(s)"""
     bl_idname = "object.phobos_set_mass"
     bl_label = "Set Mass"
     bl_options = {'REGISTER', 'UNDO'}
@@ -163,9 +157,7 @@ class SetMassOperator(Operator):
 
 
 class SyncMassesOperator(Operator):
-    """
-    Synchronize masses among the selected object(s)
-    """
+    """Synchronize masses among the selected object(s)"""
     bl_idname = "object.phobos_sync_masses"
     bl_label = "Synchronize Masses"
     bl_options = {'REGISTER', 'UNDO'}
@@ -240,9 +232,7 @@ class SyncMassesOperator(Operator):
 
 
 class SetXRayOperator(Operator):
-    """
-    Show the selected/chosen objects via X-ray
-    """
+    """Show the selected/chosen objects via X-ray"""
     bl_idname = "object.phobos_set_xray"
     bl_label = "Set X-Ray View"
     bl_options = {'REGISTER', 'UNDO'}
@@ -291,9 +281,7 @@ class SetXRayOperator(Operator):
 
 
 class SetPhobosType(Operator):
-    """
-    Edit phobostype of selected object(s)
-    """
+    """Edit phobostype of selected object(s)"""
     bl_idname = "object.phobos_set_phobostype"
     bl_label = "Set Phobostype"
     bl_options = {'REGISTER', 'UNDO'}
@@ -316,9 +304,7 @@ class SetPhobosType(Operator):
 
 
 class BatchEditPropertyOperator(Operator):
-    """
-    Edit custom property of selected object(s)
-    """
+    """Edit custom property of selected object(s)"""
     bl_idname = "object.phobos_batch_property"
     bl_label = "Edit Custom Property"
     bl_options = {'REGISTER', 'UNDO'}
@@ -351,9 +337,7 @@ class BatchEditPropertyOperator(Operator):
 
 
 class CopyCustomProperties(Operator):
-    """
-    Copy custom properties of selected object(s)
-    """
+    """Copy custom properties of selected object(s)"""
     bl_idname = "object.phobos_copy_props"
     bl_label = "Copy Custom Properties"
     bl_options = {'REGISTER', 'UNDO'}
@@ -384,9 +368,7 @@ class CopyCustomProperties(Operator):
 
 
 class RenameCustomProperty(Operator):
-    """
-    Rename custom property of selected object(s)
-    """
+    """Rename custom property of selected object(s)"""
     bl_idname = "object.phobos_rename_custom_property"
     bl_label = "Rename Custom Property"
     bl_options = {'REGISTER', 'UNDO'}
@@ -427,9 +409,7 @@ class RenameCustomProperty(Operator):
 
 
 class SetGeometryType(Operator):
-    """
-    Edit geometry type of selected object(s)
-    """
+    """Edit geometry type of selected object(s)"""
     bl_idname = "object.phobos_set_geometry_type"
     bl_label = "Edit Geometry"
     bl_options = {'REGISTER', 'UNDO'}
@@ -458,9 +438,7 @@ class SetGeometryType(Operator):
 
 
 class EditInertia(Operator):
-    """
-    Edit inertia of selected object(s)
-    """
+    """Edit inertia of selected object(s)"""
     bl_idname = "object.phobos_edit_inertia"
     bl_label = "Edit Inertia"
     bl_options = {'REGISTER', 'UNDO'}
@@ -502,9 +480,7 @@ class EditInertia(Operator):
 
 
 class SmoothenSurfaceOperator(Operator):
-    """
-    Smoothen surface of selected objects
-    """
+    """Smoothen surface of selected objects"""
     bl_idname = "object.phobos_smoothen_surface"
     bl_label = "Smoothen Surface"
     bl_options = {'REGISTER', 'UNDO'}
@@ -539,9 +515,7 @@ class SmoothenSurfaceOperator(Operator):
 
 
 class SetOriginToCOMOperator(Operator):
-    """
-    Set origin to COM
-    """
+    """Set origin to COM"""
     bl_idname = "object.phobos_set_origin_to_com"
     bl_label = "Set Origin to COM"
     bl_options = {'REGISTER', 'UNDO'}
@@ -588,9 +562,7 @@ class SetOriginToCOMOperator(Operator):
 
 
 class CreateInertialOperator(Operator):
-    """
-    Create inertial objects based on existing objects
-    """
+    """Create inertial objects based on existing objects"""
     bl_idname = "object.create_inertial_objects"
     bl_label = "Create Inertials"
     bl_options = {'REGISTER', 'UNDO'}
@@ -626,9 +598,7 @@ class CreateInertialOperator(Operator):
 
 
 class AddGravityVector(Operator):
-    """
-    Add a vector representing gravity in the scene
-    """
+    """Add a vector representing gravity in the scene"""
     bl_idname = "object.phobos_add_gravity"
     bl_label = "Add Gravity"
     bl_options = {'REGISTER', 'UNDO'}
@@ -646,9 +616,7 @@ class AddGravityVector(Operator):
 
 
 class EditYAMLDictionary(Operator):
-    """
-    Edit object dictionary as YAML
-    """
+    """Edit object dictionary as YAML"""
     bl_idname = 'object.phobos_edityamldictionary'
     bl_label = "Edit YAML Dictionary"
     bl_options = {'REGISTER', 'UNDO'}
@@ -687,9 +655,7 @@ class EditYAMLDictionary(Operator):
 
 
 class CreateCollisionObjects(Operator):
-    """
-    Create collision objects for all selected links
-    """
+    """Create collision objects for all selected links"""
     bl_idname = "object.create_collision_objects"
     bl_label = "Create Collision Objects"
     bl_options = {'REGISTER', 'UNDO'}
@@ -785,9 +751,7 @@ class CreateCollisionObjects(Operator):
 
 
 class SetCollisionGroupOperator(Operator):
-    """
-    Set the collision groups of the selected object(s)
-    """
+    """Set the collision groups of the selected object(s)"""
     bl_idname = "object.phobos_set_collision_group"
     bl_label = "Set Collision Groups"
     bl_options = {'REGISTER', 'UNDO'}
@@ -829,9 +793,7 @@ class SetCollisionGroupOperator(Operator):
 
 
 class DefineJointConstraintsOperator(Operator):
-    """
-    Add bone constraints to the joint (link)
-    """
+    """Add bone constraints to the joint (link)"""
     bl_idname = "object.define_joint_constraints"
     bl_label = "Define Joint Constraints"
     bl_options = {'REGISTER', 'UNDO'}
@@ -947,9 +909,7 @@ class DefineJointConstraintsOperator(Operator):
 
 
 class AttachMotorOperator(Operator):
-    """
-    Attach motor values to selected joints
-    """
+    """Attach motor values to selected joints"""
     bl_idname = "object.attach_motor"
     bl_label = "Attach Motor"
     bl_options = {'REGISTER', 'UNDO'}
@@ -1019,9 +979,7 @@ class AttachMotorOperator(Operator):
 
 
 class CreateLinkOperator(Operator):
-    """
-    Create link(s), optionally based on existing objects
-    """
+    """Create link(s), optionally based on existing objects"""
     bl_idname = "object.phobos_create_link"
     bl_label = "Create Links"
     bl_options = {'REGISTER', 'UNDO'}
@@ -1084,9 +1042,7 @@ class CreateLinkOperator(Operator):
 
 
 class AddSensorOperator(Operator):
-    """
-    Add/update a sensor
-    """
+    """Add/update a sensor"""
     bl_idname = "object.phobos_add_sensor"
     bl_label = "Add/Update A Sensor"
     bl_options = {'REGISTER', 'UNDO'}
@@ -1200,9 +1156,7 @@ class AddSensorOperator(Operator):
 
 
 class CreateMimicJointOperator(Operator):
-    """
-    Make a number of joints follow a specified joint
-    """
+    """Make a number of joints follow a specified joint"""
     bl_idname = "object.phobos_create_mimic_joint"
     bl_label = "Create Mimic Joint"
     bl_options = {'REGISTER', 'UNDO'}
@@ -1249,9 +1203,7 @@ class CreateMimicJointOperator(Operator):
 
 
 class RefineLevelOfDetailOperator(Operator):
-    """
-    Refine LoD settings with minimum distances
-    """
+    """Refine LoD settings with minimum distances"""
     bl_idname = "object.phobos_refine_lod"
     bl_label = "Refine Level of Detail"
     bl_options = {'REGISTER', 'UNDO'}
