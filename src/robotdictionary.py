@@ -177,7 +177,7 @@ def deriveGeometry(obj):
         gt = obj['geometry/type']
         if gt == 'box':
             geometry['size'] = list(obj.dimensions)
-        elif gt == 'cylinder':
+        elif gt == 'cylinder' or gt == 'capsule':
             geometry['radius'] = obj.dimensions[0]/2
             geometry['length'] = obj.dimensions[2]
         elif gt == 'sphere':
@@ -266,7 +266,7 @@ def deriveCapsule(obj):
     viscol_dict = {}
     capsule_pose = deriveObjectPose(obj)
     rotation = capsule_pose['rotation_euler']
-    capsule_radius = obj['radius']
+    capsule_radius = obj['geometry']['radius']
     for part in ['sphere1', 'cylinder', 'sphere2']:
         viscol = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
         viscol['name'] = namingUtils.getObjectName(obj).split(':')[-1] + '_' + part
@@ -274,7 +274,7 @@ def deriveCapsule(obj):
         pose = {}
         geometry['radius'] = capsule_radius
         if part == 'cylinder':
-            geometry['length'] = obj['length']
+            geometry['length'] = obj['geometry']['length']
             geometry['type'] = 'cylinder'
             pose = capsule_pose
         else:
