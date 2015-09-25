@@ -298,23 +298,21 @@ def calculateMeshInertia(reference, data, mass):
                               (verts[2][0], verts[2][1], verts[2][2], 1),
                               (reference[0], reference[1], reference[2], 1)))
 
-        det_J = J.determinant()
+        abs_det_J = J.determinant()
 
-        volume = sign * abs(det_J) / 6
+        volume = sign * abs_det_J / 6
 
         centre_of_mass = mathutils.Vector(((verts[0][0] + verts[1][0] + verts[2][0] + reference[0]) / 4,
                                            (verts[0][1] + verts[1][1] + verts[2][1] + reference[1]) / 4,
                                            (verts[0][2] + verts[1][2] + verts[2][2] + reference[2]) / 4))
 
-        tetrahedra.append({'volume': volume, 'det(J)': det_J, 'J': J, 'centre_of_mass': centre_of_mass})
+        tetrahedra.append({'sign': sign, 'abs(det(J))': abs_det_J, 'J': J, 'centre_of_mass': centre_of_mass})
         mesh_volume += volume
 
     d = mass / mesh_volume
-    current_body = {}
-    first = True
+    i = mathutils.Matrix().to_3x3()
+    i.zero()
     for tetrahedron in tetrahedra:
-        tetra_mass = mass / (mesh_volume / tetrahedron['volume'])
-        tetrahedron['mass'] = tetra_mass
 
         J = tetrahedron['J']
         x1 = J[0][0]
@@ -330,49 +328,35 @@ def calculateMeshInertia(reference, data, mass):
         y4 = J[3][1]
         z4 = J[3][2]
 
-        abs_det_J = abs(tetrahedron['det(J)'])
+        abs_det_J = tetrahedron['abs(det(J))']
+        sign = tetrahedron['sign']
 
-        a = d * abs_det_J * (y1**2 + y1*y2 + y2**2 + y1*y3 + y2*y3 + y3**2
+        a = sign * d * abs_det_J * (y1**2 + y1*y2 + y2**2 + y1*y3 + y2*y3 + y3**2
             + y1*y4 + y2*y4 + y3*y4 + y4**2 + z1**2 + z1*z2 + z2**2 + z1*z3
             + z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
 
-        b = d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2
+        b = sign * d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2
             + x1*x4 + x2*x4 + x3*x4 + x4**2 + z1**2 + z1*z2 + z2**2 + z1*z3
             + z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
 
-        c = d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2
+        c = sign * d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2
             + x1*x4 + x2*x4 + x3*x4 + x4**2 + y1**2 + y1*y2 + y2**2 + y1*y3
             + y2*y3 + y3**2 + y1*y4 + y2*y4 + y3*y4 + y4**2) / 60
 
-        a_bar = d * abs_det_J * (2*y1*z1 + y2*z1 + y3*z1 + y4*z1 + y1*z2
+        a_bar = sign * d * abs_det_J * (2*y1*z1 + y2*z1 + y3*z1 + y4*z1 + y1*z2
                 + 2*y2*z2 + y3*z2 + y4*z2 + y1*z3 + y2*z3 + 2*y3*z3
                 + y4*z3 + y1*z4 + y2*z4 + y3*z4 + 2*y4*z4) / 120
 
-        b_bar = d * abs_det_J * (2*x1*z1 + x2*z1 + x3*z1 + x4*z1 + x1*z2
+        b_bar = sign * d * abs_det_J * (2*x1*z1 + x2*z1 + x3*z1 + x4*z1 + x1*z2
                 + 2*x2*z2 + x3*z2 + x4*z2 + x1*z3 + x2*z3 + 2*x3*z3
                 + x4*z3 + x1*z4 + x2*z4 + x3*z4 + 2*x4*z4) / 120
 
-        c_bar = d * abs_det_J * (2*x1*y1 + x2*y1 + x3*y1 + x4*y1 + x1*y2
+        c_bar = sign * d * abs_det_J * (2*x1*y1 + x2*y1 + x3*y1 + x4*y1 + x1*y2
                 + 2*x2*y2 + x3*y2 + x4*y2 + x1*y3 + x2*y3 + 2*x3*y3
                 + x4*y3 + x1*y4 + x2*y4 + x3*y4 + 2*x4*y4) / 120
 
-        #tetrahedron['inertia'] = inertiaListToMatrix([a, -b_bar, -c_bar, b, -a_bar, c])
-        tetrahedron['inertia'] = [a, -b_bar, -c_bar, b, -a_bar, c]
+        i += inertiaListToMatrix([a, -b_bar, -c_bar, b, -a_bar, c])
 
-        if first:
-            current_body = tetrahedron
-            first = False
-        else:
-            mass, cog, inertia = compound_inertia_analysis_3x3([{'mass': current_body['mass'],
-                                                                 'com': current_body['centre_of_mass'],
-                                                                 'inertia': current_body['inertia']},
-                                                                {'mass': tetrahedron['mass'],
-                                                                 'com': tetrahedron['centre_of_mass'],
-                                                                 'inertia': tetrahedron['inertia']}])
-
-            current_body = {'mass': mass, 'centre_of_mass': cog, 'inertia': inertia}
-
-    i = current_body['inertia']
     return i[0][0], i[0][1], i[0][2], i[1][1], i[1][2], i[2][2]
 
 
