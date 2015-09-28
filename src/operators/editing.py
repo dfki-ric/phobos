@@ -762,8 +762,8 @@ class CreateCollisionObjects(Operator):
                                                rotation_euler)
                 selectionUtils.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
-                ob['length'] = length
-                ob['radius'] = radius
+                ob['geometry/length'] = length
+                ob['geometry/radius'] = radius
                 ob['sph1_location'] = tmpsph1_location
                 ob['sph2_location'] = tmpsph2_location
             elif self.property_colltype == 'mesh':
