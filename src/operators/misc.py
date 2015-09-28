@@ -50,19 +50,16 @@ def get_pose_names(scene, context):
     return pose_items
 
 
-
 class SelectError(Operator):
-    """SelectErrorOperator
-
-    """
+    """Select an object with check errors"""
     bl_idname = "object.phobos_select_error"
-    bl_label = "Selects an object with check errors"
+    bl_label = "Select Erroneous Object"
     bl_options = {'REGISTER', 'UNDO'}
 
     errorObj = EnumProperty(
-        name="Error containing objects",
+        name="Erroneous Objects",
         items=defs.generateCheckMessages,
-        description="The objects containing errors.")
+        description="The objects containing errors")
 
     def execute(self, context):
         startLog(self)
@@ -75,12 +72,9 @@ class SelectError(Operator):
 
 
 class CheckDict(Operator):
-    """CheckDictOperator
-
-    """
-
+    """Check the robot dictionary"""
     bl_idname = "object.phobos_check_dict"
-    bl_label = "Checks the robotdictionary"
+    bl_label = "Check Dictionary"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -99,11 +93,9 @@ class CheckDict(Operator):
 
 
 class CalculateMassOperator(Operator):
-    """CalculateMassOperator
-
-    """
+    """Display mass of the selected objects in a pop-up window"""
     bl_idname = "object.phobos_calculate_mass"
-    bl_label = "Display mass of the selected objects in a pop-up window."
+    bl_label = "Calculate Mass"
 
     def execute(self, context):
         startLog(self)
@@ -114,29 +106,27 @@ class CalculateMassOperator(Operator):
 
 
 class ShowDistanceOperator(Operator):
-    """ShowDistanceOperator
-
-    """
+    """Show distance between two selected objects in world coordinates"""
     bl_idname = "object.phobos_show_distance"
-    bl_label = "Shows distance between two selected objects in world coordinates."
+    bl_label = "Show Distance"
     bl_options = {'REGISTER', 'UNDO'}
 
     distance = FloatProperty(
-        name="distance",
+        name="Distance",
         default=0.0,
         subtype='DISTANCE',
         unit='LENGTH',
         precision=6,
-        description="distance between objects")
+        description="Distance between objects")
 
     distVector = FloatVectorProperty(
-        name="distanceVector",
+        name="Distance Vector",
         default=(0.0, 0.0, 0.0,),
         subtype='TRANSLATION',
         unit='LENGTH',
         size=3,
         precision=6,
-        description="distance between objects")
+        description="Distance vector between objects")
 
     def execute(self, context):
         startLog(self)
@@ -151,17 +141,15 @@ class ShowDistanceOperator(Operator):
 
 
 class SetLogSettings(Operator):
-    """Adjust Logging Settings for phobos
-
-    """
+    """Adjust logging settings for Phobos"""
     bl_idname = 'object.phobos_adjust_logger'
-    bl_label = "Change the detail of the phobos logger"
+    bl_label = "Set Logging Preferences"
     bl_options = {'REGISTER', 'UNDO'}
 
     isEnabled = BoolProperty(
-        name="Enable logging",
+        name="Enable Logging",
         default=True,
-        description="Enable log messages (INFOS will still appear)"
+        description="Enable log messages (INFOS will appear in any case)"
     )
 
     errors = BoolProperty(
@@ -184,11 +172,9 @@ class SetLogSettings(Operator):
 
 
 class StorePoseOperator(Operator):
-    """
-    Store the current pose of selected links in one of the scene's robots.
-    """
+    """Store the current pose of selected links in one of the scene's robots"""
     bl_idname = 'object.store_pose'
-    bl_label = "Store the robot's current pose"
+    bl_label = "Store Current Pose"
     bl_options = {'REGISTER', 'UNDO'}
 
     robot_name = EnumProperty(
@@ -209,11 +195,9 @@ class StorePoseOperator(Operator):
 
 
 class LoadPoseOperator(Operator):
-    """
-    Load a previously stored pose for one of the scene's robots.
-    """
+    """Load a previously stored pose for one of the scene's robots"""
     bl_idname = 'object.load_pose'
-    bl_label = "Load a pose for the robot"
+    bl_label = "Load Pose"
     bl_options = {'REGISTER', 'UNDO'}
 
     robot_name = EnumProperty(
