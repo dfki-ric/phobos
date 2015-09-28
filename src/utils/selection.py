@@ -148,21 +148,61 @@ def getObjectByName(name):
                 nameTag = type + "/name"
                 if nameTag in obj and name == obj[nameTag]:
                     objlist.append(obj)
-                    break
+                    # 'break' does not seem to make sense here, as there may be
+                    # objects from different types with the wanted name
+                    #break
     return objlist
 
 
-def getObjectByNameAndType(name, type):
-    nameTag = type + "/name"
+def getObjectsByPattern(pattern, match_case=False):
+    """
+    Find objects in the scene that match a name pattern. The pattern may match
+    either the object's actual name or the value of the 'phobostype/name'
+    property.
+
+    :param pattern: The pattern to search for.
+    :type pattern: str.
+    :param match_case: Indicate whether to match the object names' case to the pattern.
+    :type match_case: bool.
+    :return: List containing the matching objects.
+    """
+    obj_list = []
     for obj in bpy.data.objects:
-        if nameTag in obj and name == obj[nameTag]:
+        for subtype in defs.subtypes:
+            name_tag = subtype + '/name'
+            if name_tag in obj:
+                obj_name = obj[name_tag]
+                if (match_case and pattern in obj_name) \
+                        or (not match_case and pattern.lower() in obj_name.lower()):
+                    obj_list.append(obj)
+        if (match_case and pattern in obj.name) \
+                or (not match_case and pattern.lower() in obj.name.lower()):
+            obj_list.append(obj)
+    return obj_list
+
+
+def getObjectByNameAndType(name, phobostype):
+    """
+    Find an object with a specified phobostype and having the property
+    "phobostype/'name' == name".
+
+    :param name: The name to search for.
+    :type name: str.
+    :param phobostype: The phobostype to search for.
+    :type phobostype: str.
+    :return: Matching object.
+    """
+    name_tag = phobostype + "/name"
+    for obj in bpy.data.objects:
+        if name_tag in obj and name == obj[name_tag]:
             return obj
-    log("No object of type " + type + " with name " + name + " found.", "WARNING")
+    log("No object of type " + phobostype + " with name " + name + " found.", "WARNING")
     return None
 
 
-def selectByName(name):
+def selectByName(name, match_case=False):
     """Uses getObjectByName to select the found objects.
 
     """
-    selectObjects(getObjectByName(name), True)
+    #selectObjects(getObjectByName(name), True)
+    selectObjects(getObjectsByPattern(name, match_case), True)

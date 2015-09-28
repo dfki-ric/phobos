@@ -56,7 +56,7 @@ def register():
 
     bpy.types.World.path = StringProperty(name='path', default='.', update=updateExportPath)
     bpy.types.World.decimalPlaces = IntProperty(name="decimalPlaces",
-                                                description="number of decimal places to export",
+                                                description="Number of decimal places to export",
                                                 default=6)
     bpy.types.World.relativePath = BoolProperty(name='relative path', default=True)
     bpy.types.World.useBobj = BoolProperty(name="useBobj", update=updateExportOptions)
@@ -71,7 +71,7 @@ def register():
     bpy.types.World.exportURDF = BoolProperty(name="exportURDF", default=True, update=updateExportOptions)
     bpy.types.World.exportSRDF = BoolProperty(name="exportSRDF", default=True)
     bpy.types.World.exportYAML = BoolProperty(name="exportYAML", update=updateExportOptions)
-    bpy.types.World.structureExport = BoolProperty(name="structureExport", default=False, description="create structured subfolders")
+    bpy.types.World.structureExport = BoolProperty(name="structureExport", default=False, description="Create structured subfolders")
     bpy.types.World.sceneName = StringProperty(name="sceneName")
 
     #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
@@ -83,7 +83,7 @@ def unregister():
 
 class MessageOperator(bpy.types.Operator):
     bl_idname = "error.message"
-    bl_label = "Displays a message in a window"
+    bl_label = "Display a message in a window"
     type = StringProperty()
     message = StringProperty()
 
@@ -202,7 +202,7 @@ def useDefaultLayers(self, context):
 class PhobosPanel(bpy.types.Panel):
     """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_PT_PHOBOS"
-    bl_label = "phobos: Model editing"
+    bl_label = "phobos: Model Editing"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
@@ -218,7 +218,7 @@ class PhobosPanel(bpy.types.Panel):
         layout.label(text="Robot Model:")
         inlayout = layout.split()
         rc1 = inlayout.column(align=True)
-        rc1.operator('object.phobos_add_chain', text='Define kinematic chain', icon='CONSTRAINT')
+        rc1.operator('object.phobos_add_chain', text='Define Kinematic Chain', icon='CONSTRAINT')
         rc2 = inlayout.column(align=True)
         rc2.operator('object.phobos_name_model', text='Name Robot')
         rc2.operator('object.phobos_toggle_namespaces', text='Toggle Namespaces')
@@ -236,11 +236,11 @@ class PhobosPanel(bpy.types.Panel):
         layout.label(text="Inspect Robot", icon='VIEWZOOM')
         iinlayout = layout.split()
         ic1 = iinlayout.column(align=True)
-        ic1.operator('object.phobos_show_distance', text='Measure distance')
-        ic1.operator('object.phobos_check_dict', text='Check Robot dictionary')
+        ic1.operator('object.phobos_show_distance', text='Measure Distance')
+        ic1.operator('object.phobos_check_dict', text='Check Robot Dictionary')
         ic2 = iinlayout.column(align=True)
-        ic2.operator('object.phobos_set_xray', text='X-Ray view')
-        ic2.operator('object.phobos_select_error', text="Select error containing object")
+        ic2.operator('object.phobos_set_xray', text='X-Ray View')
+        ic2.operator('object.phobos_select_error', text="Select Erroneous Object")
 
         # Selection Menu
         layout.separator()
@@ -250,7 +250,7 @@ class PhobosPanel(bpy.types.Panel):
         sc1.operator('object.phobos_select_root', text='Select Root')
         sc1.operator('object.phobos_select_model', text='Select Robot')
         sc2 = sinlayout.column(align=True)
-        sc2.operator('object.phobos_select_objects_by_phobostype', text="Select by phobostype")
+        sc2.operator('object.phobos_select_objects_by_phobostype', text="Select by Phobostype")
         sc2.operator('object.phobos_select_objects_by_name', text="Select by Name")
 
         # Pose Menu
@@ -270,7 +270,7 @@ class PhobosPanel(bpy.types.Panel):
 class PhobosModelPanel(bpy.types.Panel):
     """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_MODEL_PT_PHOBOS"
-    bl_label = "phobos: Object editing"
+    bl_label = "phobos: Object Editing"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
@@ -284,7 +284,7 @@ class PhobosModelPanel(bpy.types.Panel):
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
         c2 = inlayout.column(align=True)
-        c1.operator('object.phobos_set_phobostype', text='Set phobostype')
+        c1.operator('object.phobos_set_phobostype', text='Set Phobostype')
         c1.operator('object.phobos_sort_objects_to_layers', text="Set Objects to Layers", icon='IMGDISPLAY')
         c1.operator('object.phobos_smoothen_surface', text="Smoothen Surface")
         c1.operator('object.phobos_refine_lod', text="Refine LoD")
@@ -306,7 +306,7 @@ class PhobosModelPanel(bpy.types.Panel):
         kc1.operator('object.phobos_set_origin_to_com', text="Set Origin to COM")
         kc1.operator("object.phobos_create_mimic_joint", text="Mimic Joint")
         kc2.operator('object.define_joint_constraints', text="Define Joint Constraints")
-        kc2.operator('object.attach_motor', text="Attach motor")
+        kc2.operator('object.attach_motor', text="Attach Motor")
         kc2.operator('object.phobos_set_geometry_type', text="Set Geometry Type(s)")
         kc2.operator('object.phobos_set_collision_group', text="Set Collision Group")
 
@@ -402,7 +402,7 @@ class PhobosExportPanel(bpy.types.Panel):
         ginlayout = self.layout.split()
         g1 = ginlayout.column(align=True)
         g1.prop(bpy.data.worlds[0], "relativePath")
-        g1.prop(bpy.data.worlds[0], "structureExport", text="structure export")
+        g1.prop(bpy.data.worlds[0], "structureExport", text="Structure Export")
         g2 = ginlayout.column(align=True)
         g2.prop(bpy.data.worlds[0], "decimalPlaces")
 
@@ -411,12 +411,12 @@ class PhobosExportPanel(bpy.types.Panel):
         inlayout = self.layout.split()
         c1 = inlayout.column(align=True)
         c1.label(text="Mesh export")
-        c1.prop(bpy.data.worlds[0], "exportMeshes", text="export meshes")
+        c1.prop(bpy.data.worlds[0], "exportMeshes", text="Export Meshes")
 
-        c1.prop(bpy.data.worlds[0], "useBobj", text="use .bobj format")
-        c1.prop(bpy.data.worlds[0], "useObj", text="use .obj format")
-        c1.prop(bpy.data.worlds[0], "useStl", text="use .stl format")
-        c1.prop(bpy.data.worlds[0], "useDae", text="use .dae format")
+        c1.prop(bpy.data.worlds[0], "useBobj", text="Use .bobj format")
+        c1.prop(bpy.data.worlds[0], "useObj", text="Use .obj format")
+        c1.prop(bpy.data.worlds[0], "useStl", text="Use .stl format")
+        c1.prop(bpy.data.worlds[0], "useDae", text="Use .dae format")
         if bpy.data.worlds[0].useObj:
             labeltext = ".obj is used"
         elif bpy.data.worlds[0].useBobj:
@@ -429,14 +429,14 @@ class PhobosExportPanel(bpy.types.Panel):
             labeltext = ".obj is used"
         c1.label(text=labeltext)
         c2 = inlayout.column(align=True)
-        c2.label(text="Robot data export")
+        c2.label(text="Robot Data Export")
         #c2.prop(bpy.data.worlds[0], "exportMARSscene", text="as MARS scene")
-        c2.prop(bpy.data.worlds[0], "exportSMURF", text="as SMURF")
-        c2.prop(bpy.data.worlds[0], "exportURDF", text="as URDF")
-        c2.prop(bpy.data.worlds[0], "exportSRDF", text="with SRDF")
-        c2.prop(bpy.data.worlds[0], "exportYAML", text="as YAML dump")
-        c2.prop(bpy.data.worlds[0], "exportTextures", text="export textures")
-        c2.prop(bpy.data.worlds[0], "exportCustomData", text="export custom data")
+        c2.prop(bpy.data.worlds[0], "exportSMURF", text="As SMURF")
+        c2.prop(bpy.data.worlds[0], "exportURDF", text="As URDF")
+        c2.prop(bpy.data.worlds[0], "exportSRDF", text="With SRDF")
+        c2.prop(bpy.data.worlds[0], "exportYAML", text="As YAML dump")
+        c2.prop(bpy.data.worlds[0], "exportTextures", text="Export textures")
+        c2.prop(bpy.data.worlds[0], "exportCustomData", text="Export custom data")
 
         ec1 = layout.column(align=True)
         ec1.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
@@ -446,13 +446,13 @@ class PhobosExportPanel(bpy.types.Panel):
         layout.separator()
         layout.label(text="Baking")
         layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
-        layout.operator("object.phobos_create_robot_instance", text="Create Robot lib instance", icon="RENDERLAYERS")
-        layout.operator('object.phobos_import_lib_robot', text="Import Robot bake", icon="COPYDOWN")
+        layout.operator("object.phobos_create_robot_instance", text="Create Robot Lib Instance", icon="RENDERLAYERS")
+        layout.operator('object.phobos_import_lib_robot', text="Import Robot Bake", icon="COPYDOWN")
 
         layout.separator()
 
         layout.label(text="Export Scene")
-        self.layout.prop(bpy.data.worlds[0], "sceneName", text="name")
+        self.layout.prop(bpy.data.worlds[0], "sceneName", text="Name")
         layout.operator("object.phobos_export_scene", text="Export SMURF Scene", icon="WORLD_DATA")
 
 
@@ -472,14 +472,14 @@ class PhobosSettingsPanel(bpy.types.Panel):
 
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
-        c1.operator('object.phobos_adjust_logger', text='Adjust logging settings')
+        c1.operator('object.phobos_adjust_logger', text='Adjust Logging Settings')
         #c2 = inlayout.column(align=True)
         #c2.operator('object.phobos_partial_rename', text="Partial Rename")
 
 
 class PhobosObjectPanel(bpy.types.Panel):
     bl_idname = "OBJECT_PT_PHOBOS"
-    bl_label = "phobos Object panel displaying custom properties"
+    bl_label = "phobos: Object Panel Displaying Custom Properties"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "object"

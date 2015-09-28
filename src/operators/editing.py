@@ -48,11 +48,9 @@ from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, 
 
 
 class SortObjectsToLayersOperator(Operator):
-    """SortObjectsToLayersOperator
-
-    """
+    """Sort all selected objects to their according layers"""
     bl_idname = "object.phobos_sort_objects_to_layers"
-    bl_label = "Sorts all selected objects to their according layers"
+    bl_label = "Sort Objects to Layers"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -73,18 +71,17 @@ class SortObjectsToLayersOperator(Operator):
     def poll(cls, context):
         return len(context.selected_objects) > 0
 
-class AddChainOperator(Operator):
-    """AddChainOperator
 
-    """
+class AddChainOperator(Operator):
+    """Add a chain between two selected objects"""
     bl_idname = "object.phobos_add_chain"
-    bl_label = "Adds a chain between two selected objects."
+    bl_label = "Add Chain"
     bl_options = {'REGISTER', 'UNDO'}
 
     chainname = StringProperty(
-        name='chainname',
+        name='Chain Name',
         default='new_chain',
-        description='name of the chain to be created')
+        description='Name of the chain to be created')
 
     def execute(self, context):
         endobj = context.active_object
@@ -110,22 +107,20 @@ class AddChainOperator(Operator):
 
 
 class SetMassOperator(Operator):
-    """SetMassOperator
-
-    """
+    """Set the mass of the selected object(s)"""
     bl_idname = "object.phobos_set_mass"
-    bl_label = "Sets the mass of the selected object(s)."
+    bl_label = "Set Mass"
     bl_options = {'REGISTER', 'UNDO'}
 
     mass = FloatProperty(
-        name='mass',
+        name='Mass',
         default=0.001,
-        description='mass (of active object) in kg')
+        description='Mass (of active object) in kg')
 
     userbmass = BoolProperty(
-        name='use rigid body mass',
+        name='Use Rigid Body Mass',
         default=False,
-        description='If True, mass entry from rigid body data is used.')
+        description='If true, mass entry from rigid body data is used')
 
     @classmethod
     def poll(cls, context):
@@ -163,11 +158,9 @@ class SetMassOperator(Operator):
 
 
 class SyncMassesOperator(Operator):
-    """SyncMassesOperator
-
-    """
+    """Synchronize masses among the selected object(s)"""
     bl_idname = "object.phobos_sync_masses"
-    bl_label = "Synchronize masses among the selected object(s)."
+    bl_label = "Synchronize Masses"
     bl_options = {'REGISTER', 'UNDO'}
 
     synctype = EnumProperty(
@@ -181,7 +174,7 @@ class SyncMassesOperator(Operator):
     updateinertial = BoolProperty(
         name='robotupdate inertial',
         default=False,
-        description='update inertials'
+        description='Update inertials'
     )
 
     def execute(self, context):
@@ -240,28 +233,26 @@ class SyncMassesOperator(Operator):
 
 
 class SetXRayOperator(Operator):
-    """SetXrayOperator
-
-    """
+    """Show the selected/chosen objects via X-ray"""
     bl_idname = "object.phobos_set_xray"
-    bl_label = "Shows the selected/chosen objects via X-Ray."
+    bl_label = "Set X-Ray View"
     bl_options = {'REGISTER', 'UNDO'}
 
     objects = EnumProperty(
-        name="show objects:",
+        name="Show Objects:",
         default='selected',
         items=(('all',) * 3, ('selected',) * 3, ('by name',) * 3) + defs.phobostypes,
-        description="show objects via x-ray")
+        description="Show objects via x-ray")
 
     show = BoolProperty(
-        name="show",
+        name="Show",
         default=True,
-        description="set to")
+        description="Set to")
 
     namepart = StringProperty(
-        name="name contains",
+        name="Name Contains",
         default="",
-        description="part of a name for objects to be selected in 'by name' mode")
+        description="Part of a name for objects to be selected in 'by name' mode")
 
     @classmethod
     def poll(cls, context):
@@ -269,12 +260,12 @@ class SetXRayOperator(Operator):
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text="Select Items for X-Ray view")
+        layout.label(text="Select items for X-ray view")
 
-        layout.prop(self, "objects")
-        layout.prop(self, "show", text="x-ray enabled" if self.show else "x-ray disabled")
+        layout.prop(self, "Objects")
+        layout.prop(self, "Show", text="X-Ray Enabled" if self.show else "X-Ray Disabled")
         if self.objects == 'by name':
-            layout.prop(self, "namepart")
+            layout.prop(self, "Name Part")
 
     def execute(self, context):
         if self.objects == 'all':
@@ -289,19 +280,18 @@ class SetXRayOperator(Operator):
             obj.show_x_ray = self.show
         return {'FINISHED'}
 
-class SetPhobosType(Operator):
-    """Set phobostype Operator
 
-    """
+class SetPhobosType(Operator):
+    """Edit phobostype of selected object(s)"""
     bl_idname = "object.phobos_set_phobostype"
-    bl_label = "Edit phobostype of selected object(s)"
+    bl_label = "Set Phobostype"
     bl_options = {'REGISTER', 'UNDO'}
 
     phobostype = EnumProperty(
         items=defs.phobostypes,
-        name="phobostype",
+        name="Phobostype",
         default="undefined",
-        description="phobostype")
+        description="Phobostype")
 
     def execute(self, context):
         for obj in bpy.context.selected_objects:
@@ -315,22 +305,20 @@ class SetPhobosType(Operator):
 
 
 class BatchEditPropertyOperator(Operator):
-    """Batch-Edit Property Operator
-
-    """
+    """Edit custom property of selected object(s)"""
     bl_idname = "object.phobos_batch_property"
-    bl_label = "Edit custom property of selected object(s)"
+    bl_label = "Edit Custom Property"
     bl_options = {'REGISTER', 'UNDO'}
 
     property_name = StringProperty(
-        name="property_name",
+        name="Name",
         default="",
-        description="custom property name")
+        description="Custom property name")
 
     property_value = StringProperty(
-        name="property_value",
+        name="Value",
         default="",
-        description="custom property value")
+        description="Custom property value")
 
     def execute(self, context):
         value = generalUtils.parse_number(self.property_value)
@@ -350,11 +338,9 @@ class BatchEditPropertyOperator(Operator):
 
 
 class CopyCustomProperties(Operator):
-    """Copy Custom Properties Operator
-
-    """
+    """Copy custom properties of selected object(s)"""
     bl_idname = "object.phobos_copy_props"
-    bl_label = "Edit custom property of selected object(s)"
+    bl_label = "Copy Custom Properties"
     bl_options = {'REGISTER', 'UNDO'}
 
     empty_properties = BoolProperty(
@@ -366,7 +352,7 @@ class CopyCustomProperties(Operator):
         slaves = context.selected_objects
         master = context.active_object
         slaves.remove(master)
-        props = robotdictionary.cleanObjectProperties(dict(master.items()))
+        props = blenderUtils.cleanObjectProperties(dict(master.items()))
         for obj in slaves:
             if self.empty_properties:
                 for key in obj.keys():
@@ -383,25 +369,23 @@ class CopyCustomProperties(Operator):
 
 
 class RenameCustomProperty(Operator):
-    """Rename Custom Properties Operator
-
-    """
+    """Rename custom property of selected object(s)"""
     bl_idname = "object.phobos_rename_custom_property"
-    bl_label = "Edit custom property of selected object(s)"
+    bl_label = "Rename Custom Property"
     bl_options = {'REGISTER', 'UNDO'}
 
     find = StringProperty(
-        name="find property name:",
+        name="Find Property Name",
         default='',
-        description="name to be searched for")
+        description="Name to be searched for")
 
     replace = StringProperty(
-        name="replacement name:",
+        name="Replacement Name",
         default='',
-        description="new name to be replaced with")
+        description="New name to be replaced with")
 
     overwrite = BoolProperty(
-        name='overwrite existing properties',
+        name='Overwrite Existing Properties',
         default=False,
         description="If a property of the specified replacement name exists, overwrite it?"
     )
@@ -426,16 +410,14 @@ class RenameCustomProperty(Operator):
 
 
 class SetGeometryType(Operator):
-    """Set Geometry Type Operator
-
-    """
+    """Edit geometry type of selected object(s)"""
     bl_idname = "object.phobos_set_geometry_type"
-    bl_label = "Edit geometry type of selected object(s)"
+    bl_label = "Edit Geometry"
     bl_options = {'REGISTER', 'UNDO'}
 
     geomType = EnumProperty(
         items=defs.geometrytypes,
-        name="type",
+        name="Type",
         default="box",
         description="Phobos geometry type")
 
@@ -457,11 +439,9 @@ class SetGeometryType(Operator):
 
 
 class EditInertia(Operator):
-    """Edit Inertia Operator
-
-    """
+    """Edit inertia of selected object(s)"""
     bl_idname = "object.phobos_edit_inertia"
-    bl_label = "Edit inertia of selected object(s)"
+    bl_label = "Edit Inertia"
     bl_options = {'REGISTER', 'UNDO'}
 
     # inertiamatrix = FloatVectorProperty (
@@ -472,11 +452,11 @@ class EditInertia(Operator):
     #        description = "set inertia for a link")
 
     inertiavector = FloatVectorProperty(
-        name="inertiavec",
+        name="Inertia Vector",
         default=[0, 0, 0, 0, 0, 0],
         subtype='NONE',
         size=6,
-        description="set inertia for a link"
+        description="Set inertia for a link"
     )
 
     def invoke(self, context, event):
@@ -501,11 +481,9 @@ class EditInertia(Operator):
 
 
 class SmoothenSurfaceOperator(Operator):
-    """SmoothenSurfaceOperator
-
-    """
+    """Smoothen surface of selected objects"""
     bl_idname = "object.phobos_smoothen_surface"
-    bl_label = "Smoothen Selected Objects"
+    bl_label = "Smoothen Surface"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -538,30 +516,28 @@ class SmoothenSurfaceOperator(Operator):
 
 
 class SetOriginToCOMOperator(Operator):
-    """SetOriginToCOMOperator
-
-    """
+    """Set origin to COM"""
     bl_idname = "object.phobos_set_origin_to_com"
     bl_label = "Set Origin to COM"
     bl_options = {'REGISTER', 'UNDO'}
 
     com_shift = FloatVectorProperty(
-        name="CAD origin shift",
+        name="CAD Origin Shift",
         default=(0.0, 0.0, 0.0,),
         subtype='TRANSLATION',
         unit='LENGTH',
         size=3,
         precision=6,
-        description="distance between objects")
+        description="Offset of distance between objects")
 
     cursor_location = FloatVectorProperty(
-        name="CAD origin",
+        name="CAD Origin",
         default=(0.0, 0.0, 0.0,),
         subtype='TRANSLATION',
         unit='LENGTH',
         size=3,
         precision=6,
-        description="distance between objects")
+        description="Distance between objects")
 
     def execute(self, context):
         master = context.active_object
@@ -587,23 +563,21 @@ class SetOriginToCOMOperator(Operator):
 
 
 class CreateInertialOperator(Operator):
-    """CreateInertialOperator
-
-    """
+    """Create inertial objects based on existing objects"""
     bl_idname = "object.create_inertial_objects"
-    bl_label = "Creates inertial objects based on existing objects"
+    bl_label = "Create Inertials"
     bl_options = {'REGISTER', 'UNDO'}
 
     auto_compute = BoolProperty(
-        name='calculate automatically',
+        name='Calculate Automatically',
         default=True,
-        description='calculate inertia automatically'
+        description='Calculate inertia automatically'
     )
 
     preserve_children = BoolProperty(
-        name='preserve child inertials',
+        name='Preserve Child Inertials',
         default=False,
-        description='preserve child inertials'
+        description='Preserve child inertials'
     )
 
     def execute(self, context):
@@ -625,17 +599,15 @@ class CreateInertialOperator(Operator):
 
 
 class AddGravityVector(Operator):
-    """Add Gravity Operator
-
-    """
+    """Add a vector representing gravity in the scene"""
     bl_idname = "object.phobos_add_gravity"
-    bl_label = "Add a vector representing gravity in the scene"
+    bl_label = "Add Gravity"
     bl_options = {'REGISTER', 'UNDO'}
 
     property_name = FloatVectorProperty(
-        name="gravity_vector",
+        name="Gravity Vector",
         default=(0, 0, -9.81),
-        description="gravity vector")
+        description="Gravity vector")
 
     def execute(self, context):
         bpy.ops.object.empty_add(type='SINGLE_ARROW')
@@ -645,11 +617,9 @@ class AddGravityVector(Operator):
 
 
 class EditYAMLDictionary(Operator):
-    """Edit a dictionary as YAML in text file.
-
-    """
+    """Edit object dictionary as YAML"""
     bl_idname = 'object.phobos_edityamldictionary'
-    bl_label = "Edit object dictionary as YAML"
+    bl_label = "Edit YAML Dictionary"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -686,17 +656,15 @@ class EditYAMLDictionary(Operator):
 
 
 class CreateCollisionObjects(Operator):
-    """Select n bodies to create collision objects for.
-
-    """
+    """Create collision objects for all selected links"""
     bl_idname = "object.create_collision_objects"
-    bl_label = "Create collision objects for all selected Links"
+    bl_label = "Create Collision Objects"
     bl_options = {'REGISTER', 'UNDO'}
 
     property_colltype = EnumProperty(
-        name='coll_type',
+        name='Collision Type',
         default='box',
-        description="collision type",
+        description="Collision type",
         items=defs.geometrytypes)
 
     def execute(self, context):
@@ -784,19 +752,17 @@ class CreateCollisionObjects(Operator):
 
 
 class SetCollisionGroupOperator(Operator):
-    """Sets the collision group of the selected object(s).
-
-    """
+    """Set the collision groups of the selected object(s)"""
     bl_idname = "object.phobos_set_collision_group"
-    bl_label = "Sets the collision group of the selected object(s)."
+    bl_label = "Set Collision Groups"
     bl_options = {'REGISTER', 'UNDO'}
 
     groups = BoolVectorProperty(
-        name='collision groups',
+        name='Collision Groups',
         size=20,
         subtype='LAYER',
         default=(False,) * 20,
-        description='collision groups')
+        description='Collision groups')
 
     def invoke(self, context, event):
 
@@ -828,60 +794,58 @@ class SetCollisionGroupOperator(Operator):
 
 
 class DefineJointConstraintsOperator(Operator):
-    """DefineJointConstraintsOperator
-
-    """
+    """Add bone constraints to the joint (link)"""
     bl_idname = "object.define_joint_constraints"
-    bl_label = "Adds Bone Constraints to the joint (link)"
+    bl_label = "Define Joint Constraints"
     bl_options = {'REGISTER', 'UNDO'}
 
     passive = BoolProperty(
-        name='passive',
+        name='Passive',
         default=False,
-        description='makes the joint passive (no actuation)'
+        description='Make the joint passive (no actuation)'
     )
 
     useRadian = BoolProperty(
-        name='useRadian',
+        name='Use Radian',
         default=True,
-        description='use degrees or rad for joints'
+        description='Use degrees or rad for joints'
     )
 
     joint_type = EnumProperty(
-        name='joint_type',
+        name='Joint Type',
         default='revolute',
-        description="type of the joint",
+        description="Type of the joint",
         items=defs.jointtypes)
 
     lower = FloatProperty(
-        name="lower",
+        name="Lower",
         default=0.0,
-        description="lower constraint of the joint")
+        description="Lower constraint of the joint")
 
     upper = FloatProperty(
-        name="upper",
+        name="Upper",
         default=0.0,
-        description="upper constraint of the joint")
+        description="Upper constraint of the joint")
 
     maxeffort = FloatProperty(
-        name="max effort (N or Nm)",
+        name="Max Effort (N or Nm)",
         default=0.0,
-        description="maximum effort of the joint")
+        description="Maximum effort of the joint")
 
     maxvelocity = FloatProperty(
-        name="max velocity (m/s or rad/s)",
+        name="Max Velocity (m/s or rad/s)",
         default=0.0,
-        description="maximum velocity of the joint. If you uncheck radian, you can enter °/sec here")
+        description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here")
 
     spring = FloatProperty(
-        name="spring constant",
+        name="Spring Constant",
         default=0.0,
-        description="spring constant of the joint")
+        description="Spring constant of the joint")
 
     damping = FloatProperty(
-        name="damping constant",
+        name="Damping Constant",
         default=0.0,
-        description="damping constant of the joint")
+        description="Damping constant of the joint")
 
     # TODO: invoke function to read all values in
 
@@ -926,7 +890,7 @@ class DefineJointConstraintsOperator(Operator):
             velocity = self.maxvelocity * ((2 * math.pi) / 360)  # from °/s to rad/s
         else:
             velocity = self.maxvelocity
-            objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
         for link in objs:
             bpy.context.scene.objects.active = link
             joints.setJointConstraints(link, self.joint_type, lower, upper, self.spring, self.damping)
@@ -946,42 +910,40 @@ class DefineJointConstraintsOperator(Operator):
 
 
 class AttachMotorOperator(Operator):
-    """AttachMotorOperator
-
-    """
+    """Attach motor values to selected joints"""
     bl_idname = "object.attach_motor"
-    bl_label = "Attaches motor values to selected joints"
+    bl_label = "Attach Motor"
     bl_options = {'REGISTER', 'UNDO'}
 
     P = FloatProperty(
         name="P",
         default=1.0,
-        description="P-value")
+        description="P value")
 
     I = FloatProperty(
         name="I",
         default=0.0,
-        description="I-value")
+        description="I value")
 
     D = FloatProperty(
         name="D",
         default=0.0,
-        description="D-value")
+        description="D value")
 
     vmax = FloatProperty(
-        name="maximum velocity [m/s] or [rad/s]",
+        name="Maximum Velocity [m/s] or [rad/s]",
         default=1.0,
-        description="maximum turning velocity of the motor")
+        description="Maximum turning velocity of the motor")
 
     taumax = FloatProperty(
-        name="maximum torque [Nm]",
+        name="Maximum Torque [Nm]",
         default=1.0,
-        description="maximum torque a motor can apply")
+        description="Maximum torque a motor can apply")
 
     motortype = EnumProperty(
-        name='motor_type',
+        name='Motor Type',
         default='PID',
-        description="type of the motor",
+        description="Type of the motor",
         items=defs.motortypes)
 
     def draw(self, context):
@@ -1018,54 +980,52 @@ class AttachMotorOperator(Operator):
 
 
 class CreateLinkOperator(Operator):
-    """Create Link Operator
-
-    """
+    """Create link(s), optionally based on existing objects"""
     bl_idname = "object.phobos_create_link"
-    bl_label = "Create link(s), optionally based on existing objects"
+    bl_label = "Create Links"
     bl_options = {'REGISTER', 'UNDO'}
 
     type = EnumProperty(
         items=(('3D cursor',) * 3,
                ('selected objects',) * 3),
         default='selected objects',
-        name='location',
+        name='Location',
         description='Where to create new link(s)?'
     )
 
     size = FloatProperty(
-        name="visual link size",
+        name="Visual Link Size",
         default=0.2,
-        description="size of the created link"
+        description="Size of the created link"
     )
 
     parenting = BoolProperty(
-        name='parenting',
+        name='Parenting',
         default=False,
-        description='parent associated objects to created links?'
+        description='Parent associated objects to created links?'
     )
 
     parentobject = BoolProperty(
-        name='parent object(s)',
+        name='Parent Object(s)',
         default=False,
-        description='parent objects to newly created links?'
+        description='Parent objects to newly created links?'
     )
 
     namepartindices = StringProperty(
-        name="name segment indices",
-        description="allows reusing parts of objects' names, specified as e.g. '2 3'",
+        name="Name Segment Indices",
+        description="Allow reusing parts of objects' names, specified as e.g. '2 3'",
         default=''
     )
 
     separator = StringProperty(
-        name="separator",
-        description="seperator to split object names with, e.g. '_'",
+        name="Separator",
+        description="Separator to split object names with, e.g. '_'",
         default='_'
     )
 
     prefix = StringProperty(
-        name="prefix",
-        description="prefix to put before names, e.g. 'link'",
+        name="Prefix",
+        description="Prefix to put before names, e.g. 'link'",
         default='link'
     )
 
@@ -1083,78 +1043,76 @@ class CreateLinkOperator(Operator):
 
 
 class AddSensorOperator(Operator):
-    """AddSensorOperator
-
-    """
+    """Add/update a sensor"""
     bl_idname = "object.phobos_add_sensor"
-    bl_label = "Add/Update a sensor"
+    bl_label = "Add/Update A Sensor"
     bl_options = {'REGISTER', 'UNDO'}
 
     sensor_type = EnumProperty(
-        name="sensor_type",
+        name="Sensor Type",
         default="CameraSensor",
         items=tuple([(type,) * 3 for type in defs.sensortypes]),
-        description="tyoe of the sensor to be created"
+        description="Type of the sensor to be created"
     )
 
     custom_type = StringProperty(
-        name="custom_type",
+        name="Custom Type",
         default='',
-        description="type of the custom sensor to be created"
+        description="Type of the custom sensor to be created"
     )
 
     sensor_name = StringProperty(
-        name="sensor_name",
+        name="Sensor Name",
         default='new_sensor',
-        description="name of the sensor"
+        description="Name of the sensor"
     )
 
     add_link = BoolProperty(name="add_link", default=True, description="add additional link as sensor mounting")
 
     # the following is a set of all properties that exist within MARS' sensors
     # TODO: we should get rid of gui-settings such as hud and rename stuff (eg. maxDistance - maxDist)
-    width = IntProperty(name='width', default=0, description='width')
-    height = IntProperty(name='height', default=0, description='height')
-    resolution = FloatProperty(name='resolution', default=0, description='resolution')
-    horizontal_resolution = FloatProperty(name='horizontal_resolution', default=0, description='horizontal_resolution')
-    opening_width = FloatProperty(name='opening_width', default=0, description='opening_width')
-    opening_height = FloatProperty(name='opening_height', default=0, description='opening_height')
-    maxDistance = FloatProperty(name='maxDistance', default=0, description='maxDistance')
-    maxDist = FloatProperty(name='maxDist', default=0, description='maxDist')
-    verticalOpeningAngle = FloatProperty(name='verticalOpeningAngle', default=0, description='verticalOpeningAngle')
-    horizontalOpeningAngle = FloatProperty(name='horizontalOpeningAngle', default=0,
-                                           description='horizontalOpeningAngle')
-    hud_pos = IntProperty(name='hud_pos', default=0, description='hud_pos')
-    hud_width = IntProperty(name='hud_width', default=0, description='hud_width')
-    hud_height = IntProperty(name='hud_height', default=0, description='hud_height')
-    updateRate = FloatProperty(name='updateRate', default=0, description='updateRate')
-    vertical_offset = FloatProperty(name='vertical_offset', default=0, description='vertical_offset')
-    horizontal_offset = FloatProperty(name='horizontal_offset', default=0, description='horizontal_offset')
-    gain = FloatProperty(name='gain', default=0, description='gain')
-    left_limit = FloatProperty(name='left_limit', default=0, description='left_limit')
-    right_limit = FloatProperty(name='right_limit', default=0, description='right_limit')
-    rttResolutionX = FloatProperty(name='rttResolutionX', default=0, description='rttResolutionX')
-    rttResolutionY = FloatProperty(name='rttResolutionY', default=0, description='rttResolutionY')
-    numRaysHorizontal = FloatProperty(name='numRaysHorizontal', default=0, description='numRaysHorizontal')
-    numRaysVertical = FloatProperty(name='numRaysVertical', default=0, description='numRaysVertical')
-    draw_rays = BoolProperty(name='draw_rays', default=False, description='draw_rays')
-    depthImage = BoolProperty(name='depthImage', default=False, description='depthImage')
-    show_cam = BoolProperty(name='show_cam', default=False, description='show_cam')
-    only_ray = BoolProperty(name='only_ray', default=False, description='only_ray')
-    ping_pong_mode = BoolProperty(name='ping_pong_mode', default=False, description='ping_pong_mode')
-    bands = IntProperty(name='bands', default=0, description='bands')
-    lasers = IntProperty(name='lasers', default=0, description='lasers')
-    extension = FloatVectorProperty(name='extension', default=(0, 0, 0), description='extension')
+    width = IntProperty(name='Width', default=0, description='Width')
+    height = IntProperty(name='Height', default=0, description='Height')
+    resolution = FloatProperty(name='Resolution', default=0, description='Resolution')
+    horizontal_resolution = FloatProperty(name='Horizontal Resolution', default=0, description='Horizontal resolution')
+    opening_width = FloatProperty(name='Opening Width', default=0, description='Opening width')
+    opening_height = FloatProperty(name='Opening Height', default=0, description='Opening height')
+    maxDistance = FloatProperty(name='Max Distance', default=0, description='Maximum distance')
+    maxDist = FloatProperty(name='Max Dist', default=0, description='Max dist')
+    verticalOpeningAngle = FloatProperty(name='Vertical Opening Angle', default=0, description='Vertical opening angle')
+    horizontalOpeningAngle = FloatProperty(name='Horizontal Opening Angle', default=0,
+                                           description='horizontal opening angle')
+    hud_pos = IntProperty(name='HUD Position', default=0, description='HUD position')
+    hud_width = IntProperty(name='HUD Width', default=0, description='HUD width')
+    hud_height = IntProperty(name='HUD Height', default=0, description='HUD height')
+    updateRate = FloatProperty(name='Update Rate', default=0, description='Update rate')
+    vertical_offset = FloatProperty(name='Vertical Offset', default=0, description='Vertical offset')
+    horizontal_offset = FloatProperty(name='Horizontal Offset', default=0, description='Horizontal offset')
+    gain = FloatProperty(name='Gain', default=0, description='Gain')
+    left_limit = FloatProperty(name='Left Limit', default=0, description='Left limit')
+    right_limit = FloatProperty(name='Right Limit', default=0, description='Right limit')
+    rttResolutionX = FloatProperty(name='RTT Resolution x', default=0, description='RTT resolution x')
+    rttResolutionY = FloatProperty(name='RTT Resolution y', default=0, description='RTT resolution y')
+    numRaysHorizontal = FloatProperty(name='Number Rays Horizontal', default=0, description='Number of horizontal rays')
+    numRaysVertical = FloatProperty(name='Number Rays Vertical', default=0, description='Number of vertical rays')
+    draw_rays = BoolProperty(name='Draw Rays', default=False, description='Draw rays')
+    depthImage = BoolProperty(name='Depth Image', default=False, description='Depth of the image')
+    show_cam = BoolProperty(name='Show Camera', default=False, description='Show the camera?')
+    only_ray = BoolProperty(name='Only Ray', default=False, description='Only ray')
+    ping_pong_mode = BoolProperty(name='Ping Pong Mode', default=False, description='Ping pong mode')
+    bands = IntProperty(name='Bands', default=0, description='Bands')
+    lasers = IntProperty(name='Lasers', default=0, description='Lasers')
+    extension = FloatVectorProperty(name='Extension', default=(0, 0, 0), description='Extension')
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "sensor_name", text="name of the sensor")
-        layout.prop(self, "sensor_type", text="sensor type")
+        layout.prop(self, "sensor_name", text="Sensor Name")
+        layout.prop(self, "sensor_type", text="Sensor Type")
         if self.sensor_type in ['CameraSensor', 'ScanningSonar', 'RaySensor',
                                 'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            layout.prop(self, "add_link", "attach sensor to new link?")
+            layout.prop(self, "add_link", "Attach to New Link")
         if self.sensor_type == "custom":
-            layout.prop(self, "custom_type", text="enter custom type")
+            layout.prop(self, "custom_type", text="Custom Type")
         else:
             for key in defs.sensorProperties[self.sensor_type]:
                 layout.prop(self, key, text=key)
@@ -1199,32 +1157,30 @@ class AddSensorOperator(Operator):
 
 
 class CreateMimicJointOperator(Operator):
-    """CreateMimicJointOperator
-
-    """
+    """Make a number of joints follow a specified joint"""
     bl_idname = "object.phobos_create_mimic_joint"
-    bl_label = "Make a number of joints follow a specified joint."
+    bl_label = "Create Mimic Joint"
     bl_options = {'REGISTER', 'UNDO'}
 
     multiplier = FloatProperty(
-        name="multiplier",
+        name="Multiplier",
         default=1.0,
-        description="multiplier for joint mimickry")
+        description="Multiplier for joint mimicry")
 
     offset = FloatProperty(
-        name="offset",
+        name="Offset",
         default=0.0,
-        description="offset for joint mimickry")
+        description="Offset for joint mimicry")
 
     mimicjoint = BoolProperty(
-        name="mimic joint",
+        name="Mimic Joint",
         default=True,
-        description="create joint mimickry")
+        description="Create joint mimicry")
 
     mimicmotor = BoolProperty(
-        name="mimic motor",
+        name="Mimic Motor",
         default=False,
-        description="create motor mimickry")
+        description="Create motor mimicry")
 
     def execute(self, context):
         masterjoint = bpy.context.active_object
@@ -1248,18 +1204,16 @@ class CreateMimicJointOperator(Operator):
 
 
 class RefineLevelOfDetailOperator(Operator):
-    """Allows to set more specific LoD settings than the standard Blender implementation.
-
-    """
+    """Refine LoD settings with minimum distances"""
     bl_idname = "object.phobos_refine_lod"
-    bl_label = "Refines LoD settings with minimum distances"
+    bl_label = "Refine Level of Detail"
     bl_options = {'REGISTER', 'UNDO'}
 
-    maxdistances = FloatVectorProperty(name="maxDistances",
-        description="maximum distances", size=5)
+    maxdistances = FloatVectorProperty(name="Maximum Distances",
+        description="Maximum distances", size=5)
 
-    mindistances = FloatVectorProperty(name="minDistances",
-        description="minimum distances", size=5)
+    mindistances = FloatVectorProperty(name="Minimum Distances",
+        description="Minimum distances", size=5)
 
     def draw(self, context):
         layout = self.layout
@@ -1272,7 +1226,7 @@ class RefineLevelOfDetailOperator(Operator):
         while len(lodlist) < len(self.maxdistances):
             lodlist.append('not assigned')
 
-        c1.label("Level of Detail objects:")
+        c1.label("Level of Detail Objects:")
         for lodname in lodlist:
             c1.label(text=lodname)
         c2.prop(self, 'mindistances')
