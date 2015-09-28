@@ -54,11 +54,11 @@ def register():
     bpy.types.World.useDefaultLayers = BoolProperty(name="use default layers", update=useDefaultLayers)
     bpy.types.World.linkLayer = IntProperty(name="link", update=manageLayers)
 
-    bpy.types.World.path = StringProperty(name='path', default='.', update=updateExportPath)
-    bpy.types.World.decimalPlaces = IntProperty(name="decimalPlaces",
+    bpy.types.World.path = StringProperty(name='Path', default='.', update=updateExportPath)
+    bpy.types.World.decimalPlaces = IntProperty(name="Decimal Places",
                                                 description="Number of decimal places to export",
                                                 default=6)
-    bpy.types.World.relativePath = BoolProperty(name='relative path', default=True)
+    bpy.types.World.relativePath = BoolProperty(name='Relative Path', default=True)
     bpy.types.World.useBobj = BoolProperty(name="useBobj", update=updateExportOptions)
     bpy.types.World.useObj = BoolProperty(name="useObj", update=updateExportOptions)
     bpy.types.World.useStl = BoolProperty(name="useStl", update=updateExportOptions)
@@ -434,9 +434,9 @@ class PhobosExportPanel(bpy.types.Panel):
         c2.prop(bpy.data.worlds[0], "exportSMURF", text="As SMURF")
         c2.prop(bpy.data.worlds[0], "exportURDF", text="As URDF")
         c2.prop(bpy.data.worlds[0], "exportSRDF", text="With SRDF")
-        c2.prop(bpy.data.worlds[0], "exportYAML", text="As YAML dump")
-        c2.prop(bpy.data.worlds[0], "exportTextures", text="Export textures")
-        c2.prop(bpy.data.worlds[0], "exportCustomData", text="Export custom data")
+        c2.prop(bpy.data.worlds[0], "exportYAML", text="As YAML Dump")
+        c2.prop(bpy.data.worlds[0], "exportTextures", text="Export Textures")
+        c2.prop(bpy.data.worlds[0], "exportCustomData", text="Export Custom Data")
 
         ec1 = layout.column(align=True)
         ec1.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
