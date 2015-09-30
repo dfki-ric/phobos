@@ -1016,6 +1016,9 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
 
     #Creates filter object containing all root links considered as entities to export to SMURFS
     entities = [e for e in selectionUtils.getRoots() if "entityname" in e and "entitytype" in e and ((selected_only and e.select) or not selected_only)]
+    if len(entities) == 0:
+        log("There are no entities to export!", "WARNING", __name__+".exportSMURFsScene")
+        return
     #Determine outpath for this scene
     if bpy.data.worlds[0].relativePath:
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
