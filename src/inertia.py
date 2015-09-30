@@ -243,9 +243,9 @@ def calculateEllipsoidInertia(mass, size):
     return (ixx, ixy, ixz, iyy, iyz, izz,)
 
 
-def calculateMeshInertia(reference, data, mass):
+def calculateMeshInertia(data, mass):
     """
-    Calculate the approximate (!) inertia tensor of arbitrary mesh objects.
+    Calculate the inertia tensor of arbitrary mesh objects.
 
     Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
     Simply and Quickly' (2004) by Jonathan Blow (1)
@@ -255,9 +255,6 @@ def calculateMeshInertia(reference, data, mass):
     Links: (1) http://number-none.com/blow/inertia/body_i.html
            (2) http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf
 
-    :param reference: An arbitrary reference point. Smart choices
-    may possibly reduce time complexity.
-    :type reference: mathutils.Vector.
     :param data: The mesh object's data.
     :type data: bpy.types.BlendData.
     :param mass: The object's mass.
@@ -271,6 +268,7 @@ def calculateMeshInertia(reference, data, mass):
 
     tetrahedra = []
     mesh_volume = 0
+    origin = mathutils.Vector((0.0, 0.0, 0.0))
 
     vertices = data.vertices
     prev_mode = bpy.context.mode
@@ -284,7 +282,7 @@ def calculateMeshInertia(reference, data, mass):
 
         tri_normal = triangle.normal
         tri_centre = triangle.center
-        ref_tri_vector = tri_centre - reference
+        ref_tri_vector = tri_centre - origin
         normal_angle = ref_tri_vector.angle(tri_normal, 90)
         if normal_angle > 90:
             sign = -1
@@ -296,15 +294,15 @@ def calculateMeshInertia(reference, data, mass):
         J = mathutils.Matrix(((verts[0][0], verts[0][1], verts[0][2], 1),
                               (verts[1][0], verts[1][1], verts[1][2], 1),
                               (verts[2][0], verts[2][1], verts[2][2], 1),
-                              (reference[0], reference[1], reference[2], 1)))
+                              (origin[0], origin[1], origin[2], 1)))
 
         abs_det_J = J.determinant()
 
         volume = sign * abs_det_J / 6
 
-        centre_of_mass = mathutils.Vector(((verts[0][0] + verts[1][0] + verts[2][0] + reference[0]) / 4,
-                                           (verts[0][1] + verts[1][1] + verts[2][1] + reference[1]) / 4,
-                                           (verts[0][2] + verts[1][2] + verts[2][2] + reference[2]) / 4))
+        centre_of_mass = mathutils.Vector(((verts[0][0] + verts[1][0] + verts[2][0] + origin[0]) / 4,
+                                           (verts[0][1] + verts[1][1] + verts[2][1] + origin[1]) / 4,
+                                           (verts[0][2] + verts[1][2] + verts[2][2] + origin[2]) / 4))
 
         tetrahedra.append({'sign': sign, 'abs(det(J))': abs_det_J, 'J': J, 'centre_of_mass': centre_of_mass})
         mesh_volume += volume
@@ -513,8 +511,7 @@ def createInertials(link, empty=False, preserve_children=False):
                     if geometry['type'] == 'mesh':
                         selectionUtils.selectObjects([obj])
                         bpy.context.scene.objects.active = obj
-                        # TODO: reference point should be arbitrary but there may be smarter choices
-                        inert = calculateMeshInertia(mathutils.Vector((0, 0, 0)), obj.data, mass)
+                        inert = calculateMeshInertia(obj.data, mass)
                         #print('mesh:', inert)
                         #print('ellipsoid:', calculateEllipsoidInertia(mass, geometry['size']))
                         #print('box:', calculateBoxInertia(mass, geometry['size']))
