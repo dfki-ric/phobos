@@ -88,12 +88,11 @@ def bool_constructor(self, node):
 yaml.Loader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 
-print("Using following folder for defs: " + os.path.dirname(__file__) + "/definitions")
-defs.updateDefs(os.path.dirname(__file__) + "/definitions")
-
 if "bpy" in locals():
     import imp
-
+    imp.reload(phobos.defs)
+    print("Using following folder for defs: " + os.path.dirname(__file__) + "/definitions")
+    defs.updateDefs(os.path.dirname(__file__) + "/definitions")
     imp.reload(phobos.robotdictionary)
     imp.reload(phobos.controllers)
     imp.reload(phobos.exporter)
@@ -113,9 +112,11 @@ if "bpy" in locals():
     imp.reload(phobos.operators.naming)
     imp.reload(phobos.operators.selection)
     imp.reload(phobos.inertia)
-    imp.reload(phobos.defs)
     print("Reloading Phobos.")
 else:
+
+    print("Using following folder for defs: " + os.path.dirname(__file__) + "/definitions")
+    defs.updateDefs(os.path.dirname(__file__) + "/definitions")
     import phobos.links, phobos.robotdictionary, phobos.controllers, \
         phobos.exporter, phobos.importer, phobos.joints, phobos.sensors, phobos.inertia, \
         phobos.phobosgui, phobos.utils.naming, phobos.utils.blender, phobos.utils.general, phobos.utils.selection, \
