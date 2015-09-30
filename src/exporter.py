@@ -1015,7 +1015,7 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
     entitiesList = []
 
     #Creates filter object containing all root links considered as entities to export to SMURFS
-    entities = filter(lambda r: "entityname" in r and "entitytype" in r and False if (selected_only and not r.select) else True, selectionUtils.getRoots())
+    entities = [e for e in selectionUtils.getRoots() if "entityname" in e and "entitytype" in e and ((selected_only and e.select) or not selected_only)]
     #Determine outpath for this scene
     if bpy.data.worlds[0].relativePath:
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
@@ -1078,6 +1078,7 @@ def handleScene_smurf(smurf, outpath, subfolder):
     else:
         selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)
         robot = robotdictionary.buildRobotDictionary()
+        selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True) #reselect for mesh export
         export(outpath, robotmodel=robot)
     entitypose = robotdictionary.deriveObjectPose(smurf)
     entry =     {'name': smurf['entityname'],
