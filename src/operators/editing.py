@@ -344,9 +344,9 @@ class CopyCustomProperties(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     empty_properties = BoolProperty(
-        name='empty',
+        name='Empty',
         default=False,
-        description="empty properties?")
+        description="Empty properties?")
 
     def execute(self, context):
         slaves = context.selected_objects
@@ -851,21 +851,21 @@ class DefineJointConstraintsOperator(Operator):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "joint_type", text="joint_type")
-        layout.prop(self, "passive", text="makes the joint passive (no actuation)")
-        layout.prop(self, "useRadian", text="use radian")
+        layout.prop(self, "joint_type", text="Joint Type")
+        layout.prop(self, "passive", text="Makes the Joint Passive (No Actuation)")
+        layout.prop(self, "useRadian", text="Use Radian")
         if self.joint_type != 'fixed':
             layout.prop(self, "maxeffort",
-                        text="max effort [" + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'))
+                        text="Max Effort [" + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'))
             if self.joint_type in ['revolute', 'continuous']:
-                layout.prop(self, "maxvelocity", text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"))
+                layout.prop(self, "maxvelocity", text="Max Velocity [" + ("rad/s]" if self.useRadian else "°/s]"))
             else:
-                layout.prop(self, "maxvelocity", text="max velocity [m/s]")
+                layout.prop(self, "maxvelocity", text="Max Velocity [m/s]")
         if self.joint_type in ('revolute', 'prismatic'):
-            layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
-            layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
-            layout.prop(self, "spring", text="spring constant [N/m]")
-            layout.prop(self, "damping", text="damping constant")
+            layout.prop(self, "lower", text="Lower [rad]" if self.useRadian else "lower [°]")
+            layout.prop(self, "upper", text="Upper [rad]" if self.useRadian else "upper [°]")
+            layout.prop(self, "spring", text="Spring Constant [N/m]")
+            layout.prop(self, "damping", text="Damping Constant")
 
     def invoke(self, context, event):
         aObject = context.active_object
@@ -948,9 +948,9 @@ class AttachMotorOperator(Operator):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "motortype", text="motor_type")
-        layout.prop(self, "taumax", text="maximum torque [Nm]")
-        layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
+        layout.prop(self, "motortype", text="Motor Type")
+        layout.prop(self, "taumax", text="Maximum Torque [Nm]")
+        layout.prop(self, "vmax", text="Maximum Velocity [m/s] or [rad/s]")
         if self.motortype == 'PID':
             layout.prop(self, "P", text="P")
             layout.prop(self, "I", text="I")
@@ -1125,7 +1125,7 @@ class AddSensorOperator(Operator):
                   }
         parent = context.active_object
         for key in defs.sensorProperties[self.sensor_type]:
-            if type(defs.sensorProperties[self.sensor_type][key]) == type(True):
+            if type(defs.sensorProperties[self.sensor_type][key]) == bool:
                 value = getattr(self, key)
                 sensor['props'][key] = '$true' if value else '$false'
             else:

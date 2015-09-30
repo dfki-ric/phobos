@@ -52,27 +52,25 @@ motors = []
 
 
 class AddControllerOperator(Operator):
-    """AddControllerOperator
-
-    """
+    """Add a node-dependent controller"""
     bl_idname = "object.phobos_add_controller"
-    bl_label = "Add a node-dependent controller"
+    bl_label = "Add Controller"
     bl_options = {'REGISTER', 'UNDO'}
 
     controller_scale = FloatProperty(
-        name = "controller scale",
-        default = 0.05,
-        description = "scale of the controller visualization")
+        name="Controller Scale",
+        default=0.05,
+        description="Scale of the controller visualization")
 
     controller_name = StringProperty(
-        name = "controller name",
-        default = 'controller',
-        description = "name of the controller")
+        name="Controller Name",
+        default='Controller',
+        description="Name of the controller")
 
     controller_rate = FloatProperty(
-        name = "rate",
-        default = 10,
-        description = "rate of the controller [Hz]")
+        name="Rate",
+        default=10,
+        description="Rate of the controller [Hz]")
 
     def execute(self, context):
         startLog(self)
