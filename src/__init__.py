@@ -132,6 +132,7 @@ def register():
     :return: Nothing
 
     """
+    phobos.defs.register()
     phobos.links.register()
     phobos.controllers.register()
     phobos.exporter.register()
@@ -150,6 +151,7 @@ def unregister():
     :return: Nothing
 
     """
+    phobos.defs.unregister()
     phobos.links.unregister()
     phobos.controllers.unregister()
     phobos.exporter.unregister()
