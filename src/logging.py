@@ -31,52 +31,48 @@ Created on 05 Dec 2014
 
 """
 
-levels = {"ALL": True, "ERROR": True, "WARNING": True, "INFO": True}
+import phobos.defs as defs
+from datetime import datetime
+
+
+"""
+This is the global operator variable storing the currently active blender operator.
+"""
 operator = None
 
-def startLog(pOperator):
-    """This function starts logging for a specified operator.
-
-    :param pOperator: The operator you want to log for.
-    :type pOperator: bpy.types.Operator
-
+def startLog(pOperater):
+    """Sets the global operator variable to the given operator
+    :param pOperator: The new active operator.
     """
     global operator
-    operator = pOperator
+    operator = pOperater
 
 def endLog():
-    """This function ends the logging for a former registered operator.
-
+    """Sets the global operator variable to None.
     """
     global operator
     operator = None
 
-def adjustLevel(type, isEnabled):
-    """This function adjusts the visibility for a certain logging level.
-
-    :param type: The log level you want to enable or disable.
-    :type type: str -- One of ALL, ERROR, WARNING or INFO.
-    :param isEnabled: Sets whether logs with the specified level are visible or not.
-    :type isEnabled: bool.
-
+def log(message, level, origin=""):
+    """Logs a given message to the blender console and logging file if present
+    and if log level is low enough.
+    :param message: The message to log.
+    :param level: The log level for the message. Must be one of the logLevels specified defs
+    :param origin: If set the message is prefixed with the origin.
     """
-    global levels
-    if type in levels:
-        levels[type] = isEnabled
+    prefs = defs.getPrefs()
+    if defs.logLevels[level] <= defs.logLevels[prefs.logLevel]:
+        msg = origin + "::" + message if origin != "" else message
+        if operator != None:
+            operator.report({level}, msg)
+        if prefs.logFile != "":
+            with open(prefs.logFile, "a") as lf:
+                date = datetime.now().strftime("%Y%m%d_%H:%M")
+                lf.write(date + "  " + msg + "\n")
+        print(msg)
 
-def log(msg, logType="WARNING", parent=""):
-    """Logs a given message and a given log level.
-    If there is a registered operator its report function is used, else its printed to the console.
+def register():
+    print("Registering " + __name__)
 
-    :param msg: The message to log.
-    :type msg: str
-    :param logType: The log level you want to log the message with.
-    :type logType: str -- one of ERROR, WARNING or INFO.
-
-    """
-    global levels, operator
-    if levels['ALL'] or logType == "INFO":
-        if operator != None and (logType in levels) and levels[logType] == True:
-            operator.report ({logType}, msg)
-        else:
-            print ("LOGGER: ", "Log without bound operator: ", msg)
+def unregister():
+    print("Unregistering " + __name__)
