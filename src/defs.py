@@ -35,7 +35,9 @@ This module may well be imported and used outside of the MARS Blender Tools
 in the future.
 """
 
-import math, os, yaml, re
+import math, os, yaml, re, bpy
+from bpy.types import AddonPreferences
+from bpy.props import StringProperty, EnumProperty
 
 
 # TODO: the following definitions for enum properties in blender should be
@@ -63,6 +65,8 @@ jointtypes = (('revolute',) * 3,
               ('planar',) * 3)
 
 motortypes = []
+
+logLevels = ("NONE", "ERROR", "WARNING", "INFO")
 
 geometrytypes = (('box',) * 3,
                  ('cylinder',) * 3,
@@ -242,3 +246,37 @@ def __evaluateString(s):
             log("The expression " + ma + " could not be evaluated. Ignoring file", "ERROR")
             return ""
     return s
+
+class PhobosPrefs(AddonPreferences):
+    bl_idname = __package__
+
+    logFile = StringProperty(
+        name = "Log file",
+        subtype = "FILE_PATH",
+    )
+
+    logLevel = EnumProperty(
+        name = "Loglevel",
+        items = tuple(((l,)*3 for l in logLevels)),
+        default = "INFO"
+    )
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="Logging Settings")
+        layout.prop(self, "logFile")
+        layout.prop(self, "logLevel")
+
+def getPrefs():
+    """Returns the addon preferences object for fast access.
+    :return: The addon preferences object.
+    """
+    return bpy.context.user_preferences.addons["phobos"].preferences
+
+def register():
+    print("Registering " + __name__)
+    bpy.utils.register_class(PhobosPrefs)
+
+def unregister():
+    print("Unregistering " + __name__)
+    bpy.utils.unregister_class(PhobosPrefs)
