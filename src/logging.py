@@ -66,9 +66,13 @@ def log(message, level, origin=""):
         if operator != None:
             operator.report({level}, msg)
         if prefs.logFile != "":
-            with open(prefs.logFile, "a") as lf:
-                date = datetime.now().strftime("%Y%m%d_%H:%M")
-                lf.write(date + "  " + msg + "\n")
+            try:
+                with open(prefs.logFile, "a") as lf:
+                    date = datetime.now().strftime("%Y%m%d_%H:%M")
+                    lf.write(date + "  " + msg + "\n")
+            except IOError:
+                prefs.logFile = ""
+                log("Cannot write to log file! Resetting it.", "ERROR", __name__+".log")
         print(msg)
 
 def register():
