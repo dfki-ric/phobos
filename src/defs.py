@@ -66,7 +66,7 @@ jointtypes = (('revolute',) * 3,
 
 motortypes = []
 
-logLevels = ("NONE", "ERROR", "WARNING", "INFO")
+logLevels = {"NONE": 0, "ERROR": 1, "WARNING": 2, "INFO": 3}
 
 geometrytypes = (('box',) * 3,
                  ('cylinder',) * 3,
@@ -257,7 +257,7 @@ class PhobosPrefs(AddonPreferences):
 
     logLevel = EnumProperty(
         name = "Loglevel",
-        items = tuple(((l,)*3 for l in logLevels)),
+        items = tuple(((l,)*3 for l in tuple(logLevels.keys()))),
         default = "INFO"
     )
 
