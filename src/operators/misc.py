@@ -28,7 +28,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 import bpy
 from bpy.props import BoolProperty, FloatProperty, FloatVectorProperty, EnumProperty, StringProperty
 from bpy.types import Operator
-from phobos.logging import adjustLevel, startLog, endLog, log
+from phobos.logging import startLog, endLog, log
 import phobos.defs as defs
 import phobos.utils.selection as selectionUtils
 import phobos.robotdictionary as robotdictionary
@@ -138,38 +138,6 @@ class ShowDistanceOperator(Operator):
     @classmethod
     def poll(self, context):
         return len(context.selected_objects) == 2
-
-
-class SetLogSettings(Operator):
-    """Adjust logging settings for Phobos"""
-    bl_idname = 'object.phobos_adjust_logger'
-    bl_label = "Set Logging Preferences"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    isEnabled = BoolProperty(
-        name="Enable Logging",
-        default=True,
-        description="Enable log messages (INFOS will appear in any case)"
-    )
-
-    errors = BoolProperty(
-        name="Show Errors",
-        default=True,
-        description="Show errors in log"
-    )
-
-    warnings = BoolProperty(
-        name="Show Warnings",
-        default=True,
-        description="Show warnings in log"
-    )
-
-    def execute(self, context):
-        adjustLevel("ALL", self.isEnabled)
-        adjustLevel("ERROR", self.errors)
-        adjustLevel("WARNING", self.warnings)
-        return {'FINISHED'}
-
 
 class StorePoseOperator(Operator):
     """Store the current pose of selected links in one of the scene's robots"""
