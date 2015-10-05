@@ -457,28 +457,6 @@ class PhobosExportPanel(bpy.types.Panel):
         self.layout.prop(bpy.data.worlds[0], "heightmapMesh", text="export heightmap as mesh")
         layout.operator("object.phobos_export_scene", text="Export SMURF Scene", icon="WORLD_DATA")
 
-
-class PhobosSettingsPanel(bpy.types.Panel):
-    """A Custom Panel in the Viewport Toolbar for Phobos settings"""
-    bl_idname = "TOOLS_SETTINGS_PT_PHOBOS"
-    bl_label = "phobos: Settings"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
-    bl_category = 'Phobos'
-
-    def draw_header(self, context):
-        self.layout.label(icon='MODIFIER')
-
-    def draw(self, context):
-        layout = self.layout
-
-        inlayout = layout.split()
-        c1 = inlayout.column(align=True)
-        c1.operator('object.phobos_adjust_logger', text='Adjust Logging Settings')
-        #c2 = inlayout.column(align=True)
-        #c2.operator('object.phobos_partial_rename', text="Partial Rename")
-
-
 class PhobosObjectPanel(bpy.types.Panel):
     bl_idname = "OBJECT_PT_PHOBOS"
     bl_label = "phobos: Object Panel Displaying Custom Properties"
