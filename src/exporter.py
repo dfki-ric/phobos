@@ -925,7 +925,6 @@ def exportModelToSMURF(model, path):
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
     #write urdf
-    log('name', model['modelname'])
     exportModelToURDF(model, os.path.join(path, urdf_filename))
 
     # #write semantics (SRDF information in YML format)
