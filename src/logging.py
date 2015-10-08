@@ -53,7 +53,7 @@ def endLog():
     global operator
     operator = None
 
-def log(message, level, origin=""):
+def log(message, level="INFO", origin=""):
     """Logs a given message to the blender console and logging file if present
     and if log level is low enough.
     :param message: The message to log.
