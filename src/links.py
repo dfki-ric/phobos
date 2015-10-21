@@ -51,7 +51,7 @@ def unregister():
     print("Unregistering links...")
 
 
-def createLink(scale, position=None, orientation=None, name=''):
+def createLink(scale, position=None, orientation=None, name='', axis='x'):
     """Creates an empty link (bone) at the current 3D cursor position.
 
     :param scale: This is the scale you want to apply to the new link.
@@ -66,21 +66,25 @@ def createLink(scale, position=None, orientation=None, name=''):
 
     """
     blenderUtils.toggleLayer(defs.layerTypes['link'], True)
-    if position is None and orientation is None:
-        bpy.ops.object.armature_add(layers=blenderUtils.defLayers([0]))
-    elif position is None:
-        bpy.ops.object.armature_add(rotation=orientation, layers=blenderUtils.defLayers([0]))
-    elif orientation is None:
+    if orientation:
         bpy.ops.object.armature_add(location=position, layers=blenderUtils.defLayers([0]))
     else:
-        bpy.ops.object.armature_add(location=position, rotation=orientation, layers=blenderUtils.defLayers([0]))
-    link = bpy.context.active_object
-    link.scale = [scale, scale, scale]
-    bpy.ops.object.transform_apply(scale=True)
+        bpy.ops.object.armature_add(layers=blenderUtils.defLayers([0]))
+    newLink = bpy.context.active_object
+    if axis == 'y':
+        bpy.ops.transform.rotate(value=(-1)*math.pi/2, axis=(1, 0, 0), constraint_axis=(True, False, False), constraint_orientation="GLOBAL")
+    elif axis == 'z':
+        pass  # Nothing to do here
+    else:  # x axis as default even for wrong params!
+        bpy.ops.transform.rotate(value=math.pi/2, axis=(0, 1, 0), constraint_axis=(False, True, False), constraint_orientation="GLOBAL")
+    newLink.scale = [scale, scale, scale]
+    bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)  # Apply rotation
+    newLink.phobostype = "link"
     if name:
-        link.name = name
-    link.phobostype = 'link'
-    return link
+        newLink.name = name
+    if orientation:
+        newLink.rotation_euler = orientation
+    return newLink
 
 
 def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, namepartindices=[], separator='_', prefix='link'):
