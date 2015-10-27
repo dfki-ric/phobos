@@ -201,7 +201,7 @@ def exportObj(path, obj):
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = determineMeshOutpath(obj, 'obj', path)
-    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False)
+    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False, use_mesh_modifiers=True)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
@@ -239,7 +239,7 @@ def exportStl(path, obj):
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = determineMeshOutpath(obj, 'stl', path)
-    bpy.ops.export_mesh.stl(filepath=outpath)
+    bpy.ops.export_mesh.stl(filepath=outpath, use_mesh_modifiers=True)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
