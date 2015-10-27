@@ -40,6 +40,7 @@ import phobos.materials as materials
 
 import phobos.bobj_import as bobj_import
 import phobos.joints as joints
+import phobos.links as links
 import phobos.sensors as sensors
 import phobos.controllers as controllers
 import phobos.lights as lights
@@ -690,21 +691,13 @@ class RobotModelParser():
         :return: bpy_types.Object -- the newly created blender link object.
 
         """
-        bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
-        #create base object ( =armature)
-        bpy.ops.object.select_all(action='DESELECT')
-        #bpy.ops.view3d.snap_cursor_to_center()
-        bpy.ops.object.armature_add(layers=blenderUtils.defLayers(0))
-        newlink = bpy.context.active_object #print(bpy.context.object) #print(bpy.context.scene.objects.active) #bpy.context.selected_objects[0]
+        ax = (1,0,0) if "axis" not in link else link['axis']
+        newLink = links.createLink(0.3, position=None, orientation=None, name=self.praefixNames(link['name'], "link"), axis=ax)
         newlink["link/name"] = link['name']
-        newlink.name = self.praefixNames(link['name'], "link")
-        #newlink.location = (0.0, 0.0, 0.0)
         newlink.location = link['pose']['translation']
-        newlink.scale = (0.3, 0.3, 0.3) #TODO: make this depend on the largest visual or collision object
         bpy.ops.object.transform_apply(scale=True)
-        newlink.phobostype = 'link'
         if newlink.name != self.praefixNames(link['name'], "link"):
-            log("Warning, name conflict!")
+            log("Warning, name conflict!", "WARNING", __name__+".createLink")
         # place inertial
         if 'inertial' in link:
             self.createInertial(link['name'], link['inertial'])
