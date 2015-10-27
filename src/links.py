@@ -51,7 +51,7 @@ def unregister():
     print("Unregistering links...")
 
 
-def createLink(scale, position=None, orientation=None, name='', axis='x'):
+def createLink(scale, position=None, orientation=None, name='', axis=(1,0,0)):
     """Creates an empty link (bone) at the current 3D cursor position.
 
     :param scale: This is the scale you want to apply to the new link.
@@ -71,11 +71,11 @@ def createLink(scale, position=None, orientation=None, name='', axis='x'):
     else:
         bpy.ops.object.armature_add(layers=blenderUtils.defLayers([0]))
     newLink = bpy.context.active_object
-    if axis == 'y':
+    if axis == (0,1,0):
         bpy.ops.transform.rotate(value=(-1)*math.pi/2, axis=(1, 0, 0), constraint_axis=(True, False, False), constraint_orientation="GLOBAL")
-    elif axis == 'z':
+    elif axis == (0,0,1):
         pass  # Nothing to do here
-    else:  # x axis as default even for wrong params!
+    else:  # x axis as default even for wrong params Will be fixed later!
         bpy.ops.transform.rotate(value=math.pi/2, axis=(0, 1, 0), constraint_axis=(False, True, False), constraint_orientation="GLOBAL")
     newLink.scale = [scale, scale, scale]
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)  # Apply rotation
