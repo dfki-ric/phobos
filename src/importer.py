@@ -692,6 +692,7 @@ class RobotModelParser():
 
         """
         ax = (1,0,0) if "axis" not in link else link['axis']
+        ax = (round(ax[0]), round(ax[1]), round(ax[2])) # Rounds the axis values to integers! Maybe support free axis later?
         newLink = links.createLink(0.3, position=None, orientation=None, name=self.praefixNames(link['name'], "link"), axis=ax)
         newlink["link/name"] = link['name']
         newlink.location = link['pose']['translation']
