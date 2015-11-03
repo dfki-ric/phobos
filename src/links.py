@@ -71,12 +71,13 @@ def createLink(scale, position=None, orientation=None, name='', axis=(1,0,0)):
     else:
         bpy.ops.object.armature_add(layers=blenderUtils.defLayers([0]))
     newLink = bpy.context.active_object
-    if axis == (0,1,0):
-        bpy.ops.transform.rotate(value=(-1)*math.pi/2, axis=(1, 0, 0), constraint_axis=(True, False, False), constraint_orientation="GLOBAL")
-    elif axis == (0,0,1):
-        pass  # Nothing to do here
-    elif axis == (1,0,0):
-        bpy.ops.transform.rotate(value=math.pi/2, axis=(0, 1, 0), constraint_axis=(False, True, False), constraint_orientation="GLOBAL")
+    if axis == (0,1,0) or axis == (0,-1,0):
+        bpy.ops.transform.rotate(value=axis[1]*(-1)*math.pi/2, axis=(1, 0, 0), constraint_axis=(True, False, False), constraint_orientation="GLOBAL")
+    elif axis == (0,0,1) or axis == (0,0,-1):
+        if axis[2] == -1:
+            bpy.ops.transform.rotate(value=math.pi, axis=(0, 1, 0), constraint_axis=(True, False, False), constraint_orientation="GLOBAL")
+    elif axis == (1,0,0) or axis == (-1,0,0):
+        bpy.ops.transform.rotate(value=axis[0]*math.pi/2, axis=(0, 1, 0), constraint_axis=(False, True, False), constraint_orientation="GLOBAL")
     else:
         log("Unsupported axis during link creation!", "ERROR", __name__+".createLink")
         return None
