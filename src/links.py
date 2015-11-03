@@ -75,8 +75,11 @@ def createLink(scale, position=None, orientation=None, name='', axis=(1,0,0)):
         bpy.ops.transform.rotate(value=(-1)*math.pi/2, axis=(1, 0, 0), constraint_axis=(True, False, False), constraint_orientation="GLOBAL")
     elif axis == (0,0,1):
         pass  # Nothing to do here
-    else:  # x axis as default even for wrong params Will be fixed later!
+    elif axis == (1,0,0):
         bpy.ops.transform.rotate(value=math.pi/2, axis=(0, 1, 0), constraint_axis=(False, True, False), constraint_orientation="GLOBAL")
+    else:
+        log("Unsupported axis during link creation!", "ERROR", __name__+".createLink")
+        return None
     newLink.scale = [scale, scale, scale]
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)  # Apply rotation
     newLink.phobostype = "link"
