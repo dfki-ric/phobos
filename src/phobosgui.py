@@ -310,6 +310,7 @@ class PhobosModelPanel(bpy.types.Panel):
         kc2.operator('object.attach_motor', text="Attach Motor")
         kc2.operator('object.phobos_set_geometry_type', text="Set Geometry Type(s)")
         kc2.operator('object.phobos_set_collision_group', text="Set Collision Group")
+        kc2.operator('object.phobos_urdfupdate', text="URDFUpdate")
 
         #Mass Menu
         layout.separator()
