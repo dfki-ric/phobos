@@ -1287,7 +1287,10 @@ def export(path='', robotmodel=None):
                     texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
                     targetPath = os.path.join(outpath, 'textures', os.path.basename((mat[texturetype])))
                     if os.path.isfile(texpath):
-                        shutil.copy(texpath, targetPath)
+                        try:
+                            shutil.copy(texpath, targetPath)
+                        except shutil.SameFileError:
+                            log("The file " + targetPath + " does already exist. Skipping texture copy.", "WARNING", __name__+".export-texture")
                         mat[texturetype] = 'textures/' + os.path.basename(mat[texturetype]) #changed for correct entries in urdf and smurf - little hack
     if yaml or urdf or smurf or mars:
         if yaml:
