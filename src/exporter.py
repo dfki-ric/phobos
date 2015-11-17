@@ -1277,6 +1277,18 @@ def export(path='', robotmodel=None):
     daeexp = bpy.data.worlds[0].useDae
     objectlist = bpy.context.selected_objects
     robot = robotmodel if robotmodel else robotdictionary.buildRobotDictionary()
+    if texexp:
+        print("Exporting textures to " + os.path.join(outpath, 'textures') + "...\n")
+        securepath(os.path.join(outpath, 'textures'))
+        for materialname in robot['materials']:
+            mat = robot['materials'][materialname]
+            for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
+                if texturetype in mat:
+                    texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
+                    targetPath = os.path.join(outpath, 'textures', os.path.basename((mat[texturetype])))
+                    if os.path.isfile(texpath):
+                        shutil.copy(texpath, targetPath)
+                        mat[texturetype] = 'textures/' + os.path.basename(mat[texturetype]) #changed for correct entries in urdf and smurf - little hack
     if yaml or urdf or smurf or mars:
         if yaml:
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
@@ -1332,13 +1344,4 @@ def export(path='', robotmodel=None):
         if show_progress:
             wm.progress_end()
 
-    if texexp:
-        print("Exporting textures to " + os.path.join(outpath, 'textures') + "...\n")
-        securepath(os.path.join(outpath, 'textures'))
-        for materialname in robot['materials']:
-            mat = robot['materials'][materialname]
-            for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
-                if texturetype in mat:
-                    texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
-                    if os.path.isfile(texpath):
-                        shutil.copy(texpath, os.path.join(outpath, 'textures', os.path.basename(mat[texturetype])))
+
