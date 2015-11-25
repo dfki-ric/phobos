@@ -573,9 +573,6 @@ class RobotModelParser():
             geom = viscol['geometry']
             geomtype = geom['type']
             # create the Blender object
-            # tag all objects
-            for obj in bpy.data.objects:
-                obj.tag = True
             if geomtype == 'mesh':
                 if hasattr(self, 'zipped') and self.zipped:
                     if not os.path.isdir(os.path.join(self.tmp_path, tmp_dir_name)):
@@ -604,6 +601,7 @@ class RobotModelParser():
                     # hack for test:
                     elif filetype == 'bobj' or filetype == 'BOBJ':
                         import_bobj(geom_path)
+                        bpy.context.scene.objects.active = bpy.context.selected_objects[0]
                         #filename = geom['filename'].split('.')[0] + '.obj'
                         #try:
                         #    bpy.ops.import_scene.obj(filepath=os.path.join(self.path, filename))
@@ -611,15 +609,8 @@ class RobotModelParser():
                         #    print('ERROR: Missing object.')
                         #    return
                     # find the newly imported obj
-                    for obj in bpy.data.objects:
-                        if not obj.tag:
-                            newgeom = obj
-                            #with obj file import, blender only turns the object, not the vertices,
-                            #leaving a rotation in the matrix_basis, which we here get rid of
-                            if filetype == 'obj':
-                                bpy.ops.object.select_all(action='DESELECT')
-                                newgeom.select = True
-                                bpy.ops.object.transform_apply(rotation=True)
+                    newgeom = bpy.context.active_object
+
                 #print(viscol)
                 newgeom['filename'] = geom['filename']
                 #newgeom.select = True
