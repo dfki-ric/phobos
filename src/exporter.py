@@ -1275,6 +1275,7 @@ def export(path='', robotmodel=None):
     bobjexp = bpy.data.worlds[0].useBobj
     stlexp = bpy.data.worlds[0].useStl
     daeexp = bpy.data.worlds[0].useDae
+    structureE = bpy.data.worlds[0].structureExport
     objectlist = bpy.context.selected_objects
     robot = robotmodel if robotmodel else robotdictionary.buildRobotDictionary()
     if texexp:
@@ -1291,7 +1292,10 @@ def export(path='', robotmodel=None):
                             shutil.copy(texpath, targetPath)
                         except shutil.SameFileError:
                             log("The file " + targetPath + " does already exist. Skipping texture copy.", "WARNING", __name__+".export-texture")
-                        mat[texturetype] = 'textures/' + os.path.basename(mat[texturetype]) #changed for correct entries in urdf and smurf - little hack
+                        if structureE:
+                            mat[texturetype] = '../textures/' + os.path.basename(mat[texturetype]) #changed for correct entries in urdf and smurf - little hack
+                        else:
+                            mat[texturetype] = 'textures/' + os.path.basename(mat[texturetype]) #changed for correct entries in urdf and smurf - little hack
     if yaml or urdf or smurf or mars:
         if yaml:
             exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
