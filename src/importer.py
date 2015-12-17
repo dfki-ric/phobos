@@ -575,7 +575,7 @@ class RobotModelParser():
             # create the Blender object
             # tag all objects
             for obj in bpy.data.objects:
-                obj.tag = True
+                obj['phobosTag'] = True
             if geomtype == 'mesh':
                 if hasattr(self, 'zipped') and self.zipped:
                     if not os.path.isdir(os.path.join(self.tmp_path, tmp_dir_name)):
@@ -612,7 +612,7 @@ class RobotModelParser():
                         #    return
                     # find the newly imported obj
                     for obj in bpy.data.objects:
-                        if not obj.tag:
+                        if 'phobosTag' not in obj:
                             newgeom = obj
                             #with obj file import, blender only turns the object, not the vertices,
                             #leaving a rotation in the matrix_basis, which we here get rid of
@@ -621,11 +621,14 @@ class RobotModelParser():
                                 newgeom.select = True
                                 bpy.ops.object.transform_apply(rotation=True)
                 #print(viscol)
-                newgeom['filename'] = geom['filename']
+                            newgeom['filename'] = geom['filename']
                 #newgeom.select = True
                 #if 'scale' in geom:
                 #    newgeom.scale = geom['scale']
                 #bpy.ops.object.transform_apply(scale=True)
+                    for obj in bpy.data.objects:
+                        if 'phobosTag' in obj:
+                            del obj['phobosTag']
             elif geomtype == 'box':
                 dimensions = geom['size']
             elif geomtype == 'cylinder':
