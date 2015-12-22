@@ -907,11 +907,33 @@ class RobotModelParser():
         """
         print("\n\nCreating Blender model...")
         print("Creating links...")
+        urdfUpdateTable = {}
         for l in self.robot['links']:
             #print(l + ', ', end='')
             link = self.robot['links'][l]
             #print(link['name'])
-            self.createLink(link)
+            newLink = self.createLink(link)
+            urdfUpdateTable[l] = newLink.name
+        fileContent = "linkMapping = '''\n" + yaml.dump(urdfUpdateTable, default_flow_style=False) + "'''\n"
+        fileContent += "robotName='" + self.robot['name'] + "'"
+        fileContent += '''
+import yaml, bpy
+import phobos.utils.blender as blenderUtils
+import phobos.utils.naming as namingUtils
+newLinkMapping = yaml.load(linkMapping)
+newMapping = dict()
+newMapping['links'] = newLinkMapping
+for obj_b in bpy.data.objects:
+    name = obj_b.name[5:] #removes the link_ prefix, because its not in the urdffile.
+    if name in newLinkMapping:
+        obj_b['link/name'] = newLinkMapping[name]
+        obj_b.name = newLinkMapping[name]
+blenderUtils.updateTextFile(robotName + '_urdfUpdateTable', yaml.dump(newMapping, default_flow_style=False))
+'''
+
+        blenderUtils.updateTextFile(self.robot["name"] + "_urdfUpdateTable", fileContent)
+        blenderUtils.openScriptInEditor(self.robot["name"] + "_urdfUpdateTable")
+        log("Please remember to edit the urdfUpdateTable before any other changes!", "WARNING", __name__+".createBlenderModel")
 
         print("\n\nCreating joints...")
         for j in self.robot['joints']:
@@ -2093,7 +2115,32 @@ class URDFModelParser(RobotModelParser):
         if newlink == {}:
             print("\n### WARNING:", newlink['name'], "is empty.")
         return newlink
-        
+
+    def updateLink(self, oldName, newName):
+        """Updates an existing link with its robot model.
+
+        :param newName: The links new name in the blender model
+        :param oldName: The links old name in the robot dictionary
+
+        """
+        if oldName not in self.robot["links"]:
+            log(oldName + " not in robot dictionary. Skipping!", "ERROR", __name__+".updateLink")
+            return
+        linkList = []
+        for l in selectionUtils.getObjectByName(newName):
+            root = selectionUtils.getRoot(l)
+            if "modelname" in root and root["modelname"] == self.robot["name"] and l.phobostype == "link":
+                linkList.append(l)
+        if len(linkList) != 1:
+            log("Cannot identify " + newName + " More than one or no object found. Skipping!\n List: " + str(linkList), "ERROR")
+            return
+        log("Updating link " + newName, "INFO", __name__+".updateLink")
+        linkDict = self.robot["links"][oldName]
+        location = mathutils.Matrix.Translation(linkDict['pose']['translation'])
+        rotation = mathutils.Euler(tuple(linkDict['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+        transform_matrix = location * rotation
+        linkList[0].matrix_local = transform_matrix
+
     def parseInertial(self, link_dict, link_xml):
         '''
         '''

@@ -218,3 +218,48 @@ class RobotModelImporter(bpy.types.Operator):
         context.window_manager.fileselect_add(self)
 
         return {'RUNNING_MODAL'}
+
+class URDFUpdate(Operator):
+    """Update an existing robot with an urdf file"""
+    bl_idname = "object.phobos_urdfupdate"
+    bl_label = "URDFUpdate"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+
+    def execute(self, context):
+        startLog(self)
+        parser = importer.URDFModelParser(self.filepath)
+        parser.parseModel()
+        urdfUpdateTable = yaml.load(blenderUtils.readTextFile(parser.robot["name"]+"_urdfUpdateTable"))
+        if "links" in urdfUpdateTable:
+            log("Updating Links.", "INFO", __name__+".URDFUpdate")
+            for link in urdfUpdateTable["links"]:
+                parser.updateLink(link, urdfUpdateTable["links"][link])
+        # to refresh the 3D viev
+        selectionUtils.selectObjects(selectionUtils.returnObjectList("link"))
+        bpy.ops.transform.translate()
+
+        endLog()
+        return {"FINISHED"}
+
+    def invoke(self, context, event):
+        # create the open file dialog
+        context.window_manager.fileselect_add(self)
+
+        return {'RUNNING_MODAL'}
+
+def register():
+    """This function is called when this module is registered to blender.
+
+    """
+    print("Registering " + __name__)
+    bpy.utils.register_class(URDFUpdate)
+
+
+def unregister():
+    """ This function is called when this module is unregistered from blender.
+
+    """
+    print("Unregistering " + __name__)
+    bpy.utils.unregister_class(URDFUpdate)
