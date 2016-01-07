@@ -122,9 +122,10 @@ def selectObjects(objects, clear=True, active=-1):
     ##doc/python_api/examples/bpy.ops.py:
     ## check poll() to avoid exception:
     # if bpy.ops.object.mode_set.poll():
-    # bpy.ops.object.mode_set(mode='OBJECT')
+    #     bpy.ops.object.mode_set(mode='OBJECT')
 
     if clear:
+        bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
         obj.select = True
