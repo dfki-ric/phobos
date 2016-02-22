@@ -1190,11 +1190,11 @@ def export(path='', model=None):
     bobjexp = bpy.data.worlds[0].useBobj
     stlexp = bpy.data.worlds[0].useStl
     daeexp = bpy.data.worlds[0].useDae
-
+    # create tmp list of selected objects before model building
+    objectlist = bpy.context.selected_objects
     # make sure we have a valid model to export
     if not model:
         model = robotdictionary.buildRobotDictionary()
-    objectlist = bpy.context.selected_objects
 
     # export data
     if yaml or urdf or smurf:
