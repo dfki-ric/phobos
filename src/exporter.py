@@ -107,7 +107,7 @@ def exportBobj(path, obj):
 
     me_verts = mesh.vertices[:]
 
-    out = open(determineMeshOutpath(obj, 'bobj', path), "wb")
+    out = open(os.path.join(path, obj.data.name + "." + 'bobj'), "wb")
 
     for v in mesh.vertices:
         out.write(struct.pack('ifff', 1, v.co[0], v.co[1], v.co[2]))
@@ -200,7 +200,7 @@ def exportObj(path, obj):
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
-    outpath = determineMeshOutpath(obj, 'obj', path)
+    outpath = os.path.join(path, obj.data.name + "." + 'obj')
     bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False, use_mesh_modifiers=True)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
@@ -238,7 +238,7 @@ def exportStl(path, obj):
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
-    outpath = determineMeshOutpath(obj, 'stl', path)
+    outpath = os.path.join(path, obj.data.name + "." + 'stl')
     bpy.ops.export_mesh.stl(filepath=outpath, use_mesh_modifiers=True)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
@@ -261,7 +261,7 @@ def exportDae(path, obj):
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
-    outpath = determineMeshOutpath(obj, 'dae', path)
+    outpath = os.path.join(path, obj.data.name + "." + 'dae')
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.wm.collada_export(filepath=outpath, selected=True)
@@ -1212,21 +1212,6 @@ def hasNoImportLock(obj, filetype):
         return "meshes/" + obj.data.name + "." + filetype != obj["filename"]
     else:
         return True
-
-def determineMeshOutpath(obj, exporttype: str, path: str) -> str:
-    """Determines the meshes filename for a specific object
-
-    :param obj: The object you want to export the mesh from
-    :type obj: bpy.types.Object
-    :param exporttype: The filetype you want export to *without leading .*
-    :type exporttype: str
-    :param path: The path you want the mesh export to.
-    :type path: str
-    :return: str - Returns the filepath to export the mesh to
-
-    """
-    return os.path.join(path, obj.data.name + "." + exporttype)
-
 
 def securepath(path):  #TODO: this is totally not error-handled!
     """This function checks whether a path exists or not.
