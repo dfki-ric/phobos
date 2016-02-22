@@ -1064,16 +1064,15 @@ def deriveLightEntity(light):
     lightobj = selectionUtils.getImmediateChildren(light)[0]
     color = lightobj.data.color
     entry = {"name": light["entityname"],
-            "type": "light",
-            "light_type": "spotlight" if lightobj.data.type == "SPOT" else "omnilight",
-            "anchor": light["anchor"] if "anchor" in light else "none",
-            "color": {
-                "diffuse": [color.r, color.g, color.b],
-                "use_specular": lightobj.data.use_specular  # only specular information currently available
-            },
-            "position": entitypose["translation"],
-            "rotation": entitypose["rotation_quaternion"]
-            }
+             "type": "light",
+             "light_type": "spotlight" if lightobj.data.type == "SPOT" else "omnilight",
+             "anchor": light["anchor"] if "anchor" in light else "none",
+             "color": {"diffuse": [color.r, color.g, color.b],
+                       "use_specular": lightobj.data.use_specular  # only specular information currently available
+                       },
+             "position": entitypose["translation"],
+             "rotation": entitypose["rotation_quaternion"]
+             }
     if entry["light_type"] == "spotlight":
         entry["angle"] = lightobj.data.spot_size
     return entry
