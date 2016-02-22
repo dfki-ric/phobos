@@ -289,9 +289,8 @@ def bakeModel(objlist, path, modelname):
     log("Applying modifier...", "INFO")
     print("Applying modifier...")
     bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
-    name = "bake.stl"
-    obj.name = name
-    bpy.ops.export_mesh.stl(filepath=os.path.join(path, name))
+    obj.name = modelname + "_bake.stl"
+    bpy.ops.export_mesh.stl(filepath=os.path.join(path, obj.name))
     obj.select = True
     bpy.ops.object.delete()
     log("Done baking...", "INFO")
