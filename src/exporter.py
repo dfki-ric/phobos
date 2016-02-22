@@ -196,16 +196,17 @@ def exportObj(path, obj):
 
     """
     objname = namingUtils.getObjectName(obj)
-    oldBlenderObjName = obj.name
+    tmpobjname = obj.name
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = os.path.join(path, obj.data.name + "." + 'obj')
-    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False, use_mesh_modifiers=True)
+    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False,
+                             use_mesh_modifiers=True)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
-    obj.name = oldBlenderObjName
+    obj.name = tmpobjname
 
 
 def exportStl(path, obj):
@@ -218,7 +219,7 @@ def exportStl(path, obj):
 
     """
     objname = namingUtils.getObjectName(obj)
-    oldBlenderObjectName = obj.name
+    tmpobjname = obj.name
     print("OBJNAME: " + objname)
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
@@ -228,7 +229,7 @@ def exportStl(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
-    obj.name = oldBlenderObjectName
+    obj.name = tmpobjname
 
 
 def exportDae(path, obj):
@@ -241,7 +242,7 @@ def exportDae(path, obj):
 
     """
     objname = namingUtils.getObjectName(obj)
-    oldBlenderObjectName = obj.name
+    tmpobjname = obj.name
     print("OBJNAME: " + objname)
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
     tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
@@ -253,7 +254,7 @@ def exportDae(path, obj):
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
-    obj.name = oldBlenderObjectName
+    obj.name = tmpobjname
 
 
 def bakeModel(objlist, path, modelname):
