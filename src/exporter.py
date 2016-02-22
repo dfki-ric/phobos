@@ -339,7 +339,7 @@ def xmlline(ind, tag, names, values):
     return ''.join(line)
 
 
-def l2str(items, start=-1, end=-1):
+def l2str(items, start=0, end=-1):
     """This function takes a list and generates a String with its element.
 
     :param items: The list of elements you want to generate a String from. *Make sure the elements can be cast to
@@ -352,13 +352,9 @@ def l2str(items, start=-1, end=-1):
     :return: str - the generated string.
 
     """
-    line = []
-    i = start if start >= 0 else 0
-    maxi = end if end >= 0 else len(items)
-    while i < maxi:
-        line.append(str(items[i]) + ' ')
-        i += 1
-    return ''.join(line)[0:-1]
+    start = max(start, 0)
+    end = end if end >= 0 else len(items)
+    return ' '.join([str(i) for i in items[start:end]])
 
 
 def gatherAnnotations(model):
