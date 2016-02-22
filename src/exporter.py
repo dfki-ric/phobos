@@ -332,8 +332,7 @@ def xmlline(ind, tag, names, values):
     :return: String -- the generated xml line.
 
     """
-    #TODO: Make the ind secure against negative numbers with abs?
-    line = [indent * ind + '<' + tag]
+    line = [indent * max(0, ind) + '<' + tag]
     for i in range(len(names)):
         line.append(' ' + names[i] + '="' + str(values[i]) + '"')
     line.append('/>\n')
