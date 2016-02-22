@@ -207,21 +207,6 @@ def exportObj(path, obj):
     bpy.ops.object.delete()
     obj.name = oldBlenderObjName
 
-    #This is the old implementation which did not work properly (08.08.2014)
-    #bpy.ops.object.select_all(action='DESELECT')
-    #obj.select = True
-    #outpath = os.path.join(path, getObjectName(obj)) + '.obj'
-    #world_matrix = obj.matrix_world.copy()
-    ##inverse_local_rotation = obj.matrix_local.to_euler().to_matrix().inverted()
-    ##world_scale = world_matrix.to_scale() TODO: implement scale
-    ## we move the object to the world origin and revert its local rotation
-    ##print(inverse_local_rotation, mathutils.Matrix.Translation((0, 0, 0)))
-    ##obj.matrix_world = inverse_local_rotation.to_4x4() * mathutils.Matrix.Identity(4)
-    #obj.matrix_world = mathutils.Matrix.Identity(4)
-    #bpy.ops.export_scene.obj(filepath=outpath, axis_forward='-Z',
-    #                         axis_up='Y', use_selection=True, use_normals=True)
-    #obj.matrix_world = world_matrix
-
 
 def exportStl(path, obj):
     """This function exports a specific object to a chosen path as a .stl
@@ -332,7 +317,7 @@ def exportModelToYAML(model, filepath):
 
 
 def xmlline(ind, tag, names, values):
-    """This function generates a xml line with specified values.
+    """This function generates an xml line with specified values.
     To use this function you need to know the indentation level you need for this line.
     Make sure the names and values list have the correct order.
 
@@ -393,7 +378,6 @@ def gatherAnnotations(model):
     # gather information from directly accessible types
     for objtype in types:
         for elementname in model[objtype]:
-            #tmpdict = model[objtype][elementname].copy()
             tmpdict = model[objtype][elementname]
             tmpdict['temp_type'] = objtype[:-1]
             elementlist.append(tmpdict)
@@ -402,15 +386,11 @@ def gatherAnnotations(model):
         for objtype in ('collision', 'visual'):
             if objtype in model['links'][linkname]:
                 for elementname in model['links'][linkname][objtype]:
-                    #tmpdict = model['links'][linkname][objtype][elementname].copy()
                     tmpdict = model['links'][linkname][objtype][elementname]
-                    #tmpdict['link'] = linkname
                     tmpdict['temp_type'] = objtype
                     elementlist.append(tmpdict)
         if 'inertial' in model['links'][linkname]:
-            #tmpdict = model['links'][linkname]['inertial'].copy()
             tmpdict = model['links'][linkname]['inertial']
-            #tmpdict['link'] = linkname
             tmpdict['temp_type'] = 'inertial'
             elementlist.append(tmpdict)
     # loop through the list of annotated elements and categorize the data
@@ -428,14 +408,8 @@ def gatherAnnotations(model):
                 annotations[category][element['temp_type']].append(tmpdict)
                 delkeys.append(key)
         delkeys.append('temp_type')
-        #print('element:', element)
         for key in delkeys:
-            #print(key)
             del element[key]
-    #print('annotations:', annotations)
-    #for category in annotations:
-    #    for element in annotations[category]:
-    #        del element['type']
     return annotations
 
 
@@ -560,23 +534,15 @@ def writeURDFGeometry(output, element):
 
 def exportModelToURDF(model, filepath):
     """This functions writes the URDF of a given model into a file at the given filepath.
-    All of the files content will be overwritten in this process.
+    An existing file with this path will be overwritten.
 
-    :param model: The model you want to convert into URDF.
+    :param model: Dictionary of the model to be exported as URDF.
     :type model: dict
-    :param filepath: The filepath you want to export the URDF to.
+    :param filepath: The path of the exported file.
     :type filepath: str
 
     """
     print(filepath)
-
-    #print('##############################')
-    #print(model['modelname'] + '_urdf_order')
-    #if model['modelname'] + '_urdf_order' in bpy.data.texts:
-    #    print('GOT FILE!')
-    #else:
-    #    print('NO FILE!')
-    #print('##############################')
 
     stored_element_order = None
     order_file_name = model['modelname'] + '_urdf_order'
@@ -584,7 +550,7 @@ def exportModelToURDF(model, filepath):
         stored_element_order = yaml.load(bpy.data.texts[order_file_name].as_string())
 
     output = [xmlHeader, indent + '<robot name="' + model['modelname'] + '">\n\n']
-    #export link information
+    # export link information
     if stored_element_order is None:
         sorted_link_keys = get_sorted_keys(model['links'])
     else:
@@ -607,7 +573,7 @@ def exportModelToURDF(model, filepath):
                 output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'],
                                       [str(i) for i in link['inertial']['inertia']]))
                 output.append(indent * 3 + '</inertial>\n')
-            #visual object
+            # visual object
             if link['visual']:
                 if stored_element_order is None:
                     sorted_visual_keys = get_sorted_keys(link['visual'])
@@ -626,8 +592,8 @@ def exportModelToURDF(model, filepath):
                                               [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
                         writeURDFGeometry(output, vis['geometry'])
                         if 'material' in vis:
-                            if model['materials'][vis['material']][
-                                'users'] == 0:  #FIXME: change back to 1 when implemented in urdfloader
+                            # FIXME: change back to 1 when implemented in urdfloader
+                            if model['materials'][vis['material']]['users'] == 0:
                                 mat = model['materials'][vis['material']]
                                 output.append(indent * 4 + '<material name="' + mat['name'] + '">\n')
                                 color = mat['diffuseColor']
@@ -640,7 +606,7 @@ def exportModelToURDF(model, filepath):
                             else:
                                 output.append(indent * 4 + '<material name="' + vis["material"] + '"/>\n')
                         output.append(indent * 3 + '</visual>\n')
-            #collision object
+            # collision object
             if link['collision']:
                 if stored_element_order is None:
                     sorted_collision_keys = get_sorted_keys(link['collision'])
@@ -660,7 +626,7 @@ def exportModelToURDF(model, filepath):
                         writeURDFGeometry(output, col['geometry'])
                         output.append(indent * 3 + '</collision>\n')
             output.append(indent * 2 + '</link>\n\n')
-    #export joint information
+    # export joint information
     missing_values = False
     if stored_element_order is None:
         sorted_joint_keys = get_sorted_keys(model['joints'])
@@ -685,7 +651,6 @@ def exportModelToURDF(model, filepath):
             if 'limits' in joint:
                 for limit_value in ['effort', 'velocity']:
                     if limit_value not in joint['limits']:
-                        #print("\n###WARNING: joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!###")
                         log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
                         missing_values = True
                 used_limits = []
@@ -695,13 +660,11 @@ def exportModelToURDF(model, filepath):
                 output.append(
                     xmlline(3, 'limit', used_limits, [joint['limits'][p] for p in used_limits]))
             elif joint['type'] in ['revolute', 'prismatic']:
-                #print("\n###WARNING: joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!###\n")
                 log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
                 missing_values = True
             output.append(indent * 2 + '</joint>\n\n')
-    #export material information
+    # export material information
     if missing_values:
-        #print("\n###WARNING: Created URDF is invalid due to missing values!###")
         log("Created URDF is invalid due to missing values!")
         bpy.ops.tools.phobos_warning_dialog('INVOKE_DEFAULT', message="Created URDF is invalid due to missing values!")
     if stored_element_order is None:
@@ -724,7 +687,7 @@ def exportModelToURDF(model, filepath):
                 if 'diffuseTexture' in model['materials'][m]:
                     output.append(indent * 3 + '<texture filename="' + model['materials'][m]['diffuseTexture'] + '"/>\n')
                 output.append(indent * 2 + '</material>\n\n')
-    #finish the export
+    # finish the export
     output.append(xmlFooter)
     with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))
@@ -791,7 +754,7 @@ def exportModelToSRDF(model, path):
         output.append(indent * 2 + '</group>\n\n')
     #for joint in model['state']['joints']:
     #    pass
-    #passive joints
+    # passive joints
     sorted_joint_keys = get_sorted_keys(model['joints'])
     for joint in sorted_joint_keys:
         try:
@@ -811,7 +774,7 @@ def exportModelToSRDF(model, path):
             output.append(indent * 2 + '<link_sphere_approximation link="' + model['links'][link]['name'] + '">\n')
             output.append(xmlline(3, 'sphere', ('center', 'radius'), ('0.0 0.0 0.0', '0')))
             output.append(indent * 2 + '</link_sphere_approximation>\n\n')
-    #calculate collision-exclusive links
+    # calculate collision-exclusive links
     collisionExclusives = []
     for combination in itertools.combinations(model['links'], 2):
         link1 = model['links'][combination[0]]
@@ -849,7 +812,7 @@ def exportModelToSRDF(model, path):
         output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (pair[0], pair[1])))
 
     output.append('\n')
-    #finish the export
+    # finish the export
     output.append(xmlFooter)
     with open(path, 'w') as outputfile:
         outputfile.write(''.join(output))
@@ -880,7 +843,7 @@ def exportModelToSMURF(model, path):
               'lights': model['lights'] != {},
               'poses': model['poses'] != {}
               }
-    #create all filenames
+    # create all filenames
     smurf_filename = model['modelname'] + ".smurf"
     if bpy.data.worlds[0].structureExport:
         urdf_filename = "../urdf/" + model['modelname'] + ".urdf"
@@ -911,7 +874,7 @@ def exportModelToSMURF(model, path):
 
     infostring = ' definition SMURF file for "' + model['modelname'] + '", ' + model["date"] + "\n\n"
 
-    #write model information
+    # write model information
     print('Writing SMURF information to', smurf_filename)
     modeldata = {"date": model["date"], "files": [urdf_filename] + [filenames[f] for f in fileorder if export[f]]}
     # append custom data
@@ -924,7 +887,7 @@ def exportModelToSMURF(model, path):
         op.write("modelname: " + model['modelname'] + "\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
-    #write urdf
+    # write urdf
     exportModelToURDF(model, os.path.join(path, urdf_filename))
 
     # #write semantics (SRDF information in YML format)
@@ -939,10 +902,10 @@ def exportModelToSMURF(model, path):
     #             semantics['chains'] = model['chains']
     #         op.write(yaml.dump(semantics, default_flow_style=False))
 
-    #write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
+    # write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
     if export['state']:
         states = []
-        #gather all states
+        # gather all states
         for jointname in model['joints']:
             joint = model['joints'][jointname]
             if 'state' in joint:  # this should always be the case, but testing doesn't hurt
@@ -954,7 +917,7 @@ def exportModelToSMURF(model, path):
             op.write("modelname: " + model['modelname'] + '\n')
             op.write(yaml.dump(states))  #, default_flow_style=False))
 
-    #write materials, sensors, motors & controllers
+    # write materials, sensors, motors & controllers
     for data in ['materials', 'sensors', 'motors', 'controllers', 'lights', 'poses']:
         if export[data]:
             with open(path + filenames[data], 'w') as op:
@@ -962,7 +925,7 @@ def exportModelToSMURF(model, path):
                 op.write(yaml.dump(sort_for_yaml_dump({data: list(model[data].values())}, data), default_flow_style=False))
                 #op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
-    #write collision bitmask information
+    # write collision bitmask information
     if export['collision']:
         print('capsules:', model['capsules'])
         capsules = model['capsules']
@@ -982,7 +945,7 @@ def exportModelToSMURF(model, path):
             op.write('#visual data' + infostring)
             op.write(yaml.dump({'visuals': list(lodsettings.values())}, default_flow_style=False))
 
-    #write additional information
+    # write additional information
     for category in annotationdict.keys():
         if export[category]:
             outstring = '#' + category + infostring
@@ -1013,12 +976,12 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
 
     entitiesList = []
 
-    #Creates filter object containing all root links considered as entities to export to SMURFS
     entities = [e for e in selectionUtils.getRoots() if "entityname" in e and "entitytype" in e and ((selected_only and e.select) or not selected_only)]
+    # identify all entities in the scene
     if len(entities) == 0:
         log("There are no entities to export!", "WARNING", __name__+".exportSMURFsScene")
         return
-    #Determine outpath for this scene
+    # determine outpath for this scene
     if bpy.data.worlds[0].relativePath:
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
     else:
@@ -1026,7 +989,7 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
     for entity in entities:
         log("Exporting " + str(entity) + " to SMURFS", "INFO")
         if entity["entitytype"] == "smurf":
-            #Determine outpath for the smurf export
+            # determine outpath for the smurf export
             smurf_outpath = securepath(os.path.join(outpath, entity["modelname"]) if subfolder else outpath)
             entry = handleScene_smurf(entity, smurf_outpath, subfolder)
         elif entity["entitytype"] == "light":
@@ -1045,9 +1008,9 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
 
 
 def handleScene_smurf(smurf, outpath, subfolder):
-    """This function handles a smurf entity in a scene to export it
+    """Derives the dictionary for a SMURF entity.
 
-    :param smurf: The smurfs root object.
+    :param smurf: The smurf root object.
     :type smurf: bpy.types.Object
     :param outpath: The path to export the smurf to.
     :type outpath: str
@@ -1074,7 +1037,7 @@ def handleScene_smurf(smurf, outpath, subfolder):
                 if os.path.isfile(fullPath):
                     shutil.copy2(fullPath, os.path.join(outpath, filename))
                 else:
-                    #Remove old folders to prevent errors in copytree
+                    # remove old folders to prevent errors in copytree
                     shutil.rmtree(os.path.join(outpath, filename), True)
                     shutil.copytree(fullPath, os.path.join(outpath, filename))
     else:
@@ -1186,34 +1149,7 @@ def handleScene_heightmap(heightmap, outpath, subfolder):
     return entry
 
 
-def exportModelToMARS(model, path):
-    """Exports selected robot as a MARS scene
-
-    :param model: The robot model you want to export.
-    :type model: dict
-    :param path: The path you want the MARS file to be located
-    :type path: str
-
-    """
-    mse.exportModelToMARS(model, path)
-
-def hasNoImportLock(obj, filetype):
-    """This function gets an phobos object and returns whether the objects meshes desired filename matches the one saved
-    in the objects *filename* property or not.
-
-    :param obj: The phobos object to check.
-    :type obj: bpy.types.Object
-    :param filetype: The filetype the object will be exported as.
-    :type filetype: str
-    :return: bool
-
-    """
-    if "filename" in obj:
-        return "meshes/" + obj.data.name + "." + filetype != obj["filename"]
-    else:
-        return True
-
-def securepath(path):  #TODO: this is totally not error-handled!
+def securepath(path):
     """This function checks whether a path exists or not.
     If it doesn't the functions creates the path.
 
@@ -1222,23 +1158,23 @@ def securepath(path):  #TODO: this is totally not error-handled!
     :return: String -- the path given as parameter, but secured by expanding ~ constructs.
 
     """
-
+    # TODO: add exception handling
     if not os.path.exists(path):
         os.makedirs(path)
     return os.path.expanduser(path)
 
 
+def export(path='', model=None):
+    """Configures and performs export of selected or specified model.
 
-def export(path='', robotmodel=None):
-    """This function does the actual exporting of the robot model.
-
-    :param path: The path to export the robot to.
+    :param path: The path to export the model to.
     :type path: str
-    :param robotmodel: The robotmodel you want to export.
-    :type robotmodel: dict
+    :param model: The model to be exported.
+    :type model: dict
 
     """
-    #TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
+    # TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
+    # configure and setup path
     if path == '':
         if bpy.data.worlds[0].relativePath:
             outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
@@ -1249,11 +1185,12 @@ def export(path='', robotmodel=None):
     if not outpath.endswith(os.path.sep):
         outpath += os.path.sep
     meshoutpath = securepath(os.path.join(outpath, 'meshes'))
+
+    # parse export settings
     yaml = bpy.data.worlds[0].exportYAML
     urdf = bpy.data.worlds[0].exportURDF
     srdf = bpy.data.worlds[0].exportSRDF
     smurf = bpy.data.worlds[0].exportSMURF
-    mars = bpy.data.worlds[0].exportMARSscene
     meshexp = bpy.data.worlds[0].exportMeshes
     texexp = bpy.data.worlds[0].exportTextures
     objexp = bpy.data.worlds[0].useObj
@@ -1264,9 +1201,7 @@ def export(path='', robotmodel=None):
     robot = robotmodel if robotmodel else robotdictionary.buildRobotDictionary()
     if yaml or urdf or smurf or mars:
         if yaml:
-            exportModelToYAML(robot, outpath + robot["modelname"] + "_dict.yml")
-        if mars:
-            exportModelToMARS(robot, outpath + robot["modelname"] + "_mars.scene")
+            exportModelToYAML(model, outpath + model["modelname"] + "_dict.yml")
         if srdf:
             exportModelToSRDF(robot, outpath + robot["modelname"] + ".srdf")
         if smurf:
