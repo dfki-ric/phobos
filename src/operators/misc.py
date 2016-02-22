@@ -99,7 +99,7 @@ class CalculateMassOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        mass = generalUtils.calculateSum(bpy.context.selected_objects, 'mass')
+        mass = generalUtils.calculateSum(context.selected_objects, 'mass')
         log("The calculated mass is: " + str(mass), "INFO")
         endLog()
         return {'FINISHED'}
@@ -130,7 +130,7 @@ class ShowDistanceOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        self.distance, self.distVector = generalUtils.distance(bpy.context.selected_objects)
+        self.distance, self.distVector = generalUtils.distance(context.selected_objects)
         log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO")
         endLog()
         return {'FINISHED'}

@@ -181,7 +181,7 @@ class SyncMassesOperator(Operator):
         sourcelist = []
         targetlist = []
         processed = set()
-        links = [obj.name for obj in bpy.context.selected_objects if obj.phobostype == 'link']
+        links = [obj.name for obj in context.selected_objects if obj.phobostype == 'link']
         t = datetime.now()
         objdict = {obj.name: obj for obj in bpy.data.objects if obj.phobostype in ['visual', 'collision']
                    and obj.parent.name in links}
@@ -271,7 +271,7 @@ class SetXRayOperator(Operator):
         if self.objects == 'all':
             objlist = bpy.data.objects
         elif self.objects == 'selected':
-            objlist = bpy.context.selected_objects
+            objlist = context.selected_objects
         elif self.objects == 'by name':
             objlist = [obj for obj in bpy.data.objects if obj.name.find(self.namepart) >= 0]
         else:
@@ -294,7 +294,7 @@ class SetPhobosType(Operator):
         description="Phobostype")
 
     def execute(self, context):
-        for obj in bpy.context.selected_objects:
+        for obj in context.selected_objects:
             obj.phobostype = self.phobostype
         return {'FINISHED'}
 
@@ -490,12 +490,12 @@ class SmoothenSurfaceOperator(Operator):
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269;
         objs = filter(lambda e: e.type == "MESH", context.selected_objects)
         if show_progress:
-            wm = bpy.context.window_manager
-            total = float(len(bpy.context.selected_objects))
+            wm = context.window_manager
+            total = float(len(context.selected_objects))
             wm.progress_begin(0, total)
             i = 1
         for obj in objs:
-            bpy.context.scene.objects.active = obj
+            context.scene.objects.active = obj
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.select_all()
             bpy.ops.mesh.normals_make_consistent()
@@ -581,10 +581,10 @@ class CreateInertialOperator(Operator):
     )
 
     def execute(self, context):
-        links = [obj for obj in bpy.context.selected_objects if obj.phobostype == 'link']
+        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
         if show_progress:
-            wm = bpy.context.window_manager
+            wm = context.window_manager
             total = float(len(links))
             wm.progress_begin(0, total)
             i = 1
@@ -611,7 +611,7 @@ class AddGravityVector(Operator):
 
     def execute(self, context):
         bpy.ops.object.empty_add(type='SINGLE_ARROW')
-        bpy.context.active_object.name = "gravity"
+        context.active_object.name = "gravity"
         bpy.ops.transform.rotate(value=(math.pi), axis=(1.0, 0.0, 0.0))
         return {'FINISHED'}
 
@@ -638,10 +638,10 @@ class EditYAMLDictionary(Operator):
                     "# ------- Hit 'Run Script' to save your changes --------",
                     "import yaml", "import bpy",
                     "tmpdata = yaml.load(" + variablename + ")",
-                    "for key in dict(bpy.context.active_object.items()):",
-                    "   del bpy.context.active_object[key]",
+                    "for key in dict(context.active_object.items()):",
+                    "   del context.active_object[key]",
                     "for key, value in tmpdata.items():",
-                    "    bpy.context.active_object[key] = value",
+                    "    context.active_object[key] = value",
                     "bpy.ops.text.unlink()"
                     ]
         blenderUtils.createNewTextfile(textfilename, '\n'.join(contents))
@@ -671,7 +671,7 @@ class CreateCollisionObjects(Operator):
 
         startLog(self)
         visuals = []
-        for obj in bpy.context.selected_objects:
+        for obj in context.selected_objects:
             if obj.phobostype == "visual":
                 visuals.append(obj)
             obj.select = False
@@ -743,7 +743,7 @@ class CreateCollisionObjects(Operator):
                 ob.select = True
                 bpy.ops.object.transform_apply(scale=True)
                 vis.parent.select = True
-                bpy.context.scene.objects.active = vis.parent
+                context.scene.objects.active = vis.parent
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
                 # ob.parent_type = vis.parent_type
                 # ob.parent_bone = vis.parent_bone
@@ -892,7 +892,7 @@ class DefineJointConstraintsOperator(Operator):
             velocity = self.maxvelocity
         objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
         for link in objs:
-            bpy.context.scene.objects.active = link
+            context.scene.objects.active = link
             joints.setJointConstraints(link, self.joint_type, lower, upper, self.spring, self.damping)
             if self.joint_type != 'fixed':
                 link['joint/maxeffort'] = self.maxeffort
@@ -1034,7 +1034,7 @@ class CreateLinkOperator(Operator):
         if self.type == '3D cursor':
             links.createLink(self.size)
         else:
-            for obj in bpy.context.selected_objects:
+            for obj in context.selected_objects:
                 tmpnamepartindices = [int(p) for p in self.namepartindices.split()]
                 links.deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting, parentobjects=self.parentobject,
                                      namepartindices=tmpnamepartindices, separator=self.separator,
@@ -1183,8 +1183,8 @@ class CreateMimicJointOperator(Operator):
         description="Create motor mimicry")
 
     def execute(self, context):
-        masterjoint = bpy.context.active_object
-        for obj in bpy.context.selected_objects:
+        masterjoint = context.active_object
+        for obj in context.selected_objects:
             if obj.name != masterjoint.name:
                 if self.mimicjoint:
                     obj["joint/mimic_joint"] = nameUtils.getObjectName(masterjoint, 'joint')
@@ -1200,7 +1200,7 @@ class CreateMimicJointOperator(Operator):
     def poll(cls, context):
         ob = context.active_object
         return (ob is not None and ob.phobostype == 'link'
-                and len(bpy.context.selected_objects) > 1)
+                and len(context.selected_objects) > 1)
 
 
 class RefineLevelOfDetailOperator(Operator):
@@ -1316,7 +1316,7 @@ class AddHeightmapOperator(Operator):
         h_tex = bpy.data.textures.new(self.name, type='IMAGE')
         h_tex.image = img
         #Add plane, subdivide and create displacement
-        prev_mode = bpy.context.mode
+        prev_mode = context.mode
         bpy.ops.mesh.primitive_plane_add(view_align=False, enter_editmode=False)
         plane = context.active_object
         plane["phobostype"] = "visual"

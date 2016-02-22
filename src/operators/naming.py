@@ -80,7 +80,7 @@ class NameModelOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        root = selectionUtils.getRoot(bpy.context.active_object)
+        root = selectionUtils.getRoot(context.active_object)
         if root == None:
             log("Could not set modelname due to missing root link. No name was set.", "ERROR")
             return {'FINISHED'}
@@ -107,7 +107,7 @@ class PartialRename(Operator):
 
     def execute(self, context):
         types = defs.subtypes
-        for obj in bpy.context.selected_objects:
+        for obj in context.selected_objects:
             obj.name = obj.name.replace(self.find, self.replace)
             for type in types:
                 nametag = type + "/name"
