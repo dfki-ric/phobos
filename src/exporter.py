@@ -255,6 +255,7 @@ def exportDae(path, obj):
     bpy.ops.object.delete()
     obj.name = oldBlenderObjectName
 
+
 def bakeModel(objlist, path, modelname):
     """This function gets a list of objects and creates a single, simplified mesh from it and exports it to .stl.
 
@@ -968,10 +969,11 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
 
     """
 
-    entitiesList = []
+    outputlist = []
 
-    entities = [e for e in selectionUtils.getRoots() if "entityname" in e and "entitytype" in e and ((selected_only and e.select) or not selected_only)]
     # identify all entities in the scene
+    entities = [e for e in selectionUtils.getRoots() if (("entityname" in e and "entitytype" in e)
+                or 'modelname' in e) and ((selected_only and e.select) or not selected_only)]
     if len(entities) == 0:
         log("There are no entities to export!", "WARNING", __name__+".exportSMURFsScene")
         return
@@ -985,23 +987,23 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
         if entity["entitytype"] == "smurf":
             # determine outpath for the smurf export
             smurf_outpath = securepath(os.path.join(outpath, entity["modelname"]) if subfolder else outpath)
-            entry = handleScene_smurf(entity, smurf_outpath, subfolder)
+            entry = deriveSMURFEntity(entity, smurf_outpath, subfolder)
         elif entity["entitytype"] == "light":
-            entry = handleScene_light(entity)
+            entry = deriveLightEntity(entity)
         elif entity["entitytype"] == "heightmap":
             heightmap_outpath = securepath(os.path.join(outpath, "heightmaps") if subfolder else outpath)
-            entry = handleScene_heightmap(entity, heightmap_outpath, subfolder)
-        entitiesList.append(entry)
+            entry = deriveHeightmapEntity(entity, heightmap_outpath, subfolder)
+        outputlist.append(entry)
 
     with open(os.path.join(outpath, bpy.data.worlds['World'].sceneName + '.smurfs'),
               'w') as outputfile:
-        sceneInfo = "# SMURF scene " + bpy.data.worlds['World'].sceneName + "; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
-        sceneInfo += "# created with Phobos " + defs.version + " - https://github.com/rock-simulation/phobos\n\n"
-        outputfile.write(sceneInfo)
-        outputfile.write(yaml.dump({'entities': entitiesList}))
+        sceneinfo = "# SMURF scene " + bpy.data.worlds['World'].sceneName + "; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
+        sceneinfo += "# created with Phobos " + defs.version + " - https://github.com/rock-simulation/phobos\n\n"
+        outputfile.write(sceneinfo)
+        outputfile.write(yaml.dump({'entities': outputlist}))
 
 
-def handleScene_smurf(smurf, outpath, subfolder):
+def deriveSMURFEntity(smurf, outpath, savetosubfolder):
     """Derives the dictionary for a SMURF entity.
 
     :param smurf: The smurf root object.
@@ -1014,14 +1016,9 @@ def handleScene_smurf(smurf, outpath, subfolder):
 
     """
     log("Exporting " + smurf["entityname"] + " as a smurf entity to " + outpath, "INFO")
-    #The smurf path without subfolders in the export.
-    normalSmurf = os.path.join(outpath, smurf["modelname"]+".smurf")
-    #Thre smurf path inside a smurf subfolder.
-    subSmurf = os.path.join(outpath, "smurf", smurf["modelname"]+".smurf")
-    #Praefix for uri depending on subfolder
-    praefix = smurf["modelname"] if subfolder else ""
-    entry = {}
-    #To differentiate between complete robot and dummy aka 'reference'
+    outpath = os.path.join(outpath, smurf["modelname"]+".smurf")
+    subfolder = smurf["modelname"] if savetosubfolder else ""
+    # differentiate between full model and baked reference
     if "isReference" in smurf:
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
             robots = yaml.load(f.read())
@@ -1037,20 +1034,21 @@ def handleScene_smurf(smurf, outpath, subfolder):
     else:
         selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)
         robot = robotdictionary.buildRobotDictionary()
-        selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True) #reselect for mesh export
-        export(outpath, robotmodel=robot)
+        selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True) # re-select for mesh export
+        export(outpath, model=robot)
     entitypose = robotdictionary.deriveObjectPose(smurf)
-    entry =     {'name': smurf['entityname'],
-                 'type': 'smurf',
-                 'file': os.path.join(praefix, smurf["modelname"]+".smurf") if os.path.isfile(normalSmurf)
-                    else os.path.join(praefix, "smurf", smurf["modelname"]+".smurf"),
-                 'anchor': smurf["anchor"] if "anchor" in smurf else "none",
-                 "position": entitypose["translation"],
-                 "rotation": entitypose["rotation_quaternion"],
-                 "pose": smurf["entitypose"] if "entitypose" in smurf else "default"}
+    entry = {'name': smurf['entityname'],
+             'type': 'smurf',
+             'file': os.path.join(subfolder, smurf["modelname"]+".smurf") if os.path.isfile(outpath)
+                else os.path.join(subfolder, "smurf", smurf["modelname"]+".smurf"),
+             'anchor': smurf["anchor"] if "anchor" in smurf else "none",
+             "position": entitypose["translation"],
+             "rotation": entitypose["rotation_quaternion"],
+             "pose": smurf["entitypose"] if "entitypose" in smurf else "default"}
     return entry
 
-def handleScene_light(light):
+
+def deriveLightEntity(light):
     """This function handles a light entity in a scene to export it
 
     :param smurf: The lights root object.
@@ -1062,24 +1060,25 @@ def handleScene_light(light):
     """
     log("Exporting " + light["entityname"] + " as a light entity", "INFO")
     entitypose = robotdictionary.deriveObjectPose(light)
-    lightObj = selectionUtils.getImmediateChildren(light)[0]
-    color = lightObj.data.color
+    lightobj = selectionUtils.getImmediateChildren(light)[0]
+    color = lightobj.data.color
     entry = {"name": light["entityname"],
             "type": "light",
-            "light_type": "spotlight" if lightObj.data.type == "SPOT" else "omnilight",
+            "light_type": "spotlight" if lightobj.data.type == "SPOT" else "omnilight",
             "anchor": light["anchor"] if "anchor" in light else "none",
             "color": {
                 "diffuse": [color.r, color.g, color.b],
-                "use_specular": lightObj.data.use_specular #We have no other specular information at the moment.
+                "use_specular": lightobj.data.use_specular  # only specular information currently available
             },
             "position": entitypose["translation"],
             "rotation": entitypose["rotation_quaternion"]
             }
     if entry["light_type"] == "spotlight":
-        entry["angle"] = lightObj.data.spot_size
+        entry["angle"] = lightobj.data.spot_size
     return entry
 
-def handleScene_heightmap(heightmap, outpath, subfolder):
+
+def deriveHeightmapEntity(heightmap, outpath):
     """This function handles a heightmap entity in a scene to export it
 
     :param smurf: The heightmap root object.
@@ -1090,7 +1089,6 @@ def handleScene_heightmap(heightmap, outpath, subfolder):
 
     """
     log("Exporting " + heightmap["entityname"] + " as a heightmap entity", "INFO")
-    entry = {}
     entitypose = robotdictionary.deriveObjectPose(heightmap)
     heightmapMesh = selectionUtils.getImmediateChildren(heightmap)[0]
     if bpy.data.worlds[0].heightmapMesh:
@@ -1120,26 +1118,26 @@ def handleScene_heightmap(heightmap, outpath, subfolder):
         heightmapMesh.data = oldMesh
         bpy.data.meshes.remove(exMesh)
         entry = {"name": heightmap["entityname"],
-                "type": "mesh",
-                "file": filename,
-                "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
-                "position": entitypose["translation"],
-                "rotation": entitypose["rotation_quaternion"]
-                }
+                 "type": "mesh",
+                 "file": filename,
+                 "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
+                 "position": entitypose["translation"],
+                 "rotation": entitypose["rotation_quaternion"]
+                 }
 
     else:
         imagepath = os.path.abspath(os.path.join(os.path.split(bpy.data.filepath)[0], heightmap["image"]))
         shutil.copy2(imagepath, outpath)
         entry = {"name": heightmap["entityname"],
-                "type": "heightmap",
-                "file": os.path.join("heightmaps", os.path.basename(imagepath)),
-                "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
-                "width": heightmapMesh.dimensions[1],
-                "length": heightmapMesh.dimensions[0],
-                "height": heightmapMesh.modifiers["displace_heightmap"].strength,
-                "position": entitypose["translation"],
-                "rotation": entitypose["rotation_quaternion"]
-                }
+                 "type": "heightmap",
+                 "file": os.path.join("heightmaps", os.path.basename(imagepath)),
+                 "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
+                 "width": heightmapMesh.dimensions[1],
+                 "length": heightmapMesh.dimensions[0],
+                 "height": heightmapMesh.modifiers["displace_heightmap"].strength,
+                 "position": entitypose["translation"],
+                 "rotation": entitypose["rotation_quaternion"]
+                 }
     return entry
 
 
@@ -1191,26 +1189,31 @@ def export(path='', model=None):
     bobjexp = bpy.data.worlds[0].useBobj
     stlexp = bpy.data.worlds[0].useStl
     daeexp = bpy.data.worlds[0].useDae
+
+    # make sure we have a valid model to export
+    if not model:
+        model = robotdictionary.buildRobotDictionary()
     objectlist = bpy.context.selected_objects
-    robot = robotmodel if robotmodel else robotdictionary.buildRobotDictionary()
-    if yaml or urdf or smurf or mars:
+
+    # export data
+    if yaml or urdf or smurf:
         if yaml:
             exportModelToYAML(model, outpath + model["modelname"] + "_dict.yml")
         if srdf:
-            exportModelToSRDF(robot, outpath + robot["modelname"] + ".srdf")
+            exportModelToSRDF(model, outpath + model["modelname"] + ".srdf")
         if smurf:
             if bpy.data.worlds[0].structureExport:
                 securepath(os.path.join(outpath, 'smurf'))
                 securepath(os.path.join(outpath, 'urdf'))
-                exportModelToSMURF(robot, os.path.join(outpath, 'smurf/'))
+                exportModelToSMURF(model, os.path.join(outpath, 'smurf/'))
             else:
-                exportModelToSMURF(robot, outpath)
+                exportModelToSMURF(model, outpath)
         elif urdf:
             if bpy.data.worlds[0].structureExport:
                 securepath(os.path.join(outpath, 'urdf'))
-                exportModelToURDF(robot, os.path.join(outpath, 'urdf', robot["modelname"] + ".urdf"))
+                exportModelToURDF(model, os.path.join(outpath, 'urdf', model["modelname"] + ".urdf"))
             else:
-                exportModelToURDF(robot, outpath + robot["modelname"] + ".urdf")
+                exportModelToURDF(model, outpath + model["modelname"] + ".urdf")
     if meshexp:
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
         if show_progress:
@@ -1249,8 +1252,8 @@ def export(path='', model=None):
     if texexp:
         print("Exporting textures to " + os.path.join(outpath, 'textures') + "...\n")
         securepath(os.path.join(outpath, 'textures'))
-        for materialname in robot['materials']:
-            mat = robot['materials'][materialname]
+        for materialname in model['materials']:
+            mat = model['materials'][materialname]
             for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
                 if texturetype in mat:
                     texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
