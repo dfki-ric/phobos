@@ -1215,25 +1215,24 @@ def export(path='', model=None):
             else:
                 exportModelToURDF(model, outpath + model["modelname"] + ".urdf")
     if meshexp:
+        meshnames = set()
+        exportobjects = set()
+        for obj in objectlist:
+            if ((obj.phobostype == 'visual' or obj.phobostype == 'collision') and
+                    (obj['geometry/type'] == 'mesh') and (obj.data.name not in meshnames)):
+                meshnames.add(obj.data.name)
+                exportobjects.add(obj)
+                for lod in obj.lod_levels:
+                    if lod.object.data.name not in meshnames:
+                        meshnames.add(lod.object.data.name)
+                        exportobjects.add(lod.object)
+
         show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
         if show_progress:
             wm = bpy.context.window_manager
-            total = float(len(objectlist))
-            wm.progress_begin(0, total)
+            wm.progress_begin(0, float(len(exportobjects)))
             i = 1
-        print("Exporting meshes to " + meshoutpath + "...\n")
-        meshes = set()
-        exportobjects = set()
-        for obj in objectlist:
-            if obj.phobostype == 'visual' or obj.phobostype == 'collision':
-                if obj['geometry/type'] == 'mesh':
-                    if not obj.data.name in meshes:
-                        meshes.add(obj.data.name)
-                        exportobjects.add(obj)
-                        for lod in obj.lod_levels:
-                            if lod.object.data.name not in meshes:
-                                meshes.add(lod.object.data.name)
-                                exportobjects.add(lod.object)
+        print("Exporting " + str(len(exportobjects)) + " meshes to " + meshoutpath + "...\n")
         for expobj in exportobjects:
             if objexp:
                 exportObj(meshoutpath, expobj)
