@@ -951,6 +951,7 @@ def exportModelToSMURF(model, path):
             with open(os.path.join(path, text.name), 'w') as op:
                 op.write('\n'.join(line.body for line in text.lines))
 
+
 def exportSMURFsScene(selected_only=True, subfolder=True):
     """Exports an arranged scene into SMURFS. It will export only entities
     with a valid entityname, and entitytype property.
@@ -1015,15 +1016,15 @@ def deriveSMURFEntity(smurf, outpath, savetosubfolder):
     if "isReference" in smurf:
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
             robots = yaml.load(f.read())
-            sourcePath = robots[smurf["modelname"]]
-            for filename in os.listdir(sourcePath):
-                fullPath = os.path.join(sourcePath, filename)
-                if os.path.isfile(fullPath):
-                    shutil.copy2(fullPath, os.path.join(outpath, filename))
+            sourcepath = robots[smurf["modelname"]]
+            for filename in os.listdir(sourcepath):
+                fullpath = os.path.join(sourcepath, filename)
+                if os.path.isfile(fullpath):
+                    shutil.copy2(fullpath, os.path.join(outpath, filename))
                 else:
                     # remove old folders to prevent errors in copytree
                     shutil.rmtree(os.path.join(outpath, filename), True)
-                    shutil.copytree(fullPath, os.path.join(outpath, filename))
+                    shutil.copytree(fullpath, os.path.join(outpath, filename))
     else:
         selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)
         selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)  # re-select for mesh export
@@ -1161,6 +1162,8 @@ def export(model, objectlist, path=None):
     if not model or not objectlist:
         return  # TODO: Check if there could be a valid model to export without a single object
 
+    # set up path
+    if not path:
         if bpy.data.worlds[0].relativePath:
             outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
         else:

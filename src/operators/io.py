@@ -163,16 +163,13 @@ class ExportBakeOperator(Operator):
         root = selectionUtils.getRoot(context.selected_objects[0])
         model = robotdictionary.buildModelDictionary(root)
         selectionUtils.selectObjects(objs)
-        outpath = ""
         if bpy.data.worlds[0].relativePath:
             outpath = exporter.securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
         else:
             outpath = exporter.securepath(os.path.expanduser(bpy.data.worlds[0].path))
-        #expPath = os.path.join(outpath, robot["modelname"] + "_bake")
-        #exporter.export(path=expPath, robotmodel=robot)
-        exporter.bakeModel(objs, outpath, robot["modelname"])
+        exporter.bakeModel(objs, outpath, model["modelname"])
         with open(os.path.join(outpath, "info.bake"), "w") as f:
-            f.write(yaml.dump({"name": robot["modelname"]}))
+            f.write(yaml.dump({"name": model["modelname"]}))
         endLog()
         return {'FINISHED'}
 
@@ -187,18 +184,12 @@ class RobotModelImporter(bpy.types.Operator):
     # creating property for storing the path to the .scn file
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
 
-    # set a filter to only consider .scn files (only used internally)
-    #filter_glob = bpy.props.StringProperty(default="*.*",options={'HIDDEN'})
-
     @classmethod
     def poll(cls, context):
         return context is not None
 
     def execute(self, context):
-        # get the chosen file path
-        #directory, filename = os.path.split(self.filepath)
         modeltype = self.filepath.split('.')[-1]
-
         if modeltype == 'scene':
             imp = importer.MARSModelParser(self.filepath)
         elif modeltype == 'urdf':
@@ -206,18 +197,14 @@ class RobotModelImporter(bpy.types.Operator):
         elif modeltype == 'smurf' or modeltype == 'yml' or modeltype == 'yaml':
             imp = importer.SMURFModelParser(self.filepath)
         elif modeltype == 'scn':
-            imp= importer.MARSModelParser(self.filepath, zipped=True)
+            imp = importer.MARSModelParser(self.filepath, zipped=True)
         else:
             print("Unknown model format, aborting import...")
-
         importer.cleanUpScene()
         imp.parseModel()
         imp.createBlenderModel()
-
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        # create the open file dialog
         context.window_manager.fileselect_add(self)
-
         return {'RUNNING_MODAL'}
