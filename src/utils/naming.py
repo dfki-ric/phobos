@@ -32,7 +32,9 @@ import phobos.utils.selection as selection
 
 
 def getObjectName(obj, phobostype=None):
-    """This function returns the objects valid name.
+    """This function returns the name for an object depending on its phobostype.
+    For links and objects lacking a '*phobostype*/name' property, the object's
+    name is used instead, cleaned of namespaces.
 
     :param obj: The object you want the name for.
     :type obj: bpy.types.Object
@@ -40,13 +42,13 @@ def getObjectName(obj, phobostype=None):
     :return: str -- The objects name.
 
     """
-    type = phobostype
-    if "phobostype" in obj and type == None:
-        type = obj.phobostype
-    if type and type + "/name" in obj:
-        return obj[type + "/name"]
+    if obj is None:
+        return None
+    nametype = phobostype if phobostype else obj.phobostype
+    if nametype != 'link' and nametype + "/name" in obj:
+        return obj[nametype + "/name"]
     else:
-        return obj.name
+        return obj.name.split(':')[-1]
 
 
 def replaceNameElement(prop, old, new):
