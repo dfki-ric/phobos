@@ -81,8 +81,9 @@ class CheckDict(Operator):
 
         startLog(self)
         messages = {}
-        dic = robotdictionary.buildRobotDictionary()
-        validator.check_dict(dic, defs.dictConstraints, messages)
+        root = selectionUtils.getRoot(context.selected_objects[0])
+        model, objectlist = robotdictionary.buildModelDictionary(root)
+        validator.check_dict(model, defs.dictConstraints, messages)
         defs.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
         for entry in messages:
             log("Errors in object " + entry + ":", 'INFO')

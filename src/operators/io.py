@@ -144,7 +144,9 @@ class ExportModelOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        exporter.export()
+        root = selectionUtils.getRoot(context.selected_objects[0])
+        model, objectlist = robotdictionary.buildModelDictionary(root)
+        exporter.export(model, objectlist)
         endLog()
         return {'FINISHED'}
 
@@ -158,7 +160,8 @@ class ExportBakeOperator(Operator):
     def execute(self, context):
         startLog(self)
         objs = context.selected_objects
-        robot = robotdictionary.buildRobotDictionary()
+        root = selectionUtils.getRoot(context.selected_objects[0])
+        model = robotdictionary.buildModelDictionary(root)
         selectionUtils.selectObjects(objs)
         outpath = ""
         if bpy.data.worlds[0].relativePath:

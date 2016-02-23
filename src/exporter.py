@@ -834,7 +834,7 @@ def exportModelToSMURF(model, path):
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'collision': bitmasks != {} or model['capsules'] != [],
+              'collision': bitmasks != {},# FIXME: capsules: or model['capsules'] != [],
               'visuals': lodsettings != {},
               'lights': model['lights'] != {},
               'poses': model['poses'] != {}
@@ -923,17 +923,9 @@ def exportModelToSMURF(model, path):
 
     # write collision bitmask information
     if export['collision']:
-        print('capsules:', model['capsules'])
-        capsules = model['capsules']
-        for capsule in capsules:
-            if capsule['name'] in bitmasks:
-                bitmask = bitmasks[capsule['name']]['bitmask']
-                capsule['bitmask'] = bitmask
         with open(path + filenames['collision'], 'w') as op:
             op.write('#collision data' + infostring)
             op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
-            if model['capsules']:
-                op.write(yaml.dump({'capsules': model['capsules']}, default_flow_style=False))
 
     # write visual information (level of detail, ...)
     if export['visuals']:
@@ -1034,9 +1026,9 @@ def deriveSMURFEntity(smurf, outpath, savetosubfolder):
                     shutil.copytree(fullPath, os.path.join(outpath, filename))
     else:
         selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)
-        robot = robotdictionary.buildRobotDictionary()
-        selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True) # re-select for mesh export
-        export(outpath, model=robot)
+        selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)  # re-select for mesh export
+        model, objectlist = robotdictionary.buildModelDictionary(root)
+        export(model, objectlist, outpath)
     entitypose = robotdictionary.deriveObjectPose(smurf)
     entry = {'name': smurf['entityname'],
              'type': 'smurf',
@@ -1156,7 +1148,7 @@ def securepath(path):
     return os.path.expanduser(path)
 
 
-def export(path='', model=None):
+def export(model, objectlist, path=None):
     """Configures and performs export of selected or specified model.
 
     :param path: The path to export the model to.
@@ -1165,9 +1157,10 @@ def export(path='', model=None):
     :type model: dict
 
     """
-    # TODO: check if all selected objects are on visible layers (option bpy.ops.object.select_all()?)
-    # configure and setup path
-    if path == '':
+    # check for valid model and objectlist
+    if not model or not objectlist:
+        return  # TODO: Check if there could be a valid model to export without a single object
+
         if bpy.data.worlds[0].relativePath:
             outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
         else:
@@ -1189,11 +1182,6 @@ def export(path='', model=None):
     bobjexp = bpy.data.worlds[0].useBobj
     stlexp = bpy.data.worlds[0].useStl
     daeexp = bpy.data.worlds[0].useDae
-    # create tmp list of selected objects before model building
-    objectlist = bpy.context.selected_objects
-    # make sure we have a valid model to export
-    if not model:
-        model = robotdictionary.buildRobotDictionary()
 
     # export data
     if yaml or urdf or smurf:
