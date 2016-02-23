@@ -30,46 +30,59 @@ import phobos.defs as defs
 from phobos.logging import log
 
 
-def returnObjectList(phobostype):
+def getObjectsByPhobostypes(phobostypes):
     """Returns list of all objects in the current scene matching phobostype
-
     """
-    objlist = []
-    for obj in bpy.context.scene.objects:
-        if obj.phobostype == phobostype:
-            objlist.append(obj)
-    return objlist
+    return [obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes]
 
 
-def getChildren(root):
-    """Finds all children for a given root
+def getChildren(root, phobostypes=(), selected_only=True, include_hidden=True):
+    """Finds all (selected or unselected / hidden or unhidden) children of a
+    given root object and phobostypes. If phobostypes is not provided, it is ignored.
 
+    :param root:
+    :param phobostypes:
+    :param include_selected:
+    :param include_hidden:
+    :return:
     """
-    children = []
-    for obj in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
-        if getRoot(obj) == root:
-            children.append(obj)
-    return children
+    return [child for child in bpy.context.scene.objects if getRoot(child) == root
+            and (child.phobostype in phobostypes if phobostypes else True)
+            and (not child.hide or include_hidden)
+            and (child.select or not selected_only)]
 
 
-def getImmediateChildren(obj, phobostypes=None):
-    """Finds all immediate children for a given object
-
+def getImmediateChildren(obj, phobostypes=(), selected_only=True, include_hidden=True):
+    """Finds all immediate children for a given object and phoboytypes.
+    If phobostypes is not provided, it is ignored.
     """
-    children = []
-    for child in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
-        if child.parent == obj:
-            if phobostypes is not None:
-                if child.phobostype in phobostypes:
-                    children.append(child)
-            else:
-                children.append(child)
-    return children
+    return [child for child in bpy.context.scene.objects if child.parent == obj
+            and (child.phobostype in phobostypes if phobostypes else True)
+            and (not child.hide or include_hidden)
+            and (child.select or not selected_only)]
+
+
+def getEffectiveParent(obj):
+    """
+    Returns the visible parent of an object, i.e. the first *link* ascending the
+    object tree starting from the obj, excluding hidden objects unless specified
+    differently by *include_hidden*.
+    tree which is
+    :param obj:
+    :return:
+    """
+    print("EffectiveParent for obj: ", obj.name)
+    parent = obj.parent
+    while parent and parent.hide:
+        parent = parent.parent
+        print("   iterating to parent: ", parent.name)
+    print("  ", parent)
+    return parent
 
 
 def getRoot(obj=None):
     """
-    Find the root of an object, i.e. the first going up the tree containing a
+    Returns the root of an object, i.e. the first going up the tree containing a
     model name or entity name. If there is no such object up the tree, the
     tree's top-most object is returned.
     If no object is given, find root of the active object. If there is no
@@ -80,7 +93,7 @@ def getRoot(obj=None):
     :return: The root object.
     """
     if not obj:
-        for anobj in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
+        for anobj in bpy.context.scene.objects:
             if bpy.context.scene.objects.active == anobj:
                 obj = anobj
                 break
@@ -95,16 +108,12 @@ def getRoot(obj=None):
 
 def getRoots():
     """
-    Find all of the scene's root links, i.e. links containing a model name or
-    entity name.
+    Returns a list of all of the current scene's root links, i.e. links containing a model
+    name or entity name.
 
     :return: List of all root links.
     """
-    roots = []
-    for obj in bpy.data.objects:  # TODO: this is not the best list to iterate over (there might be multiple scenes)
-        if ('modelname' in obj or 'entityname' in obj) and obj.phobostype == "link":
-            roots.append(obj)
-
+    roots = [obj for obj in bpy.context.scene.objects if isModelRoot(obj)]
     if not roots:
         log("Phobos: No root objects found.", "WARNING", "getRoots")
     else:
@@ -112,10 +121,25 @@ def getRoots():
     return roots  # TODO: Should we change this and all other list return values in a tuple or generator expression?
 
 
+def isModelRoot(obj):
+    """
+    Returns whether or not the object passed to obj is a Phobos model root.
+
+    :param obj: The object for which model root status is tested.
+    :return: True if obj is Phobos model root, else False.
+    """
+    return ('modelname' in obj or 'entityname' in obj) and obj.phobostype == "link"
+
+
 def selectObjects(objects, clear=True, active=-1):
-    """Selects all objects provided in list, clears current selection if clear is True
+    """
+    Selects all objects provided in list, clears current selection if clear is True
     and sets one of the objects the active objects if a valid index is provided.
 
+    :param objects:
+    :param clear:
+    :param active:
+    :return:
     """
 
     ##Jan Paul: solution to "context is incorrect" error from
@@ -141,17 +165,14 @@ def getObjectByName(name):
 
     """
     objlist = []
-    for obj in bpy.data.objects:
+    for obj in bpy.context.scene.objects:
         if name == obj.name:
             objlist.append(obj)
         else:
-            for type in defs.subtypes:
-                nameTag = type + "/name"
-                if nameTag in obj and name == obj[nameTag]:
+            for subtype in defs.subtypes:
+                nametag = subtype + "/name"
+                if nametag in obj and name == obj[nametag]:
                     objlist.append(obj)
-                    # 'break' does not seem to make sense here, as there may be
-                    # objects from different types with the wanted name
-                    #break
     return objlist
 
 
