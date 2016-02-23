@@ -37,10 +37,8 @@ import yaml
 
 # import from Blender
 import bpy
-import mathutils
 
 # import from Phobos
-import phobos.defs as defs
 import phobos.joints as joints
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
