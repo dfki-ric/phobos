@@ -879,7 +879,6 @@ class DefineJointConstraintsOperator(Operator):
 
         lower = 0
         upper = 0
-        velocity = 0
         if self.joint_type in ('revolute', 'prismatic'):
             if not self.useRadian:
                 lower = math.radians(self.lower)
@@ -891,22 +890,19 @@ class DefineJointConstraintsOperator(Operator):
             velocity = self.maxvelocity * ((2 * math.pi) / 360)  # from °/s to rad/s
         else:
             velocity = self.maxvelocity
-        objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
-        for link in objs:
-            context.scene.objects.active = link
-            joints.setJointConstraints(link, self.joint_type, lower, upper, self.spring, self.damping)
+        for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
+            context.scene.objects.active = joint
+            joints.setJointConstraints(joint, self.joint_type, lower, upper, self.spring, self.damping)
             if self.joint_type != 'fixed':
-                link['joint/maxeffort'] = self.maxeffort
-                link['joint/maxvelocity'] = velocity
+                joint['joint/maxeffort'] = self.maxeffort
+                joint['joint/maxvelocity'] = velocity
             else:
-                if "joint/maxeffort" in link: del link["joint/maxeffort"]
-                if "joint/maxvelocity" in link: del link["joint/maxvelocity"]
+                if "joint/maxeffort" in joint: del joint["joint/maxeffort"]
+                if "joint/maxvelocity" in joint: del joint["joint/maxvelocity"]
             if self.passive:
-                link['joint/passive'] = "$true"
+                joint['joint/passive'] = "$true"
             else:
-                pass  # FIXME: add default motor here or upon export?
-                # upon export might have the advantage of being able
-                # to check for missing motors in the model checking
+                log("Please add motor to active joint in " + joint.name, "INFO", "DefineJointConstraintsOperator")
         return {'FINISHED'}
 
 
