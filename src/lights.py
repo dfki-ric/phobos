@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# coding=utf-8
 
 """
 Copyright 2015, University of Bremen & DFKI GmbH Robotics Innovation Center

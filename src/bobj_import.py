@@ -1,4 +1,6 @@
-#import importer
+#!/usr/bin/python
+# coding=utf-8
+
 import struct
 
 import os
