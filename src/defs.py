@@ -36,7 +36,10 @@ This module may well be imported and used outside of the MARS Blender Tools
 in the future.
 """
 
-import math, os, yaml, re, bpy
+import os
+import re
+import yaml
+import bpy
 from bpy.types import AddonPreferences
 from bpy.props import StringProperty, EnumProperty, BoolProperty
 from phobos.logging import loglevels, log
@@ -45,8 +48,22 @@ from phobos.logging import loglevels, log
 # TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below
 
+# phobos version number
 version = '0.7'
 
+# definitions of which elements are assigned to which default layers
+layerTypes = {
+    "link": 0,
+    'inertial': 1,
+    "visual": 2,
+    "collision": 3,
+    "sensor": 4,
+    "decoration": 5,
+    "light": 6,
+    "approxsphere": 13
+}
+
+# types of blender objects phobos differentiates
 phobostypes = (('undefined',) * 3,
                ('link',) * 3,
                ('inertial',) * 3,
@@ -65,8 +82,6 @@ jointtypes = (('revolute',) * 3,
               ('fixed',) * 3,
               ('floating',) * 3,
               ('planar',) * 3)
-
-motortypes = []
 
 geometrytypes = (('box',) * 3,
                  ('cylinder',) * 3,
@@ -92,45 +107,14 @@ type_properties = {"undefined": (),
                    "controller_default": ("controller",),
                    "light": ('name', 'light/directional', 'light/exponent'),
                    "light_default": ('new_light', 'true', '1.0')
-}
+                   }
 
-# definition of phobos specific custom properties
-reservedProperties ={
-    #saves the filename of a shared mesh for visual and collision objects. It lives in the geometry category.
-    "SHAREDMESH": "sharedMeshFile"
-}
-
-# definition of node types
-nodeTypes = ("undefined",
-             "mesh",
-             "box",
-             "sphere",
-             "capsule",
-             "cylinder",
-             "plane",
-             "terrain",
-             "reference"
-)
-
-# definition of joint types
-# jointTypes = ("undefined",
-#              "revolute",
-#              "continuous",
-#              "prismatic",
-#              "hinge2",
-#              "slider",
-#              "ball",
-#              "universal",
-#              "fixed",
-#              "istruct-spine"
-#             )
-
-# definition of sensor types
+# definitions of model elements to be read in
+dictConstraints = {}
+motortypes = []
 sensortypes = []
-
 sensorProperties = {}
 
-dictConstraints = {}
 
 checkMessages = {"NoObject": []}
 
@@ -140,25 +124,12 @@ def generateCheckMessages(param1, param2):#FIXME: Parameter?
     """
     return [(x,)*3 for x in list(checkMessages.keys())]
 
-#definitions of which elements live on which layers by default
-layerTypes = {
-    "link": 0,
-    'inertial': 1,
-    "visual": 2,
-    "collision": 3,
-    "sensor": 4,
-    "decoration": 5,
-    "light": 6,
-    "approxsphere": 13
-}
-
-#default materials used: Phobos
+# default materials used in Phobos
 defaultmaterials = {
     'phobos_joint': {'diffuse': (0, 0, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
     'phobos_name': {'diffuse': (1, 1, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
     'phobos_laserscanner': {'diffuse': (1.0, 0.08, 0.08), 'specular': (1, 1, 1), 'alpha': 0.3,
                             'diffuse_intensity': 1.0},
-    #'phobos_camera': {'diffuse': (0.13, 0.4, 1), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 0.8},
     'phobos_tof-camera': {'diffuse': (0.44, 1, 0.735), 'specular': (1, 1, 1), 'alpha': 0.3, 'diffuse_intensity': 0.7},
     'phobos_inertial': {'diffuse': (1, 0.18, 0), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
     'phobos_sensor': {'diffuse': (0.8, 0.75, 0), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
@@ -172,9 +143,6 @@ defaultmaterials = {
     'phobos_indicator6': {'diffuse': (0, 1, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
 }
 
-MARSlegacydict = {'specularColor': 'specularFront',
-                  'diffuseColor': 'diffuseFront'
-}
 
 def updateDefs(defsFolderPath):
     """Updates the definitions with all yml files in the given folder
@@ -201,6 +169,7 @@ def updateDefs(defsFolderPath):
                     motortypes.append((motor,) * 3)
     # Extending dictConstraints
     dictConstraints['sensors']['$forElem']['$selection__type'] = sensorProperties
+
 
 def __parseAllYAML(path):
     """This functions reads all .yml files in the given path and loads them.
@@ -230,6 +199,7 @@ def __parseAllYAML(path):
                     log("The file "+file+" was not found.", "ERROR")
     return dicts
 
+
 def __evaluateString(s):
     """This functions evaluates a string by searching for mathematical expressions enclosed in &
     and evaluating the inner string as python code.
@@ -246,6 +216,7 @@ def __evaluateString(s):
             log("The expression " + ma + " could not be evaluated. Ignoring file", "ERROR")
             return ""
     return s
+
 
 class PhobosPrefs(AddonPreferences):
     bl_idname = __package__
@@ -279,12 +250,6 @@ class PhobosPrefs(AddonPreferences):
         layout.prop(self, "logtofile", text="write to logfile")
         layout.prop(self, "logtoterminal", text="only display in terminal")
         layout.prop(self, "loglevel", text="log level")
-
-def getPrefs():
-    """Returns the addon preferences object for fast access.
-    :return: The addon preferences object.
-    """
-    return bpy.context.user_preferences.addons["phobos"].preferences
 
 def register():
     print("Registering " + __name__)
