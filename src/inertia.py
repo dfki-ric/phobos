@@ -514,7 +514,7 @@ def createInertials(link, empty=False, preserve_children=False):
         for obj in viscols:
             if not empty:
                 mass = obj['mass'] if 'mass' in obj else None
-                geometry = robotdictionary.deriveGeometry(obj)
+                geometry = generalUtils.deriveGeometry(obj)
                 if mass is not None:
                     if geometry['type'] == 'mesh':
                         selectionUtils.selectObjects([obj])
