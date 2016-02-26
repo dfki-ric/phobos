@@ -432,20 +432,27 @@ def fuseInertiaData(inertials):
     for o in inertials:
         objdict = None
         try:
+            pose = generalUtils.deriveObjectPose(o)
+            # FIXME the following is really a short cut that points to a bigger problem
+            inertia = o['inertia'] if 'inertia' in o else o['inertial/inertia']
+            mass = o['mass'] if 'mass' in o else o['inertial/mass']
             objdict = {'name': o.name,
-                       'mass': o['mass'],
-                       'com': o.matrix_local.to_translation(),
-                       'rot': o.matrix_local.to_3x3(),
-                       'inertia': o['inertia']
+                       'mass': mass,
+                       'com': mathutils.Vector(pose['translation']),  # FIXME: this is not nice, as we invert what is one when deriving the pose
+                       'rot': pose['rawmatrix'].to_3x3(),
+                       'inertia': inertia
                        }
-        except KeyError:
-            print('Inertial object ' + o.name + ' is missing data.')
+        except KeyError as e:
+            log('Inertial object ' + o.name + ' is missing data: '+str(e), "WARNING", "fuseInertiaData")
         if objdict:
             objects.append(objdict)
     if len(objects) > 0:
+        log("Fusing inertials: " + str([i.name for i in inertials]), "DEBUG", "fuseInertiaData")
         mass, com, inertia = compound_inertia_analysis_3x3(objects)
+        log("Fused mass: " + str(mass), "DEBUG", "fuseInertiaData")
         return mass, com, inertia
     else:
+        log("No inertial found to fuse.", "DEBUG", "fuseInertiaData")
         return None, None, None
 
 
