@@ -260,7 +260,7 @@ class PhobosPrefs(AddonPreferences):
     loglevel = EnumProperty(
         name="loglevel",
         items=tuple(((l,)*3 for l in tuple(loglevels.keys()))),
-        default="INFO"
+        default="ERROR"
     )
 
     logtofile = BoolProperty(
