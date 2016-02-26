@@ -35,10 +35,35 @@ import phobos.defs as defs
 from datetime import datetime
 
 
-"""
-This is the global operator variable storing the currently active blender operator.
-"""
+# This is the global operator variable storing the currently active blender operator.
 operator = None
+
+class col:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    DEBUG = '\033[35m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    BLINK = '\033[5m'
+    DIM = '\033[2m'
+
+
+def decorate(level):
+    if level == "INFO":
+        return col.BOLD+col.OKGREEN+level+col.ENDC
+    if level == "WARNING":
+        return col.BOLD+col.WARNING+level+col.ENDC
+    if level == "ERROR":
+        return col.BOLD+col.FAIL+level+col.ENDC
+    if level == "DEBUG":
+        return col.BOLD+col.DEBUG+level+col.ENDC
+    else:
+        return level
+
 
 def startLog(pOperater):
     """Sets the global operator variable to the given operator
@@ -47,11 +72,13 @@ def startLog(pOperater):
     global operator
     operator = pOperater
 
+
 def endLog():
     """Sets the global operator variable to None.
     """
     global operator
     operator = None
+
 
 def log(message, level="INFO", origin=""):
     """Logs a given message to the blender console and logging file if present
@@ -61,22 +88,25 @@ def log(message, level="INFO", origin=""):
     :param origin: If set the message is prefixed with the origin.
     """
     prefs = defs.getPrefs()
-    if defs.logLevels[level] <= defs.logLevels[prefs.logLevel]:
-        msg = origin + "::" + message if origin != "" else message
-        if operator != None:
-            operator.report({level}, msg)
-        if prefs.logFile != "":
+    if defs.loglevels[level] <= defs.loglevels[prefs.loglevel]:
+        date = datetime.now().strftime("%Y%m%d_%H:%M")
+        msg = "[" + date + "] " + level + " " + message + " (" + origin + ")"
+        terminalmsg = "[" + date + "] " + decorate(level) + " " + message + col.DIM + " (" + origin + ")" + col.ENDC
+        if prefs.logtofile:
             try:
-                with open(prefs.logFile, "a") as lf:
-                    date = datetime.now().strftime("%Y%m%d_%H:%M")
+                with open(prefs.logfile, "a") as lf:
                     lf.write(date + "  " + msg + "\n")
             except IOError:
-                prefs.logFile = ""
                 log("Cannot write to log file! Resetting it.", "ERROR", __name__+".log")
-        print(msg)
+        # log to terminal or Blender
+        if prefs.logtoterminal:
+            print(terminalmsg)
+        elif operator is not None:
+            operator.report({level}, msg)
 
 def register():
     print("Registering " + __name__)
+
 
 def unregister():
     print("Unregistering " + __name__)

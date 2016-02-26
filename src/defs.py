@@ -37,7 +37,7 @@ in the future.
 
 import math, os, yaml, re, bpy
 from bpy.types import AddonPreferences
-from bpy.props import StringProperty, EnumProperty
+from bpy.props import StringProperty, EnumProperty, BoolProperty
 
 
 # TODO: the following definitions for enum properties in blender should be
@@ -66,7 +66,7 @@ jointtypes = (('revolute',) * 3,
 
 motortypes = []
 
-logLevels = {"NONE": 0, "ERROR": 1, "WARNING": 2, "INFO": 3}
+loglevels = {"NONE": 0, "ERROR": 1, "WARNING": 2, "INFO": 3, "DEBUG": 4}
 
 geometrytypes = (('box',) * 3,
                  ('cylinder',) * 3,
@@ -250,22 +250,35 @@ def __evaluateString(s):
 class PhobosPrefs(AddonPreferences):
     bl_idname = __package__
 
-    logFile = StringProperty(
-        name = "Log file",
-        subtype = "FILE_PATH",
+    logfile = StringProperty(
+        name="logfile",
+        subtype="FILE_PATH",
+        default="."
     )
 
-    logLevel = EnumProperty(
-        name = "Loglevel",
-        items = tuple(((l,)*3 for l in tuple(logLevels.keys()))),
-        default = "INFO"
+    loglevel = EnumProperty(
+        name="loglevel",
+        items=tuple(((l,)*3 for l in tuple(loglevels.keys()))),
+        default="INFO"
+    )
+
+    logtofile = BoolProperty(
+        name="logtofile",
+        default=False
+    )
+
+    logtoterminal = BoolProperty(
+        name="logtoterminal",
+        default=True
     )
 
     def draw(self, context):
         layout = self.layout
         layout.label(text="Logging Settings")
-        layout.prop(self, "logFile")
-        layout.prop(self, "logLevel")
+        layout.prop(self, "logfile", text="log file path")
+        layout.prop(self, "logtofile", text="write to logfile")
+        layout.prop(self, "logtoterminal", text="only display in terminal")
+        layout.prop(self, "loglevel", text="log level")
 
 def getPrefs():
     """Returns the addon preferences object for fast access.
