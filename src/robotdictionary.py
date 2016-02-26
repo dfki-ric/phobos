@@ -42,9 +42,12 @@ import bpy
 import phobos.joints as joints
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
-import phobos.utils.general as gUtils
 import phobos.utils.blender as bUtils
 import phobos.logging as log
+from phobos.utils.general import epsilonToZero
+from phobos.utils.general import deriveObjectPose
+from phobos.utils.general import deriveGeometry
+
 
 
 def register():
@@ -234,45 +237,6 @@ def deriveKinematics(obj):
     return link, joint, motor
 
 
-def deriveGeometry(obj):
-    """This function derives the geometry from an object.
-
-    :param obj: The blender object to derive the geometry from.
-    :type obj: bpy_types.Object
-    :return: dict
-
-    """
-    if 'geometry/type' in obj:
-        geometry = {'type': obj['geometry/type']}
-        gt = obj['geometry/type']
-        if gt == 'box':
-            geometry['size'] = list(obj.dimensions)
-        elif gt == 'cylinder' or gt == 'capsule':
-            geometry['radius'] = obj.dimensions[0]/2
-            geometry['length'] = obj.dimensions[2]
-        elif gt == 'sphere':
-            geometry['radius'] = obj.dimensions[0]/2
-        elif gt == 'mesh':
-            filename = obj.data.name
-            if bpy.data.worlds[0].useObj:
-                filename += ".obj"
-            elif bpy.data.worlds[0].useBobj:
-                filename += ".bobj"
-            elif bpy.data.worlds[0].useStl:
-                filename += ".stl"
-            elif bpy.data.worlds[0].useDae:
-                filename += ".dae"
-            else:
-                filename += ".obj"
-            geometry['filename'] = os.path.join('meshes', filename)
-            geometry['scale'] = list(obj.scale)
-            geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
-        return geometry
-    else:
-        warnings.warn("No geometry/type found for object "+nUtils.getObjectName(obj)+".")
-        return None
-
-
 def deriveInertial(obj):
     """This function derives the inertial from the given object.
 
@@ -284,22 +248,6 @@ def deriveInertial(obj):
     props['inertia'] = list(map(float, obj['inertial/inertia']))
     props['pose'] = deriveObjectPose(obj)
     return props
-
-
-def deriveObjectPose(obj):
-    """This function derives a pose of link, visual or collision object.
-
-    :param obj: The blender object to derive the pose from.
-    :type obj: bpy_types.Object
-    :return: dict
-
-    """
-    pose = {}
-    pose['matrix'] = [list(vector) for vector in list(obj.matrix_local)]
-    pose['translation'] = list(obj.matrix_local.to_translation())
-    pose['rotation_euler'] = list(obj.matrix_local.to_euler())
-    pose['rotation_quaternion'] = list(obj.matrix_local.to_quaternion())
-    return pose
 
 
 def deriveVisual(obj):

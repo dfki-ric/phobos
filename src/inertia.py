@@ -32,7 +32,6 @@ import bpy
 import mathutils
 import math
 import phobos.defs as defs
-import phobos.robotdictionary as robotdictionary
 import phobos.utils.general as generalUtils
 import phobos.utils.selection as selectionUtils
 import phobos.utils.blender as blenderUtils

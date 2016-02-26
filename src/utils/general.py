@@ -25,12 +25,14 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from phobos.logging import log
-import phobos.utils.selection as selectionUtils
-import phobos.utils.naming as namingUtils
-from datetime import datetime
 import re
+import os
+import bpy
+from datetime import datetime
 import mathutils
+from phobos.logging import log
+import phobos.utils.naming as nUtils
+import phobos.utils.selection as sUtils
 
 
 def is_float(s):
@@ -188,7 +190,7 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            log("The object '" + namingUtils.getObjectName(obj) + "' has not property '" + numeric_prop + "'")
+            log("The object '" + nUtils.getObjectName(obj) + "' has not property '" + numeric_prop + "'")
     return numsum
 
 
@@ -218,3 +220,66 @@ def outerProduct(v, u):
     for vi in v:
         lines.append([vi * ui for ui in u])
     return mathutils.Matrix(lines)
+
+
+def deriveObjectPose(obj):
+    """This function derives a pose of link, visual or collision object.
+
+    :param obj: The blender object to derive the pose from.
+    :type obj: bpy_types.Object
+    :return: dict
+
+    """
+    matrix = obj.matrix_local
+    effectiveparent = sUtils.getEffectiveParent(obj)
+    parent = obj.parent
+    while parent != effectiveparent and parent is not None:
+        matrix = parent.matrix_local * matrix
+        parent = parent.parent
+    pose = {'rawmatrix': matrix,
+            'matrix': [list(vector) for vector in list(matrix)],
+            'translation': list(matrix.to_translation()),
+            'rotation_euler': list(matrix.to_euler()),
+            'rotation_quaternion': list(matrix.to_quaternion())
+            }
+    return pose
+
+
+def deriveGeometry(obj):
+    """This function derives the geometry from an object.
+
+    :param obj: The blender object to derive the geometry from.
+    :type obj: bpy_types.Object
+    :return: dict
+
+    """
+    try:
+        geometry = {'type': obj['geometry/type']}
+        gt = obj['geometry/type']
+        if gt == 'box':
+            geometry['size'] = list(obj.dimensions)
+        elif gt == 'cylinder' or gt == 'capsule':
+            geometry['radius'] = obj.dimensions[0]/2
+            geometry['length'] = obj.dimensions[2]
+        elif gt == 'sphere':
+            geometry['radius'] = obj.dimensions[0]/2
+        elif gt == 'mesh':
+            filename = obj.data.name
+            if bpy.data.worlds[0].useObj:
+                filename += ".obj"
+            elif bpy.data.worlds[0].useBobj:
+                filename += ".bobj"
+            elif bpy.data.worlds[0].useStl:
+                filename += ".stl"
+            elif bpy.data.worlds[0].useDae:
+                filename += ".dae"
+            else:
+                filename += ".obj"
+            geometry['filename'] = os.path.join('meshes', filename)
+            geometry['scale'] = list(obj.scale)
+            geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
+        return geometry
+    except KeyError as err:
+        log("Undefined geometry for object " + nUtils.getObjectName(obj)
+            + " " + str(err), "ERROR", "deriveGeometry")
+        return None
