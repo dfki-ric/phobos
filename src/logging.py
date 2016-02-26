@@ -32,12 +32,15 @@ Created on 05 Dec 2014
 
 """
 
-import phobos.defs as defs
+import bpy
 from datetime import datetime
 
 
-# This is the global operator variable storing the currently active blender operator.
+# global operator storing the currently active blender operator
 operator = None
+
+# levels of detail for logging
+loglevels = {"NONE": 0, "ERROR": 1, "WARNING": 2, "INFO": 3, "DEBUG": 4}
 
 class col:
     HEADER = '\033[95m'
@@ -85,11 +88,11 @@ def log(message, level="INFO", origin=""):
     """Logs a given message to the blender console and logging file if present
     and if log level is low enough.
     :param message: The message to log.
-    :param level: The log level for the message. Must be one of the logLevels specified defs
+    :param level: Valid log level for the message as defined by 'loglevels'.
     :param origin: If set the message is prefixed with the origin.
     """
-    prefs = defs.getPrefs()
-    if defs.loglevels[level] <= defs.loglevels[prefs.loglevel]:
+    prefs = bpy.context.user_preferences.addons["phobos"].preferences
+    if loglevels[level] <= loglevels[prefs.loglevel]:
         date = datetime.now().strftime("%Y%m%d_%H:%M")
         msg = "[" + date + "] " + level + " " + message + " (" + origin + ")"
         terminalmsg = "[" + date + "] " + decorate(level) + " " + message + col.DIM + " (" + origin + ")" + col.ENDC

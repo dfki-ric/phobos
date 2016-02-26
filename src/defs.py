@@ -39,6 +39,7 @@ in the future.
 import math, os, yaml, re, bpy
 from bpy.types import AddonPreferences
 from bpy.props import StringProperty, EnumProperty, BoolProperty
+from phobos.logging import loglevels, log
 
 
 # TODO: the following definitions for enum properties in blender should be
@@ -66,8 +67,6 @@ jointtypes = (('revolute',) * 3,
               ('planar',) * 3)
 
 motortypes = []
-
-loglevels = {"NONE": 0, "ERROR": 1, "WARNING": 2, "INFO": 3, "DEBUG": 4}
 
 geometrytypes = (('box',) * 3,
                  ('cylinder',) * 3,
