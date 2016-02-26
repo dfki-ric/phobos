@@ -44,7 +44,7 @@ def printMatrices(obj, info=None):
 
     """
     if not info:
-        info = selection.getObjectName(obj)
+        info = obj.name
     print("\n----------------", info, "---------------------\n",
           "local:\n", obj.matrix_local,
           "\n\nworld:\n", obj.matrix_world,
