@@ -133,7 +133,7 @@ def parse_text(s):
 
     """
     numstrings = s.split()
-    if numstrings == []:
+    if numstrings:
         return None
     if len(numstrings) > 1:
         if only_contains_int(numstrings):
@@ -146,6 +146,21 @@ def parse_text(s):
             return numstrings  # s
     else:
         return parse_number(s)
+
+
+def securepath(path):
+    """This function checks whether a path exists or not.
+    If it doesn't the functions creates the path.
+
+    :param path: The path you want to check for existence *DIRECTORIES ONLY*
+    :type path: str
+    :return: String -- the path given as parameter, but secured by expanding ~ constructs.
+
+    """
+    # TODO: add exception handling
+    if not os.path.exists(path):
+        os.makedirs(path)
+    return os.path.expanduser(path)
 
 
 def calcBoundingBoxCenter(boundingbox):
@@ -191,7 +206,8 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            log("The object '" + nUtils.getObjectName(obj) + "' has not property '" + numeric_prop + "'")
+            log(obj.phobostype + " object " + obj.name + " does not contain '" + numeric_prop
+                + "'", "WARNING", "calculateSum")
     return numsum
 
 

@@ -30,23 +30,19 @@ File export.py
 Created on 13 Feb 2014
 """
 
-import bpy
-import mathutils
 import os
 import shutil
-import tempfile
-import zipfile
-import shutil
-from datetime import datetime
-import yaml
 import struct
 import itertools
+from datetime import datetime
+import yaml
+import bpy
 import phobos.robotdictionary as robotdictionary
 import phobos.defs as defs
 import phobos.utils.blender as blenderUtils
 import phobos.utils.selection as selectionUtils
-import phobos.utils.general as generalUtils
 import phobos.utils.naming as namingUtils
+from phobos.utils.general import securepath, roundVector
 from phobos.logging import log
 
 
@@ -65,7 +61,6 @@ def unregister():
 
 
 indent = '  '
-# xmlHeader = '<!-- created with Phobos ' + defs.version + ' -->\n<?xml version="1.0"?>\n'
 xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
 xmlFooter = indent + '</robot>\n'
 
@@ -139,14 +134,14 @@ def exportBobj(path, obj):
         if f.use_smooth:
             for v_idx in f.vertices:
                 v = me_verts[v_idx]
-                noKey = generalUtils.roundVector(v.normal, 6)
+                noKey = roundVector(v.normal, 6)
                 if noKey not in globalNormals:
                     globalNormals[noKey] = totno
                     totno += 1
                     out.write(struct.pack('ifff', 3, noKey[0], noKey[1], noKey[2]))
         else:
             # Hard, 1 normal from the face.
-            noKey = generalUtils.roundVector(f.normal, 6)
+            noKey = roundVector(f.normal, 6)
             if noKey not in globalNormals:
                 globalNormals[noKey] = totno
                 totno += 1
@@ -171,17 +166,17 @@ def exportBobj(path, obj):
                 if f_smooth:  # Smoothed, use vertex normals
                     for vi, v in f_v:
                         out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi],
-                                              globalNormals[generalUtils.roundVector(v.normal, 6)]))
+                                              globalNormals[roundVector(v.normal, 6)]))
                 else:  # No smoothing, face normals
-                    no = globalNormals[generalUtils.roundVector(f.normal, 6)]
+                    no = globalNormals[roundVector(f.normal, 6)]
                     for vi, v in f_v:
                         out.write(struct.pack('iii', v.index + totverts, totuvco + uv_face_mapping[f_index][vi], no))
             else:  # No UV's
                 if f_smooth:  # Smoothed, use vertex normals
                     for vi, v in f_v:
-                        out.write(struct.pack('iii', v.index + totverts, 0, globalNormals[generalUtils.roundVector(v.normal, 6)]))
+                        out.write(struct.pack('iii', v.index + totverts, 0, globalNormals[roundVector(v.normal, 6)]))
                 else:  # No smoothing, face normals
-                    no = globalNormals[generalUtils.roundVector(f.normal, 6)]
+                    no = globalNormals[roundVector(f.normal, 6)]
                     for vi, v in f_v:
                         out.write(struct.pack('iii', v.index + totverts, 0, no))
     out.close()
@@ -1136,21 +1131,6 @@ def deriveHeightmapEntity(heightmap, outpath):
                  "rotation": entitypose["rotation_quaternion"]
                  }
     return entry
-
-
-def securepath(path):
-    """This function checks whether a path exists or not.
-    If it doesn't the functions creates the path.
-
-    :param path: The path you want to check for existence *DIRECTORIES ONLY*
-    :type path: str
-    :return: String -- the path given as parameter, but secured by expanding ~ constructs.
-
-    """
-    # TODO: add exception handling
-    if not os.path.exists(path):
-        os.makedirs(path)
-    return os.path.expanduser(path)
 
 
 def export(model, objectlist, path=None):
