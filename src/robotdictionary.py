@@ -29,7 +29,6 @@ Created on 28 Jul 2014
 import os
 import copy
 import sys
-import warnings
 from datetime import datetime
 
 # imports from additional modules
@@ -43,7 +42,7 @@ import phobos.joints as joints
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
-import phobos.logging as log
+from phobos.logging import log
 from phobos.utils.general import epsilonToZero
 from phobos.utils.general import deriveObjectPose
 from phobos.utils.general import deriveGeometry
