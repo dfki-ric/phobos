@@ -46,7 +46,7 @@ import sys
 import os.path
 
 yamlconfpath = os.path.dirname(__file__) + "/yamlpath.conf"
-if (os.path.isfile(yamlconfpath)):
+if os.path.isfile(yamlconfpath):
     f = open(yamlconfpath)
     path = f.read()
     f.close()

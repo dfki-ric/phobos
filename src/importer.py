@@ -145,7 +145,7 @@ def round_float(float_as_str, decimal=6):
 
     """
     return round(float(float_as_str), decimal)
-    
+
 def pos_rot_tree_to_lists(position, rotation):
     """Convert the xml representations of a position and a rotation to lists.
     If either is 'None', return a list of zeroes instead.
@@ -170,9 +170,9 @@ def pos_rot_tree_to_lists(position, rotation):
         rz = round_float(rotation.find('z').text)
     else:
         rw, rx, ry, rz = (0, 0, 0, 0)
-        
+
     return [px, py, pz], [rw, rx, ry, rz]
-        
+
 def calc_pose_formats(position, rotation, pivot=[0,0,0]):
     """Create a dictionary containing various representations of the pose
     represented by 'position' and 'rotation':
@@ -254,7 +254,7 @@ def calc_pose_formats(position, rotation, pivot=[0,0,0]):
     #print()
 
     return pose_dict
-    
+
 def add_quaternion(rot1, rot2):
     """Adds two rotations in quaternion format and returns the result as tuple.
 
@@ -269,8 +269,8 @@ def add_quaternion(rot1, rot2):
     quat2 = mathutils.Quaternion(rot2)
     quat_sum = quat1 * quat2
     return (quat_sum.w, quat_sum.x, quat_sum.y, quat_sum.z)
-    
-    
+
+
 def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
     '''
     Handle missing visual and collision geometry.
@@ -977,7 +977,7 @@ class RobotModelParser():
 
         print('Done!')
 
-        
+
     def _debug_output(self):
         """Writes the robot dictionary to a yaml file in the source file's directory
 
@@ -999,7 +999,7 @@ class MARSModelParser(RobotModelParser):
         Initialise a 'MARSModelParser' object and a number of containers
         used to keep track of the parsed information and to apply it in
         the right places.
-        
+
         Explanation of some of the containers:
             - self.link_index_dict:
                 {link index: link name}
@@ -1021,7 +1021,7 @@ class MARSModelParser(RobotModelParser):
         """
 
         RobotModelParser.__init__(self, filepath)
-        
+
         self.xml_tree = None
 
         self.link_index_dict = {}
@@ -1073,7 +1073,7 @@ class MARSModelParser(RobotModelParser):
             self.xml_tree = ET.parse(self.filepath)
 
         root = self.xml_tree.getroot()
-        
+
         nodes = root.find('nodelist')
         joints = root.find('jointlist')
         sensors = root.find('sensorlist')
@@ -1087,7 +1087,7 @@ class MARSModelParser(RobotModelParser):
         self._apply_relative_ids(nodes)
 
         self.robot['materials'] = self._parse_materials(material_list)
-        
+
         links = self._parse_links(nodes)
         #self._add_parent_links(links)
         self.robot['name'] = os.path.basename(self.filepath).split('.')[0]
@@ -1100,7 +1100,7 @@ class MARSModelParser(RobotModelParser):
         self.robot['groups'] = self.link_groups_group_order
         self._parse_additional_visuals_and_collisions(self.robot, nodes)
         self.robot['lights'] = self._parse_lights(lights, links)
-        
+
         for link in self.robot['links']:
             handle_missing_geometry(self.missing_vis_geos[link], self.missing_coll_geos[link], self.robot['links'][link])
 
@@ -1178,7 +1178,7 @@ class MARSModelParser(RobotModelParser):
             joint_dict['child'] = self.link_index_dict[joint['child_index']]
             joints_dict[joint_name] = joint_dict
         return joints_dict
-        
+
     def _parse_materials(self, materials_tree):
         """
         Parse the materials from the MARS scene.
@@ -1192,7 +1192,7 @@ class MARSModelParser(RobotModelParser):
         for material in materials_tree:
             material_dict = {}
             mat_id = int(material.find('id').text)
-            
+
             # check needs to be explicit for future versions
             name = self._find_name(material, emerg='material')
             material_dict['name'] = name
@@ -1209,7 +1209,7 @@ class MARSModelParser(RobotModelParser):
                     material_dict[py_colour] = [r, g, b, a]
                     # for now:
             #        material_dict['color'] = [r, g, b, a]
-            
+
             transparency = material.find('transparency')
             if transparency is not None:
                 material_dict['transparency'] = round_float(transparency.text)
@@ -1226,7 +1226,7 @@ class MARSModelParser(RobotModelParser):
                 materials.makeMaterial(name, tuple(material_dict['diffuseColor'][0:3]), (1, 1, 1), material_dict['diffuseColor'][-1])
 
         return materials_dict
-    
+
     def _parse_geometry(self, vis_coll_dict, node, mode):
         """
         Parse the geometry of a visual or collision object and add it to a the
@@ -1255,7 +1255,7 @@ class MARSModelParser(RobotModelParser):
         elif mode == 'collision':
             size = node.find('extend')
             geometry_type = node.find('physicmode').text
-        
+
         geometry_dict = {}
         geometry_dict['type'] = geometry_type
         if geometry_type == 'box' or geometry_type == 'mesh':
@@ -1277,7 +1277,7 @@ class MARSModelParser(RobotModelParser):
             x = round_float(size.find('x').text)
             y = round_float(size.find('y').text)
             geometry_dict['size'] = [x, y]
-        
+
         if geometry_dict == {}:
             return False
         else:
@@ -1319,12 +1319,12 @@ class MARSModelParser(RobotModelParser):
         #visual_dict['pose'] = calc_pose_formats(pos, rot)
         mat_index = int(node.find('material_id').text)
         visual_dict['material'] = self.material_indices[mat_index]
-        
+
         if not self._parse_geometry(visual_dict, node, 'visual'):
             missing_vis_geo.append(name)
-        
+
         visuals_dict[name] = visual_dict
-        
+
     def _parse_collision(self, collisions_dict, node, missing_coll_geo):
         """
         Parse information for a collision object from a 'node' element.
@@ -1343,32 +1343,32 @@ class MARSModelParser(RobotModelParser):
         collision_dict = {}
         name = self._find_name(node, prefix='collision')
         collision_dict['name'] = name
-        index = int(node.find('index').text)        
-        
+        index = int(node.find('index').text)
+
         #if name.startswith('collision_joint_sphere'):
         #    position, rotation = pos_rot_tree_to_lists(None, None)
         #    collision_dict['pose'] = calc_pose_formats(position, rotation)
         #else:
         collision_dict['pose'] = self.applied_vis_col_poses[index]
-        
+
         bitmask = node.find('coll_bitmask')
         if bitmask is not None:
             collision_dict['bitmask'] = int(float(bitmask.text))
-        
+
         if not self._parse_geometry(collision_dict, node, 'collision'):
             missing_coll_geo.append(name)
-        
+
         max_contacts = node.find('cmax_num_contacts')
         if max_contacts is not None:
             collision_dict['max_contacts'] = int(max_contacts.text)
-        
+
         collisions_dict[name] = collision_dict
-        
+
     def _parse_inertial(self, link_dict, node):
         """
         Parse the inertial information of a node and write it into the
         respective link's dictionary.
-        
+
         :param link_dict: The dictionary of for the link the inertial
         information should be written to.
         :type link_dict: dict.
@@ -1377,11 +1377,11 @@ class MARSModelParser(RobotModelParser):
         :return: Nothing.
         """
         inertial_dict = {}
-        
+
         mass = node.find('mass')
         if mass is not None:
             inertial_dict['mass'] = round_float(mass.text)
-        
+
         inertia = node.find('inertia')
         if inertia is not None and bool(inertia.text):  # 'inertia' states whether the defined inertia values are to be used
             i00 = round_float(node.find('i00').text)
@@ -1393,14 +1393,14 @@ class MARSModelParser(RobotModelParser):
             inertial_dict['inertia'] = [i00, i01, i02,
                                              i11, i12,
                                                   i22]
-                                
+
         if inertial_dict is not {}:
             # inertial pose is always origin for now
             position, rotation = pos_rot_tree_to_lists(None, None)
             inertial_dict['pose'] = calc_pose_formats(position, rotation)
             inertial_dict['name'] = self._find_name(node, prefix='inertial')
             link_dict['inertial'] = inertial_dict
-     
+
     def _get_unique_name(self, name):
         """
         Create a name that has not been used yet in the currently parsed scene
@@ -1418,7 +1418,7 @@ class MARSModelParser(RobotModelParser):
             distinct_name = name
             self.name_counter_dict[name] = 1
         return distinct_name
-        
+
     def _parse_links(self, nodes):
         """
         Parse information for the links from the currently parsed scene.
@@ -1433,7 +1433,7 @@ class MARSModelParser(RobotModelParser):
             missing_coll_geo = []
             index = int(node.find('index').text)
             name = self._find_name(node)
-                
+
             self.link_index_dict[index] = name
 
             group_id = node.find('groupid')
@@ -1447,24 +1447,24 @@ class MARSModelParser(RobotModelParser):
                 self.link_groups_group_order[group].append(node_group_dict)
             else:
                 self.link_groups_group_order[group] = [node_group_dict]
-            
+
             rel_id = node.find('relativeid')
             if index in self.link_indices:
                 link_dict = {}
-                
+
                 link_dict['name'] = name
-                
+
                 pose = self.applied_rel_id_poses[index]
                 link_dict['pose'] = pose
 
                 visuals_dict = {}
                 #self._parse_visual(visuals_dict, node, missing_vis_geo)
                 link_dict['visual'] = visuals_dict
-                
+
                 collisions_dict = {}
                 #self._parse_collision(collisions_dict, node, missing_coll_geo)
                 link_dict['collision'] = collisions_dict
-                
+
                 self._parse_inertial(link_dict, node)
 
                 pivot = node.find('pivot')
@@ -1476,7 +1476,7 @@ class MARSModelParser(RobotModelParser):
 
                 if rel_id is not None:
                     link_dict['parent'] = int(rel_id.text)
-                
+
                 links_dict[name] = link_dict
                 self.missing_vis_geos[name] = missing_vis_geo
                 self.missing_coll_geos[name] = missing_coll_geo
@@ -1495,19 +1495,19 @@ class MARSModelParser(RobotModelParser):
                     link_index = node['index']
                     self.link_groups_link_order[link_index] = group
                     break
-                    
+
         for link_index in self.link_groups_link_order:
             group = self.link_groups_link_order[link_index]
             for node in group:
                 self.link_group_dict[node['index']] = link_index
-        
+
         for link_name in links_dict:
             link_dict = links_dict[link_name]
             if 'parent' in link_dict:
                 link_dict['parent'] = self.link_index_dict[self.link_group_dict[link_dict['parent']]]
-        
+
         return links_dict
-        
+
     def _add_parent_links(self, links):
         """
         Replace the 'parent' place holders inside the parsed links with the
@@ -1541,7 +1541,7 @@ class MARSModelParser(RobotModelParser):
         for link in self.link_groups_link_order:
             for node in self.link_groups_link_order[link]:
                 self.vis_coll_groups[node['index']] = link
-        
+
         for node in nodes:
             index = int(node.find('index').text)
             #rel_id = node.find('relativeid')
@@ -1559,13 +1559,13 @@ class MARSModelParser(RobotModelParser):
                         #self._parse_visual(visuals_dict, node, self.missing_vis_geos[name], root_child)
                         self._parse_visual(visuals_dict, node, self.missing_vis_geos[name])
                         model['links'][name]['visual'] = visuals_dict
-                        
+
                         collisions_dict = model['links'][name]['collision']
                         self._parse_collision(collisions_dict, node, self.missing_coll_geos[name])
                         model['links'][name]['collision'] = collisions_dict
-                        
+
                         break
-        
+
     def _parse_joints(self, joints):
         """
         Parse the joint information from the currently parsed scene.
@@ -1767,7 +1767,7 @@ class MARSModelParser(RobotModelParser):
 
             sensors_dict[name] = sensor_dict
         return sensors_dict
-    
+
     def _parse_motors(self, motors):
         """
         Parse the motor information from the currently parsed scene.
@@ -1812,7 +1812,7 @@ class MARSModelParser(RobotModelParser):
             motors_dict[name] = motor_dict
 
         return motors_dict
-    
+
     def _parse_controllers(self, controllers):
         """
         Parse the controller information from the currently parsed scene.
@@ -2025,7 +2025,7 @@ class URDFModelParser(RobotModelParser):
             joint = self.robot['joints'][j]
             self.robot['links'][joint['child']]['parent'] = joint['parent']
             #print(joint['parent'] + ', ', end='')
-            
+
         self.parseMaterials()
 
         self.robot['lights'] = {}
@@ -2094,7 +2094,7 @@ class URDFModelParser(RobotModelParser):
         if newlink == {}:
             print("\n### WARNING:", newlink['name'], "is empty.")
         return newlink
-        
+
     def parseInertial(self, link_dict, link_xml):
         '''
         '''
@@ -2110,9 +2110,9 @@ class URDFModelParser(RobotModelParser):
                 values = []
                 link_dict['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
             link_dict['inertial']['name'] = 'inertial_' + link_dict['name']
-            
-  
-        
+
+
+
 
     def parseJoint(self, joint):
         #print(joint.attrib['name']+', ', end='')
@@ -2133,7 +2133,7 @@ class URDFModelParser(RobotModelParser):
         #mimic
         #safety_controller
         return newjoint, pose
-        
+
     def parseMaterials(self):
         '''
         '''
@@ -2149,20 +2149,20 @@ class URDFModelParser(RobotModelParser):
             #TODO: handle duplicate names? urdf_robotname_xxx?
             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1])
             self.element_order['materials'].append(m['name'])
-    
+
 class SRDFModelParser(RobotModelParser):
     """Class derived from RobotModelParser wich parses a SRDF extension file for URDF"""
-    
+
     def __init__(self, filepath):
         RobotModelParser.__init__(self, filepath)
-        
+
     def parseModel(self, robot):
         collision_Exclusives = self.buildCollisionExclusives()
         collision_Dic = self.buildCollisionDictionary(collision_Exclusives, robot)
         collision_Groups = self.buildCollisionGroups(collision_Dic)
         robot = self.buildBitmasks(collision_Groups, robot)
         return robot
-        
+
     def buildBitmasks(self, collision_Groups, robot):
         bits = len(collision_Groups)
         if bits > 20:
@@ -2177,20 +2177,20 @@ class SRDFModelParser(RobotModelParser):
                         except KeyError:
                             robot['links'][link]['collision'][coll]['bitmask'] = 2**i
         return robot
-    
+
     def buildCollisionExclusives(self):
         print("\nParsing SRDF extensions from", self.filepath)
         self.tree = ET.parse(self.filepath)
         self.root = self.tree.getroot()
-        
+
         collision_Exclusives = []
         for disabled_coll in self.root.iter('disable_collisions'):
             pair = (disabled_coll.attrib['link1'], disabled_coll.attrib['link2'])
             collision_Exclusives.append(pair)
             #print("Append ", pair, " to collision Exclusives")
         return collision_Exclusives
-        
-    
+
+
     def buildCollisionDictionary(self, collision_exclusives, robot):
         dic = {}
         for pair in collision_exclusives:
@@ -2212,7 +2212,7 @@ class SRDFModelParser(RobotModelParser):
                 #print("Pair: ", pair, " not included")
         print("Collision Dictionary:\n", dic)
         return dic
-                
+
     def checkGroup(self, group, colls):
         cut = []
         for elem in group:
@@ -2234,7 +2234,7 @@ class SRDFModelParser(RobotModelParser):
                 group.append(link)
                 for l in cut:
                     colls.remove(l)
-                
+
     def buildCollisionGroups(self, dic):
         groups=[]
         for link in dic:
@@ -2251,7 +2251,7 @@ class SRDFModelParser(RobotModelParser):
         print ("Number of collision Groups: ", len(groups))
         #print ("Collision Groups:\n", groups)
         return groups
-        
+
 
 class SMURFModelParser(RobotModelParser):
     """Class derived from RobotModelParser which parses a SMURF model"""

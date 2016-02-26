@@ -12,7 +12,6 @@ from bpy_extras.io_utils import unpack_list, unpack_face_list
 def get_fmt_sizes():
     for fmt in ['ifff', 'iff', 'i', 'iii']:
         print(fmt, struct.calcsize(fmt))
-        
 
 
 def line_value(line_split):     # copy from blender addons; should be imported from there
@@ -40,10 +39,9 @@ def create_materials(filepath, relpath,                                         
     DIR = os.path.dirname(filepath)
     context_material_vars = set()
 
-    #==================================================================================#
-    # This function sets textures defined in .mtl file                                 #
-    #==================================================================================#
     def load_material_image(blender_material, context_material_name, imagepath, type):
+        """Sets textures defined in .mtl file
+        """
 
         texture = bpy.data.textures.new(name=type, type='IMAGE')
 
@@ -126,8 +124,8 @@ def create_materials(filepath, relpath,                                         
         material_libs.append(temp_mtl)
     del temp_mtl
 
-    #Create new materials
-    for name in unique_materials:  # .keys()
+    # Create new materials
+    for name in unique_materials:
         if name is not None:
             unique_materials[name] = bpy.data.materials.new(name.decode('utf-8', "replace"))
             unique_material_images[name] = None  # assign None to all material images to start with, add to later.
@@ -141,7 +139,6 @@ def create_materials(filepath, relpath,                                         
         if not os.path.exists(mtlpath):
             print ("\tMaterial not found MTL: %r" % mtlpath)
         else:
-            #print('\t\tloading mtl: %e' % mtlpath)
             context_material = None
             mtl = open(mtlpath, 'rb')
             for line in mtl:  # .readlines():
@@ -650,20 +647,6 @@ def create_mesh(new_objects,        # copy from blender addons; should be import
 
     mesh_untessellate(me, fgon_edges)
 
-    # XXX slow
-#     if unique_smooth_groups and sharp_edges:
-#         for sharp_edge in sharp_edges.keys():
-#             for ed in me.edges:
-#                 if edges_match(sharp_edge, ed.vertices):
-#                     ed.use_edge_sharp = True
-
-#     if unique_smooth_groups and sharp_edges:
-#         SHARP= Mesh.EdgeFlags.SHARP
-#         for ed in me.findEdges( sharp_edges.keys() ):
-#             if ed is not None:
-#                 me_edges[ed].flag |= SHARP
-#         del SHARP
-
     ob = bpy.data.objects.new(me.name, me)
     new_objects.append(ob)
 
@@ -939,11 +922,3 @@ def load(#operator, context,
 
         for obj in new_objects:
             obj.scale = scale, scale, scale
-
-def main():
-    #load('/home/srahms/blub/Cube.bobj')
-    load('/home/srahms/workspace/models/spacebot/300-100-SPBORB01-209-001_sim.052.bobj')
-    
-if __name__ == '__main__':
-    main()
-    #get_fmt_sizes()

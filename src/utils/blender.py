@@ -151,6 +151,7 @@ def defLayers(layerlist):
         layers[layer] = True
     return layers
 
+
 def updateTextFile(textfilename, newContent):
     """This function updates a blender textfile or creates a new one if it is not existent.
 
@@ -166,6 +167,7 @@ def updateTextFile(textfilename, newContent):
         pass #Not important. Just create.
     createNewTextfile(textfilename, newContent)
 
+
 def readTextFile(textfilename):
     """This function returns the content of a specified text file.
 
@@ -179,6 +181,7 @@ def readTextFile(textfilename):
     except KeyError:
         log("No text file " + textfilename + " found. Setting", "INFO")
         return ""
+
 
 def createNewTextfile(textfilename, contents):
     """This function creates a new blender text file with the given content.
