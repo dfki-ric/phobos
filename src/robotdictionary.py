@@ -40,6 +40,7 @@ import bpy
 
 # import from Phobos
 import phobos.joints as joints
+import phobos.inertia as inertia
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
@@ -227,7 +228,7 @@ def deriveKinematics(obj):
     joint = None
     motor = None
     # joints and motors of root elements are only relevant for scenes, not within models
-    if obj.parent:
+    if sUtils.getEffectiveParent(obj):
         # TODO: here we have to identify root joints and write their properties to SMURF!
         # --> namespacing parent = "blub::blublink1"
         # --> how to mark separate smurfs in phobos (simply modelname?)
@@ -245,9 +246,13 @@ def deriveInertial(obj):
     :type obj: bpy_types.Object
     :return: dict
     """
-    props = initObjectProperties(obj, phobostype='inertial')
-    props['inertia'] = list(map(float, obj['inertial/inertia']))
-    props['pose'] = deriveObjectPose(obj)
+    try:
+        props = initObjectProperties(obj, phobostype='inertial')
+        props['inertia'] = list(map(float, obj['inertial/inertia']))
+        props['pose'] = deriveObjectPose(obj)
+    except KeyError as e:
+        log("Missing data in inertial object " + obj.name + str(e), "ERROR", "deriveInertial")
+        return None
     return props
 
 
@@ -259,31 +264,33 @@ def deriveVisual(obj):
     :return: dict
 
     """
-    visual = initObjectProperties(obj, phobostype='visual', ignoretypes='geometry')
-    visual['geometry'] = deriveGeometry(obj)
-    visual['pose'] = deriveObjectPose(obj)
-    if obj.lod_levels:
-        if 'lodmaxdistances' in obj:
-            maxdlist = obj['lodmaxdistances']
-        else:
-            maxdlist=[obj.lod_levels[i+1].distance for i in range(len(obj.lod_levels)-1)]+[100.0]
-        lodlist = []
-        for i in range(len(obj.lod_levels)):
-            filename = obj.lod_levels[i].object.data.name
-            if bpy.data.worlds[0].useObj:
-                filename += ".obj"
-            elif bpy.data.worlds[0].useBobj:
-                filename += ".bobj"
-            elif bpy.data.worlds[0].useStl:
-                filename += ".stl"
-            elif bpy.data.worlds[0].useDae:
-                filename += ".dae"
+    try:
+        visual = initObjectProperties(obj, phobostype='visual', ignoretypes='geometry')
+        visual['geometry'] = deriveGeometry(obj)
+        visual['pose'] = deriveObjectPose(obj)
+        if obj.lod_levels:
+            if 'lodmaxdistances' in obj:
+                maxdlist = obj['lodmaxdistances']
             else:
-                filename += ".obj"
-            lodlist.append({'start': obj.lod_levels[i].distance, 'end': maxdlist[i], 'filename': os.path.join('meshes', filename)})
-        visual['lod'] = lodlist
-    #if obj.data.materials:
-    #    visual['material'] = deriveMaterial(obj.data.materials[0]) #this is now centralized!
+                maxdlist=[obj.lod_levels[i+1].distance for i in range(len(obj.lod_levels)-1)]+[100.0]
+            lodlist = []
+            for i in range(len(obj.lod_levels)):
+                filename = obj.lod_levels[i].object.data.name
+                if bpy.data.worlds[0].useObj:
+                    filename += ".obj"
+                elif bpy.data.worlds[0].useBobj:
+                    filename += ".bobj"
+                elif bpy.data.worlds[0].useStl:
+                    filename += ".stl"
+                elif bpy.data.worlds[0].useDae:
+                    filename += ".dae"
+                else:
+                    filename += ".obj"
+                lodlist.append({'start': obj.lod_levels[i].distance, 'end': maxdlist[i], 'filename': os.path.join('meshes', filename)})
+            visual['lod'] = lodlist
+    except KeyError:
+        log("Missing data in visual object " + obj.name, "ERROR", "deriveVisual")
+        return None
     return visual
 
 
@@ -366,7 +373,6 @@ def deriveLight(obj):
     :param obj: The blender object to derive the light from.
     :type obj: bpy_types.Object
     :return: tuple
-
     """
     light = initObjectProperties(obj, phobostype='light')
     light_data = obj.data
@@ -377,8 +383,9 @@ def deriveLight(obj):
     light['type'] = light_data.type.lower()
     if light['type'] == 'SPOT':
         light['size'] = light_data.size
-    light['position'] =  list(obj.matrix_local.to_translation())
-    light['rotation'] = list(obj.matrix_local.to_euler())
+    pose = deriveObjectPose(obj)
+    light['position'] = pose['translation']
+    light['rotation'] = pose['rotation_euler']
     try:
         light['attenuation_linear'] = float(light_data.linear_attenuation)
     except AttributeError:
@@ -390,9 +397,7 @@ def deriveLight(obj):
     if light_data.energy:
         light['attenuation_constant'] = float(light_data.energy)
 
-    if obj.parent is not None:
-        light['parent'] = nUtils.getObjectName(obj.parent,phobostype="link")
-
+    light['parent'] = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
     return light
 
 
@@ -409,11 +414,11 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=()):
     :return: dict
 
     """
-    props = {'name': nUtils.getObjectName(obj, 'material')}  #allow duplicated names differentiated by types
-    if not phobostype:
+    props = {'name': nUtils.getObjectName(obj, phobostype)}  # allow duplicated names differentiated by types
+    if not phobostype:  # if no phobostype is defined, everything is parsed
         for key, value in obj.items():
             props[key] = value
-    else:
+    else:  # if a phobostype is defined, we search for special custom properties
         for key, value in obj.items():
             if hasattr(value, 'to_list'):  # transform Blender id_arrays into lists
                 value = list(value)
@@ -617,6 +622,8 @@ def buildModelDictionary(root):
     :param root: bpy.types.objects
     :return: dict
     """
+    os.system('clear')
+
     robot = {'links': {},
              'joints': {},
              'poses': {},
@@ -654,7 +661,6 @@ def buildModelDictionary(root):
             robot['joints'][jointdict['name']] = jointdict
         if motordict:  # motor will be None if no motor is attached or link is a root
             robot['motors'][motordict['name']] = motordict
-
         # add inertial information to link
         try:  # if this link-inertial object is no present, we ignore the inertia!
             inertial = bpy.context.scene.objects['inertial_' + linkdict['name']]
@@ -664,6 +670,33 @@ def buildModelDictionary(root):
         except KeyError:
             log("No inertia for link " + linkdict['name'], "WARNING", "buildModelDictionary")
 
+    # we need to combine inertia if certain objects are left out, and overwrite it
+    inertials = (i for i in objectlist if i.phobostype == 'inertial' and "inertial/inertia" in i)
+    editlinks = {}
+    for i in inertials:
+        if i.parent not in linklist:
+            realparent = sUtils.getEffectiveParent(i)
+            if realparent:
+                parentname = nUtils.getObjectName(realparent)
+                if parentname in editlinks:
+                    editlinks[parentname].append(i)
+                else:
+                    editlinks[parentname] = [i]
+    for linkname in editlinks:
+        inertials = editlinks[linkname]
+        try:
+            inertials.append(bpy.context.scene.objects['inertial_' + linkname])
+        except KeyError:
+            pass
+        mv, cv, iv = inertia.fuseInertiaData(inertials)
+        iv = inertia.inertiaMatrixToList(iv)
+        if mv is not None and cv is not None and iv is not None:
+            robot['links'][linkname]['inertial'] = {'mass': mv,
+                                                            'inertia': iv,
+                                                            'pose': {'translation': list(cv),
+                                                                     'rotation_euler': [0, 0, 0]
+                                                                     }
+                                                            }
 
     # complete link information by parsing visuals and collision objects
     log("Parsing visual and collision (approximation) objects...", "INFO", "buildModelDictionary")
@@ -704,7 +737,8 @@ def buildModelDictionary(root):
             matname = nUtils.getObjectName(mat, 'material')
             if matname not in robot['materials']:
                 robot['materials'][matname] = deriveMaterial(mat)  # this should actually never happen
-            robot['links'][nUtils.getObjectName(obj.parent)]['visual'][nUtils.getObjectName(obj)]['material'] = matname
+            linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
+            robot['links'][linkname]['visual'][nUtils.getObjectName(obj)]['material'] = matname
 
     # gather information on groups of objects
     log("Parsing groups...", "INFO", "buildModelDictionary")
