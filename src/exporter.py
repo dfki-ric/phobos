@@ -514,19 +514,23 @@ def writeURDFGeometry(output, element):
     :return: str -- The extended String
 
     """
-    output.append(indent * 4 + '<geometry>\n')
-    if element['type'] == 'box':
-        output.append(xmlline(5, 'box', ['size'], [l2str(element['size'])]))
-    elif element['type'] == "cylinder":
-        output.append(xmlline(5, 'cylinder', ['radius', 'length'], [element['radius'], element['length']]))
-    elif element['type'] == "sphere":
-        output.append(xmlline(5, 'sphere', ['radius'], [element['radius']]))
-    elif element['type'] == "mesh":         # capsules are now converted into a cylinder with two spheres and thus need not be handled here
-        if bpy.data.worlds[0].structureExport:
-            output.append(xmlline(5, 'mesh', ['filename', 'scale'], ["../" + element['filename'], l2str(element['scale'])]))
-        else:
-            output.append(xmlline(5, 'mesh', ['filename', 'scale'], [element['filename'], l2str(element['scale'])]))
-    output.append(indent * 4 + '</geometry>\n')
+    geometry = element['geometry']
+    try:
+        output.append(indent * 4 + '<geometry>\n')
+        if geometry['type'] == 'box':
+            output.append(xmlline(5, 'box', ['size'], [l2str(geometry['size'])]))
+        elif geometry['type'] == "cylinder":
+            output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))
+        elif geometry['type'] == "sphere":
+            output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
+        elif geometry['type'] == "mesh":  # capsules are now converted into a cylinder with two spheres and thus need not be handled here
+            if bpy.data.worlds[0].structureExport:
+                output.append(xmlline(5, 'mesh', ['filename', 'scale'], ["../" + geometry['filename'], l2str(geometry['scale'])]))
+            else:
+                output.append(xmlline(5, 'mesh', ['filename', 'scale'], [geometry['filename'], l2str(geometry['scale'])]))
+        output.append(indent * 4 + '</geometry>\n')
+    except (KeyError, TypeError) as err:
+        log("Misdefined geometry in element " + element['name'] + " " + str(err), "ERROR", "writeURDFGeometry")
 
 
 def exportModelToURDF(model, filepath):
@@ -587,7 +591,7 @@ def exportModelToURDF(model, filepath):
                         output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                               [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
-                        writeURDFGeometry(output, vis['geometry'])
+                        writeURDFGeometry(output, vis)
                         if 'material' in vis:
                             # FIXME: change back to 1 when implemented in urdfloader
                             if model['materials'][vis['material']]['users'] == 0:
@@ -620,7 +624,7 @@ def exportModelToURDF(model, filepath):
                         output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                               [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
-                        writeURDFGeometry(output, col['geometry'])
+                        writeURDFGeometry(output, col)
                         output.append(indent * 3 + '</collision>\n')
             output.append(indent * 2 + '</link>\n\n')
     # export joint information
@@ -688,9 +692,8 @@ def exportModelToURDF(model, filepath):
     output.append(xmlFooter)
     with open(filepath, 'w') as outputfile:
         outputfile.write(''.join(output))
-    # problem of different joint transformations needed for fixed joints
-    print("phobos URDF export: Writing model data to", filepath)
-    #logger.log("phobos URDF export: Writing model data to " + filepath, level='ALL')
+    # FIXME: different joint transformations needed for fixed joints
+    log("Writing model data to " + filepath, "INFO", "exportModelToURDF")
 
 
 def exportModelToSRDF(model, path):
@@ -791,7 +794,7 @@ def exportModelToSRDF(model, path):
         :type parent: dict
 
         """
-        children = selectionUtils.getImmediateChildren(parent, 'link')
+        children = selectionUtils.getImmediateChildren(parent, ['link'], selected_only=True)
         if len(children) > 0:
             for child in children:
                 #output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (mother.name, child.name)))
@@ -814,7 +817,7 @@ def exportModelToSRDF(model, path):
     with open(path, 'w') as outputfile:
         outputfile.write(''.join(output))
     # FIXME: problem of different joint transformations needed for fixed joints
-    print("phobos SRDF export: Writing model data to", path)
+    log("Writing model data to " + path, "INFO", "exportModeltoSRDF")
 
 
 def exportModelToSMURF(model, path):
@@ -872,7 +875,7 @@ def exportModelToSMURF(model, path):
     infostring = ' definition SMURF file for "' + model['modelname'] + '", ' + model["date"] + "\n\n"
 
     # write model information
-    print('Writing SMURF information to', smurf_filename)
+    log("Writing SMURF model to " + smurf_filename, "INFO", "exportModelToSMURF")
     modeldata = {"date": model["date"], "files": [urdf_filename] + [filenames[f] for f in fileorder if export[f]]}
     # append custom data
     for text in customtexts:
@@ -1029,7 +1032,7 @@ def deriveSMURFEntity(smurf, outpath, savetosubfolder):
     else:
         selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)
         selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)  # re-select for mesh export
-        model, objectlist = robotdictionary.buildModelDictionary(root)
+        model, objectlist = robotdictionary.buildModelDictionary(smurf)
         export(model, objectlist, outpath)
     entitypose = robotdictionary.deriveObjectPose(smurf)
     entry = {'name': smurf['entityname'],
