@@ -36,7 +36,7 @@ def getObjectsByPhobostypes(phobostypes):
     return [obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes]
 
 
-def getChildren(root, phobostypes=(), selected_only=True, include_hidden=True):
+def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
     """Finds all (selected or unselected / hidden or unhidden) children of a
     given root object and phobostypes. If phobostypes is not provided, it is ignored.
 
@@ -52,7 +52,7 @@ def getChildren(root, phobostypes=(), selected_only=True, include_hidden=True):
             and (child.select or not selected_only)]
 
 
-def getImmediateChildren(obj, phobostypes=(), selected_only=True, include_hidden=True):
+def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidden=False):
     """Finds all immediate children for a given object and phoboytypes.
     If phobostypes is not provided, it is ignored.
     """
