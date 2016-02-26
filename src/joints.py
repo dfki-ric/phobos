@@ -168,7 +168,8 @@ def getJointConstraint(joint, ctype):
     return con
 
 
-def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damping=0.0):
+def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damping=0.0,
+                        maxeffort_approximation=None, maxspeed_approximation=None):
     """This function sets the constraints for a given joint and jointtype.
 
     :param joint: The joint you want to set the constraints for.
@@ -328,9 +329,22 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
             crot.max_z = 0
             crot.owner_space = 'LOCAL'
         else:
-            log("Unknown joint type", "ERROR")
+            log("Unknown joint type for joint " + joint.name, "WARNING", "setJointConstraints")
         joint['joint/type'] = jointtype
         bpy.ops.object.mode_set(mode='OBJECT')
+
+        # approximation functions for effort and speed
+        if jointtype in ['revolute', 'continuous', 'prismatic']:
+            try:
+                if maxeffort_approximation:
+                    joint["joint/maxeffort_approximation"] = maxeffort_approximation["function"]
+                    joint["joint/maxeffort_coefficients"] = maxeffort_approximation["coefficients"]
+                if maxspeed_approximation:
+                    joint["joint/maxspeed_approximation"] = maxspeed_approximation["function"]
+                    joint["joint/maxspeed_coefficients"] = maxspeed_approximation["coefficients"]
+            except KeyError:
+                log("Approximation for max effort and/or speed ill-defined in joint object " + joint.name,
+                    "ERROR", "setJointConstraints")
 
 
 
