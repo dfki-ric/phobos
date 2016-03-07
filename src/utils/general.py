@@ -157,9 +157,11 @@ def securepath(path):
     :return: String -- the path given as parameter, but secured by expanding ~ constructs.
 
     """
-    # TODO: add exception handling
     if not os.path.exists(path):
-        os.makedirs(path)
+        try:
+            os.makedirs(path)
+        except NotADirectoryError:
+            log(path + " is not a valid directory", "ERROR", "securepath")
     return os.path.expanduser(path)
 
 
