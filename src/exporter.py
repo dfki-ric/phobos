@@ -405,7 +405,7 @@ def gatherAnnotations(model):
     return annotations
 
 
-def gatherCollisionBitmasks(model):
+def deriveRefinedCollisionData(model):
     """This function collects all collision bitmasks in a given model.
 
     :param model: The robot model to search in.
@@ -413,14 +413,16 @@ def gatherCollisionBitmasks(model):
     :return: dict -- a dictionary containing all bitmasks with corresponding element name (key).
 
     """
-    bitmasks = {}
+    collisiondata = {}
     for linkname in model['links']:
         for elementname in model['links'][linkname]['collision']:
             element = model['links'][linkname]['collision'][elementname]
-            if 'bitmask' in element:
-                bitmask = {'name': elementname, 'link': linkname, 'bitmask': element['bitmask']}
-                bitmasks[elementname] = bitmask
-    return bitmasks
+            data = {key: element[key] for key in (a for a in element.keys() if a not in ['geometry', 'name', 'pose'])}
+            if data:
+                data['name'] = model['links'][linkname]['collision'][elementname]['name']
+                data['link'] = linkname
+                collisiondata[elementname] = data
+    return collisiondata
 
 
 def gatherLevelOfDetailSettings(model):
@@ -824,8 +826,9 @@ def exportModelToSMURF(model, path):
     :type param: str
 
     """
-
-    bitmasks = gatherCollisionBitmasks(model)
+    collisiondata = deriveRefinedCollisionData(model)
+    capsules = []
+    #capsules = gatherCollisionCapsules(model)
     lodsettings = gatherLevelOfDetailSettings(model)
 
     export = {'state': False,  # model['state'] != {}, # TODO: handle state
@@ -833,7 +836,7 @@ def exportModelToSMURF(model, path):
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
-              'collision': bitmasks != {},# FIXME: capsules: or model['capsules'] != [],
+              'collision': collisiondata != {},
               'visuals': lodsettings != {},
               'lights': model['lights'] != {},
               'poses': model['poses'] != {}
@@ -920,11 +923,13 @@ def exportModelToSMURF(model, path):
                 op.write(yaml.dump(sort_for_yaml_dump({data: list(model[data].values())}, data), default_flow_style=False))
                 #op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
-    # write collision bitmask information
-    if export['collision']:
+    # write additional collision information
+    if exportdata['collision']:
         with open(path + filenames['collision'], 'w') as op:
             op.write('#collision data' + infostring)
-            op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
+            #op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
+            op.write(yaml.dump({'collision': [collisiondata[key] for key in sorted(collisiondata.keys())]},
+                               default_flow_style=False))
 
     # write visual information (level of detail, ...)
     if export['visuals']:
