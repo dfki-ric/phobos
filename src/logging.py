@@ -84,18 +84,20 @@ def endLog():
     operator = None
 
 
-def log(message, level="INFO", origin=""):
+def log(message, level="INFO", origin="", prefix=""):
     """Logs a given message to the blender console and logging file if present
     and if log level is low enough.
     :param message: The message to log.
     :param level: Valid log level for the message as defined by 'loglevels'.
     :param origin: If set the message is prefixed with the origin.
+    :param prefix: Any string that should be printed before message (e.g. "\n")
     """
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
     if loglevels[level] <= loglevels[prefs.loglevel]:
         date = datetime.now().strftime("%Y%m%d_%H:%M")
         msg = "[" + date + "] " + level + " " + message + " (" + origin + ")"
-        terminalmsg = "[" + date + "] " + decorate(level) + " " + message + col.DIM + " (" + origin + ")" + col.ENDC
+        terminalmsg = prefix + "[" + date + "] " + decorate(level) + " " + message +\
+                      col.DIM + " (" + origin + ")" + col.ENDC
         if prefs.logtofile:
             try:
                 with open(prefs.logfile, "a") as lf:
