@@ -304,7 +304,7 @@ def exportModelToYAML(model, filepath):
     :type filepath: str
 
     """
-    print("phobos YAML export: Writing model data to", filepath)
+    log("phobos YAML export: Writing model data to " + filepath, "INFO", "exportModelToYAML")
     with open(filepath, 'w') as outputfile:
         outputfile.write('# YAML dump of robot model "' + model['modelname'] + '", ' + datetime.now().strftime(
             "%Y%m%d_%H:%M") + "\n")
@@ -540,7 +540,7 @@ def exportModelToURDF(model, filepath):
     :type filepath: str
 
     """
-    print(filepath)
+    log("Export URDF to " + filepath, "INFO", "exportModelToURDF")
 
     stored_element_order = None
     order_file_name = model['modelname'] + '_urdf_order'
@@ -980,11 +980,13 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
     else:
         outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+    log("Exporting scene to " + outpath, "INFO", "exportSMURFsScene")
     for entity in entities:
-        log("Exporting " + str(entity) + " to SMURFS", "INFO")
+        log("Exporting " + str(entity["entityname"]) + " to SMURFS", "INFO")
         if entity["entitytype"] == "smurf":
             # determine outpath for the smurf export
             smurf_outpath = securepath(os.path.join(outpath, entity["modelname"]) if subfolder else outpath)
+            log("smurf_outpath: " + outpath, "DEBUG", "exportSMURFsScene")
             entry = deriveSMURFEntity(entity, smurf_outpath, subfolder)
         elif entity["entitytype"] == "light":
             entry = deriveLightEntity(entity)
@@ -1013,8 +1015,7 @@ def deriveSMURFEntity(smurf, outpath, savetosubfolder):
     :return: dict - An entry for the scenes entitiesList
 
     """
-    log("Exporting " + smurf["entityname"] + " as a smurf entity to " + outpath, "INFO")
-    outpath = os.path.join(outpath, smurf["modelname"]+".smurf")
+    log("Exporting " + smurf["entityname"] + " as a smurf entity to " + outpath, "INFO", "deriveSMURFEntity", "\n\n")
     subfolder = smurf["modelname"] if savetosubfolder else ""
     # differentiate between full model and baked reference
     if "isReference" in smurf:
@@ -1162,6 +1163,7 @@ def export(model, objectlist, path=None):
     if not outpath.endswith(os.path.sep):
         outpath += os.path.sep
     meshoutpath = securepath(os.path.join(outpath, 'meshes'))
+    log("Export path: " + outpath, "DEBUG", "export")
 
     # parse export settings
     yaml = bpy.data.worlds[0].exportYAML
@@ -1229,7 +1231,7 @@ def export(model, objectlist, path=None):
             wm.progress_end()
 
     if texexp:
-        print("Exporting textures to " + os.path.join(outpath, 'textures') + "...\n")
+        log("Exporting textures to " + os.path.join(outpath, 'textures') + "...", "INFO", "export")
         securepath(os.path.join(outpath, 'textures'))
         for materialname in model['materials']:
             mat = model['materials'][materialname]
