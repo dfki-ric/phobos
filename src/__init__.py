@@ -30,20 +30,22 @@ Created on 6 Jan 2014
 
 """
 
+import sys
+import os.path
+
 bl_info = {
     "name": "Phobos",
     "description": "A set of tools to enable editing of MARS robot models in Blender.",
-    "author": "Kai von Szadkowski, Malte Langosz, Stefan Rahms, Ole Schwiegert",
-    "version": (0, 3),
+    "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz",
+    "version": (0, 7),
     "blender": (2, 69, 0),
     "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
     "wiki_url": "",
+    "support": "COMMUNITY",
+    "tracker_url": "https://github.com/rock-simulation/phobos/issues",
     "category": "Development"
 }
-
-import sys
-import os.path
 
 yamlconfpath = os.path.dirname(__file__) + "/yamlpath.conf"
 if os.path.isfile(yamlconfpath):
