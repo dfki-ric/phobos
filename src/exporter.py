@@ -1209,26 +1209,27 @@ def export(model, objectlist, path=None):
                         meshnames.add(lod.object.data.name)
                         exportobjects.add(lod.object)
 
-        show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
-        if show_progress:
-            wm = bpy.context.window_manager
-            wm.progress_begin(0, float(len(exportobjects)))
-            i = 1
-        print("Exporting " + str(len(exportobjects)) + " meshes to " + meshoutpath + "...\n")
-        for expobj in exportobjects:
-            if objexp:
-                exportObj(meshoutpath, expobj)
-            if bobjexp:
-                exportBobj(meshoutpath, expobj)
-            if stlexp:
-                exportStl(meshoutpath, expobj)
-            if daeexp:
-                exportDae(meshoutpath, expobj)
+        if exportobjects:  # if there are meshes to export
+            show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
             if show_progress:
-                wm.progress_update(i)
-                i += 1
-        if show_progress:
-            wm.progress_end()
+                wm = bpy.context.window_manager
+                wm.progress_begin(0, float(len(exportobjects)))
+                i = 1
+            log("Exporting " + str(len(exportobjects)) + " meshes to " + meshoutpath + "...", "INFO", "export")
+            for expobj in exportobjects:
+                if objexp:
+                    exportObj(meshoutpath, expobj)
+                if bobjexp:
+                    exportBobj(meshoutpath, expobj)
+                if stlexp:
+                    exportStl(meshoutpath, expobj)
+                if daeexp:
+                    exportDae(meshoutpath, expobj)
+                if show_progress:
+                    wm.progress_update(i)
+                    i += 1
+            if show_progress:
+                wm.progress_end()
 
     if texexp:
         log("Exporting textures to " + os.path.join(outpath, 'textures') + "...", "INFO", "export")
