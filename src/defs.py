@@ -39,10 +39,11 @@ in the future.
 import os
 import re
 import yaml
+import math
 import bpy
 from bpy.types import AddonPreferences
 from bpy.props import StringProperty, EnumProperty, BoolProperty
-from phobos.logging import loglevels, log
+from phobos.logging import *
 
 
 # TODO: the following definitions for enum properties in blender should be
