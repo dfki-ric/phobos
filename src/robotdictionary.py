@@ -517,101 +517,102 @@ def deriveChainEntry(obj):
     return returnchains
 
 
-def storePose(robot_name, pose_name):
+def storePose(modelname, posename):
     """
-    Store the current pose of all of a robot's selected links.
+    Stores the current pose of all of a robot's selected joints.
     Existing poses of the same name will be overwritten.
 
-    :param robot_name: The robot the pose belongs to.
-    :type robot_name: str.
-    :param pose_name: The name the pose will be stored under.
-    :type pose_name: str.
+    :param modelname: The robot the pose belongs to.
+    :type modelname: str.
+    :param posename: The name the pose will be stored under.
+    :type posename: str.
     :return: Nothing.
     """
-    file_name = 'robot_poses_' + robot_name
-    load_file = bUtils.readTextFile(file_name)
-    if load_file == '':
-        poses = {}
-    else:
-        poses = yaml.load(load_file)
-    new_pose = {}
-    prev_mode = bpy.context.mode
-    bpy.ops.object.mode_set(mode='POSE')
+    rootlink = None
     for root in sUtils.getRoots():
-        if root['modelname'] == robot_name:
-            links = sUtils.getChildren(root)
-            for link in links:
-                if link.select and link.phobostype == 'link':
-                    link.pose.bones['Bone'].rotation_mode = 'XYZ'
-                    new_pose[nUtils.getObjectName(link, 'joint')] = link.pose.bones['Bone'].rotation_euler.y
-    bpy.ops.object.mode_set(mode=prev_mode)
-    poses[pose_name] = new_pose
-    bUtils.updateTextFile(file_name, yaml.dump(poses))
+        if root['modelname'] == modelname:
+            rootlink = root
+    if rootlink:
+        filename = modelname + '::poses'
+        posedict = yaml.load(bUtils.readTextFile(filename))
+        if not posedict:
+            posedict = {posename: {'name': posename, 'joints': {}}}
+        else:
+            posedict[posename] = {'name': posename, 'joints': {}}
+        bpy.ops.object.mode_set(mode='POSE')
+        links = sUtils.getChildren(rootlink, ('link',), True, False)
+        for link in (link for link in links if 'joint/type' in link
+                     and link['joint/type'] not in ['fixed', 'floating']):
+            link.pose.bones['Bone'].rotation_mode = 'XYZ'
+            posedict[posename]['joints'][nUtils.getObjectName(link, 'joint')] = link.pose.bones['Bone'].rotation_euler.y
+        bUtils.updateTextFile(filename, yaml.dump(posedict, default_flow_style=False))
+    else:
+        log("No model root could be found to store the pose for", "ERROR", "storePose")
 
 
-def loadPose(robot_name, pose_name):
+def loadPose(modelname, posename):
     """
     Load and apply a robot's stored pose.
 
-    :param robot_name: The robot's name.
-    :type robot_name: str.
-    :param pose_name: The name the pose is stored under.
-    :type pose_name: str.
+    :param modelname: The model's name.
+    :type modelname: str.
+    :param posename: The name the pose is stored under.
+    :type posename: str.
     :return Nothing.
     """
-    load_file = bUtils.readTextFile('robot_poses_' + robot_name)
+    load_file = bUtils.readTextFile(modelname + '::poses')
     if load_file == '':
-        log('No poses stored.', 'ERROR')
+        log('No poses stored.', 'ERROR', 'loadPose')
         return
     poses = yaml.load(load_file)
-    if pose_name in poses:
+    try:
+        pose = poses[posename]
         prev_mode = bpy.context.mode
         bpy.ops.object.mode_set(mode='POSE')
         for obj in sUtils.getObjectsByPhobostypes(['link']):
-            if nUtils.getObjectName(obj, 'joint') in poses[pose_name]:
+            if nUtils.getObjectName(obj, 'joint') in pose['joints']:
                 obj.pose.bones['Bone'].rotation_mode = 'XYZ'
-                obj.pose.bones['Bone'].rotation_euler.y = poses[pose_name][nUtils.getObjectName(obj, 'joint')]
+                obj.pose.bones['Bone'].rotation_euler.y = pose['joints'][nUtils.getObjectName(obj, 'joint')]
         bpy.ops.object.mode_set(mode=prev_mode)
-    #else:
-    #    log('No pose with name ' + pose_name + ' stored for robot ' + robot_name + '.', 'ERROR')
+    except KeyError:
+        log('No pose with name ' + posename + ' stored for model ' + modelname, 'ERROR', "loadPose")
 
 
-def get_poses(robot_name):
+def getPoses(modelname):
     """
     Get the names of the poses that have been stored for a robot.
 
-    :param robot_name: The robot's name.
+    :param modelname: The model's name.
     :return: A list containing the poses' names.
     """
-    load_file = bUtils.readTextFile('robot_poses_' + robot_name)
+    load_file = bUtils.readTextFile(modelname + '::poses')
     if load_file == '':
         return []
     poses = yaml.load(load_file)
     return poses.keys()
 
 
-def deriveStoredPoses():
+def deriveTextData(modelname):
     """
-    Collect the poses that have been stored for the scene's robots.
+    Collect additional data stored for a specific model.
 
-    :return: A dictionary containing the poses.
+    :param modelname: Name of the model for which data should be derived.
+    :return: A dictionary containing additional data.
     """
-    poses_dict = {}
-    for text in bpy.data.texts:
-        file_name = text.name
-        if file_name.startswith('robot_poses_'):
-            robot_name = file_name[len('robot_poses_'):]
-            poses_file = bUtils.readTextFile(file_name)
-            if poses_file == '':
-                poses_dict[robot_name] = {}
-                break
-            poses = yaml.load(poses_file)
-            posedict = {}
-            for pose in poses:
-                newpose = {'name': pose, 'joints': poses[pose]}
-                posedict[pose] = newpose
-            poses_dict[robot_name] = posedict
-    return poses_dict
+    datadict = {}
+    datatextfiles = [text for text in bpy.data.texts if text.name.startswith(modelname+'::')]
+    for text in datatextfiles:
+        try:
+            dataname = text.name.split('::')[-1]
+        except IndexError:
+            log("Possibly invalidly named model data text file: " + modelname, "WARNING", "deriveTextData")
+        try:
+            data = yaml.load(bUtils.readTextFile(text.name))
+        except yaml.scanner.ScannerError:
+            log("Invalid formatting of data file: " + dataname, "ERROR", "deriveTextData")
+        if data:
+            datadict[dataname] = data
+    return datadict
 
 
 def buildModelDictionary(root):
@@ -624,7 +625,6 @@ def buildModelDictionary(root):
 
     robot = {'links': {},
              'joints': {},
-             'poses': {},
              'sensors': {},
              'motors': {},
              'controllers': {},
@@ -762,7 +762,8 @@ def buildModelDictionary(root):
         if obj.phobostype == 'light':
             robot['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
 
-    robot['poses'] = deriveStoredPoses()
+    # add additional data to model
+    robot.update(deriveTextData(robot['modelname']))
 
     # shorten numbers in dictionary to n decimalPlaces and return it
     log("Rounding numbers...", "INFO", "buildModelDictionary")

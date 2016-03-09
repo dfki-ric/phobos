@@ -461,7 +461,7 @@ def get_sorted_keys(dictionary):
     :return: the dictionary's sorted keys
 
     """
-    return sort_urdf_elements(dictionary.keys())
+    return sorted(dictionary.keys())
 
 
 def sort_for_yaml_dump(structure, category):
@@ -833,15 +833,14 @@ def exportModelToSMURF(model, path):
     #capsules = gatherCollisionCapsules(model)
     lodsettings = gatherLevelOfDetailSettings(model)
 
-    export = {'state': False,  # model['state'] != {}, # TODO: handle state
+    exportdata = {'state': False,  # model['state'] != {}, # TODO: handle state
               'materials': model['materials'] != {},
               'sensors': model['sensors'] != {},
               'motors': model['motors'] != {},
               'controllers': model['controllers'] != {},
               'collision': collisiondata != {},
               'visuals': lodsettings != {},
-              'lights': model['lights'] != {},
-              'poses': model['poses'] != {}
+              'lights': model['lights'] != {}
               }
     # create all filenames
     smurf_filename = model['modelname'] + ".smurf"
@@ -857,29 +856,31 @@ def exportModelToSMURF(model, path):
                  'collision': model['modelname'] + "_collision.yml",
                  'visuals': model['modelname'] + "_visuals.yml",
                  'lights': model['modelname'] + "_lights.yml",
-                 'poses': model['modelname'] + "_poses.yml"
                  }
-    fileorder = ['collision', 'visuals', 'materials', 'motors', 'sensors', 'controllers', 'state', 'lights', 'poses']
+    fileorder = ['collision', 'visuals', 'materials', 'motors', 'sensors', 'controllers', 'state', 'lights']
 
+    # gather annotations and data from text files
     annotationdict = gatherAnnotations(model)
     for category in annotationdict:
         filenames[category] = model['modelname'] + '_' + category + '.yml'
         fileorder.append(category)
-        export[category] = True
+        exportdata[category] = True
 
-    customtexts = []
+    customdatalist = []
     for text in bpy.data.texts:
-        if text.name.startswith(model['modelname']) and text.name.endswith('.yml'):
-            customtexts.append(text)
+        if text.name.startswith(model['modelname']+'::'):
+            dataname = text.name.split('::')[-1]
+            customdatalist.append(dataname)
+            filenames[dataname] = model['modelname'] + '_' + dataname + '.yml'
+            fileorder.append(dataname)
+            exportdata[dataname] = True
 
     infostring = ' definition SMURF file for "' + model['modelname'] + '", ' + model["date"] + "\n\n"
 
     # write model information
     log("Writing SMURF model to " + smurf_filename, "INFO", "exportModelToSMURF")
-    modeldata = {"date": model["date"], "files": [urdf_filename] + [filenames[f] for f in fileorder if export[f]]}
+    modeldata = {"date": model["date"], "files": [urdf_filename] + [filenames[f] for f in fileorder if exportdata[f]]}
     # append custom data
-    for text in customtexts:
-        modeldata['files'].append(text.name)
     with open(os.path.join(path, smurf_filename), 'w') as op:
         op.write('# main SMURF file of model "' + model['modelname'] + '"\n')
         op.write('# created with Phobos ' + defs.version + ' - https://github.com/rock-simulation/phobos\n\n')
@@ -903,7 +904,7 @@ def exportModelToSMURF(model, path):
     #         op.write(yaml.dump(semantics, default_flow_style=False))
 
     # write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
-    if export['state']:
+    if exportdata['state']:
         states = []
         # gather all states
         for jointname in model['joints']:
@@ -918,11 +919,12 @@ def exportModelToSMURF(model, path):
             op.write(yaml.dump(states))  #, default_flow_style=False))
 
     # write materials, sensors, motors & controllers
-    for data in ['materials', 'sensors', 'motors', 'controllers', 'lights', 'poses']:
-        if export[data]:
+    for data in ['materials', 'sensors', 'motors', 'controllers', 'lights']:
+        if exportdata[data]:
             with open(path + filenames[data], 'w') as op:
                 op.write('#' + data + infostring)
-                op.write(yaml.dump(sort_for_yaml_dump({data: list(model[data].values())}, data), default_flow_style=False))
+                op.write(yaml.dump(sort_for_yaml_dump({data: list(model[data].values())}, data),
+                                   default_flow_style=False))
                 #op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
     # write additional collision information
@@ -934,14 +936,14 @@ def exportModelToSMURF(model, path):
                                default_flow_style=False))
 
     # write visual information (level of detail, ...)
-    if export['visuals']:
+    if exportdata['visuals']:
         with open(path + filenames['visuals'], 'w') as op:
             op.write('#visual data' + infostring)
             op.write(yaml.dump({'visuals': list(lodsettings.values())}, default_flow_style=False))
 
     # write additional information
     for category in annotationdict.keys():
-        if export[category]:
+        if exportdata[category]:
             outstring = '#' + category + infostring
             for elementtype in annotationdict[category]:
                 outstring += elementtype + ':\n'
@@ -950,12 +952,19 @@ def exportModelToSMURF(model, path):
             with open(path + filenames[category], 'w') as op:
                 op.write(outstring)
 
-    # write custom yml files
-    if bpy.data.worlds[0].exportCustomData:
-        print("Exporting custom files to to " + path + "...\n")
-        for text in customtexts:
-            with open(os.path.join(path, text.name), 'w') as op:
-                op.write('\n'.join(line.body for line in text.lines))
+    # write custom data from textfiles
+    for data in customdatalist:
+        if exportdata[data]:
+            with open(path + filenames[data], 'w') as op:
+                op.write('#' + data + infostring)
+                op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
+
+    ## write custom yml files
+    #if bpy.data.worlds[0].exportCustomData:
+    #    log("Exporting custom files to to " + path + "...", "INFO", "exportModelToSMURF")
+    #    for text in customtexts:
+    #        with open(os.path.join(path, text.name), 'w') as op:
+    #            op.write('\n'.join(line.body for line in text.lines))
 
 
 def exportSMURFsScene(selected_only=True, subfolder=True):
@@ -1002,7 +1011,8 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
         sceneinfo = "# SMURF scene " + bpy.data.worlds['World'].sceneName + "; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
         sceneinfo += "# created with Phobos " + defs.version + " - https://github.com/rock-simulation/phobos\n\n"
         outputfile.write(sceneinfo)
-        outputfile.write(yaml.dump({'entities': outputlist}))
+        entitiesdict = gUtils.epsilonToZero({'entities': outputlist})
+        outputfile.write(yaml.dump(entitiesdict))
 
 
 def deriveSMURFEntity(smurf, outpath, savetosubfolder):

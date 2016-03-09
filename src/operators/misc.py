@@ -45,7 +45,7 @@ def get_robot_names(scene, context):
 
 # FIXME: this should not go here either
 def get_pose_names(scene, context):
-    poses = robotdictionary.get_poses(current_robot_name)
+    poses = robotdictionary.getPoses(current_robot_name)
     pose_items = [(pose,)*3 for pose in poses]
     return pose_items
 
