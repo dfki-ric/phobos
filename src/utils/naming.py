@@ -76,11 +76,11 @@ def addNamespace(obj):
         log("The obj " + getObjectName(obj) + "has no namespace to append to. Aborting.", "ERROR")
         return
     obj.name = namespace + "::" + name
-    for pType in types:
-        typeTag = pType + "/type"
-        nameTag = pType + "/name"
-        if (typeTag in obj or ("phobostype" in obj and obj.phobostype == pType)) and nameTag not in obj:
-            obj[nameTag] = name
+    for ptype in types:
+        typetag = ptype + "/type"
+        nametag = ptype + "/name"
+        if (typetag in obj or ("phobostype" in obj and obj.phobostype == ptype)) and nametag not in obj:
+            obj[nametag] = name
 
 
 def removeNamespace(obj):

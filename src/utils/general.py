@@ -193,7 +193,6 @@ def epsilonToZero(data, epsilon, decimals):
     elif type(data) is list:
         return [epsilonToZero(a, epsilon, decimals) for a in data]
     elif type(data) is dict:
-        #print(data)
         return {key: epsilonToZero(value, epsilon, decimals) for key, value in data.items()}
     else:  # any other type, such as string
         return data
@@ -296,7 +295,7 @@ def deriveGeometry(obj):
                 filename += ".obj"
             geometry['filename'] = os.path.join('meshes', filename)
             geometry['scale'] = list(obj.scale)
-            geometry['size'] = list(obj.dimensions)  # this is needed to calculate an approximate inertia
+            geometry['size'] = list(obj.dimensions)  # FIXME: is this needed to calculate an approximate inertia
         return geometry
     except KeyError as err:
         log("Undefined geometry for object " + nUtils.getObjectName(obj)

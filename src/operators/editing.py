@@ -141,7 +141,6 @@ class SetMassOperator(Operator):
             try:
                 oldmass = obj['mass']
             except KeyError:
-                log("The object '" + obj.name + "' has no mass")
                 oldmass = None
             if self.userbmass:
                 try:
@@ -849,8 +848,6 @@ class DefineJointConstraintsOperator(Operator):
         default=0.0,
         description="Damping constant of the joint")
 
-    # TODO: invoke function to read all values in
-
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "joint_type", text="joint_type")
@@ -1185,11 +1182,11 @@ class CreateMimicJointOperator(Operator):
         for obj in context.selected_objects:
             if obj.name != masterjoint.name:
                 if self.mimicjoint:
-                    obj["joint/mimic_joint"] = nameUtils.getObjectName(masterjoint, 'joint')
+                    obj["joint/mimic_joint"] = nUtils.getObjectName(masterjoint, 'joint')
                     obj["joint/mimic_multiplier"] = self.multiplier
                     obj["joint/mimic_offset"] = self.offset
                 if self.mimicmotor:
-                    obj["motor/mimic_motor"] = nameUtils.getObjectName(masterjoint, 'motor')
+                    obj["motor/mimic_motor"] = nUtils.getObjectName(masterjoint, 'motor')
                     obj["motor/mimic_multiplier"] = self.multiplier
                     obj["motor/mimic_offset"] = self.offset
         return {'FINISHED'}
@@ -1304,37 +1301,37 @@ class AddHeightmapOperator(Operator):
         if os.path.basename(self.filepath) not in bpy.data.images:
             try:
                 img = bpy.data.images.load(self.filepath)
-            except:
+            except RuntimeError:
                 log("Cannot load image from file! Aborting.", "ERROR")
                 return {"FINISHED"}
         else:
             log("Image already imported. Using cached version.", "INFO")
             img = bpy.data.images[os.path.basename(self.filepath)]
-        #Create Texture
+        # Create Texture
         h_tex = bpy.data.textures.new(self.name, type='IMAGE')
         h_tex.image = img
-        #Add plane, subdivide and create displacement
+        # Add plane, subdivide and create displacement
         prev_mode = context.mode
         bpy.ops.mesh.primitive_plane_add(view_align=False, enter_editmode=False)
         plane = context.active_object
-        plane["phobostype"] = "visual"
+        plane['phobostype'] = 'visual'
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.subdivide(number_cuts=self.cutNo)
         bpy.ops.object.mode_set(mode=prev_mode)
-        plane.modifiers.new("displace_heightmap", "DISPLACE")
-        plane.modifiers["displace_heightmap"].texture = h_tex
-        plane.name = self.name+"_visual::heightmap"
-        #Add root link for heightmap
+        plane.modifiers.new('displace_heightmap', 'DISPLACE')
+        plane.modifiers['displace_heightmap'].texture = h_tex
+        plane.name = self.name+'_visual::heightmap'
+        # Add root link for heightmap
         root = links.createLink(1.0, name=self.name + "::heightmap")
-        root["entitytype"] = "heightmap"
-        root["entityname"] = self.name
-        root["image"] = os.path.relpath(os.path.basename(self.filepath), bpy.data.filepath) #relative path to blender file
-        root["anchor"] = "world"
-        #Create Parenting
+        root['entity/type'] = 'heightmap'
+        root['entity/name'] = self.name
+        root['image'] = os.path.relpath(os.path.basename(self.filepath), bpy.data.filepath)
+        root['joint/type'] = 'fixed'
+        # Create Parenting
         sUtils.selectObjects([root, plane], clear=True, active=0)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
         endLog()
-        return {"FINISHED"}
+        return {'FINISHED'}
 
     def invoke(self, context, event):
         # create the open file dialog

@@ -30,20 +30,20 @@ from bpy.props import BoolProperty, FloatProperty, FloatVectorProperty, EnumProp
 from bpy.types import Operator
 from phobos.logging import startLog, endLog, log
 import phobos.defs as defs
-import phobos.utils.selection as selectionUtils
+import phobos.utils.selection as sUtils
+import phobos.utils.general as gUtils
 import phobos.robotdictionary as robotdictionary
 import phobos.validator as validator
-import phobos.utils.general as generalUtils
 
-
+# FIXME: this is ugly
 current_robot_name = ''
 
-
+# FIXME: this should be treated in selection utils
 def get_robot_names(scene, context):
-    robot_names = [(root['modelname'],)*3 for root in selectionUtils.getRoots()]
+    robot_names = [(root['modelname'],)*3 for root in sUtils.getRoots()]
     return robot_names
 
-
+# FIXME: this should not go here either
 def get_pose_names(scene, context):
     poses = robotdictionary.get_poses(current_robot_name)
     pose_items = [(pose,)*3 for pose in poses]
@@ -63,7 +63,7 @@ class SelectError(Operator):
 
     def execute(self, context):
         startLog(self)
-        selectionUtils.selectByName(self.errorObj)
+        sUtils.selectByName(self.errorObj)
         for message in defs.checkMessages[self.errorObj]:
             log(message, 'INFO')
         endLog()
@@ -81,7 +81,7 @@ class CheckDict(Operator):
 
         startLog(self)
         messages = {}
-        root = selectionUtils.getRoot(context.selected_objects[0])
+        root = sUtils.getRoot(context.selected_objects[0])
         model, objectlist = robotdictionary.buildModelDictionary(root)
         validator.check_dict(model, defs.dictConstraints, messages)
         defs.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
@@ -100,7 +100,7 @@ class CalculateMassOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        mass = generalUtils.calculateSum(context.selected_objects, 'mass')
+        mass = gUtils.calculateSum(context.selected_objects, 'mass')
         log("The calculated mass is: " + str(mass), "INFO")
         endLog()
         return {'FINISHED'}
@@ -131,7 +131,7 @@ class ShowDistanceOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        self.distance, self.distVector = generalUtils.distance(context.selected_objects)
+        self.distance, self.distVector = gUtils.distance(context.selected_objects)
         log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO")
         endLog()
         return {'FINISHED'}
@@ -139,6 +139,7 @@ class ShowDistanceOperator(Operator):
     @classmethod
     def poll(self, context):
         return len(context.selected_objects) == 2
+
 
 class StorePoseOperator(Operator):
     """Store the current pose of selected links in one of the scene's robots"""

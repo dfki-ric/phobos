@@ -493,6 +493,7 @@ def sort_dict_list(dict_list, sort_key):
     sort_key_values = []
     for dictionary in dict_list:
         sort_key_values.append(dictionary[sort_key])
+    #FIXME: This is really complicated! Either there is an in-built function or dictionary['name'] would suffice
     for value in sort_urdf_elements(sort_key_values):
         for dictionary in dict_list:
             if dictionary[sort_key] == value:
@@ -506,7 +507,7 @@ def writeURDFGeometry(output, element):
     """This functions writes the URDF geometry for a given element at the end of a given String.
 
     :param output: The String to append the URDF output string on.
-    :type outpute: str
+    :type output: str
     :param element: A certain element to parse into URDF.
     :type element: dict
     :return: str -- The extended String

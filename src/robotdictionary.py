@@ -29,7 +29,6 @@ Created on 28 Jul 2014
 # import from standard Python
 import os
 import copy
-import sys
 from datetime import datetime
 
 # imports from additional modules
@@ -162,7 +161,7 @@ def deriveJoint(obj):
         del props['maxeffort']
     if limits != {}:
         props['limits'] = limits
-    #TODO:
+    # TODO:
     # - calibration
     # - dynamics
     # - mimic
@@ -178,11 +177,10 @@ def deriveJointState(joint):
     :type joint: bpy_types.Object
     :return: dict
     """
-    state = {}
-    state['matrix'] = [list(vector) for vector in list(joint.pose.bones[0].matrix_basis)]
-    state['translation'] = list(joint.pose.bones[0].matrix_basis.to_translation())
-    state['rotation_euler'] = list(joint.pose.bones[0].matrix_basis.to_euler())
-    state['rotation_quaternion'] = list(joint.pose.bones[0].matrix_basis.to_quaternion())
+    state = {'matrix': [list(vector) for vector in list(joint.pose.bones[0].matrix_basis)],
+             'translation': list(joint.pose.bones[0].matrix_basis.to_translation()),
+             'rotation_euler': list(joint.pose.bones[0].matrix_basis.to_euler()),
+             'rotation_quaternion': list(joint.pose.bones[0].matrix_basis.to_quaternion())}
     # TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
     return state
 
@@ -318,7 +316,7 @@ def deriveCollision(obj):
 
 
 def deriveApproxsphere(obj):
-    """This function derives a approxsphere from a given blender object
+    """This function derives an SRDF approximation sphere from a given blender object
 
     :param obj: The blender object to derive the approxsphere from.
     :type obj: bpy_types.Object
@@ -622,7 +620,7 @@ def buildModelDictionary(root):
     :param root: bpy.types.objects
     :return: dict
     """
-    os.system('clear')
+    #os.system('clear')
 
     robot = {'links': {},
              'joints': {},
@@ -646,6 +644,9 @@ def buildModelDictionary(root):
         else:
             log("No name for the model defines, setting to 'unnamed_model'", "WARNING", "buildModelDictionary")
             robot['modelname'] = 'unnamed_model'
+
+    log("Creating dictionary for robot " + robot['modelname'] + " from object "
+        + root.name, "INFO", "buildModelDictionary")
 
     # create tuples of objects belonging to model
     objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
