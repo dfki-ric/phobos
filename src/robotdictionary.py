@@ -123,7 +123,7 @@ def deriveLink(obj):
     :return: dict
 
     """
-    props = initObjectProperties(obj, phobostype='link', ignoretypes=['joint', 'motor'])
+    props = initObjectProperties(obj, phobostype='link', ignoretypes=['joint', 'motor', 'entity'])
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
     props["visual"] = {}
@@ -139,9 +139,9 @@ def deriveJoint(obj):
     :return: dict
 
     """
-    if not 'joint/type' in obj.keys():
+    if 'joint/type' not in obj.keys():
         jt, crot = joints.deriveJointType(obj, adjust=True)
-    props = initObjectProperties(obj, phobostype='joint', ignoretypes=['link', 'motor'])
+    props = initObjectProperties(obj, phobostype='joint', ignoretypes=['link', 'motor', 'entity'])
 
     parent = sUtils.getEffectiveParent(obj)
     props['parent'] = nUtils.getObjectName(parent)

@@ -959,7 +959,7 @@ def exportModelToSMURF(model, path):
 
 def exportSMURFsScene(selected_only=True, subfolder=True):
     """Exports an arranged scene into SMURFS. It will export only entities
-    with a valid entityname, and entitytype property.
+    with a valid entity/name, and entity/type property.
 
     :param selected_only: If True only selected entities get exported.
     :type selected_only: bool
@@ -971,8 +971,8 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
     outputlist = []
 
     # identify all entities in the scene
-    entities = [e for e in selectionUtils.getRoots() if (("entityname" in e and "entitytype" in e)
-                or 'modelname' in e) and ((selected_only and e.select) or not selected_only)]
+    entities = [e for e in [obj for obj in bpy.context.scene.objects if sUtils.isEntity(obj)]
+                if ((selected_only and e.select) or not selected_only)]
     if len(entities) == 0:
         log("There are no entities to export!", "WARNING", __name__+".exportSMURFsScene")
         return
@@ -983,15 +983,15 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
         outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
     log("Exporting scene to " + outpath, "INFO", "exportSMURFsScene")
     for entity in entities:
-        log("Exporting " + str(entity["entityname"]) + " to SMURFS", "INFO")
-        if entity["entitytype"] == "smurf":
+        log("Exporting " + str(entity["entity/name"]) + " to SMURFS", "INFO")
+        if entity["entity/type"] == "smurf":
             # determine outpath for the smurf export
             smurf_outpath = securepath(os.path.join(outpath, entity["modelname"]) if subfolder else outpath)
             log("smurf_outpath: " + outpath, "DEBUG", "exportSMURFsScene")
             entry = deriveSMURFEntity(entity, smurf_outpath, subfolder)
-        elif entity["entitytype"] == "light":
+        elif entity["entity/type"] == 'light':
             entry = deriveLightEntity(entity)
-        elif entity["entitytype"] == "heightmap":
+        elif entity["entity/type"] == 'heightmap':
             heightmap_outpath = securepath(os.path.join(outpath, "heightmaps") if subfolder else outpath)
             entry = deriveHeightmapEntity(entity, heightmap_outpath, subfolder)
         outputlist.append(entry)
@@ -1016,7 +1016,7 @@ def deriveSMURFEntity(smurf, outpath, savetosubfolder):
     :return: dict - An entry for the scenes entitiesList
 
     """
-    log("Exporting " + smurf["entityname"] + " as a smurf entity to " + outpath, "INFO", "deriveSMURFEntity", "\n\n")
+    log("Exporting " + smurf["entity/name"] + " as a smurf entity to " + outpath, "INFO", "deriveSMURFEntity", "\n\n")
     subfolder = smurf["modelname"] if savetosubfolder else ""
     # differentiate between full model and baked reference
     if "isReference" in smurf:
@@ -1037,14 +1037,13 @@ def deriveSMURFEntity(smurf, outpath, savetosubfolder):
         model, objectlist = robotdictionary.buildModelDictionary(smurf)
         export(model, objectlist, outpath)
     entitypose = robotdictionary.deriveObjectPose(smurf)
-    entry = {'name': smurf['entityname'],
-             'type': 'smurf',
-             'file': os.path.join(subfolder, smurf["modelname"]+".smurf") if os.path.isfile(outpath)
-                else os.path.join(subfolder, "smurf", smurf["modelname"]+".smurf"),
-             'anchor': smurf["anchor"] if "anchor" in smurf else "none",
-             "position": entitypose["translation"],
-             "rotation": entitypose["rotation_quaternion"],
-             "pose": smurf["entitypose"] if "entitypose" in smurf else "default"}
+    entry = robotdictionary.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
+
+    entry['file'] = (os.path.join(subfolder, smurf["modelname"]+".smurf") if os.path.isfile(outpath)
+                     else os.path.join(subfolder, "smurf", smurf["modelname"]+".smurf"))
+    entry['anchor'] = 'world' if 'joint/type' in smurf and smurf['joint/type'] == 'fixed' else "none"
+    entry["position"] = entitypose["translation"]
+    entry["rotation"] = entitypose["rotation_quaternion"]
     return entry
 
 
@@ -1058,11 +1057,11 @@ def deriveLightEntity(light):
     :return: dict - An entry for the scenes entitiesList
 
     """
-    log("Exporting " + light["entityname"] + " as a light entity", "INFO")
+    log("Exporting " + light["entity/name"] + " as a light entity", "INFO")
     entitypose = robotdictionary.deriveObjectPose(light)
     lightobj = sUtils.getImmediateChildren(light)[0]
     color = lightobj.data.color
-    entry = {"name": light["entityname"],
+    entry = {"name": light["entity/name"],
              "type": "light",
              "light_type": "spotlight" if lightobj.data.type == "SPOT" else "omnilight",
              "anchor": light["anchor"] if "anchor" in light else "none",
@@ -1087,12 +1086,12 @@ def deriveHeightmapEntity(heightmap, outpath):
     :return: dict - An entry for the scenes entitiesList
 
     """
-    log("Exporting " + heightmap["entityname"] + " as a heightmap entity", "INFO")
+    log("Exporting " + heightmap["entity/name"] + " as a heightmap entity", "INFO")
     entitypose = robotdictionary.deriveObjectPose(heightmap)
     heightmapMesh = sUtils.getImmediateChildren(heightmap)[0]
     if bpy.data.worlds[0].heightmapMesh:
         exMesh = heightmapMesh.to_mesh(bpy.context.scene, True, "PREVIEW")
-        exMesh.name = "hm_" + heightmap["entityname"]
+        exMesh.name = "hm_" + heightmap["entity/name"]
         oldMesh = heightmapMesh.data
         heightmapMesh.data = exMesh
         heightmapMesh.modifiers["displace_heightmap"].show_render = False
@@ -1116,7 +1115,7 @@ def deriveHeightmapEntity(heightmap, outpath):
         heightmapMesh.modifiers["displace_heightmap"].show_viewport = True
         heightmapMesh.data = oldMesh
         bpy.data.meshes.remove(exMesh)
-        entry = {"name": heightmap["entityname"],
+        entry = {"name": heightmap["entity/name"],
                  "type": "mesh",
                  "file": filename,
                  "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
@@ -1127,7 +1126,7 @@ def deriveHeightmapEntity(heightmap, outpath):
     else:
         imagepath = os.path.abspath(os.path.join(os.path.split(bpy.data.filepath)[0], heightmap["image"]))
         shutil.copy2(imagepath, outpath)
-        entry = {"name": heightmap["entityname"],
+        entry = {"name": heightmap["entity/name"],
                  "type": "heightmap",
                  "file": os.path.join("heightmaps", os.path.basename(imagepath)),
                  "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
