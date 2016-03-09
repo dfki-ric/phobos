@@ -33,12 +33,8 @@ import phobos.importer as importer
 import phobos.links as links
 import bpy
 import yaml
-import zipfile
 import os
-import shutil
-import tempfile
-import phobos.utils.selection as selectionUtils
-import phobos.utils.blender as blenderUtils
+import phobos.utils.selection as sUtils
 import phobos.robotdictionary as robotdictionary
 from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty
@@ -115,7 +111,7 @@ class CreateRobotInstance(Operator):
         obj = context.active_object
         obj.name = self.robName + "::visual"
         obj.phobostype = "visual"
-        selectionUtils.selectObjects([root, obj], clear=True, active=0)
+        sUtils.selectObjects([root, obj], clear=True, active=0)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
         return {"FINISHED"}
 
@@ -145,7 +141,7 @@ class ExportModelOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        root = selectionUtils.getRoot(context.selected_objects[0])
+        root = sUtils.getRoot(context.selected_objects[0])
         model, objectlist = robotdictionary.buildModelDictionary(root)
         exporter.export(model, objectlist)
         endLog()
@@ -161,9 +157,9 @@ class ExportBakeOperator(Operator):
     def execute(self, context):
         startLog(self)
         objs = context.selected_objects
-        root = selectionUtils.getRoot(context.selected_objects[0])
+        root = sUtils.getRoot(context.selected_objects[0])
         model = robotdictionary.buildModelDictionary(root)
-        selectionUtils.selectObjects(objs)
+        sUtils.selectObjects(objs)
         if bpy.data.worlds[0].relativePath:
             outpath = exporter.securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
         else:

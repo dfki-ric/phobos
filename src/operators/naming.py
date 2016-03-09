@@ -28,11 +28,11 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
 from bpy.types import Operator
-import phobos.defs as defs
-from phobos.logging import startLog, endLog, log
 from bpy.props import BoolProperty, StringProperty
-import phobos.utils.selection as selectionUtils
-import phobos.utils.naming as namingUtils
+import phobos.defs as defs
+import phobos.utils.selection as sUtils
+import phobos.utils.naming as nUtils
+from phobos.logging import startLog, endLog, log
 
 
 class ToggleNamespaces(Operator):
@@ -51,19 +51,19 @@ class ToggleNamespaces(Operator):
         startLog(self)
         objlist = context.selected_objects
         if self.complete:
-            roots = list(set([selectionUtils.getRoot(obj) for obj in context.selected_objects]))
+            roots = list(set([sUtils.getRoot(obj) for obj in context.selected_objects]))
             if None in roots:
                 roots.remove(None)
-            objlist = [elem for sublist in [selectionUtils.getChildren(root) for root in roots] for elem in sublist]
+            objlist = [elem for sublist in [sUtils.getChildren(root) for root in roots] for elem in sublist]
         objnames = [o.name for o in bpy.data.objects]
         for obj in objlist:
             if "::" in obj.name:
-                if namingUtils.namesAreExplicit({obj.name.split("::")[-1]}, objnames):
-                    namingUtils.removeNamespace(obj)
+                if nUtils.namesAreExplicit({obj.name.split("::")[-1]}, objnames):
+                    nUtils.removeNamespace(obj)
                 else:
                     log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit", "ERROR")
             else:
-                namingUtils.addNamespace(obj)
+                nUtils.addNamespace(obj)
         endLog()
         return {'FINISHED'}
 
@@ -81,7 +81,7 @@ class NameModelOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        root = selectionUtils.getRoot(context.active_object)
+        root = sUtils.getRoot(context.active_object)
         if root == None:
             log("Could not set modelname due to missing root link. No name was set.", "ERROR")
             return {'FINISHED'}

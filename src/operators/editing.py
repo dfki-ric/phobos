@@ -26,26 +26,27 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import bpy
 import math
-import yaml
 import os
-import mathutils
+import yaml
 from datetime import datetime
+
+import bpy
+import mathutils
+from bpy.types import Operator
+from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, EnumProperty, FloatVectorProperty, \
+    BoolVectorProperty
+
 import phobos.defs as defs
 import phobos.inertia as inertia
-import phobos.utils.selection as selectionUtils
-import phobos.utils.general as generalUtils
-import phobos.utils.blender as blenderUtils
-import phobos.utils.naming as nameUtils
-import phobos.robotdictionary as robotdictionary
+import phobos.utils.selection as sUtils
+import phobos.utils.general as gUtils
+import phobos.utils.blender as bUtils
+import phobos.utils.naming as nUtils
 import phobos.joints as joints
 import phobos.sensors as sensors
 import phobos.links as links
 from phobos.logging import startLog, endLog, log
-from bpy.types import Operator
-from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, EnumProperty, FloatVectorProperty, \
-    BoolVectorProperty
 
 
 class SortObjectsToLayersOperator(Operator):
@@ -201,8 +202,8 @@ class SyncMassesOperator(Operator):
                 sourcelist.append('collision_' + basename)
             else:  # latest to oldest
                 try:
-                    tv = generalUtils.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
-                    tc = generalUtils.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
+                    tv = gUtils.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
+                    tc = gUtils.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
                     if tc < tv:  # if collision information is older than visual information
                         sourcelist.append('visual_' + basename)
                         targetlist.append('collision_' + basename)
@@ -322,7 +323,7 @@ class BatchEditPropertyOperator(Operator):
         description="Custom property value")
 
     def execute(self, context):
-        value = generalUtils.parse_number(self.property_value)
+        value = gUtils.parse_number(self.property_value)
         if value == '':
             for obj in context.selected_objects:
                 if self.property_name in obj.keys():
@@ -353,7 +354,7 @@ class CopyCustomProperties(Operator):
         slaves = context.selected_objects
         master = context.active_object
         slaves.remove(master)
-        props = blenderUtils.cleanObjectProperties(dict(master.items()))
+        props = bUtils.cleanObjectProperties(dict(master.items()))
         for obj in slaves:
             if self.empty_properties:
                 for key in obj.keys():
@@ -546,10 +547,10 @@ class SetOriginToCOMOperator(Operator):
         to_cadorigin = self.cursor_location - master.matrix_world.to_translation()
         com_shift_world = to_cadorigin + self.com_shift
         for s in slaves:
-            selectionUtils.selectObjects([s], True, 0)
+            sUtils.selectObjects([s], True, 0)
             context.scene.cursor_location = s.matrix_world.to_translation() + com_shift_world
             bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-        selectionUtils.selectObjects(slaves, True, slaves.index(master))
+        sUtils.selectObjects(slaves, True, slaves.index(master))
         context.scene.cursor_location = self.cursor_location.copy()
         return {'FINISHED'}
 
@@ -634,7 +635,7 @@ class EditYAMLDictionary(Operator):
             if hasattr(tmpdict[key], 'to_list'):  # transform Blender id_arrays into lists
                 tmpdict[key] = list(tmpdict[key])
         contents = [variablename + ' = """',
-                    yaml.dump(blenderUtils.cleanObjectProperties(tmpdict),
+                    yaml.dump(bUtils.cleanObjectProperties(tmpdict),
                               default_flow_style=False) + '"""\n',
                     "# ------- Hit 'Run Script' to save your changes --------",
                     "import yaml", "import bpy",
@@ -645,8 +646,8 @@ class EditYAMLDictionary(Operator):
                     "    context.active_object[key] = value",
                     "bpy.ops.text.unlink()"
                     ]
-        blenderUtils.createNewTextfile(textfilename, '\n'.join(contents))
-        blenderUtils.openScriptInEditor(textfilename)
+        bUtils.createNewTextfile(textfilename, '\n'.join(contents))
+        bUtils.openScriptInEditor(textfilename)
         endLog()
         return {'FINISHED'}
 
@@ -688,7 +689,7 @@ class CreateCollisionObjects(Operator):
             collname = '_'.join(nameparts)
             materialname = vis.data.materials[0].name if len(vis.data.materials) > 0 else "None"
             bBox = vis.bound_box
-            center = generalUtils.calcBoundingBoxCenter(bBox)
+            center = gUtils.calcBoundingBoxCenter(bBox)
             rotation = mathutils.Matrix.Identity(4)
             size = list(vis.dimensions)
             if self.property_colltype in ['cylinder', 'capsule']:
@@ -709,7 +710,7 @@ class CreateCollisionObjects(Operator):
             rotation_euler = (vis.matrix_world * rotation).to_euler()
             center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion() * center
             if self.property_colltype != 'capsule' and self.property_colltype != 'mesh':
-                ob = blenderUtils.createPrimitive(collname, self.property_colltype, size,
+                ob = bUtils.createPrimitive(collname, self.property_colltype, size,
                                              defs.layerTypes['collision'], materialname, center,
                                              rotation_euler)
             elif self.property_colltype == 'capsule':
@@ -718,18 +719,18 @@ class CreateCollisionObjects(Operator):
                 zshift = length / 2
                 tmpsph1_location = center + rotation_euler.to_matrix().to_4x4() * mathutils.Vector((0,0,zshift))
                 tmpsph2_location = center - rotation_euler.to_matrix().to_4x4() * mathutils.Vector((0,0,zshift))
-                ob = blenderUtils.createPrimitive(collname, 'cylinder', size,
+                ob = bUtils.createPrimitive(collname, 'cylinder', size,
                                              defs.layerTypes['collision'], materialname, center,
                                              rotation_euler)
-                sph1 = blenderUtils.createPrimitive('tmpsph1', 'sphere', radius,
+                sph1 = bUtils.createPrimitive('tmpsph1', 'sphere', radius,
                                                defs.layerTypes['collision'], materialname,
                                                tmpsph1_location,
                                                rotation_euler)
-                sph2 = blenderUtils.createPrimitive('tmpsph2', 'sphere', radius,
+                sph2 = bUtils.createPrimitive('tmpsph2', 'sphere', radius,
                                                defs.layerTypes['collision'], materialname,
                                                tmpsph2_location,
                                                rotation_euler)
-                selectionUtils.selectObjects([ob, sph1, sph2], True, 0)
+                sUtils.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
                 ob['geometry/length'] = length
                 ob['geometry/radius'] = radius
@@ -1254,7 +1255,7 @@ class RefineLevelOfDetailOperator(Operator):
         for obj in selobjects:
             if obj.phobostype in ['visual', 'collision']:
                 if obj != sourceobj:
-                    selectionUtils.selectObjects([obj], clear=True, active=0)
+                    sUtils.selectObjects([obj], clear=True, active=0)
                     bpy.ops.object.lod_clear_all()
                     for i in range(n-1):
                         bpy.ops.object.lod_add()
@@ -1330,7 +1331,7 @@ class AddHeightmapOperator(Operator):
         root["image"] = os.path.relpath(os.path.basename(self.filepath), bpy.data.filepath) #relative path to blender file
         root["anchor"] = "world"
         #Create Parenting
-        selectionUtils.selectObjects([root, plane], clear=True, active=0)
+        sUtils.selectObjects([root, plane], clear=True, active=0)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
         endLog()
         return {"FINISHED"}

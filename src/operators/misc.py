@@ -26,7 +26,6 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import bpy
 from bpy.props import BoolProperty, FloatProperty, FloatVectorProperty, EnumProperty, StringProperty
 from bpy.types import Operator
 from phobos.logging import startLog, endLog, log
