@@ -240,7 +240,7 @@ class SetXRayOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     objects = EnumProperty(
-        name="Show Objects:",
+        name="Objects",
         default='selected',
         items=(('all',) * 3, ('selected',) * 3, ('by name',) * 3) + defs.phobostypes,
         description="Show objects via x-ray")
@@ -263,8 +263,8 @@ class SetXRayOperator(Operator):
         layout = self.layout
         layout.label(text="Select items for X-ray view")
 
-        layout.prop(self, "Objects")
-        layout.prop(self, "Show", text="X-Ray Enabled" if self.show else "X-Ray Disabled")
+        layout.prop(self, "objects")
+        layout.prop(self, "show", text="enable X-Ray view" if self.show else "disable X-Ray view")
         if self.objects == 'by name':
             layout.prop(self, "Name Part")
 
