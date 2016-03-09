@@ -39,9 +39,10 @@ import yaml
 import bpy
 import phobos.robotdictionary as robotdictionary
 import phobos.defs as defs
-import phobos.utils.blender as blenderUtils
-import phobos.utils.selection as selectionUtils
-import phobos.utils.naming as namingUtils
+import phobos.utils.blender as bUtils
+import phobos.utils.selection as sUtils
+import phobos.utils.naming as nUtils
+import phobos.utils.general as gUtils
 from phobos.utils.general import securepath, roundVector
 from phobos.logging import log
 
@@ -84,7 +85,7 @@ def exportBobj(path, obj):
 
     # ignore dupli children
     if obj.parent and obj.parent.dupli_type in {'VERTS', 'FACES'}:
-        print(namingUtils.getObjectName(obj), 'is a dupli child - ignoring')
+        print(nUtils.getObjectName(obj), 'is a dupli child - ignoring')
         return
 
     mesh = obj.to_mesh(bpy.context.scene, True, 'PREVIEW') #Jan Paul: ", True)": calculate tesselation faces added as test
@@ -191,10 +192,10 @@ def exportObj(path, obj):
     :type obj: bpy.types.Object
 
     """
-    objname = namingUtils.getObjectName(obj)
+    objname = nUtils.getObjectName(obj)
     tmpobjname = obj.name
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+    tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = os.path.join(path, obj.data.name + "." + 'obj')
     bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False,
@@ -214,11 +215,11 @@ def exportStl(path, obj):
     :type obj: bpy.types.Object
 
     """
-    objname = namingUtils.getObjectName(obj)
+    objname = nUtils.getObjectName(obj)
     tmpobjname = obj.name
     print("OBJNAME: " + objname)
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+    tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = os.path.join(path, obj.data.name + "." + 'stl')
     bpy.ops.export_mesh.stl(filepath=outpath, use_mesh_modifiers=True)
@@ -237,11 +238,11 @@ def exportDae(path, obj):
     :type obj: bpy.types.Object
 
     """
-    objname = namingUtils.getObjectName(obj)
+    objname = nUtils.getObjectName(obj)
     tmpobjname = obj.name
     print("OBJNAME: " + objname)
     obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = blenderUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+    tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = os.path.join(path, obj.data.name + "." + 'dae')
     bpy.ops.object.select_all(action='DESELECT')
@@ -265,7 +266,7 @@ def bakeModel(objlist, path, modelname):
 
     """
     visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
-    selectionUtils.selectObjects(visuals, active=0)
+    sUtils.selectObjects(visuals, active=0)
     log("Copying objects for joining...", "INFO")
     print("Copying objects for joining...")
     bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
@@ -791,7 +792,7 @@ def exportModelToSRDF(model, path):
         :type parent: dict
 
         """
-        children = selectionUtils.getImmediateChildren(parent, ['link'], selected_only=True)
+        children = sUtils.getImmediateChildren(parent, ['link'], selected_only=True)
         if len(children) > 0:
             for child in children:
                 #output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (mother.name, child.name)))
@@ -800,7 +801,7 @@ def exportModelToSRDF(model, path):
                 addPCCombinations(child)
 
     # FIXME: Do we need this?
-    roots = selectionUtils.getRoots()
+    roots = sUtils.getRoots()
     for root in roots:
         if root.name == 'root':
             addPCCombinations(root)
@@ -1031,8 +1032,8 @@ def deriveSMURFEntity(smurf, outpath, savetosubfolder):
                     shutil.rmtree(os.path.join(outpath, filename), True)
                     shutil.copytree(fullpath, os.path.join(outpath, filename))
     else:
-        selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)
-        selectionUtils.selectObjects(selectionUtils.getChildren(smurf), clear=True)  # re-select for mesh export
+        sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)
+        sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)  # re-select for mesh export
         model, objectlist = robotdictionary.buildModelDictionary(smurf)
         export(model, objectlist, outpath)
     entitypose = robotdictionary.deriveObjectPose(smurf)
@@ -1059,7 +1060,7 @@ def deriveLightEntity(light):
     """
     log("Exporting " + light["entityname"] + " as a light entity", "INFO")
     entitypose = robotdictionary.deriveObjectPose(light)
-    lightobj = selectionUtils.getImmediateChildren(light)[0]
+    lightobj = sUtils.getImmediateChildren(light)[0]
     color = lightobj.data.color
     entry = {"name": light["entityname"],
              "type": "light",
@@ -1088,7 +1089,7 @@ def deriveHeightmapEntity(heightmap, outpath):
     """
     log("Exporting " + heightmap["entityname"] + " as a heightmap entity", "INFO")
     entitypose = robotdictionary.deriveObjectPose(heightmap)
-    heightmapMesh = selectionUtils.getImmediateChildren(heightmap)[0]
+    heightmapMesh = sUtils.getImmediateChildren(heightmap)[0]
     if bpy.data.worlds[0].heightmapMesh:
         exMesh = heightmapMesh.to_mesh(bpy.context.scene, True, "PREVIEW")
         exMesh.name = "hm_" + heightmap["entityname"]
