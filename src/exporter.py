@@ -1211,14 +1211,17 @@ def export(model, objectlist, path=None):
         meshnames = set()
         exportobjects = set()
         for obj in objectlist:
-            if ((obj.phobostype == 'visual' or obj.phobostype == 'collision') and
-                    (obj['geometry/type'] == 'mesh') and (obj.data.name not in meshnames)):
-                meshnames.add(obj.data.name)
-                exportobjects.add(obj)
-                for lod in obj.lod_levels:
-                    if lod.object.data.name not in meshnames:
-                        meshnames.add(lod.object.data.name)
-                        exportobjects.add(lod.object)
+            try:
+                if ((obj.phobostype == 'visual' or obj.phobostype == 'collision') and
+                        (obj['geometry/type'] == 'mesh') and (obj.data.name not in meshnames)):
+                    meshnames.add(obj.data.name)
+                    exportobjects.add(obj)
+                    for lod in obj.lod_levels:
+                        if lod.object.data.name not in meshnames:
+                            meshnames.add(lod.object.data.name)
+                            exportobjects.add(lod.object)
+            except KeyError:
+                log("Undefined geometry type in object " + obj.name + ", skipping mesh export", "ERROR", "export")
 
         if exportobjects:  # if there are meshes to export
             show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
