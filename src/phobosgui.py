@@ -225,14 +225,6 @@ class PhobosPanel(bpy.types.Panel):
         rc2.operator('object.phobos_name_model', text='Name Robot')
         rc2.operator('object.phobos_toggle_namespaces', text='Toggle Namespaces')
 
-        #Scene Menu
-        layout.separator()
-        layout.label(text="Scene Editing", icon="WORLD")
-        iinlayout = layout.split()
-        ic1 = iinlayout.column(align=True)
-        ic1.operator("object.phobos_add_heightmap", text="Create Heightmap")
-        ic2 = iinlayout.column(align=True)
-
         # Inspection Menu
         layout.separator()
         layout.label(text="Inspect Robot", icon='VIEWZOOM')
@@ -267,6 +259,29 @@ class PhobosPanel(bpy.types.Panel):
         #for root in utility.getRoots():
         #    linspect1.operator('object.phobos_select_model', text=root["modelname"]).modelname = \
         #     root["modelname"] if "modelname" in root else root.name
+
+
+class PhobosScenePanel(bpy.types.Panel):
+    """A Custom Panel in the Phobos viewport toolbar"""
+    bl_idname = "TOOLS_PT_PHOBOS_SCENE"
+    bl_label = "phobos: Scene Editing"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
+    #bl_context = ''
+
+    def draw_header(self, context):
+        self.layout.label(icon='SCENE_DATA')
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="Scene Editing", icon="WORLD")
+        iinlayout = layout.split()
+        ic1 = iinlayout.column(align=True)
+        ic1.operator("object.phobos_add_heightmap", text="Create Heightmap")
+        # FIXME: this would be a killer feature
+        #ic2 = iinlayout.column(align=True)
+        #ic2.template_preview(bpy.data.textures["da"])
 
 
 class PhobosModelPanel(bpy.types.Panel):
@@ -457,6 +472,7 @@ class PhobosExportPanel(bpy.types.Panel):
         self.layout.prop(bpy.data.worlds[0], "sceneName", text="Name")
         self.layout.prop(bpy.data.worlds[0], "heightmapMesh", text="export heightmap as mesh")
         layout.operator("object.phobos_export_scene", text="Export SMURF Scene", icon="WORLD_DATA")
+
 
 class PhobosObjectPanel(bpy.types.Panel):
     bl_idname = "OBJECT_PT_PHOBOS"
