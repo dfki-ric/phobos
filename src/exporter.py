@@ -36,6 +36,7 @@ import struct
 import itertools
 from datetime import datetime
 import yaml
+import mathutils
 import bpy
 import phobos.robotdictionary as robotdictionary
 import phobos.defs as defs
@@ -222,7 +223,7 @@ def exportStl(path, obj):
     tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
     tmpobject.data = obj.data  # copy the mesh here
     outpath = os.path.join(path, obj.data.name + "." + 'stl')
-    bpy.ops.export_mesh.stl(filepath=outpath, use_mesh_modifiers=True)
+    bpy.ops.export_mesh.stl(filepath=outpath, use_selection=True, use_mesh_modifiers=True)
     bpy.ops.object.select_all(action='DESELECT')
     tmpobject.select = True
     bpy.ops.object.delete()
@@ -1008,6 +1009,10 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
         elif entity["entity/type"] == 'heightmap':
             heightmap_outpath = securepath(os.path.join(outpath, "heightmaps") if subfolder else outpath)
             entry = deriveHeightmapEntity(entity, heightmap_outpath, subfolder)
+        elif entity['entity/type'] == 'primitive':
+            primitive_outpath = securepath(os.path.join(outpath, 'primitives') if subfolder else outpath)
+            log("primitive_outpath: " + outpath, "DEBUG", "exportSMURFsScene")
+            entry = derivePrimitiveEntity(entity)
         outputlist.append(entry)
 
     with open(os.path.join(outpath, bpy.data.worlds['World'].sceneName + '.smurfs'),
@@ -1015,7 +1020,8 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
         sceneinfo = "# SMURF scene " + bpy.data.worlds['World'].sceneName + "; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
         sceneinfo += "# created with Phobos " + defs.version + " - https://github.com/rock-simulation/phobos\n\n"
         outputfile.write(sceneinfo)
-        entitiesdict = gUtils.epsilonToZero({'entities': outputlist})
+        epsilon = 10**(-bpy.data.worlds[0].decimalPlaces)  # TODO: implement this separately
+        entitiesdict = gUtils.epsilonToZero({'entities': outputlist}, epsilon, bpy.data.worlds[0].decimalPlaces)
         outputfile.write(yaml.dump(entitiesdict))
 
 
@@ -1056,7 +1062,8 @@ def deriveSMURFEntity(smurf, outpath, savetosubfolder):
 
     entry['file'] = (os.path.join(subfolder, smurf["modelname"]+".smurf") if os.path.isfile(outpath)
                      else os.path.join(subfolder, "smurf", smurf["modelname"]+".smurf"))
-    entry['anchor'] = 'world' if 'joint/type' in smurf and smurf['joint/type'] == 'fixed' else "none"
+    if 'parent' not in entry and 'joint/type' in smurf and smurf['joint/type'] == 'fixed':
+        entry['parent'] = 'world'
     entry["position"] = entitypose["translation"]
     entry["rotation"] = entitypose["rotation_quaternion"]
     return entry
@@ -1152,6 +1159,27 @@ def deriveHeightmapEntity(heightmap, outpath):
                  "rotation": entitypose["rotation_quaternion"]
                  }
     return entry
+
+
+def derivePrimitiveEntity(primitive, outpath=None):
+    """This function handles an entity of type "primitive" in a scene to export
+
+    :param primitive: The lights root object.
+    :type primitive: bpy.types.Object
+    :param outpath: If True data will be exported into subfolders.
+    :type outpath: str
+    :return: dict - An entry for the scenes entitiesList
+
+    """
+    log("Exporting " + nUtils.getObjectName(primitive, 'entity') + " as entity of type 'primitive", "INFO")
+    entity = robotdictionary.initObjectProperties(primitive, 'entity', ['geometry'])
+    pose = gUtils.deriveObjectPose(primitive)
+    entity['geometry'] = gUtils.deriveGeometry(primitive)
+    entity['position'] = {'x': pose['translation'][0],
+                          'y': pose['translation'][1],
+                          'z': pose['translation'][2]}
+    return entity
+
 
 
 def export(model, objectlist, path=None):
