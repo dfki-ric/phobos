@@ -798,19 +798,17 @@ def exportModelToSRDF(model, path):
         :type parent: dict
 
         """
-        children = sUtils.getImmediateChildren(parent, ['link'], selected_only=True)
+        children = sUtils.getChildren(parent, ['link'], selected_only=True)
         if len(children) > 0:
             for child in children:
                 #output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (mother.name, child.name)))
                 if ((parent, child) not in collisionExclusives) or ((child, parent) not in collisionExclusives):
                     collisionExclusives.append((parent.name, child.name))
-                addPCCombinations(child)
+                #addPCCombinations(child)
 
     # FIXME: Do we need this?
-    roots = sUtils.getRoots()
-    for root in roots:
-        if root.name == 'root':
-            addPCCombinations(root)
+    for root in sUtils.getRoots():
+        addPCCombinations(root)
 
     for pair in collisionExclusives:
         output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (pair[0], pair[1])))
@@ -823,6 +821,12 @@ def exportModelToSRDF(model, path):
     # FIXME: problem of different joint transformations needed for fixed joints
     log("Writing model data to " + path, "INFO", "exportModeltoSRDF")
 
+
+def findChild(parent, model, childlist):
+    for l in model['links']:
+        if model['links'][l]['parent'] == parent:
+            return childlist + [findChild(l['name'], model, childlist)]
+    return []
 
 def exportModelToSMURF(model, path):
     """This function exports a given model to a specific path as a smurf representation.
