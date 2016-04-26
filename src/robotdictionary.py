@@ -123,6 +123,8 @@ def deriveLink(obj):
 
     """
     props = initObjectProperties(obj, phobostype='link', ignoretypes=['joint', 'motor', 'entity'])
+    parent = sUtils.getEffectiveParent(obj)
+    props['parent'] = parent.name if parent else None
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
     props["visual"] = {}
@@ -702,14 +704,17 @@ def buildModelDictionary(root):
     # complete link information by parsing visuals and collision objects
     log("Parsing visual and collision (approximation) objects...", "INFO", "buildModelDictionary")
     for obj in objectlist:
-        if obj.phobostype in ['visual', 'collision']:
-            props = deriveDictEntry(obj)
-            parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
-            robot['links'][parentname][obj.phobostype][nUtils.getObjectName(obj)] = props
-        elif obj.phobostype == 'approxsphere':
-            props = deriveDictEntry(obj)
-            parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
-            robot['links'][parentname]['approxcollision'].append(props)
+        try:
+            if obj.phobostype in ['visual', 'collision']:
+                props = deriveDictEntry(obj)
+                parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
+                robot['links'][parentname][obj.phobostype][nUtils.getObjectName(obj)] = props
+            elif obj.phobostype == 'approxsphere':
+                props = deriveDictEntry(obj)
+                parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
+                robot['links'][parentname]['approxcollision'].append(props)
+        except KeyError:
+            log(parentname + " not found", "ERROR")
 
     # combine collision information for links
     for linkname in robot['links']:
