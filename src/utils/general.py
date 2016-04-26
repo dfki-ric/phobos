@@ -279,6 +279,9 @@ def deriveGeometry(obj):
         elif gt == 'cylinder' or gt == 'capsule':
             geometry['radius'] = obj.dimensions[0]/2
             geometry['length'] = obj.dimensions[2]
+        elif gt == 'capsule':
+            geometry['radius'] = obj.dimensions[0]/2
+            geometry['length'] = obj.dimensions[2] - obj.dimensions[0]
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
@@ -296,6 +299,8 @@ def deriveGeometry(obj):
             geometry['filename'] = os.path.join('meshes', filename)
             geometry['scale'] = list(obj.scale)
             geometry['size'] = list(obj.dimensions)  # FIXME: is this needed to calculate an approximate inertia
+        else:  # any other geometry type, i.e. 'plane'
+            geometry['size'] = list(obj.dimensions)
         return geometry
     except KeyError as err:
         log("Undefined geometry for object " + nUtils.getObjectName(obj)

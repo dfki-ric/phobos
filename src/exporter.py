@@ -522,11 +522,15 @@ def writeURDFGeometry(output, element):
             output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))
         elif geometry['type'] == "sphere":
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
-        elif geometry['type'] == "mesh":  # capsules are now converted into a cylinder with two spheres and thus need not be handled here
+        elif geometry['type'] == 'mesh':
             if bpy.data.worlds[0].structureExport:
                 output.append(xmlline(5, 'mesh', ['filename', 'scale'], ["../" + geometry['filename'], l2str(geometry['scale'])]))
             else:
                 output.append(xmlline(5, 'mesh', ['filename', 'scale'], [geometry['filename'], l2str(geometry['scale'])]))
+        elif geometry['type'] == 'capsule':
+            output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))  # FIXME: real capsules here!
+        else:
+            raise TypeError("Unknown geometry type")
         output.append(indent * 4 + '</geometry>\n')
     except (KeyError, TypeError) as err:
         log("Misdefined geometry in element " + element['name'] + " " + str(err), "ERROR", "writeURDFGeometry")
