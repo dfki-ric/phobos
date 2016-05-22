@@ -736,13 +736,18 @@ class CreateCollisionObjects(Operator):
                 ob['sph1_location'] = tmpsph1_location
                 ob['sph2_location'] = tmpsph2_location
             elif self.property_colltype == 'mesh':
-                pass
-                # TODO: copy mesh!!
+                ob = blenderUtils.createPrimitive(collname, 'cylinder', (1,1,1),
+                                             defs.layerTypes['collision'], materialname, center,
+                                             rotation_euler)
+                ob.data = vis.data
             ob.phobostype = 'collision'
             ob['geometry/type'] = self.property_colltype
             if vis.parent:
                 ob.select = True
-                bpy.ops.object.transform_apply(scale=True)
+                try:
+                    bpy.ops.object.transform_apply(scale=True)
+                except RuntimeError:
+                    log("Cannot apply scale. Mesh " + ob.data.name + " is shared between several objects.", "WARNING", __name__+".CreateCollisionObjects")
                 vis.parent.select = True
                 context.scene.objects.active = vis.parent
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
