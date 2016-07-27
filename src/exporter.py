@@ -1017,6 +1017,8 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
             primitive_outpath = securepath(os.path.join(outpath, 'primitives') if subfolder else outpath)
             log("primitive_outpath: " + outpath, "DEBUG", "exportSMURFsScene")
             entry = derivePrimitiveEntity(entity)
+        else:  # generic entity export
+            entry = deriveGenericEntity(entity)
         outputlist.append(entry)
 
     with open(os.path.join(outpath, bpy.data.worlds['World'].sceneName + '.smurfs'),
@@ -1191,6 +1193,20 @@ def derivePrimitiveEntity(primitive, outpath=None):
                           'z': entity['geometry']['size'][2]}
     return entity
 
+
+def deriveGenericEntity(entityobj, outpath=None):
+    """This function handles an entity of unknown type by simply exporting its custom properties.
+
+    :param entityobj: The object representing the entity.
+    :type entityobj: bpy.types.Object
+    :param outpath: If True data will be exported into subfolders.
+    :type outpath: str
+    :return: dict - An entry for the scenes entitiesList
+
+    """
+    log("Exporting " + nUtils.getObjectName(entityobj, 'entity') + " as entity of type 'generic", "INFO")
+    entity = robotdictionary.initObjectProperties(entityobj, 'entity', ['geometry'])
+    return entity
 
 
 def export(model, objectlist, path=None):
