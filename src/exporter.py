@@ -1168,7 +1168,7 @@ def deriveHeightmapEntity(heightmap, outpath):
 def derivePrimitiveEntity(primitive, outpath=None):
     """This function handles an entity of type "primitive" in a scene to export
 
-    :param primitive: The lights root object.
+    :param primitive: The object representing the primitive.
     :type primitive: bpy.types.Object
     :param outpath: If True data will be exported into subfolders.
     :type outpath: str
@@ -1182,6 +1182,13 @@ def derivePrimitiveEntity(primitive, outpath=None):
     entity['position'] = {'x': pose['translation'][0],
                           'y': pose['translation'][1],
                           'z': pose['translation'][2]}
+    entity['rotation'] = {'w': pose['rotation_quaternion'][0],
+                          'x': pose['rotation_quaternion'][1],
+                          'y': pose['rotation_quaternion'][2],
+                          'z': pose['rotation_quaternion'][3]}
+    entity['extend'] = {'x': entity['geometry']['size'][0],
+                          'y': entity['geometry']['size'][1],
+                          'z': entity['geometry']['size'][2]}
     return entity
 
 
