@@ -209,7 +209,7 @@ def deriveMotor(obj, joint):
                 props['minValue'] = 0
                 props['maxValue'] = props["maxSpeed"]
         except KeyError:
-            log("Missing data in motor " + obj.name, "DEBUG", "deriveMotor")
+            log("Missing data in motor " + obj.name + '. No motor created.', "WARNING", "deriveMotor")
             return None
         return props
     else:
@@ -639,7 +639,7 @@ def buildModelDictionary(root):
     robot["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
     if root.phobostype != 'link':
         log("Found no 'link' object as root of the robot model.", "ERROR", "buildModelDictionary")
-        raise Exception("No valid root link.")
+        raise Exception(root.name + " is  no valid root link.")
     else:
         if 'modelname' in root:
             robot['modelname'] = root["modelname"]
@@ -714,7 +714,10 @@ def buildModelDictionary(root):
                 parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
                 robot['links'][parentname]['approxcollision'].append(props)
         except KeyError:
-            log(parentname + " not found", "ERROR")
+            try:
+                log(parentname + " not found", "ERROR")
+            except TypeError:
+                log("No parent found for " + obj.name, "ERROR")
 
     # combine collision information for links
     for linkname in robot['links']:
