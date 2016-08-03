@@ -142,9 +142,12 @@ class ExportModelOperator(Operator):
     def execute(self, context):
         startLog(self)
         root = sUtils.getRoot(context.selected_objects[0])
-        model, objectlist = robotdictionary.buildModelDictionary(root)
-        exporter.export(model, objectlist)
-        endLog()
+        if root.phobostype != 'link':
+            log("Selection includes objects not parented to any model root, please adapt selection.", "ERROR", "ExportModelOperator")
+        else:
+            model, objectlist = robotdictionary.buildModelDictionary(root)
+            exporter.export(model, objectlist)
+            endLog()
         return {'FINISHED'}
 
 
