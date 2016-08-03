@@ -32,6 +32,7 @@ import mathutils
 from . import defs
 import phobos.utils.blender as blenderUtils
 import phobos.utils.selection as selectionUtils
+import phobos.utils.naming as nameUtils
 
 
 
@@ -86,34 +87,34 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     blenderUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object
     if 'Camera' in sensor['type']:
-        bpy.context.scene.layers[defs.layerTypes['sensor']] = True
         bpy.ops.object.add(type='CAMERA', location=origin.to_translation(),
                            rotation=origin.to_euler(),
                            layers=blenderUtils.defLayers([defs.layerTypes['sensor']]))
         newsensor = bpy.context.active_object
         if reference is not None:
-            selectionUtils.selectObjects([newsensor, bpy.data.objects[reference]], clear=True, active=1)
+            selectionUtils.selectObjects([newsensor, reference], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     elif sensor['type'] in ['RaySensor', 'RotatingRaySensor', 'ScanningSonar', 'MultiLevelLaserRangeFinder']:
         # TODO: create a proper ray sensor scanning layer disc here
         newsensor = blenderUtils.createPrimitive(sensor['name'], 'disc', (0.5, 36),
                                             defs.layerTypes['sensor'], 'phobos_laserscanner',
                                             origin.to_translation(), protation=origin.to_euler())
-        if reference is not None and reference != []:
-            if type(reference) == str:
-                key = reference
-            else:
-                key = reference[0]
-            selectionUtils.selectObjects([newsensor, bpy.data.objects[key]], clear=True, active=1)
+        if reference is not None:
+            selectionUtils.selectObjects([newsensor, reference], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:  # contact, force and torque sensors (or unknown sensors)
         newsensor = blenderUtils.createPrimitive(sensor['name'], 'sphere', 0.05,
                                             defs.layerTypes['sensor'], 'phobos_sensor',
                                             origin.to_translation(), protation=origin.to_euler())
-        if 'Node' in sensor['type']:
-            newsensor['sensor/nodes'] = sorted(reference)
+        if sensor['type'] == 'Joint6DOF':
+            pass #newsensor['sensor/nodes'] = nameUtils.getObjectName(reference)
+        elif 'Node' in sensor['type']:
+            newsensor['sensor/nodes'] = sorted([nameUtils.getObjectName(ref) for ref in reference])
         elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
-            newsensor['sensor/joints'] = sorted(reference)
+            newsensor['sensor/joints'] = sorted([nameUtils.getObjectName(ref) for ref in reference])
+        if reference is not None:
+            selectionUtils.selectObjects([newsensor, reference], clear=True, active=1)
+            bpy.ops.object.parent_set(type='BONE_RELATIVE')
     # set sensor properties
     newsensor.phobostype = 'sensor'
     newsensor.name = sensor['name']

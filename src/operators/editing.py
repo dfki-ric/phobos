@@ -1046,7 +1046,7 @@ class AddSensorOperator(Operator):
 
     sensor_type = EnumProperty(
         name="Sensor Type",
-        default="CameraSensor",
+        default="undefined",
         items=tuple([(type,) * 3 for type in defs.sensortypes]),
         description="Type of the sensor to be created"
     )
@@ -1132,17 +1132,20 @@ class AddSensorOperator(Operator):
             if self.add_link:
                 link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(),
                                         name='link_' + self.sensor_name)
-                sensorObj = sensors.createSensor(sensor, link.name, link.matrix_world)
+                sensorObj = sensors.createSensor(sensor, link, link.matrix_world)
             else:
-                sensorObj = sensors.createSensor(sensor, context.active_object.name, context.active_object.matrix_world)
+                sensorObj = sensors.createSensor(sensor, context.active_object, context.active_object.matrix_world)
             if self.add_link:
-                selectionUtils.selectObjects([parent, link], clear=True, active=0)
+                sUtils.selectObjects([parent, link], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
-                selectionUtils.selectObjects([link, sensorObj], clear=True, active=0)
+                sUtils.selectObjects([link, sensorObj], clear=True, active=0)
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
             sensors.cameraRotLock(sensorObj)
         elif sensor['type'] in ['Joint6DOF']:
-            sensors.createSensor(sensor, context.active_object, context.active_object.matrix_world)
+            for obj in context.selected_objects:
+                if obj.phobostype == 'link':
+                    sensor['name'] = "sensor_joint6dof_" + nUtils.getObjectName(obj, phobostype="joint")
+                    sensors.createSensor(sensor, obj, obj.matrix_world)
         elif 'Node' in sensor['type']:
             sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
                          mathutils.Matrix.Translation(context.scene.cursor_location))
