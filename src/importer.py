@@ -35,6 +35,7 @@ from collections import namedtuple
 import xml.etree.ElementTree as ET
 import zipfile
 import shutil
+import re
 
 import phobos.defs as defs
 import phobos.materials as materials
@@ -586,6 +587,14 @@ class RobotModelParser():
                     geom_path = os.path.join(os.path.abspath(os.path.join(self.tmp_path, tmp_dir_name)), geom['filename'])
                 else:
                     geom_path = os.path.join(self.path, geom['filename'])
+                # Remove 'urdf/package://{package_name}' to workaround the lack
+                # of rospack here. This supposes that the urdf file is in the
+                # urdf folder and that the meshes are in the meshes folder at
+                # the same level as the urdf folder.
+                if 'package://' in geom_path:
+                   geom_path = re.sub(r'(.*)urdf/package://([^/]+)/(.*)',
+                                      '\\1\\3',
+                                      geom_path)
 
                 bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes[geomsrc])
                 meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
