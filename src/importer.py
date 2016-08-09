@@ -2144,7 +2144,8 @@ class URDFModelParser(RobotModelParser):
             color = material.find('color')
             if color is not None:
                 newmaterial['color'] = generalUtils.parse_text(color.attrib['rgba'])
-                material_list.append(newmaterial)
+                if not newmaterial in material_list:
+                    material_list.append(newmaterial)
         for m in material_list:
             #TODO: handle duplicate names? urdf_robotname_xxx?
             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1])
