@@ -133,7 +133,7 @@ def parse_text(s):
 
     """
     numstrings = s.split()
-    if numstrings:
+    if not numstrings:
         return None
     if len(numstrings) > 1:
         if only_contains_int(numstrings):
