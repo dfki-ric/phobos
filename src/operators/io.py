@@ -29,6 +29,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 from phobos.logging import startLog, endLog, log
 import phobos.defs as defs
 import phobos.exporter as exporter
+from phobos.export import entity_types
 import phobos.importer as importer
 import phobos.links as links
 import bpy
@@ -146,7 +147,10 @@ class ExportModelOperator(Operator):
             log("Selection includes objects not parented to any model root, please adapt selection.", "ERROR", "ExportModelOperator")
         else:
             model, objectlist = robotdictionary.buildModelDictionary(root)
-            exporter.export(model, objectlist)
+            if 'smurf' in entity_types:
+                entity_types['smurf'].export(model, objectlist)
+            else:
+                log("No export available for a robot entity!", "ERROR", __name__+".ExportModelOperator")
             endLog()
         return {'FINISHED'}
 
