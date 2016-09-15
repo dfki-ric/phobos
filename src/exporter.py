@@ -58,45 +58,119 @@ def unregister():
     print("Unregistering export...")
 
 
-def bakeModel(objlist, path, modelname):
+def createThumbnail(objects, img_path, modelname, render_resolution=256):
+    """This function creates a thumbnail of the given objects.
+
+    :param obj: List of objects for the thumbnail.
+    :type obj: list
+    :param Resolution used for the render.
+    :type int
+
+    """
+    # thumbnail
+
+    # check/create camera
+    # TODO create camera if there is no
+    cam_ob = bpy.context.scene.camera
+    # cam = bpy.data.cameras.new("Camera")
+    # delete_cam = False
+    if not cam_ob:
+        log("No Camera found! Can not create thumbnail", "WARNING", __name__ + ".bakeModel")
+        return
+        #cam_ob = bpy.data.objects.new("Camera", cam)
+        #bpy.context.scene.objects.link(cam_ob)
+        #delete_cam = True
+    #bpy.context.scene.camera = cam_ob
+
+    log("Creating thumbnail of model: "+modelname, "INFO",__name__+".bakeModel")
+    # hide all other objects from rendering
+    for ob in bpy.data.objects:
+        if not (ob in objects) and not(ob.type == 'LAMP'):
+            ob.hide_render = True
+
+    # set render settings
+    bpy.data.scenes[0].render.resolution_x = render_resolution
+    bpy.data.scenes[0].render.resolution_y = render_resolution
+    bpy.data.scenes[0].render.resolution_percentage = 100
+    # render
+    bpy.ops.render.render(use_viewport=True)
+    # save image
+    log("saving thumbnail to: "+img_path, "INFO",__name__+".bakeModel")
+    bpy.data.images['Render Result'].save_render(img_path)
+
+
+    # make all objects visible again
+    for ob in bpy.data.objects:
+        ob.hide_render = False
+
+    # delete camera if needed
+    #if delete_cam:
+    #    bpy.ops.object.select_all(action='DESELECT')
+    #    cam_ob.select = True
+    #    bpy.ops.object.delete()
+
+
+def bakeModel(objlist, modelname, savetosubfolder=True):
     """This function gets a list of objects and creates a single, simplified mesh from it and exports it to .stl.
 
     :param objlist: The list of blender objects to join and export as simplified stl file.
     :type objlist: list
-    :param path: The path to export the stl file to *without filename*
-    :type path: str
     :param modelname: The new models name and filename.
     :type modelname: str
 
     """
+    if bpy.data.worlds[0].relativePath:
+        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+    else:
+        outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+
+    bake_outpath = securepath(os.path.join(outpath, modelname) if savetosubfolder else outpath)
+
+    if bpy.data.worlds[0].structureExport:
+        securepath(os.path.join(bake_outpath, 'bake'))
+        bake_outpath = os.path.join(bake_outpath, 'bake/')
+
     visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
-    sUtils.selectObjects(visuals, active=0)
-    log("Copying objects for joining...", "INFO")
-    print("Copying objects for joining...")
-    bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
-    log("joining...", "INFO")
-    print("joining...")
-    bpy.ops.object.join()
-    obj = bpy.context.active_object
-    log("Deleting vertices...", "INFO")
-    print("Deleting vertices...")
-    bpy.ops.object.editmode_toggle()
-    bpy.ops.mesh.select_all(action='TOGGLE')
-    bpy.ops.mesh.select_all(action='TOGGLE')
-    bpy.ops.mesh.remove_doubles()
-    bpy.ops.object.editmode_toggle()
-    log("Adding modifier...", "INFO")
-    print("Adding modifier...")
-    bpy.ops.object.modifier_add(type='DECIMATE')
-    bpy.context.object.modifiers["Decimate"].decimate_type = 'DISSOLVE'
-    log("Applying modifier...", "INFO")
-    print("Applying modifier...")
-    bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
-    obj.name = modelname + "_bake.stl"
-    bpy.ops.export_mesh.stl(filepath=os.path.join(path, obj.name))
-    obj.select = True
-    bpy.ops.object.delete()
-    log("Done baking...", "INFO")
+    if len(visuals) > 0:
+
+        log("Baking model to " + bake_outpath, "INFO",__name__+".bakeModel")
+        sUtils.selectObjects(visuals, active=0)
+        log("Copying objects for joining...", "INFO",__name__+".bakeModel")
+        bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
+        log("joining...", "INFO",__name__+".bakeModel")
+        bpy.ops.object.join()
+        obj = bpy.context.active_object
+        log("Deleting vertices...", "INFO",__name__+".bakeModel")
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.mesh.select_all(action='TOGGLE')
+        bpy.ops.mesh.select_all(action='TOGGLE')
+        bpy.ops.mesh.remove_doubles()
+        bpy.ops.object.editmode_toggle()
+        log("Adding modifier...", "INFO",__name__+".bakeModel")
+        bpy.ops.object.modifier_add(type='DECIMATE')
+        bpy.context.object.modifiers["Decimate"].decimate_type = 'DISSOLVE'
+        log("Applying modifier...", "INFO",__name__+".bakeModel")
+        bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
+        obj.name = modelname + "_bake.stl"
+
+
+        bpy.ops.export_mesh.stl(filepath=os.path.join(bake_outpath, obj.name))
+
+        obj.hide_render = True
+
+        createThumbnail(visuals, img_path=os.path.join(bake_outpath, modelname) + ".png", modelname=modelname)
+
+        obj.select = True
+
+        bpy.ops.object.delete()
+        log("Done baking...", "INFO")
+
+        with open(os.path.join(bake_outpath, "info.bake"), "w") as f:
+            f.write(yaml.dump({"name": modelname}))
+
+    else:
+        log("No visuals to bake!","WARNING")
+
     print("Done baking...")
 
 

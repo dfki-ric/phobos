@@ -105,6 +105,24 @@ def getRoot(obj=None):
     return child
 
 
+def getRootsOfObjs(objs):
+    """
+    Returns a list of all given objects links.
+
+    :return: List of all root links.
+    """
+    roots = []
+    for obj in objs:
+        root = getRoot(obj)
+        if not (root in roots) and ('phobostype' in root) and (root['phobostype'] == 1):
+            roots.append(root)
+    if not roots:
+        log("Phobos: No root objects found.", "WARNING", "getRootsOfObjs")
+    else:
+        log("Phobos: Found " + str(len(roots)) + " root object(s)", "INFO", "getRootsOfObjs")
+    return roots  # TODO: Should we change this and all other list return values in a tuple or generator expression?
+
+
 def getRoots():
     """
     Returns a list of all of the current scene's root links, i.e. links containing a model
@@ -145,7 +163,7 @@ def selectObjects(objects, clear=True, active=-1):
     :return:
     """
 
-    if clear:
+    if clear and bpy.context.active_object:
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
@@ -225,3 +243,25 @@ def selectByName(name, match_case=False):
     """
     #selectObjects(getObjectByName(name), True)
     selectObjects(getObjectsByPattern(name, match_case), True)
+
+
+def selectChildren(root, clear=True, phobostypes=(), include_hidden=True):
+    """
+    Selects all objects provided in list, clears current selection if clear is True
+    and sets one of the objects the active objects if a valid index is provided.
+
+    :param objects:
+    :param clear:
+    :param active:
+    :return:
+    """
+    children = [child for child in bpy.context.scene.objects if getRoot(child) == root
+            and (child.phobostype in phobostypes if phobostypes else True)
+            and (not child.hide or include_hidden)]
+
+    if clear and bpy.context.active_object:
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.object.select_all(action='DESELECT')
+    for obj in children:
+        obj.select = True
+    bpy.context.scene.objects.active = root

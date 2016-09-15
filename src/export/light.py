@@ -2,7 +2,7 @@
 # coding=utf-8
 
 """
-.. module:: phobos.exporter
+.. module:: phobos.export.light
     :platform: Unix, Windows, Mac
     :synopsis: TODO: INSERT TEXT HERE
 
@@ -25,9 +25,9 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
-File light_entity.py
+File light.py
 
-Created on 13 Feb 2014
+Created on 12 Sep 2016
 """
 
 import phobos.robotdictionary as robotdictionary

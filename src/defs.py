@@ -42,7 +42,7 @@ import yaml
 import math
 import bpy
 from bpy.types import AddonPreferences
-from bpy.props import StringProperty, EnumProperty, BoolProperty
+from bpy.props import StringProperty, EnumProperty, BoolProperty, CollectionProperty
 from phobos.logging import *
 
 
@@ -220,7 +220,6 @@ def __evaluateString(s):
             return ""
     return s
 
-
 class PhobosPrefs(AddonPreferences):
     bl_idname = __package__
 
@@ -246,6 +245,12 @@ class PhobosPrefs(AddonPreferences):
         default=True
     )
 
+    modelfolder = StringProperty(
+        name="modelfolder",
+        subtype="DIR_PATH",
+        default=".",
+    )
+
     def draw(self, context):
         layout = self.layout
         layout.label(text="Logging Settings")
@@ -253,6 +258,8 @@ class PhobosPrefs(AddonPreferences):
         layout.prop(self, "logtofile", text="write to logfile")
         layout.prop(self, "logtoterminal", text="only display in terminal")
         layout.prop(self, "loglevel", text="log level")
+        layout.prop(self, "modelfolder", text="model folder")
+
 
 def register():
     print("Registering " + __name__)

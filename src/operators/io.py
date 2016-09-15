@@ -163,17 +163,12 @@ class ExportBakeOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        objs = context.selected_objects
-        root = sUtils.getRoot(context.selected_objects[0])
-        model = robotdictionary.buildModelDictionary(root)
-        sUtils.selectObjects(objs)
-        if bpy.data.worlds[0].relativePath:
-            outpath = exporter.securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
-        else:
-            outpath = exporter.securepath(os.path.expanduser(bpy.data.worlds[0].path))
-        exporter.bakeModel(objs, outpath, model["modelname"])
-        with open(os.path.join(outpath, "info.bake"), "w") as f:
-            f.write(yaml.dump({"name": model["modelname"]}))
+        roots = sUtils.getRootsOfObjs(context.selected_objects)
+        for root in roots:
+            sUtils.selectChildren(root)
+            model, objectlist = robotdictionary.buildModelDictionary(root)
+            print(len(objectlist))
+            exporter.bakeModel(objectlist, model["modelname"])
         endLog()
         return {'FINISHED'}
 
