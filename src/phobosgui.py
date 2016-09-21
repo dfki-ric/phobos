@@ -29,17 +29,27 @@ Created on 6 Jan 2014
 import os
 import yaml
 import bpy
+import bgl
+import blf
 from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty, StringProperty, CollectionProperty
 from . import defs
 
-
-# Create custom property group
-class BakeModelProp(bpy.types.PropertyGroup):
-    '''name = StringProperty() '''
-    id = IntProperty()
+phobos_model_preview_name = "phobos_model_preview"
 
 
-def getBackedModels():
+def getView3DArea():
+    if bpy.context.area.type == 'VIEW_3D':
+        return bpy.context.area
+    else:
+        for oWindow in bpy.context.window_manager.windows:
+            oScreen = oWindow.screen
+            for oArea in oScreen.areas:
+                if oArea.type == 'VIEW_3D':
+                    return oArea
+    return None
+
+
+def loadBackedModels():
     modelsfolder = os.path.abspath(bpy.context.user_preferences.addons["phobos"].preferences.modelfolder)
     foundbakes = []
 
@@ -56,7 +66,111 @@ def getBackedModels():
             bake_dict[model_name] = []
             bake_dict[model_name].append({"posename": bakeyaml["posename"]})
             bake_dict[model_name][-1]["bakepath"] = os.path.dirname(bake)
-    return bake_dict
+
+    for model_name in bake_dict.keys():
+        item = bpy.data.worlds[0].bakeModel.add()
+        item.name  = model_name
+        item.label = model_name
+        item.type  = "robot_name"
+        for pose in bake_dict[model_name]:
+            item = bpy.data.worlds[0].bakeModel.add()
+            item.name  = os.path.split(pose["bakepath"])[-1]
+            item.label = os.path.splitext(os.path.split(pose["bakepath"])[-1])[1]
+            item.filepath = pose["bakepath"]
+
+
+def draw_thumbnail_callback(self):
+    area = getView3DArea()
+    if (len(bpy.context.scene.thumbnails)>0) and area:
+
+        # Draw a textured quad
+        area_widths  = [region.width for region in bpy.context.area.regions if region.type=='WINDOW']
+        area_heights = [region.height for region in bpy.context.area.regions if region.type=='WINDOW']
+        if (len(area_widths)>0) and (len(area_heights)>0):
+
+            active_thumbnail = bpy.context.scene.thumbnails[bpy.context.scene.active_thumbnail]
+            if active_thumbnail.type == "robot_name":
+                return
+            im = bpy.data.images[active_thumbnail.name]
+
+            view_width = area_widths[0]
+            view_height = area_heights[0]
+            tex_start_x = 0
+            tex_end_x = view_width
+            tex_start_y = 0
+            tex_end_y = view_height
+            if im.size[0] < view_width:
+                diff = np.trunc((view_width-im.size[0])/2)
+                tex_start_x = diff
+                tex_end_x   = diff+im.size[0]
+            if im.size[1] < view_height:
+                diff = np.trunc((view_height-im.size[1])/2)
+                tex_start_y = diff
+                tex_end_y   = diff+im.size[1]
+
+            # Draw information
+            font_id = 0  # XXX, need to find out how best to get this.
+            blf.position(font_id, tex_start_x, tex_end_y + 20, 0)
+            blf.size(font_id, 20, 72)
+            blf.draw(font_id, active_thumbnail.description)
+
+            tex = im.bindcode
+            bgl.glEnable(bgl.GL_TEXTURE_2D)
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, tex[0])
+
+            # Background
+            bgl.glEnable(bgl.GL_BLEND)
+
+            bgl.glBegin(bgl.GL_QUADS)
+            bgl.glColor4f(0, 0, 0, 0.3)
+            bgl.glVertex2i(0, 0)
+            bgl.glVertex2i(0, view_height)
+            bgl.glVertex2i(view_width, view_height)
+            bgl.glVertex2i(view_width, 0)
+
+            # Draw Image
+            bgl.glColor4f(1, 1, 1, 1)
+            bgl.glTexCoord2f(0, 0)
+            bgl.glVertex2i(int(tex_start_x), int(tex_start_y))
+            bgl.glTexCoord2f(0, 1)
+            bgl.glVertex2i(int(tex_start_x), int(tex_end_y))
+            bgl.glTexCoord2f(1, 1)
+            bgl.glVertex2i(int(tex_end_x), int(tex_end_y))
+            bgl.glTexCoord2f(1, 0)
+            bgl.glVertex2i(int(tex_end_x), int(tex_start_y))
+            bgl.glEnd()
+
+            # restore opengl defaults
+            bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
+            bgl.glDisable(bgl.GL_QUADS)
+            bgl.glDisable(bgl.GL_BLEND)
+            bgl.glDisable(bgl.GL_TEXTURE_2D)
+
+
+# Create custom property group
+class BakeModelProp(bpy.types.PropertyGroup):
+    label = bpy.props.StringProperty()
+    type  = bpy.props.StringProperty()
+    filepath = bpy.props.StringProperty()
+
+
+class Thumbnail_UIList(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            if item.type == "robot_name":
+                layout.label(text=item.label, translate=False, icon="DOWNARROW_HLT")
+            else:
+                if item==bpy.context.scene.thumbnails[bpy.context.scene.active_thumbnail]:
+                    sLayout = layout.split(0.5)
+                    sLayout.template_preview(bpy.data.textures["phobos_model_preview"])
+                else:
+                    sLayout = layout.split(0.1)
+                    sLayout.label(text="")
+                sLayout.label(text=item.label, translate=False, icon="POSE_DATA")
+        elif self.layout_type in {'GRID'}:
+            layout.alignment = 'CENTER'
+            layout.label(text="", icon_value=icon)
 
 
 def register():
@@ -103,9 +217,16 @@ def register():
     bpy.types.World.exportYAML = BoolProperty(name="exportYAML", update=updateExportOptions)
     bpy.types.World.structureExport = BoolProperty(name="structureExport", default=False, description="Create structured subfolders")
     bpy.types.World.sceneName = StringProperty(name="sceneName")
-    bpy.types.World.bakeModelIndex = IntProperty()
+
+    bpy.utils.register_class(Thumbnail_UIList)
     bpy.utils.register_class(BakeModelProp)
-    bpy.types.World.bakeModel = CollectionProperty(type=BakeModelProp)
+    bpy.utils.register_class(DrawThumbnailOperator)
+    bpy.utils.register_class(LoadBackedModelsOperator)
+
+    bpy.types.Scene.thumbnails = bpy.props.CollectionProperty(type=BakeModelProp)
+    bpy.types.Scene.active_thumbnail = bpy.props.IntProperty(name="Index of thumbnail list", default=0,
+                                                             update=showThumbnail)
+    bpy.types.Scene.thumbnail_visible = bpy.props.BoolProperty(name="Is the draw thumbnail operator running", default=False)
 
     #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
 
@@ -145,6 +266,59 @@ class OkOperator(bpy.types.Operator):
 
     def execute(self, context):
         return {'FINISHED'}
+
+class LoadBackedModelsOperator(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "object.load_backed_models_operator"
+    bl_label = "Load backed models"
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        loadBackedModels()
+        return {'FINISHED'}
+
+
+class DrawThumbnailOperator(bpy.types.Operator):
+    """Draw a line with the mouse"""
+    bl_idname = "view3d.draw_thumbnail_operator"
+    bl_label = "Drawn thumbnail to the View3D"
+
+    def modal(self, context, event):
+        context.area.tag_redraw()
+
+        if event.type in {'LEFTMOUSE','RIGHTMOUSE','ESC'}:
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            bpy.context.scene.thumbnail_visible = False
+            return {'CANCELLED'}
+
+        return {'PASS_THROUGH'}
+
+    def execute(self, context):
+        # the arguments we pass the the callback
+        args = (self,)
+        # Add the region OpenGL drawing callback
+        # draw in view space with 'POST_VIEW' and 'PRE_VIEW'
+        if hasattr(self,"_handle") and self._handle:
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+
+        self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_thumbnail_callback, args, 'WINDOW', 'POST_PIXEL')
+
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+
+def showThumbnail(self,value):
+    active_thumbnail = bpy.context.scene.thumbnails[bpy.context.scene.active_thumbnail]
+    if active_thumbnail.name not in bpy.data.images:
+        im = bpy.data.images.load(active_thumbnail.filepath)
+        im.gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
+    bpy.data.textures[phobos_model_preview_name].image = bpy.data.images[active_thumbnail.name]
+    #return
+    if not bpy.context.scene.thumbnail_visible:
+        bpy.ops.view3d.draw_thumbnail_operator()
+        bpy.context.scene.thumbnail_visible = True
 
 
 def updateExportOptions(self, context):
@@ -312,12 +486,7 @@ class PhobosScenePanel(bpy.types.Panel):
     #bl_context = ''
     def __init__(self):
         super(PhobosScenePanel, self).__init__()
-        bakedModels = getBackedModels()
-        for model in bakedModels:
-            for pose in model:
-                item = bpy.data.worlds[0].bakeModel.add()
-                item.id = len(bpy.data.worlds[0].bakeModel.custom)
-                item.name = pose["posename"]  # assign name of selected object
+
 
     def draw_header(self, context):
         self.layout.label(icon='SCENE_DATA')
@@ -332,8 +501,10 @@ class PhobosScenePanel(bpy.types.Panel):
         # FIXME: this would be a killer feature
         #ic2 = iinlayout.column(align=True)
         #ic2.template_preview(bpy.data.textures["da"])
-        layout.label(text="Import baked robot model", icon="WORLD")
-        layout.template_list("UL_items", "", bpy.data.worlds[0], "bakeModel", bpy.data.worlds[0], "bakeModelIndex", rows=2)
+        layout.label(text="Import baked robot model")#, icon="WORLD")
+        layout.template_list("Thumbnail_UIList", "", context.scene, "thumbnails", context.scene, "active_thumbnail")
+        if not phobos_model_preview_name in bpy.data.textures:
+            bpy.data.textures.new(phobos_model_preview_name, type='IMAGE')
 
 
 class PhobosModelPanel(bpy.types.Panel):
