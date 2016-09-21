@@ -99,6 +99,16 @@ def createThumbnail(objects, img_path, modelname, render_resolution=256):
     bpy.data.images['Render Result'].save_render(img_path)
 
 
+    # set render settings
+    bpy.data.scenes[0].render.resolution_x = 32
+    bpy.data.scenes[0].render.resolution_y = 32
+    bpy.data.scenes[0].render.resolution_percentage = 100
+    # render
+    bpy.ops.render.render(use_viewport=True)
+    # save image
+    log("saving icon to: "+os.path.basename(img_path).split('.')[0]+"_icon.png", "INFO",__name__+".bakeModel")
+    bpy.data.images['Render Result'].save_render(os.path.basename(img_path).split('.')[0]+"_icon.png")
+
     # make all objects visible again
     for ob in bpy.data.objects:
         ob.hide_render = False
@@ -110,7 +120,7 @@ def createThumbnail(objects, img_path, modelname, render_resolution=256):
     #    bpy.ops.object.delete()
 
 
-def bakeModel(objlist, modelname, savetosubfolder=True):
+def bakeModel(objlist, modelname, posename="", savetosubfolder=True):
     """This function gets a list of objects and creates a single, simplified mesh from it and exports it to .stl.
 
     :param objlist: The list of blender objects to join and export as simplified stl file.
@@ -127,8 +137,12 @@ def bakeModel(objlist, modelname, savetosubfolder=True):
     bake_outpath = securepath(os.path.join(outpath, modelname) if savetosubfolder else outpath)
 
     if bpy.data.worlds[0].structureExport:
-        securepath(os.path.join(bake_outpath, 'bake'))
-        bake_outpath = os.path.join(bake_outpath, 'bake/')
+        securepath(os.path.join(bake_outpath, 'bakes'))
+        bake_outpath = os.path.join(bake_outpath, 'bakes/')
+
+    if posename != "":
+        securepath(os.path.join(bake_outpath, posename))
+        bake_outpath = os.path.join(bake_outpath, posename)+'/'
 
     visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
     if len(visuals) > 0:
@@ -137,7 +151,7 @@ def bakeModel(objlist, modelname, savetosubfolder=True):
         sUtils.selectObjects(visuals, active=0)
         log("Copying objects for joining...", "INFO",__name__+".bakeModel")
         bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
-        log("joining...", "INFO",__name__+".bakeModel")
+        log("Joining...", "INFO",__name__+".bakeModel")
         bpy.ops.object.join()
         obj = bpy.context.active_object
         log("Deleting vertices...", "INFO",__name__+".bakeModel")
@@ -166,7 +180,10 @@ def bakeModel(objlist, modelname, savetosubfolder=True):
         log("Done baking...", "INFO")
 
         with open(os.path.join(bake_outpath, "info.bake"), "w") as f:
-            f.write(yaml.dump({"name": modelname}))
+            info = dict()
+            info["name"] = modelname
+            info["posename"] = posename
+            f.write(yaml.dump(info))
 
     else:
         log("No visuals to bake!","WARNING")

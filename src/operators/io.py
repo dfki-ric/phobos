@@ -168,7 +168,7 @@ class ExportBakeOperator(Operator):
             sUtils.selectChildren(root)
             model, objectlist = robotdictionary.buildModelDictionary(root)
             print(len(objectlist))
-            exporter.bakeModel(objectlist, model["modelname"])
+            exporter.bakeModel(objectlist, model["modelname"],'pose1')
         endLog()
         return {'FINISHED'}
 

@@ -26,9 +26,37 @@ Created on 6 Jan 2014
 @author: Kai von Szadkowski
 """
 
+import os
+import yaml
 import bpy
-from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty, StringProperty
+from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty, StringProperty, CollectionProperty
 from . import defs
+
+
+# Create custom property group
+class BakeModelProp(bpy.types.PropertyGroup):
+    '''name = StringProperty() '''
+    id = IntProperty()
+
+
+def getBackedModels():
+    modelsfolder = os.path.abspath(bpy.context.user_preferences.addons["phobos"].preferences.modelfolder)
+    foundbakes = []
+
+    for root, dirs, files in os.walk(modelsfolder):
+        if 'info.bake' in files:
+            foundbakes.append(os.path.join(root, 'info.bake'))
+    print(foundbakes)
+    #return {}
+    bake_dict = dict()
+    for bake in foundbakes:
+        with open(bake, 'r') as bakeinfo:
+            bakeyaml = yaml.load(bakeinfo)
+            model_name = bakeyaml["name"]
+            bake_dict[model_name] = []
+            bake_dict[model_name].append({"posename": bakeyaml["posename"]})
+            bake_dict[model_name][-1]["bakepath"] = os.path.dirname(bake)
+    return bake_dict
 
 
 def register():
@@ -75,6 +103,9 @@ def register():
     bpy.types.World.exportYAML = BoolProperty(name="exportYAML", update=updateExportOptions)
     bpy.types.World.structureExport = BoolProperty(name="structureExport", default=False, description="Create structured subfolders")
     bpy.types.World.sceneName = StringProperty(name="sceneName")
+    bpy.types.World.bakeModelIndex = IntProperty()
+    bpy.utils.register_class(BakeModelProp)
+    bpy.types.World.bakeModel = CollectionProperty(type=BakeModelProp)
 
     #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
 
@@ -200,7 +231,6 @@ def useDefaultLayers(self, context):
 #                 obj.data.materials.pop(0, update_data=True)
 #     bpy.data.scenes[0].update()
 
-
 class PhobosPanel(bpy.types.Panel):
     """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_PT_PHOBOS"
@@ -260,6 +290,17 @@ class PhobosPanel(bpy.types.Panel):
         #    linspect1.operator('object.phobos_select_model', text=root["modelname"]).modelname = \
         #     root["modelname"] if "modelname" in root else root.name
 
+# custom list
+class UL_items(bpy.types.UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        split = layout.split(0.3)
+        split.label("Index: %d" % (index))
+        split.prop(item, "name", text="", emboss=False, translate=False, icon='BORDER_RECT')
+
+    def invoke(self, context, event):
+        pass
+
 
 class PhobosScenePanel(bpy.types.Panel):
     """A Custom Panel in the Phobos viewport toolbar"""
@@ -269,9 +310,18 @@ class PhobosScenePanel(bpy.types.Panel):
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
     #bl_context = ''
+    def __init__(self):
+        super(PhobosScenePanel, self).__init__()
+        bakedModels = getBackedModels()
+        for model in bakedModels:
+            for pose in model:
+                item = bpy.data.worlds[0].bakeModel.add()
+                item.id = len(bpy.data.worlds[0].bakeModel.custom)
+                item.name = pose["posename"]  # assign name of selected object
 
     def draw_header(self, context):
         self.layout.label(icon='SCENE_DATA')
+
 
     def draw(self, context):
         layout = self.layout
@@ -282,6 +332,8 @@ class PhobosScenePanel(bpy.types.Panel):
         # FIXME: this would be a killer feature
         #ic2 = iinlayout.column(align=True)
         #ic2.template_preview(bpy.data.textures["da"])
+        layout.label(text="Import baked robot model", icon="WORLD")
+        layout.template_list("UL_items", "", bpy.data.worlds[0], "bakeModel", bpy.data.worlds[0], "bakeModelIndex", rows=2)
 
 
 class PhobosModelPanel(bpy.types.Panel):
