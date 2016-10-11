@@ -39,6 +39,9 @@ import phobos.utils.export as eUtils
 from phobos.utils.general import securepath
 from phobos.logging import log
 
+# information for structure export
+structure_subfolder = "heightmaps"
+
 def deriveEntity(entity, outpath, savetosubfolder):
     """This function handles a heightmap entity in a scene to export it
 
@@ -55,7 +58,7 @@ def deriveEntity(entity, outpath, savetosubfolder):
     heightmap = entity
 
     # determine outpath for the heightmap export
-    heightmap_outpath = securepath(os.path.join(outpath, "heightmaps") if savetosubfolder else outpath)
+    heightmap_outpath = securepath(os.path.join(outpath, structure_subfolder) if savetosubfolder else outpath)
 
 
     log("Exporting " + heightmap["entity/name"] + " as a heightmap entity", "INFO")

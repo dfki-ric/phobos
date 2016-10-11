@@ -58,7 +58,7 @@ def unregister():
     print("Unregistering export...")
 
 
-def createThumbnail(objects, img_path, modelname, render_resolution=256):
+def createThumbnail(objects, export_path, modelname, previewfile, iconfile, render_resolution=256):
     """This function creates a thumbnail of the given objects.
 
     :param obj: List of objects for the thumbnail.
@@ -95,8 +95,8 @@ def createThumbnail(objects, img_path, modelname, render_resolution=256):
     # render
     bpy.ops.render.render(use_viewport=True)
     # save image
-    log("saving thumbnail to: "+img_path, "INFO",__name__+".bakeModel")
-    bpy.data.images['Render Result'].save_render(img_path)
+    log("saving preview to: "+os.path.join(export_path,previewfile), "INFO",__name__+".bakeModel")
+    bpy.data.images['Render Result'].save_render(os.path.join(export_path,previewfile))
 
 
     # set render settings
@@ -106,8 +106,8 @@ def createThumbnail(objects, img_path, modelname, render_resolution=256):
     # render
     bpy.ops.render.render(use_viewport=True)
     # save image
-    log("saving icon to: "+os.path.basename(img_path).split('.')[0]+"_icon.png", "INFO",__name__+".bakeModel")
-    bpy.data.images['Render Result'].save_render(os.path.basename(img_path).split('.')[0]+"_icon.png")
+    log("saving icon to: "+os.path.join(export_path,iconfile), "INFO",__name__+".bakeModel")
+    bpy.data.images['Render Result'].save_render(os.path.join(export_path,iconfile))
 
     # make all objects visible again
     for ob in bpy.data.objects:
@@ -144,6 +144,8 @@ def bakeModel(objlist, modelname, posename="", savetosubfolder=True):
         securepath(os.path.join(bake_outpath, posename))
         bake_outpath = os.path.join(bake_outpath, posename)+'/'
 
+    export_name = modelname+ '_' + posename
+
     visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
     if len(visuals) > 0:
 
@@ -165,14 +167,15 @@ def bakeModel(objlist, modelname, posename="", savetosubfolder=True):
         bpy.context.object.modifiers["Decimate"].decimate_type = 'DISSOLVE'
         log("Applying modifier...", "INFO",__name__+".bakeModel")
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
-        obj.name = modelname + "_bake.stl"
+        obj.name = export_name + "_bake.stl"
 
 
         bpy.ops.export_mesh.stl(filepath=os.path.join(bake_outpath, obj.name))
 
         obj.hide_render = True
-
-        createThumbnail(visuals, img_path=os.path.join(bake_outpath, modelname) + ".png", modelname=modelname)
+        previewfile = export_name + '.png'
+        iconfile = export_name +  '.icon'
+        createThumbnail(visuals, export_path=bake_outpath, modelname=modelname, previewfile=previewfile, iconfile=iconfile)
 
         obj.select = True
 
@@ -183,6 +186,8 @@ def bakeModel(objlist, modelname, posename="", savetosubfolder=True):
             info = dict()
             info["name"] = modelname
             info["posename"] = posename
+            info["preview"] = previewfile
+            info["icon"] = iconfile
             f.write(yaml.dump(info))
 
     else:

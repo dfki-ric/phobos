@@ -2,6 +2,7 @@ import os
 import imp
 
 entity_types = dict()
+structure_export_folders = []
 for filename in os.listdir(os.path.dirname(__file__)):
     mod_name,file_ext = os.path.splitext(os.path.split(filename)[-1])
     if (filename != os.path.split(__file__)[-1]) and (file_ext.lower() == '.py'):
@@ -9,3 +10,5 @@ for filename in os.listdir(os.path.dirname(__file__)):
 
         if hasattr(py_mod, 'entity_type_name'):
             entity_types[py_mod.entity_type_name] = py_mod
+        if hasattr(py_mod, 'structure_subfolder'):
+            structure_export_folders.append(py_mod.structure_subfolder)
