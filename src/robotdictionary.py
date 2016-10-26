@@ -574,7 +574,7 @@ def loadPose(modelname, posename):
         for obj in sUtils.getObjectsByPhobostypes(['link']):
             if nUtils.getObjectName(obj, 'joint') in pose['joints']:
                 obj.pose.bones['Bone'].rotation_mode = 'XYZ'
-                obj.pose.bones['Bone'].rotation_euler.y = pose['joints'][nUtils.getObjectName(obj, 'joint')]
+                obj.pose.bones['Bone'].rotation_euler.y = float(pose['joints'][nUtils.getObjectName(obj, 'joint')])
         bpy.ops.object.mode_set(mode=prev_mode)
     except KeyError:
         log('No pose with name ' + posename + ' stored for model ' + modelname, 'ERROR', "loadPose")

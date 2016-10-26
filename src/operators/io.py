@@ -35,10 +35,12 @@ import phobos.links as links
 import bpy
 import yaml
 import os
+import time
 import phobos.utils.selection as sUtils
 import phobos.robotdictionary as robotdictionary
 from bpy.types import Operator
-from bpy.props import EnumProperty, StringProperty
+from bpy.props import EnumProperty, StringProperty, FloatProperty, IntProperty
+
 
 def generateLibEntries(param1, param2): #FIXME: parameter?
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
@@ -79,6 +81,69 @@ class ImportLibRobot(Operator):
         context.window_manager.fileselect_add(self)
 
         return {'RUNNING_MODAL'}
+
+
+class ImportSelectedLibRobot(Operator):
+    """Import a baked robot into the robot library"""
+    bl_idname = "scene.phobos_import_selected_lib_robot"
+    bl_label = "Import Baked Robot"
+    #bl_options = {'REGISTER', 'UNDO'}
+    obj_name = StringProperty(
+        name="New Smurf Entity Name",
+        default="New Robot",
+        description="Name of new Smurf Entity"
+    )
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        selected_robot = bpy.context.scene.bakeModels[bpy.data.textures[bpy.context.scene.active_bakeModel].name]
+        if selected_robot.model_file != '':
+            return wm.invoke_props_dialog(self,width=300,height=100)
+        else:
+            return {"CANCELLED"}
+
+    def draw(self, context):
+        row = self.layout
+        row.prop(self, "obj_name")
+
+    def execute(self, context):
+        startLog(self)
+        log("Import robot bake", "INFO")
+        selected_robot = bpy.context.scene.bakeModels[bpy.data.textures[bpy.context.scene.active_bakeModel].name]
+        if (selected_robot.type != "robot_name"):
+            if os.path.splitext(selected_robot.model_file)[-1] == ".obj":
+                bpy.ops.import_scene.obj(filepath=selected_robot.model_file,
+                                         axis_forward='-Z',
+                                         axis_up='Y',
+                                         filter_glob="*.obj;*.mtl",
+                                         use_edges=True,
+                                         use_smooth_groups=True,
+                                         use_split_objects=True,
+                                         use_split_groups=True,
+                                         use_groups_as_vgroups=False,
+                                         use_image_search=True,
+                                         split_mode='ON',
+                                         global_clamp_size=0)
+            elif os.path.splitext(selected_robot.model_file)[-1] == ".stl":
+                bpy.ops.import_mesh.stl(filepath=selected_robot.model_file,
+                                        axis_forward='Y',
+                                        axis_up='Z',
+                                        filter_glob="*.stl",
+                                        files=[],
+                                        directory="",
+                                        global_scale=1,
+                                        use_scene_unit=True,
+                                        use_facet_normal=False)
+            robot_obj = bpy.context.selected_objects[0]
+            bpy.context.object = robot_obj
+            robot_obj.name = self.obj_name
+            robot_obj["modelname"] = selected_robot.robot_name
+            robot_obj["entity/name"] = self.obj_name
+            robot_obj["entity/type"] = "smurf"
+            robot_obj["entity/pose"] = selected_robot.label
+
+        endLog()
+        return {'FINISHED'}
 
 
 class CreateRobotInstance(Operator):
@@ -167,8 +232,79 @@ class ExportBakeOperator(Operator):
         for root in roots:
             sUtils.selectChildren(root)
             model, objectlist = robotdictionary.buildModelDictionary(root)
-            print(len(objectlist))
             exporter.bakeModel(objectlist, model["modelname"],'pose1')
+        endLog()
+        return {'FINISHED'}
+
+
+class ExportAllPosesOperator(Operator):
+    """Bake the selected model"""
+    bl_idname = "object.phobos_export_all_poses"
+    bl_label = "Export All Poses"
+    #bl_options = {'REGISTER', 'UNDO'}
+    decimate_type = EnumProperty(name="Decimate Type",
+                                 items=[('COLLAPSE','Collapse','COLLAPSE'),('UNSUBDIV','Un-Subdivide','UNSUBDIV'),('DISSOLVE','Planar','DISSOLVE')])
+    decimate_ratio = FloatProperty(name="Ratio",default=0.15)
+    decimate_iteration = IntProperty(name="Iterations",default=1)
+    decimate_angle_limit = FloatProperty(name="Angle Limit",default=5)
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        bpy.context.scene.render.resolution_x=256
+        bpy.context.scene.render.resolution_y=256
+        bpy.context.scene.render.resolution_percentage=100
+        return wm.invoke_props_dialog(self,width=300,height=100)
+
+    def draw(self, context):
+        row = self.layout
+        row.label(text="Model Export Properties:")
+        row.prop(self, "decimate_type")
+        if self.decimate_type == 'COLLAPSE':
+            row.prop(self, "decimate_ratio")
+        elif self.decimate_type == 'UNSUBDIV':
+            row.prop(self, "decimate_iteration")
+        elif self.decimate_type == 'DISSOLVE':
+            row.prop(self, "decimate_angle_limit")
+        rd = bpy.context.scene.render
+        image_settings = rd.image_settings
+        row.label(text="Preview Properties:")
+        row.label(text="Resolution:")
+        row.prop(rd, "resolution_x", text="X")
+        row.prop(rd, "resolution_y", text="Y")
+        row.prop(rd, "resolution_percentage", text="")
+        #row.label(text="File Format:")
+        #row.template_image_settings(image_settings, color_management=False)
+
+    def check(self,context):
+        return True
+
+    def execute(self, context):
+        startLog(self)
+        root = sUtils.getRoot(context.selected_objects[0])
+
+        sUtils.selectChildren(root)
+        model, objectlist = robotdictionary.buildModelDictionary(root)
+        poses = robotdictionary.getPoses(model["modelname"])
+        i = 0
+        for pose in poses:
+            bpy.context.window_manager.progress_begin(0, len(poses))
+            bpy.context.window_manager.progress_update(i)
+            i += 1
+            root.select = True
+            sUtils.selectChildren(root)
+            bpy.context.scene.objects.active = root
+            robotdictionary.loadPose(model["modelname"], pose)
+            model, objectlist = robotdictionary.buildModelDictionary(root)
+            parameter = self.decimate_ratio
+            if self.decimate_type == 'UNSUBDIV':
+                parameter = self.decimate_iteration
+            elif self.decimate_type == 'DISSOLVE':
+                parameter = self.decimate_angle_limit
+            exporter.bakeModel(objectlist, model["modelname"],pose,decimate_type=self.decimate_type, decimate_parameter=parameter)
+        bpy.context.window_manager.progress_end()
+        root.select = True
+        sUtils.selectChildren(root)
+        bpy.context.scene.objects.active = root
         endLog()
         return {'FINISHED'}
 

@@ -27,6 +27,7 @@ Created on 6 Jan 2014
 """
 
 import os
+import glob
 import yaml
 import bpy
 import bgl
@@ -34,70 +35,98 @@ import blf
 from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty, StringProperty, CollectionProperty
 from . import defs
 
-phobos_model_preview_name = "phobos_model_preview"
-
-def setBackedModelItemProps(src_item, dest_item):
-    dest_item.name    = src_item.name
-    dest_item.label   = src_item.label
-    dest_item.type    = src_item.type
-    dest_item.icon    = src_item.icon
-    dest_item.parent  = src_item.parent
-    dest_item.path    = src_item.path
-    dest_item.preview = src_item.preview
-
 
 def loadBackedModels():
     modelsfolder = os.path.abspath(bpy.context.user_preferences.addons["phobos"].preferences.modelfolder)
-    foundbakes = []
+    robots_found = []
 
     for root, dirs, files in os.walk(modelsfolder):
-        if 'info.bake' in files:
-            foundbakes.append(os.path.join(root, 'info.bake'))
-    bake_dict = dict()
-    for bake in foundbakes:
-        with open(bake, 'r') as bakeinfo:
-            bakeyaml = yaml.load(bakeinfo)
-            model_name = bakeyaml["name"]
-            if model_name not in bake_dict:
-                bake_dict[model_name] = []
-            bake_dict[model_name].append({"posename": bakeyaml["posename"]})
-            bake_dict[model_name][-1]["bakepath"] = os.path.dirname(bake)
-            bake_dict[model_name][-1]["preview"] = bakeyaml["preview"]
-            bake_dict[model_name][-1]["icon"] = bakeyaml["icon"]
+        for file in files:
+            if os.path.splitext(file)[-1] == '.smurf':
+                robots_found.append(os.path.join(root, file))
+    robots_dict = dict()
+    for robot in robots_found:
+        with open(robot, 'r') as robot_smurf:
+            robot_yml   = yaml.load(robot_smurf)
+            model_name  = robot_yml["modelname"]
+            robot_files = robot_yml["files"]
+            for file in robot_files:
+                if file.split('_')[-1] == "poses.yml":
+                    if model_name not in robots_dict:
+                        robots_dict[model_name] = []
+                    with open(os.path.join(os.path.dirname(robot),file)) as poses:
+                        poses_yml = yaml.load(poses)
+                        for pose in poses_yml['poses']:
+                            robots_dict[model_name].append({"posename": pose['name']})
+                            if os.path.split(os.path.dirname(robot))[-1] == "smurf":
+                                robots_dict[model_name][-1]["robotpath"] = os.path.dirname(os.path.dirname(robot))
+                                robots_dict[model_name][-1]["subfolder"] = True
+                            else:
+                                robots_dict[model_name][-1]["robotpath"] = os.path.dirname(robot)
+                                robots_dict[model_name][-1]["subfolder"] = False
 
-    for model_name in bake_dict.keys():
+    bpy.context.scene.bakeModels.clear()
+    model_count = 0
+    for model_name in robots_dict.keys():
         item = bpy.context.scene.bakeModels.add()
-        item.name  = model_name
+        item.name  = "model_preview_"+str(model_count)
         item.label = model_name
         item.type  = "robot_name"
-        item.icon = "DOWNARROW_HLT"
-        item_gui = bpy.context.scene.bakeModels_gui.add()
-        setBackedModelItemProps(item,item_gui)
-        for pose in bake_dict[model_name]:
+        if item.hide:
+            item.icon = "RIGHTARROW"
+        else:
+            item.icon  = "DOWNARROW_HLT"
+        if not item.name in bpy.data.textures.keys():
+            bpy.data.textures.new(item.name,type="NONE")
+        current_parent = item.name
+        pose_count = 0
+        for pose in robots_dict[model_name]:
             item = bpy.context.scene.bakeModels.add()
-            item.parent = model_name
-            item.name  = os.path.split(pose["preview"])[-1]
-            item.label = pose["posename"]
-            item.path = pose["bakepath"]
-            item.preview = os.path.join(pose["bakepath"],pose["preview"])
-            item.icon = "POSE_DATA"
-            item_gui = bpy.context.scene.bakeModels_gui.add()
-            setBackedModelItemProps(item, item_gui)
-            im = bpy.data.images.load(item.preview)
-            #im.gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
-            tex = bpy.data.textures.new(item.name,type='IMAGE')
-            tex.image = bpy.data.images[item.name]
+            item.parent     = current_parent
+            item.name       = "model_preview_"+str(model_count)+'_'+str(pose_count)
+            item.label      = pose["posename"]
+            item.path       = pose["robotpath"]
+            item.type       = "robot_model"
+            item.robot_name = model_name
+            print(pose["robotpath"] + "/**/" + model_name + "_" + pose['posename'])
+            for file in (glob.glob(pose["robotpath"] + "/**/" + model_name + "_" + pose['posename'] + ".*")+glob.glob(pose["robotpath"] + "/" + model_name + "_" + pose['posename'] + ".*")):
+                if (os.path.splitext(file)[-1].lower() == ".stl") or (os.path.splitext(file)[-1].lower() == ".obj"):
+                    item.model_file = os.path.join(pose["robotpath"], file)
+                if (os.path.splitext(file)[-1].lower() == ".png"):
+                    item.preview = os.path.join(pose["robotpath"], file)
+
+            item.icon = "X_VEC"
+            if item.preview != '':
+                if os.path.split(item.preview)[-1] in bpy.data.images.keys():
+                    bpy.data.images[os.path.split(item.preview)[-1]].reload()
+                im = bpy.data.images.load(item.preview)
+
+                im.gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
+                tex = None
+                if not item.name in bpy.data.textures.keys():
+                    tex = bpy.data.textures.new(item.name,type='IMAGE')
+                else:
+                    tex = bpy.data.textures[item.name]
+                tex.image = im
+            else:
+                bpy.data.textures.new(item.name, type="NONE")
+            pose_count += 1
+        model_count += 1
+
+    # Debug
+#    item = bpy.context.scene.bakeModels.add()
+#    item.name = "model_preview_1"
+#    item.label = "Compi"
+#    item.type = "robot_name"
+#    if item.hide:
+#        item.icon = "RIGHTARROW"
+#    else:
+#        item.icon = "DOWNARROW_HLT"
+#    if not item.name in bpy.data.textures.keys():
+#        tex = bpy.data.textures.new(item.name, type='NONE')
 
 
-    item = bpy.context.scene.bakeModels.add()
-    item.name = "compi"
-    item.label = "compi"
-    item.type = "robot_name"
-    item.icon = "DOWNARROW_HLT"
-    item_gui = bpy.context.scene.bakeModels_gui.add()
-    setBackedModelItemProps(item, item_gui)
-
-
+#example for using opengl
 def draw_preview_callback(self):
 
     # Search for View_3d window
@@ -118,15 +147,15 @@ def draw_preview_callback(self):
         area_heights = [region.height for region in bpy.context.area.regions if region.type=='WINDOW']
         if (len(area_widths)>0) and (len(area_heights)>0):
 
-            active_preview = bpy.context.scene.bakeModels[bpy.context.scene.active_bakeModel]
-            im = bpy.data.images[active_preview.name]
+            active_preview = bpy.context.scene.bakeModels[bpy.data.textures[bpy.context.scene.active_bakeModel].name]
+            im = bpy.data.textures[bpy.context.scene.active_bakeModel].image
 
             view_width = area_widths[0]
             view_height = area_heights[0]
-            tex_start_x = 0
-            tex_end_x = view_width
-            tex_start_y = 0
-            tex_end_y = view_height
+            tex_start_x = 50
+            tex_end_x = view_width-50
+            tex_start_y = 50
+            tex_end_y = view_height-50
             if im.size[0] < view_width:
                 diff = int((view_width-im.size[0])/2)
                 tex_start_x = diff
@@ -178,37 +207,57 @@ def draw_preview_callback(self):
 
 # Create custom property group
 class BakeModelProp(bpy.types.PropertyGroup):
+    robot_name = bpy.props.StringProperty()
     label = bpy.props.StringProperty()
-    hide = bpy.props.BoolProperty(default = False)
+    hide = bpy.props.BoolProperty(default = True)
     parent = bpy.props.StringProperty()
     icon =  bpy.props.StringProperty()
     type  = bpy.props.StringProperty()
     path = bpy.props.StringProperty()
+    model_file = bpy.props.StringProperty()
     preview = bpy.props.StringProperty()
 
 
-
-class BakeModel_UIList(bpy.types.UIList):
-
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
-        if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            if item.type == "robot_name":
-                layout.label(text=item.label, translate=False, icon=item.icon)
+class BakeModel_UIList_tex(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        self.filter_name = 'model_preview_*'
+        #self.use_filter_show = False
+        tex = item
+        if tex.name in bpy.context.scene.bakeModels.keys():
+            coll_item = bpy.context.scene.bakeModels[tex.name]
+            if coll_item.type == "robot_name":
+                layout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
             else:
-#                if item==bpy.context.scene.bakeModels[bpy.context.scene.active_bakeModel]:
-               sLayout = layout.split(0.1)
-               sLayout.label(text="")
-               sLayout.label(text=item.label, translate=False, icon=item.icon)
-#                sLayout = layout.split(0.5)
-#                   if bpy.context.scene.preview_visible == False:
-#                sLayout.template_preview(bpy.data.textures["mantis_pose1.png"])
-#                sLayout.template_preview(bpy.data.textures["mantis_pose1.png"])
+                sLayout = layout.split(0.1)
+                sLayout.label(text="")
+                if tex.type == 'IMAGE':
+                    sLayout.label(text=coll_item.label, translate=False,icon_value=icon)
+                else:
+                    sLayout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
 
-#                    bpy.context.scene.preview_visible = False
-#               else:
-        elif self.layout_type in {'GRID'}:
-            layout.alignment = 'CENTER'
-            layout.label(text="", icon_value=icon)
+
+    def filter_items(self, context, data, propname):
+        # Default return values.
+        flt_flags = []
+        flt_neworder = []
+
+        textures = getattr(data, propname)
+        flt_flags = [self.bitflag_filter_item] * len(textures)
+
+        # Filter by emptiness.
+        for idx, tex in enumerate(textures):
+            if tex.name in bpy.context.scene.bakeModels.keys():
+                curr_model = bpy.context.scene.bakeModels[tex.name]
+                if curr_model.hide and not (curr_model.type == "robot_name"):
+                    flt_flags[idx] &= ~self.bitflag_filter_item
+            else:
+                flt_flags[idx] &= ~self.bitflag_filter_item
+
+        helper_funcs = bpy.types.UI_UL_list
+        # Reorder by name or average weight.
+        flt_neworder = helper_funcs.sort_items_by_name(textures, "name")
+
+        return flt_flags, flt_neworder
 
 
 def register():
@@ -256,7 +305,7 @@ def register():
     bpy.types.World.structureExport = BoolProperty(name="structureExport", default=False, description="Create structured subfolders")
     bpy.types.World.sceneName = StringProperty(name="sceneName")
 
-    bpy.utils.register_class(BakeModel_UIList)
+    bpy.utils.register_class(BakeModel_UIList_tex)
     bpy.utils.register_class(BakeModelProp)
     bpy.utils.register_class(DrawPreviewOperator)
 
@@ -264,9 +313,7 @@ def register():
     bpy.utils.register_class(LoadBackedModelsOperator)
 
     bpy.types.Scene.bakeModels = bpy.props.CollectionProperty(type=BakeModelProp)
-    bpy.types.Scene.bakeModels_gui = bpy.props.CollectionProperty(type=BakeModelProp)
-    bpy.types.Scene.active_bakeModel = bpy.props.IntProperty(name="Index of preview list", default=0
-                                                             ,update=showPreview)
+    bpy.types.Scene.active_bakeModel = bpy.props.IntProperty(name="Index of preview list", default=0,update=showPreview)
     bpy.types.Scene.preview_visible = bpy.props.BoolProperty(name="Is the draw preview operator running", default=False)
     bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(name="Should we redraw the preview_template", default=False)
 
@@ -290,7 +337,8 @@ class MessageOperator(bpy.types.Operator):
 
     def invoke(self, context, event):
         wm = context.window_manager
-        return wm.invoke_popup(self, width=400, height=200)
+        result = wm.invoke_popup(self, width=400, height=200)
+        return result
 
     def draw(self, context):
         self.layout.label("Phobos")
@@ -328,51 +376,39 @@ class ChangePreviewOperator(bpy.types.Operator):
 
 
     def execute(self, context):
-        active_preview = bpy.context.scene.bakeModels[bpy.context.scene.active_bakeModel]
-        if active_preview.type != "robot_name":
-            if active_preview.name not in bpy.data.images:
-                im = bpy.data.images.load(active_preview.preview)
-                im.gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
-            bpy.data.textures[phobos_model_preview_name].image = bpy.data.images[active_preview.name]
-            bpy.context.scene.preview_visible = True
-            ''' show on view_3d
-            if not bpy.context.scene.preview_visible:
-                bpy.ops.view3d.draw_preview_operator()
-                bpy.context.scene.preview_visible = True
-            '''
-        else:
-            active_preview.hide = not active_preview.hide
-            bpy.context.scene.bakeModels_gui.clear()
-            if active_preview.hide:
-                active_preview.icon = "RIGHTARROW"
+        if bpy.data.textures[bpy.context.scene.active_bakeModel].name in bpy.context.scene.bakeModels.keys():
+            active_preview = bpy.context.scene.bakeModels[bpy.data.textures[bpy.context.scene.active_bakeModel].name]
+            if active_preview.type != "robot_name":
+                # show on view_3d
+                if not bpy.context.scene.preview_visible and (bpy.data.textures[bpy.context.scene.active_bakeModel].type == 'IMAGE'):
+                    bpy.ops.view3d.draw_preview_operator()
+                    bpy.context.scene.preview_visible = True
+
             else:
-                active_preview.icon = "DOWNARROW_HLT"
-            for model in bpy.context.scene.bakeModels:
-                if model.type == "robot_name":
-                    item_gui = bpy.context.scene.bakeModels_gui.add()
-                    setBackedModelItemProps(model, item_gui)
-                elif (model.parent != active_preview.name):
-                    item_gui = bpy.context.scene.bakeModels_gui.add()
-                    setBackedModelItemProps(model, item_gui)
-                elif not active_preview.hide:
-                    item_gui = bpy.context.scene.bakeModels_gui.add()
-                    setBackedModelItemProps(model, item_gui)
-        context.area.tag_redraw()
-        print("DEBUG")
+                active_preview.hide = not active_preview.hide
+                if active_preview.hide:
+                    active_preview.icon = "RIGHTARROW"
+                else:
+                    active_preview.icon = "DOWNARROW_HLT"
+                for model in bpy.context.scene.bakeModels:
+                    if (model.type != "robot_name") and (model.parent == active_preview.name):
+                        model.hide = active_preview.hide
+
         return {'FINISHED'}
 
 
+# not used
+# example for using opengl
 class DrawPreviewOperator(bpy.types.Operator):
-    """Draw a line with the mouse"""
     bl_idname = "view3d.draw_preview_operator"
     bl_label = "Draw preview to the View3D"
 
     def modal(self, context, event):
-        context.area.tag_redraw()
-
         if event.type in {'LEFTMOUSE','RIGHTMOUSE','ESC'}:
-            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+#            if bpy.context.scene.preview_visible:
             bpy.context.scene.preview_visible = False
+ #           else:
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
             return {'CANCELLED'}
 
         return {'PASS_THROUGH'}
@@ -532,6 +568,7 @@ class PhobosPanel(bpy.types.Panel):
         pc1.operator('object.store_pose', text='Store Current Pose')
         pc2 = pinlayout.column(align=True)
         pc2.operator('object.load_pose', text='Load Pose')
+        layout.operator("object.phobos_export_all_poses", text="Bake All Poses", icon="OUTLINER_OB_ARMATURE")
 
         #for root in utility.getRoots():
         #    linspect1.operator('object.phobos_select_model', text=root["modelname"]).modelname = \
@@ -556,9 +593,6 @@ class PhobosScenePanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
-    #bl_context = ''
-    def __init__(self):
-        super(PhobosScenePanel, self).__init__()
 
 
     def draw_header(self, context):
@@ -571,17 +605,18 @@ class PhobosScenePanel(bpy.types.Panel):
         iinlayout = layout.split()
         ic1 = iinlayout.column(align=True)
         ic1.operator("object.phobos_add_heightmap", text="Create Heightmap")
-        # FIXME: this would be a killer feature
-        #ic2 = iinlayout.column(align=True)
-        #ic2.template_preview(bpy.data.textures["da"])
+
         layout.label(text="Import baked robot model", icon="OUTLINER_OB_ARMATURE")
         layout.operator("scene.load_backed_models_operator", text="Load Models", icon="LIBRARY_DATA_DIRECT")
 
-        layout.template_list("BakeModel_UIList", "", context.scene, "bakeModels_gui", context.scene, "active_bakeModel")
-        if not phobos_model_preview_name in bpy.data.textures:
-            bpy.data.textures.new(phobos_model_preview_name, type='IMAGE')
-        layout.template_preview(bpy.data.textures[phobos_model_preview_name],parent=bpy.data.textures[phobos_model_preview_name],preview_id="phobos_model_preview_name")
-        layout.operator('object.phobos_import_lib_robot', text="Import Robot Bake", icon="COPYDOWN")
+        layout.template_list("BakeModel_UIList_tex", "",  bpy.data, "textures", context.scene, "active_bakeModel")
+#        layout.template_preview(bpy.data.textures[context.scene.active_bakeModel])
+#        layout.template_preview(preview_mat.active_texture,
+#                                parent=preview_mat,
+#                                slot=preview_mat.texture_slots[preview_mat.active_texture_index],
+#                                preview_id="phobos_model_preview")
+
+        layout.operator('scene.phobos_import_selected_lib_robot', text="Import Selected Robot Bake", icon="COPYDOWN")
 
 
 class PhobosModelPanel(bpy.types.Panel):
@@ -760,10 +795,10 @@ class PhobosExportPanel(bpy.types.Panel):
         ec2 = layout.column(align=True)
         ec2.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
 
-        layout.separator()
-        layout.label(text="Baking")
-        layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
-        layout.operator("object.phobos_create_robot_instance", text="Create Robot Lib Instance", icon="RENDERLAYERS")
+#        layout.separator()
+#        layout.label(text="Baking")
+#        layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
+#        layout.operator("object.phobos_create_robot_instance", text="Create Robot Lib Instance", icon="RENDERLAYERS")
 
         layout.separator()
 
