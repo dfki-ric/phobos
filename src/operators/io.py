@@ -33,8 +33,10 @@ from phobos.export import entity_types
 import phobos.importer as importer
 import phobos.links as links
 import bpy
+import bgl
 import yaml
 import os
+import glob
 import time
 import phobos.utils.selection as sUtils
 import phobos.robotdictionary as robotdictionary
@@ -45,6 +47,104 @@ from bpy.props import EnumProperty, StringProperty, FloatProperty, IntProperty
 def generateLibEntries(param1, param2): #FIXME: parameter?
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
         return [("None",)*3] + [(entry,)*3 for entry in yaml.load(f.read())]
+
+
+def loadBackedModels():
+    modelsfolder = os.path.abspath(bpy.context.user_preferences.addons["phobos"].preferences.modelfolder)
+    robots_found = []
+
+    for root, dirs, files in os.walk(modelsfolder):
+        for file in files:
+            if os.path.splitext(file)[-1] == '.smurf':
+                robots_found.append(os.path.join(root, file))
+    robots_dict = dict()
+    for robot in robots_found:
+        with open(robot, 'r') as robot_smurf:
+            robot_yml   = yaml.load(robot_smurf)
+            model_name  = robot_yml["modelname"]
+            robot_files = robot_yml["files"]
+            for file in robot_files:
+                if file.split('_')[-1] == "poses.yml":
+                    if model_name not in robots_dict:
+                        robots_dict[model_name] = []
+                    with open(os.path.join(os.path.dirname(robot),file)) as poses:
+                        poses_yml = yaml.load(poses)
+                        for pose in poses_yml['poses']:
+                            robots_dict[model_name].append({"posename": pose['name']})
+                            robots_dict[model_name][-1]["robotpath"] = os.path.dirname(robot)
+
+    bpy.context.scene.bakeModels.clear()
+    model_count = 0
+    for model_name in robots_dict.keys():
+        item = bpy.context.scene.bakeModels.add()
+        item.name  = "model_preview_"+str(model_count)
+        item.label = model_name
+        item.type  = "robot_name"
+        if item.hide:
+            item.icon = "RIGHTARROW"
+        else:
+            item.icon  = "DOWNARROW_HLT"
+        if not item.name in bpy.data.textures.keys():
+            bpy.data.textures.new(item.name,type="NONE")
+        current_parent = item.name
+        pose_count = 0
+        for pose in robots_dict[model_name]:
+            item = bpy.context.scene.bakeModels.add()
+            item.parent     = current_parent
+            item.name       = "model_preview_"+str(model_count)+'_'+str(pose_count)
+            item.label      = pose["posename"]
+            item.path       = pose["robotpath"]
+            item.type       = "robot_model"
+            item.robot_name = model_name
+            search_path = pose["robotpath"]
+            if os.path.split(search_path)[-1] == "smurf":
+                search_path = os.path.dirname(search_path)
+            for file in (glob.glob(search_path + "/**/" + model_name + "_" + pose['posename'] + ".*")+glob.glob(search_path + "/" + model_name + "_" + pose['posename'] + ".*")):
+                if (os.path.splitext(file)[-1].lower() == ".stl") or (os.path.splitext(file)[-1].lower() == ".obj"):
+                    item.model_file = os.path.join(search_path, file)
+                if (os.path.splitext(file)[-1].lower() == ".png"):
+                    item.preview = os.path.join(search_path, file)
+
+            item.icon = "X_VEC"
+            print(item.preview)
+            if item.preview != '':
+                if os.path.split(item.preview)[-1] in bpy.data.images.keys():
+                    bpy.data.images[os.path.split(item.preview)[-1]].reload()
+                im = bpy.data.images.load(item.preview)
+
+                im.gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
+                tex = None
+                if not item.name in bpy.data.textures.keys():
+                    tex = bpy.data.textures.new(item.name,type='IMAGE')
+                else:
+                    tex = bpy.data.textures[item.name]
+                tex.image = im
+            else:
+                bpy.data.textures.new(item.name, type="NONE")
+            pose_count += 1
+        model_count += 1
+
+    # Debug
+#    item = bpy.context.scene.bakeModels.add()
+#    item.name = "model_preview_1"
+#    item.label = "Compi"
+#    item.type = "robot_name"
+#    if item.hide:
+#        item.icon = "RIGHTARROW"
+#    else:
+#        item.icon = "DOWNARROW_HLT"
+#    if not item.name in bpy.data.textures.keys():
+#        tex = bpy.data.textures.new(item.name, type='NONE')
+
+
+class LoadBackedModelsOperator(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "scene.load_backed_models_operator"
+    bl_label = "Load backed models"
+
+    def execute(self, context):
+        loadBackedModels()
+        return {'FINISHED'}
 
 
 class ImportLibRobot(Operator):
@@ -135,12 +235,14 @@ class ImportSelectedLibRobot(Operator):
                                         use_scene_unit=True,
                                         use_facet_normal=False)
             robot_obj = bpy.context.selected_objects[0]
-            bpy.context.object = robot_obj
+            bpy.context.scene.objects.active = robot_obj
             robot_obj.name = self.obj_name
             robot_obj["modelname"] = selected_robot.robot_name
             robot_obj["entity/name"] = self.obj_name
             robot_obj["entity/type"] = "smurf"
             robot_obj["entity/pose"] = selected_robot.label
+            robot_obj["entity/isReference"] = True
+            robot_obj.phobostype = 'entity'
 
         endLog()
         return {'FINISHED'}
@@ -236,6 +338,79 @@ class ExportBakeOperator(Operator):
         endLog()
         return {'FINISHED'}
 
+'''
+class ExportCurrentPoseOperator(Operator):
+    """Bake the selected model"""
+    bl_idname = "object.phobos_export_all_poses"
+    bl_label = "Export All Poses"
+    #bl_options = {'REGISTER', 'UNDO'}
+    decimate_type = EnumProperty(name="Decimate Type",
+                                 items=[('COLLAPSE','Collapse','COLLAPSE'),('UNSUBDIV','Un-Subdivide','UNSUBDIV'),('DISSOLVE','Planar','DISSOLVE')])
+    decimate_ratio = FloatProperty(name="Ratio",default=0.15)
+    decimate_iteration = IntProperty(name="Iterations",default=1)
+    decimate_angle_limit = FloatProperty(name="Angle Limit",default=5)
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        bpy.context.scene.render.resolution_x=256
+        bpy.context.scene.render.resolution_y=256
+        bpy.context.scene.render.resolution_percentage=100
+        return wm.invoke_props_dialog(self,width=300,height=100)
+
+    def draw(self, context):
+        row = self.layout
+        row.label(text="Model Export Properties:")
+        row.prop(self, "decimate_type")
+        if self.decimate_type == 'COLLAPSE':
+            row.prop(self, "decimate_ratio")
+        elif self.decimate_type == 'UNSUBDIV':
+            row.prop(self, "decimate_iteration")
+        elif self.decimate_type == 'DISSOLVE':
+            row.prop(self, "decimate_angle_limit")
+        rd = bpy.context.scene.render
+        image_settings = rd.image_settings
+        row.label(text="Preview Properties:")
+        row.label(text="Resolution:")
+        row.prop(rd, "resolution_x", text="X")
+        row.prop(rd, "resolution_y", text="Y")
+        row.prop(rd, "resolution_percentage", text="")
+        #row.label(text="File Format:")
+        #row.template_image_settings(image_settings, color_management=False)
+
+    def check(self,context):
+        return True
+
+    def execute(self, context):
+        # TODO
+        startLog(self)
+        root = sUtils.getRoot(context.selected_objects[0])
+
+        sUtils.selectChildren(root)
+        model, objectlist = robotdictionary.buildModelDictionary(root)
+        poses = robotdictionary.getPoses(model["modelname"])
+        i = 0
+        for pose in poses:
+            bpy.context.window_manager.progress_begin(0, len(poses))
+            bpy.context.window_manager.progress_update(i)
+            i += 1
+            root.select = True
+            sUtils.selectChildren(root)
+            bpy.context.scene.objects.active = root
+            robotdictionary.loadPose(model["modelname"], pose)
+            model, objectlist = robotdictionary.buildModelDictionary(root)
+            parameter = self.decimate_ratio
+            if self.decimate_type == 'UNSUBDIV':
+                parameter = self.decimate_iteration
+            elif self.decimate_type == 'DISSOLVE':
+                parameter = self.decimate_angle_limit
+            exporter.bakeModel(objectlist, model["modelname"],pose,decimate_type=self.decimate_type, decimate_parameter=parameter)
+        bpy.context.window_manager.progress_end()
+        root.select = True
+        sUtils.selectChildren(root)
+        bpy.context.scene.objects.active = root
+        endLog()
+        return {'FINISHED'}
+'''
 
 class ExportAllPosesOperator(Operator):
     """Bake the selected model"""

@@ -36,97 +36,7 @@ from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty, St
 from . import defs
 
 
-def loadBackedModels():
-    modelsfolder = os.path.abspath(bpy.context.user_preferences.addons["phobos"].preferences.modelfolder)
-    robots_found = []
-
-    for root, dirs, files in os.walk(modelsfolder):
-        for file in files:
-            if os.path.splitext(file)[-1] == '.smurf':
-                robots_found.append(os.path.join(root, file))
-    robots_dict = dict()
-    for robot in robots_found:
-        with open(robot, 'r') as robot_smurf:
-            robot_yml   = yaml.load(robot_smurf)
-            model_name  = robot_yml["modelname"]
-            robot_files = robot_yml["files"]
-            for file in robot_files:
-                if file.split('_')[-1] == "poses.yml":
-                    if model_name not in robots_dict:
-                        robots_dict[model_name] = []
-                    with open(os.path.join(os.path.dirname(robot),file)) as poses:
-                        poses_yml = yaml.load(poses)
-                        for pose in poses_yml['poses']:
-                            robots_dict[model_name].append({"posename": pose['name']})
-                            if os.path.split(os.path.dirname(robot))[-1] == "smurf":
-                                robots_dict[model_name][-1]["robotpath"] = os.path.dirname(os.path.dirname(robot))
-                                robots_dict[model_name][-1]["subfolder"] = True
-                            else:
-                                robots_dict[model_name][-1]["robotpath"] = os.path.dirname(robot)
-                                robots_dict[model_name][-1]["subfolder"] = False
-
-    bpy.context.scene.bakeModels.clear()
-    model_count = 0
-    for model_name in robots_dict.keys():
-        item = bpy.context.scene.bakeModels.add()
-        item.name  = "model_preview_"+str(model_count)
-        item.label = model_name
-        item.type  = "robot_name"
-        if item.hide:
-            item.icon = "RIGHTARROW"
-        else:
-            item.icon  = "DOWNARROW_HLT"
-        if not item.name in bpy.data.textures.keys():
-            bpy.data.textures.new(item.name,type="NONE")
-        current_parent = item.name
-        pose_count = 0
-        for pose in robots_dict[model_name]:
-            item = bpy.context.scene.bakeModels.add()
-            item.parent     = current_parent
-            item.name       = "model_preview_"+str(model_count)+'_'+str(pose_count)
-            item.label      = pose["posename"]
-            item.path       = pose["robotpath"]
-            item.type       = "robot_model"
-            item.robot_name = model_name
-            print(pose["robotpath"] + "/**/" + model_name + "_" + pose['posename'])
-            for file in (glob.glob(pose["robotpath"] + "/**/" + model_name + "_" + pose['posename'] + ".*")+glob.glob(pose["robotpath"] + "/" + model_name + "_" + pose['posename'] + ".*")):
-                if (os.path.splitext(file)[-1].lower() == ".stl") or (os.path.splitext(file)[-1].lower() == ".obj"):
-                    item.model_file = os.path.join(pose["robotpath"], file)
-                if (os.path.splitext(file)[-1].lower() == ".png"):
-                    item.preview = os.path.join(pose["robotpath"], file)
-
-            item.icon = "X_VEC"
-            if item.preview != '':
-                if os.path.split(item.preview)[-1] in bpy.data.images.keys():
-                    bpy.data.images[os.path.split(item.preview)[-1]].reload()
-                im = bpy.data.images.load(item.preview)
-
-                im.gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
-                tex = None
-                if not item.name in bpy.data.textures.keys():
-                    tex = bpy.data.textures.new(item.name,type='IMAGE')
-                else:
-                    tex = bpy.data.textures[item.name]
-                tex.image = im
-            else:
-                bpy.data.textures.new(item.name, type="NONE")
-            pose_count += 1
-        model_count += 1
-
-    # Debug
-#    item = bpy.context.scene.bakeModels.add()
-#    item.name = "model_preview_1"
-#    item.label = "Compi"
-#    item.type = "robot_name"
-#    if item.hide:
-#        item.icon = "RIGHTARROW"
-#    else:
-#        item.icon = "DOWNARROW_HLT"
-#    if not item.name in bpy.data.textures.keys():
-#        tex = bpy.data.textures.new(item.name, type='NONE')
-
-
-#example for using opengl
+# show robot model on 3dview
 def draw_preview_callback(self):
 
     # Search for View_3d window
@@ -205,7 +115,6 @@ def draw_preview_callback(self):
             bgl.glDisable(bgl.GL_TEXTURE_2D)
 
 
-# Create custom property group
 class BakeModelProp(bpy.types.PropertyGroup):
     robot_name = bpy.props.StringProperty()
     label = bpy.props.StringProperty()
@@ -220,8 +129,8 @@ class BakeModelProp(bpy.types.PropertyGroup):
 
 class BakeModel_UIList_tex(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        self.filter_name = 'model_preview_*'
-        #self.use_filter_show = False
+        #self.filter_name = 'model_preview_*'
+        self.use_filter_show = False
         tex = item
         if tex.name in bpy.context.scene.bakeModels.keys():
             coll_item = bpy.context.scene.bakeModels[tex.name]
@@ -244,7 +153,7 @@ class BakeModel_UIList_tex(bpy.types.UIList):
         textures = getattr(data, propname)
         flt_flags = [self.bitflag_filter_item] * len(textures)
 
-        # Filter by emptiness.
+        # Filter items. Only show robots. Hide all other textures
         for idx, tex in enumerate(textures):
             if tex.name in bpy.context.scene.bakeModels.keys():
                 curr_model = bpy.context.scene.bakeModels[tex.name]
@@ -254,7 +163,7 @@ class BakeModel_UIList_tex(bpy.types.UIList):
                 flt_flags[idx] &= ~self.bitflag_filter_item
 
         helper_funcs = bpy.types.UI_UL_list
-        # Reorder by name or average weight.
+        # Reorder by name
         flt_neworder = helper_funcs.sort_items_by_name(textures, "name")
 
         return flt_flags, flt_neworder
@@ -310,7 +219,6 @@ def register():
     bpy.utils.register_class(DrawPreviewOperator)
 
     bpy.utils.register_class(ChangePreviewOperator)
-    bpy.utils.register_class(LoadBackedModelsOperator)
 
     bpy.types.Scene.bakeModels = bpy.props.CollectionProperty(type=BakeModelProp)
     bpy.types.Scene.active_bakeModel = bpy.props.IntProperty(name="Index of preview list", default=0,update=showPreview)
@@ -357,19 +265,6 @@ class OkOperator(bpy.types.Operator):
     def execute(self, context):
         return {'FINISHED'}
 
-class LoadBackedModelsOperator(bpy.types.Operator):
-    """Tooltip"""
-    bl_idname = "scene.load_backed_models_operator"
-    bl_label = "Load backed models"
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
-
-    def execute(self, context):
-        loadBackedModels()
-        return {'FINISHED'}
-
 class ChangePreviewOperator(bpy.types.Operator):
     bl_idname = "scene.change_preview"
     bl_label = "Change the preview texture"
@@ -397,8 +292,6 @@ class ChangePreviewOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-# not used
-# example for using opengl
 class DrawPreviewOperator(bpy.types.Operator):
     bl_idname = "view3d.draw_preview_operator"
     bl_label = "Draw preview to the View3D"
@@ -429,6 +322,7 @@ class DrawPreviewOperator(bpy.types.Operator):
 
 def showPreview(self,value):
     bpy.ops.scene.change_preview()
+
 
 def updateExportOptions(self, context):
     if bpy.data.worlds[0].exportSMURF and not bpy.data.worlds[0].exportURDF:
@@ -832,7 +726,6 @@ class PhobosObjectPanel(bpy.types.Panel):
         row_type.prop(bpy.context.active_object, 'phobostype')
 
         box_props = layout.box()
-
         try:
             for prop in defs.type_properties[bpy.context.active_object.phobostype]:
                 #box_props.label(prop)

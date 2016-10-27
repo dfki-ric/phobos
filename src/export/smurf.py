@@ -64,13 +64,22 @@ def deriveEntity(entity, outpath, savetosubfolder):
     smurf = entity
 
     # determine outpath for the smurf export
-    smurf_outpath = securepath(os.path.join(outpath, entity["modelname"]) if savetosubfolder else outpath)
-    log("smurf_outpath: " + outpath, "DEBUG", "exportSMURFsScene")
-
-    log("Exporting " + smurf["entity/name"] + " as a smurf entity to " + smurf_outpath, "INFO", "deriveSMURFEntity", "\n\n")
-    subfolder = smurf["modelname"] if savetosubfolder else ""
     # differentiate between full model and baked reference
-    if "isReference" in smurf:
+    if "entity/isReference" in smurf:
+        bpy.ops.scene.load_backed_models_operator()
+        for robot_model in bpy.context.scene.bakeModels:
+            if (smurf["modelname"] == robot_model.robot_name) and (smurf["entity/pose"] == robot_model.label):
+                entitypose = robotdictionary.deriveObjectPose(smurf)
+                entry      = robotdictionary.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
+                entry.pop("isReference");
+
+                entry['file'] = os.path.join(os.path.relpath(robot_model.path,outpath), smurf["modelname"] + ".smurf")
+                if 'parent' not in entry and 'joint/type' in smurf and smurf['joint/type'] == 'fixed':
+                    entry['parent'] = 'world'
+                entry["position"] = entitypose["translation"]
+                entry["rotation"] = entitypose["rotation_quaternion"]
+
+        '''
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
             robots = yaml.load(f.read())
             sourcepath = robots[smurf["modelname"]]
@@ -82,20 +91,27 @@ def deriveEntity(entity, outpath, savetosubfolder):
                     # remove old folders to prevent errors in copytree
                     shutil.rmtree(os.path.join(smurf_outpath, filename), True)
                     shutil.copytree(fullpath, os.path.join(smurf_outpath, filename))
+        '''
     else:
+        smurf_outpath = securepath(os.path.join(outpath, entity["modelname"]) if savetosubfolder else outpath)
+        log("smurf_outpath: " + outpath, "DEBUG", "exportSMURFsScene")
+
+        log("Exporting " + smurf["entity/name"] + " as a smurf entity to " + smurf_outpath, "INFO", "deriveSMURFEntity",
+            "\n\n")
+        subfolder = smurf["modelname"] if savetosubfolder else ""
         sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)
         sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)  # re-select for mesh export
         model, objectlist = robotdictionary.buildModelDictionary(smurf)
         export(model, objectlist, smurf_outpath)
-    entitypose = robotdictionary.deriveObjectPose(smurf)
-    entry = robotdictionary.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
+        entitypose = robotdictionary.deriveObjectPose(smurf)
+        entry = robotdictionary.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
 
-    entry['file'] = (os.path.join(subfolder, smurf["modelname"]+".smurf") if os.path.isfile(smurf_outpath)
-                     else os.path.join(subfolder, "smurf", smurf["modelname"]+".smurf"))
-    if 'parent' not in entry and 'joint/type' in smurf and smurf['joint/type'] == 'fixed':
-        entry['parent'] = 'world'
-    entry["position"] = entitypose["translation"]
-    entry["rotation"] = entitypose["rotation_quaternion"]
+        entry['file'] = (os.path.join(subfolder, smurf["modelname"]+".smurf") if os.path.isfile(smurf_outpath)
+                         else os.path.join(subfolder, "smurf", smurf["modelname"]+".smurf"))
+        if 'parent' not in entry and 'joint/type' in smurf and smurf['joint/type'] == 'fixed':
+            entry['parent'] = 'world'
+        entry["position"] = entitypose["translation"]
+        entry["rotation"] = entitypose["rotation_quaternion"]
     return entry
 
 
