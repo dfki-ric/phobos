@@ -220,6 +220,19 @@ def __evaluateString(s):
             return ""
     return s
 
+
+class ModelPoseProp(bpy.types.PropertyGroup):
+    robot_name = bpy.props.StringProperty()
+    label = bpy.props.StringProperty()
+    hide = bpy.props.BoolProperty(default = True)
+    parent = bpy.props.StringProperty()
+    icon =  bpy.props.StringProperty()
+    type  = bpy.props.StringProperty()
+    path = bpy.props.StringProperty()
+    model_file = bpy.props.StringProperty()
+    preview = bpy.props.StringProperty()
+
+
 class PhobosPrefs(AddonPreferences):
     bl_idname = __package__
 
@@ -251,6 +264,9 @@ class PhobosPrefs(AddonPreferences):
         default=".",
     )
 
+    models_poses = bpy.props.CollectionProperty(type=ModelPoseProp)
+
+
     def draw(self, context):
         layout = self.layout
         layout.label(text="Logging Settings")
@@ -263,6 +279,7 @@ class PhobosPrefs(AddonPreferences):
 
 def register():
     print("Registering " + __name__)
+    bpy.utils.register_class(ModelPoseProp)
     bpy.utils.register_class(PhobosPrefs)
 
 def unregister():

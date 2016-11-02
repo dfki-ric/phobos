@@ -34,6 +34,9 @@ import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
 import phobos.robotdictionary as robotdictionary
 import phobos.validator as validator
+import bpy
+import blf
+import bgl
 
 # FIXME: this is ugly
 current_robot_name = ''
@@ -141,6 +144,95 @@ class ShowDistanceOperator(Operator):
         return len(context.selected_objects) == 2
 
 
+class StorePoseOperator2(Operator):
+    """Store the current pose of selected links in one of the scene's robots"""
+    bl_idname = 'object.store_pose2'
+    bl_label = "Store Current Pose"
+
+    robot_name = EnumProperty(
+        items=get_robot_names,
+        name="Robot",
+        description="Robot to store pose for"
+    )
+
+    pose_name = StringProperty(
+        name="Pose Name",
+        default="New Pose",
+        description="Name of new pose"
+    )
+
+    @classmethod
+    def poll(self, context):
+        result = False
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        activeModelPoseIndex = bpy.context.scene.active_ModelPose
+        if (len(bpy.context.selected_objects) > 0) and \
+           (context.scene.objects.active != None) and \
+           (sUtils.isModelRoot(sUtils.getRoot(context.scene.objects.active))) and \
+           (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()):
+            result = True
+        return result
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self,width=300,height=100)
+
+    def draw(self, context):
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        activeModelPoseIndex = bpy.context.scene.active_ModelPose
+        row = self.layout
+        if modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose':
+            self.pose_name = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].label
+        else:
+            self.pose_name = "New Pose"
+        row.prop(self, "pose_name")
+
+    def execute(self, context):
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        activeModelPoseIndex = bpy.context.scene.active_ModelPose
+        robot_name = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name
+        robotdictionary.storePose(robot_name, self.pose_name)
+        bpy.ops.scene.reload_models_and_poses_operator()
+        newPose = modelsPosesColl.add()
+        newPose.parent = robot_name
+        newPose.name = robot_name + '_' + self.pose_name
+        newPose.label = self.pose_name
+        #newPose.path = pose["robotpath"]
+        newPose.type = "robot_pose"
+        newPose.robot_name = robot_name
+        newPose.icon = "X_VEC"
+        return {'FINISHED'}
+
+
+class LoadPoseOperator2(Operator):
+    """Load a previously stored pose for one of the scene's robots"""
+    bl_idname = 'object.load_pose2'
+    bl_label = "Load Selected Pose"
+
+    @classmethod
+    def poll(self, context):
+        result = False
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        activeModelPoseIndex = bpy.context.scene.active_ModelPose
+        root = sUtils.getRoot(context.scene.objects.active)
+        if (len(bpy.context.selected_objects) > 0) and \
+           (context.scene.objects.active != None) and \
+           (sUtils.isModelRoot(root)) and \
+           (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()) and \
+           (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["modelname"]):
+            result = True
+        return result
+
+    def execute(self, context):
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        activeModelPoseIndex = bpy.context.scene.active_ModelPose
+        modelPose = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
+        root = sUtils.getRoot(context.scene.objects.active)
+        bpy.context.scene.objects.active = root
+        robotdictionary.loadPose(modelPose.robot_name, modelPose.label)
+        return {'FINISHED'}
+
+
 class StorePoseOperator(Operator):
     """Store the current pose of selected links in one of the scene's robots"""
     bl_idname = 'object.store_pose'
@@ -187,3 +279,148 @@ class LoadPoseOperator(Operator):
         current_robot_name = self.robot_name
         robotdictionary.loadPose(self.robot_name, self.pose_name)
         return {'FINISHED'}
+
+
+# show robot model on 3dview
+def draw_preview_callback(self):
+
+    # Search for View_3d window
+    area = None
+    if bpy.context.area.type != 'VIEW_3D':
+        return bpy.context.area
+    else:
+        for oWindow in bpy.context.window_manager.windows:
+            oScreen = oWindow.screen
+            for oArea in oScreen.areas:
+                if oArea.type == 'VIEW_3D':
+                    area = oArea
+
+    modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+    activeModelPoseIndex = bpy.context.scene.active_ModelPose
+
+    if (len(modelsPosesColl)>0) and area:
+
+        # Draw a textured quad
+        area_widths  = [region.width for region in bpy.context.area.regions if region.type=='WINDOW']
+        area_heights = [region.height for region in bpy.context.area.regions if region.type=='WINDOW']
+        if (len(area_widths)>0) and (len(area_heights)>0):
+
+            active_preview = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
+            im = bpy.data.images[activeModelPoseIndex]
+
+            view_width = area_widths[0]
+            view_height = area_heights[0]
+            tex_start_x = 50
+            tex_end_x = view_width-50
+            tex_start_y = 50
+            tex_end_y = view_height-50
+            if im.size[0] < view_width:
+                diff = int((view_width-im.size[0])/2)
+                tex_start_x = diff
+                tex_end_x   = diff+im.size[0]
+            if im.size[1] < view_height:
+                diff = int((view_height-im.size[1])/2)
+                tex_start_y = diff
+                tex_end_y   = diff+im.size[1]
+
+            # Draw information
+            font_id = 0  # XXX, need to find out how best to get this.
+            blf.position(font_id, tex_start_x, tex_end_y + 20, 0)
+            blf.size(font_id, 20, 72)
+            blf.draw(font_id, active_preview.label)
+
+            tex = im.bindcode
+            bgl.glEnable(bgl.GL_TEXTURE_2D)
+            # if using blender 2.77 change tex to tex[0]
+            bgl.glBindTexture(bgl.GL_TEXTURE_2D, tex)
+
+            # Background
+            bgl.glEnable(bgl.GL_BLEND)
+
+            bgl.glBegin(bgl.GL_QUADS)
+            bgl.glColor4f(0, 0, 0, 0.3)
+            bgl.glVertex2i(0, 0)
+            bgl.glVertex2i(0, view_height)
+            bgl.glVertex2i(view_width, view_height)
+            bgl.glVertex2i(view_width, 0)
+
+            # Draw Image
+            bgl.glColor4f(1, 1, 1, 1)
+            bgl.glTexCoord2f(0, 0)
+            bgl.glVertex2i(int(tex_start_x), int(tex_start_y))
+            bgl.glTexCoord2f(0, 1)
+            bgl.glVertex2i(int(tex_start_x), int(tex_end_y))
+            bgl.glTexCoord2f(1, 1)
+            bgl.glVertex2i(int(tex_end_x), int(tex_end_y))
+            bgl.glTexCoord2f(1, 0)
+            bgl.glVertex2i(int(tex_end_x), int(tex_start_y))
+            bgl.glEnd()
+
+            # restore opengl defaults
+            bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
+            bgl.glDisable(bgl.GL_QUADS)
+            bgl.glDisable(bgl.GL_BLEND)
+            bgl.glDisable(bgl.GL_TEXTURE_2D)
+
+
+class ChangePreviewOperator(bpy.types.Operator):
+    bl_idname = "scene.change_preview"
+    bl_label = "Change the preview texture"
+
+    def execute(self, context):
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        activeModelPoseIndex = bpy.context.scene.active_ModelPose
+        if bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys():
+            activeModelPose = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
+            if activeModelPose.type != "robot_name":
+                # show on view_3d
+                root = None
+                if context.scene.objects.active != None:
+                    root = sUtils.getRoot(context.scene.objects.active)
+                if not bpy.context.scene.preview_visible and \
+                        (bpy.data.images[activeModelPoseIndex].type == 'IMAGE') and \
+                        (root == None or not sUtils.isModelRoot(root) or not (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name] != root["modelname"]) or len(bpy.context.selected_objects) == 0):
+                    bpy.ops.view3d.draw_preview_operator()
+                    bpy.context.scene.preview_visible = True
+
+            else:
+                activeModelPose.hide = not activeModelPose.hide
+                if activeModelPose.hide:
+                    activeModelPose.icon = "RIGHTARROW"
+                else:
+                    activeModelPose.icon = "DOWNARROW_HLT"
+                for modelPose in modelsPosesColl:
+                    if (modelPose.type != "robot_name") and (modelPose.parent == activeModelPose.name):
+                        modelPose.hide = activeModelPose.hide
+
+        return {'FINISHED'}
+
+
+class DrawPreviewOperator(bpy.types.Operator):
+    bl_idname = "view3d.draw_preview_operator"
+    bl_label = "Draw preview to the View3D"
+
+    def modal(self, context, event):
+        if event.type in {'LEFTMOUSE','RIGHTMOUSE','ESC'}:
+#            if bpy.context.scene.preview_visible:
+            bpy.context.scene.preview_visible = False
+ #           else:
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+            return {'CANCELLED'}
+
+        return {'PASS_THROUGH'}
+
+    def execute(self, context):
+        # the arguments we pass the the callback
+        args = (self,)
+        # Add the region OpenGL drawing callback
+        # draw in view space with 'POST_VIEW' and 'PRE_VIEW'
+        if hasattr(self,"_handle") and self._handle:
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
+
+        self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_preview_callback, args, 'WINDOW', 'POST_PIXEL')
+
+        context.window_manager.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
+
+

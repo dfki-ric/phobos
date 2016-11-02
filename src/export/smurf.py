@@ -66,8 +66,9 @@ def deriveEntity(entity, outpath, savetosubfolder):
     # determine outpath for the smurf export
     # differentiate between full model and baked reference
     if "entity/isReference" in smurf:
-        bpy.ops.scene.load_backed_models_operator()
-        for robot_model in bpy.context.scene.bakeModels:
+        bpy.ops.scene.reload_models_and_poses_operator()
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        for robot_model in modelsPosesColl:
             if (smurf["modelname"] == robot_model.robot_name) and (smurf["entity/pose"] == robot_model.label):
                 entitypose = robotdictionary.deriveObjectPose(smurf)
                 entry      = robotdictionary.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])

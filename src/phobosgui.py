@@ -31,132 +31,39 @@ import glob
 import yaml
 import bpy
 import bgl
-import blf
 from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty, StringProperty, CollectionProperty
 from . import defs
+from phobos.operators.io import loadModelsAndPoses
 
 
-# show robot model on 3dview
-def draw_preview_callback(self):
-
-    # Search for View_3d window
-    area = None
-    if bpy.context.area.type != 'VIEW_3D':
-        return bpy.context.area
-    else:
-        for oWindow in bpy.context.window_manager.windows:
-            oScreen = oWindow.screen
-            for oArea in oScreen.areas:
-                if oArea.type == 'VIEW_3D':
-                    area = oArea
-
-    if (len(bpy.context.scene.bakeModels)>0) and area:
-
-        # Draw a textured quad
-        area_widths  = [region.width for region in bpy.context.area.regions if region.type=='WINDOW']
-        area_heights = [region.height for region in bpy.context.area.regions if region.type=='WINDOW']
-        if (len(area_widths)>0) and (len(area_heights)>0):
-
-            active_preview = bpy.context.scene.bakeModels[bpy.data.textures[bpy.context.scene.active_bakeModel].name]
-            im = bpy.data.textures[bpy.context.scene.active_bakeModel].image
-
-            view_width = area_widths[0]
-            view_height = area_heights[0]
-            tex_start_x = 50
-            tex_end_x = view_width-50
-            tex_start_y = 50
-            tex_end_y = view_height-50
-            if im.size[0] < view_width:
-                diff = int((view_width-im.size[0])/2)
-                tex_start_x = diff
-                tex_end_x   = diff+im.size[0]
-            if im.size[1] < view_height:
-                diff = int((view_height-im.size[1])/2)
-                tex_start_y = diff
-                tex_end_y   = diff+im.size[1]
-
-            # Draw information
-            font_id = 0  # XXX, need to find out how best to get this.
-            blf.position(font_id, tex_start_x, tex_end_y + 20, 0)
-            blf.size(font_id, 20, 72)
-            blf.draw(font_id, active_preview.label)
-
-            tex = im.bindcode
-            bgl.glEnable(bgl.GL_TEXTURE_2D)
-            # if using blender 2.77 change tex to tex[0]
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, tex)
-
-            # Background
-            bgl.glEnable(bgl.GL_BLEND)
-
-            bgl.glBegin(bgl.GL_QUADS)
-            bgl.glColor4f(0, 0, 0, 0.3)
-            bgl.glVertex2i(0, 0)
-            bgl.glVertex2i(0, view_height)
-            bgl.glVertex2i(view_width, view_height)
-            bgl.glVertex2i(view_width, 0)
-
-            # Draw Image
-            bgl.glColor4f(1, 1, 1, 1)
-            bgl.glTexCoord2f(0, 0)
-            bgl.glVertex2i(int(tex_start_x), int(tex_start_y))
-            bgl.glTexCoord2f(0, 1)
-            bgl.glVertex2i(int(tex_start_x), int(tex_end_y))
-            bgl.glTexCoord2f(1, 1)
-            bgl.glVertex2i(int(tex_end_x), int(tex_end_y))
-            bgl.glTexCoord2f(1, 0)
-            bgl.glVertex2i(int(tex_end_x), int(tex_start_y))
-            bgl.glEnd()
-
-            # restore opengl defaults
-            bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
-            bgl.glDisable(bgl.GL_QUADS)
-            bgl.glDisable(bgl.GL_BLEND)
-            bgl.glDisable(bgl.GL_TEXTURE_2D)
-
-
-class BakeModelProp(bpy.types.PropertyGroup):
-    robot_name = bpy.props.StringProperty()
-    label = bpy.props.StringProperty()
-    hide = bpy.props.BoolProperty(default = True)
-    parent = bpy.props.StringProperty()
-    icon =  bpy.props.StringProperty()
-    type  = bpy.props.StringProperty()
-    path = bpy.props.StringProperty()
-    model_file = bpy.props.StringProperty()
-    preview = bpy.props.StringProperty()
-
-
-class BakeModel_UIList_tex(bpy.types.UIList):
+class Models_Poses_UIList(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        #self.filter_name = 'model_preview_*'
         self.use_filter_show = False
-        tex = item
-        if tex.name in bpy.context.scene.bakeModels.keys():
-            coll_item = bpy.context.scene.bakeModels[tex.name]
+        im = item
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        if im.name in modelsPosesColl.keys():
+            coll_item = modelsPosesColl[im.name]
             if coll_item.type == "robot_name":
                 layout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
             else:
                 sLayout = layout.split(0.1)
                 sLayout.label(text="")
-                if tex.type == 'IMAGE':
+                if im.filepath != '':
                     sLayout.label(text=coll_item.label, translate=False,icon_value=icon)
                 else:
                     sLayout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
 
 
     def filter_items(self, context, data, propname):
-        # Default return values.
-        flt_flags = []
-        flt_neworder = []
+        images = getattr(data, propname)
+        flt_flags = [self.bitflag_filter_item] * len(images)
 
-        textures = getattr(data, propname)
-        flt_flags = [self.bitflag_filter_item] * len(textures)
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
 
-        # Filter items. Only show robots. Hide all other textures
-        for idx, tex in enumerate(textures):
-            if tex.name in bpy.context.scene.bakeModels.keys():
-                curr_model = bpy.context.scene.bakeModels[tex.name]
+        # Filter items. Only show robots. Hide all other images
+        for idx, im in enumerate(images):
+            if im.name in modelsPosesColl.keys():
+                curr_model = modelsPosesColl[im.name]
                 if curr_model.hide and not (curr_model.type == "robot_name"):
                     flt_flags[idx] &= ~self.bitflag_filter_item
             else:
@@ -164,7 +71,16 @@ class BakeModel_UIList_tex(bpy.types.UIList):
 
         helper_funcs = bpy.types.UI_UL_list
         # Reorder by name
-        flt_neworder = helper_funcs.sort_items_by_name(textures, "name")
+        flt_neworder = []
+        noPreviewIndex = 0
+        for im in images:
+            newIndex = 0
+            if im.name in modelsPosesColl.keys():
+                newIndex = modelsPosesColl.keys().index(im.name)
+            else:
+                newIndex = len(modelsPosesColl) + noPreviewIndex
+                noPreviewIndex += 1
+            flt_neworder.append(newIndex)
 
         return flt_flags, flt_neworder
 
@@ -214,18 +130,12 @@ def register():
     bpy.types.World.structureExport = BoolProperty(name="structureExport", default=False, description="Create structured subfolders")
     bpy.types.World.sceneName = StringProperty(name="sceneName")
 
-    bpy.utils.register_class(BakeModel_UIList_tex)
-    bpy.utils.register_class(BakeModelProp)
-    bpy.utils.register_class(DrawPreviewOperator)
+    bpy.utils.register_class(Models_Poses_UIList)
 
-    bpy.utils.register_class(ChangePreviewOperator)
-
-    bpy.types.Scene.bakeModels = bpy.props.CollectionProperty(type=BakeModelProp)
-    bpy.types.Scene.active_bakeModel = bpy.props.IntProperty(name="Index of preview list", default=0,update=showPreview)
+    bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(name="Index of current pose", default=0,update=showPreview)
     bpy.types.Scene.preview_visible = bpy.props.BoolProperty(name="Is the draw preview operator running", default=False)
     bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(name="Should we redraw the preview_template", default=False)
-
-    #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
+    loadModelsAndPoses()
 
 
 def unregister():
@@ -264,61 +174,6 @@ class OkOperator(bpy.types.Operator):
 
     def execute(self, context):
         return {'FINISHED'}
-
-class ChangePreviewOperator(bpy.types.Operator):
-    bl_idname = "scene.change_preview"
-    bl_label = "Change the preview texture"
-
-
-    def execute(self, context):
-        if bpy.data.textures[bpy.context.scene.active_bakeModel].name in bpy.context.scene.bakeModels.keys():
-            active_preview = bpy.context.scene.bakeModels[bpy.data.textures[bpy.context.scene.active_bakeModel].name]
-            if active_preview.type != "robot_name":
-                # show on view_3d
-                if not bpy.context.scene.preview_visible and (bpy.data.textures[bpy.context.scene.active_bakeModel].type == 'IMAGE'):
-                    bpy.ops.view3d.draw_preview_operator()
-                    bpy.context.scene.preview_visible = True
-
-            else:
-                active_preview.hide = not active_preview.hide
-                if active_preview.hide:
-                    active_preview.icon = "RIGHTARROW"
-                else:
-                    active_preview.icon = "DOWNARROW_HLT"
-                for model in bpy.context.scene.bakeModels:
-                    if (model.type != "robot_name") and (model.parent == active_preview.name):
-                        model.hide = active_preview.hide
-
-        return {'FINISHED'}
-
-
-class DrawPreviewOperator(bpy.types.Operator):
-    bl_idname = "view3d.draw_preview_operator"
-    bl_label = "Draw preview to the View3D"
-
-    def modal(self, context, event):
-        if event.type in {'LEFTMOUSE','RIGHTMOUSE','ESC'}:
-#            if bpy.context.scene.preview_visible:
-            bpy.context.scene.preview_visible = False
- #           else:
-            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
-            return {'CANCELLED'}
-
-        return {'PASS_THROUGH'}
-
-    def execute(self, context):
-        # the arguments we pass the the callback
-        args = (self,)
-        # Add the region OpenGL drawing callback
-        # draw in view space with 'POST_VIEW' and 'PRE_VIEW'
-        if hasattr(self,"_handle") and self._handle:
-            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
-
-        self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_preview_callback, args, 'WINDOW', 'POST_PIXEL')
-
-        context.window_manager.modal_handler_add(self)
-        return {'RUNNING_MODAL'}
-
 
 def showPreview(self,value):
     bpy.ops.scene.change_preview()
@@ -462,22 +317,10 @@ class PhobosPanel(bpy.types.Panel):
         pc1.operator('object.store_pose', text='Store Current Pose')
         pc2 = pinlayout.column(align=True)
         pc2.operator('object.load_pose', text='Load Pose')
-        layout.operator("object.phobos_export_all_poses", text="Bake All Poses", icon="OUTLINER_OB_ARMATURE")
 
         #for root in utility.getRoots():
         #    linspect1.operator('object.phobos_select_model', text=root["modelname"]).modelname = \
         #     root["modelname"] if "modelname" in root else root.name
-
-# custom list
-class UL_items(bpy.types.UIList):
-
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        split = layout.split(0.3)
-        split.label("Index: %d" % (index))
-        split.prop(item, "name", text="", emboss=False, translate=False, icon='BORDER_RECT')
-
-    def invoke(self, context, event):
-        pass
 
 
 class PhobosScenePanel(bpy.types.Panel):
@@ -500,10 +343,30 @@ class PhobosScenePanel(bpy.types.Panel):
         ic1 = iinlayout.column(align=True)
         ic1.operator("object.phobos_add_heightmap", text="Create Heightmap")
 
-        layout.label(text="Import baked robot model", icon="OUTLINER_OB_ARMATURE")
-        layout.operator("scene.load_backed_models_operator", text="Load Models", icon="LIBRARY_DATA_DIRECT")
+        layout.label(text="Robotmodels and Poses", icon="MOD_ARMATURE")
+        #layout.operator("scene.load_backed_models_operator", text="Load Models", icon="LIBRARY_DATA_DIRECT")
+        #layout.operator("scene.reload_models_and_poses_operator", text="Reload Models and Poses", icon="LIBRARY_DATA_DIRECT")
 
-        layout.template_list("BakeModel_UIList_tex", "",  bpy.data, "textures", context.scene, "active_bakeModel")
+
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        for model_pose in modelsPosesColl:
+            if not model_pose.name in bpy.data.images.keys():
+                if model_pose.type == 'robot_name':
+                    bpy.data.images.new(model_pose.name,0,0)
+                elif 'robot_pose':
+                    if model_pose.preview != '':
+                        if os.path.split(model_pose.preview)[-1] in bpy.data.images.keys():
+                            bpy.data.images[os.path.split(model_pose.preview)[-1]].reload()
+                        im = bpy.data.images.load(model_pose.preview)
+                        model_pose.name  = im.name
+                        #im.name = model_pose.name
+                        im.gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
+                    else:
+                        print(model_pose.name)
+                        bpy.data.images.new(model_pose.name, 0, 0)
+
+        layout.template_list("Models_Poses_UIList", "",  bpy.data, "images", context.scene, "active_ModelPose")
+
 #        layout.template_preview(bpy.data.textures[context.scene.active_bakeModel])
 #        layout.template_preview(preview_mat.active_texture,
 #                                parent=preview_mat,
@@ -511,6 +374,14 @@ class PhobosScenePanel(bpy.types.Panel):
 #                                preview_id="phobos_model_preview")
 
         layout.operator('scene.phobos_import_selected_lib_robot', text="Import Selected Robot Bake", icon="COPYDOWN")
+        pinlayout = layout.split()
+        pc1 = pinlayout.column(align=True)
+        pc1.operator('object.store_pose2', text='Store Current Pose')
+        pc2 = pinlayout.column(align=True)
+        pc2.operator('object.load_pose2', text='Load Selected Pose')
+
+        layout.operator("object.phobos_export_current_poses", text="Export Selected Pose", icon="OUTLINER_OB_ARMATURE")
+        layout.operator("object.phobos_export_all_poses", text="Export All Poses", icon="OUTLINER_OB_ARMATURE")
 
 
 class PhobosModelPanel(bpy.types.Panel):
