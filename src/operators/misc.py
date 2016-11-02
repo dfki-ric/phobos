@@ -219,7 +219,8 @@ class LoadPoseOperator2(Operator):
            (context.scene.objects.active != None) and \
            (sUtils.isModelRoot(root)) and \
            (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()) and \
-           (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["modelname"]):
+           (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["modelname"]) and \
+           (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose'):
             result = True
         return result
 

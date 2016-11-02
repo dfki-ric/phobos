@@ -353,9 +353,12 @@ class ExportCurrentPoseOperator(Operator):
         root = None
         if context.scene.objects.active != None:
             root = sUtils.getRoot(context.scene.objects.active)
-        if (root != None) and \
+        if (len(bpy.context.selected_objects)>0) and \
+           (root != None) and \
            sUtils.isModelRoot(root) and \
-           (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["modelname"]):
+           (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()) and \
+           (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["modelname"]) and \
+           (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose') :
            result = True
         return result
 
@@ -435,7 +438,9 @@ class ExportAllPosesOperator(Operator):
         root = None
         if context.scene.objects.active != None:
             root = sUtils.getRoot(context.scene.objects.active)
-        if (root != None) and \
+
+        if (len(bpy.context.selected_objects)>0) and \
+           (root != None) and \
            sUtils.isModelRoot(root):
            result = True
         return result
