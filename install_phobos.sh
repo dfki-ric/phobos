@@ -91,7 +91,7 @@ installPhobos() {
     if [ -d "$phobospath" ]
     then
         echo "Phobos installation found and updated."
-        cp -R src/* "$phobospath"
+        cp -R phobos/* "$phobospath"
         cp -R definitions "$phobospath"
         installed=1
     else
@@ -100,7 +100,7 @@ installPhobos() {
         case $YN in
             y|Y )
                 mkdir -p "$phobospath"
-                cp -R src/* "$phobospath"
+                cp -R phobos/* "$phobospath"
 		        cp -R definitions "$phobospath"
                 installed=1
                 echo "Copied phobos to $phobospath"
