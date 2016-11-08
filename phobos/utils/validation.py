@@ -19,7 +19,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
-File validator.py
+File validation.py
 
 Created on 26 March 2015
 
