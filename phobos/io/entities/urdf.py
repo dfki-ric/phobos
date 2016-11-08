@@ -1,34 +1,53 @@
-#!/usr/bin/python
-# coding=utf-8
 
-"""
-.. module:: phobos.export.entities
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
+from phobos.utils.io import l2str, xmlline, indent, xmlHeader
 
-.. moduleauthor:: Kai von Szadowski
 
-Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
-This file is part of Phobos, a Blender Add-On to edit robot models.
+import bpy
+import mathutils
+import os
+import yaml
+import math
+from collections import namedtuple
+import xml.etree.ElementTree as ET
+import zipfile
+import shutil
 
-Phobos is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation, either version 3
-of the License, or (at your option) any later version.
+import phobos.defs as defs
+import phobos.model.materials as materials
 
-Phobos is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.
 
-You should have received a copy of the GNU Lesser General Public License
-along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
+import phobos.model.controllers as controllers
+import phobos.model.lights as lights
+import phobos.utils.selection as sUtils
+import phobos.utils.blender as bUtils
+import phobos.utils.general as gUtils
+from phobos.logging import log
+from phobos.io.meshes.bobj import exportBobj
 
-File meshes.py
+#This is a really nice pythonic approach to creating a list of constants
+Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
+defaults = Defaults(0.001, #mass
+                    [0.0, 0.0, 0.0]  # idtransform
+                    )
 
-Created on 13 Feb 2014
-"""
+# more?
+MARScolordict = {'diffuseFront': 'diffuseColor',
+                 'specularFront': 'specularColor'}
+
+tmp_dir_name = 'phobos_magic_zip_tmp_dir'
+
+
+def sort_urdf_elements(elems):
+    """
+    Sort a collection of elements. By default, this method simply wraps the standard 'sorted()' method.
+    This is done in order to be able to easily change the element ordering.
+
+    :param elems: a collection
+    :return: sorted colletion
+    """
+    return sorted(elems)
+
 
 def writeURDFGeometry(output, element):
     """This functions writes the URDF geometry for a given element at the end of a given String.
@@ -225,54 +244,6 @@ def exportModelToURDF(model, filepath):
     # FIXME: different joint transformations needed for fixed joints
     log("Writing model data to " + filepath, "INFO", "exportModelToURDF")
 
-
-import bpy
-import mathutils
-import os
-import yaml
-import math
-from collections import namedtuple
-import xml.etree.ElementTree as ET
-import zipfile
-import shutil
-import re
-
-import phobos.defs as defs
-import phobos.materials as materials
-
-import phobos.bobj_import as bobj_import
-import phobos.joints as joints
-import phobos.sensors as sensors
-import phobos.controllers as controllers
-import phobos.lights as lights
-import phobos.utils.selection as selectionUtils
-import phobos.utils.blender as blenderUtils
-import phobos.utils.general as generalUtils
-from phobos.logging import log
-
-#This is a really nice pythonic approach to creating a list of constants
-Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
-defaults = Defaults(0.001, #mass
-                    [0.0, 0.0, 0.0]  # idtransform
-                    )
-
-# more?
-MARScolordict = {'diffuseFront': 'diffuseColor',
-                 'specularFront': 'specularColor'}
-
-tmp_dir_name = 'phobos_magic_zip_tmp_dir'
-
-def register():
-    """This function is called when this module is registered to blender.
-
-    """
-    print("Registering importer...")
-
-def unregister():
-    """This function is called when this module is unregistered from blender.
-
-    """
-    print("Unregistering importer...")
 
 def cleanUpScene():
     """This function cleans up the scene and removes all blender objects, meshes, materials and lights.
@@ -643,7 +614,7 @@ class RobotModelParser():
         :type: dict
 
         """
-        bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
+        bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])
         print(parent['name'] + ', ', end='')
         children = []
         for l in self.robot['links']:
@@ -653,7 +624,7 @@ class RobotModelParser():
             # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
             parentLink = bpy.data.objects[self.praefixNames(parent['name'], "link")]
             childLink = bpy.data.objects[self.praefixNames(child['name'], "link")]
-            selectionUtils.selectObjects([childLink, parentLink], True, 1)
+            sUtils.selectObjects([childLink, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             # 2: move to parents origin by setting the world matrix to the parents world matrix
             childLink.matrix_world = parentLink.matrix_world        # removing this line does not seem to make a difference
@@ -683,7 +654,7 @@ class RobotModelParser():
         :type link: dict
 
         """
-        bpy.context.scene.layers = blenderUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
+        bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
         parentLink = bpy.data.objects[self.praefixNames(link['name'], "link")]
         if 'inertial' in link:
             if 'pose' in link['inertial']:
@@ -700,7 +671,7 @@ class RobotModelParser():
                 return
             inertialname = link['inertial']['name']
             inertialobj = bpy.data.objects[inertialname]
-            selectionUtils.selectObjects([inertialobj, parentLink], True, 1)
+            sUtils.selectObjects([inertialobj, parentLink], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
             inertialobj.matrix_local = urdf_geom_loc * urdf_geom_rot
         for geomsrc in ['visual', 'collision']:
@@ -719,7 +690,7 @@ class RobotModelParser():
                     #geom.matrix_world = parentLink.matrix_world
                     #selectObjects([geom], True, 0)
                     #bpy.ops.object.transform_apply(location=True, rotation=True)
-                    selectionUtils.selectObjects([geom, parentLink], True, 1)
+                    sUtils.selectObjects([geom, parentLink], True, 1)
                     bpy.ops.object.parent_set(type='BONE_RELATIVE')
                     geom.matrix_local = urdf_geom_loc * urdf_geom_rot
                     try:
@@ -727,7 +698,7 @@ class RobotModelParser():
                     except KeyError:
                         pass
 
-                    selectionUtils.selectObjects([geom, parentLink], True, 1)
+                    sUtils.selectObjects([geom, parentLink], True, 1)
 
 
     def _get_object(self, link_name):
@@ -833,7 +804,7 @@ class RobotModelParser():
                 self.placeChildLinks(root)
                 print("\n\nAssigning model name...")
                 try:
-                    rootlink = selectionUtils.getRoot(bpy.data.objects[self.praefixNames(root['name'], "link")])
+                    rootlink = sUtils.getRoot(bpy.data.objects[self.praefixNames(root['name'], "link")])
                     rootlink['modelname'] = self.robot['name']
                 except KeyError:
                     log("Could not assign model name to root link.", "ERROR")
@@ -1873,11 +1844,11 @@ class URDFModelParser(RobotModelParser):
         pose = {}
         if origin is not None:
             try:
-                pose['translation'] = generalUtils.parse_text(origin.attrib['xyz'])
+                pose['translation'] = gUtils.parse_text(origin.attrib['xyz'])
             except KeyError:
                 pose['translation'] = defaults.idtransform
             try:
-                pose['rotation_euler'] = generalUtils.parse_text(origin.attrib['rpy'])
+                pose['rotation_euler'] = gUtils.parse_text(origin.attrib['rpy'])
             except KeyError:
                 pose['rotation_euler'] = defaults.idtransform
         else:
@@ -1938,7 +1909,7 @@ class URDFModelParser(RobotModelParser):
         #print('#############################')
         #print(self.robot['name'] + '_urdf_order')
         #print('#############################')
-        blenderUtils.createNewTextfile(self.robot['name'] + '_urdf_order', yaml.dump(self.element_order))
+        bUtils.createNewTextfile(self.robot['name'] + '_urdf_order', yaml.dump(self.element_order))
         #openScriptInEditor('element_order')
         self._debug_output()
 
@@ -1978,12 +1949,12 @@ class URDFModelParser(RobotModelParser):
                 dictelement['pose'] = self.parsePose(xmlelement.find('origin'))
                 geometry = xmlelement.find('geometry')
                 if geometry is not None:
-                    dictelement['geometry'] = {a: generalUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+                    dictelement['geometry'] = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
                     dictelement['geometry']['type'] = geometry[0].tag
                     if geometry[0].tag == 'mesh':
                         dictelement['geometry']['filename'] = geometry[0].attrib['filename']
                         try:
-                            dictelement['geometry']['scale'] = generalUtils.parse_text(geometry[0].attrib['scale'])
+                            dictelement['geometry']['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
                         except KeyError:
                             dictelement['geometry']['scale'] = [1.0, 1.0, 1.0]
                 material = xmlelement.find('material')
@@ -2028,10 +1999,10 @@ class URDFModelParser(RobotModelParser):
         newjoint['child'] = joint.find('child').attrib['link']
         axis = joint.find('axis')
         if axis is not None:
-            newjoint['axis'] = generalUtils.parse_text(axis.attrib['xyz'])
+            newjoint['axis'] = gUtils.parse_text(axis.attrib['xyz'])
         limit = joint.find('limit')
         if limit is not None:
-            newjoint['limits'] = {a: generalUtils.parse_text(limit.attrib[a]) for a in limit.attrib}
+            newjoint['limits'] = {a: gUtils.parse_text(limit.attrib[a]) for a in limit.attrib}
         #calibration
         #dynamics
         #limit
@@ -2048,7 +2019,7 @@ class URDFModelParser(RobotModelParser):
             newmaterial = {a: material.attrib[a] for a in material.attrib}
             color = material.find('color')
             if color is not None:
-                newmaterial['color'] = generalUtils.parse_text(color.attrib['rgba'])
+                newmaterial['color'] = gUtils.parse_text(color.attrib['rgba'])
                 if not newmaterial in material_list:
                     material_list.append(newmaterial)
         for m in material_list:

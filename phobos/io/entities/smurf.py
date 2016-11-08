@@ -32,15 +32,14 @@ Created on 12 Sep 2016
 
 import os
 import shutil
-import itertools
 import yaml
 from datetime import datetime
 import bpy
-import phobos.robotdictionary as robotdictionary
+import phobos.model.models as models
 import phobos.utils.selection as sUtils
-import phobos.utils.export as eUtils
+import phobos.utils.io as iUtils
 import phobos.defs as defs
-from phobos.utils.general import securepath
+from phobos.utils.io import securepath
 from phobos.logging import log
 
 
@@ -66,8 +65,8 @@ def deriveEntity(entity, outpath, savetosubfolder):
         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         for robot_model in modelsPosesColl:
             if (smurf["modelname"] == robot_model.robot_name) and (smurf["entity/pose"] == robot_model.label):
-                entitypose = robotdictionary.deriveObjectPose(smurf)
-                entry      = robotdictionary.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
+                entitypose = models.deriveObjectPose(smurf)
+                entry      = models.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
                 entry.pop("isReference");
 
                 entry['file'] = os.path.join(os.path.relpath(robot_model.path,outpath), smurf["modelname"] + ".smurf")
@@ -98,10 +97,10 @@ def deriveEntity(entity, outpath, savetosubfolder):
         subfolder = smurf["modelname"] if savetosubfolder else ""
         sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)
         sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)  # re-select for mesh export
-        model, objectlist = robotdictionary.buildModelDictionary(smurf)
+        model, objectlist = models.buildModelDictionary(smurf)
         export(model, objectlist, smurf_outpath)
-        entitypose = robotdictionary.deriveObjectPose(smurf)
-        entry = robotdictionary.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
+        entitypose = models.deriveObjectPose(smurf)
+        entry = models.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
 
         entry['file'] = (os.path.join(subfolder, smurf["modelname"]+".smurf") if os.path.isfile(smurf_outpath)
                          else os.path.join(subfolder, "smurf", smurf["modelname"]+".smurf"))
@@ -202,28 +201,6 @@ def gatherLevelOfDetailSettings(model):
     return lods
 
 
-def sort_urdf_elements(elems):
-    """
-    Sort a collection of elements. By default, this method simply wraps the standard 'sorted()' method.
-    This is done in order to be able to easily change the element ordering.
-
-    :param elems: a collection
-    :return: sorted colletion
-    """
-    return sorted(elems)
-
-
-def get_sorted_keys(dictionary):
-    """Sorts a dictionaries keys.
-
-    :param dictionary: The dictionary to sort the keys from
-    :type dictionary: dict
-    :return: the dictionary's sorted keys
-
-    """
-    return sorted(dictionary.keys())
-
-
 def sort_for_yaml_dump(structure, category):
     """Please add doc ASAP
     :param structure:
@@ -279,98 +256,6 @@ def exportModelToYAML(model, filepath):
         outputfile.write("# created with Phobos" + defs.version + " - https://github.com/rock-simulation/phobos\n\n")
         outputfile.write(yaml.dump(
             model))  # default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
-
-
-def exportModelToSRDF(model, path):
-    """This function exports the SRDF-relevant data from the dictionary to a specified path.
-    Further detail on different elements of SRDF:
-
-    <group>
-    Groups in SRDF can contain *links*, *joints*, *chains* and other *groups* (the latter two of which have to be specified
-    upstream. As nested groups is just a shortcut for adding links and joints to a group, it is not supported and the
-    user will have to add all links and joints explicitly to each group.
-    Originally both links and their associated parent joints were added. SRDF however implicitly assumes this, so the
-    current implementation only adds the links.
-
-    <chain>
-    Chains are elements to simplify defining groups and are supported. The dictionary also contains a list of all
-    elements belonging to that chain, which is discarded and not written to SRDF, however. It might be written to SMURF
-    in the future.
-
-    <link_sphere_approximatio>
-    SRDF defines the convention that if no sphere is defined, one large sphere is
-    assumed for that link. If one wants to have no sphere at all, it is necessary to define a sphere of radius 0.
-    As one large sphere can be explicitly added by the user and should be if that is what he intends (WYSIWYG),
-    we add a sphere of radius 0 by default if no sphere is specified.
-
-    <passive_joint>
-    Marks a joint as passive.
-
-    <disable_collisions>
-    Disables collisions between pairs of links to simplify collision checking and avoid collisions
-    of parents and children at their joints.
-
-
-    Currently not supported:
-    - <group_state>
-    - <virtual_joint>
-
-    :param model: a robot model dictionary.
-    :type model: dict
-    :param path: the outpath for the file.
-    :type path: str
-
-    """
-    output = []
-    output.append(xmlHeader)
-    output.append(indent + '<robot name="' + model['modelname'] + '">\n\n')
-    sorted_group_keys = get_sorted_keys(model['groups'])
-    for groupname in sorted_group_keys:
-        output.append(indent * 2 + '<group name="' + groupname + '">\n')
-        # TODO: once groups are implemented, this should be sorted aswell:
-        for member in model['groups'][groupname]:
-            output.append(indent * 3 + '<' + member['type'] + ' name="' + member['name'] + '" />\n')
-        output.append(indent * 2 + '</group>\n\n')
-    sorted_chain_keys = get_sorted_keys(model['chains'])
-    for chainname in sorted_chain_keys:
-        output.append(indent * 2 + '<group name="' + chainname + '">\n')
-        chain = model['chains'][chainname]
-        output.append(indent * 3 + '<chain base_link="' + chain['start'] + '" tip_link="' + chain['end'] + '" />\n')
-        output.append(indent * 2 + '</group>\n\n')
-    #for joint in model['state']['joints']:
-    #    pass
-    # passive joints
-    sorted_joint_keys = get_sorted_keys(model['joints'])
-    for joint in sorted_joint_keys:
-        try:
-            if model['joints'][joint]['passive']:
-                output.append(indent * 2 + '<passive_joint name="' + model['links'][joint]['name'] + '"/>\n\n')
-        except KeyError:
-            pass
-    sorted_link_keys = get_sorted_keys(model['links'])
-    for link in sorted_link_keys:
-        if len(model['links'][link]['approxcollision']) > 0:
-            output.append(indent * 2 + '<link_sphere_approximation link="' + model['links'][link]['name'] + '">\n')
-            # TODO: there does not seem to be a way to sort the spheres if there are multiple
-            for sphere in model['links'][link]['approxcollision']:
-                output.append(xmlline(3, 'sphere', ('center', 'radius'), (l2str(sphere['center']), sphere['radius'])))
-            output.append(indent * 2 + '</link_sphere_approximation>\n\n')
-        else:
-            output.append(indent * 2 + '<link_sphere_approximation link="' + model['links'][link]['name'] + '">\n')
-            output.append(xmlline(3, 'sphere', ('center', 'radius'), ('0.0 0.0 0.0', '0')))
-            output.append(indent * 2 + '</link_sphere_approximation>\n\n')
-    # calculate collision-exclusive links
-    collisionExclusives = []
-    for combination in itertools.combinations(model['links'], 2):
-        link1 = model['links'][combination[0]]
-        link2 = model['links'][combination[1]]
-        # TODO: we might want to automatically add parent/child link combinations
-        try:
-            if link1['collision_bitmask'] & link2['collision_bitmask'] == 0:
-                #output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (link1['name'], link2['name'])))
-                collisionExclusives.append((link1['name'], link2['name']))
-        except KeyError:
-            pass
 
 
 def exportModelToSMURF(model, path):
@@ -603,13 +488,13 @@ def export(model, objectlist, path=None):
             log("Exporting " + str(len(exportobjects)) + " meshes to " + meshoutpath + "...", "INFO", "export")
             for expobj in exportobjects:
                 if objexp:
-                    eUtils.exportObj(meshoutpath, expobj)
+                    iUtils.exportObj(meshoutpath, expobj)
                 if bobjexp:
-                    eUtils.exportBobj(meshoutpath, expobj)
+                    iUtils.exportBobj(meshoutpath, expobj)
                 if stlexp:
-                    eUtils.exportStl(meshoutpath, expobj)
+                    iUtils.exportStl(meshoutpath, expobj)
                 if daeexp:
-                    eUtils.exportDae(meshoutpath, expobj)
+                    iUtils.exportDae(meshoutpath, expobj)
                 if show_progress:
                     wm.progress_update(i)
                     i += 1

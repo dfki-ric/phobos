@@ -30,7 +30,7 @@ File primitive.py
 Created on 12 Sep 2016
 """
 
-import phobos.robotdictionary as robotdictionary
+import phobos.model.models as models
 import phobos.utils.naming as nUtils
 import phobos.utils.general as gUtils
 from phobos.logging import log
@@ -51,7 +51,7 @@ def deriveEntity(entity, outpath, savetosubfolder):
     primitive = entity
 
     log("Exporting " + nUtils.getObjectName(primitive, 'entity') + " as entity of type 'primitive", "INFO")
-    entity = robotdictionary.initObjectProperties(primitive, 'entity', ['geometry'])
+    entity = models.initObjectProperties(primitive, 'entity', ['geometry'])
     pose = gUtils.deriveObjectPose(primitive)
     entity['geometry'] = gUtils.deriveGeometry(primitive)
     entity['position'] = {'x': pose['translation'][0],

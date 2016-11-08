@@ -26,6 +26,10 @@ Created on 3 Nov 2016
 @author: Kai von Szadkowski
 """
 
+import phobos.model.models as models
+import phobos.utils.naming as nUtils
+from phobos.logging import log
+
 def deriveGenericEntity(entityobj, outpath=None):
     """This function handles an entity of unknown type by simply exporting its custom properties.
 
@@ -37,5 +41,5 @@ def deriveGenericEntity(entityobj, outpath=None):
 
     """
     log("Exporting " + nUtils.getObjectName(entityobj, 'entity') + " as entity of type 'generic", "INFO")
-    entity = robotdictionary.initObjectProperties(entityobj, 'entity', ['geometry'])
+    entity = models.initObjectProperties(entityobj, 'entity', ['geometry'])
     return entity

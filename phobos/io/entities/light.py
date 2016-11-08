@@ -30,7 +30,7 @@ File light.py
 Created on 12 Sep 2016
 """
 
-import phobos.robotdictionary as robotdictionary
+import phobos.model.models as models
 import phobos.utils.selection as sUtils
 from phobos.logging import log
 
@@ -49,7 +49,7 @@ def deriveEntity(entity, outpath, savetosubfolder):
     """
     light = entity
     log("Exporting " + light["entity/name"] + " as a light entity", "INFO")
-    entitypose = robotdictionary.deriveObjectPose(light)
+    entitypose = models.deriveObjectPose(light)
     lightobj = sUtils.getImmediateChildren(light)[0]
     color = lightobj.data.color
     entry = {"name": light["entity/name"],

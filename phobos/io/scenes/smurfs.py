@@ -31,11 +31,12 @@ import yaml
 from datetime import datetime
 import bpy
 from phobos.defs import version
-from phobos.utils.general import securepath, epsilonToZero
-from phobos.export import entity_types
+from phobos.utils.io import securepath
+from phobos.utils.general import epsilonToZero
+from phobos.io.entities import entity_types
 from phobos.utils.selection import isEntity
 from phobos.logging import log
-from entities import deriveGenericEntity
+from phobos.io.entities.entities import deriveGenericEntity
 
 def exportSMURFsScene(selected_only=True, subfolder=True):
     """Exports an arranged scene into SMURFS. It will export only entities

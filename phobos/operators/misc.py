@@ -30,14 +30,15 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 import bpy
 import blf
 import bgl
-from bpy.props import BoolProperty, FloatProperty, FloatVectorProperty, EnumProperty, StringProperty
+from bpy.props import *
 from bpy.types import Operator
 from phobos.logging import startLog, endLog, log
 import phobos.defs as defs
 import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
-import phobos.model.robot as robot
-import phobos.validator as validator
+import phobos.model.poses as poses
+import phobos.model.models as models
+import phobos.utils.validation as vUtils
 
 # FIXME: this is ugly
 current_robot_name = ''
@@ -49,8 +50,8 @@ def get_robot_names(scene, context):
 
 # FIXME: this should not go here either
 def get_pose_names(scene, context):
-    poses = model.getPoses(current_robot_name)
-    pose_items = [(pose,)*3 for pose in poses]
+    poselist = poses.getPoses(current_robot_name)
+    pose_items = [(pose,)*3 for pose in poselist]
     return pose_items
 
 
@@ -86,8 +87,8 @@ class CheckDict(Operator):
         startLog(self)
         messages = {}
         root = sUtils.getRoot(context.selected_objects[0])
-        model, objectlist = robot.buildModelDictionary(root)
-        validator.check_dict(model, defs.dictConstraints, messages)
+        model, objectlist = models.buildModelDictionary(root)
+        vUtils.check_dict(model, defs.dictConstraints, messages)
         defs.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
         for entry in messages:
             log("Errors in object " + entry + ":", 'INFO')
@@ -192,7 +193,7 @@ class StorePoseOperator2(Operator):
         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         robot_name = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name
-        robot.storePose(robot_name, self.pose_name)
+        models.storePose(robot_name, self.pose_name)
         bpy.ops.scene.reload_models_and_poses_operator()
         newPose = modelsPosesColl.add()
         newPose.parent = robot_name
@@ -279,7 +280,7 @@ class LoadPoseOperator(Operator):
     def execute(self, context):
         global current_robot_name
         current_robot_name = self.robot_name
-        robot.loadPose(self.robot_name, self.pose_name)
+        models.loadPose(self.robot_name, self.pose_name)
         return {'FINISHED'}
 
 

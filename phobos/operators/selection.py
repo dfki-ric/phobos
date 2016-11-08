@@ -29,6 +29,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 import bpy
 from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty
+import phobos.defs as defs
 import phobos.utils.selection as sUtils
 from phobos.logging import startLog, endLog, log
 

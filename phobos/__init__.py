@@ -92,40 +92,81 @@ yaml.Loader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 
 if "bpy" in locals():
-    import imp
-    imp.reload(phobos.defs)
+    import importlib
+    importlib.reload(phobos.defs)
     print("Using following folder for defs: " + os.path.dirname(__file__) + "/definitions")
     defs.updateDefs(os.path.dirname(__file__) + "/definitions")
-    imp.reload(phobos.robotdictionary)
-    imp.reload(phobos.controllers)
-    imp.reload(phobos.exporter)
-    imp.reload(phobos.importer)
-    imp.reload(phobos.phobosgui)
-    imp.reload(phobos.joints)
-    imp.reload(phobos.links)
-    imp.reload(phobos.sensors)
-    imp.reload(phobos.logging)
-    imp.reload(phobos.utils.blender)
-    imp.reload(phobos.utils.general)
-    imp.reload(phobos.utils.selection)
-    imp.reload(phobos.utils.naming)
-    imp.reload(phobos.operators.io)
-    imp.reload(phobos.operators.editing)
-    imp.reload(phobos.operators.misc)
-    imp.reload(phobos.operators.naming)
-    imp.reload(phobos.operators.selection)
-    imp.reload(phobos.inertia)
+    importlib.reload(phobos.utils.validation)
+    importlib.reload(phobos.utils.selection)
+    importlib.reload(phobos.utils.io)
+    importlib.reload(phobos.utils.general)
+    importlib.reload(phobos.utils.naming)
+    importlib.reload(phobos.utils.blender)
+    importlib.reload(phobos.testing)
+    importlib.reload(phobos.logging)
+    importlib.reload(phobos.phobosgui)
+    importlib.reload(phobos.model.controllers)
+    importlib.reload(phobos.model.joints)
+    importlib.reload(phobos.model.materials)
+    importlib.reload(phobos.model.poses)
+    importlib.reload(phobos.model.inertia)
+    importlib.reload(phobos.model.sensors)
+    importlib.reload(phobos.model.models)
+    importlib.reload(phobos.model.links)
+    importlib.reload(phobos.model.geometries)
+    importlib.reload(phobos.model.lights)
+    importlib.reload(phobos.io.meshes.meshes)
+    importlib.reload(phobos.io.meshes.bobj)
+    importlib.reload(phobos.io.entities.smurf)
+    importlib.reload(phobos.io.entities.primitive)
+    importlib.reload(phobos.io.entities.light)
+    importlib.reload(phobos.io.entities.urdf)
+    importlib.reload(phobos.io.entities.heightmap)
+    importlib.reload(phobos.io.entities.generic)
+    importlib.reload(phobos.io.scenes.smurfs)
+    importlib.reload(phobos.operators.misc)
+    importlib.reload(phobos.operators.editing)
+    importlib.reload(phobos.operators.selection)
+    importlib.reload(phobos.operators.io)
+    importlib.reload(phobos.operators.naming)
     print("Reloading Phobos.")
 else:
 
     print("Using following folder for defs: " + os.path.dirname(__file__) + "/definitions")
     defs.updateDefs(os.path.dirname(__file__) + "/definitions")
-    import phobos.links, phobos.robotdictionary, phobos.controllers, \
-        phobos.exporter, phobos.importer, phobos.joints, phobos.sensors, phobos.inertia, \
-        phobos.phobosgui, phobos.utils.naming, phobos.utils.blender, phobos.utils.general, phobos.utils.selection, \
-        phobos.operators.io, phobos.operators.editing, phobos.operators.misc, phobos.operators.naming, \
-        phobos.operators.selection, phobos.logging, phobos.defs
-
+    import phobos.utils.validation
+    import phobos.utils.selection
+    import phobos.utils.io
+    import phobos.utils.general
+    import phobos.utils.naming
+    import phobos.utils.blender
+    import phobos.testing
+    import phobos.logging
+    import phobos.phobosgui
+    import phobos.model.controllers
+    import phobos.model.joints
+    import phobos.model.materials
+    import phobos.model.poses
+    import phobos.model.inertia
+    import phobos.model.sensors
+    import phobos.model.models
+    import phobos.model.links
+    import phobos.model.geometries
+    import phobos.model.lights
+    import phobos.io.meshes.meshes
+    import phobos.io.meshes.bobj
+    import phobos.io.entities.smurf
+    import phobos.io.entities.primitive
+    import phobos.io.entities.light
+    import phobos.io.entities.urdf
+    import phobos.io.entities.heightmap
+    import phobos.io.entities.generic
+    import phobos.io.scenes.smurfs
+    import phobos.operators.misc
+    import phobos.operators.editing
+    import phobos.operators.selection
+    import phobos.operators.io
+    import phobos.operators.naming
     print("Importing Phobos modules.")
 
 import bpy
@@ -137,15 +178,7 @@ def register():
 
     """
     phobos.defs.register()
-    phobos.logging.register()
-    phobos.links.register()
-    phobos.controllers.register()
-    phobos.exporter.register()
     phobos.phobosgui.register()
-    phobos.importer.register()
-    phobos.joints.register()
-    phobos.sensors.register()
-    phobos.inertia.register()
     phobos.operators.editing.register()
     bpy.utils.register_module(__name__)
 
@@ -157,15 +190,7 @@ def unregister():
 
     """
     phobos.defs.unregister()
-    phobos.logging.unregister()
-    phobos.links.unregister()
-    phobos.controllers.unregister()
-    phobos.exporter.unregister()
     phobos.phobosgui.unregister()
-    phobos.importer.unregister()
-    phobos.joints.unregister()
-    phobos.sensors.unregister()
-    phobos.inertia.register()
     phobos.operators.editing.unregister()
     bpy.utils.unregister_module(__name__)
 

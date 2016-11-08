@@ -30,12 +30,12 @@ from copy import deepcopy as dc
 
 
 def check_dict(dic, validator, messages):
-    """ This function validates a given dictionary against a validator.
+    """ This function validates a given dictionary against a validation.
     It writes all messages to the given messages list
 
     :param dic: The dictionary you want to validate.
     :type dic: dict
-    :param validator: The validator you want to validate against.
+    :param validator: The validation you want to validate against.
     :type validator: dict
     :param messages: The message list you want to append the error messages to.
     :type messages: dict
@@ -45,17 +45,17 @@ def check_dict(dic, validator, messages):
 
 
 def check_dict_alg(dic, validator, entry_list, messages, whole_validator, current_elem):
-    """This function does the real validation work by working through the validator.
+    """This function does the real validation work by working through the validation.
 
     :param dic: The dictionary you want to validate.
     :type dic: dict
-    :param validator: The validator you want to validate against.
+    :param validator: The validation you want to validate against.
     :type validator: dict
     :param entry_list: This list contains all keys you have to traverse to get the correct value in the dictionary.
     :type entry_list: list
     :param messages: The message list you want to append the error messages to.
     :type messages: dict
-    :param whole_validator: This is a copy of the whole validator needed when referencing to a top level key.
+    :param whole_validator: This is a copy of the whole validation needed when referencing to a top level key.
     :type whole_validator: dict
     :param current_elem: The current element the alg is checking.
     :type current_elem: str
@@ -131,13 +131,13 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator,
     :type node: str
     :param dic: The dict you want to validate.
     :type dic: dict
-    :param validator: The validator you want to validate the dic with.
+    :param validator: The validation you want to validate the dic with.
     :type validator: dict
     :param entry_list: The list of keys to navigate to the value in the dictionary.
     :type entry_list: list
     :param messages: The list to append the messages to.
     :type messages: dict
-    :param whole_validator: The whole validator to reach top level keys in case of a reference operator.
+    :param whole_validator: The whole validation to reach top level keys in case of a reference operator.
      :type whole_validator: dict
 
     """

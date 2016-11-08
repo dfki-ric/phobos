@@ -46,18 +46,19 @@ import phobos.io.scenes.smurfs as smurfs
 from phobos.io.entities import entities
 
 
-
-
 def generateLibEntries(param1, param2): #FIXME: parameter?
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
         return [("None",)*3] + [(entry,)*3 for entry in yaml.load(f.read())]
 
 
 def loadModelsAndPoses():
-    modelsfolder = os.path.abspath(bpy.context.user_preferences.addons["phobos"].preferences.modelfolder)
+    if bpy.context.user_preferences.addons["phobos"].preferences.modelsfolder:
+        modelsfolder = os.path.abspath(bpy.context.user_preferences.addons["phobos"].preferences.modelsfolder)
+    else:
+        modelsfolder = ''
     modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
     robots_found = []
-
+    print(modelsfolder)
     for root, dirs, files in os.walk(modelsfolder):
         for file in files:
             if os.path.splitext(file)[-1] == '.smurf':
@@ -196,13 +197,14 @@ class ImportSelectedLibRobot(Operator):
         #print("modelfile: ("+modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file+")")
         if context.scene.objects.active != None:
             root = sUtils.getRoot(context.scene.objects.active)
-        if (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()) and \
-           (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file != '') and \
-           ((len(bpy.context.selected_objects) == 0) or \
-           (root == None) or \
-           not sUtils.isModelRoot(root) or \
-           (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name != root["modelname"])):
-           result = True
+        if ( not root
+             or not sUtils.isModelRoot(root)
+             or bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()
+             and modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file != ''
+             and len(bpy.context.selected_objects) == 0
+             or modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name != root["modelname"]
+             ):
+            result = True
         return result
 
     def invoke(self, context, event):

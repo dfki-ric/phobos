@@ -169,27 +169,37 @@ def createGeometry(self, viscol, geomsrc):
     newgeom[geomsrc+"/name"] = viscol['name']
     return newgeom
 
-    #code for capsules:
-
-    #buildModelDictionary:
-        capsules_list = []
-        # in for-loop:
-        if all([key in props for key in ['cylinder', 'sphere1', 'sphere2']]):     # this is the case with simulated capsules
-            capsules_list.append({'link': parent.name,
-                                  'name': props['cylinder']['name'][:-len('_cylinder')],
-                                  'radius': props['cylinder']['geometry']['radius'],
-                                  'length': props['cylinder']['geometry']['length'] + 2*props['cylinder']['geometry']['radius'],
-                                  #'bitmask': props['cylinder']['bitmask']
-                                })
-            for key in props:
-                robot['links'][nUtils.getObjectName(parent, phobostype="link")][obj.phobostype][key] = props[key]
-        robot['capsules'] = capsules_list
-
-
-    # deriveDictEntry
-    if obj['geometry/type'] == 'capsule':
-                    props, parent = deriveCapsule(obj)
-                else:
+    ##code for capsules:
+    #
+    # #buildModelDictionary:
+    #     capsules_list = []
+    #     # in for-loop:
+    #     if all([key in props for key in ['cylinder', 'sphere1', 'sphere2']]):     # this is the case with simulated capsules
+    #         capsules_list.append({'link': parent.name,
+    #                               'name': props['cylinder']['name'][:-len('_cylinder')],
+    #                               'radius': props['cylinder']['geometry']['radius'],
+    #                               'length': props['cylinder']['geometry']['length'] + 2*props['cylinder']['geometry']['radius'],
+    #                               #'bitmask': props['cylinder']['bitmask']
+    #                             })
+    #         for key in props:
+    #             robot['links'][nUtils.getObjectName(parent, phobostype="link")][obj.phobostype][key] = props[key]
+    #     robot['capsules'] = capsules_list
+    #
+    #
+    # # deriveDictEntry
+    # if obj['geometry/type'] == 'capsule':
+    #                 props, parent = deriveCapsule(obj)
+    #             else:
+# exportModelToSmurf
+#     print('capsules:', model['capsules'])
+#     capsules = model['capsules']
+#     for capsule in capsules:
+#         if capsule['name'] in bitmasks:
+#             bitmask = bitmasks[capsule['name']]['bitmask']
+#             capsule['bitmask'] = bitmask
+#
+#                     if model['capsules']:
+#             op.write(yaml.dump({'capsules': model['capsules']}, default_flow_style=False))
 
 
 def deriveCapsule(obj):
@@ -237,14 +247,3 @@ def deriveCapsule(obj):
         viscol_dict[part] = viscol
     return viscol_dict, obj.parent
 
-
-# exportModelToSmurf
-        print('capsules:', model['capsules'])
-        capsules = model['capsules']
-        for capsule in capsules:
-            if capsule['name'] in bitmasks:
-                bitmask = bitmasks[capsule['name']]['bitmask']
-                capsule['bitmask'] = bitmask
-
-                        if model['capsules']:
-                op.write(yaml.dump({'capsules': model['capsules']}, default_flow_style=False))

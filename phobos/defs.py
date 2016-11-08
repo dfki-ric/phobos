@@ -258,10 +258,10 @@ class PhobosPrefs(AddonPreferences):
         default=True
     )
 
-    modelfolder = StringProperty(
-        name="modelfolder",
+    modelsfolder = StringProperty(
+        name="modelsfolder",
         subtype="DIR_PATH",
-        default=".",
+        default='',
     )
 
     exportpluginsfolder = StringProperty(
@@ -281,7 +281,7 @@ class PhobosPrefs(AddonPreferences):
         layout.prop(self, "loglevel", text="log level")
         layout.separator()
         layout.label(text="Folders")
-        layout.prop(self, "modelfolder", text="model folder")
+        layout.prop(self, "modelsfolder", text="models folder")
         layout.prop(self, 'pluginspath', text="Path for plugins")
 
 

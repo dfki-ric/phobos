@@ -33,10 +33,10 @@ Created on 12 Sep 2016
 import os
 import shutil
 import bpy
-import phobos.robotdictionary as robotdictionary
+import phobos.model.models as models
 import phobos.utils.selection as sUtils
-import phobos.utils.export as eUtils
-from phobos.utils.general import securepath
+import phobos.utils.io as iUtils
+from phobos.utils.io import securepath
 from phobos.logging import log
 
 # information for structure export
@@ -61,7 +61,7 @@ def deriveEntity(entity, outpath, savetosubfolder):
     heightmap_outpath = securepath(os.path.join(outpath, structure_subfolder) if savetosubfolder else outpath)
 
     log("Exporting " + heightmap["entity/name"] + " as a heightmap entity", "INFO")
-    entitypose = robotdictionary.deriveObjectPose(heightmap)
+    entitypose = models.deriveObjectPose(heightmap)
     heightmapMesh = sUtils.getImmediateChildren(heightmap)[0]
     if bpy.data.worlds[0].heightmapMesh:
         exMesh = heightmapMesh.to_mesh(bpy.context.scene, True, "PREVIEW")
@@ -71,16 +71,16 @@ def deriveEntity(entity, outpath, savetosubfolder):
         heightmapMesh.modifiers["displace_heightmap"].show_render = False
         heightmapMesh.modifiers["displace_heightmap"].show_viewport = False
         if bpy.data.worlds[0].useObj:
-            eUtils.exportObj(heightmap_outpath, heightmapMesh)
+            iUtils.exportObj(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".obj")
         elif bpy.data.worlds[0].useBobj:
-            eUtils.exportBobj(heightmap_outpath, heightmapMesh)
+            iUtils.exportBobj(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".bobj")
         elif bpy.data.worlds[0].useStl:
-            eUtils.exportStl(heightmap_outpath, heightmapMesh)
+            iUtils.exportStl(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".stl")
         elif bpy.data.worlds[0].useDae:
-            eUtils.exportDae(heightmap_outpath, heightmapMesh)
+            iUtils.exportDae(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".dae")
         else:
             log("No mesh export type checked! Aborting heightmap export.", "ERROR", __name__+".handleScene_heightmap")
