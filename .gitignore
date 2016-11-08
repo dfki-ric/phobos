@@ -1,4 +1,7 @@
 installconfig.txt
 yamlpath.conf
 *~
+.*
+*.orig
+installconfig*
 __pycache__
