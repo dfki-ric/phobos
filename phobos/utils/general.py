@@ -148,36 +148,12 @@ def parse_text(s):
         return parse_number(s)
 
 
-def securepath(path):
-    """This function checks whether a path exists or not.
-    If it doesn't the functions creates the path.
-
-    :param path: The path you want to check for existence *DIRECTORIES ONLY*
-    :type path: str
-    :return: String -- the path given as parameter, but secured by expanding ~ constructs.
-
-    """
-    if not os.path.exists(path):
-        try:
-            os.makedirs(path)
-        except NotADirectoryError:
-            log(path + " is not a valid directory", "ERROR", "securepath")
-    return os.path.expanduser(path)
-
-
 def calcBoundingBoxCenter(boundingbox):
     """Calculates the center of a bounding box
 
     """
     c = sum((mathutils.Vector(b) for b in boundingbox), mathutils.Vector())
     return c / 8
-
-
-def roundVector(v, n):
-    """Returns a mathutils.Vector with its components rounded to n digits.
-
-    """
-    return round(v.x, n), round(v.y, n), round(v.z, n)
 
 
 def epsilonToZero(data, epsilon, decimals):
@@ -238,71 +214,3 @@ def outerProduct(v, u):
     for vi in v:
         lines.append([vi * ui for ui in u])
     return mathutils.Matrix(lines)
-
-
-def deriveObjectPose(obj):
-    """This function derives a pose of link, visual or collision object.
-
-    :param obj: The blender object to derive the pose from.
-    :type obj: bpy_types.Object
-    :return: dict
-
-    """
-    matrix = obj.matrix_local
-    effectiveparent = sUtils.getEffectiveParent(obj)
-    parent = obj.parent
-    while parent != effectiveparent and parent is not None:
-        matrix = parent.matrix_local * matrix
-        parent = parent.parent
-    pose = {'rawmatrix': matrix,
-            'matrix': [list(vector) for vector in list(matrix)],
-            'translation': list(matrix.to_translation()),
-            'rotation_euler': list(matrix.to_euler()),
-            'rotation_quaternion': list(matrix.to_quaternion())
-            }
-    return pose
-
-
-def deriveGeometry(obj):
-    """This function derives the geometry from an object.
-
-    :param obj: The blender object to derive the geometry from.
-    :type obj: bpy_types.Object
-    :return: dict
-
-    """
-    try:
-        geometry = {'type': obj['geometry/type']}
-        gt = obj['geometry/type']
-        if gt == 'box':
-            geometry['size'] = list(obj.dimensions)
-        elif gt == 'cylinder' or gt == 'capsule':
-            geometry['radius'] = obj.dimensions[0]/2
-            geometry['length'] = obj.dimensions[2]
-        elif gt == 'capsule':
-            geometry['radius'] = obj.dimensions[0]/2
-            geometry['length'] = obj.dimensions[2] - obj.dimensions[0]
-        elif gt == 'sphere':
-            geometry['radius'] = obj.dimensions[0]/2
-        elif gt == 'mesh':
-            filename = obj.data.name
-            if bpy.data.worlds[0].useObj:
-                filename += ".obj"
-            elif bpy.data.worlds[0].useBobj:
-                filename += ".bobj"
-            elif bpy.data.worlds[0].useStl:
-                filename += ".stl"
-            elif bpy.data.worlds[0].useDae:
-                filename += ".dae"
-            else:
-                filename += ".obj"
-            geometry['filename'] = os.path.join('meshes', filename)
-            geometry['scale'] = list(obj.scale)
-            geometry['size'] = list(obj.dimensions)  # FIXME: is this needed to calculate an approximate inertia
-        else:  # any other geometry type, i.e. 'plane'
-            geometry['size'] = list(obj.dimensions)
-        return geometry
-    except KeyError as err:
-        log("Undefined geometry for object " + nUtils.getObjectName(obj)
-            + " " + str(err), "ERROR", "deriveGeometry")
-        return None
