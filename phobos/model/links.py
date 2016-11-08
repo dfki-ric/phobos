@@ -33,9 +33,10 @@ Created on 14 Apr 2014
 import bpy
 import math
 import phobos.defs as defs
-import phobos.utils.naming as namingUtils
-import phobos.utils.blender as blenderUtils
-import phobos.utils.selection as selectionUtils
+import phobos.utils.naming as nUtils
+import phobos.utils.blender as bUtils
+import phobos.utils.selection as sUtils
+from phobos.logging import log
 
 
 def register():
@@ -60,11 +61,11 @@ def createLink(self, link):
         :return: bpy_types.Object -- the newly created blender link object.
 
         """
-        bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
+        bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])
         #create base object ( =armature)
         bpy.ops.object.select_all(action='DESELECT')
         #bpy.ops.view3d.snap_cursor_to_center()
-        bpy.ops.object.armature_add(layers=blenderUtils.defLayers(0))
+        bpy.ops.object.armature_add(layers=bUtils.defLayers(0))
         newlink = bpy.context.active_object #print(bpy.context.object) #print(bpy.context.scene.objects.active) #bpy.context.selected_objects[0]
         newlink["link/name"] = link['name']
         newlink.name = self.praefixNames(link['name'], "link")
@@ -111,15 +112,15 @@ def createLink(scale, position=None, orientation=None, name=''):
     :return: bpy_types.Object
 
     """
-    blenderUtils.toggleLayer(defs.layerTypes['link'], True)
+    bUtils.toggleLayer(defs.layerTypes['link'], True)
     if position is None and orientation is None:
-        bpy.ops.object.armature_add(layers=blenderUtils.defLayers([0]))
+        bpy.ops.object.armature_add(layers=bUtils.defLayers([0]))
     elif position is None:
-        bpy.ops.object.armature_add(rotation=orientation, layers=blenderUtils.defLayers([0]))
+        bpy.ops.object.armature_add(rotation=orientation, layers=bUtils.defLayers([0]))
     elif orientation is None:
-        bpy.ops.object.armature_add(location=position, layers=blenderUtils.defLayers([0]))
+        bpy.ops.object.armature_add(location=position, layers=bUtils.defLayers([0]))
     else:
-        bpy.ops.object.armature_add(location=position, rotation=orientation, layers=blenderUtils.defLayers([0]))
+        bpy.ops.object.armature_add(location=position, rotation=orientation, layers=bUtils.defLayers([0]))
     link = bpy.context.active_object
     link.scale = [scale, scale, scale]
     bpy.ops.object.transform_apply(scale=True)
@@ -148,34 +149,34 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
     :type prefix: str
 
     """
-    print('Deriving link from', namingUtils.getObjectName(obj))
-    nameparts = namingUtils.getObjectName(obj).split('_')
+    print('Deriving link from', nUtils.getObjectName(obj))
+    nameparts = nUtils.getObjectName(obj).split('_')
     rotation = obj.matrix_world.to_euler()
     if 'invertAxis' in obj and obj['invertAxis'] == 1:
         rotation.x += math.pi if rotation.x < 0 else -math.pi
-    tmpname = namingUtils.getObjectName(obj)
+    tmpname = nUtils.getObjectName(obj)
     if namepartindices:
         try:
             tmpname = separator.join([nameparts[p] for p in namepartindices])
         except IndexError:
-            print('Wrong name segment indices given for obj', namingUtils.getObjectName(obj))
+            print('Wrong name segment indices given for obj', nUtils.getObjectName(obj))
     if prefix != '':
         tmpname = prefix + separator + tmpname
-    if tmpname == namingUtils.getObjectName(obj):
+    if tmpname == nUtils.getObjectName(obj):
         obj.name += '*'
     link = createLink(scale, obj.matrix_world.to_translation(), obj.matrix_world.to_euler(), tmpname)
     if parenting and obj.parent:
         if obj.parent:
-            selectionUtils.selectObjects([link, obj.parent], True, 1)
+            sUtils.selectObjects([link, obj.parent], True, 1)
             if obj.parent.phobostype == 'link':
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
             else:
                 bpy.ops.object.parent_set(type='OBJECT')
-        children = selectionUtils.getImmediateChildren(obj)
+        children = sUtils.getImmediateChildren(obj)
         if parentobjects:
             children.append(obj)
         for child in children:
-            selectionUtils.selectObjects([child], True, 0)
+            sUtils.selectObjects([child], True, 0)
             bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-            selectionUtils.selectObjects([child, link], True, 1)
+            sUtils.selectObjects([child, link], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')

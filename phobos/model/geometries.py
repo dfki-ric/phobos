@@ -4,11 +4,11 @@ import os
 import zipfile
 import bpy
 import mathutils
-from phobos.logging import log
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 import phobos.model.poses as poses
-from phobos.export.meshes import bobj
+import phobos.io.meshes.bobj as bobj
+from phobos.logging import log
 
 
 def deriveGeometry(obj):

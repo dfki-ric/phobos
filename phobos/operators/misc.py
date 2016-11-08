@@ -26,17 +26,18 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+
+import bpy
+import blf
+import bgl
 from bpy.props import BoolProperty, FloatProperty, FloatVectorProperty, EnumProperty, StringProperty
 from bpy.types import Operator
 from phobos.logging import startLog, endLog, log
 import phobos.defs as defs
 import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
-import phobos.robotdictionary as robotdictionary
+import phobos.model.robot as robot
 import phobos.validator as validator
-import bpy
-import blf
-import bgl
 
 # FIXME: this is ugly
 current_robot_name = ''
@@ -48,7 +49,7 @@ def get_robot_names(scene, context):
 
 # FIXME: this should not go here either
 def get_pose_names(scene, context):
-    poses = robotdictionary.getPoses(current_robot_name)
+    poses = model.getPoses(current_robot_name)
     pose_items = [(pose,)*3 for pose in poses]
     return pose_items
 
@@ -85,7 +86,7 @@ class CheckDict(Operator):
         startLog(self)
         messages = {}
         root = sUtils.getRoot(context.selected_objects[0])
-        model, objectlist = robotdictionary.buildModelDictionary(root)
+        model, objectlist = robot.buildModelDictionary(root)
         validator.check_dict(model, defs.dictConstraints, messages)
         defs.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
         for entry in messages:
@@ -191,7 +192,7 @@ class StorePoseOperator2(Operator):
         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         robot_name = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name
-        robotdictionary.storePose(robot_name, self.pose_name)
+        robot.storePose(robot_name, self.pose_name)
         bpy.ops.scene.reload_models_and_poses_operator()
         newPose = modelsPosesColl.add()
         newPose.parent = robot_name
@@ -230,7 +231,7 @@ class LoadPoseOperator2(Operator):
         modelPose = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
         root = sUtils.getRoot(context.scene.objects.active)
         bpy.context.scene.objects.active = root
-        robotdictionary.loadPose(modelPose.robot_name, modelPose.label)
+        robot.loadPose(modelPose.robot_name, modelPose.label)
         return {'FINISHED'}
 
 
@@ -253,7 +254,7 @@ class StorePoseOperator(Operator):
     )
 
     def execute(self, context):
-        robotdictionary.storePose(self.robot_name, self.pose_name)
+        robot.storePose(self.robot_name, self.pose_name)
         return {'FINISHED'}
 
 
@@ -278,7 +279,7 @@ class LoadPoseOperator(Operator):
     def execute(self, context):
         global current_robot_name
         current_robot_name = self.robot_name
-        robotdictionary.loadPose(self.robot_name, self.pose_name)
+        robot.loadPose(self.robot_name, self.pose_name)
         return {'FINISHED'}
 
 

@@ -27,11 +27,9 @@ Created on 6 Jan 2014
 """
 
 import os
-import glob
-import yaml
 import bpy
 import bgl
-from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty, StringProperty, CollectionProperty
+from bpy.props import *
 from . import defs
 from phobos.operators.io import loadModelsAndPoses
 

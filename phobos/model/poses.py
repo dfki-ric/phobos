@@ -31,10 +31,10 @@ Created on 13 Feb 2014
 """
 
 import os
-from phobos.utils.general import securepath
 import bpy
 import phobos.utils.selection as sUtils
 from phobos.logging import log
+from phobos.utils.io import securepath
 
 
 def register():

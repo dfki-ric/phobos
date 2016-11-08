@@ -30,9 +30,9 @@ Created on 6 Jan 2014
 import bpy
 import mathutils
 from phobos import defs
-import phobos.utils.blender as blenderUtils
-import phobos.utils.selection as selectionUtils
-import phobos.utils.naming as nameUtils
+import phobos.utils.blender as bUtils
+import phobos.utils.selection as sUtils
+import phobos.utils.naming as nUtils
 
 
 
@@ -75,7 +75,7 @@ def attachSensor(self, sensor):
     :type sensor: dict
 
     """
-    bpy.context.scene.layers = blenderUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
+    bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
     #try:
     if 'pose' in sensor:
         urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
@@ -85,9 +85,9 @@ def attachSensor(self, sensor):
         urdf_geom_rot = mathutils.Matrix.Identity(4)
     sensorobj = bpy.data.objects[sensor['name']]
     if 'link' in sensor:
-        parentLink = selectionUtils.getObjectByNameAndType(sensor['link'], 'link')
+        parentLink = sUtils.getObjectByNameAndType(sensor['link'], 'link')
         #parentLink = bpy.data.objects['link_' + sensor['link']]
-        selectionUtils.selectObjects([sensorobj, parentLink], True, 1)
+        sUtils.selectObjects([sensorobj, parentLink], True, 1)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:
         #TODO: what?
@@ -104,7 +104,7 @@ def cameraRotLock(object):
     :type object: bpy_types.Object
 
     """
-    selectionUtils.selectObjects([object], active=0)
+    sUtils.selectObjects([object], active=0)
     bpy.ops.transform.rotate(value=-1.5708, axis=(-1, 0, 0), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     bpy.ops.transform.rotate(value=1.5708, axis=(0, -1, 0), constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
     bpy.ops.object.constraint_add(type='LIMIT_ROTATION')
@@ -131,36 +131,36 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     :return: The newly created sensor object
 
     """
-    blenderUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
+    bUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object
     if 'Camera' in sensor['type']:
         bpy.ops.object.add(type='CAMERA', location=origin.to_translation(),
                            rotation=origin.to_euler(),
-                           layers=blenderUtils.defLayers([defs.layerTypes['sensor']]))
+                           layers=bUtils.defLayers([defs.layerTypes['sensor']]))
         newsensor = bpy.context.active_object
         if reference is not None:
-            selectionUtils.selectObjects([newsensor, reference], clear=True, active=1)
+            sUtils.selectObjects([newsensor, reference], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     elif sensor['type'] in ['RaySensor', 'RotatingRaySensor', 'ScanningSonar', 'MultiLevelLaserRangeFinder']:
         # TODO: create a proper ray sensor scanning layer disc here
-        newsensor = blenderUtils.createPrimitive(sensor['name'], 'disc', (0.5, 36),
+        newsensor = bUtils.createPrimitive(sensor['name'], 'disc', (0.5, 36),
                                             defs.layerTypes['sensor'], 'phobos_laserscanner',
                                             origin.to_translation(), protation=origin.to_euler())
         if reference is not None:
-            selectionUtils.selectObjects([newsensor, reference], clear=True, active=1)
+            sUtils.selectObjects([newsensor, reference], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:  # contact, force and torque sensors (or unknown sensors)
-        newsensor = blenderUtils.createPrimitive(sensor['name'], 'sphere', 0.05,
+        newsensor = bUtils.createPrimitive(sensor['name'], 'sphere', 0.05,
                                             defs.layerTypes['sensor'], 'phobos_sensor',
                                             origin.to_translation(), protation=origin.to_euler())
         if sensor['type'] == 'Joint6DOF':
-            pass #newsensor['sensor/nodes'] = nameUtils.getObjectName(reference)
+            pass #newsensor['sensor/nodes'] = nUtils.getObjectName(reference)
         elif 'Node' in sensor['type']:
-            newsensor['sensor/nodes'] = sorted([nameUtils.getObjectName(ref) for ref in reference])
+            newsensor['sensor/nodes'] = sorted([nUtils.getObjectName(ref) for ref in reference])
         elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
-            newsensor['sensor/joints'] = sorted([nameUtils.getObjectName(ref) for ref in reference])
+            newsensor['sensor/joints'] = sorted([nUtils.getObjectName(ref) for ref in reference])
         if reference is not None:
-            selectionUtils.selectObjects([newsensor, reference], clear=True, active=1)
+            sUtils.selectObjects([newsensor, reference], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
     # set sensor properties
     newsensor.phobostype = 'sensor'
@@ -180,7 +180,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     # throw warning if type is not known
     if sensor['type'] not in defs.sensortypes:
         print("### Warning: sensor", sensor['name'], "is of unknown/custom type.")
-    selectionUtils.selectObjects([newsensor], clear=False, active=0)
+    sUtils.selectObjects([newsensor], clear=False, active=0)
     return newsensor
 
 

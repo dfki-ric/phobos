@@ -26,13 +26,10 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import phobos.utils.selection as selection
+import bpy
 import phobos.defs as defs
 import phobos.materials as materials
-import bpy
 from phobos.logging import log
-
-import yaml
 
 
 def printMatrices(obj, info=None):

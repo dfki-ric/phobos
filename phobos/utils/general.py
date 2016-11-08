@@ -27,13 +27,9 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import re
-import os
-import bpy
 from datetime import datetime
 import mathutils
 from phobos.logging import log
-import phobos.utils.naming as nUtils
-import phobos.utils.selection as sUtils
 
 
 def is_float(s):

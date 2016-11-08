@@ -34,6 +34,7 @@ import bpy
 import mathutils
 from phobos import defs
 from phobos.logging import log
+from phobos.model import joints
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
@@ -103,7 +104,7 @@ def createJoint(self, joint):
         # link['joint/type'] = joint['type']
 
         # set axis
-        selectionUtils.selectObjects([link], clear=True, active=0)
+        sUtils.selectObjects([link], clear=True, active=0)
         bpy.ops.object.mode_set(mode='EDIT')
         editbone = link.data.edit_bones[0]
         #oldaxis = editbone.vector

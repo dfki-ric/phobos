@@ -1,6 +1,7 @@
 
 import os
 from phobos import defs
+from phobos.logging import log
 
 indent = '  '
 xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
