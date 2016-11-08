@@ -26,9 +26,62 @@ Created on 6 Jan 2014
 @author: Kai von Szadkowski
 """
 
+import os
+import glob
+import yaml
 import bpy
-from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty, StringProperty
+import bgl
+from bpy.props import IntProperty, FloatProperty, BoolProperty, EnumProperty, StringProperty, CollectionProperty
 from . import defs
+from phobos.operators.io import loadModelsAndPoses
+
+
+class Models_Poses_UIList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        self.use_filter_show = False
+        im = item
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        if im.name in modelsPosesColl.keys():
+            coll_item = modelsPosesColl[im.name]
+            if coll_item.type == "robot_name":
+                layout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
+            else:
+                sLayout = layout.split(0.1)
+                sLayout.label(text="")
+                if im.filepath != '':
+                    sLayout.label(text=coll_item.label, translate=False,icon_value=icon)
+                else:
+                    sLayout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
+
+    def filter_items(self, context, data, propname):
+        images = getattr(data, propname)
+        flt_flags = [self.bitflag_filter_item] * len(images)
+
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+
+        # Filter items. Only show robots. Hide all other images
+        for idx, im in enumerate(images):
+            if im.name in modelsPosesColl.keys():
+                curr_model = modelsPosesColl[im.name]
+                if curr_model.hide and not (curr_model.type == "robot_name"):
+                    flt_flags[idx] &= ~self.bitflag_filter_item
+            else:
+                flt_flags[idx] &= ~self.bitflag_filter_item
+
+        helper_funcs = bpy.types.UI_UL_list
+        # Reorder by name
+        flt_neworder = []
+        noPreviewIndex = 0
+        for im in images:
+            newIndex = 0
+            if im.name in modelsPosesColl.keys():
+                newIndex = modelsPosesColl.keys().index(im.name)
+            else:
+                newIndex = len(modelsPosesColl) + noPreviewIndex
+                noPreviewIndex += 1
+            flt_neworder.append(newIndex)
+
+        return flt_flags, flt_neworder
 
 
 def register():
@@ -76,7 +129,12 @@ def register():
     bpy.types.World.structureExport = BoolProperty(name="structureExport", default=False, description="Create structured subfolders")
     bpy.types.World.sceneName = StringProperty(name="sceneName")
 
-    #bpy.types.World.gravity = FloatVectorProperty(name = "gravity")
+    bpy.utils.register_class(Models_Poses_UIList)
+
+    bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(name="Index of current pose", default=0,update=showPreview)
+    bpy.types.Scene.preview_visible = bpy.props.BoolProperty(name="Is the draw preview operator running", default=False)
+    bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(name="Should we redraw the preview_template", default=False)
+    loadModelsAndPoses()
 
 
 def unregister():
@@ -96,7 +154,8 @@ class MessageOperator(bpy.types.Operator):
 
     def invoke(self, context, event):
         wm = context.window_manager
-        return wm.invoke_popup(self, width=400, height=200)
+        result = wm.invoke_popup(self, width=400, height=200)
+        return result
 
     def draw(self, context):
         self.layout.label("Phobos")
@@ -114,6 +173,9 @@ class OkOperator(bpy.types.Operator):
 
     def execute(self, context):
         return {'FINISHED'}
+
+def showPreview(self,value):
+    bpy.ops.scene.change_preview()
 
 
 def updateExportOptions(self, context):
@@ -200,7 +262,6 @@ def useDefaultLayers(self, context):
 #                 obj.data.materials.pop(0, update_data=True)
 #     bpy.data.scenes[0].update()
 
-
 class PhobosPanel(bpy.types.Panel):
     """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_PT_PHOBOS"
@@ -268,10 +329,11 @@ class PhobosScenePanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
-    #bl_context = ''
+
 
     def draw_header(self, context):
         self.layout.label(icon='SCENE_DATA')
+
 
     def draw(self, context):
         layout = self.layout
@@ -279,9 +341,46 @@ class PhobosScenePanel(bpy.types.Panel):
         iinlayout = layout.split()
         ic1 = iinlayout.column(align=True)
         ic1.operator("object.phobos_add_heightmap", text="Create Heightmap")
-        # FIXME: this would be a killer feature
-        #ic2 = iinlayout.column(align=True)
-        #ic2.template_preview(bpy.data.textures["da"])
+
+        layout.label(text="Robotmodels and Poses", icon="MOD_ARMATURE")
+        #layout.operator("scene.load_backed_models_operator", text="Load Models", icon="LIBRARY_DATA_DIRECT")
+        #layout.operator("scene.reload_models_and_poses_operator", text="Reload Models and Poses", icon="LIBRARY_DATA_DIRECT")
+
+
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        for model_pose in modelsPosesColl:
+            if not model_pose.name in bpy.data.images.keys():
+                if model_pose.type == 'robot_name':
+                    bpy.data.images.new(model_pose.name,0,0)
+                elif 'robot_pose':
+                    if model_pose.preview != '':
+                        if os.path.split(model_pose.preview)[-1] in bpy.data.images.keys():
+                            bpy.data.images[os.path.split(model_pose.preview)[-1]].reload()
+                        im = bpy.data.images.load(model_pose.preview)
+                        model_pose.name  = im.name
+                        #im.name = model_pose.name
+                        im.gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
+                    else:
+                        print(model_pose.name)
+                        bpy.data.images.new(model_pose.name, 0, 0)
+
+        layout.template_list("Models_Poses_UIList", "",  bpy.data, "images", context.scene, "active_ModelPose")
+
+#        layout.template_preview(bpy.data.textures[context.scene.active_bakeModel])
+#        layout.template_preview(preview_mat.active_texture,
+#                                parent=preview_mat,
+#                                slot=preview_mat.texture_slots[preview_mat.active_texture_index],
+#                                preview_id="phobos_model_preview")
+
+        layout.operator('scene.phobos_import_selected_lib_robot', text="Import Selected Robot Bake", icon="COPYDOWN")
+        pinlayout = layout.split()
+        pc1 = pinlayout.column(align=True)
+        pc1.operator('object.store_pose2', text='Store Current Pose')
+        pc2 = pinlayout.column(align=True)
+        pc2.operator('object.load_pose2', text='Load Selected Pose')
+
+        layout.operator("object.phobos_export_current_poses", text="Export Selected Pose", icon="OUTLINER_OB_ARMATURE")
+        layout.operator("object.phobos_export_all_poses", text="Export All Poses", icon="OUTLINER_OB_ARMATURE")
 
 
 class PhobosModelPanel(bpy.types.Panel):
@@ -460,11 +559,10 @@ class PhobosExportPanel(bpy.types.Panel):
         ec2 = layout.column(align=True)
         ec2.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
 
-        layout.separator()
-        layout.label(text="Baking")
-        layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
-        layout.operator("object.phobos_create_robot_instance", text="Create Robot Lib Instance", icon="RENDERLAYERS")
-        layout.operator('object.phobos_import_lib_robot', text="Import Robot Bake", icon="COPYDOWN")
+#        layout.separator()
+#        layout.label(text="Baking")
+#        layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
+#        layout.operator("object.phobos_create_robot_instance", text="Create Robot Lib Instance", icon="RENDERLAYERS")
 
         layout.separator()
 
@@ -498,7 +596,6 @@ class PhobosObjectPanel(bpy.types.Panel):
         row_type.prop(bpy.context.active_object, 'phobostype')
 
         box_props = layout.box()
-
         try:
             for prop in defs.type_properties[bpy.context.active_object.phobostype]:
                 #box_props.label(prop)

@@ -42,7 +42,7 @@ import yaml
 import math
 import bpy
 from bpy.types import AddonPreferences
-from bpy.props import StringProperty, EnumProperty, BoolProperty
+from bpy.props import StringProperty, EnumProperty, BoolProperty, CollectionProperty
 from phobos.logging import *
 
 
@@ -221,6 +221,18 @@ def __evaluateString(s):
     return s
 
 
+class ModelPoseProp(bpy.types.PropertyGroup):
+    robot_name = bpy.props.StringProperty()
+    label = bpy.props.StringProperty()
+    hide = bpy.props.BoolProperty(default = True)
+    parent = bpy.props.StringProperty()
+    icon =  bpy.props.StringProperty()
+    type  = bpy.props.StringProperty()
+    path = bpy.props.StringProperty()
+    model_file = bpy.props.StringProperty()
+    preview = bpy.props.StringProperty()
+
+
 class PhobosPrefs(AddonPreferences):
     bl_idname = __package__
 
@@ -246,6 +258,20 @@ class PhobosPrefs(AddonPreferences):
         default=True
     )
 
+    modelfolder = StringProperty(
+        name="modelfolder",
+        subtype="DIR_PATH",
+        default=".",
+    )
+
+    exportpluginsfolder = StringProperty(
+        name='exportpluginsfolder',
+        subtype='DIR_PATH',
+        default='.'
+    )
+
+    models_poses = bpy.props.CollectionProperty(type=ModelPoseProp)
+
     def draw(self, context):
         layout = self.layout
         layout.label(text="Logging Settings")
@@ -253,9 +279,15 @@ class PhobosPrefs(AddonPreferences):
         layout.prop(self, "logtofile", text="write to logfile")
         layout.prop(self, "logtoterminal", text="only display in terminal")
         layout.prop(self, "loglevel", text="log level")
+        layout.separator()
+        layout.label(text="Folders")
+        layout.prop(self, "modelfolder", text="model folder")
+        layout.prop(self, 'pluginspath', text="Path for plugins")
+
 
 def register():
     print("Registering " + __name__)
+    bpy.utils.register_class(ModelPoseProp)
     bpy.utils.register_class(PhobosPrefs)
 
 def unregister():

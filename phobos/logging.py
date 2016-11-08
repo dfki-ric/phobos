@@ -7,7 +7,7 @@
     :synopsis: TODO: This module offers a simple way to log messages from phobos and uses blender integrated tools
     to display them.
 
-.. moduleauthor:: Ole Schwiegert
+.. moduleauthor:: Ole Schwiegert, Kai von Szadkowski
 
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 

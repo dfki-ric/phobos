@@ -6,7 +6,7 @@
     :platform: Unix, Windows, Mac
     :synopsis: TODO: INSERT TEXT HERE
 
-..moduleauthor:: Kai von Szadowski, Ole Schwiegert
+..moduleauthor:: Kai von Szadowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Sebastian Klemp
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
