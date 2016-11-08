@@ -2,6 +2,12 @@
 # coding=utf-8
 
 """
+.. module:: phobos.export.entities
+    :platform: Unix, Windows, Mac
+    :synopsis: TODO: INSERT TEXT HERE
+
+.. moduleauthor:: Kai von Szadowski
+
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -19,12 +25,206 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
-File importer.py
+File meshes.py
 
-Created on 28 Feb 2014
-
-@author: Kai von Szadkowski
+Created on 13 Feb 2014
 """
+
+def writeURDFGeometry(output, element):
+    """This functions writes the URDF geometry for a given element at the end of a given String.
+
+    :param output: The String to append the URDF output string on.
+    :type output: str
+    :param element: A certain element to parse into URDF.
+    :type element: dict
+    :return: str -- The extended String
+
+    """
+    geometry = element['geometry']
+    try:
+        output.append(indent * 4 + '<geometry>\n')
+        if geometry['type'] == 'box':
+            output.append(xmlline(5, 'box', ['size'], [l2str(geometry['size'])]))
+        elif geometry['type'] == "cylinder":
+            output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))
+        elif geometry['type'] == "sphere":
+            output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
+        elif geometry['type'] == 'mesh':
+            if bpy.data.worlds[0].structureExport:
+                output.append(xmlline(5, 'mesh', ['filename', 'scale'], ["../" + geometry['filename'], l2str(geometry['scale'])]))
+            else:
+                output.append(xmlline(5, 'mesh', ['filename', 'scale'], [geometry['filename'], l2str(geometry['scale'])]))
+        elif geometry['type'] == 'capsule':
+            output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))  # FIXME: real capsules here!
+        else:
+            raise TypeError("Unknown geometry type")
+        output.append(indent * 4 + '</geometry>\n')
+    except (KeyError, TypeError) as err:
+        log("Misdefined geometry in element " + element['name'] + " " + str(err), "ERROR", "writeURDFGeometry")
+
+
+def exportModelToURDF(model, filepath):
+    """This functions writes the URDF of a given model into a file at the given filepath.
+    An existing file with this path will be overwritten.
+
+    :param model: Dictionary of the model to be exported as URDF.
+    :type model: dict
+    :param filepath: The path of the exported file.
+    :type filepath: str
+
+    """
+    log("Export URDF to " + filepath, "INFO", "exportModelToURDF")
+
+    stored_element_order = None
+    order_file_name = model['modelname'] + '_urdf_order'
+    if order_file_name in bpy.data.texts:
+        stored_element_order = yaml.load(bpy.data.texts[order_file_name].as_string())
+
+    output = [xmlHeader, indent + '<robot name="' + model['modelname'] + '">\n\n']
+    # export link information
+    if stored_element_order is None:
+        sorted_link_keys = get_sorted_keys(model['links'])
+    else:
+        sorted_link_keys = stored_element_order['links']
+        new_keys = []
+        for link_key in model['links']:
+            if link_key not in sorted_link_keys:
+                new_keys.append(link_key)
+        sorted_link_keys += sort_urdf_elements(new_keys)
+    for l in sorted_link_keys:
+        if l in model['links']:
+            link = model['links'][l]
+            output.append(indent * 2 + '<link name="' + l + '">\n')
+            if 'mass' in link['inertial'] and 'inertia' in link['inertial']:
+                output.append(indent * 3 + '<inertial>\n')
+                if 'pose' in link['inertial']:
+                    output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['inertial']['pose']['translation']),
+                                                                        l2str(link['inertial']['pose']['rotation_euler'])]))
+                output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
+                output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'],
+                                      [str(i) for i in link['inertial']['inertia']]))
+                output.append(indent * 3 + '</inertial>\n')
+            # visual object
+            if link['visual']:
+                if stored_element_order is None:
+                    sorted_visual_keys = get_sorted_keys(link['visual'])
+                else:
+                    sorted_visual_keys = stored_element_order['viscol'][link['name']]['visual']
+                    new_keys = []
+                    for vis_key in link['visual']:
+                        if vis_key not in sorted_visual_keys:
+                            new_keys.append(vis_key)
+                    sorted_visual_keys += sort_urdf_elements(new_keys)
+                for v in sorted_visual_keys:
+                    if v in link['visual']:
+                        vis = link['visual'][v]
+                        output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
+                        output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
+                                              [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
+                        writeURDFGeometry(output, vis)
+                        if 'material' in vis:
+                            # FIXME: change back to 1 when implemented in urdfloader
+                            if model['materials'][vis['material']]['users'] == 0:
+                                mat = model['materials'][vis['material']]
+                                output.append(indent * 4 + '<material name="' + mat['name'] + '">\n')
+                                color = mat['diffuseColor']
+                                output.append(
+                                    indent * 5 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
+                                        mat["transparency"]) + '"/>\n')
+                                if 'diffuseTexture' in mat:
+                                    output.append(indent * 5 + '<texture filename="' + mat['diffuseTexture'] + '"/>\n')
+                                output.append(indent * 4 + '</material>\n')
+                            else:
+                                output.append(indent * 4 + '<material name="' + vis["material"] + '"/>\n')
+                        output.append(indent * 3 + '</visual>\n')
+            # collision object
+            if link['collision']:
+                if stored_element_order is None:
+                    sorted_collision_keys = get_sorted_keys(link['collision'])
+                else:
+                    sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
+                    new_keys = []
+                    for col_key in link['collision']:
+                        if col_key not in sorted_collision_keys:
+                            new_keys.append(col_key)
+                    sorted_collision_keys += sort_urdf_elements(new_keys)
+                for c in sorted_collision_keys:
+                    if c in link['collision']:
+                        col = link['collision'][c]
+                        output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
+                        output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
+                                              [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
+                        writeURDFGeometry(output, col)
+                        output.append(indent * 3 + '</collision>\n')
+            output.append(indent * 2 + '</link>\n\n')
+    # export joint information
+    missing_values = False
+    if stored_element_order is None:
+        sorted_joint_keys = get_sorted_keys(model['joints'])
+    else:
+        sorted_joint_keys = stored_element_order['joints']
+        new_keys = []
+        for joint_key in model['joints']:
+            if joint_key not in sorted_joint_keys:
+                new_keys.append(joint_key)
+        sorted_joint_keys += sort_urdf_elements(new_keys)
+    for j in sorted_joint_keys:
+        if j in model['joints']:
+            joint = model['joints'][j]
+            output.append(indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n')
+            child = model['links'][joint["child"]]
+            output.append(xmlline(3, 'origin', ['xyz', 'rpy'],
+                                  [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])]))
+            output.append(indent * 3 + '<parent link="' + joint["parent"] + '"/>\n')
+            output.append(indent * 3 + '<child link="' + joint["child"] + '"/>\n')
+            if 'axis' in joint:
+                output.append(indent * 3 + '<axis xyz="' + l2str(joint['axis']) + '"/>\n')
+            if 'limits' in joint:
+                for limit_value in ['effort', 'velocity']:
+                    if limit_value not in joint['limits']:
+                        log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
+                        missing_values = True
+                used_limits = []
+                for limit in ['lower', 'upper', 'effort', 'velocity']:
+                    if limit in joint['limits']:
+                        used_limits.append(limit)
+                output.append(
+                    xmlline(3, 'limit', used_limits, [joint['limits'][p] for p in used_limits]))
+            elif joint['type'] in ['revolute', 'prismatic']:
+                log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
+                missing_values = True
+            output.append(indent * 2 + '</joint>\n\n')
+    # export material information
+    if missing_values:
+        log("Created URDF is invalid due to missing values!")
+        bpy.ops.tools.phobos_warning_dialog('INVOKE_DEFAULT', message="Created URDF is invalid due to missing values!")
+    if stored_element_order is None:
+        sorted_material_keys = get_sorted_keys(model['materials'])
+    else:
+        sorted_material_keys = stored_element_order['materials']
+        new_keys = []
+        for material_key in model['materials']:
+            if material_key not in sorted_material_keys:
+                new_keys.append(material_key)
+        sorted_material_keys += sort_urdf_elements(new_keys)
+    for m in sorted_material_keys:
+        if m in model['materials']:
+            if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
+                output.append(indent * 2 + '<material name="' + m + '">\n')
+                color = model['materials'][m]['diffuseColor']
+                transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
+                output.append(indent * 3 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
+                    1.0 - transparency) + '"/>\n')
+                if 'diffuseTexture' in model['materials'][m]:
+                    output.append(indent * 3 + '<texture filename="' + model['materials'][m]['diffuseTexture'] + '"/>\n')
+                output.append(indent * 2 + '</material>\n\n')
+    # finish the export
+    output.append(indent + '</robot>\n')
+    with open(filepath, 'w') as outputfile:
+        outputfile.write(''.join(output))
+    # FIXME: different joint transformations needed for fixed joints
+    log("Writing model data to " + filepath, "INFO", "exportModelToURDF")
+
 
 import bpy
 import mathutils
@@ -529,215 +729,6 @@ class RobotModelParser():
 
                     selectionUtils.selectObjects([geom, parentLink], True, 1)
 
-    def attachSensor(self, sensor):
-        """This function attaches a given sensor to its parent link.
-
-        :param sensor: The sensor you want to attach to its parent link.
-        :type sensor: dict
-
-        """
-        bpy.context.scene.layers = blenderUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
-        #try:
-        if 'pose' in sensor:
-            urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
-            urdf_geom_rot = mathutils.Euler(tuple(sensor['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
-        else:
-            urdf_geom_loc = mathutils.Matrix.Identity(4)
-            urdf_geom_rot = mathutils.Matrix.Identity(4)
-        sensorobj = bpy.data.objects[sensor['name']]
-        if 'link' in sensor:
-            parentLink = selectionUtils.getObjectByNameAndType(sensor['link'], 'link')
-            #parentLink = bpy.data.objects['link_' + sensor['link']]
-            selectionUtils.selectObjects([sensorobj, parentLink], True, 1)
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
-        else:
-            #TODO: what?
-            pass
-        sensorobj.matrix_local = urdf_geom_loc * urdf_geom_rot
-        #except KeyError:
-        #    log("inconsistent data on sensor: "+ sensor['name'], "ERROR")
-
-
-    def createGeometry(self, viscol, geomsrc):
-        """This function takes a visual or collision object and creates the geometry for it.
-
-        :param viscol: The visual/collision object you want to create the geometry for.
-        :type viscol: dict
-        :param geomsrc: The new viscols phobostype.
-        :type geomsrc: str
-
-        """
-        #TODO: Write doc
-        newgeom = None
-        if viscol['geometry'] is not {}:
-            dimensions = None
-            bpy.ops.object.select_all(action='DESELECT')
-            geom = viscol['geometry']
-            geomtype = geom['type']
-            # create the Blender object
-            # tag all objects
-            for obj in bpy.data.objects:
-                obj['phobosTag'] = True
-            if geomtype == 'mesh':
-                if hasattr(self, 'zipped') and self.zipped:
-                    if not os.path.isdir(os.path.join(self.tmp_path, tmp_dir_name)):
-                        os.mkdir(os.path.join(self.tmp_path, tmp_dir_name))
-                    archive = zipfile.ZipFile(self.filepath)
-                    archive.extract(geom['filename'], path=os.path.join(self.tmp_path, tmp_dir_name))
-                    geom_path = os.path.join(os.path.abspath(os.path.join(self.tmp_path, tmp_dir_name)), geom['filename'])
-                else:
-                    geom_path = os.path.join(self.path, geom['filename'])
-                # Remove 'urdf/package://{package_name}' to workaround the lack
-                # of rospack here. This supposes that the urdf file is in the
-                # urdf folder and that the meshes are in the meshes folder at
-                # the same level as the urdf folder.
-                if 'package://' in geom_path:
-                   geom_path = re.sub(r'(.*)urdf/package://([^/]+)/(.*)',
-                                      '\\1\\3',
-                                      geom_path)
-
-                bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes[geomsrc])
-                meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
-                if not os.path.isfile(geom_path):
-                    log(geom_path + " is no file. Object " + self.praefixNames(viscol['name'], geomsrc) + " will have empty mesh!", "ERROR", "importer:createGeometry")
-                    bpy.data.meshes.new(meshname)
-                if meshname in bpy.data.meshes:
-                    bpy.ops.object.add(type='MESH')
-                    newgeom = bpy.context.object
-                    newgeom.data = bpy.data.meshes[meshname]
-                else:
-                    filetype = geom['filename'].split('.')[-1]
-                    if filetype == 'obj' or filetype == 'OBJ':
-                        bpy.ops.import_scene.obj(filepath=geom_path)
-                    elif filetype == 'stl' or filetype == 'STL':
-                        bpy.ops.import_mesh.stl(filepath=geom_path)
-                    # hack for test:
-                    elif filetype == 'bobj' or filetype == 'BOBJ':
-                        import_bobj(geom_path)
-                        #filename = geom['filename'].split('.')[0] + '.obj'
-                        #try:
-                        #    bpy.ops.import_scene.obj(filepath=os.path.join(self.path, filename))
-                        #except:
-                        #    print('ERROR: Missing object.')
-                        #    return
-                    # find the newly imported obj
-                    for obj in bpy.data.objects:
-                        if 'phobosTag' not in obj:
-                            newgeom = obj
-                            #with obj file import, blender only turns the object, not the vertices,
-                            #leaving a rotation in the matrix_basis, which we here get rid of
-                            if filetype == 'obj':
-                                bpy.ops.object.select_all(action='DESELECT')
-                                newgeom.select = True
-                                bpy.ops.object.transform_apply(rotation=True)
-                #print(viscol)
-                            newgeom['filename'] = geom['filename']
-                #newgeom.select = True
-                #if 'scale' in geom:
-                #    newgeom.scale = geom['scale']
-                #bpy.ops.object.transform_apply(scale=True)
-                    for obj in bpy.data.objects:
-                        if 'phobosTag' in obj:
-                            del obj['phobosTag']
-            elif geomtype == 'box':
-                dimensions = geom['size']
-            elif geomtype == 'cylinder':
-                dimensions = (geom['radius'], geom['length'])
-            elif geomtype == 'sphere':
-                dimensions = geom['radius']
-            else:
-                log("Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.', "ERROR")
-            if dimensions:  # if a standard primitive type is found, create the object
-                newgeom = blenderUtils.createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
-                newgeom.select = True
-                bpy.ops.object.transform_apply(scale=True)
-            if newgeom is not None:
-                newgeom.phobostype = geomsrc
-                newgeom['geometry/type'] = geomtype
-                if geomsrc == 'visual':
-                    try:
-                        if 'name' in viscol['material']:
-                            newgeom.data.materials.append(bpy.data.materials[viscol['material']['name']])
-                        else:
-                            newgeom.data.materials.append(bpy.data.materials[viscol['material']])
-                    except KeyError:
-                        log('No material for obj', viscol['name'])
-            #FIXME: place empty coordinate system and return...what? Error handling of file import!
-        for prop in viscol:
-            if prop.startswith('$'):
-                for tag in viscol[prop]:
-                    newgeom[prop[1:]+'/'+tag] = viscol[prop][tag]
-        newgeom.name = self.praefixNames(viscol['name'], geomsrc)
-        newgeom[geomsrc+"/name"] = viscol['name']
-        return newgeom
-
-    def createInertial(self, name, inertial):
-        """This function creates the blender representation of a given intertial.
-
-        :param name: The intertials name.
-        :param type: str
-        :param inertial: The intertial you want to create in blender form.
-        :type intertial: dict
-        :return: bpy_types.Object -- the newly created blender inertial object.
-
-        """
-        bpy.ops.object.select_all(action='DESELECT')
-        inert = blenderUtils.createPrimitive('inertial_'+name, 'box', [0.04, 0.04, 0.04], player='inertial')
-        inert.select = True
-        bpy.ops.object.transform_apply(scale=True)
-        for prop in inertial:
-            if prop not in ['pose'] and inertial[prop] is not None:
-                if not prop.startswith('$'):
-                    inert[prop] = inertial[prop]
-                else:
-                    for tag in inertial[prop]:
-                        inert[prop[1:]+'/'+tag] = inertial[prop][tag]
-        inert.phobostype = 'inertial'
-        return inert
-
-    def createLink(self, link):
-        """This function creates the blender representation of a given link
-
-        :param link: The link you want to create a representation of.
-        :type link: dict
-        :return: bpy_types.Object -- the newly created blender link object.
-
-        """
-        bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
-        #create base object ( =armature)
-        bpy.ops.object.select_all(action='DESELECT')
-        #bpy.ops.view3d.snap_cursor_to_center()
-        bpy.ops.object.armature_add(layers=blenderUtils.defLayers(0))
-        newlink = bpy.context.active_object #print(bpy.context.object) #print(bpy.context.scene.objects.active) #bpy.context.selected_objects[0]
-        newlink["link/name"] = link['name']
-        newlink.name = self.praefixNames(link['name'], "link")
-        #newlink.location = (0.0, 0.0, 0.0)
-        newlink.location = link['pose']['translation']
-        newlink.scale = (0.3, 0.3, 0.3) #TODO: make this depend on the largest visual or collision object
-        bpy.ops.object.transform_apply(scale=True)
-        newlink.phobostype = 'link'
-        if newlink.name != self.praefixNames(link['name'], "link"):
-            log("Warning, name conflict!")
-        # place inertial
-        if 'inertial' in link:
-            self.createInertial(link['name'], link['inertial'])
-        # place visual
-        if 'visual' in link:
-            for v in link['visual']:
-                visual = link['visual'][v]
-                if 'geometry' in visual:
-                    self.createGeometry(visual, 'visual')
-        # place collision
-        if 'collision' in link:
-            for c in link['collision']:
-                collision = link['collision'][c]
-                if 'geometry' in collision:
-                    self.createGeometry(collision, 'collision')
-        for prop in link:
-            if prop.startswith('$'):
-                for tag in link[prop]:
-                    newlink['link/'+prop[1:]+'/'+tag] = link[prop][tag]
-        return newlink
 
     def _get_object(self, link_name):
         """
@@ -780,101 +771,6 @@ class RobotModelParser():
                 offset_matrix = mathutils.Matrix.Rotation(angle, 4, axis)
                 pose_bone.matrix = offset_matrix * bone_matrix
 
-
-    def createJoint(self, joint):
-        """This function creates the blender representation of a given joint.
-
-        :param joint: The joint you want to create a blender object from.
-        :type joint: dict
-
-        """
-        bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
-        link = bpy.data.objects[self.praefixNames(joint['child'], "link")]
-        # add joint information
-        if 'name' in joint:
-            link['joint/name'] = joint['name']
-
-        # link['joint/type'] = joint['type']
-
-        # set axis
-        selectionUtils.selectObjects([link], clear=True, active=0)
-        bpy.ops.object.mode_set(mode='EDIT')
-        editbone = link.data.edit_bones[0]
-        #oldaxis = editbone.vector
-        length = editbone.length
-        if 'axis' in joint:
-            axis = mathutils.Vector(tuple(joint['axis']))
-            #oldaxis.cross(axis) # rotation axis
-            editbone.tail = editbone.head + axis.normalized() * length
-
-        # add constraints
-        for param in ['effort', 'velocity']:
-            try:
-                if 'limits' in joint:
-                    link['joint/max'+param] = joint['limits'][param]
-            except KeyError:
-                log("Key Error in adding joint constraints for joint", joint['name']) #Todo: more details
-        try:
-            lower = joint['limits']['lower']
-            upper = joint['limits']['upper']
-        except KeyError:
-            lower = 0.0
-            upper = 0.0
-        joints.setJointConstraints(link, joint['type'], lower, upper)
-        for prop in joint:
-            if prop.startswith('$'):
-                for tag in joint[prop]:
-                    link['joint/'+prop[1:]+'/'+tag] = joint[prop][tag]
-
-    def createMotor(self, motor):
-        """This function creates the motor properties in the motors joint object.
-
-        :param motor: The motor you want to create the properties from.
-        :type motor: dict
-
-        """
-        #try:
-        link = bpy.data.objects[self.praefixNames(self.robot['joints'][motor['joint']]['child'], "link")]
-        selectionUtils.selectObjects([link])
-        motor_type = motor['type']
-        if motor_type == 'PID':
-            #print(motor)
-            bpy.ops.object.attach_motor(motortype=motor_type,
-                                        vmax=motor['velocity'],
-                                        taumax=motor['effort'],
-                                        P=motor['p'],
-                                        I=motor['i'],
-                                        D=motor['d'])
-        elif motor_type == 'DC':
-            bpy.ops.object.attach_motor(motortype=motor_type,
-                                        vmax=motor['velocity'],
-                                        taumax=motor['effort'])
-            #for prop in motor:
-            #    if prop != 'joint':
-            #        if not prop.startswith('$'):
-            #            joint['motor/'+prop] = motor[prop]
-            #        else:
-            #            for tag in motor[prop]:
-            #                joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
-        #except KeyError:
-            #print("Joint " + motor['joint'] + " does not exist", "ERROR")
-
-    def createSensor(self, sensor):
-        if 'link' in sensor:
-            reference = [sensor['link']]
-        elif 'joint' in sensor:
-            reference = [sensor['joint']]
-            pass
-        elif 'links' in sensor:
-            reference = sensor['links']
-        elif 'joints' in sensor:
-            reference = sensor['joints']
-        elif 'motors' in sensor:
-            reference = sensor['motors']
-        else:
-            reference = None
-
-        sensors.createSensor(sensor, reference)
 
     def createController(self, controller):
         """This function creates a specified controller.
