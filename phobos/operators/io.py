@@ -26,22 +26,26 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from phobos.logging import startLog, endLog, log
-import phobos.defs as defs
-import phobos.exporter as exporter
-from phobos.export import entity_types
-import phobos.importer as importer
-import phobos.links as links
+import os
+import yaml
 import bpy
 import bgl
-import yaml
-import os
 import glob
-import time
-import phobos.utils.selection as sUtils
-import phobos.robotdictionary as robotdictionary
 from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty, FloatProperty, IntProperty
+
+import phobos.defs as defs
+from phobos.logging import startLog, endLog, log
+import phobos.model.models as models
+import phobos.model.links as links
+import phobos.utils.selection as sUtils
+import phobos.io.entities.urdf as urdf
+import phobos.io.scenes.smurfs as smurfs
+import phobos.io.entities.smurf as smurf
+import phobos.io.scenes.smurfs as smurfs
+from phobos.io.entities import entities
+
+
 
 
 def generateLibEntries(param1, param2): #FIXME: parameter?
@@ -325,7 +329,7 @@ class ExportModelOperator(Operator):
         if root.phobostype != 'link':
             log("Selection includes objects not parented to any model root, please adapt selection.", "ERROR", "ExportModelOperator")
         else:
-            model, objectlist = robotdictionary.buildModelDictionary(root)
+            model, objectlist = models.buildModelDictionary(root)
             if 'smurf' in entity_types:
                 entity_types['smurf'].export(model, objectlist)
             else:
@@ -395,7 +399,7 @@ class ExportCurrentPoseOperator(Operator):
 
         objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
         sUtils.selectObjects([root] + objectlist, clear=True, active=0)
-        robotdictionary.loadPose(selected_robot.robot_name, selected_robot.label)
+        models.loadPose(selected_robot.robot_name, selected_robot.label)
         parameter = self.decimate_ratio
         if self.decimate_type == 'UNSUBDIV':
             parameter = self.decimate_iteration
@@ -459,12 +463,12 @@ class ExportAllPosesOperator(Operator):
         root = sUtils.getRoot(context.selected_objects[0])
         objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
         sUtils.selectObjects(objectlist)
-        poses = robotdictionary.getPoses(root['modelname'])
+        poses = models.getPoses(root['modelname'])
         bpy.context.window_manager.progress_begin(0, len(poses))
         i = 1
         for pose in poses:
             sUtils.selectObjects([root] + objectlist, clear=True, active=0)
-            robotdictionary.loadPose(root['modelname'], pose)
+            models.loadPose(root['modelname'], pose)
             parameter = self.decimate_ratio
             if self.decimate_type == 'UNSUBDIV':
                 parameter = self.decimate_iteration

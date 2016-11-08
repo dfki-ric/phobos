@@ -34,18 +34,17 @@ from datetime import datetime
 import bpy
 import mathutils
 from bpy.types import Operator
-from bpy.props import IntProperty, StringProperty, FloatProperty, BoolProperty, EnumProperty, FloatVectorProperty, \
-    BoolVectorProperty
+from bpy.props import *
 
 import phobos.defs as defs
-import phobos.inertia as inertia
+import phobos.model.inertia as inertia
 import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
-import phobos.joints as joints
-import phobos.sensors as sensors
-import phobos.links as links
+import phobos.model.joints as joints
+import phobos.model.sensors as sensors
+import phobos.model.links as links
 from phobos.logging import startLog, endLog, log
 
 
