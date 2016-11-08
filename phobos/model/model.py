@@ -19,7 +19,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
-File robotdictionary.py
+File model.py
 
 Created on 28 Jul 2014
 
@@ -38,8 +38,11 @@ import yaml
 import bpy
 
 # import from Phobos
-import phobos.joints as joints
-import phobos.inertia as inertia
+import phobos.model.joints as joints
+import phobos.model.inertia as inertia
+import phobos.model.links as links
+import phobos.model.geometries as geometries
+import phobos.model.materials as materials
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
@@ -574,7 +577,7 @@ def loadPose(modelname, posename):
         for obj in sUtils.getObjectsByPhobostypes(['link']):
             if nUtils.getObjectName(obj, 'joint') in pose['joints']:
                 obj.pose.bones['Bone'].rotation_mode = 'XYZ'
-                obj.pose.bones['Bone'].rotation_euler.y = pose['joints'][nUtils.getObjectName(obj, 'joint')]
+                obj.pose.bones['Bone'].rotation_euler.y = float(pose['joints'][nUtils.getObjectName(obj, 'joint')])
         bpy.ops.object.mode_set(mode=prev_mode)
     except KeyError:
         log('No pose with name ' + posename + ' stored for model ' + modelname, 'ERROR', "loadPose")

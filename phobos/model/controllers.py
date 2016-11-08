@@ -29,10 +29,10 @@ Created on 30 Jan 2014
 import bpy
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatProperty
-from . import defs
+from phobos import defs
 from phobos.logging import startLog, endLog, log
-import phobos.utils.blender as blenderUtils
-import phobos.utils.naming as namingUtils
+import phobos.utils.blender as bUtils
+import phobos.utils.naming as nUtils
 
 
 def register():
@@ -88,7 +88,7 @@ class AddControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            blenderUtils.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "phobos_controller", location)
+            bUtils.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "phobos_controller", location)
             bpy.context.scene.objects.active.phobostype = "controller"
             bpy.context.scene.objects.active.name = self.controller_name
             controllers.append(bpy.context.scene.objects.active)
@@ -129,7 +129,7 @@ class AddLegacyControllerOperator(Operator):
             else:
                 objects.append(obj)
         if len(controllers) <= 0:
-            blenderUtils.createPrimitive("controller", "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
+            bUtils.createPrimitive("controller", "sphere", self.controller_scale, defs.layerTypes["sensor"], "controller", location)
             bpy.context.scene.objects.active.phobostype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
@@ -142,7 +142,7 @@ class AddLegacyControllerOperator(Operator):
             i = 1
             for obj in objects:
                 if obj.phobostype == "link":
-                    ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = namingUtils.getObjectName(obj)
+                    ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = nUtils.getObjectName(obj)
                     i += 1
         log("Added joints to (new) controller(s).", "INFO")
         #for prop in defs.controllerProperties[self.controller_type]:

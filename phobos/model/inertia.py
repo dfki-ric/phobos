@@ -2,7 +2,7 @@
 # coding=utf-8
 
 """
-.. module:: phobos.exporter
+.. module:: phobos.model.inertia
     :platform: Unix, Windows, Mac
     :synopsis: A module providing functions to calculate and handle inertia data.
 
@@ -50,6 +50,31 @@ def unregister():
     """This function is called when this module is unregistered from blender.
     """
     print("Unregistering inertia...")
+
+
+def createInertial(self, name, inertial):
+    """This function creates the blender representation of a given intertial.
+
+    :param name: The intertials name.
+    :param type: str
+    :param inertial: The intertial you want to create in blender form.
+    :type intertial: dict
+    :return: bpy_types.Object -- the newly created blender inertial object.
+
+    """
+    bpy.ops.object.select_all(action='DESELECT')
+    inert = bUtils.createPrimitive('inertial_'+name, 'box', [0.04, 0.04, 0.04], player='inertial')
+    inert.select = True
+    bpy.ops.object.transform_apply(scale=True)
+    for prop in inertial:
+        if prop not in ['pose'] and inertial[prop] is not None:
+            if not prop.startswith('$'):
+                inert[prop] = inertial[prop]
+            else:
+                for tag in inertial[prop]:
+                    inert[prop[1:]+'/'+tag] = inertial[prop][tag]
+    inert.phobostype = 'inertial'
+    return inert
 
 
 def calculateMassOfLink(link):

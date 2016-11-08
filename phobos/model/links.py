@@ -52,6 +52,51 @@ def unregister():
     print("Unregistering links...")
 
 
+def createLink(self, link):
+        """This function creates the blender representation of a given link
+
+        :param link: The link you want to create a representation of.
+        :type link: dict
+        :return: bpy_types.Object -- the newly created blender link object.
+
+        """
+        bpy.context.scene.layers = blenderUtils.defLayers(defs.layerTypes['link'])
+        #create base object ( =armature)
+        bpy.ops.object.select_all(action='DESELECT')
+        #bpy.ops.view3d.snap_cursor_to_center()
+        bpy.ops.object.armature_add(layers=blenderUtils.defLayers(0))
+        newlink = bpy.context.active_object #print(bpy.context.object) #print(bpy.context.scene.objects.active) #bpy.context.selected_objects[0]
+        newlink["link/name"] = link['name']
+        newlink.name = self.praefixNames(link['name'], "link")
+        #newlink.location = (0.0, 0.0, 0.0)
+        newlink.location = link['pose']['translation']
+        newlink.scale = (0.3, 0.3, 0.3) #TODO: make this depend on the largest visual or collision object
+        bpy.ops.object.transform_apply(scale=True)
+        newlink.phobostype = 'link'
+        if newlink.name != self.praefixNames(link['name'], "link"):
+            log("Warning, name conflict!")
+        # place inertial
+        if 'inertial' in link:
+            self.createInertial(link['name'], link['inertial'])
+        # place visual
+        if 'visual' in link:
+            for v in link['visual']:
+                visual = link['visual'][v]
+                if 'geometry' in visual:
+                    self.createGeometry(visual, 'visual')
+        # place collision
+        if 'collision' in link:
+            for c in link['collision']:
+                collision = link['collision'][c]
+                if 'geometry' in collision:
+                    self.createGeometry(collision, 'collision')
+        for prop in link:
+            if prop.startswith('$'):
+                for tag in link[prop]:
+                    newlink['link/'+prop[1:]+'/'+tag] = link[prop][tag]
+        return newlink
+
+
 def createLink(scale, position=None, orientation=None, name=''):
     """Creates an empty link (bone) at the current 3D cursor position.
 
@@ -87,19 +132,19 @@ def createLink(scale, position=None, orientation=None, name=''):
 def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, namepartindices=[], separator='_', prefix='link'):
     """Derives a link from an object that defines a joint through its position, orientation and parent-child relationships.
 
-    :param obj: The object you want to derive your link from.
+    :param obj: The object to derive a link from.
     :type obj: bpy_types.Object
-    :param scale: The scale you want to apply to the link.
+    :param scale: The scale to apply to the link.
     :type scale: float
-    :param parenting: Whether you want to automate the parenting of the new link or not.
+    :param parenting: Whether to automate the parenting of the new link or not.
     :type parenting: bool.
-    :param parentobjects: Whether you want to parent all the objects to the new link or not.
+    :param parentobjects: Whether to parent all the objects to the new link or not.
     :type parentobjects: bool.
     :param namepartindices: Parts of the objects name you want to reuse in the links name.
     :type namepartindices: list with two elements.
-    :param separator: The separator you want to use to separate the links name with. Its '_' per default
+    :param separator: The separator to use to separate the links name with. Its '_' per default
     :type separator: str
-    :param prefix: The prefix you want to use for the new links name. Its 'link' per default.
+    :param prefix: The prefix to use for the new links name. Its 'link' per default.
     :type prefix: str
 
     """
@@ -119,7 +164,7 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
     if tmpname == namingUtils.getObjectName(obj):
         obj.name += '*'
     link = createLink(scale, obj.matrix_world.to_translation(), obj.matrix_world.to_euler(), tmpname)
-    if parenting:
+    if parenting and obj.parent:
         if obj.parent:
             selectionUtils.selectObjects([link, obj.parent], True, 1)
             if obj.parent.phobostype == 'link':
@@ -134,18 +179,3 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
             bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
             selectionUtils.selectObjects([child, link], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
-
-
-
-
-
-# TODO: evaluate the parenting method below
-#def deriveLinkFromVisual():
-#    """Derives a link from a currently-selected, visual object, both unparented or parented to the parent joint."""
-#    visual = bpy.scene.active_object
-#    link = bpy.ops.object.empty_add(type='ARROWS')
-#    link.matrix_world = visual.matrix_world
-#    if obj.parent:
-#        link.parent = visual.parent
-#    obj.parent = link
-#    return link

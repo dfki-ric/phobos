@@ -29,7 +29,7 @@ Created on 6 Jan 2014
 
 import bpy
 import mathutils
-from . import defs
+from phobos import defs
 import phobos.utils.blender as blenderUtils
 import phobos.utils.selection as selectionUtils
 import phobos.utils.naming as nameUtils
@@ -48,6 +48,53 @@ def unregister():
 
     """
     print("Unregistering sensors...")
+
+
+def createSensor(self, sensor):
+    if 'link' in sensor:
+        reference = [sensor['link']]
+    elif 'joint' in sensor:
+        reference = [sensor['joint']]
+        pass
+    elif 'links' in sensor:
+        reference = sensor['links']
+    elif 'joints' in sensor:
+        reference = sensor['joints']
+    elif 'motors' in sensor:
+        reference = sensor['motors']
+    else:
+        reference = None
+
+    sensors.createSensor(sensor, reference)
+
+
+def attachSensor(self, sensor):
+    """This function attaches a given sensor to its parent link.
+
+    :param sensor: The sensor you want to attach to its parent link.
+    :type sensor: dict
+
+    """
+    bpy.context.scene.layers = blenderUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
+    #try:
+    if 'pose' in sensor:
+        urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
+        urdf_geom_rot = mathutils.Euler(tuple(sensor['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+    else:
+        urdf_geom_loc = mathutils.Matrix.Identity(4)
+        urdf_geom_rot = mathutils.Matrix.Identity(4)
+    sensorobj = bpy.data.objects[sensor['name']]
+    if 'link' in sensor:
+        parentLink = selectionUtils.getObjectByNameAndType(sensor['link'], 'link')
+        #parentLink = bpy.data.objects['link_' + sensor['link']]
+        selectionUtils.selectObjects([sensorobj, parentLink], True, 1)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    else:
+        #TODO: what?
+        pass
+    sensorobj.matrix_local = urdf_geom_loc * urdf_geom_rot
+    #except KeyError:
+    #    log("inconsistent data on sensor: "+ sensor['name'], "ERROR")
 
 
 def cameraRotLock(object):

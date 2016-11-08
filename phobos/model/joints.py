@@ -32,8 +32,11 @@ Created on 7 Jan 2014
 
 import bpy
 import mathutils
+from phobos import defs
 from phobos.logging import log
-import phobos.utils.naming as namingUtils
+import phobos.utils.blender as bUtils
+import phobos.utils.naming as nUtils
+import phobos.utils.selection as sUtils
 
 
 def register():
@@ -48,6 +51,86 @@ def unregister():
 
     """
     print("Unregistering joints...")
+
+
+def createMotor(self, motor):
+    """This function creates the motor properties in the motors joint object.
+
+    :param motor: The motor you want to create the properties from.
+    :type motor: dict
+
+    """
+    #try:
+    link = bpy.data.objects[self.praefixNames(self.robot['joints'][motor['joint']]['child'], "link")]
+    sUtils.selectObjects([link])
+    motor_type = motor['type']
+    if motor_type == 'PID':
+        #print(motor)
+        bpy.ops.object.attach_motor(motortype=motor_type,
+                                    vmax=motor['velocity'],
+                                    taumax=motor['effort'],
+                                    P=motor['p'],
+                                    I=motor['i'],
+                                    D=motor['d'])
+    elif motor_type == 'DC':
+        bpy.ops.object.attach_motor(motortype=motor_type,
+                                    vmax=motor['velocity'],
+                                    taumax=motor['effort'])
+        #for prop in motor:
+        #    if prop != 'joint':
+        #        if not prop.startswith('$'):
+        #            joint['motor/'+prop] = motor[prop]
+        #        else:
+        #            for tag in motor[prop]:
+        #                joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
+    #except KeyError:
+        #print("Joint " + motor['joint'] + " does not exist", "ERROR")
+
+
+def createJoint(self, joint):
+        """This function creates the blender representation of a given joint.
+
+        :param joint: The joint you want to create a blender object from.
+        :type joint: dict
+
+        """
+        bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])
+        link = bpy.data.objects[self.praefixNames(joint['child'], "link")]
+        # add joint information
+        if 'name' in joint:
+            link['joint/name'] = joint['name']
+
+        # link['joint/type'] = joint['type']
+
+        # set axis
+        selectionUtils.selectObjects([link], clear=True, active=0)
+        bpy.ops.object.mode_set(mode='EDIT')
+        editbone = link.data.edit_bones[0]
+        #oldaxis = editbone.vector
+        length = editbone.length
+        if 'axis' in joint:
+            axis = mathutils.Vector(tuple(joint['axis']))
+            #oldaxis.cross(axis) # rotation axis
+            editbone.tail = editbone.head + axis.normalized() * length
+
+        # add constraints
+        for param in ['effort', 'velocity']:
+            try:
+                if 'limits' in joint:
+                    link['joint/max'+param] = joint['limits'][param]
+            except KeyError:
+                log("Key Error in adding joint constraints for joint", joint['name']) #Todo: more details
+        try:
+            lower = joint['limits']['lower']
+            upper = joint['limits']['upper']
+        except KeyError:
+            lower = 0.0
+            upper = 0.0
+        joints.setJointConstraints(link, joint['type'], lower, upper)
+        for prop in joint:
+            if prop.startswith('$'):
+                for tag in joint[prop]:
+                    link['joint/'+prop[1:]+'/'+tag] = joint[prop][tag]
 
 
 def deriveJointType(joint, adjust=False):
@@ -93,7 +176,7 @@ def deriveJointType(joint, adjust=False):
             jtype = 'planar'
     if adjust:
         joint['joint/type'] = jtype
-        log("Set type of joint '" + namingUtils.getObjectName(joint) + "'to '" + jtype + "'.", "INFO")
+        log("Set type of joint '" + nUtils.getObjectName(joint) + "'to '" + jtype + "'.", "INFO")
     return jtype, crot
 
 
