@@ -315,7 +315,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c1 = inlayout.column(align=True)
         c2 = inlayout.column(align=True)
         c1.operator('phobos.set_phobostype', text='Set Phobostype')
-        c1.operator('phobos.partial_rename', text="Partial Rename")
+        c1.operator('phobos.batch_rename')
         c1.operator('phobos.edityamldictionary', text='Edit Object Dictionary', icon='TEXT')
         c2.operator('phobos.batch_property', text='Edit Custom Property', icon='GREASEPENCIL')
         c2.operator('phobos.copy_props', text='Copy Custom Property', icon='GHOST')

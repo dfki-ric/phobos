@@ -112,30 +112,39 @@ class VersionModelOperator(Operator):
         return {'FINISHED'}
 
 
-class PartialRename(Operator):
+class BatchRename(Operator):
     """Replace part of the name of selected object(s)"""
-    bl_idname = "phobos.partial_rename"
-    bl_label = "Partial Rename"
+    bl_idname = "phobos.batch_rename"
+    bl_label = "Batch Rename"
     bl_options = {'REGISTER', 'UNDO'}
 
     find = StringProperty(
-        name="Find",
+        name="Find:",
         default="",
-        description="Find string")
+        description="A string to be replaced.")
 
     replace = StringProperty(
-        name="Replace",
+        name="Replace:",
         default="",
-        description="Replace with")
+        description="A string to replace the 'Find' string.")
+
+    add = StringProperty(
+        name="Add/Embed:",
+        default="*",
+        description="Add any string by representing the old name with '*'.")
+
+    include_properties = BoolProperty(
+        name="Include Properties",
+        default=False,
+        description="Replace names stored in '*/name' properties?")
 
     def execute(self, context):
-        types = defs.subtypes
         for obj in context.selected_objects:
-            obj.name = obj.name.replace(self.find, self.replace)
-            for type in types:
-                nametag = type + "/name"
-                if nametag in obj:
-                    obj[nametag] = obj[nametag].replace(self.find, self.replace)
+            obj.name = self.add.replace('*', obj.name.replace(self.find, self.replace))
+            if self.include_properties:
+                for key in obj.keys():
+                    if key.endswith('/name'):
+                        obj[key] = self.add.replace('*', obj[key].replace(self.find, self.replace))
         return {'FINISHED'}
 
     @classmethod
