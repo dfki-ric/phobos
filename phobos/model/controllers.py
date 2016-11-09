@@ -56,7 +56,7 @@ class AddControllerOperator(Operator):
     """AddControllerOperator
 
     """
-    bl_idname = "object.phobos_add_controller"
+    bl_idname = "phobos.add_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -109,7 +109,7 @@ class AddLegacyControllerOperator(Operator):
     """AddLegacyControllerOperator
 
     """
-    bl_idname = "object.phobos_add_legacy_controller"
+    bl_idname = "phobos.add_legacy_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
 

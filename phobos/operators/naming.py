@@ -37,7 +37,7 @@ from phobos.logging import startLog, endLog, log
 
 class ToggleNamespaces(Operator):
     """Toggle the use of namespaces for the selected objects"""
-    bl_idname = "object.phobos_toggle_namespaces"
+    bl_idname = "phobos.toggle_namespaces"
     bl_label = "Toggle Namespaces"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -70,7 +70,7 @@ class ToggleNamespaces(Operator):
 
 class NameModelOperator(Operator):
     """Name model by assigning 'modelname' property to root node"""
-    bl_idname = "object.phobos_name_model"
+    bl_idname = "phobos.name_model"
     bl_label = "Name Model"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -92,7 +92,7 @@ class NameModelOperator(Operator):
 
 class VersionModelOperator(Operator):
     """Set model version by assigning 'version' property to root node"""
-    bl_idname = "object.phobos_set_version"
+    bl_idname = "phobos.set_version"
     bl_label = "Set Version of Model"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -114,7 +114,7 @@ class VersionModelOperator(Operator):
 
 class PartialRename(Operator):
     """Replace part of the name of selected object(s)"""
-    bl_idname = "object.phobos_partial_rename"
+    bl_idname = "phobos.partial_rename"
     bl_label = "Partial Rename"
     bl_options = {'REGISTER', 'UNDO'}
 

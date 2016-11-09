@@ -143,7 +143,7 @@ class ReloadModelsAndPosesOperator(bpy.types.Operator):
 
 class ImportLibRobot(Operator):
     """Import a baked robot into the robot library"""
-    bl_idname = "object.phobos_import_lib_robot"
+    bl_idname = "phobos.import_lib_robot"
     bl_label = "Import Baked Robot"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -268,7 +268,7 @@ class ImportSelectedLibRobot(Operator):
 
 class CreateRobotInstance(Operator):
     """Create a new instance of the selected robot lib entry"""
-    bl_idname = "object.phobos_create_robot_instance"
+    bl_idname = "phobos.create_robot_instance"
     bl_label = "Create Robot Instance"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -308,7 +308,7 @@ class CreateRobotInstance(Operator):
 
 class ExportSceneOperator(Operator):
     """Export the selected model(s) in a scene"""
-    bl_idname = "object.phobos_export_scene"
+    bl_idname = "phobos.export_scene"
     bl_label = "Export Scene"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -321,7 +321,7 @@ class ExportSceneOperator(Operator):
 
 class ExportModelOperator(Operator):
     """Export the selected model(s)"""
-    bl_idname = "object.phobos_export_robot"
+    bl_idname = "phobos.export_robot"
     bl_label = "Export Model"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -342,7 +342,7 @@ class ExportModelOperator(Operator):
 
 class ExportCurrentPoseOperator(Operator):
     """Bake the selected model"""
-    bl_idname = "object.phobos_export_current_poses"
+    bl_idname = "phobos.export_current_poses"
     bl_label = "Export Selected Pose"
 
     decimate_type = EnumProperty(name="Decimate Type",
@@ -417,7 +417,7 @@ class ExportCurrentPoseOperator(Operator):
 
 class ExportAllPosesOperator(Operator):
     """Bake the selected model"""
-    bl_idname = "object.phobos_export_all_poses"
+    bl_idname = "phobos.export_all_poses"
     bl_label = "Export All Poses"
     #bl_options = {'REGISTER', 'UNDO'}
     decimate_type = EnumProperty(name="Decimate Type",
@@ -488,7 +488,7 @@ class ExportAllPosesOperator(Operator):
 
 class RobotModelImporter(bpy.types.Operator):
     """Import robot model file from various formats"""
-    bl_idname = "obj.import_robot_model"
+    bl_idname = "phobos.import_robot_model"
     bl_label = ""
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'FILE'

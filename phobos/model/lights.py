@@ -93,7 +93,7 @@ def addLight(light_dict):
 
 
 #class AddLightOperator(bpy.types.Operator):
-#    bl_idname = "object.phobos_add_light"
+#    bl_idname = "phobos.add_light"
 #    bl_label = "Add a light"
 #    bl_options = {'REGISTER', 'UNDO'}
 #

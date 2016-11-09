@@ -36,7 +36,7 @@ from phobos.logging import startLog, endLog, log
 
 class SelectObjectsByPhobosType(Operator):
     """Select objects in the scene by phobostype"""
-    bl_idname = "object.phobos_select_objects_by_phobostype"
+    bl_idname = "phobos.select_objects_by_phobostype"
     bl_label = "Select by Phobostype"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -57,7 +57,7 @@ class SelectObjectsByPhobosType(Operator):
 
 class SelectObjectsByName(Operator):
     """Select objects in the scene by their name"""
-    bl_idname = "object.phobos_select_objects_by_name"
+    bl_idname = "phobos.select_objects_by_name"
     bl_label = "Select by Name"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -73,7 +73,7 @@ class SelectObjectsByName(Operator):
 
 class SelectRootOperator(Operator):
     """Select root object(s) of currently selected object(s)"""
-    bl_idname = "object.phobos_select_root"
+    bl_idname = "phobos.select_root"
     bl_label = "Select Roots"
 
     def execute(self, context):
@@ -93,7 +93,7 @@ class SelectRootOperator(Operator):
 
 class SelectModelOperator(Operator):
     """Select all objects of model(s) containing the currently selected object(s)"""
-    bl_idname = "object.phobos_select_model"
+    bl_idname = "phobos.select_model"
     bl_label = "Select Model"
     bl_options = {'REGISTER', 'UNDO'}
 

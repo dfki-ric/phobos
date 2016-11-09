@@ -57,7 +57,7 @@ def get_pose_names(scene, context):
 
 class SelectError(Operator):
     """Select an object with check errors"""
-    bl_idname = "object.phobos_select_error"
+    bl_idname = "phobos.select_error"
     bl_label = "Select Erroneous Object"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -78,7 +78,7 @@ class SelectError(Operator):
 
 class CheckDict(Operator):
     """Check the robot dictionary"""
-    bl_idname = "object.phobos_check_dict"
+    bl_idname = "phobos.check_dict"
     bl_label = "Check Dictionary"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -100,7 +100,7 @@ class CheckDict(Operator):
 
 class CalculateMassOperator(Operator):
     """Display mass of the selected objects in a pop-up window"""
-    bl_idname = "object.phobos_calculate_mass"
+    bl_idname = "phobos.calculate_mass"
     bl_label = "Calculate Mass"
 
     def execute(self, context):
@@ -113,7 +113,7 @@ class CalculateMassOperator(Operator):
 
 class ShowDistanceOperator(Operator):
     """Show distance between two selected objects in world coordinates"""
-    bl_idname = "object.phobos_show_distance"
+    bl_idname = "phobos.show_distance"
     bl_label = "Show Distance"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -148,7 +148,7 @@ class ShowDistanceOperator(Operator):
 
 class StorePoseOperator2(Operator):
     """Store the current pose of selected links in one of the scene's robots"""
-    bl_idname = 'object.store_pose2'
+    bl_idname = 'phobos.store_pose2'
     bl_label = "Store Current Pose"
 
     robot_name = EnumProperty(
@@ -208,7 +208,7 @@ class StorePoseOperator2(Operator):
 
 class LoadPoseOperator2(Operator):
     """Load a previously stored pose for one of the scene's robots"""
-    bl_idname = 'object.load_pose2'
+    bl_idname = 'phobos.load_pose2'
     bl_label = "Load Selected Pose"
 
     @classmethod
@@ -238,7 +238,7 @@ class LoadPoseOperator2(Operator):
 
 class StorePoseOperator(Operator):
     """Store the current pose of selected links in one of the scene's robots"""
-    bl_idname = 'object.store_pose'
+    bl_idname = 'phobos.store_pose'
     bl_label = "Store Current Pose"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -261,7 +261,7 @@ class StorePoseOperator(Operator):
 
 class LoadPoseOperator(Operator):
     """Load a previously stored pose for one of the scene's robots"""
-    bl_idname = 'object.load_pose'
+    bl_idname = 'phobos.load_pose'
     bl_label = "Load Pose"
     bl_options = {'REGISTER', 'UNDO'}
 

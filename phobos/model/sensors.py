@@ -189,7 +189,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
 
 # class AddLegacySensorOperator(Operator):
 #     """AddSensorOperator"""
-#     bl_idname = "object.phobos_add_legacy_sensor"
+#     bl_idname = "phobos.add_legacy_sensor"
 #     bl_label = "Add/Update a sensor"
 #     bl_options = {'REGISTER', 'UNDO'}
 #

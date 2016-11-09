@@ -276,17 +276,17 @@ class PhobosToolsPanel(bpy.types.Panel):
         tsinlayout = layout.split()
         tsc1 = tsinlayout.column(align=True)
         tsc1.label(text="Select...", icon='HAND')
-        tsc1.operator('object.phobos_select_root', text='Root')
-        tsc1.operator('object.phobos_select_model', text='Robot')
-        tsc1.operator('object.phobos_select_objects_by_phobostype', text="by Phobostype")
-        tsc1.operator('object.phobos_select_objects_by_name', text="by Name")
+        tsc1.operator('phobos.select_root', text='Root')
+        tsc1.operator('phobos.select_model', text='Robot')
+        tsc1.operator('phobos.select_objects_by_phobostype', text="by Phobostype")
+        tsc1.operator('phobos.select_objects_by_name', text="by Name")
         tsc2 = tsinlayout.column(align=True)
         tsc2.label(text="Tools", icon='MODIFIER')
-        tsc2.operator('object.phobos_sort_objects_to_layers', text="Set Objects to Layers", icon='IMGDISPLAY')
-        tsc2.operator('object.phobos_set_xray', text='X-Ray Vision')
-        tsc2.operator('object.phobos_toggle_namespaces', text='Toggle Namespace')
-        tsc2.operator('object.phobos_show_distance', text='Measure Distance')
-        tsc2.operator('object.phobos_check_dict', text='Validate')
+        tsc2.operator('phobos.sort_objects_to_layers', text="Set Objects to Layers", icon='IMGDISPLAY')
+        tsc2.operator('phobos.set_xray', text='X-Ray Vision')
+        tsc2.operator('phobos.toggle_namespaces', text='Toggle Namespace')
+        tsc2.operator('phobos.show_distance', text='Measure Distance')
+        tsc2.operator('phobos.check_dict', text='Validate')
 
 
 class PhobosModelPanel(bpy.types.Panel):
@@ -308,51 +308,51 @@ class PhobosModelPanel(bpy.types.Panel):
         inlayout = layout.split()
         rc1 = inlayout.column(align=True)
         rc2 = inlayout.column(align=True)
-        rc1.operator('object.phobos_name_model', text='Name Robot')
-        rc2.operator('object.phobos_set_version', text='Set Version')
+        rc1.operator('phobos.name_model', text='Name Robot')
+        rc2.operator('phobos.set_version', text='Set Version')
 
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
         c2 = inlayout.column(align=True)
-        c1.operator('object.phobos_set_phobostype', text='Set Phobostype')
-        c1.operator('object.phobos_partial_rename', text="Partial Rename")
-        c1.operator('object.phobos_edityamldictionary', text='Edit Object Dictionary', icon='TEXT')
-        c2.operator('object.phobos_batch_property', text='Edit Custom Property', icon='GREASEPENCIL')
-        c2.operator('object.phobos_copy_props', text='Copy Custom Property', icon='GHOST')
-        c2.operator('object.phobos_rename_custom_property', text='Rename Custom Property', icon='SYNTAX_OFF')
+        c1.operator('phobos.set_phobostype', text='Set Phobostype')
+        c1.operator('phobos.partial_rename', text="Partial Rename")
+        c1.operator('phobos.edityamldictionary', text='Edit Object Dictionary', icon='TEXT')
+        c2.operator('phobos.batch_property', text='Edit Custom Property', icon='GREASEPENCIL')
+        c2.operator('phobos.copy_props', text='Copy Custom Property', icon='GHOST')
+        c2.operator('phobos.rename_custom_property', text='Rename Custom Property', icon='SYNTAX_OFF')
 
         layout.separator()
         kinlayout = layout.split()
         kc1 = kinlayout.column(align=True)
         kc2 = kinlayout.column(align=True)
         kc1.label(text='Kinematics', icon='POSE_DATA')
-        kc1.operator("object.phobos_create_link", text="Create Link(s)")
-        kc1.operator('object.define_joint_constraints', text="Define Joint(s)")
-        kc1.operator('object.create_inertial_objects', text="Create Inertial Object(s)")
-        kc1.operator("object.phobos_create_mimic_joint", text="Mimic Joint")
-        kc1.operator('object.phobos_add_chain', text='Define Kinematic Chain', icon='CONSTRAINT')
+        kc1.operator("phobos.create_link", text="Create Link(s)")
+        kc1.operator('phobos.define_joint_constraints', text="Define Joint(s)")
+        kc1.operator('phobos.create_inertial_objects', text="Create Inertial Object(s)")
+        kc1.operator("phobos.create_mimic_joint", text="Mimic Joint")
+        kc1.operator('phobos.add_chain', text='Define Kinematic Chain', icon='CONSTRAINT')
         kc2.label(text='Visual/Collision', icon='GROUP')
-        kc2.operator('object.create_collision_objects', text="Create Collision Object(s)")
-        kc2.operator('object.phobos_set_geometry_type', text="Set Geometry Type(s)")
-        kc2.operator('object.phobos_set_collision_group', text="Set Collision Group")
-        kc2.operator('object.phobos_smoothen_surface', text="Smoothen Surface")
-        kc2.operator('object.phobos_refine_lod', text="Refine LoD")
-        #kc1.operator('object.phobos_set_origin_to_com', text="Set Origin to COM")
+        kc2.operator('phobos.create_collision_objects', text="Create Collision Object(s)")
+        kc2.operator('phobos.set_geometry_type', text="Set Geometry Type(s)")
+        kc2.operator('phobos.set_collision_group', text="Set Collision Group")
+        kc2.operator('phobos.smoothen_surface', text="Smoothen Surface")
+        kc2.operator('phobos.refine_lod', text="Refine LoD")
+        #kc1.operator('phobos.set_origin_to_com', text="Set Origin to COM")
 
         # Masses, Inertia & Hardware
         layout.separator()
         minlayout = layout.split()
         hw1 = minlayout.column(align=True)
         hw1.label(text="Hardware", icon='MOD_SCREW')
-        hw1.operator('object.attach_motor', text="Add/Edit Motor")
-        hw1.operator('object.phobos_add_sensor', text="Add/Edit Sensor")
-        hw1.operator("object.phobos_add_controller", text="Add/Edit Controller")
+        hw1.operator('phobos.attach_motor', text="Add/Edit Motor")
+        hw1.operator('phobos.add_sensor', text="Add/Edit Sensor")
+        hw1.operator("phobos.add_controller", text="Add/Edit Controller")
         mc1 = minlayout.column(align=True)
         mc1.label(text="Masses & Inertia", icon='PHYSICS')
-        mc1.operator('object.phobos_calculate_mass', text='Show Mass')
-        mc1.operator('object.phobos_set_mass', text='Set Mass')
-        mc1.operator('object.phobos_sync_masses', text='Sync Masses')
-        mc1.operator('object.phobos_edit_inertia', text='Edit Inertia')
+        mc1.operator('phobos.calculate_mass', text='Show Mass')
+        mc1.operator('phobos.set_mass', text='Set Mass')
+        mc1.operator('phobos.sync_masses', text='Sync Masses')
+        mc1.operator('phobos.edit_inertia', text='Edit Inertia')
 
         #hw2 = hwlayout.column(align=True)
         #hw2.label(text="Templates", icon='FILE_BLANK')
@@ -367,19 +367,19 @@ class PhobosModelPanel(bpy.types.Panel):
         #
         # ic2 = iinlayout.column(align=True)
         #
-        # ic2.operator('object.phobos_select_error', text="Select Erroneous Object")
+        # ic2.operator('phobos.select_error', text="Select Erroneous Object")
 
         ## Pose Menu
         #layout.separator()
         #layout.label(text="Poses")
         #pinlayout = layout.split()
         #pc1 = pinlayout.column(align=True)
-        #pc1.operator('object.store_pose', text='Store Current Pose')
+        #pc1.operator('phobos.store_pose', text='Store Current Pose')
         #pc2 = pinlayout.column(align=True)
-        #pc2.operator('object.load_pose', text='Load Pose')
+        #pc2.operator('phobos.load_pose', text='Load Pose')
 
         #for root in utility.getRoots():
-        #    linspect1.operator('object.phobos_select_model', text=root["modelname"]).modelname = \
+        #    linspect1.operator('phobos.select_model', text=root["modelname"]).modelname = \
         #     root["modelname"] if "modelname" in root else root.name
 
 
@@ -399,9 +399,9 @@ class PhobosScenePanel(bpy.types.Panel):
         layout.label(text="Scene Editing", icon="WORLD")
         iinlayout = layout.split()
         ic1 = iinlayout.column(align=True)
-        ic1.operator("object.phobos_add_heightmap", text="Create Heightmap")
+        ic1.operator("phobos.add_heightmap", text="Create Heightmap")
         ic2 = iinlayout.column(align=True)
-        ic2.operator('object.phobos_define_entity', text='Define Entity')
+        ic2.operator('phobos.define_entity', text='Define Entity')
 
         layout.label(text="Robotmodels and Poses", icon="MOD_ARMATURE")
         #layout.operator("scene.load_backed_models_operator", text="Load Models", icon="LIBRARY_DATA_DIRECT")
@@ -436,12 +436,12 @@ class PhobosScenePanel(bpy.types.Panel):
         layout.operator('scene.phobos_import_selected_lib_robot', text="Import Selected Robot Bake", icon="COPYDOWN")
         pinlayout = layout.split()
         pc1 = pinlayout.column(align=True)
-        pc1.operator('object.store_pose2', text='Store Current Pose')
+        pc1.operator('phobos.store_pose2', text='Store Current Pose')
         pc2 = pinlayout.column(align=True)
-        pc2.operator('object.load_pose2', text='Load Selected Pose')
+        pc2.operator('phobos.load_pose2', text='Load Selected Pose')
 
-        layout.operator("object.phobos_export_current_poses", text="Export Selected Pose", icon="OUTLINER_OB_ARMATURE")
-        layout.operator("object.phobos_export_all_poses", text="Export All Poses", icon="OUTLINER_OB_ARMATURE")
+        layout.operator("phobos.export_current_poses", text="Export Selected Pose", icon="OUTLINER_OB_ARMATURE")
+        layout.operator("phobos.export_all_poses", text="Export All Poses", icon="OUTLINER_OB_ARMATURE")
 
 
 # class PhobosSenConPanel(bpy.types.Panel):
@@ -467,13 +467,13 @@ class PhobosScenePanel(bpy.types.Panel):
 #         #col_sensor_1 = sensor_split.column(align=True)
 #         #for i in range(half_n_sensortypes):  #sensor in defs.sensorTypes:
 #         #    sensor = defs.sensortypes[i]
-#         #    #col_sensor_1.operator('object.phobos_add_sensor_'+sensor, text=sensor)
-#         #    col_sensor_1.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
+#         #    #col_sensor_1.operator('phobos.add_sensor_'+sensor, text=sensor)
+#         #    col_sensor_1.operator('phobos.add_sensor', text=sensor).sensor_type = sensor
 #         #col_sensor_2 = sensor_split.column(align=True)
 #         #for i in range(n_sensortypes - half_n_sensortypes):
 #         #    sensor = defs.sensortypes[i + half_n_sensortypes]
-#         #    col_sensor_2.operator('object.phobos_add_sensor', text=sensor).sensor_type = sensor
-#         #    #col_sensor_2.operator('object.phobos_add_sensor_'+sensor, text=sensor)
+#         #    col_sensor_2.operator('phobos.add_sensor', text=sensor).sensor_type = sensor
+#         #    #col_sensor_2.operator('phobos.add_sensor_'+sensor, text=sensor)
 #         sc2 = slayout.column(align=True)
 #
 
@@ -562,25 +562,25 @@ class PhobosExportPanel(bpy.types.Panel):
         c2.prop(bpy.data.worlds[0], "exportCustomData", text="Export custom data")
 
         ec1 = layout.column(align=True)
-        ec1.operator("object.phobos_export_robot", text="Export Robot Model", icon="PASTEDOWN")
+        ec1.operator("phobos.export_robot", text="Export Robot Model", icon="PASTEDOWN")
         ec2 = layout.column(align=True)
-        ec2.operator("obj.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
+        ec2.operator("phobos.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
 
 #        layout.separator()
 #        layout.label(text="Baking")
-#        layout.operator("object.phobos_export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
-#        layout.operator("object.phobos_create_robot_instance", text="Create Robot Lib Instance", icon="RENDERLAYERS")
+#        layout.operator("phobos.export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
+#        layout.operator("phobos.create_robot_instance", text="Create Robot Lib Instance", icon="RENDERLAYERS")
 
         layout.separator()
 
         layout.label(text="Export Scene")
         self.layout.prop(bpy.data.worlds[0], "sceneName", text="Name")
         self.layout.prop(bpy.data.worlds[0], "heightmapMesh", text="export heightmap as mesh")
-        layout.operator("object.phobos_export_scene", text="Export SMURF Scene", icon="WORLD_DATA")
+        layout.operator("phobos.export_scene", text="Export SMURF Scene", icon="WORLD_DATA")
 
 
 class PhobosObjectPanel(bpy.types.Panel):
-    bl_idname = "OBJECT_PT_PHOBOS"
+    bl_idname = "phobos.PT_PHOBOS"
     bl_label = "phobos: Object Panel Displaying Custom Properties"
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
