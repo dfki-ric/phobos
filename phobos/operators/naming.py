@@ -82,10 +82,32 @@ class NameModelOperator(Operator):
     def execute(self, context):
         startLog(self)
         root = sUtils.getRoot(context.active_object)
-        if root == None:
+        if root:
+            root["modelname"] = self.modelname
+        else:
             log("Could not set modelname due to missing root link. No name was set.", "ERROR")
-            return {'FINISHED'}
-        root["modelname"] = self.modelname
+        endLog()
+        return {'FINISHED'}
+
+
+class VersionModelOperator(Operator):
+    """Set model version by assigning 'version' property to root node"""
+    bl_idname = "object.phobos_set_version"
+    bl_label = "Set Version of Model"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    version = StringProperty(
+        name="Version",
+        default="",
+        description="Version of the robot model to be assigned")
+
+    def execute(self, context):
+        startLog(self)
+        root = sUtils.getRoot(context.active_object)
+        if root:
+            root["version"] = self.version
+        else:
+            log("Could not set version due to missing root link. No name was set.", "ERROR")
         endLog()
         return {'FINISHED'}
 

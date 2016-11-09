@@ -1343,6 +1343,30 @@ class AddHeightmapOperator(Operator):
         return {'RUNNING_MODAL'}
 
 
+class DefineEntityOperator(Operator):
+    """Defines an entity by setting properties in active object"""
+    bl_idname = "object.phobos_define_entity"
+    bl_label = "Define entity"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    entityname = StringProperty(
+        name="entity/name",
+        default="",
+        description="Name of the entity")
+
+    entitytype = StringProperty(
+        name="entity/type",
+        default="",
+        description="Type of the entity")
+
+    def execute(self, context):
+        entity = bpy.context.active_object
+        if entity:
+            entity['entity/name'] = self.entityname
+            entity['entity/type'] = self.entitytype
+        return {'FINISHED'}
+
+
 def add_editing_manual_map():
     """This allows you to right click on a button and link to the manual
 
