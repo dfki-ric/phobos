@@ -26,6 +26,8 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import sys
+import inspect
 
 import bpy
 import blf
@@ -55,7 +57,7 @@ def get_pose_names(scene, context):
     return pose_items
 
 
-class SelectError(Operator):
+class SelectErrorOperator(Operator):
     """Select an object with check errors"""
     bl_idname = "phobos.select_error"
     bl_label = "Select Erroneous Object"
@@ -76,10 +78,10 @@ class SelectError(Operator):
         return {'FINISHED'}
 
 
-class CheckDict(Operator):
+class ValidateOperator(Operator):
     """Check the robot dictionary"""
-    bl_idname = "phobos.check_dict"
-    bl_label = "Check Dictionary"
+    bl_idname = "phobos.valicate"
+    bl_label = "Validate"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -111,11 +113,11 @@ class CalculateMassOperator(Operator):
         return {'FINISHED'}
 
 
-class ShowDistanceOperator(Operator):
+class MeasureDistanceOperator(Operator):
     """Show distance between two selected objects in world coordinates"""
-    bl_idname = "phobos.show_distance"
-    bl_label = "Show Distance"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_idname = "phobos.measure_distance"
+    bl_label = "Measure Distance"
+    bl_options = {'REGISTER'}
 
     distance = FloatProperty(
         name="Distance",
@@ -426,4 +428,15 @@ class DrawPreviewOperator(bpy.types.Operator):
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
+
+def register():
+    print("Registering operators.misc...")
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.register_class(classdef)
+
+
+def unregister():
+    print("Unregistering operators.misc...")
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.unregister_class(classdef)
 

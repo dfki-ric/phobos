@@ -26,6 +26,9 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import sys
+import inspect
+
 import bpy
 from bpy.types import Operator
 from bpy.props import BoolProperty, StringProperty
@@ -162,3 +165,15 @@ class BatchRename(Operator):
     def poll(cls, context):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
+
+
+def register():
+    print("Registering operators.naming...")
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.register_class(classdef)
+
+
+def unregister():
+    print("Unregistering operators.naming...")
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.unregister_class(classdef)

@@ -67,14 +67,14 @@ def createMotor(self, motor):
     motor_type = motor['type']
     if motor_type == 'PID':
         #print(motor)
-        bpy.ops.object.attach_motor(motortype=motor_type,
+        bpy.ops.object.add_motor(motortype=motor_type,
                                     vmax=motor['velocity'],
                                     taumax=motor['effort'],
                                     P=motor['p'],
                                     I=motor['i'],
                                     D=motor['d'])
     elif motor_type == 'DC':
-        bpy.ops.object.attach_motor(motortype=motor_type,
+        bpy.ops.object.add_motor(motortype=motor_type,
                                     vmax=motor['velocity'],
                                     taumax=motor['effort'])
         #for prop in motor:

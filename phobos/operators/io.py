@@ -28,6 +28,9 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import yaml
+import sys
+import inspect
+
 import bpy
 import bgl
 import glob
@@ -520,3 +523,15 @@ class RobotModelImporter(bpy.types.Operator):
     def invoke(self, context, event):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+
+def register():
+    print("Registering operators.io...")
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.register_class(classdef)
+
+
+def unregister():
+    print("Unregistering operators.io...")
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.unregister_class(classdef)

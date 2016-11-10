@@ -57,7 +57,7 @@ class AddControllerOperator(Operator):
 
     """
     bl_idname = "phobos.add_controller"
-    bl_label = "Add a node-dependent controller"
+    bl_label = "Add/edit controller"
     bl_options = {'REGISTER', 'UNDO'}
 
     controller_scale = FloatProperty(

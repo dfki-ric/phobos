@@ -26,6 +26,9 @@ You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import sys
+import inspect
+
 import bpy
 from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty
@@ -75,6 +78,7 @@ class SelectRootOperator(Operator):
     """Select root object(s) of currently selected object(s)"""
     bl_idname = "phobos.select_root"
     bl_label = "Select Roots"
+    bl_options = {'REGISTER', 'UNDO', 'PRESET'}
 
     def execute(self, context):
         startLog(self)
@@ -120,3 +124,15 @@ class SelectModelOperator(Operator):
                 selection.extend(sUtils.getChildren(root))
         sUtils.selectObjects(list(selection), True)
         return {'FINISHED'}
+
+
+def register():
+    print("Registering operators.selection...")
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.register_class(classdef)
+
+
+def unregister():
+    print("Unregistering operators.selection...")
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.unregister_class(classdef)

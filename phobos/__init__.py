@@ -179,7 +179,6 @@ def register():
     """
     phobos.defs.register()
     phobos.phobosgui.register()
-    phobos.operators.editing.register()
     bpy.utils.register_module(__name__)
 
 
@@ -191,7 +190,6 @@ def unregister():
     """
     phobos.defs.unregister()
     phobos.phobosgui.unregister()
-    phobos.operators.editing.unregister()
     bpy.utils.unregister_module(__name__)
 
 # if __name__ == "__main__":

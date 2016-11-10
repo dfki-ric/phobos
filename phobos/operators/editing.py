@@ -29,6 +29,8 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 import math
 import os
 import yaml
+import inspect
+import sys
 from datetime import datetime
 
 import bpy
@@ -52,7 +54,7 @@ class SortObjectsToLayersOperator(Operator):
     """Sort all selected objects to their according layers"""
     bl_idname = "phobos.sort_objects_to_layers"
     bl_label = "Sort Objects to Layers"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'UNDO'}
 
     def execute(self, context):
         startLog(self)
@@ -73,10 +75,10 @@ class SortObjectsToLayersOperator(Operator):
         return len(context.selected_objects) > 0
 
 
-class AddChainOperator(Operator):
-    """Add a chain between two selected objects"""
-    bl_idname = "phobos.add_chain"
-    bl_label = "Add Chain"
+class AddKinematicChainOperator(Operator):
+    """Add a kinematic chain between two selected objects"""
+    bl_idname = "phobos.add_kinematic_chain"
+    bl_label = "Add Kinematic Chain"
     bl_options = {'REGISTER', 'UNDO'}
 
     chainname = StringProperty(
@@ -160,7 +162,7 @@ class SetMassOperator(Operator):
 class SyncMassesOperator(Operator):
     """Synchronize masses among the selected object(s)"""
     bl_idname = "phobos.sync_masses"
-    bl_label = "Synchronize Masses"
+    bl_label = "Sync Masses"
     bl_options = {'REGISTER', 'UNDO'}
 
     synctype = EnumProperty(
@@ -235,7 +237,7 @@ class SyncMassesOperator(Operator):
 class SetXRayOperator(Operator):
     """Show the selected/chosen objects via X-ray"""
     bl_idname = "phobos.set_xray"
-    bl_label = "Set X-Ray View"
+    bl_label = "X-Ray Vision"
     bl_options = {'REGISTER', 'UNDO'}
 
     objects = EnumProperty(
@@ -411,8 +413,8 @@ class RenameCustomProperty(Operator):
 
 class SetGeometryType(Operator):
     """Edit geometry type of selected object(s)"""
-    bl_idname = "phobos.set_geometry_type"
-    bl_label = "Edit Geometry"
+    bl_idname = "phobos.define_geometry"
+    bl_label = "Define Geometry"
     bl_options = {'REGISTER', 'UNDO'}
 
     geomType = EnumProperty(
@@ -565,7 +567,7 @@ class SetOriginToCOMOperator(Operator):
 class CreateInertialOperator(Operator):
     """Create inertial objects based on existing objects"""
     bl_idname = "phobos.create_inertial_objects"
-    bl_label = "Create Inertials"
+    bl_label = "Create Inertial Object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     auto_compute = BoolProperty(
@@ -619,7 +621,7 @@ class AddGravityVector(Operator):
 class EditYAMLDictionary(Operator):
     """Edit object dictionary as YAML"""
     bl_idname = 'phobos.edityamldictionary'
-    bl_label = "Edit YAML Dictionary"
+    bl_label = "Edit Object Dictionary"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -658,7 +660,7 @@ class EditYAMLDictionary(Operator):
 class CreateCollisionObjects(Operator):
     """Create collision objects for all selected links"""
     bl_idname = "phobos.create_collision_objects"
-    bl_label = "Create Collision Objects"
+    bl_label = "Create Collision Object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     property_colltype = EnumProperty(
@@ -755,7 +757,7 @@ class CreateCollisionObjects(Operator):
 class SetCollisionGroupOperator(Operator):
     """Set the collision groups of the selected object(s)"""
     bl_idname = "phobos.set_collision_group"
-    bl_label = "Set Collision Groups"
+    bl_label = "Set Collision Group(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     groups = BoolVectorProperty(
@@ -797,7 +799,7 @@ class SetCollisionGroupOperator(Operator):
 class DefineJointConstraintsOperator(Operator):
     """Add bone constraints to the joint (link)"""
     bl_idname = "phobos.define_joint_constraints"
-    bl_label = "Define Joint Constraints"
+    bl_label = "Define Joint(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     passive = BoolProperty(
@@ -904,10 +906,10 @@ class DefineJointConstraintsOperator(Operator):
         return {'FINISHED'}
 
 
-class AttachMotorOperator(Operator):
+class AddMotorOperator(Operator):
     """Attach motor values to selected joints"""
-    bl_idname = "phobos.attach_motor"
-    bl_label = "Attach Motor"
+    bl_idname = "phobos.add_motor"
+    bl_label = "Add/Edit Motor"
     bl_options = {'REGISTER', 'UNDO'}
 
     P = FloatProperty(
@@ -974,10 +976,10 @@ class AttachMotorOperator(Operator):
         return {'FINISHED'}
 
 
-class CreateLinkOperator(Operator):
+class CreateLinksOperator(Operator):
     """Create link(s), optionally based on existing objects"""
-    bl_idname = "phobos.create_link"
-    bl_label = "Create Links"
+    bl_idname = "phobos.create_links"
+    bl_label = "Create Link(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     type = EnumProperty(
@@ -1038,9 +1040,9 @@ class CreateLinkOperator(Operator):
 
 
 class AddSensorOperator(Operator):
-    """Add/update a sensor"""
+    """Add/edit a sensor"""
     bl_idname = "phobos.add_sensor"
-    bl_label = "Add/Update A Sensor"
+    bl_label = "Add/Edit Sensor"
     bl_options = {'REGISTER', 'UNDO'}
 
     sensor_type = EnumProperty(
@@ -1157,7 +1159,7 @@ class AddSensorOperator(Operator):
 class CreateMimicJointOperator(Operator):
     """Make a number of joints follow a specified joint"""
     bl_idname = "phobos.create_mimic_joint"
-    bl_label = "Create Mimic Joint"
+    bl_label = "Mimic Joint"
     bl_options = {'REGISTER', 'UNDO'}
 
     multiplier = FloatProperty(
@@ -1202,9 +1204,9 @@ class CreateMimicJointOperator(Operator):
 
 
 class RefineLevelOfDetailOperator(Operator):
-    """Refine LoD settings with minimum distances"""
-    bl_idname = "phobos.refine_lod"
-    bl_label = "Refine Level of Detail"
+    """Edit Level of Detail settings with minimum distances"""
+    bl_idname = "phobos.edit_lod"
+    bl_label = "Edit LoD"
     bl_options = {'REGISTER', 'UNDO'}
 
     maxdistances = FloatVectorProperty(name="Maximum Distances",
@@ -1282,7 +1284,7 @@ class RefineLevelOfDetailOperator(Operator):
 class AddHeightmapOperator(Operator):
     """Add a heightmap object to the 3D-Cursors location"""
     bl_idname = "phobos.add_heightmap"
-    bl_label = "Adds a heightmap object to the 3D-Cursors location"
+    bl_label = "Create Heightmap"
     bl_options = {'REGISTER', 'UNDO'}
 
     name = StringProperty(
@@ -1346,7 +1348,7 @@ class AddHeightmapOperator(Operator):
 class DefineEntityOperator(Operator):
     """Defines an entity by setting properties in active object"""
     bl_idname = "phobos.define_entity"
-    bl_label = "Define entity"
+    bl_label = "Define Entity"
     bl_options = {'REGISTER', 'UNDO'}
 
     entityname = StringProperty(
@@ -1376,7 +1378,7 @@ def add_editing_manual_map():
     url_manual_prefix = "https://github.com/rock-simulation/phobos/wiki/Operators#"
     url_manual_mapping = (
         ("bpy.ops.object.phobos_sort_objects_to_layers", "set-objects-to-layers"),
-        ("bpy.ops.object.phobos_add_chain", "define-kinematic-chain"),
+        ("bpy.ops.object.phobos_add_kinematic_chain", "define-kinematic-chain"),
         ("bpy.ops.object.phobos_set_mass", "set-mass"),
         ("bpy.ops.object.phobos_sync_masses", "sync-masses"),
         ("bpy.ops.object.phobos_set_xray", "x-ray-view"),
@@ -1384,7 +1386,7 @@ def add_editing_manual_map():
         ("bpy.ops.object.phobos_batch_property", "edit-custom-property"),
         ("bpy.ops.object.phobos_copy_props", "copy-custom-property"),
         ("bpy.ops.object.phobos_rename_custom_property", "rename-custom-property"),
-        ("bpy.ops.object.phobos_set_geometry_type", "set-geometry-types"),
+        ("bpy.ops.object.phobos_define_geometry", "define-geometry"),
         ("bpy.ops.object.phobos_edit_inertia", "edit-inertia"),
         ("bpy.ops.object.phobos_smoothen_surface", "smoothen-surface"),
         ("bpy.ops.object.phobos_set_origin_to_com", "set-origin-to-com"),
@@ -1405,66 +1407,14 @@ def add_editing_manual_map():
 
 
 def register():
-    """This function is called when this module is registered to blender.
-
-    """
     print("Registering operators.editing...")
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.register_class(classdef)
     bpy.utils.register_manual_map(add_editing_manual_map)
-    bpy.utils.register_class(SortObjectsToLayersOperator)
-    bpy.utils.register_class(AddChainOperator)
-    bpy.utils.register_class(SetMassOperator)
-    bpy.utils.register_class(SyncMassesOperator)
-    bpy.utils.register_class(SetXRayOperator)
-    bpy.utils.register_class(SetPhobosType)
-    bpy.utils.register_class(BatchEditPropertyOperator)
-    bpy.utils.register_class(CopyCustomProperties)
-    bpy.utils.register_class(RenameCustomProperty)
-    bpy.utils.register_class(SetGeometryType)
-    bpy.utils.register_class(EditInertia)
-    bpy.utils.register_class(SmoothenSurfaceOperator)
-    bpy.utils.register_class(SetOriginToCOMOperator)
-    bpy.utils.register_class(CreateInertialOperator)
-    bpy.utils.register_class(AddGravityVector)
-    bpy.utils.register_class(EditYAMLDictionary)
-    bpy.utils.register_class(CreateCollisionObjects)
-    bpy.utils.register_class(SetCollisionGroupOperator)
-    bpy.utils.register_class(DefineJointConstraintsOperator)
-    bpy.utils.register_class(AttachMotorOperator)
-    bpy.utils.register_class(CreateLinkOperator)
-    bpy.utils.register_class(AddSensorOperator)
-    bpy.utils.register_class(CreateMimicJointOperator)
-    bpy.utils.register_class(RefineLevelOfDetailOperator)
-    bpy.utils.register_class(AddHeightmapOperator)
 
 
 def unregister():
-    """ This function is called when this module is unregistered from blender.
-
-    """
     print("Unregistering operators.editing...")
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.unregister_class(classdef)
     bpy.utils.unregister_manual_map(add_editing_manual_map)
-    bpy.utils.unregister_class(SortObjectsToLayersOperator)
-    bpy.utils.unregister_class(AddChainOperator)
-    bpy.utils.unregister_class(SetMassOperator)
-    bpy.utils.unregister_class(SyncMassesOperator)
-    bpy.utils.unregister_class(SetXRayOperator)
-    bpy.utils.unregister_class(SetPhobosType)
-    bpy.utils.unregister_class(BatchEditPropertyOperator)
-    bpy.utils.unregister_class(CopyCustomProperties)
-    bpy.utils.unregister_class(RenameCustomProperty)
-    bpy.utils.unregister_class(SetGeometryType)
-    bpy.utils.unregister_class(EditInertia)
-    bpy.utils.unregister_class(SmoothenSurfaceOperator)
-    bpy.utils.unregister_class(SetOriginToCOMOperator)
-    bpy.utils.unregister_class(CreateInertialOperator)
-    bpy.utils.unregister_class(AddGravityVector)
-    bpy.utils.unregister_class(EditYAMLDictionary)
-    bpy.utils.unregister_class(CreateCollisionObjects)
-    bpy.utils.unregister_class(SetCollisionGroupOperator)
-    bpy.utils.unregister_class(DefineJointConstraintsOperator)
-    bpy.utils.unregister_class(AttachMotorOperator)
-    bpy.utils.unregister_class(CreateLinkOperator)
-    bpy.utils.unregister_class(AddSensorOperator)
-    bpy.utils.unregister_class(CreateMimicJointOperator)
-    bpy.utils.unregister_class(RefineLevelOfDetailOperator)
-    bpy.utils.unregister_class(AddHeightmapOperator)
