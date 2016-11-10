@@ -1,5 +1,7 @@
 
 import os
+import subprocess
+import bpy
 from phobos import defs
 from phobos.logging import log
 
@@ -62,3 +64,12 @@ def securepath(path):
         except NotADirectoryError:
             log(path + " is not a valid directory", "ERROR", "securepath")
     return os.path.expanduser(path)
+
+
+def getgitbranch():
+    try:
+        output = str(subprocess.check_output(['git', 'branch'], cwd=bpy.path.abspath('//'), universal_newlines=True))
+        branch = [a for a in output.split('\n') if a.find('*') >= 0][0]
+        return branch[branch.find('*')+2:]
+    except subprocess.CalledProcessError:
+        return None

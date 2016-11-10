@@ -32,6 +32,7 @@ from bpy.props import BoolProperty, StringProperty
 import phobos.defs as defs
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
+import phobos.utils.io as iUtils
 from phobos.logging import startLog, endLog, log
 
 
@@ -90,24 +91,34 @@ class NameModelOperator(Operator):
         return {'FINISHED'}
 
 
-class VersionModelOperator(Operator):
+class SetModelVersionOperator(Operator):
     """Set model version by assigning 'version' property to root node"""
     bl_idname = "phobos.set_version"
-    bl_label = "Set Version of Model"
+    bl_label = "Set Model Version"
     bl_options = {'REGISTER', 'UNDO'}
 
     version = StringProperty(
         name="Version",
         default="",
-        description="Version of the robot model to be assigned")
+        description="Version of the model to be assigned")
+
+    usegitbranch = BoolProperty(
+        name="Use Git branch name",
+        default=False,
+        description="Insert Git branch name in place of *?")
 
     def execute(self, context):
         startLog(self)
         root = sUtils.getRoot(context.active_object)
         if root:
-            root["version"] = self.version
+            if self.usegitbranch:
+                gitbranch = iUtils.getgitbranch()
+                if gitbranch:
+                    root["version"] = self.version.replace('*', gitbranch)
+            else:
+                root["version"] = self.version
         else:
-            log("Could not set version due to missing root link. No name was set.", "ERROR")
+            log("Could not set version due to missing root link. No version was set.", "ERROR")
         endLog()
         return {'FINISHED'}
 
