@@ -250,15 +250,15 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
 
 class ModelPoseProp(bpy.types.PropertyGroup):
-    robot_name = bpy.props.StringProperty()
-    label = bpy.props.StringProperty()
-    hide = bpy.props.BoolProperty(default = True)
-    parent = bpy.props.StringProperty()
-    icon =  bpy.props.StringProperty()
-    type  = bpy.props.StringProperty()
-    path = bpy.props.StringProperty()
-    model_file = bpy.props.StringProperty()
-    preview = bpy.props.StringProperty()
+    robot_name = StringProperty()
+    label = StringProperty()
+    hide = BoolProperty(default=True)
+    parent = StringProperty()
+    icon = StringProperty()
+    type = StringProperty()
+    path = StringProperty()
+    model_file = StringProperty()
+    preview = StringProperty()
 
 
 class PhobosPrefs(AddonPreferences):
