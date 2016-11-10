@@ -42,7 +42,7 @@ import yaml
 import math
 import bpy
 from bpy.types import AddonPreferences
-from bpy.props import StringProperty, EnumProperty, BoolProperty, CollectionProperty
+from bpy.props import StringProperty, EnumProperty, BoolProperty, CollectionProperty, IntProperty
 from phobos.logging import *
 
 
@@ -221,6 +221,34 @@ def __evaluateString(s):
     return s
 
 
+class PhobosExportSettings(bpy.types.PropertyGroup):
+
+    def updateExportPath(self, context):
+        if not bpy.data.worlds[0].path.endswith('/'):
+            bpy.data.worlds[0].path += '/'
+
+    path = StringProperty(name='path', default='.', update=updateExportPath)
+    decimalPlaces = IntProperty(name="decimalPlaces",
+                                description="Number of decimal places to export",
+                                default=5)
+    relativePath = BoolProperty(name='relative path', default=True)
+    heightmapMesh = BoolProperty(name='export heightmap as mesh', default=False)
+    useBobj = BoolProperty(name="useBobj")
+    useObj = BoolProperty(name="useObj")
+    useStl = BoolProperty(name="useStl")
+    useDae = BoolProperty(name="useDae")
+    exportMeshes = BoolProperty(name="exportMeshes")
+    exportTextures = BoolProperty(name="exportTextures")
+    exportCustomData = BoolProperty(name="exportCustomData")
+    exportMARSscene = BoolProperty(name="exportMARSscene")
+    exportSMURF = BoolProperty(name="exportSMURF", default=True)
+    exportURDF = BoolProperty(name="exportURDF", default=True)
+    exportSRDF = BoolProperty(name="exportSRDF", default=False)
+    exportYAML = BoolProperty(name="exportYAML")
+    structureExport = BoolProperty(name="structureExport", default=False, description="Create structured subfolders")
+    sceneName = StringProperty(name="sceneName")
+
+
 class ModelPoseProp(bpy.types.PropertyGroup):
     robot_name = bpy.props.StringProperty()
     label = bpy.props.StringProperty()
@@ -289,6 +317,7 @@ def register():
     print("Registering " + __name__)
     bpy.utils.register_class(ModelPoseProp)
     bpy.utils.register_class(PhobosPrefs)
+    bpy.utils.register_class(PhobosExportSettings)
 
 def unregister():
     print("Unregistering " + __name__)

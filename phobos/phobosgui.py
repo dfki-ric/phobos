@@ -34,7 +34,28 @@ from . import defs
 from phobos.operators.io import loadModelsAndPoses
 
 
+def register():
+    print("Registering phobosgui...")
+    bpy.types.Object.phobostype = EnumProperty(
+        items=defs.phobostypes,
+        name="type",
+        description="Phobos object type")
+
+    bpy.types.World.phobosexportsettings = PointerProperty(type=defs.PhobosExportSettings)
+
+    bpy.utils.register_class(Models_Poses_UIList)
+    bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(name="Index of current pose", default=0,update=showPreview)
+    bpy.types.Scene.preview_visible = bpy.props.BoolProperty(name="Is the draw preview operator running", default=False)
+    bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(name="Should we redraw the preview_template", default=False)
+    loadModelsAndPoses()
+
+
+def unregister():
+    print("Unregistering phobosgui...")
+
+
 class Models_Poses_UIList(bpy.types.UIList):
+
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         self.use_filter_show = False
         im = item
@@ -82,63 +103,6 @@ class Models_Poses_UIList(bpy.types.UIList):
         return flt_flags, flt_neworder
 
 
-def register():
-    print("Registering gui...")
-    bpy.types.Object.phobostype = EnumProperty(
-        items=defs.phobostypes,
-        name="type",
-        description="Phobos object type")
-    print("    Added 'phobostype' to Object properties.")
-    # bpy.types.Object.lastchanged = StringProperty(
-    #        default = '',
-    #        name = "lastchanged",
-    #        description = "Iso format datetime string of last change event")
-
-    bpy.types.World.showBodies = BoolProperty(name="showBodies", update=SetVisibleLayers)
-    bpy.types.World.showJoints = BoolProperty(name="showJoints", update=SetVisibleLayers)
-    bpy.types.World.showConstraints = BoolProperty(name="showConstraints", update=SetVisibleLayers)
-    bpy.types.World.showJointSpheres = BoolProperty(name="showJointSpheres", update=SetVisibleLayers)
-    bpy.types.World.showSensors = BoolProperty(name="showSensors", update=SetVisibleLayers)
-    bpy.types.World.showNames = BoolProperty(name="showNames", update=SetVisibleLayers)
-    bpy.types.World.showDecorations = BoolProperty(name="showDecorations", update=SetVisibleLayers)
-    #bpy.types.World.showMotorTypes = BoolProperty(name = "showMotorTypes", update=showMotorTypes)
-    bpy.types.World.manageLayers = BoolProperty(name="manage layers", update=manageLayers)
-    bpy.types.World.useDefaultLayers = BoolProperty(name="use default layers", update=useDefaultLayers)
-    bpy.types.World.linkLayer = IntProperty(name="link", update=manageLayers)
-
-    bpy.types.World.path = StringProperty(name='path', default='.', update=updateExportPath)
-    bpy.types.World.decimalPlaces = IntProperty(name="decimalPlaces",
-                                                description="Number of decimal places to export",
-                                                default=6)
-    bpy.types.World.relativePath = BoolProperty(name='relative path', default=True)
-    bpy.types.World.heightmapMesh = BoolProperty(name='export heightmap as mesh', default=False)
-    bpy.types.World.useBobj = BoolProperty(name="useBobj", update=updateExportOptions)
-    bpy.types.World.useObj = BoolProperty(name="useObj", update=updateExportOptions)
-    bpy.types.World.useStl = BoolProperty(name="useStl", update=updateExportOptions)
-    bpy.types.World.useDae = BoolProperty(name="useDae", update=updateExportOptions)
-    bpy.types.World.exportMeshes = BoolProperty(name="exportMeshes", update=updateExportOptions)
-    bpy.types.World.exportTextures = BoolProperty(name="exportTextures", update=updateExportOptions)
-    bpy.types.World.exportCustomData = BoolProperty(name="exportCustomData", update=updateExportOptions)
-    bpy.types.World.exportMARSscene = BoolProperty(name="exportMARSscene", update=updateExportOptions)
-    bpy.types.World.exportSMURF = BoolProperty(name="exportSMURF", default=True, update=updateExportOptions)
-    bpy.types.World.exportURDF = BoolProperty(name="exportURDF", default=True, update=updateExportOptions)
-    bpy.types.World.exportSRDF = BoolProperty(name="exportSRDF", default=True)
-    bpy.types.World.exportYAML = BoolProperty(name="exportYAML", update=updateExportOptions)
-    bpy.types.World.structureExport = BoolProperty(name="structureExport", default=False, description="Create structured subfolders")
-    bpy.types.World.sceneName = StringProperty(name="sceneName")
-
-    bpy.utils.register_class(Models_Poses_UIList)
-
-    bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(name="Index of current pose", default=0,update=showPreview)
-    bpy.types.Scene.preview_visible = bpy.props.BoolProperty(name="Is the draw preview operator running", default=False)
-    bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(name="Should we redraw the preview_template", default=False)
-    loadModelsAndPoses()
-
-
-def unregister():
-    print("Unregistering gui...")
-
-
 class MessageOperator(bpy.types.Operator):
     bl_idname = "error.message"
     bl_label = "Display a message in a window"
@@ -174,16 +138,6 @@ class OkOperator(bpy.types.Operator):
 
 def showPreview(self,value):
     bpy.ops.scene.change_preview()
-
-
-def updateExportOptions(self, context):
-    if bpy.data.worlds[0].exportSMURF and not bpy.data.worlds[0].exportURDF:
-        bpy.data.worlds[0].exportURDF = True
-
-
-def updateExportPath(self, context):
-    if not bpy.data.worlds[0].path.endswith('/'):
-        bpy.data.worlds[0].path += '/'
 
 
 class PhobosToolsPanel(bpy.types.Panel):
@@ -355,50 +309,54 @@ class PhobosExportPanel(bpy.types.Panel):
         self.layout.label(icon='FILESEL')
 
     def draw(self, context):
+        expsets = bpy.data.worlds[0].phobosexportsettings
         layout = self.layout
 
         #export robot model options
         self.layout.label(text="Model Export Settings")
-        self.layout.prop(bpy.data.worlds[0], "path")
-        self.layout.operator('object.phobos.choose_export_path', text='', icon='FILE_FOLDER')
+        pathlayout = self.layout.split(percentage=0.85)
+        p1 = pathlayout.column(align=False)
+        p2 = pathlayout.column(align=False)
+        p1.prop(expsets, "path")
+        p2.operator('phobos.choose_export_path', text='', icon='FILE_FOLDER')
         ginlayout = self.layout.split()
         g1 = ginlayout.column(align=True)
-        g1.prop(bpy.data.worlds[0], "relativePath")
-        g1.prop(bpy.data.worlds[0], "structureExport", text="Structure Export")
+        g1.prop(expsets, "relativePath")
+        g1.prop(expsets, "structureExport", text="Structure Export")
         g2 = ginlayout.column(align=True)
-        g2.prop(bpy.data.worlds[0], "decimalPlaces")
+        g2.prop(expsets, "decimalPlaces")
 
         layout.separator()
 
         inlayout = self.layout.split()
         c1 = inlayout.column(align=True)
         c1.label(text="Mesh export")
-        c1.prop(bpy.data.worlds[0], "exportMeshes", text="Export Meshes")
+        c1.prop(expsets, "exportMeshes", text="Export Meshes")
 
-        c1.prop(bpy.data.worlds[0], "useBobj", text="Use .bobj format")
-        c1.prop(bpy.data.worlds[0], "useObj", text="Use .obj format")
-        c1.prop(bpy.data.worlds[0], "useStl", text="Use .stl format")
-        c1.prop(bpy.data.worlds[0], "useDae", text="Use .dae format")
-        if bpy.data.worlds[0].useObj:
-            labeltext = ".obj is used"
-        elif bpy.data.worlds[0].useBobj:
-            labeltext = ".bobj is used"
-        elif bpy.data.worlds[0].useStl:
-            labeltext = ".stl is used"
-        elif bpy.data.worlds[0].useDae:
-            labeltext = ".dae is used"
+        c1.prop(expsets, "useBobj", text="Use .bobj format")
+        c1.prop(expsets, "useObj", text="Use .obj format")
+        c1.prop(expsets, "useStl", text="Use .stl format")
+        c1.prop(expsets, "useDae", text="Use .dae format")
+        if expsets.useObj:
+            labeltext = "URDF uses .obj"
+        elif expsets.useBobj:
+            labeltext = "URDF uses .bobj"
+        elif expsets.useStl:
+            labeltext = "URDF uses .stl"
+        elif expsets.useDae:
+            labeltext = "URDF uses .dae"
         else:
-            labeltext = ".obj is used"
+            labeltext = "URDF uses .obj"
         c1.label(text=labeltext)
         c2 = inlayout.column(align=True)
         c2.label(text="Robot Data Export")
-        #c2.prop(bpy.data.worlds[0], "exportMARSscene", text="as MARS scene")
-        c2.prop(bpy.data.worlds[0], "exportSMURF", text="As SMURF")
-        c2.prop(bpy.data.worlds[0], "exportURDF", text="As URDF")
-        c2.prop(bpy.data.worlds[0], "exportSRDF", text="With SRDF")
-        c2.prop(bpy.data.worlds[0], "exportYAML", text="As YAML dump")
-        c2.prop(bpy.data.worlds[0], "exportTextures", text="Export textures")
-        c2.prop(bpy.data.worlds[0], "exportCustomData", text="Export custom data")
+        #c2.prop(expsets, "exportMARSscene", text="as MARS scene")
+        c2.prop(expsets, "exportSMURF", text="As SMURF")
+        c2.prop(expsets, "exportURDF", text="As URDF")
+        c2.prop(expsets, "exportSRDF", text="With SRDF")
+        c2.prop(expsets, "exportYAML", text="As YAML dump")
+        c2.prop(expsets, "exportTextures", text="Export textures")
+        c2.prop(expsets, "exportCustomData", text="Export custom data")
 
         ec1 = layout.column(align=True)
         ec1.operator("phobos.export_robot", text="Export Robot Model", icon="PASTEDOWN")
@@ -413,8 +371,8 @@ class PhobosExportPanel(bpy.types.Panel):
         layout.separator()
 
         layout.label(text="Export Scene")
-        self.layout.prop(bpy.data.worlds[0], "sceneName", text="Name")
-        self.layout.prop(bpy.data.worlds[0], "heightmapMesh", text="export heightmap as mesh")
+        self.layout.prop(expsets, "sceneName", text="Name")
+        self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
         layout.operator("phobos.export_scene", text="Export SMURF Scene", icon="WORLD_DATA")
 
 
