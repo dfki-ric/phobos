@@ -200,14 +200,17 @@ class ImportSelectedLibRobot(Operator):
         #print("modelfile: ("+modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file+")")
         if context.scene.objects.active != None:
             root = sUtils.getRoot(context.scene.objects.active)
-        if ( not root
-             or not sUtils.isModelRoot(root)
-             or bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()
-             and modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file != ''
-             and len(bpy.context.selected_objects) == 0
-             or modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name != root["modelname"]
-             ):
-            result = True
+        try:
+            if ( not root
+                 or not sUtils.isModelRoot(root)
+                 or bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()
+                 and modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file != ''
+                 and len(bpy.context.selected_objects) == 0
+                 or modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name != root["modelname"]
+                 ):
+                result = True
+        except KeyError:
+            result = False
         return result
 
     def invoke(self, context, event):
