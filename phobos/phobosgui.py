@@ -186,79 +186,6 @@ def updateExportPath(self, context):
         bpy.data.worlds[0].path += '/'
 
 
-def SetVisibleLayers(self, context):
-    """Set active Layers according to Phobos world data."""
-    layers = [False] * 20
-    layers[0] = bpy.data.worlds[0].showBodies
-    layers[1] = bpy.data.worlds[0].showJoints
-    layers[2] = bpy.data.worlds[0].showJointSpheres
-    layers[3] = bpy.data.worlds[0].showSensors
-    layers[4] = bpy.data.worlds[0].showDecorations
-    layers[5] = bpy.data.worlds[0].showConstraints
-    onetrue = False
-    for b in layers:
-        onetrue = onetrue or b
-    if not onetrue:
-        bpy.data.worlds[0].showBodies = True
-        layers[0] = True
-    bpy.context.scene.layers = layers
-    for obj in bpy.data.objects:
-        obj.show_name = bpy.data.worlds[0].showNames
-
-
-def setWorldView(b):
-    bpy.data.worlds[0].showBodies = b[0]
-    bpy.data.worlds[0].showJoints = b[1]
-    bpy.data.worlds[0].showJointSpheres = b[2]
-    bpy.data.worlds[0].showSensors = b[3]
-    bpy.data.worlds[0].showDecorations = b[4]
-    bpy.data.worlds[0].showConstraints = b[5]
-    bpy.data.worlds[0].showNames = b[6]
-    applyWorldView()
-
-
-def applyWorldView():
-    layers = [False] * 20
-    layers[0] = bpy.data.worlds[0].showBodies
-    layers[1] = bpy.data.worlds[0].showJoints
-    layers[2] = bpy.data.worlds[0].showJointSpheres
-    layers[3] = bpy.data.worlds[0].showSensors
-    layers[4] = bpy.data.worlds[0].showDecorations
-    layers[5] = bpy.data.worlds[0].showConstraints
-    layers[6] = bpy.data.worlds[0].showNames
-    bpy.context.scene.layers = layers
-
-
-def manageLayers(self, context):
-    if bpy.data.worlds[0].manageLayers:
-        pass  # TODO: not so important
-
-
-def useDefaultLayers(self, context):
-    pass  # TODO: not so important
-
-
-# def showMotorTypes(self, context):
-# """Changes materials of joints to indicate different motor types."""
-#     if bpy.data.worlds[0].showMotorTypes:
-#         types = {}
-#         n_indicators = 0
-#         for obj in bpy.context.selected_objects:
-#             if obj.phobostype == "joint":
-#                 if "spec_motor" in obj:
-#                     if not (obj["spec_motor"] in types):
-#                         n_indicators += 1
-#                         types[obj["spec_motor"]] = "indicator" + str(n_indicators)
-#                     if not types[obj["spec_motor"]] in obj.data.materials:
-#                         obj.data.materials.append(bpy.data.materials[types[obj["spec_motor"]]])
-#                         obj.data.materials.pop(0, update_data=True)
-#         bpy.data.scenes[0].update()
-#     else:
-#         for obj in bpy.context.selected_objects:
-#             if obj.phobostype == "joint":
-#                 obj.data.materials.append(bpy.data.materials["Joint Discs"])
-#                 obj.data.materials.pop(0, update_data=True)
-#     bpy.data.scenes[0].update()
 class PhobosToolsPanel(bpy.types.Panel):
     """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_PT_PHOBOS_TOOLS"
@@ -354,34 +281,6 @@ class PhobosModelPanel(bpy.types.Panel):
         mc1.operator('phobos.sync_masses', text='Sync Masses')
         mc1.operator('phobos.edit_inertia', text='Edit Inertia')
 
-        #hw2 = hwlayout.column(align=True)
-        #hw2.label(text="Templates", icon='FILE_BLANK')
-        #ol.template_list("RENDERLAYER_UL_renderlayers", "", bpy.context, "layers", bpy.context.selected_objects, "active_index", rows=3)
-
-
-        # # Inspection Menu
-        # layout.separator()
-        # layout.label(text="Inspect Robot", icon='VIEWZOOM')
-        # iinlayout = layout.split()
-        # ic1 = iinlayout.column(align=True)
-        #
-        # ic2 = iinlayout.column(align=True)
-        #
-        # ic2.operator('phobos.select_error', text="Select Erroneous Object")
-
-        ## Pose Menu
-        #layout.separator()
-        #layout.label(text="Poses")
-        #pinlayout = layout.split()
-        #pc1 = pinlayout.column(align=True)
-        #pc1.operator('phobos.store_pose', text='Store Current Pose')
-        #pc2 = pinlayout.column(align=True)
-        #pc2.operator('phobos.load_pose', text='Load Pose')
-
-        #for root in utility.getRoots():
-        #    linspect1.operator('phobos.select_model', text=root["modelname"]).modelname = \
-        #     root["modelname"] if "modelname" in root else root.name
-
 
 class PhobosScenePanel(bpy.types.Panel):
     """A Custom Panel in the Phobos viewport toolbar"""
@@ -442,66 +341,6 @@ class PhobosScenePanel(bpy.types.Panel):
 
         layout.operator("phobos.export_current_poses", text="Export Selected Pose", icon="OUTLINER_OB_ARMATURE")
         layout.operator("phobos.export_all_poses", text="Export All Poses", icon="OUTLINER_OB_ARMATURE")
-
-
-# class PhobosSenConPanel(bpy.types.Panel):
-#     """A Custom Panel in the Phobos viewport toolbar"""
-#     bl_idname = "TOOLS_SENCON_PT_PHOBOS"
-#     bl_label = "phobos: Sensors & Controllers"
-#     bl_space_type = 'VIEW_3D'
-#     bl_region_type = 'TOOLS'
-#     bl_category = 'Phobos'
-#
-#     def draw_header(self, context):
-#         self.layout.label(icon='GAME')
-#
-#     def draw(self, context):
-#         slayout = self.layout.split()
-#         sc1 = slayout.column(align=True)
-#         # create sensor creation buttons
-#         #row_sensors.label(text="Add Sensors / Controllers")
-#
-#         #sensor_split = row_sensors.split()
-#         #n_sensortypes = int(len(defs.sensortypes))
-#         #half_n_sensortypes = int(n_sensortypes / 2)
-#         #col_sensor_1 = sensor_split.column(align=True)
-#         #for i in range(half_n_sensortypes):  #sensor in defs.sensorTypes:
-#         #    sensor = defs.sensortypes[i]
-#         #    #col_sensor_1.operator('phobos.add_sensor_'+sensor, text=sensor)
-#         #    col_sensor_1.operator('phobos.add_sensor', text=sensor).sensor_type = sensor
-#         #col_sensor_2 = sensor_split.column(align=True)
-#         #for i in range(n_sensortypes - half_n_sensortypes):
-#         #    sensor = defs.sensortypes[i + half_n_sensortypes]
-#         #    col_sensor_2.operator('phobos.add_sensor', text=sensor).sensor_type = sensor
-#         #    #col_sensor_2.operator('phobos.add_sensor_'+sensor, text=sensor)
-#         sc2 = slayout.column(align=True)
-#
-
-
-# class PhobosVisPanel(bpy.types.Panel):
-#     """A Custom Panel in the Phobos viewport toolbar"""
-#     bl_idname = "TOOLS_VIS_PT_PHOBOS"
-#     bl_label = "phobos: Visibility"
-#     bl_space_type = 'VIEW_3D'
-#     bl_region_type = 'TOOLS'
-#     bl_category = 'Phobos'
-#
-#     def draw_header(self, context):
-#         self.layout.label(icon = 'VISIBLE_IPO_ON')
-#
-#     def draw(self, context):
-#         lvis = self.layout
-#         # Visibility
-#         lsplit = lvis.column(align=True)
-#         #lsplit = layout.split()
-#         lsplit.prop(bpy.data.worlds[0], "showBodies")
-#         lsplit.prop(bpy.data.worlds[0], "showJoints")
-#         lsplit.prop(bpy.data.worlds[0], "showJointSpheres")
-#         lsplit.prop(bpy.data.worlds[0], "showSensors")
-#         lsplit.prop(bpy.data.worlds[0], "showDecorations")
-#         lsplit.prop(bpy.data.worlds[0], "showConstraints")
-#         lsplit.prop(bpy.data.worlds[0], "showNames")
-#         lsplit.prop(bpy.data.worlds[0], "showMotorTypes")
 
 
 class PhobosExportPanel(bpy.types.Panel):
