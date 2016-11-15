@@ -475,7 +475,7 @@ def deriveGroupEntry(group):
         if obj.phobostype == 'link':
             links.append({'type': 'link', 'name': nUtils.getObjectName(obj)})
         else:
-            log("Group " + nUtils.getObjectName(group) + " contains " + obj.phobostype
+            log("Group " + group.name + " contains " + obj.phobostype
                 + ': ' + nUtils.getObjectName(obj), "ERROR", "deriveGroupEntry")
     return links
 
