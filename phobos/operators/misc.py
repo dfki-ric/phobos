@@ -80,7 +80,7 @@ class SelectErrorOperator(Operator):
 
 class ValidateOperator(Operator):
     """Check the robot dictionary"""
-    bl_idname = "phobos.valicate"
+    bl_idname = "phobos.validate"
     bl_label = "Validate"
     bl_options = {'REGISTER', 'UNDO'}
 
