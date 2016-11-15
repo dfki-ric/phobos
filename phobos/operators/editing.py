@@ -249,6 +249,7 @@ class SetXRayOperator(Operator):
     show = BoolProperty(
         name="Show",
         default=True,
+
         description="Set to")
 
     namepart = StringProperty(
@@ -673,6 +674,7 @@ class CreateCollisionObjects(Operator):
 
         startLog(self)
         visuals = []
+        collisions = []
         for obj in context.selected_objects:
             if obj.phobostype == "visual":
                 visuals.append(obj)
@@ -742,6 +744,7 @@ class CreateCollisionObjects(Operator):
                 # TODO: copy mesh!!
             ob.phobostype = 'collision'
             ob['geometry/type'] = self.property_colltype
+            collisions.append(ob)
             if vis.parent:
                 ob.select = True
                 bpy.ops.object.transform_apply(scale=True)
@@ -750,6 +753,7 @@ class CreateCollisionObjects(Operator):
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
                 # ob.parent_type = vis.parent_type
                 # ob.parent_bone = vis.parent_bone
+            sUtils.selectObjects(collisions)
         endLog()
         return {'FINISHED'}
 
