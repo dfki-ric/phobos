@@ -102,7 +102,7 @@ def exportModelToURDF(model, filepath):
     output = [xmlHeader, indent + '<robot name="' + model['modelname'] + '">\n\n']
     # export link information
     if stored_element_order is None:
-        sorted_link_keys = get_sorted_keys(model['links'])
+        sorted_link_keys = sorted(model['links'])
     else:
         sorted_link_keys = stored_element_order['links']
         new_keys = []
@@ -126,7 +126,7 @@ def exportModelToURDF(model, filepath):
             # visual object
             if link['visual']:
                 if stored_element_order is None:
-                    sorted_visual_keys = get_sorted_keys(link['visual'])
+                    sorted_visual_keys = sorted(link['visual'])
                 else:
                     sorted_visual_keys = stored_element_order['viscol'][link['name']]['visual']
                     new_keys = []
@@ -159,7 +159,7 @@ def exportModelToURDF(model, filepath):
             # collision object
             if link['collision']:
                 if stored_element_order is None:
-                    sorted_collision_keys = get_sorted_keys(link['collision'])
+                    sorted_collision_keys = sorted(link['collision'])
                 else:
                     sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
                     new_keys = []
@@ -179,7 +179,7 @@ def exportModelToURDF(model, filepath):
     # export joint information
     missing_values = False
     if stored_element_order is None:
-        sorted_joint_keys = get_sorted_keys(model['joints'])
+        sorted_joint_keys = sorted(model['joints'])
     else:
         sorted_joint_keys = stored_element_order['joints']
         new_keys = []
@@ -218,7 +218,7 @@ def exportModelToURDF(model, filepath):
         log("Created URDF is invalid due to missing values!")
         bpy.ops.tools.phobos_warning_dialog('INVOKE_DEFAULT', message="Created URDF is invalid due to missing values!")
     if stored_element_order is None:
-        sorted_material_keys = get_sorted_keys(model['materials'])
+        sorted_material_keys = sorted(model['materials'])
     else:
         sorted_material_keys = stored_element_order['materials']
         new_keys = []
