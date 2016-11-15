@@ -37,10 +37,13 @@ from datetime import datetime
 import bpy
 import phobos.model.models as models
 import phobos.utils.selection as sUtils
-import phobos.utils.io as iUtils
+import phobos.io.meshes as meshes
 import phobos.defs as defs
 from phobos.utils.io import securepath
 from phobos.logging import log
+from phobos.io.entities.srdf import exportModelToSRDF
+from phobos.io.entities.urdf import exportModelToURDF
+from phobos.io.entities.urdf import sort_urdf_elements
 
 
 def deriveEntity(entity, outpath, savetosubfolder):

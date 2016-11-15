@@ -46,7 +46,7 @@ import phobos.io.entities.urdf as urdf
 import phobos.io.scenes.smurfs as smurfs
 import phobos.io.entities.smurf as smurf
 import phobos.io.scenes.smurfs as smurfs
-from phobos.io.entities import entities
+from phobos.io.entities import entity_types
 
 
 def generateLibEntries(param1, param2): #FIXME: parameter?
@@ -320,7 +320,7 @@ class ExportSceneOperator(Operator):
 
     def execute(self, context):
         startLog(self)
-        exporter.exportSMURFsScene()
+        io.scenes.exportSMURFsScene()
         endLog()
         return {'FINISHED'}
 
