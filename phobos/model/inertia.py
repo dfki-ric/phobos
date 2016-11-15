@@ -38,6 +38,8 @@ import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 from phobos.logging import log
+from phobos.model.geometries import deriveGeometry
+from phobos.model.poses import deriveObjectPose
 
 
 def createInertial(self, name, inertial):
@@ -413,7 +415,7 @@ def fuseInertiaData(inertials):
     for o in inertials:
         objdict = None
         try:
-            pose = gUtils.deriveObjectPose(o)
+            pose = deriveObjectPose(o)
             # FIXME the following is really a short cut that points to a bigger problem
             inertia = o['inertia'] if 'inertia' in o else o['inertial/inertia']
             mass = o['mass'] if 'mass' in o else o['inertial/mass']
@@ -492,7 +494,7 @@ def createInertials(link, empty=False, preserve_children=False):
         for obj in viscols:
             if not empty:
                 mass = obj['mass'] if 'mass' in obj else None
-                geometry = gUtils.deriveGeometry(obj)
+                geometry = deriveGeometry(obj)
                 if mass is not None:
                     if geometry['type'] == 'mesh':
                         sUtils.selectObjects([obj])
