@@ -30,15 +30,6 @@ import bpy
 import phobos.utils.selection as sUtils
 
 
-def register():
-    print("Registering sensors...")
-
-
-def unregister():
-    print("Unregistering sensors...")
-
-
-
 def addLight(light_dict):
 
     if light_dict['type'] == 'spotlight':

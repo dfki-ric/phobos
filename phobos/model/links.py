@@ -39,20 +39,6 @@ import phobos.utils.selection as sUtils
 from phobos.logging import log
 
 
-def register():
-    """This function is called when this module is registered to blender.
-
-    """
-    print("Registering links...")
-
-
-def unregister():
-    """This function is called when this module is unregistered from blender.
-
-    """
-    print("Unregistering links...")
-
-
 def createLink(self, link):
         """This function creates the blender representation of a given link
 

@@ -35,21 +35,6 @@ import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
 
 
-
-def register():
-    """This function is called when this module is registered to blender
-
-    """
-    print("Registering sensors...")
-
-
-def unregister():
-    """This function is called when this module is unregistered to blender
-
-    """
-    print("Unregistering sensors...")
-
-
 def createSensor(self, sensor):
     if 'link' in sensor:
         reference = [sensor['link']]

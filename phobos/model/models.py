@@ -49,14 +49,6 @@ from phobos.model.poses import deriveObjectPose
 from phobos.model.geometries import deriveGeometry
 
 
-
-def register():
-    """This function is called when this module is registered in blender.
-
-    """
-    print("Registering export...")
-
-
 def collectMaterials(objectlist):
     """This function collects all materials from a list of objects and sorts them into a dictionary
 

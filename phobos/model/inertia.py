@@ -40,18 +40,6 @@ import phobos.utils.naming as nUtils
 from phobos.logging import log
 
 
-def register():
-    """This function is called when this module is registered to blender.
-    """
-    print("Registering inertia...")
-
-
-def unregister():
-    """This function is called when this module is unregistered from blender.
-    """
-    print("Unregistering inertia...")
-
-
 def createInertial(self, name, inertial):
     """This function creates the blender representation of a given intertial.
 

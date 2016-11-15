@@ -40,20 +40,6 @@ import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
 
 
-def register():
-    """This function is called when this module is registrered to blender.
-
-    """
-    print("Registering joints...")
-
-
-def unregister():
-    """This function is called when this module is unregistered from blender.
-
-    """
-    print("Unregistering joints...")
-
-
 def createMotor(self, motor):
     """This function creates the motor properties in the motors joint object.
 

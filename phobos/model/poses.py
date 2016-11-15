@@ -37,20 +37,6 @@ from phobos.logging import log
 from phobos.utils.io import securepath
 
 
-def register():
-    """This function is called when this module is registered to blender.
-
-    """
-    print("Registering export...")
-
-
-def unregister():
-    """This function is called when this module is unregistered from blender.
-
-    """
-    print("Unregistering export...")
-
-
 def deriveObjectPose(obj):
     """This function derives a pose of link, visual or collision object.
 

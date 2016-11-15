@@ -35,19 +35,6 @@ import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 
 
-def register():
-    """This function is called when this module is registered to blender
-
-    """
-    print("Registering controllers...")
-
-
-def unregister():
-    """This function is called when this module is unregistered from blender.
-
-    """
-    print("Unregistering controllers...")
-
 sensors = []
 motors = []
 
