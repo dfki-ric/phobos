@@ -34,6 +34,8 @@ import phobos.model.models as models
 import phobos.utils.naming as nUtils
 import phobos.utils.general as gUtils
 from phobos.logging import log
+from phobos.model.geometries import deriveGeometry
+from phobos.model.poses import deriveObjectPose
 
 def deriveEntity(entity, outpath, savetosubfolder):
     """This function handles a primitive entity in a scene to export it
@@ -52,8 +54,8 @@ def deriveEntity(entity, outpath, savetosubfolder):
 
     log("Exporting " + nUtils.getObjectName(primitive, 'entity') + " as entity of type 'primitive", "INFO")
     entity = models.initObjectProperties(primitive, 'entity', ['geometry'])
-    pose = gUtils.deriveObjectPose(primitive)
-    entity['geometry'] = gUtils.deriveGeometry(primitive)
+    pose = deriveObjectPose(primitive)
+    entity['geometry'] = deriveGeometry(primitive)
     entity['position'] = {'x': pose['translation'][0],
                           'y': pose['translation'][1],
                           'z': pose['translation'][2]}
