@@ -69,7 +69,7 @@ def writeURDFGeometry(output, element):
         elif geometry['type'] == "sphere":
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
-            if bpy.data.worlds[0].structureExport:
+            if bpy.data.worlds[0].phobosexportsettings.structureExport:
                 output.append(xmlline(5, 'mesh', ['filename', 'scale'], ["../" + geometry['filename'], l2str(geometry['scale'])]))
             else:
                 output.append(xmlline(5, 'mesh', ['filename', 'scale'], [geometry['filename'], l2str(geometry['scale'])]))

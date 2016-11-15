@@ -224,8 +224,8 @@ def __evaluateString(s):
 class PhobosExportSettings(bpy.types.PropertyGroup):
 
     def updateExportPath(self, context):
-        if not bpy.data.worlds[0].path.endswith('/'):
-            bpy.data.worlds[0].path += '/'
+        if not bpy.data.worlds[0].phobosexportsettings.path.endswith('/'):
+            bpy.data.worlds[0].phobosexportsettings.path += '/'
 
     path = StringProperty(name='path', default='.', update=updateExportPath)
     decimalPlaces = IntProperty(name="decimalPlaces",

@@ -268,13 +268,13 @@ def deriveVisual(obj):
             lodlist = []
             for i in range(len(obj.lod_levels)):
                 filename = obj.lod_levels[i].object.data.name
-                if bpy.data.worlds[0].useObj:
+                if bpy.data.worlds[0].phobosexportsettings.useObj:
                     filename += ".obj"
-                elif bpy.data.worlds[0].useBobj:
+                elif bpy.data.worlds[0].phobosexportsettings.useBobj:
                     filename += ".bobj"
-                elif bpy.data.worlds[0].useStl:
+                elif bpy.data.worlds[0].phobosexportsettings.useStl:
                     filename += ".stl"
-                elif bpy.data.worlds[0].useDae:
+                elif bpy.data.worlds[0].phobosexportsettings.useDae:
                     filename += ".dae"
                 else:
                     filename += ".obj"
@@ -767,5 +767,5 @@ def buildModelDictionary(root):
 
     # shorten numbers in dictionary to n decimalPlaces and return it
     log("Rounding numbers...", "INFO", "buildModelDictionary")
-    epsilon = 10**(-bpy.data.worlds[0].decimalPlaces)  # TODO: implement this separately
-    return epsilonToZero(robot, epsilon, bpy.data.worlds[0].decimalPlaces), objectlist
+    epsilon = 10**(-bpy.data.worlds[0].phobosexportsettings.decimalPlaces)  # TODO: implement this separately
+    return epsilonToZero(robot, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces), objectlist

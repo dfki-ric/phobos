@@ -58,10 +58,11 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
         log("There are no entities to export!", "WARNING", __name__+".exportSMURFsScene")
         return
     # determine outpath for this scene
-    if bpy.data.worlds[0].relativePath:
-        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+    if bpy.data.worlds[0].phobosexportsettings.relativePath:
+        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"),
+                                                             bpy.data.worlds[0].phobosexportsettings.path)))
     else:
-        outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+        outpath = securepath(os.path.expanduser(bpy.data.worlds[0].phobosexportsettings.path))
     log("Exporting scene to " + outpath, "INFO", "exportSMURFsScene")
     for entity in entities:
         log("Exporting " + str(entity["entity/name"]) + " to SMURFS", "INFO")
@@ -79,6 +80,6 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
         sceneinfo = "# SMURF scene " + bpy.data.worlds['World'].sceneName + "; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
         sceneinfo += "# created with Phobos " + version + " - https://github.com/rock-simulation/phobos\n\n"
         outputfile.write(sceneinfo)
-        epsilon = 10**(-bpy.data.worlds[0].decimalPlaces)  # TODO: implement this separately
-        entitiesdict = epsilonToZero({'entities': outputlist}, epsilon, bpy.data.worlds[0].decimalPlaces)
+        epsilon = 10**(-bpy.data.worlds[0].phobosexportsettings.decimalPlaces)  # TODO: implement this separately
+        entitiesdict = epsilonToZero({'entities': outputlist}, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces)
         outputfile.write(yaml.dump(entitiesdict))

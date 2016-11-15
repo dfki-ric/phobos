@@ -34,13 +34,14 @@ def deriveGeometry(obj):
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
             filename = obj.data.name
-            if bpy.data.worlds[0].useObj:
+            expsets = bpy.data.worlds[0].phobosexportsettings
+            if expsets.useObj:
                 filename += ".obj"
-            elif bpy.data.worlds[0].useBobj:
+            elif expsets.useBobj:
                 filename += ".bobj"
-            elif bpy.data.worlds[0].useStl:
+            elif expsets.useStl:
                 filename += ".stl"
-            elif bpy.data.worlds[0].useDae:
+            elif expsets.useDae:
                 filename += ".dae"
             else:
                 filename += ".obj"

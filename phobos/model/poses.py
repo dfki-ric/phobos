@@ -132,15 +132,15 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
     :type modelname: str
 
     """
-    if bpy.data.worlds[0].relativePath:
-        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+    if bpy.data.worlds[0].phobosexportsettings.relativePath:
+        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].phobosexportsettings.path)))
     else:
-        outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+        outpath = securepath(os.path.expanduser(bpy.data.worlds[0].phobosexportsettings.path))
 
     #bake_outpath = securepath(os.path.join(outpath, modelname) if savetosubfolder else outpath)
     bake_outpath = outpath
 
-    if bpy.data.worlds[0].structureExport:
+    if bpy.data.worlds[0].phobosexportsettings.structureExport:
         securepath(os.path.join(bake_outpath, 'bakes'))
         bake_outpath = os.path.join(bake_outpath, 'bakes/')
 

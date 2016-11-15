@@ -283,7 +283,7 @@ def exportModelToSMURF(model, path):
               }
     # create all filenames
     smurf_filename = model['modelname'] + ".smurf"
-    if bpy.data.worlds[0].structureExport:
+    if bpy.data.worlds[0].phobosexportsettings.structureExport:
         urdf_filename = "../urdf/" + model['modelname'] + ".urdf"
     else:
         urdf_filename = model['modelname'] + ".urdf"
@@ -421,10 +421,11 @@ def export(model, objectlist, path=None):
 
     # set up path
     if not path:
-        if bpy.data.worlds[0].relativePath:
-            outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].path)))
+        if bpy.data.worlds[0].phobosexportsettings.relativePath:
+            outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"),
+                                                                 bpy.data.worlds[0].phobosexportsettings.path)))
         else:
-            outpath = securepath(os.path.expanduser(bpy.data.worlds[0].path))
+            outpath = securepath(os.path.expanduser(bpy.data.worlds[0].phobosexportsettings.path))
     else:
         outpath = path
     if not outpath.endswith(os.path.sep):
@@ -433,16 +434,16 @@ def export(model, objectlist, path=None):
     log("Export path: " + outpath, "DEBUG", "export")
 
     # parse export settings
-    yaml = bpy.data.worlds[0].exportYAML
-    urdf = bpy.data.worlds[0].exportURDF
-    srdf = bpy.data.worlds[0].exportSRDF
-    smurf = bpy.data.worlds[0].exportSMURF
-    meshexp = bpy.data.worlds[0].exportMeshes
-    texexp = bpy.data.worlds[0].exportTextures
-    objexp = bpy.data.worlds[0].useObj
-    bobjexp = bpy.data.worlds[0].useBobj
-    stlexp = bpy.data.worlds[0].useStl
-    daeexp = bpy.data.worlds[0].useDae
+    yaml = bpy.data.worlds[0].phobosexportsettings.exportYAML
+    urdf = bpy.data.worlds[0].phobosexportsettings.exportURDF
+    srdf = bpy.data.worlds[0].phobosexportsettings.exportSRDF
+    smurf = bpy.data.worlds[0].phobosexportsettings.exportSMURF
+    meshexp = bpy.data.worlds[0].phobosexportsettings.exportMeshes
+    texexp = bpy.data.worlds[0].phobosexportsettings.exportTextures
+    objexp = bpy.data.worlds[0].phobosexportsettings.useObj
+    bobjexp = bpy.data.worlds[0].phobosexportsettings.useBobj
+    stlexp = bpy.data.worlds[0].phobosexportsettings.useStl
+    daeexp = bpy.data.worlds[0].phobosexportsettings.useDae
 
     # export data
     if yaml or urdf or smurf:
@@ -451,14 +452,14 @@ def export(model, objectlist, path=None):
         if srdf:
             exportModelToSRDF(model, outpath + model["modelname"] + ".srdf")
         if smurf:
-            if bpy.data.worlds[0].structureExport:
+            if bpy.data.worlds[0].phobosexportsettings.structureExport:
                 securepath(os.path.join(outpath, 'smurf'))
                 securepath(os.path.join(outpath, 'urdf'))
                 exportModelToSMURF(model, os.path.join(outpath, 'smurf/'))
             else:
                 exportModelToSMURF(model, outpath)
         elif urdf:
-            if bpy.data.worlds[0].structureExport:
+            if bpy.data.worlds[0].phobosexportsettings.structureExport:
                 securepath(os.path.join(outpath, 'urdf'))
                 exportModelToURDF(model, os.path.join(outpath, 'urdf', model["modelname"] + ".urdf"))
             else:
@@ -488,13 +489,13 @@ def export(model, objectlist, path=None):
             log("Exporting " + str(len(exportobjects)) + " meshes to " + meshoutpath + "...", "INFO", "export")
             for expobj in exportobjects:
                 if objexp:
-                    iUtils.exportObj(meshoutpath, expobj)
+                    meshes.meshes.exportObj(meshoutpath, expobj)
                 if bobjexp:
-                    iUtils.exportBobj(meshoutpath, expobj)
+                    meshes.bobj.exportBobj(meshoutpath, expobj)
                 if stlexp:
-                    iUtils.exportStl(meshoutpath, expobj)
+                    meshes.meshes.exportStl(meshoutpath, expobj)
                 if daeexp:
-                    iUtils.exportDae(meshoutpath, expobj)
+                    meshes.meshes.exportDae(meshoutpath, expobj)
                 if show_progress:
                     wm.progress_update(i)
                     i += 1
