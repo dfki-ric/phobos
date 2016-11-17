@@ -857,20 +857,21 @@ class DefineJointConstraintsOperator(Operator):
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "joint_type", text="joint_type")
-        layout.prop(self, "passive", text="makes the joint passive (no actuation)")
-        layout.prop(self, "useRadian", text="use radian")
-        if self.joint_type != 'fixed':
-            layout.prop(self, "maxeffort",
-                        text="max effort [" + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'))
-            if self.joint_type in ['revolute', 'continuous']:
-                layout.prop(self, "maxvelocity", text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"))
-            else:
-                layout.prop(self, "maxvelocity", text="max velocity [m/s]")
-        if self.joint_type in ('revolute', 'prismatic'):
-            layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
-            layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
-            layout.prop(self, "spring", text="spring constant [N/m]")
-            layout.prop(self, "damping", text="damping constant")
+        if not self.joint_type == 'fixed':
+            layout.prop(self, "passive", text="makes the joint passive (no actuation)")
+            layout.prop(self, "useRadian", text="use radian")
+            if self.joint_type != 'fixed':
+                layout.prop(self, "maxeffort",
+                            text="max effort [" + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'))
+                if self.joint_type in ['revolute', 'continuous']:
+                    layout.prop(self, "maxvelocity", text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"))
+                else:
+                    layout.prop(self, "maxvelocity", text="max velocity [m/s]")
+            if self.joint_type in ('revolute', 'prismatic'):
+                layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
+                layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
+                layout.prop(self, "spring", text="spring constant [N/m]")
+                layout.prop(self, "damping", text="damping constant")
 
     def invoke(self, context, event):
         aObject = context.active_object
