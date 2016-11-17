@@ -950,12 +950,13 @@ class AddMotorOperator(Operator):
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "motortype", text="motor_type")
-        layout.prop(self, "taumax", text="maximum torque [Nm]")
-        layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
-        if self.motortype == 'PID':
-            layout.prop(self, "P", text="P")
-            layout.prop(self, "I", text="I")
-            layout.prop(self, "D", text="D")
+        if not self.motortype == 'none':
+            layout.prop(self, "taumax", text="maximum torque [Nm]")
+            layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
+            if self.motortype == 'PID':
+                layout.prop(self, "P", text="P")
+                layout.prop(self, "I", text="I")
+                layout.prop(self, "D", text="D")
 
     def invoke(self, context, event):
         aObject = context.active_object
@@ -968,15 +969,20 @@ class AddMotorOperator(Operator):
 
         objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
         for joint in objs:
-            # TODO: these keys have to be adapted
-            if self.motortype == 'PID':
-                joint['motor/p'] = self.P
-                joint['motor/i'] = self.I
-                joint['motor/d'] = self.D
-            joint['motor/maxSpeed'] = self.vmax
-            joint['motor/maxEffort'] = self.taumax
-            # joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
-            joint['motor/type'] = self.motortype
+            if not self.motortype == 'none':
+                # TODO: these keys have to be adapted
+                if self.motortype == 'PID':
+                    joint['motor/p'] = self.P
+                    joint['motor/i'] = self.I
+                    joint['motor/d'] = self.D
+                joint['motor/maxSpeed'] = self.vmax
+                joint['motor/maxEffort'] = self.taumax
+                # joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
+                joint['motor/type'] = self.motortype
+            else:
+                for key in joint.keys():
+                    if key.startswith('motor/'):
+                        del joint[key]
         return {'FINISHED'}
 
 
