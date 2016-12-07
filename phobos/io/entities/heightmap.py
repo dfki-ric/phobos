@@ -73,9 +73,6 @@ def deriveEntity(entity, outpath, savetosubfolder):
         if bpy.data.worlds[0].useObj:
             iUtils.exportObj(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".obj")
-        elif bpy.data.worlds[0].useBobj:
-            iUtils.exportBobj(heightmap_outpath, heightmapMesh)
-            filename = os.path.join("heightmaps", exMesh.name + ".bobj")
         elif bpy.data.worlds[0].useStl:
             iUtils.exportStl(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".stl")

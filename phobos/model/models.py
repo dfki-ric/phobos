@@ -270,8 +270,6 @@ def deriveVisual(obj):
                 filename = obj.lod_levels[i].object.data.name
                 if bpy.data.worlds[0].phobosexportsettings.useObj:
                     filename += ".obj"
-                elif bpy.data.worlds[0].phobosexportsettings.useBobj:
-                    filename += ".bobj"
                 elif bpy.data.worlds[0].phobosexportsettings.useStl:
                     filename += ".stl"
                 elif bpy.data.worlds[0].phobosexportsettings.useDae:

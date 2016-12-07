@@ -7,7 +7,6 @@ import mathutils
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 import phobos.model.poses as poses
-import phobos.io.meshes.bobj as bobj
 from phobos.logging import log
 
 
@@ -37,8 +36,6 @@ def deriveGeometry(obj):
             expsets = bpy.data.worlds[0].phobosexportsettings
             if expsets.useObj:
                 filename += ".obj"
-            elif expsets.useBobj:
-                filename += ".bobj"
             elif expsets.useStl:
                 filename += ".stl"
             elif expsets.useDae:
@@ -110,15 +107,6 @@ def createGeometry(self, viscol, geomsrc):
                     bpy.ops.import_scene.obj(filepath=geom_path)
                 elif filetype == 'stl' or filetype == 'STL':
                     bpy.ops.import_mesh.stl(filepath=geom_path)
-                # hack for test:
-                elif filetype == 'bobj' or filetype == 'BOBJ':
-                    bobj.import_bobj(geom_path)
-                    #filename = geom['filename'].split('.')[0] + '.obj'
-                    #try:
-                    #    bpy.ops.import_scene.obj(filepath=os.path.join(self.path, filename))
-                    #except:
-                    #    print('ERROR: Missing object.')
-                    #    return
                 # find the newly imported obj
                 for obj in bpy.data.objects:
                     if 'phobosTag' not in obj:

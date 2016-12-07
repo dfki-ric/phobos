@@ -116,7 +116,6 @@ if "bpy" in locals():
     importlib.reload(phobos.model.geometries)
     importlib.reload(phobos.model.lights)
     importlib.reload(phobos.io.meshes.meshes)
-    importlib.reload(phobos.io.meshes.bobj)
     importlib.reload(phobos.io.entities.smurf)
     importlib.reload(phobos.io.entities.primitive)
     importlib.reload(phobos.io.entities.light)
@@ -154,7 +153,6 @@ else:
     import phobos.model.geometries
     import phobos.model.lights
     import phobos.io.meshes.meshes
-    import phobos.io.meshes.bobj
     import phobos.io.entities.smurf
     import phobos.io.entities.primitive
     import phobos.io.entities.light
