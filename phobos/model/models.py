@@ -608,14 +608,14 @@ def deriveTextData(modelname):
 
 
 def buildModelDictionary(root):
-    """Builds a python dictionary representation of a SMURF model for export and inspection.
+    """Builds a python dictionary representation of a Phobos model.
 
     :param root: bpy.types.objects
     :return: dict
     """
     #os.system('clear')
 
-    robot = {'links': {},
+    model = {'links': {},
              'joints': {},
              'sensors': {},
              'motors': {},
@@ -627,18 +627,18 @@ def buildModelDictionary(root):
              'chains': {}
              }
     # timestamp of model
-    robot["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
+    model["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
     if root.phobostype != 'link':
         log("Found no 'link' object as root of the robot model.", "ERROR", "buildModelDictionary")
         raise Exception(root.name + " is  no valid root link.")
     else:
         if 'modelname' in root:
-            robot['modelname'] = root["modelname"]
+            model['modelname'] = root["modelname"]
         else:
             log("No name for the model defines, setting to 'unnamed_model'", "WARNING", "buildModelDictionary")
-            robot['modelname'] = 'unnamed_model'
+            model['modelname'] = 'unnamed_model'
 
-    log("Creating dictionary for robot " + robot['modelname'] + " from object "
+    log("Creating dictionary for robot " + model['modelname'] + " from object "
         + root.name, "INFO", "buildModelDictionary")
 
     # create tuples of objects belonging to model
@@ -650,21 +650,21 @@ def buildModelDictionary(root):
     for link in linklist:
         # parse link and extract joint and motor information
         linkdict, jointdict, motordict = deriveKinematics(link)
-        robot['links'][linkdict['name']] = linkdict
+        model['links'][linkdict['name']] = linkdict
         if jointdict:  # joint will be None if link is a root
-            robot['joints'][jointdict['name']] = jointdict
+            model['joints'][jointdict['name']] = jointdict
         if motordict:  # motor will be None if no motor is attached or link is a root
-            robot['motors'][motordict['name']] = motordict
+            model['motors'][motordict['name']] = motordict
         # add inertial information to link
         try:  # if this link-inertial object is no present, we ignore the inertia!
             inertial = bpy.context.scene.objects['inertial_' + linkdict['name']]
             props = deriveDictEntry(inertial)
             if props is not None:
-                robot['links'][linkdict['name']]['inertial'] = props
+                model['links'][linkdict['name']]['inertial'] = props
         except KeyError:
             log("No inertia for link " + linkdict['name'], "WARNING", "buildModelDictionary")
 
-    # we need to combine inertia if certain objects are left out, and overwrite it
+    # combine inertia if certain objects are left out, and overwrite it
     inertials = (i for i in objectlist if i.phobostype == 'inertial' and "inertial/inertia" in i)
     editlinks = {}
     for i in inertials:
@@ -685,12 +685,9 @@ def buildModelDictionary(root):
         mv, cv, iv = inertia.fuseInertiaData(inertials)
         iv = inertia.inertiaMatrixToList(iv)
         if mv is not None and cv is not None and iv is not None:
-            robot['links'][linkname]['inertial'] = {'mass': mv,
-                                                            'inertia': iv,
-                                                            'pose': {'translation': list(cv),
-                                                                     'rotation_euler': [0, 0, 0]
-                                                                     }
-                                                            }
+            model['links'][linkname]['inertial'] = {'mass': mv, 'inertia': iv,
+                                                    'pose': {'translation': list(cv), 'rotation_euler': [0, 0, 0]}
+                                                    }
 
     # complete link information by parsing visuals and collision objects
     log("Parsing visual and collision (approximation) objects...", "INFO", "buildModelDictionary")
@@ -699,11 +696,11 @@ def buildModelDictionary(root):
             if obj.phobostype in ['visual', 'collision']:
                 props = deriveDictEntry(obj)
                 parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
-                robot['links'][parentname][obj.phobostype][nUtils.getObjectName(obj)] = props
+                model['links'][parentname][obj.phobostype][nUtils.getObjectName(obj)] = props
             elif obj.phobostype == 'approxsphere':
                 props = deriveDictEntry(obj)
                 parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
-                robot['links'][parentname]['approxcollision'].append(props)
+                model['links'][parentname]['approxcollision'].append(props)
         except KeyError:
             try:
                 log(parentname + " not found", "ERROR")
@@ -711,8 +708,8 @@ def buildModelDictionary(root):
                 log("No parent found for " + obj.name, "ERROR")
 
     # combine collision information for links
-    for linkname in robot['links']:
-        link = robot['links'][linkname]
+    for linkname in model['links']:
+        link = model['links'][linkname]
         bitmask = 0
         for collname in link['collision']:
             try:
@@ -726,19 +723,19 @@ def buildModelDictionary(root):
     for obj in objectlist:
         if obj.phobostype in ['sensor', 'controller']:
             props = deriveDictEntry(obj)
-            robot[obj.phobostype+'s'][nUtils.getObjectName(obj)] = props
+            model[obj.phobostype+'s'][nUtils.getObjectName(obj)] = props
 
     # parse materials
     log("Parsing materials...", "INFO", "buildModelDictionary")
-    robot['materials'] = collectMaterials(objectlist)
+    model['materials'] = collectMaterials(objectlist)
     for obj in objectlist:
         if obj.phobostype == 'visual' and len(obj.data.materials) > 0:
             mat = obj.data.materials[0]
             matname = nUtils.getObjectName(mat, 'material')
-            if matname not in robot['materials']:
-                robot['materials'][matname] = deriveMaterial(mat)  # this should actually never happen
+            if matname not in model['materials']:
+                model['materials'][matname] = deriveMaterial(mat)  # this should actually never happen
             linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
-            robot['links'][linkname]['visual'][nUtils.getObjectName(obj)]['material'] = matname
+            model['links'][linkname]['visual'][nUtils.getObjectName(obj)]['material'] = matname
 
     # identify unique meshes
     log("Parsing meshes...", "INFO", "buildModelDictionary")
@@ -757,7 +754,7 @@ def buildModelDictionary(root):
     log("Parsing groups...", "INFO", "buildModelDictionary")
     for group in bpy.data.groups:  # TODO: get rid of the "data" part and check for relation to robot
         if len(group.objects) > 0 and nUtils.getObjectName(group, 'group') != "RigidBodyWorld":
-            robot['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
+            model['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
 
     # gather information on chains of objects
     log("Parsing chains...", "INFO", "buildModelDictionary")
@@ -766,18 +763,18 @@ def buildModelDictionary(root):
         if obj.phobostype == 'link' and 'endChain' in obj:
             chains.extend(deriveChainEntry(obj))
     for chain in chains:
-        robot['chains'][chain['name']] = chain
+        model['chains'][chain['name']] = chain
 
     # gather information on lights
     log("Parsing lights...", "INFO", "buildModelDictionary")
     for obj in objectlist:
         if obj.phobostype == 'light':
-            robot['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
+            model['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
 
     # add additional data to model
-    robot.update(deriveTextData(robot['modelname']))
+    model.update(deriveTextData(model['modelname']))
 
     # shorten numbers in dictionary to n decimalPlaces and return it
     log("Rounding numbers...", "INFO", "buildModelDictionary")
     epsilon = 10**(-bpy.data.worlds[0].phobosexportsettings.decimalPlaces)  # TODO: implement this separately
-    return epsilonToZero(robot, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces), objectlist
+    return epsilonToZero(model, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces), objectlist
