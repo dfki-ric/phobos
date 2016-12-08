@@ -274,7 +274,6 @@ class ImportLibRobot(Operator):
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
 
     def execute(self, context):
-        startLog(self)
         libPath = os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml")
         path, file = os.path.split(self.filepath)
         if file.endswith(".bake"):
@@ -291,7 +290,6 @@ class ImportLibRobot(Operator):
                 f.truncate()
         else:
             log("This is no robot bake!", "ERROR")
-        endLog()
         return {"FINISHED"}
 
     def invoke(self, context, event):
@@ -350,7 +348,6 @@ class ImportSelectedLibRobot(Operator):
         row.prop(self, "obj_name")
 
     def execute(self, context):
-        startLog(self)
         log("Import robot bake", "INFO")
         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
@@ -388,8 +385,6 @@ class ImportSelectedLibRobot(Operator):
             robot_obj["entity/pose"] = selected_robot.label
             robot_obj["entity/isReference"] = True
             robot_obj.phobostype = 'entity'
-
-        endLog()
         return {'FINISHED'}
 
 
@@ -485,7 +480,6 @@ class ExportCurrentPoseOperator(Operator):
 
     def execute(self, context):
         # TODO
-        startLog(self)
         root = sUtils.getRoot(context.selected_objects[0])
 
         modelsPosesColl = bpy.context.user_preferences.addons['phobos'].preferences.models_poses
@@ -504,7 +498,6 @@ class ExportCurrentPoseOperator(Operator):
                            decimate_parameter=parameter)
         sUtils.selectObjects([root] + objectlist, clear=True, active=0)
         bpy.ops.scene.reload_models_and_poses_operator()
-        endLog()
         return {'FINISHED'}
 
 
@@ -554,7 +547,6 @@ class ExportAllPosesOperator(Operator):
         return True
 
     def execute(self, context):
-        startLog(self)
         root = sUtils.getRoot(context.selected_objects[0])
         objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
         sUtils.selectObjects(objectlist)
@@ -575,7 +567,6 @@ class ExportAllPosesOperator(Operator):
         bpy.context.window_manager.progress_end()
         sUtils.selectObjects([root] + objectlist, clear=True, active=0)
         bpy.ops.scene.reload_models_and_poses_operator()
-        endLog()
         return {'FINISHED'}
 
 

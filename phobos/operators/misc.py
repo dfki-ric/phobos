@@ -85,8 +85,6 @@ class ValidateOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-
-        startLog(self)
         messages = {}
         root = sUtils.getRoot(context.selected_objects[0])
         model, objectlist = models.buildModelDictionary(root)
@@ -96,7 +94,6 @@ class ValidateOperator(Operator):
             log("Errors in object " + entry + ":", 'INFO')
             for error in messages[entry]:
                 log(error, 'INFO')
-        endLog()
         return {'FINISHED'}
 
 
@@ -106,10 +103,8 @@ class CalculateMassOperator(Operator):
     bl_label = "Calculate Mass"
 
     def execute(self, context):
-        startLog(self)
         mass = gUtils.calculateSum(context.selected_objects, 'mass')
         log("The calculated mass is: " + str(mass), "INFO")
-        endLog()
         return {'FINISHED'}
 
 
@@ -137,10 +132,8 @@ class MeasureDistanceOperator(Operator):
         description="Distance vector between objects")
 
     def execute(self, context):
-        startLog(self)
         self.distance, self.distVector = gUtils.distance(context.selected_objects)
-        log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO")
-        endLog()
+        log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO", origin=self)
         return {'FINISHED'}
 
     @classmethod
