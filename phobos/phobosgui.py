@@ -27,12 +27,21 @@ Created on 6 Jan 2014
 """
 
 import os
+import sys
+import inspect
+
 import bpy
 import bgl
-from bpy.props import *
+from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
+                       PointerProperty, CollectionProperty)
+from bpy.types import AddonPreferences
+
 from . import defs
 from phobos.phoboslog import log, loglevels
 from phobos.operators.io import loadModelsAndPoses
+from phobos.io import entities
+from phobos.io import meshes
+from phobos.io import scenes
 
 
 class ModelPoseProp(bpy.types.PropertyGroup):
@@ -118,6 +127,22 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     sceneName = StringProperty(name='Name', default='', description="Name of scene to be exported.")
 
 
+class Mesh_Export_UIList(bpy.types.UIList):
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        # assert(isinstance(item, bpy.types.MaterialTextureSlot)
+        ma = data
+        slot = item
+        tex = slot.texture if slot else None
+        if self.layout_type in {'DEFAULT', 'COMPACT'}:
+            if tex:
+                layout.prop(tex, "name", text="", emboss=False, icon_value=icon)
+            else:
+                layout.label(text="", icon_value=icon)
+            if tex and isinstance(item, bpy.types.MaterialTextureSlot):
+                layout.prop(ma, "use_textures", text="", index=index)
+        elif self.layout_type == 'GRID':
+            layout.alignment = 'CENTER'
+            layout.label(text="", icon_value=icon)
 
 
 class Models_Poses_UIList(bpy.types.UIList):
@@ -170,7 +195,7 @@ class Models_Poses_UIList(bpy.types.UIList):
 
 
 class MessageOperator(bpy.types.Operator):
-    bl_idname = "error.message"
+    bl_idname = "phobos.message"
     bl_label = "Display a message in a window"
     type = StringProperty()
     message = StringProperty()
@@ -196,7 +221,7 @@ class MessageOperator(bpy.types.Operator):
 
 
 class OkOperator(bpy.types.Operator):
-    bl_idname = "error.ok"
+    bl_idname = "phobos.ok"
     bl_label = "OK"
 
     def execute(self, context):
@@ -449,7 +474,7 @@ class PhobosObjectPanel(bpy.types.Panel):
 
         layout = self.layout
 
-        #the following is used for real pre-defined rather than custom properties
+        #the following for real pre-defined rather than custom properties
         #row_type.prop(bpy.context.active_object, "type")
         row_type = layout.row()
         row_type.label(icon="OBJECT_DATA")
