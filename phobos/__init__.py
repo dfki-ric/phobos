@@ -103,7 +103,7 @@ if "bpy" in locals():
     importlib.reload(phobos.utils.naming)
     importlib.reload(phobos.utils.blender)
     importlib.reload(phobos.testing)
-    importlib.reload(phobos.logging)
+    importlib.reload(phobos.phoboslog)
     importlib.reload(phobos.phobosgui)
     importlib.reload(phobos.model.controllers)
     importlib.reload(phobos.model.joints)
@@ -140,7 +140,7 @@ else:
     import phobos.utils.naming
     import phobos.utils.blender
     import phobos.testing
-    import phobos.logging
+    import phobos.phoboslog
     import phobos.phobosgui
     import phobos.model.controllers
     import phobos.model.joints

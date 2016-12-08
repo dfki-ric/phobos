@@ -43,11 +43,11 @@ import math
 import bpy
 from bpy.types import AddonPreferences
 from bpy.props import StringProperty, EnumProperty, BoolProperty, CollectionProperty, IntProperty
-from phobos.logging import *
 
 
 # TODO: the following definitions for enum properties in blender should be
 # combined with the type definitions further below
+from phobos.phoboslog import log
 
 # phobos version number
 version = '0.7'

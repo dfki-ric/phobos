@@ -36,7 +36,7 @@ import phobos.defs as defs
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.io as iUtils
-from phobos.logging import startLog, endLog, log
+from phobos.phoboslog import log
 
 
 class ToggleNamespaces(Operator):
@@ -52,7 +52,6 @@ class ToggleNamespaces(Operator):
     )
 
     def execute(self, context):
-        startLog(self)
         objlist = context.selected_objects
         if self.complete:
             roots = list(set([sUtils.getRoot(obj) for obj in context.selected_objects]))
@@ -68,7 +67,6 @@ class ToggleNamespaces(Operator):
                     log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit", "ERROR")
             else:
                 nUtils.addNamespace(obj)
-        endLog()
         return {'FINISHED'}
 
 
@@ -84,13 +82,11 @@ class NameModelOperator(Operator):
         description="Name of the robot model to be assigned")
 
     def execute(self, context):
-        startLog(self)
         root = sUtils.getRoot(context.active_object)
         if root:
             root["modelname"] = self.modelname
         else:
             log("Could not set modelname due to missing root link. No name was set.", "ERROR")
-        endLog()
         return {'FINISHED'}
 
 
@@ -111,7 +107,6 @@ class SetModelVersionOperator(Operator):
         description="Insert Git branch name in place of *?")
 
     def execute(self, context):
-        startLog(self)
         root = sUtils.getRoot(context.active_object)
         if root:
             if self.usegitbranch:
@@ -122,7 +117,6 @@ class SetModelVersionOperator(Operator):
                 root["version"] = self.version
         else:
             log("Could not set version due to missing root link. No version was set.", "ERROR")
-        endLog()
         return {'FINISHED'}
 
 

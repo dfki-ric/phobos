@@ -37,7 +37,7 @@ import phobos.utils.general as gUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
-from phobos.logging import log
+from phobos.phoboslog import log
 from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 

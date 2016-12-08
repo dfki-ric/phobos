@@ -29,7 +29,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 import re
 from datetime import datetime
 import mathutils
-from phobos.logging import log
+from phobos.phoboslog import log
 
 
 def is_float(s):

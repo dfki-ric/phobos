@@ -35,7 +35,7 @@ from phobos.utils.io import securepath
 from phobos.utils.general import epsilonToZero
 from phobos.io.entities import entity_types
 from phobos.utils.selection import isEntity
-from phobos.logging import log
+from phobos.phoboslog import log
 from phobos.io.entities.entities import deriveGenericEntity
 
 def exportSMURFsScene(selected_only=True, subfolder=True):

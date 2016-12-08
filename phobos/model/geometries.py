@@ -7,7 +7,7 @@ import mathutils
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 import phobos.model.poses as poses
-from phobos.logging import log
+from phobos.phoboslog import log
 
 
 def deriveGeometry(obj):

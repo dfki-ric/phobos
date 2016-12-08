@@ -3,10 +3,12 @@ import os
 import subprocess
 import bpy
 from phobos import defs
-from phobos.logging import log
+from phobos.phoboslog import log
+
 
 indent = '  '
 xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
+
 
 def xmlline(ind, tag, names, values):
     """This function generates an xml line with specified values.

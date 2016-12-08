@@ -36,7 +36,7 @@ import phobos.defs as defs
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
-from phobos.logging import log
+from phobos.phoboslog import log
 
 
 def createLink(self, link):

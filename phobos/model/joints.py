@@ -33,7 +33,7 @@ Created on 7 Jan 2014
 import bpy
 import mathutils
 from phobos import defs
-from phobos.logging import log
+from phobos.phoboslog import log
 from phobos.model import joints
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils

@@ -32,7 +32,7 @@ Created on 12 Sep 2016
 
 import phobos.model.models as models
 import phobos.utils.selection as sUtils
-from phobos.logging import log
+from phobos.phoboslog import log
 
 
 def deriveEntity(entity, outpath, savetosubfolder):

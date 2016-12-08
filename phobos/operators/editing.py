@@ -47,7 +47,7 @@ import phobos.utils.naming as nUtils
 import phobos.model.joints as joints
 import phobos.model.sensors as sensors
 import phobos.model.links as links
-from phobos.logging import startLog, endLog, log
+from phobos.phoboslog import log
 
 
 class SortObjectsToLayersOperator(Operator):
@@ -57,7 +57,6 @@ class SortObjectsToLayersOperator(Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        startLog(self)
         objs = filter(lambda e: "phobostype" in e, context.selected_objects)
         for obj in objs:
             phobosType = obj.phobostype
@@ -67,7 +66,6 @@ class SortObjectsToLayersOperator(Operator):
                 obj.layers = layers
             if phobosType == 'undefined':
                 log("The phobostype of the object '" + obj.name + "' is undefined", "INFO")
-        endLog()
         return {'FINISHED'}
 
     @classmethod
@@ -136,7 +134,6 @@ class SetMassOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        startLog(self)
         objs = filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision", "inertial"), context.selected_objects)
         for obj in objs:
             try:
@@ -155,7 +152,6 @@ class SetMassOperator(Operator):
             if obj['mass'] != oldmass:
                 t = datetime.now()
                 obj['masschanged'] = t.isoformat()
-        endLog()
         return {'FINISHED'}
 
 
@@ -394,7 +390,6 @@ class RenameCustomProperty(Operator):
     )
 
     def execute(self, context):
-        startLog(self)
         objs = filter(lambda e: self.find in e, context.selected_objects)
         if self.replace != "":
             for obj in objs:
@@ -403,7 +398,6 @@ class RenameCustomProperty(Operator):
                 else:
                     obj[self.replace] = obj[self.find]
                     del obj[self.find]
-        endLog()
         return {'FINISHED'}
 
     @classmethod
@@ -425,14 +419,12 @@ class SetGeometryType(Operator):
         description="Phobos geometry type")
 
     def execute(self, context):
-        startLog(self)
         objs = filter(lambda e: "phobostype" in e, context.selected_objects)
         for obj in objs:
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
                 obj['geometry/type'] = self.geomType
             else:
                 log("The object '" + obj.name + "' is no collision or visual")
-        endLog()
         return {'FINISHED'}
 
     @classmethod
@@ -626,7 +618,6 @@ class EditYAMLDictionary(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        startLog(self)
         ob = context.active_object
         textfilename = ob.name + datetime.now().strftime("%Y%m%d_%H:%M")
         variablename = ob.name.translate({ord(c): "_" for c in "!@#$%^&*()[]{};:,./<>?\|`~-=+"}) \
@@ -649,7 +640,6 @@ class EditYAMLDictionary(Operator):
                     ]
         bUtils.createNewTextfile(textfilename, '\n'.join(contents))
         bUtils.openScriptInEditor(textfilename)
-        endLog()
         return {'FINISHED'}
 
     @classmethod
@@ -671,8 +661,6 @@ class CreateCollisionObjects(Operator):
         items=defs.geometrytypes)
 
     def execute(self, context):
-
-        startLog(self)
         visuals = []
         collisions = []
         for obj in context.selected_objects:
@@ -754,7 +742,6 @@ class CreateCollisionObjects(Operator):
                 # ob.parent_type = vis.parent_type
                 # ob.parent_bone = vis.parent_bone
             sUtils.selectObjects(collisions)
-        endLog()
         return {'FINISHED'}
 
 
@@ -1313,7 +1300,6 @@ class AddHeightmapOperator(Operator):
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
 
     def execute(self, context):
-        startLog(self)
         if os.path.basename(self.filepath) not in bpy.data.images:
             try:
                 img = bpy.data.images.load(self.filepath)
@@ -1346,7 +1332,6 @@ class AddHeightmapOperator(Operator):
         # Create Parenting
         sUtils.selectObjects([root, plane], clear=True, active=0)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
-        endLog()
         return {'FINISHED'}
 
     def invoke(self, context, event):

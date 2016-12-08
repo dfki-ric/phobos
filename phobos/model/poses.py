@@ -33,7 +33,7 @@ Created on 13 Feb 2014
 import os
 import bpy
 import phobos.utils.selection as sUtils
-from phobos.logging import log
+from phobos.phoboslog import log
 from phobos.utils.io import securepath
 
 

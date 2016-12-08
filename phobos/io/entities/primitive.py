@@ -33,7 +33,7 @@ Created on 12 Sep 2016
 import phobos.model.models as models
 import phobos.utils.naming as nUtils
 import phobos.utils.general as gUtils
-from phobos.logging import log
+from phobos.phoboslog import log
 from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 

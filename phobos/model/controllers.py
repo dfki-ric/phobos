@@ -30,7 +30,7 @@ import bpy
 from bpy.types import Operator
 from bpy.props import StringProperty, BoolProperty, FloatProperty
 from phobos import defs
-from phobos.logging import startLog, endLog, log
+from phobos.phoboslog import log
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 
@@ -63,7 +63,6 @@ class AddControllerOperator(Operator):
         description = "rate of the controller [Hz]")
 
     def execute(self, context):
-        startLog(self)
         global sensors
         global motors
         location = bpy.context.scene.cursor_location
@@ -88,7 +87,6 @@ class AddControllerOperator(Operator):
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        endLog()
         return {'FINISHED'}
 
 
@@ -106,7 +104,6 @@ class AddLegacyControllerOperator(Operator):
         description = "scale of the controller visualization")
 
     def execute(self, context):
-        startLog(self)
         location = bpy.context.scene.cursor_location
         objects = []
         controllers = []
@@ -135,7 +132,6 @@ class AddLegacyControllerOperator(Operator):
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
-        endLog()
         return {'FINISHED'}
 
 

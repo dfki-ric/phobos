@@ -27,7 +27,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import bpy
-from phobos.logging import log
+from phobos.phoboslog import log
 import phobos.defs as defs
 import phobos.utils.selection as selection
 

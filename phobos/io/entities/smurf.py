@@ -40,10 +40,10 @@ import phobos.utils.selection as sUtils
 import phobos.io.meshes as meshes
 import phobos.defs as defs
 from phobos.utils.io import securepath
-from phobos.logging import log
 from phobos.io.entities.srdf import exportModelToSRDF
 from phobos.io.entities.urdf import exportModelToURDF
 from phobos.io.entities.urdf import sort_urdf_elements
+from phobos.phoboslog import log
 
 
 def deriveEntity(entity, outpath, savetosubfolder):

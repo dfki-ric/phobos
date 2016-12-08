@@ -28,7 +28,7 @@ Created on 3 Nov 2016
 
 import phobos.model.models as models
 import phobos.utils.naming as nUtils
-from phobos.logging import log
+from phobos.phoboslog import log
 
 def deriveGenericEntity(entityobj, outpath=None):
     """This function handles an entity of unknown type by simply exporting its custom properties.

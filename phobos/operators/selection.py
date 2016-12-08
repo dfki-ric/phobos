@@ -34,7 +34,7 @@ from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty
 import phobos.defs as defs
 import phobos.utils.selection as sUtils
-from phobos.logging import startLog, endLog, log
+from phobos.phoboslog import log
 
 
 class SelectObjectsByPhobosType(Operator):
@@ -81,7 +81,6 @@ class SelectRootOperator(Operator):
     bl_options = {'REGISTER', 'UNDO', 'PRESET'}
 
     def execute(self, context):
-        startLog(self)
         roots = set()
         for obj in bpy.context.selected_objects:
             roots.add(sUtils.getRoot(obj))
@@ -91,7 +90,6 @@ class SelectRootOperator(Operator):
         else:
             # bpy.ops.error.message('INVOKE_DEFAULT', type="ERROR", message="Couldn't find any root object.")
             log("Couldn't find any root object.", "ERROR")
-        endLog()
         return {'FINISHED'}
 
 

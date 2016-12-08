@@ -2,7 +2,7 @@
 # coding=utf-8
 
 """
-.. module:: phobos.logging
+.. module:: phobos.phoboslog
     :platform: Unix, Windows, Mac
     :synopsis: TODO: This module offers a simple way to log messages from phobos and uses blender integrated tools
     to display them.
@@ -26,7 +26,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
-File logging.py
+File phoboslog.py
 
 Created on 05 Dec 2014
 
@@ -35,9 +35,6 @@ Created on 05 Dec 2014
 import bpy
 from datetime import datetime
 
-
-# global operator storing the currently active blender operator
-operator = None
 
 # levels of detail for logging
 loglevels = {"NONE": 0, "ERROR": 1, "WARNING": 2, "INFO": 3, "DEBUG": 4}
@@ -69,22 +66,7 @@ def decorate(level):
         return level
 
 
-def startLog(pOperater):
-    """Sets the global operator variable to the given operator
-    :param pOperator: The new active operator.
-    """
-    global operator
-    operator = pOperater
-
-
-def endLog():
-    """Sets the global operator variable to None.
-    """
-    global operator
-    operator = None
-
-
-def log(message, level="INFO", origin="", prefix=""):
+def log(message, level="INFO", origin=None, prefix=""):
     """Logs a given message to the blender console and logging file if present
     and if log level is low enough.
     :param message: The message to log.
@@ -92,12 +74,16 @@ def log(message, level="INFO", origin="", prefix=""):
     :param origin: If set the message is prefixed with the origin.
     :param prefix: Any string that should be printed before message (e.g. "\n")
     """
+    if type(origin) is not str:
+        originname = origin.bl_idname
+    else:
+        originname = origin
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
     if loglevels[level] <= loglevels[prefs.loglevel]:
         date = datetime.now().strftime("%Y%m%d_%H:%M")
-        msg = "[" + date + "] " + level + " " + message + " (" + origin + ")"
+        msg = "[" + date + "] " + level + " " + message + " (" + originname + ")"
         terminalmsg = prefix + "[" + date + "] " + decorate(level) + " " + message +\
-                      col.DIM + " (" + origin + ")" + col.ENDC
+                      col.DIM + " (" + originname + ")" + col.ENDC
         if prefs.logtofile:
             try:
                 with open(prefs.logfile, "a") as lf:
@@ -107,8 +93,8 @@ def log(message, level="INFO", origin="", prefix=""):
         # log to terminal or Blender
         if prefs.logtoterminal:
             print(terminalmsg)
-        elif operator is not None:
-            operator.report({level}, msg)
+        if origin is not None and type(origin) is not str:
+            origin.report({level}, msg)
 
 def register():
     print("Registering " + __name__)

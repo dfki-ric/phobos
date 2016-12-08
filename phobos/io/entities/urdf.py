@@ -22,7 +22,7 @@ import phobos.model.lights as lights
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.general as gUtils
-from phobos.logging import log
+from phobos.phoboslog import log
 
 #This is a really nice pythonic approach to creating a list of constants
 Defaults = namedtuple('Defaults', ['mass', 'idtransform'])

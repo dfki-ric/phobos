@@ -31,6 +31,7 @@ import bpy
 import bgl
 from bpy.props import *
 from . import defs
+from phobos.phoboslog import log, loglevels
 from phobos.operators.io import loadModelsAndPoses
 
 
