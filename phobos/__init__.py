@@ -55,7 +55,6 @@ if os.path.isfile(yamlconfpath):
     if (path == "v" or path == "i"):
         print("There is no YAML installation for python 3.4 or greater on this computer")
     else:
-        print("Importing yaml module")
         sys.path.insert(0, path)
         import yaml
 else:
@@ -63,12 +62,6 @@ else:
     print("Using distributed package instead!")
     sys.path.insert(0, sys.path[0] + "/phobos")
     import yaml
-
-    print("Importing yaml module")
-
-# prepare defs module
-import phobos.defs as defs
-import os
 
 # Add custom YAML (de-)serializer
 def bool_representer(dumper, data):
@@ -93,9 +86,10 @@ yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 
 if "bpy" in locals():
     import importlib
+    print("Reloading Phobos...")
     importlib.reload(phobos.defs)
-    print("Using following folder for defs: " + os.path.dirname(__file__) + "/definitions")
-    defs.updateDefs(os.path.dirname(__file__) + "/definitions")
+    print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
+    phobos.defs.updateDefs(os.path.dirname(__file__) + "/definitions")
     importlib.reload(phobos.utils.validation)
     importlib.reload(phobos.utils.selection)
     importlib.reload(phobos.utils.io)
@@ -128,11 +122,11 @@ if "bpy" in locals():
     importlib.reload(phobos.operators.selection)
     importlib.reload(phobos.operators.io)
     importlib.reload(phobos.operators.naming)
-    print("Reloading Phobos.")
 else:
-
-    print("Using following folder for defs: " + os.path.dirname(__file__) + "/definitions")
-    defs.updateDefs(os.path.dirname(__file__) + "/definitions")
+    print("Loading Phobos...")
+    print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
+    import phobos.defs
+    phobos.defs.updateDefs(os.path.dirname(__file__) + "/definitions")
     import phobos.utils.validation
     import phobos.utils.selection
     import phobos.utils.io
@@ -165,7 +159,6 @@ else:
     import phobos.operators.selection
     import phobos.operators.io
     import phobos.operators.naming
-    print("Importing Phobos modules.")
 
 import bpy
 
@@ -175,7 +168,6 @@ def register():
     :return: Nothing
 
     """
-    phobos.defs.register()
     phobos.phobosgui.register()
     bpy.utils.register_module(__name__)
 
@@ -186,7 +178,6 @@ def unregister():
     :return: Nothing
 
     """
-    phobos.defs.unregister()
     phobos.phobosgui.unregister()
     bpy.utils.unregister_module(__name__)
 
