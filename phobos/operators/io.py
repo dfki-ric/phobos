@@ -170,6 +170,43 @@ class RobotModelImporter(bpy.types.Operator):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
+
+class ChooseExportPathOperator(bpy.types.Operator):
+    """Set path for export"""
+    bl_idname = "phobos.choose_export_path"
+    bl_label = ""
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'FILE'
+
+    # creating property for storing the path to the .scn file
+    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+    filename = bpy.props.StringProperty(subtype="FILE_PATH")
+    directory = bpy.props.StringProperty(subtype="FILE_PATH")
+
+    @classmethod
+    def poll(cls, context):
+        return context is not None
+
+    def execute(self, context):
+        print(self.filename, self.filepath, self.directory)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
+# class ViewExportOperator(Operator):
+#     """Open a file explorer window in the export path"""
+#     bl_idname = "phobos.view_export"
+#     bl_label = "Export Scene"
+#     bl_options = {'REGISTER', 'UNDO'}
+#
+#     def execute(self, context):
+#        bpy.ops.wm.path_open(filepath=bpy.types.World.path)
+#        return {'FINISHED'}
+
+
 def generateLibEntries(param1, param2): #FIXME: parameter?
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
         return [("None",)*3] + [(entry,)*3 for entry in yaml.load(f.read())]
