@@ -60,12 +60,15 @@ def securepath(path):
     :return: String -- the path given as parameter, but secured by expanding ~ constructs.
 
     """
+    path = os.path.abspath(path)
     if not os.path.exists(path):
         try:
             os.makedirs(path)
         except NotADirectoryError:
             log(path + " is not a valid directory", "ERROR", "securepath")
-    return os.path.expanduser(path)
+            return None
+    return path
+    # os.path.expanduser(path)  # this is probably not necessary
 
 
 def getgitbranch():
@@ -75,3 +78,5 @@ def getgitbranch():
         return branch[branch.find('*')+2:]
     except subprocess.CalledProcessError:
         return None
+    except FileNotFoundError:
+        log("No git repository found.", "ERROR", origin="utils/io/getgitbranch")

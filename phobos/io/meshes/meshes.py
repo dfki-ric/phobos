@@ -36,7 +36,27 @@ import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 
 
-def exportObj(path, obj):
+def exportMesh(obj, path, meshtype):
+    objname = nUtils.getObjectName(obj)
+    tmpobjname = obj.name
+    obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
+    tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+    tmpobject.data = obj.data  # copy the mesh here
+    outpath = os.path.join(path, obj.data.name + "." + meshtype)
+    if meshtype == 'obj':
+        bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False,
+                                 use_mesh_modifiers=True)
+    elif meshtype == 'stl':
+        bpy.ops.export_mesh.stl(filepath=outpath, use_selection=True, use_mesh_modifiers=True)
+    elif meshtype == 'dae':
+        bpy.ops.wm.collada_export(filepath=outpath, selected=True)
+    bpy.ops.object.select_all(action='DESELECT')
+    tmpobject.select = True
+    bpy.ops.object.delete()
+    obj.name = tmpobjname
+
+
+def exportObj(obj, path):
     """This function exports a specific object to a chosen path as an .obj
 
     :param path: The path you want the object export to. *without the filename!*
@@ -45,21 +65,10 @@ def exportObj(path, obj):
     :type obj: .types.Object
 
     """
-    objname = nUtils.getObjectName(obj)
-    tmpobjname = obj.name
-    obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
-    tmpobject.data = obj.data  # copy the mesh here
-    outpath = os.path.join(path, obj.data.name + "." + 'obj')
-    bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False,
-                             use_mesh_modifiers=True)
-    bpy.ops.object.select_all(action='DESELECT')
-    tmpobject.select = True
-    bpy.ops.object.delete()
-    obj.name = tmpobjname
+    exportMesh(obj, path, 'obj')
 
 
-def exportStl(path, obj):
+def exportStl(obj, path):
     """This function exports a specific object to a chosen path as a .stl
 
     :param path: The path you want the object exported to. *without filename!*
@@ -68,20 +77,10 @@ def exportStl(path, obj):
     :type obj: bpy.types.Object
 
     """
-    objname = nUtils.getObjectName(obj)
-    tmpobjname = obj.name
-    obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
-    tmpobject.data = obj.data  # copy the mesh here
-    outpath = os.path.join(path, obj.data.name + "." + 'stl')
-    bpy.ops.export_mesh.stl(filepath=outpath, use_selection=True, use_mesh_modifiers=True)
-    bpy.ops.object.select_all(action='DESELECT')
-    tmpobject.select = True
-    bpy.ops.object.delete()
-    obj.name = tmpobjname
+    exportMesh(obj, path, 'stl')
 
 
-def exportDae(path, obj):
+def exportDae(obj, path):
     """This function exports a specific object to a chosen path as a .dae
 
     :param path: The path you want the object exported to. *without filename!*
@@ -90,16 +89,14 @@ def exportDae(path, obj):
     :type obj: bpy.types.Object
 
     """
-    objname = nUtils.getObjectName(obj)
-    tmpobjname = obj.name
-    obj.name = 'tmp_export_666'  # surely no one will ever name an object like so
-    tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
-    tmpobject.data = obj.data  # copy the mesh here
-    outpath = os.path.join(path, obj.data.name + "." + 'dae')
-    bpy.ops.object.select_all(action='DESELECT')
-    tmpobject.select = True
-    bpy.ops.wm.collada_export(filepath=outpath, selected=True)
-    bpy.ops.object.select_all(action='DESELECT')
-    tmpobject.select = True
-    bpy.ops.object.delete()
-    obj.name = tmpobjname
+    exportMesh(obj, path, 'dae')
+
+
+# registering mesh types with Phobos
+mesh_type_dict = {'obj': {'export': exportObj,
+                          'extensions': ('obj',)},
+                  'stl': {'export': exportStl,
+                          'extensions': ('stl',)},
+                  'dae': {'export': exportDae,
+                          'extensions': ('dae',)}
+                  }

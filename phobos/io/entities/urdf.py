@@ -48,7 +48,7 @@ def sort_urdf_elements(elems):
     return sorted(elems)
 
 
-def writeURDFGeometry(output, element):
+def writeURDFGeometry(output, element, relative_path='', mesh_format='obj'):
     """This functions writes the URDF geometry for a given element at the end of a given String.
 
     :param output: The String to append the URDF output string on.
@@ -68,10 +68,9 @@ def writeURDFGeometry(output, element):
         elif geometry['type'] == "sphere":
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
-            if bpy.data.worlds[0].phobosexportsettings.structureExport:
-                output.append(xmlline(5, 'mesh', ['filename', 'scale'], ["../" + geometry['filename'], l2str(geometry['scale'])]))
-            else:
-                output.append(xmlline(5, 'mesh', ['filename', 'scale'], [geometry['filename'], l2str(geometry['scale'])]))
+            output.append(xmlline(5, 'mesh', ['filename', 'scale'],
+                                  [relative_path + geometry['filename'] + '.' + mesh_format,
+                                   l2str(geometry['scale'])]))
         elif geometry['type'] == 'capsule':
             output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))  # FIXME: real capsules here!
         else:
@@ -81,7 +80,7 @@ def writeURDFGeometry(output, element):
         log("Misdefined geometry in element " + element['name'] + " " + str(err), "ERROR", "writeURDFGeometry")
 
 
-def exportModelToURDF(model, filepath):
+def exportUrdf(model, filepath, relative_path='', mesh_format='obj'):
     """This functions writes the URDF of a given model into a file at the given filepath.
     An existing file with this path will be overwritten.
 
@@ -139,7 +138,7 @@ def exportModelToURDF(model, filepath):
                         output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                               [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
-                        writeURDFGeometry(output, vis)
+                        output.append(writeURDFGeometry(output, vis, relative_path, mesh_format))
                         if 'material' in vis:
                             # FIXME: change back to 1 when implemented in urdfloader
                             if model['materials'][vis['material']]['users'] == 0:
@@ -172,7 +171,7 @@ def exportModelToURDF(model, filepath):
                         output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                               [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
-                        writeURDFGeometry(output, col)
+                        writeURDFGeometry(output, col, relative_path, mesh_format)
                         output.append(indent * 3 + '</collision>\n')
             output.append(indent * 2 + '</link>\n\n')
     # export joint information
@@ -280,6 +279,7 @@ def store_element_order(element_order, path):
     stream = open(path + '_element_order_debug.yml', 'w')
     stream.write(yaml.dump(element_order))
     stream.close()
+
 
 def round_float(float_as_str, decimal=6):
     """Casts 'float_as_str' to float and round to 'decimal' decimal places. The possible exception **ValueError** is
@@ -687,6 +687,10 @@ def get_phobos_joint_name(mars_name, has_limits):
 #             self.element_order['materials'].append(m['name'])
 
 
+# registering export functions of types with Phobos
+entity_type_dict = {'urdf': {'export': exportUrdf,
+                             'extensions': ('urdf', 'xml')}
+                    }
 
 def main():
     # call the newly registered operator

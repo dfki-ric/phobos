@@ -30,24 +30,145 @@ import os
 import yaml
 import sys
 import inspect
+import shutil
 
 import bpy
 import bgl
 import glob
 from bpy.types import Operator
-from bpy.props import EnumProperty, StringProperty, FloatProperty, IntProperty
+from bpy.props import (EnumProperty, StringProperty, FloatProperty, IntProperty,
+                      BoolProperty)
 
 import phobos.defs as defs
-from phobos.logging import startLog, endLog, log
+from phobos.phoboslog import log
 import phobos.model.models as models
 import phobos.model.links as links
 import phobos.utils.selection as sUtils
-import phobos.io.entities.urdf as urdf
-import phobos.io.scenes.smurfs as smurfs
-import phobos.io.entities.smurf as smurf
-import phobos.io.scenes.smurfs as smurfs
-from phobos.io.entities import entity_types
+from phobos.utils.io import securepath
+import phobos.io.entities as entities
+import phobos.io.meshes as meshes
+import phobos.io.scenes as scenes
 
+
+class ExportSceneOperator(Operator):
+    """Export the selected model(s) in a scene"""
+    bl_idname = "phobos.export_scene"
+    bl_label = "Export Scene"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        io.scenes.exportSMURFsScene()
+        return {'FINISHED'}
+
+
+class ExportModelOperator(Operator):
+    """Export the selected model"""
+    bl_idname = "phobos.export_robot"
+    bl_label = "Export Model"
+    bl_options = {'REGISTER'}
+
+    def execute(self, context):
+        # setup paths
+        expsets = bpy.data.worlds[0].phobosexportsettings
+        if expsets.path.startswith('.'):
+            export_path = os.path.join(bpy.path.abspath('//'), expsets.path)
+        else:
+            export_path = expsets.path
+        if not securepath(export_path):
+            log("Could not secure path to export to.", "ERROR", 'ExportModelOperator')
+            return {'CANCELLED'}
+        log("Export path: " + export_path, "DEBUG", 'ExportModelOperator')
+
+        # find model root TODO: this assumes that only parts of one model are selected
+        root = sUtils.getRoot(context.selected_objects[0])
+        if not sUtils.isModelRoot(root):
+            log("Selection includes objects not parented to any model root, please adapt selection.", "ERROR", "ExportModelOperator")
+            return {'CANCELLED'}
+
+        # derive model
+        model, objectlist = models.buildModelDictionary(root)
+
+        # export model in selected formats
+        for entitytype in entities.entity_types:
+            if expsets.structureExport:
+                model_path = os.path.join(export_path, entitytype)
+            else:
+                model_path = export_path
+            securepath(model_path)
+            try:
+                typename = "export_entity_" + entitytype
+                if getattr(bpy.data.worlds[0], typename):
+                    entities.entity_types[entitytype]['export'](model, model_path)
+                    log("Export model: " + model['name'] + ' as ' + entitytype, "DEBUG", 'ExportModelOperator')
+            except KeyError:
+                log("No export function available for selected model type: " + entitytype,
+                    "ERROR", "ExportModelOperator")
+
+        # TODO: Move mesh export to individual formats? This is practically SMURF
+        # export meshes in selected formats
+        for meshtype in meshes.mesh_types:
+            if expsets.structureExport:
+                mesh_path = os.path.join(export_path, 'meshes', meshtype)
+            else:
+                mesh_path = export_path
+            securepath(mesh_path)
+            try:
+                typename = "export_mesh_" + meshtype
+                if getattr(bpy.data.worlds[0], typename):
+                    for meshname in model['meshes']:
+                        meshes.mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_path)
+            except KeyError:
+                log("No export function available for selected mesh function: " + meshtype,
+                    "ERROR", "ExportModelOperator")
+
+        # TODO: Move texture export to individual formats? This is practically SMURF
+        # export textures
+        texture_path = securepath(os.path.join(export_path, 'textures'))
+        for materialname in model['materials']:
+            log("Exporting textures to " + texture_path, "INFO", "ExportModelOperator")
+            mat = model['materials'][materialname]
+            for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
+                if texturetype in mat:
+                    texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
+                    if os.path.isfile(texpath):
+                        shutil.copy(texpath, os.path.join(texture_path, os.path.basename(mat[texturetype])))
+        return {'FINISHED'}
+
+
+class RobotModelImporter(bpy.types.Operator):
+    """Import robot model file from various formats"""
+    bl_idname = "phobos.import_robot_model"
+    bl_label = ""
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'FILE'
+
+    # creating property for storing the path to the .scn file
+    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+
+    @classmethod
+    def poll(cls, context):
+        return context is not None
+
+    def execute(self, context):
+        modeltype = self.filepath.split('.')[-1]
+        if modeltype == 'scene':
+            imp = importer.MARSModelParser(self.filepath)
+        elif modeltype == 'urdf':
+            imp = importer.URDFModelParser(self.filepath)
+        elif modeltype == 'smurf' or modeltype == 'yml' or modeltype == 'yaml':
+            imp = importer.SMURFModelParser(self.filepath)
+        elif modeltype == 'scn':
+            imp = importer.MARSModelParser(self.filepath, zipped=True)
+        else:
+            print("Unknown model format, aborting import...")
+        bUtils.cleanScene()
+        imp.parseModel()
+        imp.createBlenderModel()
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 def generateLibEntries(param1, param2): #FIXME: parameter?
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
@@ -312,40 +433,6 @@ class CreateRobotInstance(Operator):
         return os.path.isfile(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"))
 
 
-class ExportSceneOperator(Operator):
-    """Export the selected model(s) in a scene"""
-    bl_idname = "phobos.export_scene"
-    bl_label = "Export Scene"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        startLog(self)
-        io.scenes.exportSMURFsScene()
-        endLog()
-        return {'FINISHED'}
-
-
-class ExportModelOperator(Operator):
-    """Export the selected model(s)"""
-    bl_idname = "phobos.export_robot"
-    bl_label = "Export Model"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        startLog(self)
-        root = sUtils.getRoot(context.selected_objects[0])
-        if root.phobostype != 'link':
-            log("Selection includes objects not parented to any model root, please adapt selection.", "ERROR", "ExportModelOperator")
-        else:
-            model, objectlist = models.buildModelDictionary(root)
-            if 'smurf' in entity_types:
-                entity_types['smurf'].export(model, objectlist)
-            else:
-                log("No export available for a robot entity!", "ERROR", __name__+".ExportModelOperator")
-            endLog()
-        return {'FINISHED'}
-
-
 class ExportCurrentPoseOperator(Operator):
     """Bake the selected model"""
     bl_idname = "phobos.export_current_poses"
@@ -490,42 +577,6 @@ class ExportAllPosesOperator(Operator):
         bpy.ops.scene.reload_models_and_poses_operator()
         endLog()
         return {'FINISHED'}
-
-
-class RobotModelImporter(bpy.types.Operator):
-    """Import robot model file from various formats"""
-    bl_idname = "phobos.import_robot_model"
-    bl_label = ""
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'FILE'
-
-    # creating property for storing the path to the .scn file
-    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
-
-    @classmethod
-    def poll(cls, context):
-        return context is not None
-
-    def execute(self, context):
-        modeltype = self.filepath.split('.')[-1]
-        if modeltype == 'scene':
-            imp = importer.MARSModelParser(self.filepath)
-        elif modeltype == 'urdf':
-            imp = importer.URDFModelParser(self.filepath)
-        elif modeltype == 'smurf' or modeltype == 'yml' or modeltype == 'yaml':
-            imp = importer.SMURFModelParser(self.filepath)
-        elif modeltype == 'scn':
-            imp = importer.MARSModelParser(self.filepath, zipped=True)
-        else:
-            print("Unknown model format, aborting import...")
-        importer.cleanUpScene()
-        imp.parseModel()
-        imp.createBlenderModel()
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
 
 
 def register():

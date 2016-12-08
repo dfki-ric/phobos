@@ -621,6 +621,7 @@ def buildModelDictionary(root):
              'motors': {},
              'controllers': {},
              'materials': {},
+             'meshes': {},
              'lights': {},
              'groups': {},
              'chains': {}
@@ -738,6 +739,19 @@ def buildModelDictionary(root):
                 robot['materials'][matname] = deriveMaterial(mat)  # this should actually never happen
             linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
             robot['links'][linkname]['visual'][nUtils.getObjectName(obj)]['material'] = matname
+
+    # identify unique meshes
+    log("Parsing meshes...", "INFO", "buildModelDictionary")
+    for obj in objectlist:
+        try:
+            if ((obj.phobostype == 'visual' or obj.phobostype == 'collision') and
+                    (obj['geometry/type'] == 'mesh') and (obj.data.name not in model['meshes'])):
+                model['meshes'][obj.data.name] = obj
+                for lod in obj.lod_levels:
+                    if lod.object.data.name not in model['meshes']:
+                        model['meshes'][lod.object.data.name] = lod.object
+        except KeyError:
+            log("Undefined geometry type in object " + obj.name, "ERROR", "buildModelDictionary")
 
     # gather information on groups of objects
     log("Parsing groups...", "INFO", "buildModelDictionary")

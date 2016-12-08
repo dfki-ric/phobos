@@ -31,21 +31,18 @@ Created on 12 Sep 2016
 """
 
 import os
-import shutil
 import yaml
-from datetime import datetime
 import bpy
+import phobos.defs as defs
 import phobos.model.models as models
 import phobos.utils.selection as sUtils
-import phobos.io.meshes as meshes
-import phobos.defs as defs
 from phobos.utils.io import securepath
 from phobos.io.entities.urdf import sort_urdf_elements
 from phobos.phoboslog import log
 
 
 def deriveEntity(entity, outpath, savetosubfolder):
-    """Derives the dictionary for a SMURF entity.
+    """Derives the dictionary for a SMURF entity from the phobos model dictionary.
 
     :param entity: The smurf root object.
     :type entity: bpy.types.Object
@@ -99,7 +96,7 @@ def deriveEntity(entity, outpath, savetosubfolder):
         sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)
         sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)  # re-select for mesh export
         model, objectlist = models.buildModelDictionary(smurf)
-        export(model, objectlist, smurf_outpath)
+        export(model, objectlist, smurf_outpath) # FIXME: this is the export function from entities!
         entitypose = models.deriveObjectPose(smurf)
         entry = models.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
 
@@ -110,9 +107,6 @@ def deriveEntity(entity, outpath, savetosubfolder):
         entry["position"] = entitypose["translation"]
         entry["rotation"] = entitypose["rotation_quaternion"]
     return entry
-
-
-
 
 
 def gatherAnnotations(model):
@@ -241,8 +235,7 @@ def sort_dict_list(dict_list, sort_key):
     return sorted_dict_list
 
 
-
-def exportModelToSMURF(model, path):
+def exportSmurf(model, path):
     """This function exports a given model to a specific path as a smurf representation.
 
     :param model: The model you want to export.
@@ -252,25 +245,22 @@ def exportModelToSMURF(model, path):
 
     """
     collisiondata = deriveRefinedCollisionData(model)
-    capsules = []
-    #capsules = gatherCollisionCapsules(model)
+    # capsules = []
+    # capsules = gatherCollisionCapsules(model)
     lodsettings = gatherLevelOfDetailSettings(model)
 
     exportdata = {'state': False,  # model['state'] != {}, # TODO: handle state
-              'materials': model['materials'] != {},
-              'sensors': model['sensors'] != {},
-              'motors': model['motors'] != {},
-              'controllers': model['controllers'] != {},
-              'collision': collisiondata != {},
-              'visuals': lodsettings != {},
-              'lights': model['lights'] != {}
-              }
+                  'materials': model['materials'] != {},
+                  'sensors': model['sensors'] != {},
+                  'motors': model['motors'] != {},
+                  'controllers': model['controllers'] != {},
+                  'collision': collisiondata != {},
+                  'visuals': lodsettings != {},
+                  'lights': model['lights'] != {}
+                  }
+
     # create all filenames
     smurf_filename = model['modelname'] + ".smurf"
-    if bpy.data.worlds[0].phobosexportsettings.structureExport:
-        urdf_filename = "../urdf/" + model['modelname'] + ".urdf"
-    else:
-        urdf_filename = model['modelname'] + ".urdf"
     filenames = {'state': model['modelname'] + "_state.yml",
                  'materials': model['modelname'] + "_materials.yml",
                  'sensors': model['modelname'] + "_sensors.yml",
@@ -302,7 +292,8 @@ def exportModelToSMURF(model, path):
 
     # write model information
     log("Writing SMURF model to " + smurf_filename, "INFO", "exportModelToSMURF")
-    modeldata = {"date": model["date"], "files": [urdf_filename] + [filenames[f] for f in fileorder if exportdata[f]]}
+    modeldata = {"date": model["date"],
+                 "files": [urdf_path + urdf_filename] + [filenames[f] for f in fileorder if exportdata[f]]}
     # append custom data
     with open(os.path.join(path, smurf_filename), 'w') as op:
         op.write('# main SMURF file of model "' + model['modelname'] + '"\n')
@@ -310,9 +301,6 @@ def exportModelToSMURF(model, path):
         op.write("SMURF version: " + defs.version + "\n")
         op.write("modelname: " + model['modelname'] + "\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
-
-    # write urdf
-    exportModelToURDF(model, os.path.join(path, urdf_filename))
 
     # #write semantics (SRDF information in YML format)
     # if export['semantics']:
@@ -390,6 +378,101 @@ def exportModelToSMURF(model, path):
     #            op.write('\n'.join(line.body for line in text.lines))
 
 
+# class SMURFModelParser(RobotModelParser):
+#     """Class derived from RobotModelParser which parses a SMURF model"""
+#
+#     def __init__(self, filepath):
+#         RobotModelParser.__init__(self, filepath)
+#
+#     def parseModel(self):
+#         print("Parsing SMURF model...")
+#         #smurf = None
+#         with open(self.filepath, 'r') as smurffile:
+#             smurf = yaml.load(smurffile)
+#         if smurf is None:
+#             log('No valid SMURF file.', "ERROR")
+#             return None
+#         urdffile = None
+#         srdffile = None
+#         ymlfiles = [f for f in smurf['files'] if f.endswith('.yml') or f.endswith('.yaml')]
+#         for f in smurf['files']:
+#             if f.endswith('.urdf'):
+#                 urdffile = f
+#             if f.endswith('.srdf'):
+#                 srdffile = f
+#         # get URDF info
+#         if urdffile is None:
+#             log("Did not find URDF file associated with SMURF.", "ERROR")
+#             return None
+#         urdfparser = URDFModelParser(os.path.join(self.path, urdffile))
+#         urdfparser.parseModel()
+#         if srdffile is not None:
+#             srdfparser = SRDFModelParser(os.path.join(self.path, srdffile))
+#             self.robot = srdfparser.parseModel(urdfparser.robot)
+#         else:
+#             self.robot = urdfparser.robot
+#         # make sure all types exist
+#         typelist = ['links', 'joints', 'materials', 'sensors', 'motors', 'controllers', 'groups', 'chains']
+#         for key in typelist:
+#             if key not in self.robot:
+#                 self.robot[key] = {}
+#         #add the smurf information
+#         custom_dicts = {}
+#         for yml in ymlfiles:
+#             with open(os.path.join(self.path, yml), 'r') as ymlfile:
+#                 ymldict = yaml.load(ymlfile)
+#             for key in ymldict:
+#                 print(key)
+#                 if key in ['materials', 'sensors', 'motors', 'controllers']:
+#                     for element in ymldict[key]:
+#                         if element['name'] not in self.robot[key]:
+#                             self.robot[key][element['name']] = element
+#                         else:
+#                             for tag in element:
+#                                 self.robot[key][element['name']][tag] = element[tag]
+#                 elif key in 'state':
+#                     pass  # TODO: handle state
+#                 else:
+#                     custom_dicts[key] = ymldict[key]
+#
+#         for key in custom_dicts:
+#             print('assign custom properties:', key, custom_dicts[key])
+#             for element in custom_dicts[key]:  # iterate over list with custom annotations
+#                 print(element)
+#                 try:
+#                     objtype = element['type']
+#                 except KeyError:
+#                     log("Could not find 'type' in custom annotation: " + str(element), "ERROR")
+#                 try:
+#                     objname = element['name']
+#                 except KeyError:
+#                     log("Could not find 'name' in custom annotation: " + str(element), "ERROR")
+#                 try:
+#                     if objtype+'s' in typelist:  #FIXME: this is a total hack!
+#                         objtype += 's'
+#                     else:
+#                         raise TypeError(objtype)
+#                     if objname in self.robot[objtype]:
+#                         for tag in element:
+#                             if tag not in ['type', 'name']:
+#                                 if not '$'+key in self.robot[objtype][objname]:
+#                                     self.robot[objtype][objname]['$'+key] = {tag: element[tag]}
+#                                 else:
+#                                     self.robot[objtype][objname]['$'+key][tag] = element[tag]
+#                     else:
+#                         raise NameError(objname)
+#                 except TypeError:
+#                     print("###ERROR: could not find 'type' or 'name' in custom annotation", objtype, objname)
+#                 except NameError:
+#                     log("Element " + str(objname) + " of type " + str(objtype) + " does not exist in this model.", "ERROR")
+#
+#         #now some debug output
+#         with open(self.filepath+'_SMURF_debug.yml', 'w') as outputfile:
+#             outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 
+# registering export functions of types with Phobos
+entity_type_dict = {'smurf': {'export': exportSmurf,
+                              'extensions': ('smurf',)}
+                    }
 

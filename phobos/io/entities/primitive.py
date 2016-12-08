@@ -68,5 +68,11 @@ def deriveEntity(entity, outpath, savetosubfolder):
                           'z': entity['geometry']['size'][2]}
     return entity
 
-# information for the registration in the exporter
-entity_type_name = 'primitive'
+
+def exportPrimitive():
+    pass
+
+# registering export functions of types with Phobos
+entity_type_dict = {'primitive': {'export': exportPrimitive,
+                                  'extensions': ('smurf',)}
+                    }

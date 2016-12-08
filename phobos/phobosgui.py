@@ -46,13 +46,7 @@ class ModelPoseProp(bpy.types.PropertyGroup):
     model_file = StringProperty()
     preview = StringProperty()
 
-    bpy.types.World.phobosexportsettings = PointerProperty(type=defs.PhobosExportSettings)
 
-    bpy.utils.register_class(Models_Poses_UIList)
-    bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(name="Index of current pose", default=0,update=showPreview)
-    bpy.types.Scene.preview_visible = bpy.props.BoolProperty(name="Is the draw preview operator running", default=False)
-    bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(name="Should we redraw the preview_template", default=False)
-    loadModelsAndPoses()
 class PhobosPrefs(AddonPreferences):
     bl_idname = __package__
 
@@ -103,6 +97,25 @@ class PhobosPrefs(AddonPreferences):
         layout.label(text="Folders")
         layout.prop(self, "modelsfolder", text="models folder")
         #layout.prop(self, 'pluginspath', text="Path for plugins")
+
+
+class PhobosExportSettings(bpy.types.PropertyGroup):
+
+    def updateExportPath(self, context):
+        if not bpy.data.worlds[0].phobosexportsettings.path.endswith('/'):
+            bpy.data.worlds[0].phobosexportsettings.path += '/'
+
+    path = StringProperty(name='path', default='.', update=updateExportPath)
+    relativePath = BoolProperty(name='Relative path', default=True)
+    structureExport = BoolProperty(name="Structure export", default=True, description="Create structured subfolders")
+    decimalPlaces = IntProperty(name="decimals",
+                                description="Number of decimal places to export",
+                                default=5)
+    exportTextures = BoolProperty(name='Export textures', default=True)
+    exportMeshes = BoolProperty(name='Export meshes', default=True)
+    outputMeshtype = StringProperty(name='Output mesh type', default='obj',
+                                    description="Mesh type to use in exported entity/scene files.")
+    sceneName = StringProperty(name='Name', default='', description="Name of scene to be exported.")
 
 
 
@@ -378,43 +391,35 @@ class PhobosExportPanel(bpy.types.Panel):
         g1.prop(expsets, "structureExport", text="Structure Export")
         g2 = ginlayout.column(align=True)
         g2.prop(expsets, "decimalPlaces")
+        g2.prop(expsets, "exportTextures", text="Export textures")
 
         layout.separator()
 
+        # Settings for mesh and entity export
         inlayout = self.layout.split()
+
         c1 = inlayout.column(align=True)
         c1.label(text="Mesh export")
-        c1.prop(expsets, "exportMeshes", text="Export Meshes")
+        for meshtype in meshes.mesh_types:
+            if 'export' in meshes.mesh_types[meshtype]:
+                typename = "export_mesh_" + meshtype
+                c1.prop(bpy.data.worlds[0], typename)
+        c1.label(text="output: " + bpy.data.worlds[0].phobosexportsettings.outputMeshtype)
 
-        c1.prop(expsets, "useBobj", text="Use .bobj format")
-        c1.prop(expsets, "useObj", text="Use .obj format")
-        c1.prop(expsets, "useStl", text="Use .stl format")
-        c1.prop(expsets, "useDae", text="Use .dae format")
-        if expsets.useObj:
-            labeltext = "URDF uses .obj"
-        elif expsets.useBobj:
-            labeltext = "URDF uses .bobj"
-        elif expsets.useStl:
-            labeltext = "URDF uses .stl"
-        elif expsets.useDae:
-            labeltext = "URDF uses .dae"
-        else:
-            labeltext = "URDF uses .obj"
-        c1.label(text=labeltext)
         c2 = inlayout.column(align=True)
-        c2.label(text="Robot Data Export")
-        #c2.prop(expsets, "exportMARSscene", text="as MARS scene")
-        c2.prop(expsets, "exportSMURF", text="As SMURF")
-        c2.prop(expsets, "exportURDF", text="As URDF")
-        c2.prop(expsets, "exportSRDF", text="With SRDF")
-        c2.prop(expsets, "exportYAML", text="As YAML dump")
-        c2.prop(expsets, "exportTextures", text="Export textures")
-        c2.prop(expsets, "exportCustomData", text="Export custom data")
+        c2.label(text="Model Export")
+        for entitytype in entities.entity_types:
+            if 'export' in entities.entity_types[entitytype]:
+                typename = "export_entity_" + entitytype
+                c2.prop(bpy.data.worlds[0], typename)
+
+        #c2.prop(expsets, "exportCustomData", text="Export custom data")
 
         ec1 = layout.column(align=True)
         ec1.operator("phobos.export_robot", text="Export Robot Model", icon="PASTEDOWN")
-        ec2 = layout.column(align=True)
-        ec2.operator("phobos.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
+        # FIXME: issue with export and import of models with new generic system
+        #ec2 = layout.column(align=True)
+        #ec2.operator("phobos.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
 
 #        layout.separator()
 #        layout.label(text="Baking")
@@ -425,7 +430,7 @@ class PhobosExportPanel(bpy.types.Panel):
 
         layout.label(text="Export Scene")
         self.layout.prop(expsets, "sceneName", text="Name")
-        self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
+        #self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
         layout.operator("phobos.export_scene", icon="WORLD_DATA")
 
 

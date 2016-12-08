@@ -32,17 +32,7 @@ def deriveGeometry(obj):
         elif gt == 'sphere':
             geometry['radius'] = obj.dimensions[0]/2
         elif gt == 'mesh':
-            filename = obj.data.name
-            expsets = bpy.data.worlds[0].phobosexportsettings
-            if expsets.useObj:
-                filename += ".obj"
-            elif expsets.useStl:
-                filename += ".stl"
-            elif expsets.useDae:
-                filename += ".dae"
-            else:
-                filename += ".obj"
-            geometry['filename'] = os.path.join('meshes', filename)
+            geometry['filename'] = obj.data.name
             geometry['scale'] = list(obj.scale)
             geometry['size'] = list(obj.dimensions)  # FIXME: is this needed to calculate an approximate inertia
         else:  # any other geometry type, i.e. 'plane'
@@ -88,9 +78,7 @@ def createGeometry(self, viscol, geomsrc):
             # urdf folder and that the meshes are in the meshes folder at
             # the same level as the urdf folder.
             if 'package://' in geom_path:
-               geom_path = re.sub(r'(.*)urdf/package://([^/]+)/(.*)',
-                                  '\\1\\3',
-                                  geom_path)
+               geom_path = re.sub(r'(.*)urdf/package://([^/]+)/(.*)', '\\1\\3', geom_path)
 
             bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
             meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
