@@ -29,6 +29,15 @@ Created on 26 March 2015
 from copy import deepcopy as dc
 
 
+checkMessages = {"NoObject": []}
+
+def generateCheckMessages(param1, param2):  # FIXME: Parameter?
+    """This function is just for generating a blender friendly list for an operator.
+
+    """
+    return [(x,)*3 for x in list(checkMessages.keys())]
+
+
 def check_dict(dic, validator, messages):
     """ This function validates a given dictionary against a validation.
     It writes all messages to the given messages list

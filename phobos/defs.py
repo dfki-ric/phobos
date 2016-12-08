@@ -39,14 +39,6 @@ in the future.
 import os
 import re
 import yaml
-import math
-import bpy
-from bpy.types import AddonPreferences
-from bpy.props import StringProperty, EnumProperty, BoolProperty, CollectionProperty, IntProperty
-
-
-# TODO: the following definitions for enum properties in blender should be
-# combined with the type definitions further below
 from phobos.phoboslog import log
 
 # phobos version number
@@ -112,21 +104,6 @@ type_properties = {"undefined": (),
                    "light_default": ('new_light', 'true', '1.0')
                    }
 
-# definitions of model elements to be read in
-dictConstraints = {}
-motortypes = []
-sensortypes = []
-sensorProperties = {}
-
-
-checkMessages = {"NoObject": []}
-
-def generateCheckMessages(param1, param2):#FIXME: Parameter?
-    """This function is just for generating a blender friendly list for an operator.
-
-    """
-    return [(x,)*3 for x in list(checkMessages.keys())]
-
 # default materials used in Phobos
 defaultmaterials = {
     'phobos_joint': {'diffuse': (0, 0, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
@@ -144,7 +121,13 @@ defaultmaterials = {
     'phobos_indicator4': {'diffuse': (1, 0, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
     'phobos_indicator5': {'diffuse': (1, 1, 0), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
     'phobos_indicator6': {'diffuse': (0, 1, 1), 'specular': (1, 1, 1), 'alpha': 1.0, 'diffuse_intensity': 1.0},
-}
+    }
+
+# definitions of model elements to be read in
+dictConstraints = {}
+motortypes = []
+sensortypes = []
+sensorProperties = {}
 
 
 def updateDefs(defsFolderPath):
@@ -154,7 +137,6 @@ def updateDefs(defsFolderPath):
     :type defsFolderPath: str
 
     """
-    print("Parsing YAML files for updating defs")
     dicts = __parseAllYAML(defsFolderPath)
     for entry in dicts:
         if 'Sensors' in entry:
@@ -174,8 +156,27 @@ def updateDefs(defsFolderPath):
     dictConstraints['sensors']['$forElem']['$selection__type'] = sensorProperties
 
 
+def __evaluateString(s):
+    """Evaluates a string by searching for mathematical expressions enclosed
+    in & and evaluating the inner string as python code.
+
+    :param s: The string to evaluate.
+    :type s: str
+    :return: str -- the evaluated string.
+    """
+    import math  # needed for evaluation of strings (see below)
+    p = re.compile('&.*&')
+    for ma in p.findall(s):
+        try:
+            s = s.replace(ma, str(eval(ma[1:-1])))
+        except():
+            log("The expression " + ma + " could not be evaluated. Ignoring file", "ERROR")
+            return ""
+    return s
+
+
 def __parseAllYAML(path):
-    """This functions reads all .yml files in the given path and loads them.
+    """Reads all .yml files in the given path and loads them.
     It also evaluates the by & enclosed expressions in this file.
 
     :param path: The path to open all files in.
@@ -187,7 +188,7 @@ def __parseAllYAML(path):
     dicts = []
     for root, dirs, files in os.walk(path):
         for file in files:
-            print("Parsing "+ file)
+            print('  '+file)
             if file.endswith(".yml"):
                 try:
                     f = open(path+'/'+file, 'r') #TODO: Better way to handle filepath and avoid double '/'?
@@ -202,123 +203,3 @@ def __parseAllYAML(path):
                     log("The file "+file+" was not found.", "ERROR")
     return dicts
 
-
-def __evaluateString(s):
-    """This functions evaluates a string by searching for mathematical expressions enclosed in &
-    and evaluating the inner string as python code.
-
-    :param s: The string to evaluate.
-    :type s: str
-    :return: str -- the evaluated string.
-    """
-    p = re.compile('&.*&')
-    for ma in p.findall(s):
-        try:
-            s = s.replace(ma, str(eval(ma[1:-1])))
-        except():
-            log("The expression " + ma + " could not be evaluated. Ignoring file", "ERROR")
-            return ""
-    return s
-
-
-class PhobosExportSettings(bpy.types.PropertyGroup):
-
-    def updateExportPath(self, context):
-        if not bpy.data.worlds[0].phobosexportsettings.path.endswith('/'):
-            bpy.data.worlds[0].phobosexportsettings.path += '/'
-
-    path = StringProperty(name='path', default='.', update=updateExportPath)
-    decimalPlaces = IntProperty(name="decimalPlaces",
-                                description="Number of decimal places to export",
-                                default=5)
-    relativePath = BoolProperty(name='relative path', default=True)
-    heightmapMesh = BoolProperty(name='export heightmap as mesh', default=False)
-    useBobj = BoolProperty(name="useBobj")
-    useObj = BoolProperty(name="useObj")
-    useStl = BoolProperty(name="useStl")
-    useDae = BoolProperty(name="useDae")
-    exportMeshes = BoolProperty(name="exportMeshes")
-    exportTextures = BoolProperty(name="exportTextures")
-    exportCustomData = BoolProperty(name="exportCustomData")
-    exportMARSscene = BoolProperty(name="exportMARSscene")
-    exportSMURF = BoolProperty(name="exportSMURF", default=True)
-    exportURDF = BoolProperty(name="exportURDF", default=True)
-    exportSRDF = BoolProperty(name="exportSRDF", default=False)
-    exportYAML = BoolProperty(name="exportYAML")
-    structureExport = BoolProperty(name="structureExport", default=False, description="Create structured subfolders")
-    sceneName = StringProperty(name="sceneName")
-
-
-class ModelPoseProp(bpy.types.PropertyGroup):
-    robot_name = StringProperty()
-    label = StringProperty()
-    hide = BoolProperty(default=True)
-    parent = StringProperty()
-    icon = StringProperty()
-    type = StringProperty()
-    path = StringProperty()
-    model_file = StringProperty()
-    preview = StringProperty()
-
-
-class PhobosPrefs(AddonPreferences):
-    bl_idname = __package__
-
-    logfile = StringProperty(
-        name="logfile",
-        subtype="FILE_PATH",
-        default="."
-    )
-
-    loglevel = EnumProperty(
-        name="loglevel",
-        items=tuple(((l,)*3 for l in tuple(loglevels.keys()))),
-        default="ERROR"
-    )
-
-    logtofile = BoolProperty(
-        name="logtofile",
-        default=False
-    )
-
-    logtoterminal = BoolProperty(
-        name="logtoterminal",
-        default=True
-    )
-
-    modelsfolder = StringProperty(
-        name="modelsfolder",
-        subtype="DIR_PATH",
-        default='',
-    )
-
-    exportpluginsfolder = StringProperty(
-        name='exportpluginsfolder',
-        subtype='DIR_PATH',
-        default='.'
-    )
-
-    models_poses = bpy.props.CollectionProperty(type=ModelPoseProp)
-
-    def draw(self, context):
-        layout = self.layout
-        layout.label(text="Logging Settings")
-        layout.prop(self, "logfile", text="log file path")
-        layout.prop(self, "logtofile", text="write to logfile")
-        layout.prop(self, "logtoterminal", text="only display in terminal")
-        layout.prop(self, "loglevel", text="log level")
-        layout.separator()
-        layout.label(text="Folders")
-        layout.prop(self, "modelsfolder", text="models folder")
-        layout.prop(self, 'pluginspath', text="Path for plugins")
-
-
-def register():
-    print("Registering " + __name__)
-    bpy.utils.register_class(ModelPoseProp)
-    bpy.utils.register_class(PhobosPrefs)
-    bpy.utils.register_class(PhobosExportSettings)
-
-def unregister():
-    print("Unregistering " + __name__)
-    bpy.utils.unregister_class(PhobosPrefs)

@@ -41,6 +41,16 @@ def register():
         items=defs.phobostypes,
         name="type",
         description="Phobos object type")
+class ModelPoseProp(bpy.types.PropertyGroup):
+    robot_name = StringProperty()
+    label = StringProperty()
+    hide = BoolProperty(default=True)
+    parent = StringProperty()
+    icon = StringProperty()
+    type = StringProperty()
+    path = StringProperty()
+    model_file = StringProperty()
+    preview = StringProperty()
 
     bpy.types.World.phobosexportsettings = PointerProperty(type=defs.PhobosExportSettings)
 
@@ -49,10 +59,60 @@ def register():
     bpy.types.Scene.preview_visible = bpy.props.BoolProperty(name="Is the draw preview operator running", default=False)
     bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(name="Should we redraw the preview_template", default=False)
     loadModelsAndPoses()
+class PhobosPrefs(AddonPreferences):
+    bl_idname = __package__
 
+    logfile = StringProperty(
+        name="logfile",
+        subtype="FILE_PATH",
+        default="."
+    )
 
 def unregister():
     print("Unregistering phobosgui...")
+    loglevel = EnumProperty(
+        name="loglevel",
+        items=tuple(((l,)*3 for l in tuple(loglevels.keys()))),
+        default="ERROR"
+    )
+
+    logtofile = BoolProperty(
+        name="logtofile",
+        default=False
+    )
+
+    logtoterminal = BoolProperty(
+        name="logtoterminal",
+        default=True
+    )
+
+    modelsfolder = StringProperty(
+        name="modelsfolder",
+        subtype="DIR_PATH",
+        default='',
+    )
+
+    exportpluginsfolder = StringProperty(
+        name='exportpluginsfolder',
+        subtype='DIR_PATH',
+        default='.'
+    )
+
+    models_poses = CollectionProperty(type=ModelPoseProp)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.label(text="Log Settings")
+        layout.prop(self, "logfile", text="log file path")
+        layout.prop(self, "logtofile", text="write to logfile")
+        layout.prop(self, "logtoterminal", text="only display in terminal")
+        layout.prop(self, "loglevel", text="log level")
+        layout.separator()
+        layout.label(text="Folders")
+        layout.prop(self, "modelsfolder", text="models folder")
+        #layout.prop(self, 'pluginspath', text="Path for plugins")
+
+
 
 
 class Models_Poses_UIList(bpy.types.UIList):
