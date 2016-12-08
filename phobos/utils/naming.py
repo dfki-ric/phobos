@@ -71,17 +71,16 @@ def addNamespace(obj):
     types = defs.subtypes
     name = obj.name
     root = selection.getRoot(obj)
-    namespace = root["entity/name"] if root != None and "entity/name" in root else None
-    if not namespace:
-        log("The obj " + getObjectName(obj) + "has no namespace to append to. Aborting.", "ERROR")
-        return
-    obj.name = namespace + "::" + name
-    for ptype in types:
-        typetag = ptype + "/type"
-        nametag = ptype + "/name"
-        if (typetag in obj or ("phobostype" in obj and obj.phobostype == ptype)) and nametag not in obj:
-            obj[nametag] = name
-
+    try:
+        namespace = root["entity/name"]
+        obj.name = namespace + "::" + name
+        for ptype in types:
+            typetag = ptype + "/type"
+            nametag = ptype + "/name"
+            if (typetag in obj or ("phobostype" in obj and obj.phobostype == ptype)) and nametag not in obj:
+                obj[nametag] = name
+    except (TypeError, KeyError):
+        log(getObjectName(obj) + " is not part of a well-defined entity.", "ERROR", "utils/naming/addNamespace")
 
 def removeNamespace(obj):
     """This function removes the namespace from an object if present.
