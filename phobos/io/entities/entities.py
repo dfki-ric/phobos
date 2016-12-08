@@ -26,6 +26,7 @@ Created on 3 Nov 2016
 @author: Kai von Szadkowski
 """
 
+import bpy
 import phobos.model.models as models
 import phobos.utils.naming as nUtils
 from phobos.phoboslog import log
@@ -370,3 +371,114 @@ def deriveGenericEntity(entityobj, outpath=None):
     log("Exporting " + nUtils.getObjectName(entityobj, 'entity') + " as entity of type 'generic", "INFO")
     entity = models.initObjectProperties(entityobj, 'entity', ['geometry'])
     return entity
+
+    # write urdf
+    urdf_path = "../urdf/" if structured else ''
+    urdf_filename = model['modelname'] + ".urdf"
+    exportModelToURDF(model, os.path.join(path, urdf_path, urdf_filename),
+                      '../meshes/' if structured else '')
+
+
+def export(model, objectlist, path=None, structured=True, entity_types=('smurf'), mesh_format='obj'):
+    """Configures and performs export of selected or specified model.
+
+    :param path: The path to export the model to.
+    :type path: str
+    :param model: The model to be exported.
+    :type model: dict
+
+    """
+    # check for valid model and objectlist
+    if not model or not objectlist:
+        return  # TODO: Check if there could be a valid model to export without a single object
+
+    # set up path
+    if not path:
+        if bpy.data.worlds[0].phobosexportsettings.relativePath:
+            outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"),
+                                                                 bpy.data.worlds[0].phobosexportsettings.path)))
+        else:
+            outpath = securepath(os.path.expanduser(bpy.data.worlds[0].phobosexportsettings.path))
+    else:
+        outpath = path
+    if not outpath.endswith(os.path.sep):
+        outpath += os.path.sep
+    meshoutpath = securepath(os.path.join(outpath, 'meshes'))
+    log("Export path: " + outpath, "DEBUG", "export")
+
+    # parse export settings
+    yaml = bpy.data.worlds[0].phobosexportsettings.exportYAML
+    urdf = bpy.data.worlds[0].phobosexportsettings.exportURDF
+    srdf = bpy.data.worlds[0].phobosexportsettings.exportSRDF
+    smurf = bpy.data.worlds[0].phobosexportsettings.exportSMURF
+    meshexp = bpy.data.worlds[0].phobosexportsettings.exportMeshes
+    texexp = bpy.data.worlds[0].phobosexportsettings.exportTextures
+    objexp = bpy.data.worlds[0].phobosexportsettings.useObj
+    stlexp = bpy.data.worlds[0].phobosexportsettings.useStl
+    daeexp = bpy.data.worlds[0].phobosexportsettings.useDae
+
+    # export data
+    if yaml or urdf or smurf:
+        if yaml:
+            exportModelToYAML(model, outpath + model["modelname"] + "_dict.yml")
+        if srdf:
+            exportModelToSRDF(model, outpath + model["modelname"] + ".srdf")
+        if smurf:
+            if bpy.data.worlds[0].phobosexportsettings.structureExport:
+                securepath(os.path.join(outpath, 'smurf'))
+                securepath(os.path.join(outpath, 'urdf'))
+                exportModelToSMURF(model, os.path.join(outpath, 'smurf/'))
+            else:
+                exportModelToSMURF(model, outpath)
+        elif urdf:
+            if bpy.data.worlds[0].phobosexportsettings.structureExport:
+                securepath(os.path.join(outpath, 'urdf'))
+                exportModelToURDF(model, os.path.join(outpath, 'urdf', model["modelname"] + ".urdf"))
+            else:
+                exportModelToURDF(model, outpath + model["modelname"] + ".urdf")
+    if meshexp:
+        meshnames = set()
+        exportobjects = set()
+        for obj in objectlist:
+            try:
+                if ((obj.phobostype == 'visual' or obj.phobostype == 'collision') and
+                        (obj['geometry/type'] == 'mesh') and (obj.data.name not in meshnames)):
+                    meshnames.add(obj.data.name)
+                    exportobjects.add(obj)
+                    for lod in obj.lod_levels:
+                        if lod.object.data.name not in meshnames:
+                            meshnames.add(lod.object.data.name)
+                            exportobjects.add(lod.object)
+            except KeyError:
+                log("Undefined geometry type in object " + obj.name + ", skipping mesh export", "ERROR", "export")
+
+        if exportobjects:  # if there are meshes to export
+            show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
+            if show_progress:
+                wm = bpy.context.window_manager
+                wm.progress_begin(0, float(len(exportobjects)))
+                i = 1
+            log("Exporting " + str(len(exportobjects)) + " meshes to " + meshoutpath + "...", "INFO", "export")
+            for expobj in exportobjects:
+                if objexp:
+                    meshes.meshes.exportObj(meshoutpath, expobj)
+                if stlexp:
+                    meshes.meshes.exportStl(meshoutpath, expobj)
+                if daeexp:
+                    meshes.meshes.exportDae(meshoutpath, expobj)
+                if show_progress:
+                    wm.progress_update(i)
+                    i += 1
+            if show_progress:
+                wm.progress_end()
+
+    if texexp:
+        log("Exporting textures to " + os.path.join(outpath, 'textures') + "...", "INFO", "export")
+        securepath(os.path.join(outpath, 'textures'))
+        for materialname in model['materials']:
+            mat = model['materials'][materialname]
+            for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
+                if texturetype in mat:
+                    texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
+                    if os.path.isfile(texpath):
+                        shutil.copy(texpath, os.path.join(outpath, 'textures', os.path.basename(mat[texturetype])))
