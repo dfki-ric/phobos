@@ -35,12 +35,6 @@ from phobos.phoboslog import log, loglevels
 from phobos.operators.io import loadModelsAndPoses
 
 
-def register():
-    print("Registering phobosgui...")
-    bpy.types.Object.phobostype = EnumProperty(
-        items=defs.phobostypes,
-        name="type",
-        description="Phobos object type")
 class ModelPoseProp(bpy.types.PropertyGroup):
     robot_name = StringProperty()
     label = StringProperty()
@@ -68,8 +62,6 @@ class PhobosPrefs(AddonPreferences):
         default="."
     )
 
-def unregister():
-    print("Unregistering phobosgui...")
     loglevel = EnumProperty(
         name="loglevel",
         items=tuple(((l,)*3 for l in tuple(loglevels.keys()))),
@@ -472,6 +464,55 @@ class PhobosObjectPanel(bpy.types.Panel):
             #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.phobostype+"_default"]
 
 
-# if script is run directly, register contained classes
-if __name__ == "__main__":
-    register()
+def register():
+    print("Registering phobosgui...")
+
+    bpy.types.Object.phobostype = EnumProperty(
+        items=defs.phobostypes,
+        name="type",
+        description="Phobos object type")
+
+    # Add settings to world to preserve settings for every model
+    for meshtype in meshes.mesh_types:
+        if 'export' in meshes.mesh_types[meshtype]:
+            typename = "export_mesh_" + meshtype
+            setattr(bpy.types.World, typename, BoolProperty(name=meshtype, default=False))
+
+    for entitytype in entities.entity_types:
+        if 'export' in entities.entity_types[entitytype]:
+            typename = "export_entity_" + entitytype
+            setattr(bpy.types.World, typename, BoolProperty(name=entitytype, default=False))
+
+    for scenetype in scenes.scene_types:
+        if 'export' in scenes.scene_types[scenetype]:
+            typename = "export_scene_" + scenetype
+            setattr(bpy.types.World, typename, BoolProperty(name=scenetype, default=False))
+
+    # Register classes (cannot be automatic, as it is placed in gui in the registering order)
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        try:
+            if classdef.__bases__[0] != bpy.types.Panel:
+                bpy.utils.register_class(classdef)
+        except ValueError:
+            print('Error with class registration:', key, classdef)
+    bpy.utils.register_class(PhobosToolsPanel)
+    bpy.utils.register_class(PhobosModelPanel)
+    bpy.utils.register_class(PhobosScenePanel)
+    bpy.utils.register_class(PhobosExportPanel)
+    bpy.utils.register_class(PhobosObjectPanel)
+
+    bpy.types.World.phobosexportsettings = PointerProperty(type=PhobosExportSettings)
+    bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(name="Index of current pose", default=0,update=showPreview)
+    bpy.types.Scene.preview_visible = bpy.props.BoolProperty(name="Is the draw preview operator running", default=False)
+    bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(name="Should we redraw the preview_template", default=False)
+
+    # Read in model and pose data from the respective folders
+    loadModelsAndPoses()
+
+
+def unregister():
+    print("Unregistering phobosgui...")
+
+    # Unregister classes
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.unregister_class(classdef)
