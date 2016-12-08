@@ -52,6 +52,7 @@ class ToggleNamespaces(Operator):
     )
 
     def execute(self, context):
+        self.report({'ERROR'}, "My message")
         objlist = context.selected_objects
         if self.complete:
             roots = list(set([sUtils.getRoot(obj) for obj in context.selected_objects]))
@@ -64,7 +65,8 @@ class ToggleNamespaces(Operator):
                 if nUtils.namesAreExplicit({obj.name.split("::")[-1]}, objnames):
                     nUtils.removeNamespace(obj)
                 else:
-                    log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit", "ERROR")
+                    log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit",
+                        "ERROR", op=self)
             else:
                 nUtils.addNamespace(obj)
         return {'FINISHED'}

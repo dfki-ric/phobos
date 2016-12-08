@@ -294,6 +294,7 @@ def round_float(float_as_str, decimal=6):
     """
     return round(float(float_as_str), decimal)
 
+
 def pos_rot_tree_to_lists(position, rotation):
     """Convert the xml representations of a position and a rotation to lists.
     If either is 'None', return a list of zeroes instead.
@@ -321,7 +322,8 @@ def pos_rot_tree_to_lists(position, rotation):
 
     return [px, py, pz], [rw, rx, ry, rz]
 
-def calc_pose_formats(position, rotation, pivot=[0,0,0]):
+
+def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
     """Create a dictionary containing various representations of the pose
     represented by 'position' and 'rotation':
         - translation == position
@@ -403,6 +405,7 @@ def calc_pose_formats(position, rotation, pivot=[0,0,0]):
 
     return pose_dict
 
+
 def add_quaternion(rot1, rot2):
     """Adds two rotations in quaternion format and returns the result as tuple.
 
@@ -420,10 +423,9 @@ def add_quaternion(rot1, rot2):
 
 
 def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
-    '''
-    Handle missing visual and collision geometry.
+    """Handle missing visual and collision geometry.
     I hope it was meant like that ...
-    '''
+    """
     if no_visual_geo or no_collision_geo:
         print("\n### WARNING: Missing geometry information in", link_dict['name'], ".")
     if no_visual_geo:
@@ -443,16 +445,6 @@ def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
             except:
                 pass # TODO: print something?
 
-
-
-def import_bobj(filepath):
-    """This function calls the bobj import function with the given filepath and no other parameters.
-
-    :param filepath: The path to the bobj file.
-    :type filepath: str
-
-    """
-    bobj_import.load(filepath)
 
 def get_phobos_joint_name(mars_name, has_limits):
     """This function gets a mars joint name and returns the corresponding urdf joint type.
@@ -694,7 +686,7 @@ entity_type_dict = {'urdf': {'export': exportUrdf,
 
 def main():
     # call the newly registered operator
-    cleanUpScene()
+    bUtils.cleanScene()
     bpy.ops.import_robot_model('INVOKE_DEFAULT')
 
 if __name__ == '__main__':
