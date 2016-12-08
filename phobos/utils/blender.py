@@ -228,3 +228,26 @@ def cleanObjectProperties(props):
             if key in props:
                 del props[key]
     return props
+
+def cleanScene():
+    """This function cleans up the scene and removes all blender objects, meshes, materials and lights.
+
+    """
+    # select all objects
+    bpy.ops.object.select_all(action="SELECT")
+
+    # and delete them
+    bpy.ops.object.delete()
+
+    # after that we have to clean up all loaded meshes (unfortunately
+    # this is not done automatically)
+    for mesh in bpy.data.meshes:
+        bpy.data.meshes.remove(mesh)
+
+    # and all materials
+    for material in bpy.data.materials:
+        bpy.data.materials.remove(material)
+
+    # and all lights (aka lamps)
+    for lamp in bpy.data.lamps:
+        bpy.data.lamps.remove(lamp)

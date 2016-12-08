@@ -244,29 +244,6 @@ def exportModelToURDF(model, filepath):
     log("Writing model data to " + filepath, "INFO", "exportModelToURDF")
 
 
-def cleanUpScene():
-    """This function cleans up the scene and removes all blender objects, meshes, materials and lights.
-
-    """
-    # select all objects
-    bpy.ops.object.select_all(action="SELECT")
-
-    # and delete them
-    bpy.ops.object.delete()
-
-    # after that we have to clean up all loaded meshes (unfortunately
-    # this is not done automatically)
-    for mesh in bpy.data.meshes:
-        bpy.data.meshes.remove(mesh)
-
-    # and all materials
-    for material in bpy.data.materials:
-        bpy.data.materials.remove(material)
-
-    # and all lights (aka lamps)
-    for lamp in bpy.data.lamps:
-        bpy.data.lamps.remove(lamp)
-
 def store_element_order(element_order, path):
     """This function dumps whatever pythonic yaml structure to a given filepath and appends *_element_order_debug.yml*
     to the end of path.
