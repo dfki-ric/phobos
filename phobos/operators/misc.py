@@ -32,9 +32,9 @@ import inspect
 import bpy
 import blf
 import bgl
-from bpy.props import *
+from bpy.props import StringProperty, FloatProperty, FloatVectorProperty, EnumProperty
 from bpy.types import Operator
-from phobos.logging import startLog, endLog, log
+from phobos.phoboslog import log
 import phobos.defs as defs
 import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
@@ -57,25 +57,23 @@ def get_pose_names(scene, context):
     return pose_items
 
 
-class SelectErrorOperator(Operator):
-    """Select an object with check errors"""
-    bl_idname = "phobos.select_error"
-    bl_label = "Select Erroneous Object"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    errorObj = EnumProperty(
-        name="Erroneous Objects",
-        items=defs.generateCheckMessages,
-        description="The objects containing errors")
-
-    def execute(self, context):
-        startLog(self)
-        sUtils.selectByName(self.errorObj)
-        for message in defs.checkMessages[self.errorObj]:
-            log(message, 'INFO')
-        endLog()
-
-        return {'FINISHED'}
+# class SelectErrorOperator(Operator):
+#     """Select an object with check errors"""
+#     bl_idname = "phobos.select_error"
+#     bl_label = "Select Erroneous Object"
+#     bl_options = {'REGISTER', 'UNDO'}
+#
+#     errorObj = EnumProperty(
+#         name="Erroneous Objects",
+#         items=defs.generateCheckMessages,
+#         description="The objects containing errors")
+#
+#     def execute(self, context):
+#         sUtils.selectByName(self.errorObj)
+#         for message in vUtils.checkMessages[self.errorObj]:
+#             log(message, 'INFO')
+#
+#         return {'FINISHED'}
 
 
 class ValidateOperator(Operator):
@@ -89,7 +87,7 @@ class ValidateOperator(Operator):
         root = sUtils.getRoot(context.selected_objects[0])
         model, objectlist = models.buildModelDictionary(root)
         vUtils.check_dict(model, defs.dictConstraints, messages)
-        defs.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
+        vUtils.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
         for entry in messages:
             log("Errors in object " + entry + ":", 'INFO')
             for error in messages[entry]:
