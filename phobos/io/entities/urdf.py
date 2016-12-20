@@ -91,6 +91,7 @@ def exportUrdf(model, filepath, relative_path='', mesh_format='obj'):
 
     """
     log("Export URDF to " + filepath, "INFO", "exportModelToURDF")
+    filename = os.path.join(filepath, model['name']+'.urdf')
 
     stored_element_order = None
     order_file_name = model['modelname'] + '_urdf_order'
@@ -138,7 +139,7 @@ def exportUrdf(model, filepath, relative_path='', mesh_format='obj'):
                         output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                               [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
-                        output.append(writeURDFGeometry(output, vis, relative_path, mesh_format))
+                        writeURDFGeometry(output, vis, relative_path, mesh_format)
                         if 'material' in vis:
                             # FIXME: change back to 1 when implemented in urdfloader
                             if model['materials'][vis['material']]['users'] == 0:
@@ -237,10 +238,10 @@ def exportUrdf(model, filepath, relative_path='', mesh_format='obj'):
                 output.append(indent * 2 + '</material>\n\n')
     # finish the export
     output.append(indent + '</robot>\n')
-    with open(filepath, 'w') as outputfile:
+    with open(filename, 'w') as outputfile:
         outputfile.write(''.join(output))
     # FIXME: different joint transformations needed for fixed joints
-    log("Writing model data to " + filepath, "INFO", "exportModelToURDF")
+    log("Writing model data to " + filename, "INFO", "exportModelToURDF")
 
 
 def store_element_order(element_order, path):
