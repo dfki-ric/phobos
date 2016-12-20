@@ -38,7 +38,7 @@ from phobos.utils.selection import isEntity
 from phobos.phoboslog import log
 from phobos.io.entities.entities import deriveGenericEntity
 
-def exportSMURFsScene(selected_only=True, subfolder=True):
+def exportSMURFsScene(entities, path, selected_only=True, subfolder=True):
     """Exports an arranged scene into SMURFS. It will export only entities
     with a valid entity/name, and entity/type property.
 
@@ -57,25 +57,19 @@ def exportSMURFsScene(selected_only=True, subfolder=True):
     if len(entities) == 0:
         log("There are no entities to export!", "WARNING", __name__+".exportSMURFsScene")
         return
-    # determine outpath for this scene
-    if bpy.data.worlds[0].phobosexportsettings.relativePath:
-        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"),
-                                                             bpy.data.worlds[0].phobosexportsettings.path)))
-    else:
-        outpath = securepath(os.path.expanduser(bpy.data.worlds[0].phobosexportsettings.path))
-    log("Exporting scene to " + outpath, "INFO", "exportSMURFsScene")
+    log("Exporting scene to " + path, "INFO", "exportSMURFsScene")
     for entity in entities:
         log("Exporting " + str(entity["entity/name"]) + " to SMURFS", "INFO")
         if entity["entity/type"] in entity_types:
             if hasattr(entity_types[entity["entity/type"]], 'deriveEntity'):
-                entry = entity_types[entity["entity/type"]].deriveEntity(entity, outpath, subfolder)  # known entity export
+                entry = entity_types[entity["entity/type"]].deriveEntity(entity, path, subfolder)  # known entity export
             else:
                 log("Required method ""deriveEntity"" not implemented", "ERROR")
         else:  # generic entity export
             entry = deriveGenericEntity(entity)
         outputlist.append(entry)
 
-    with open(os.path.join(outpath, bpy.data.worlds['World'].sceneName + '.smurfs'),
+    with open(os.path.join(path, bpy.data.worlds['World'].sceneName + '.smurfs'),
               'w') as outputfile:
         sceneinfo = "# SMURF scene " + bpy.data.worlds['World'].sceneName + "; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
         sceneinfo += "# created with Phobos " + version + " - https://github.com/rock-simulation/phobos\n\n"

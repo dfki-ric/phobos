@@ -394,7 +394,7 @@ def export(model, objectlist, path=None, structured=True, entity_types=('smurf')
 
     # set up path
     if not path:
-        if bpy.data.worlds[0].phobosexportsettings.relativePath:
+        if os.path.isabs(bpy.data.worlds[0].phobosexportsettings.path:
             outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"),
                                                                  bpy.data.worlds[0].phobosexportsettings.path)))
         else:

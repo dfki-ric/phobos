@@ -115,13 +115,13 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
             bpy.data.worlds[0].phobosexportsettings.path += '/'
 
     path = StringProperty(name='path', default='.', update=updateExportPath)
-    relativePath = BoolProperty(name='Relative path', default=True)
+    #relativePaths = BoolProperty(name='Relative Paths', default=True,
+     #                            description="Use relative paths in exported files")
     structureExport = BoolProperty(name="Structure export", default=True, description="Create structured subfolders")
     decimalPlaces = IntProperty(name="decimals",
                                 description="Number of decimal places to export",
                                 default=5)
     exportTextures = BoolProperty(name='Export textures', default=True)
-    exportMeshes = BoolProperty(name='Export meshes', default=True)
     outputMeshtype = StringProperty(name='Output mesh type', default='obj',
                                     description="Mesh type to use in exported entity/scene files.")
     sceneName = StringProperty(name='Name', default='', description="Name of scene to be exported.")
@@ -412,7 +412,7 @@ class PhobosExportPanel(bpy.types.Panel):
         p2.operator('phobos.choose_export_path', text='', icon='FILE_FOLDER')
         ginlayout = self.layout.split()
         g1 = ginlayout.column(align=True)
-        g1.prop(expsets, "relativePath")
+        #g1.prop(expsets, "relativePaths")
         g1.prop(expsets, "structureExport", text="Structure Export")
         g2 = ginlayout.column(align=True)
         g2.prop(expsets, "decimalPlaces")

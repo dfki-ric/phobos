@@ -70,10 +70,10 @@ class ExportModelOperator(Operator):
     def execute(self, context):
         # setup paths
         expsets = bpy.data.worlds[0].phobosexportsettings
-        if expsets.path.startswith('.'):
-            export_path = os.path.join(bpy.path.abspath('//'), expsets.path)
-        else:
+        if os.path.isabs(expsets.path):
             export_path = expsets.path
+        else:
+            export_path = os.path.join(bpy.path.abspath('//'), expsets.path)
         if not securepath(export_path):
             log("Could not secure path to export to.", "ERROR", 'ExportModelOperator')
             return {'CANCELLED'}
@@ -124,8 +124,8 @@ class ExportModelOperator(Operator):
         # TODO: Move texture export to individual formats? This is practically SMURF
         # export textures
         texture_path = securepath(os.path.join(export_path, 'textures'))
+        log("Exporting textures to " + texture_path, "INFO", "ExportModelOperator")
         for materialname in model['materials']:
-            log("Exporting textures to " + texture_path, "INFO", "ExportModelOperator")
             mat = model['materials'][materialname]
             for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
                 if texturetype in mat:
