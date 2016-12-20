@@ -74,7 +74,9 @@ def log(message, level="INFO", origin=None, prefix=""):
     :param origin: If set the message is prefixed with the origin.
     :param prefix: Any string that should be printed before message (e.g. "\n")
     """
-    if type(origin) is not str:
+    if origin is None:
+        originname='phoboslog'
+    elif type(origin) is not str:
         originname = origin.bl_idname
     else:
         originname = origin
