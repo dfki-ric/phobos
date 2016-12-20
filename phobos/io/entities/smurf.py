@@ -235,7 +235,7 @@ def sort_dict_list(dict_list, sort_key):
     return sorted_dict_list
 
 
-def exportSmurf(model, path):
+def exportSmurf(model, path, mesh_format='obj'):
     """This function exports a given model to a specific path as a smurf representation.
 
     :param model: The model you want to export.
@@ -271,6 +271,8 @@ def exportSmurf(model, path):
                  'lights': model['modelname'] + "_lights.yml",
                  }
     fileorder = ['collision', 'visuals', 'materials', 'motors', 'sensors', 'controllers', 'state', 'lights']
+    urdf_path = '../urdf/'
+    urdf_filename = model['name'] + '.urdf'
 
     # gather annotations and data from text files
     annotationdict = gatherAnnotations(model)
@@ -324,7 +326,7 @@ def exportSmurf(model, path):
                 tmpstate = joint['state'].copy()
                 tmpstate['name'] = jointname
                 states.append(joint['state'])
-        with open(path + filenames['state'], 'w') as op:
+        with open(os.path.join(path, filenames['state']), 'w') as op:
             op.write('#state' + infostring)
             op.write("modelname: " + model['modelname'] + '\n')
             op.write(yaml.dump(states))  #, default_flow_style=False))
@@ -332,7 +334,7 @@ def exportSmurf(model, path):
     # write materials, sensors, motors & controllers
     for data in ['materials', 'sensors', 'motors', 'controllers', 'lights']:
         if exportdata[data]:
-            with open(path + filenames[data], 'w') as op:
+            with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)
                 op.write(yaml.dump(sort_for_yaml_dump({data: list(model[data].values())}, data),
                                    default_flow_style=False))
@@ -340,7 +342,7 @@ def exportSmurf(model, path):
 
     # write additional collision information
     if exportdata['collision']:
-        with open(path + filenames['collision'], 'w') as op:
+        with open(os.path.join(path + filenames['collision']), 'w') as op:
             op.write('#collision data' + infostring)
             #op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
             op.write(yaml.dump({'collision': [collisiondata[key] for key in sorted(collisiondata.keys())]},
@@ -348,7 +350,7 @@ def exportSmurf(model, path):
 
     # write visual information (level of detail, ...)
     if exportdata['visuals']:
-        with open(path + filenames['visuals'], 'w') as op:
+        with open(os.path.join(path, filenames['visuals']), 'w') as op:
             op.write('#visual data' + infostring)
             op.write(yaml.dump({'visuals': list(lodsettings.values())}, default_flow_style=False))
 
@@ -360,13 +362,13 @@ def exportSmurf(model, path):
                 outstring += elementtype + ':\n'
                 outstring += yaml.dump(annotationdict[category][elementtype],
                                        default_flow_style=False) + "\n"
-            with open(path + filenames[category], 'w') as op:
+            with open(os.path.join(path, filenames[category]), 'w') as op:
                 op.write(outstring)
 
     # write custom data from textfiles
     for data in customdatalist:
         if exportdata[data]:
-            with open(path + filenames[data], 'w') as op:
+            with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)
                 op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
