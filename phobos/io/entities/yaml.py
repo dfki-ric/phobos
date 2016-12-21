@@ -9,7 +9,7 @@ def exportModelToYAML(model, filepath):
     """
     log("phobos YAML export: Writing model data to " + filepath, "INFO", "exportModelToYAML")
     with open(filepath, 'w') as outputfile:
-        outputfile.write('# YAML dump of robot model "' + model['modelname'] + '", ' + datetime.now().strftime(
+        outputfile.write('# YAML dump of robot model "' + model['name'] + '", ' + datetime.now().strftime(
             "%Y%m%d_%H:%M") + "\n")
         outputfile.write("# created with Phobos" + defs.version + " - https://github.com/rock-simulation/phobos\n\n")
         outputfile.write(yaml.dump(

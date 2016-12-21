@@ -94,11 +94,11 @@ def exportUrdf(model, filepath, relative_path='', mesh_format='obj'):
     filename = os.path.join(filepath, model['name']+'.urdf')
 
     stored_element_order = None
-    order_file_name = model['modelname'] + '_urdf_order'
+    order_file_name = model['name'] + '_urdf_order'
     if order_file_name in bpy.data.texts:
         stored_element_order = yaml.load(bpy.data.texts[order_file_name].as_string())
 
-    output = [xmlHeader, indent + '<robot name="' + model['modelname'] + '">\n\n']
+    output = [xmlHeader, indent + '<robot name="' + model['name'] + '">\n\n']
     # export link information
     if stored_element_order is None:
         sorted_link_keys = sorted(model['links'])

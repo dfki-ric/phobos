@@ -76,7 +76,7 @@
 #     """
 #     output = []
 #     output.append(xmlHeader)
-#     output.append(indent + '<robot name="' + model['modelname'] + '">\n\n')
+#     output.append(indent + '<robot name="' + model['name'] + '">\n\n')
 #     sorted_group_keys = sorted(model['groups'])
 #     for groupname in sorted_group_keys:
 #         output.append(indent * 2 + '<group name="' + groupname + '">\n')

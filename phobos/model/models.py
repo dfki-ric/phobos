@@ -633,12 +633,12 @@ def buildModelDictionary(root):
         raise Exception(root.name + " is  no valid root link.")
     else:
         if 'modelname' in root:
-            model['modelname'] = root["modelname"]
+            model['name'] = root["modelname"]
         else:
             log("No name for the model defines, setting to 'unnamed_model'", "WARNING", "buildModelDictionary")
-            model['modelname'] = 'unnamed_model'
+            model['name'] = 'unnamed_model'
 
-    log("Creating dictionary for robot " + model['modelname'] + " from object "
+    log("Creating dictionary for robot " + model['name'] + " from object "
         + root.name, "INFO", "buildModelDictionary")
 
     # create tuples of objects belonging to model
@@ -772,7 +772,7 @@ def buildModelDictionary(root):
             model['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
 
     # add additional data to model
-    model.update(deriveTextData(model['modelname']))
+    model.update(deriveTextData(model['name']))
 
     # shorten numbers in dictionary to n decimalPlaces and return it
     log("Rounding numbers...", "INFO", "buildModelDictionary")

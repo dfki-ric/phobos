@@ -261,14 +261,14 @@ def exportSmurf(model, path, mesh_format='obj'):
 
     # create all filenames
     smurf_filename = model['modelname'] + ".smurf"
-    filenames = {'state': model['modelname'] + "_state.yml",
-                 'materials': model['modelname'] + "_materials.yml",
-                 'sensors': model['modelname'] + "_sensors.yml",
-                 'motors': model['modelname'] + "_motors.yml",
-                 'controllers': model['modelname'] + "_controllers.yml",
-                 'collision': model['modelname'] + "_collision.yml",
-                 'visuals': model['modelname'] + "_visuals.yml",
-                 'lights': model['modelname'] + "_lights.yml",
+    filenames = {'state': model['name'] + "_state.yml",
+                 'materials': model['name'] + "_materials.yml",
+                 'sensors': model['name'] + "_sensors.yml",
+                 'motors': model['name'] + "_motors.yml",
+                 'controllers': model['name'] + "_controllers.yml",
+                 'collision': model['name'] + "_collision.yml",
+                 'visuals': model['name'] + "_visuals.yml",
+                 'lights': model['name'] + "_lights.yml",
                  }
     fileorder = ['collision', 'visuals', 'materials', 'motors', 'sensors', 'controllers', 'state', 'lights']
     urdf_path = '../urdf/'
@@ -277,20 +277,20 @@ def exportSmurf(model, path, mesh_format='obj'):
     # gather annotations and data from text files
     annotationdict = gatherAnnotations(model)
     for category in annotationdict:
-        filenames[category] = model['modelname'] + '_' + category + '.yml'
+        filenames[category] = model['name'] + '_' + category + '.yml'
         fileorder.append(category)
         exportdata[category] = True
 
     customdatalist = []
     for text in bpy.data.texts:
-        if text.name.startswith(model['modelname']+'::'):
+        if text.name.startswith(model['name']+'::'):
             dataname = text.name.split('::')[-1]
             customdatalist.append(dataname)
-            filenames[dataname] = model['modelname'] + '_' + dataname + '.yml'
+            filenames[dataname] = model['name'] + '_' + dataname + '.yml'
             fileorder.append(dataname)
             exportdata[dataname] = True
 
-    infostring = ' definition SMURF file for "' + model['modelname'] + '", ' + model["date"] + "\n\n"
+    infostring = ' definition SMURF file for "' + model['name'] + '", ' + model["date"] + "\n\n"
 
     # write model information
     log("Writing SMURF model to " + smurf_filename, "INFO", "exportModelToSMURF")
@@ -298,17 +298,17 @@ def exportSmurf(model, path, mesh_format='obj'):
                  "files": [urdf_path + urdf_filename] + [filenames[f] for f in fileorder if exportdata[f]]}
     # append custom data
     with open(os.path.join(path, smurf_filename), 'w') as op:
-        op.write('# main SMURF file of model "' + model['modelname'] + '"\n')
+        op.write('# main SMURF file of model "' + model['name'] + '"\n')
         op.write('# created with Phobos ' + defs.version + ' - https://github.com/rock-simulation/phobos\n\n')
         op.write("SMURF version: " + defs.version + "\n")
-        op.write("modelname: " + model['modelname'] + "\n")
+        op.write("modelname: " + model['name'] + "\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
     # #write semantics (SRDF information in YML format)
     # if export['semantics']:
     #     with open(path + filenames['semantics'], 'w') as op:
     #         op.write('#semantics'+infostring)
-    #         op.write("modelname: "+model['modelname']+'\n')
+    #         op.write("modelname: "+model['name']+'\n')
     #         semantics = {}
     #         if model['groups'] != {}:
     #             semantics['groups'] = model['groups']
@@ -328,7 +328,7 @@ def exportSmurf(model, path, mesh_format='obj'):
                 states.append(joint['state'])
         with open(os.path.join(path, filenames['state']), 'w') as op:
             op.write('#state' + infostring)
-            op.write("modelname: " + model['modelname'] + '\n')
+            op.write("modelname: " + model['name'] + '\n')
             op.write(yaml.dump(states))  #, default_flow_style=False))
 
     # write materials, sensors, motors & controllers
