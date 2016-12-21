@@ -111,10 +111,10 @@ class ExportModelOperator(Operator):
                 mesh_path = os.path.join(export_path, 'meshes', meshtype)
             else:
                 mesh_path = export_path
-            securepath(mesh_path)
             try:
                 typename = "export_mesh_" + meshtype
                 if getattr(bpy.data.worlds[0], typename):
+                    securepath(mesh_path)
                     for meshname in model['meshes']:
                         meshes.mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_path)
             except KeyError:
