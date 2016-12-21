@@ -414,9 +414,9 @@ class PhobosExportPanel(bpy.types.Panel):
         g1 = ginlayout.column(align=True)
         #g1.prop(expsets, "relativePaths")
         g1.prop(expsets, "structureExport", text="Structure Export")
+        g1.prop(expsets, "exportTextures", text="Export textures")
         g2 = ginlayout.column(align=True)
         g2.prop(expsets, "decimalPlaces")
-        g2.prop(expsets, "exportTextures", text="Export textures")
 
         layout.separator()
 
