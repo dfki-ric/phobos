@@ -90,19 +90,23 @@ class ExportModelOperator(Operator):
 
         # export model in selected formats
         for entitytype in entities.entity_types:
+            typename = "export_entity_" + entitytype
+            # check if format exists and should be exported
+            if not getattr(bpy.data.worlds[0], typename, False):
+                continue
+            # format exists and is exported:
             if expsets.structureExport:
                 model_path = os.path.join(export_path, entitytype)
             else:
                 model_path = export_path
             securepath(model_path)
             try:
-                typename = "export_entity_" + entitytype
-                if getattr(bpy.data.worlds[0], typename):
-                    entities.entity_types[entitytype]['export'](model, model_path)
-                    log("Export model: " + model['name'] + ' as ' + entitytype, "DEBUG", 'ExportModelOperator')
+                entities.entity_types[entitytype]['export'](model, model_path)
+                log("Export model: " + model['name'] + ' as ' + entitytype, "DEBUG", 'ExportModelOperator')
             except KeyError:
                 log("No export function available for selected model type: " + entitytype,
                     "ERROR", "ExportModelOperator")
+                continue
 
         # TODO: Move mesh export to individual formats? This is practically SMURF
         # export meshes in selected formats

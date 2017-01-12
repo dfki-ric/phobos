@@ -260,7 +260,7 @@ def exportSmurf(model, path, mesh_format='obj'):
                   }
 
     # create all filenames
-    smurf_filename = model['modelname'] + ".smurf"
+    smurf_filename = model['name'] + ".smurf"
     filenames = {'state': model['name'] + "_state.yml",
                  'materials': model['name'] + "_materials.yml",
                  'sensors': model['name'] + "_sensors.yml",
@@ -342,7 +342,7 @@ def exportSmurf(model, path, mesh_format='obj'):
 
     # write additional collision information
     if exportdata['collision']:
-        with open(os.path.join(path + filenames['collision']), 'w') as op:
+        with open(os.path.join(path, filenames['collision']), 'w') as op:
             op.write('#collision data' + infostring)
             #op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
             op.write(yaml.dump({'collision': [collisiondata[key] for key in sorted(collisiondata.keys())]},
