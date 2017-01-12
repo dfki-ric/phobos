@@ -97,7 +97,7 @@ def getRoot(obj=None):
                 obj = anobj
                 break
         else:
-            log("No root object found! Check your object selection", "ERROR")
+            log("No root object found! Check your object selection.", "ERROR")
             return None
     child = obj
     while child.parent and not ('modelname' in child or 'entity/name' in child):
@@ -127,7 +127,7 @@ def isModelRoot(obj):
     :param obj: The object for which model root status is tested.
     :return: True if obj is Phobos model root, else False.
     """
-    return 'modelname' in obj and obj.phobostype == 'link'
+    return None if obj is None else ('modelname' in obj and obj.phobostype == 'link')
 
 
 def isEntity(obj):
