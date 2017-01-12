@@ -158,15 +158,10 @@ class StorePoseOperator2(Operator):
 
     @classmethod
     def poll(self, context):
-        result = False
         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-        if (len(bpy.context.selected_objects) > 0) and \
-           (context.scene.objects.active != None) and \
-           (sUtils.isModelRoot(sUtils.getRoot(context.scene.objects.active))) and \
-           (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()):
-            result = True
-        return result
+        root = sUtils.isModelRoot(context.scene.objects.active)
+        return root and bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -209,10 +204,8 @@ class LoadPoseOperator2(Operator):
         result = False
         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-        root = sUtils.getRoot(context.scene.objects.active)
-        if (len(bpy.context.selected_objects) > 0) and \
-           (context.scene.objects.active != None) and \
-           (sUtils.isModelRoot(root)) and \
+        root = sUtils.isModelRoot(context.scene.objects.active)
+        if root and \
            (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()) and \
            (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["modelname"]) and \
            (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose'):
