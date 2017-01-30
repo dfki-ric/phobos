@@ -34,6 +34,7 @@ import os
 import bpy
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
+from phobos.phoboslog import log
 
 
 def exportMesh(obj, path, meshtype):
@@ -54,6 +55,50 @@ def exportMesh(obj, path, meshtype):
     tmpobject.select = True
     bpy.ops.object.delete()
     obj.name = tmpobjname
+
+
+def importMesh(filepath, meshtype):
+    # tag all objects
+    for obj in bpy.data.objects:
+        obj['phobosTag'] = True
+
+    # import mesh
+    try:
+        mesh_type_dict[meshtype]['import'](filepath)
+    except KeyError:
+        log('Unknown mesh type: ' + meshtype, 'ERROR', 'importMesh')
+
+    # find the newly imported obj
+    newgeom = None
+    for obj in bpy.data.objects:
+        if 'phobosTag' not in obj:
+            newgeom = obj
+
+    # with obj file import, blender only turns the object, not the vertices,
+    # leaving a rotation in the matrix_basis, which we here get rid of
+    if meshtype == 'obj':
+        bpy.ops.object.select_all(action='DESELECT')
+        newgeom.select = True
+        bpy.ops.object.transform_apply(rotation=True)
+
+    # clean the tag
+    for obj in bpy.data.objects:
+        if 'phobosTag' in obj:
+            del obj['phobosTag']
+
+    return newgeom
+
+
+def importObj(filepath):
+    bpy.ops.import_scene.obj(filepath=filepath)
+
+
+def importStl(filepath):
+    bpy.ops.import_mesh.stl(filepath=filepath)
+
+
+def importDae(filepath):
+    bpy.ops.wm.collada_import(filepath=filepath)
 
 
 def exportObj(obj, path):
@@ -94,9 +139,12 @@ def exportDae(obj, path):
 
 # registering mesh types with Phobos
 mesh_type_dict = {'obj': {'export': exportObj,
+                          'import': importObj,
                           'extensions': ('obj',)},
                   'stl': {'export': exportStl,
+                          'import': importStl,
                           'extensions': ('stl',)},
                   'dae': {'export': exportDae,
+                          'import': importDae,
                           'extensions': ('dae',)}
                   }
