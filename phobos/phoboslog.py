@@ -37,7 +37,7 @@ from datetime import datetime
 
 
 # levels of detail for logging
-loglevels = {"NONE": 0, "ERROR": 1, "WARNING": 2, "INFO": 3, "DEBUG": 4}
+loglevels = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
 
 class col:
     HEADER = '\033[95m'
@@ -81,7 +81,7 @@ def log(message, level="INFO", origin=None, prefix=""):
     else:
         originname = origin
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
-    if loglevels[level] <= loglevels[prefs.loglevel]:
+    if loglevels.index(level) <= loglevels.index(prefs.loglevel):
         date = datetime.now().strftime("%Y%m%d_%H:%M")
         msg = "[" + date + "] " + level + " " + message + " (" + originname + ")"
         terminalmsg = prefix + "[" + date + "] " + decorate(level) + " " + message +\
@@ -98,9 +98,3 @@ def log(message, level="INFO", origin=None, prefix=""):
         if origin is not None and type(origin) is not str:
             origin.report({level}, msg)
 
-def register():
-    print("Registering " + __name__)
-
-
-def unregister():
-    print("Unregistering " + __name__)

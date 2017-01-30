@@ -37,7 +37,7 @@ from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
 from bpy.types import AddonPreferences
 
 from . import defs
-from phobos.phoboslog import log, loglevels
+from phobos.phoboslog import loglevels
 from phobos.operators.io import loadModelsAndPoses
 from phobos.io import entities
 from phobos.io import meshes
@@ -67,7 +67,7 @@ class PhobosPrefs(AddonPreferences):
 
     loglevel = EnumProperty(
         name="loglevel",
-        items=tuple(((l,)*3 for l in tuple(loglevels.keys()))),
+        items=tuple(((l,)*3 for l in loglevels)),
         default="ERROR"
     )
 
