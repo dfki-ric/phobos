@@ -122,6 +122,11 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
     return obj
 
 
+def setObjectLayersActive(obj):
+    for l in range(obj.layers):
+        bpy.context.scene.layers[l] &= obj.layers[l]
+
+
 def toggleLayer(index, value=None):
     """ This function toggles a specific layer or sets it to a desired value.
 
