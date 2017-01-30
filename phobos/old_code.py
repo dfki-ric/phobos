@@ -706,3 +706,21 @@ __author__ = 'kavonszadkowski'
 #         """
 #         with open(self.filepath + '_ref_debug.yml', 'w') as outputfile:
 #             outputfile.write(yaml.dump(self.robot)) #last parameter prevents inline formatting for lists and dictionaries
+
+
+
+## importer
+
+# from collections import namedtuple
+#
+# #This is a really nice pythonic approach to creating a list of constants
+# Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
+# defaults = Defaults(0.001, #mass
+#                     [0.0, 0.0, 0.0]  # idtransform
+#                     )
+#
+# # more?
+# MARScolordict = {'diffuseFront': 'diffuseColor',
+#                  'specularFront': 'specularColor'}
+#
+# tmp_dir_name = 'phobos_magic_zip_tmp_dir'

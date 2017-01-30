@@ -82,6 +82,7 @@ def addNamespace(obj):
     except (TypeError, KeyError):
         log(getObjectName(obj) + " is not part of a well-defined entity.", "ERROR", "utils/naming/addNamespace")
 
+
 def removeNamespace(obj):
     """This function removes the namespace from an object if present.
 

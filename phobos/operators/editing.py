@@ -954,8 +954,7 @@ class AddMotorOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
-
-        objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
+        objs = (obj for obj in context.selected_objects if obj.phobostype == "link")
         for joint in objs:
             if not self.motortype == 'none':
                 # TODO: these keys have to be adapted

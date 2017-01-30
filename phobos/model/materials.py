@@ -35,7 +35,7 @@ import bpy
 import phobos.defs as defs
 
 
-def makeMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
+def createMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
     """Returns a Blender material specified by the input parameters
 
     :param name: The name of the new material.
@@ -79,4 +79,4 @@ def createPhobosMaterials():
     for material in defs.defaultmaterials:
         mat = defs.defaultmaterials[material]
         if not material in materials:
-            makeMaterial(material, mat['diffuse'], mat['specular'], mat['alpha'], mat['diffuse_intensity'])
+            createMaterial(material, mat['diffuse'], mat['specular'], mat['alpha'], mat['diffuse_intensity'])
