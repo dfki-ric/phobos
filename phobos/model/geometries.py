@@ -20,7 +20,8 @@ def getLargestDimension(geometry):
     if geometry['type'] == 'sphere':
         return geometry['radius']
     if geometry['type'] == 'mesh':
-        return max(geometry['size'] if 'size' in geometry else geometry['scale'])
+        # scale would make no sense here for an absolute measure
+        return max(geometry['size']) if 'size' in geometry else 0.2
 
 
 def deriveGeometry(obj):

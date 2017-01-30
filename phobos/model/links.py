@@ -72,7 +72,7 @@ def createLink(link):
 
     # set the size of the link
     elements = getGeometricElements(link)
-    scale = 2 * max((geometrymodel.getLargestDimension(element['geometry']) for element in elements)) if elements else 0.2
+    scale = max((geometrymodel.getLargestDimension(element['geometry']) for element in elements)) if elements else 0.2
     newlink.scale = (scale, scale, scale)
     bpy.ops.object.transform_apply(scale=True)
 
