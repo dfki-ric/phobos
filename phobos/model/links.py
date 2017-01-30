@@ -189,7 +189,7 @@ def placeChildLinks(model, parent):
         childLink.matrix_local = transform_matrix
         # 4: be happy, as world and basis are now the same and local is the transform to be exported to urdf
         # 5: take care of the rest of the tree
-        placeChildLinks(child)
+        placeChildLinks(model, child)
 
 
 def placeLinkSubelements(link):
@@ -200,7 +200,7 @@ def placeLinkSubelements(link):
     :type link: dict
 
     """
-    elements = getGeometricElements(link) + link['inertial'] if 'inertial' in link else None
+    elements = getGeometricElements(link) + ([link['inertial']] if 'inertial' in link else [])
     bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
     parentlink = bpy.data.objects[link['name']]
     for element in elements:
@@ -219,7 +219,7 @@ def placeLinkSubelements(link):
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
         obj.matrix_local = location * rotation
         try:
-            element.scale = element['geometry']['scale']
+            obj.scale = mathutils.Vector(element['geometry']['scale'])
         except KeyError:
             pass
         # sUtils.selectObjects([element, parentlink], True, 1)
