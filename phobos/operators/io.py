@@ -80,6 +80,7 @@ class ExportModelOperator(Operator):
         log("Export path: " + export_path, "DEBUG", 'ExportModelOperator')
 
         # find model root TODO: this assumes that only parts of one model are selected
+        log("Checking for model root in selection.", "INFO", 'ExportModelOperator')
         root = sUtils.getRoot(context.selected_objects[0])
         if not sUtils.isModelRoot(root):
             log("Selection includes objects not parented to any model root, please adapt selection.", "ERROR", "ExportModelOperator")
@@ -124,6 +125,7 @@ class ExportModelOperator(Operator):
             except KeyError:
                 log("No export function available for selected mesh function: " + meshtype,
                     "ERROR", "ExportModelOperator")
+                print(sys.exc_info()[0])
 
         # TODO: Move texture export to individual formats? This is practically SMURF
         # export textures
@@ -140,7 +142,7 @@ class ExportModelOperator(Operator):
         return {'FINISHED'}
 
 
-class RobotModelImporter(bpy.types.Operator):
+class ImportModelOperator(bpy.types.Operator):  # formerly "RobotModelImporter"
     """Import robot model file from various formats"""
     bl_idname = "phobos.import_robot_model"
     bl_label = ""
@@ -150,28 +152,29 @@ class RobotModelImporter(bpy.types.Operator):
     # creating property for storing the path to the .scn file
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
 
+    entitytype = EnumProperty(
+        name="Entity type",
+        items=tuple((e, e, 'file extensions: ' + str(entities.entity_types[e]['extensions']))
+                    for e in entities.entity_types if 'import' in entities.entity_types[e]),
+        description="Type of entity to import from file")
+
     @classmethod
     def poll(cls, context):
         return context is not None
 
     def execute(self, context):
-        modeltype = self.filepath.split('.')[-1]
-        if modeltype == 'scene':
-            imp = importer.MARSModelParser(self.filepath)
-        elif modeltype == 'urdf':
-            imp = importer.URDFModelParser(self.filepath)
-        elif modeltype == 'smurf' or modeltype == 'yml' or modeltype == 'yaml':
-            imp = importer.SMURFModelParser(self.filepath)
-        elif modeltype == 'scn':
-            imp = importer.MARSModelParser(self.filepath, zipped=True)
-        else:
-            print("Unknown model format, aborting import...")
-        bUtils.cleanScene()
-        imp.parseModel()
-        imp.createBlenderModel()
+        try:
+            log("Importing " + self.filepath + ' as ' + self.entitytype, "INFO", 'ImportModelOperator')
+            model = entities.entity_types[self.entitytype]['import'](self.filepath)
+        except KeyError:
+            log("No import function available for selected model type: " + self.entitytype,
+                "ERROR", "ImportModelOperator")
+        #bUtils.cleanScene()
+        models.buildModelFromDictionary(model)
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        #wm.invoke_props_dialog(self,width=300,height=100)
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
