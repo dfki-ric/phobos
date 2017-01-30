@@ -870,6 +870,7 @@ def buildModelFromDictionary(model):
             try:
                 rootlink = sUtils.getRoot(bpy.data.objects[root['name']])
                 rootlink['modelname'] = model['name']
+                rootlink.location=(0, 0, 0)
             except KeyError:
                 log("Could not assign model name to root link.", "ERROR")
 
@@ -877,31 +878,49 @@ def buildModelFromDictionary(model):
     for link in model['links']:
         linkmodel.placeLinkSubelements(model['links'][link])
 
-    log("Creating sensors...", 'INFO', 'buildModelFromDictionary')
-    for s in model['sensors']:
-        sensormodel.createSensor(model['sensors'][s])
+    try:
+        log("Creating sensors...", 'INFO', 'buildModelFromDictionary')
+        for s in model['sensors']:
+            sensormodel.createSensor(model['sensors'][s])
+    except KeyError:
+        log("No sensors in model " + model['name'], 'INFO', 'buildModelFromDictionary')
 
-    log("Creating motors...", 'INFO', 'buildModelFromDictionary')
-    for m in model['motors']:
-        eUtils.addDictionaryToObj(model['motors'][m],
-                                  model['joints'][model['motors'][m]['joint']],
-                                  category='motor')
+    try:
+        log("Creating motors...", 'INFO', 'buildModelFromDictionary')
+        for m in model['motors']:
+            eUtils.addDictionaryToObj(model['motors'][m],
+                                      model['joints'][model['motors'][m]['joint']],
+                                      category='motor')
+    except KeyError:
+        log("No motors in model " + model['name'], 'INFO', 'buildModelFromDictionary')
 
-    log("Creating controllers...", 'INFO', 'buildModelFromDictionary')
-    for c in model['controllers']:
-        controllermodel.createController(model['controllers'][c])
+    try:
+        log("Creating controllers...", 'INFO', 'buildModelFromDictionary')
+        for c in model['controllers']:
+            controllermodel.createController(model['controllers'][c])
+    except KeyError:
+        log("No controllers in model " + model['name'], 'INFO', 'buildModelFromDictionary')
 
-    log("Creating groups...", 'INFO', 'buildModelFromDictionary')
-    for g in model['groups']:
-        createGroup(model['groups'][g])
+    try:
+        log("Creating groups...", 'INFO', 'buildModelFromDictionary')
+        for g in model['groups']:
+            createGroup(model['groups'][g])
+    except KeyError:
+        log("No kinematic groups in model " + model['name'], 'INFO', 'buildModelFromDictionary')
 
-    log("Creating chains...", 'INFO', 'buildModelFromDictionary')
-    for ch in model['chains']:
-        createChain(model['chains'][ch])
+    try:
+        log("Creating chains...", 'INFO', 'buildModelFromDictionary')
+        for ch in model['chains']:
+            createChain(model['chains'][ch])
+    except KeyError:
+        log("No kinematic chains in model " + model['name'], 'INFO', 'buildModelFromDictionary')
 
-    log("Creating lights...", 'INFO', 'buildModelFromDictionary')
-    for l in model['lights']:
-        lightmodel.createLight(model['lights'][l])
+    try:
+        log("Creating lights...", 'INFO', 'buildModelFromDictionary')
+        for l in model['lights']:
+            lightmodel.createLight(model['lights'][l])
+    except KeyError:
+        log("No lights in model " + model['name'], 'INFO', 'buildModelFromDictionary')
 
 
 def createGroup(group):
