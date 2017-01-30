@@ -36,17 +36,35 @@ import yaml
 
 # import from Blender
 import bpy
+import mathutils
 
 # import from Phobos
-import phobos.model.joints as joints
-import phobos.model.inertia as inertia
+import phobos.model.links as linkmodel
+import phobos.model.inertia as inertiamodel
+import phobos.model.joints as jointmodel
+#import phobos.model.motors as motormodel
+import phobos.model.controllers as controllermodel
+import phobos.model.sensors as sensormodel
+import phobos.model.lights as lightmodel
+import phobos.model.poses as poses
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
+import phobos.utils.blender as eUtils
 from phobos.phoboslog import log
 from phobos.utils.general import epsilonToZero
 from phobos.model.poses import deriveObjectPose
 from phobos.model.geometries import deriveGeometry
+
+
+        #    if prop != 'joint':
+        #        if not prop.startswith('$'):
+        #            joint['motor/'+prop] = motor[prop]
+        #        else:
+        #            for tag in motor[prop]:
+        #                joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
+    #except KeyError:
+        #print("Joint " + motor['joint'] + " does not exist", "ERROR")
 
 
 def collectMaterials(objectlist):
@@ -133,13 +151,13 @@ def deriveJoint(obj):
 
     """
     if 'joint/type' not in obj.keys():
-        jt, crot = joints.deriveJointType(obj, adjust=True)
+        jt, crot = jointmodel.deriveJointType(obj, adjust=True)
     props = initObjectProperties(obj, phobostype='joint', ignoretypes=['link', 'motor', 'entity'])
 
     parent = sUtils.getEffectiveParent(obj)
     props['parent'] = nUtils.getObjectName(parent)
     props['child'] = nUtils.getObjectName(obj)
-    axis, minmax = joints.getJointConstraints(obj)
+    axis, minmax = jointmodel.getJointConstraints(obj)
     if axis:
         props['axis'] = list(axis)
     limits = {}
@@ -305,6 +323,52 @@ def deriveCollision(obj):
         log("Missing data in collision object " + obj.name, "ERROR", "deriveCollision")
         return None
     return collision
+
+
+def deriveCapsule(obj):
+    """This function derives a capsule from a given blender object
+
+    :param obj: The blender object to derive the capsule from.
+    :type obj: bpy_types.Object
+    :return: tuple
+
+    """
+    viscol_dict = {}
+    capsule_pose = poses.deriveObjectPose(obj)
+    rotation = capsule_pose['rotation_euler']
+    capsule_radius = obj['geometry']['radius']
+    for part in ['sphere1', 'cylinder', 'sphere2']:
+        viscol = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
+        viscol['name'] = nUtils.getObjectName(obj).split(':')[-1] + '_' + part
+        geometry = {}
+        pose = {}
+        geometry['radius'] = capsule_radius
+        if part == 'cylinder':
+            geometry['length'] = obj['geometry']['length']
+            geometry['type'] = 'cylinder'
+            pose = capsule_pose
+        else:
+            geometry['type'] = 'sphere'
+            if part == 'sphere1':
+                location = obj['sph1_location']
+            else:
+                location = obj['sph2_location']
+            pose['translation'] = location
+            pose['rotation_euler'] = rotation
+            loc_mu = mathutils.Matrix.Translation(location)
+            rot_mu = mathutils.Euler(rotation).to_quaternion()
+            pose['rotation_quaternion'] = list(rot_mu)
+            matrix = loc_mu * rot_mu.to_matrix().to_4x4()
+            #print(list(matrix))
+            pose['matrix'] = [list(vector) for vector in list(matrix)]
+        viscol['geometry'] = geometry
+        viscol['pose'] = pose
+        try:
+            viscol['bitmask'] = int(''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups]), 2)
+        except AttributeError:
+            pass
+        viscol_dict[part] = viscol
+    return viscol_dict, obj.parent
 
 
 def deriveApproxsphere(obj):
@@ -682,8 +746,8 @@ def buildModelDictionary(root):
             inertials.append(bpy.context.scene.objects['inertial_' + linkname])
         except KeyError:
             pass
-        mv, cv, iv = inertia.fuseInertiaData(inertials)
-        iv = inertia.inertiaMatrixToList(iv)
+        mv, cv, iv = inertiamodel.fuseInertiaData(inertials)
+        iv = inertiamodel.inertiaMatrixToList(iv)
         if mv is not None and cv is not None and iv is not None:
             model['links'][linkname]['inertial'] = {'mass': mv, 'inertia': iv,
                                                     'pose': {'translation': list(cv), 'rotation_euler': [0, 0, 0]}
@@ -778,3 +842,71 @@ def buildModelDictionary(root):
     log("Rounding numbers...", "INFO", "buildModelDictionary")
     epsilon = 10**(-bpy.data.worlds[0].phobosexportsettings.decimalPlaces)  # TODO: implement this separately
     return epsilonToZero(model, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces), objectlist
+
+
+def buildModelFromDictionary(model):
+    """Creates the Blender representation of the imported model, using a model dictionary.
+
+    """
+    log("Creating Blender model...", 'INFO', 'buildModelFromDictionary')
+
+    log("Creating links...", 'INFO', 'buildModelFromDictionary')
+    for l in model['links']:
+        link = model['links'][l]
+        linkmodel.createLink(link)
+
+    log("Creating joints...", 'INFO', 'buildModelFromDictionary')
+    for j in model['joints']:
+        joint = model['joints'][j]
+        jointmodel.createJoint(joint)
+
+    # build tree recursively and correct translation & rotation on the fly
+    log("Placing links...", 'INFO', 'buildModelFromDictionary')
+    for l in model['links']:
+        if 'parent' not in model['links'][l]:
+            root = model['links'][l]
+            linkmodel.placeChildLinks(model, root)
+            log("Assigning model name...", 'INFO', 'buildModelFromDictionary')
+            try:
+                rootlink = sUtils.getRoot(bpy.data.objects[root['name']])
+                rootlink['modelname'] = model['name']
+            except KeyError:
+                log("Could not assign model name to root link.", "ERROR")
+
+    log("Creating visual and collision objects...", 'INFO', 'buildModelFromDictionary')
+    for link in model['links']:
+        linkmodel.placeLinkSubelements(model['links'][link])
+
+    log("Creating sensors...", 'INFO', 'buildModelFromDictionary')
+    for s in model['sensors']:
+        sensormodel.createSensor(model['sensors'][s])
+
+    log("Creating motors...", 'INFO', 'buildModelFromDictionary')
+    for m in model['motors']:
+        eUtils.addDictionaryToObj(model['motors'][m],
+                                  model['joints'][model['motors'][m]['joint']],
+                                  category='motor')
+
+    log("Creating controllers...", 'INFO', 'buildModelFromDictionary')
+    for c in model['controllers']:
+        controllermodel.createController(model['controllers'][c])
+
+    log("Creating groups...", 'INFO', 'buildModelFromDictionary')
+    for g in model['groups']:
+        createGroup(model['groups'][g])
+
+    log("Creating chains...", 'INFO', 'buildModelFromDictionary')
+    for ch in model['chains']:
+        createChain(model['chains'][ch])
+
+    log("Creating lights...", 'INFO', 'buildModelFromDictionary')
+    for l in model['lights']:
+        lightmodel.createLight(model['lights'][l])
+
+
+def createGroup(group):
+    pass
+
+
+def createChain(group):
+    pass
