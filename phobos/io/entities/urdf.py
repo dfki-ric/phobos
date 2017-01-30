@@ -1,40 +1,41 @@
+#!/usr/bin/python
+# coding=utf-8
 
-from phobos.utils.io import l2str, xmlline, indent, xmlHeader
+"""
+Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
+This file is part of Phobos, a Blender Add-On to edit robot models.
 
+Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.
+
+Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
+
+File model.py
+
+Created on 28 Jul 2014
+
+@author: Kai von Szadkowski, Stefan Rahms
+"""
 
 import bpy
 import mathutils
 import os
 import yaml
-import math
-from collections import namedtuple
 import xml.etree.ElementTree as ET
-import zipfile
-import shutil
 
-import phobos.defs as defs
+from phobos.utils.io import l2str, xmlline, indent, xmlHeader
 import phobos.model.materials as materials
-
-
-import phobos.model.controllers as controllers
-import phobos.model.lights as lights
-import phobos.utils.selection as sUtils
-import phobos.utils.blender as bUtils
 import phobos.utils.general as gUtils
 from phobos.phoboslog import log
-
-#This is a really nice pythonic approach to creating a list of constants
-Defaults = namedtuple('Defaults', ['mass', 'idtransform'])
-defaults = Defaults(0.001, #mass
-                    [0.0, 0.0, 0.0]  # idtransform
-                    )
-
-# more?
-MARScolordict = {'diffuseFront': 'diffuseColor',
-                 'specularFront': 'specularColor'}
-
-tmp_dir_name = 'phobos_magic_zip_tmp_dir'
 
 
 def sort_urdf_elements(elems):
@@ -466,229 +467,192 @@ def get_phobos_joint_name(mars_name, has_limits):
     return 'fixed'
 
 
-# class URDFModelParser(RobotModelParser):
-#     """Class derived from RobotModelParser which parses a URDF model
-#
-#     """
-#
-#     def __init__(self, filepath):
-#         """Inits the Parser with the URDF file location
-#
-#         :param filepath: The filepath where the URDF lies.
-#         :type filepath: String.
-#         :return: Nothing.
-#
-#         """
-#         RobotModelParser.__init__(self, filepath)
-#         self.element_order = {'links': [],
-#                               'joints': [],
-#                               'viscol': {},
-#                               'materials': []}
-#
-#     def parsePose(self, origin):
-#         """This function parses the robot models pose and returns it as a dictionary.
-#
-#         :param origin: The origin blender object to parse the pose from.
-#         :type orign: blender object.
-#         :return: dict -- The origins pose.
-#
-#         """
-#         pose = {}
-#         if origin is not None:
-#             try:
-#                 pose['translation'] = gUtils.parse_text(origin.attrib['xyz'])
-#             except KeyError:
-#                 pose['translation'] = defaults.idtransform
-#             try:
-#                 pose['rotation_euler'] = gUtils.parse_text(origin.attrib['rpy'])
-#             except KeyError:
-#                 pose['rotation_euler'] = defaults.idtransform
-#         else:
-#             pose['translation'] = defaults.idtransform
-#             pose['rotation_euler'] = defaults.idtransform
-#         return pose
-#
-#     def parseModel(self):
-#         """This function parses the whole URDF representation of the robot and builds the robot dictionary from it.
-#         The created robot is stored in the robot value of the parser and the URDF file is specified by the filepath
-#         given to the Parser.
-#
-#         :return: Nothing.
-#
-#         """
-#         print("\nParsing URDF model from", self.filepath)
-#         self.tree = ET.parse(self.filepath)
-#         self.root = self.tree.getroot()#[0]
-#         self.robot["name"] = self.root.attrib["name"]
-#         if 'version' in self.root.attrib:
-#             self.robot["version"] = self.root.attrib['version'] #TODO: implement version functionality (time code)
-#
-#         #write links to dictionary
-#         links = {}
-#         print("\n\nParsing links..")
-#         for link in self.root.iter('link'):
-#             newlink = self.parseLink(link)
-#             #write link to list
-#             links[newlink['name']] = newlink
-#         self.robot['links'] = links
-#
-#         #write joints to dictionary
-#         joints = {}
-#         print("\n\nParsing joints..")
-#         for joint in self.root.iter('joint'):
-#             if joint.find('parent') is not None: #this is needed as there are "joint" tags e.g. in transmission
-#                 newjoint, pose = self.parseJoint(joint)
-#                 self.robot['links'][newjoint['child']]['pose'] = pose
-#                 joints[newjoint['name']] = newjoint
-#         self.robot['joints'] = joints
-#
-#         #find any links that still have no pose (most likely because they had no parent)
-#         for link in links:
-#             if not 'pose' in links[link]:
-#                 links[link]['pose'] = self.parsePose(None)
-#
-#         #write parent-child information to nodes
-#         print("\n\nWriting parent-child information to nodes..")
-#         for j in self.robot['joints']:
-#             joint = self.robot['joints'][j]
-#             self.robot['links'][joint['child']]['parent'] = joint['parent']
-#             #print(joint['parent'] + ', ', end='')
-#
-#         self.parseMaterials()
-#
-#         self.robot['lights'] = {}
-#
-#         #print('#############################')
-#         #print(self.robot['name'] + '_urdf_order')
-#         #print('#############################')
-#         bUtils.createNewTextfile(self.robot['name'] + '_urdf_order', yaml.dump(self.element_order))
-#         #openScriptInEditor('element_order')
-#         self._debug_output()
-#
-#     def parseLink(self, link):
-#         """This function parses the link from the given link dict object.
-#
-#         :param link: The link you want to
-#         :return:
-#
-#         """
-#         #print(link.attrib['name'] + ', ', end='')
-#         newlink = {a: link.attrib[a] for a in link.attrib}
-#
-#         link_name = link.attrib['name']
-#         self.element_order['links'].append(link_name)
-#         viscol_order = {'visual': [],
-#                         'collision': []}
-#
-#         self.parseInertial(newlink, link)
-#         #no_visual_geo = self.parseVisual(newlink, link)
-#         #no_collision_geo = self.parseCollision(newlink, link)
-#         #handle_missing_geometry(no_visual_geo, no_collision_geo, newlink)
-#         #parse visual and collision objects
-#         for objtype in ['visual', 'collision']:
-#             newlink[objtype] = {}
-#             i = 0
-#             for xmlelement in link.iter(objtype):
-#                 try:
-#                     elementname = xmlelement.attrib['name']
-#                 except KeyError:
-#                     elementname = objtype + '_' + str(i) + '_' + newlink['name']
-#                     i += 1
-#                 newlink[objtype][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
-#                 dictelement = newlink[objtype][elementname]
-#                 viscol_order[objtype].append(elementname)
-#                 dictelement['name'] = elementname
-#                 dictelement['pose'] = self.parsePose(xmlelement.find('origin'))
-#                 geometry = xmlelement.find('geometry')
-#                 if geometry is not None:
-#                     dictelement['geometry'] = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-#                     dictelement['geometry']['type'] = geometry[0].tag
-#                     if geometry[0].tag == 'mesh':
-#                         dictelement['geometry']['filename'] = geometry[0].attrib['filename']
-#                         try:
-#                             dictelement['geometry']['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
-#                         except KeyError:
-#                             dictelement['geometry']['scale'] = [1.0, 1.0, 1.0]
-#                 material = xmlelement.find('material')
-#                 if material is not None:
-#                     dictelement['material'] = {'name': material.attrib['name']}
-#                     # We don't need to do the following, as any material with color or texture
-#                     # will be parsed in the parsing of materials in parseModel
-#                     # This might be necessary if there are name conflicts etc.
-#                     #color = material.find('color')
-#                     #if color is not None:
-#                     #    dictelement['material']['color'] = parse_text(color.attrib['rgba'])
-#         self.element_order['viscol'][link_name] = viscol_order
-#         if newlink == {}:
-#             print("\n### WARNING:", newlink['name'], "is empty.")
-#         return newlink
-#
-#     def parseInertial(self, link_dict, link_xml):
-#         '''
-#         '''
-#         inertial = link_xml.find('inertial')
-#         if inertial is not None: # 'if Element' yields none if the Element contains no children, thus this notation
-#             link_dict['inertial'] = {}
-#             link_dict['inertial']['pose'] = self.parsePose(inertial.find('origin'))
-#             mass = inertial.find('mass')
-#             if mass is not None:
-#                 link_dict['inertial']['mass'] = float(mass.attrib['value'])
-#             inertia = inertial.find('inertia')
-#             if inertia is not None:
-#                 values = []
-#                 link_dict['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
-#             link_dict['inertial']['name'] = 'inertial_' + link_dict['name']
-#
-#
-#
-#
-#     def parseJoint(self, joint):
-#         #print(joint.attrib['name']+', ', end='')
-#         newjoint = {a: joint.attrib[a] for a in joint.attrib}
-#         self.element_order['joints'].append(joint.attrib['name'])
-#         pose = self.parsePose(joint.find('origin'))
-#         newjoint['parent'] = joint.find('parent').attrib['link']
-#         newjoint['child'] = joint.find('child').attrib['link']
-#         axis = joint.find('axis')
-#         if axis is not None:
-#             newjoint['axis'] = gUtils.parse_text(axis.attrib['xyz'])
-#         limit = joint.find('limit')
-#         if limit is not None:
-#             newjoint['limits'] = {a: gUtils.parse_text(limit.attrib[a]) for a in limit.attrib}
-#         #calibration
-#         #dynamics
-#         #limit
-#         #mimic
-#         #safety_controller
-#         return newjoint, pose
-#
-#     def parseMaterials(self):
-#         '''
-#         '''
-#         material_list = [] #TODO: build dictionary entry for materials
-#         print("\n\nParsing materials..")
-#         for material in self.root.iter('material'):
-#             newmaterial = {a: material.attrib[a] for a in material.attrib}
-#             color = material.find('color')
-#             if color is not None:
-#                 newmaterial['color'] = gUtils.parse_text(color.attrib['rgba'])
-#                 if not newmaterial in material_list:
-#                     material_list.append(newmaterial)
-#         for m in material_list:
-#             #TODO: handle duplicate names? urdf_robotname_xxx?
-#             materials.makeMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1])
-#             self.element_order['materials'].append(m['name'])
+def parsePose(origin):
+    """This function parses the robot models pose and returns it as a dictionary.
+
+    :param origin: The origin blender object to parse the pose from.
+    :type orign: blender object.
+    :return: dict -- The origins pose.
+
+    """
+    pose = {}
+    if origin is not None:
+        try:
+            pose['translation'] = gUtils.parse_text(origin.attrib['xyz'])
+        except KeyError:
+            pose['translation'] = [0.0, 0.0, 0.0]
+        try:
+            pose['rotation_euler'] = gUtils.parse_text(origin.attrib['rpy'])
+        except KeyError:
+            pose['rotation_euler'] = [0.0, 0.0, 0.0]
+    else:
+        pose['translation'] = [0.0, 0.0, 0.0]
+        pose['rotation_euler'] = [0.0, 0.0, 0.0]
+    return pose
+
+
+def importUrdf(filepath):
+    """This function parses the whole URDF representation of the model and builds the model dictionary from it.
+    The created model is stored in the model value of the parser and the URDF file is specified by the filepath
+    given to the Parser.
+
+    :return: Nothing.
+
+    """
+    model = {}
+    #element_order = {'links': [], 'joints': [], 'viscol': {}, 'materials': []}
+    log("Parsing URDF model from " + filepath, "INFO", 'importUrdf')
+    tree = ET.parse(filepath)
+    root = tree.getroot()#[0]
+    model["name"] = root.attrib["name"]
+    if 'version' in root.attrib:
+        model["version"] = root.attrib['version']
+
+    # parse links
+    links = {}
+    log("Parsing links...", "INFO", 'importUrdf')
+    for link in root.iter('link'):
+        links[link.attrib['name']] = parseLink(link, filepath)
+        #element_order['links'].append(links.attrib['name'])
+        #viscol_order = {'visual': [], 'collision': []}
+    model['links'] = links
+
+    # parse joints
+    joints = {}
+    log("Parsing joints...", "INFO", 'importUrdf')
+    for joint in root.iter('joint'):
+        if joint.find('parent') is not None:  # this is needed as there are "joint" tags e.g. in transmission
+            newjoint, pose = parseJoint(joint)
+            #element_order['joints'].append(joint.attrib['name'])
+            model['links'][newjoint['child']]['pose'] = pose
+            joints[newjoint['name']] = newjoint
+    model['joints'] = joints
+
+    # find any links that still have no pose (most likely because they had no parent)
+    for link in links:
+        if 'pose' not in links[link]:
+            links[link]['pose'] = parsePose(None)
+
+    # write parent-child information to nodes
+    log("Writing parent-child information to nodes...", "INFO", 'importUrdf')
+    for j in model['joints']:
+        joint = model['joints'][j]
+        model['links'][joint['child']]['parent'] = joint['parent']
+
+    # parse materials
+    model['materials'] = []
+    log("Parsing materials..", 'INFO', 'importUrdf')
+    for material in root.iter('material'):
+        newmaterial = {a: material.attrib[a] for a in material.attrib}
+        color = material.find('color')
+        if color is not None:
+            newmaterial['color'] = gUtils.parse_text(color.attrib['rgba'])
+            if newmaterial not in model['materials']:
+                model['materials'].append(newmaterial)
+    for m in model['materials']:
+        #TODO: handle duplicate names? urdf_modelname_xxx?
+        materials.createMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1])
+        #element_order['materials'].append(m['name'])
+    return model
+
+
+def parseLink(link, sourcefilepath=None):
+    """This function parses the link from the given link dict object.
+
+    :param link: The link you want to
+    :return:
+
+    """
+    #print(link.attrib['name'] + ', ', end='')
+    newlink = {a: link.attrib[a] for a in link.attrib}
+
+    link_name = link.attrib['name']
+
+    parseInertial(newlink, link)
+    #no_visual_geo = parseVisual(newlink, link)
+    #no_collision_geo = parseCollision(newlink, link)
+    #handle_missing_geometry(no_visual_geo, no_collision_geo, newlink)
+    #parse visual and collision objects
+    for objtype in ['visual', 'collision']:
+        newlink[objtype] = {}
+        i = 0
+        for xmlelement in link.iter(objtype):
+            try:
+                elementname = xmlelement.attrib['name']
+            except KeyError:
+                elementname = objtype + '_' + str(i) + '_' + newlink['name']
+                i += 1
+            newlink[objtype][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
+            dictelement = newlink[objtype][elementname]
+            #viscol_order[objtype].append(elementname)
+            dictelement['name'] = elementname
+            dictelement['pose'] = parsePose(xmlelement.find('origin'))
+            geometry = xmlelement.find('geometry')
+            if geometry is not None:
+                dictelement['geometry'] = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+                dictelement['geometry']['type'] = geometry[0].tag
+                if geometry[0].tag == 'mesh':
+                    dictelement['geometry']['filename'] = geometry[0].attrib['filename']
+                    if sourcefilepath:
+                        dictelement['geometry']['sourcefilepath'] = sourcefilepath
+                    try:
+                        dictelement['geometry']['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
+                    except KeyError:
+                        dictelement['geometry']['scale'] = [1.0, 1.0, 1.0]
+            material = xmlelement.find('material')
+            if material is not None:
+                dictelement['material'] = {'name': material.attrib['name']}
+                # We don't need to do the following, as any material with color or texture
+                # will be parsed in the parsing of materials in parseModel
+                # This might be necessary if there are name conflicts etc.
+                #color = material.find('color')
+                #if color is not None:
+                #    dictelement['material']['color'] = parse_text(color.attrib['rgba'])
+    #element_order['viscol'][link_name] = viscol_order
+    if newlink == {}:
+        print("\n### WARNING:", newlink['name'], "is empty.")
+    return newlink
+
+
+def parseInertial(link_dict, link_xml):
+    '''
+    '''
+    inertial = link_xml.find('inertial')
+    if inertial is not None:  # 'if Element' yields None if the Element contains no children, thus this notation
+        link_dict['inertial'] = {}
+        link_dict['inertial']['pose'] = parsePose(inertial.find('origin'))
+        mass = inertial.find('mass')
+        if mass is not None:
+            link_dict['inertial']['mass'] = float(mass.attrib['value'])
+        inertia = inertial.find('inertia')
+        if inertia is not None:
+            values = []
+            link_dict['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
+        link_dict['inertial']['name'] = 'inertial_' + link_dict['name']
+
+
+def parseJoint(joint):
+    newjoint = {a: joint.attrib[a] for a in joint.attrib}
+    pose = parsePose(joint.find('origin'))
+    newjoint['parent'] = joint.find('parent').attrib['link']
+    newjoint['child'] = joint.find('child').attrib['link']
+    axis = joint.find('axis')
+    if axis is not None:
+        newjoint['axis'] = gUtils.parse_text(axis.attrib['xyz'])
+    limit = joint.find('limit')
+    if limit is not None:
+        newjoint['limits'] = {a: gUtils.parse_text(limit.attrib[a]) for a in limit.attrib}
+    #calibration
+    #dynamics
+    #limit
+    #mimic
+    #safety_controller
+    return newjoint, pose
 
 
 # registering export functions of types with Phobos
 entity_type_dict = {'urdf': {'export': exportUrdf,
+                             'import': importUrdf,
                              'extensions': ('urdf', 'xml')}
                     }
 
-def main():
-    # call the newly registered operator
-    bUtils.cleanScene()
-    bpy.ops.import_robot_model('INVOKE_DEFAULT')
-
-if __name__ == '__main__':
-    main()
