@@ -6,7 +6,7 @@
     :platform: Unix, Windows, Mac
     :synopsis: A module providing functions to calculate and handle inertia data.
 
-.. moduleauthor:: Kai von Szadowski
+.. moduleauthor:: Kai von Szadowski, Bertold Bongardt, Stefan Rahms
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -33,17 +33,17 @@ import math
 import bpy
 import mathutils
 import phobos.defs as defs
+from phobos.phoboslog import log
 import phobos.utils.general as gUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
-from phobos.phoboslog import log
 from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 
 
-def createInertial(self, name, inertial):
-    """This function creates the blender representation of a given intertial.
+def createInertialFromDictionary(name, inertial):
+    """Creates the Blender representation of a given intertial provided a dictionary.
 
     :param name: The intertials name.
     :param type: str
@@ -52,8 +52,9 @@ def createInertial(self, name, inertial):
     :return: bpy_types.Object -- the newly created blender inertial object.
 
     """
+    # FIXME: this needs work to get rid of duplicate code
     bpy.ops.object.select_all(action='DESELECT')
-    inert = bUtils.createPrimitive('inertial_'+name, 'box', [0.04, 0.04, 0.04], player='inertial')
+    inert = bUtils.createPrimitive('inertial_'+name, 'box', [0.06, 0.06, 0.06], player='inertial')
     inert.select = True
     bpy.ops.object.transform_apply(scale=True)
     for prop in inertial:
@@ -65,6 +66,86 @@ def createInertial(self, name, inertial):
                     inert[prop[1:]+'/'+tag] = inertial[prop][tag]
     inert.phobostype = 'inertial'
     return inert
+
+
+def createInertial(obj):
+    """Creates an empty inertial object with the same world transform as the corresponding
+    object and parents it to the correct link.
+
+    :param obj: The object you want to copy the world transform from.
+    :type obj: bpy_types.Object
+    :return: bpy_types.Object -- the newly created inertia.
+
+    """
+    if obj.phobostype == 'link':
+        parent = obj
+        size = (0.06, 0.06, 0.06)
+    else:
+        parent = obj.parent
+        size = (0.015, 0.015, 0.015)
+    rotation = obj.matrix_world.to_euler()
+    center = obj.matrix_world.to_translation()
+    inertial = bUtils.createPrimitive('inertial_' + nUtils.getObjectName(obj, phobostype="link"), 'box', size,
+                                   defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    inertial.phobostype = 'inertial'
+    bpy.ops.object.select_all(action="DESELECT")
+    return inertial
+
+
+def createInertials(link, empty=False, preserve_children=False):
+    """Creates inertial representations for visual and collision objects in link.
+
+    :param link: The link you want to create the inertial for.
+    :type link: bpy_types.Object
+    :param empty: If set to True the new inertial object will contain no information.
+    :type empty: bool
+    :param preserve_children: If set to False existing inertial objects will be deleted.
+    :type preserve_children: bool
+
+    """
+    viscols = getInertiaRelevantObjects(link)
+    # clean existing data
+    if not preserve_children:
+        oldinertials = sUtils.getImmediateChildren(link, ['inertial'])
+    else:
+        try:
+            oldinertials = [bpy.data.objects['inertial_'+link.name]]
+        except KeyError:
+            oldinertials = None
+    if oldinertials:
+        sUtils.selectObjects(oldinertials, clear=True, active=0)
+        bpy.ops.object.delete()
+    if not preserve_children:
+        for obj in viscols:
+            if not empty:
+                mass = obj['mass'] if 'mass' in obj else None
+                geometry = deriveGeometry(obj)
+                if mass is not None:
+                    if geometry['type'] == 'mesh':
+                        sUtils.selectObjects([obj])
+                        bpy.context.scene.objects.active = obj
+                        inert = calculateMeshInertia(obj.data, mass)
+                    else:
+                        inert = calculateInertia(mass, geometry)
+                    if inert is not None:
+                        inertial = createInertial(obj)
+                        inertial['mass'] = mass
+                        inertial['inertia'] = inert
+            else:
+                createInertial(obj)
+    # compose inertial object for link
+    if not empty:
+        mass, com, inert = fuseInertiaData(sUtils.getImmediateChildren(link, ['inertial']))
+        if mass and com and inert:
+            inertial = createInertial(link)
+            com_translate = mathutils.Matrix.Translation(com)
+            inertial.matrix_local = com_translate
+            bpy.ops.transform.translate(value=(0, 0, 0))  # FIXME: this is a trick to force Blender to apply matrix_local
+            inertial['inertial/mass'] = mass
+            inertial['inertial/inertia'] = inertiaMatrixToList(inert)
+    else:
+        createInertial(link)
 
 
 def calculateMassOfLink(link):
@@ -225,7 +306,7 @@ def calculateEllipsoidInertia(mass, size):
 
 def calculateMeshInertia(data, mass):
     """
-    Calculate the inertia tensor of arbitrary mesh objects.
+    Calculates the inertia tensor of arbitrary mesh objects.
 
     Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
     Simply and Quickly' (2004) by Jonathan Blow (1)
@@ -437,89 +518,6 @@ def fuseInertiaData(inertials):
     else:
         log("No inertial found to fuse.", "DEBUG", "fuseInertiaData")
         return None, None, None
-
-
-def createInertial(obj):
-    """Creates an empty inertial object with the same world transform as the corresponding
-    object and parents it to the correct link.
-
-    :param obj: The object you want to copy the world transform from.
-    :type obj: bpy_types.Object
-    :return: bpy_types.Object -- the newly created inertia.
-
-    """
-    if obj.phobostype == 'link':
-        parent = obj
-        size = (0.04, 0.04, 0.04)
-    else:
-        parent = obj.parent
-        size = (0.02, 0.02, 0.02)
-    rotation = obj.matrix_world.to_euler()
-    center = obj.matrix_world.to_translation()
-    inertial = bUtils.createPrimitive('inertial_' + nUtils.getObjectName(obj, phobostype="link"), 'box', size,
-                                   defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    inertial.phobostype = 'inertial'
-    bpy.ops.object.select_all(action="DESELECT")
-
-    sUtils.selectObjects([parent, inertial], True, 0)
-    bpy.ops.object.parent_set(type='BONE_RELATIVE')
-    return inertial
-
-
-def createInertials(link, empty=False, preserve_children=False):
-    """Creates inertial representations for visual and collision objects in link.
-
-    :param link: The link you want to create the inertial for.
-    :type link: bpy_types.Object
-    :param empty: If set to True the new inertial object will contain no information.
-    :type empty: bool
-    :param preserve_children: If set to False existing inertial objects will be deleted.
-    :type preserve_children: bool
-
-    """
-    viscols = getInertiaRelevantObjects(link)
-    # clean existing data
-    if not preserve_children:
-        oldinertials = sUtils.getImmediateChildren(link, ['inertial'])
-    else:
-        try:
-            oldinertials = [bpy.data.objects['inertial_'+link.name]]
-        except KeyError:
-            oldinertials = None
-    if oldinertials:
-        sUtils.selectObjects(oldinertials, clear=True, active=0)
-        bpy.ops.object.delete()
-    if not preserve_children:
-        for obj in viscols:
-            if not empty:
-                mass = obj['mass'] if 'mass' in obj else None
-                geometry = deriveGeometry(obj)
-                if mass is not None:
-                    if geometry['type'] == 'mesh':
-                        sUtils.selectObjects([obj])
-                        bpy.context.scene.objects.active = obj
-                        inert = calculateMeshInertia(obj.data, mass)
-                    else:
-                        inert = calculateInertia(mass, geometry)
-                    if inert is not None:
-                        inertial = createInertial(obj)
-                        inertial['mass'] = mass
-                        inertial['inertia'] = inert
-            else:
-                createInertial(obj)
-    # compose inertial object for link
-    if not empty:
-        mass, com, inert = fuseInertiaData(sUtils.getImmediateChildren(link, ['inertial']))
-        if mass and com and inert:
-            inertial = createInertial(link)
-            com_translate = mathutils.Matrix.Translation(com)
-            inertial.matrix_local = com_translate
-            bpy.ops.transform.translate(value=(0, 0, 0))  # FIXME: this is a trick to force Blender to apply matrix_local
-            inertial['inertial/mass'] = mass
-            inertial['inertial/inertia'] = inertiaMatrixToList(inert)
-    else:
-        createInertial(link)
 
 
 ################################################################################
