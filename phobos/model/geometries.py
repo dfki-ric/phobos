@@ -102,6 +102,7 @@ def createGeometry(viscol, geomsrc):
                 + " will have empty mesh!", "ERROR", "createGeometry")
             bpy.data.meshes.new(meshname)
         if meshname in bpy.data.meshes:
+            log('Assigning copy of existing mesh ' + meshname + ' to ' + viscol['name'], 'INFO', 'createGeometry')
             bpy.ops.object.add(type='MESH')
             newgeom = bpy.context.object
             newgeom.data = bpy.data.meshes[meshname]
@@ -109,6 +110,7 @@ def createGeometry(viscol, geomsrc):
             log('Importing mesh for link element ' + viscol['name'], 'INFO', 'createGeometry')
             filetype = geom['filename'].split('.')[-1].lower()
             newgeom = meshes.importMesh(geom_path, filetype)
+            newgeom.data.name = meshname
             if not newgeom:
                 log('Failed to import mesh file ' + geom['filename'], 'ERROR', 'createGeometry')
                 return
@@ -125,6 +127,8 @@ def createGeometry(viscol, geomsrc):
             dimensions = geom['radius']
         else:
             log("Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.', "ERROR")
+            bpy.ops.object.empty_add(type='PLAIN_AXES', radius=0.2)
+            bpy.context.active_object.name = viscol['name']
             return None
         log('Creating primitve for obj ' + viscol['name'], 'INFO', 'createGeometry')
         newgeom = bUtils.createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
