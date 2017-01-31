@@ -102,7 +102,7 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
 
 
 def setObjectLayersActive(obj):
-    for l in range(obj.layers):
+    for l in range(len(obj.layers)):
         bpy.context.scene.layers[l] &= obj.layers[l]
 
 
