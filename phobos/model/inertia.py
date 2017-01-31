@@ -39,6 +39,7 @@ import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 from phobos.model.geometries import deriveGeometry
+from phobos.model.materials import assignMaterial
 from phobos.model.poses import deriveObjectPose
 
 
@@ -65,6 +66,7 @@ def createInertialFromDictionary(name, inertial):
                 for tag in inertial[prop]:
                     inert[prop[1:]+'/'+tag] = inertial[prop][tag]
     inert.phobostype = 'inertial'
+    assignMaterial(inert, 'phobos_inertial')
     return inert
 
 

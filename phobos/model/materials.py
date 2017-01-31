@@ -6,7 +6,7 @@
     :platform: Unix, Windows, Mac
     :synopsis: TODO: INSERT TEXT HERE
 
-.. moduleauthor:: Kai von Szadowski
+.. moduleauthor:: Kai von Szadkowski
 
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
@@ -33,6 +33,7 @@ Created on 7 Jan 2014
 
 import bpy
 import phobos.defs as defs
+from phobos.phoboslog import log
 
 
 def createMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
@@ -72,7 +73,7 @@ def createMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, textur
 
 
 def createPhobosMaterials():
-    """Uses makeMaterial() to create a list of standard materials used in Phobos
+    """Creates a list of standard materials used in Phobos.
 
     """
     materials = bpy.data.materials.keys()
@@ -80,3 +81,23 @@ def createPhobosMaterials():
         mat = defs.defaultmaterials[material]
         if not material in materials:
             createMaterial(material, mat['diffuse'], mat['specular'], mat['alpha'], mat['diffuse_intensity'])
+
+
+def assignMaterial(obj, materialname):
+    """Assigns a material to an object, avoiding creating multiple copies.
+
+    :param obj: The object to assign the material to.
+    :type obj: bpy.types.Object
+    :param materialname: The materials name.
+    :type materialname: str
+
+    """
+    if materialname not in bpy.data.materials:
+        if materialname in defs.defaultmaterials:
+            createPhobosMaterials()
+        else:
+            log("Material to be assigned does not exist.", "ERROR", "assignMaterial")
+            return None
+    obj.data.materials.append(bpy.data.materials[materialname])
+    if bpy.data.materials[materialname].use_transparency:
+        obj.show_transparent = True

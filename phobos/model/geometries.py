@@ -9,6 +9,7 @@ import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
 import phobos.io.meshes.meshes as meshes
+from phobos.model.materials import assignMaterial
 from phobos.phoboslog import log
 
 
@@ -136,9 +137,9 @@ def createGeometry(viscol, geomsrc):
     if geomsrc == 'visual':
         try:
             if 'name' in viscol['material']:
-                newgeom.data.materials.append(bpy.data.materials[viscol['material']['name']])
+                assignMaterial(newgeom, viscol['material']['name'])
             else:
-                newgeom.data.materials.append(bpy.data.materials[viscol['material']])
+                assignMaterial(newgeom, viscol['material'])
         except KeyError:
             log('No material for obj', viscol['name'], 'DEBUG', 'createGeometry')
     #FIXME: place empty coordinate system and return...what? Error handling of file import!

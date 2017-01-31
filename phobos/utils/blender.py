@@ -50,27 +50,6 @@ def printMatrices(obj, info=None):
           "\n\nbasis:\n", obj.matrix_basis)
 
 
-def assignMaterial(obj, materialname):
-    """This function assigns a material to an objects mesh.
-
-    :param obj: The object to assign the material to.
-    :type obj: bpy.types.Object
-    :param materialname: The materials name.
-    :type materialname: str
-
-    """
-    if materialname not in bpy.data.materials:
-        if materialname in defs.defaultmaterials:
-            materials.createPhobosMaterials()
-        else:
-            # print("###ERROR: material to be assigned does not exist.")
-            log("Material to be assigned does not exist.", "ERROR")
-            return None
-    obj.data.materials.append(bpy.data.materials[materialname])
-    if bpy.data.materials[materialname].use_transparency:
-        obj.show_transparent = True
-
-
 def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(0, 0, 0), protation=(0, 0, 0),
                     verbose=False):
     """Generates the primitive specified by the input parameters
@@ -118,7 +97,7 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
     obj = bpy.context.object
     obj.name = pname
     if pmaterial != 'None':
-        assignMaterial(obj, pmaterial)
+        materials.assignMaterial(obj, pmaterial)
     return obj
 
 
