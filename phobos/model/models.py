@@ -922,6 +922,14 @@ def buildModelFromDictionary(model):
     except KeyError:
         log("No lights in model " + model['name'], 'INFO', 'buildModelFromDictionary')
 
+    # FIXME: this is a trick to force Blender to apply matrix_local
+    # AAAAAARGH: THIS DOES NOT WORK!
+    for obj in bpy.data.objects:
+        bUtils.setObjectLayersActive(obj)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.transform.translate(value=(0, 0, 0))
+
 
 def createGroup(group):
     pass
