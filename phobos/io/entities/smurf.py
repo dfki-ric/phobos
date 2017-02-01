@@ -93,7 +93,6 @@ def deriveEntity(entity, outpath, savetosubfolder):
         log("Exporting " + smurf["entity/name"] + " as a smurf entity to " + smurf_outpath, "INFO", "deriveSMURFEntity",
             "\n\n")
         subfolder = smurf["modelname"] if savetosubfolder else ""
-        sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)
         sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)  # re-select for mesh export
         model, objectlist = models.buildModelDictionary(smurf)
         export(model, objectlist, smurf_outpath) # FIXME: this is the export function from entities!
@@ -236,6 +235,7 @@ def sort_dict_list(dict_list, sort_key):
 
 
 def exportSmurf(model, path, mesh_format='obj'):
+    log(model['name'] + ' ' + path, "DEBUG", "exportSmurf")
     """This function exports a given model to a specific path as a smurf representation.
 
     :param model: The model you want to export.
