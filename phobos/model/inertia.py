@@ -92,6 +92,8 @@ def createInertial(obj):
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     inertial.phobostype = 'inertial'
     bpy.ops.object.select_all(action="DESELECT")
+    sUtils.selectObjects((inertial, parent), clear=True, active=1)
+    bpy.ops.object.parent_set(type='BONE_RELATIVE')
     return inertial
 
 
@@ -123,7 +125,7 @@ def createInertials(link, empty=False, preserve_children=False):
             if not empty:
                 mass = obj['mass'] if 'mass' in obj else None
                 geometry = deriveGeometry(obj)
-                if mass is not None:
+                if mass is not None and geometry is not None:
                     if geometry['type'] == 'mesh':
                         sUtils.selectObjects([obj])
                         bpy.context.scene.objects.active = obj
