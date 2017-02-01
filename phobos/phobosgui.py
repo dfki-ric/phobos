@@ -327,65 +327,65 @@ class PhobosModelPanel(bpy.types.Panel):
         mc1.operator('phobos.edit_inertia')
 
 
-class PhobosScenePanel(bpy.types.Panel):
-    """A Custom Panel in the Phobos viewport toolbar"""
-    bl_idname = "TOOLS_PT_PHOBOS_SCENE"
-    bl_label = "Scene Editing"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
-    bl_category = 'Phobos'
-
-    def draw_header(self, context):
-        self.layout.label(icon='SCENE_DATA')
-
-    def draw(self, context):
-        layout = self.layout
-        layout.label(text="Scene Editing", icon="WORLD")
-        iinlayout = layout.split()
-        ic1 = iinlayout.column(align=True)
-        ic1.operator("phobos.add_heightmap")
-        ic2 = iinlayout.column(align=True)
-        ic2.operator('phobos.define_entity')
-
-        layout.label(text="Robotmodels and Poses", icon="MOD_ARMATURE")
-        #layout.operator("scene.load_backed_models_operator", text="Load Models", icon="LIBRARY_DATA_DIRECT")
-        #layout.operator("scene.reload_models_and_poses_operator", text="Reload Models and Poses", icon="LIBRARY_DATA_DIRECT")
-
-
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
-        for model_pose in modelsPosesColl:
-            if not model_pose.name in bpy.data.images.keys():
-                if model_pose.type == 'robot_name':
-                    bpy.data.images.new(model_pose.name,0,0)
-                elif 'robot_pose':
-                    if model_pose.preview != '':
-                        if os.path.split(model_pose.preview)[-1] in bpy.data.images.keys():
-                            bpy.data.images[os.path.split(model_pose.preview)[-1]].reload()
-                        im = bpy.data.images.load(model_pose.preview)
-                        model_pose.name  = im.name
-                        #im.name = model_pose.name
-                        im.gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
-                    else:
-                        print(model_pose.name)
-                        bpy.data.images.new(model_pose.name, 0, 0)
-
-        layout.template_list("Models_Poses_UIList", "",  bpy.data, "images", context.scene, "active_ModelPose")
-
-#        layout.template_preview(bpy.data.textures[context.scene.active_bakeModel])
-#        layout.template_preview(preview_mat.active_texture,
-#                                parent=preview_mat,
-#                                slot=preview_mat.texture_slots[preview_mat.active_texture_index],
-#                                preview_id="phobos_model_preview")
-
-        layout.operator('scene.phobos_import_selected_lib_robot', text="Import Selected Robot Bake", icon="COPYDOWN")
-        pinlayout = layout.split()
-        pc1 = pinlayout.column(align=True)
-        pc1.operator('phobos.store_pose2', text='Store Current Pose')
-        pc2 = pinlayout.column(align=True)
-        pc2.operator('phobos.load_pose2', text='Load Selected Pose')
-
-        layout.operator("phobos.export_current_poses", text="Export Selected Pose", icon="OUTLINER_OB_ARMATURE")
-        layout.operator("phobos.export_all_poses", text="Export All Poses", icon="OUTLINER_OB_ARMATURE")
+# class PhobosScenePanel(bpy.types.Panel):
+#     """A Custom Panel in the Phobos viewport toolbar"""
+#     bl_idname = "TOOLS_PT_PHOBOS_SCENE"
+#     bl_label = "Scene Editing"
+#     bl_space_type = 'VIEW_3D'
+#     bl_region_type = 'TOOLS'
+#     bl_category = 'Phobos'
+#
+#     def draw_header(self, context):
+#         self.layout.label(icon='SCENE_DATA')
+#
+#     def draw(self, context):
+#         layout = self.layout
+#         layout.label(text="Scene Editing", icon="WORLD")
+#         iinlayout = layout.split()
+#         ic1 = iinlayout.column(align=True)
+#         ic1.operator("phobos.add_heightmap")
+#         ic2 = iinlayout.column(align=True)
+#         ic2.operator('phobos.define_entity')
+#
+#         layout.label(text="Robotmodels and Poses", icon="MOD_ARMATURE")
+#         #layout.operator("scene.load_backed_models_operator", text="Load Models", icon="LIBRARY_DATA_DIRECT")
+#         #layout.operator("scene.reload_models_and_poses_operator", text="Reload Models and Poses", icon="LIBRARY_DATA_DIRECT")
+#
+#
+#         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+#         for model_pose in modelsPosesColl:
+#             if not model_pose.name in bpy.data.images.keys():
+#                 if model_pose.type == 'robot_name':
+#                     bpy.data.images.new(model_pose.name,0,0)
+#                 elif 'robot_pose':
+#                     if model_pose.preview != '':
+#                         if os.path.split(model_pose.preview)[-1] in bpy.data.images.keys():
+#                             bpy.data.images[os.path.split(model_pose.preview)[-1]].reload()
+#                         im = bpy.data.images.load(model_pose.preview)
+#                         model_pose.name  = im.name
+#                         #im.name = model_pose.name
+#                         im.gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
+#                     else:
+#                         print(model_pose.name)
+#                         bpy.data.images.new(model_pose.name, 0, 0)
+#
+#         layout.template_list("Models_Poses_UIList", "",  bpy.data, "images", context.scene, "active_ModelPose")
+#
+# #        layout.template_preview(bpy.data.textures[context.scene.active_bakeModel])
+# #        layout.template_preview(preview_mat.active_texture,
+# #                                parent=preview_mat,
+# #                                slot=preview_mat.texture_slots[preview_mat.active_texture_index],
+# #                                preview_id="phobos_model_preview")
+#
+#         layout.operator('scene.phobos_import_selected_lib_robot', text="Import Selected Robot Bake", icon="IMPORT")
+#         pinlayout = layout.split()
+#         pc1 = pinlayout.column(align=True)
+#         pc1.operator('phobos.store_pose2', text='Store Current Pose')
+#         pc2 = pinlayout.column(align=True)
+#         pc2.operator('phobos.load_pose2', text='Load Selected Pose')
+#
+#         layout.operator("phobos.export_current_poses", text="Export Selected Pose", icon="OUTLINER_OB_ARMATURE")
+#         layout.operator("phobos.export_all_poses", text="Export All Poses", icon="OUTLINER_OB_ARMATURE")
 
 
 class PhobosExportPanel(bpy.types.Panel):
@@ -527,7 +527,7 @@ def register():
             print('Error with class registration:', key, classdef)
     bpy.utils.register_class(PhobosToolsPanel)
     bpy.utils.register_class(PhobosModelPanel)
-    bpy.utils.register_class(PhobosScenePanel)
+    #bpy.utils.register_class(PhobosScenePanel)
     bpy.utils.register_class(PhobosExportPanel)
     bpy.utils.register_class(PhobosObjectPanel)
 
