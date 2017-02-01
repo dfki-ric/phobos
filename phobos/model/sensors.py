@@ -50,7 +50,9 @@ def createSensor(self, sensor):
     else:
         reference = None
 
-    sensors.createSensor(sensor, reference)
+    # FIXME: This needs to be resolved in a generic way!
+    createSensor(sensor, reference)
+    attachSensor(sensor)
 
 
 def attachSensor(self, sensor):
