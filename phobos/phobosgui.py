@@ -114,7 +114,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         if not bpy.data.worlds[0].phobosexportsettings.path.endswith('/'):
             bpy.data.worlds[0].phobosexportsettings.path += '/'
 
-    path = StringProperty(name='path', default='.', update=updateExportPath)
+    path = StringProperty(name='path', default='../', update=updateExportPath)
     #relativePaths = BoolProperty(name='Relative Paths', default=True,
      #                            description="Use relative paths in exported files")
     structureExport = BoolProperty(name="Structure export", default=True, description="Create structured subfolders")
@@ -391,7 +391,7 @@ class PhobosScenePanel(bpy.types.Panel):
 class PhobosExportPanel(bpy.types.Panel):
     """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_EXPORT_PT_PHOBOS"
-    bl_label = "phobos: Export & Import"
+    bl_label = "Export & Import"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
@@ -441,10 +441,10 @@ class PhobosExportPanel(bpy.types.Panel):
         #c2.prop(expsets, "exportCustomData", text="Export custom data")
 
         ec1 = layout.column(align=True)
-        ec1.operator("phobos.export_robot", text="Export Robot Model", icon="PASTEDOWN")
+        ec1.operator("phobos.export_robot", text="Export Robot Model", icon="EXPORT")
         # FIXME: issue with export and import of models with new generic system
         #ec2 = layout.column(align=True)
-        #ec2.operator("phobos.import_robot_model", text="Import Robot Model", icon="COPYDOWN")
+        ec1.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
 
 #        layout.separator()
 #        layout.label(text="Baking")
