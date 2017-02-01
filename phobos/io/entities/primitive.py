@@ -64,8 +64,8 @@ def deriveEntity(entity, outpath, savetosubfolder):
                           'y': pose['rotation_quaternion'][2],
                           'z': pose['rotation_quaternion'][3]}
     entity['extend'] = {'x': entity['geometry']['size'][0],
-                          'y': entity['geometry']['size'][1],
-                          'z': entity['geometry']['size'][2]}
+                        'y': entity['geometry']['size'][1],
+                        'z': entity['geometry']['size'][2]}
     return entity
 
 

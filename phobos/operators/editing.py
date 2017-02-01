@@ -36,7 +36,8 @@ from datetime import datetime
 import bpy
 import mathutils
 from bpy.types import Operator
-from bpy.props import *
+from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
+                       FloatProperty, FloatVectorProperty, BoolVectorProperty)
 
 import phobos.defs as defs
 import phobos.model.inertia as inertia
@@ -727,8 +728,9 @@ class CreateCollisionObjects(Operator):
                 ob['sph1_location'] = tmpsph1_location
                 ob['sph2_location'] = tmpsph2_location
             elif self.property_colltype == 'mesh':
-                bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked":False, "mode":'TRANSLATION'}, TRANSFORM_OT_translate={"value":(0, 0, 0), "constraint_axis":(False, False, False), "constraint_orientation":'GLOBAL', "mirror":False, "proportional":'DISABLED', "proportional_edit_falloff":'SMOOTH', "proportional_size":1, "snap":False, "snap_target":'CLOSEST', "snap_point":(0, 0, 0), "snap_align":False, "snap_normal":(0, 0, 0), "gpencil_strokes":False, "texture_space":False, "remove_on_cancel":False, "release_confirm":False})
-
+                # FIXME: simply turn this into object.duplicate?
+                bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
+                                              TRANSFORM_OT_translate={"value": (0, 0, 0)})
                 # TODO: copy mesh!!
             ob.phobostype = 'collision'
             ob['geometry/type'] = self.property_colltype
@@ -759,7 +761,6 @@ class SetCollisionGroupOperator(Operator):
         description='Collision groups')
 
     def invoke(self, context, event):
-
         try:
             self.groups = context.active_object.rigid_body.collision_groups
         except AttributeError:
@@ -868,7 +869,6 @@ class DefineJointConstraintsOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
-
         lower = 0
         upper = 0
         if self.joint_type in ('revolute', 'prismatic'):
@@ -1024,7 +1024,6 @@ class CreateLinksOperator(Operator):
     )
 
     def execute(self, context):
-
         if self.type == '3D cursor':
             links.createLink(self.size)
         else:
@@ -1287,14 +1286,12 @@ class AddHeightmapOperator(Operator):
     name = StringProperty(
         name="Name",
         description="The new heightmap's name",
-        default="heightmap"
-    )
+        default="heightmap")
 
     cutNo = IntProperty(
         name="Number of Cuts",
         description="Number of cuts for subdivide",
-        default=100
-    )
+        default=100)
 
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
 
@@ -1336,7 +1333,6 @@ class AddHeightmapOperator(Operator):
     def invoke(self, context, event):
         # create the open file dialog
         context.window_manager.fileselect_add(self)
-
         return {'RUNNING_MODAL'}
 
 
@@ -1363,7 +1359,8 @@ class DefineEntityOperator(Operator):
             entity['entity/type'] = self.entitytype
         return {'FINISHED'}
 
-
+# FIXME: this is broken and really there should be a way to automate this if the names
+# are set correctly in the wiki, which is really where the editing should take place
 def add_editing_manual_map():
     """This allows you to right click on a button and link to the manual
 

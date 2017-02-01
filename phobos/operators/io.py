@@ -128,6 +128,7 @@ class ExportModelOperator(Operator):
                 print(sys.exc_info()[0])
 
         # TODO: Move texture export to individual formats? This is practically SMURF
+        # FIXME: test if textures are present before creating the output folder
         # export textures
         if expsets.exportTextures:
             texture_path = securepath(os.path.join(export_path, 'textures'))

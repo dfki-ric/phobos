@@ -26,12 +26,12 @@ Created on 6 Jan 2014
 @author: Kai von Szadkowski
 """
 
-import os
+#import os
 import sys
 import inspect
 
 import bpy
-import bgl
+#import bgl
 from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
                        PointerProperty, CollectionProperty)
 from bpy.types import AddonPreferences
