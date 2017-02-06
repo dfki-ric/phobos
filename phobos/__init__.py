@@ -92,6 +92,7 @@ if "bpy" in locals():
     phobos.defs.updateDefs(os.path.dirname(__file__) + "/definitions")
     importlib.reload(phobos.utils.validation)
     importlib.reload(phobos.utils.selection)
+    importlib.reload(phobos.utils.editing)
     importlib.reload(phobos.utils.io)
     importlib.reload(phobos.utils.general)
     importlib.reload(phobos.utils.naming)
@@ -115,7 +116,6 @@ if "bpy" in locals():
     importlib.reload(phobos.io.entities.light)
     importlib.reload(phobos.io.entities.urdf)
     importlib.reload(phobos.io.entities.heightmap)
-    importlib.reload(phobos.io.entities.generic)
     importlib.reload(phobos.io.scenes.smurfs)
     importlib.reload(phobos.operators.misc)
     importlib.reload(phobos.operators.editing)
@@ -128,6 +128,7 @@ else:
     import phobos.defs
     phobos.defs.updateDefs(os.path.dirname(__file__) + "/definitions")
     import phobos.utils.validation
+    import phobos.utils.editing
     import phobos.utils.selection
     import phobos.utils.io
     import phobos.utils.general
@@ -152,7 +153,6 @@ else:
     import phobos.io.entities.light
     import phobos.io.entities.urdf
     import phobos.io.entities.heightmap
-    import phobos.io.entities.generic
     import phobos.io.scenes.smurfs
     import phobos.operators.misc
     import phobos.operators.editing
@@ -180,6 +180,3 @@ def unregister():
     """
     phobos.phobosgui.unregister()
     bpy.utils.unregister_module(__name__)
-
-# if __name__ == "__main__":
-#    register()
