@@ -91,14 +91,14 @@ class AddKinematicChainOperator(Operator):
             if obj is not context.active_object:
                 startobj = obj
                 break
-        if not 'startChain' in startobj:
+        if 'startChain' not in startobj:
             startobj['startChain'] = [self.chainname]
         else:
             namelist = startobj['startChain']
             if self.chainname not in namelist:
                 namelist.append(self.chainname)
             startobj['startChain'] = namelist
-        if not 'endChain' in endobj:
+        if 'endChain' not in endobj:
             endobj['endChain'] = [self.chainname]
         else:
             namelist = endobj['endChain']
