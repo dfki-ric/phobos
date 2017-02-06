@@ -39,19 +39,15 @@ from phobos.utils.io import securepath
 
 
 def deriveObjectPose(obj):
-    """This function derives a pose of link, visual or collision object.
+    """Derives a pose of link, visual or collision object.
 
     :param obj: The blender object to derive the pose from.
     :type obj: bpy_types.Object
     :return: dict
 
     """
-    matrix = obj.matrix_local
     effectiveparent = sUtils.getEffectiveParent(obj)
-    parent = obj.parent
-    while parent != effectiveparent and parent is not None:
-        matrix = parent.matrix_local * matrix
-        parent = parent.parent
+    matrix = eUtils.getCombinedTransform(obj, effectiveparent)
     pose = {'rawmatrix': matrix,
             'matrix': [list(vector) for vector in list(matrix)],
             'translation': list(matrix.to_translation()),
@@ -62,7 +58,7 @@ def deriveObjectPose(obj):
 
 
 def createPreview(objects, export_path, modelname, previewfile, render_resolution=256):
-    """This function creates a thumbnail of the given objects.
+    """Creates a thumbnail of the given objects.
 
     :param obj: List of objects for the thumbnail.
     :type obj: list
