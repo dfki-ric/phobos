@@ -50,7 +50,7 @@ import phobos.model.poses as poses
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
-import phobos.utils.blender as eUtils
+import phobos.utils.editing as eUtils
 from phobos.phoboslog import log
 from phobos.utils.general import epsilonToZero
 from phobos.model.poses import deriveObjectPose
