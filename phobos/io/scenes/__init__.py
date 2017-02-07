@@ -10,4 +10,4 @@ for filename in os.listdir(os.path.dirname(__file__)):
 
         if hasattr(py_mod, 'mesh_type_dict'):
             # mesh_types = {**mesh_types, **py_mod.mesh_type_dict}  # unpacking (> Python 3.5)
-            scene_types.update(py_mod.mesh_type_dict.copy())
+            scene_types.update(py_mod.scene_type_dict.copy())
