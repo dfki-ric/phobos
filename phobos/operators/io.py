@@ -44,6 +44,7 @@ from phobos.phoboslog import log
 import phobos.model.models as models
 import phobos.model.links as links
 import phobos.utils.selection as sUtils
+import phobos.utils.io as ioUtils
 from phobos.utils.io import securepath
 import phobos.io.entities as entities
 import phobos.io.meshes as meshes
@@ -69,11 +70,7 @@ class ExportModelOperator(Operator):
 
     def execute(self, context):
         # setup paths
-        expsets = bpy.data.worlds[0].phobosexportsettings
-        if os.path.isabs(expsets.path):
-            export_path = expsets.path
-        else:
-            export_path = os.path.join(bpy.path.abspath('//'), expsets.path)
+        export_path = ioUtils.getExportPath()
         if not securepath(export_path):
             log("Could not secure path to export to.", "ERROR", 'ExportModelOperator')
             return {'CANCELLED'}
@@ -96,10 +93,7 @@ class ExportModelOperator(Operator):
             if not getattr(bpy.data.worlds[0], typename, False):
                 continue
             # format exists and is exported:
-            if expsets.structureExport:
-                model_path = os.path.join(export_path, entitytype)
-            else:
-                model_path = export_path
+            model_path = ioUtils.getModelPath(entitytype)
             securepath(model_path)
             try:
                 entities.entity_types[entitytype]['export'](model, model_path)
@@ -112,10 +106,7 @@ class ExportModelOperator(Operator):
         # TODO: Move mesh export to individual formats? This is practically SMURF
         # export meshes in selected formats
         for meshtype in meshes.mesh_types:
-            if expsets.structureExport:
-                mesh_path = os.path.join(export_path, 'meshes', meshtype)
-            else:
-                mesh_path = export_path
+            mesh_path = ioUtils.getOutputMeshpath(meshtype)
             try:
                 typename = "export_mesh_" + meshtype
                 if getattr(bpy.data.worlds[0], typename):

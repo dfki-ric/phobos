@@ -35,6 +35,7 @@ import xml.etree.ElementTree as ET
 from phobos.utils.io import l2str, xmlline, indent, xmlHeader
 import phobos.model.materials as materials
 import phobos.utils.general as gUtils
+import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 
 
@@ -49,7 +50,7 @@ def sort_urdf_elements(elems):
     return sorted(elems)
 
 
-def writeURDFGeometry(output, element, relative_path='', mesh_format='obj'):
+def writeURDFGeometry(output, element):
     """This functions writes the URDF geometry for a given element at the end of a given String.
 
     :param output: The String to append the URDF output string on.
@@ -70,7 +71,8 @@ def writeURDFGeometry(output, element, relative_path='', mesh_format='obj'):
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
             output.append(xmlline(5, 'mesh', ['filename', 'scale'],
-                                  [relative_path + geometry['filename'] + '.' + mesh_format,
+                                  [os.path.join(ioUtils.getRelativeMeshpath(),
+                                                geometry['filename'] + '.' + ioUtils.getOutputMeshtype()),
                                    l2str(geometry['scale'])]))
         elif geometry['type'] == 'capsule':
             output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))  # FIXME: real capsules here!
@@ -81,7 +83,7 @@ def writeURDFGeometry(output, element, relative_path='', mesh_format='obj'):
         log("Misdefined geometry in element " + element['name'] + " " + str(err), "ERROR", "writeURDFGeometry")
 
 
-def exportUrdf(model, filepath, relative_path='', mesh_format='obj'):
+def exportUrdf(model, filepath):
     """This functions writes the URDF of a given model into a file at the given filepath.
     An existing file with this path will be overwritten.
 
@@ -140,7 +142,7 @@ def exportUrdf(model, filepath, relative_path='', mesh_format='obj'):
                         output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                               [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
-                        writeURDFGeometry(output, vis, relative_path, mesh_format)
+                        writeURDFGeometry(output, vis)
                         if 'material' in vis:
                             # FIXME: change back to 1 when implemented in urdfloader
                             if model['materials'][vis['material']]['users'] == 0:
@@ -173,7 +175,7 @@ def exportUrdf(model, filepath, relative_path='', mesh_format='obj'):
                         output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                               [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
-                        writeURDFGeometry(output, col, relative_path, mesh_format)
+                        writeURDFGeometry(output, col)
                         output.append(indent * 3 + '</collision>\n')
             output.append(indent * 2 + '</link>\n\n')
     # export joint information

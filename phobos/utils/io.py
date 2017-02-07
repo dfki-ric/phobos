@@ -1,5 +1,5 @@
 
-import os
+import os.path
 import subprocess
 import bpy
 from phobos import defs
@@ -67,6 +67,43 @@ def securepath(path):
             return None
     return path
     # os.path.expanduser(path)  # this is probably not necessary
+
+
+def getExpSettings():
+    return bpy.data.worlds[0].phobosexportsettings
+
+
+def getModelPath(entitytype):
+    if getExpSettings().structureExport:
+        return os.path.join(getExportPath(), entitytype)
+    else:
+        return getExportPath()
+
+
+def getOutputMeshtype():
+    return str(getExpSettings().outputMeshtype)
+
+
+def getOutputMeshpath(meshtype=None):
+    if getExpSettings().structureExport:
+        return os.path.join(getExportPath(), 'meshes', meshtype if meshtype else getOutputMeshtype())
+    else:
+        return getExportPath()
+
+
+def getRelativeMeshpath(modeltype='urdf', meshtype=None):
+    return os.path.relpath(getOutputMeshpath(meshtype if meshtype else getOutputMeshtype()), getModelPath(modeltype))
+
+
+def getExportPath():
+    if os.path.isabs(getExpSettings().path):
+        return getExpSettings().path
+    else:
+        return os.path.join(bpy.path.abspath('//'), getExpSettings().path)
+
+
+def textureExportEnabled():
+    return bpy.data.worlds[0].phobosexportsettings.exportTextures
 
 
 def getgitbranch():

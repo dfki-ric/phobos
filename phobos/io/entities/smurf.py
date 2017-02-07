@@ -234,7 +234,7 @@ def sort_dict_list(dict_list, sort_key):
     return sorted_dict_list
 
 
-def exportSmurf(model, path, mesh_format='obj'):
+def exportSmurf(model, path):
     log(model['name'] + ' ' + path, "DEBUG", "exportSmurf")
     """This function exports a given model to a specific path as a smurf representation.
 

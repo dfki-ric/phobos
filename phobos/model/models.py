@@ -51,6 +51,7 @@ import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.editing as eUtils
+import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 from phobos.utils.general import epsilonToZero
 from phobos.model.poses import deriveObjectPose
@@ -285,15 +286,7 @@ def deriveVisual(obj):
                 maxdlist=[obj.lod_levels[i+1].distance for i in range(len(obj.lod_levels)-1)]+[100.0]
             lodlist = []
             for i in range(len(obj.lod_levels)):
-                filename = obj.lod_levels[i].object.data.name
-                if bpy.data.worlds[0].phobosexportsettings.useObj:
-                    filename += ".obj"
-                elif bpy.data.worlds[0].phobosexportsettings.useStl:
-                    filename += ".stl"
-                elif bpy.data.worlds[0].phobosexportsettings.useDae:
-                    filename += ".dae"
-                else:
-                    filename += ".obj"
+                filename = obj.lod_levels[i].object.data.name + ioUtils.getOutputMeshtype()
                 lodlist.append({'start': obj.lod_levels[i].distance, 'end': maxdlist[i], 'filename': os.path.join('meshes', filename)})
             visual['lod'] = lodlist
     except KeyError:
