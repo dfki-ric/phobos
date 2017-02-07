@@ -119,17 +119,18 @@ class ExportModelOperator(Operator):
                 print(sys.exc_info()[0])
 
         # TODO: Move texture export to individual formats? This is practically SMURF
-        # FIXME: test if textures are present before creating the output folder
         # export textures
-        if expsets.exportTextures:
-            texture_path = securepath(os.path.join(export_path, 'textures'))
-            log("Exporting textures to " + texture_path, "INFO", "ExportModelOperator")
+        if ioUtils.textureExportEnabled():
+            texture_path = ''
             for materialname in model['materials']:
                 mat = model['materials'][materialname]
                 for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
                     if texturetype in mat:
                         texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
                         if os.path.isfile(texpath):
+                            if texture_path == '':
+                                texture_path = securepath(os.path.join(export_path, 'textures'))
+                                log("Exporting textures to " + texture_path, "INFO", "ExportModelOperator")
                             shutil.copy(texpath, os.path.join(texture_path, os.path.basename(mat[texturetype])))
         return {'FINISHED'}
 
