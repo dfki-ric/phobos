@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.5
 # coding=utf-8
 
 """
@@ -32,6 +32,7 @@ Created on 6 Jan 2014
 
 import sys
 import os.path
+import importlib
 
 bl_info = {
     "name": "Phobos",
@@ -52,7 +53,7 @@ if os.path.isfile(yamlconfpath):
     f = open(yamlconfpath)
     path = f.read()
     f.close()
-    if (path == "v" or path == "i"):
+    if path == "v" or path == "i":
         print("There is no YAML installation for python 3.4 or greater on this computer")
     else:
         sys.path.insert(0, path)
@@ -62,6 +63,7 @@ else:
     print("Using distributed package instead!")
     sys.path.insert(0, sys.path[0] + "/phobos")
     import yaml
+
 
 # Add custom YAML (de-)serializer
 def bool_representer(dumper, data):
@@ -84,45 +86,10 @@ def bool_constructor(self, node):
 yaml.Loader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 
-if "bpy" in locals():
-    import importlib
-    print("Reloading Phobos...")
-    importlib.reload(phobos.defs)
-    print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
-    phobos.defs.updateDefs(os.path.dirname(__file__) + "/definitions")
-    importlib.reload(phobos.utils.validation)
-    importlib.reload(phobos.utils.selection)
-    importlib.reload(phobos.utils.editing)
-    importlib.reload(phobos.utils.io)
-    importlib.reload(phobos.utils.general)
-    importlib.reload(phobos.utils.naming)
-    importlib.reload(phobos.utils.blender)
-    importlib.reload(phobos.testing)
-    importlib.reload(phobos.phoboslog)
-    importlib.reload(phobos.phobosgui)
-    importlib.reload(phobos.model.controllers)
-    importlib.reload(phobos.model.joints)
-    importlib.reload(phobos.model.materials)
-    importlib.reload(phobos.model.poses)
-    importlib.reload(phobos.model.inertia)
-    importlib.reload(phobos.model.sensors)
-    importlib.reload(phobos.model.models)
-    importlib.reload(phobos.model.links)
-    importlib.reload(phobos.model.geometries)
-    importlib.reload(phobos.model.lights)
-    importlib.reload(phobos.io.meshes.meshes)
-    importlib.reload(phobos.io.entities.smurf)
-    importlib.reload(phobos.io.entities.primitive)
-    importlib.reload(phobos.io.entities.light)
-    importlib.reload(phobos.io.entities.urdf)
-    importlib.reload(phobos.io.entities.heightmap)
-    importlib.reload(phobos.io.scenes.smurfs)
-    importlib.reload(phobos.operators.misc)
-    importlib.reload(phobos.operators.editing)
-    importlib.reload(phobos.operators.selection)
-    importlib.reload(phobos.operators.io)
-    importlib.reload(phobos.operators.naming)
-else:
+# Initial imports
+if "bpy" not in locals():
+    print("Loading Python engine...")
+    import bpy
     print("Loading Phobos...")
     print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
     import phobos.defs
@@ -148,6 +115,8 @@ else:
     import phobos.model.geometries
     import phobos.model.lights
     import phobos.io.meshes.meshes
+    import phobos.io.entities
+    import phobos.io.entities.sdf
     import phobos.io.entities.smurf
     import phobos.io.entities.primitive
     import phobos.io.entities.light
@@ -159,8 +128,47 @@ else:
     import phobos.operators.selection
     import phobos.operators.io
     import phobos.operators.naming
+# Reloading
+else:
+    print("Reloading Phobos...")
+    importlib.reload(phobos.defs)
+    print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
+    phobos.defs.updateDefs(os.path.dirname(__file__) + "/definitions")
+    importlib.reload(phobos.utils.validation)
+    importlib.reload(phobos.utils.selection)
+    importlib.reload(phobos.utils.editing)
+    importlib.reload(phobos.utils.io)
+    importlib.reload(phobos.utils.general)
+    importlib.reload(phobos.utils.naming)
+    importlib.reload(phobos.utils.blender)
+    importlib.reload(phobos.testing)
+    importlib.reload(phobos.phoboslog)
+    importlib.reload(phobos.phobosgui)
+    importlib.reload(phobos.model.controllers)
+    importlib.reload(phobos.model.joints)
+    importlib.reload(phobos.model.materials)
+    importlib.reload(phobos.model.poses)
+    importlib.reload(phobos.model.inertia)
+    importlib.reload(phobos.model.sensors)
+    importlib.reload(phobos.model.models)
+    importlib.reload(phobos.model.links)
+    importlib.reload(phobos.model.geometries)
+    importlib.reload(phobos.model.lights)
+    importlib.reload(phobos.io.meshes.meshes)
+    importlib.reload(phobos.io.entities)
+    importlib.reload(phobos.io.entities.sdf)
+    importlib.reload(phobos.io.entities.smurf)
+    importlib.reload(phobos.io.entities.primitive)
+    importlib.reload(phobos.io.entities.light)
+    importlib.reload(phobos.io.entities.urdf)
+    importlib.reload(phobos.io.entities.heightmap)
+    importlib.reload(phobos.io.scenes.smurfs)
+    importlib.reload(phobos.operators.misc)
+    importlib.reload(phobos.operators.editing)
+    importlib.reload(phobos.operators.selection)
+    importlib.reload(phobos.operators.io)
+    importlib.reload(phobos.operators.naming)
 
-import bpy
 
 def register():
     """This function registers all modules to blender.

@@ -39,7 +39,7 @@ import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 
 def exportSdf(model, filepath):
-    log("Starting export to: ", filepath)
+    log("Export SDF to" + filepath, "INFO", "exportSdf")
 
 def importSdf():
     pass
