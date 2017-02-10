@@ -123,9 +123,8 @@ def retrieve_from_list(alist, prop, value):
 
 
 def parse_text(s):
-    """Parses a text by splitting up elements separated by whitespace. The elements are then
-    try to be parsed as lists of floats, ints or strings or, if only one element is found,
-    are tried to be parsed using the function parse_number().
+    """Parses a text by splitting up elements separated by whitespace and tries
+    to determine whether it is a list of floats, ints or strings.
 
     """
     numstrings = s.split()

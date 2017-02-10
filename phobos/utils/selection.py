@@ -65,9 +65,9 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
 
 def getEffectiveParent(obj, selected_only=True, include_hidden=False):
     """
-    Returns the visible parent of an object, i.e. the first *link* ascending the
-    object tree starting from the obj, excluding hidden objects unless specified
-    differently by *include_hidden*.
+    Returns the selected parent of an object, i.e. the first *link* ascending the
+    object tree that is selected, starting from the obj, optionally also excluding
+    hidden objects.
     tree which is
     :param obj:
     :return:

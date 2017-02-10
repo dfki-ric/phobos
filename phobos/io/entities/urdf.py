@@ -217,8 +217,7 @@ def exportUrdf(model, filepath):
             output.append(indent * 2 + '</joint>\n\n')
     # export material information
     if missing_values:
-        log("Created URDF is invalid due to missing values!")
-        bpy.ops.tools.phobos_warning_dialog('INVOKE_DEFAULT', message="Created URDF is invalid due to missing values!")
+        log("Created URDF is invalid due to missing values!", "WARNING", "exportUrdf")
     if stored_element_order is None:
         sorted_material_keys = sorted(model['materials'])
     else:
