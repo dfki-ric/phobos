@@ -1,6 +1,6 @@
 #If you want to evaluate numeric expressions in this yaml file, just enclose your expression with '&'. In that simple expressions you can use the python math module.
 
-Sensors:
+sensors:
     RaySensor:
         width:
             required: true

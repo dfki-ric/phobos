@@ -1,0 +1,15 @@
+controllers:
+  generic_pid:
+    name: generic_pid
+    type: pid
+    parameters:
+      p: 20.0
+      i: 1.0
+      d: 0.1
+  limes_position:
+    name: limes_position
+    type: pid
+    parameters:
+      p: 20.0
+      i: 0.1
+      d: 0.0

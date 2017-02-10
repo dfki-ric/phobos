@@ -1,4 +1,34 @@
-Motors:
-    - none
-    - PID
-    - DC
+motors:
+  generic_dc:
+    name: generic_dc
+    type: dc
+    controller: generic_dc
+    maxSpeed: 3.141
+    maxEffort: 50.0
+  generic_bldc:
+    name: generic_bldc
+    type: bldc
+    controller: generic_pid
+    maxSpeed: 3.141
+    maxEffort: 50.0
+  limes_typ1:
+    name: limes_typ1
+    type: bldc
+    controller: limes_position
+    maxSpeed: 1.438
+    maxEffort: 238
+    protocol: ndlcom
+  limes_typ2:
+    name: limes_typ2
+    type: bldc
+    controller: limes_position
+    maxSpeed: 1.966
+    maxEffort: 92
+    protocol: ndlcom
+  limes_typ3:
+    name: limes_typ3
+    type: bldc
+    controller: limes_position
+    maxSpeed: 2.293
+    maxEffort: 54
+    protocol: ndlcom

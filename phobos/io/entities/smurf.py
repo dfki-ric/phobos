@@ -109,7 +109,7 @@ def deriveEntity(entity, outpath, savetosubfolder):
 
 
 def gatherAnnotations(model):
-    """This function gathers custom properties annotating elements of the robot
+    """Gathers custom properties annotating elements of the robot
     across the model. These annotations were created in the model.py
     module and are marked with a leading '$'.
 
