@@ -28,12 +28,6 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 File defs.py
 
 Created on 7 Jan 2014
-
-NOTE: This module is used to provide a number of global definitions which
-are used by the other modules. If you make changes to this module,
-do not include any imports which are not part of the standard python 3 libray.
-This module may well be imported and used outside of the MARS Blender Tools
-in the future.
 """
 
 import os
@@ -125,8 +119,14 @@ defaultmaterials = {
 
 # definitions of model elements to be read in
 dictConstraints = {}
-motortypes = []
-sensortypes = []
+hardware = {'motors': {},
+            'sensors': {}
+            }
+software = {'controllers': {},
+            'algorithms': {}
+            }
+#motortypes
+#sensortypes
 sensorProperties = {}
 
 
@@ -139,19 +139,22 @@ def updateDefs(defsFolderPath):
     """
     dicts = __parseAllYAML(defsFolderPath)
     for entry in dicts:
-        if 'Sensors' in entry:
-            for sens in entry['Sensors']:
-                if sens not in sensortypes:
-                    sensortypes.append(sens)
-                    sensorProperties[sens] = entry['Sensors'][sens]
+        if 'sensors' in entry:
+            for name, data in entry['sensors'].items():
+                if name not in hardware['sensors']:
+                    hardware['sensors'][name] = data
         if 'DictConstraints' in entry:
             for cons in entry['DictConstraints']:
                 if cons not in dictConstraints:
                     dictConstraints[cons] = entry['DictConstraints'][cons]
-        if 'Motors'in entry:
-            for motor in entry['Motors']:
-                if (motor,) * 3 not in motortypes:
-                    motortypes.append((motor,) * 3)
+        if 'motors' in entry:
+            for name, data in entry['motors'].items():
+                if name not in hardware['motors']:
+                    hardware['motors'][name] = data
+        if 'controllers' in entry:
+            for name, data in entry['controllers'].items():
+                if name not in software['controllers']:
+                    software['controllers'][name] = data
     # Extending dictConstraints
     dictConstraints['sensors']['$forElem']['$selection__type'] = sensorProperties
 

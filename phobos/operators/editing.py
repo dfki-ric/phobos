@@ -931,9 +931,10 @@ class AddMotorOperator(Operator):
 
     motortype = EnumProperty(
         name='Motor Type',
-        default='PID',
+        default='generic_dc',
         description="Type of the motor",
-        items=defs.motortypes)
+        items=tuple([(t,) * 3 for t in defs.hardware['motors']])
+        )
 
     def draw(self, context):
         layout = self.layout
@@ -1043,8 +1044,8 @@ class AddSensorOperator(Operator):
 
     sensor_type = EnumProperty(
         name="Sensor Type",
-        default="undefined",
-        items=tuple([(type,) * 3 for type in defs.sensortypes]),
+        default='undefined',
+        items=tuple([(t,) * 3 for t in defs.hardware['sensors']]),
         description="Type of the sensor to be created"
     )
 
