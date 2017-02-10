@@ -15,7 +15,7 @@ def exportYAML(model, path, mesh_format=''):
 
     """
     log("phobos YAML export: Writing model data to " + path, "INFO", "exportModelToYAML")
-    with open(os.path.join(path, model['name'], '.yaml'), 'w') as outputfile:
+    with open(os.path.join(path, model['name'] + '.yaml'), 'w') as outputfile:
         outputfile.write('# YAML dump of robot model "' + model['name'] + '", ' + datetime.now().strftime(
             "%Y%m%d_%H:%M") + "\n")
         outputfile.write("# created with Phobos" + defs.version + " - https://github.com/rock-simulation/phobos\n\n")
