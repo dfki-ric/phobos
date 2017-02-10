@@ -213,6 +213,7 @@ def cleanObjectProperties(props):
                 del props[key]
     return props
 
+
 def cleanScene():
     """This function cleans up the scene and removes all blender objects, meshes, materials and lights.
 
