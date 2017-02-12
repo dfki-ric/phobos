@@ -39,55 +39,7 @@ sensors = []
 motors = []
 
 
-class AddControllerOperator(Operator):
-    """AddControllerOperator
 
-    """
-    bl_idname = "phobos.add_controller"
-    bl_label = "Add/edit Controller"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    controller_scale = FloatProperty(
-        name = "controller scale",
-        default = 0.05,
-        description = "scale of the controller visualization")
-
-    controller_name = StringProperty(
-        name = "controller name",
-        default = 'controller',
-        description = "name of the controller")
-
-    controller_rate = FloatProperty(
-        name = "rate",
-        default = 10,
-        description = "rate of the controller [Hz]")
-
-    def execute(self, context):
-        global sensors
-        global motors
-        location = bpy.context.scene.cursor_location
-        objects = []
-        controllers = []
-        for obj in bpy.context.selected_objects:
-            if obj.phobostype == "controller":
-                controllers.append(obj)
-            else:
-                objects.append(obj)
-        if len(controllers) <= 0:
-            bUtils.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "phobos_controller", location)
-            bpy.context.scene.objects.active.phobostype = "controller"
-            bpy.context.scene.objects.active.name = self.controller_name
-            controllers.append(bpy.context.scene.objects.active)
-        #empty index list so enable robotupdate of controller
-        for ctrl in controllers:
-            ctrl['controller/sensors'] = sorted(sensors, key=str.lower)
-            ctrl['controller/motors'] = sorted(motors, key=str.lower)
-            ctrl['controller/rate'] = self.controller_rate
-        print("Added joints/motors to (new) controller(s).")
-        #for prop in defs.controllerProperties[self.controller_type]:
-        #    for ctrl in controllers:
-        #        ctrl[prop] = defs.controllerProperties[prop]
-        return {'FINISHED'}
 
 
 class AddLegacyControllerOperator(Operator):

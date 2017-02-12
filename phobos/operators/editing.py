@@ -1153,6 +1153,119 @@ class AddSensorOperator(Operator):
         return {'FINISHED'}
 
 
+def getControllerParameters(name):
+    try:
+        return defs.software['controllers'][name]['parameters'].keys()
+    except:
+        return []
+
+
+def getDefaultControllerParameters(scene, context):
+    try:
+        name = bpy.context.active_object['motor/controller']
+        return defs.software['controllers'][name]['parameters'].values()
+    except:
+        return None
+
+
+class AddControllerOperator(Operator):
+    """AddControllerOperator
+
+    """
+    bl_idname = "phobos.add_controller"
+    bl_label = "Add/edit Controller"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # controller_scale = FloatProperty(
+    #     name = "controller scale",
+    #     default = 0.05,
+    #     description = "scale of the controller visualization")
+    #
+    # controller_name = StringProperty(
+    #     name = "controller name",
+    #     default = 'controller',
+    #     description = "name of the controller")
+    #
+    # controller_rate = FloatProperty(
+    #     name = "rate",
+    #     default = 10,
+    #     description = "rate of the controller [Hz]")
+
+    controllertype = EnumProperty(
+        name='Controller Type',
+        default='generic_pid',
+        description="Type of the controller",
+        items=tuple([(t,) * 3 for t in defs.software['controllers']])
+    )
+
+    cparam1 = FloatProperty(default=0.0, description='Controller parameter #1')
+    cparam2 = FloatProperty(default=0.0, description='Controller parameter #2')
+    cparam3 = FloatProperty(default=0.0, description='Controller parameter #3')
+    cparam4 = FloatProperty(default=0.0, description='Controller parameter #4')
+    cparam5 = FloatProperty(default=0.0, description='Controller parameter #5')
+    cparam6 = FloatProperty(default=0.0, description='Controller parameter #6')
+    cparam7 = FloatProperty(default=0.0, description='Controller parameter #7')
+    cparam8 = FloatProperty(default=0.0, description='Controller parameter #8')
+
+    # controllerparameters = FloatVectorProperty(
+    #     name="Controller Parameters",
+    #     description="parameters of the controller",
+    #     default=(0.0, 0.0, 0.0, 0.0, 0.0),
+    #     precision=3,
+    #     size=5#getControllerParametersNumber
+    #     )
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "controllertype")
+        #layout.prop(self, "controllerparameters")
+        slayout = layout.split(0.2)
+        c1 = slayout.column()
+        c2 = slayout.column()
+        i = 0
+        for key in getControllerParameters(context.active_object['motor/controller']):
+            i += 1
+            c1.label(key+':')
+            c2.prop(self, "cparam"+str(i))
+
+    def execute(self, context):
+        controller = defs.software['controllers'][self.controllertype]
+        for obj in bpy.context.selected_objects:
+            obj['motor/controller'] = controller['name']
+            obj['*software/controller/name'] = controller['name']
+            obj['*software/controller/type'] = controller['type']
+            i = 0
+            for key in getControllerParameters(controller['name']):
+                i += 1
+                obj['*software/controller/'+key] = getattr(self, 'cparam'+str(i))  # self.cparam1# params[i]
+
+        # global sensors
+        # global motors
+        # location = bpy.context.scene.cursor_location
+        # objects = []
+        # controllers = []
+        # for obj in bpy.context.selected_objects:
+        #     if obj.phobostype == "controller":
+        #         controllers.append(obj)
+        #     else:
+        #         objects.append(obj)
+        # if len(controllers) <= 0:
+        #     bUtils.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "phobos_controller", location)
+        #     bpy.context.scene.objects.active.phobostype = "controller"
+        #     bpy.context.scene.objects.active.name = self.controller_name
+        #     controllers.append(bpy.context.scene.objects.active)
+        # #empty index list so enable robotupdate of controller
+        # for ctrl in controllers:
+        #     ctrl['controller/sensors'] = sorted(sensors, key=str.lower)
+        #     ctrl['controller/motors'] = sorted(motors, key=str.lower)
+        #     ctrl['controller/rate'] = self.controller_rate
+        # print("Added joints/motors to (new) controller(s).")
+        # #for prop in defs.controllerProperties[self.controller_type]:
+        # #    for ctrl in controllers:
+        # #        ctrl[prop] = defs.controllerProperties[prop]
+        return {'FINISHED'}
+
+
 class CreateMimicJointOperator(Operator):
     """Make a number of joints follow a specified joint"""
     bl_idname = "phobos.create_mimic_joint"
