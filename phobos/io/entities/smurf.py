@@ -202,8 +202,9 @@ def sort_for_yaml_dump(structure, category):
     :return:
 
     """
-    if category in ['materials', 'motors', 'sensors']:
-        return {category: sort_dict_list(structure[category], 'name')}
+    if category in ['materials', 'motors', 'sensors', 'chains']:
+        #return {category: sort_dict_list(structure[category], 'name')}
+        return {category: sorted(structure[category], key=lambda k: k['name'])}
     elif category == 'simulation':
         return_dict = {}
         for viscol in ['collision', 'visual']:
@@ -256,7 +257,8 @@ def exportSmurf(model, path):
                   'controllers': model['controllers'] != {},
                   'collision': collisiondata != {},
                   'visuals': lodsettings != {},
-                  'lights': model['lights'] != {}
+                  'lights': model['lights'] != {},
+                  'chains': model['chains'] != {}
                   }
 
     # create all filenames
@@ -269,8 +271,10 @@ def exportSmurf(model, path):
                  'collision': model['name'] + "_collision.yml",
                  'visuals': model['name'] + "_visuals.yml",
                  'lights': model['name'] + "_lights.yml",
+                 'chains': model['name'] + "_chains.yml"
                  }
-    fileorder = ['collision', 'visuals', 'materials', 'motors', 'sensors', 'controllers', 'state', 'lights']
+    fileorder = ['chains', 'collision', 'visuals', 'materials', 'motors',
+                 'sensors', 'controllers', 'state', 'lights']
     urdf_path = '../urdf/'
     urdf_filename = model['name'] + '.urdf'
 
@@ -290,6 +294,27 @@ def exportSmurf(model, path):
             fileorder.append(dataname)
             exportdata[dataname] = True
 
+    highleveldata = {}
+    for obj in bpy.data.objects:
+        for key in obj.keys():
+            if key.startswith('*'):
+                category, listname, specifier = key.replace('*', '').split('/')
+                listname += 's'
+                if category not in highleveldata:
+                    filenames[category] = model['name'] + '_' + category + '.yml'
+                    fileorder.append(category)
+                    exportdata[category] = True
+                    highleveldata[category] = {}
+                if listname not in highleveldata[category]:
+                    highleveldata[category][listname] = {}
+                if '*'+category+'/'+listname[:-1]+'/name' not in obj:
+                    name = obj.name
+                else:
+                    name = obj['*'+category+'/'+listname[:-1]+'/name']
+                if name not in highleveldata[category][listname]:
+                    highleveldata[category][listname][name] = {}
+                highleveldata[category][listname][name][specifier] = obj[key]
+
     infostring = ' definition SMURF file for "' + model['name'] + '", ' + model["date"] + "\n\n"
 
     # write model information
@@ -304,17 +329,27 @@ def exportSmurf(model, path):
         op.write("modelname: " + model['name'] + "\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))
 
-    # #write semantics (SRDF information in YML format)
-    # if export['semantics']:
-    #     with open(path + filenames['semantics'], 'w') as op:
-    #         op.write('#semantics'+infostring)
-    #         op.write("modelname: "+model['name']+'\n')
-    #         semantics = {}
-    #         if model['groups'] != {}:
-    #             semantics['groups'] = model['groups']
-    #         if model['chains'] != {}:
-    #             semantics['chains'] = model['chains']
-    #         op.write(yaml.dump(semantics, default_flow_style=False))
+    for category in highleveldata:
+        with open(os.path.join(path, filenames[category]), 'w') as op:
+            op.write('# main SMURF file of model "' + model['name'] + '"\n')
+            op.write('# created with Phobos ' + defs.version + ' - https://github.com/rock-simulation/phobos\n\n')
+            op.write(yaml.dump({listname: list(highleveldata[category][listname].values())
+                                for listname in highleveldata[category].keys()}, default_flow_style=False))
+
+    ## write semantics (SRDF information in YML format)
+    #if exportdata['kinematics']:
+    #    log("Writing kinematics data to " + filenames['kinematics'], "INFO", "exportModelToSMURF")
+    #    print(model['chains'])
+    #    with open(os.path.join(path, filenames['kinematics']), 'w') as op:
+    #        op.write('# kinematics'+infostring)
+    #        kinematics = {}
+    #        #if model['groups'] != {}:
+    #        #    kinematics['groups'] = model['groups']
+    #        if model['chains'] != {}:
+    #            kinematics['chains'] = list(model['chains'].values())
+    #        op.write(yaml.dump(kinematics, default_flow_style=False))
+    #else:
+    #    log("Non kinematics data to write", "INFO", "exportModelToSMURF")
 
     # write state (state information of all joints, sensor & motor activity etc.) #TODO: implement everything but joints
     if exportdata['state']:
@@ -332,7 +367,7 @@ def exportSmurf(model, path):
             op.write(yaml.dump(states))  #, default_flow_style=False))
 
     # write materials, sensors, motors & controllers
-    for data in ['materials', 'sensors', 'motors', 'controllers', 'lights']:
+    for data in ['materials', 'sensors', 'motors', 'controllers', 'lights', 'chains']:
         if exportdata[data]:
             with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)

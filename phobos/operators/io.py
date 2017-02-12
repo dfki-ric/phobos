@@ -95,13 +95,13 @@ class ExportModelOperator(Operator):
             # format exists and is exported:
             model_path = ioUtils.getModelPath(entitytype)
             securepath(model_path)
-            try:
-                entities.entity_types[entitytype]['export'](model, model_path)
-                log("Export model: " + model['name'] + ' as ' + entitytype, "DEBUG", 'ExportModelOperator')
-            except KeyError:
-                log("No export function available for selected model type: " + entitytype,
-                    "ERROR", "ExportModelOperator")
-                continue
+            #try:
+            entities.entity_types[entitytype]['export'](model, model_path)
+            log("Export model: " + model['name'] + ' as ' + entitytype, "DEBUG", 'ExportModelOperator')
+            #except KeyError:
+            #    log("No export function available for selected model type: " + entitytype,
+            #        "ERROR", "ExportModelOperator")
+            #    continue
 
         # TODO: Move mesh export to individual formats? This is practically SMURF
         # export meshes in selected formats

@@ -469,6 +469,8 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=()):
         for key, value in obj.items():
             if hasattr(value, 'to_list'):  # transform Blender id_arrays into lists
                 value = list(value)
+            if hasattr(value, 'to_dict'):  # transform Blender id_arrays into lists
+                value = value.to_dict()
             if '/' in key:
                 if phobostype+'/' in key:
                     specs = key.split('/')[1:]
@@ -535,34 +537,38 @@ def deriveGroupEntry(group):
     return links
 
 
-def deriveChainEntry(obj):
+def deriveChain(endobj):
     """Derives a phobos dict entry for a kinematic chain ending in the provided object.
 
-    :param obj:
+    :param endobj:
     :return:
     """
     returnchains = []
-    if 'endChain' in obj:
-        chainlist = obj['endChain']
+    chainlist = endobj['endChain']
     for chainName in chainlist:
-        chainclosed = False
-        parent = obj
-        chain = {'name': chainName, 'start': '', 'end': nUtils.getObjectName(obj), 'elements': []}
-        while not chainclosed:
-            if parent.parent is None:  # FIXME: use effectiveParent
-                log("Unclosed chain, aborting parsing chain " + chainName, "ERROR", "deriveChainEntry")
-                chain = None
+        obj = endobj
+        chain = {'name': chainName, 'start': '', 'end': nUtils.getObjectName(endobj, 'joint'),
+                 'elements': [nUtils.getObjectName(endobj, 'joint')]}
+        while obj.parent is not None:
+            obj = obj.parent  # FIXME: use effectiveParent
+            chain['elements'].append(nUtils.getObjectName(obj, 'joint'))
+            if 'startChain' in obj and chainName in obj['startChain']:
+                chain['start'] = nUtils.getObjectName(obj)
+                chain['elements'].reverse()
+                returnchains.append(chain)
+                # TODO: the following is a hack for temporary compatibility, 2017-02-03
+                chain['actuators'] = chain['elements']
+                del chain['elements']
+                chain['software'] = [{'reference': obj['software']}]
+                matrix = eUtils.getCombinedTransform(obj, sUtils.getRoot(obj))
+                t = matrix.to_translation()
+                r = matrix.to_quaternion()
+                chain['properties'] = {'translation': {'x': t.x, 'y': t.y, 'z': t.z},
+                                       'rotation': {'w': r.w, 'x': r.x, 'y': r.y, 'z': r.z}
+                                       }
                 break
-            chain['elements'].append(parent.name)
-            parent = parent.parent  # FIXME: use effectiveParent
-            if 'startChain' in parent:
-                startchain = parent['startChain']
-                if chainName in startchain:
-                    chain['start'] = nUtils.getObjectName(parent)
-                    chain['elements'].append(nUtils.getObjectName(parent))
-                    chainclosed = True
-        if chain is not None:
-            returnchains.append(chain)
+        if chain['start'] == '':  # no startChain marker anywhere
+                log("Unclosed chain, aborting parsing chain " + chainName, "ERROR", "deriveChainEntry")
     return returnchains
 
 
@@ -818,7 +824,7 @@ def buildModelDictionary(root):
     chains = []
     for obj in objectlist:
         if obj.phobostype == 'link' and 'endChain' in obj:
-            chains.extend(deriveChainEntry(obj))
+            chains.extend(deriveChain(obj))
     for chain in chains:
         model['chains'][chain['name']] = chain
 

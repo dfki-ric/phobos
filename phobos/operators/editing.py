@@ -931,21 +931,30 @@ class AddMotorOperator(Operator):
 
     motortype = EnumProperty(
         name='Motor Type',
-        default='generic_dc',
+        default='generic_bldc',
         description="Type of the motor",
         items=tuple([(t,) * 3 for t in defs.hardware['motors']])
+        #items=((t,) * 3 for t in sorted(defs.hardware['motors'].keys()))
         )
+
+    controllertype = EnumProperty(
+        name='Controller Type',
+        default='generic_pid',
+        description="Type of the controller",
+        items=tuple([(t,) * 3 for t in defs.software['controllers']])
+    )
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "motortype", text="motor_type")
+        layout.prop(self, "motortype")
         if not self.motortype == 'none':
             layout.prop(self, "taumax", text="maximum torque [Nm]")
             layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
-            if self.motortype == 'PID':
-                layout.prop(self, "P", text="P")
-                layout.prop(self, "I", text="I")
-                layout.prop(self, "D", text="D")
+            layout.prop(self, "controllertype")
+            #if self.motortype == 'PID':
+            #    layout.prop(self, "P", text="P")
+            #    layout.prop(self, "I", text="I")
+            #    layout.prop(self, "D", text="D")
 
     def invoke(self, context, event):
         aObject = context.active_object
@@ -967,6 +976,7 @@ class AddMotorOperator(Operator):
                 joint['motor/maxEffort'] = self.taumax
                 # joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
                 joint['motor/type'] = self.motortype
+                joint['motor/controller'] = self.controllertype
             else:
                 for key in joint.keys():
                     if key.startswith('motor/'):
