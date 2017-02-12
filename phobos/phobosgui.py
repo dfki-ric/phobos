@@ -425,15 +425,15 @@ class PhobosExportPanel(bpy.types.Panel):
 
         c1 = inlayout.column(align=True)
         c1.label(text="Mesh export")
-        for meshtype in meshes.mesh_types:
+        for meshtype in sorted(meshes.mesh_types):
             if 'export' in meshes.mesh_types[meshtype]:
                 typename = "export_mesh_" + meshtype
                 c1.prop(bpy.data.worlds[0], typename)
-        c1.label(text="output: " + bpy.data.worlds[0].phobosexportsettings.outputMeshtype)
+        c1.prop(bpy.data.worlds[0].phobosexportsettings, 'outputMeshtype')
 
         c2 = inlayout.column(align=True)
         c2.label(text="Model Export")
-        for entitytype in entities.entity_types:
+        for entitytype in sorted(entities.entity_types):
             if 'export' in entities.entity_types[entitytype]:
                 typename = "export_entity_" + entitytype
                 c2.prop(bpy.data.worlds[0], typename)
