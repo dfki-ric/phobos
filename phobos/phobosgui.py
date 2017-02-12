@@ -445,6 +445,7 @@ class PhobosExportPanel(bpy.types.Panel):
         # FIXME: issue with export and import of models with new generic system
         #ec2 = layout.column(align=True)
         ec1.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
+        ec1.operator("phobos.import_component", text="Import Component", icon="IMPORT")
 
 #        layout.separator()
 #        layout.label(text="Baking")

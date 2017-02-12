@@ -211,6 +211,48 @@ class ChooseExportPathOperator(bpy.types.Operator):
 #        return {'FINISHED'}
 
 
+class ImportComponent(bpy.types.Operator):
+    bl_idname = "phobos.import_component"
+    bl_label = ""
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'FILE'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # creating property for storing the path to the .scn file
+    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+
+    #@classmethod
+    #def poll(cls, context):
+    #    return context is not None
+
+    def execute(self, context):
+        if self.filepath != '':
+            log("Importing component" + self.filepath, "INFO", 'ImportComponentOperator')
+            objects = []
+            with bpy.data.libraries.load(self.filepath) as (data_from, data_to):
+                for obj in data_from.objects:
+                    objects.append({'name': obj})
+            bpy.ops.wm.append(directory=self.filepath+"/Object/", files=objects)
+            # with bpy.data.libraries.load(self.filepath) as (data_from, data_to):
+            #     for attr in dir(data_to):
+            #         print(attr)
+            #         setattr(data_to, attr, getattr(data_from, attr))
+            #with bpy.data.libraries.load(self.filepath) as (data_from, data_to):
+            #    print(data_to)
+            #    data_to.objects = data_from.objects
+            #link object to current scene
+            #for cat in ['armatures', 'materials', 'meshes', 'objects']:
+                #for arm in data_to.armatures:
+                #    bpy.data.armatures.
+            #for obj in data_to.objects:
+            #    bpy.context.scene.objects.link(obj)
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
 def generateLibEntries(param1, param2): #FIXME: parameter?
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
         return [("None",)*3] + [(entry,)*3 for entry in yaml.load(f.read())]
