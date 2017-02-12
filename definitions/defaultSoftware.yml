@@ -1,4 +1,7 @@
 controllers:
+  none:
+    name: none
+    type: none
   generic_pid:
     name: generic_pid
     type: pid

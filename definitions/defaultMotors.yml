@@ -1,4 +1,8 @@
 motors:
+  none:
+    name: none
+    type: none
+    controller: none
   generic_dc:
     name: generic_dc
     type: dc
