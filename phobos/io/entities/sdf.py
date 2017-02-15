@@ -27,12 +27,11 @@ Created on 06 Feb 2017
 """
 
 import bpy
-import mathutils
 import os
 import yaml
 import xml.etree.ElementTree as ET
 
-from phobos.utils.io import l2str, xmlline, indent, xmlHeader
+from phobos.utils.io import l2str, indent, xmlHeader
 import phobos.model.materials as materials
 import phobos.utils.general as gUtils
 import phobos.utils.io as ioUtils
@@ -94,10 +93,12 @@ class xmlTagger(object):
         # create parameter strings by unpacking dictionary
         if params:
             parameters = [key + '="' + str(params[key]) + '" ' for key in params.keys()]
+            # remove trailing whitespace
+            parameters[-1] = parameters[-1][:-1]
         else:
             parameters = {}
 
-        line += self.ind() + "<" + tag + " "
+        line += self.ind() + "<" + tag + (" " if len(parameters) > 0 else "")
 
         # add optional parameters
         if len(parameters) > 0:
@@ -126,7 +127,10 @@ class xmlTagger(object):
         """
         self.output.append(self.ind() + '<' + str(tag) + '> ' + str(value) + ' </' + tag + '>\n')
 
-    def getOutput(self):
+    def get_indent(self):
+        return self.indentation
+
+    def get_output(self):
         """ Completes all trailing tags until at initial indentation and returns the output as string.
 
         :return: str -- the finished xml string.
@@ -138,11 +142,26 @@ class xmlTagger(object):
         return self.output
 
 
+def frame(framedata, indentation):
+    """ Simple wrapper for frame data.
+
+    :param framedata: data as provided by dictionary
+    :param indentation: indentation at current level
+    :return: str -- writable xml line
+    """
+    tagger = xmlTagger(initial=indentation)
+    tagger.descend('frame', {'name': '...'})
+    tagger.descend('pose', {'frame': '...'})
+    tagger.ascend()
+    tagger.ascend()
+    return "".join(tagger.get_output())
+
 def exportSdf(model, filepath):
     log("Export SDF to" + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
 
     # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains', 'meshes', 'lights', 'motors', 'groups', 'joints', 'name'
+    log('Exporting "{0}"...'.format(model['name'], "DEBUG", "exportSdf"))
     # print('sensors\n')
     # print(model['sensors'])
     # print('materials\n')
@@ -151,7 +170,7 @@ def exportSdf(model, filepath):
     # print(model['controllers'])
     # print('date\n')
     # print(model['date'])
-    # print('links\n')
+    print('links\n')
     # print(model['links'])
     # print('chains\n')
     # print(model['chains'])
@@ -163,13 +182,12 @@ def exportSdf(model, filepath):
     # print(model['motors'])
     # print('groups\n')
     # print(model['groups'])
-    #print('joints\n')
-    #print(model['joints'])
+    log("Joints exported.", "DEBUG", "exportSdf")
+    # print(model['joints'])
     # print('name\n')
-    # print(model['name'])
 
     # create tagger and add headers
-    xml = xmlTagger()
+    xml = xmlTagger(indent=indent)
     xml.write(xmlHeader)
     xml.descend('sdf', {"version": 1.5})
 
@@ -210,9 +228,24 @@ def exportSdf(model, filepath):
     # xml.attrib('pose', poseVal) OR xml.descend('pose') \\ xml.attrib('frame', otherFrame) \\ xml.ascend()
 
     # link
-    # xml.descend('link', {'name': ...})
-    # wrapper for links?
-    # xml.ascend()
+    for linkkey in model['links'].keys():
+        link = model['links'][linkkey]
+        # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision', 'approxcollision', 'collision_bitmask'
+        xml.descend('link', {'name': link['name']})
+        # xml.attrib('gravity', ...)
+        # xml.attrib('enable_wind', ...)
+        # xml.attrib('self_collide', ...)
+        # xml.attrib('kinematic', ...)
+        # xml.attrib('must_be_base_link', ...)
+        # xml.descend('velocity_decay')
+        # xml.attrib('linear', ...)
+        # xml.attrib('angular', ...)
+        # xml.ascend()
+        # xml.write(frame(model['frame']), xml.get_indent())
+        # TODO Go forth with pose wrapper
+        xml.attrib('', ...)
+
+        xml.ascend()
 
     # joint
     for jointkey in model['joints'].keys():
@@ -223,9 +256,83 @@ def exportSdf(model, filepath):
         # xml.attrib('gearbox_ratio', ...)
         # xml.attrib('gearbox_reference_body', ...)'
         # xml.attrib('thread_pitch', ...)'
-        xml.descend('axis')
-        xml.attrib('xyz', '...')
-        xml.ascend()
+        if 'axis' in joint.keys():
+            xml.descend('axis')
+            xml.attrib('xyz', l2str(joint['axis']))
+            # xml.attrib('use_parent_model_frame', ...)
+            # xml.descend('dynamics')
+            # xml.attrib('damping', ...)
+            # xml.attrib('friction', ...)
+            # xml.attrib('spring_reference', ...)
+            # xml.attrib('spring_stiffness', ...)
+            # xml.ascend()
+            xml.descend('limit')
+            xml.attrib('lower', joint['limits']['lower'])
+            xml.attrib('upper', joint['limits']['upper'])
+            xml.attrib('effort', joint['limits']['effort'])
+            xml.attrib('velocity', joint['limits']['velocity'])
+            #xml.attrib('stiffness', ...)
+            #xml.attrib('dissipation', ...)
+            xml.ascend()
+            xml.ascend()
+        # if 'axis2' in joint.keys():
+            # xml.descend('axis')
+            # xml.attrib('xyz', l2str(joint['axis']))
+            # xml.attrib('use_parent_model_frame', ...)
+            # xml.descend('dynamics')
+            # xml.attrib('damping', ...)
+            # xml.attrib('friction', ...)
+            # xml.attrib('spring_reference', ...)
+            # xml.attrib('spring_stiffness', ...)
+            # xml.ascend()
+            # xml.descend('limit')
+            # xml.attrib('lower', joint['limits']['lower'])
+            # xml.attrib('upper', joint['limits']['upper'])
+            # xml.attrib('effort', joint['limits']['effort'])
+            # xml.attrib('velocity', joint['limits']['velocity'])
+            # xml.attrib('stiffness', ...)
+            # xml.attrib('dissipation', ...)
+            # xml.ascend()
+            # xml.ascend()
+        # if 'physics' in joint.keys():
+            # xml.descend('physics')
+            # xml.descend('simbody')
+            # xml.attrib('must_be_loop_joint', ...)
+            # xml.ascend()
+            #
+            # xml.descend('ode')
+            # xml.attrib('cfm_damping', ...)
+            # xml.attrib('implicit_spring_damper', ...)
+            # xml.attrib('fudge_factor', ...)
+            # xml.attrib('cfm', ...)
+            # xml.attrib('erp', ...)
+            # xml.attrib('bounce', ...)
+            # xml.attrib('max_force', ...)
+            # xml.attrib('velocity', ...)
+            #
+            # xml.descend('limit', ...)
+            # xml.attrib('cfm', ...)
+            # xml.attrib('erp', ...)
+            # xml.ascend()
+            #
+            # xml.descend('suspension')
+            # xml.attrib('cfm', ...)
+            # xml.attrib('erp', ...)
+            # xml.ascend()
+            # xml.ascend()
+            #
+            # xml.attrib('provide_feedback', ...)
+            # xml.ascend()
+        # if 'frame' in joint.keys():
+            # xml.write(joint['frame'])
+        # if 'pose' in joint.keys():
+            # xml.descend('pose')
+            # xml.attrib('frame', ...)
+            # xml.ascend()
+        # if 'sensor' in joint.keys():
+            # xml.descend('sensor')
+            # SENSOR WRAPPER
+            # xml.ascend('sensor')
         xml.ascend()
 
     # plugin
@@ -246,7 +353,7 @@ def exportSdf(model, filepath):
     # xml.attrib('palm_link')
     # xml.ascend()
 
-    outputtext = xml.getOutput()
+    outputtext = xml.get_output()
 
     with open(filename, 'w') as outputfile:
         outputfile.writelines(outputtext)
