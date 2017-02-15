@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3.5
 # coding=utf-8
 
 """
@@ -6,8 +6,8 @@
     :platform: Unix, Windows, Mac
     :synopsis: TODO: INSERT TEXT HERE
 
-..moduleauthor:: Kai von Szadowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Sebastian Klemp
-Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
+..moduleauthor:: Kai von Szadowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Sebastian Klemp, Simon Reichel
+Copyright 2017, University of Bremen & DFKI GmbH Robotics Innovation Center
 
 This file is part of Phobos, a Blender Add-On to edit robot models.
 
@@ -24,7 +24,7 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
-File __init__.py
+File phobos.__init__.py
 
 Created on 6 Jan 2014
 
@@ -32,6 +32,52 @@ Created on 6 Jan 2014
 
 import sys
 import os.path
+import importlib
+import pkgutil
+import phobos
+import bpy
+
+
+def import_submodules(package, recursive=True, verbose=False):
+    """ Import all submodules of a module, recursively, including subpackages.
+        If a module is already imported it is reloaded instead.
+        Recursion can be turned off.
+        The imported modules are returned as dictionary.
+
+    :param package: package (name or actual module)
+    :type package: str | module
+    :param recursive: recursion active
+    :type recursive: bool
+    :param verbose: import feedback active
+    :type verbose: bool
+    :rtype: dict[str, types.ModuleType]
+    """
+    modules = sys.modules
+
+    # when using string import initial module first
+    if isinstance(package, str):
+        package = importlib.import_module(package)
+
+    results = {}
+    # iterate over all modules in package path
+    for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
+        full_name = package.__name__ + '.' + name
+
+        # reload already imported modules
+        if full_name in modules.keys():
+            if verbose:
+                print("RELOAD: ", full_name)
+            results[full_name] = importlib.reload(modules[full_name])
+        # otherwise import them
+        else:
+            if verbose:
+                print("IMPORT: ", full_name)
+            results[full_name] = importlib.import_module(full_name)
+
+        # recursion on submodules
+        if recursive and is_pkg:
+            results.update(import_submodules(full_name))
+    return results
 
 bl_info = {
     "name": "Phobos",
@@ -52,7 +98,7 @@ if os.path.isfile(yamlconfpath):
     f = open(yamlconfpath)
     path = f.read()
     f.close()
-    if (path == "v" or path == "i"):
+    if path == "v" or path == "i":
         print("There is no YAML installation for python 3.4 or greater on this computer")
     else:
         sys.path.insert(0, path)
@@ -62,6 +108,7 @@ else:
     print("Using distributed package instead!")
     sys.path.insert(0, sys.path[0] + "/phobos")
     import yaml
+
 
 # Add custom YAML (de-)serializer
 def bool_representer(dumper, data):
@@ -84,83 +131,14 @@ def bool_constructor(self, node):
 yaml.Loader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 
-if "bpy" in locals():
-    import importlib
-    print("Reloading Phobos...")
-    importlib.reload(phobos.defs)
-    print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
-    phobos.defs.updateDefs(os.path.dirname(__file__) + "/definitions")
-    importlib.reload(phobos.utils.validation)
-    importlib.reload(phobos.utils.selection)
-    importlib.reload(phobos.utils.editing)
-    importlib.reload(phobos.utils.io)
-    importlib.reload(phobos.utils.general)
-    importlib.reload(phobos.utils.naming)
-    importlib.reload(phobos.utils.blender)
-    importlib.reload(phobos.testing)
-    importlib.reload(phobos.phoboslog)
-    importlib.reload(phobos.phobosgui)
-    importlib.reload(phobos.model.controllers)
-    importlib.reload(phobos.model.joints)
-    importlib.reload(phobos.model.materials)
-    importlib.reload(phobos.model.poses)
-    importlib.reload(phobos.model.inertia)
-    importlib.reload(phobos.model.sensors)
-    importlib.reload(phobos.model.models)
-    importlib.reload(phobos.model.links)
-    importlib.reload(phobos.model.geometries)
-    importlib.reload(phobos.model.lights)
-    importlib.reload(phobos.io.meshes.meshes)
-    importlib.reload(phobos.io.entities.smurf)
-    importlib.reload(phobos.io.entities.primitive)
-    importlib.reload(phobos.io.entities.light)
-    importlib.reload(phobos.io.entities.urdf)
-    importlib.reload(phobos.io.entities.heightmap)
-    importlib.reload(phobos.io.scenes.smurfs)
-    importlib.reload(phobos.operators.misc)
-    importlib.reload(phobos.operators.editing)
-    importlib.reload(phobos.operators.selection)
-    importlib.reload(phobos.operators.io)
-    importlib.reload(phobos.operators.naming)
-else:
-    print("Loading Phobos...")
-    print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
-    import phobos.defs
-    phobos.defs.updateDefs(os.path.dirname(__file__) + "/definitions")
-    import phobos.utils.validation
-    import phobos.utils.editing
-    import phobos.utils.selection
-    import phobos.utils.io
-    import phobos.utils.general
-    import phobos.utils.naming
-    import phobos.utils.blender
-    import phobos.testing
-    import phobos.phoboslog
-    import phobos.phobosgui
-    import phobos.model.controllers
-    import phobos.model.joints
-    import phobos.model.materials
-    import phobos.model.poses
-    import phobos.model.inertia
-    import phobos.model.sensors
-    import phobos.model.models
-    import phobos.model.links
-    import phobos.model.geometries
-    import phobos.model.lights
-    import phobos.io.meshes.meshes
-    import phobos.io.entities.smurf
-    import phobos.io.entities.primitive
-    import phobos.io.entities.light
-    import phobos.io.entities.urdf
-    import phobos.io.entities.heightmap
-    import phobos.io.scenes.smurfs
-    import phobos.operators.misc
-    import phobos.operators.editing
-    import phobos.operators.selection
-    import phobos.operators.io
-    import phobos.operators.naming
+# Recursively import all submodules
+print("Importing phobos")
+import_submodules(phobos, verbose=True)
 
-import bpy
+# Update definitions for GUI
+print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
+phobos.defs.updateDefs(os.path.dirname(__file__) + "/definitions")
+
 
 def register():
     """This function registers all modules to blender.
@@ -178,5 +156,6 @@ def unregister():
     :return: Nothing
 
     """
+    print("Unregistering Phobos...")
     phobos.phobosgui.unregister()
     bpy.utils.unregister_module(__name__)
