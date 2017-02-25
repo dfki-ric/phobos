@@ -26,7 +26,6 @@ Created on 06 Feb 2017
 @author: Simon Reichel
 """
 
-import bpy
 import os
 import yaml
 import xml.etree.ElementTree as ET
@@ -197,13 +196,14 @@ def inertial(inertialdata, indentation):
     tagger = xmlTagger(initial=indentation)
     tagger.descend('inertial')
     tagger.attrib('mass', inertialdata['mass'])
+    inertia = inertialdata['inertia']
     tagger.descend('inertia')
-    tagger.attrib('ixx', inertialdata['inertia'][0])
-    tagger.attrib('ixy', inertialdata['inertia'][1])
-    tagger.attrib('ixz', inertialdata['inertia'][2])
-    tagger.attrib('iyy', inertialdata['inertia'][3])
-    tagger.attrib('iyz', inertialdata['inertia'][4])
-    tagger.attrib('izz', inertialdata['inertia'][5])
+    tagger.attrib('ixx', inertia[0])
+    tagger.attrib('ixy', inertia[1])
+    tagger.attrib('ixz', inertia[2])
+    tagger.attrib('iyy', inertia[3])
+    tagger.attrib('iyz', inertia[4])
+    tagger.attrib('izz', inertia[5])
     tagger.ascend()
     # tagger.write(frame(inertialdata['frame'], tagger.getindent()))
     tagger.write(pose(inertialdata['pose'], tagger.get_indent()))
@@ -311,10 +311,15 @@ def exportSdf(model, filepath):
         # xml.attrib('angular', ...)
         # xml.ascend()
         # xml.write(frame(model['frame']), xml.get_indent())
+        print('Going to pose')
         xml.write(pose(link['pose'], xml.get_indent()))
-        xml.write(inertial(link['inertial'], xml.get_indent()))
+        print('Going to inertial')
+        # TODO How to deal with empty inertial?
+        if len(link['inertial'].keys()) == 4:
+            xml.write(inertial(link['inertial'], xml.get_indent()))
+        print('Inertial done')
         # TODO continue with collision wrapper
-        xml.write(collision(link['collision'], xml.get_indent()))
+        # xml.write(collision(link['collision'], xml.get_indent()))
         # 'visual'
         # 'sensor'
         # 'projector'
@@ -347,8 +352,8 @@ def exportSdf(model, filepath):
             xml.attrib('upper', joint['limits']['upper'])
             xml.attrib('effort', joint['limits']['effort'])
             xml.attrib('velocity', joint['limits']['velocity'])
-            #xml.attrib('stiffness', ...)
-            #xml.attrib('dissipation', ...)
+            # xml.attrib('stiffness', ...)
+            # xml.attrib('dissipation', ...)
             xml.ascend()
             xml.ascend()
         # if 'axis2' in joint.keys():
@@ -434,6 +439,7 @@ def exportSdf(model, filepath):
     with open(filename, 'w') as outputfile:
         outputfile.writelines(outputtext)
     log("Writing model data to " + filename, "INFO", "exportModelToSDF")
+
 
 def importSdf():
     pass
