@@ -53,7 +53,7 @@ class xmlTagger(object):
             :param initial: the indentation hierarchy of the root element for the xml file
             :type initial: int
             """
-        self.indentation = 0
+        self.indentation = initial
         self.initial = initial
         self.indent = indent
         self.workingTags = []
@@ -142,6 +142,32 @@ class xmlTagger(object):
         return self.output
 
 
+def pose(posedata, indentation):
+    """ Simple wrapper for pose data.
+
+    :param posedata: pose data as provided by dictionary
+    :param indentation: indentation at current level
+    :return: str -- writable xml line
+    """
+    # {'matrix': [[-1.0, 0, 0, 0.3], [0, -1.0, 0, 0], [0, 0, 1.0, 0.1], [0, 0, 0, 1.0]],
+    #  'rawmatrix': Matrix(((-1.0, 5.642599489874556e-07, 1.5100516392863028e-08, 0.2999999523162842),
+    #                       (-5.642599489874556e-07, -1.0, -3.178652008273275e-08, 2.9802322387695312e-08),
+    #                       (1.510050751107883e-08, -3.178649876645068e-08, 1.0, 0.09999991953372955),
+    #                       (0.0, 0.0, 0.0, 1.0))), 'rotation_quaternion': [0, 0, 0, 1.0],
+    #  'rotation_euler': [0, 0, -3.14159], 'translation': [0.3, 0, 0.1]}
+
+    # 'matrix', 'rawmatrix', 'rotation_quaternion', 'rotation_euler', 'translation'
+
+    # TODO location in meters, rotation in radians?!
+    # TODO pose could be relative to different frame!
+    tagger = xmlTagger(initial=indentation)
+    tra = posedata['translation']
+    rot = posedata['rotation_euler']
+    result = '{0} {1} {2} {3} {4} {5}'.format(tra[0], tra[1], tra[2], rot[0], rot[1], rot[2])
+    tagger.attrib('pose', result)
+    return "".join(tagger.get_output())
+
+
 def frame(framedata, indentation):
     """ Simple wrapper for frame data.
 
@@ -151,10 +177,53 @@ def frame(framedata, indentation):
     """
     tagger = xmlTagger(initial=indentation)
     tagger.descend('frame', {'name': '...'})
-    tagger.descend('pose', {'frame': '...'})
-    tagger.ascend()
+    tagger.write(pose(framedata['pose'], tagger.get_indent()))
     tagger.ascend()
     return "".join(tagger.get_output())
+
+
+def inertial(inertialdata, indentation):
+    """ Simple wrapper for link inertial data.
+
+    :param inertialdata: data as provided by dictionary
+    :param indentation: indentation at current level
+    :return: str -- writable xml line
+    """
+
+    # {'mass': 0.5, 'pose': {...}, 'name': 'inertial_leg52', 'inertia': [0.00024, -4e-05, 4e-05, 0.00514, 0, 0.00515]}
+
+    # 'mass', 'pose', 'name', 'inertia'
+
+    tagger = xmlTagger(initial=indentation)
+    tagger.descend('inertial')
+    tagger.attrib('mass', inertialdata['mass'])
+    tagger.descend('inertia')
+    tagger.attrib('ixx', inertialdata['inertia'][0])
+    tagger.attrib('ixy', inertialdata['inertia'][1])
+    tagger.attrib('ixz', inertialdata['inertia'][2])
+    tagger.attrib('iyy', inertialdata['inertia'][3])
+    tagger.attrib('iyz', inertialdata['inertia'][4])
+    tagger.attrib('izz', inertialdata['inertia'][5])
+    tagger.ascend()
+    # tagger.write(frame(inertialdata['frame'], tagger.getindent()))
+    tagger.write(pose(inertialdata['pose'], tagger.get_indent()))
+    tagger.ascend()
+    return "".join(tagger.get_output())
+
+
+def collision(collisiondata, indentation):
+    """ Simple wrapper for link collision data.
+
+    :param collisiondata: data as provided by dictionary
+    :param indentation: indentation at current level
+    :return: str -- writable xml line
+    """
+    tagger = xmlTagger(initial=indentation)
+    tagger.descend('collision')
+    # TODO Go forth...
+    tagger.ascend()
+    return "".join(tagger.get_output())
+
 
 def exportSdf(model, filepath):
     log("Export SDF to" + filepath, "INFO", "exportSdf")
@@ -242,9 +311,16 @@ def exportSdf(model, filepath):
         # xml.attrib('angular', ...)
         # xml.ascend()
         # xml.write(frame(model['frame']), xml.get_indent())
-        # TODO Go forth with pose wrapper
-        xml.attrib('', ...)
-
+        xml.write(pose(link['pose'], xml.get_indent()))
+        xml.write(inertial(link['inertial'], xml.get_indent()))
+        # TODO continue with collision wrapper
+        xml.write(collision(link['collision'], xml.get_indent()))
+        # 'visual'
+        # 'sensor'
+        # 'projector'
+        # 'audio_sink'
+        # 'audio_source'
+        # 'battery'
         xml.ascend()
 
     # joint
