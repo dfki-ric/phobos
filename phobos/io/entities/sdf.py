@@ -218,19 +218,179 @@ def collision(collisiondata, indentation):
     :param indentation: indentation at current level
     :return: str -- writable xml line
     """
+    # {'collision_leg2_lower': {'pose': {...}, 'name': 'collision_leg2_lower',
+    #                           'bitmask': 2, 'geometry': {'size': [0.27958, 0.06, 0.06], 'type': 'box'}},
+    #  'collision_leg2_foot': {'pose': {...}, 'name': 'collision_leg2_foot',
+    #                          'bitmask': 4, 'geometry': {'radius': 0.06, 'type': 'sphere'}}}
     tagger = xmlTagger(initial=indentation)
-    tagger.descend('collision')
-    # TODO Go forth...
+    tagger.descend('collision', {'name': collisiondata['name']})
+    # tagger.attrib('laser_retro', ...)
+    # tagger.attrib('max_contacts', ...)
+    # tagger.attrib('frame', ...)
+    tagger.write(pose(collisiondata['pose'], tagger.get_indent()))
+    tagger.write(geometry(collisiondata['geometry'], tagger.get_indent()))
+    # # SURFACE PARAMETERS
+    # tagger.descend('surface')
+    # # BOUNCE PART
+    # tagger.descend('bounce')
+    # tagger.attrib('restitution_coefficient', ...)
+    # tagger.attrib('threshold', ...)
+    # tagger.ascend()
+    # # FRICTION PART
+    # tagger.descend('friction')
+    # tagger.descend('torsional')
+    # tagger.attrib('coefficient', ...)
+    # tagger.attrib('use_patch_radius', ...)
+    # tagger.attrib('patch_radius', ...)
+    # tagger.attrib('surface_radius', ...)
+    # tagger.descend('ode')
+    # tagger.attrib('slip', ...)
+    # tagger.ascend()
+    # tagger.ascend()
+    # tagger.descend('ode')
+    # tagger.attrib('mu', ...)
+    # tagger.attrib('mu2', ...)
+    # tagger.attrib('fdir1', ...)
+    # tagger.attrib('slip1', ...)
+    # tagger.attrib('slip2', ...)
+    # tagger.ascend()
+    # tagger.descend('bullet')
+    # tagger.attrib('friction')
+    # tagger.attrib('friction2', ...)
+    # tagger.attrib('fdir1', ...)
+    # tagger.attrib('rolling_friction', ...)
+    # tagger.ascend()
+    # tagger.ascend()
+    # # CONTACT PART
+    # tagger.descend('contact')
+    # tagger.attrib('collide_without_contact', ...)
+    # TODO bitmask?
+    # tagger.attrib('collide_without_contact_bitmask', ...)
+    # tagger.attrib('collide_bitmask', ...)
+    # tagger.attrib('poissons_ratio', ...)
+    # tagger.attrib('elastic_modulus', ...)
+    # tagger.descend('ode')
+    # tagger.attrib('soft_cfm', ...)
+    # tagger.attrib('soft_erp', ...)
+    # tagger.attrib('kp', ...)
+    # tagger.attrib('kd', ...)
+    # tagger.attrib('max_vel', ...)
+    # tagger.attrib('min_depth', ...)
+    # tagger.ascend()
+    # tagger.descend('bullet')
+    # tagger.attrib('soft_cfm', ...)
+    # tagger.attrib('soft_erp', ...)
+    # tagger.attrib('kp', ...)
+    # tagger.attrib('kd', ...)
+    # tagger.attrib('split_impulse', ...)
+    # tagger.attrib('split_impulse_penetration_threshold', ...)
+    # tagger.ascend()
+    # # SOFT CONTACT PART
+    # tagger.descend('soft_contact')
+    # tagger.descend('dart')
+    # tagger.attrib('bone_attachment', ...)
+    # tagger.attrib('stiffness', ...)
+    # tagger.attrib('damping', ...)
+    # tagger.attrib('flesh_mass_fraction', ...)
+    # tagger.ascend()
+    # tagger.ascend()
+    # tagger.ascend()
     tagger.ascend()
     return "".join(tagger.get_output())
 
 
+def geometry(geometrydata, indentation):
+    """ Simple wrapper for geometry data of link collisions.
+
+    :param geometrydata: data as provided by dictionary
+    :param indentation: indentation at current level
+    :return: str -- writable xml line
+    """
+    # {'size': [0.23617, 0.06, 0.06], 'type': 'box'}
+    # {'radius': 0.06, 'type': 'sphere'}
+
+    tagger = xmlTagger(initial=indentation)
+    tagger.descend('geometry')
+    # TODO Available geometries?
+    # if geometrydata['type'] == 'empty':
+    #     tagger.attrib('empty', ...)
+    if geometrydata['type'] == 'box':
+        tagger.descend('box')
+        tagger.attrib('size', '{0} {1} {2}'.format(*geometrydata['size']))
+        tagger.ascend()
+    # elif geometrydata['type'] == 'cylinder':
+    #     tagger.descend('cylinder')
+    #     tagger.attrib('radius', ...)
+    #     tagger.attrib('length', ...)
+    #     tagger.ascend()
+    # elif geometrydata['type'] == 'heightmap':
+    #     tagger.descend('heightmap')
+    #     tagger.attrib('uri', ...)
+    #     tagger.attrib('size', ...)
+    #     tagger.attrib('pos', ...)
+    #     tagger.descend('texture')
+    #     tagger.attrib('size', ...)
+    #     tagger.attrib('diffuse', ...)
+    #     tagger.attrib('normal', ...)
+    #     tagger.ascend()
+    #     tagger.descend('blend')
+    #     tagger.attrib('min_height', ...)
+    #     tagger.attrib('fade_dist', ...)
+    #     tagger.ascend()
+    #     tagger.attrib('use_terrain_paging', ...)
+    #     tagger.ascend()
+    # elif geometrydata['type'] == 'image':
+    #     tagger.descend('image')
+    #     tagger.attrib('uri', ...)
+    #     tagger.attrib('scale', ...)
+    #     tagger.attrib('threshold', ...)
+    #     tagger.attrib('height', ...)
+    #     tagger.attrib('granularity', ...)
+    #     tagger.ascend()
+    # elif geometrydata['type'] == 'mesh':
+    #     tagger.descend('mesh')
+    #     tagger.attrib('uri', ...)
+    #     tagger.descend('submesh')
+    #     tagger.attrib('name', ...)
+    #     tagger.attrib('center', ...)
+    #     tagger.ascend()
+    #     tagger.attrib('scale', ...)
+    #     tagger.ascend()
+    # elif geometrydata['type'] == 'plane':
+    #     tagger.descend('plane')
+    #     tagger.attrib('normal', ...)
+    #     tagger.attrib('size', ...)
+    #     tagger.ascend()
+    # elif geometrydata['type'] == 'polyline':
+    #     tagger.descend('polyline')
+    #     tagger.attrib('point', ...)
+    #     tagger.attrib('height', ...)
+    #     tagger.ascend()
+    elif geometrydata['type'] == 'sphere':
+        tagger.descend('sphere')
+        tagger.attrib('radius', '{0}'.format(geometrydata['radius']))
+        tagger.ascend()
+    tagger.ascend()
+    return "".join(tagger.get_output())
+
+
+def visual(visualdata, indentation):
+    """ Simple wrapper for visual data of links.
+
+    :param visualdata: data as provided by dictionary
+    :param indentation: indentation at current level
+    :return: str -- writable xml line
+    """
+    print(visualdata)
+    return ""
+
 def exportSdf(model, filepath):
-    log("Export SDF to" + filepath, "INFO", "exportSdf")
+    log("Export SDF to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
 
     # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains', 'meshes', 'lights', 'motors', 'groups', 'joints', 'name'
     log('Exporting "{0}"...'.format(model['name'], "DEBUG", "exportSdf"))
+    # TODO remove debugging information
     # print('sensors\n')
     # print(model['sensors'])
     # print('materials\n')
@@ -239,7 +399,7 @@ def exportSdf(model, filepath):
     # print(model['controllers'])
     # print('date\n')
     # print(model['date'])
-    print('links\n')
+    print('Model links implemented.')
     # print(model['links'])
     # print('chains\n')
     # print(model['chains'])
@@ -251,7 +411,7 @@ def exportSdf(model, filepath):
     # print(model['motors'])
     # print('groups\n')
     # print(model['groups'])
-    log("Joints exported.", "DEBUG", "exportSdf")
+    print('Model joints implemented.')
     # print(model['joints'])
     # print('name\n')
 
@@ -300,6 +460,7 @@ def exportSdf(model, filepath):
     for linkkey in model['links'].keys():
         link = model['links'][linkkey]
         # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision', 'approxcollision', 'collision_bitmask'
+        # TODO approxcollision? collision_bitmask? parent?
         xml.descend('link', {'name': link['name']})
         # xml.attrib('gravity', ...)
         # xml.attrib('enable_wind', ...)
@@ -311,22 +472,44 @@ def exportSdf(model, filepath):
         # xml.attrib('angular', ...)
         # xml.ascend()
         # xml.write(frame(model['frame']), xml.get_indent())
-        print('Going to pose')
         xml.write(pose(link['pose'], xml.get_indent()))
-        print('Going to inertial')
         # TODO How to deal with empty inertial?
         if len(link['inertial'].keys()) == 4:
             xml.write(inertial(link['inertial'], xml.get_indent()))
-        print('Inertial done')
-        # TODO continue with collision wrapper
-        # xml.write(collision(link['collision'], xml.get_indent()))
-        # 'visual'
-        # 'sensor'
-        # 'projector'
-        # 'audio_sink'
-        # 'audio_source'
-        # 'battery'
+        if len(link['collision'].keys()) > 0:
+            for colkey in link['collision'].keys():
+                xml.write(collision(link['collision'][colkey], xml.get_indent()))
+        xml.write(visual(link['visual'], xml.get_indent()))
+        # xml.write(sensor(link['sensor'], xml.get_indent()))
+        # xml.descend('projector', {'name': ...})
+        # xml.attrib('texture', ...)
+        # xml.attrib('fov', ...)
+        # xml.attrib('near_clip', ...)
+        # xml.attrib('far_clip', ...)
+        # xml.write(frame('...', xml.get_indent()))
+        # xml.write(pose('...', xml.get_indent()))
+        # xml.descend('plugin', {'name': ..., 'filename': ...})
+        # # PLUGIN ELEMENT?
+        # xml.ascend()
+        # xml.ascend()
+        # xml.attrib('audio_sink', ...)
+        # xml.descend('audio_source')
+        # xml.attrib('uri', ...)
+        # xml.attrib('pitch', ...)
+        # xml.attrib('gain', ...)
+        # xml.descend('contact')
+        # xml.attrib('collision', ...)
+        # xml.ascend()
+        # xml.attrib('loop', ...)
+        # xml.write(frame('...', xml.get_indent()))
+        # xml.write(pose('...', xml.get_indent()))
+        # xml.ascend()
+        # xml.descend('battery', {'name': ...})
+        # xml.attrib('voltage', ...)
+        # xml.ascend()
         xml.ascend()
+
+    log('Links exported.', 'DEBUG', 'exportSdf')
 
     # joint
     for jointkey in model['joints'].keys():
@@ -416,6 +599,8 @@ def exportSdf(model, filepath):
             # xml.ascend('sensor')
         xml.ascend()
 
+    log("Joints exported.", "DEBUG", "exportSdf")
+
     # plugin
     # xml.descend('plugin')
     # xml.attrib('name', ...)
@@ -436,9 +621,10 @@ def exportSdf(model, filepath):
 
     outputtext = xml.get_output()
 
+    log("Writing model data to " + filename, "DEBUG", "exportSdf")
     with open(filename, 'w') as outputfile:
         outputfile.writelines(outputtext)
-    log("Writing model data to " + filename, "INFO", "exportModelToSDF")
+    log("Export successful.", "INFO", "exportModelToSDF")
 
 
 def importSdf():
