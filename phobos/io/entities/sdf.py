@@ -124,7 +124,7 @@ class xmlTagger(object):
         :param value: The value of the attribute
         :type value: str (will be casted anyway)
         """
-        self.output.append(self.ind() + '<' + str(tag) + '> ' + str(value) + ' </' + tag + '>\n')
+        self.output.append(self.ind() + '<' + str(tag) + '>' + str(value) + '</' + tag + '>\n')
 
     def get_indent(self):
         return self.indentation
@@ -347,15 +347,15 @@ def geometry(geometrydata, indentation):
     #     tagger.attrib('height', ...)
     #     tagger.attrib('granularity', ...)
     #     tagger.ascend()
-    # elif geometrydata['type'] == 'mesh':
-    #     tagger.descend('mesh')
-    #     tagger.attrib('uri', ...)
+    elif geometrydata['type'] == 'mesh':
+        tagger.descend('mesh')
+        tagger.attrib('uri', geometrydata['filename'] + '.dae')
     #     tagger.descend('submesh')
     #     tagger.attrib('name', ...)
     #     tagger.attrib('center', ...)
     #     tagger.ascend()
-    #     tagger.attrib('scale', ...)
-    #     tagger.ascend()
+        tagger.attrib('scale', '{0} {1} {2}'.format(*geometrydata['scale']))
+        tagger.ascend()
     # elif geometrydata['type'] == 'plane':
     #     tagger.descend('plane')
     #     tagger.attrib('normal', ...)
@@ -395,14 +395,14 @@ def visual(visualdata, indentation):
     tagger.write(pose(visualdata['pose'], tagger.get_indent()))
     # tagger.write(material(visualdata['material']), tagger.get_indent())
     # TODO remove when mesh is finished
-    if visualdata['geometry']['type'] != 'mesh':
+    if visualdata['geometry']['type'] == 'mesh':
         tagger.write(geometry(visualdata['geometry'], tagger.get_indent()))
-    else:
-        tagger.descend('geometry')
-        tagger.descend('box')
-        tagger.attrib('size', '0.25 0.05 0.05')
-        tagger.ascend()
-        tagger.ascend()
+    # else:
+    #     tagger.descend('geometry')
+    #     tagger.descend('box')
+    #     tagger.attrib('size', '0.25 0.05 0.05')
+    #     tagger.ascend()
+    #     tagger.ascend()
     # PLUGIN ELEMENT?
     tagger.ascend()
     return "".join(tagger.get_output())
