@@ -381,17 +381,31 @@ def visual(visualdata, indentation):
     :param indentation: indentation at current level
     :return: str -- writable xml line
     """
-    # {'visual_leg1_foot': {'material', 'geometry': {'filename', 'type',
-    # 'scale': [1.0, 1.0, 1.0], 'size': [0.12, 0.12, 0.12]}, 'name': 'visual_leg1_foot', 'p
-    # ose': {'rotation_euler': [-1.5708, 0, 1.5708], 'rotation_quaternion': [0.5, -0.5, -0.5, 
-    # 0.5], 'rawmatrix': Matrix(((-7.450580596923828e-08, -4.132642175136425e-07, -1.0, 0.4000
-    # 0003576278687),
-    #     (1.0, -4.371148065729358e-08, -5.960464477539063e-08, 7.450580596923828e-09),
-    #     (-4.371141315573368e-08, -1.0, 4.132641322485142e-07, -9.685754776000977e-08),
-    #     (0.0, 0.0, 0.0, 1.0))), 'translation': [0.4, 0, 0], 'matrix': [[0, 0, -1.0, 0.4]
-
-    print(visualdata)
-    return ""
+    # {'geometry': 'pose': 'material': 'upper_leg', 'name': 'visual_leg2_upper'}
+    visualdata = visualdata[next(iter(visualdata))]
+    tagger = xmlTagger(initial=indentation)
+    tagger.descend('visual', params={'name': visualdata['name']})
+    # tagger.attrib('cast_shadows', ...)
+    # tagger.attrib('laser_retro', ...)
+    # tagger.attrib('transparency', ...)
+    # tagger.descend('meta')
+    # tagger.attrib('layer', ...)
+    # tagger.ascend()
+    # tagger.write(frame(..., tagger.get_indent()))
+    tagger.write(pose(visualdata['pose'], tagger.get_indent()))
+    # tagger.write(material(visualdata['material']), tagger.get_indent())
+    # TODO remove when mesh is finished
+    if visualdata['geometry']['type'] != 'mesh':
+        tagger.write(geometry(visualdata['geometry'], tagger.get_indent()))
+    else:
+        tagger.descend('geometry')
+        tagger.descend('box')
+        tagger.attrib('size', '0.25 0.05 0.05')
+        tagger.ascend()
+        tagger.ascend()
+    # PLUGIN ELEMENT?
+    tagger.ascend()
+    return "".join(tagger.get_output())
 
 def exportSdf(model, filepath):
     log("Export SDF to " + filepath, "INFO", "exportSdf")
@@ -475,6 +489,9 @@ def exportSdf(model, filepath):
     # link
     for linkkey in model['links'].keys():
         link = model['links'][linkkey]
+        print(link['name'])
+        print(link['visual'])
+        print('///')
         # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision', 'approxcollision', 'collision_bitmask'
         # TODO approxcollision? collision_bitmask? parent?
         xml.descend('link', {'name': link['name']})
@@ -495,7 +512,8 @@ def exportSdf(model, filepath):
         if len(link['collision'].keys()) > 0:
             for colkey in link['collision'].keys():
                 xml.write(collision(link['collision'][colkey], xml.get_indent()))
-        xml.write(visual(link['visual'], xml.get_indent()))
+        if len(link['visual'].keys()) != 0:
+            xml.write(visual(link['visual'], xml.get_indent()))
         # xml.write(sensor(link['sensor'], xml.get_indent()))
         # xml.descend('projector', {'name': ...})
         # xml.attrib('texture', ...)
