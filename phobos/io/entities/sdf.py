@@ -381,6 +381,15 @@ def visual(visualdata, indentation):
     :param indentation: indentation at current level
     :return: str -- writable xml line
     """
+    # {'visual_leg1_foot': {'material', 'geometry': {'filename', 'type',
+    # 'scale': [1.0, 1.0, 1.0], 'size': [0.12, 0.12, 0.12]}, 'name': 'visual_leg1_foot', 'p
+    # ose': {'rotation_euler': [-1.5708, 0, 1.5708], 'rotation_quaternion': [0.5, -0.5, -0.5, 
+    # 0.5], 'rawmatrix': Matrix(((-7.450580596923828e-08, -4.132642175136425e-07, -1.0, 0.4000
+    # 0003576278687),
+    #     (1.0, -4.371148065729358e-08, -5.960464477539063e-08, 7.450580596923828e-09),
+    #     (-4.371141315573368e-08, -1.0, 4.132641322485142e-07, -9.685754776000977e-08),
+    #     (0.0, 0.0, 0.0, 1.0))), 'translation': [0.4, 0, 0], 'matrix': [[0, 0, -1.0, 0.4]
+
     print(visualdata)
     return ""
 
@@ -420,6 +429,13 @@ def exportSdf(model, filepath):
     xml.write(xmlHeader)
     xml.descend('sdf', {"version": 1.5})
 
+    xml.descend('world', params={'name': 'default'})
+    xml.descend('include')
+    xml.attrib('uri', 'model://ground_plane')
+    xml.ascend()
+    xml.descend('include')
+    xml.attrib('uri', 'model://sun')
+    xml.ascend()
     # model layer
     xml.descend('model', params={"name": model['name']})
 
