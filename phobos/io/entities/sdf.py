@@ -29,12 +29,15 @@ Created on 06 Feb 2017
 import os
 import yaml
 import xml.etree.ElementTree as ET
+import bpy
 
 from phobos.utils.io import l2str, indent, xmlHeader
 import phobos.model.materials as materials
 import phobos.utils.general as gUtils
 import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
+from phobos.utils.selection import getRoot
+from phobos.utils.editing import getCombinedTransform
 
 
 class xmlTagger(object):
@@ -141,11 +144,12 @@ class xmlTagger(object):
         return self.output
 
 
-def pose(posedata, indentation):
+def pose(posedata, indentation, relative=False):
     """ Simple wrapper for pose data.
 
     :param posedata: pose data as provided by dictionary
     :param indentation: indentation at current level
+    :param relative: True for usage of sdf relative pathing
     :return: str -- writable xml line
     """
     # {'matrix': [[-1.0, 0, 0, 0.3], [0, -1.0, 0, 0], [0, 0, 1.0, 0.1], [0, 0, 0, 1.0]],
@@ -231,71 +235,73 @@ def collision(collisiondata, indentation, modelname):
     tagger.write(geometry(collisiondata['geometry'], tagger.get_indent(),
                           modelname))
     # # SURFACE PARAMETERS
-    # tagger.descend('surface')
-    # # BOUNCE PART
-    # tagger.descend('bounce')
-    # tagger.attrib('restitution_coefficient', ...)
-    # tagger.attrib('threshold', ...)
-    # tagger.ascend()
-    # # FRICTION PART
-    # tagger.descend('friction')
-    # tagger.descend('torsional')
-    # tagger.attrib('coefficient', ...)
-    # tagger.attrib('use_patch_radius', ...)
-    # tagger.attrib('patch_radius', ...)
-    # tagger.attrib('surface_radius', ...)
-    # tagger.descend('ode')
-    # tagger.attrib('slip', ...)
-    # tagger.ascend()
-    # tagger.ascend()
-    # tagger.descend('ode')
-    # tagger.attrib('mu', ...)
-    # tagger.attrib('mu2', ...)
-    # tagger.attrib('fdir1', ...)
-    # tagger.attrib('slip1', ...)
-    # tagger.attrib('slip2', ...)
-    # tagger.ascend()
-    # tagger.descend('bullet')
-    # tagger.attrib('friction')
-    # tagger.attrib('friction2', ...)
-    # tagger.attrib('fdir1', ...)
-    # tagger.attrib('rolling_friction', ...)
-    # tagger.ascend()
-    # tagger.ascend()
-    # # CONTACT PART
-    # tagger.descend('contact')
-    # tagger.attrib('collide_without_contact', ...)
-    # TODO bitmask?
-    # tagger.attrib('collide_without_contact_bitmask', ...)
-    # tagger.attrib('collide_bitmask', ...)
-    # tagger.attrib('poissons_ratio', ...)
-    # tagger.attrib('elastic_modulus', ...)
-    # tagger.descend('ode')
-    # tagger.attrib('soft_cfm', ...)
-    # tagger.attrib('soft_erp', ...)
-    # tagger.attrib('kp', ...)
-    # tagger.attrib('kd', ...)
-    # tagger.attrib('max_vel', ...)
-    # tagger.attrib('min_depth', ...)
-    # tagger.ascend()
-    # tagger.descend('bullet')
-    # tagger.attrib('soft_cfm', ...)
-    # tagger.attrib('soft_erp', ...)
-    # tagger.attrib('kp', ...)
-    # tagger.attrib('kd', ...)
-    # tagger.attrib('split_impulse', ...)
-    # tagger.attrib('split_impulse_penetration_threshold', ...)
-    # tagger.ascend()
-    # # SOFT CONTACT PART
-    # tagger.descend('soft_contact')
-    # tagger.descend('dart')
-    # tagger.attrib('bone_attachment', ...)
-    # tagger.attrib('stiffness', ...)
-    # tagger.attrib('damping', ...)
-    # tagger.attrib('flesh_mass_fraction', ...)
-    # tagger.ascend()
-    # tagger.ascend()
-    # tagger.ascend()
+    if 'bitmask' in collisiondata:
+        tagger.descend('surface')
+        print(collisiondata['bitmask'])
+        # # BOUNCE PART
+        # tagger.descend('bounce')
+        # tagger.attrib('restitution_coefficient', ...)
+        # tagger.attrib('threshold', ...)
+        # tagger.ascend()
+        # # FRICTION PART
+        # tagger.descend('friction')
+        # tagger.descend('torsional')
+        # tagger.attrib('coefficient', ...)
+        # tagger.attrib('use_patch_radius', ...)
+        # tagger.attrib('patch_radius', ...)
+        # tagger.attrib('surface_radius', ...)
+        # tagger.descend('ode')
+        # tagger.attrib('slip', ...)
+        # tagger.ascend()
+        # tagger.ascend()
+        # tagger.descend('ode')
+        # tagger.attrib('mu', ...)
+        # tagger.attrib('mu2', ...)
+        # tagger.attrib('fdir1', ...)
+        # tagger.attrib('slip1', ...)
+        # tagger.attrib('slip2', ...)
+        # tagger.ascend()
+        # tagger.descend('bullet')
+        # tagger.attrib('friction')
+        # tagger.attrib('friction2', ...)
+        # tagger.attrib('fdir1', ...)
+        # tagger.attrib('rolling_friction', ...)
+        # tagger.ascend()
+        # tagger.ascend()
+        # # CONTACT PART
+        tagger.descend('contact')
+        # tagger.attrib('collide_without_contact', ...)
+        # tagger.attrib('collide_without_contact_bitmask', ...)
+        bitstring = '0x{0:02d}'.format(collisiondata['bitmask'])
+        tagger.attrib('collide_bitmask', bitstring)
+        # tagger.attrib('poissons_ratio', ...)
+        # tagger.attrib('elastic_modulus', ...)
+        # tagger.descend('ode')
+        # tagger.attrib('soft_cfm', ...)
+        # tagger.attrib('soft_erp', ...)
+        # tagger.attrib('kp', ...)
+        # tagger.attrib('kd', ...)
+        # tagger.attrib('max_vel', ...)
+        # tagger.attrib('min_depth', ...)
+        # tagger.ascend()
+        # tagger.descend('bullet')
+        # tagger.attrib('soft_cfm', ...)
+        # tagger.attrib('soft_erp', ...)
+        # tagger.attrib('kp', ...)
+        # tagger.attrib('kd', ...)
+        # tagger.attrib('split_impulse', ...)
+        # tagger.attrib('split_impulse_penetration_threshold', ...)
+        # tagger.ascend()
+        # # SOFT CONTACT PART
+        # tagger.descend('soft_contact')
+        # tagger.descend('dart')
+        # tagger.attrib('bone_attachment', ...)
+        # tagger.attrib('stiffness', ...)
+        # tagger.attrib('damping', ...)
+        # tagger.attrib('flesh_mass_fraction', ...)
+        # tagger.ascend()
+        tagger.ascend()
+        tagger.ascend()
     tagger.ascend()
     return "".join(tagger.get_output())
 
@@ -406,7 +412,7 @@ def visual(visualdata, indentation, modelname):
     # tagger.attrib('layer', ...)
     # tagger.ascend()
     # tagger.write(frame(..., tagger.get_indent()))
-    tagger.write(pose(visualdata['pose'], tagger.get_indent()))
+    # tagger.write(pose(rootpose, tagger.get_indent()))
     # tagger.write(material(visualdata['material']), tagger.get_indent())
     tagger.write(geometry(visualdata['geometry'], tagger.get_indent(),
                               modelname))
@@ -414,7 +420,7 @@ def visual(visualdata, indentation, modelname):
     tagger.ascend()
     return "".join(tagger.get_output())
 
-def exportSdf(model, filepath):
+def exportSdf(model, filepath, relativeSDF=False):
     log("Export SDF to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
 
@@ -497,6 +503,7 @@ def exportSdf(model, filepath):
     # link
     for linkkey in model['links'].keys():
         link = model['links'][linkkey]
+        linkobj = bpy.context.scene.objects[link['name']]
         # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision',
         # 'approxcollision', 'collision_bitmask'
         # TODO approxcollision? collision_bitmask? parent?
@@ -511,7 +518,17 @@ def exportSdf(model, filepath):
         # xml.attrib('angular', ...)
         # xml.ascend()
         # xml.write(frame(model['frame']), xml.get_indent())
-        xml.write(pose(link['pose'], xml.get_indent()))
+        if not relativeSDF:
+            matrix = getCombinedTransform(linkobj, getRoot(linkobj))
+            rootpose = {'rawmatrix': matrix,
+                'matrix': [list(vector) for vector in list(matrix)],
+                'translation': list(matrix.to_translation()),
+                'rotation_euler': list(matrix.to_euler()),
+                'rotation_quaternion': list(matrix.to_quaternion())}
+            xml.write(pose(rootpose, xml.get_indent()))
+        else:
+            # TODO relative SDF support
+            xml.write(pose(link['pose'], xml.get_indent(), relative=True))
         # TODO How to deal with empty inertial?
         if len(link['inertial'].keys()) == 4:
             xml.write(inertial(link['inertial'], xml.get_indent()))
