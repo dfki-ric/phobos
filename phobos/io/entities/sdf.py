@@ -211,7 +211,7 @@ def inertial(inertialdata, indentation):
     return "".join(tagger.get_output())
 
 
-def collision(collisiondata, indentation):
+def collision(collisiondata, indentation, modelname):
     """ Simple wrapper for link collision data.
 
     :param collisiondata: data as provided by dictionary
@@ -228,7 +228,8 @@ def collision(collisiondata, indentation):
     # tagger.attrib('max_contacts', ...)
     # tagger.attrib('frame', ...)
     tagger.write(pose(collisiondata['pose'], tagger.get_indent()))
-    tagger.write(geometry(collisiondata['geometry'], tagger.get_indent()))
+    tagger.write(geometry(collisiondata['geometry'], tagger.get_indent(),
+                          modelname))
     # # SURFACE PARAMETERS
     # tagger.descend('surface')
     # # BOUNCE PART
@@ -299,11 +300,12 @@ def collision(collisiondata, indentation):
     return "".join(tagger.get_output())
 
 
-def geometry(geometrydata, indentation):
+def geometry(geometrydata, indentation, modelname):
     """ Simple wrapper for geometry data of link collisions.
 
     :param geometrydata: data as provided by dictionary
     :param indentation: indentation at current level
+    :param modelname: name used for gazebo model pathing
     :return: str -- writable xml line
     """
     # {'size': [0.23617, 0.06, 0.06], 'type': 'box'}
@@ -311,18 +313,18 @@ def geometry(geometrydata, indentation):
 
     tagger = xmlTagger(initial=indentation)
     tagger.descend('geometry')
-    # TODO Available geometries?
+    # available geometries in geometries.py: box,cylinder,capsule,sphere,mesh
     # if geometrydata['type'] == 'empty':
     #     tagger.attrib('empty', ...)
     if geometrydata['type'] == 'box':
         tagger.descend('box')
         tagger.attrib('size', '{0} {1} {2}'.format(*geometrydata['size']))
         tagger.ascend()
-    # elif geometrydata['type'] == 'cylinder':
-    #     tagger.descend('cylinder')
-    #     tagger.attrib('radius', ...)
-    #     tagger.attrib('length', ...)
-    #     tagger.ascend()
+    elif geometrydata['type'] == 'cylinder':
+        tagger.descend('cylinder')
+        tagger.attrib('radius', geometrydata['radius'])
+        tagger.attrib('length', geometrydata['length'])
+        tagger.ascend()
     # elif geometrydata['type'] == 'heightmap':
     #     tagger.descend('heightmap')
     #     tagger.attrib('uri', ...)
@@ -349,7 +351,8 @@ def geometry(geometrydata, indentation):
     #     tagger.ascend()
     elif geometrydata['type'] == 'mesh':
         tagger.descend('mesh')
-        tagger.attrib('uri', geometrydata['filename'] + '.dae')
+        tagger.attrib('uri',
+                      'model://' + modelname + '/meshes/' + geometrydata['filename'] + '.dae')
     #     tagger.descend('submesh')
     #     tagger.attrib('name', ...)
     #     tagger.attrib('center', ...)
@@ -370,11 +373,22 @@ def geometry(geometrydata, indentation):
         tagger.descend('sphere')
         tagger.attrib('radius', '{0}'.format(geometrydata['radius']))
         tagger.ascend()
+    # TODO capsule is not supported by sdf: export as mesh
+    # elif geometrydata['type'] == 'capsule':
+    #     tagger.descend('mesh')
+    #     tagger.attrib('uri',
+    #                   'model://' + modelname + '/meshes/' + geometrydata['filename'] + '.dae')
+    #     tagger.descend('submesh')
+    #     tagger.attrib('name', ...)
+    #     tagger.attrib('center', ...)
+    #     tagger.ascend()
+        # tagger.attrib('scale', '{0} {1} {2}'.format(*geometrydata['scale']))
+        # tagger.ascend()
     tagger.ascend()
     return "".join(tagger.get_output())
 
 
-def visual(visualdata, indentation):
+def visual(visualdata, indentation, modelname):
     """ Simple wrapper for visual data of links.
 
     :param visualdata: data as provided by dictionary
@@ -394,15 +408,8 @@ def visual(visualdata, indentation):
     # tagger.write(frame(..., tagger.get_indent()))
     tagger.write(pose(visualdata['pose'], tagger.get_indent()))
     # tagger.write(material(visualdata['material']), tagger.get_indent())
-    # TODO remove when mesh is finished
-    if visualdata['geometry']['type'] == 'mesh':
-        tagger.write(geometry(visualdata['geometry'], tagger.get_indent()))
-    # else:
-    #     tagger.descend('geometry')
-    #     tagger.descend('box')
-    #     tagger.attrib('size', '0.25 0.05 0.05')
-    #     tagger.ascend()
-    #     tagger.ascend()
+    tagger.write(geometry(visualdata['geometry'], tagger.get_indent(),
+                              modelname))
     # PLUGIN ELEMENT?
     tagger.ascend()
     return "".join(tagger.get_output())
@@ -411,7 +418,8 @@ def exportSdf(model, filepath):
     log("Export SDF to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
 
-    # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains', 'meshes', 'lights', 'motors', 'groups', 'joints', 'name'
+    # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains', 'meshes',
+    # 'lights', 'motors', 'groups', 'joints', 'name'
     log('Exporting "{0}"...'.format(model['name'], "DEBUG", "exportSdf"))
     # TODO remove debugging information
     # print('sensors\n')
@@ -443,15 +451,16 @@ def exportSdf(model, filepath):
     xml.write(xmlHeader)
     xml.descend('sdf', {"version": 1.5})
 
-    xml.descend('world', params={'name': 'default'})
-    xml.descend('include')
-    xml.attrib('uri', 'model://ground_plane')
-    xml.ascend()
-    xml.descend('include')
-    xml.attrib('uri', 'model://sun')
-    xml.ascend()
+    # xml.descend('world', params={'name': 'default'})
+    # xml.descend('include')
+    # xml.attrib('uri', 'model://ground_plane')
+    # xml.ascend()
+    # xml.descend('include')
+    # xml.attrib('uri', 'model://sun')
+    # xml.ascend()
     # model layer
-    xml.descend('model', params={"name": model['name']})
+    modelname = model['name']
+    xml.descend('model', params={"name": modelname})
 
     # static model
     # xml.attrib('static', ...)
@@ -485,14 +494,11 @@ def exportSdf(model, filepath):
 
     # pose
     # xml.attrib('pose', poseVal) OR xml.descend('pose') \\ xml.attrib('frame', otherFrame) \\ xml.ascend()
-
     # link
     for linkkey in model['links'].keys():
         link = model['links'][linkkey]
-        print(link['name'])
-        print(link['visual'])
-        print('///')
-        # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision', 'approxcollision', 'collision_bitmask'
+        # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision',
+        # 'approxcollision', 'collision_bitmask'
         # TODO approxcollision? collision_bitmask? parent?
         xml.descend('link', {'name': link['name']})
         # xml.attrib('gravity', ...)
@@ -511,9 +517,10 @@ def exportSdf(model, filepath):
             xml.write(inertial(link['inertial'], xml.get_indent()))
         if len(link['collision'].keys()) > 0:
             for colkey in link['collision'].keys():
-                xml.write(collision(link['collision'][colkey], xml.get_indent()))
+                xml.write(collision(link['collision'][colkey],
+                                    xml.get_indent(), modelname))
         if len(link['visual'].keys()) != 0:
-            xml.write(visual(link['visual'], xml.get_indent()))
+            xml.write(visual(link['visual'], xml.get_indent(), modelname))
         # xml.write(sensor(link['sensor'], xml.get_indent()))
         # xml.descend('projector', {'name': ...})
         # xml.attrib('texture', ...)
