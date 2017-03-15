@@ -199,17 +199,24 @@ def inertial(inertialdata, indentation):
 
     tagger = xmlTagger(initial=indentation)
     tagger.descend('inertial')
-    tagger.attrib('mass', inertialdata['mass'])
-    inertia = inertialdata['inertia']
-    tagger.descend('inertia')
-    tagger.attrib('ixx', inertia[0])
-    tagger.attrib('ixy', inertia[1])
-    tagger.attrib('ixz', inertia[2])
-    tagger.attrib('iyy', inertia[3])
-    tagger.attrib('iyz', inertia[4])
-    tagger.attrib('izz', inertia[5])
-    tagger.ascend()
+    if 'mass' in inertialdata:
+        tagger.attrib('mass', inertialdata['mass'])
+    else:
+        log("Object without mass!", "WARNING", "exportSdf")
+    if 'inertia' in inertialdata:
+        inertia = inertialdata['inertia']
+        tagger.descend('inertia')
+        tagger.attrib('ixx', inertia[0])
+        tagger.attrib('ixy', inertia[1])
+        tagger.attrib('ixz', inertia[2])
+        tagger.attrib('iyy', inertia[3])
+        tagger.attrib('iyz', inertia[4])
+        tagger.attrib('izz', inertia[5])
+        tagger.ascend()
+    else:
+        log("Object without inertia!", "WARNING", "exportSdf")
     # tagger.write(frame(inertialdata['frame'], tagger.getindent()))
+    # TODO make this relative
     tagger.write(pose(inertialdata['pose'], tagger.get_indent()))
     tagger.ascend()
     return "".join(tagger.get_output())
@@ -237,7 +244,6 @@ def collision(collisiondata, indentation, modelname):
     # # SURFACE PARAMETERS
     if 'bitmask' in collisiondata:
         tagger.descend('surface')
-        print(collisiondata['bitmask'])
         # # BOUNCE PART
         # tagger.descend('bounce')
         # tagger.attrib('restitution_coefficient', ...)
@@ -506,7 +512,6 @@ def exportSdf(model, filepath, relativeSDF=False):
         linkobj = bpy.context.scene.objects[link['name']]
         # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision',
         # 'approxcollision', 'collision_bitmask'
-        # TODO approxcollision? collision_bitmask? parent?
         xml.descend('link', {'name': link['name']})
         # xml.attrib('gravity', ...)
         # xml.attrib('enable_wind', ...)
@@ -530,8 +535,7 @@ def exportSdf(model, filepath, relativeSDF=False):
             # TODO relative SDF support
             xml.write(pose(link['pose'], xml.get_indent(), relative=True))
         # TODO How to deal with empty inertial?
-        if len(link['inertial'].keys()) == 4:
-            xml.write(inertial(link['inertial'], xml.get_indent()))
+        xml.write(inertial(link['inertial'], xml.get_indent()))
         if len(link['collision'].keys()) > 0:
             for colkey in link['collision'].keys():
                 xml.write(collision(link['collision'][colkey],
