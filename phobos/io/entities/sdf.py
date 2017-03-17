@@ -30,6 +30,7 @@ import os
 import yaml
 import xml.etree.ElementTree as ET
 import bpy
+import math
 
 from phobos.utils.io import l2str, indent, xmlHeader
 import phobos.model.materials as materials
@@ -144,10 +145,14 @@ class xmlTagger(object):
         return self.output
 
 
-def pose(posedata, indentation, relative=False):
+def pose(poseobject, posedata, indentation, relative):
     """ Simple wrapper for pose data.
+    If relative poses are used the data found in posedata is used.
+    Otherwise the pose of the poseobject will be combined with all collected
+    links up to the rootobject (see phobos.utils.editing.getCombinedTransform).
 
-    :param posedata: pose data as provided by dictionary
+    :param poseobject: object to be used for absolute pose
+    :param posedata: the original (relative) posedata
     :param indentation: indentation at current level
     :param relative: True for usage of sdf relative pathing
     :return: str -- writable xml line
@@ -164,35 +169,55 @@ def pose(posedata, indentation, relative=False):
     # TODO location in meters, rotation in radians?!
     # TODO pose could be relative to different frame!
     tagger = xmlTagger(initial=indentation)
+
+    # combine transformations of pose if relative is not used
+    if not relative:
+        matrix = getCombinedTransform(poseobject, getRoot(poseobject))
+        posedata = {'rawmatrix': matrix,
+            'matrix': [list(vector) for vector in list(matrix)],
+            'translation': list(matrix.to_translation()),
+            'rotation_euler': list(matrix.to_euler()),
+            'rotation_quaternion': list(matrix.to_quaternion())}
+
+    # only translation and euler rotation are required
     tra = posedata['translation']
     rot = posedata['rotation_euler']
+    # convert radians to degree
+    rot = [rad * 180. / math.pi for rad in rot]
     result = '{0} {1} {2} {3} {4} {5}'.format(tra[0], tra[1], tra[2], rot[0], rot[1], rot[2])
     tagger.attrib('pose', result)
     return "".join(tagger.get_output())
 
 
-def frame(framedata, indentation):
+def frame(frameobj, framedata, indentation, relative):
     """ Simple wrapper for frame data.
+    The frameobject is required to add the pose within the frame dependent on
+    the relative pose parameter.
 
+    :param frameobj: object to be used for absolute pose
     :param framedata: data as provided by dictionary
     :param indentation: indentation at current level
+    :param relative: True when using relative sdf pathing
     :return: str -- writable xml line
     """
     tagger = xmlTagger(initial=indentation)
     tagger.descend('frame', {'name': '...'})
-    tagger.write(pose(framedata['pose'], tagger.get_indent()))
+    tagger.write(pose(frameobj, framedata['pose'], tagger.get_indent(),
+                      relative))
     tagger.ascend()
     return "".join(tagger.get_output())
 
 
-def inertial(inertialdata, indentation):
+def inertial(inertialobj, inertialdata, indentation, relative):
     """ Simple wrapper for link inertial data.
+    The inertialobject is required to add the pose within the frame dependent on
+    the relative pose parameter.
 
+    :param inertialobj: object to be used for absolute pose
     :param inertialdata: data as provided by dictionary
     :param indentation: indentation at current level
     :return: str -- writable xml line
     """
-
     # {'mass': 0.5, 'pose': {...}, 'name': 'inertial_leg52', 'inertia': [0.00024, -4e-05, 4e-05, 0.00514, 0, 0.00515]}
 
     # 'mass', 'pose', 'name', 'inertia'
@@ -202,7 +227,7 @@ def inertial(inertialdata, indentation):
     if 'mass' in inertialdata:
         tagger.attrib('mass', inertialdata['mass'])
     else:
-        log("Object without mass!", "WARNING", "exportSdf")
+        log("Object '{0}' without mass!".format(inertialobj.name), "WARNING", "exportSdf")
     if 'inertia' in inertialdata:
         inertia = inertialdata['inertia']
         tagger.descend('inertia')
@@ -214,17 +239,25 @@ def inertial(inertialdata, indentation):
         tagger.attrib('izz', inertia[5])
         tagger.ascend()
     else:
-        log("Object without inertia!", "WARNING", "exportSdf")
+        log("Object '{0}' without inertia!".format(inertialobj.name), "WARNING",
+            "exportSdf")
     # tagger.write(frame(inertialdata['frame'], tagger.getindent()))
-    # TODO make this relative
-    tagger.write(pose(inertialdata['pose'], tagger.get_indent()))
+    if 'pose' in inertialdata:
+        tagger.write(pose(inertialobj, inertialdata['pose'], tagger.get_indent(),
+                      relative))
+    else:
+        log("Object '{0}' has no inertial pose!".format(inertialobj.name),
+            "WARNING", "exportsdf")
     tagger.ascend()
     return "".join(tagger.get_output())
 
 
-def collision(collisiondata, indentation, modelname):
+def collision(collisionobj, collisiondata, indentation, relative, modelname):
     """ Simple wrapper for link collision data.
+    The collisionobject is required to add the pose within the frame dependent on
+    the relative pose parameter.
 
+    :param collisionobj:
     :param collisiondata: data as provided by dictionary
     :param indentation: indentation at current level
     :return: str -- writable xml line
@@ -238,7 +271,8 @@ def collision(collisiondata, indentation, modelname):
     # tagger.attrib('laser_retro', ...)
     # tagger.attrib('max_contacts', ...)
     # tagger.attrib('frame', ...)
-    tagger.write(pose(collisiondata['pose'], tagger.get_indent()))
+    tagger.write(pose(collisionobj, collisiondata['pose'], tagger.get_indent(),
+                     relative))
     tagger.write(geometry(collisiondata['geometry'], tagger.get_indent(),
                           modelname))
     # # SURFACE PARAMETERS
@@ -400,7 +434,7 @@ def geometry(geometrydata, indentation, modelname):
     return "".join(tagger.get_output())
 
 
-def visual(visualdata, indentation, modelname):
+def visual(visualobj, linkobj, visualdata, indentation, modelname):
     """ Simple wrapper for visual data of links.
 
     :param visualdata: data as provided by dictionary
@@ -408,7 +442,6 @@ def visual(visualdata, indentation, modelname):
     :return: str -- writable xml line
     """
     # {'geometry': 'pose': 'material': 'upper_leg', 'name': 'visual_leg2_upper'}
-    visualdata = visualdata[next(iter(visualdata))]
     tagger = xmlTagger(initial=indentation)
     tagger.descend('visual', params={'name': visualdata['name']})
     # tagger.attrib('cast_shadows', ...)
@@ -418,7 +451,17 @@ def visual(visualdata, indentation, modelname):
     # tagger.attrib('layer', ...)
     # tagger.ascend()
     # tagger.write(frame(..., tagger.get_indent()))
-    # tagger.write(pose(rootpose, tagger.get_indent()))
+
+    # Pose data of the visual is transformed by link
+    # TODO fix matrix calculation
+    matrix = visualobj.matrix_local
+    # matrix = matrix * linkobj.matrix_local
+    posedata = {'rawmatrix': matrix,
+        'matrix': [list(vector) for vector in list(matrix)],
+        'translation': list(matrix.to_translation()),
+        'rotation_euler': list(matrix.to_euler()),
+        'rotation_quaternion': list(matrix.to_quaternion())}
+    tagger.write(pose(visualobj, posedata, tagger.get_indent(), True))
     # tagger.write(material(visualdata['material']), tagger.get_indent())
     tagger.write(geometry(visualdata['geometry'], tagger.get_indent(),
                               modelname))
@@ -429,6 +472,7 @@ def visual(visualdata, indentation, modelname):
 def exportSdf(model, filepath, relativeSDF=False):
     log("Export SDF to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
+    errors = False
 
     # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains', 'meshes',
     # 'lights', 'motors', 'groups', 'joints', 'name'
@@ -460,233 +504,239 @@ def exportSdf(model, filepath, relativeSDF=False):
 
     # create tagger and add headers
     xml = xmlTagger(indent=indent)
-    xml.write(xmlHeader)
-    xml.descend('sdf', {"version": 1.5})
+    try:
+        xml.write(xmlHeader)
+        xml.descend('sdf', {"version": 1.5})
 
-    # xml.descend('world', params={'name': 'default'})
-    # xml.descend('include')
-    # xml.attrib('uri', 'model://ground_plane')
-    # xml.ascend()
-    # xml.descend('include')
-    # xml.attrib('uri', 'model://sun')
-    # xml.ascend()
-    # model layer
-    modelname = model['name']
-    xml.descend('model', params={"name": modelname})
+        # xml.descend('world', params={'name': 'default'})
+        # xml.descend('include')
+        # xml.attrib('uri', 'model://ground_plane')
+        # xml.ascend()
+        # xml.descend('include')
+        # xml.attrib('uri', 'model://sun')
+        # xml.ascend()
+        # model layer
+        modelname = model['name']
+        xml.descend('model', params={"name": modelname})
 
-    # static model
-    # xml.attrib('static', ...)
+        # static model
+        # xml.attrib('static', ...)
 
-    # self collide (all links collide with each other)
-    # xml.attrib('self_collide', ...)
-
-    # allows auto disabling of the model when at rest (only jointless models)
-    # xml.attrib('allow_auto_disable', ...)
-
-    # include stuff from uri
-    # xml.descend('include')
-    # xml.attrib('uri', ...)
-    # xml.attrib('pose', ...)
-    # xml.attrib('name', ...)
-    # xml.attrib('static', ...)
-    # xml.ascend()
-
-    # nested model element
-    # xml.descend('model', params={'name': ...})
-    # add wrapper for xml model?
-    # xml.ascend()
-
-    # enables wind influence on all links in the model (overriden by link wind property)
-    # xml.attrib('enable_wind', ...)
-
-    # frame
-    # xml.descend('frame', {'name': ...})
-    # xml.attrib('pose', poseVal) OR xml.descend('pose') \\ xml.attrib('frame', otherFrame) \\ xml.ascend()
-    # xml.ascend()
-
-    # pose
-    # xml.attrib('pose', poseVal) OR xml.descend('pose') \\ xml.attrib('frame', otherFrame) \\ xml.ascend()
-    # link
-    for linkkey in model['links'].keys():
-        link = model['links'][linkkey]
-        linkobj = bpy.context.scene.objects[link['name']]
-        # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision',
-        # 'approxcollision', 'collision_bitmask'
-        xml.descend('link', {'name': link['name']})
-        # xml.attrib('gravity', ...)
-        # xml.attrib('enable_wind', ...)
+        # self collide (all links collide with each other)
         # xml.attrib('self_collide', ...)
-        # xml.attrib('kinematic', ...)
-        # xml.attrib('must_be_base_link', ...)
-        # xml.descend('velocity_decay')
-        # xml.attrib('linear', ...)
-        # xml.attrib('angular', ...)
-        # xml.ascend()
-        # xml.write(frame(model['frame']), xml.get_indent())
-        if not relativeSDF:
-            matrix = getCombinedTransform(linkobj, getRoot(linkobj))
-            rootpose = {'rawmatrix': matrix,
-                'matrix': [list(vector) for vector in list(matrix)],
-                'translation': list(matrix.to_translation()),
-                'rotation_euler': list(matrix.to_euler()),
-                'rotation_quaternion': list(matrix.to_quaternion())}
-            xml.write(pose(rootpose, xml.get_indent()))
-        else:
-            # TODO relative SDF support
-            xml.write(pose(link['pose'], xml.get_indent(), relative=True))
-        # TODO How to deal with empty inertial?
-        xml.write(inertial(link['inertial'], xml.get_indent()))
-        if len(link['collision'].keys()) > 0:
-            for colkey in link['collision'].keys():
-                xml.write(collision(link['collision'][colkey],
-                                    xml.get_indent(), modelname))
-        if len(link['visual'].keys()) != 0:
-            xml.write(visual(link['visual'], xml.get_indent(), modelname))
-        # xml.write(sensor(link['sensor'], xml.get_indent()))
-        # xml.descend('projector', {'name': ...})
-        # xml.attrib('texture', ...)
-        # xml.attrib('fov', ...)
-        # xml.attrib('near_clip', ...)
-        # xml.attrib('far_clip', ...)
-        # xml.write(frame('...', xml.get_indent()))
-        # xml.write(pose('...', xml.get_indent()))
-        # xml.descend('plugin', {'name': ..., 'filename': ...})
-        # # PLUGIN ELEMENT?
-        # xml.ascend()
-        # xml.ascend()
-        # xml.attrib('audio_sink', ...)
-        # xml.descend('audio_source')
+
+        # allows auto disabling of the model when at rest (only jointless models)
+        # xml.attrib('allow_auto_disable', ...)
+
+        # include stuff from uri
+        # xml.descend('include')
         # xml.attrib('uri', ...)
-        # xml.attrib('pitch', ...)
-        # xml.attrib('gain', ...)
-        # xml.descend('contact')
-        # xml.attrib('collision', ...)
+        # xml.attrib('pose', ...)
+        # xml.attrib('name', ...)
+        # xml.attrib('static', ...)
         # xml.ascend()
-        # xml.attrib('loop', ...)
-        # xml.write(frame('...', xml.get_indent()))
-        # xml.write(pose('...', xml.get_indent()))
-        # xml.ascend()
-        # xml.descend('battery', {'name': ...})
-        # xml.attrib('voltage', ...)
-        # xml.ascend()
-        xml.ascend()
 
-    log('Links exported.', 'DEBUG', 'exportSdf')
+        # nested model element
+        # xml.descend('model', params={'name': ...})
+        # add wrapper for xml model?
+        # xml.ascend()
 
-    # joint
-    for jointkey in model['joints'].keys():
-        joint = model['joints'][jointkey]
-        xml.descend('joint', {'name': joint['name'], 'type': joint['type']})
-        xml.attrib('parent', joint['parent'])
-        xml.attrib('child', joint['child'])
-        # xml.attrib('gearbox_ratio', ...)
-        # xml.attrib('gearbox_reference_body', ...)'
-        # xml.attrib('thread_pitch', ...)'
-        if 'axis' in joint.keys():
-            xml.descend('axis')
-            xml.attrib('xyz', l2str(joint['axis']))
-            # xml.attrib('use_parent_model_frame', ...)
-            # xml.descend('dynamics')
-            # xml.attrib('damping', ...)
-            # xml.attrib('friction', ...)
-            # xml.attrib('spring_reference', ...)
-            # xml.attrib('spring_stiffness', ...)
+        # enables wind influence on all links in the model (overriden by link wind property)
+        # xml.attrib('enable_wind', ...)
+
+        # frame
+        # xml.descend('frame', {'name': ...})
+        # xml.attrib('pose', poseVal) OR xml.descend('pose') \\ xml.attrib('frame', otherFrame) \\ xml.ascend()
+        # xml.ascend()
+
+        # pose
+        # xml.attrib('pose', poseVal) OR xml.descend('pose') \\ xml.attrib('frame', otherFrame) \\ xml.ascend()
+        # link
+        for linkkey in model['links'].keys():
+            link = model['links'][linkkey]
+            linkobj = bpy.context.scene.objects[link['name']]
+            # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision',
+            # 'approxcollision', 'collision_bitmask'
+            xml.descend('link', {'name': link['name']})
+            # xml.attrib('gravity', ...)
+            # xml.attrib('enable_wind', ...)
+            # xml.attrib('self_collide', ...)
+            # xml.attrib('kinematic', ...)
+            # xml.attrib('must_be_base_link', ...)
+            # xml.descend('velocity_decay')
+            # xml.attrib('linear', ...)
+            # xml.attrib('angular', ...)
             # xml.ascend()
-            xml.descend('limit')
-            xml.attrib('lower', joint['limits']['lower'])
-            xml.attrib('upper', joint['limits']['upper'])
-            xml.attrib('effort', joint['limits']['effort'])
-            xml.attrib('velocity', joint['limits']['velocity'])
-            # xml.attrib('stiffness', ...)
-            # xml.attrib('dissipation', ...)
+            # xml.write(frame(model['frame']), xml.get_indent())
+            xml.write(pose(linkobj, link['pose'], xml.get_indent(), relativeSDF))
+            xml.write(inertial(linkobj, link['inertial'], xml.get_indent(),
+                            relativeSDF))
+            if len(link['collision'].keys()) > 0:
+                for colkey in link['collision'].keys():
+                    xml.write(collision(linkobj, link['collision'][colkey],
+                                        xml.get_indent(), relativeSDF, modelname))
+            if len(link['visual'].keys()) != 0:
+                for visualkey in link['visual'].keys():
+                    visualobj = bpy.context.scene.objects[visualkey]
+                    xml.write(visual(visualobj, linkobj,
+                                     link['visual'][visualkey],
+                                     xml.get_indent(), modelname))
+            # xml.write(sensor(link['sensor'], xml.get_indent()))
+            # xml.descend('projector', {'name': ...})
+            # xml.attrib('texture', ...)
+            # xml.attrib('fov', ...)
+            # xml.attrib('near_clip', ...)
+            # xml.attrib('far_clip', ...)
+            # xml.write(frame('...', xml.get_indent()))
+            # xml.write(pose('...', xml.get_indent()))
+            # xml.descend('plugin', {'name': ..., 'filename': ...})
+            # # PLUGIN ELEMENT?
+            # xml.ascend()
+            # xml.ascend()
+            # xml.attrib('audio_sink', ...)
+            # xml.descend('audio_source')
+            # xml.attrib('uri', ...)
+            # xml.attrib('pitch', ...)
+            # xml.attrib('gain', ...)
+            # xml.descend('contact')
+            # xml.attrib('collision', ...)
+            # xml.ascend()
+            # xml.attrib('loop', ...)
+            # xml.write(frame('...', xml.get_indent()))
+            # xml.write(pose('...', xml.get_indent()))
+            # xml.ascend()
+            # xml.descend('battery', {'name': ...})
+            # xml.attrib('voltage', ...)
+            # xml.ascend()
             xml.ascend()
+
+        log('Links exported.', 'DEBUG', 'exportSdf')
+
+        # joint
+        for jointkey in model['joints'].keys():
+            joint = model['joints'][jointkey]
+            xml.descend('joint', {'name': joint['name'], 'type': joint['type']})
+            xml.attrib('parent', joint['parent'])
+            xml.attrib('child', joint['child'])
+            # xml.attrib('gearbox_ratio', ...)
+            # xml.attrib('gearbox_reference_body', ...)'
+            # xml.attrib('thread_pitch', ...)'
+            if 'axis' in joint.keys():
+                xml.descend('axis')
+                xml.attrib('xyz', l2str(joint['axis']))
+                # xml.attrib('use_parent_model_frame', ...)
+                # xml.descend('dynamics')
+                # xml.attrib('damping', ...)
+                # xml.attrib('friction', ...)
+                # xml.attrib('spring_reference', ...)
+                # xml.attrib('spring_stiffness', ...)
+                # xml.ascend()
+                xml.descend('limit')
+                xml.attrib('lower', joint['limits']['lower'])
+                xml.attrib('upper', joint['limits']['upper'])
+                xml.attrib('effort', joint['limits']['effort'])
+                xml.attrib('velocity', joint['limits']['velocity'])
+                # xml.attrib('stiffness', ...)
+                # xml.attrib('dissipation', ...)
+                xml.ascend()
+                xml.ascend()
+            # if 'axis2' in joint.keys():
+                # xml.descend('axis')
+                # xml.attrib('xyz', l2str(joint['axis']))
+                # xml.attrib('use_parent_model_frame', ...)
+                # xml.descend('dynamics')
+                # xml.attrib('damping', ...)
+                # xml.attrib('friction', ...)
+                # xml.attrib('spring_reference', ...)
+                # xml.attrib('spring_stiffness', ...)
+                # xml.ascend()
+                # xml.descend('limit')
+                # xml.attrib('lower', joint['limits']['lower'])
+                # xml.attrib('upper', joint['limits']['upper'])
+                # xml.attrib('effort', joint['limits']['effort'])
+                # xml.attrib('velocity', joint['limits']['velocity'])
+                # xml.attrib('stiffness', ...)
+                # xml.attrib('dissipation', ...)
+                # xml.ascend()
+                # xml.ascend()
+            # if 'physics' in joint.keys():
+                # xml.descend('physics')
+                # xml.descend('simbody')
+                # xml.attrib('must_be_loop_joint', ...)
+                # xml.ascend()
+                #
+                # xml.descend('ode')
+                # xml.attrib('cfm_damping', ...)
+                # xml.attrib('implicit_spring_damper', ...)
+                # xml.attrib('fudge_factor', ...)
+                # xml.attrib('cfm', ...)
+                # xml.attrib('erp', ...)
+                # xml.attrib('bounce', ...)
+                # xml.attrib('max_force', ...)
+                # xml.attrib('velocity', ...)
+                #
+                # xml.descend('limit', ...)
+                # xml.attrib('cfm', ...)
+                # xml.attrib('erp', ...)
+                # xml.ascend()
+                #
+                # xml.descend('suspension')
+                # xml.attrib('cfm', ...)
+                # xml.attrib('erp', ...)
+                # xml.ascend()
+                # xml.ascend()
+                #
+                # xml.attrib('provide_feedback', ...)
+                # xml.ascend()
+            # if 'frame' in joint.keys():
+                # xml.write(joint['frame'])
+            # if 'pose' in joint.keys():
+                # xml.descend('pose')
+                # xml.attrib('frame', ...)
+                # xml.ascend()
+            # if 'sensor' in joint.keys():
+                # xml.descend('sensor')
+                # SENSOR WRAPPER
+                # xml.ascend('sensor')
             xml.ascend()
-        # if 'axis2' in joint.keys():
-            # xml.descend('axis')
-            # xml.attrib('xyz', l2str(joint['axis']))
-            # xml.attrib('use_parent_model_frame', ...)
-            # xml.descend('dynamics')
-            # xml.attrib('damping', ...)
-            # xml.attrib('friction', ...)
-            # xml.attrib('spring_reference', ...)
-            # xml.attrib('spring_stiffness', ...)
-            # xml.ascend()
-            # xml.descend('limit')
-            # xml.attrib('lower', joint['limits']['lower'])
-            # xml.attrib('upper', joint['limits']['upper'])
-            # xml.attrib('effort', joint['limits']['effort'])
-            # xml.attrib('velocity', joint['limits']['velocity'])
-            # xml.attrib('stiffness', ...)
-            # xml.attrib('dissipation', ...)
-            # xml.ascend()
-            # xml.ascend()
-        # if 'physics' in joint.keys():
-            # xml.descend('physics')
-            # xml.descend('simbody')
-            # xml.attrib('must_be_loop_joint', ...)
-            # xml.ascend()
-            #
-            # xml.descend('ode')
-            # xml.attrib('cfm_damping', ...)
-            # xml.attrib('implicit_spring_damper', ...)
-            # xml.attrib('fudge_factor', ...)
-            # xml.attrib('cfm', ...)
-            # xml.attrib('erp', ...)
-            # xml.attrib('bounce', ...)
-            # xml.attrib('max_force', ...)
-            # xml.attrib('velocity', ...)
-            #
-            # xml.descend('limit', ...)
-            # xml.attrib('cfm', ...)
-            # xml.attrib('erp', ...)
-            # xml.ascend()
-            #
-            # xml.descend('suspension')
-            # xml.attrib('cfm', ...)
-            # xml.attrib('erp', ...)
-            # xml.ascend()
-            # xml.ascend()
-            #
-            # xml.attrib('provide_feedback', ...)
-            # xml.ascend()
-        # if 'frame' in joint.keys():
-            # xml.write(joint['frame'])
-        # if 'pose' in joint.keys():
-            # xml.descend('pose')
-            # xml.attrib('frame', ...)
-            # xml.ascend()
-        # if 'sensor' in joint.keys():
-            # xml.descend('sensor')
-            # SENSOR WRAPPER
-            # xml.ascend('sensor')
-        xml.ascend()
 
-    log("Joints exported.", "DEBUG", "exportSdf")
+        log("Joints exported.", "DEBUG", "exportSdf")
 
-    # plugin
-    # xml.descend('plugin')
-    # xml.attrib('name', ...)
-    # xml.attrib('filename', ...)
-    # OPTIONAL xml.descend('otherplugin')
-    # xml.ascend()
+        # plugin
+        # xml.descend('plugin')
+        # xml.attrib('name', ...)
+        # xml.attrib('filename', ...)
+        # OPTIONAL xml.descend('otherplugin')
+        # xml.ascend()
 
-    # gripper
-    # xml.descend('gripper', {'name': ...})
-    # xml.descend('grasp_check')
-    # xml.attrib('detach_steps')
-    # xml.attrib('attach_steps')
-    # xml.attrib('min_contact_count')
-    # xml.ascend()
-    # xml.attrib('gripper_link')
-    # xml.attrib('palm_link')
-    # xml.ascend()
+        # gripper
+        # xml.descend('gripper', {'name': ...})
+        # xml.descend('grasp_check')
+        # xml.attrib('detach_steps')
+        # xml.attrib('attach_steps')
+        # xml.attrib('min_contact_count')
+        # xml.ascend()
+        # xml.attrib('gripper_link')
+        # xml.attrib('palm_link')
+        # xml.ascend()
 
-    outputtext = xml.get_output()
+    # TODO remove this when finished
+    except Exception as e:
+        import sys
+        import traceback
+        e = sys.exc_info()[0]
+        print(e)
+        print(traceback.format_exc())
+        errors=True
+        log("Error in export!", "ERROR", "exportsdf")
+    finally:
+        outputtext = xml.get_output()
 
-    log("Writing model data to " + filename, "DEBUG", "exportSdf")
-    with open(filename, 'w') as outputfile:
-        outputfile.writelines(outputtext)
-    log("Export successful.", "INFO", "exportModelToSDF")
+        log("Writing model data to " + filename, "DEBUG", "exportSdf")
+        with open(filename, 'w') as outputfile:
+            outputfile.writelines(outputtext)
+    finishmessage="Export finished with " + ("no " if not errors else "") + "errors."
+    log(finishmessage, "INFO", "exportModelToSDF")
 
 
 def importSdf():
