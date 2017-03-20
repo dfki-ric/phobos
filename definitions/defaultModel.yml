@@ -1,4 +1,4 @@
-DictConstraints:
+model:
     sensors:
         $forElem:
             type:
@@ -48,7 +48,7 @@ DictConstraints:
             default: [0.0, 0.0, 0.0]
         rotation_quaternion:
             required: true
-            default: [0.0, 0.0, 0.0] 
+            default: [0.0, 0.0, 0.0]
         translation:
             required: true
             default: [0.0, 0.0, 0.0]

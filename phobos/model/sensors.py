@@ -239,7 +239,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
 #                 elif self.sensor_type == "ScanningSonar":
 #                     print("Added nodes to new " + self.sensor_type)
 #             # add the pre-defined sensor properties
-#             for prop in defs.sensorProperties[self.sensor_type]:
+#             for prop in defs.definitions['sensora'][self.sensor_type]:
 #                 sensor[prop] = defs.sensorProperties[self.sensor_type][prop]
 #         else:
 #             print("Sensor could not be created: unknown sensor type.")

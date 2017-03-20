@@ -933,7 +933,7 @@ class AddMotorOperator(Operator):
         name='Motor Type',
         default='generic_dc',
         description="Type of the motor",
-        items=tuple([(t,) * 3 for t in defs.hardware['motors']])
+        items=tuple([(t,) * 3 for t in defs.definitions['motors']])
         )
 
     def draw(self, context):
@@ -1045,7 +1045,7 @@ class AddSensorOperator(Operator):
     sensor_type = EnumProperty(
         name="Sensor Type",
         default='undefined',
-        items=tuple([(t,) * 3 for t in defs.hardware['sensors']]),
+        items=tuple([(t,) * 3 for t in defs.definitions['sensors']]),
         description="Type of the sensor to be created"
     )
 
@@ -1108,7 +1108,7 @@ class AddSensorOperator(Operator):
         if self.sensor_type == "custom":
             layout.prop(self, "custom_type", text="Custom Type")
         else:
-            for key in defs.sensorProperties[self.sensor_type]:
+            for key in defs.definitions['sensors'][self.sensor_type]:
                 layout.prop(self, key, text=key)
 
     def execute(self, context):
@@ -1118,8 +1118,8 @@ class AddSensorOperator(Operator):
                   'props': {}
                   }
         parent = context.active_object
-        for key in defs.sensorProperties[self.sensor_type]:
-            if type(defs.sensorProperties[self.sensor_type][key]) == type(True):
+        for key in defs.definitions['sensora'][self.sensor_type]:
+            if type(defs.definitions['sensora'][self.sensor_type][key]) == type(True):
                 value = getattr(self, key)
                 sensor['props'][key] = '$true' if value else '$false'
             else:
@@ -1155,7 +1155,7 @@ class AddSensorOperator(Operator):
 
 def getControllerParameters(name):
     try:
-        return defs.software['controllers'][name]['parameters'].keys()
+        return defs.definitions['controllers'][name]['parameters'].keys()
     except:
         return []
 
@@ -1163,7 +1163,7 @@ def getControllerParameters(name):
 def getDefaultControllerParameters(scene, context):
     try:
         name = bpy.context.active_object['motor/controller']
-        return defs.software['controllers'][name]['parameters'].values()
+        return defs.definitions['controllers'][name]['parameters'].values()
     except:
         return None
 
@@ -1195,7 +1195,7 @@ class AddControllerOperator(Operator):
         name='Controller Type',
         default='generic_pid',
         description="Type of the controller",
-        items=tuple([(t,) * 3 for t in defs.software['controllers']])
+        items=tuple([(t,) * 3 for t in defs.definitions['controllers']])
     )
 
     cparam1 = FloatProperty(default=0.0, description='Controller parameter #1')
@@ -1229,7 +1229,7 @@ class AddControllerOperator(Operator):
             c2.prop(self, "cparam"+str(i))
 
     def execute(self, context):
-        controller = defs.software['controllers'][self.controllertype]
+        controller = defs.definitions['controllers'][self.controllertype]
         for obj in bpy.context.selected_objects:
             obj['motor/controller'] = controller['name']
             obj['*software/controller/name'] = controller['name']

@@ -86,7 +86,7 @@ class ValidateOperator(Operator):
         messages = {}
         root = sUtils.getRoot(context.selected_objects[0])
         model, objectlist = models.buildModelDictionary(root)
-        vUtils.check_dict(model, defs.dictConstraints, messages)
+        vUtils.check_dict(model, defs.definitions['model'], messages)
         vUtils.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
         for entry in messages:
             log("Errors in object " + entry + ":", 'INFO')
