@@ -1,6 +1,6 @@
 __author__ = 'kavonszadkowski'
 
-    GUI:
+#    GUI:
 
     #bpy.types.World.showBodies = BoolProperty(name="showBodies", update=SetVisibleLayers)
     #bpy.types.World.showJoints = BoolProperty(name="showJoints", update=SetVisibleLayers)
