@@ -234,7 +234,7 @@ def showPreview(self,value):
 class PhobosToolsPanel(bpy.types.Panel):
     """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_PT_PHOBOS_TOOLS"
-    bl_label = "Editing Tools"
+    bl_label = "General Tools"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
@@ -391,13 +391,13 @@ class PhobosModelPanel(bpy.types.Panel):
 class PhobosExportPanel(bpy.types.Panel):
     """A Custom Panel in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_EXPORT_PT_PHOBOS"
-    bl_label = "Export & Import"
+    bl_label = "Export"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
 
     def draw_header(self, context):
-        self.layout.label(icon='FILESEL')
+        self.layout.label(icon='EXPORT')
 
     def draw(self, context):
         expsets = bpy.data.worlds[0].phobosexportsettings
@@ -444,8 +444,6 @@ class PhobosExportPanel(bpy.types.Panel):
         ec1.operator("phobos.export_robot", text="Export Robot Model", icon="EXPORT")
         # FIXME: issue with export and import of models with new generic system
         #ec2 = layout.column(align=True)
-        ec1.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
-        ec1.operator("phobos.import_component", text="Import Component", icon="IMPORT")
 
 #        layout.separator()
 #        layout.label(text="Baking")
@@ -458,6 +456,22 @@ class PhobosExportPanel(bpy.types.Panel):
         self.layout.prop(expsets, "sceneName", text="Name")
         #self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
         layout.operator("phobos.export_scene", icon="WORLD_DATA")
+
+
+class PhobosImportPanel(bpy.types.Panel):
+    """A Custom Panel in the Phobos viewport toolbar"""
+    bl_idname = "TOOLS_IMPORT_PT_PHOBOS"
+    bl_label = "Import"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
+
+    def draw_header(self, context):
+        self.layout.label(icon='IMPORT')
+
+    def draw(self, context):
+        self.layout.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
+        self.layout.operator("phobos.import_component", text="Import Component", icon="IMPORT")
 
 
 class PhobosObjectPanel(bpy.types.Panel):
@@ -530,6 +544,7 @@ def register():
     bpy.utils.register_class(PhobosModelPanel)
     #bpy.utils.register_class(PhobosScenePanel)
     bpy.utils.register_class(PhobosExportPanel)
+    bpy.utils.register_class(PhobosImportPanel)
     bpy.utils.register_class(PhobosObjectPanel)
 
     bpy.types.World.phobosexportsettings = PointerProperty(type=PhobosExportSettings)
