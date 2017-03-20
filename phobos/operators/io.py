@@ -131,7 +131,10 @@ class ExportModelOperator(Operator):
                             if texture_path == '':
                                 texture_path = securepath(os.path.join(export_path, 'textures'))
                                 log("Exporting textures to " + texture_path, "INFO", "ExportModelOperator")
-                            shutil.copy(texpath, os.path.join(texture_path, os.path.basename(mat[texturetype])))
+                            try:
+                                shutil.copy(texpath, os.path.join(texture_path, os.path.basename(mat[texturetype])))
+                            except shutil.SameFileError:
+                                log("{} already in place".format(texturetype), "INFO", "ExportModelOperator")
         return {'FINISHED'}
 
 
