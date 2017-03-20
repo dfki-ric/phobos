@@ -633,10 +633,27 @@ def exportSdf(model, filepath, relativeSDF=False):
 
         log('Links exported.', 'DEBUG', 'exportSdf')
 
+        # TODO move to top
+        # Joint mapping from URDF to SDF
+        jointmapping = {
+            'revolute': 'revolute',
+            'continuous': 'revolute',
+            'prismatic': 'prismatic',
+            'fixed': 'fixed',
+            'floating': 'TODO',
+            'planar': 'TODO'
+        }
+
         # joint
         for jointkey in model['joints'].keys():
             joint = model['joints'][jointkey]
-            xml.descend('joint', {'name': joint['name'], 'type': joint['type']})
+            # use sdf joint names instead URDF
+            sdftype = jointmapping[joint['type']]
+            xml.descend('joint', {'name': joint['name'], 'type': sdftype})
+            # TODO remove when all joints are finished
+            if sdftype == 'TODO':
+                print(joint['type'] + ' joint type not supported yet:')
+                print(joint['name'])
             xml.attrib('parent', joint['parent'])
             xml.attrib('child', joint['child'])
             # OPT: xml.attrib('gearbox_ratio', ...)
@@ -654,9 +671,17 @@ def exportSdf(model, filepath, relativeSDF=False):
                 # REQ: xml.attrib('spring_stiffness', ...)
                 # xml.ascend()
                 xml.descend('limit')
-                # TODO These are required!
-                xml.attrib('lower', joint['limits']['lower'])
-                xml.attrib('upper', joint['limits']['upper'])
+                # can be omitted for continuous joint
+                if 'lower' in joint['limits'].keys():
+                    xml.attrib('lower', joint['limits']['lower'])
+                else:
+                    print(joint['name'] + ' lower limit missing')
+                    xml.attrib('lower', '')
+                if 'upper' in joint['limits'].keys():
+                    print(joint['name'] + ' upper limit missing')
+                    xml.attrib('upper', joint['limits']['upper'])
+                else:
+                    xml.attrib('upper', '')
                 # TODO: Optional!
                 xml.attrib('effort', joint['limits']['effort'])
                 # TODO: Optional!
@@ -744,7 +769,6 @@ def exportSdf(model, filepath, relativeSDF=False):
         import sys
         import traceback
         e = sys.exc_info()[0]
-        print(e)
         print(traceback.format_exc())
         errors=True
         log("Error in export!", "ERROR", "exportsdf")
