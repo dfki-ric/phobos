@@ -169,6 +169,38 @@ class ExportModelOperator(Operator):
                 sUtils.selectObjects(list([root]), False)
             bpy.ops.phobos.select_model()
 
+        # TODO: Move mesh export to individual formats? This is practically SMURF
+        # export meshes in selected formats
+        for meshtype in meshes.mesh_types:
+            mesh_path = ioUtils.getOutputMeshpath(meshtype)
+            try:
+                typename = "export_mesh_" + meshtype
+                if getattr(bpy.data.worlds[0], typename):
+                    securepath(mesh_path)
+                    for meshname in model['meshes']:
+                        meshes.mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_path)
+            except KeyError:
+                log("No export function available for selected mesh function: " + meshtype,
+                    "ERROR", "ExportModelOperator")
+                print(sys.exc_info()[0])
+
+        # TODO: Move texture export to individual formats? This is practically SMURF
+        # export textures
+        if ioUtils.textureExportEnabled():
+            texture_path = ''
+            for materialname in model['materials']:
+                mat = model['materials'][materialname]
+                for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
+                    if texturetype in mat:
+                        texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
+                        if os.path.isfile(texpath):
+                            if texture_path == '':
+                                texture_path = securepath(os.path.join(export_path, 'textures'))
+                                log("Exporting textures to " + texture_path, "INFO", "ExportModelOperator")
+                            try:
+                                shutil.copy(texpath, os.path.join(texture_path, os.path.basename(mat[texturetype])))
+                            except shutil.SameFileError:
+                                log("{} already in place".format(texturetype), "INFO", "ExportModelOperator")
         # report success to user
         log("Export successful.", "INFO", end="\n\n")
         return {'FINISHED'}
