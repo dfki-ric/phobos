@@ -166,7 +166,7 @@ def pose(poseobject, posedata, indentation, relative):
 
     # 'matrix', 'rawmatrix', 'rotation_quaternion', 'rotation_euler', 'translation'
 
-    # TODO location in meters, rotation in radians?!
+    # SDF uses radians as unit
     # TODO pose could be relative to different frame!
     tagger = xmlTagger(initial=indentation)
 
@@ -182,8 +182,6 @@ def pose(poseobject, posedata, indentation, relative):
     # only translation and euler rotation are required
     tra = posedata['translation']
     rot = posedata['rotation_euler']
-    # convert radians to degree
-    rot = [rad * 180. / math.pi for rad in rot]
     result = '{0} {1} {2} {3} {4} {5}'.format(tra[0], tra[1], tra[2], rot[0], rot[1], rot[2])
     tagger.attrib('pose', result)
     return "".join(tagger.get_output())
@@ -454,13 +452,18 @@ def visual(visualobj, linkobj, visualdata, indentation, modelname):
 
     # Pose data of the visual is transformed by link
     # TODO fix matrix calculation
-    matrix = visualobj.matrix_local
+    matrix = visualobj.matrix_basis
     # matrix = matrix * linkobj.matrix_local
     posedata = {'rawmatrix': matrix,
         'matrix': [list(vector) for vector in list(matrix)],
         'translation': list(matrix.to_translation()),
         'rotation_euler': list(matrix.to_euler()),
         'rotation_quaternion': list(matrix.to_quaternion())}
+    # tagger.attrib('pose', '0 0 0 0 0 0')
+    # tagger.descend('geometry')
+    # tagger.descend('box')
+    # tagger.attrib('size', '0.1 0.1 0.1')
+    # tagger.ascend()
     tagger.write(pose(visualobj, posedata, tagger.get_indent(), True))
     # tagger.write(material(visualdata['material']), tagger.get_indent())
     tagger.write(geometry(visualdata['geometry'], tagger.get_indent(),
@@ -581,6 +584,16 @@ def exportSdf(model, filepath, relativeSDF=False):
                     xml.write(visual(visualobj, linkobj,
                                      link['visual'][visualkey],
                                      xml.get_indent(), modelname))
+            # TODO remove when debugging done
+            xml.descend('visual', params={'name':
+                                          '{}_center'.format(link['name'])})
+            xml.attrib('pose', '0 0 0 0 0 0')
+            xml.descend('geometry')
+            xml.descend('sphere')
+            xml.attrib('radius', '0.05')
+            xml.ascend()
+            xml.ascend()
+            xml.ascend()
             # xml.write(sensor(link['sensor'], xml.get_indent()))
             # xml.descend('projector', {'name': ...})
             # xml.attrib('texture', ...)
