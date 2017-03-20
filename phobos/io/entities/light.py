@@ -66,5 +66,11 @@ def deriveEntity(entity, outpath, savetosubfolder):
         entry["angle"] = lightobj.data.spot_size
     return entry
 
-# information for the registration in the exporter
-entity_type_name = 'light'
+
+def exportLight():
+    pass
+
+#  registering import/export functions of types with Phobos
+entity_type_dict = {'light': {'export': exportLight,
+                              'extensions': ('smurf',)}
+                    }

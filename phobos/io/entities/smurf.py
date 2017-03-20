@@ -473,7 +473,7 @@ def exportSmurf(model, path):
 #             outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 
-# registering export functions of types with Phobos
+# registering import/export functions of types with Phobos
 entity_type_dict = {'smurf': {'export': exportSmurf,
                               'extensions': ('smurf',)}
                     }

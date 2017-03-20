@@ -50,3 +50,12 @@ def deriveGenericEntity(entityobj, outpath=None):
     urdf_filename = model['name'] + ".urdf"
     exportModelToURDF(model, os.path.join(path, urdf_path, urdf_filename),
                       '../meshes/' if structured else '')
+
+
+def exportGenericEntity():
+    pass
+
+# registering import/export functions of types with Phobos
+entity_type_dict = {'smurf': {'export': exportGenericEntity,
+                              'extensions': ('yaml',)}
+                    }
