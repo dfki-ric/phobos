@@ -193,39 +193,6 @@ class Models_Poses_UIList(bpy.types.UIList):
         return flt_flags, flt_neworder
 
 
-class MessageOperator(bpy.types.Operator):
-    bl_idname = "phobos.message"
-    bl_label = "Display a message in a window"
-    type = StringProperty()
-    message = StringProperty()
-
-    def execute(self, context):
-        self.report({'INFO'}, self.message)
-        print(self.message)
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        wm = context.window_manager
-        result = wm.invoke_popup(self, width=400, height=200)
-        return result
-
-    def draw(self, context):
-        self.layout.label("Phobos")
-        row = self.layout  # .split(0.25)
-        row.prop(self, "type")
-        row.prop(self, "message")
-        # row = self.layout#.split(0.80)
-        row.label("")
-        row.operator("error.ok")
-
-
-class OkOperator(bpy.types.Operator):
-    bl_idname = "phobos.ok"
-    bl_label = "OK"
-
-    def execute(self, context):
-        return {'FINISHED'}
-
 def showPreview(self,value):
     bpy.ops.scene.change_preview()
 
