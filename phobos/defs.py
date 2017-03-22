@@ -173,3 +173,8 @@ def __parseAllYAML(path):
                 except FileNotFoundError:
                     log("The file "+file+" was not found.", "ERROR")
     return dicts
+
+
+# Update definitions from files
+print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
+updateDefs(os.path.dirname(__file__) + "/definitions")

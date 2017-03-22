@@ -26,7 +26,6 @@ Created on 6 Jan 2014
 @author: Kai von Szadkowski
 """
 
-#import os
 import sys
 import inspect
 
@@ -545,13 +544,19 @@ def register():
             typename = "export_scene_" + scenetype
             setattr(bpy.types.World, typename, BoolProperty(name=scenetype, default=False))
 
-    # Register classes (cannot be automatic, as it is placed in gui in the registering order)
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
-        try:
-            if classdef.__bases__[0] != bpy.types.Panel:
-                bpy.utils.register_class(classdef)
-        except ValueError:
-            print('Error with class registration:', key, classdef)
+    # Register classes (cannot be automatic, as panels are placed in gui in the registering order)
+    #     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    #         try:
+    #             if classdef.__bases__[0] != bpy.types.Panel:
+    #                 bpy.utils.register_class(classdef)
+    #         except ValueError:
+    #             print('Error with class registration:', key, classdef)
+    bpy.utils.register_class(ModelPoseProp)
+    bpy.utils.register_class(PhobosPrefs)
+    bpy.utils.register_class(PhobosExportSettings)
+    #bpy.utils.register_class(Mesh_Export_UIList)
+    #bpy.utils.register_class(Models_Poses_UIList)
+
     bpy.utils.register_class(PhobosToolsPanel)
     bpy.utils.register_class(PhobosModelPanel)
     #bpy.utils.register_class(PhobosScenePanel)

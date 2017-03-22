@@ -34,8 +34,8 @@ import os.path
 import importlib
 import pkgutil
 # TODO double import of basemodule?
-import phobos
 import bpy
+import phobos
 
 
 def import_submodules(package, recursive=True, verbose=False):
@@ -81,7 +81,7 @@ def import_submodules(package, recursive=True, verbose=False):
 
 bl_info = {
     "name": "Phobos",
-    "description": "A set of tools to enable editing of MARS robot models in Blender.",
+    "description": "A toolbox to enable editing of robot models in Blender.",
     "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz",
     "version": (0, 7),
     "blender": (2, 69, 0),
@@ -136,10 +136,6 @@ yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 # Recursively import all submodules
 print("Importing phobos")
 import_submodules(phobos, verbose=True)
-
-# Update definitions for GUI
-print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
-phobos.defs.updateDefs(os.path.dirname(__file__) + "/definitions")
 
 
 def register():
