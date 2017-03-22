@@ -509,6 +509,18 @@ class PhobosObjectPanel(bpy.types.Panel):
             #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.phobostype+"_default"]
 
 
+def get_operator_manuals():
+    """This allows you to right click on a button and link to the manual
+
+    :return: tuple
+
+    """
+    url_manual_prefix = "https://github.com/rock-simulation/phobos/wiki/Operators#"
+    url_manual_ops = tuple(('bpy.ops.phobos.' + opname, opname.replace('_', '-'),)
+                           for opname in dir(bpy.ops.phobos) if not opname.startswith("__"))
+    return url_manual_prefix, url_manual_ops
+
+
 def register():
     print("Registering phobosgui...")
 
@@ -555,6 +567,9 @@ def register():
     # Read in model and pose data from the respective folders
     loadModelsAndPoses()
 
+    # Add manuals to operator buttons
+    bpy.utils.register_manual_map(get_operator_manuals)
+
 
 def unregister():
     print("Unregistering phobosgui...")
@@ -562,3 +577,6 @@ def unregister():
     # Unregister classes
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.unregister_class(classdef)
+
+    # Remove manuals from buttons
+    bpy.utils.unregister_manual_map(get_operator_manuals)

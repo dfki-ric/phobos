@@ -1473,54 +1473,14 @@ class DefineEntityOperator(Operator):
             entity['entity/type'] = self.entitytype
         return {'FINISHED'}
 
-# FIXME: this is broken and really there should be a way to automate this if the names
-# are set correctly in the wiki, which is really where the editing should take place
-def add_editing_manual_map():
-    """This allows you to right click on a button and link to the manual
-
-    :return: tuple
-
-    """
-    url_manual_prefix = "https://github.com/rock-simulation/phobos/wiki/Operators#"
-    url_manual_mapping = (
-        ("bpy.ops.object.phobos_sort_objects_to_layers", "set-objects-to-layers"),
-        ("bpy.ops.object.phobos_add_kinematic_chain", "define-kinematic-chain"),
-        ("bpy.ops.object.phobos_set_mass", "set-mass"),
-        ("bpy.ops.object.phobos_sync_masses", "sync-masses"),
-        ("bpy.ops.object.phobos_set_xray", "x-ray-view"),
-        ("bpy.ops.object.phobos_set_phobostype", "set-phobostype"),
-        ("bpy.ops.object.phobos_batch_property", "edit-custom-property"),
-        ("bpy.ops.object.phobos_copy_props", "copy-custom-property"),
-        ("bpy.ops.object.phobos_rename_custom_property", "rename-custom-property"),
-        ("bpy.ops.object.phobos_define_geometry", "define-geometry"),
-        ("bpy.ops.object.phobos_edit_inertia", "edit-inertia"),
-        ("bpy.ops.object.phobos_smoothen_surface", "smoothen-surface"),
-        ("bpy.ops.object.phobos_set_origin_to_com", "set-origin-to-com"),
-        ("bpy.ops.object.create_inertial_objects", "create-inertial-objects"),
-        ("bpy.ops.object.phobos_add_gravity", ""),
-        ("bpy.ops.object.phobos_edityamldictionary", "edit-object-dictionary"),
-        ("bpy.ops.object.create_collision_objects", "create-collision-objects"),
-        ("bpy.ops.object.phobos_set_collision_group", "set-collision-group"),
-        ("bpy.ops.object.define_joint_constraints", "define-joint-constraints"),
-        ("bpy.ops.object.attach_motor", "attach-motor"),
-        ("bpy.ops.object.phobos_create_link", "create-links"),
-        ("bpy.ops.object.phobos_add_sensor", "addedit-sensor"),
-        ("bpy.ops.object.phobos_create_mimic_joint", "mimic-joint"),
-        ("bpy.ops.object.phobos_refine_lod", "refine-lod"),
-        ("phobos.add_heightmap", "add-heightmap"),
-    )
-    return url_manual_prefix, url_manual_mapping
-
 
 def register():
     print("Registering operators.editing...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.register_class(classdef)
-    bpy.utils.register_manual_map(add_editing_manual_map)
 
 
 def unregister():
     print("Unregistering operators.editing...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.unregister_class(classdef)
-    bpy.utils.unregister_manual_map(add_editing_manual_map)
