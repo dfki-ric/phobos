@@ -1120,8 +1120,8 @@ class AddSensorOperator(Operator):
                   'props': {}
                   }
         parent = context.active_object
-        for key in defs.definitions['sensora'][self.sensor_type]:
-            if type(defs.definitions['sensora'][self.sensor_type][key]) == type(True):
+        for key in defs.definitions['sensors'][self.sensor_type]:
+            if type(defs.definitions['sensors'][self.sensor_type][key]) == type(True):
                 value = getattr(self, key)
                 sensor['props'][key] = '$true' if value else '$false'
             else:
