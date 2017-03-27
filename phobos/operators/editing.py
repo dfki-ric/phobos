@@ -633,10 +633,10 @@ class EditYAMLDictionary(Operator):
                     "# ------- Hit 'Run Script' to save your changes --------",
                     "import yaml", "import bpy",
                     "tmpdata = yaml.load(" + variablename + ")",
-                    "for key in dict(context.active_object.items()):",
-                    "   del context.active_object[key]",
+                    "for key in dict(bpy.context.active_object.items()):",
+                    "   del bpy.context.active_object[key]",
                     "for key, value in tmpdata.items():",
-                    "    context.active_object[key] = value",
+                    "    bpy.context.active_object[key] = value",
                     "bpy.ops.text.unlink()"
                     ]
         bUtils.createNewTextfile(textfilename, '\n'.join(contents))
