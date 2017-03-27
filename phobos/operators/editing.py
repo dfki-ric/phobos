@@ -650,7 +650,7 @@ class EditYAMLDictionary(Operator):
 
 
 class CreateCollisionObjects(Operator):
-    """Create collision objects for all selected links"""
+    """Create collision objects for all selected visual objects"""
     bl_idname = "phobos.create_collision_objects"
     bl_label = "Create Collision Object(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -980,7 +980,7 @@ class CreateLinksOperator(Operator):
     bl_label = "Create Link(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    type = EnumProperty(
+    linktype = EnumProperty(
         items=(('3D cursor',) * 3,
                ('selected objects',) * 3),
         default='selected objects',
@@ -1025,14 +1025,16 @@ class CreateLinksOperator(Operator):
     )
 
     def execute(self, context):
-        if self.type == '3D cursor':
-            links.createLink(self.size)
+        if self.linktype == '3D cursor':
+            links.createLink({'name': self.name})
         else:
             for obj in context.selected_objects:
                 tmpnamepartindices = [int(p) for p in self.namepartindices.split()]
-                links.deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting, parentobjects=self.parentobject,
-                                     namepartindices=tmpnamepartindices, separator=self.separator,
-                                     prefix=self.prefix)
+                links.deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting,
+                                           parentobjects=self.parentobject,
+                                           namepartindices=tmpnamepartindices,
+                                           separator=self.separator,
+                                           prefix=self.prefix)
         return {'FINISHED'}
 
 
