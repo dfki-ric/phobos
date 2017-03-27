@@ -265,7 +265,7 @@ class SetXRayOperator(Operator):
         layout.prop(self, "objects")
         layout.prop(self, "show", text="enable X-Ray view" if self.show else "disable X-Ray view")
         if self.objects == 'by name':
-            layout.prop(self, "Name Part")
+            layout.prop(self, "namepart")
 
     def execute(self, context):
         if self.objects == 'all':
