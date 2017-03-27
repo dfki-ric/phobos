@@ -43,14 +43,18 @@ from phobos.phoboslog import log
 
 
 def getGeometricElements(link):
-    visuals = []
-    collisions = []
+    visuals = False
+    collisions = False
     if 'visual' in link:
         visuals = [link['visual'][v] for v in link['visual']]
     if 'collision' in link:
         collisions = [link['collision'][v] for v in link['collision']]
-    return visuals + collisions
 
+    # avoid uninitialized variables from manually created links
+    if (visuals or collisions):
+        return visuals + collisions
+    else:
+        return None
 
 def createLink(link):
     """Creates the blender representation of a given link and its parent joint.
@@ -65,6 +69,9 @@ def createLink(link):
     bpy.ops.object.select_all(action='DESELECT')
     bpy.ops.object.armature_add(layers=bUtils.defLayers([defs.layerTypes['link']]))
     newlink = bpy.context.active_object
+    # Move bone when adding at selected objects location
+    if 'matrix' in link:
+        newlink.matrix_world = link['matrix']
     newlink.phobostype = 'link'
     newlink.name = link['name']
     # FIXME: This is a hack and should be checked before creation!
@@ -73,6 +80,10 @@ def createLink(link):
     # set the size of the link
     elements = getGeometricElements(link)
     scale = max((geometrymodel.getLargestDimension(element['geometry']) for element in elements)) if elements else 0.2
+
+    # use scaling factor provided by user
+    if 'scale' in link:
+        scale *= link['scale']
     newlink.scale = (scale, scale, scale)
     bpy.ops.object.transform_apply(scale=True)
 
@@ -120,7 +131,8 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
     :type prefix: str
 
     """
-    print('Deriving link from', nUtils.getObjectName(obj))
+    log('Deriving link from' + nUtils.getObjectName(obj), level="INFO",
+        origin="deriveLinkFromObject")
     nameparts = nUtils.getObjectName(obj).split('_')
     rotation = obj.matrix_world.to_euler()
     if 'invertAxis' in obj and obj['invertAxis'] == 1:
@@ -135,7 +147,8 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
         tmpname = prefix + separator + tmpname
     if tmpname == nUtils.getObjectName(obj):
         obj.name += '*'
-    link = createLink(scale, obj.matrix_world.to_translation(), obj.matrix_world.to_euler(), tmpname)
+    link = createLink({'scale': scale, 'name': tmpname, 'matrix':
+                    obj.matrix_world})
     if parenting and obj.parent:
         if obj.parent:
             sUtils.selectObjects([link, obj.parent], True, 1)

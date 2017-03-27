@@ -92,6 +92,9 @@ class SelectRootOperator(Operator):
             log("Couldn't find any root object.", "ERROR")
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        return len(bpy.context.selected_objects) > 0
 
 class SelectModelOperator(Operator):
     """Select all objects of model(s) containing the currently selected object(s)"""

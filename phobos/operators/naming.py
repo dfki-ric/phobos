@@ -52,7 +52,6 @@ class ToggleNamespaces(Operator):
     )
 
     def execute(self, context):
-        self.report({'ERROR'}, "My message")
         objlist = context.selected_objects
         if self.complete:
             roots = list(set([sUtils.getRoot(obj) for obj in context.selected_objects]))
