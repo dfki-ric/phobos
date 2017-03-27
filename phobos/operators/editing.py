@@ -1026,7 +1026,7 @@ class CreateLinksOperator(Operator):
 
     def execute(self, context):
         if self.linktype == '3D cursor':
-            links.createLink({'name': self.name})
+            links.createLink({'name': self.name, 'scale': self.size})
         else:
             for obj in context.selected_objects:
                 tmpnamepartindices = [int(p) for p in self.namepartindices.split()]
