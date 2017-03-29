@@ -78,18 +78,21 @@ class SelectRootOperator(Operator):
     """Select root object(s) of currently selected object(s)"""
     bl_idname = "phobos.select_root"
     bl_label = "Select Roots"
-    bl_options = {'REGISTER', 'UNDO', 'PRESET'}
+    bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
         roots = set()
+
+        # add root object of each selected object
         for obj in bpy.context.selected_objects:
             roots.add(sUtils.getRoot(obj))
+
+        # select all found root objects
         if len(roots) > 0:
             sUtils.selectObjects(list(roots), True)
             bpy.context.scene.objects.active = list(roots)[0]
         else:
-            # bpy.ops.error.message('INVOKE_DEFAULT', type="ERROR", message="Couldn't find any root object.")
-            log("Couldn't find any root object.", "ERROR")
+            log("Couldn't find any root object.", "ERROR", self)
         return {'FINISHED'}
 
     @classmethod
@@ -110,13 +113,15 @@ class SelectModelOperator(Operator):
     def execute(self, context):
         selection = []
         if self.modelname:
-            print("phobos: Selecting model", self.modelname)
+            log("phobos: Selecting model" + self.modelname, "INFO",
+                "selectModelOperator")
             roots = sUtils.getRoots()
             for root in roots:
                 if root["modelname"] == self.modelname:
                     selection = sUtils.getChildren(root)
         else:
-            print("phobos: No model name provided, deriving from selection...")
+            log("No model name provided, deriving from selection...",
+                "INFO", self)
             roots = set()
             for obj in bpy.context.selected_objects:
                 print("Selecting", sUtils.getRoot(obj).name)
