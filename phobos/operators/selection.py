@@ -6,7 +6,7 @@
     :platform: Unix, Windows, Mac
     :synopsis: This module contains operators for selecting and finding objects.
 
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert
+.. moduleauthor:: Kai von Szadowski, Ole Schwiegert, Simon Reichel
 
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
