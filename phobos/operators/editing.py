@@ -1158,6 +1158,67 @@ class CreateMimicJointOperator(Operator):
         return (ob is not None and ob.phobostype == 'link'
                 and len(objs) > 1)
 
+# TODO add this operator to GUI
+class AddHeightmapOperator(Operator):
+    """Add a heightmap object to the 3D-Cursors location"""
+    bl_idname = "phobos.add_heightmap"
+    bl_label = "Create Heightmap"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    name = StringProperty(
+        name="Name",
+        description="The new heightmap's name",
+        default="heightmap")
+
+    cutNo = IntProperty(
+        name="Number of Cuts",
+        description="Number of cuts for subdivide",
+        default=100)
+
+    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+
+    # TODO test operator, fix documentation and clean up code
+    def execute(self, context):
+        if os.path.basename(self.filepath) not in bpy.data.images:
+            try:
+                img = bpy.data.images.load(self.filepath)
+            except RuntimeError:
+                log("Cannot load image from file! Aborting.", "ERROR")
+                return {"FINISHED"}
+        else:
+            log("Image already imported. Using cached version.", "INFO")
+            img = bpy.data.images[os.path.basename(self.filepath)]
+        # Create Texture
+        h_tex = bpy.data.textures.new(self.name, type='IMAGE')
+        h_tex.image = img
+        # Add plane, subdivide and create displacement
+        prev_mode = context.mode
+        bpy.ops.mesh.primitive_plane_add(view_align=False, enter_editmode=False)
+        plane = context.active_object
+        plane['phobostype'] = 'visual'
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.subdivide(number_cuts=self.cutNo)
+        bpy.ops.object.mode_set(mode=prev_mode)
+        plane.modifiers.new('displace_heightmap', 'DISPLACE')
+        plane.modifiers['displace_heightmap'].texture = h_tex
+        plane.name = self.name+'_visual::heightmap'
+        # Add root link for heightmap
+        root = links.createLink(1.0, name=self.name + "::heightmap")
+        root['entity/type'] = 'heightmap'
+        root['entity/name'] = self.name
+        root['image'] = os.path.relpath(os.path.basename(self.filepath), bpy.data.filepath)
+        root['joint/type'] = 'fixed'
+        # Create Parenting
+        sUtils.selectObjects([root, plane], clear=True, active=0)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        # create the open file dialog
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
 
 def register():
     print("Registering operators.editing...")
