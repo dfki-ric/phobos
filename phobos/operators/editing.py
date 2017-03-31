@@ -1158,6 +1158,85 @@ class CreateMimicJointOperator(Operator):
         return (ob is not None and ob.phobostype == 'link'
                 and len(objs) > 1)
 
+# TODO improve documentation
+class RefineLevelOfDetailOperator(Operator):
+    """Edit Level of Detail settings with minimum distances"""
+    bl_idname = "phobos.edit_lod"
+    bl_label = "Edit LoD"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    maxdistances = FloatVectorProperty(name="Maximum Distances",
+        description="Maximum distances", size=5)
+
+    mindistances = FloatVectorProperty(name="Minimum Distances",
+        description="Minimum distances", size=5)
+
+    # TODO test this and clean up code
+    def draw(self, context):
+        layout = self.layout
+        inlayout = layout.split()
+        c1 = inlayout.column(align=True)
+        c2 = inlayout.column(align=True)
+        c3 = inlayout.column(align=True)
+
+        lodlist = [lod.object.data.name for lod in context.active_object.lod_levels]
+        while len(lodlist) < len(self.maxdistances):
+            lodlist.append('not assigned')
+
+        c1.label("Level of Detail Objects:")
+        for lodname in lodlist:
+            c1.label(text=lodname)
+        c2.prop(self, 'mindistances')
+        c3.prop(self, 'maxdistances')
+
+    def invoke(self, context, event):
+        #nlod = len(context.active_object.lod_levels)
+        #self.startdistances = FloatVectorProperty(name="startDistances", description="minimum distances", size=nlod)
+        #self.enddistances = FloatVectorProperty(name="endDistances", description="maximum distances", size=nlod)
+        lodlist = [0.0]*5
+        for lod in range(min(5, len(context.active_object.lod_levels))):
+            lodlist[lod] = context.active_object.lod_levels[lod].distance
+        self.mindistances = tuple(lodlist)
+        lodlist = [0.0]*5
+        for lod in range(min(4, len(context.active_object.lod_levels)-1)):
+            lodlist[lod] = context.active_object.lod_levels[lod+1].distance
+        self.maxdistances = tuple(lodlist)
+
+    #    obj = context.active_object
+    #    #self.mindistances = tuple(obj[a] for a in obj.keys() if a.startswith('visual/lod'))
+    #    self.mindistances = tuple(lod.distance for lod in obj.lod_levels)
+        return self.execute(context)
+
+    def execute(self, context):
+        sourceobj = context.active_object
+        selobjects = context.selected_objects
+        n = len(sourceobj.lod_levels)
+        for obj in selobjects:
+            if obj.phobostype in ['visual', 'collision']:
+                if obj != sourceobj:
+                    sUtils.selectObjects([obj], clear=True, active=0)
+                    bpy.ops.object.lod_clear_all()
+                    for i in range(n-1):
+                        bpy.ops.object.lod_add()
+                        obj.lod_levels[i+1].distance = sourceobj.lod_levels[i+1].distance
+                        obj.lod_levels[i+1].object = sourceobj.lod_levels[i+1].object
+                for i in range(n):
+                    lodlist = []
+                    #loddict = {'start': self.startdistances[dist], 'end': self.enddistances[dist],
+                    #           'filename': sourceobj.lod_levels[dist].object.data.name}
+                    #obj['lod/' + str(dist) + '_start'] = self.startdistances[dist]
+                    obj.lod_levels[i].distance = self.mindistances[i]
+                    #obj['lod/' + str(dist) + '_end'] = sourceobj.lod_levels[dist].distance
+                    #obj['lod/' + str(dist) + '_mesh'] = sourceobj.lod_levels[dist].object.data.name
+                    #obj['lod/lod'] = loddict
+                obj['lodmaxdistances'] = list(self.maxdistances[:len(obj.lod_levels)])
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob is not None and ob.phobostype == 'visual'
+
 
 def register():
     print("Registering operators.editing...")
