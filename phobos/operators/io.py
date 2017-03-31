@@ -162,11 +162,11 @@ class ImportModelOperator(bpy.types.Operator):  # formerly "RobotModelImporter"
         try:
             log("Importing " + self.filepath + ' as ' + self.entitytype, "INFO", 'ImportModelOperator')
             model = entities.entity_types[self.entitytype]['import'](self.filepath)
+            #bUtils.cleanScene()
+            models.buildModelFromDictionary(model)
         except KeyError:
             log("No import function available for selected model type: " + self.entitytype,
                 "ERROR", "ImportModelOperator")
-        #bUtils.cleanScene()
-        models.buildModelFromDictionary(model)
         return {'FINISHED'}
 
     def invoke(self, context, event):
