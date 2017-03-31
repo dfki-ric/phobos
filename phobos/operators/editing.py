@@ -624,6 +624,8 @@ class EditYAMLDictionary(Operator):
         variablename = ob.name.translate({ord(c): "_" for c in "!@#$%^&*()[]{};:,./<>?\|`~-=+"}) \
                        + "_data"
         tmpdict = dict(ob.items())
+
+        # write object properties to short python script
         for key in tmpdict:
             if hasattr(tmpdict[key], 'to_list'):  # transform Blender id_arrays into lists
                 tmpdict[key] = list(tmpdict[key])
@@ -639,6 +641,8 @@ class EditYAMLDictionary(Operator):
                     "    bpy.context.active_object[key] = value",
                     "bpy.ops.text.unlink()"
                     ]
+
+        # show python script to user
         bUtils.createNewTextfile(textfilename, '\n'.join(contents))
         bUtils.openScriptInEditor(textfilename)
         return {'FINISHED'}
@@ -664,52 +668,70 @@ class CreateCollisionObjects(Operator):
     def execute(self, context):
         visuals = []
         collisions = []
+
+        # find all selected visual objects
         for obj in context.selected_objects:
             if obj.phobostype == "visual":
                 visuals.append(obj)
             obj.select = False
 
         if not visuals:
-            # bpy.ops.error.message('INVOKE_DEFAULT', type="CreateCollisions Error", message="Not enough bodies selected.")
-            log("Not enough bodies selected.", "ERROR")
+            log("No visual objects selected.", "ERROR", self)
             return {'CANCELLED'}
+
+        # create collision objects for each visual
         for vis in visuals:
+            # build object names
             nameparts = vis.name.split('_')
             if nameparts[0] == 'visual':
                 nameparts[0] = 'collision'
             collname = '_'.join(nameparts)
             materialname = vis.data.materials[0].name if len(vis.data.materials) > 0 else "None"
+
+            # get bounding box
             bBox = vis.bound_box
             center = gUtils.calcBoundingBoxCenter(bBox)
             rotation = mathutils.Matrix.Identity(4)
             size = list(vis.dimensions)
+
+            # calculate size for cylinder, capsule or sphere
             if self.property_colltype in ['cylinder', 'capsule']:
                 axes = ('X', 'Y', 'Z')
                 long_side = axes[size.index(max(size))]
-                # xyequal = (size[0] - size[1])
                 length = max(size)
                 radii = [s for s in size if s != length]
                 radius = max(radii) / 2 if radii != [] else length / 2
                 size = (radius, length)
+
+                # rotate cylinder/capsule to match longest side
                 if long_side == 'X':
                     rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'Y')
                 elif long_side == 'Y':
                     rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'X')
                     # FIXME: apply rotation for moved cylinder object?
+
             elif self.property_colltype == 'sphere':
                 size = max(size) / 2
+
+            # calculate rotation and center coordinates
             rotation_euler = (vis.matrix_world * rotation).to_euler()
             center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion() * center
+
+            # create Mesh
             if self.property_colltype != 'capsule' and self.property_colltype != 'mesh':
                 ob = bUtils.createPrimitive(collname, self.property_colltype, size,
                                              defs.layerTypes['collision'], materialname, center,
                                              rotation_euler)
             elif self.property_colltype == 'capsule':
-                length = max(length - 2 * radius, 0.001)  # prevent length from turning negative
+                # TODO reimplement capsules
+                # prevent length from turning negative
+                length = max(length - 2 * radius, 0.001)
                 size = (radius, length)
                 zshift = length / 2
                 tmpsph1_location = center + rotation_euler.to_matrix().to_4x4() * mathutils.Vector((0,0,zshift))
                 tmpsph2_location = center - rotation_euler.to_matrix().to_4x4() * mathutils.Vector((0,0,zshift))
+
+                # create cylinder and spheres and join them
                 ob = bUtils.createPrimitive(collname, 'cylinder', size,
                                              defs.layerTypes['collision'], materialname, center,
                                              rotation_euler)
@@ -723,6 +745,8 @@ class CreateCollisionObjects(Operator):
                                                rotation_euler)
                 sUtils.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
+
+                # assign capsule properties
                 ob['geometry/length'] = length
                 ob['geometry/radius'] = radius
                 ob['sph1_location'] = tmpsph1_location
@@ -732,23 +756,34 @@ class CreateCollisionObjects(Operator):
                 bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
                                               TRANSFORM_OT_translate={"value": (0, 0, 0)})
                 # TODO: copy mesh!!
+
+            # set properties of new collision object
             ob.phobostype = 'collision'
             ob['geometry/type'] = self.property_colltype
             collisions.append(ob)
+
+            # make collision object relative if visual object has a parent
             if vis.parent:
                 ob.select = True
                 bpy.ops.object.transform_apply(scale=True)
                 vis.parent.select = True
                 context.scene.objects.active = vis.parent
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
+                # TODO delete these lines?
                 # ob.parent_type = vis.parent_type
                 # ob.parent_bone = vis.parent_bone
+
+            # select created collision objects
             sUtils.selectObjects(collisions)
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) > 0
+
 
 class SetCollisionGroupOperator(Operator):
-    """Set the collision groups of the selected object(s)"""
+    """Set the collision groups of the selected collision object(s)"""
     bl_idname = "phobos.set_collision_group"
     bl_label = "Set Collision Group(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -763,22 +798,22 @@ class SetCollisionGroupOperator(Operator):
     def invoke(self, context, event):
         try:
             self.groups = context.active_object.rigid_body.collision_groups
+        # create rigid body settings if not existent in active object
         except AttributeError:
-            pass  # TODO: catch properly
+            bpy.ops.rigidbody.object_add(type='ACTIVE')
+            obj.rigid_body.kinematic = True
+            obj.rigid_body.collision_groups = self.groups
         return self.execute(context)
 
     def execute(self, context):
-        """This function executes this blender operator and sets the collision groups for the selected object(s).
-
-        :param context: The blender context this operator should work with.
-        :return: set -- the blender specific return set.
-
-        """
         objs = filter(lambda e: "phobostype" in e and e.phobostype == "collision", context.selected_objects)
         active_object = context.active_object
+
+        # try assigning the collision groups to each selected collision object
         for obj in objs:
             try:
                 obj.rigid_body.collision_groups = self.groups
+            # initialize rigid body settings if necessary
             except AttributeError:
                 context.scene.objects.active = obj
                 bpy.ops.rigidbody.object_add(type='ACTIVE')
@@ -787,6 +822,10 @@ class SetCollisionGroupOperator(Operator):
         context.scene.objects.active = active_object
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob is not None and ob.phobostype == 'collision' and ob.mode == 'OBJECT'
 
 class DefineJointConstraintsOperator(Operator):
     """Add bone constraints to the joint (link)"""
@@ -845,6 +884,8 @@ class DefineJointConstraintsOperator(Operator):
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "joint_type", text="joint_type")
+
+        # enable/disable optional parameters
         if not self.joint_type == 'fixed':
             layout.prop(self, "passive", text="makes the joint passive (no actuation)")
             layout.prop(self, "useRadian", text="use radian")
@@ -897,6 +938,11 @@ class DefineJointConstraintsOperator(Operator):
                 log("Please add motor to active joint in " + joint.name, "INFO", "DefineJointConstraintsOperator")
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        # due to invoke the active object needs to be a link
+        return ob is not None and ob.phobostype == 'link' and ob.mode == 'OBJECT'
 
 class AddMotorOperator(Operator):
     """Attach motor values to selected joints"""
