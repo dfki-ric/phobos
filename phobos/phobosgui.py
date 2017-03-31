@@ -274,8 +274,6 @@ class PhobosModelPanel(bpy.types.Panel):
         kc2.operator('phobos.define_geometry')
         kc2.operator('phobos.set_collision_group')
         kc2.operator('phobos.smoothen_surface')
-        kc2.operator('phobos.edit_lod')
-        #kc1.operator('phobos.set_origin_to_com', text="Set Origin to COM")
 
         # Masses, Inertia & Hardware
         layout.separator()
@@ -283,8 +281,6 @@ class PhobosModelPanel(bpy.types.Panel):
         hw1 = minlayout.column(align=True)
         hw1.label(text="Hardware", icon='MOD_SCREW')
         hw1.operator('phobos.add_motor')
-        hw1.operator('phobos.add_sensor')
-        hw1.operator("phobos.add_controller")
         mc1 = minlayout.column(align=True)
         mc1.label(text="Masses & Inertia", icon='PHYSICS')
         mc1.operator('phobos.calculate_mass')
