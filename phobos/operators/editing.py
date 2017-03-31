@@ -1342,7 +1342,10 @@ class CreateMimicJointOperator(Operator):
 
     def execute(self, context):
         masterjoint = context.active_object
-        for obj in context.selected_objects:
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
+
+        # apply mimicking for all selected joints
+        for obj in objs:
             if obj.name != masterjoint.name:
                 if self.mimicjoint:
                     obj["joint/mimic_joint"] = nUtils.getObjectName(masterjoint, 'joint')
@@ -1357,8 +1360,9 @@ class CreateMimicJointOperator(Operator):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
         return (ob is not None and ob.phobostype == 'link'
-                and len(context.selected_objects) > 1)
+                and len(objs) > 1)
 
 
 class RefineLevelOfDetailOperator(Operator):
