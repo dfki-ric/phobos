@@ -242,7 +242,7 @@ def inertial(inertialobj, inertialdata, indentation, relative):
     # OPT: tagger.write(frame(inertialdata['frame'], tagger.getindent()))
     if 'pose' in inertialdata:
         tagger.write(pose(inertialobj, inertialdata['pose'], tagger.get_indent(),
-                      relative))
+                      True))
     else:
         log("Object '{0}' has no inertial pose!".format(inertialobj.name),
             "WARNING", "exportsdf")
@@ -250,7 +250,7 @@ def inertial(inertialobj, inertialdata, indentation, relative):
     return "".join(tagger.get_output())
 
 
-def collision(collisionobj, collisiondata, indentation, relative, modelname):
+def collision(collisionobj, collisiondata, indentation, modelname):
     """ Simple wrapper for link collision data.
     The collisionobject is required to add the pose within the frame dependent on
     the relative pose parameter.
@@ -271,7 +271,7 @@ def collision(collisionobj, collisiondata, indentation, relative, modelname):
     # OPT: tagger.attrib('frame', ...)
     # TODO: Optional!
     tagger.write(pose(collisionobj, collisiondata['pose'], tagger.get_indent(),
-                     relative))
+                     True))
     tagger.write(geometry(collisiondata['geometry'], tagger.get_indent(),
                           modelname))
     # # SURFACE PARAMETERS
@@ -456,12 +456,8 @@ def visual(visualobj, linkobj, visualdata, indentation, modelname):
     # OPT: tagger.write(frame(..., tagger.get_indent()))
 
     # Pose data of the visual is transformed by link
-    # TODO fix matrix calculation
-    print(visualobj)
+    # TODO check matrix calculation
     matrix = visualobj.matrix_local
-    print(list(matrix.to_translation()))
-    # matrix = matrix * linkobj.matrix_local
-    # print(list(matrix.to_translation()))
     posedata = {'rawmatrix': matrix,
         'matrix': [list(vector) for vector in list(matrix)],
         'translation': list(matrix.to_translation()),
@@ -566,9 +562,9 @@ def exportSdf(model, filepath, relativeSDF=False):
         # link
         for linkkey in model['links'].keys():
             link = model['links'][linkkey]
-            linkobj = bpy.context.scene.objects[link['name']]
             # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision',
             # 'approxcollision', 'collision_bitmask'
+            linkobj = bpy.context.scene.objects[link['name']]
             xml.descend('link', {'name': link['name']})
             # OPT: xml.attrib('gravity', ...)
             # OPT: xml.attrib('enable_wind', ...)
@@ -582,14 +578,37 @@ def exportSdf(model, filepath, relativeSDF=False):
             # OPT: xml.write(frame(model['frame']), xml.get_indent())
             # TODO: Optional!
             xml.write(pose(linkobj, link['pose'], xml.get_indent(), relativeSDF))
-            # TODO: Optional!
-            xml.write(inertial(linkobj, link['inertial'], xml.get_indent(),
-                            relativeSDF))
+            # inertial data might be missing
+            if len(link['inertial']) > 0:
+                inertialname = link['inertial']['name']
+                inertialobj = bpy.context.scene.objects[inertialname]
+                xml.write(inertial(inertialobj, link['inertial'], xml.get_indent(),
+                            True))
+
+            # collision data might be missing
             if len(link['collision'].keys()) > 0:
                 for colkey in link['collision'].keys():
-                    xml.write(collision(linkobj, link['collision'][colkey],
-                                        xml.get_indent(), relativeSDF, modelname))
-            if len(link['visual'].keys()) != 0:
+                    colliname = link['collision'][colkey]['name']
+                    collisionobj = bpy.context.scene.objects[colliname]
+                    xml.write(collision(collisionobj, link['collision'][colkey],
+                                        xml.get_indent(), modelname))
+            # TODO remove when debugging done (shows collision as visuals
+            # if len(link['collision'].keys()) > 0:
+            #     for colkey in link['collision'].keys():
+            #         colliname = link['collision'][colkey]['name']
+            #         colligeom = link['collision'][colkey]['geometry']
+            #         collisionobj = bpy.context.scene.objects[colliname]
+            #         collisiondata = link['collision'][colkey]
+            #         xml.descend('visual', params={'name':
+            #                                       'col_{0}'.format(colliname)})
+            #         xml.write(pose(collisionobj, collisiondata['pose'], xml.get_indent(),
+            #                         True))
+            #         xml.write(geometry(collisiondata['geometry'], xml.get_indent(),
+            #                             modelname))
+            #         xml.ascend()
+
+            # there might be no visual objects
+            if len(link['visual'].keys()) > 0:
                 for visualkey in link['visual'].keys():
                     visualobj = bpy.context.scene.objects[visualkey]
                     xml.write(visual(visualobj, linkobj,
