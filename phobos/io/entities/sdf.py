@@ -457,8 +457,11 @@ def visual(visualobj, linkobj, visualdata, indentation, modelname):
 
     # Pose data of the visual is transformed by link
     # TODO fix matrix calculation
-    matrix = visualobj.matrix_basis
+    print(visualobj)
+    matrix = visualobj.matrix_local
+    print(list(matrix.to_translation()))
     # matrix = matrix * linkobj.matrix_local
+    # print(list(matrix.to_translation()))
     posedata = {'rawmatrix': matrix,
         'matrix': [list(vector) for vector in list(matrix)],
         'translation': list(matrix.to_translation()),
@@ -593,15 +596,16 @@ def exportSdf(model, filepath, relativeSDF=False):
                                      link['visual'][visualkey],
                                      xml.get_indent(), modelname))
             # TODO remove when debugging done
-            xml.descend('visual', params={'name':
-                                          '{}_center'.format(link['name'])})
-            xml.attrib('pose', '0 0 0 0 0 0')
-            xml.descend('geometry')
-            xml.descend('sphere')
-            xml.attrib('radius', '0.05')
-            xml.ascend()
-            xml.ascend()
-            xml.ascend()
+            # xml.descend('visual', params={'name':
+            #                               '{}_center'.format(link['name'])})
+            # xml.attrib('pose', '0 0 0 0 0 0')
+            # xml.descend('geometry')
+            # xml.descend('sphere')
+            # xml.attrib('radius', '0.05')
+            # xml.ascend()
+            # xml.ascend()
+            # xml.ascend()
+
             # OPT: xml.write(sensor(link['sensor'], xml.get_indent()))
             # OPT: xml.descend('projector', {'name': ...})
             # REQ: xml.attrib('texture', ...)
