@@ -1154,7 +1154,8 @@ class CreateMimicJointOperator(Operator):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
+        objs = list(filter(lambda e: "phobostype" in e and e.phobostype ==
+                           "link", context.selected_objects))
         return (ob is not None and ob.phobostype == 'link'
                 and len(objs) > 1)
 
