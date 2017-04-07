@@ -1034,20 +1034,20 @@ class CreateLinksOperator(Operator):
 
     size = FloatProperty(
         name="Visual Link Size",
-        default=0.2,
+        default=1.0,
         description="Size of the created link"
     )
 
     parenting = BoolProperty(
-        name='Parenting',
+        name='Parenting hierarchy',
         default=False,
-        description='Parent associated objects to created links?'
+        description='Use parenting hierarchy for links?'
     )
 
     parentobject = BoolProperty(
-        name='Parent Object(s)',
+        name='Include selected Object(s)',
         default=False,
-        description='Parent objects to newly created links?'
+        description='Add selected objects to link hierarchy?'
     )
 
     namepartindices = StringProperty(
@@ -1081,6 +1081,19 @@ class CreateLinksOperator(Operator):
                                            prefix=self.prefix)
         return {'FINISHED'}
 
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "linktype")
+        layout.prop(self, "size")
+        layout.prop(self, "parenting")
+
+        # show parentobject only when using parenting hierarchy
+        if self.parenting == True:
+            layout.prop(self, "parentobject")
+
+        layout.prop(self, "namepartindices")
+        layout.prop(self, "separator")
+        layout.prop(self, "prefix")
 
 def getControllerParameters(name):
     """
