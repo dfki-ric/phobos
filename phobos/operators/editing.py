@@ -346,7 +346,7 @@ class SetPhobosType(Operator):
     @classmethod
     def poll(cls, context):
         return len(context.selected_objects) > 0 and (
-                context.active_object.mode == 'OBJECT')
+                context.selected_objects[0].mode == 'OBJECT')
 
     def invoke(self, context, event):
         # take phobostype from active object
