@@ -7,7 +7,7 @@
     :synopsis: TODO: This module offers a simple way to log messages from phobos and uses blender integrated tools
     to display them.
 
-.. moduleauthor:: Ole Schwiegert, Kai von Szadkowski
+.. moduleauthor:: Ole Schwiegert, Kai von Szadkowski, Simon Reichel
 
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
@@ -35,11 +35,13 @@ Created on 05 Dec 2014
 import bpy
 from datetime import datetime
 
-
 # levels of detail for logging
 loglevels = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
 
 class col:
+    """
+    Provides the color ids for different terminal messages.
+    """
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
@@ -54,6 +56,14 @@ class col:
 
 
 def decorate(level):
+    """
+    Provides a simple wrapper to color the log level according to the colors
+    from class col.
+
+    :param level: the loging level as described by loglevels.
+    :type level: str.
+    :return: str - decorated string of level
+    """
     if level == "INFO":
         return col.BOLD+col.OKGREEN+level+col.ENDC
     if level == "WARNING":
@@ -68,33 +78,68 @@ def decorate(level):
 
 def log(message, level="INFO", origin=None, prefix=""):
     """Logs a given message to the blender console and logging file if present
-    and if log level is low enough.
+    and if log level is low enough. The origin can be defined as string.
+    The message is logged by the operator depending on the loglevel
+    settings.
+
     :param message: The message to log.
+    :type message: str.
     :param level: Valid log level for the message as defined by 'loglevels'.
+    :type level: str.
     :param origin: If set the message is prefixed with the origin.
+    :type origin: str. or obj.
     :param prefix: Any string that should be printed before message (e.g. "\n")
+    :type prefix: str.
+    :return: None.
     """
+    # Generate name of origin
     if origin is None:
         originname='phoboslog'
     elif type(origin) is not str:
         originname = origin.bl_idname
     else:
         originname = origin
+
+    # Display only messages up to preferred log level
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
     if loglevels.index(level) <= loglevels.index(prefs.loglevel):
         date = datetime.now().strftime("%Y%m%d_%H:%M")
         msg = "[" + date + "] " + level + " " + message + " (" + originname + ")"
         terminalmsg = prefix + "[" + date + "] " + decorate(level) + " " + message +\
                       col.DIM + " (" + originname + ")" + col.ENDC
+
+        # log to file if activated
         if prefs.logtofile:
             try:
                 with open(prefs.logfile, "a") as lf:
                     lf.write(date + "  " + msg + "\n")
             except IOError:
+                # TODO Infinite loop can occur when harddrive has an error!
+                # Thus, logging the IOError should be handled differently...
                 log("Cannot write to log file! Resetting it.", "ERROR", __name__+".log")
+
         # log to terminal or Blender
         if prefs.logtoterminal:
             print(terminalmsg)
+
+        # log in GUI depending on loglevel
+        import sys
+        # start from this function
+        frame = sys._getframe(1)
+        f_name = frame.f_code.co_name
+        # go back until operator (using execute)
+        while f_name != 'execute' and frame != None:
+            frame = frame.f_back
+            f_name = frame.f_code.co_name
+
+        # use operator to show message in Blender
+        if 'self' in frame.f_locals:
+            origin = frame.f_locals['self']
+
+        # show message in Blender status bar.
         if origin is not None and type(origin) is not str:
+            # format report message to remove loging level and originname
+            msg = msg.split(level)[1][1:]
+            msg = msg.split(originname)[0][:-2]
             origin.report({level}, msg)
 

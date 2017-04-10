@@ -6,7 +6,7 @@
     :platform: Unix, Windows, Mac
     :synopsis: This module contains functions to find and select objects
 
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert
+.. moduleauthor:: Kai von Szadowski, Ole Schwiegert, Simon Reichel
 
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
@@ -32,20 +32,30 @@ from phobos.phoboslog import log
 
 
 def getObjectsByPhobostypes(phobostypes):
-    """Returns list of all objects in the current scene matching phobostype
+    """
+    Returns list of all objects in the current scene matching phobostype
+
+    :param phobostypes: the phobostypes to match objects with.
+    :type phobostypes: list.
+    :return: list - Blender objects.
     """
     return [obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes]
 
 
 def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
-    """Finds all (selected or unselected / hidden or unhidden) children of a
+    """
+    Finds all (selected or unselected / hidden or unhidden) children of a
     given root object and phobostypes. If phobostypes is not provided, it is ignored.
 
-    :param root:
-    :param phobostypes:
-    :param include_selected:
-    :param include_hidden:
-    :return:
+    :param root: object to start search from.
+    :type root: bpy.types.Object.
+    :param phobostypes: phobostypes to limit search to.
+    :type phobostypes: list of strings.
+    :param selected_only: True to find only selected children, else False.
+    :type: selected_only: bool.
+    :param include_hidden: True to include hidden objects, else False.
+    :type: include_hidden: bool.
+    :return: list - Blender objects which are children of root.
     """
     return [child for child in bpy.context.scene.objects if getRoot(child) == root
             and (child.phobostype in phobostypes if phobostypes else True)
@@ -54,8 +64,20 @@ def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
 
 
 def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidden=False):
-    """Finds all immediate children for a given object and phoboytypes.
-    If phobostypes is not provided, it is ignored.
+    """
+    Finds all immediate children for a given object and phoboytypes.
+    If phobostypes is not provided, it is ignored. Search can be limited to
+    selected objects and restricted to hidden objects.
+
+    :param obj: object to start search from.
+    :type obj: bpy.types.Object.
+    :param phobostypes: phobostypes to limit search to.
+    :type phobostypes: list of strings.
+    :param selected_only: True to find only selected children, else False.
+    :type: selected_only: bool.
+    :param include_hidden: True to include hidden objects, else False.
+    :type: include_hidden: bool.
+    :return: list - Blender objects which are immediate children of obj.
     """
     return [child for child in bpy.context.scene.objects if child.parent == obj
             and (child.phobostype in phobostypes if phobostypes else True)
@@ -65,12 +87,17 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
 
 def getEffectiveParent(obj, selected_only=True, include_hidden=False):
     """
-    Returns the selected parent of an object, i.e. the first *link* ascending the
+    Returns the parent of an object, i.e. the first *link* ascending the
     object tree that is selected, starting from the obj, optionally also excluding
     hidden objects.
-    tree which is
-    :param obj:
-    :return:
+
+    :param obj: object of which to find the parent.
+    :type obj: bpy.types.Object.
+    :param selected_only: True to find only selected parent, else False.
+    :type: selected_only: bool.
+    :param include_hidden: True to include hidden objects, else False.
+    :type: include_hidden: bool.
+    :return: bpy.types.Object - the effective parent of the obj.
     """
     parent = obj.parent
     while parent and ((parent.hide and not include_hidden)
@@ -89,7 +116,7 @@ def getRoot(obj=None):
 
     :param obj: The object to find the root for.
     :type obj: bpy.types.Object.
-    :return: The root object.
+    :return: bpy.types.Object - The root object.
     """
     if not obj:
         for anobj in bpy.context.scene.objects:
@@ -110,7 +137,7 @@ def getRoots():
     Returns a list of all of the current scene's root links, i.e. links containing a model
     name or entity name.
 
-    :return: List of all root links.
+    :return: list - all root links.
     """
     roots = [obj for obj in bpy.context.scene.objects if isModelRoot(obj)]
     if not roots:
@@ -125,12 +152,21 @@ def isModelRoot(obj):
     Returns whether or not the object passed to obj is a Phobos model root.
 
     :param obj: The object for which model root status is tested.
-    :return: True if obj is Phobos model root, else False.
+    :type obj: bpy.types.Object.
+    :return: bool - True if obj is Phobos model root, else False.
     """
+    # TODO why check for None objects?
     return None if obj is None else ('modelname' in obj and obj.phobostype == 'link')
 
 
 def isEntity(obj):
+    """
+    Returns whether or not the opject passed is an Phobos entity.
+
+    :param obj: The object for which entity status is tested.
+    :type obj: bpy.types.Object.
+    :return: bool - True if obj is an entity, else False.
+    """
     return 'entity/type' in obj and 'entity/name' in obj
 
 
@@ -139,13 +175,16 @@ def selectObjects(objects, clear=True, active=-1):
     Selects all objects provided in list, clears current selection if clear is True
     and sets one of the objects the active objects if a valid index is provided.
 
-    :param objects:
-    :param clear:
-    :param active:
-    :return:
+    :param objects: the objects to be selected.
+    :type objects: list of bpy.types.Object.
+    :param clear: True to clear current selected objects before selection, else False.
+    :type clear: bool.
+    :param active: index of the object to set active.
+    :type active: int.
+    :return: None.
     """
-
     if clear:
+        # TODO still required?
         #bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
@@ -155,10 +194,12 @@ def selectObjects(objects, clear=True, active=-1):
 
 
 def getObjectByName(name):
-    """Gets blender object by its name (blender objects name or subtypes name).
+    """
+    Gets blender object by its name (blender objects name or subtypes name).
 
-    :param name: The exact objects name to find.
-    :return: list - containing all found objects.
+    :param name: The exact object name to find.
+    :type name: str.
+    :return: list - all found objects.
 
     """
     objlist = []
@@ -183,7 +224,7 @@ def getObjectsByPattern(pattern, match_case=False):
     :type pattern: str.
     :param match_case: Indicate whether to match the object names' case to the pattern.
     :type match_case: bool.
-    :return: List containing the matching objects.
+    :return: list - all matching objects.
     """
     obj_list = []
     for obj in bpy.data.objects:
@@ -209,19 +250,26 @@ def getObjectByNameAndType(name, phobostype):
     :type name: str.
     :param phobostype: The phobostype to search for.
     :type phobostype: str.
-    :return: Matching object.
+    :return: bpy.types.Object - the matching object.
     """
     name_tag = phobostype + "/name"
     for obj in bpy.data.objects:
         if name_tag in obj and name == obj[name_tag]:
             return obj
-    log("No object of type " + phobostype + " with name " + name + " found.", "WARNING")
+    log("No object of type " + phobostype + " with name " + name + " found.",
+        "WARNING", "getObjectByNameAndType")
     return None
 
 
 def selectByName(name, match_case=False):
-    """Uses getObjectByName to select the found objects.
+    """
+    Uses getObjectsByPattern to select the found objects.
 
+    :param pattern: The pattern to search for.
+    :type pattern: str.
+    :param match_case: Indicate whether to match the object names' case to the pattern.
+    :type match_case: bool.
+    :return: None.
     """
     #selectObjects(getObjectByName(name), True)
     selectObjects(getObjectsByPattern(name, match_case), True)

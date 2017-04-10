@@ -43,11 +43,11 @@ def check_dict(dic, validator, messages):
     It writes all messages to the given messages list
 
     :param dic: The dictionary you want to validate.
-    :type dic: dict
+    :type dic: dict.
     :param validator: The validation you want to validate against.
-    :type validator: dict
+    :type validator: dict.
     :param messages: The message list you want to append the error messages to.
-    :type messages: dict
+    :type messages: dict.
 
     """
     check_dict_alg(dic, validator, [], messages, validator, "NoObject")
@@ -57,21 +57,20 @@ def check_dict_alg(dic, validator, entry_list, messages, whole_validator, curren
     """This function does the real validation work by working through the validation.
 
     :param dic: The dictionary you want to validate.
-    :type dic: dict
+    :type dic: dict.
     :param validator: The validation you want to validate against.
-    :type validator: dict
+    :type validator: dict.
     :param entry_list: This list contains all keys you have to traverse to get the correct value in the dictionary.
-    :type entry_list: list
+    :type entry_list: list.
     :param messages: The message list you want to append the error messages to.
-    :type messages: dict
+    :type messages: dict.
     :param whole_validator: This is a copy of the whole validation needed when referencing to a top level key.
-    :type whole_validator: dict
+    :type whole_validator: dict.
     :param current_elem: The current element the alg is checking.
-    :type current_elem: str
+    :type current_elem: str.
 
     """
     for node in validator:
-        print("Checking node ", node)
         new_list = dc(entry_list)
         node_value = validator[node]
         if node != 'isReference':
@@ -90,8 +89,8 @@ def is_leaf(node_value):
     """This function checks whether a validation node is a leaf or not.
 
     :param node_value: The value of the node you want to check.
-    :type node_value: dict
-    :return: bool
+    :type node_value: dict.
+    :return: bool.
 
     """
     return isinstance(node_value, dict) and 'required' in node_value
@@ -101,8 +100,8 @@ def is_operator(node):
     """This function checks whether a validation node is an operator or not.
 
     :param node: The node key you want to check.
-    :type node: str
-    :return: bool
+    :type node: str.
+    :return: bool.
 
     """
     return node.startswith('$')
@@ -113,13 +112,13 @@ def check_leaf(leaf_value, dic, entry_list, messages, current_elem):
     messages into the given list.
 
     :param leaf_value: The leaf value used for validation.
-    :type leaf_value: dict
+    :type leaf_value: dict.
     :param dic: The dictionary you want to validate.
-    :type dic: dict
+    :type dic: dict.
     :param entry_list: The keys navigating you to the dictionary value to validate against the validation leaf.
-    :type entry_list: list
+    :type entry_list: list.
     :param messages: The list you want to append the messages to.
-    :type messages: dict
+    :type messages: dict.
 
     """
     value = traverse_dict(dic, entry_list)
@@ -137,17 +136,17 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator,
     """This function handles an operator and decides how to continue the validation process.
 
     :param node: The operator to handle.
-    :type node: str
+    :type node: str.
     :param dic: The dict you want to validate.
-    :type dic: dict
+    :type dic: dict.
     :param validator: The validation you want to validate the dic with.
-    :type validator: dict
+    :type validator: dict.
     :param entry_list: The list of keys to navigate to the value in the dictionary.
-    :type entry_list: list
+    :type entry_list: list.
     :param messages: The list to append the messages to.
-    :type messages: dict
+    :type messages: dict.
     :param whole_validator: The whole validation to reach top level keys in case of a reference operator.
-     :type whole_validator: dict
+    :type whole_validator: dict.
 
     """
     if node == '$reference':
@@ -181,10 +180,10 @@ def traverse_dict(dic, entry_list):
     keys are not found.
 
     :param dic: The dictionary to traverse.
-    :type dic: dict
+    :type dic: dict.
     :param entry_list: The list of keys you want to traverse with.
-     :type entry_list: list
-    :return: dict
+    :type entry_list: list.
+    :return: dict.
 
     """
     length = len(entry_list)
@@ -201,9 +200,12 @@ def add_message(messages, key, message):
     """This function adds a message to the messages dictionary.
 
     :param messages: The dictionary containing the messages.
+    :type messages: dict.
     :param key: The messages corresponding key (node name).
+    :type key: str.
     :param message: The message to append to a specific key.
-
+    :type message: str.
+    :return: None.
     """
     if key in messages:
         messages[key].append(message)

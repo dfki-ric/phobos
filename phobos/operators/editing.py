@@ -6,7 +6,7 @@
     :platform: Unix, Windows, Mac
     :synopsis: This module contains operators to manipulate blender objects
 
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert
+.. moduleauthor:: Kai von Szadowski, Ole Schwiegert, Simon Reichel
 
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
@@ -59,14 +59,20 @@ class SortObjectsToLayersOperator(Operator):
 
     def execute(self, context):
         objs = filter(lambda e: "phobostype" in e, context.selected_objects)
+        # TODO maybe clear layers first of all objects without phobostype?
         for obj in objs:
             phobosType = obj.phobostype
+            # TODO what about controllers?
+            # sort phobostypes to layers defined in defs
             if phobosType != 'controller' and phobosType != 'undefined':
                 layers = 20 * [False]
                 layers[defs.layerTypes[phobosType]] = True
                 obj.layers = layers
+
+            # undefined type will be shown in statusbar
             if phobosType == 'undefined':
-                log("The phobostype of the object '" + obj.name + "' is undefined", "INFO")
+                log("The phobostype of the object '" + obj.name + "' is" +
+                    "undefined", "INFO", self)
         return {'FINISHED'}
 
     @classmethod
@@ -87,10 +93,13 @@ class AddKinematicChainOperator(Operator):
 
     def execute(self, context):
         endobj = context.active_object
+        # pick first nonactive object as start
         for obj in context.selected_objects:
             if obj is not context.active_object:
                 startobj = obj
                 break
+
+        # add chain properties to startobj
         if 'startChain' not in startobj:
             startobj['startChain'] = [self.chainname]
         else:
@@ -98,6 +107,8 @@ class AddKinematicChainOperator(Operator):
             if self.chainname not in namelist:
                 namelist.append(self.chainname)
             startobj['startChain'] = namelist
+
+        # add chain properties to endobj
         if 'endChain' not in endobj:
             endobj['endChain'] = [self.chainname]
         else:
@@ -106,6 +117,10 @@ class AddKinematicChainOperator(Operator):
                 namelist.append(self.chainname)
             endobj['endChain'] = namelist
         return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) == 2
 
 
 class SetMassOperator(Operator):
@@ -137,23 +152,39 @@ class SetMassOperator(Operator):
     def execute(self, context):
         objs = filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision", "inertial"), context.selected_objects)
         for obj in objs:
+            # check for old mass value
             try:
                 oldmass = obj['mass']
             except KeyError:
                 oldmass = None
+
+            # use rigid body mass
             if self.userbmass:
                 try:
                     obj['mass'] = obj.rigid_body.mass
                 except AttributeError:
                     obj['mass'] = 0.001
-                    # print("### Error: object has no rigid body properties.")
-                    log("The object '" + obj.name + "' has no rigid body properties. Set mass to 0.001", "ERROR")
+                    log("The object '" + obj.name + "' has no rigid body" +
+                        "properties. Set mass to 0.001", "ERROR", self)
+            # use provided mass
             else:
                 obj['mass'] = self.mass
-            if obj['mass'] != oldmass:
+
+            # only keep oldmass when it exists
+            if obj['mass'] != oldmass and oldmass:
                 t = datetime.now()
                 obj['masschanged'] = t.isoformat()
         return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and len(list(filter(lambda e: "phobostype" in e and
+            e.phobostype in ("visual", "collision", "inertial"), context.selected_objects))) >= 1
+
+    def invoke(self, context, event):
+        if 'mass' in context.active_object:
+            self.mass = context.active_object['mass']
+        return self.execute(context)
 
 
 class SyncMassesOperator(Operator):
@@ -180,15 +211,18 @@ class SyncMassesOperator(Operator):
         sourcelist = []
         targetlist = []
         processed = set()
+        # FIXME NoneTypeError although objects are selected
         links = [obj.name for obj in context.selected_objects if obj.phobostype == 'link']
         t = datetime.now()
         objdict = {obj.name: obj for obj in bpy.data.objects if obj.phobostype in ['visual', 'collision']
                    and obj.parent.name in links}
+
         # gather all name bases of objects for which both visual and collision are present
         for obj in objdict.keys():
             basename = obj.replace(objdict[obj].phobostype + '_', '')
             if 'visual_' + basename in objdict.keys() and 'collision_' + basename in objdict.keys():
                 processed.add(basename)
+
         # fill source and target lists for syncing
         for basename in processed:
             if self.synctype == "vtc":
@@ -208,16 +242,19 @@ class SyncMassesOperator(Operator):
                         targetlist.append('visual_' + basename)
                         sourcelist.append('collision_' + basename)
                 except KeyError:
-                    print(basename, "has insufficient data for time-based synchronisation of masses.")
+                    log(basename + " has insufficient data for time-based" +
+                        "synchronisation of masses.", "WARNING")
+
         # sync the mass values
         for i in range(len(sourcelist)):
             try:
                 objdict[targetlist[i]]['mass'] = objdict[sourcelist[i]]['mass']
             except KeyError:
-                print("No mass information in object", targetlist[i])
+                log("No mass information in object " + targetlist[i], "WARNING")
             if self.synctype != "vtc" and self.synctype != "ctv":
                 objdict[targetlist[i]]['masschanged'] = objdict[sourcelist[i]]['masschanged']
 
+        # update inertials and sum masses for links
         for linkname in links:
             masssum = 0.0
             link = bpy.data.objects[linkname]
@@ -229,6 +266,10 @@ class SyncMassesOperator(Operator):
             if self.updateinertial:
                 inertia.createInertials(link)
         return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) > 0
 
 
 class SetXRayOperator(Operator):
@@ -246,7 +287,6 @@ class SetXRayOperator(Operator):
     show = BoolProperty(
         name="Show",
         default=True,
-
         description="Set to")
 
     namepart = StringProperty(
@@ -264,10 +304,13 @@ class SetXRayOperator(Operator):
 
         layout.prop(self, "objects")
         layout.prop(self, "show", text="enable X-Ray view" if self.show else "disable X-Ray view")
+
+        # show name text field only when changing by name
         if self.objects == 'by name':
             layout.prop(self, "namepart")
 
     def execute(self, context):
+        # pick objects to change
         if self.objects == 'all':
             objlist = bpy.data.objects
         elif self.objects == 'selected':
@@ -276,6 +319,8 @@ class SetXRayOperator(Operator):
             objlist = [obj for obj in bpy.data.objects if obj.name.find(self.namepart) >= 0]
         else:
             objlist = [obj for obj in bpy.data.objects if obj.phobostype == self.objects]
+
+        # change xray setting
         for obj in objlist:
             obj.show_x_ray = self.show
         return {'FINISHED'}
@@ -300,8 +345,15 @@ class SetPhobosType(Operator):
 
     @classmethod
     def poll(cls, context):
-        ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT'
+        return len(context.selected_objects) > 0 and (
+                context.selected_objects[0].mode == 'OBJECT')
+
+    def invoke(self, context, event):
+        # take phobostype from active object
+        if 'phobostype' in context.active_object:
+            objtype = context.active_object['phobostype']
+            self.phobostype = defs.phobostypes[objtype][0]
+        return self.execute(context)
 
 
 class BatchEditPropertyOperator(Operator):
@@ -322,10 +374,12 @@ class BatchEditPropertyOperator(Operator):
 
     def execute(self, context):
         value = gUtils.parse_number(self.property_value)
+        # delete property when value is empty
         if value == '':
             for obj in context.selected_objects:
                 if self.property_name in obj.keys():
                     del(obj[self.property_name])
+        # change property
         else:
             for obj in context.selected_objects:
                 obj[self.property_name] = value
@@ -334,7 +388,7 @@ class BatchEditPropertyOperator(Operator):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT'
+        return ob is not None and len(context.selected_objects) > 0 and ob.mode == 'OBJECT'
 
 
 class CopyCustomProperties(Operator):
@@ -395,7 +449,8 @@ class RenameCustomProperty(Operator):
         if self.replace != "":
             for obj in objs:
                 if self.replace in obj and not self.overwrite:
-                    log("Property '" + self.replace + "' already present in object '" + obj.name + "'", "ERROR")
+                    log("Property '" + self.replace + "' already present in" +
+                        "object '" + obj.name + "'", "ERROR", self)
                 else:
                     obj[self.replace] = obj[self.find]
                     del obj[self.find]
@@ -425,7 +480,8 @@ class SetGeometryType(Operator):
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
                 obj['geometry/type'] = self.geomType
             else:
-                log("The object '" + obj.name + "' is no collision or visual")
+                log("The object '" + obj.name + "' is no collision or visual.",
+                   "INFO", self)
         return {'FINISHED'}
 
     @classmethod
@@ -440,13 +496,6 @@ class EditInertia(Operator):
     bl_label = "Edit Inertia"
     bl_options = {'REGISTER', 'UNDO'}
 
-    # inertiamatrix = FloatVectorProperty (
-    # name = "inertia",
-    # default = [0, 0, 0, 0, 0, 0, 0, 0, 0],
-    # subtype = 'MATRIX',
-    #        size = 9,
-    #        description = "set inertia for a link")
-
     inertiavector = FloatVectorProperty(
         name="Inertia Vector",
         default=[0, 0, 0, 0, 0, 0],
@@ -456,17 +505,15 @@ class EditInertia(Operator):
     )
 
     def invoke(self, context, event):
+        # use inertia of active object
         if 'inertia' in context.active_object:
             self.inertiavector = mathutils.Vector(context.active_object['inertia'])
         return self.execute(context)
 
     def execute(self, context):
-        # m = self.inertiamatrix
-        # inertialist = []#[m[0], m[1], m[2], m[4], m[5], m[8]]
-        # obj['inertia'] = ' '.join(inertialist)
         objs = filter(lambda e: "phobostype" in e and e.phobostype == "inertial", context.selected_objects)
         for obj in objs:
-            obj['inertia'] = self.inertiavector  # ' '.join([str(i) for i in self.inertiavector])
+            obj['inertia'] = self.inertiavector
         return {'FINISHED'}
 
     @classmethod
@@ -510,56 +557,8 @@ class SmoothenSurfaceOperator(Operator):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
-
-class SetOriginToCOMOperator(Operator):
-    """Set origin to COM"""
-    bl_idname = "phobos.set_origin_to_com"
-    bl_label = "Set Origin to COM"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    com_shift = FloatVectorProperty(
-        name="CAD Origin Shift",
-        default=(0.0, 0.0, 0.0,),
-        subtype='TRANSLATION',
-        unit='LENGTH',
-        size=3,
-        precision=6,
-        description="Offset of distance between objects")
-
-    cursor_location = FloatVectorProperty(
-        name="CAD Origin",
-        default=(0.0, 0.0, 0.0,),
-        subtype='TRANSLATION',
-        unit='LENGTH',
-        size=3,
-        precision=6,
-        description="Distance between objects")
-
-    def execute(self, context):
-        master = context.active_object
-        slaves = context.selected_objects
-        to_cadorigin = self.cursor_location - master.matrix_world.to_translation()
-        com_shift_world = to_cadorigin + self.com_shift
-        for s in slaves:
-            sUtils.selectObjects([s], True, 0)
-            context.scene.cursor_location = s.matrix_world.to_translation() + com_shift_world
-            bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-        sUtils.selectObjects(slaves, True, slaves.index(master))
-        context.scene.cursor_location = self.cursor_location.copy()
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        self.cursor_location = context.scene.cursor_location.copy()
-        return self.execute(context)
-
-    @classmethod
-    def poll(cls, context):
-        ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
-
-
 class CreateInertialOperator(Operator):
-    """Create inertial objects based on existing objects"""
+    """Create inertial objects based on existing links"""
     bl_idname = "phobos.create_inertial_objects"
     bl_label = "Create Inertial Object(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -593,23 +592,9 @@ class CreateInertialOperator(Operator):
             wm.progress_end()
         return {'FINISHED'}
 
-
-class AddGravityVector(Operator):
-    """Add a vector representing gravity in the scene"""
-    bl_idname = "phobos.add_gravity"
-    bl_label = "Add Gravity"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    property_name = FloatVectorProperty(
-        name="Gravity Vector",
-        default=(0, 0, -9.81),
-        description="Gravity vector")
-
-    def execute(self, context):
-        bpy.ops.object.empty_add(type='SINGLE_ARROW')
-        context.active_object.name = "gravity"
-        bpy.ops.transform.rotate(value=(math.pi), axis=(1.0, 0.0, 0.0))
-        return {'FINISHED'}
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) > 0
 
 
 class EditYAMLDictionary(Operator):
@@ -624,6 +609,8 @@ class EditYAMLDictionary(Operator):
         variablename = ob.name.translate({ord(c): "_" for c in "!@#$%^&*()[]{};:,./<>?\|`~-=+"}) \
                        + "_data"
         tmpdict = dict(ob.items())
+
+        # write object properties to short python script
         for key in tmpdict:
             if hasattr(tmpdict[key], 'to_list'):  # transform Blender id_arrays into lists
                 tmpdict[key] = list(tmpdict[key])
@@ -639,6 +626,8 @@ class EditYAMLDictionary(Operator):
                     "    bpy.context.active_object[key] = value",
                     "bpy.ops.text.unlink()"
                     ]
+
+        # show python script to user
         bUtils.createNewTextfile(textfilename, '\n'.join(contents))
         bUtils.openScriptInEditor(textfilename)
         return {'FINISHED'}
@@ -664,52 +653,70 @@ class CreateCollisionObjects(Operator):
     def execute(self, context):
         visuals = []
         collisions = []
+
+        # find all selected visual objects
         for obj in context.selected_objects:
             if obj.phobostype == "visual":
                 visuals.append(obj)
             obj.select = False
 
         if not visuals:
-            # bpy.ops.error.message('INVOKE_DEFAULT', type="CreateCollisions Error", message="Not enough bodies selected.")
-            log("Not enough bodies selected.", "ERROR")
+            log("No visual objects selected.", "ERROR", self)
             return {'CANCELLED'}
+
+        # create collision objects for each visual
         for vis in visuals:
+            # build object names
             nameparts = vis.name.split('_')
             if nameparts[0] == 'visual':
                 nameparts[0] = 'collision'
             collname = '_'.join(nameparts)
             materialname = vis.data.materials[0].name if len(vis.data.materials) > 0 else "None"
+
+            # get bounding box
             bBox = vis.bound_box
             center = gUtils.calcBoundingBoxCenter(bBox)
             rotation = mathutils.Matrix.Identity(4)
             size = list(vis.dimensions)
+
+            # calculate size for cylinder, capsule or sphere
             if self.property_colltype in ['cylinder', 'capsule']:
                 axes = ('X', 'Y', 'Z')
                 long_side = axes[size.index(max(size))]
-                # xyequal = (size[0] - size[1])
                 length = max(size)
                 radii = [s for s in size if s != length]
                 radius = max(radii) / 2 if radii != [] else length / 2
                 size = (radius, length)
+
+                # rotate cylinder/capsule to match longest side
                 if long_side == 'X':
                     rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'Y')
                 elif long_side == 'Y':
                     rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'X')
                     # FIXME: apply rotation for moved cylinder object?
+
             elif self.property_colltype == 'sphere':
                 size = max(size) / 2
+
+            # calculate rotation and center coordinates
             rotation_euler = (vis.matrix_world * rotation).to_euler()
             center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion() * center
+
+            # create Mesh
             if self.property_colltype != 'capsule' and self.property_colltype != 'mesh':
                 ob = bUtils.createPrimitive(collname, self.property_colltype, size,
                                              defs.layerTypes['collision'], materialname, center,
                                              rotation_euler)
             elif self.property_colltype == 'capsule':
-                length = max(length - 2 * radius, 0.001)  # prevent length from turning negative
+                # TODO reimplement capsules
+                # prevent length from turning negative
+                length = max(length - 2 * radius, 0.001)
                 size = (radius, length)
                 zshift = length / 2
                 tmpsph1_location = center + rotation_euler.to_matrix().to_4x4() * mathutils.Vector((0,0,zshift))
                 tmpsph2_location = center - rotation_euler.to_matrix().to_4x4() * mathutils.Vector((0,0,zshift))
+
+                # create cylinder and spheres and join them
                 ob = bUtils.createPrimitive(collname, 'cylinder', size,
                                              defs.layerTypes['collision'], materialname, center,
                                              rotation_euler)
@@ -723,6 +730,8 @@ class CreateCollisionObjects(Operator):
                                                rotation_euler)
                 sUtils.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
+
+                # assign capsule properties
                 ob['geometry/length'] = length
                 ob['geometry/radius'] = radius
                 ob['sph1_location'] = tmpsph1_location
@@ -732,23 +741,34 @@ class CreateCollisionObjects(Operator):
                 bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
                                               TRANSFORM_OT_translate={"value": (0, 0, 0)})
                 # TODO: copy mesh!!
+
+            # set properties of new collision object
             ob.phobostype = 'collision'
             ob['geometry/type'] = self.property_colltype
             collisions.append(ob)
+
+            # make collision object relative if visual object has a parent
             if vis.parent:
                 ob.select = True
                 bpy.ops.object.transform_apply(scale=True)
                 vis.parent.select = True
                 context.scene.objects.active = vis.parent
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
+                # TODO delete these lines?
                 # ob.parent_type = vis.parent_type
                 # ob.parent_bone = vis.parent_bone
+
+            # select created collision objects
             sUtils.selectObjects(collisions)
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) > 0
+
 
 class SetCollisionGroupOperator(Operator):
-    """Set the collision groups of the selected object(s)"""
+    """Set the collision groups of the selected collision object(s)"""
     bl_idname = "phobos.set_collision_group"
     bl_label = "Set Collision Group(s)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -763,22 +783,22 @@ class SetCollisionGroupOperator(Operator):
     def invoke(self, context, event):
         try:
             self.groups = context.active_object.rigid_body.collision_groups
+        # create rigid body settings if not existent in active object
         except AttributeError:
-            pass  # TODO: catch properly
+            bpy.ops.rigidbody.object_add(type='ACTIVE')
+            obj.rigid_body.kinematic = True
+            obj.rigid_body.collision_groups = self.groups
         return self.execute(context)
 
     def execute(self, context):
-        """This function executes this blender operator and sets the collision groups for the selected object(s).
-
-        :param context: The blender context this operator should work with.
-        :return: set -- the blender specific return set.
-
-        """
         objs = filter(lambda e: "phobostype" in e and e.phobostype == "collision", context.selected_objects)
         active_object = context.active_object
+
+        # try assigning the collision groups to each selected collision object
         for obj in objs:
             try:
                 obj.rigid_body.collision_groups = self.groups
+            # initialize rigid body settings if necessary
             except AttributeError:
                 context.scene.objects.active = obj
                 bpy.ops.rigidbody.object_add(type='ACTIVE')
@@ -787,6 +807,10 @@ class SetCollisionGroupOperator(Operator):
         context.scene.objects.active = active_object
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        return ob is not None and ob.phobostype == 'collision' and ob.mode == 'OBJECT'
 
 class DefineJointConstraintsOperator(Operator):
     """Add bone constraints to the joint (link)"""
@@ -845,6 +869,8 @@ class DefineJointConstraintsOperator(Operator):
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "joint_type", text="joint_type")
+
+        # enable/disable optional parameters
         if not self.joint_type == 'fixed':
             layout.prop(self, "passive", text="makes the joint passive (no actuation)")
             layout.prop(self, "useRadian", text="use radian")
@@ -871,6 +897,8 @@ class DefineJointConstraintsOperator(Operator):
     def execute(self, context):
         lower = 0
         upper = 0
+
+        # lower and upper limits
         if self.joint_type in ('revolute', 'prismatic'):
             if not self.useRadian:
                 lower = math.radians(self.lower)
@@ -878,10 +906,14 @@ class DefineJointConstraintsOperator(Operator):
             else:
                 lower = self.lower
                 upper = self.upper
+
+        # velocity calculation
         if not self.useRadian:
             velocity = self.maxvelocity * ((2 * math.pi) / 360)  # from °/s to rad/s
         else:
             velocity = self.maxvelocity
+
+        # set properties for each joint
         for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
             context.scene.objects.active = joint
             joints.setJointConstraints(joint, self.joint_type, lower, upper, self.spring, self.damping)
@@ -894,9 +926,15 @@ class DefineJointConstraintsOperator(Operator):
             if self.passive:
                 joint['joint/passive'] = "$true"
             else:
+                # TODO show up in text edit which joints are to change?
                 log("Please add motor to active joint in " + joint.name, "INFO", "DefineJointConstraintsOperator")
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        # due to invoke the active object needs to be a link
+        return ob is not None and ob.phobostype == 'link' and ob.mode == 'OBJECT'
 
 class AddMotorOperator(Operator):
     """Attach motor values to selected joints"""
@@ -957,6 +995,7 @@ class AddMotorOperator(Operator):
     def execute(self, context):
         objs = (obj for obj in context.selected_objects if obj.phobostype == "link")
         for joint in objs:
+            # add motor properties
             if not self.motortype == 'none':
                 # TODO: these keys have to be adapted
                 if self.motortype == 'PID':
@@ -965,14 +1004,19 @@ class AddMotorOperator(Operator):
                     joint['motor/d'] = self.D
                 joint['motor/maxSpeed'] = self.vmax
                 joint['motor/maxEffort'] = self.taumax
-                # joint['motor/type'] = 'PID' if self.motortype == 'PID' else 'DC'
                 joint['motor/type'] = self.motortype
+            # delete motor properties for none type
             else:
                 for key in joint.keys():
                     if key.startswith('motor/'):
                         del joint[key]
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        ob = context.active_object
+        # due to invoke the active object needs to be a link
+        return ob is not None and ob.phobostype == 'link' and ob.mode == 'OBJECT'
 
 class CreateLinksOperator(Operator):
     """Create link(s), optionally based on existing objects"""
@@ -990,20 +1034,20 @@ class CreateLinksOperator(Operator):
 
     size = FloatProperty(
         name="Visual Link Size",
-        default=0.2,
+        default=1.0,
         description="Size of the created link"
     )
 
     parenting = BoolProperty(
-        name='Parenting',
+        name='Parenting hierarchy',
         default=False,
-        description='Parent associated objects to created links?'
+        description='Use parenting hierarchy for links?'
     )
 
     parentobject = BoolProperty(
-        name='Parent Object(s)',
+        name='Include selected Object(s)',
         default=False,
-        description='Parent objects to newly created links?'
+        description='Add selected objects to link hierarchy?'
     )
 
     namepartindices = StringProperty(
@@ -1037,125 +1081,28 @@ class CreateLinksOperator(Operator):
                                            prefix=self.prefix)
         return {'FINISHED'}
 
-
-class AddSensorOperator(Operator):
-    """Add/edit a sensor"""
-    bl_idname = "phobos.add_sensor"
-    bl_label = "Add/Edit Sensor"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    sensor_type = EnumProperty(
-        name="Sensor Type",
-        default='undefined',
-        items=tuple([(t,) * 3 for t in defs.definitions['sensors']]),
-        description="Type of the sensor to be created"
-    )
-
-    custom_type = StringProperty(
-        name="Custom Type",
-        default='',
-        description="Type of the custom sensor to be created"
-    )
-
-    sensor_name = StringProperty(
-        name="Sensor Name",
-        default='new_sensor',
-        description="Name of the sensor"
-    )
-
-    add_link = BoolProperty(name="add_link", default=True, description="add additional link as sensor mounting")
-
-    # the following is a set of all properties that exist within MARS' sensors
-    # TODO: we should get rid of gui-settings such as hud and rename stuff (eg. maxDistance - maxDist)
-    width = IntProperty(name='Width', default=0, description='Width')
-    height = IntProperty(name='Height', default=0, description='Height')
-    resolution = FloatProperty(name='Resolution', default=0, description='Resolution')
-    horizontal_resolution = FloatProperty(name='Horizontal Resolution', default=0, description='Horizontal resolution')
-    opening_width = FloatProperty(name='Opening Width', default=0, description='Opening width')
-    opening_height = FloatProperty(name='Opening Height', default=0, description='Opening height')
-    maxDistance = FloatProperty(name='Max Distance', default=0, description='Maximum distance')
-    maxDist = FloatProperty(name='Max Dist', default=0, description='Max dist')
-    verticalOpeningAngle = FloatProperty(name='Vertical Opening Angle', default=0, description='Vertical opening angle')
-    horizontalOpeningAngle = FloatProperty(name='Horizontal Opening Angle', default=0,
-                                           description='horizontal opening angle')
-    hud_pos = IntProperty(name='HUD Position', default=0, description='HUD position')
-    hud_width = IntProperty(name='HUD Width', default=0, description='HUD width')
-    hud_height = IntProperty(name='HUD Height', default=0, description='HUD height')
-    updateRate = FloatProperty(name='Update Rate', default=0, description='Update rate')
-    vertical_offset = FloatProperty(name='Vertical Offset', default=0, description='Vertical offset')
-    horizontal_offset = FloatProperty(name='Horizontal Offset', default=0, description='Horizontal offset')
-    gain = FloatProperty(name='Gain', default=0, description='Gain')
-    left_limit = FloatProperty(name='Left Limit', default=0, description='Left limit')
-    right_limit = FloatProperty(name='Right Limit', default=0, description='Right limit')
-    rttResolutionX = FloatProperty(name='RTT Resolution x', default=0, description='RTT resolution x')
-    rttResolutionY = FloatProperty(name='RTT Resolution y', default=0, description='RTT resolution y')
-    numRaysHorizontal = FloatProperty(name='Number Rays Horizontal', default=0, description='Number of horizontal rays')
-    numRaysVertical = FloatProperty(name='Number Rays Vertical', default=0, description='Number of vertical rays')
-    draw_rays = BoolProperty(name='Draw Rays', default=False, description='Draw rays')
-    depthImage = BoolProperty(name='Depth Image', default=False, description='Depth of the image')
-    show_cam = BoolProperty(name='Show Camera', default=False, description='Show the camera?')
-    only_ray = BoolProperty(name='Only Ray', default=False, description='Only ray')
-    ping_pong_mode = BoolProperty(name='Ping Pong Mode', default=False, description='Ping pong mode')
-    bands = IntProperty(name='Bands', default=0, description='Bands')
-    lasers = IntProperty(name='Lasers', default=0, description='Lasers')
-    extension = FloatVectorProperty(name='Extension', default=(0, 0, 0), description='Extension')
-
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "sensor_name", text="Sensor Name")
-        layout.prop(self, "sensor_type", text="Sensor Type")
-        if self.sensor_type in ['CameraSensor', 'ScanningSonar', 'RaySensor',
-                                'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            layout.prop(self, "add_link", "Attach to New Link")
-        if self.sensor_type == "custom":
-            layout.prop(self, "custom_type", text="Custom Type")
-        else:
-            for key in defs.definitions['sensors'][self.sensor_type]:
-                layout.prop(self, key, text=key)
+        layout.prop(self, "linktype")
+        layout.prop(self, "size")
+        layout.prop(self, "parenting")
 
-    def execute(self, context):
-        # create a dictionary holding the sensor definition
-        sensor = {'name': self.sensor_name,
-                  'type': self.custom_type if self.sensor_type == 'Custom' else self.sensor_type,
-                  'props': {}
-                  }
-        parent = context.active_object
-        for key in defs.definitions['sensors'][self.sensor_type]:
-            if type(defs.definitions['sensors'][self.sensor_type][key]) == type(True):
-                value = getattr(self, key)
-                sensor['props'][key] = '$true' if value else '$false'
-            else:
-                sensor['props'][key] = getattr(self, key)
-        # type-specific settings
-        if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
-                              'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            if self.add_link:
-                link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(),
-                                        name='link_' + self.sensor_name)
-                sensorObj = sensors.createSensor(sensor, link, link.matrix_world)
-            else:
-                sensorObj = sensors.createSensor(sensor, context.active_object, context.active_object.matrix_world)
-            if self.add_link:
-                sUtils.selectObjects([parent, link], clear=True, active=0)
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
-                sUtils.selectObjects([link, sensorObj], clear=True, active=0)
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            sensors.cameraRotLock(sensorObj)
-        elif sensor['type'] in ['Joint6DOF']:
-            for obj in context.selected_objects:
-                if obj.phobostype == 'link':
-                    sensor['name'] = "sensor_joint6dof_" + nUtils.getObjectName(obj, phobostype="joint")
-                    sensors.createSensor(sensor, obj, obj.matrix_world)
-        elif 'Node' in sensor['type']:
-            sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
-                         mathutils.Matrix.Translation(context.scene.cursor_location))
-        elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
-            sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
-                         mathutils.Matrix.Translation(context.scene.cursor_location))
-        return {'FINISHED'}
+        # show parentobject only when using parenting hierarchy
+        if self.parenting == True:
+            layout.prop(self, "parentobject")
 
+        layout.prop(self, "namepartindices")
+        layout.prop(self, "separator")
+        layout.prop(self, "prefix")
 
 def getControllerParameters(name):
+    """
+    Returns the controller parameters for the controller type with the provided
+    name.
+
+    :param name: the name of the controller type.
+    :type name: str.
+    """
     try:
         return defs.definitions['controllers'][name]['parameters'].keys()
     except:
@@ -1163,109 +1110,15 @@ def getControllerParameters(name):
 
 
 def getDefaultControllerParameters(scene, context):
+    """
+    Returns the default controller parameters for the controller of the active
+    object.
+    """
     try:
         name = bpy.context.active_object['motor/controller']
         return defs.definitions['controllers'][name]['parameters'].values()
     except:
         return None
-
-
-class AddControllerOperator(Operator):
-    """AddControllerOperator
-
-    """
-    bl_idname = "phobos.add_controller"
-    bl_label = "Add/edit Controller"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    # controller_scale = FloatProperty(
-    #     name = "controller scale",
-    #     default = 0.05,
-    #     description = "scale of the controller visualization")
-    #
-    # controller_name = StringProperty(
-    #     name = "controller name",
-    #     default = 'controller',
-    #     description = "name of the controller")
-    #
-    # controller_rate = FloatProperty(
-    #     name = "rate",
-    #     default = 10,
-    #     description = "rate of the controller [Hz]")
-
-    controllertype = EnumProperty(
-        name='Controller Type',
-        default='generic_pid',
-        description="Type of the controller",
-        items=tuple([(t,) * 3 for t in defs.definitions['controllers']])
-    )
-
-    cparam1 = FloatProperty(default=0.0, description='Controller parameter #1')
-    cparam2 = FloatProperty(default=0.0, description='Controller parameter #2')
-    cparam3 = FloatProperty(default=0.0, description='Controller parameter #3')
-    cparam4 = FloatProperty(default=0.0, description='Controller parameter #4')
-    cparam5 = FloatProperty(default=0.0, description='Controller parameter #5')
-    cparam6 = FloatProperty(default=0.0, description='Controller parameter #6')
-    cparam7 = FloatProperty(default=0.0, description='Controller parameter #7')
-    cparam8 = FloatProperty(default=0.0, description='Controller parameter #8')
-
-    # controllerparameters = FloatVectorProperty(
-    #     name="Controller Parameters",
-    #     description="parameters of the controller",
-    #     default=(0.0, 0.0, 0.0, 0.0, 0.0),
-    #     precision=3,
-    #     size=5#getControllerParametersNumber
-    #     )
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "controllertype")
-        #layout.prop(self, "controllerparameters")
-        slayout = layout.split(0.2)
-        c1 = slayout.column()
-        c2 = slayout.column()
-        i = 0
-        for key in getControllerParameters(context.active_object['motor/controller']):
-            i += 1
-            c1.label(key+':')
-            c2.prop(self, "cparam"+str(i))
-
-    def execute(self, context):
-        controller = defs.definitions['controllers'][self.controllertype]
-        for obj in bpy.context.selected_objects:
-            obj['motor/controller'] = controller['name']
-            obj['*software/controller/name'] = controller['name']
-            obj['*software/controller/type'] = controller['type']
-            i = 0
-            for key in getControllerParameters(controller['name']):
-                i += 1
-                obj['*software/controller/'+key] = getattr(self, 'cparam'+str(i))  # self.cparam1# params[i]
-
-        # global sensors
-        # global motors
-        # location = bpy.context.scene.cursor_location
-        # objects = []
-        # controllers = []
-        # for obj in bpy.context.selected_objects:
-        #     if obj.phobostype == "controller":
-        #         controllers.append(obj)
-        #     else:
-        #         objects.append(obj)
-        # if len(controllers) <= 0:
-        #     bUtils.createPrimitive(self.controller_name, "sphere", self.controller_scale, defs.layerTypes["sensor"], "phobos_controller", location)
-        #     bpy.context.scene.objects.active.phobostype = "controller"
-        #     bpy.context.scene.objects.active.name = self.controller_name
-        #     controllers.append(bpy.context.scene.objects.active)
-        # #empty index list so enable robotupdate of controller
-        # for ctrl in controllers:
-        #     ctrl['controller/sensors'] = sorted(sensors, key=str.lower)
-        #     ctrl['controller/motors'] = sorted(motors, key=str.lower)
-        #     ctrl['controller/rate'] = self.controller_rate
-        # print("Added joints/motors to (new) controller(s).")
-        # #for prop in defs.controllerProperties[self.controller_type]:
-        # #    for ctrl in controllers:
-        # #        ctrl[prop] = defs.controllerProperties[prop]
-        return {'FINISHED'}
 
 
 class CreateMimicJointOperator(Operator):
@@ -1296,7 +1149,10 @@ class CreateMimicJointOperator(Operator):
 
     def execute(self, context):
         masterjoint = context.active_object
-        for obj in context.selected_objects:
+        objs = filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
+
+        # apply mimicking for all selected joints
+        for obj in objs:
             if obj.name != masterjoint.name:
                 if self.mimicjoint:
                     obj["joint/mimic_joint"] = nUtils.getObjectName(masterjoint, 'joint')
@@ -1311,169 +1167,10 @@ class CreateMimicJointOperator(Operator):
     @classmethod
     def poll(cls, context):
         ob = context.active_object
+        objs = list(filter(lambda e: "phobostype" in e and e.phobostype ==
+                           "link", context.selected_objects))
         return (ob is not None and ob.phobostype == 'link'
-                and len(context.selected_objects) > 1)
-
-
-class RefineLevelOfDetailOperator(Operator):
-    """Edit Level of Detail settings with minimum distances"""
-    bl_idname = "phobos.edit_lod"
-    bl_label = "Edit LoD"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    maxdistances = FloatVectorProperty(name="Maximum Distances",
-        description="Maximum distances", size=5)
-
-    mindistances = FloatVectorProperty(name="Minimum Distances",
-        description="Minimum distances", size=5)
-
-    def draw(self, context):
-        layout = self.layout
-        inlayout = layout.split()
-        c1 = inlayout.column(align=True)
-        c2 = inlayout.column(align=True)
-        c3 = inlayout.column(align=True)
-
-        lodlist = [lod.object.data.name for lod in context.active_object.lod_levels]
-        while len(lodlist) < len(self.maxdistances):
-            lodlist.append('not assigned')
-
-        c1.label("Level of Detail Objects:")
-        for lodname in lodlist:
-            c1.label(text=lodname)
-        c2.prop(self, 'mindistances')
-        c3.prop(self, 'maxdistances')
-
-    def invoke(self, context, event):
-        #nlod = len(context.active_object.lod_levels)
-        #self.startdistances = FloatVectorProperty(name="startDistances", description="minimum distances", size=nlod)
-        #self.enddistances = FloatVectorProperty(name="endDistances", description="maximum distances", size=nlod)
-        lodlist = [0.0]*5
-        for lod in range(min(5, len(context.active_object.lod_levels))):
-            lodlist[lod] = context.active_object.lod_levels[lod].distance
-        self.mindistances = tuple(lodlist)
-        lodlist = [0.0]*5
-        for lod in range(min(4, len(context.active_object.lod_levels)-1)):
-            lodlist[lod] = context.active_object.lod_levels[lod+1].distance
-        self.maxdistances = tuple(lodlist)
-
-    #    obj = context.active_object
-    #    #self.mindistances = tuple(obj[a] for a in obj.keys() if a.startswith('visual/lod'))
-    #    self.mindistances = tuple(lod.distance for lod in obj.lod_levels)
-        return self.execute(context)
-
-    def execute(self, context):
-        sourceobj = context.active_object
-        selobjects = context.selected_objects
-        n = len(sourceobj.lod_levels)
-        for obj in selobjects:
-            if obj.phobostype in ['visual', 'collision']:
-                if obj != sourceobj:
-                    sUtils.selectObjects([obj], clear=True, active=0)
-                    bpy.ops.object.lod_clear_all()
-                    for i in range(n-1):
-                        bpy.ops.object.lod_add()
-                        obj.lod_levels[i+1].distance = sourceobj.lod_levels[i+1].distance
-                        obj.lod_levels[i+1].object = sourceobj.lod_levels[i+1].object
-                for i in range(n):
-                    lodlist = []
-                    #loddict = {'start': self.startdistances[dist], 'end': self.enddistances[dist],
-                    #           'filename': sourceobj.lod_levels[dist].object.data.name}
-                    #obj['lod/' + str(dist) + '_start'] = self.startdistances[dist]
-                    obj.lod_levels[i].distance = self.mindistances[i]
-                    #obj['lod/' + str(dist) + '_end'] = sourceobj.lod_levels[dist].distance
-                    #obj['lod/' + str(dist) + '_mesh'] = sourceobj.lod_levels[dist].object.data.name
-                    #obj['lod/lod'] = loddict
-                obj['lodmaxdistances'] = list(self.maxdistances[:len(obj.lod_levels)])
-        return {'FINISHED'}
-
-    @classmethod
-    def poll(cls, context):
-        ob = context.active_object
-        return ob is not None and ob.phobostype == 'visual'
-
-
-class AddHeightmapOperator(Operator):
-    """Add a heightmap object to the 3D-Cursors location"""
-    bl_idname = "phobos.add_heightmap"
-    bl_label = "Create Heightmap"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    name = StringProperty(
-        name="Name",
-        description="The new heightmap's name",
-        default="heightmap")
-
-    cutNo = IntProperty(
-        name="Number of Cuts",
-        description="Number of cuts for subdivide",
-        default=100)
-
-    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
-
-    def execute(self, context):
-        if os.path.basename(self.filepath) not in bpy.data.images:
-            try:
-                img = bpy.data.images.load(self.filepath)
-            except RuntimeError:
-                log("Cannot load image from file! Aborting.", "ERROR")
-                return {"FINISHED"}
-        else:
-            log("Image already imported. Using cached version.", "INFO")
-            img = bpy.data.images[os.path.basename(self.filepath)]
-        # Create Texture
-        h_tex = bpy.data.textures.new(self.name, type='IMAGE')
-        h_tex.image = img
-        # Add plane, subdivide and create displacement
-        prev_mode = context.mode
-        bpy.ops.mesh.primitive_plane_add(view_align=False, enter_editmode=False)
-        plane = context.active_object
-        plane['phobostype'] = 'visual'
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.subdivide(number_cuts=self.cutNo)
-        bpy.ops.object.mode_set(mode=prev_mode)
-        plane.modifiers.new('displace_heightmap', 'DISPLACE')
-        plane.modifiers['displace_heightmap'].texture = h_tex
-        plane.name = self.name+'_visual::heightmap'
-        # Add root link for heightmap
-        root = links.createLink(1.0, name=self.name + "::heightmap")
-        root['entity/type'] = 'heightmap'
-        root['entity/name'] = self.name
-        root['image'] = os.path.relpath(os.path.basename(self.filepath), bpy.data.filepath)
-        root['joint/type'] = 'fixed'
-        # Create Parenting
-        sUtils.selectObjects([root, plane], clear=True, active=0)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        # create the open file dialog
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
-
-
-class DefineEntityOperator(Operator):
-    """Defines an entity by setting properties in active object"""
-    bl_idname = "phobos.define_entity"
-    bl_label = "Define Entity"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    entityname = StringProperty(
-        name="entity/name",
-        default="",
-        description="Name of the entity")
-
-    entitytype = StringProperty(
-        name="entity/type",
-        default="",
-        description="Type of the entity")
-
-    def execute(self, context):
-        entity = bpy.context.active_object
-        if entity:
-            entity['entity/name'] = self.entityname
-            entity['entity/type'] = self.entitytype
-        return {'FINISHED'}
+                and len(objs) > 1)
 
 
 def register():
