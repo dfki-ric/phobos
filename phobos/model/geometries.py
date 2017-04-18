@@ -76,27 +76,7 @@ def createGeometry(viscol, geomsrc):
     geomtype = geom['type']
     # create the Blender object
     if geomtype == 'mesh':
-        # TODO delete me?
-        # if hasattr(self, 'zipped') and self.zipped:
-        #     if not os.path.isdir(os.path.join(self.tmp_path, tmp_dir_name)):
-        #         os.mkdir(os.path.join(self.tmp_path, tmp_dir_name))
-        #     archive = zipfile.ZipFile(self.filepath)
-        #     archive.extract(geom['filename'], path=os.path.join(self.tmp_path, tmp_dir_name))
-        #     geom_path = os.path.join(os.path.abspath(os.path.join(self.tmp_path, tmp_dir_name)), geom['filename'])
-        # else:
-        if 'sourcefilepath' in geom:
-            geom_path = os.path.normpath(os.path.join(os.path.dirname(geom['sourcefilepath']), geom['filename']))
-            log('sourcefilepath: ' + geom_path, 'DEBUG')
-        else:
-            geom_path = geom['filename']
-        # TODO still up to date?
-        # Remove 'urdf/package://{package_name}' to workaround the lack
-        # of rospack here. This supposes that the urdf file is in the
-        # urdf folder and that the meshes are in the meshes folder at
-        # the same level as the urdf folder.
-        if 'package://' in geom_path:
-            geom_path = re.sub(r'(.*)urdf/package://([^/]+)/(.*)', '\\1\\3', geom_path)
-
+        geom_path = geom['filename']
         bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
         meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
         if not os.path.isfile(geom_path):

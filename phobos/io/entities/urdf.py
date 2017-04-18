@@ -629,6 +629,26 @@ def parseLink(link, sourcefilepath=None):
                         dictelement['geometry']['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
                     except KeyError:
                         dictelement['geometry']['scale'] = [1.0, 1.0, 1.0]
+
+                                        # if hasattr(self, 'zipped') and self.zipped:
+                    #     if not os.path.isdir(os.path.join(self.tmp_path, tmp_dir_name)):
+                    #         os.mkdir(os.path.join(self.tmp_path, tmp_dir_name))
+                    #     archive = zipfile.ZipFile(self.filepath)
+                    #     archive.extract(geom['filename'], path=os.path.join(self.tmp_path, tmp_dir_name))
+                    #     geom_path = os.path.join(os.path.abspath(os.path.join(self.tmp_path, tmp_dir_name)), geom['filename'])
+                    # else:
+                    if 'sourcefilepath' in geom:
+                        geom_path = os.path.normpath(os.path.join(os.path.dirname(geom['sourcefilepath']), geom['filename']))
+                        log('sourcefilepath: ' + geom_path, 'DEBUG', 'createGeometry')
+                    else:
+                        geom_path = geom['filename']
+                    # Remove 'urdf/package://{package_name}' to workaround the lack
+                    # of rospack here. This supposes that the urdf file is in the
+                    # urdf folder and that the meshes are in the meshes folder at
+                    # the same level as the urdf folder.
+                    if 'package://' in geom_path:
+                        geom_path = re.sub(r'(.*)urdf/package://([^/]+)/(.*)', '\\1\\3', geom_path)
+
             material = xmlelement.find('material')
             if material is not None:
                 dictelement['material'] = {'name': material.attrib['name']}
