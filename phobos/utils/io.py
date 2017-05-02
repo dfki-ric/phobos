@@ -4,6 +4,7 @@ import subprocess
 import bpy
 from phobos import defs
 from phobos.phoboslog import log
+from phobos.utils import selection as sUtils
 
 
 indent = '  '
@@ -73,34 +74,50 @@ def getExpSettings():
     return bpy.data.worlds[0].phobosexportsettings
 
 
-def getModelPath(entitytype):
-    if getExpSettings().structureExport:
-        return os.path.join(getExportPath(), entitytype)
+def getExportModels():
+    if getExpSettings().selectedOnly:
+        roots = {root for root in sUtils.getRoots() if root.select}
     else:
-        return getExportPath()
+        roots = sUtils.getRoots()
+    return list(roots)
+
+
+def getExportEntities():
+    if getExpSettings().selectedOnly:
+        roots = [obj for obj in sUtils.getSelectedObjects() if sUtils.isEntity(obj)]
+    else:
+        roots = [obj for obj in bpy.context.scene.objects if sUtils.isEntity(obj)]
+    return roots
+
+
+def getModelListForEnumProp(self, context):
+    rootnames = set([r['modelname'] for r in getExportModels()])
+    return sorted([(r,) * 3 for r in rootnames])
 
 
 def getOutputMeshtype():
     return str(getExpSettings().outputMeshtype)
 
 
-def getOutputMeshpath(meshtype=None):
+def getOutputMeshpath(path, meshtype=None):
     if getExpSettings().structureExport:
-        return os.path.join(getExportPath(), 'meshes', meshtype if meshtype else getOutputMeshtype())
+        return os.path.join(path, 'meshes', meshtype if meshtype else getOutputMeshtype())
     else:
-        return getExportPath()
-
-
-def getRelativeMeshpath(modeltype='urdf', meshtype=None):
-    return os.path.relpath(getOutputMeshpath(meshtype if meshtype else getOutputMeshtype()), getModelPath(modeltype))
+        return path
 
 
 def getExportPath():
     if os.path.isabs(getExpSettings().path):
         return getExpSettings().path
     else:
-        return os.path.join(bpy.path.abspath('//'), getExpSettings().path)
+        return os.path.normpath(os.path.join(bpy.path.abspath('//'), getExpSettings().path))
 
+
+def getAbsolutePath(path):
+    if os.path.isabs(path):
+        return path
+    else:
+        return os.path.join(bpy.path.abspath('//'), path)
 
 def textureExportEnabled():
     return bpy.data.worlds[0].phobosexportsettings.exportTextures
