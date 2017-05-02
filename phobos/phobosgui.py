@@ -113,17 +113,19 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         if not bpy.data.worlds[0].phobosexportsettings.path.endswith('/'):
             bpy.data.worlds[0].phobosexportsettings.path += '/'
 
+    def getMeshTypeListForEnumProp(self, context):
+        return sorted([(mt,) * 3 for mt in meshes.mesh_types])
+
     path = StringProperty(name='path', default='../', update=updateExportPath)
-    #relativePaths = BoolProperty(name='Relative Paths', default=True,
-     #                            description="Use relative paths in exported files")
     structureExport = BoolProperty(name="Structure export", default=True, description="Create structured subfolders")
+    selectedOnly = BoolProperty(name="Selected only", default=True, description="Export only selected objects")
     decimalPlaces = IntProperty(name="decimals",
                                 description="Number of decimal places to export",
                                 default=5)
     exportTextures = BoolProperty(name='Export textures', default=True)
-    outputMeshtype = StringProperty(name='Output mesh type', default='obj',
-                                    description="Mesh type to use in exported entity/scene files.")
-    sceneName = StringProperty(name='Name', default='', description="Name of scene to be exported.")
+    outputMeshtype = EnumProperty(items=getMeshTypeListForEnumProp,
+                                  name='link',
+                                  description="Mesh type to use in exported entity/scene files.")
 
 
 class Mesh_Export_UIList(bpy.types.UIList):
@@ -375,8 +377,9 @@ class PhobosExportPanel(bpy.types.Panel):
         ginlayout = self.layout.split()
         g1 = ginlayout.column(align=True)
         #g1.prop(expsets, "relativePaths")
-        g1.prop(expsets, "structureExport", text="Structure Export")
-        g1.prop(expsets, "exportTextures", text="Export textures")
+        #g1.prop(expsets, "structureExport")
+        g1.prop(expsets, "exportTextures")
+        g1.prop(expsets, "selectedOnly")
         g2 = ginlayout.column(align=True)
         g2.prop(expsets, "decimalPlaces")
 
@@ -385,25 +388,30 @@ class PhobosExportPanel(bpy.types.Panel):
         # Settings for mesh and entity export
         inlayout = self.layout.split()
 
-        c1 = inlayout.column(align=True)
-        c1.label(text="Mesh export")
+        cmodel = inlayout.column(align=True)
+        cmodel.label(text="Models")
+        for entitytype in sorted(entities.entity_types):
+            if 'export' in entities.entity_types[entitytype] and 'extensions' in entities.entity_types[entitytype]:
+                typename = "export_entity_" + entitytype
+                cmodel.prop(bpy.data.worlds[0], typename)
+
+        cmesh = inlayout.column(align=True)
+        cmesh.label(text="Meshes")
         for meshtype in sorted(meshes.mesh_types):
             if 'export' in meshes.mesh_types[meshtype]:
                 typename = "export_mesh_" + meshtype
-                c1.prop(bpy.data.worlds[0], typename)
-        c1.prop(bpy.data.worlds[0].phobosexportsettings, 'outputMeshtype')
+                cmesh.prop(bpy.data.worlds[0], typename)
+        cmesh.prop(bpy.data.worlds[0].phobosexportsettings, 'outputMeshtype')
 
-        c2 = inlayout.column(align=True)
-        c2.label(text="Model Export")
-        for entitytype in sorted(entities.entity_types):
-            if 'export' in entities.entity_types[entitytype]:
-                typename = "export_entity_" + entitytype
-                c2.prop(bpy.data.worlds[0], typename)
+        cscene = inlayout.column(align=True)
+        cscene.label(text="Scenes")
+        for scenetype in sorted(scenes.scene_types):
+            if 'export' in scenes.scene_types[scenetype]:
+                typename = "export_scene_" + scenetype
+                cscene.prop(bpy.data.worlds[0], typename)
 
         #c2.prop(expsets, "exportCustomData", text="Export custom data")
 
-        ec1 = layout.column(align=True)
-        ec1.operator("phobos.export_robot", text="Export Robot Model", icon="EXPORT")
         # FIXME: issue with export and import of models with new generic system
         #ec2 = layout.column(align=True)
 
@@ -412,11 +420,10 @@ class PhobosExportPanel(bpy.types.Panel):
 #        layout.operator("phobos.export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
 #        layout.operator("phobos.create_robot_instance", text="Create Robot Lib Instance", icon="RENDERLAYERS")
 
-        layout.separator()
-
-        layout.label(text="Export Scene")
-        self.layout.prop(expsets, "sceneName", text="Name")
         #self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
+
+        layout.separator()
+        layout.operator("phobos.export_model", icon="EXPORT")
         layout.operator("phobos.export_scene", icon="WORLD_DATA")
 
 
@@ -472,10 +479,9 @@ class PhobosObjectPanel(bpy.types.Panel):
 
 
 def get_operator_manuals():
-    """This allows you to right click on a button and link to the manual
-
+    """Returns a tuple with the Phobos wiki Operator page and pairs of operator
+    names and wiki page anchor names to allow for linking from Blender to wiki.
     :return: tuple
-
     """
     url_manual_prefix = "https://github.com/rock-simulation/phobos/wiki/Operators#"
     url_manual_ops = tuple(('bpy.ops.phobos.' + opname, opname.replace('_', '-'),)
