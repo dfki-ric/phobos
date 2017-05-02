@@ -35,17 +35,16 @@ import yaml
 import bpy
 import phobos.defs as defs
 import phobos.model.models as models
-import phobos.utils.selection as sUtils
-from phobos.utils.io import securepath
+import phobos.utils.io as ioUtils
 from phobos.io.entities.urdf import sort_urdf_elements
 from phobos.phoboslog import log
 
 
-def deriveEntity(entity, outpath, savetosubfolder):
+def deriveEntity(root, outpath):
     """Derives the dictionary for a SMURF entity from the phobos model dictionary.
 
-    :param entity: The smurf root object.
-    :type entity: bpy.types.Object
+    :param root: The smurf root object.
+    :type root: bpy.types.Object
     :param outpath: The path to export the smurf to.
     :type outpath: str
     :param savetosubfolder: If True the export path has a subfolder for this smurf entity.
@@ -53,26 +52,23 @@ def deriveEntity(entity, outpath, savetosubfolder):
     :return: dict - An entry for the scenes entitiesList
 
     """
+    entitypose = models.deriveObjectPose(root)
+    entity = models.initObjectProperties(root, 'entity', ['link', 'joint', 'motor'])
+    if 'parent' not in entity and 'joint/type' in root and root['joint/type'] == 'fixed':
+        entity['parent'] = 'world'
+    entity["position"] = entitypose["translation"]
+    entity["rotation"] = entitypose["rotation_quaternion"]
 
-    smurf = entity
-
-    # determine outpath for the smurf export
-    # differentiate between full model and baked reference
-    if "entity/isReference" in smurf:
+    # check model data if entity is a reference
+    # FIXME: this part is broken but not used at the moment anyways
+    if "isReference" in entity:
+        entity.pop("isReference")
         bpy.ops.scene.reload_models_and_poses_operator()
         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         for robot_model in modelsPosesColl:
-            if (smurf["modelname"] == robot_model.robot_name) and (smurf["entity/pose"] == robot_model.label):
-                entitypose = models.deriveObjectPose(smurf)
-                entry      = models.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
-                entry.pop("isReference");
-
-                entry['file'] = os.path.join(os.path.relpath(robot_model.path,outpath), smurf["modelname"] + ".smurf")
-                if 'parent' not in entry and 'joint/type' in smurf and smurf['joint/type'] == 'fixed':
-                    entry['parent'] = 'world'
-                entry["position"] = entitypose["translation"]
-                entry["rotation"] = entitypose["rotation_quaternion"]
-
+            if (root["modelname"] == robot_model.robot_name) and (root["entity/pose"] == robot_model.label):
+                pass
+        entity['file'] = os.path.join(os.path.relpath(robot_model.path, outpath), root["name"] + ".smurf")
         '''
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
             robots = yaml.load(f.read())
@@ -87,25 +83,12 @@ def deriveEntity(entity, outpath, savetosubfolder):
                     shutil.copytree(fullpath, os.path.join(smurf_outpath, filename))
         '''
     else:
-        smurf_outpath = securepath(os.path.join(outpath, entity["modelname"]) if savetosubfolder else outpath)
-        log("smurf_outpath: " + outpath, "DEBUG", "exportSMURFsScene")
-
-        log("Exporting " + smurf["entity/name"] + " as a smurf entity to " + smurf_outpath, "INFO", "deriveSMURFEntity",
-            "\n\n")
-        subfolder = smurf["modelname"] if savetosubfolder else ""
-        sUtils.selectObjects(sUtils.getChildren(smurf), clear=True)  # re-select for mesh export
-        model, objectlist = models.buildModelDictionary(smurf)
-        export(model, objectlist, smurf_outpath) # FIXME: this is the export function from entities!
-        entitypose = models.deriveObjectPose(smurf)
-        entry = models.initObjectProperties(smurf, 'entity', ['link', 'joint', 'motor'])
-
-        entry['file'] = (os.path.join(subfolder, smurf["modelname"]+".smurf") if os.path.isfile(smurf_outpath)
-                         else os.path.join(subfolder, "smurf", smurf["modelname"]+".smurf"))
-        if 'parent' not in entry and 'joint/type' in smurf and smurf['joint/type'] == 'fixed':
-            entry['parent'] = 'world'
-        entry["position"] = entitypose["translation"]
-        entry["rotation"] = entitypose["rotation_quaternion"]
-    return entry
+        modelpath = os.path.join(outpath, root['modelname'])
+        if ioUtils.getExpSettings().structureExport:
+            modelpath = os.path.join(modelpath, 'smurf')
+        log("Scene paths: " + outpath + ' '+ modelpath, "DEBUG")
+        entity['file'] = os.path.join(os.path.relpath(modelpath, os.path.dirname(outpath)), root['modelname']+".smurf")
+    return entity
 
 
 def gatherAnnotations(model):
@@ -475,6 +458,7 @@ def exportSmurf(model, path):
 
 # registering import/export functions of types with Phobos
 entity_type_dict = {'smurf': {'export': exportSmurf,
+                              'derive': deriveEntity,
                               'extensions': ('smurf',)}
                     }
 

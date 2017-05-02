@@ -37,7 +37,7 @@ from phobos.phoboslog import log
 from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 
-def deriveEntity(entity, outpath, savetosubfolder):
+def deriveEntity(primitive, outpath, savetosubfolder=True):
     """This function handles a primitive entity in a scene to export it
 
     :param smurf: The heightmap root object.
@@ -49,10 +49,6 @@ def deriveEntity(entity, outpath, savetosubfolder):
     :return: dict - An entry for the scenes entitiesList
 
     """
-
-    primitive = entity
-
-    log("Exporting " + nUtils.getObjectName(primitive, 'entity') + " as entity of type 'primitive", "INFO")
     entity = models.initObjectProperties(primitive, 'entity', ['geometry'])
     pose = deriveObjectPose(primitive)
     entity['geometry'] = deriveGeometry(primitive)
@@ -63,9 +59,14 @@ def deriveEntity(entity, outpath, savetosubfolder):
                           'x': pose['rotation_quaternion'][1],
                           'y': pose['rotation_quaternion'][2],
                           'z': pose['rotation_quaternion'][3]}
-    entity['extend'] = {'x': entity['geometry']['size'][0],
-                        'y': entity['geometry']['size'][1],
-                        'z': entity['geometry']['size'][2]}
+    if 'radius' in entity['geometry']:
+        entity['radius'] = entity['geometry']['radius']
+    #entity['extend'] = {'x': entity['geometry']['size'][0],
+    #                    'y': entity['geometry']['size'][1],
+    #                    'z': entity['geometry']['size'][2]}
+    entity['extend'] = {'x': primitive.dimensions[0],
+                        'y': primitive.dimensions[1],
+                        'z': primitive.dimensions[2]}
     return entity
 
 
@@ -73,6 +74,5 @@ def exportPrimitive():
     pass
 
 # registering export functions of types with Phobos
-entity_type_dict = {'primitive': {'export': exportPrimitive,
-                                  'extensions': ('smurf',)}
+entity_type_dict = {'primitive': {'derive': deriveEntity}
                     }
