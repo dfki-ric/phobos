@@ -78,13 +78,16 @@ def collectMaterials(objectlist):
     """
     materials = {}
     for obj in objectlist:
-        if obj.phobostype == 'visual' and obj.data.materials:
-            mat = obj.data.materials[0]  # simply grab the first material
-            if mat.name not in materials:
-                materials[mat.name] = deriveMaterial(mat)
-                materials[mat.name]['users'] = 1
-            else:
-                materials[mat.name]['users'] += 1
+        if obj.phobostype == 'visual':
+            try:
+                mat = obj.active_material
+                if mat.name not in materials:
+                    materials[mat.name] = deriveMaterial(mat)
+                    materials[mat.name]['users'] = 1
+                else:
+                    materials[mat.name]['users'] += 1
+            except AttributeError:
+                log("Could not parse material in object " + obj.name, "ERROR", "collectMaterials")
     return materials
 
 
@@ -699,7 +702,7 @@ def buildModelDictionary(root):
         + root.name, "INFO", "buildModelDictionary")
 
     # create tuples of objects belonging to model
-    objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
+    objectlist = sUtils.getChildren(root, selected_only=ioUtils.getExpSettings().selectedOnly, include_hidden=False)
     linklist = [link for link in objectlist if link.phobostype == 'link']
 
     # digest all the links to derive link and joint information
@@ -749,7 +752,7 @@ def buildModelDictionary(root):
     # complete link information by parsing visuals and collision objects
     log("Parsing visual and collision (approximation) objects...", "INFO", "buildModelDictionary")
     for obj in objectlist:
-        try:
+        #try:
             if obj.phobostype in ['visual', 'collision']:
                 props = deriveDictEntry(obj)
                 parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
@@ -758,11 +761,11 @@ def buildModelDictionary(root):
                 props = deriveDictEntry(obj)
                 parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
                 model['links'][parentname]['approxcollision'].append(props)
-        except KeyError:
-            try:
-                log(parentname + " not found", "ERROR")
-            except TypeError:
-                log("No parent found for " + obj.name, "ERROR")
+        #except KeyError:
+        #    try:
+        #        log(parentname + " not found", "ERROR")
+        #    except TypeError:
+        #        log("No parent found for " + obj.name, "ERROR")
 
     # combine collision information for links
     for linkname in model['links']:
@@ -786,13 +789,15 @@ def buildModelDictionary(root):
     log("Parsing materials...", "INFO", "buildModelDictionary")
     model['materials'] = collectMaterials(objectlist)
     for obj in objectlist:
-        if obj.phobostype == 'visual' and len(obj.data.materials) > 0:
-            mat = obj.data.materials[0]
-            matname = nUtils.getObjectName(mat, 'material')
-            if matname not in model['materials']:
-                model['materials'][matname] = deriveMaterial(mat)  # this should actually never happen
-            linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
-            model['links'][linkname]['visual'][nUtils.getObjectName(obj)]['material'] = matname
+        if obj.phobostype == 'visual':
+            mat = obj.active_material
+            try:
+                if mat.name not in model['materials']:
+                    model['materials'][mat.name] = deriveMaterial(mat)  # this should actually never happen
+                linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
+                model['links'][linkname]['visual'][nUtils.getObjectName(obj)]['material'] = mat.name
+            except AttributeError:
+                log("Could not parse material for object "+ obj.name, "ERROR", 'buildModelDictionary')
 
     # identify unique meshes
     log("Parsing meshes...", "INFO", "buildModelDictionary")
@@ -833,8 +838,8 @@ def buildModelDictionary(root):
 
     # shorten numbers in dictionary to n decimalPlaces and return it
     log("Rounding numbers...", "INFO", "buildModelDictionary")
-    epsilon = 10**(-bpy.data.worlds[0].phobosexportsettings.decimalPlaces)  # TODO: implement this separately
-    return epsilonToZero(model, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces), objectlist
+    epsilon = 10**(-ioUtils.getExpSettings().decimalPlaces)  # TODO: implement this separately
+    return epsilonToZero(model, epsilon, ioUtils.getExpSettings().decimalPlaces)
 
 
 def buildModelFromDictionary(model):
