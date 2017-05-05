@@ -24,6 +24,10 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
+
+File operators/editing.py
+
+@author: Kai von Szadkowski, Stefan Rahms, Simon Reichel
 """
 
 import math
@@ -285,9 +289,9 @@ class SetXRayOperator(Operator):
         description="Show objects via x-ray")
 
     show = BoolProperty(
-        name="Show",
+        name="Enable X-Ray",
         default=True,
-        description="Set to")
+        description="Enable or disable X-Ray")
 
     namepart = StringProperty(
         name="Name Contains",
@@ -303,7 +307,7 @@ class SetXRayOperator(Operator):
         layout.label(text="Select items for X-ray view")
 
         layout.prop(self, "objects")
-        layout.prop(self, "show", text="enable X-Ray view" if self.show else "disable X-Ray view")
+        layout.prop(self, "show")
 
         # show name text field only when changing by name
         if self.objects == 'by name':
