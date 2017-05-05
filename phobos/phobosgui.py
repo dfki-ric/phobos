@@ -116,7 +116,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     def getMeshTypeListForEnumProp(self, context):
         return sorted([(mt,) * 3 for mt in meshes.mesh_types])
 
-    path = StringProperty(name='path', default='../', update=updateExportPath)
+    path = StringProperty(name='path', subtype='DIR_PATH', default='../', update=updateExportPath)
     structureExport = BoolProperty(name="Structure export", default=True, description="Create structured subfolders")
     selectedOnly = BoolProperty(name="Selected only", default=True, description="Export only selected objects")
     decimalPlaces = IntProperty(name="decimals",
@@ -368,12 +368,7 @@ class PhobosExportPanel(bpy.types.Panel):
         layout = self.layout
 
         #export robot model options
-        self.layout.label(text="Model Export Settings")
-        pathlayout = self.layout.split(percentage=0.85)
-        p1 = pathlayout.column(align=False)
-        p2 = pathlayout.column(align=False)
-        p1.prop(expsets, "path")
-        p2.operator('phobos.choose_export_path', text='', icon='FILE_FOLDER')
+        layout.prop(expsets, "path")
         ginlayout = self.layout.split()
         g1 = ginlayout.column(align=True)
         #g1.prop(expsets, "relativePaths")
