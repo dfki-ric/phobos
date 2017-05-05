@@ -160,7 +160,7 @@ def isEntity(obj):
     :type obj: bpy.types.Object.
     :return: bool - True if obj is an entity, else False.
     """
-    return 'entity/type' in obj and 'entity/name' in obj
+    return None if obj is None else ('entity/type' in obj and 'entity/name' in obj)
 
 
 def selectObjects(objects, clear=True, active=-1):
