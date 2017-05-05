@@ -41,6 +41,7 @@ from phobos.operators.io import loadModelsAndPoses
 from phobos.io import entities
 from phobos.io import meshes
 from phobos.io import scenes
+from phobos.io import libraries
 
 
 class ModelPoseProp(bpy.types.PropertyGroup):
@@ -435,7 +436,6 @@ class PhobosImportPanel(bpy.types.Panel):
 
     def draw(self, context):
         self.layout.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
-        self.layout.operator("phobos.import_component", text="Import Component", icon="IMPORT")
 
 
 class PhobosObjectPanel(bpy.types.Panel):
@@ -533,11 +533,13 @@ def register():
     bpy.types.Scene.preview_visible = bpy.props.BoolProperty(name="Is the draw preview operator running", default=False)
     bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(name="Should we redraw the preview_template", default=False)
 
-    # Read in model and pose data from the respective folders
-    loadModelsAndPoses()
-
     # Add manuals to operator buttons
     bpy.utils.register_manual_map(get_operator_manuals)
+
+    # Read in model and pose data from the respective folders
+    #loadModelsAndPoses()
+    libraries.register()
+
 
 
 def unregister():
