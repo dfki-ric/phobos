@@ -126,7 +126,7 @@ class ExportModelOperator(Operator):
             return context.window_manager.invoke_props_dialog(self)
         else:
             try:
-                self.modelname = modellist[0]
+                self.modelname = modellist[0][0]
                 return self.execute(context)
             except IndexError:
                 return {'CANCELLED'}  #TODO: Check if this correct like that
