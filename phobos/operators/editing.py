@@ -534,7 +534,7 @@ class SmoothenSurfaceOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269;
+        show_progress = bUtils.getBlenderVersion() >= 269
         objs = filter(lambda e: e.type == "MESH", context.selected_objects)
         if show_progress:
             wm = context.window_manager
@@ -581,7 +581,7 @@ class CreateInertialOperator(Operator):
 
     def execute(self, context):
         links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
-        show_progress = bpy.app.version[0] * 100 + bpy.app.version[1] >= 269
+        show_progress = bUtils.getBlenderVersion() >= 269
         if show_progress:
             wm = context.window_manager
             total = float(len(links))
