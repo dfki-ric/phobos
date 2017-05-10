@@ -61,24 +61,22 @@ def replaceNameElement(prop, old, new):
             obj[prop] = obj[prop].replace(old, new)
 
 
-def addNamespace(obj):
+def addNamespace(obj, namespace=None):
     """This function namespaces a given blender object.
 
     :param obj: The object to namespace.
     :type obj: bpy.types.Object
 
     """
-    types = defs.subtypes
-    name = obj.name
-    root = selection.getRoot(obj)
     try:
-        namespace = root["entity/name"]
-        obj.name = namespace + "::" + name
-        for ptype in types:
+        if not namespace:
+            namespace = selection.getRoot(obj)["entity/name"]
+        obj.name = namespace + "::" + obj.name
+        for ptype in defs.subtypes:
             typetag = ptype + "/type"
             nametag = ptype + "/name"
             if (typetag in obj or ("phobostype" in obj and obj.phobostype == ptype)) and nametag not in obj:
-                obj[nametag] = name
+                obj[nametag] = obj.name
     except (TypeError, KeyError):
         log(getObjectName(obj) + " is not part of a well-defined entity.", "ERROR", "utils/naming/addNamespace")
 
@@ -90,12 +88,10 @@ def removeNamespace(obj):
     :type obj: bpy.types.Object
 
     """
-    types = defs.subtypes
-    name = obj.name.split("::")[-1]
-    obj.name = name
-    for pType in types:
+    obj.name = obj.name.split("::")[-1]
+    for pType in defs.subtypes:
         nameTag = pType + "/name"
-        if nameTag in obj and obj[nameTag] == name:
+        if nameTag in obj and obj[nameTag] == obj.name:
             del obj[nameTag]
 
 
