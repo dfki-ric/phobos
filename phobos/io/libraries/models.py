@@ -30,6 +30,7 @@ __author__ = 'kavonszadkowski'
 import os
 import bpy
 import bpy.utils.previews
+import phobos.utils.naming as nUtils
 from phobos.phoboslog import log
 
 
@@ -43,7 +44,7 @@ def getCategoriesForEnumProperty(self, context):
 
 
 def compileModelList():
-    log("Compiling Model List...", "INFO")
+    log("Compiling model list from local library...", "INFO", 'compileModelList')
     for previews in preview_collections.values():
         bpy.utils.previews.remove(previews)
     preview_collections.clear()
@@ -58,14 +59,16 @@ def compileModelList():
         categorypath = os.path.join(rootpath, category)
         for modelname in os.listdir(categorypath):
             modelpath = os.path.join(categorypath, modelname)
-            if os.path.exists(os.path.join(modelpath, 'blender')):
+            if os.path.exists(os.path.join(modelpath, 'blender', modelname+'.blend')):
                 model_data[category][modelname] = {'path': modelpath}
                 if os.path.exists(os.path.join(modelpath, 'thumbnails')):
                     preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'thumbnails', modelname+'.png'), 'IMAGE')
-                    log("Adding model to path: "+os.path.join(modelpath, 'thumbnails', modelname+'.png'))
+                    log("Adding model to path: "+os.path.join(modelpath, 'thumbnails', modelname+'.png'),
+                        'DEBUG', 'compileModelList')
                 else:
                     preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'blender', modelname+'.blend'), 'BLEND')
-                    log("Adding model to path: "+os.path.join(os.path.join(modelpath, 'blender', modelname+'.blend')))
+                    log("Adding model to path: "+os.path.join(os.path.join(modelpath, 'blender', modelname+'.blend')),
+                        'DEBUG', 'compileModelList')
                 enum_items.append((modelname, modelname, "", preview.icon_id, i))
                 i += 1
         newpreviewcollection.enum_items = enum_items
@@ -81,60 +84,60 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = "Phobos Models"
-    bl_label = "Local Model Library"
-    #bl_options = {'DEFAULT_CLOSED'}
+    bl_label = "Locally Model Library"
 
     def draw(self, context):
-       layout = self.layout
-       wm = context.window_manager
-       layout.prop(wm, 'category')
-       layout.template_icon_view(wm, 'previewlist')
-       layout.prop(wm, 'previewlist')
-       layout.separator()
-       layout.label(text='Import')
-       layout.operator("phobos.import_component", text="Import Component", icon="IMPORT")
+        layout = self.layout
+        wm = context.window_manager
+        layout.operator("phobos.update_model_library", icon="FILE_REFRESH")
+        layout.prop(wm, 'category')
+        layout.template_icon_view(wm, 'modelpreview', show_labels=True, scale=5.0)
+        layout.prop(wm, 'modelpreview')
+        layout.prop(wm, 'as_reference')
+        layout.prop(wm, 'namespace')
+        layout.label(text=wm.namespace+'::objectname' if wm.namespace != '' else 'no namespacing')
+        layout.operator("phobos.import_model_from_library", icon="IMPORT")
 
 
-class ImportComponent(bpy.types.Operator):
-    bl_idname = "phobos.import_component"
-    bl_label = ""
+class UpdateModelLibraryOperator(bpy.types.Operator):
+    """Update Model Library"""
+    bl_idname = "phobos.update_model_library"
+    bl_label = "Update Library"
+
+    def execute(self, context):
+        compileModelList()
+        return {'FINISHED'}
+
+
+class ImportModelFromLibraryOperator(bpy.types.Operator):
+    bl_idname = "phobos.import_model_from_library"
+    bl_label = "Import Model"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'FILE'
     bl_options = {'REGISTER', 'UNDO'}
 
-    # creating property for storing the path to the .scn file
-    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
-
-    #@classmethod
-    #def poll(cls, context):
-    #    return context is not None
-
     def execute(self, context):
-        if self.filepath != '':
-            log("Importing component" + self.filepath, "INFO", 'ImportComponentOperator')
+        wm = context.window_manager
+        filepath = os.path.join(model_data[wm.category][wm.modelpreview]['path'],
+                                'blender', wm.modelpreview+'.blend')
+        if (os.path.exists(filepath) and os.path.isfile(filepath)
+            and filepath.endswith('.blend')):
+            log("Importing model" + filepath, "INFO", 'ImportModelFromLibraryOperator')
             objects = []
-            with bpy.data.libraries.load(self.filepath) as (data_from, data_to):
+            with bpy.data.libraries.load(filepath) as (data_from, data_to):
                 for obj in data_from.objects:
                     objects.append({'name': obj})
-            bpy.ops.wm.append(directory=self.filepath+"/Object/", files=objects)
-            # with bpy.data.libraries.load(self.filepath) as (data_from, data_to):
-            #     for attr in dir(data_to):
-            #         print(attr)
-            #         setattr(data_to, attr, getattr(data_from, attr))
-            #with bpy.data.libraries.load(self.filepath) as (data_from, data_to):
-            #    print(data_to)
-            #    data_to.objects = data_from.objects
-            #link object to current scene
-            #for cat in ['armatures', 'materials', 'meshes', 'objects']:
-                #for arm in data_to.armatures:
-                #    bpy.data.armatures.
-            #for obj in data_to.objects:
-            #    bpy.context.scene.objects.link(obj)
-        return {'FINISHED'}
+            bpy.ops.wm.append(directory=filepath+"/Object/", files=objects)
+            bpy.ops.view3d.view_selected(use_all_regions=False)
+            if wm.namespace != '':
+                for obj in bpy.context.selected_objects:
+                    nUtils.addNamespace(obj, wm.namespace)
+            return {'FINISHED'}
+        else:
+            log("Model " + wm.modelpreview + " could not be loaded from library: No valid .blend file.",
+                "ERROR", 'ImportModelFromLibraryOperator')
+            return {'CANCELLED'}
 
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
 
 
 
@@ -143,13 +146,15 @@ def register():
     from bpy.props import (
             StringProperty,
             EnumProperty,
+            BoolProperty
             )
-    WindowManager.previewlist = EnumProperty(items=getModelListForEnumProperty,
-                                             name='Model')
-    WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty,
-                                          name='Category')
+    WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
+                                              #update=updateModelPreview)
+    WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
     compileModelList()
-
+    WindowManager.namespace = StringProperty(name='Name space')
+    WindowManager.import_reference = BoolProperty(name='Import reference')
+    WindowManager.as_reference = bpy.props.BoolProperty(name='As Reference')
 
 
 def unregister():
