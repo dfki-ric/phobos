@@ -2,11 +2,11 @@
 # coding=utf-8
 
 """
-.. module:: phobos.operators.io
+.. module:: phobos.io.libraries.models.py
     :platform: Unix, Windows, Mac
     :synopsis: This module contains operators import/export
 
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert
+.. moduleauthor:: Kai von Szadowski, Simon Reichel
 
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
@@ -25,12 +25,12 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
-__author__ = 'kavonszadkowski'
 
 import os
 import bpy
 import bpy.utils.previews
 import phobos.utils.naming as nUtils
+import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 
 
@@ -52,27 +52,30 @@ def compileModelList():
 
     rootpath = bpy.context.user_preferences.addons["phobos"].preferences.modelsfolder
     i = 0
-    for category in os.listdir(rootpath):
-        model_data[category] = {}
-        newpreviewcollection = bpy.utils.previews.new()
-        enum_items = []
-        categorypath = os.path.join(rootpath, category)
-        for modelname in os.listdir(categorypath):
-            modelpath = os.path.join(categorypath, modelname)
-            if os.path.exists(os.path.join(modelpath, 'blender', modelname+'.blend')):
-                model_data[category][modelname] = {'path': modelpath}
-                if os.path.exists(os.path.join(modelpath, 'thumbnails')):
-                    preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'thumbnails', modelname+'.png'), 'IMAGE')
-                    log("Adding model to path: "+os.path.join(modelpath, 'thumbnails', modelname+'.png'),
-                        'DEBUG', 'compileModelList')
-                else:
-                    preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'blender', modelname+'.blend'), 'BLEND')
-                    log("Adding model to path: "+os.path.join(os.path.join(modelpath, 'blender', modelname+'.blend')),
-                        'DEBUG', 'compileModelList')
-                enum_items.append((modelname, modelname, "", preview.icon_id, i))
-                i += 1
-        newpreviewcollection.enum_items = enum_items
-        preview_collections[category] = newpreviewcollection
+    if rootpath != '' and os.path.exists(rootpath):
+        for category in os.listdir(rootpath):
+            model_data[category] = {}
+            newpreviewcollection = bpy.utils.previews.new()
+            enum_items = []
+            categorypath = os.path.join(rootpath, category)
+            for modelname in os.listdir(categorypath):
+                modelpath = os.path.join(categorypath, modelname)
+                if os.path.exists(os.path.join(modelpath, 'blender', modelname+'.blend')):
+                    model_data[category][modelname] = {'path': modelpath}
+                    if os.path.exists(os.path.join(modelpath, 'thumbnails')):
+                        preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'thumbnails', modelname+'.png'), 'IMAGE')
+                        log("Adding model to path: "+os.path.join(modelpath, 'thumbnails', modelname+'.png'),
+                            'DEBUG', 'compileModelList')
+                    else:
+                        preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'blender', modelname+'.blend'), 'BLEND')
+                        log("Adding model to path: "+os.path.join(os.path.join(modelpath, 'blender', modelname+'.blend')),
+                            'DEBUG', 'compileModelList')
+                    enum_items.append((modelname, modelname, "", preview.icon_id, i))
+                    i += 1
+            newpreviewcollection.enum_items = enum_items
+            preview_collections[category] = newpreviewcollection
+    else:
+        log('Model library folder does not exist.')
 
 
 model_data = {}
