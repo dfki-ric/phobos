@@ -79,7 +79,7 @@ def createPhobosMaterials():
     materials = bpy.data.materials.keys()
     for material in defs.definitions['materials']:
         mat = defs.definitions['materials'][material]
-        if not material in materials:
+        if material not in materials:
             createMaterial(material, mat['diffuse'], mat['specular'], mat['alpha'], mat['diffuse_intensity'])
 
 

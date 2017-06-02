@@ -208,7 +208,7 @@ def exportModel(root, export_path, entitytypes=None):
                             log("{} already in place".format(texturetype), "INFO", "ExportModelOperator")
 
 
-class ImportModelOperator(bpy.types.Operator):  # formerly "RobotModelImporter"
+class ImportModelOperator(bpy.types.Operator):
     """Import robot model file from various formats"""
     bl_idname = "phobos.import_robot_model"
     bl_label = ""
