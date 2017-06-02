@@ -240,3 +240,64 @@ def cleanScene():
     # and all lights (aka lamps)
     for lamp in bpy.data.lamps:
         bpy.data.lamps.remove(lamp)
+
+
+def createPreview(objects, export_path, modelname, previewfile, render_resolution=256):
+    """Creates a thumbnail of the given objects.
+
+    :param obj: List of objects for the thumbnail.
+    :type obj: list
+    :param Resolution used for the render.
+    :type int
+
+    """
+    bpy.ops.view3d.camera_to_view_selected()
+    bpy.data.cameras[0].type = 'ORTHO' #'PANO'
+    #bpy.ops.render.opengl() (nice and fast and needs no light but needs viewport to be square shaped to zoom in!)
+    bpy.ops.render.render()
+
+    cam_ob = bpy.context.scene.camera
+    # cam = bpy.data.cameras.new("Camera")
+    # delete_cam = False
+    if not cam_ob:
+        log("No Camera found! Can not create thumbnail", "WARNING", __name__ + ".bakeModel")
+        return
+        #cam_ob = bpy.data.objects.new("Camera", cam)
+        #bpy.context.scene.objects.link(cam_ob)
+        #delete_cam = True
+    #bpy.context.scene.camera = cam_ob
+
+    log("Creating thumbnail of model: "+modelname, "INFO",__name__+".bakeModel")
+    # hide all other objects from rendering
+    for ob in bpy.data.objects:
+        if not (ob in objects) and not(ob.type == 'LAMP'):
+            ob.hide_render = True
+            ob.hide = True
+
+    # set render settings
+#    bpy.context.scene.render.resolution_x = render_resolution
+#    bpy.context.scene.render.resolution_y = render_resolution
+#    bpy.context.scene.render.resolution_percentage = 100
+    # render
+    #bpy.ops.render.render(use_viewport=True)
+    bpy.ops.render.opengl(view_context=True)
+    # save image
+    bpy.context.scene.render.image_settings.file_format = 'PNG'
+#    bpy.data.images['Render Result'].file_format = bpy.context.scene.render.image_settings.file_format
+
+    #print(bpy.data.images['Render Result'].file_format)
+    log("saving preview to: "+os.path.join(export_path,previewfile+'.png'), "INFO",__name__+".bakeModel")
+
+    bpy.data.images['Render Result'].save_render(os.path.join(export_path,previewfile+'.png'))
+
+
+    # make all objects visible again
+    for ob in bpy.data.objects:
+        ob.hide_render = False
+        ob.hide = False
+
+    # delete camera if needed
+    #if delete_cam:
+    #    bpy.ops.object.select_all(action='DESELECT')
+    #    cam_ob.select = True
+    #    bpy.ops.object.delete()
