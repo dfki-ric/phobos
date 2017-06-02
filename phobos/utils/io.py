@@ -121,18 +121,3 @@ def getAbsolutePath(path):
 
 def textureExportEnabled():
     return bpy.data.worlds[0].phobosexportsettings.exportTextures
-
-
-def getgitbranch():
-    """Checks whether working directory (of .blend file) contains a git repository.
-    Returns branch if repository is found.
-    """
-    try:
-        output = str(subprocess.check_output(['git', 'branch'], cwd=bpy.path.abspath('//'), universal_newlines=True))
-        branch = [a for a in output.split('\n') if a.find('*') >= 0][0]
-        return branch[branch.find('*')+2:]
-    except subprocess.CalledProcessError:
-        return None
-    except FileNotFoundError:
-        log("No git repository found.", "ERROR", origin="utils/io/getgitbranch")
-        return None
