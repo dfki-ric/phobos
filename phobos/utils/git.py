@@ -34,40 +34,41 @@ from phobos.phoboslog import log
 def cloneGit(name, url, destination):
     try:
         subprocess.check_output(['git', 'clone', url, name], cwd=destination, universal_newlines=True)
-        log("Cloned git into " + destination + ".", "INFO", "drock::cloneGit")
+        log("Cloned git into " + destination + ".", "INFO", "utils.git.cloneGit")
         return True
     except subprocess.CalledProcessError:
-        log("Problem cloning git repository.", "ERROR", "drock::cloneGit")
-        return None
+        log("Problem cloning git repository. Destination is either not empty or remote is incorrect.",
+            "ERROR", "utils.git.cloneGit")
+        return False
 
 
 def switchToBranch(branch, workingdir):
     if not branch or not workingdir:
-        log("No branch specified.", "ERROR", "drock::switchToBranch")
+        log("No branch specified.", "ERROR", "utils.git.switchToBranch")
         return False
     try:
         subprocess.check_output(['git', 'checkout', branch], cwd=workingdir, universal_newlines=True)
-        log("Switched to branch " + branch + ".", "INFO", "drock::switchToBranch")
+        log("Switched to branch " + branch + ".", "INFO", "utils.git.switchToBranch")
         return True
     except subprocess.CalledProcessError:
         try:  # checking out remote branch
             subprocess.check_output(['git', 'checkout', '-b', branch, 'origin/'+branch], cwd=workingdir,
                                     universal_newlines=True)
         except subprocess.CalledProcessError:
-            log("Could not switch to branch " + branch + ".", "ERROR", "drock::switchToBranch")
+            log("Could not switch to branch " + branch + ".", "ERROR", "utils.git.switchToBranch")
             return False
 
 
 def checkoutCommit(commit, workingdir):
-    if not commit:
-        log("No branch specified.", "ERROR", "drock::switchToBranch")
+    if not commit or not workingdir:
+        log("No commit specified.", "ERROR", "utils.git.checkoutCommit")
         return False
     try:
-        subprocess.check_output(['git', 'checkout', commit], cwd = workingdir, universal_newlines=True)
-        log("Checked out commit " + commit + ".", "INFO", "drock::checkoutCommit")
+        subprocess.check_output(['git', 'checkout', commit], cwd=workingdir, universal_newlines=True)
+        log("Checked out commit " + commit + ".", "INFO", "utils.git.checkoutCommit")
         return True
     except subprocess.CalledProcessError:
-        log("Problem checking out " + commit, "ERROR", "drock::checkoutCommit")
+        log("Problem checking out " + commit, "ERROR", "utils.git.checkoutCommit")
         return False
 
 def getgitbranch():
