@@ -187,7 +187,7 @@ def datetimeFromIso(iso):
     """Accepts a date-time string in iso format and returns a datetime object.
 
     """
-    return datetime(*[int(a) for a in re.split(":|-|T|\.", iso)])
+    return datetime(*[int(a) for a in re.split(":|-|T| |\.", iso)])
 
 
 def distance(objects):
