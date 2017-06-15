@@ -32,6 +32,7 @@ Created on 05 Dec 2014
 
 """
 
+import inspect
 import bpy
 from datetime import datetime
 
@@ -77,7 +78,8 @@ def decorate(level):
 
 
 def log(message, level="INFO", origin=None, prefix=""):
-    """Logs a given message to the blender console and logging file if present
+    """
+    Logs a given message to the blender console and logging file if present
     and if log level is low enough. The origin can be defined as string.
     The message is logged by the operator depending on the loglevel
     settings.
@@ -93,12 +95,13 @@ def log(message, level="INFO", origin=None, prefix=""):
     :return: None.
     """
     # Generate name of origin
-    if origin is None:
-        originname='phoboslog'
-    elif type(origin) is not str:
-        originname = origin.bl_idname
-    else:
-        originname = origin
+    #if origin is None:
+    #    originname='phoboslog'
+    #elif type(origin) is not str:
+    #    originname = origin.bl_idname
+    #else:
+    #    originname = origin
+    originname = inspect.stack()[1][1].split('addons/')[-1] + ' - ' + inspect.stack()[1][3]
 
     # Display only messages up to preferred log level
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
@@ -116,7 +119,7 @@ def log(message, level="INFO", origin=None, prefix=""):
             except IOError:
                 # TODO Infinite loop can occur when harddrive has an error!
                 # Thus, logging the IOError should be handled differently...
-                log("Cannot write to log file! Resetting it.", "ERROR", __name__+".log")
+                log("Cannot write to log file! Resetting it: " + __name__ + ".log", "ERROR")
 
         # log to terminal or Blender
         if prefs.logtoterminal:
@@ -142,4 +145,3 @@ def log(message, level="INFO", origin=None, prefix=""):
                 msg = msg.split(level)[1][1:]
                 msg = msg.split(originname)[0][:-2]
                 origin.report({level}, msg)
-
