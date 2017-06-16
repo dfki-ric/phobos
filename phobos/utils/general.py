@@ -175,7 +175,12 @@ def calculateSum(objects, numeric_prop):
 def datetimeFromIso(iso):
     """Accepts a date-time string in iso format and returns a datetime object.
     """
-    return datetime(*[int(a) for a in re.split(":|-|T| |\.", iso)])
+    try:
+        dtime = datetime(*[int(a) for a in re.split(":|-|T| |\.", iso)])
+        return dtime
+    except ValueError as e:
+        log("Could not convert iso string: "+str(e), "ERROR")
+        return datetime.now()
 
 
 def distance(objects):
