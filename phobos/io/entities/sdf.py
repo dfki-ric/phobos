@@ -27,33 +27,30 @@ Created on 06 Feb 2017
 """
 
 import os
-import yaml
-import xml.etree.ElementTree as ET
 import bpy
-import math
 
 from phobos.utils.io import l2str, indent, xmlHeader
-import phobos.model.materials as materials
-import phobos.utils.general as gUtils
-import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 from phobos.utils.selection import getRoot
 from phobos.utils.editing import getCombinedTransform
 
 
 class xmlTagger(object):
-    """ A simple class to create a syntax conform xml file. The line indentation space can be customized using the
-    indent parameter. To nest xml files an initial indentation layer can be provided. The xmlTagger writes an output
-    string using the provided functions and takes care of the indentations.
+    """ A simple class to create a syntax conform xml file. The line
+    indentation space can be customized using the indent parameter.
+    To nest xml files an initial indentation layer can be provided.
+    The xmlTagger writes an output string using the provided functions and
+    takes care of the indentations.
     """
 
     def __init__(self, indent='  ', initial=0):
-        """ Creates a new xml tagger. The line indentation space can be customized using the
-        indent parameter. To nest xml files an initial indentation layer can be provided.
+        """ Creates a new xml tagger. The line indentation space can be
+        customized using the indent parameter. To nest xml files an initial
+        indentation layer can be provided.
 
             :param indent: the symbol(s) used for indentations.
             :type indent: str
-            :param initial: the indentation hierarchy of the root element for the xml file
+            :param initial: indentation hierarchy of root element for xml file
             :type initial: int
             """
         self.indentation = initial
@@ -63,16 +60,19 @@ class xmlTagger(object):
         self.output = []
 
     def ind(self):
-        """ Helper function to return the current indentation depending on the hierarchy.
+        """ Helper function to return the current indentation depending on the
+        hierarchy.
 
         :return: str -- the current indentation (e.g. "  ").
             """
         return "" + self.indentation * self.indent
 
     def ascend(self):
-        """ Move up one hierarchical layer by finishing the current tag and removing one indentation.
+        """ Move up one hierarchical layer by finishing the current tag and
+        removing one indentation.
 
-        :exception IndentationError -- trying to move above root hierarchical layer
+        :exception IndentationError -- trying to move above root hierarchical
+        layer
         """
         if self.indentation > self.initial:
             lasttag = self.workingTags.pop(-1)
@@ -82,7 +82,8 @@ class xmlTagger(object):
             IndentationError()
 
     def descend(self, tag, params=None):
-        """ Move down one hierarchical layer using the new tag. Optional in-line attributes can be provided in the
+        """ Move down one hierarchical layer using the new tag.
+        Optional in-line attributes can be provided in the
         dictionary params (e.g. {'name': 'foo'}.
 
         :param tag: The tag used to create the new element.
@@ -95,7 +96,8 @@ class xmlTagger(object):
 
         # create parameter strings by unpacking dictionary
         if params:
-            parameters = [key + '="' + str(params[key]) + '" ' for key in params.keys()]
+            parameters = [key + '="' +
+                          str(params[key]) + '" ' for key in params.keys()]
             # remove trailing whitespace
             parameters[-1] = parameters[-1][:-1]
         else:
@@ -121,20 +123,23 @@ class xmlTagger(object):
         self.output.append(text)
 
     def attrib(self, tag, value):
-        """ Adds an attribute to the current element. The tag of the attribute is wrapped around its value.
+        """ Adds an attribute to the current element. The tag of the attribute
+        is wrapped around its value.
 
         :param tag: The tag of the attribute.
         :type tag: str
         :param value: The value of the attribute
         :type value: str (will be casted anyway)
         """
-        self.output.append(self.ind() + '<' + str(tag) + '>' + str(value) + '</' + tag + '>\n')
+        self.output.append(self.ind() + '<' + str(tag) +
+                           '>' + str(value) + '</' + tag + '>\n')
 
     def get_indent(self):
         return self.indentation
 
     def get_output(self):
-        """ Completes all trailing tags until at initial indentation and returns the output as string.
+        """ Completes all trailing tags until at initial indentation and
+        returns the output as string.
 
         :return: str -- the finished xml string.
         """
@@ -145,7 +150,7 @@ class xmlTagger(object):
         return self.output
 
 
-def pose(poseobject, posedata, indentation, relative):
+def pose(poseobject, relativepose, indentation, relative):
     """ Simple wrapper for pose data.
     If relative poses are used the data found in posedata is used.
     Otherwise the pose of the poseobject will be combined with all collected
@@ -157,66 +162,75 @@ def pose(poseobject, posedata, indentation, relative):
     :param relative: True for usage of sdf relative pathing
     :return: str -- writable xml line
     """
-    # {'matrix': [[-1.0, 0, 0, 0.3], [0, -1.0, 0, 0], [0, 0, 1.0, 0.1], [0, 0, 0, 1.0]],
-    #  'rawmatrix': Matrix(((-1.0, 5.642599489874556e-07, 1.5100516392863028e-08, 0.2999999523162842),
-    #                       (-5.642599489874556e-07, -1.0, -3.178652008273275e-08, 2.9802322387695312e-08),
-    #                       (1.510050751107883e-08, -3.178649876645068e-08, 1.0, 0.09999991953372955),
-    #                       (0.0, 0.0, 0.0, 1.0))), 'rotation_quaternion': [0, 0, 0, 1.0],
-    #  'rotation_euler': [0, 0, -3.14159], 'translation': [0.3, 0, 0.1]}
 
-    # 'matrix', 'rawmatrix', 'rotation_quaternion', 'rotation_euler', 'translation'
+    # 'matrix', 'rawmatrix', 'rotation_quaternion', 'rotation_euler',
+    # 'translation'
 
     # SDF uses radians as unit
     # TODO pose could be relative to different frame!
     tagger = xmlTagger(initial=indentation)
 
-    # combine transformations of pose if relative is not used
-    if not relative:
+    if 'frame' in relativepose and relative:
+        tagger.write(frame(relativepose['frame'], tagger.get_indent(),
+                           relative))
+
+    # relative poses are written to file as they are
+    if relative:
+        posedata = relativepose
+    # absolute poses are created by combined transform of the pose
+    else:
         matrix = getCombinedTransform(poseobject, getRoot(poseobject))
         posedata = {'rawmatrix': matrix,
-            'matrix': [list(vector) for vector in list(matrix)],
-            'translation': list(matrix.to_translation()),
-            'rotation_euler': list(matrix.to_euler()),
-            'rotation_quaternion': list(matrix.to_quaternion())}
+                    'matrix': [list(vector) for vector in list(matrix)],
+                    'translation': list(matrix.to_translation()),
+                    'rotation_euler': list(matrix.to_euler()),
+                    'rotation_quaternion': list(matrix.to_quaternion())}
 
     # only translation and euler rotation are required
     tra = posedata['translation']
     rot = posedata['rotation_euler']
-    result = '{0} {1} {2} {3} {4} {5}'.format(tra[0], tra[1], tra[2], rot[0], rot[1], rot[2])
+    result = '{0} {1} {2} {3} {4} {5}'.format(
+        tra[0], tra[1], tra[2], rot[0], rot[1], rot[2])
     tagger.attrib('pose', result)
     return "".join(tagger.get_output())
 
 
-def frame(frameobj, framedata, indentation, relative):
+def frame(framedata, indentation, relative):
     """ Simple wrapper for frame data.
-    The frameobject is required to add the pose within the frame dependent on
-    the relative pose parameter.
+    The name of the frameobject (has to be a key in framedata) is used to
+    define the object pose.
 
-    :param frameobj: object to be used for absolute pose
     :param framedata: data as provided by dictionary
     :param indentation: indentation at current level
-    :param relative: True when using relative sdf pathing
+    :param relative: True to apply a pose to the frame object itself (NOT
+    SUPPORTED YET)
     :return: str -- writable xml line
     """
     tagger = xmlTagger(initial=indentation)
-    tagger.descend('frame', {'name': '...'})
-    tagger.write(pose(frameobj, framedata['pose'], tagger.get_indent(),
-                      relative))
+    tagger.descend('frame', {'name': framedata['name']})
+    # relative frame pose is not supported yet
+    # tagger.write(pose(frameobj, framedata['pose'], tagger.get_indent(),
+    # relative))
     tagger.ascend()
     return "".join(tagger.get_output())
 
 
 def inertial(inertialobj, inertialdata, indentation, relative):
     """ Simple wrapper for link inertial data.
-    The inertialobject is required to add the pose within the frame dependent on
-    the relative pose parameter.
+    The inertial object is required to determine the position (pose) of the
+    object.
+    If relative poses are used the data found in inertialdata is used.
+    Otherwise the pose of the inertialobject will be combined with all
+    collected links up to the rootobject (see
+    phobos.utils.editing.getCombinedTransform).
 
     :param inertialobj: object to be used for absolute pose
-    :param inertialdata: data as provided by dictionary
+    :param inertialdata: data as provided by dictionary (should contain mass
+    and inertia)
     :param indentation: indentation at current level
+    :param relative: True for usage of sdf relative pathing
     :return: str -- writable xml line
     """
-    # {'mass': 0.5, 'pose': {...}, 'name': 'inertial_leg52', 'inertia': [0.00024, -4e-05, 4e-05, 0.00514, 0, 0.00515]}
 
     # 'mass', 'pose', 'name', 'inertia'
 
@@ -225,7 +239,8 @@ def inertial(inertialobj, inertialdata, indentation, relative):
     if 'mass' in inertialdata:
         tagger.attrib('mass', inertialdata['mass'])
     else:
-        log("Object '{0}' without mass!".format(inertialobj.name), "WARNING", "exportSdf")
+        log("Object '{0}' without mass!".format(
+            inertialobj.name), "WARNING", "exportSdf")
     if 'inertia' in inertialdata:
         inertia = inertialdata['inertia']
         tagger.descend('inertia')
@@ -237,12 +252,11 @@ def inertial(inertialobj, inertialdata, indentation, relative):
         tagger.attrib('izz', inertia[5])
         tagger.ascend()
     else:
-        log("Object '{0}' without inertia!".format(inertialobj.name), "WARNING",
-            "exportSdf")
-    # OPT: tagger.write(frame(inertialdata['frame'], tagger.getindent()))
+        log("Object '{0}' without inertia!".format(inertialobj.name),
+            "WARNING", "exportSdf")
     if 'pose' in inertialdata:
-        tagger.write(pose(inertialobj, inertialdata['pose'], tagger.get_indent(),
-                      True))
+        tagger.write(pose(inertialobj, inertialdata['pose'],
+                          tagger.get_indent(), relative))
     else:
         log("Object '{0}' has no inertial pose!".format(inertialobj.name),
             "WARNING", "exportsdf")
@@ -250,28 +264,35 @@ def inertial(inertialobj, inertialdata, indentation, relative):
     return "".join(tagger.get_output())
 
 
-def collision(collisionobj, collisiondata, indentation, modelname):
+def collision(collisionobj, collisiondata, indentation, relative, modelname):
     """ Simple wrapper for link collision data.
-    The collisionobject is required to add the pose within the frame dependent on
-    the relative pose parameter.
+    The collision object is required to determine the position (pose) of the
+    object.
+    If relative poses are used the data found in collisiondata is used.
+    Otherwise the pose of the collisionobject will be combined with all
+    collected links up to the rootobject (see
+    phobos.utils.editing.getCombinedTransform).
 
-    :param collisionobj:
-    :param collisiondata: data as provided by dictionary
+    :param collisionobj: object to be used for absolute pose
+    :param collisiondata: data as provided by dictionary (should contain name,
+    geometry, [bitmask])
     :param indentation: indentation at current level
+    :param relative: True for usage of sdf relative pathing
+    :param modelname: the name of the model (required for geometry)
     :return: str -- writable xml line
     """
-    # {'collision_leg2_lower': {'pose': {...}, 'name': 'collision_leg2_lower',
-    #                           'bitmask': 2, 'geometry': {'size': [0.27958, 0.06, 0.06], 'type': 'box'}},
-    #  'collision_leg2_foot': {'pose': {...}, 'name': 'collision_leg2_foot',
-    #                          'bitmask': 4, 'geometry': {'radius': 0.06, 'type': 'sphere'}}}
+    # {'collision_leg2_lower': {'pose': {...}, 'name': '...',
+    #                           'bitmask': 2, 'geometry': {...}},
+    #  'collision_leg2_foot': {'pose': {...}, 'name': '...',
+    #                          'bitmask': 4, 'geometry': {...}}}
     tagger = xmlTagger(initial=indentation)
     tagger.descend('collision', {'name': collisiondata['name']})
     # OPT: tagger.attrib('laser_retro', ...)
     # OPT: tagger.attrib('max_contacts', ...)
     # OPT: tagger.attrib('frame', ...)
-    # TODO: Optional!
+    # Write collisionposition always relative to link!
     tagger.write(pose(collisionobj, collisiondata['pose'], tagger.get_indent(),
-                     True))
+                      True))
     tagger.write(geometry(collisiondata['geometry'], tagger.get_indent(),
                           modelname))
     # # SURFACE PARAMETERS
@@ -399,8 +420,8 @@ def geometry(geometrydata, indentation, modelname):
     #     tagger.ascend()
     elif geometrydata['type'] == 'mesh':
         tagger.descend('mesh')
-        tagger.attrib('uri',
-                      'model://' + modelname + '/meshes/' + geometrydata['filename'] + '.dae')
+        tagger.attrib('uri', 'model://' + modelname + '/meshes/' +
+                      geometrydata['filename'] + '.dae')
     #     OPT: tagger.descend('submesh')
     #     REQ: tagger.attrib('name', ...)
     #     OPT: tagger.attrib('center', ...)
@@ -425,8 +446,8 @@ def geometry(geometrydata, indentation, modelname):
     # TODO capsule is not supported by sdf: export as mesh
     # elif geometrydata['type'] == 'capsule':
     #     tagger.descend('mesh')
-    #     tagger.attrib('uri',
-    #                   'model://' + modelname + '/meshes/' + geometrydata['filename'] + '.dae')
+    #     tagger.attrib('uri', 'model://' + modelname + '/meshes/' +
+    #                   geometrydata['filename'] + '.dae')
     #     tagger.descend('submesh')
     #     tagger.attrib('name', ...)
     #     tagger.attrib('center', ...)
@@ -437,14 +458,25 @@ def geometry(geometrydata, indentation, modelname):
     return "".join(tagger.get_output())
 
 
-def visual(visualobj, linkobj, visualdata, indentation, modelname):
+def visual(visualobj, linkobj, visualdata, indentation, relative, modelname):
     """ Simple wrapper for visual data of links.
+    The visual object is required to determine the position (pose) of the
+    object.
+    If relative poses are used the data found in visualdata (key pose) is used.
+    Otherwise the pose of the visual object will be combined with all
+    collected links up to the rootobject (see
+    phobos.utils.editing.getCombinedTransform).
 
-    :param visualdata: data as provided by dictionary
+    :param visualobj: object to be used for pose
+    :param visualdata: data as provided by dictionary (should contain name,
+    geometry)
     :param indentation: indentation at current level
+    :param relative: True for usage of sdf relative pathing
+    :param modelname: the name of the model (required for geometry)
     :return: str -- writable xml line
     """
-    # {'geometry': 'pose': 'material': 'upper_leg', 'name': 'visual_leg2_upper'}
+
+    # geometry': 'pose': 'material': 'upper_leg', 'name': 'visual_leg2_upper'
     tagger = xmlTagger(initial=indentation)
     tagger.descend('visual', params={'name': visualdata['name']})
     # OPT: tagger.attrib('cast_shadows', ...)
@@ -455,35 +487,33 @@ def visual(visualobj, linkobj, visualdata, indentation, modelname):
     # tagger.ascend()
     # OPT: tagger.write(frame(..., tagger.get_indent()))
 
-    # Pose data of the visual is transformed by link
-    # TODO check matrix calculation
-    matrix = visualobj.matrix_local
-    posedata = {'rawmatrix': matrix,
-        'matrix': [list(vector) for vector in list(matrix)],
-        'translation': list(matrix.to_translation()),
-        'rotation_euler': list(matrix.to_euler()),
-        'rotation_quaternion': list(matrix.to_quaternion())}
-    # tagger.attrib('pose', '0 0 0 0 0 0')
-    # tagger.descend('geometry')
-    # tagger.descend('box')
-    # tagger.attrib('size', '0.1 0.1 0.1')
-    # tagger.ascend()
-    # TODO: Optional!
-    tagger.write(pose(visualobj, posedata, tagger.get_indent(), True))
+    if relative and 'pose' in visualdata:
+        posedata = visualdata['pose']
+        tagger.write(pose(visualobj, posedata, tagger.get_indent(), relative))
+    # Pose data of the visual is transformed by link --> use local matrix
+    else:
+        matrix = visualobj.matrix_local
+        posedata = {'rawmatrix': matrix,
+                    'matrix': [list(vector) for vector in list(matrix)],
+                    'translation': list(matrix.to_translation()),
+                    'rotation_euler': list(matrix.to_euler()),
+                    'rotation_quaternion': list(matrix.to_quaternion())}
+        # overwrite absolute position of the visual object
+        tagger.write(pose(visualobj, posedata, tagger.get_indent(), True))
     # OPT: tagger.write(material(visualdata['material']), tagger.get_indent())
     tagger.write(geometry(visualdata['geometry'], tagger.get_indent(),
-                              modelname))
-    # TODO PLUGIN ELEMENT?
+                          modelname))
     tagger.ascend()
     return "".join(tagger.get_output())
+
 
 def exportSdf(model, filepath, relativeSDF=False):
     log("Export SDF to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
     errors = False
 
-    # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains', 'meshes',
-    # 'lights', 'motors', 'groups', 'joints', 'name'
+    # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains',
+    # 'meshes', 'lights', 'motors', 'groups', 'joints', 'name'
     log('Exporting "{0}"...'.format(model['name'], "DEBUG", "exportSdf"))
     # TODO remove debugging information
     # print('sensors\n')
@@ -533,7 +563,8 @@ def exportSdf(model, filepath, relativeSDF=False):
         # OPT: self collide (all links collide with each other)
         # xml.attrib('self_collide', ...)
 
-        # OPT: allows auto disabling of the model when at rest (only jointless models)
+        # OPT: allows auto disabling of the model when at rest (only jointless
+        # models)
         # xml.attrib('allow_auto_disable', ...)
 
         # include stuff from uri
@@ -549,16 +580,19 @@ def exportSdf(model, filepath, relativeSDF=False):
         # add wrapper for xml model?
         # xml.ascend()
 
-        # enables wind influence on all links in the model (overriden by link wind property)
+        # enables wind influence on all links in the model (overriden by link
+        # wind property)
         # OPT: xml.attrib('enable_wind', ...)
 
         # frame
         # OPT: xml.descend('frame', {'name': ...})
-        # OPT: xml.attrib('pose', poseVal) OR xml.descend('pose') \\ xml.attrib('frame', otherFrame) \\ xml.ascend()
+        # OPT: xml.attrib('pose', poseVal) OR xml.descend('pose') \\
+        # xml.attrib('frame', otherFrame) \\ xml.ascend()
         # xml.ascend()
 
         # pose
-        # OPT: xml.attrib('pose', poseVal) OR xml.descend('pose') \\ xml.attrib('frame', otherFrame) \\ xml.ascend()
+        # OPT: xml.attrib('pose', poseVal) OR xml.descend('pose') \\
+        # xml.attrib('frame', otherFrame) \\ xml.ascend()
         # link
         for linkkey in model['links'].keys():
             link = model['links'][linkkey]
@@ -577,35 +611,32 @@ def exportSdf(model, filepath, relativeSDF=False):
             # xml.ascend()
             # OPT: xml.write(frame(model['frame']), xml.get_indent())
             # TODO: Optional!
-            xml.write(pose(linkobj, link['pose'], xml.get_indent(), relativeSDF))
+            xml.write(pose(linkobj, link['pose'],
+                           xml.get_indent(), relativeSDF))
             # inertial data might be missing
             if len(link['inertial']) > 0:
                 inertialname = link['inertial']['name']
                 inertialobj = bpy.context.scene.objects[inertialname]
-                xml.write(inertial(inertialobj, link['inertial'], xml.get_indent(),
-                            True))
+                xml.write(inertial(inertialobj, link['inertial'],
+                                   xml.get_indent(), relativeSDF))
+            else:
+                log('No inertial data for "{0}"...'.format(link['name'],
+                                                           "WARNING",
+                                                           "exportSdf"))
 
             # collision data might be missing
             if len(link['collision'].keys()) > 0:
                 for colkey in link['collision'].keys():
                     colliname = link['collision'][colkey]['name']
                     collisionobj = bpy.context.scene.objects[colliname]
-                    xml.write(collision(collisionobj, link['collision'][colkey],
-                                        xml.get_indent(), modelname))
-            # TODO remove when debugging done (shows collision as visuals
-            # if len(link['collision'].keys()) > 0:
-            #     for colkey in link['collision'].keys():
-            #         colliname = link['collision'][colkey]['name']
-            #         colligeom = link['collision'][colkey]['geometry']
-            #         collisionobj = bpy.context.scene.objects[colliname]
-            #         collisiondata = link['collision'][colkey]
-            #         xml.descend('visual', params={'name':
-            #                                       'col_{0}'.format(colliname)})
-            #         xml.write(pose(collisionobj, collisiondata['pose'], xml.get_indent(),
-            #                         True))
-            #         xml.write(geometry(collisiondata['geometry'], xml.get_indent(),
-            #                             modelname))
-            #         xml.ascend()
+                    xml.write(collision(collisionobj,
+                                        link['collision'][colkey],
+                                        xml.get_indent(), relativeSDF,
+                                        modelname))
+            else:
+                log('No collision data for "{0}"...'.format(link['name'],
+                                                            "WARNING",
+                                                            "exportSdf"))
 
             # there might be no visual objects
             if len(link['visual'].keys()) > 0:
@@ -613,17 +644,11 @@ def exportSdf(model, filepath, relativeSDF=False):
                     visualobj = bpy.context.scene.objects[visualkey]
                     xml.write(visual(visualobj, linkobj,
                                      link['visual'][visualkey],
-                                     xml.get_indent(), modelname))
-            # TODO remove when debugging done
-            # xml.descend('visual', params={'name':
-            #                               '{}_center'.format(link['name'])})
-            # xml.attrib('pose', '0 0 0 0 0 0')
-            # xml.descend('geometry')
-            # xml.descend('sphere')
-            # xml.attrib('radius', '0.05')
-            # xml.ascend()
-            # xml.ascend()
-            # xml.ascend()
+                                     xml.get_indent(), relativeSDF, modelname))
+            else:
+                log('No visual data for "{0}"...'.format(link['name'],
+                                                         "WARNING",
+                                                         "exportSdf"))
 
             # OPT: xml.write(sensor(link['sensor'], xml.get_indent()))
             # OPT: xml.descend('projector', {'name': ...})
@@ -788,12 +813,12 @@ def exportSdf(model, filepath, relativeSDF=False):
         # xml.ascend()
 
     # TODO remove this when finished
-    except Exception as e:
+    except Exception:
         import sys
         import traceback
-        e = sys.exc_info()[0]
+        sys.exc_info()[0]
         print(traceback.format_exc())
-        errors=True
+        errors = True
         log("Error in export!", "ERROR", "exportsdf")
     finally:
         outputtext = xml.get_output()
@@ -801,7 +826,8 @@ def exportSdf(model, filepath, relativeSDF=False):
         log("Writing model data to " + filename, "DEBUG", "exportSdf")
         with open(filename, 'w') as outputfile:
             outputfile.writelines(outputtext)
-    finishmessage="Export finished with " + ("no " if not errors else "") + "errors."
+    finishmessage = "Export finished with " + \
+        ("no " if not errors else "") + "errors."
     log(finishmessage, "INFO", "exportModelToSDF")
 
 
