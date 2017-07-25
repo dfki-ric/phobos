@@ -75,9 +75,10 @@ class ExportSceneOperator(Operator):
             log("There are no entities to export!", "WARNING")
 
         # derive entities and export if necessary
-        modellist = []
-        for root in rootobjects:
-            log("Adding entity '" + str(root["entity/name"]) + "' to scene.", "INFO")
+        models = set()
+        for root in entities:
+            log("Adding entity '" +
+                str(root["entity/name"]) + "' to scene.", "INFO")
             if root["entity/type"] in entity_types:
                 # TODO delete me?
                 # try:
@@ -643,7 +644,6 @@ class ExportAllPosesOperator(Operator):
         #row.template_image_settings(image_settings, color_management=False)
 
     def check(self, context):
-        # TODO what does this do at all?
         return True
 
     def execute(self, context):
