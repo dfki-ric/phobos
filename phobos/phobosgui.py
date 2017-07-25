@@ -30,14 +30,13 @@ import sys
 import inspect
 
 import bpy
-#import bgl
+# import bgl
 from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
                        PointerProperty, CollectionProperty)
 from bpy.types import AddonPreferences
 
 from . import defs
 from phobos.phoboslog import loglevels
-from phobos.operators.io import loadModelsAndPoses
 from phobos.io import entities
 from phobos.io import meshes
 from phobos.io import scenes
@@ -67,7 +66,7 @@ class PhobosPrefs(AddonPreferences):
 
     loglevel = EnumProperty(
         name="loglevel",
-        items=tuple(((l,)*3 for l in loglevels)),
+        items=tuple(((l,) * 3 for l in loglevels)),
         default="ERROR"
     )
 
@@ -105,7 +104,7 @@ class PhobosPrefs(AddonPreferences):
         layout.separator()
         layout.label(text="Folders")
         layout.prop(self, "modelsfolder", text="models folder")
-        #layout.prop(self, 'pluginspath', text="Path for plugins")
+        # layout.prop(self, 'pluginspath', text="Path for plugins")
 
 
 class PhobosExportSettings(bpy.types.PropertyGroup):
@@ -117,27 +116,34 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     def getMeshTypeListForEnumProp(self, context):
         return sorted([(mt,) * 3 for mt in meshes.mesh_types])
 
-    path = StringProperty(name='path', subtype='DIR_PATH', default='../', update=updateExportPath)
-    structureExport = BoolProperty(name="Structure export", default=True, description="Create structured subfolders")
-    selectedOnly = BoolProperty(name="Selected only", default=True, description="Export only selected objects")
-    decimalPlaces = IntProperty(name="decimals",
-                                description="Number of decimal places to export",
-                                default=5)
+    path = StringProperty(name='path', subtype='DIR_PATH', default='../',
+                          update=updateExportPath)
+    # TODO is not visible in GUI?!
+    structureExport = BoolProperty(name="Structure export", default=True,
+                                   description="Create structured subfolders")
+    selectedOnly = BoolProperty(name="Selected only", default=True,
+                                description="Export only selected objects")
+    decimalPlaces = IntProperty(name="decimals", description="Number of " +
+                                "decimal places to export", default=5)
     exportTextures = BoolProperty(name='Export textures', default=True)
     outputMeshtype = EnumProperty(items=getMeshTypeListForEnumProp,
                                   name='link',
-                                  description="Mesh type to use in exported entity/scene files.")
+                                  description="Mesh type to use in exported " +
+                                  "entity/scene files.")
 
 
 class Mesh_Export_UIList(bpy.types.UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+
+    def draw_item(self, context, layout, data, item, icon, active_data,
+                  active_propname, index):
         # assert(isinstance(item, bpy.types.MaterialTextureSlot)
         ma = data
         slot = item
         tex = slot.texture if slot else None
         if self.layout_type in {'DEFAULT', 'COMPACT'}:
             if tex:
-                layout.prop(tex, "name", text="", emboss=False, icon_value=icon)
+                layout.prop(tex, "name", text="",
+                            emboss=False, icon_value=icon)
             else:
                 layout.label(text="", icon_value=icon)
             if tex and isinstance(item, bpy.types.MaterialTextureSlot):
@@ -149,27 +155,33 @@ class Mesh_Export_UIList(bpy.types.UIList):
 
 class Models_Poses_UIList(bpy.types.UIList):
 
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+    def draw_item(self, context, layout, data, item, icon, active_data,
+                  active_propname, index):
         self.use_filter_show = False
         im = item
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bpy.context.user_preferences.addons[
+            "phobos"].preferences.models_poses
         if im.name in modelsPosesColl.keys():
             coll_item = modelsPosesColl[im.name]
             if coll_item.type == "robot_name":
-                layout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
+                layout.label(text=coll_item.label,
+                             translate=False, icon=coll_item.icon)
             else:
                 sLayout = layout.split(0.1)
                 sLayout.label(text="")
                 if im.filepath != '':
-                    sLayout.label(text=coll_item.label, translate=False,icon_value=icon)
+                    sLayout.label(text=coll_item.label,
+                                  translate=False, icon_value=icon)
                 else:
-                    sLayout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
+                    sLayout.label(text=coll_item.label,
+                                  translate=False, icon=coll_item.icon)
 
     def filter_items(self, context, data, propname):
         images = getattr(data, propname)
         flt_flags = [self.bitflag_filter_item] * len(images)
 
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bpy.context.user_preferences.addons[
+            "phobos"].preferences.models_poses
 
         # Filter items. Only show robots. Hide all other images
         for idx, im in enumerate(images):
@@ -180,6 +192,7 @@ class Models_Poses_UIList(bpy.types.UIList):
             else:
                 flt_flags[idx] &= ~self.bitflag_filter_item
 
+        # TODO remove this (never used)
         helper_funcs = bpy.types.UI_UL_list
         # Reorder by name
         flt_neworder = []
@@ -196,7 +209,7 @@ class Models_Poses_UIList(bpy.types.UIList):
         return flt_flags, flt_neworder
 
 
-def showPreview(self,value):
+def showPreview(self, value):
     bpy.ops.scene.change_preview()
 
 
@@ -207,19 +220,20 @@ class PhobosToolsPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
-    #bl_context = ''
+    # bl_context = ''
 
     def draw(self, context):
         layout = self.layout
 
         # Tools & Selection Menu
-        #layout.separator()
+        # layout.separator()
         tsinlayout = layout.split()
         tsc1 = tsinlayout.column(align=True)
         tsc1.label(text="Select...", icon='HAND')
         tsc1.operator('phobos.select_root', text='Root')
         tsc1.operator('phobos.select_model', text='Robot')
-        tsc1.operator('phobos.select_objects_by_phobostype', text="by Phobostype")
+        tsc1.operator('phobos.select_objects_by_phobostype',
+                      text="by Phobostype")
         tsc1.operator('phobos.select_objects_by_name', text="by Name")
         tsc2 = tsinlayout.column(align=True)
         tsc2.label(text="Tools", icon='MODIFIER')
@@ -237,13 +251,13 @@ class PhobosModelPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
-    #bl_context = ''
+    # bl_context = ''
 
     def draw_header(self, context):
         self.layout.label(icon='OUTLINER_DATA_ARMATURE')
 
     def draw(self, context):
-        layout=self.layout
+        layout = self.layout
 
         # Robot Model Menu
         inlayout = layout.split()
@@ -368,12 +382,12 @@ class PhobosExportPanel(bpy.types.Panel):
         expsets = bpy.data.worlds[0].phobosexportsettings
         layout = self.layout
 
-        #export robot model options
+        # export robot model options
         layout.prop(expsets, "path")
         ginlayout = self.layout.split()
         g1 = ginlayout.column(align=True)
-        #g1.prop(expsets, "relativePaths")
-        #g1.prop(expsets, "structureExport")
+        # g1.prop(expsets, "relativePaths")
+        # g1.prop(expsets, "structureExport")
         g1.prop(expsets, "exportTextures")
         g1.prop(expsets, "selectedOnly")
         g2 = ginlayout.column(align=True)
@@ -387,7 +401,8 @@ class PhobosExportPanel(bpy.types.Panel):
         cmodel = inlayout.column(align=True)
         cmodel.label(text="Models")
         for entitytype in sorted(entities.entity_types):
-            if 'export' in entities.entity_types[entitytype] and 'extensions' in entities.entity_types[entitytype]:
+            if ('export' in entities.entity_types[entitytype] and
+                    'extensions' in entities.entity_types[entitytype]):
                 typename = "export_entity_" + entitytype
                 cmodel.prop(bpy.data.worlds[0], typename)
 
@@ -406,17 +421,17 @@ class PhobosExportPanel(bpy.types.Panel):
                 typename = "export_scene_" + scenetype
                 cscene.prop(bpy.data.worlds[0], typename)
 
-        #c2.prop(expsets, "exportCustomData", text="Export custom data")
+        # c2.prop(expsets, "exportCustomData", text="Export custom data")
 
         # FIXME: issue with export and import of models with new generic system
-        #ec2 = layout.column(align=True)
+        # ec2 = layout.column(align=True)
 
 #        layout.separator()
 #        layout.label(text="Baking")
 #        layout.operator("phobos.export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
 #        layout.operator("phobos.create_robot_instance", text="Create Robot Lib Instance", icon="RENDERLAYERS")
 
-        #self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
+        # self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
 
         layout.separator()
         layout.operator("phobos.export_model", icon="EXPORT")
@@ -435,7 +450,8 @@ class PhobosImportPanel(bpy.types.Panel):
         self.layout.label(icon='IMPORT')
 
     def draw(self, context):
-        self.layout.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
+        self.layout.operator("phobos.import_robot_model",
+                             text="Import Robot Model", icon="IMPORT")
 
 
 class PhobosObjectPanel(bpy.types.Panel):
@@ -453,23 +469,24 @@ class PhobosObjectPanel(bpy.types.Panel):
 
         layout = self.layout
 
-        #the following for real pre-defined rather than custom properties
-        #row_type.prop(bpy.context.active_object, "type")
+        # the following for real pre-defined rather than custom properties
+        # row_type.prop(bpy.context.active_object, "type")
         row_type = layout.row()
         row_type.label(icon="OBJECT_DATA")
-        #row_type.prop_enum(bpy.context.active_object, '["type"]', "node")
-        #row_type.prop_enum(bpy.context.active_object, 'phobostype')
+        # row_type.prop_enum(bpy.context.active_object, '["type"]', "node")
+        # row_type.prop_enum(bpy.context.active_object, 'phobostype')
         row_type.prop(bpy.context.active_object, 'phobostype')
 
         box_props = layout.box()
         try:
             for prop in defs.type_properties[bpy.context.active_object.phobostype]:
-                #box_props.label(prop)
+                # box_props.label(prop)
                 if prop in bpy.context.active_object:
-                    box_props.prop(bpy.context.active_object, '["' + prop + '"]')
+                    box_props.prop(bpy.context.active_object,
+                                   '["' + prop + '"]')
         except KeyError:
             print("Key could not be found.")
-            #else:
+            # else:
             #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.phobostype+"_default"]
 
 
@@ -496,17 +513,20 @@ def register():
     for meshtype in meshes.mesh_types:
         if 'export' in meshes.mesh_types[meshtype]:
             typename = "export_mesh_" + meshtype
-            setattr(bpy.types.World, typename, BoolProperty(name=meshtype, default=False))
+            setattr(bpy.types.World, typename, BoolProperty(
+                name=meshtype, default=False))
 
     for entitytype in entities.entity_types:
         if 'export' in entities.entity_types[entitytype]:
             typename = "export_entity_" + entitytype
-            setattr(bpy.types.World, typename, BoolProperty(name=entitytype, default=False))
+            setattr(bpy.types.World, typename, BoolProperty(
+                name=entitytype, default=False))
 
     for scenetype in scenes.scene_types:
         if 'export' in scenes.scene_types[scenetype]:
             typename = "export_scene_" + scenetype
-            setattr(bpy.types.World, typename, BoolProperty(name=scenetype, default=False))
+            setattr(bpy.types.World, typename, BoolProperty(
+                name=scenetype, default=False))
 
     # Register classes (cannot be automatic, as panels are placed in gui in the registering order)
     #     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
@@ -518,28 +538,31 @@ def register():
     bpy.utils.register_class(ModelPoseProp)
     bpy.utils.register_class(PhobosPrefs)
     bpy.utils.register_class(PhobosExportSettings)
-    #bpy.utils.register_class(Mesh_Export_UIList)
-    #bpy.utils.register_class(Models_Poses_UIList)
+    # bpy.utils.register_class(Mesh_Export_UIList)
+    # bpy.utils.register_class(Models_Poses_UIList)
 
     bpy.utils.register_class(PhobosToolsPanel)
     bpy.utils.register_class(PhobosModelPanel)
-    #bpy.utils.register_class(PhobosScenePanel)
+    # bpy.utils.register_class(PhobosScenePanel)
     bpy.utils.register_class(PhobosExportPanel)
     bpy.utils.register_class(PhobosImportPanel)
     bpy.utils.register_class(PhobosObjectPanel)
 
-    bpy.types.World.phobosexportsettings = PointerProperty(type=PhobosExportSettings)
-    bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(name="Index of current pose", default=0,update=showPreview)
-    bpy.types.Scene.preview_visible = bpy.props.BoolProperty(name="Is the draw preview operator running", default=False)
-    bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(name="Should we redraw the preview_template", default=False)
+    bpy.types.World.phobosexportsettings = PointerProperty(
+        type=PhobosExportSettings)
+    bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(
+        name="Index of current pose", default=0, update=showPreview)
+    bpy.types.Scene.preview_visible = bpy.props.BoolProperty(
+        name="Is the draw preview operator running", default=False)
+    bpy.types.Scene.redraw_preview = bpy.props.BoolProperty(
+        name="Should we redraw the preview_template", default=False)
 
     # Add manuals to operator buttons
     bpy.utils.register_manual_map(get_operator_manuals)
 
     # Read in model and pose data from the respective folders
-    #loadModelsAndPoses()
+    # loadModelsAndPoses()
     libraries.register()
-
 
 
 def unregister():

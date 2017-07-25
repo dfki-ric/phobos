@@ -176,7 +176,9 @@ def selectObjects(objects, clear=True, active=-1):
     :type active: int.
     :return: None.
     """
-    bpy.ops.object.mode_set(mode='OBJECT')
+    # if no object is active, object mode can't be toggled
+    if bpy.context.scene.objects.active:
+        bpy.ops.object.mode_set(mode='OBJECT')
     if clear:
         # TODO still required?
         #bpy.ops.object.mode_set(mode='OBJECT')
