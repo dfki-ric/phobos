@@ -31,8 +31,6 @@ import bpy
 
 from phobos.utils.io import l2str, indent, xmlHeader
 from phobos.phoboslog import log
-from phobos.utils.selection import getRoot
-from phobos.utils.editing import getCombinedTransform
 
 
 class xmlTagger(object):
@@ -150,7 +148,7 @@ class xmlTagger(object):
         return self.output
 
 
-def pose(poseobject, relativepose, indentation, relative):
+def pose(poseobject, relativepose, indentation, world):
     """ Simple wrapper for pose data.
     If relative poses are used the data found in posedata is used.
     Otherwise the pose of the poseobject will be combined with all collected
@@ -162,24 +160,16 @@ def pose(poseobject, relativepose, indentation, relative):
     :param relative: True for usage of sdf relative pathing
     :return: str -- writable xml line
     """
-
-    # 'matrix', 'rawmatrix', 'rotation_quaternion', 'rotation_euler',
-    # 'translation'
-
-    # SDF uses radians as unit
-    # TODO pose could be relative to different frame!
     tagger = xmlTagger(initial=indentation)
 
-    if 'frame' in relativepose and relative:
-        tagger.write(frame(relativepose['frame'], tagger.get_indent(),
-                           relative))
-
     # relative poses are written to file as they are
-    if relative:
+    if not world:
         posedata = relativepose
-    # absolute poses are created by combined transform of the pose
+    # world poses are created by combined transform of the pose
     else:
-        matrix = getCombinedTransform(poseobject, getRoot(poseobject))
+        matrix = poseobject.matrix_world
+        # FINAL remove when done
+        # matrix = getCombinedTransform(poseobject, getRoot(poseobject))
         posedata = {'rawmatrix': matrix,
                     'matrix': [list(vector) for vector in list(matrix)],
                     'translation': list(matrix.to_translation()),
@@ -255,8 +245,9 @@ def inertial(inertialobj, inertialdata, indentation, relative):
         log("Object '{0}' without inertia!".format(inertialobj.name),
             "WARNING", "exportSdf")
     if 'pose' in inertialdata:
+        # CHECK the inertialpose has to be relative to link
         tagger.write(pose(inertialobj, inertialdata['pose'],
-                          tagger.get_indent(), relative))
+                               tagger.get_indent(), False))
     else:
         log("Object '{0}' has no inertial pose!".format(inertialobj.name),
             "WARNING", "exportsdf")
@@ -291,12 +282,12 @@ def collision(collisionobj, collisiondata, indentation, relative, modelname):
     # OPT: tagger.attrib('max_contacts', ...)
     # OPT: tagger.attrib('frame', ...)
     # Write collisionposition always relative to link!
-    tagger.write(pose(collisionobj, collisiondata['pose'], tagger.get_indent(),
-                      True))
+    tagger.write(pose(collisionobj, collisiondata['pose'],
+                           tagger.get_indent(), False))
     tagger.write(geometry(collisiondata['geometry'], tagger.get_indent(),
                           modelname))
     # # SURFACE PARAMETERS
-    # TODO: Optional!
+    # TODO: Optional. Add if clause
     if 'bitmask' in collisiondata:
         tagger.descend('surface')
         # # BOUNCE PART
@@ -330,11 +321,11 @@ def collision(collisionobj, collisiondata, indentation, relative, modelname):
         # tagger.ascend()
         # tagger.ascend()
         # # CONTACT PART
-        # TODO: Optional!
+        # TODO: Optional. Add if clause
         tagger.descend('contact')
         # OPT: tagger.attrib('collide_without_contact', ...)
         # OPT: tagger.attrib('collide_without_contact_bitmask', ...)
-        # TODO: Optional!
+        # TODO: Optional. Add if clause
         bitstring = '0x{0:02d}'.format(collisiondata['bitmask'])
         tagger.attrib('collide_bitmask', bitstring)
         # OPT: tagger.attrib('poissons_ratio', ...)
@@ -426,7 +417,7 @@ def geometry(geometrydata, indentation, modelname):
     #     REQ: tagger.attrib('name', ...)
     #     OPT: tagger.attrib('center', ...)
     #     tagger.ascend()
-    # TODO: Optional!
+    #     TODO: Optional. Add if clause
         tagger.attrib('scale', '{0} {1} {2}'.format(*geometrydata['scale']))
         tagger.ascend()
     # elif geometrydata['type'] == 'plane':
@@ -443,7 +434,7 @@ def geometry(geometrydata, indentation, modelname):
         tagger.descend('sphere')
         tagger.attrib('radius', '{0}'.format(geometrydata['radius']))
         tagger.ascend()
-    # TODO capsule is not supported by sdf: export as mesh
+    # OPTIONAL capsule is not supported by sdf: export as mesh
     # elif geometrydata['type'] == 'capsule':
     #     tagger.descend('mesh')
     #     tagger.attrib('uri', 'model://' + modelname + '/meshes/' +
@@ -487,19 +478,15 @@ def visual(visualobj, linkobj, visualdata, indentation, relative, modelname):
     # tagger.ascend()
     # OPT: tagger.write(frame(..., tagger.get_indent()))
 
-    if relative and 'pose' in visualdata:
-        posedata = visualdata['pose']
-        tagger.write(pose(visualobj, posedata, tagger.get_indent(), relative))
     # Pose data of the visual is transformed by link --> use local matrix
-    else:
-        matrix = visualobj.matrix_local
-        posedata = {'rawmatrix': matrix,
-                    'matrix': [list(vector) for vector in list(matrix)],
-                    'translation': list(matrix.to_translation()),
-                    'rotation_euler': list(matrix.to_euler()),
-                    'rotation_quaternion': list(matrix.to_quaternion())}
-        # overwrite absolute position of the visual object
-        tagger.write(pose(visualobj, posedata, tagger.get_indent(), True))
+    matrix = visualobj.matrix_local
+    posedata = {'rawmatrix': matrix,
+                'matrix': [list(vector) for vector in list(matrix)],
+                'translation': list(matrix.to_translation()),
+                'rotation_euler': list(matrix.to_euler()),
+                'rotation_quaternion': list(matrix.to_quaternion())}
+    # overwrite absolute position of the visual object
+    tagger.write(pose(visualobj, posedata, tagger.get_indent(), False))
     # OPT: tagger.write(material(visualdata['material']), tagger.get_indent())
     tagger.write(geometry(visualdata['geometry'], tagger.get_indent(),
                           modelname))
@@ -515,7 +502,7 @@ def exportSdf(model, filepath, relativeSDF=False):
     # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains',
     # 'meshes', 'lights', 'motors', 'groups', 'joints', 'name'
     log('Exporting "{0}"...'.format(model['name'], "DEBUG", "exportSdf"))
-    # TODO remove debugging information
+    # FINAL remove debugging information
     # print('sensors\n')
     # print(model['sensors'])
     # print('materials\n')
@@ -610,9 +597,8 @@ def exportSdf(model, filepath, relativeSDF=False):
             # OPT: xml.attrib('angular', ...)
             # xml.ascend()
             # OPT: xml.write(frame(model['frame']), xml.get_indent())
-            # TODO: Optional!
-            xml.write(pose(linkobj, link['pose'],
-                           xml.get_indent(), relativeSDF))
+            # TODO Optional. Add if clause
+            xml.write(pose(linkobj, link['pose'], xml.get_indent(), True))
             # inertial data might be missing
             if len(link['inertial']) > 0:
                 inertialname = link['inertial']['name']
@@ -659,7 +645,7 @@ def exportSdf(model, filepath, relativeSDF=False):
             # OPT: xml.write(frame('...', xml.get_indent()))
             # OPT: xml.write(pose('...', xml.get_indent()))
             # OPT: xml.descend('plugin', {'name': ..., 'filename': ...})
-            # TODO PLUGIN ELEMENT?
+            # TODO Add plugin element?
             # xml.ascend()
             # xml.ascend()
             # OPT: xml.attrib('audio_sink', ...)
@@ -681,7 +667,7 @@ def exportSdf(model, filepath, relativeSDF=False):
 
         log('Links exported.', 'DEBUG', 'exportSdf')
 
-        # TODO move to top
+        # FINAL move somewhere else
         # Joint mapping from URDF to SDF
         jointmapping = {
             'revolute': 'revolute',
@@ -698,7 +684,7 @@ def exportSdf(model, filepath, relativeSDF=False):
             # use sdf joint names instead URDF
             sdftype = jointmapping[joint['type']]
             xml.descend('joint', {'name': joint['name'], 'type': sdftype})
-            # TODO remove when all joints are finished
+            # FINAL remove when all joints are finished
             if sdftype == 'TODO':
                 print(joint['type'] + ' joint type not supported yet:')
                 print(joint['name'])
@@ -709,8 +695,9 @@ def exportSdf(model, filepath, relativeSDF=False):
             # OPT: xml.attrib('thread_pitch', ...)'
             if 'axis' in joint.keys():
                 xml.descend('axis')
+                # CHECK axis should be global (use parent model frame)
                 xml.attrib('xyz', l2str(joint['axis']))
-                # TODO is this true?
+                # CHECK is this true?
                 xml.attrib('use_parent_model_frame', '1')
                 # OPT: xml.descend('dynamics')
                 # OPT: xml.attrib('damping', ...)
@@ -730,9 +717,9 @@ def exportSdf(model, filepath, relativeSDF=False):
                     xml.attrib('upper', joint['limits']['upper'])
                 else:
                     xml.attrib('upper', '')
-                # TODO: Optional!
+                # TODO: Optional. Add if clause
                 xml.attrib('effort', joint['limits']['effort'])
-                # TODO: Optional!
+                # TODO: Optional. Add if clause
                 xml.attrib('velocity', joint['limits']['velocity'])
                 # OPT: xml.attrib('stiffness', ...)
                 # OPT: xml.attrib('dissipation', ...)
@@ -812,7 +799,7 @@ def exportSdf(model, filepath, relativeSDF=False):
         # REQ: xml.attrib('palm_link')
         # xml.ascend()
 
-    # TODO remove this when finished
+    # FINAL remove this when finished
     except Exception:
         import sys
         import traceback
