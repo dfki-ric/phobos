@@ -283,7 +283,6 @@ class PhobosModelPanel(bpy.types.Panel):
         kc1.label(text='Kinematics', icon='POSE_DATA')
         kc1.operator("phobos.create_links")
         kc1.operator('phobos.define_joint_constraints')
-        kc1.operator('phobos.create_inertial_objects')
         kc1.operator("phobos.create_mimic_joint")
         kc1.operator('phobos.add_kinematic_chain', icon='CONSTRAINT')
         kc2.label(text='Visual/Collision', icon='GROUP')
@@ -303,6 +302,7 @@ class PhobosModelPanel(bpy.types.Panel):
         mc1.operator('phobos.calculate_mass')
         mc1.operator('phobos.set_mass')
         mc1.operator('phobos.sync_masses')
+        mc1.operator('phobos.create_inertial_objects')
         mc1.operator('phobos.edit_inertia')
 
 
