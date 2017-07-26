@@ -247,7 +247,7 @@ def inertial(inertialobj, inertialdata, indentation, relative):
     if 'pose' in inertialdata:
         # CHECK the inertialpose has to be relative to link
         tagger.write(pose(inertialobj, inertialdata['pose'],
-                               tagger.get_indent(), False))
+                          tagger.get_indent(), False))
     else:
         log("Object '{0}' has no inertial pose!".format(inertialobj.name),
             "WARNING", "exportsdf")
@@ -283,7 +283,7 @@ def collision(collisionobj, collisiondata, indentation, relative, modelname):
     # OPT: tagger.attrib('frame', ...)
     # Write collisionposition always relative to link!
     tagger.write(pose(collisionobj, collisiondata['pose'],
-                           tagger.get_indent(), False))
+                      tagger.get_indent(), False))
     tagger.write(geometry(collisiondata['geometry'], tagger.get_indent(),
                           modelname))
     # # SURFACE PARAMETERS
@@ -695,10 +695,8 @@ def exportSdf(model, filepath, relativeSDF=False):
             # OPT: xml.attrib('thread_pitch', ...)'
             if 'axis' in joint.keys():
                 xml.descend('axis')
-                # CHECK axis should be global (use parent model frame)
+                # axis is defined in local coord space of parent link
                 xml.attrib('xyz', l2str(joint['axis']))
-                # CHECK is this true?
-                xml.attrib('use_parent_model_frame', '1')
                 # OPT: xml.descend('dynamics')
                 # OPT: xml.attrib('damping', ...)
                 # OPT: xml.attrib('friction', ...)
