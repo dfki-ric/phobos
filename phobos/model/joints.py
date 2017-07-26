@@ -6,7 +6,7 @@
     :platform: Unix, Windows, Mac
     :synopsis: TODO: INSERT TEXT HERE
 
-.. moduleauthor:: Kai von Szadowski
+.. moduleauthor:: Kai von Szadowski, Simon Reichel
 
 Copyright 2014, University of Bremen & DFKI GmbH Robotics Innovation Center
 
@@ -37,7 +37,6 @@ from phobos.phoboslog import log
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
-import phobos.utils.editing as eUtils
 
 
 def createJoint(joint, linkobj=None):
@@ -81,12 +80,16 @@ def createJoint(joint, linkobj=None):
 
 
 def deriveJointType(joint, adjust=False):
-    """ Derives the type of the joint defined by the armature object 'joint' based on the constraints defined in the joint.
+    """ Derives the type of the joint defined by the armature object 'joint'
+    based on the constraints defined in the joint. If the constraints do not
+    match the specified joint type, a warning is logged. By using the adjust
+    parameter it is possible to overwrite the joint type according to the
+    specified joint constraints.
 
     :param joint: The joint you want to derive its type from.
     :type joint: bpy_types.Object
-    :param adjust: Decides whether or not the type of the joint is adjusted after detecting (without checking whether
-    the property "type" was previously defined in the armature or not).
+    :param adjust: Decides whether or not the type of the joint is corrected
+    according to the constraints (overwriting the existing joint type)
     :type adjust: bool.
     :return: tuple(2) -- jtype, crot
 
@@ -107,9 +110,12 @@ def deriveJointType(joint, adjust=False):
                     c.use_limit_y and (c.min_y != 0 or c.max_y != 0),
                     c.use_limit_z and (c.min_z != 0 or c.max_z != 0)]
     ncloc = sum(cloc) if cloc else None
-    ncrot = sum((limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z,)) if limrot else None
-    if cloc:  # = if there is any constraint at all, as all joints but floating ones have translation limits
-        if ncloc == 3:  # fixed or revolute
+    ncrot = sum((limrot.use_limit_x, limrot.use_limit_y,
+                 limrot.use_limit_z,)) if limrot else None
+    # all but floating joints have translational limits
+    if cloc:
+        # fixed, revolute or continuous
+        if ncloc == 3:
             if ncrot == 3:
                 if sum(crot) > 0:
                     jtype = 'revolute'
@@ -121,9 +127,17 @@ def deriveJointType(joint, adjust=False):
             jtype = 'prismatic'
         elif ncloc == 1:
             jtype = 'planar'
+
+    # warn user if the constraints do not match the specified joint type
+    if jtype != joint['joint/type']:
+        log(("The specified joint type '{0}' at link '{1}' does not match " +
+            "the required constraints (set to '{2}' instead).").format(
+                joint['joint/type'], joint['link/name'], jtype), "WARNING")
+
     if adjust:
         joint['joint/type'] = jtype
-        log("Set type of joint '" + nUtils.getObjectName(joint) + "'to '" + jtype + "'.", "INFO")
+        log("Set type of joint '" + nUtils.getObjectName(joint) + "'to '" +
+            jtype + "'.", "INFO")
     return jtype, crot
 
 
