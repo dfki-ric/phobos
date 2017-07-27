@@ -738,8 +738,8 @@ def exportSdf(model, filepath, relativeSDF=False):
             xml.descend('joint', {'name': joint['name'], 'type': sdftype})
             # FINAL remove when all joints are finished
             if sdftype == 'TODO':
-                print(joint['type'] + ' joint type not supported yet:')
-                print(joint['name'])
+                log("joint type '" + joint['type'] + "' at joint '" +
+                    joint['name'] + "' not supported yet.", 'ERROR')
             xml.attrib('parent', joint['parent'])
             xml.attrib('child', joint['child'])
             # OPT: xml.attrib('gearbox_ratio', ...)
@@ -761,10 +761,12 @@ def exportSdf(model, filepath, relativeSDF=False):
                     if 'lower' in joint['limits'].keys():
                         xml.attrib('lower', joint['limits']['lower'])
                     else:
-                        print(joint['name'] + ' lower limit missing')
+                        log("The lower limit is missing for joint '" +
+                            joint['name'] + ".", "WARNING")
                         xml.attrib('lower', '')
                     if 'upper' in joint['limits'].keys():
-                        print(joint['name'] + ' upper limit missing')
+                        log("The upper limit is missing for joint '" +
+                            joint['name'] + "'.", "WARNING")
                         xml.attrib('upper', joint['limits']['upper'])
                     else:
                         xml.attrib('upper', '')
