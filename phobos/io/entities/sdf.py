@@ -205,7 +205,7 @@ def frame(framedata, indentation, relative):
     return "".join(tagger.get_output())
 
 
-def inertial(inertialobj, inertialdata, indentation, relative):
+def inertial(inertialobj, inertialdata, indentation):
     """ Simple wrapper for link inertial data.
     The inertial object is required to determine the position (pose) of the
     object.
@@ -215,10 +215,12 @@ def inertial(inertialobj, inertialdata, indentation, relative):
     phobos.utils.editing.getCombinedTransform).
 
     :param inertialobj: object to be used for absolute pose
+    :type inertialobj: Blender object.
     :param inertialdata: data as provided by dictionary (should contain mass
     and inertia)
+    :type inertialdata: dict.
     :param indentation: indentation at current level
-    :param relative: True for usage of sdf relative pathing
+    :type indentation: int.
     :return: str -- writable xml line
     """
 
@@ -255,7 +257,7 @@ def inertial(inertialobj, inertialdata, indentation, relative):
     return "".join(tagger.get_output())
 
 
-def collision(collisionobj, collisiondata, indentation, relative, modelname):
+def collision(collisionobj, collisiondata, indentation, modelname):
     """ Simple wrapper for link collision data.
     The collision object is required to determine the position (pose) of the
     object.
@@ -448,7 +450,7 @@ def geometry(geometrydata, indentation, modelname):
     return "".join(tagger.get_output())
 
 
-def visual(visualobj, linkobj, visualdata, indentation, relative, modelname):
+def visual(visualobj, linkobj, visualdata, indentation, modelname):
     """ Simple wrapper for visual data of links.
     The visual object is required to determine the position (pose) of the
     object.
@@ -541,7 +543,7 @@ def material(materialdata, indentation):
     return "".join(tagger.get_output())
 
 
-def exportSdf(model, filepath, relativeSDF=False):
+def exportSdf(model, filepath):
     log("Export SDF to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
     errors = False
@@ -651,7 +653,7 @@ def exportSdf(model, filepath, relativeSDF=False):
                 inertialname = link['inertial']['name']
                 inertialobj = bpy.context.scene.objects[inertialname]
                 xml.write(inertial(inertialobj, link['inertial'],
-                                   xml.get_indent(), relativeSDF))
+                                   xml.get_indent()))
             else:
                 log('No inertial data for "{0}"...'.format(link['name'],
                                                            "WARNING",
@@ -664,8 +666,7 @@ def exportSdf(model, filepath, relativeSDF=False):
                     collisionobj = bpy.context.scene.objects[colliname]
                     xml.write(collision(collisionobj,
                                         link['collision'][colkey],
-                                        xml.get_indent(), relativeSDF,
-                                        modelname))
+                                        xml.get_indent(), modelname))
             else:
                 log('No collision data for "{0}"...'.format(link['name'],
                                                             "WARNING",
@@ -682,7 +683,7 @@ def exportSdf(model, filepath, relativeSDF=False):
                         material = model['materials'][visualdata['material']]
                         visualdata['material'] = material
                     xml.write(visual(visualobj, linkobj, visualdata,
-                                     xml.get_indent(), relativeSDF, modelname))
+                                     xml.get_indent(), modelname))
             else:
                 log('No visual data for "{0}"...'.format(link['name'],
                                                          "WARNING",
