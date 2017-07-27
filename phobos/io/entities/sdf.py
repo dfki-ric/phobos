@@ -487,9 +487,57 @@ def visual(visualobj, linkobj, visualdata, indentation, relative, modelname):
                 'rotation_quaternion': list(matrix.to_quaternion())}
     # overwrite absolute position of the visual object
     tagger.write(pose(visualobj, posedata, tagger.get_indent(), False))
-    # OPT: tagger.write(material(visualdata['material']), tagger.get_indent())
+
+    # write material data if available
+    if 'material' in visualdata:
+        tagger.write(material(visualdata['material'], tagger.get_indent()))
+
     tagger.write(geometry(visualdata['geometry'], tagger.get_indent(),
                           modelname))
+    tagger.ascend()
+    return "".join(tagger.get_output())
+
+
+def material(materialdata, indentation):
+    """ Simple wrapper for material data of visual objects.
+    The materialdata is the model dictionary of the specific material.
+
+    :param materialdata: the material information
+    :param visualdata: data as provided by dictionary (should contain
+    diffuseColor, specularColor etc)
+    :param indentation: indentation at current level
+    :return: str -- writable xml line
+    """
+    tagger = xmlTagger(initial=indentation)
+    tagger.descend('material')
+    alpha = materialdata[
+        'transparency'] if 'transparency' in materialdata else '1.0'
+    # {'mat_wheel': {'ambientColor': {'r': 0.02562, 'g': 0.20235, 'b': 0.0156},
+    # 'users': 2, 'specularColor': {'r': 0.5, 'g': 0.5, 'b': 0.5},
+    # 'name': 'mat_wheel', 'shininess': 25.0,
+    # 'diffuseColor': {'r': 0.02562, 'g': 0.20235, 'b': 0.0156},
+    # 'emissionColor': {'r': 1.0, 'g': 0, 'b': 0.62306}
+
+    # OPT: tagger.descend('plugin', ...)
+    # OPT: tagger.descend('shader', ...)
+    # OPT: tagger.attrib('lighting', ...)
+
+    ambient = materialdata['ambientColor']
+    tagger.attrib('ambient', '{0} {1} {2} {3}'.format(
+                  ambient['r'], ambient['g'], ambient['g'], alpha))
+
+    diffuse = materialdata['diffuseColor']
+    tagger.attrib('diffuse', '{0} {1} {2} {3}'.format(
+        diffuse['r'], diffuse['g'], diffuse['b'], alpha))
+
+    specular = materialdata['specularColor']
+    tagger.attrib('specular', '{0} {1} {2} {3}'.format(
+        specular['r'], specular['g'], specular['b'], 1.0))
+
+    if 'emissionColor' in materialdata:
+        emission = materialdata['emissionColor']
+        tagger.attrib('emissive', '{0} {1} {2} {3}'.format(
+            emission['r'], emission['g'], emission['b'], 1.0))
     tagger.ascend()
     return "".join(tagger.get_output())
 
@@ -505,7 +553,7 @@ def exportSdf(model, filepath, relativeSDF=False):
     # FINAL remove debugging information
     # print('sensors\n')
     # print(model['sensors'])
-    # print('materials\n')
+    print('Model materials implemented.')
     # print(model['materials'])
     # print('controllers\n')
     # print(model['controllers'])
@@ -628,8 +676,13 @@ def exportSdf(model, filepath, relativeSDF=False):
             if len(link['visual'].keys()) > 0:
                 for visualkey in link['visual'].keys():
                     visualobj = bpy.context.scene.objects[visualkey]
-                    xml.write(visual(visualobj, linkobj,
-                                     link['visual'][visualkey],
+                    visualdata = link['visual'][visualkey]
+
+                    # add material information to the visualdata if available
+                    if 'material' in visualdata:
+                        material = model['materials'][visualdata['material']]
+                        visualdata['material'] = material
+                    xml.write(visual(visualobj, linkobj, visualdata,
                                      xml.get_indent(), relativeSDF, modelname))
             else:
                 log('No visual data for "{0}"...'.format(link['name'],
