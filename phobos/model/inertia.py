@@ -97,60 +97,70 @@ def createInertial(obj):
     return inertial
 
 
-def createInertials(link, empty=False, preserve_children=False):
-    """Creates inertial representations for visual and collision objects in link.
+def createMajorInertialObjects(link, autocalc=True, selected_only=False):
+    """Creates inertial representations from minor inertials of a link.
+    The new link inertial can contain automatically calculated inertia or
+    remain empty (based on the autocalc parameter). If the selected_only
+    parameter is used the inertia is calculated including only the selected
+    minor inertials objects.
 
     :param link: The link you want to create the inertial for.
     :type link: bpy_types.Object
-    :param empty: If set to True the new inertial object will contain no information.
-    :type empty: bool
-    :param preserve_children: If set to False existing inertial objects will be deleted.
-    :type preserve_children: bool
+    :param autocalc: If set to False the new inertial object will contain no
+    inertia information.
+    :type empty: bool.
+    :param selected_only: If set to True the inertia calculation uses only the
+    currently selected inertial objects.
+    :type selected_only: bool.
 
     """
-    viscols = getInertiaRelevantObjects(link)
-    # clean existing data
-    if not preserve_children:
-        oldinertials = sUtils.getImmediateChildren(link, ['inertial'])
-    else:
-        try:
-            oldinertials = [bpy.data.objects['inertial_'+link.name]]
-        except KeyError:
-            oldinertials = None
-    if oldinertials:
-        sUtils.selectObjects(oldinertials, clear=True, active=0)
-        bpy.ops.object.delete()
-    if not preserve_children:
-        for obj in viscols:
-            if not empty:
-                mass = obj['mass'] if 'mass' in obj else None
-                geometry = deriveGeometry(obj)
-                if mass is not None and geometry is not None:
-                    if geometry['type'] == 'mesh':
-                        sUtils.selectObjects([obj])
-                        bpy.context.scene.objects.active = obj
-                        inert = calculateMeshInertia(obj.data, mass)
-                    else:
-                        inert = calculateInertia(mass, geometry)
-                    if inert is not None:
-                        inertial = createInertial(obj)
-                        inertial['mass'] = mass
-                        inertial['inertia'] = inert
-            else:
-                createInertial(obj)
-    # compose inertial object for link
-    if not empty:
-        mass, com, inert = fuseInertiaData(sUtils.getImmediateChildren(link, ['inertial']))
+    inertias = sUtils.getImmediateChildren(link, ('inertial'),
+                                           selected_only, True)
+    # compose inertial object for link from minor inertials
+    if autocalc:
+        mass, com, inert = fuseInertiaData(inertias)
         if mass and com and inert:
             inertial = createInertial(link)
             com_translate = mathutils.Matrix.Translation(com)
             inertial.matrix_local = com_translate
-            bpy.ops.transform.translate(value=(0, 0, 0))  # FIXME: this is a trick to force Blender to apply matrix_local
+            # FIXME: this is a trick to force Blender to apply matrix_local
+            bpy.ops.transform.translate(value=(0, 0, 0))
             inertial['inertial/mass'] = mass
             inertial['inertial/inertia'] = inertiaMatrixToList(inert)
+    # create empty inertial object
     else:
         createInertial(link)
 
+
+def createMinorInertialObjects(link, autocalc=True):
+    """Creates inertial representations for minor inertials from the visual/
+    collision objects of a link. The new inertials can be calculated
+    automatically or remain empty (based on the autocalc parameter)
+
+    :param link: the link which contains the visual/collision objects
+    :type link: bpy_types.Object
+    :param autocalc: If set to False the new inertial object will contain no
+    inertia information.
+    :type autocalc: bool
+    """
+    viscols = getInertiaRelevantObjects(link)
+    for obj in viscols:
+        if autocalc:
+            mass = obj['mass'] if 'mass' in obj else None
+            geometry = deriveGeometry(obj)
+            if mass is not None and geometry is not None:
+                if geometry['type'] == 'mesh':
+                    sUtils.selectObjects([obj])
+                    bpy.context.scene.objects.active = obj
+                    inert = calculateMeshInertia(obj.data, mass)
+                else:
+                    inert = calculateInertia(mass, geometry)
+                if inert is not None:
+                    inertial = createInertial(obj)
+                    inertial['mass'] = mass
+                    inertial['inertia'] = inert
+        else:
+            createInertial(obj)
 
 def calculateMassOfLink(link):
     """Calculates the masses of visual and collision objects found in a link,
@@ -443,18 +453,23 @@ def inertiaMatrixToList(im):
     return (im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2][2],)
 
 
-def getInertiaRelevantObjects(link):
+def getInertiaRelevantObjects(link, selected_only=False):
     """Returns a list of visual and collision objects of a link.
     If name-pairs of visual and collision objects are detected,
     the one with the latest change-date is used. If this is not clear,
-    visual objects are omitted in favor of collision objects.
+    visual objects are omitted in favor of collision objects. If the
+    selected_only parameter is used, only the selected objects are considered.
 
     :param link: The link you want to gather the inertia relevant objects for.
     :type link: bpy_types.Object
+    :param selected_only: return only relevant objects which are selected
+    :type selected_only: bool
     :return: list
 
     """
-    objdict = {obj.name: obj for obj in sUtils.getImmediateChildren(link, ['visual', 'collision'])}
+    objdict = {obj.name: obj for obj in
+               sUtils.getImmediateChildren(link, ['visual', 'collision'],
+                                           selected_only)}
     basenames = set()
     inertiaobjects = []
     for objname in objdict.keys():
