@@ -287,7 +287,6 @@ def collision(collisionobj, collisiondata, indentation, relative, modelname):
     tagger.write(geometry(collisiondata['geometry'], tagger.get_indent(),
                           modelname))
     # # SURFACE PARAMETERS
-    # TODO: Optional. Add if clause
     if 'bitmask' in collisiondata:
         tagger.descend('surface')
         # # BOUNCE PART
@@ -756,25 +755,26 @@ def exportSdf(model, filepath, relativeSDF=False):
                 # REQ: xml.attrib('spring_reference', ...)
                 # REQ: xml.attrib('spring_stiffness', ...)
                 # xml.ascend()
-                xml.descend('limit')
-                # can be omitted for continuous joint
-                if 'lower' in joint['limits'].keys():
-                    xml.attrib('lower', joint['limits']['lower'])
-                else:
-                    print(joint['name'] + ' lower limit missing')
-                    xml.attrib('lower', '')
-                if 'upper' in joint['limits'].keys():
-                    print(joint['name'] + ' upper limit missing')
-                    xml.attrib('upper', joint['limits']['upper'])
-                else:
-                    xml.attrib('upper', '')
-                # TODO: Optional. Add if clause
-                xml.attrib('effort', joint['limits']['effort'])
-                # TODO: Optional. Add if clause
-                xml.attrib('velocity', joint['limits']['velocity'])
-                # OPT: xml.attrib('stiffness', ...)
-                # OPT: xml.attrib('dissipation', ...)
-                xml.ascend()
+                if 'limits' in joint.keys():
+                    xml.descend('limit')
+                    # can be omitted for continuous joint
+                    if 'lower' in joint['limits'].keys():
+                        xml.attrib('lower', joint['limits']['lower'])
+                    else:
+                        print(joint['name'] + ' lower limit missing')
+                        xml.attrib('lower', '')
+                    if 'upper' in joint['limits'].keys():
+                        print(joint['name'] + ' upper limit missing')
+                        xml.attrib('upper', joint['limits']['upper'])
+                    else:
+                        xml.attrib('upper', '')
+                    if 'effort' in joint['limits'].keys():
+                        xml.attrib('effort', joint['limits']['effort'])
+                    if 'velocity' in joint['limits'].keys():
+                        xml.attrib('velocity', joint['limits']['velocity'])
+                    # OPT: xml.attrib('stiffness', ...)
+                    # OPT: xml.attrib('dissipation', ...)
+                    xml.ascend()
                 xml.ascend()
             # if 'axis2' in joint.keys():
                 # OPT: xml.descend('axis2')
