@@ -371,6 +371,7 @@ def geometry(geometrydata, indentation, modelname):
     """
     # {'size': [0.23617, 0.06, 0.06], 'type': 'box'}
     # {'radius': 0.06, 'type': 'sphere'}
+    import phobos.utils.io as ioUtils
 
     tagger = xmlTagger(initial=indentation)
     tagger.descend('geometry')
@@ -412,8 +413,9 @@ def geometry(geometrydata, indentation, modelname):
     #     tagger.ascend()
     elif geometrydata['type'] == 'mesh':
         tagger.descend('mesh')
+        meshtype = ioUtils.getExpSettings().outputMeshtype
         tagger.attrib('uri', 'model://' + modelname + '/meshes/' +
-                      geometrydata['filename'] + '.dae')
+                      geometrydata['filename'] + '.{0}'.format(meshtype))
     #     OPT: tagger.descend('submesh')
     #     REQ: tagger.attrib('name', ...)
     #     OPT: tagger.attrib('center', ...)
