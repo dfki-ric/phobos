@@ -19,26 +19,23 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
-File phobosgui.py
+File smurfs.py
 
 Created on 3 Nov 2016
 
 @author: Kai von Szadkowski
 """
 
-import os
 import yaml
 from datetime import datetime
 import bpy
 from phobos.defs import version
-from phobos.utils.io import securepath
 from phobos.utils.general import epsilonToZero
-from phobos.io.entities import entity_types
-from phobos.utils.selection import isEntity
 from phobos.phoboslog import log
-from phobos.io.entities.entities import deriveGenericEntity
+from phobos.utils.io import securepath
 
-def exportSMURFsScene(entities, path, selected_only=True, subfolder=True):
+
+def exportSMURFScene(entities, path):
     """Exports an arranged scene into SMURFS. It will export only entities
     with a valid entity/name, and entity/type property.
 
@@ -49,31 +46,18 @@ def exportSMURFsScene(entities, path, selected_only=True, subfolder=True):
 
     """
 
-    outputlist = []
-
-    # identify all entities in the scene
-    entities = [e for e in [obj for obj in bpy.context.scene.objects if isEntity(obj)]
-                if ((selected_only and e.select) or not selected_only)]
-    if len(entities) == 0:
-        log("There are no entities to export!", "WARNING", __name__+".exportSMURFsScene")
-        return
-    log("Exporting scene to " + path, "INFO", "exportSMURFsScene")
-    for entity in entities:
-        log("Exporting " + str(entity["entity/name"]) + " to SMURFS", "INFO")
-        if entity["entity/type"] in entity_types:
-            if hasattr(entity_types[entity["entity/type"]], 'deriveEntity'):
-                entry = entity_types[entity["entity/type"]].deriveEntity(entity, path, subfolder)  # known entity export
-            else:
-                log("Required method ""deriveEntity"" not implemented", "ERROR")
-        else:  # generic entity export
-            entry = deriveGenericEntity(entity)
-        outputlist.append(entry)
-
-    with open(os.path.join(path, bpy.data.worlds['World'].sceneName + '.smurfs'),
-              'w') as outputfile:
-        sceneinfo = "# SMURF scene " + bpy.data.worlds['World'].sceneName + "; created " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
+    with open(path + '.smurfs', 'w') as outputfile:
+        sceneinfo = "# SMURF scene created at " + path + " " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
+        log(sceneinfo, "INFO")
         sceneinfo += "# created with Phobos " + version + " - https://github.com/rock-simulation/phobos\n\n"
+        securepath(path)
+        log("Exporting scene to " + path+'.smurfs', "INFO", "exportSMURFsScene")
         outputfile.write(sceneinfo)
         epsilon = 10**(-bpy.data.worlds[0].phobosexportsettings.decimalPlaces)  # TODO: implement this separately
-        entitiesdict = epsilonToZero({'entities': outputlist}, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces)
+        entitiesdict = epsilonToZero({'entities': entities}, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces)
         outputfile.write(yaml.dump(entitiesdict))
+
+# registering import/export functions of types with Phobos
+scene_type_dict = {'smurfs': {'export': exportSMURFScene,
+                              'extensions': ('smurfs',)}
+                    }

@@ -130,7 +130,7 @@ def createGeometry(viscol, geomsrc):
             bpy.ops.object.empty_add(type='PLAIN_AXES', radius=0.2)
             bpy.context.active_object.name = viscol['name']
             return None
-        log('Creating primitve for obj ' + viscol['name'], 'INFO', 'createGeometry')
+        log('Creating primtive for obj ' + viscol['name'], 'INFO', 'createGeometry')
         newgeom = bUtils.createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
         newgeom.select = True
         bpy.ops.object.transform_apply(scale=True)

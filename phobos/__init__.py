@@ -82,19 +82,19 @@ def import_submodules(package, recursive=True, verbose=False):
 bl_info = {
     "name": "Phobos",
     "description": "A toolbox to enable editing of robot models in Blender.",
-    "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz",
+    "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Simon Reichel",
     "version": (0, 7),
+    # DOCU update Blender version @GUI (30)
     "blender": (2, 69, 0),
     "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
-    "wiki_url": "",
+    "wiki_url": "https://github.com/rock-simulation/phobos/wiki",
     "support": "COMMUNITY",
     "tracker_url": "https://github.com/rock-simulation/phobos/issues",
     "category": "Development"
 }
 
 # TODO rework yaml import: loading module twice if yaml is not found...
-
 yamlconfpath = os.path.dirname(__file__) + "/yamlpath.conf"
 if os.path.isfile(yamlconfpath):
     f = open(yamlconfpath)
@@ -149,11 +149,9 @@ def register():
 
 
 def unregister():
-    """This function unregisters all modules to blender.
-
-    :return: Nothing
-
+    """This function unregisters all modules in Blender.
     """
+    print("\n" + "-" * 100)
     print("Unregistering Phobos...")
     # TODO delete all imported modules to resolve reregistration conflicts
     phobos.phobosgui.unregister()

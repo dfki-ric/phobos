@@ -50,7 +50,7 @@ def sort_urdf_elements(elems):
     return sorted(elems)
 
 
-def writeURDFGeometry(output, element):
+def writeURDFGeometry(output, element, path):
     """This functions writes the URDF geometry for a given element at the end of a given String.
 
     :param output: The String to append the URDF output string on.
@@ -70,8 +70,11 @@ def writeURDFGeometry(output, element):
         elif geometry['type'] == "sphere":
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
+            #FIXME: the following will crash if unstructured export is used
+            log("writeURDFGeometry: "+path + ' ' + ioUtils.getOutputMeshpath(os.path.dirname(path)), "DEBUG")
+            meshpath = ioUtils.getOutputMeshpath(os.path.dirname(path))
             output.append(xmlline(5, 'mesh', ['filename', 'scale'],
-                                  [os.path.join(ioUtils.getRelativeMeshpath(),
+                                  [os.path.join(ioUtils.os.path.relpath(meshpath, path),
                                                 geometry['filename'] + '.' + ioUtils.getOutputMeshtype()),
                                    l2str(geometry['scale'])]))
         elif geometry['type'] == 'capsule':
@@ -83,18 +86,18 @@ def writeURDFGeometry(output, element):
         log("Misdefined geometry in element " + element['name'] + " " + str(err), "ERROR", "writeURDFGeometry")
 
 
-def exportUrdf(model, filepath):
+def exportUrdf(model, outpath):
     """This functions writes the URDF of a given model into a file at the given filepath.
     An existing file with this path will be overwritten.
 
     :param model: Dictionary of the model to be exported as URDF.
     :type model: dict
-    :param filepath: The path of the exported file.
-    :type filepath: str
+    :param outpath: The path of the exported file.
+    :type outpath: str
 
     """
-    log("Export URDF to " + filepath, "INFO", "exportModelToURDF")
-    filename = os.path.join(filepath, model['name']+'.urdf')
+    log("Export URDF to " + outpath, "INFO", "exportModelToURDF")
+    filename = os.path.join(outpath, model['name']+'.urdf')
 
     stored_element_order = None
     order_file_name = model['name'] + '_urdf_order'
@@ -142,7 +145,7 @@ def exportUrdf(model, filepath):
                         output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                               [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
-                        writeURDFGeometry(output, vis)
+                        writeURDFGeometry(output, vis, outpath)
                         if 'material' in vis:
                             # FIXME: change back to 1 when implemented in urdfloader
                             if model['materials'][vis['material']]['users'] == 0:
@@ -175,7 +178,7 @@ def exportUrdf(model, filepath):
                         output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
                                               [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
-                        writeURDFGeometry(output, col)
+                        writeURDFGeometry(output, col, outpath)
                         output.append(indent * 3 + '</collision>\n')
             output.append(indent * 2 + '</link>\n\n')
     # export joint information

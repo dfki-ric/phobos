@@ -35,7 +35,7 @@ import shutil
 import bpy
 import phobos.model.models as models
 import phobos.utils.selection as sUtils
-import phobos.utils.io as iUtils
+import phobos.utils.io as ioUtils
 from phobos.utils.io import securepath
 from phobos.phoboslog import log
 
@@ -43,7 +43,7 @@ from phobos.phoboslog import log
 structure_subfolder = "heightmaps"
 
 
-def deriveEntity(entity, outpath, savetosubfolder):
+def deriveEntity(entity, outpath):
     """This function handles a heightmap entity in a scene to export it
 
     :param smurf: The heightmap root object.
@@ -59,7 +59,7 @@ def deriveEntity(entity, outpath, savetosubfolder):
     heightmap = entity
 
     # determine outpath for the heightmap export
-    heightmap_outpath = securepath(os.path.join(outpath, structure_subfolder) if savetosubfolder else outpath)
+    heightmap_outpath = securepath(os.path.join(outpath, structure_subfolder) if ioUtils.getExportSettings().structureExport else outpath)
 
     log("Exporting " + heightmap["entity/name"] + " as a heightmap entity", "INFO")
     entitypose = models.deriveObjectPose(heightmap)
@@ -72,13 +72,13 @@ def deriveEntity(entity, outpath, savetosubfolder):
         heightmapMesh.modifiers["displace_heightmap"].show_render = False
         heightmapMesh.modifiers["displace_heightmap"].show_viewport = False
         if bpy.data.worlds[0].useObj:
-            iUtils.exportObj(heightmap_outpath, heightmapMesh)
+            ioUtils.exportObj(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".obj")
         elif bpy.data.worlds[0].useStl:
-            iUtils.exportStl(heightmap_outpath, heightmapMesh)
+            ioUtils.exportStl(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".stl")
         elif bpy.data.worlds[0].useDae:
-            iUtils.exportDae(heightmap_outpath, heightmapMesh)
+            ioUtils.exportDae(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".dae")
         else:
             log("No mesh export type checked! Aborting heightmap export.", "ERROR", __name__+".handleScene_heightmap")

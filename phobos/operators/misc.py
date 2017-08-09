@@ -160,7 +160,7 @@ class StorePoseOperator2(Operator):
     def poll(self, context):
         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-        root = sUtils.isModelRoot(context.scene.objects.active)
+        root = sUtils.isRoot(context.scene.objects.active)
         return root and bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()
 
     def invoke(self, context, event):
@@ -204,7 +204,7 @@ class LoadPoseOperator2(Operator):
         result = False
         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-        root = sUtils.isModelRoot(context.scene.objects.active)
+        root = sUtils.isRoot(context.scene.objects.active)
         if root and \
            (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()) and \
            (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["modelname"]) and \
@@ -368,7 +368,7 @@ class ChangePreviewOperator(bpy.types.Operator):
                     root = sUtils.getRoot(context.scene.objects.active)
                 if not bpy.context.scene.preview_visible and \
                         (bpy.data.images[activeModelPoseIndex].type == 'IMAGE') and \
-                        (root == None or not sUtils.isModelRoot(root) or not (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name] != root["modelname"]) or len(bpy.context.selected_objects) == 0):
+                        (root == None or not sUtils.isRoot(root) or not (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name] != root["modelname"]) or len(bpy.context.selected_objects) == 0):
                     bpy.ops.view3d.draw_preview_operator()
                     bpy.context.scene.preview_visible = True
 

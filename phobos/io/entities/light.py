@@ -35,7 +35,7 @@ import phobos.utils.selection as sUtils
 from phobos.phoboslog import log
 
 
-def deriveEntity(entity, outpath, savetosubfolder):
+def deriveEntity(light, outpath, savetosubfolder):
     """This function handles a light entity in a scene to export it
 
     :param entity: The lights root object.
@@ -47,12 +47,11 @@ def deriveEntity(entity, outpath, savetosubfolder):
     :return: dict - An entry for the scenes entitiesList
 
     """
-    light = entity
     log("Exporting " + light["entity/name"] + " as a light entity", "INFO")
     entitypose = models.deriveObjectPose(light)
     lightobj = sUtils.getImmediateChildren(light)[0]
     color = lightobj.data.color
-    entry = {"name": light["entity/name"],
+    entity = {"name": light["entity/name"],
              "type": "light",
              "light_type": "spotlight" if lightobj.data.type == "SPOT" else "omnilight",
              "anchor": light["anchor"] if "anchor" in light else "none",
@@ -62,15 +61,12 @@ def deriveEntity(entity, outpath, savetosubfolder):
              "position": entitypose["translation"],
              "rotation": entitypose["rotation_quaternion"]
              }
-    if entry["light_type"] == "spotlight":
-        entry["angle"] = lightobj.data.spot_size
-    return entry
+    if entity["light_type"] == "spotlight":
+        entity["angle"] = lightobj.data.spot_size
+    return entity
 
 
-def exportLight():
-    pass
 
 #  registering import/export functions of types with Phobos
-entity_type_dict = {'light': {'export': exportLight,
-                              'extensions': ('smurf',)}
+entity_type_dict = {'light': {'derive': deriveEntity}
                     }

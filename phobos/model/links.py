@@ -51,8 +51,12 @@ def getGeometricElements(link):
         collisions = [link['collision'][v] for v in link['collision']]
 
     # avoid uninitialized variables from manually created links
-    if (visuals or collisions):
-        return visuals + collisions
+    if (visuals and not collisions):
+        return visuals
+    elif (collisions and not visuals):
+        return collisions
+    elif (collisions and visuals):
+        return collisions and visuals
     else:
         return None
 
@@ -75,17 +79,8 @@ def createLink(link):
     newlink.phobostype = 'link'
     newlink.name = link['name']
     # FIXME: This is a hack and should be checked before creation!
-    newlink["link/name"] = link['name']  # this is a backup in case an object with the link's name already exists
-
-    # set the size of the link
-    elements = getGeometricElements(link)
-    scale = max((geometrymodel.getLargestDimension(element['geometry']) for element in elements)) if elements else 0.2
-
-    # use scaling factor provided by user
-    if 'scale' in link:
-        scale *= link['scale']
-    newlink.scale = (scale, scale, scale)
-    bpy.ops.object.transform_apply(scale=True)
+    # this is a backup in case an object with the link's name already exists
+    newlink["link/name"] = link['name']
 
     # create inertial
     if 'inertial' in link:
@@ -103,6 +98,17 @@ def createLink(link):
             collision = link['collision'][c]
             geometrymodel.createGeometry(collision, 'collision')
 
+    # FIXME geometric dimensions are not intiallized properly, thus scale always 0.2!
+    # set the size of the link
+    elements = getGeometricElements(link)
+    scale = max((geometrymodel.getLargestDimension(element['geometry']) for element in elements)) if elements else 0.2
+
+    # use scaling factor provided by user
+    if 'scale' in link:
+        scale *= link['scale']
+    newlink.scale = (scale, scale, scale)
+    bpy.ops.object.transform_apply(scale=True)
+
     # add custom properties
     for prop in link:
         if prop.startswith('$'):
@@ -112,8 +118,11 @@ def createLink(link):
     return newlink
 
 
-def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, namepartindices=[], separator='_', prefix='link'):
-    """Derives a link from an object that defines a joint through its position, orientation and parent-child relationships.
+def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False,
+                         namepartindices=[], separator='_', prefix='link'):
+    """
+    Derives a link from an object that defines a joint through its position,
+    orientation and parent-child relationships.
 
     :param obj: The object to derive a link from.
     :type obj: bpy_types.Object
@@ -142,20 +151,25 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False, na
         try:
             tmpname = separator.join([nameparts[p] for p in namepartindices])
         except IndexError:
-            print('Wrong name segment indices given for obj', nUtils.getObjectName(obj))
+            log('Wrong name segment indices given for obj' +
+                nUtils.getObjectName(obj), level="WARNING", origin="deriveLinkFromObject")
     if prefix != '':
         tmpname = prefix + separator + tmpname
     if tmpname == nUtils.getObjectName(obj):
         obj.name += '*'
     link = createLink({'scale': scale, 'name': tmpname, 'matrix':
                     obj.matrix_world})
-    if parenting and obj.parent:
+
+    # parent objects and other links together
+    if parenting:
         if obj.parent:
             sUtils.selectObjects([link, obj.parent], True, 1)
             if obj.parent.phobostype == 'link':
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
             else:
                 bpy.ops.object.parent_set(type='OBJECT')
+
+        # parent children to link
         children = sUtils.getImmediateChildren(obj)
         if parentobjects:
             children.append(obj)
