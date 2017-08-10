@@ -138,9 +138,9 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False,
     :type separator: str
     :param prefix: The prefix to use for the new links name. Its 'link' per default.
     :type prefix: str
-
+    :return: the new created link
     """
-    log('Deriving link from' + nUtils.getObjectName(obj), level="INFO",
+    log('Deriving link from ' + nUtils.getObjectName(obj), level="INFO",
         origin="deriveLinkFromObject")
     nameparts = nUtils.getObjectName(obj).split('_')
     rotation = obj.matrix_world.to_euler()
@@ -178,6 +178,8 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False,
             bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
             sUtils.selectObjects([child, link], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
+
+    return link
 
 
 def placeChildLinks(model, parent):

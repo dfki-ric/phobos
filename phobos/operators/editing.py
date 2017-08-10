@@ -1352,8 +1352,120 @@ class CreateMimicJointOperator(Operator):
         ob = context.active_object
         objs = list(filter(lambda e: "phobostype" in e and e.phobostype ==
                            "link", context.selected_objects))
-        return (ob is not None and ob.phobostype == 'link'
-                and len(objs) > 1)
+        return (ob is not None and ob.phobostype == 'link' and len(objs) > 1)
+
+
+class AddHeightmapOperator(Operator):
+    """Add a heightmap object to the 3D-Cursors location"""
+    bl_idname = "phobos.add_heightmap"
+    bl_label = "Create heightmap"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    name = StringProperty(
+        name="Name",
+        description="The name of the new heightmap object",
+        default="heightmap")
+
+    cutNo = IntProperty(
+        name="Number of cuts",
+        description="Number of cuts for subdivision",
+        default=100)
+
+    strength = FloatProperty(
+        name="Displacement strength",
+        description="Strength of the displacement effect",
+        default=0.1)
+
+    subsurf = BoolProperty(
+        name="Use subsurf",
+        description="Use subsurf modifier to smoothen surface",
+        default=False)
+
+    subsurflvl = IntProperty(
+        name="Subsurf subdivisions",
+        description="Number of divisions for subsurf smoothing",
+        default=2)
+
+    filepath = StringProperty(subtype="FILE_PATH")
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'name')
+        layout.prop(self, 'cutNo')
+        layout.prop(self, 'strength')
+        layout.prop(self, 'subsurf')
+        if self.subsurf:
+            layout.prop(self, 'subsurflvl')
+
+    def execute(self, context):
+        if os.path.basename(self.filepath) not in bpy.data.images:
+            try:
+                img = bpy.data.images.load(self.filepath)
+            except RuntimeError:
+                log("Cannot load image from file! Aborting.", "ERROR")
+                return {"CANCELLED"}
+        else:
+            log("Image already imported. Using cached version.", "INFO")
+            img = bpy.data.images[os.path.basename(self.filepath)]
+
+        # Create texture from image
+        h_tex = bpy.data.textures.new(self.name, type='IMAGE')
+        h_tex.image = img
+
+        # Add plane as single object (phobostype visual)
+        if context.scene.objects.active:
+            bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.mesh.primitive_plane_add(view_align=False, enter_editmode=False)
+        plane = context.active_object
+        plane['phobostype'] = 'visual'
+
+        # subdivide plane
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.subdivide(number_cuts=self.cutNo)
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # create displacement
+        plane.modifiers.new('displace_heightmap', 'DISPLACE')
+        plane.modifiers['displace_heightmap'].texture = h_tex
+        plane.modifiers['displace_heightmap'].strength = self.strength
+
+        # create subsurf
+        if self.subsurf:
+            plane.modifiers.new('subsurf_heightmap', 'SUBSURF')
+            plane.modifiers['subsurf_heightmap'].render_levels = self.subsurflvl
+
+        # enable smooth shading
+        bpy.ops.phobos.smoothen_surface()
+
+        # Add root link for heightmap
+        root = links.deriveLinkfromObject(plane, scale=1.0, parenting=True,
+                                          parentobjects=True)
+
+        # set names and custom properties
+        # FIXME: what about the namespaces? @HEIGHTMAP (14)
+        plane.name = self.name + '_visual::heightmap'
+        root.name = self.name + "::heightmap"
+        root['entity/type'] = 'heightmap'
+        root['entity/name'] = self.name
+        root['image'] = os.path.relpath(os.path.basename(self.filepath), bpy.data.filepath)
+        root['joint/type'] = 'fixed'
+
+        # select the plane object for further adjustments
+        context.scene.objects.active = plane
+
+        # FIXME this GUI "hack" does not work, as the buttons context enum is not updated while the operator is running @HEIGHTMAP (30)
+        # current_screen = bpy.context.screen.name
+        # screen = bpy.data.screens[current_screen]
+        # for area in screen.areas:
+        #     if area.type == 'PROPERTIES':
+        #         area.tag_redraw()
+        #         area.spaces[0].context = 'MODIFIER'
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        # create the open file dialog
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
 
 
 def register():
