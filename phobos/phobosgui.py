@@ -23,7 +23,7 @@ File phobosgui.py
 
 Created on 6 Jan 2014
 
-@author: Kai von Szadkowski
+@author: Kai von Szadkowski, Simon Reichel
 """
 
 import sys
@@ -308,6 +308,9 @@ class PhobosModelPanel(bpy.types.Panel):
         hw1 = minlayout.column(align=True)
         hw1.label(text="Hardware", icon='MOD_SCREW')
         hw1.operator('phobos.add_motor')
+        # TODO move this operator where it should really belong
+        hw1.operator("phobos.add_heightmap")
+
         mc1 = minlayout.column(align=True)
         mc1.label(text="Masses & Inertia", icon='PHYSICS')
         mc1.operator('phobos.calculate_mass')
@@ -334,8 +337,6 @@ class PhobosModelPanel(bpy.types.Panel):
 #         layout = self.layout
 #         layout.label(text="Scene Editing", icon="WORLD")
 #         iinlayout = layout.split()
-#         ic1 = iinlayout.column(align=True)
-#         ic1.operator("phobos.add_heightmap")
 #         ic2 = iinlayout.column(align=True)
 #         ic2.operator('phobos.define_entity')
 #
