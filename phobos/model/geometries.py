@@ -145,7 +145,7 @@ def createGeometry(viscol, geomsrc):
             else:
                 assignMaterial(newgeom, viscol['material'])
         except KeyError:
-            log('No material for obj', viscol['name'], 'DEBUG', 'createGeometry')
+            log('No material for obj ' + viscol['name'], 'DEBUG', 'createGeometry')
     #FIXME: place empty coordinate system and return...what? Error handling of file import!
     for prop in viscol:
         if prop.startswith('$'):
@@ -186,5 +186,3 @@ def createGeometry(viscol, geomsrc):
 #
 #                     if model['capsules']:
 #             op.write(yaml.dump({'capsules': model['capsules']}, default_flow_style=False))
-
-
