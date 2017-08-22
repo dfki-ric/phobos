@@ -83,7 +83,7 @@ bl_info = {
     "name": "Phobos",
     "description": "A toolbox to enable editing of robot models in Blender.",
     "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Simon Reichel",
-    "version": (0, 7),
+    "version": (0, 7, 1),
     # DOCU update Blender version @GUI (30)
     "blender": (2, 69, 0),
     "location": "Phobos adds a number of custom tool panels.",
