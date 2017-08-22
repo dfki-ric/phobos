@@ -968,6 +968,7 @@ class SetCollisionGroupOperator(Operator):
             self.groups = context.active_object.rigid_body.collision_groups
         # create rigid body settings if not existent in active object
         except AttributeError:
+            obj = context.active_object
             bpy.ops.rigidbody.object_add(type='ACTIVE')
             obj.rigid_body.kinematic = True
             obj.rigid_body.collision_groups = self.groups
