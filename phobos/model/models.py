@@ -330,6 +330,12 @@ def deriveCollision(obj):
         try:
             collision['bitmask'] = int(''.join(
                 ['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[::-1], 2)
+            for group in obj.rigid_body.collision_groups[16:]:
+                if group:
+                    log(('Object {0} is on a collision layer higher than ' +
+                        '16. These layers are ignored when exporting.').format(
+                        obj.name), "WARNING", "deriveCollision")
+                    break
         except AttributeError:
             pass
     except KeyError:
@@ -822,6 +828,7 @@ def buildModelDictionary(root):
         bitmask = 0
         for collname in link['collision']:
             try:
+                # bitwise OR to add all collision layers
                 bitmask = bitmask | link['collision'][collname]['bitmask']
             except KeyError:
                 pass
