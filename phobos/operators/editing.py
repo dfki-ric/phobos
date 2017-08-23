@@ -923,7 +923,11 @@ class CreateCollisionObjects(Operator):
                 # FIXME: simply turn this into object.duplicate?
                 bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
                                               TRANSFORM_OT_translate={"value": (0, 0, 0)})
-                # TODO: copy mesh!!
+                # TODO: copy mesh? This was taken from pull request #102
+                # ob = blenderUtils.createPrimitive(collname, 'cylinder', (1,1,1),
+                #                                   defs.layerTypes['collision'], materialname, center,
+                #                                   rotation_euler)
+                # ob.data = vis.data
 
             # set properties of new collision object
             ob.phobostype = 'collision'
@@ -934,6 +938,14 @@ class CreateCollisionObjects(Operator):
             if vis.parent:
                 ob.select = True
                 bpy.ops.object.transform_apply(scale=True)
+                # CHECK test whether mesh option does work
+                # this was taken from pull request #102
+                # try:
+                #     bpy.ops.object.transform_apply(scale=True)
+                # except RuntimeError:
+                #     log("Cannot apply scale. Mesh " + ob.data.name +
+                #         " is shared between several objects.", "WARNING",
+                #         "CreateCollisionObjects")
                 vis.parent.select = True
                 context.scene.objects.active = vis.parent
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
