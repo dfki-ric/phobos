@@ -1,7 +1,6 @@
-__author__ = 'kavonszadkowski'
 
+# TODO add shebang and document introduction
 import os
-#import zipfile
 import re
 import bpy
 import phobos.defs as defs
@@ -14,6 +13,7 @@ from phobos.phoboslog import log
 
 
 def getLargestDimension(geometry):
+    # DOCU add some docstring
     if geometry['type'] == 'box':
         return max(geometry['size'])
     if geometry['type'] == 'cylinder' or geometry['type'] == 'capsule':
@@ -31,7 +31,6 @@ def deriveGeometry(obj):
     :param obj: The blender object to derive the geometry from.
     :type obj: bpy_types.Object
     :return: dict
-
     """
     try:
         geometry = {'type': obj['geometry/type']}
@@ -49,13 +48,15 @@ def deriveGeometry(obj):
         elif gt == 'mesh':
             geometry['filename'] = obj.data.name
             geometry['scale'] = list(obj.scale)
-            geometry['size'] = list(obj.dimensions)  # FIXME: is this needed to calculate an approximate inertia
-        else:  # any other geometry type, i.e. 'plane'
+            # FIXME: is this needed to calculate an approximate inertia
+            geometry['size'] = list(obj.dimensions)
+        # any other geometry type, i.e. 'plane'
+        else:
             geometry['size'] = list(obj.dimensions)
         return geometry
     except KeyError as err:
-        log("Undefined geometry for object " + nUtils.getObjectName(obj)
-            + " " + str(err), "ERROR", "deriveGeometry")
+        log("Undefined geometry for object " + nUtils.getObjectName(obj) +
+            " " + str(err), "ERROR", "deriveGeometry")
         return None
 
 
@@ -76,6 +77,7 @@ def createGeometry(viscol, geomsrc):
     geomtype = geom['type']
     # create the Blender object
     if geomtype == 'mesh':
+        # TODO delete me?
         # if hasattr(self, 'zipped') and self.zipped:
         #     if not os.path.isdir(os.path.join(self.tmp_path, tmp_dir_name)):
         #         os.mkdir(os.path.join(self.tmp_path, tmp_dir_name))
@@ -88,6 +90,7 @@ def createGeometry(viscol, geomsrc):
             log('sourcefilepath: ' + geom_path, 'DEBUG', 'createGeometry')
         else:
             geom_path = geom['filename']
+        # TODO still up to date?
         # Remove 'urdf/package://{package_name}' to workaround the lack
         # of rospack here. This supposes that the urdf file is in the
         # urdf folder and that the meshes are in the meshes folder at
@@ -98,8 +101,8 @@ def createGeometry(viscol, geomsrc):
         bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
         meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
         if not os.path.isfile(geom_path):
-            log(geom_path + " is no file. Object " + viscol['name']
-                + " will have empty mesh!", "ERROR", "createGeometry")
+            log(geom_path + " is no file. Object " + viscol['name'] +
+                " will have empty mesh!", "ERROR", "createGeometry")
             bpy.data.meshes.new(meshname)
         if meshname in bpy.data.meshes:
             log('Assigning copy of existing mesh ' + meshname + ' to ' + viscol['name'], 'INFO', 'createGeometry')
@@ -146,7 +149,7 @@ def createGeometry(viscol, geomsrc):
                 assignMaterial(newgeom, viscol['material'])
         except KeyError:
             log('No material for obj ' + viscol['name'], 'DEBUG', 'createGeometry')
-    #FIXME: place empty coordinate system and return...what? Error handling of file import!
+    # FIXME: place empty coordinate system and return...what? Error handling of file import!
     for prop in viscol:
         if prop.startswith('$'):
             for tag in viscol[prop]:
@@ -155,6 +158,7 @@ def createGeometry(viscol, geomsrc):
     newgeom[geomsrc+"/name"] = viscol['name']
     return newgeom
 
+    # TODO still needed? If yes, make it an dev branch or issue
     ##code for capsules:
     #
     # #buildModelDictionary:

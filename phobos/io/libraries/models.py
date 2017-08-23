@@ -30,20 +30,24 @@ import os
 import bpy
 import bpy.utils.previews
 import phobos.utils.naming as nUtils
+# TODO ioUtils is not used
 import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 
 
 def getModelListForEnumProperty(self, context):
+    # DOCU missing some docstring
     category = context.window_manager.category
     return preview_collections[category].enum_items
 
 
 def getCategoriesForEnumProperty(self, context):
+    # DOCU missing some docstring
     return [(category,)*3 for category in sorted(preview_collections.keys())]
 
 
 def compileModelList():
+    # DOCU missing some docstring
     log("Compiling model list from local library...", "INFO", 'compileModelList')
     for previews in preview_collections.values():
         bpy.utils.previews.remove(previews)
@@ -64,11 +68,11 @@ def compileModelList():
                     model_data[category][modelname] = {'path': modelpath}
                     if os.path.exists(os.path.join(modelpath, 'thumbnails')):
                         preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'thumbnails', modelname+'.png'), 'IMAGE')
-                        log("Adding model to path: "+os.path.join(modelpath, 'thumbnails', modelname+'.png'),
+                        log("Adding model to path: " + os.path.join(modelpath, 'thumbnails', modelname+'.png'),
                             'DEBUG', 'compileModelList')
                     else:
-                        preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'blender', modelname+'.blend'), 'BLEND')
-                        log("Adding model to path: "+os.path.join(os.path.join(modelpath, 'blender', modelname+'.blend')),
+                        preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'blender', modelname + '.blend'), 'BLEND')
+                        log("Adding model to path: " + os.path.join(os.path.join(modelpath, 'blender', modelname + '.blend')),
                             'DEBUG', 'compileModelList')
                     enum_items.append((modelname, modelname, "", preview.icon_id, i))
                     i += 1
@@ -77,12 +81,13 @@ def compileModelList():
     else:
         log('Model library folder does not exist.')
 
-
+# TODO move this to beginning of file
 model_data = {}
 preview_collections = {}
 
 
 class PhobosModelLibraryPanel(bpy.types.Panel):
+    # DOCU add some docstring and update bl_idname
     bl_idname = "TOOLS_PT_PHOBOS_LOCALMODELS"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
@@ -113,6 +118,7 @@ class UpdateModelLibraryOperator(bpy.types.Operator):
 
 
 class ImportModelFromLibraryOperator(bpy.types.Operator):
+    # DOCU add some docstring
     bl_idname = "phobos.import_model_from_library"
     bl_label = "Import Model"
     bl_space_type = 'VIEW_3D'
@@ -123,8 +129,8 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
         wm = context.window_manager
         filepath = os.path.join(model_data[wm.category][wm.modelpreview]['path'],
                                 'blender', wm.modelpreview+'.blend')
-        if (os.path.exists(filepath) and os.path.isfile(filepath)
-            and filepath.endswith('.blend')):
+        if (os.path.exists(filepath) and os.path.isfile(filepath) and
+           filepath.endswith('.blend')):
             log("Importing model" + filepath, "INFO", 'ImportModelFromLibraryOperator')
             objects = []
             with bpy.data.libraries.load(filepath) as (data_from, data_to):
@@ -142,8 +148,6 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-
-
 def register():
     from bpy.types import WindowManager
     from bpy.props import (
@@ -152,6 +156,7 @@ def register():
             BoolProperty
             )
     WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
+    # TODO delete me?
                                               #update=updateModelPreview)
     WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
     compileModelList()

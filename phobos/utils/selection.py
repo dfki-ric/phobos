@@ -57,10 +57,10 @@ def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
     :type: include_hidden: bool.
     :return: list - Blender objects which are children of root.
     """
-    return [child for child in bpy.context.scene.objects if getRoot(child) == root
-            and (child.phobostype in phobostypes if phobostypes else True)
-            and (not child.hide or include_hidden)
-            and (child.select or not selected_only)]
+    return [child for child in bpy.context.scene.objects if getRoot(child) == root and
+            (child.phobostype in phobostypes if phobostypes else True) and
+            (not child.hide or include_hidden) and
+            (child.select or not selected_only)]
 
 
 def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidden=False):
@@ -79,10 +79,10 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
     :type: include_hidden: bool.
     :return: list - Blender objects which are immediate children of obj.
     """
-    return [child for child in bpy.context.scene.objects if child.parent == obj
-            and (child.phobostype in phobostypes if phobostypes else True)
-            and (not child.hide or include_hidden)
-            and (child.select or not selected_only)]
+    return [child for child in bpy.context.scene.objects if child.parent == obj and
+            (child.phobostype in phobostypes if phobostypes else True) and
+            (not child.hide or include_hidden) and
+            (child.select or not selected_only)]
 
 
 def getEffectiveParent(obj, include_hidden=False):
@@ -98,9 +98,9 @@ def getEffectiveParent(obj, include_hidden=False):
     :return: bpy.types.Object - the effective parent of the obj.
     """
     parent = obj.parent
-    while parent and ((parent.hide and not include_hidden)
-                      or (not parent.select
-                          and bpy.data.worlds[0].phobosexportsettings.selectedOnly)):
+    while parent and ((parent.hide and not include_hidden) or
+                      (not parent.select and
+                       bpy.data.worlds[0].phobosexportsettings.selectedOnly)):
         parent = parent.parent
     return parent
 
@@ -180,8 +180,8 @@ def selectObjects(objects, clear=True, active=-1):
     if bpy.context.scene.objects.active:
         bpy.ops.object.mode_set(mode='OBJECT')
     if clear:
-        # TODO still required?
-        #bpy.ops.object.mode_set(mode='OBJECT')
+        # TODO delete me?
+        # bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
         obj.select = True
@@ -196,7 +196,6 @@ def getObjectByName(name):
     :param name: The exact object name to find.
     :type name: str.
     :return: list - all found objects.
-
     """
     objlist = []
     for obj in bpy.context.scene.objects:
@@ -267,7 +266,8 @@ def selectByName(name, match_case=False):
     :type match_case: bool.
     :return: None.
     """
-    #selectObjects(getObjectByName(name), True)
+    # TODO delete me?
+    # selectObjects(getObjectByName(name), True)
     selectObjects(getObjectsByPattern(name, match_case), True)
 
 
@@ -275,12 +275,14 @@ def getSelectedObjects():
     """
     Returns a generator of all selected objects independent of bpy.context.
 
+    # DOCU fill this in
     :return:
     """
     return (obj for obj in bpy.context.scene.objects if obj.select)
 
 
 def getObjectsByProperty(property, value):
+    # DOCU add some docstring
     candidate = None
     for obj in bpy.data.objects:
         if property in obj and obj[property] == value:

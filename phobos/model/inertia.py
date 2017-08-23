@@ -51,7 +51,6 @@ def createInertialFromDictionary(name, inertial):
     :param inertial: The intertial you want to create in blender form.
     :type intertial: dict
     :return: bpy_types.Object -- the newly created blender inertial object.
-
     """
     # FIXME: this needs work to get rid of duplicate code
     bpy.ops.object.select_all(action='DESELECT')
@@ -77,7 +76,6 @@ def createInertial(obj):
     :param obj: The object you want to copy the world transform from.
     :type obj: bpy_types.Object
     :return: bpy_types.Object -- the newly created inertia.
-
     """
     if obj.phobostype == 'link':
         parent = obj
@@ -88,7 +86,7 @@ def createInertial(obj):
     rotation = obj.matrix_world.to_euler()
     center = obj.matrix_world.to_translation()
     inertial = bUtils.createPrimitive('inertial_' + nUtils.getObjectName(obj, phobostype="link"), 'box', size,
-                                   defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
+                                      defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     inertial.phobostype = 'inertial'
     bpy.ops.object.select_all(action="DESELECT")
@@ -162,6 +160,7 @@ def createMinorInertialObjects(link, autocalc=True):
         else:
             createInertial(obj)
 
+
 def calculateMassOfLink(link):
     """Calculates the masses of visual and collision objects found in a link,
     compares it to mass in link inertial object if present and returns the max of both, warning if they are not equal.
@@ -200,6 +199,7 @@ def calculateInertia(mass, geometry):
         inertia = calculateSphereInertia(mass, geometry['radius'])
     elif gt == 'capsule':
         inertia = calculateCapsuleInertia(mass, geometry['radius'], geometry['length'])
+    # TODO delete or make it a dev branche or issue
     #elif gt == 'mesh':
     #    inertia = calculateEllipsoidInertia(mass, geometry['size'])
     return inertia
@@ -399,29 +399,30 @@ def calculateMeshInertia(data, mass):
         abs_det_J = tetrahedron['abs(det(J))']
         sign = tetrahedron['sign']
 
-        a = sign * d * abs_det_J * (y1**2 + y1*y2 + y2**2 + y1*y3 + y2*y3 + y3**2
-            + y1*y4 + y2*y4 + y3*y4 + y4**2 + z1**2 + z1*z2 + z2**2 + z1*z3
-            + z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
+        # CHECK this might be easier with numpy (and more beautiful)
+        a = sign * d * abs_det_J * (y1**2 + y1*y2 + y2**2 + y1*y3 + y2*y3 + y3**2 +
+            y1*y4 + y2*y4 + y3*y4 + y4**2 + z1**2 + z1*z2 + z2**2 + z1*z3 +
+            z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
 
-        b = sign * d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2
-            + x1*x4 + x2*x4 + x3*x4 + x4**2 + z1**2 + z1*z2 + z2**2 + z1*z3
-            + z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
+        b = sign * d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2 +
+            x1*x4 + x2*x4 + x3*x4 + x4**2 + z1**2 + z1*z2 + z2**2 + z1*z3 +
+            z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
 
-        c = sign * d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2
-            + x1*x4 + x2*x4 + x3*x4 + x4**2 + y1**2 + y1*y2 + y2**2 + y1*y3
-            + y2*y3 + y3**2 + y1*y4 + y2*y4 + y3*y4 + y4**2) / 60
+        c = sign * d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2 +
+            x1*x4 + x2*x4 + x3*x4 + x4**2 + y1**2 + y1*y2 + y2**2 + y1*y3 +
+            y2*y3 + y3**2 + y1*y4 + y2*y4 + y3*y4 + y4**2) / 60
 
-        a_bar = sign * d * abs_det_J * (2*y1*z1 + y2*z1 + y3*z1 + y4*z1 + y1*z2
-                + 2*y2*z2 + y3*z2 + y4*z2 + y1*z3 + y2*z3 + 2*y3*z3
-                + y4*z3 + y1*z4 + y2*z4 + y3*z4 + 2*y4*z4) / 120
+        a_bar = sign * d * abs_det_J * (2*y1*z1 + y2*z1 + y3*z1 + y4*z1 + y1*z2 +
+                2*y2*z2 + y3*z2 + y4*z2 + y1*z3 + y2*z3 + 2*y3*z3 +
+                y4*z3 + y1*z4 + y2*z4 + y3*z4 + 2*y4*z4) / 120
 
-        b_bar = sign * d * abs_det_J * (2*x1*z1 + x2*z1 + x3*z1 + x4*z1 + x1*z2
-                + 2*x2*z2 + x3*z2 + x4*z2 + x1*z3 + x2*z3 + 2*x3*z3
-                + x4*z3 + x1*z4 + x2*z4 + x3*z4 + 2*x4*z4) / 120
+        b_bar = sign * d * abs_det_J * (2*x1*z1 + x2*z1 + x3*z1 + x4*z1 + x1*z2 +
+                2*x2*z2 + x3*z2 + x4*z2 + x1*z3 + x2*z3 + 2*x3*z3 +
+                x4*z3 + x1*z4 + x2*z4 + x3*z4 + 2*x4*z4) / 120
 
-        c_bar = sign * d * abs_det_J * (2*x1*y1 + x2*y1 + x3*y1 + x4*y1 + x1*y2
-                + 2*x2*y2 + x3*y2 + x4*y2 + x1*y3 + x2*y3 + 2*x3*y3
-                + x4*y3 + x1*y4 + x2*y4 + x3*y4 + 2*x4*y4) / 120
+        c_bar = sign * d * abs_det_J * (2*x1*y1 + x2*y1 + x3*y1 + x4*y1 + x1*y2 +
+                2*x2*y2 + x3*y2 + x4*y2 + x1*y3 + x2*y3 + 2*x3*y3 +
+                x4*y3 + x1*y4 + x2*y4 + x3*y4 + 2*x4*y4) / 120
 
         i += inertiaListToMatrix([a, -b_bar, -c_bar, b, -a_bar, c])
 
@@ -465,7 +466,6 @@ def getInertiaRelevantObjects(link, selected_only=False):
     :param selected_only: return only relevant objects which are selected
     :type selected_only: bool
     :return: list
-
     """
     objdict = {obj.name: obj for obj in
                sUtils.getImmediateChildren(link, ['visual', 'collision'],
@@ -478,7 +478,7 @@ def getInertiaRelevantObjects(link, selected_only=False):
                 inertiaobjects.append(objdict[objname])
             else:
                 basename = objname.replace(objdict[objname].phobostype + '_', '')
-                if not basename in basenames:
+                if basename not in basenames:
                     basenames.add(basename)
                     collision = 'collision_'+basename if 'collision_'+basename in objdict.keys()\
                         and 'mass' in objdict['collision_'+basename] else None
@@ -488,11 +488,13 @@ def getInertiaRelevantObjects(link, selected_only=False):
                         try:
                             tv = gUtils.datetimeFromIso(objdict[visual]['masschanged'])
                             tc = gUtils.datetimeFromIso(objdict[collision]['masschanged'])
-                            if tc < tv:  # if collision information is older than visual information
+                            # if collision information is older than visual information
+                            if tc < tv:
                                 inertiaobjects.append(objdict[visual])
                             else:
                                 inertiaobjects.append(objdict[collision])
-                        except KeyError:  # if masschanged not present in both
+                        # if masschanged not present in both
+                        except KeyError:
                             inertiaobjects.append(objdict[collision])
                     else:
                         inertiaobjects.append(objdict[collision] if collision else objdict[visual])
@@ -509,7 +511,6 @@ def fuseInertiaData(inertials):
     :param inertials: The alist of objects relevant for the inertia of a link.
     :type inertials: list
     :return: tuple(3) -- see description for content.
-
     """
     objects = []
     for o in inertials:
@@ -521,7 +522,8 @@ def fuseInertiaData(inertials):
             mass = o['mass'] if 'mass' in o else o['inertial/mass']
             objdict = {'name': o.name,
                        'mass': mass,
-                       'com': mathutils.Vector(pose['translation']),  # FIXME: this is not nice, as we invert what is one when deriving the pose
+                       # FIXME: this is not nice, as we invert what is one when deriving the pose
+                       'com': mathutils.Vector(pose['translation']),
                        'rot': pose['rawmatrix'].to_3x3(),
                        'inertia': inertia
                        }
@@ -538,8 +540,8 @@ def fuseInertiaData(inertials):
         log("No inertial found to fuse.", "DEBUG", "fuseInertiaData")
         return None, None, None
 
-
-################################################################################
+# TODO this should be removed or documented otherwise
+###############################################################################
 # From here on we have code modified from Berti's implementation
 
 
@@ -605,11 +607,13 @@ def spin_inertia_3x3(inertia_3x3, rotmat, passive=True):
 
     WHERE IS a COMBINED METHOD of shifted and rotated inertia ? does it exist ?
     """
-    R   = rotmat
-    R_T = rotmat.transposed() #unlike .transpose(), this yields a new matrix and does not reset the original
-    I   = inertia_3x3
+    # DOCU improve this docstring
+    R = rotmat
+    # unlike transpose(), this yields a new matrix and does not reset the original
+    R_T = rotmat.transposed()
+    I = inertia_3x3
 
-    if passive :
+    if passive:
         # the object stands still but the inertia is expressed with respect to a rotated reference frame
         rotated_inertia = R_T * I * R
 

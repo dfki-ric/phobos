@@ -34,7 +34,6 @@ from phobos.phoboslog import log
 
 def is_float(s):
     """Tests if an input variable (string) is a float number.
-
     """
     try:
         float(s)
@@ -45,7 +44,6 @@ def is_float(s):
 
 def is_int(s):
     """Tests if an input variable (string) is an int number.
-
     """
     try:
         int(s)
@@ -57,7 +55,6 @@ def is_int(s):
 def parse_number(s):
     """Takes an input variable (string) and determines whether it represents
     a float number, int or string
-
     """
     if is_int(s):
         return int(s)
@@ -69,7 +66,6 @@ def parse_number(s):
 
 def only_contains_int(stringlist):
     """Checks if a list of strings contains int numbers exclusively.
-
     """
     for num in stringlist:
         if not is_int(num):
@@ -79,7 +75,6 @@ def only_contains_int(stringlist):
 
 def only_contains_float(stringlist):
     """Checks if a list of strings contains float numbers exclusively.
-
     """
     for num in stringlist:
         if not is_float(num):
@@ -90,7 +85,6 @@ def only_contains_float(stringlist):
 def find_in_list(alist, prop, value):
     """Returns the index of the first object in a list which has a field
     named *prop* with value *value*. If no such object is found, returns -1.
-
     """
     n = -1
     for i in range(len(alist)):
@@ -106,7 +100,6 @@ def find_in_list(alist, prop, value):
 def retrieve_from_list(alist, prop, value):
     """Returns the first object in a list which has a field named
     *prop* with value *value*. If no such object is found, returns 'None'.
-
     """
     n = -1
     for i in range(len(alist)):
@@ -125,7 +118,6 @@ def retrieve_from_list(alist, prop, value):
 def parse_text(s):
     """Parses a text by splitting up elements separated by whitespace and tries
     to determine whether it is a list of floats, ints or strings.
-
     """
     numstrings = s.split()
     if not numstrings:
@@ -145,7 +137,6 @@ def parse_text(s):
 
 def calcBoundingBoxCenter(boundingbox):
     """Calculates the center of a bounding box
-
     """
     c = sum((mathutils.Vector(b) for b in boundingbox), mathutils.Vector())
     return c / 8
@@ -154,11 +145,10 @@ def calcBoundingBoxCenter(boundingbox):
 def epsilonToZero(data, epsilon, decimals):
     """Recursively loops through a dictionary and sets all floating values
      < epsilon equal to zero.
-
      """
     if is_float(data):
         if type(data) == str:
-            log("The number " + data +  " is skipped during rounding due to its type 'str'", "WARNING")
+            log("The number " + data + " is skipped during rounding due to its type 'str'", "WARNING")
             return data
         return 0 if abs(data) < epsilon else round(data, decimals)
     elif type(data) is list:
@@ -171,21 +161,19 @@ def epsilonToZero(data, epsilon, decimals):
 
 def calculateSum(objects, numeric_prop):
     """Returns sum of *numeric_prop* in *objects*.
-
     """
     numsum = 0
     for obj in objects:
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            log(obj.phobostype + " object " + obj.name + " does not contain '" + numeric_prop
-                + "'", "WARNING", "calculateSum")
+            log(obj.phobostype + " object " + obj.name + " does not contain '" + numeric_prop +
+                "'", "WARNING", "calculateSum")
     return numsum
 
 
 def datetimeFromIso(iso):
     """Accepts a date-time string in iso format and returns a datetime object.
-
     """
     return datetime(*[int(a) for a in re.split(":|-|T| |\.", iso)])
 
@@ -195,7 +183,6 @@ def distance(objects):
 
     :param objects: The two objects to calculate the distance for.
     :type objects: list -- with exactly two elements
-
     """
     v = objects[0].matrix_world.to_translation() - objects[1].matrix_world.to_translation()
     return v.length, v
@@ -203,7 +190,6 @@ def distance(objects):
 
 def outerProduct(v, u):
     """Returns a mathutils.Matrix representing the outer product of vectors v and u.
-
     """
     lines = []
     for vi in v:

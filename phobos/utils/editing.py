@@ -28,11 +28,13 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 
 def addDictionaryToObj(dict, obj, category=None):
+    # DOCU add some docstring
     for key, value in dict:
         obj[(category+'/'+key) if category else key] = value
 
 
 def getCombinedTransform(obj, effectiveparent):
+    # DOCU add some docstring
     parent = obj.parent
     matrix = obj.matrix_local
     while parent != effectiveparent and parent is not None:

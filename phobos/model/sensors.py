@@ -60,9 +60,9 @@ def attachSensor(self, sensor):
 
     :param sensor: The sensor you want to attach to its parent link.
     :type sensor: dict
-
     """
     bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
+    # TODO delete me?
     #try:
     if 'pose' in sensor:
         urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
@@ -73,23 +73,24 @@ def attachSensor(self, sensor):
     sensorobj = bpy.data.objects[sensor['name']]
     if 'link' in sensor:
         parentLink = sUtils.getObjectByNameAndType(sensor['link'], 'link')
+        # TODO delete me?
         #parentLink = bpy.data.objects['link_' + sensor['link']]
         sUtils.selectObjects([sensorobj, parentLink], True, 1)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:
-        #TODO: what?
+        #TODO: what? handle it...
         pass
     sensorobj.matrix_local = urdf_geom_loc * urdf_geom_rot
+    # TODO delete me?
     #except KeyError:
     #    log("inconsistent data on sensor: "+ sensor['name'], "ERROR")
 
 
 def cameraRotLock(object):
-    """TODO: PLEASE ADD PYDOC. What should this do exactly?
+    """DOCU: PLEASE ADD PYDOC. What should this do exactly?
 
     :param object: The object to lock the rotation for
     :type object: bpy_types.Object
-
     """
     sUtils.selectObjects([object], active=0)
     bpy.ops.transform.rotate(value=-1.5708, axis=(-1, 0, 0), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
@@ -116,7 +117,6 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     :param origin: The new sensors origin.
     :type origin: mathutils.Matrix
     :return: The newly created sensor object
-
     """
     bUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object
@@ -136,12 +136,15 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
         if reference is not None:
             sUtils.selectObjects([newsensor, reference], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
-    else:  # contact, force and torque sensors (or unknown sensors)
+    # contact, force and torque sensors (or unknown sensors)
+    else:
         newsensor = bUtils.createPrimitive(sensor['name'], 'sphere', 0.05,
                                             defs.layerTypes['sensor'], 'phobos_sensor',
                                             origin.to_translation(), protation=origin.to_euler())
         if sensor['type'] == 'Joint6DOF':
-            pass #newsensor['sensor/nodes'] = nUtils.getObjectName(reference)
+            # TODO delete me? handle this
+            #newsensor['sensor/nodes'] = nUtils.getObjectName(reference)
+            pass
         elif 'Node' in sensor['type']:
             newsensor['sensor/nodes'] = sorted([nUtils.getObjectName(ref) for ref in reference])
         elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
@@ -154,6 +157,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     newsensor.name = sensor['name']
     newsensor['sensor/type'] = sensor['type']
 
+    # TODO delete me?
     #for prop in ['link', 'joint', 'links', 'joints', 'motors']:
     #    if prop in sensor:
     #        newsensor['sensor/'+prop] = sensor[prop]
@@ -170,10 +174,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     sUtils.selectObjects([newsensor], clear=False, active=0)
     return newsensor
 
-
-
-
-
+# TODO this class should reside at operators... give it a dev branch
 # class AddLegacySensorOperator(Operator):
 #     """AddSensorOperator"""
 #     bl_idname = "phobos.add_legacy_sensor"

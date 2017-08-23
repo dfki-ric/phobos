@@ -1,6 +1,6 @@
 
+# TODO add shebang and document introduction
 import os.path
-import subprocess
 import bpy
 from phobos import defs
 from phobos.phoboslog import log
@@ -25,7 +25,6 @@ def xmlline(ind, tag, names, values):
     :param values: Values of xml element's attributes
     :type values: list (same order as for names)
     :return: String -- Generated xml line.
-
     """
     line = [indent * max(0, ind) + '<' + tag]
     for i in range(len(names)):
@@ -44,7 +43,6 @@ def l2str(items, start=0, end=-1):
     :param end: Exclusive end index for iteration
     :type end: int
     :return: str - Generated string.
-
     """
     start = max(start, 0)
     end = end if end >= 0 else len(items)
@@ -57,24 +55,27 @@ def securepath(path):
     :param path: The path to be secured (directories only)
     :type path: str
     :return: String -- secured path as absolute path, None on error
-
     """
     path = os.path.abspath(path)
     if not os.path.exists(path):
         try:
             os.makedirs(path)
+        # TODO notadirectoryerror is not recognized... where to import it from?
         except NotADirectoryError:
             log(path + " is not a valid directory", "ERROR", "securepath")
             return None
     return path
+    # TODO delete me?
     # os.path.expanduser(path)  # this is probably not necessary
 
 
 def getExpSettings():
+    # DOCU add some docstring
     return bpy.data.worlds[0].phobosexportsettings
 
 
 def getExportModels():
+    # DOCU add some docstring
     if getExpSettings().selectedOnly:
         roots = {root for root in sUtils.getRoots() if root.select}
     else:
@@ -83,6 +84,7 @@ def getExportModels():
 
 
 def getExportEntities():
+    # DOCU add some docstring
     if getExpSettings().selectedOnly:
         roots = [obj for obj in sUtils.getSelectedObjects() if sUtils.isEntity(obj)]
     else:
@@ -91,15 +93,18 @@ def getExportEntities():
 
 
 def getModelListForEnumProp(self, context):
+    # DOCU add some docstring
     rootnames = set([r['modelname'] for r in getExportModels()])
     return sorted([(r,) * 3 for r in rootnames])
 
 
 def getOutputMeshtype():
+    # DOCU add some docstring
     return str(getExpSettings().outputMeshtype)
 
 
 def getOutputMeshpath(path, meshtype=None):
+    # DOCU add some docstring
     if getExpSettings().structureExport:
         return os.path.join(path, 'meshes', meshtype if meshtype else getOutputMeshtype())
     else:
@@ -107,6 +112,7 @@ def getOutputMeshpath(path, meshtype=None):
 
 
 def getExportPath():
+    # DOCU add some docstring
     if os.path.isabs(getExpSettings().path):
         return getExpSettings().path
     else:
@@ -114,10 +120,13 @@ def getExportPath():
 
 
 def getAbsolutePath(path):
+    # DOCU add some docstring
     if os.path.isabs(path):
         return path
     else:
         return os.path.join(bpy.path.abspath('//'), path)
 
+
 def textureExportEnabled():
+    # DOCU add some docstring
     return bpy.data.worlds[0].phobosexportsettings.exportTextures

@@ -99,6 +99,7 @@ class SelectRootOperator(Operator):
     def poll(cls, context):
         return len(bpy.context.selected_objects) > 0
 
+
 class SelectModelOperator(Operator):
     """Select all objects of model(s) containing the currently selected object(s)"""
     bl_idname = "phobos.select_model"

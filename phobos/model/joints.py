@@ -40,6 +40,7 @@ import phobos.utils.blender as bUtils
 
 
 def createJoint(joint, linkobj=None):
+    # TODO add some docstring
     # add joint information
     if not linkobj:
         linkobj = bpy.data.objects[joint['child']]  # TODO: Make this generic?
@@ -53,9 +54,11 @@ def createJoint(joint, linkobj=None):
     if 'axis' in joint:
         bpy.ops.object.mode_set(mode='EDIT')
         editbone = linkobj.data.edit_bones[0]
+        # TODO delete me?
         #oldaxis = editbone.vector
         length = editbone.length
         axis = mathutils.Vector(tuple(joint['axis']))
+        # TODO delete me?
         #oldaxis.cross(axis) # rotation axis
         editbone.tail = editbone.head + axis.normalized() * length
 
@@ -92,9 +95,9 @@ def deriveJointType(joint, adjust=False):
     according to the constraints (overwriting the existing joint type)
     :type adjust: bool.
     :return: tuple(2) -- jtype, crot
-
     """
-    jtype = 'floating'  # 'universal' in MARS nomenclature
+    # 'universal' in MARS nomenclature
+    jtype = 'floating'
     cloc = None
     crot = None
     limrot = None
@@ -147,7 +150,6 @@ def getJointConstraints(joint):
     :param joint: The joint you want to get the constraints from.
     :type joint: bpy_types.Object
     :return: tuple -- containing the axis and limits lists.
-
     """
     jt, crot = deriveJointType(joint)
     axis = None
@@ -155,8 +157,11 @@ def getJointConstraints(joint):
     if jt not in ['floating', 'fixed']:
         if jt in ['revolute', 'continuous'] and crot:
             c = getJointConstraint(joint, 'LIMIT_ROTATION')
-            #axis = (joint.matrix_local * -bpy.data.armatures[joint.name].bones[0].vector).normalized() #we cannot use joint for both as the first is a Blender 'Object', the second an 'Armature'
-            #axis = (joint.matrix_local * -joint.data.bones[0].vector).normalized() #joint.data accesses the armature, thus the armature's name is not important anymore
+            # TODO delete me?
+            #we cannot use joint for both as the first is a Blender 'Object', the second an 'Armature'
+            #axis = (joint.matrix_local * -bpy.data.armatures[joint.name].bones[0].vector).normalized()
+            #joint.data accesses the armature, thus the armature's name is not important anymore
+            #axis = (joint.matrix_local * -joint.data.bones[0].vector).normalized()
             axis = joint.data.bones[0].vector.normalized() #vector along axis of bone (Y axis of pose bone) in object space
             if crot[0]:
                 limits = (c.min_x, c.max_x)
@@ -169,12 +174,14 @@ def getJointConstraints(joint):
             if not c:
                 raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
             freeloc = [c.use_min_x and c.use_max_x and c.min_x == c.max_x,
-                    c.use_min_y and c.use_max_y and c.min_y == c.max_y,
-                    c.use_min_z and c.use_max_z and c.min_z == c.max_z]
+                       c.use_min_y and c.use_max_y and c.min_y == c.max_y,
+                       c.use_min_z and c.use_max_z and c.min_z == c.max_z]
             if jt == 'prismatic':
                 if sum(freeloc) == 2:
+                    # TODO delete me?
                     #axis = mathutils.Vector([int(not i) for i in freeloc])
-                    axis = joint.data.bones[0].vector.normalized() #vector along axis of bone (Y axis of pose bone) in obect space
+                    #vector along axis of bone (Y axis of pose bone) in obect space
+                    axis = joint.data.bones[0].vector.normalized()
                     if not freeloc[0]:
                         limits = (c.min_x, c.max_x)
                     elif not freeloc[1]:
@@ -203,7 +210,6 @@ def getJointConstraint(joint, ctype):
     :param joint: The joint you want to extract the constraints from.
     :type joint: bpy_types.Object
     :param ctype: Specifies the constraint type you want to extract.
-
     """
     con = None
     for c in joint.pose.bones[0].constraints:
@@ -229,7 +235,6 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
     :type lower: float
     :param upper: The constraints upper limit.
     :type upper:float
-
     """
     log("Processing joint: " + joint.name, 'DEBUG', 'setJointConstraints')
     bpy.ops.object.mode_set(mode='POSE')

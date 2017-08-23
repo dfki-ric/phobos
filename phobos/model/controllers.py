@@ -28,6 +28,7 @@ Created on 30 Jan 2014
 
 import bpy
 from bpy.types import Operator
+# TODO BoolProperty not used
 from bpy.props import StringProperty, BoolProperty, FloatProperty
 from phobos import defs
 from phobos.phoboslog import log
@@ -39,21 +40,18 @@ sensors = []
 motors = []
 
 
-
-
-
 class AddLegacyControllerOperator(Operator):
     """AddLegacyControllerOperator
-
     """
+    # TODO more bl information?
     bl_idname = "phobos.add_legacy_controller"
     bl_label = "Add a node-dependent controller"
     bl_options = {'REGISTER', 'UNDO'}
 
     controller_scale = FloatProperty(
-        name = "controller_scale",
-        default = 0.05,
-        description = "scale of the controller visualization")
+        name="controller_scale",
+        default=0.05,
+        description="scale of the controller visualization")
 
     def execute(self, context):
         location = bpy.context.scene.cursor_location
@@ -69,7 +67,7 @@ class AddLegacyControllerOperator(Operator):
             bpy.context.scene.objects.active.phobostype = "controller"
             bpy.context.scene.objects.active.name = "controller"
             controllers.append(bpy.context.scene.objects.active)
-        #empty index list so enable robotupdate of controller
+        # empty index list so enable robotupdate of controller
         for ctrl in controllers:
             for key in ctrl.keys():
                 if key.find("index") >= 0:
@@ -81,16 +79,15 @@ class AddLegacyControllerOperator(Operator):
                     ctrl["index"+(str(i) if i >= 10 else "0"+str(i))] = nUtils.getObjectName(obj)
                     i += 1
         log("Added joints to (new) controller(s).", "INFO")
+        # TODO delete me?
         #for prop in defs.controllerProperties[self.controller_type]:
         #    for ctrl in controllers:
         #        ctrl[prop] = defs.controllerProperties[prop]
         return {'FINISHED'}
 
 
-
 def addController(controller):
     """This function inits and calls the phobos_add_controller operator.
-
     """
     global sensors
     global motors

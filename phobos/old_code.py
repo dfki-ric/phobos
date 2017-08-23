@@ -1,5 +1,7 @@
 __author__ = 'kavonszadkowski'
 
+# TODO this file will be deleted soon...
+
 #    GUI:
 
     #bpy.types.World.showBodies = BoolProperty(name="showBodies", update=SetVisibleLayers)

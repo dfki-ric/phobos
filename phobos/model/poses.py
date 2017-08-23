@@ -44,7 +44,6 @@ def deriveObjectPose(obj):
     :param obj: The blender object to derive the pose from.
     :type obj: bpy_types.Object
     :return: dict
-
     """
     effectiveparent = sUtils.getEffectiveParent(obj)
     matrix = eUtils.getCombinedTransform(obj, effectiveparent)
@@ -56,8 +55,8 @@ def deriveObjectPose(obj):
             }
     return pose
 
+# TODO delete me?
 #def bakeAllPoses(objlist, modelname, posename="", savetosubfolder=True):
-
 
 
 def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimate_parameter=0.1):
@@ -67,13 +66,15 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
     :type objlist: list
     :param modelname: The new models name and filename.
     :type modelname: str
-
     """
     if bpy.data.worlds[0].phobosexportsettings.relativePath:
+        # CHECK careful with path consistency (Windows)
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].phobosexportsettings.path)))
     else:
+        # CHECK careful with path consistency (Windows)
         outpath = securepath(os.path.expanduser(bpy.data.worlds[0].phobosexportsettings.path))
 
+    # TODO delete me?
     #bake_outpath = securepath(os.path.join(outpath, modelname) if savetosubfolder else outpath)
     bake_outpath = outpath
 
@@ -81,25 +82,25 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
         securepath(os.path.join(bake_outpath, 'bakes'))
         bake_outpath = os.path.join(bake_outpath, 'bakes/')
 
-    export_name = modelname+ '_' + posename
+    export_name = modelname + '_' + posename
 
     visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
     if len(visuals) > 0:
 
-        log("Baking model to " + bake_outpath, "INFO",__name__+".bakeModel")
+        log("Baking model to " + bake_outpath, "INFO", __name__+".bakeModel")
         sUtils.selectObjects(visuals, active=0)
-        log("Copying objects for joining...", "INFO",__name__+".bakeModel")
+        log("Copying objects for joining...", "INFO", __name__+".bakeModel")
         bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
-        log("Joining...", "INFO",__name__+".bakeModel")
+        log("Joining...", "INFO", __name__+".bakeModel")
         bpy.ops.object.join()
         obj = bpy.context.active_object
-        log("Deleting vertices...", "INFO",__name__+".bakeModel")
+        log("Deleting vertices...", "INFO", __name__+".bakeModel")
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.select_all(action='TOGGLE')
         bpy.ops.mesh.select_all(action='TOGGLE')
         bpy.ops.mesh.remove_doubles()
         bpy.ops.object.editmode_toggle()
-        log("Adding modifier...", "INFO",__name__+".bakeModel")
+        log("Adding modifier...", "INFO", __name__+".bakeModel")
 
         bpy.ops.object.modifier_add(type='DECIMATE')
         bpy.context.object.modifiers["Decimate"].decimate_type = decimate_type
@@ -110,12 +111,12 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
         elif decimate_type == 'DISSOLVE':
             bpy.context.object.modifiers["Decimate"].angle_limit = decimate_parameter
 
-
-        log("Applying modifier...", "INFO",__name__+".bakeModel")
+        log("Applying modifier...", "INFO", __name__+".bakeModel")
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
         obj.name = export_name + ".obj"
 
-        bpy.ops.export_scene.obj(filepath=os.path.join(bake_outpath, obj.name),use_selection=True)
+        # TODO use_selection might cause bugs, depending on Blender version
+        bpy.ops.export_scene.obj(filepath=os.path.join(bake_outpath, obj.name), use_selection=True)
 
         obj.hide_render = True
         previewfile = export_name
@@ -127,6 +128,7 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
         log("Done baking...", "INFO")
 
     else:
-        log("No visuals to bake!","WARNING")
+        log("No visuals to bake!", "WARNING")
 
+    # TODO better use logging, right?
     print("Done baking...")

@@ -71,6 +71,7 @@ def deriveEntity(entity, outpath):
         heightmapMesh.data = exMesh
         heightmapMesh.modifiers["displace_heightmap"].show_render = False
         heightmapMesh.modifiers["displace_heightmap"].show_viewport = False
+        # CHECK are the heightmaps exported to the right directory?
         if bpy.data.worlds[0].useObj:
             ioUtils.exportObj(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".obj")

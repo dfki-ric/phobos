@@ -32,6 +32,7 @@ from phobos.phoboslog import log
 
 
 def cloneGit(name, url, destination):
+    # DOCU add some docstring
     try:
         subprocess.check_output(['git', 'clone', url, name], cwd=destination, universal_newlines=True)
         log("Cloned git into " + destination + ".", "INFO", "utils.git.cloneGit")
@@ -43,6 +44,7 @@ def cloneGit(name, url, destination):
 
 
 def switchToBranch(branch, workingdir):
+    # DOCU add some docstring
     if not branch or not workingdir:
         log("No branch specified.", "ERROR", "utils.git.switchToBranch")
         return False
@@ -52,7 +54,7 @@ def switchToBranch(branch, workingdir):
         return True
     except subprocess.CalledProcessError:
         try:  # checking out remote branch
-            subprocess.check_output(['git', 'checkout', '-b', branch, 'origin/'+branch], cwd=workingdir,
+            subprocess.check_output(['git', 'checkout', '-b', branch, 'origin/' + branch], cwd=workingdir,
                                     universal_newlines=True)
         except subprocess.CalledProcessError:
             log("Could not switch to branch " + branch + ".", "ERROR", "utils.git.switchToBranch")
@@ -60,6 +62,7 @@ def switchToBranch(branch, workingdir):
 
 
 def checkoutCommit(commit, workingdir):
+    # DOCU add some docstring
     if not commit or not workingdir:
         log("No commit specified.", "ERROR", "utils.git.checkoutCommit")
         return False
@@ -70,6 +73,7 @@ def checkoutCommit(commit, workingdir):
     except subprocess.CalledProcessError:
         log("Problem checking out " + commit, "ERROR", "utils.git.checkoutCommit")
         return False
+
 
 def getgitbranch():
     """Checks whether working directory (of .blend file) contains a git repository.

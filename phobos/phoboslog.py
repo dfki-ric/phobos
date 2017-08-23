@@ -39,6 +39,7 @@ from datetime import datetime
 # levels of detail for logging
 loglevels = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
 
+
 class col:
     """
     Provides the color ids for different terminal messages.
@@ -94,6 +95,7 @@ def log(message, level="INFO", origin=None, prefix=""):
     :type prefix: str.
     :return: None.
     """
+    # TODO delete me?
     # Generate name of origin
     #if origin is None:
     #    originname='phoboslog'
@@ -117,7 +119,7 @@ def log(message, level="INFO", origin=None, prefix=""):
                 with open(prefs.logfile, "a") as lf:
                     lf.write(date + "  " + msg + "\n")
             except IOError:
-                # TODO Infinite loop can occur when harddrive has an error!
+                # FIXME Infinite loop can occur when harddrive has an error!
                 # Thus, logging the IOError should be handled differently...
                 log("Cannot write to log file! Resetting it: " + __name__ + ".log", "ERROR")
 
@@ -141,6 +143,7 @@ def log(message, level="INFO", origin=None, prefix=""):
 
             # show message in Blender status bar.
             if origin is not None and type(origin) is not str:
+                # CHECK are the messages in status bar working?
                 # format report message to remove loging level and originname
                 msg = msg.split(level)[1][1:]
                 msg = msg.split(originname)[0][:-2]

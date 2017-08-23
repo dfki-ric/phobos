@@ -32,7 +32,6 @@ import inspect
 import bpy
 from bpy.types import Operator
 from bpy.props import BoolProperty, StringProperty
-import phobos.defs as defs
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.io as iUtils

@@ -50,7 +50,6 @@ import phobos.utils.general as gUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 import phobos.model.joints as joints
-import phobos.model.sensors as sensors
 import phobos.model.links as links
 from phobos.phoboslog import log
 
@@ -143,6 +142,7 @@ class SetMassOperator(Operator):
         default=False,
         description='If true, mass entry from rigid body data is used')
 
+    # FIXME double poll method
     @classmethod
     def poll(cls, context):
         return context.active_object and len(list(filter(lambda e: "phobostype" in e and
@@ -180,10 +180,11 @@ class SetMassOperator(Operator):
                 obj['masschanged'] = t.isoformat()
         return {'FINISHED'}
 
+    # FIXME double poll method!
     @classmethod
     def poll(cls, context):
         return context.active_object is not None and len(list(filter(lambda e: "phobostype" in e and
-            e.phobostype in ("visual", "collision", "inertial"), context.selected_objects))) >= 1
+               e.phobostype in ("visual", "collision", "inertial"), context.selected_objects))) >= 1
 
     def invoke(self, context, event):
         if 'mass' in context.active_object:
@@ -218,8 +219,8 @@ class SyncMassesOperator(Operator):
         # FIXME NoneTypeError although objects are selected
         links = [obj.name for obj in context.selected_objects if obj.phobostype == 'link']
         t = datetime.now()
-        objdict = {obj.name: obj for obj in bpy.data.objects if obj.phobostype in ['visual', 'collision']
-                   and obj.parent.name in links}
+        objdict = {obj.name: obj for obj in bpy.data.objects if obj.phobostype in ['visual', 'collision'] and
+                   obj.parent.name in links}
 
         # gather all name bases of objects for which both visual and collision are present
         for obj in objdict.keys():
@@ -239,7 +240,8 @@ class SyncMassesOperator(Operator):
                 try:
                     tv = gUtils.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
                     tc = gUtils.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
-                    if tc < tv:  # if collision information is older than visual information
+                    # if collision information is older than visual information
+                    if tc < tv:
                         sourcelist.append('visual_' + basename)
                         targetlist.append('collision_' + basename)
                     else:
@@ -795,7 +797,8 @@ class EditYAMLDictionary(Operator):
 
         # write object properties to short python script
         for key in tmpdict:
-            if hasattr(tmpdict[key], 'to_list'):  # transform Blender id_arrays into lists
+            # transform Blender id_arrays into lists
+            if hasattr(tmpdict[key], 'to_list'):
                 tmpdict[key] = list(tmpdict[key])
         contents = [variablename + ' = """',
                     yaml.dump(bUtils.cleanObjectProperties(tmpdict),
@@ -888,8 +891,8 @@ class CreateCollisionObjects(Operator):
             # create Mesh
             if self.property_colltype != 'capsule' and self.property_colltype != 'mesh':
                 ob = bUtils.createPrimitive(collname, self.property_colltype, size,
-                                             defs.layerTypes['collision'], materialname, center,
-                                             rotation_euler)
+                                            defs.layerTypes['collision'], materialname, center,
+                                            rotation_euler)
             elif self.property_colltype == 'capsule':
                 # TODO reimplement capsules
                 # prevent length from turning negative
@@ -901,16 +904,16 @@ class CreateCollisionObjects(Operator):
 
                 # create cylinder and spheres and join them
                 ob = bUtils.createPrimitive(collname, 'cylinder', size,
-                                             defs.layerTypes['collision'], materialname, center,
-                                             rotation_euler)
+                                            defs.layerTypes['collision'], materialname, center,
+                                            rotation_euler)
                 sph1 = bUtils.createPrimitive('tmpsph1', 'sphere', radius,
-                                               defs.layerTypes['collision'], materialname,
-                                               tmpsph1_location,
-                                               rotation_euler)
+                                              defs.layerTypes['collision'], materialname,
+                                              tmpsph1_location,
+                                              rotation_euler)
                 sph2 = bUtils.createPrimitive('tmpsph2', 'sphere', radius,
-                                               defs.layerTypes['collision'], materialname,
-                                               tmpsph2_location,
-                                               rotation_euler)
+                                              defs.layerTypes['collision'], materialname,
+                                              tmpsph2_location,
+                                              rotation_euler)
                 sUtils.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
 
@@ -1007,6 +1010,7 @@ class SetCollisionGroupOperator(Operator):
     def poll(cls, context):
         ob = context.active_object
         return ob is not None and ob.phobostype == 'collision' and ob.mode == 'OBJECT'
+
 
 class DefineJointConstraintsOperator(Operator):
     """Add bone constraints to the joint (link)"""
@@ -1131,6 +1135,7 @@ class DefineJointConstraintsOperator(Operator):
         ob = context.active_object
         # due to invoke the active object needs to be a link
         return ob is not None and ob.phobostype == 'link' and ob.mode == 'OBJECT'
+
 
 class AddMotorOperator(Operator):
     """Attach motor values to selected joints"""
@@ -1284,12 +1289,13 @@ class CreateLinksOperator(Operator):
         layout.prop(self, "parenting")
 
         # show parentobject only when using parenting hierarchy
-        if self.parenting == True:
+        if self.parenting:
             layout.prop(self, "parentobject")
 
         layout.prop(self, "namepartindices")
         layout.prop(self, "separator")
         layout.prop(self, "prefix")
+
 
 def getControllerParameters(name):
     """

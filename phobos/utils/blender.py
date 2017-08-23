@@ -33,6 +33,7 @@ from phobos.phoboslog import log
 
 
 def getBlenderVersion():
+    # DOCU add some docstring
     return bpy.app.version[0] * 100 + bpy.app.version[1]
 
 
@@ -43,7 +44,6 @@ def printMatrices(obj, info=None):
     :type obj: bpy.types.Object
     :param info: If True the objects name will be included into the printed info.
     :type info: bool
-
     """
     if not info:
         info = obj.name
@@ -71,17 +71,18 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
     :param protation: The new primitives rotation.
     :type protation: tuple
     :return: bpy.types.Object - the new blender object.
-
     """
     if verbose:
         log(ptype + psize, "INFO", "createPrimitive")
     try:
+        # TODO delete me?
         # n_layer = bpy.context.scene.active_layer
         n_layer = int(player)
     except ValueError:
         n_layer = defs.layerTypes[player]
     players = defLayers([n_layer])
-    bpy.context.scene.layers[n_layer] = True  # the layer has to be active to prevent problems with object placement
+    # the layer has to be active to prevent problems with object placement
+    bpy.context.scene.layers[n_layer] = True
     if ptype == "box":
         bpy.ops.mesh.primitive_cube_add(layers=players, location=plocation, rotation=protation)
         obj = bpy.context.object
@@ -106,6 +107,7 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
 
 
 def setObjectLayersActive(obj):
+    # DOCU add some docstring
     for l in range(len(obj.layers)):
         bpy.context.scene.layers[l] &= obj.layers[l]
 
@@ -117,7 +119,6 @@ def toggleLayer(index, value=None):
     :type index: int
     :param value: True if visible, None for toggle.
     :type value: bool
-
     """
     if value:
         bpy.context.scene.layers[index] = value
@@ -127,7 +128,6 @@ def toggleLayer(index, value=None):
 
 def defLayers(layerlist):
     """Returns a list of 20 elements encoding the visible layers according to layerlist
-
     """
     if type(layerlist) is not list:
         layerlist = [layerlist]
@@ -144,12 +144,13 @@ def updateTextFile(textfilename, newContent):
     :type textfilename: str
     :param newContent: The textfiles new content.
     :type newContent: str
-
     """
     try:
         bpy.data.texts.remove(bpy.data.texts[textfilename])
     except KeyError:
-        pass #Not important. Just create.
+        # TODO handle this error somehow
+        # Not important. Just create.
+        pass
     createNewTextfile(textfilename, newContent)
 
 
@@ -159,7 +160,6 @@ def readTextFile(textfilename):
     :param textfilename: The blender textfiles name.
     :type textfilename: str
     :return: str - the textfiles content.
-
     """
     try:
         return "\n".join([l.body for l in bpy.data.texts[textfilename].lines])
@@ -175,7 +175,6 @@ def createNewTextfile(textfilename, contents):
     :type textfilename: str
     :param contents: The new textfiles content.
     :type contents: str
-
     """
     for text in bpy.data.texts:
         text.tag = True
@@ -196,7 +195,6 @@ def openScriptInEditor(scriptname):
 
     :param scriptname: The scripts name.
     :type scriptname: str
-
     """
     if scriptname in bpy.data.texts:
         for area in bpy.context.screen.areas:
@@ -208,7 +206,6 @@ def openScriptInEditor(scriptname):
 
 def cleanObjectProperties(props):
     """Cleans a predefined list of Blender-specific or other properties from the dictionary.
-
     """
     getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
     if props:
@@ -220,7 +217,6 @@ def cleanObjectProperties(props):
 
 def cleanScene():
     """This function cleans up the scene and removes all blender objects, meshes, materials and lights.
-
     """
     # select all objects
     bpy.ops.object.select_all(action="SELECT")
@@ -249,31 +245,35 @@ def createPreview(objects, export_path, modelname, previewfile, render_resolutio
     :type obj: list
     :param Resolution used for the render.
     :type int
-
     """
     bpy.ops.view3d.camera_to_view_selected()
-    bpy.data.cameras[0].type = 'ORTHO' #'PANO'
-    #bpy.ops.render.opengl() (nice and fast and needs no light but needs viewport to be square shaped to zoom in!)
+    # TODO 'ORTHO' or 'PANO'?
+    bpy.data.cameras[0].type = 'ORTHO'
+    # TODO delete me?
+    # bpy.ops.render.opengl() (nice and fast and needs no light but needs viewport to be square shaped to zoom in!)
     bpy.ops.render.render()
 
     cam_ob = bpy.context.scene.camera
+    # TODO delete me?
     # cam = bpy.data.cameras.new("Camera")
     # delete_cam = False
     if not cam_ob:
         log("No Camera found! Can not create thumbnail", "WARNING", __name__ + ".bakeModel")
         return
+        # TODO delete me?
         #cam_ob = bpy.data.objects.new("Camera", cam)
         #bpy.context.scene.objects.link(cam_ob)
         #delete_cam = True
     #bpy.context.scene.camera = cam_ob
 
-    log("Creating thumbnail of model: "+modelname, "INFO",__name__+".bakeModel")
+    log("Creating thumbnail of model: "+modelname, "INFO", __name__+".bakeModel")
     # hide all other objects from rendering
     for ob in bpy.data.objects:
         if not (ob in objects) and not(ob.type == 'LAMP'):
             ob.hide_render = True
             ob.hide = True
 
+    # TODO delete me?
     # set render settings
 #    bpy.context.scene.render.resolution_x = render_resolution
 #    bpy.context.scene.render.resolution_y = render_resolution
@@ -283,19 +283,19 @@ def createPreview(objects, export_path, modelname, previewfile, render_resolutio
     bpy.ops.render.opengl(view_context=True)
     # save image
     bpy.context.scene.render.image_settings.file_format = 'PNG'
+    # TODO delete me?
 #    bpy.data.images['Render Result'].file_format = bpy.context.scene.render.image_settings.file_format
-
     #print(bpy.data.images['Render Result'].file_format)
-    log("saving preview to: "+os.path.join(export_path,previewfile+'.png'), "INFO",__name__+".bakeModel")
+    log("saving preview to: "+os.path.join(export_path, previewfile+'.png'), "INFO", __name__+".bakeModel")
 
-    bpy.data.images['Render Result'].save_render(os.path.join(export_path,previewfile+'.png'))
-
+    bpy.data.images['Render Result'].save_render(os.path.join(export_path, previewfile+'.png'))
 
     # make all objects visible again
     for ob in bpy.data.objects:
         ob.hide_render = False
         ob.hide = False
 
+    # TODO delete me?
     # delete camera if needed
     #if delete_cam:
     #    bpy.ops.object.select_all(action='DESELECT')

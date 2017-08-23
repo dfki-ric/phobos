@@ -43,6 +43,7 @@ from phobos.phoboslog import log
 
 
 def getGeometricElements(link):
+    # DOCU add some docstring
     visuals = False
     collisions = False
     if 'visual' in link:
@@ -60,13 +61,13 @@ def getGeometricElements(link):
     else:
         return None
 
+
 def createLink(link):
     """Creates the blender representation of a given link and its parent joint.
 
     :param link: The link you want to create a representation of.
     :type link: dict
     :return: bpy_types.Object -- the newly created blender link object.
-
     """
     # create armature/bone
     bUtils.toggleLayer(defs.layerTypes['link'], True)
@@ -158,7 +159,7 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False,
     if tmpname == nUtils.getObjectName(obj):
         obj.name += '*'
     link = createLink({'scale': scale, 'name': tmpname, 'matrix':
-                    obj.matrix_world})
+                       obj.matrix_world})
 
     # parent objects and other links together
     if parenting:
@@ -187,7 +188,6 @@ def placeChildLinks(model, parent):
 
     :param parent: This is the parent link you want to set the children for.
     :type: dict
-
     """
     bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])
     children = []
@@ -201,8 +201,10 @@ def placeChildLinks(model, parent):
         sUtils.selectObjects([childLink, parentLink], True, 1)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
         # 2: move to parents origin by setting the world matrix to the parents world matrix
-        childLink.matrix_world = parentLink.matrix_world        # removing this line does not seem to make a difference
+        # removing this line does not seem to make a difference (TODO delete me?)
+        childLink.matrix_world = parentLink.matrix_world
 
+        # TODO delete me?
         # #bpy.context.scene.objects.active = childLink
         # if 'pivot' in child:
         #     pivot = child['pivot']
@@ -227,7 +229,6 @@ def placeLinkSubelements(link):
 
     :param link: The parent link you want to set the subelements for
     :type link: dict
-
     """
     elements = getGeometricElements(link) + ([link['inertial']] if 'inertial' in link else [])
     bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
@@ -251,4 +252,5 @@ def placeLinkSubelements(link):
             obj.scale = mathutils.Vector(element['geometry']['scale'])
         except KeyError:
             pass
+        # TODO delete me?
         # sUtils.selectObjects([element, parentlink], True, 1)

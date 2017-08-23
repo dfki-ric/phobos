@@ -31,9 +31,10 @@ from copy import deepcopy as dc
 
 checkMessages = {"NoObject": []}
 
-def generateCheckMessages(param1, param2):  # FIXME: Parameter?
-    """This function is just for generating a blender friendly list for an operator.
 
+def generateCheckMessages(param1, param2):
+    # DOCU Parameter?
+    """This function is just for generating a blender friendly list for an operator.
     """
     return [(x,)*3 for x in list(checkMessages.keys())]
 
@@ -48,7 +49,6 @@ def check_dict(dic, validator, messages):
     :type validator: dict.
     :param messages: The message list you want to append the error messages to.
     :type messages: dict.
-
     """
     check_dict_alg(dic, validator, [], messages, validator, "NoObject")
 
@@ -68,7 +68,6 @@ def check_dict_alg(dic, validator, entry_list, messages, whole_validator, curren
     :type whole_validator: dict.
     :param current_elem: The current element the alg is checking.
     :type current_elem: str.
-
     """
     for node in validator:
         new_list = dc(entry_list)
@@ -91,7 +90,6 @@ def is_leaf(node_value):
     :param node_value: The value of the node you want to check.
     :type node_value: dict.
     :return: bool.
-
     """
     return isinstance(node_value, dict) and 'required' in node_value
 
@@ -102,7 +100,6 @@ def is_operator(node):
     :param node: The node key you want to check.
     :type node: str.
     :return: bool.
-
     """
     return node.startswith('$')
 
@@ -119,7 +116,6 @@ def check_leaf(leaf_value, dic, entry_list, messages, current_elem):
     :type entry_list: list.
     :param messages: The list you want to append the messages to.
     :type messages: dict.
-
     """
     value = traverse_dict(dic, entry_list)
     default_value = leaf_value['default']
@@ -147,7 +143,6 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator,
     :type messages: dict.
     :param whole_validator: The whole validation to reach top level keys in case of a reference operator.
     :type whole_validator: dict.
-
     """
     if node == '$reference':
         new_list = dc(entry_list)
@@ -172,6 +167,7 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator,
         else:
             add_message(messages, current_elem, "Could not find " + select_type + " in " + str(entry_list))
     elif node.startswith('$exists__'):
+        # TODO handle it somehow...
         pass
 
 
@@ -184,7 +180,6 @@ def traverse_dict(dic, entry_list):
     :param entry_list: The list of keys you want to traverse with.
     :type entry_list: list.
     :return: dict.
-
     """
     length = len(entry_list)
     if length > 0:

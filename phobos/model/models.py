@@ -42,7 +42,6 @@ import mathutils
 import phobos.model.links as linkmodel
 import phobos.model.inertia as inertiamodel
 import phobos.model.joints as jointmodel
-#import phobos.model.motors as motormodel
 import phobos.model.controllers as controllermodel
 import phobos.model.sensors as sensormodel
 import phobos.model.lights as lightmodel
@@ -57,6 +56,7 @@ from phobos.utils.general import epsilonToZero
 from phobos.model.poses import deriveObjectPose
 from phobos.model.geometries import deriveGeometry
 
+# TODO delete me?
 #    if prop != 'joint':
 #        if not prop.startswith('$'):
 #            joint['motor/'+prop] = motor[prop]
@@ -73,7 +73,6 @@ def collectMaterials(objectlist):
     :param objectlist: The objectlist to grab the materials from.
     :type objectlist: list
     :return: dict
-
     """
     materials = {}
     for obj in objectlist:
@@ -97,7 +96,6 @@ def deriveMaterial(mat):
     :param mat: The blender material to derive a phobos material from
     :type mat: bpy.types.Material
     :return: dict
-
     """
     material = initObjectProperties(mat, 'material')
     material['name'] = mat.name
@@ -113,18 +111,25 @@ def deriveMaterial(mat):
     material['shininess'] = mat.specular_hardness / 2
     if mat.use_transparency:
         material['transparency'] = 1.0 - mat.alpha
-    for tex in mat.texture_slots:  # there are always 18 slots, regardless of whether they are filled or not
+    # there are always 18 slots, regardless of whether they are filled or not
+    for tex in mat.texture_slots:
         if tex is not None:
             try:
-                if tex.use_map_color_diffuse:  # regular diffuse color texture
+                # regular diffuse color texture
+                if tex.use_map_color_diffuse:
+                    # grab the first texture
                     material['diffuseTexture'] = mat.texture_slots[
-                        0].texture.image.filepath.replace('//', '')  # grab the first texture
-                if tex.use_map_normal:  # normal map
+                        0].texture.image.filepath.replace('//', '')
+                # normal map
+                if tex.use_map_normal:
+                    # grab the first texture
                     material['normalTexture'] = mat.texture_slots[
-                        0].texture.image.filepath.replace('//', '')  # grab the first texture
-                if tex.use_map_displacement:  # displacement map
+                        0].texture.image.filepath.replace('//', '')
+                # displacement map
+                if tex.use_map_displacement:
+                    # grab the first texture
                     material['displacementTexture'] = mat.texture_slots[
-                        0].texture.image.filepath.replace('//', '')  # grab the first texture
+                        0].texture.image.filepath.replace('//', '')
             except (KeyError, AttributeError):
                 log("None or incomplete texture data for material " + nUtils.getObjectName(mat, 'material'),
                     "WARNING", "deriveMaterial")
@@ -137,7 +142,6 @@ def deriveLink(obj):
     :param obj: The blender object to derive the link from.
     :type obj: bpy_types.Object
     :return: dict
-
     """
     props = initObjectProperties(obj, phobostype='link', ignoretypes=[
                                  'joint', 'motor', 'entity'])
@@ -156,7 +160,6 @@ def deriveJoint(obj):
 
     :param obj: The blender object to derive the joint from.
     :return: dict
-
     """
     if 'joint/type' not in obj.keys():
         jt, crot = jointmodel.deriveJointType(obj, adjust=True)
@@ -171,7 +174,8 @@ def deriveJoint(obj):
         props['axis'] = list(axis)
     limits = {}
     if minmax is not None:
-        if len(minmax) == 2:  # prismatic or revolute joint, TODO: planar etc.
+        # prismatic or revolute joint, TODO: planar etc.
+        if len(minmax) == 2:
             limits['lower'] = minmax[0]
             limits['upper'] = minmax[1]
     if 'maxvelocity' in props:
@@ -182,7 +186,7 @@ def deriveJoint(obj):
         del props['maxeffort']
     if limits != {}:
         props['limits'] = limits
-    # TODO:
+    # TODO: what about these?
     # - calibration
     # - dynamics
     # - mimic
@@ -202,8 +206,7 @@ def deriveJointState(joint):
              'translation': list(joint.pose.bones[0].matrix_basis.to_translation()),
              'rotation_euler': list(joint.pose.bones[0].matrix_basis.to_euler()),
              'rotation_quaternion': list(joint.pose.bones[0].matrix_basis.to_quaternion())}
-    # TODO: hard-coding this could prove problematic if we at some point build
-    # armatures from multiple bones
+    # TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
     return state
 
 
@@ -215,11 +218,11 @@ def deriveMotor(obj, joint):
     :param joint: The phobos joint to derive the constraints from.
     :type joint: dict
     :return: dict
-
     """
     props = initObjectProperties(
         obj, phobostype='motor', ignoretypes=['link', 'joint'])
-    if len(props) > 1:  # if there are any 'motor' tags and not only a name
+    # if there are any 'motor' tags and not only a name
+    if len(props) > 1:
         props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
         try:
             if props['type'] == 'PID':
@@ -235,7 +238,8 @@ def deriveMotor(obj, joint):
             return None
         return props
     else:
-        return None  # return None if no motor is attached
+        # return None if no motor is attached
+        return None
 
 
 def deriveKinematics(obj):
@@ -249,8 +253,7 @@ def deriveKinematics(obj):
     link = deriveLink(obj)
     joint = None
     motor = None
-    # joints and motors of root elements are only relevant for scenes, not
-    # within models
+    # joints and motors of root elements are only relevant for scenes, not within models
     if sUtils.getEffectiveParent(obj):
         # TODO: here we have to identify root joints and write their properties to SMURF!
         # --> namespacing parent = "blub::blublink1"
@@ -286,7 +289,6 @@ def deriveVisual(obj):
     :param obj: The blender object to derive the visuals from.
     :type obj: bpy_types.Object
     :return: dict
-
     """
     try:
         visual = initObjectProperties(
@@ -319,7 +321,6 @@ def deriveCollision(obj):
     :param obj: The blender object to derive the collision information from.
     :type obj: bpy_types.Object
     :return: dict
-
     """
     try:
         collision = initObjectProperties(
@@ -351,7 +352,6 @@ def deriveCapsule(obj):
     :param obj: The blender object to derive the capsule from.
     :type obj: bpy_types.Object
     :return: tuple
-
     """
     viscol_dict = {}
     capsule_pose = poses.deriveObjectPose(obj)
@@ -380,6 +380,7 @@ def deriveCapsule(obj):
             rot_mu = mathutils.Euler(rotation).to_quaternion()
             pose['rotation_quaternion'] = list(rot_mu)
             matrix = loc_mu * rot_mu.to_matrix().to_4x4()
+            # TODO delete me?
             # print(list(matrix))
             pose['matrix'] = [list(vector) for vector in list(matrix)]
         viscol['geometry'] = geometry
@@ -399,7 +400,6 @@ def deriveApproxsphere(obj):
     :param obj: The blender object to derive the approxsphere from.
     :type obj: bpy_types.Object
     :return: tuple
-
     """
     try:
         sphere = initObjectProperties(obj)
@@ -467,6 +467,7 @@ def deriveLight(obj):
     try:
         light['attenuation_linear'] = float(light_data.linear_attenuation)
     except AttributeError:
+        # TODO handle this somehow
         pass
     try:
         light['attenuation_quadratic'] = float(
@@ -491,16 +492,19 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=()):
     :param ignoretypes: This list contains properties that should be ignored while initializing the objects properties.
     :type ignoretypes: list
     :return: dict
-
     """
+    # allow duplicated names differentiated by types
     props = {'name': nUtils.getObjectName(
-        obj, phobostype)}  # allow duplicated names differentiated by types
-    if not phobostype:  # if no phobostype is defined, everything is parsed
+        obj, phobostype)}
+    # if no phobostype is defined, everything is parsed
+    if not phobostype:
         for key, value in obj.items():
             props[key] = value
-    else:  # if a phobostype is defined, we search for special custom properties
+    # if a phobostype is defined, we search for special custom properties
+    else:
         for key, value in obj.items():
-            if hasattr(value, 'to_list'):  # transform Blender id_arrays into lists
+            # transform Blender id_arrays into lists
+            if hasattr(value, 'to_list'):
                 value = list(value)
             if '/' in key:
                 if phobostype + '/' in key:
@@ -528,7 +532,6 @@ def deriveDictEntry(obj):
     :param obj: The object to derive the dict entry (phobos data structure) from.
     :type obj: bpy_types.Object
     :return: tuple
-
     """
     try:
         if obj.phobostype == 'inertial':
@@ -558,15 +561,14 @@ def deriveGroupEntry(group):
     :param group: The blender group to extract the links from.
     :type group: bpy_types.Group
     :return: list
-
     """
     links = []
     for obj in group.objects:
         if obj.phobostype == 'link':
             links.append({'type': 'link', 'name': nUtils.getObjectName(obj)})
         else:
-            log("Group " + group.name + " contains " + obj.phobostype
-                + ': ' + nUtils.getObjectName(obj), "ERROR", "deriveGroupEntry")
+            log("Group " + group.name + " contains " + obj.phobostype +
+                ': ' + nUtils.getObjectName(obj), "ERROR", "deriveGroupEntry")
     return links
 
 
@@ -585,13 +587,15 @@ def deriveChainEntry(obj):
         chain = {'name': chainName, 'start': '',
                  'end': nUtils.getObjectName(obj), 'elements': []}
         while not chainclosed:
-            if parent.parent is None:  # FIXME: use effectiveParent
+            # FIXME: use effectiveParent
+            if parent.parent is None:
                 log("Unclosed chain, aborting parsing chain " +
                     chainName, "ERROR", "deriveChainEntry")
                 chain = None
                 break
             chain['elements'].append(parent.name)
-            parent = parent.parent  # FIXME: use effectiveParent
+            # FIXME: use effectiveParent
+            parent = parent.parent
             if 'startChain' in parent:
                 startchain = parent['startChain']
                 if chainName in startchain:
@@ -627,8 +631,8 @@ def storePose(modelname, posename):
             posedict[posename] = {'name': posename, 'joints': {}}
         bpy.ops.object.mode_set(mode='POSE')
         links = sUtils.getChildren(rootlink, ('link',), True, False)
-        for link in (link for link in links if 'joint/type' in link
-                     and link['joint/type'] not in ['fixed', 'floating']):
+        for link in (link for link in links if 'joint/type' in link and
+                     link['joint/type'] not in ['fixed', 'floating']):
             link.pose.bones['Bone'].rotation_mode = 'XYZ'
             posedict[posename]['joints'][nUtils.getObjectName(link, 'joint')] = link.pose.bones[
                 'Bone'].rotation_euler.y
@@ -757,7 +761,8 @@ def buildModelDictionary(root):
         # parse link and extract joint and motor information
         linkdict, jointdict, motordict = deriveKinematics(link)
         model['links'][linkdict['name']] = linkdict
-        if jointdict:  # joint will be None if link is a root
+        # joint will be None if link is a root
+        if jointdict:
             model['joints'][jointdict['name']] = jointdict
         # motor will be None if no motor is attached or link is a root
         if motordict:
@@ -816,6 +821,8 @@ def buildModelDictionary(root):
             props = deriveDictEntry(obj)
             parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
             model['links'][parentname]['approxcollision'].append(props)
+
+        # TODO delete me?
         # except KeyError:
         #    try:
         #        log(parentname + " not found", "ERROR")
@@ -849,8 +856,9 @@ def buildModelDictionary(root):
             mat = obj.active_material
             try:
                 if mat.name not in model['materials']:
+                    # this should actually never happen
                     model['materials'][mat.name] = deriveMaterial(
-                        mat)  # this should actually never happen
+                        mat)
                 linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
                 model['links'][linkname]['visual'][nUtils.getObjectName(obj)][
                     'material'] = mat.name
@@ -911,8 +919,8 @@ def buildModelDictionary(root):
 
 def buildModelFromDictionary(model):
     """Creates the Blender representation of the imported model, using a model dictionary.
-
     """
+    # DOCU add some more docstring
     log("Creating Blender model...", 'INFO', 'buildModelFromDictionary')
 
     log("Creating links...", 'INFO', 'buildModelFromDictionary')
@@ -1005,8 +1013,10 @@ def buildModelFromDictionary(model):
 
 
 def createGroup(group):
+    # TODO lots of code missing here... make it a dev branch
     pass
 
 
 def createChain(group):
+    # TODO lots of code missing here... make it a dev branch
     pass
