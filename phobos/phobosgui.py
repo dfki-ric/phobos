@@ -256,6 +256,154 @@ class PhobosToolsPanel(bpy.types.Panel):
         tsc2.operator('phobos.validate')
 
 
+# TODO move this to a better place (utils)
+def getMatrixData(coord, space):
+    if space == 'local':
+        matrix = bpy.context.active_object.matrix_local
+    elif space == 'world':
+        matrix = bpy.context.active_object.matrix_world
+    if coord == 'x':
+        return matrix.to_translation()[0]
+    elif coord == 'y':
+        return matrix.to_translation()[1]
+    elif coord == 'z':
+        return matrix.to_translation()[2]
+    elif coord == 'rotx':
+        return matrix.to_euler()[0]
+    elif coord == 'roty':
+        return matrix.to_euler()[1]
+    elif coord == 'rotz':
+        return matrix.to_euler()[2]
+
+
+# CHECK will this stay here? Give it its own file?
+class MatrixPropGroup(bpy.types.PropertyGroup):
+    from bpy.props import FloatProperty
+
+    loc_x_local = FloatProperty(
+        name='location x',
+        get=lambda self: getMatrixData('x', 'local'),
+        unit='LENGTH',
+        subtype='DISTANCE',
+        description='X coordinate in the local space')
+    loc_y_local = FloatProperty(
+        name='location y',
+        get=lambda self: getMatrixData('y', 'local'),
+        unit='LENGTH',
+        subtype='DISTANCE',
+        description='Y coordinate in the local space')
+    loc_z_local = FloatProperty(
+        name='location z',
+        get=lambda self: getMatrixData('z', 'local'),
+        unit='LENGTH',
+        subtype='DISTANCE',
+        description='Z coordinate in the local space')
+    rot_x_local = FloatProperty(
+        name='rotation x',
+        get=lambda self: getMatrixData('rotx', 'local'),
+        unit='ROTATION',
+        subtype='ANGLE',
+        description='Rotation around local x axis')
+    rot_y_local = FloatProperty(
+        name='rotation y',
+        get=lambda self: getMatrixData('roty', 'local'),
+        unit='ROTATION',
+        subtype='ANGLE',
+        description='Rotation around local y axis')
+    rot_z_local = FloatProperty(
+        name='rotation z',
+        get=lambda self: getMatrixData('rotz', 'local'),
+        unit='ROTATION',
+        subtype='ANGLE',
+        description='Rotation around local z axis')
+    loc_x_world = FloatProperty(
+        name='location x',
+        get=lambda self: getMatrixData('x', 'world'),
+        unit='LENGTH',
+        subtype='DISTANCE',
+        description='X coordinate in the world space')
+    loc_y_world = FloatProperty(
+        name='location y',
+        get=lambda self: getMatrixData('y', 'world'),
+        unit='LENGTH',
+        subtype='DISTANCE',
+        description='Y coordinate in the world space')
+    loc_z_world = FloatProperty(
+        name='location z',
+        get=lambda self: getMatrixData('z', 'world'),
+        unit='LENGTH',
+        subtype='DISTANCE',
+        description='Z coordinate in the world space')
+    rot_x_world = FloatProperty(
+        name='rotation x',
+        get=lambda self: getMatrixData('rotx', 'world'),
+        unit='ROTATION',
+        subtype='ANGLE',
+        description='Rotation around world x axis')
+    rot_y_world = FloatProperty(
+        name='rotation y',
+        get=lambda self: getMatrixData('roty', 'world'),
+        unit='ROTATION',
+        subtype='ANGLE',
+        description='Rotation around world y axis')
+    rot_z_world = FloatProperty(
+        name='rotation z',
+        get=lambda self: getMatrixData('rotz', 'world'),
+        unit='ROTATION',
+        subtype='ANGLE',
+        description='Rotation around world z axis')
+
+
+# CHECK will this stay here? Give it its own file?
+class PhobosMatrixPanel(bpy.types.Panel):
+    """Contains summary information and editing possibilities in the Buttons
+    Window"""
+    bl_idname = "INFOBAR_PT_PHOBOS_TOOLS"
+    bl_label = "Phobos Matrix Information"
+    bl_space_type = "PROPERTIES"
+    # 'WINDOW', 'HEADER', 'CHANNELS', 'TEMPORARY', 'UI', 'TOOLS', 'TOOL_PROPS', 'PREVIEW'
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+
+    def draw(self, context):
+        layout = self.layout
+
+        obj = context.active_object
+
+        matrixes = layout.split()
+        localcol = matrixes.column(align=True)
+        worldcol = matrixes.column(align=True)
+
+        # Local data first
+        localcol.label(text='local', icon='ROTACTIVE')
+        # add all location properties
+        for locprop in dir(obj.phobosmatrixinfo):
+            if locprop.startswith('loc') and locprop.endswith('local'):
+                localcol.prop(obj.phobosmatrixinfo, locprop,
+                              text=locprop[4] + ' location')
+
+        localcol.separator()
+        # add all rotation properties
+        for rotatprop in dir(obj.phobosmatrixinfo):
+            if rotatprop.startswith('rot') and rotatprop.endswith('local'):
+                localcol.prop(obj.phobosmatrixinfo, rotatprop,
+                              text=rotatprop[4] + ' rotation')
+
+        # world data second
+        worldcol.label(text='world', icon='WORLD')
+        # add all location properties
+        for locprop in dir(obj.phobosmatrixinfo):
+            if locprop.startswith('loc') and locprop.endswith('world'):
+                worldcol.prop(obj.phobosmatrixinfo, locprop,
+                              text=locprop[4] + ' location')
+        worldcol.separator()
+        # add all rotation properties
+        for rotatprop in dir(obj.phobosmatrixinfo):
+            if rotatprop.startswith('rot') and rotatprop.endswith('world'):
+                worldcol.prop(obj.phobosmatrixinfo, rotatprop,
+                              text=rotatprop[4] + ' rotation')
+
+
 class PhobosModelPanel(bpy.types.Panel):
     """Contains all model editing tools in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_PT_PHOBOS_MODEL"
@@ -570,6 +718,11 @@ def register():
     # TODO delete me?
     # bpy.utils.register_class(Mesh_Export_UIList)
     # bpy.utils.register_class(Models_Poses_UIList)
+
+    # CHECK is this needed and right?
+    bpy.utils.register_class(MatrixPropGroup)
+    bpy.utils.register_class(PhobosMatrixPanel)
+    bpy.types.Object.phobosmatrixinfo = PointerProperty(type=MatrixPropGroup)
 
     bpy.utils.register_class(PhobosToolsPanel)
     bpy.utils.register_class(PhobosModelPanel)
