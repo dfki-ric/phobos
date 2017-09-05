@@ -112,6 +112,7 @@ class PhobosPrefs(AddonPreferences):
         # layout.prop(self, 'pluginspath', text="Path for plugins")
 
 prev_collections = {}
+phobosIcon = 0
 
 
 class PhobosExportSettings(bpy.types.PropertyGroup):
@@ -238,9 +239,7 @@ class PhobosToolsPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
-        pcoll = prev_collections["phobos"]
-        phobosIcon = pcoll["phobosIcon"]
-        self.layout.label(icon_value=phobosIcon.icon_id)
+        self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
         layout = self.layout
@@ -372,6 +371,9 @@ class PhobosMatrixPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "object"
 
+    def draw_header(self, context):
+        self.layout.label(icon_value=phobosIcon)
+
     def draw(self, context):
         layout = self.layout
 
@@ -411,6 +413,201 @@ class PhobosMatrixPanel(bpy.types.Panel):
                               text=rotatprop[4] + ' rotation')
 
 
+# TODO WET code with operators.naming.py
+def getModelName(self):
+    import phobos.utils.selection as sUtils
+    active_object = bpy.context.active_object
+
+    # TODO handle this error at function level
+    if active_object:
+        root = sUtils.getRoot(active_object)
+        if root:
+            return root["modelname"]
+    else:
+        return ""
+
+
+class ObjectInfoPropGroup(bpy.types.PropertyGroup):
+    from bpy.props import StringProperty
+
+    def getRoot(self):
+        import phobos.utils.selection as sUtils
+        return sUtils.getRoot(bpy.context.active_object).name
+
+    modelname = StringProperty(
+        name='modelname',
+        get=getModelName,
+        description='The name of the robot model')
+
+    rootobj = StringProperty(
+        name='root object',
+        get=getRoot,
+        description='The name of the root object')
+
+
+# class PhobosSwitchObjectOperator(bpy.types.Operator):
+
+#     def execute(self, context):
+#         pass
+
+
+class PhobosObjectInformationPanel(bpy.types.Panel):
+    """Contains information like parent, immediate children etc. in the
+    Buttons Window"""
+    bl_idname = "OBJINFO_PT_PHOBOS_TOOLS"
+    bl_label = "Phobos Object Information"
+    bl_space_type = "PROPERTIES"
+    # 'WINDOW', 'HEADER', 'CHANNELS', 'TEMPORARY', 'UI', 'TOOLS', 'TOOL_PROPS', 'PREVIEW'
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+
+    def draw_header(self, context):
+        self.layout.label(icon_value=phobosIcon)
+
+    def draw(self, context):
+        layout = self.layout
+        info = context.scene.phobosobjectinfo
+
+        datatop = layout.split()
+        datatopl = datatop.column(align=True)
+        datatopr = datatop.column(align=True)
+        # dataright = layout.column(align=True)
+
+        datatopl.operator('phobos.name_model', text=('Part of model: ' +
+                          info.modelname), icon='POSE_DATA')
+
+        datatopr.operator('phobos.select_root', text=('Root object: ' +
+                          info.rootobj), icon='OOPS')
+        # layout.operator('phobos.name_model', text='Test', emboss=False)
+
+
+ignoredProps = set([
+    'cycles', 'cycles_visibility', 'phobosmatrixinfo', 'phobostype', 'name',
+    'pose', 'size', 'scale'
+])
+
+
+class PropertyInfoCategories(bpy.types.EnumProperty):
+    categoryname = StringProperty(
+        name='categoryname',
+        description='The name of the category')
+
+
+class PhobosPropertyInformationPanel(bpy.types.Panel):
+    """Contains all properties sorted in different categories"""
+    bl_idname = "PROPINFO_PT_PHOBOS_TOOLS"
+    bl_label = "Phobos Property Information"
+    bl_space_type = "PROPERTIES"
+    # 'WINDOW', 'HEADER', 'CHANNELS', 'TEMPORARY', 'UI', 'TOOLS', 'TOOL_PROPS', 'PREVIEW'
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+
+    def addProp(self, prop, value, layout, params):
+        # get the existing layout columns
+        leftLayout = layout[1]
+        rightLayout = layout[2]
+        # put the value left or right?
+        if layout[3] % 2 == 0:
+            column = leftLayout
+        else:
+            column = rightLayout
+
+        subtable = column.split()
+        colL = subtable.column(align=True)
+        colR = subtable.column(align=True)
+        # use custom params (like icons etc) from the dictionary
+        if params:
+            colL.label(text='{0}'.format(prop))
+            colR.label(text='{0}'.format(value), **params)
+        else:
+            colL.label(text='{0}'.format(prop))
+            colR.label(text='{0}'.format(value))
+
+        # increase left-right counter
+        layout[3] += 1
+
+    def draw_header(self, context):
+        self.layout.label(icon_value=phobosIcon)
+
+    def draw(self, context):
+        from phobos.model.models import deriveDictEntry, deriveLink, deriveJoint
+        layout = self.layout
+        originalLayout = layout
+        obj = context.active_object
+
+        box = originalLayout.box()
+        table = box.split()
+        leftLayout = table.column(align=True)
+        rightLayout = table.column(align=True)
+        leftLayout.label('Phobostype')
+        # OPT: change icon_value from phobostypeIcons
+        rightLayout.label(obj.phobostype, icon_value=phobosIcon)
+
+        if obj.phobostype == 'link':
+            dictprops = {}
+            dictprops['link'] = deriveLink(obj)
+            dictprops['joint'] = deriveJoint(obj)
+        else:
+            dictprops = deriveDictEntry(obj)
+        proplist = dictprops.keys()
+        print(proplist)
+
+        # proplist = context.active_object.keys()
+        # value = context.active_object[prop]
+        categories = {}
+
+        # check whether the general box is needed
+        generalProp = set([propname for propname in proplist if type(dictprops[propname]) is not dict])
+        if len(generalProp - ignoredProps) > 0:
+            general = originalLayout.box()
+            generalTable = general.split()
+            generalL = generalTable.column(align=True)
+            generalR = generalTable.column(align=True)
+            categories['general'] = [general, generalL, generalR, 0]
+
+        counter = 0
+        proplist = set(proplist) - ignoredProps
+        for prop in proplist:
+            # check for custom GUI parameters
+            if prop in supportedProps:
+                params = supportedProps[prop]['infoparams']
+            else:
+                params = None
+
+            value = dictprops[prop]
+
+            # check for categories
+            if type(value) is dict:
+                category = prop
+
+                if category in categories:
+                    layout = categories[category]
+                else:
+                    if category in supportedCategories:
+                        originalLayout.label(category.upper(), icon_value=supportedCategories[category]['icon_value'])
+                    else:
+                        originalLayout.label(category.upper())
+
+                    box = originalLayout.box()
+                    catTable = box.split()
+                    catL = catTable.column(align=True)
+                    catR = catTable.column(align=True)
+                    categories[category] = [box, catL, catR, 0]
+                    layout = categories[category]
+
+                # TODO make this recursive to clean up code
+                for propT2 in dictprops[category].keys():
+                    value = dictprops[category][propT2]
+                    if type(value) is float:
+                        value = '{0:.4f}'.format(value)
+                    if propT2 not in ignoredProps:
+                        self.addProp(propT2, value, layout, [])
+            else:
+                layout = categories['general']
+                self.addProp(prop, value, layout, params)
+            counter += 1
+
+
 class PhobosModelPanel(bpy.types.Panel):
     """Contains all model editing tools in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_PT_PHOBOS_MODEL"
@@ -422,9 +619,7 @@ class PhobosModelPanel(bpy.types.Panel):
     def draw_header(self, context):
         # TODO decide on icon
         # self.layout.label(icon='OUTLINER_DATA_ARMATURE')
-        pcoll = prev_collections["phobos"]
-        phobosIcon = pcoll["phobosIcon"]
-        self.layout.label(icon_value=phobosIcon.icon_id)
+        self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
         layout = self.layout
@@ -494,7 +689,7 @@ class PhobosModelPanel(bpy.types.Panel):
 #         # self.layout.label(icon='SCENE_DATA')
 #         pcoll = prev_collections["phobos"]
 #         phobosIcon = pcoll["phobosIcon"]
-#         self.layout.label(icon_value=phobosIcon.icon_id)
+#         self.layout.label(icon_value=phobosIcon)
 #
 #     def draw(self, context):
 #         layout = self.layout
@@ -556,9 +751,7 @@ class PhobosExportPanel(bpy.types.Panel):
     def draw_header(self, context):
         # TODO decide on icon
         # self.layout.label(icon='EXPORT')
-        pcoll = prev_collections["phobos"]
-        phobosIcon = pcoll["phobosIcon"]
-        self.layout.label(icon_value=phobosIcon.icon_id)
+        self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
         expsets = bpy.data.worlds[0].phobosexportsettings
@@ -635,9 +828,7 @@ class PhobosImportPanel(bpy.types.Panel):
     def draw_header(self, context):
         # TODO decide on icon
         # self.layout.label(icon='IMPORT')
-        pcoll = prev_collections["phobos"]
-        phobosIcon = pcoll["phobosIcon"]
-        self.layout.label(icon_value=phobosIcon.icon_id)
+        self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
         self.layout.operator("phobos.import_robot_model",
@@ -655,9 +846,7 @@ class PhobosObjectPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
-        pcoll = prev_collections["phobos"]
-        phobosIcon = pcoll["phobosIcon"]
-        self.layout.label(icon_value=phobosIcon.icon_id)
+        self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
         layout = self.layout
@@ -699,7 +888,7 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
     def draw_header(self, context):
         pcoll = prev_collections["phobos"]
         phobosIcon = pcoll["phobosIcon"]
-        self.layout.label(icon_value=phobosIcon.icon_id)
+        self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
         layout = self.layout
@@ -762,6 +951,33 @@ def register():
                "phobosIcon.png"), 'IMAGE')
     prev_collections["phobos"] = pcoll
 
+    global phobosIcon
+    pcoll = prev_collections["phobos"]
+    phobosIcon = pcoll["phobosIcon"].icon_id
+
+    # OPT: Icons for phobostypes will be added here
+    global phobostypeIcons
+    pcoll = prev_collections["phobos"]
+    phobostypeIcons = {}
+
+    # this needs to be registered after all contained data is set
+    global supportedProps
+    supportedProps = {
+        'phobostype': {
+            'infoparams': {
+                'icon_value': phobosIcon
+            }
+        },
+        'geometry/type': {
+            'infoparams': {}
+        }
+    }
+
+    global supportedCategories
+    supportedCategories = {
+        # TODO add test
+    }
+
     # TODO delete me?
     # Register classes (cannot be automatic, as panels are placed in gui in the registering order)
     #     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
@@ -779,8 +995,13 @@ def register():
 
     # CHECK is this needed and right?
     bpy.utils.register_class(MatrixPropGroup)
+    bpy.utils.register_class(ObjectInfoPropGroup)
     bpy.utils.register_class(PhobosMatrixPanel)
+    bpy.utils.register_class(PhobosObjectInformationPanel)
+    bpy.utils.register_class(PhobosPropertyInformationPanel)
     bpy.types.Object.phobosmatrixinfo = PointerProperty(type=MatrixPropGroup)
+    bpy.types.Scene.phobosobjectinfo = PointerProperty(type=ObjectInfoPropGroup)
+    bpy.types.Scene.phobospropcategories = EnumProperty(items=[])
 
     bpy.utils.register_class(PhobosToolsPanel)
     bpy.utils.register_class(PhobosModelPanel)

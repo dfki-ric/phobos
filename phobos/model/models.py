@@ -155,6 +155,25 @@ def deriveLink(obj):
     return props
 
 
+def deriveFullLinkInformation(obj):
+    """This function derives a link from a blender object and creates its initial phobos data structure.
+
+    :param obj: The blender object to derive the link from.
+    :type obj: bpy_types.Object
+    :return: dict
+    """
+    props = initObjectProperties(obj, phobostype='link', ignoretypes=[
+                                 'joint', 'motor', 'entity'])
+    parent = sUtils.getEffectiveParent(obj)
+    props['parent'] = parent.name if parent else None
+    props["pose"] = deriveObjectPose(obj)
+    props["collision"] = {}
+    props["visual"] = {}
+    props["inertial"] = {}
+    props['approxcollision'] = []
+    return props
+
+
 def deriveJoint(obj):
     """This function derives a joint from a blender object and creates its initial phobos data structure.
 
