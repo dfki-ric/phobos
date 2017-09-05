@@ -111,6 +111,8 @@ class PhobosPrefs(AddonPreferences):
         # TODO how should plugins be handled?
         # layout.prop(self, 'pluginspath', text="Path for plugins")
 
+prev_collections = {}
+
 
 class PhobosExportSettings(bpy.types.PropertyGroup):
     # DOCU missing class description
@@ -234,6 +236,11 @@ class PhobosToolsPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos'
+
+    def draw_header(self, context):
+        pcoll = prev_collections["phobos"]
+        phobosIcon = pcoll["phobosIcon"]
+        self.layout.label(icon_value=phobosIcon.icon_id)
 
     def draw(self, context):
         layout = self.layout
@@ -413,7 +420,11 @@ class PhobosModelPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
-        self.layout.label(icon='OUTLINER_DATA_ARMATURE')
+        # TODO decide on icon
+        # self.layout.label(icon='OUTLINER_DATA_ARMATURE')
+        pcoll = prev_collections["phobos"]
+        phobosIcon = pcoll["phobosIcon"]
+        self.layout.label(icon_value=phobosIcon.icon_id)
 
     def draw(self, context):
         layout = self.layout
@@ -479,7 +490,11 @@ class PhobosModelPanel(bpy.types.Panel):
 #     bl_category = 'Phobos'
 #
 #     def draw_header(self, context):
-#         self.layout.label(icon='SCENE_DATA')
+#         # TODO decide on icon
+#         # self.layout.label(icon='SCENE_DATA')
+#         pcoll = prev_collections["phobos"]
+#         phobosIcon = pcoll["phobosIcon"]
+#         self.layout.label(icon_value=phobosIcon.icon_id)
 #
 #     def draw(self, context):
 #         layout = self.layout
@@ -539,7 +554,11 @@ class PhobosExportPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
-        self.layout.label(icon='EXPORT')
+        # TODO decide on icon
+        # self.layout.label(icon='EXPORT')
+        pcoll = prev_collections["phobos"]
+        phobosIcon = pcoll["phobosIcon"]
+        self.layout.label(icon_value=phobosIcon.icon_id)
 
     def draw(self, context):
         expsets = bpy.data.worlds[0].phobosexportsettings
@@ -614,7 +633,11 @@ class PhobosImportPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
-        self.layout.label(icon='IMPORT')
+        # TODO decide on icon
+        # self.layout.label(icon='IMPORT')
+        pcoll = prev_collections["phobos"]
+        phobosIcon = pcoll["phobosIcon"]
+        self.layout.label(icon_value=phobosIcon.icon_id)
 
     def draw(self, context):
         self.layout.operator("phobos.import_robot_model",
@@ -632,8 +655,9 @@ class PhobosObjectPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
-        # OPT: replace by Phobos logo
-        self.layout.label(icon='SMOOTH')
+        pcoll = prev_collections["phobos"]
+        phobosIcon = pcoll["phobosIcon"]
+        self.layout.label(icon_value=phobosIcon.icon_id)
 
     def draw(self, context):
         layout = self.layout
@@ -663,6 +687,31 @@ class PhobosObjectPanel(bpy.types.Panel):
             # else:
             #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.phobostype+"_default"]
 
+
+class PhobosModelLibraryPanel(bpy.types.Panel):
+    # DOCU add some docstring and update bl_idname
+    bl_idname = "TOOLS_PT_PHOBOS_LOCALMODELS"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = "Phobos Models"
+    bl_label = "Locally Model Library"
+
+    def draw_header(self, context):
+        pcoll = prev_collections["phobos"]
+        phobosIcon = pcoll["phobosIcon"]
+        self.layout.label(icon_value=phobosIcon.icon_id)
+
+    def draw(self, context):
+        layout = self.layout
+        wm = context.window_manager
+        layout.operator("phobos.update_model_library", icon="FILE_REFRESH")
+        layout.prop(wm, 'category')
+        layout.template_icon_view(wm, 'modelpreview', show_labels=True, scale=5.0)
+        layout.prop(wm, 'modelpreview')
+        layout.prop(wm, 'as_reference')
+        layout.prop(wm, 'namespace')
+        layout.label(text=wm.namespace+'::objectname' if wm.namespace != '' else 'no namespacing')
+        layout.operator("phobos.import_model_from_library", icon="IMPORT")
 
 def get_operator_manuals():
     """Returns a tuple with the Phobos wiki Operator page and pairs of operator
@@ -703,6 +752,15 @@ def register():
             typename = "export_scene_" + scenetype
             setattr(bpy.types.World, typename, BoolProperty(
                 name=scenetype, default=False))
+
+    # Load custom icons
+    import os
+    pcoll = bpy.utils.previews.new()
+
+    # load a preview thumbnail of a file and store in the previews collection
+    pcoll.load("phobosIcon", os.path.join(os.path.dirname(__file__),
+               "phobosIcon.png"), 'IMAGE')
+    prev_collections["phobos"] = pcoll
 
     # TODO delete me?
     # Register classes (cannot be automatic, as panels are placed in gui in the registering order)
@@ -753,6 +811,11 @@ def register():
 
 def unregister():
     print("Unregistering phobosgui...")
+
+    # Unregister icons
+    for pcoll in prev_collections.values():
+        bpy.utils.previews.remove(pcoll)
+    prev_collections.clear()
 
     # Unregister classes
     for key, classdef in inspect.getmembers(sys.modules[__name__],

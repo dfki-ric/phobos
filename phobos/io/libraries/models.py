@@ -34,6 +34,9 @@ import phobos.utils.naming as nUtils
 import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 
+model_data = {}
+preview_collections = {}
+
 
 def getModelListForEnumProperty(self, context):
     # DOCU missing some docstring
@@ -80,31 +83,6 @@ def compileModelList():
             preview_collections[category] = newpreviewcollection
     else:
         log('Model library folder does not exist.')
-
-# TODO move this to beginning of file
-model_data = {}
-preview_collections = {}
-
-
-class PhobosModelLibraryPanel(bpy.types.Panel):
-    # DOCU add some docstring and update bl_idname
-    bl_idname = "TOOLS_PT_PHOBOS_LOCALMODELS"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
-    bl_category = "Phobos Models"
-    bl_label = "Locally Model Library"
-
-    def draw(self, context):
-        layout = self.layout
-        wm = context.window_manager
-        layout.operator("phobos.update_model_library", icon="FILE_REFRESH")
-        layout.prop(wm, 'category')
-        layout.template_icon_view(wm, 'modelpreview', show_labels=True, scale=5.0)
-        layout.prop(wm, 'modelpreview')
-        layout.prop(wm, 'as_reference')
-        layout.prop(wm, 'namespace')
-        layout.label(text=wm.namespace+'::objectname' if wm.namespace != '' else 'no namespacing')
-        layout.operator("phobos.import_model_from_library", icon="IMPORT")
 
 
 class UpdateModelLibraryOperator(bpy.types.Operator):
