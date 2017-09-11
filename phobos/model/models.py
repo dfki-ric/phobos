@@ -533,6 +533,7 @@ def deriveDictEntry(obj):
     :type obj: bpy_types.Object
     :return: tuple
     """
+    props = {}
     try:
         if obj.phobostype == 'inertial':
             props = deriveInertial(obj)
