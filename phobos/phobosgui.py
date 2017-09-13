@@ -483,7 +483,7 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
 
 ignoredProps = set([
     'cycles', 'cycles_visibility', 'phobosmatrixinfo', 'phobostype', 'name',
-    'pose', 'size', 'scale'
+    'pose', 'size', 'scale', 'parent'
 ])
 
 
@@ -526,11 +526,33 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         # increase left-right counter
         layout[3] += 1
 
+    def addObjLink(self, prop, value, layout, params):
+        # get the existing layout columns
+        leftLayout = layout[1]
+        rightLayout = layout[2]
+        # put the link left or right?
+        if layout[3] % 2 == 0:
+            column = leftLayout
+        else:
+            column = rightLayout
+
+        # use custom params (like icons etc) from the dictionary
+        if params:
+            op = column.operator('phobos.goto_object', text='{0}'.format(value.name), **params)
+            op.objectname = value.name
+        else:
+            op = column.operator('phobos.goto_object', text='{0}'.format(value.name))
+            op.objectname = value.name
+
+        # increase left-right counter
+        layout[3] += 1
+
     def draw_header(self, context):
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
-        from phobos.model.models import deriveDictEntry, deriveLink, deriveJoint
+        from phobos.model.models import deriveDictEntry, deriveFullLinkInformation
+        import bpy
         layout = self.layout
         originalLayout = layout
         obj = context.active_object
@@ -544,13 +566,16 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         rightLayout.label(obj.phobostype, icon_value=phobosIcon)
 
         if obj.phobostype == 'link':
-            dictprops = {}
-            dictprops['link'] = deriveLink(obj)
-            dictprops['joint'] = deriveJoint(obj)
+            dictprops = deriveFullLinkInformation(obj)
         else:
             dictprops = deriveDictEntry(obj)
         proplist = dictprops.keys()
-        print(proplist)
+
+        # add parent object if available
+        if obj.parent:
+            leftLayout.label('Parent object')
+            op = rightLayout.operator('phobos.goto_object', text='{0}'.format(obj.parent.name))
+            op.objectname = obj.parent.name
 
         # proplist = context.active_object.keys()
         # value = context.active_object[prop]
@@ -601,10 +626,20 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                     if type(value) is float:
                         value = '{0:.4f}'.format(value)
                     if propT2 not in ignoredProps:
-                        self.addProp(propT2, value, layout, [])
+                        if type(value) is bpy.types.Object or (type(value) is str and value in context.scene.objects):
+                            if type(value) is str:
+                                value = context.scene.objects[value]
+                            self.addObjLink(prop, value, layout, [])
+                        else:
+                            self.addProp(propT2, value, layout, [])
             else:
                 layout = categories['general']
-                self.addProp(prop, value, layout, params)
+                if type(value) is bpy.types.Object or (type(value) is str and value in context.scene.objects):
+                    if type(value) is str:
+                        value = context.scene.objects[value]
+                    self.addObjLink(prop, value, layout, params)
+                else:
+                    self.addProp(prop, value, layout, params)
             counter += 1
 
 
