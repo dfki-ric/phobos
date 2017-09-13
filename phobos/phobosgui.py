@@ -427,30 +427,6 @@ def getModelName(self):
         return ""
 
 
-class ObjectInfoPropGroup(bpy.types.PropertyGroup):
-    from bpy.props import StringProperty
-
-    def getRoot(self):
-        import phobos.utils.selection as sUtils
-        return sUtils.getRoot(bpy.context.active_object).name
-
-    modelname = StringProperty(
-        name='modelname',
-        get=getModelName,
-        description='The name of the robot model')
-
-    rootobj = StringProperty(
-        name='root object',
-        get=getRoot,
-        description='The name of the root object')
-
-
-# class PhobosSwitchObjectOperator(bpy.types.Operator):
-
-#     def execute(self, context):
-#         pass
-
-
 class PhobosObjectInformationPanel(bpy.types.Panel):
     """Contains information like parent, immediate children etc. in the
     Buttons Window"""
@@ -465,8 +441,16 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        import phobos.utils.selection as sUtils
         layout = self.layout
-        info = context.scene.phobosobjectinfo
+        obj = context.active_object
+        modelname = ''
+        rootname = ''
+
+        root = sUtils.getRoot(obj)
+        if 'modelname' in root.keys():
+            modelname = root['modelname']
+        rootname = root.name
 
         datatop = layout.split()
         datatopl = datatop.column(align=True)
@@ -474,10 +458,10 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
         # dataright = layout.column(align=True)
 
         datatopl.operator('phobos.name_model', text=('Part of model: ' +
-                          info.modelname), icon='POSE_DATA')
+                          modelname), icon='POSE_DATA')
 
         datatopr.operator('phobos.select_root', text=('Root object: ' +
-                          info.rootobj), icon='OOPS')
+                          rootname), icon='OOPS')
         # layout.operator('phobos.name_model', text='Test', emboss=False)
 
 
@@ -527,6 +511,9 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         layout[3] += 1
 
     def addObjLink(self, prop, value, layout, params):
+        # this list is used to force labelling of special keywords
+        labels = ['joint', 'child']
+
         # get the existing layout columns
         leftLayout = layout[1]
         rightLayout = layout[2]
@@ -536,12 +523,15 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         else:
             column = rightLayout
 
+        label = [prop if prop in labels else ''][0]
         # use custom params (like icons etc) from the dictionary
         if params:
-            op = column.operator('phobos.goto_object', text='{0}'.format(value.name), **params)
+            op = column.operator('phobos.goto_object',
+                                 text=(label + [': ' if len(label) > 0 else ''][0] + '{1}'.format(label, value.name)), **params)
             op.objectname = value.name
         else:
-            op = column.operator('phobos.goto_object', text='{0}'.format(value.name))
+            op = column.operator('phobos.goto_object',
+                                 text=(label + [': ' if len(label) > 0 else ''][0] + '{1}'.format(label, value.name)))
             op.objectname = value.name
 
         # increase left-right counter
@@ -574,7 +564,8 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         # add parent object if available
         if obj.parent:
             leftLayout.label('Parent object')
-            op = rightLayout.operator('phobos.goto_object', text='{0}'.format(obj.parent.name))
+            op = rightLayout.operator('phobos.goto_object',
+                                      text='{0}'.format(obj.parent.name))
             op.objectname = obj.parent.name
 
         # proplist = context.active_object.keys()
@@ -629,7 +620,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                         if type(value) is bpy.types.Object or (type(value) is str and value in context.scene.objects):
                             if type(value) is str:
                                 value = context.scene.objects[value]
-                            self.addObjLink(prop, value, layout, [])
+                            self.addObjLink(propT2, value, layout, [])
                         else:
                             self.addProp(propT2, value, layout, [])
             else:
@@ -637,6 +628,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                 if type(value) is bpy.types.Object or (type(value) is str and value in context.scene.objects):
                     if type(value) is str:
                         value = context.scene.objects[value]
+                    print(prop, value)
                     self.addObjLink(prop, value, layout, params)
                 else:
                     self.addProp(prop, value, layout, params)
