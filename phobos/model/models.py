@@ -155,6 +155,45 @@ def deriveLink(obj):
     return props
 
 
+def deriveFullLinkInformation(obj):
+    """This function derives the full link information (including joint and
+    motor data) from a blender object and creates its initial phobos data
+    structure.
+
+    :param obj: The blender object to derive the link from.
+    :type obj: bpy_types.Object
+    :return: dict
+    """
+    props = initObjectProperties(obj, phobostype='link', ignoretypes=[
+                                 'joint', 'motor', 'entity'])
+    parent = sUtils.getEffectiveParent(obj)
+    props['parent'] = parent.name if parent else None
+    props["pose"] = deriveObjectPose(obj)
+    props["joint"] = deriveJoint(obj)
+    del props["joint"]["parent"]
+    props["motor"] = deriveMotor(obj, props['joint'])
+    collisionObjects = sUtils.getImmediateChildren(
+        obj, phobostypes=('collision'), include_hidden=True)
+    collisionDict = {}
+    for colobj in collisionObjects:
+        collisionDict[colobj.name] = colobj
+    props["collision"] = collisionDict
+    visualObjects = sUtils.getImmediateChildren(
+        obj, phobostypes=('visual'), include_hidden=True)
+    visualDict = {}
+    for visualobj in visualObjects:
+        visualDict[visualobj.name] = visualobj
+    props["visual"] = visualDict
+    inertialObjects = sUtils.getImmediateChildren(
+        obj, phobostypes=('inertial'), include_hidden=True)
+    inertialDict = {}
+    for inertialobj in inertialObjects:
+        inertialDict[inertialobj.name] = inertialobj
+    props["inertial"] = inertialDict
+    props['approxcollision'] = []
+    return props
+
+
 def deriveJoint(obj):
     """This function derives a joint from a blender object and creates its initial phobos data structure.
 
