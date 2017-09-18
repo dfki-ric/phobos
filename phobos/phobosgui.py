@@ -367,7 +367,6 @@ class PhobosMatrixPanel(bpy.types.Panel):
     bl_idname = "INFOBAR_PT_PHOBOS_TOOLS"
     bl_label = "Phobos Matrix Information"
     bl_space_type = "PROPERTIES"
-    # 'WINDOW', 'HEADER', 'CHANNELS', 'TEMPORARY', 'UI', 'TOOLS', 'TOOL_PROPS', 'PREVIEW'
     bl_region_type = "WINDOW"
     bl_context = "object"
 
@@ -413,27 +412,12 @@ class PhobosMatrixPanel(bpy.types.Panel):
                               text=rotatprop[4] + ' rotation')
 
 
-# TODO WET code with operators.naming.py
-def getModelName(self):
-    import phobos.utils.selection as sUtils
-    active_object = bpy.context.active_object
-
-    # TODO handle this error at function level
-    if active_object:
-        root = sUtils.getRoot(active_object)
-        if root:
-            return root["modelname"]
-    else:
-        return ""
-
-
 class PhobosObjectInformationPanel(bpy.types.Panel):
     """Contains information like parent, immediate children etc. in the
     Buttons Window"""
     bl_idname = "OBJINFO_PT_PHOBOS_TOOLS"
     bl_label = "Phobos Object Information"
     bl_space_type = "PROPERTIES"
-    # 'WINDOW', 'HEADER', 'CHANNELS', 'TEMPORARY', 'UI', 'TOOLS', 'TOOL_PROPS', 'PREVIEW'
     bl_region_type = "WINDOW"
     bl_context = "object"
 
@@ -471,18 +455,11 @@ ignoredProps = set([
 ])
 
 
-class PropertyInfoCategories(bpy.types.EnumProperty):
-    categoryname = StringProperty(
-        name='categoryname',
-        description='The name of the category')
-
-
 class PhobosPropertyInformationPanel(bpy.types.Panel):
     """Contains all properties sorted in different categories"""
     bl_idname = "PROPINFO_PT_PHOBOS_TOOLS"
     bl_label = "Phobos Property Information"
     bl_space_type = "PROPERTIES"
-    # 'WINDOW', 'HEADER', 'CHANNELS', 'TEMPORARY', 'UI', 'TOOLS', 'TOOL_PROPS', 'PREVIEW'
     bl_region_type = "WINDOW"
     bl_context = "object"
 
@@ -490,25 +467,36 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         # get the existing layout columns
         leftLayout = layout[1]
         rightLayout = layout[2]
+
         # put the value left or right?
-        if layout[3] % 2 == 0:
+        if layout[3][0] <= layout[3][1]:
+            layout[3][0] += len(prop)
             column = leftLayout
         else:
+            layout[3][1] += len(prop)
             column = rightLayout
 
-        subtable = column.split()
-        colL = subtable.column(align=True)
-        colR = subtable.column(align=True)
-        # use custom params (like icons etc) from the dictionary
-        if params:
-            colL.label(text='{0}'.format(prop))
-            colR.label(text='{0}'.format(value), **params)
-        else:
-            colL.label(text='{0}'.format(prop))
-            colR.label(text='{0}'.format(value))
+        # add all properties in sequence
+        for i in range(len(prop)):
+            subtable = column.split(percentage=0.45)
+            colL = subtable.column()
+            colR = subtable.column()
+            # use custom params (like icons etc) from the dictionary
+            if type(value[i]) is float:
+                value[i] = '{0:.4f}'.format(value[i])
 
-        # increase left-right counter
-        layout[3] += 1
+            # use custom properties for special operators or icons
+            if params[i]:
+                colL.label(text='{0}'.format(prop[i]))
+                if 'operator' in params[i]:
+                    colR.operator(params[i]['operator'],
+                                  text='{0}'.format(value[i]))
+                else:
+                    colR.label(text='{0}'.format(value[i]),
+                               **params[i]['infoparams'])
+            else:
+                colL.label(text='{0}'.format(prop[i]))
+                colR.label(text='{0}'.format(value[i]))
 
     def addObjLink(self, prop, value, layout, params):
         # this list is used to force labelling of special keywords
@@ -518,43 +506,58 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         leftLayout = layout[1]
         rightLayout = layout[2]
         # put the link left or right?
-        if layout[3] % 2 == 0:
+        if layout[3][0] <= layout[3][1]:
+            layout[3][0] += 1
             column = leftLayout
         else:
+            layout[3][1] += 1
             column = rightLayout
 
         label = [prop if prop in labels else ''][0]
         # use custom params (like icons etc) from the dictionary
         if params:
             op = column.operator('phobos.goto_object',
-                                 text=(label + [': ' if len(label) > 0 else ''][0] + '{1}'.format(label, value.name)), **params)
+                                 text=(label +
+                                       [': ' if len(label) > 0 else ''][0] +
+                                       '{1}'.format(label, value.name)),
+                                 **params['infoparams'])
             op.objectname = value.name
         else:
             op = column.operator('phobos.goto_object',
-                                 text=(label + [': ' if len(label) > 0 else ''][0] + '{1}'.format(label, value.name)))
+                                 text=(label +
+                                       [': ' if len(label) > 0 else ''][0] +
+                                       '{1}'.format(label, value.name)))
             op.objectname = value.name
 
-        # increase left-right counter
-        layout[3] += 1
+    def checkParams(self, item):
+        if item in supportedProps:
+            params = supportedProps[item]
+        else:
+            params = None
+
+        return params
 
     def draw_header(self, context):
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
-        from phobos.model.models import deriveDictEntry, deriveFullLinkInformation
+        from phobos.model.models import deriveDictEntry
+        from phobos.model.models import deriveFullLinkInformation
         import bpy
         layout = self.layout
         originalLayout = layout
         obj = context.active_object
 
+        # add phobostype
         box = originalLayout.box()
         table = box.split()
-        leftLayout = table.column(align=True)
-        rightLayout = table.column(align=True)
+        leftLayout = table.column()
+        rightLayout = table.column()
         leftLayout.label('Phobostype')
         # OPT: change icon_value from phobostypeIcons
         rightLayout.label(obj.phobostype, icon_value=phobosIcon)
 
+        # derive object information as dictionary
         if obj.phobostype == 'link':
             dictprops = deriveFullLinkInformation(obj)
         else:
@@ -568,71 +571,89 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                                       text='{0}'.format(obj.parent.name))
             op.objectname = obj.parent.name
 
-        # proplist = context.active_object.keys()
-        # value = context.active_object[prop]
         categories = {}
 
-        # check whether the general box is needed
-        generalProp = set([propname for propname in proplist if type(dictprops[propname]) is not dict])
+        # check whether the general category is needed
+        generalProp = set([propname for propname in proplist
+                           if type(dictprops[propname]) is not dict])
         if len(generalProp - ignoredProps) > 0:
             general = originalLayout.box()
             generalTable = general.split()
-            generalL = generalTable.column(align=True)
-            generalR = generalTable.column(align=True)
-            categories['general'] = [general, generalL, generalR, 0]
+            generalL = generalTable.column()
+            generalR = generalTable.column()
+            categories['general'] = [general, generalL, generalR, [0, 0]]
 
-        counter = 0
+        # remove the unimportant properties and iterate over the rest
         proplist = set(proplist) - ignoredProps
         for prop in proplist:
-            # check for custom GUI parameters
-            if prop in supportedProps:
-                params = supportedProps[prop]['infoparams']
-            else:
-                params = None
-
+            params = self.checkParams(prop)
             value = dictprops[prop]
 
             # check for categories
             if type(value) is dict:
                 category = prop
 
+                # look for existing category layout
                 if category in categories:
                     layout = categories[category]
+                # add a new category layout
                 else:
+                    # use custom icons for supported categories
                     if category in supportedCategories:
-                        originalLayout.label(category.upper(), icon_value=supportedCategories[category]['icon_value'])
+                        originalLayout.label(
+                            category.upper(),
+                            icon_value=supportedCategories[category][
+                                'icon_value'])
                     else:
                         originalLayout.label(category.upper())
 
+                    # create column hierarchy
                     box = originalLayout.box()
                     catTable = box.split()
-                    catL = catTable.column(align=True)
-                    catR = catTable.column(align=True)
-                    categories[category] = [box, catL, catR, 0]
+                    catL = catTable.column()
+                    catR = catTable.column()
+                    categories[category] = [box, catL, catR, [0, 0]]
                     layout = categories[category]
 
-                # TODO make this recursive to clean up code
+                # add each subproperty to the layout
                 for propT2 in dictprops[category].keys():
+                    params = self.checkParams(category + '/' + propT2)
+
                     value = dictprops[category][propT2]
-                    if type(value) is float:
-                        value = '{0:.4f}'.format(value)
                     if propT2 not in ignoredProps:
-                        if type(value) is bpy.types.Object or (type(value) is str and value in context.scene.objects):
+                        # is it a linkable object?
+                        if type(value) is bpy.types.Object or (
+                                type(value) is str and
+                                value in context.scene.objects):
+                            # a string identifier for an object
                             if type(value) is str:
                                 value = context.scene.objects[value]
-                            self.addObjLink(propT2, value, layout, [])
+                            self.addObjLink(propT2, value, layout, params)
+                        # is it another dictionary with values?
+                        elif type(value) is dict:
+                            props = value.keys()
+                            values = [value[key] for key in props]
+                            paramkeys = [category + '/' + propT2 + '/' +
+                                         propkey for propkey in props]
+                            paramlist = []
+                            for paramkey in paramkeys:
+                                paramlist.append(self.checkParams(paramkey))
+                            props = [propT2 + '/' +
+                                     propkey for propkey in props]
+                            self.addProp(props, values, layout, paramlist)
+                        # just another value
                         else:
-                            self.addProp(propT2, value, layout, [])
+                            self.addProp([propT2], [value], layout, [params])
+            # just a value for the general category
             else:
                 layout = categories['general']
-                if type(value) is bpy.types.Object or (type(value) is str and value in context.scene.objects):
+                if type(value) is bpy.types.Object or (
+                        type(value) is str and value in context.scene.objects):
                     if type(value) is str:
                         value = context.scene.objects[value]
-                    print(prop, value)
                     self.addObjLink(prop, value, layout, params)
                 else:
-                    self.addProp(prop, value, layout, params)
-            counter += 1
+                    self.addProp([prop], [value], layout, [params])
 
 
 class PhobosModelPanel(bpy.types.Panel):
@@ -997,12 +1018,26 @@ def register():
         },
         'geometry/type': {
             'infoparams': {}
+        },
+        'motor/type': {
+            'operator': 'phobos.add_motor',
+            'infoparams': {
+                'icon_value': phobosIcon
+            }
+        },
+        'joint/type': {
+            'operator': 'phobos.define_joint_constraints',
+            'infoparams': {}
+        },
+        'geometry/type': {
+            'operator': 'phobos.define_geometry',
+            'infoparams': {}
         }
     }
 
     global supportedCategories
     supportedCategories = {
-        # TODO add test
+        # CHECK this might become interesting in the future otherwise just delete it
     }
 
     # TODO delete me?
@@ -1022,12 +1057,10 @@ def register():
 
     # CHECK is this needed and right?
     bpy.utils.register_class(MatrixPropGroup)
-    bpy.utils.register_class(ObjectInfoPropGroup)
     bpy.utils.register_class(PhobosMatrixPanel)
     bpy.utils.register_class(PhobosObjectInformationPanel)
     bpy.utils.register_class(PhobosPropertyInformationPanel)
     bpy.types.Object.phobosmatrixinfo = PointerProperty(type=MatrixPropGroup)
-    bpy.types.Scene.phobosobjectinfo = PointerProperty(type=ObjectInfoPropGroup)
     bpy.types.Scene.phobospropcategories = EnumProperty(items=[])
 
     bpy.utils.register_class(PhobosToolsPanel)
