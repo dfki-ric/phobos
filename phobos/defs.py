@@ -63,6 +63,7 @@ phobostypes = (('undefined',) * 3,
                ('entity',) * 3,
                ('frame',) * 3,
                ('interface',) * 3,
+               ('assembly',) * 3
                )
 
 # DOCU add some comments for these...
