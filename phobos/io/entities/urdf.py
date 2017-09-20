@@ -120,7 +120,7 @@ def exportUrdf(model, outpath):
     for l in sorted_link_keys:
         if l in model['links']:
             link = model['links'][l]
-            output.append(indent * 2 + '<link name="' + l + '">\n')
+            output.append(indent * 2 + '<link name="' + link['name'] + '">\n')
             if 'mass' in link['inertial'] and 'inertia' in link['inertial']:
                 output.append(indent * 3 + '<inertial>\n')
                 if 'pose' in link['inertial']:
