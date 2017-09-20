@@ -176,9 +176,10 @@ class ExportModelOperator(Operator):
         return {'FINISHED'}
 
 
-def exportModel(root, export_path, entitytypes=None):
+def exportModel(root, export_path, entitytypes=None, model=None):
     # derive model
-    model = models.buildModelDictionary(root)
+    if not model:
+        model = models.buildModelDictionary(root)
 
     # export model in selected formats
     if entitytypes is None:

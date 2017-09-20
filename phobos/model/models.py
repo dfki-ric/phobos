@@ -752,6 +752,106 @@ def deriveTextData(modelname):
     return datadict
 
 
+def deriveModelDictionaryFromAssemblies(modelname):
+    model = {'links': {},
+             'joints': {},
+             'sensors': {},
+             'motors': {},
+             'controllers': {},
+             'materials': {},
+             'meshes': {},
+             'lights': {},
+             'groups': {},
+             'chains': {}
+             }
+    model['date'] = datetime.now().strftime("%Y%m%d_%H:%M")
+    model['name'] = modelname
+    assemblies = [a for a in bpy.data.objects if a.phobostype == 'assembly']
+    for a in assemblies:
+        print('-----------------------', a.name, a['assemblyname'], '\n')
+        rootlink = [r for r in bpy.data.objects if sUtils.isRoot(r)
+                    and r['modelname'] == a['assemblyname']][0]
+        adict = buildModelDictionary(rootlink)
+        for l in adict['links']:
+            model['links'][namespaced(l, a.name)] = namespaceLink(adict['links'][l], a.name)
+        for j in adict['joints']:
+            model['joints'][namespaced(j, a.name)] = namespaceJoint(adict['joints'][j], a.name)
+        for m in adict['motors']:
+            model['motors'][namespaced(m, a.name)] = namespaceMotor(adict['motors'][m], a.name)
+        for mat in adict['materials']:
+            if mat not in model['materials']:
+                model['materials'][mat] = adict['materials'][mat]
+        for mesh in adict['meshes']:
+            model['meshes'][namespaced(mesh, a.name)] = adict['meshes'][mesh]
+        print('\n\n')
+    for a in assemblies:
+        rootlink = [r for r in bpy.data.objects if sUtils.isRoot(r)
+                    and r['modelname'] == a['assemblyname']][0]
+        if a.parent:
+            #print('combining...:', a.name)
+            #print([l for l in model['links']])
+            parentassemblyname = a.parent.parent.parent['assemblyname']
+            #print(parentassemblyname)
+            parentinterfacename = a.parent.parent['interface/name']
+            #print(parentinterfacename)
+            parentassembly = [r for r in bpy.data.objects if sUtils.isRoot(r)
+                              and r['modelname'] == parentassemblyname][0]
+            #print(parentassembly)
+            parentinterface = [i for i in sUtils.getChildren(parentassembly, ('interface',))
+                               if i['interface/name'] == parentinterfacename][0]
+            #print(parentinterface)
+            parentlinkname = parentinterface.parent.name
+            #print(parentlinkname)
+
+            # derive link pose for root link
+            matrix = eUtils.getCombinedTransform(a, a.parent.parent.parent)
+            pose = {'rawmatrix': matrix,
+                    'matrix': [list(vector) for vector in list(matrix)],
+                    'translation': list(matrix.to_translation()),
+                    'rotation_euler': list(matrix.to_euler()),
+                    'rotation_quaternion': list(matrix.to_quaternion())
+                    }
+            model['links'][namespaced(rootlink.name, a.name)]['pose'] = pose
+
+            # derive additional joint
+            model['joints'][a.name] = deriveJoint(rootlink)
+            #print(yaml.dump(model['joints'][a.name]))
+            model['joints'][a.name]['name'] = namespaced(rootlink.name, a.name)
+            model['joints'][a.name]['parent'] = namespaced(parentlinkname, a.parent.parent.parent.name)
+            model['joints'][a.name]['child'] = namespaced(rootlink.name, a.name)
+            #print(yaml.dump(model['joints'][a.name]))
+        #print('######################')
+        #for j in model['joints']:
+        #    print(model['joints'][j]['name'], model['joints'][j]['child'], model['joints'][j]['child'])
+        #print('######################')
+    return model
+
+
+def namespaceMotor(motor, namespace):
+    motor['name'] = namespaced(motor['name'], namespace)
+    motor['joint'] = namespaced(motor['joint'], namespace)
+    return motor
+
+
+def namespaceLink(link, namespace):
+    link['name'] = namespaced(link['name'], namespace)
+    for element in link['collision']:
+        link['collision'][element]['name'] = namespaced(link['collision'][element]['name'], namespace)
+    for element in link['visual']:
+        link['visual'][element]['name'] = namespaced(link['visual'][element]['name'], namespace)
+    return link
+
+
+def namespaceJoint(joint, namespace):
+    joint['name'] = namespaced(joint['name'], namespace)
+    joint['child'] = namespaced(joint['child'], namespace)
+    joint['parent'] = namespaced(joint['parent'], namespace)
+    return joint
+
+def namespaced(name, namespace):
+    return namespace+'_'+name
+
+
 def buildModelDictionary(root):
     """Builds a python dictionary representation of a Phobos model.
 
