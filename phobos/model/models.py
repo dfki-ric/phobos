@@ -143,6 +143,7 @@ def deriveLink(obj):
     :type obj: bpy_types.Object
     :return: dict
     """
+    log("Deriving link " + obj.name, "DEBUG")
     props = initObjectProperties(obj, phobostype='link', ignoretypes=[
                                  'joint', 'motor', 'entity'])
     parent = sUtils.getEffectiveParent(obj)
