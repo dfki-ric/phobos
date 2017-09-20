@@ -246,7 +246,7 @@ def exportModel(root, export_path, entitytypes=None):
 class ImportModelOperator(bpy.types.Operator):
     """Import robot model file from various formats"""
     bl_idname = "phobos.import_robot_model"
-    bl_label = ""
+    bl_label = "Import Robot Model"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'FILE'
 
