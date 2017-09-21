@@ -1518,7 +1518,7 @@ class InstantiateAssembly(Operator):
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
-        eUtils.instantiateAssembly(self.assemblyname)
+        eUtils.instantiateAssembly(self.assemblyname, self.instancename)
         return {'FINISHED'}
 
 
