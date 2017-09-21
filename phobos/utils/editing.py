@@ -74,19 +74,33 @@ def instantiateAssembly(assemblyname, instancename):
     bpy.ops.object.delete(use_global=False)
 
 
+def deriveAssembly(assemblyname, objects=None):
+    if not objects:
+        objects = bpy.context.selected_objects
+    bpy.ops.group.create(name=assemblyname)
+    i = 0
+    while objects[i].parent in objects:
+        i += 1
+    if objects[i].parent and objects[i].parent in objects:
+        log()
+
+
 def connectInterfaces(parentinterface, childinterface):
-    childassembly = childinterface.parent
-    sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
-    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-    sUtils.selectObjects(objects=[childinterface, childassembly], clear=True, active=0)
-    bpy.ops.object.parent_set(type='OBJECT')
-    childinterface.matrix_world = parentinterface.matrix_world
-    sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
-    bpy.ops.object.parent_set(type='OBJECT')
-    try:
-        del childassembly['modelname']
-    except KeyError:
-        pass
+    if ((parentinterface['interface/gender'] != parentinterface['interface/gender']) or
+        (parentinterface['interface/gender'] == parentinterface['interface/gender'] and
+         parentinterface['interface/gender'] == 'bidirectional')):
+        childassembly = childinterface.parent
+        sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
+        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+        sUtils.selectObjects(objects=[childinterface, childassembly], clear=True, active=0)
+        bpy.ops.object.parent_set(type='OBJECT')
+        childinterface.matrix_world = parentinterface.matrix_world
+        sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
+        bpy.ops.object.parent_set(type='OBJECT')
+        try:
+            del childassembly['modelname']
+        except KeyError:
+            pass
 
 
 def getPropertiesSubset(obj, category=None):
