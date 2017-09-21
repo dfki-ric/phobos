@@ -952,7 +952,7 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
     def draw_header(self, context):
         pcoll = prev_collections["phobos"]
         phobosIcon = pcoll["phobosIcon"]
-        self.layout.label(icon_value=phobosIcon)
+        #self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
         layout = self.layout
