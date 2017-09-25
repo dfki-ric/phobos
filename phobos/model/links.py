@@ -74,6 +74,24 @@ def createLink(link):
     # this is a backup in case an object with the link's name already exists
     newlink["link/name"] = link['name']
 
+    # FIXME geometric dimensions are not intiallized properly, thus scale always 0.2!
+    # set the size of the link
+    elements = getGeometricElements(link)
+    scale = max((geometrymodel.getLargestDimension(element['geometry']) for element in elements)) if elements else 0.2
+
+    # use scaling factor provided by user
+    #FIXME where would this *scale* come from?
+    if 'scale' in link:
+        scale *= link['scale']
+    newlink.scale = (scale, scale, scale)
+    bpy.ops.object.transform_apply(scale=True)
+
+    # add custom properties
+    for prop in link:
+        if prop.startswith('$'):
+            for tag in link[prop]:
+                newlink['link/'+prop[1:]+'/'+tag] = link[prop][tag]
+
     # create inertial
     if 'inertial' in link:
         inertiamodel.createInertialFromDictionary(link['name'], link['inertial'])
@@ -89,23 +107,6 @@ def createLink(link):
         for c in link['collision']:
             collision = link['collision'][c]
             geometrymodel.createGeometry(collision, 'collision')
-
-    # FIXME geometric dimensions are not intiallized properly, thus scale always 0.2!
-    # set the size of the link
-    elements = getGeometricElements(link)
-    scale = max((geometrymodel.getLargestDimension(element['geometry']) for element in elements)) if elements else 0.2
-
-    # use scaling factor provided by user
-    if 'scale' in link:
-        scale *= link['scale']
-    newlink.scale = (scale, scale, scale)
-    bpy.ops.object.transform_apply(scale=True)
-
-    # add custom properties
-    for prop in link:
-        if prop.startswith('$'):
-            for tag in link[prop]:
-                newlink['link/'+prop[1:]+'/'+tag] = link[prop][tag]
 
     return newlink
 
