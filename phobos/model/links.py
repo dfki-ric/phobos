@@ -224,17 +224,20 @@ def placeLinkSubelements(link):
     elements = getGeometricElements(link) + ([link['inertial']] if 'inertial' in link else [])
     bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
     parentlink = bpy.data.objects[link['name']]
+    log('Placing subelements for link: ' + link['name'] + ': ' + ', '.join([elem['name'] for elem in elements]), 'DEBUG')
     for element in elements:
         if 'pose' in element:
+            log('Pose detected for element: ' + element['name'], 'DEBUG')
             location = mathutils.Matrix.Translation(element['pose']['translation'])
             rotation = mathutils.Euler(tuple(element['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
         else:
+            log('No pose in element: ' + element['name'], 'DEBUG')
             location = mathutils.Matrix.Identity(4)
             rotation = mathutils.Matrix.Identity(4)
         try:
             obj = bpy.data.objects[element['name']]
         except KeyError:
-            log('Missing link element for placement: ' + element['name'], 'ERROR', 'placeLinkSubelements')
+            log('Missing link element for placement: ' + element['name'], 'ERROR')
             continue
         sUtils.selectObjects([obj, parentlink], True, 1)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
@@ -242,6 +245,4 @@ def placeLinkSubelements(link):
         try:
             obj.scale = mathutils.Vector(element['geometry']['scale'])
         except KeyError:
-            pass
-        # TODO delete me?
-        # sUtils.selectObjects([element, parentlink], True, 1)
+            log('No scale defined for element ' + element['name'], 'DEBUG')

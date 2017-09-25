@@ -988,7 +988,7 @@ def buildModelFromDictionary(model):
             except KeyError:
                 log("Could not assign model name to root link.", "ERROR")
 
-    log("Creating visual and collision objects...",
+    log("Placing visual and collision objects...",
         'INFO', 'buildModelFromDictionary')
     for link in model['links']:
         linkmodel.placeLinkSubelements(model['links'][link])
