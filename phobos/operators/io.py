@@ -45,6 +45,7 @@ import phobos.model.models as models
 import phobos.model.links as links
 import phobos.utils.selection as sUtils
 import phobos.utils.io as ioUtils
+import phobos.utils.blender as bUtils
 from phobos.utils.io import securepath
 import phobos.io.entities as entities
 import phobos.io.meshes as meshes
@@ -273,6 +274,8 @@ class ImportModelOperator(bpy.types.Operator):
                 self.entitytype]['import'](self.filepath)
             # bUtils.cleanScene()
             models.buildModelFromDictionary(model)
+            for layer in ['link', 'inertial', 'visual', 'collision', 'sensor']:
+                bUtils.toggleLayer(defs.layerTypes[layer], True)
         except KeyError:
             log("No import function available for selected model type: " + self.entitytype,
                 "ERROR", "ImportModelOperator")
