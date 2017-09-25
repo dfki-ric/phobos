@@ -44,22 +44,13 @@ from phobos.phoboslog import log
 
 def getGeometricElements(link):
     # DOCU add some docstring
-    visuals = False
-    collisions = False
+    visuals = []
+    collisions = []
     if 'visual' in link:
         visuals = [link['visual'][v] for v in link['visual']]
     if 'collision' in link:
         collisions = [link['collision'][v] for v in link['collision']]
-
-    # avoid uninitialized variables from manually created links
-    if (visuals and not collisions):
-        return visuals
-    elif (collisions and not visuals):
-        return collisions
-    elif (collisions and visuals):
-        return collisions and visuals
-    else:
-        return None
+    return collisions + visuals
 
 
 def createLink(link):
