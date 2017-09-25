@@ -71,7 +71,6 @@ def createGeometry(viscol, geomsrc):
     """
     if 'geometry' not in viscol or viscol['geometry'] is {}:
         return None
-    newgeom = None
     bpy.ops.object.select_all(action='DESELECT')
     geom = viscol['geometry']
     geomtype = geom['type']
