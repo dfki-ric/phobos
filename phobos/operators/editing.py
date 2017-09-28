@@ -1219,6 +1219,7 @@ class AddMotorOperator(Operator):
         # due to invoke the active object needs to be a link
         return ob is not None and ob.phobostype == 'link' and ob.mode == 'OBJECT'
 
+
 class CreateLinksOperator(Operator):
     """Create link(s), optionally based on existing objects"""
     bl_idname = "phobos.create_links"
@@ -1493,36 +1494,56 @@ class AddAnnotationsOperator(bpy.types.Operator):
     bl_label = "Add Annotations"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'FILE'
+    bl_options = {'REGISTER', 'UNDO'}
 
-    #def getAnnotationTypes(self):
-    #    return [(category,) * 3 for category in sorted(self.annotations.keys())]
+    def getAnnotationTypes(self, context):
+        return [(category,) * 3 for category in sorted(defs.definitions.keys())]
+
+    def getDeviceTypes(self, context):
+        return [(category,) * 3 for category in sorted(defs.definitions[self.annotationtype].keys())]
 
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
 
-    #annotationtype = EnumProperty(
-    #    items=getAnnotationTypes,
-    #    name="Model",
-    #    description="Model to export")
+    annotationtype = EnumProperty(
+        items=getAnnotationTypes,
+        name="Annotation Type",
+        description="Annotation Types")
+
+    devicetype = EnumProperty(
+        items=getDeviceTypes,
+        name="Device Type",
+        description="Device Types")
 
     @classmethod
     def poll(cls, context):
         return context is not None
 
-    def execute(self, context):
-        try:
-            annotations = {}
-            with open(self.filepath, 'r') as annotationfile:
-                annotations = yaml.load(annotationfile.read())
-            for category in annotations:
-                for key, value in annotations[category].items():
-                    context.active_object[category+'/'+key] = value
-        except FileNotFoundError:
-            log("Annotation file seems to be invalid.", "ERROR")
-        return {'FINISHED'}
+    def draw(self, context):
+        l = self.layout
+        l.prop(self, 'filepath')
+        if self.filepath == '':
+            l.prop(self, 'annotationtype')
+            l.prop(self, 'devicetype')
+            b = self.layout.box()
+            for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
+                b.label(text=key+': '+str(value))
 
-    def invoke(self, context, event):
-        context.window_manager.fileselect_add(self)
-        return {'RUNNING_MODAL'}
+
+    def execute(self, context):
+        if self.filepath != '':
+            try:
+                with open(self.filepath, 'r') as annotationfile:
+                    annotations = yaml.load(annotationfile.read())
+                for category in annotations:
+                    for key, value in annotations[category].items():
+                        context.active_object[category+'/'+key] = value
+            except FileNotFoundError:
+                log("Annotation file seems to be invalid.", "ERROR")
+        else:
+            for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
+                for obj in context.selected_objects:
+                    obj[self.devicetype+'/'+key] = value
+        return {'FINISHED'}
 
 
 def register():
