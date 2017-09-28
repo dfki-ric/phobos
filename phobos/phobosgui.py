@@ -710,8 +710,7 @@ class PhobosModelPanel(bpy.types.Panel):
         hw1 = minlayout.column(align=True)
         hw1.label(text="Hardware", icon='MOD_SCREW')
         hw1.operator('phobos.add_motor')
-        # TODO move this operator where it should really belong
-        hw1.operator("phobos.add_heightmap")
+        hw1.operator("phobos.add_annotations")
 
         mc1 = minlayout.column(align=True)
         mc1.label(text="Masses & Inertia", icon='PHYSICS')
@@ -745,6 +744,7 @@ class PhobosModelPanel(bpy.types.Panel):
 #         iinlayout = layout.split()
 #         ic2 = iinlayout.column(align=True)
 #         ic2.operator('phobos.define_entity')
+#         hw1.operator("phobos.add_heightmap")
 #
 #         layout.label(text="Robotmodels and Poses", icon="MOD_ARMATURE")
 #         #layout.operator("scene.load_backed_models_operator", text="Load Models", icon="LIBRARY_DATA_DIRECT")

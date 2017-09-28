@@ -1487,6 +1487,44 @@ class AddHeightmapOperator(Operator):
         return {'RUNNING_MODAL'}
 
 
+class AddAnnotationsOperator(bpy.types.Operator):
+    """Add annotations defined in a YAML file"""
+    bl_idname = "phobos.add_annotations"
+    bl_label = "Add Annotations"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'FILE'
+
+    #def getAnnotationTypes(self):
+    #    return [(category,) * 3 for category in sorted(self.annotations.keys())]
+
+    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+
+    #annotationtype = EnumProperty(
+    #    items=getAnnotationTypes,
+    #    name="Model",
+    #    description="Model to export")
+
+    @classmethod
+    def poll(cls, context):
+        return context is not None
+
+    def execute(self, context):
+        try:
+            annotations = {}
+            with open(self.filepath, 'r') as annotationfile:
+                annotations = yaml.load(annotationfile.read())
+            for category in annotations:
+                for key, value in annotations[category].items():
+                    context.active_object[category+'/'+key] = value
+        except FileNotFoundError:
+            log("Annotation file seems to be invalid.", "ERROR")
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
 def register():
     print("Registering operators.editing...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
