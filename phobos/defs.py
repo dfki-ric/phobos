@@ -99,7 +99,11 @@ type_properties = {"undefined": (),
                    "controller": ('name',),
                    "controller_default": ("controller",),
                    "light": ('name', 'light/directional', 'light/exponent'),
-                   "light_default": ('new_light', 'true', '1.0')
+                   "light_default": ('new_light', 'true', '1.0'),
+                   "interface": (),
+                   "interface_default": (),
+                   "assembly": (),
+                   "assembly_default": ()
                    }
 
 # definitions of model elements to be read in
