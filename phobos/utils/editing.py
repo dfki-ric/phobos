@@ -74,15 +74,36 @@ def instantiateAssembly(assemblyname, instancename):
     bpy.ops.object.delete(use_global=False)
 
 
-def deriveAssembly(assemblyname, objects=None):
+def defineAssembly(assemblyname, version='', objects=None):
     if not objects:
         objects = bpy.context.selected_objects
-    bpy.ops.group.create(name=assemblyname)
-    i = 0
-    while objects[i].parent in objects:
-        i += 1
-    if objects[i].parent and objects[i].parent in objects:
-        log()
+    interfaces = [i for i in objects if i.phobostype == 'interface']
+    physical_objects = [p for p in objects if p.phobostype != 'interface']
+    sUtils.selectObjects(physical_objects, True, 0)
+    bpy.ops.group.create(name='assembly:' + assemblyname + '/' + version)
+    sUtils.selectObjects(interfaces, True, 0)
+    bpy.ops.group.create(name='assembly:' + assemblyname + '/' + version + '/interfaces')
+    for i in interfaces:
+        i.show_name = True
+    # i = 0
+    # while objects[i].parent in objects:
+    #     i += 1
+    # if objects[i].parent and objects[i].parent in objects:
+    #     log()
+
+
+def toggleInterfaces(interfaces=None, modename='toggle'):
+    modedict = {'toggle': 0, 'activate': 1, 'deactivate': 2}
+    mode = modedict[modename]
+    if not interfaces:
+        interfaces = [i for i in bpy.context.selected_objects if i.phobostype == 'interface']
+    for i in interfaces:
+        if mode == 0:
+            i.show_name = not i.show_name
+        elif mode == 1:
+            i.show_name = True
+        elif mode == 2:
+            i.show_name = False
 
 
 def connectInterfaces(parentinterface, childinterface):

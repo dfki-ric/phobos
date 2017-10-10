@@ -1522,6 +1522,49 @@ class InstantiateAssembly(Operator):
         return {'FINISHED'}
 
 
+class DefineAssembly(Operator):
+    """Instantiate an assembly"""
+    bl_idname = "phobos.define_assembly"
+    bl_label = "Define Assembly"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    assemblyname = StringProperty(
+        name="Assembly name",
+        description="Name of the assembly",
+        default=''
+    )
+
+    version = StringProperty(
+        name="Version name",
+        description="Name of the assembly version",
+        default=''
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        eUtils.defineAssembly(self.assemblyname, self.version)
+        return {'FINISHED'}
+
+
+class ToggleInterfaces(Operator):
+    """Instantiate an assembly"""
+    bl_idname = "phobos.toggle_interfaces"
+    bl_label = "Toggle interfaces"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    mode = EnumProperty(
+        name="Version name",
+        description="Name of the assembly version",
+        items=(('toggle',) * 3, ('activate',) * 3, ('deactivate',) * 3)
+    )
+
+    def execute(self, context):
+        eUtils.toggleInterfaces(None, self.mode)
+        return {'FINISHED'}
+
+
 class ConnectInterfacesOperator(Operator):
     """Connects assemblies at interfaces"""
     bl_idname = "phobos.connect_interfaces"
