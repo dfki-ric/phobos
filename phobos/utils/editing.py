@@ -27,6 +27,8 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import bpy
+import mathutils
+import math
 from . import selection as sUtils
 from phobos.phoboslog import log
 
@@ -47,7 +49,7 @@ def getCombinedTransform(obj, effectiveparent):
     return matrix
 
 
-def instantiateAssembly(assemblyname, instancename):
+def instantiateAssembly(assemblyname, instancename, version='1.0', as_assembly=True):
     assembly = None
     interfaces = None
     for group in bpy.data.groups:
@@ -61,7 +63,11 @@ def instantiateAssembly(assemblyname, instancename):
     bpy.ops.object.group_instance_add(group=assembly.name)
     assemblyobj = bpy.context.active_object
     assemblyobj.phobostype = 'assembly'
-    assemblyobj['assemblyname'] = assemblyname
+    if as_assembly:
+        assemblyobj['assemblyname'] = assemblyname
+    else:
+        assemblyobj['model/name'] = assemblyname
+    assemblyobj['version'] = version
     assemblyobj.name = instancename
     bpy.ops.object.group_instance_add(group=interfaces.name)
     #interfaceobj = bpy.context.active_object
@@ -107,17 +113,18 @@ def toggleInterfaces(interfaces=None, modename='toggle'):
 
 
 def connectInterfaces(parentinterface, childinterface):
-    if ((parentinterface['interface/gender'] != parentinterface['interface/gender']) or
-        (parentinterface['interface/gender'] == parentinterface['interface/gender'] and
-         parentinterface['interface/gender'] == 'bidirectional')):
+    if ((parentinterface['interface/direction'] != childinterface['interface/direction']) or
+        (parentinterface['interface/direction'] == childinterface['interface/direction'] and
+         parentinterface['interface/direction'] == 'bidirectional')):
         childassembly = childinterface.parent
         sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
         bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
         sUtils.selectObjects(objects=[childinterface, childassembly], clear=True, active=0)
         bpy.ops.object.parent_set(type='OBJECT')
-        childinterface.matrix_world = parentinterface.matrix_world
+        eul = mathutils.Euler((math.radians(180.0), 0.0, math.radians(180.0)), 'XYZ')
         sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
         bpy.ops.object.parent_set(type='OBJECT')
+        childinterface.matrix_world = parentinterface.matrix_world * eul.to_matrix().to_4x4()
         try:
             del childassembly['modelname']
         except KeyError:
