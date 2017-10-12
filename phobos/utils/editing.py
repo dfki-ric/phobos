@@ -66,7 +66,7 @@ def instantiateAssembly(assemblyname, instancename, version='1.0', as_assembly=T
     if as_assembly:
         assemblyobj['assemblyname'] = assemblyname
     else:
-        assemblyobj['model/name'] = assemblyname
+        assemblyobj['modelname'] = assemblyname
     assemblyobj['version'] = version
     assemblyobj.name = instancename
     bpy.ops.object.group_instance_add(group=interfaces.name)
