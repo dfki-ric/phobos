@@ -132,6 +132,12 @@ class ExportModelOperator(Operator):
         name="Model",
         description="Model to export")
 
+    exportall = BoolProperty(
+        default=False,
+        name="Export all",
+        description="Export all (selected) models in the scene."
+    )
+
     def invoke(self, context, event):
         modellist = ioUtils.getModelListForEnumProp(self, context)
         if len(modellist) > 1:
@@ -150,6 +156,12 @@ class ExportModelOperator(Operator):
             log("No properly defined models selected or present in scene.",
                 "WARNING", "ExportModelOperator")
             return {'CANCELLED'}
+        elif not self.exportall:
+            roots = [root for root in roots if root['modelname'] == self.modelname]
+            if len(roots) > 1:
+                log("Ambiguous model definitions: " + self.modelname + " exists "
+                    + str(len(roots)) + " times.", "ERROR")
+                return {'CANCELLED'}
 
         for root in roots:
             # setup paths
