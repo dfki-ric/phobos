@@ -27,6 +27,7 @@ Created on 2 Jun 2017
 """
 
 import subprocess
+import yaml
 import bpy
 from phobos.phoboslog import log
 
@@ -89,3 +90,48 @@ def getgitbranch():
     except FileNotFoundError:
         log("No git repository found.", "ERROR", origin="utils/io/getgitbranch")
         return None
+
+
+def getGitRemotes(category=''):
+    """Returns a dictionary with git remotes of the shape {name: url, ...} if valid
+    category is provided, else {'fetch': {name: url, ...}, 'push': {name: url, ...}}.
+    """
+    try:
+        output = str(subprocess.check_output(['git', 'remote', '-v'], cwd=bpy.path.abspath('//'),
+                                             universal_newlines=True))
+        remotes = {'fetch': {}, 'push': {}}
+        for line in [a for a in output.split('\n') if a != '']:
+            try:
+                linedata = line.split()
+                if 'fetch' in linedata[-1]:
+                    remotes['fetch'][linedata[0]] = linedata[1]
+                else:
+                    remotes['push'][linedata[0]] = linedata[1]
+            except IndexError:
+                log("Git return line does not fit expected output format.", "ERROR")
+        log("Found the following remotes: " + yaml.dump(remotes), "DEBUG")
+        try:
+            return remotes[category]
+        except KeyError:
+            log("No valid remotes category ('fetch'/'push') provided: " + category, "DEBUG")
+            return remotes
+    except subprocess.CalledProcessError:
+        log("CalledProcessError", "ERROR")
+        return None
+    except FileNotFoundError:
+        log("No git repository found.", "ERROR")
+        return None
+
+
+def getPushRemotesList(self, context):
+    remotes = getGitRemotes('push')
+    remoteslist = [remotes[a] for a in remotes]
+    print(remoteslist)
+    return [(url,)*3 for url in remoteslist]
+
+
+def getFetchRemotesList(self, context):
+    remotes = getGitRemotes('fetch')
+    remoteslist = [remotes[a] for a in remotes]
+    print(remoteslist)
+    return [(url,)*3 for url in remoteslist]
