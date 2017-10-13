@@ -68,7 +68,8 @@ def createJoint(joint, linkobj=None):
             if 'limits' in joint:
                 linkobj['joint/max'+param] = joint['limits'][param]
         except KeyError:
-            log("Key Error in adding joint constraints for joint", joint['name']) #Todo: more details
+            # TODO more details
+            log("Key Error in adding joint constraints for joint", joint['name'])
     try:
         lower = joint['limits']['lower']
         upper = joint['limits']['upper']
@@ -132,10 +133,13 @@ def deriveJointType(joint, adjust=False):
             jtype = 'planar'
 
     # warn user if the constraints do not match the specified joint type
-    if jtype != joint['joint/type']:
-        log(("The specified joint type '{0}' at link '{1}' does not match " +
-            "the required constraints (set to '{2}' instead).").format(
-                joint['joint/type'], joint['link/name'], jtype), "WARNING")
+    try:
+        if jtype != joint['joint/type']:
+            log(("The specified joint type '{0}' at link '{1}' does not match " +
+                "the required constraints (set to '{2}' instead).").format(
+                    joint['joint/type'], joint['link/name'], jtype), "WARNING")
+    except KeyError:
+        log("No joint type specified for joint " + joint.name, "WARNING")
 
     if adjust:
         joint['joint/type'] = jtype
