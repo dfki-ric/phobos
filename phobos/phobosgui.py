@@ -883,6 +883,24 @@ class PhobosImportPanel(bpy.types.Panel):
                              text="Import Robot Model", icon="IMPORT")
 
 
+class PhobosAssembliesPanel(bpy.types.Panel):
+    bl_idname = "TOOLS_ASSEMBLIES_PT_PHOBOS"
+    bl_label = "Assemblies"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = 'Phobos Models'
+
+    def draw_header(self, context):
+        #self.layout.label(icon='IMPORT')
+        pass
+
+    def draw(self, context):
+        self.layout.operator("phobos.define_assembly")
+        self.layout.operator("phobos.instantiate_assembly")
+        self.layout.operator("phobos.toggle_interfaces")
+        self.layout.operator("phobos.connect_interfaces")
+
+
 class PhobosObjectPanel(bpy.types.Panel):
     """Contains the custom properties of objects in the Buttons Window
     """
@@ -936,7 +954,7 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
     def draw_header(self, context):
         pcoll = prev_collections["phobos"]
         phobosIcon = pcoll["phobosIcon"]
-        self.layout.label(icon_value=phobosIcon)
+        #self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
         layout = self.layout
@@ -1067,6 +1085,7 @@ def register():
     bpy.utils.register_class(PhobosModelPanel)
     # TODO delete me?
     # bpy.utils.register_class(PhobosScenePanel)
+    bpy.utils.register_class(PhobosAssembliesPanel)
     bpy.utils.register_class(PhobosExportPanel)
     bpy.utils.register_class(PhobosImportPanel)
     bpy.utils.register_class(PhobosObjectPanel)

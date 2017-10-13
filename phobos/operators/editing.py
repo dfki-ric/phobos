@@ -49,6 +49,7 @@ import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
+import phobos.utils.editing as eUtils
 import phobos.model.joints as joints
 import phobos.model.links as links
 from phobos.phoboslog import log
@@ -1543,6 +1544,104 @@ class AddAnnotationsOperator(bpy.types.Operator):
             for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
                 for obj in context.selected_objects:
                     obj[self.devicetype+'/'+key] = value
+
+
+class InstantiateAssembly(Operator):
+    """Instantiate an assembly"""
+    bl_idname = "phobos.instantiate_assembly"
+    bl_label = "Instantiate Assembly"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def getAssembliesListForEnumProperty(self, context):
+        assemblieslist = [a.name for a in bpy.data.groups if not a.name.endswith('interfaces')]
+        return [(a,)*3 for a in assemblieslist]
+
+    assemblyname = EnumProperty(
+        name="Assembly name",
+        description="Name of the assembly",
+        items=getAssembliesListForEnumProperty
+    )
+
+    instancename = StringProperty(
+        name="Instance name",
+        default=''
+    )
+
+    def invoke(self, context, event):
+        i = 0
+        while self.assemblyname+'_'+str(i) in bpy.data.objects:
+            i+=1
+        self.instancename = self.assemblyname+'_'+str(i)
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def execute(self, context):
+        eUtils.instantiateAssembly(self.assemblyname, self.instancename)
+        return {'FINISHED'}
+
+
+class DefineAssembly(Operator):
+    """Instantiate an assembly"""
+    bl_idname = "phobos.define_assembly"
+    bl_label = "Define Assembly"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    assemblyname = StringProperty(
+        name="Assembly name",
+        description="Name of the assembly",
+        default=''
+    )
+
+    version = StringProperty(
+        name="Version name",
+        description="Name of the assembly version",
+        default=''
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        eUtils.defineAssembly(self.assemblyname, self.version)
+        return {'FINISHED'}
+
+
+class ToggleInterfaces(Operator):
+    """Instantiate an assembly"""
+    bl_idname = "phobos.toggle_interfaces"
+    bl_label = "Toggle interfaces"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    mode = EnumProperty(
+        name="Version name",
+        description="Name of the assembly version",
+        items=(('toggle',) * 3, ('activate',) * 3, ('deactivate',) * 3)
+    )
+
+    def execute(self, context):
+        eUtils.toggleInterfaces(None, self.mode)
+        return {'FINISHED'}
+
+
+class ConnectInterfacesOperator(Operator):
+    """Connects assemblies at interfaces"""
+    bl_idname = "phobos.connect_interfaces"
+    bl_label = "Connect Interfaces"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        if context.active_object is None or len(context.selected_objects) > 2:
+            return False
+        else:
+            return all([obj.phobostype == 'interface' for obj in context.selected_objects])
+
+    def execute(self, context):
+        pi = 0 if context.selected_objects[0] == context.active_object else 1
+        ci = int(not pi)  #0 if pi == 1 else 1
+        parentinterface = context.selected_objects[pi]
+        childinterface = context.selected_objects[ci]
+        eUtils.connectInterfaces(parentinterface, childinterface)
         return {'FINISHED'}
 
 
