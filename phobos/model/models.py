@@ -172,7 +172,8 @@ def deriveFullLinkInformation(obj):
     props["pose"] = deriveObjectPose(obj)
     props["joint"] = deriveJoint(obj)
     del props["joint"]["parent"]
-    props["motor"] = deriveMotor(obj, props['joint'])
+    if any(item.startswith('motor') for item in props.keys()):
+        props["motor"] = deriveMotor(obj, props['joint'])
     collisionObjects = sUtils.getImmediateChildren(
         obj, phobostypes=('collision'), include_hidden=True)
     collisionDict = {}
