@@ -237,7 +237,7 @@ def exportModel(root, export_path, entitytypes=None, model=None):
     # TODO: Move texture export to individual formats? This is practically SMURF
     # TODO: Also, this does not properly take care of textures embedded in a .blend file
     # export textures
-    if ioUtils.textureExportEnabled():
+    if ioUtils.getExpSettings().exportTextures:
         for materialname in model['materials']:
             mat = model['materials'][materialname]
             for texturetype in ['diffuseTexture', 'normalTexture',

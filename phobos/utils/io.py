@@ -127,6 +127,3 @@ def getAbsolutePath(path):
         return os.path.join(bpy.path.abspath('//'), path)
 
 
-def textureExportEnabled():
-    # DOCU add some docstring
-    return bpy.data.worlds[0].phobosexportsettings.exportTextures
