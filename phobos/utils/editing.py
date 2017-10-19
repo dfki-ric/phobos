@@ -49,7 +49,59 @@ def getCombinedTransform(obj, effectiveparent):
     return matrix
 
 
-def instantiateAssembly(assemblyname, instancename, version='1.0', as_assembly=True):
+def restructureKinematicTree(link):
+    """
+    Restructures a tree such that the *link* provided becomes the root of the tree. For
+    instance, the following tree:
+             A
+           /  \
+          B    C
+         / \    \
+        D   E    F
+    would, using the call restructureKinematicsTree(C), become:
+            C
+          /  \
+         A    F
+        /
+       B
+      / \
+     D   E
+     Currently, this function ignores allh / Woche	40
+h / Wochentag	8
+h / Arbeitstag	10
+h / Monat	176
+
+Urlaubstage	0
+Krankheitstage	0
+real h / Monat	176
+Arbeitstage	16
+Anwesenheitstage	16
+4tw real h / Monat	160
+ options such as unselected or hidden
+     objects.
+    :param link:
+    :return:
+    """
+    root = sUtils.getRoot(link)
+    links = [link]
+    obj = link
+    # gather chain of links ascending the tree
+    while not obj.parent == root:
+        obj = obj.parent
+        if obj.phobostype == 'link':
+            links.append(obj)
+    links.append(root)
+
+    # unparent all links
+    sUtils.selectObjects(links, True)
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+    i = 0
+    for l in range(len(links)-1):
+        parent = links[i]
+        child = links[i+1]
+        sUtils.selectObjects((parent, child), True, active=0)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        i += 1
 
 
 def instantiateAssembly(assemblyname, instancename, version='1.0'):
