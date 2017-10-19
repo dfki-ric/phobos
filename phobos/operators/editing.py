@@ -142,11 +142,11 @@ class SetMassOperator(Operator):
         default=False,
         description='If true, mass entry from rigid body data is used')
 
-    # FIXME double poll method
     @classmethod
     def poll(cls, context):
-        return context.active_object and len(list(filter(lambda e: "phobostype" in e and
-            e.phobostype in ("visual", "collision", "inertial"), context.selected_objects))) >= 1
+        return (bpy.context.active_object is not None and
+                len([e.phobostype in ("visual", "collision", "inertial")
+                     for e in context.selected_objects]) > 0)
 
     def invoke(self, context, event):
         if 'mass' in context.active_object:
@@ -154,7 +154,8 @@ class SetMassOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        objs = filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision", "inertial"), context.selected_objects)
+        objs = [obj for obj in bpy.context.selected_objects
+                if obj.phobostype in ("visual", "collision", "inertial")]
         for obj in objs:
             # check for old mass value
             try:
@@ -169,7 +170,7 @@ class SetMassOperator(Operator):
                 except AttributeError:
                     obj['mass'] = 0.001
                     log("The object '" + obj.name + "' has no rigid body" +
-                        "properties. Set mass to 0.001", "ERROR", self)
+                        "properties. Set mass to 0.001", "ERROR")
             # use provided mass
             else:
                 obj['mass'] = self.mass
@@ -179,12 +180,6 @@ class SetMassOperator(Operator):
                 t = datetime.now()
                 obj['masschanged'] = t.isoformat()
         return {'FINISHED'}
-
-    # FIXME double poll method!
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None and len(list(filter(lambda e: "phobostype" in e and
-               e.phobostype in ("visual", "collision", "inertial"), context.selected_objects))) >= 1
 
     def invoke(self, context, event):
         if 'mass' in context.active_object:
@@ -456,7 +451,7 @@ class RenameCustomProperty(Operator):
             for obj in objs:
                 if self.replace in obj and not self.overwrite:
                     log("Property '" + self.replace + "' already present in" +
-                        "object '" + obj.name + "'", "ERROR", self)
+                        "object '" + obj.name + "'", "ERROR")
                 else:
                     obj[self.replace] = obj[self.find]
                     del obj[self.find]
@@ -487,7 +482,7 @@ class SetGeometryType(Operator):
                 obj['geometry/type'] = self.geomType
             else:
                 log("The object '" + obj.name + "' is no collision or visual.",
-                   "INFO", self)
+                   "INFO")
         return {'FINISHED'}
 
     @classmethod
@@ -1569,7 +1564,7 @@ class InstantiateAssembly(Operator):
     def invoke(self, context, event):
         i = 0
         while self.assemblyname+'_'+str(i) in bpy.data.objects:
-            i+=1
+            i += 1
         self.instancename = self.assemblyname+'_'+str(i)
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
