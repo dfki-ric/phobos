@@ -50,32 +50,33 @@ def getCombinedTransform(obj, effectiveparent):
 
 
 def instantiateAssembly(assemblyname, instancename, version='1.0', as_assembly=True):
+
+
+def instantiateAssembly(assemblyname, instancename, version='1.0'):
     assembly = None
     interfaces = None
     for group in bpy.data.groups:
-        if group.name.startswith(assemblyname):
-            if group.name.endswith('interfaces'):
-                interfaces = group
-            else:
-                assembly = group
+        if group.name.startswith('assembly') and assemblyname in group.name:
+            assembly = group
+        if group.name.startswith('interfaces') and assemblyname in group.name:
+            interfaces = group
     if not assembly or not interfaces:
         raise RuntimeError('Assembly and/or interfaces templates do not exist.')
+    # add the assembly and write in data
     bpy.ops.object.group_instance_add(group=assembly.name)
     assemblyobj = bpy.context.active_object
     assemblyobj.phobostype = 'assembly'
-    if as_assembly:
-        assemblyobj['assemblyname'] = assemblyname
-    else:
-        assemblyobj['modelname'] = assemblyname
+    assemblyobj['assemblyname'] = assemblyname
     assemblyobj['version'] = version
     assemblyobj.name = instancename
+    # add the interfaces, make them real and get rid of parent empty object
     bpy.ops.object.group_instance_add(group=interfaces.name)
     #interfaceobj = bpy.context.active_object
     bpy.ops.object.duplicates_make_real()
     sUtils.selectObjects(objects=[assemblyobj]+bpy.context.selected_objects, clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
     sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
-                                  if a.type == 'EMPTY' and a.name.endswith('interfaces')],
+                                  if a.type == 'EMPTY' and a.name.startswith('interfaces')],
                          clear=True, active=0)
     bpy.ops.object.delete(use_global=False)
 
@@ -88,7 +89,7 @@ def defineAssembly(assemblyname, version='', objects=None):
     sUtils.selectObjects(physical_objects, True, 0)
     bpy.ops.group.create(name='assembly:' + assemblyname + '/' + version)
     sUtils.selectObjects(interfaces, True, 0)
-    bpy.ops.group.create(name='assembly:' + assemblyname + '/' + version + '/interfaces')
+    bpy.ops.group.create(name='interfaces:' + assemblyname + '/' + version)
     for i in interfaces:
         i.show_name = True
     # i = 0

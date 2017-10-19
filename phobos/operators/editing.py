@@ -1547,7 +1547,8 @@ class InstantiateAssembly(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def getAssembliesListForEnumProperty(self, context):
-        assemblieslist = [a.name for a in bpy.data.groups if not a.name.endswith('interfaces')]
+        assemblieslist = [a.name.replace('assembly:', '') for a in bpy.data.groups
+                          if a.name.startswith('assembly')]
         return [(a,)*3 for a in assemblieslist]
 
     assemblyname = EnumProperty(
