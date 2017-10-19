@@ -5,6 +5,7 @@ import bpy
 from phobos import defs
 from phobos.phoboslog import log
 from phobos.utils import selection as sUtils
+from phobos.utils import naming as nUtils
 
 
 indent = '  '
@@ -127,3 +128,19 @@ def getAbsolutePath(path):
         return os.path.join(bpy.path.abspath('//'), path)
 
 
+def importBlenderModel(filepath, namespace=''):
+    if (os.path.exists(filepath) and os.path.isfile(filepath) and
+       filepath.endswith('.blend')):
+        log("Importing Blender model" + filepath, "INFO")
+        objects = []
+        with bpy.data.libraries.load(filepath) as (data_from, data_to):
+            for obj in data_from.objects:
+                objects.append({'name': obj})
+        bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
+        bpy.ops.view3d.view_selected(use_all_regions=False)
+        if namespace != '':
+            for obj in bpy.context.selected_objects:
+                nUtils.addNamespace(obj, namespace)
+        return True
+    else:
+        return False

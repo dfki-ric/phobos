@@ -115,22 +115,11 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
         wm = context.window_manager
         filepath = os.path.join(model_data[wm.category][wm.modelpreview]['path'],
                                 'blender', wm.modelpreview+'.blend')
-        if (os.path.exists(filepath) and os.path.isfile(filepath) and
-           filepath.endswith('.blend')):
-            log("Importing model" + filepath, "INFO", 'ImportModelFromLibraryOperator')
-            objects = []
-            with bpy.data.libraries.load(filepath) as (data_from, data_to):
-                for obj in data_from.objects:
-                    objects.append({'name': obj})
-            bpy.ops.wm.append(directory=filepath+"/Object/", files=objects)
-            bpy.ops.view3d.view_selected(use_all_regions=False)
-            if wm.namespace != '':
-                for obj in bpy.context.selected_objects:
-                    nUtils.addNamespace(obj, wm.namespace)
+        if ioUtils.importBlenderModel(filepath, wm.namespace):
             return {'FINISHED'}
         else:
             log("Model " + wm.modelpreview + " could not be loaded from library: No valid .blend file.",
-                "ERROR", 'ImportModelFromLibraryOperator')
+                "ERROR")
             return {'CANCELLED'}
 
 
