@@ -169,7 +169,7 @@ def deriveFullLinkInformation(obj):
     parent = sUtils.getEffectiveParent(obj)
     props['parent'] = parent.name if parent else None
     props["pose"] = deriveObjectPose(obj)
-    props["joint"] = deriveJoint(obj)
+    props["joint"] = deriveJoint(obj, adjust=False)
     del props["joint"]["parent"]
     if any(item.startswith('motor') for item in props.keys()):
         props["motor"] = deriveMotor(obj, props['joint'])
@@ -195,14 +195,14 @@ def deriveFullLinkInformation(obj):
     return props
 
 
-def deriveJoint(obj):
+def deriveJoint(obj, adjust=True):
     """This function derives a joint from a blender object and creates its initial phobos data structure.
 
     :param obj: The blender object to derive the joint from.
     :return: dict
     """
     if 'joint/type' not in obj.keys():
-        jt, crot = jointmodel.deriveJointType(obj, adjust=True)
+        jt, crot = jointmodel.deriveJointType(obj, adjust=adjust)
     props = initObjectProperties(obj, phobostype='joint', ignoretypes=[
                                  'link', 'motor', 'entity'])
 
@@ -865,9 +865,8 @@ def buildModelDictionary(root):
              }
     # timestamp of model
     model["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
-    if root.phobostype != 'link':
-        log("Found no 'link' object as root of the robot model.", "ERROR",
-            "buildModelDictionary")
+    if root.phobostype not in ['link', 'assembly']:
+        log("Found no 'link/assembly' object as root of the robot model.", "ERROR")
         raise Exception(root.name + " is  no valid root link.")
     else:
         if 'modelname' in root:
