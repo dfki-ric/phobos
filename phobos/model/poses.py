@@ -87,20 +87,20 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
     visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
     if len(visuals) > 0:
 
-        log("Baking model to " + bake_outpath, "INFO", __name__+".bakeModel")
+        log("Baking model to " + bake_outpath, "INFO")
         sUtils.selectObjects(visuals, active=0)
-        log("Copying objects for joining...", "INFO", __name__+".bakeModel")
+        log("Copying objects for joining...", "INFO")
         bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
-        log("Joining...", "INFO", __name__+".bakeModel")
+        log("Joining...", "INFO")
         bpy.ops.object.join()
         obj = bpy.context.active_object
-        log("Deleting vertices...", "INFO", __name__+".bakeModel")
+        log("Deleting vertices...", "INFO")
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.select_all(action='TOGGLE')
         bpy.ops.mesh.select_all(action='TOGGLE')
         bpy.ops.mesh.remove_doubles()
         bpy.ops.object.editmode_toggle()
-        log("Adding modifier...", "INFO", __name__+".bakeModel")
+        log("Adding modifier...", "INFO")
 
         bpy.ops.object.modifier_add(type='DECIMATE')
         bpy.context.object.modifiers["Decimate"].decimate_type = decimate_type
@@ -111,7 +111,7 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
         elif decimate_type == 'DISSOLVE':
             bpy.context.object.modifiers["Decimate"].angle_limit = decimate_parameter
 
-        log("Applying modifier...", "INFO", __name__+".bakeModel")
+        log("Applying modifier...", "INFO")
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
         obj.name = export_name + ".obj"
 

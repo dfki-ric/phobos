@@ -147,14 +147,14 @@ class ExportModelOperator(Operator):
                 self.modelname = modellist[0][0]
                 return self.execute(context)
             except IndexError:
-                # TODO: Check if this correct like that and handle maybe?
+                log("No propely defined models to export.", "ERROR")
                 return {'CANCELLED'}
 
     def execute(self, context):
         roots = ioUtils.getExportModels()
         if not roots:
             log("No properly defined models selected or present in scene.",
-                "WARNING", "ExportModelOperator")
+                "WARNING")
             return {'CANCELLED'}
         elif not self.exportall:
             roots = [root for root in roots if root['modelname'] == self.modelname]

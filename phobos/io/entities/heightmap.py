@@ -82,7 +82,7 @@ def deriveEntity(entity, outpath):
             ioUtils.exportDae(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".dae")
         else:
-            log("No mesh export type checked! Aborting heightmap export.", "ERROR", __name__+".handleScene_heightmap")
+            log("No mesh export type checked! Aborting heightmap export.", "ERROR")
             return {}
         heightmapMesh.modifiers["displace_heightmap"].show_render = True
         heightmapMesh.modifiers["displace_heightmap"].show_viewport = True

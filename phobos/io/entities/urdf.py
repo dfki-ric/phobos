@@ -84,7 +84,7 @@ def writeURDFGeometry(output, element, path):
             raise TypeError("Unknown geometry type")
         output.append(indent * 4 + '</geometry>\n')
     except (KeyError, TypeError) as err:
-        log("Misdefined geometry in element " + element['name'] + " " + str(err), "ERROR", "writeURDFGeometry")
+        log("Misdefined geometry in element " + element['name'] + " " + str(err), "ERROR")
 
 
 def exportUrdf(model, outpath):
@@ -97,7 +97,7 @@ def exportUrdf(model, outpath):
     :type outpath: str
 
     """
-    log("Export URDF to " + outpath, "INFO", "exportModelToURDF")
+    log("Export URDF to " + outpath, "INFO")
     filename = os.path.join(outpath, model['name']+'.urdf')
 
     stored_element_order = None
@@ -208,7 +208,8 @@ def exportUrdf(model, outpath):
             if 'limits' in joint:
                 for limit_value in ['effort', 'velocity']:
                     if limit_value not in joint['limits']:
-                        log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
+                        log("joint '" + joint['name'] + "' does not specify a maximum "
+                            + limit_value + "!", "WARNING")
                         missing_values = True
                 used_limits = []
                 for limit in ['lower', 'upper', 'effort', 'velocity']:
@@ -217,12 +218,13 @@ def exportUrdf(model, outpath):
                 output.append(
                     xmlline(3, 'limit', used_limits, [joint['limits'][p] for p in used_limits]))
             elif joint['type'] in ['revolute', 'prismatic']:
-                log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
+                log("joint '" + joint['name'] + "' does not specify limits, even though its type is "
+                    + joint['type'] + "!", "WARNING")
                 missing_values = True
             output.append(indent * 2 + '</joint>\n\n')
     # export material information
     if missing_values:
-        log("Created URDF is invalid due to missing values!", "WARNING", "exportUrdf")
+        log("Created URDF is invalid due to missing values!", "WARNING")
     if stored_element_order is None:
         sorted_material_keys = sorted(model['materials'])
     else:
@@ -249,7 +251,7 @@ def exportUrdf(model, outpath):
     with open(filename, 'w') as outputfile:
         outputfile.write(''.join(output))
     # FIXME: different joint transformations needed for fixed joints
-    log("Writing model data to " + filename, "INFO", "exportModelToURDF")
+    log("Writing model data to " + filename, "INFO")
 
 
 def store_element_order(element_order, path):
@@ -519,7 +521,7 @@ def importUrdf(filepath):
     model = {}
     # TODO delete me?
     #element_order = {'links': [], 'joints': [], 'viscol': {}, 'materials': []}
-    log("Parsing URDF model from " + filepath, "INFO", 'importUrdf')
+    log("Parsing URDF model from " + filepath, "INFO")
     # TODO filepath consistency?
     tree = ET.parse(filepath)
     # TODO comment needed?
@@ -530,7 +532,7 @@ def importUrdf(filepath):
 
     # parse links
     links = {}
-    log("Parsing links...", "INFO", 'importUrdf')
+    log("Parsing links...", "INFO")
     for link in root.iter('link'):
         links[link.attrib['name']] = parseLink(link, filepath)
         # TODO delete me?

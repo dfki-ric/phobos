@@ -528,16 +528,16 @@ def fuseInertiaData(inertials):
                        'inertia': inertia
                        }
         except KeyError as e:
-            log('Inertial object ' + o.name + ' is missing data: '+str(e), "WARNING", "fuseInertiaData")
+            log('Inertial object ' + o.name + ' is missing data: '+str(e), "WARNING")
         if objdict:
             objects.append(objdict)
     if len(objects) > 0:
         log("Fusing inertials: " + str([i.name for i in inertials]), "DEBUG", "fuseInertiaData")
         mass, com, inertia = compound_inertia_analysis_3x3(objects)
-        log("Fused mass: " + str(mass), "DEBUG", "fuseInertiaData")
+        log("Fused mass: " + str(mass), "DEBUG")
         return mass, com, inertia
     else:
-        log("No inertial found to fuse.", "DEBUG", "fuseInertiaData")
+        log("No inertial found to fuse.", "DEBUG")
         return None, None, None
 
 # TODO this should be removed or documented otherwise
@@ -553,7 +553,7 @@ def combine_com_3x3(objects):
     :type objects: list containing phobos dicts
     """
     if not objects:
-        log("No Proper object list...", "DEBUG", "combine_com_3x3")
+        log("No Proper object list...", "DEBUG")
         return 0.0, mathutils.Vector((0.0,)*3)
     combined_com = mathutils.Vector((0.0,)*3)
     combined_mass = 0
@@ -561,8 +561,8 @@ def combine_com_3x3(objects):
         combined_com = combined_com + obj['com'] * obj['mass']
         combined_mass += obj['mass']
     combined_com = combined_com / combined_mass
-    log("Combined center of mass: " + str(combined_com) + ", combined mass: " + str(combined_mass),
-        "DEBUG", "combine_com_3x3")
+    log("Combined center of mass: " + str(combined_com)
+        + ", combined mass: " + str(combined_mass), "DEBUG")
     return combined_mass, combined_com
 
 

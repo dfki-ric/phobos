@@ -63,8 +63,7 @@ class ToggleNamespaces(Operator):
                 if nUtils.namesAreExplicit({obj.name.split("::")[-1]}, objnames):
                     nUtils.removeNamespace(obj)
                 else:
-                    log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit",
-                        "ERROR", op=self)
+                    log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit", "ERROR")
             else:
                 nUtils.addNamespace(obj)
         return {'FINISHED'}

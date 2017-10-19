@@ -75,7 +75,7 @@ def addNamespace(obj, namespace=None):
             if (typetag in obj or ("phobostype" in obj and obj.phobostype == ptype)) and nametag not in obj:
                 obj[nametag] = obj.name
     except (TypeError, KeyError):
-        log(getObjectName(obj) + " is not part of a well-defined entity.", "ERROR", "utils/naming/addNamespace")
+        log(getObjectName(obj) + " is not part of a well-defined entity.", "ERROR")
 
 
 def removeNamespace(obj):

@@ -56,7 +56,7 @@ def deriveGeometry(obj):
         return geometry
     except KeyError as err:
         log("Undefined geometry for object " + nUtils.getObjectName(obj) +
-            " " + str(err), "ERROR", "deriveGeometry")
+            " " + str(err), "ERROR")
         return None
 
 
@@ -86,7 +86,7 @@ def createGeometry(viscol, geomsrc):
         # else:
         if 'sourcefilepath' in geom:
             geom_path = os.path.normpath(os.path.join(os.path.dirname(geom['sourcefilepath']), geom['filename']))
-            log('sourcefilepath: ' + geom_path, 'DEBUG', 'createGeometry')
+            log('sourcefilepath: ' + geom_path, 'DEBUG')
         else:
             geom_path = geom['filename']
         # TODO still up to date?
@@ -101,20 +101,20 @@ def createGeometry(viscol, geomsrc):
         meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
         if not os.path.isfile(geom_path):
             log(geom_path + " is no file. Object " + viscol['name'] +
-                " will have empty mesh!", "ERROR", "createGeometry")
+                " will have empty mesh!", "ERROR")
             bpy.data.meshes.new(meshname)
         if meshname in bpy.data.meshes:
-            log('Assigning copy of existing mesh ' + meshname + ' to ' + viscol['name'], 'INFO', 'createGeometry')
+            log('Assigning copy of existing mesh ' + meshname + ' to ' + viscol['name'], 'INFO')
             bpy.ops.object.add(type='MESH')
             newgeom = bpy.context.object
             newgeom.data = bpy.data.meshes[meshname]
         else:
-            log('Importing mesh for link element ' + viscol['name'], 'INFO', 'createGeometry')
+            log('Importing mesh for link element ' + viscol['name'], 'INFO')
             filetype = geom['filename'].split('.')[-1].lower()
             newgeom = meshes.importMesh(geom_path, filetype)
             newgeom.data.name = meshname
             if not newgeom:
-                log('Failed to import mesh file ' + geom['filename'], 'ERROR', 'createGeometry')
+                log('Failed to import mesh file ' + geom['filename'], 'ERROR')
                 return
             # scale imported object
             if 'scale' in geom:
@@ -128,11 +128,12 @@ def createGeometry(viscol, geomsrc):
         elif geomtype == 'sphere':
             dimensions = geom['radius']
         else:
-            log("Could not determine geometry type of " + geomsrc + viscol['name'] + '. Placing empty coordinate system.', "ERROR")
+            log("Could not determine geometry type of " + geomsrc + viscol['name']
+                + '. Placing empty coordinate system.', "ERROR")
             bpy.ops.object.empty_add(type='PLAIN_AXES', radius=0.2)
             bpy.context.active_object.name = viscol['name']
             return None
-        log('Creating primtive for obj ' + viscol['name'], 'INFO', 'createGeometry')
+        log('Creating primtive for obj ' + viscol['name'], 'INFO')
         newgeom = bUtils.createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
         newgeom.select = True
         bpy.ops.object.transform_apply(scale=True)
@@ -147,7 +148,7 @@ def createGeometry(viscol, geomsrc):
             else:
                 assignMaterial(newgeom, viscol['material'])
         except KeyError:
-            log('No material for obj ' + viscol['name'], 'DEBUG', 'createGeometry')
+            log('No material for obj ' + viscol['name'], 'DEBUG')
     # FIXME: place empty coordinate system and return...what? Error handling of file import!
     for prop in viscol:
         if prop.startswith('$'):

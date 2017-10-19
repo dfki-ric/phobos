@@ -85,8 +85,7 @@ def collectMaterials(objectlist):
                 else:
                     materials[mat.name]['users'] += 1
             except AttributeError:
-                log("Could not parse material in object " +
-                    obj.name, "ERROR", "collectMaterials")
+                log("Could not parse material in object " + obj.name, "ERROR")
     return materials
 
 
@@ -131,8 +130,8 @@ def deriveMaterial(mat):
                     material['displacementTexture'] = mat.texture_slots[
                         0].texture.image.filepath.replace('//', '')
             except (KeyError, AttributeError):
-                log("None or incomplete texture data for material " + nUtils.getObjectName(mat, 'material'),
-                    "WARNING", "deriveMaterial")
+                log("None or incomplete texture data for material "
+                    + nUtils.getObjectName(mat, 'material'), "WARNING")
     return material
 
 
@@ -274,8 +273,7 @@ def deriveMotor(obj, joint):
                 props['minValue'] = 0
                 props['maxValue'] = props["maxSpeed"]
         except KeyError:
-            log("Missing data in motor " + obj.name +
-                '. No motor created.', "WARNING", "deriveMotor")
+            log("Missing data in motor " + obj.name + '. No motor created.', "WARNING")
             return None
         return props
     else:
@@ -318,8 +316,7 @@ def deriveInertial(obj):
         props['inertia'] = list(map(float, obj['inertial/inertia']))
         props['pose'] = deriveObjectPose(obj)
     except KeyError as e:
-        log("Missing data in inertial object " +
-            obj.name + str(e), "ERROR", "deriveInertial")
+        log("Missing data in inertial object " + obj.name + str(e), "ERROR")
         return None
     return props
 
@@ -350,8 +347,7 @@ def deriveVisual(obj):
                                i], 'filename': os.path.join('meshes', filename)})
             visual['lod'] = lodlist
     except KeyError:
-        log("Missing data in visual object " +
-            obj.name, "ERROR", "deriveVisual")
+        log("Missing data in visual object " + obj.name, "ERROR")
         return None
     return visual
 
@@ -376,13 +372,12 @@ def deriveCollision(obj):
                 if group:
                     log(('Object {0} is on a collision layer higher than ' +
                         '16. These layers are ignored when exporting.').format(
-                        obj.name), "WARNING", "deriveCollision")
+                        obj.name), "WARNING")
                     break
         except AttributeError:
             pass
     except KeyError:
-        log("Missing data in collision object " +
-            obj.name, "ERROR", "deriveCollision")
+        log("Missing data in collision object " + obj.name, "ERROR")
         return None
     return collision
 
@@ -448,8 +443,7 @@ def deriveApproxsphere(obj):
         pose = deriveObjectPose(obj)
         sphere['center'] = pose['translation']
     except KeyError:
-        log("Missing data in collision approximation object " +
-            obj.name, "ERROR", "deriveApproxSphere")
+        log("Missing data in collision approximation object " + obj.name, "ERROR")
         return None
     return sphere
 
@@ -465,7 +459,7 @@ def deriveSensor(obj):
         props = initObjectProperties(obj, phobostype='sensor')
         props['link'] = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
     except KeyError:
-        log("Missing data in sensor " + obj.name, "ERROR", "deriveSensor")
+        log("Missing data in sensor " + obj.name, "ERROR")
         return None
     return props
 
@@ -480,8 +474,7 @@ def deriveController(obj):
     try:
         props = initObjectProperties(obj, phobostype='controller')
     except KeyError:
-        log("Missing data in controller  " +
-            obj.name, "ERROR", "deriveController")
+        log("Missing data in controller  " + obj.name, "ERROR",)
         return None
     return props
 
@@ -591,8 +584,7 @@ def deriveDictEntry(obj):
         elif obj.phobostype == 'light':
             props = deriveLight(obj)
     except KeyError:
-        log("A KeyError occurred due to unspecifiable missing model data.",
-            "DEBUG", "deriveDictEntry")
+        log("A KeyError occurred due to unspecifiable missing model data.", "DEBUG")
         return None, None
     return props
 
@@ -610,7 +602,7 @@ def deriveGroupEntry(group):
             links.append({'type': 'link', 'name': nUtils.getObjectName(obj)})
         else:
             log("Group " + group.name + " contains " + obj.phobostype +
-                ': ' + nUtils.getObjectName(obj), "ERROR", "deriveGroupEntry")
+                ': ' + nUtils.getObjectName(obj), "ERROR")
     return links
 
 
@@ -631,8 +623,7 @@ def deriveChainEntry(obj):
         while not chainclosed:
             # FIXME: use effectiveParent
             if parent.parent is None:
-                log("Unclosed chain, aborting parsing chain " +
-                    chainName, "ERROR", "deriveChainEntry")
+                log("Unclosed chain, aborting parsing chain " + chainName, "ERROR")
                 chain = None
                 break
             chain['elements'].append(parent.name)
@@ -681,7 +672,7 @@ def storePose(modelname, posename):
         bUtils.updateTextFile(filename, yaml.dump(
             posedict, default_flow_style=False))
     else:
-        log("No model root could be found to store the pose for", "ERROR", "storePose")
+        log("No model root could be found to store the pose for", "ERROR")
 
 
 def loadPose(modelname, posename):
@@ -696,7 +687,7 @@ def loadPose(modelname, posename):
     """
     load_file = bUtils.readTextFile(modelname + '::poses')
     if load_file == '':
-        log('No poses stored.', 'ERROR', 'loadPose')
+        log('No poses stored.', 'ERROR')
         return
     poses = yaml.load(load_file)
     try:
@@ -711,7 +702,7 @@ def loadPose(modelname, posename):
         bpy.ops.object.mode_set(mode=prev_mode)
     except KeyError:
         log('No pose with name ' + posename +
-            ' stored for model ' + modelname, 'ERROR', "loadPose")
+            ' stored for model ' + modelname, 'ERROR')
 
 
 def getPoses(modelname):
@@ -742,13 +733,11 @@ def deriveTextData(modelname):
         try:
             dataname = text.name.split('::')[-1]
         except IndexError:
-            log("Possibly invalidly named model data text file: " +
-                modelname, "WARNING", "deriveTextData")
+            log("Possibly invalidly named model data text file: " + modelname, "WARNING")
         try:
             data = yaml.load(bUtils.readTextFile(text.name))
         except yaml.scanner.ScannerError:
-            log("Invalid formatting of data file: " +
-                dataname, "ERROR", "deriveTextData")
+            log("Invalid formatting of data file: " + dataname, "ERROR")
         if data:
             datadict[dataname] = data
     return datadict
@@ -884,12 +873,10 @@ def buildModelDictionary(root):
         if 'modelname' in root:
             model['name'] = root["modelname"]
         else:
-            log("No name for the model defines, setting to 'unnamed_model'",
-                "WARNING", "buildModelDictionary")
+            log("No name for the model defines, setting to 'unnamed_model'", "WARNING")
             model['name'] = 'unnamed_model'
 
-    log("Creating dictionary for robot " + model['name'] + " from object " +
-        root.name, "INFO", "buildModelDictionary")
+    log("Creating dictionary for robot " + model['name'] + " from object " + root.name, "INFO")
 
     # create tuples of objects belonging to model
     objectlist = sUtils.getChildren(
@@ -898,7 +885,7 @@ def buildModelDictionary(root):
     linklist = [link for link in objectlist if link.phobostype == 'link']
 
     # digest all the links to derive link and joint information
-    log("Parsing links, joints and motors...", "INFO", "buildModelDictionary")
+    log("Parsing links, joints and motors..."+(str(len(linklist))), "INFO", "buildModelDictionary")
     for link in linklist:
         # parse link and extract joint and motor information
         linkdict, jointdict, motordict = deriveKinematics(link)

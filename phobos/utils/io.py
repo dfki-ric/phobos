@@ -62,7 +62,7 @@ def securepath(path):
             os.makedirs(path)
         # TODO notadirectoryerror is not recognized... where to import it from?
         except NotADirectoryError:
-            log(path + " is not a valid directory", "ERROR", "securepath")
+            log(path + " is not a valid directory", "ERROR")
             return None
     return path
     # TODO delete me?

@@ -73,7 +73,7 @@ def importMesh(filepath, meshtype):
     try:
         mesh_type_dict[meshtype]['import'](filepath)
     except KeyError:
-        log('Unknown mesh type: ' + meshtype, 'ERROR', 'importMesh')
+        log('Unknown mesh type: ' + meshtype, 'ERROR')
 
     # find the newly imported obj
     newgeom = None

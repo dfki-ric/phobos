@@ -75,8 +75,7 @@ class SortObjectsToLayersOperator(Operator):
 
             # undefined type will be shown in statusbar
             if phobosType == 'undefined':
-                log("The phobostype of the object '" + obj.name + "' is" +
-                    "undefined", "INFO", self)
+                log("The phobostype of the object '" + obj.name + "' is" + "undefined", "ERROR")
         return {'FINISHED'}
 
     @classmethod

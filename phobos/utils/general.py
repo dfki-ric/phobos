@@ -93,7 +93,7 @@ def find_in_list(alist, prop, value):
                 n = i
                 break
         except KeyError:
-            log("The object at index " + str(i) + " has no property " + str(prop))
+            log("The object at index " + str(i) + " has no property " + str(prop), "ERROR")
     return n
 
 
@@ -108,7 +108,7 @@ def retrieve_from_list(alist, prop, value):
                 n = i
                 break
         except KeyError:
-            log("The object at index " + str(i) + " has no property " + str(prop))
+            log("The object at index " + str(i) + " has no property " + str(prop), "ERROR")
     if n >= 0:
         return alist[n][prop]
     else:
@@ -168,7 +168,7 @@ def calculateSum(objects, numeric_prop):
             numsum += obj[numeric_prop]
         except KeyError:
             log(obj.phobostype + " object " + obj.name + " does not contain '" + numeric_prop +
-                "'", "WARNING", "calculateSum")
+                "'", "WARNING")
     return numsum
 
 

@@ -16,7 +16,7 @@ def exportYAML(model, path, mesh_format=''):
     :type path: str
 
     """
-    log("phobos YAML export: Writing model data to " + path, "INFO", "exportModelToYAML")
+    log("phobos YAML export: Writing model data to " + path, "INFO")
     with open(os.path.join(path, model['name'] + '.yaml'), 'w') as outputfile:
         outputfile.write('# YAML dump of robot model "' + model['name'] + '", ' + datetime.now().strftime(
             "%Y%m%d_%H:%M") + "\n")

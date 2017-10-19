@@ -88,7 +88,7 @@ def deriveEntity(root, outpath):
         if ioUtils.getExpSettings().structureExport:
             modelpath = os.path.join(modelpath, 'smurf')
         # TODO why the spacing between the paths?
-        log("Scene paths: " + outpath + ' '+ modelpath, "DEBUG")
+        log("Scene paths: " + outpath + ' ' + modelpath, "DEBUG")
         entity['file'] = os.path.join(os.path.relpath(modelpath, os.path.dirname(outpath)), root['modelname']+".smurf")
     return entity
 
@@ -220,7 +220,7 @@ def sort_dict_list(dict_list, sort_key):
 
 
 def exportSmurf(model, path):
-    log(model['name'] + ' ' + path, "DEBUG", "exportSmurf")
+    log(model['name'] + ' ' + path, "DEBUG")
     """This function exports a given model to a specific path as a smurf representation.
 
     :param model: The model you want to export.
@@ -281,7 +281,7 @@ def exportSmurf(model, path):
     infostring = ' definition SMURF file for "' + model['name'] + '", ' + model["date"] + "\n\n"
 
     # write model information
-    log("Writing SMURF model to " + smurf_filename, "INFO", "exportModelToSMURF")
+    log("Writing SMURF model to " + smurf_filename, "INFO")
     # CHECK are these filepaths failsafe in Windows?
     modeldata = {"date": model["date"],
                  "files": [urdf_path + urdf_filename] + [filenames[f] for f in fileorder if exportdata[f]]}

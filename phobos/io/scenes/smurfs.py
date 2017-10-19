@@ -51,7 +51,7 @@ def exportSMURFScene(entities, path):
         log(sceneinfo, "INFO")
         sceneinfo += "# created with Phobos " + version + " - https://github.com/rock-simulation/phobos\n\n"
         securepath(path)
-        log("Exporting scene to " + path+'.smurfs', "INFO", "exportSMURFsScene")
+        log("Exporting scene to " + path+'.smurfs', "INFO")
         outputfile.write(sceneinfo)
         epsilon = 10**(-bpy.data.worlds[0].phobosexportsettings.decimalPlaces)  # TODO: implement this separately
         entitiesdict = epsilonToZero({'entities': entities}, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces)
