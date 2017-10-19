@@ -30,7 +30,8 @@ for l in links:
 
 select(visuals, clear=True, active=0)
 bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-select(links, clear=True, links.index(root))
+select(links, clear=True)
+bpy.context.scene.objects.active = root
 bpy.ops.object.join()
 
 bpy.ops.object.mode_set(mode='EDIT')
@@ -45,4 +46,5 @@ for v in visuals:
     root.data.edit_bones.active = root.data.edit_bones[vparents[v.name]]
     bpy.ops.object.mode_set(mode='OBJECT')
     select([v, root], 1)
-    bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    bpy.ops.object.parent_set(type='BONE')
+    #bpy.ops.object.parent_set(type='BONE_RELATIVE')
