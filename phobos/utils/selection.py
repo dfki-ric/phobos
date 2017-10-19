@@ -98,9 +98,10 @@ def getEffectiveParent(obj, include_hidden=False):
     :return: bpy.types.Object - the effective parent of the obj.
     """
     parent = obj.parent
-    while parent and ((parent.hide and not include_hidden) or
-                      (not parent.select and
-                       bpy.data.worlds[0].phobosexportsettings.selectedOnly)):
+    while (parent and ((parent.hide and not include_hidden) or
+                       (not parent.select and
+                       bpy.data.worlds[0].phobosexportsettings.selectedOnly))
+           and parent.phobostype != 'link'):
         parent = parent.parent
     return parent
 
@@ -149,7 +150,8 @@ def isRoot(obj):
     :type obj: bpy.types.Object.
     :return: bool - True if obj is Phobos model root, else False.
     """
-    return None if obj is None else ('modelname' in obj and obj.phobostype == 'link')
+    return None if obj is None else ('modelname' in obj and obj.phobostype in ['link', 'assembly']
+                                     and obj.parent is None)
 
 
 def isEntity(obj):
