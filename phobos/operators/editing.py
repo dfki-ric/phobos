@@ -1630,10 +1630,22 @@ class ConnectInterfacesOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        if context.active_object is None or len(context.selected_objects) > 2:
+        try:
+            if (context.active_object is None or len(context.selected_objects) != 2 or not
+                    all([obj.phobostype == 'interface' for obj in context.selected_objects])):
+                return False
+            else:
+                parentinterface = bpy.context.active_object
+                childinterface = [a for a in bpy.context.selected_objects if a != bpy.context.active_object][0]
+                if ((parentinterface['interface/type'] == childinterface['interface/type']) and
+                    (parentinterface['interface/direction'] != childinterface['interface/direction']) or
+                    (parentinterface['interface/direction'] == 'bidirectional' and
+                     childinterface['interface/direction'] == 'bidirectional')):
+                    return True
+                else:
+                    return False
+        except (KeyError, IndexError):  # if relevant data or selection is incorrect
             return False
-        else:
-            return all([obj.phobostype == 'interface' for obj in context.selected_objects])
 
     def execute(self, context):
         pi = 0 if context.selected_objects[0] == context.active_object else 1

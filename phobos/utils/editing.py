@@ -113,22 +113,19 @@ def toggleInterfaces(interfaces=None, modename='toggle'):
 
 
 def connectInterfaces(parentinterface, childinterface):
-    if ((parentinterface['interface/direction'] != childinterface['interface/direction']) or
-        (parentinterface['interface/direction'] == childinterface['interface/direction'] and
-         parentinterface['interface/direction'] == 'bidirectional')):
-        childassembly = childinterface.parent
-        sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
-        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-        sUtils.selectObjects(objects=[childinterface, childassembly], clear=True, active=0)
-        bpy.ops.object.parent_set(type='OBJECT')
-        eul = mathutils.Euler((math.radians(180.0), 0.0, math.radians(180.0)), 'XYZ')
-        sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
-        bpy.ops.object.parent_set(type='OBJECT')
-        childinterface.matrix_world = parentinterface.matrix_world * eul.to_matrix().to_4x4()
-        try:
-            del childassembly['modelname']
-        except KeyError:
-            pass
+    childassembly = childinterface.parent
+    sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+    sUtils.selectObjects(objects=[childinterface, childassembly], clear=True, active=0)
+    bpy.ops.object.parent_set(type='OBJECT')
+    eul = mathutils.Euler((math.radians(180.0), 0.0, math.radians(180.0)), 'XYZ')
+    sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
+    bpy.ops.object.parent_set(type='OBJECT')
+    childinterface.matrix_world = parentinterface.matrix_world * eul.to_matrix().to_4x4()
+    try:
+        del childassembly['modelname']
+    except KeyError:
+        pass
 
 
 def getPropertiesSubset(obj, category=None):
