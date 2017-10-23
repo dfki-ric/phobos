@@ -30,7 +30,6 @@ import os
 import bpy
 import bpy.utils.previews
 import phobos.utils.naming as nUtils
-# TODO ioUtils is not used
 import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 from bpy.props import StringProperty
@@ -54,6 +53,7 @@ def getCategoriesForEnumProperty(self, context):
     try:
         categories = [(category,) * 3 for category in sorted(preview_collections.keys())]
     except:
+        log('Unable to compile category list.', 'ERROR')
         categories = []
     return categories
 
@@ -157,8 +157,6 @@ def register():
             BoolProperty
             )
     WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
-    # TODO delete me?
-                                              #update=updateModelPreview)
     WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
     compileModelList()
 
