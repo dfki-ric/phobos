@@ -166,7 +166,13 @@ def toggleInterfaces(interfaces=None, modename='toggle'):
 
 
 def connectInterfaces(parentinterface, childinterface):
+    # first check if the interface is child of the root object and if not, restructure the tree
+    root = sUtils.getRoot(childinterface)
+    if root != childinterface.parent:
+        restructureKinematicTree(childinterface.parent)
     childassembly = childinterface.parent
+
+    # connect the interfaces
     sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
     sUtils.selectObjects(objects=[childinterface, childassembly], clear=True, active=0)
