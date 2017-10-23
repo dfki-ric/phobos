@@ -43,7 +43,7 @@ def getModelListForEnumProperty(self, context):
     # DOCU missing some docstring
     category = context.window_manager.category
     try:
-        items = preview_collections[category].enum_items
+        items = sorted(preview_collections[category].enum_items)
     except KeyError:
         items = []
     return items
