@@ -33,7 +33,7 @@ import phobos.utils.selection as selection
 
 
 def getObjectName(obj, phobostype=None):
-    """This function returns the name for an object depending on its phobostype.
+    """Returns the name for an object depending on its phobostype.
     For links and objects lacking a '*phobostype*/name' property, the object's
     name is used instead, cleaned of namespaces.
 
@@ -60,7 +60,7 @@ def replaceNameElement(prop, old, new):
 
 
 def addNamespace(obj, namespace=None):
-    """This function namespaces a given blender object.
+    """Namespaces a given blender object.
 
     :param obj: The object to namespace.
     :type obj: bpy.types.Object
@@ -79,7 +79,7 @@ def addNamespace(obj, namespace=None):
 
 
 def removeNamespace(obj):
-    """This function removes the namespace from an object if present.
+    """Removes the namespace from an object if present.
 
     :param obj: The object to remove the namespace from.
     :type obj: bpy.types.Object
@@ -102,6 +102,6 @@ def gatherNamespaces():
 
 
 def namesAreExplicit(nameset, objnames):
-    """This function checks whether two sets of names have equal names.
+    """Checks whether two sets of names have equal names.
     """
     return len(nameset.intersection(objnames)) == 0
