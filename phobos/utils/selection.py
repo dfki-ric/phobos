@@ -99,9 +99,8 @@ def getEffectiveParent(obj, include_hidden=False):
     """
     parent = obj.parent
     while (parent and ((parent.hide and not include_hidden) or
-                       (not parent.select and
-                       bpy.data.worlds[0].phobosexportsettings.selectedOnly))
-           and parent.phobostype != 'link'):
+            (not parent.select and bpy.data.worlds[0].phobosexportsettings.selectedOnly)
+             or parent.phobostype != 'link')):
         parent = parent.parent
     return parent
 
