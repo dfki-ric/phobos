@@ -33,6 +33,7 @@ import phobos.utils.naming as nUtils
 # TODO ioUtils is not used
 import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
+from bpy.props import StringProperty
 
 model_data = {}
 preview_collections = {}
@@ -111,11 +112,36 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
     bl_region_type = 'FILE'
     bl_options = {'REGISTER', 'UNDO'}
 
+    namespace = StringProperty(
+        name="Namespace",
+        default="",
+        description="Namespace with which to wrap the imported model. Avoids duplicate names of Blender objects."
+    )
+
+    #as_reference = BoolProperty(
+    #    name='Import reference'
+    #    default=False,
+    #    description="Import model as reference to original model instead of importing all elements.")
+
+    def invoke(self, context, event):
+        modelname = context.window_manager.modelpreview
+        self.namespace = modelname
+        # prevent duplicate names
+        namespaces = nUtils.gatherNamespaces()
+        if modelname in namespaces:
+            i = 1
+            self.namespace = modelname + '_' + str(i)
+            while self.namespace in namespaces:
+                i += 1
+                self.namespace = modelname + '_' + str(i) 
+        return context.window_manager.invoke_props_dialog(self, width=600)
+
+
     def execute(self, context):
         wm = context.window_manager
         filepath = os.path.join(model_data[wm.category][wm.modelpreview]['path'],
                                 'blender', wm.modelpreview+'.blend')
-        if ioUtils.importBlenderModel(filepath, wm.namespace):
+        if ioUtils.importBlenderModel(filepath, self.namespace):
             return {'FINISHED'}
         else:
             log("Model " + wm.modelpreview + " could not be loaded from library: No valid .blend file.",
@@ -135,9 +161,6 @@ def register():
                                               #update=updateModelPreview)
     WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
     compileModelList()
-    WindowManager.namespace = StringProperty(name='Name space')
-    WindowManager.import_reference = BoolProperty(name='Import reference')
-    WindowManager.as_reference = bpy.props.BoolProperty(name='As Reference')
 
 
 def unregister():

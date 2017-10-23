@@ -91,6 +91,16 @@ def removeNamespace(obj):
             del obj[nameTag]
 
 
+def gatherNamespaces():
+    """Gathers all existing namespaces.
+    """
+    namespaces = []
+    for obj in bpy.data.objects:
+        if '::' in obj.name:
+            namespaces.append(obj.name.split('::')[0])
+    return namespaces
+
+
 def namesAreExplicit(nameset, objnames):
     """This function checks whether two sets of names have equal names.
     """

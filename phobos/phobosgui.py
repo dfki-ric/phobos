@@ -963,9 +963,6 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
         layout.prop(wm, 'category')
         layout.template_icon_view(wm, 'modelpreview', show_labels=True, scale=5.0)
         layout.prop(wm, 'modelpreview')
-        layout.prop(wm, 'as_reference')
-        layout.prop(wm, 'namespace')
-        layout.label(text=wm.namespace+'::objectname' if wm.namespace != '' else 'no namespacing')
         layout.operator("phobos.import_model_from_library", icon="IMPORT")
 
 def get_operator_manuals():
