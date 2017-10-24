@@ -48,7 +48,7 @@ def getObjectName(obj, phobostype=None):
     if nametype != 'link' and nametype + "/name" in obj:
         return obj[nametype + "/name"]
     else:
-        return obj.name.split(':')[-1]
+        return obj.name.split('::')[-1]
 
 
 def replaceNameElement(prop, old, new):
@@ -91,13 +91,13 @@ def removeNamespace(obj):
             del obj[nameTag]
 
 
-def gatherNamespaces():
+def gatherNamespaces(separator='::'):
     """Gathers all existing namespaces.
     """
     namespaces = []
     for obj in bpy.data.objects:
-        if '::' in obj.name:
-            namespaces.append(obj.name.split('::')[0])
+        if separator in obj.name:
+            namespaces.append(obj.name.split(separator)[0])
     return namespaces
 
 
