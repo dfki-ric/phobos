@@ -66,25 +66,14 @@ def restructureKinematicTree(link):
        B
       / \
      D   E
-     Currently, this function ignores allh / Woche	40
-h / Wochentag	8
-h / Arbeitstag	10
-h / Monat	176
-
-Urlaubstage	0
-Krankheitstage	0
-real h / Monat	176
-Arbeitstage	16
-Anwesenheitstage	16
-4tw real h / Monat	160
- options such as unselected or hidden
-     objects.
+     Currently, this function ignores all options such as unselected or hidden objects.
     :param link:
     :return:
     """
     root = sUtils.getRoot(link)
     links = [link]
     obj = link
+
     # gather chain of links ascending the tree
     while not obj.parent == root:
         obj = obj.parent
@@ -168,8 +157,9 @@ def toggleInterfaces(interfaces=None, modename='toggle'):
 def connectInterfaces(parentinterface, childinterface):
     # first check if the interface is child of the root object and if not, restructure the tree
     root = sUtils.getRoot(childinterface)
-    if root != childinterface.parent:
-        restructureKinematicTree(childinterface.parent)
+    parent = childinterface.parent
+    if root != parent:
+        restructureKinematicTree(parent)
     childassembly = childinterface.parent
 
     # connect the interfaces
@@ -185,6 +175,18 @@ def connectInterfaces(parentinterface, childinterface):
         del childassembly['modelname']
     except KeyError:
         pass
+
+    try:
+        # parent visual and collision objects to new parent
+        viscols = sUtils.getImmediateChildren(parent, ['visual', 'collision', 'interface'])
+        print(viscols)
+        sUtils.selectObjects(viscols, True, 0)
+        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+        print()
+        sUtils.selectObjects([sUtils.getEffectiveParent(parent, ignore_selection=True)] + viscols, True, 0)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    except IndexError:
+        pass  # no objects to re-parent
 
 
 def getPropertiesSubset(obj, category=None):
