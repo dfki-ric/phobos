@@ -128,7 +128,7 @@ def getAbsolutePath(path):
         return os.path.join(bpy.path.abspath('//'), path)
 
 
-def importBlenderModel(filepath, namespace=''):
+def importBlenderModel(filepath, namespace='', prefix=True):
     if (os.path.exists(filepath) and os.path.isfile(filepath) and
        filepath.endswith('.blend')):
         log("Importing Blender model" + filepath, "INFO")
@@ -138,9 +138,21 @@ def importBlenderModel(filepath, namespace=''):
                 objects.append({'name': obj})
         bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
         bpy.ops.view3d.view_selected(use_all_regions=False)
+        # allow the use of both prefixes and namespaces, thus truly merging
+        # models or keeping them separate for export
         if namespace != '':
-            for obj in bpy.context.selected_objects:
-                nUtils.addNamespace(obj, namespace)
+            if prefix:
+                for obj in bpy.context.selected_objects:
+                    # set prefix instead of namespace
+                    obj.name = namespace + '__' + obj.name
+                    # make sure no internal name-properties remain
+                    for ptype in defs.subtypes:
+                        nametag = ptype + "/name"
+                        if nametag in obj:
+                            del obj[nametag]
+            else:
+                for obj in bpy.context.selected_objects:
+                    nUtils.addNamespace(obj, namespace)
         return True
     else:
         return False
