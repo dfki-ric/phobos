@@ -47,7 +47,9 @@ layerTypes = {
     "sensor": 4,
     "decoration": 5,
     "light": 6,
-    "approxsphere": 13
+    "approxsphere": 13,
+    'interface': 10,
+    'assembly': 10
 }
 
 # types of blender objects phobos differentiates
