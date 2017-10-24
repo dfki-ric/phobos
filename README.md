@@ -11,11 +11,8 @@ Please contact [Kai von Szadkowski](http://robotik.dfki-bremen.de/en/about-us/st
 
 ## Announcements
 
-
-**2017-02-01** - Phobos is currently undergoing major refactoring, dropping lots of historical baggage and adding nicer logging, a number of bugfixes and various new features along the way. The main goal is to extend Phobos' generic extensibility by implementing a plugin-interface for Python modules e.g. providing export or import functions for models or components.
-At the same time, Phobos will receive a face lifting to accompany new functionality in its GUI, which is why there are currently no efforts to update or complete the documentation for version 0.7.
-
-Expect to find a shiny new release with exciting features in the coming weeks!
+**2017-10-24** - Phobos' current development is focused on adding new features after the major refactoring that was finished earlier this year. Some of the new features and updating of existing features takes longer than expected and we don't want to roll out a release that is still missing a lot of important components. Allowing time to update the documentation as well, this means that new versions of Phobos will not be released before the end of the year.
+Please note that the current version of Phobos (i.e. the *master* branch of this repo) does not necessarily work with the latest version of Blender (at the time of writing, 2.79) due to changes in its API and internal python version, such that previous versions may have to be used (e.g. 2.74).
 
 
 ## Overview
