@@ -32,7 +32,7 @@ import bpy.utils.previews
 import phobos.utils.naming as nUtils
 import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
-from bpy.props import StringProperty
+from bpy.props import StringProperty, BoolProperty
 
 model_data = {}
 preview_collections = {}
@@ -118,6 +118,11 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
         description="Namespace with which to wrap the imported model. Avoids duplicate names of Blender objects."
     )
 
+    use_prefix = BoolProperty(
+       name='Use prefix',
+       default=True,
+       description="Import model with fixed prefixed instead of removable namespace.")
+
     #as_reference = BoolProperty(
     #    name='Import reference'
     #    default=False,
@@ -127,21 +132,21 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
         modelname = context.window_manager.modelpreview
         self.namespace = modelname
         # prevent duplicate names
-        namespaces = nUtils.gatherNamespaces()
+        namespaces = nUtils.gatherNamespaces('__' if self.use_prefix else '::')
         if modelname in namespaces:
             i = 1
             self.namespace = modelname + '_' + str(i)
             while self.namespace in namespaces:
                 i += 1
-                self.namespace = modelname + '_' + str(i) 
-        return context.window_manager.invoke_props_dialog(self, width=600)
+                self.namespace = modelname + '_' + str(i)
+        return context.window_manager.invoke_props_dialog(self, width=500)
 
 
     def execute(self, context):
         wm = context.window_manager
         filepath = os.path.join(model_data[wm.category][wm.modelpreview]['path'],
                                 'blender', wm.modelpreview+'.blend')
-        if ioUtils.importBlenderModel(filepath, self.namespace):
+        if ioUtils.importBlenderModel(filepath, self.namespace, self.use_prefix):
             return {'FINISHED'}
         else:
             log("Model " + wm.modelpreview + " could not be loaded from library: No valid .blend file.",
