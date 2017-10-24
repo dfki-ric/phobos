@@ -85,7 +85,7 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
             (child.select or not selected_only)]
 
 
-def getEffectiveParent(obj, include_hidden=False):
+def getEffectiveParent(obj, ignore_selection=False, include_hidden=False):
     """
     Returns the parent of an object, i.e. the first *link* ascending the
     object tree that is selected, starting from the obj, optionally also excluding
@@ -99,7 +99,8 @@ def getEffectiveParent(obj, include_hidden=False):
     """
     parent = obj.parent
     while (parent and ((parent.hide and not include_hidden) or
-            (not parent.select and bpy.data.worlds[0].phobosexportsettings.selectedOnly)
+            (not parent.select and bpy.data.worlds[0].phobosexportsettings.selectedOnly
+             and not ignore_selection)
              or parent.phobostype != 'link')):
         parent = parent.parent
     return parent
