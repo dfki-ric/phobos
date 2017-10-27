@@ -69,11 +69,11 @@ def addNamespace(obj, namespace=None):
         if not namespace:
             namespace = selection.getRoot(obj)["entity/name"]
         obj.name = namespace + "::" + obj.name
-        for ptype in defs.subtypes:
-            typetag = ptype + "/type"
-            nametag = ptype + "/name"
-            if (typetag in obj or ("phobostype" in obj and obj.phobostype == ptype)) and nametag not in obj:
-                obj[nametag] = obj.name
+        # for ptype in defs.subtypes:
+        #     typetag = ptype + "/type"
+        #     nametag = ptype + "/name"
+        #     if (typetag in obj or ("phobostype" in obj and obj.phobostype == ptype)) and nametag not in obj:
+        #         obj[nametag] = obj.name
     except (TypeError, KeyError):
         log(getObjectName(obj) + " is not part of a well-defined entity.", "ERROR")
 

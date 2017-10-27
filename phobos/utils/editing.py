@@ -171,10 +171,10 @@ def connectInterfaces(parentinterface, childinterface):
     sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
     childinterface.matrix_world = parentinterface.matrix_world * eul.to_matrix().to_4x4()
-    try:
-        del childassembly['modelname']
-    except KeyError:
-        pass
+    #try:
+    #    del childassembly['modelname']
+    #except KeyError:
+    #    pass
 
     try:
         # parent visual and collision objects to new parent
@@ -187,6 +187,8 @@ def connectInterfaces(parentinterface, childinterface):
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
     except IndexError:
         pass  # no objects to re-parent
+    parentinterface.show_name = False
+    childinterface.show_name = False
 
 
 def getPropertiesSubset(obj, category=None):
