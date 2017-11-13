@@ -22,11 +22,9 @@
 # author: Simon Reichel
 #
 # This script will install phobos into your user bound python addon repository.
-# It also provides a way for blenders python to import your
-# python3s yaml module.
 #
 # If you used the old install script you can delete the previous phobos folder.
-# You also have to delete the old installconfig.txt to run this script
+# You also have to delete the old install.conf to run this script
 # correctly.
 
 import os.path as path
@@ -34,7 +32,7 @@ import sys
 import os
 import shutil
 
-configfile = 'installconfig.txt'
+configfile = 'install.conf'
 addonpath = 'ERROR'
 
 
@@ -100,6 +98,7 @@ def installPhobos():
         print('Installation aborted: missing addonpath.')
         return False
     phobospath = path.join(addonpath, 'phobos')
+    global phobospath
 
     if path.isdir(phobospath):
         return copyphobos(phobospath)
@@ -112,36 +111,6 @@ def installPhobos():
         else:
             print('No folder for Phobos created.')
             return False
-
-
-def installYaml():
-    # check for pip installation
-    try:
-        import pip
-    except ImportError:
-        print('PIP (Pip Installs Packages) not found.')
-        print('Downloading PIP to install YAML.')
-
-        # Download pip and install it
-        url = 'https://bootstrap.pypa.io/get-pip.py'
-        import urllib.request
-        urllib.request.urlretrieve(url, 'get-pip.py')
-        print('Installing PIP.')
-        filepath = path.abspath('get-pip.py')
-        # run file in main namespace (like from commandline)
-        global_namespace = {
-            '__file__': filepath,
-            '__name__': '__main__',
-        }
-        with open('get-pip.py', 'rb') as file:
-            print('Installing PIP. Please rerun install_phobos.py to' +
-                  ' complete the installation.')
-            exec(compile(file.read(), filepath, 'exec'), global_namespace)
-
-    # install yaml using pip
-    print('Installing YAML using PIP.')
-    pip.main(['install', 'PyYaml'])
-    return
 
 
 if __name__ == '__main__':
@@ -182,4 +151,6 @@ if __name__ == '__main__':
             with open('yamlpath.conf', 'w') as yamlconffile:
                 yamlconffile.truncate()
                 yamlconffile.write(yamlpath.strip('__init__.py'))
+
+            shutil.copy2('yamlpath.conf', os.path.join(phobospath, 'yamlpath.conf'))
 
