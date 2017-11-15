@@ -97,8 +97,8 @@ def installPhobos():
     if addonpath[:5] == 'ERROR':
         print('Installation aborted: missing addonpath.')
         return False
-    phobospath = path.join(addonpath, 'phobos')
     global phobospath
+    phobospath = path.join(addonpath, 'phobos')
 
     if path.isdir(phobospath):
         return copyphobos(phobospath)
@@ -152,5 +152,5 @@ if __name__ == '__main__':
                 yamlconffile.truncate()
                 yamlconffile.write(yamlpath.strip('__init__.py'))
 
-            shutil.copy2('yamlpath.conf', os.path.join(phobospath, 'yamlpath.conf'))
+        shutil.copy2('yamlpath.conf', os.path.join(phobospath, 'yamlpath.conf'))
 

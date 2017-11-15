@@ -82,8 +82,7 @@ def import_submodules(package, recursive=True, verbose=False):
 bl_info = {
     "name": "Phobos",
     "description": "A toolbox to enable editing of robot models in Blender.",
-    "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, " +
-                "Malte Langosz, Simon Reichel",
+    "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Simon Reichel",
     "version": (0, 7, 1),
     "blender": (2, 69, 0),
     "location": "Phobos adds a number of custom tool panels.",
@@ -101,16 +100,14 @@ if os.path.isfile(yamlconfpath):
     f = open(yamlconfpath)
     path = f.read()
     f.close()
+    # CHECK is this if still required?
     if path == "v" or path == "i":
         print("There is no YAML installation for python 3.4 or greater on this computer")
     else:
-        sys.path.insert(0, path)
+        sys.path.insert(0, path.replace('/yaml', ''))
         import yaml
 else:
-    print("Could not find yamlpath.conf")
-    print("Using distributed package instead!")
-    sys.path.insert(0, sys.path[0] + "/phobos")
-    import yaml
+    print('No yamlpath.conf file found. Please reinstall phobos.')
 
 
 # Add custom YAML (de-)serializer
