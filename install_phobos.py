@@ -37,9 +37,7 @@ addonpath = 'ERROR'
 
 
 def copytree(src, dst, symlinks=False, ignore=None):
-    if os.path.exists(dst):
-        shutil.rmtree(dst)
-
+    os.makedirs(dst)
     for item in os.listdir(src):
         s = os.path.join(src, item)
         d = os.path.join(dst, item)
@@ -81,6 +79,10 @@ def makeConfigFile():
 
 def copyphobos(phobospath):
     try:
+        # remove old installation first
+        if os.path.exists(dst):
+            shutil.rmtree(dst)
+
         copytree(path.join(os.getcwd(), 'phobos'), phobospath)
         print('Phobos installation found and updated.')
         print('Copied Phobos to ' + phobospath)
