@@ -116,6 +116,8 @@ def installPhobos():
 
 
 if __name__ == '__main__':
+    # work always from installation folder
+    os.chdir(sys.path.abspath(sys.path.dirname(__file__)))
     # check for existing configfile
     if path.isfile(configfile):
         print('Found installation configuration.')
