@@ -80,8 +80,8 @@ def makeConfigFile():
 def copyphobos(phobospath):
     try:
         # remove old installation first
-        if os.path.exists(dst):
-            shutil.rmtree(dst)
+        if os.path.exists(phobospath):
+            shutil.rmtree(phobospath)
 
         copytree(path.join(os.getcwd(), 'phobos'), phobospath)
         print('Phobos installation found and updated.')
@@ -117,7 +117,7 @@ def installPhobos():
 
 if __name__ == '__main__':
     # work always from installation folder
-    os.chdir(sys.path.abspath(sys.path.dirname(__file__)))
+    os.chdir(os.path.abspath(os.path.dirname(__file__)))
     # check for existing configfile
     if path.isfile(configfile):
         print('Found installation configuration.')
