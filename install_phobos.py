@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 
 # Copyright 2017, University of Bremen & DFKI GmbH Robotics Innovation Center
 #
@@ -57,7 +57,7 @@ def makeConfigFile():
                                      'addons').format(blenderversion))
     # CHECK works with darwin?
     elif operating_system == 'darwin':
-        addonpath = path.expanduser(('~/Library/Application\ Support/' +
+        addonpath = path.expanduser(('~/Library/Application Support/' +
                                      'Blender/{0}/scripts/addons'.format(
                                          blenderversion)))
     # CHECK works with Windows?
@@ -70,6 +70,8 @@ def makeConfigFile():
                      ' the developers.').format(operating_system)
 
     pythoncommand = input('What is your Python 3 command? (e.g. python3) ')
+    if not pythoncommand:
+        pythoncommand = 'python3'
     with open(configfile, 'w') as conffile:
         conffile.writelines([
             'blenderversion={0}\n'.format(blenderversion),
