@@ -1,3 +1,6 @@
+import os
+import yaml
+
 import bpy
 from bpy.types import NodeTree, Node, NodeSocket
 import mathutils
@@ -64,6 +67,7 @@ class SocketVector2(NodeSocket):
         if self.is_output or self.is_linked:
             layout.label(text)
         else:
+            layout.label(text)
             layout.prop(self, "values")
 
     # Socket color
@@ -86,6 +90,7 @@ class SocketVector3(NodeSocket):
         if self.is_output or self.is_linked:
             layout.label(text)
         else:
+            layout.label(text)
             split = layout.split()
             column = split.column()
             column.prop(self, "values")
@@ -110,6 +115,7 @@ class SocketVector4(NodeSocket):
         if self.is_output or self.is_linked:
             layout.label(text)
         else:
+            layout.label(text)
             split = layout.split()
             column = split.column()
             column.prop(self, "values")
@@ -146,6 +152,7 @@ class SocketMat4(NodeSocket):
         if self.is_output or self.is_linked:
             layout.label(text)
         else:
+            layout.label(text)
             split = layout.split()
             column1 = split.column()
             column2 = split.column()
@@ -300,6 +307,66 @@ class VaryingFragmentNode(Node, FragmentNode):
         layout.prop(self, "varying_type")
 
 
+class CustomNode(Node, VertexFragmentNode):
+    """
+    A custom node for vertex shader
+    """
+    bl_idname = 'CustomNodeType'
+    bl_label = 'Custom Node'
+    bl_icon = 'SOUND'
+
+    node_types = []
+    input_sets = {}
+    output_sets = {}
+
+    def update_type(self, context):
+        for input_sock in self.inputs:
+            self.inputs.remove(input_sock)
+        for output_sock in self.outputs:
+            self.outputs.remove(output_sock)
+        for input_sock in CustomNode.input_sets[self.node_type]:
+            if input_sock["type"] == "INT":
+                self.inputs.new("NodeSocketInt", input_sock["name"])
+            elif input_sock["type"] == "FLOAT":
+                self.inputs.new("NodeSocketFloat", input_sock["name"])
+            elif input_sock["type"] == "VEC2":
+                self.inputs.new("SocketVector2", input_sock["name"])
+            elif input_sock["type"] == "VEC3":
+                self.inputs.new("SocketVector3", input_sock["name"])
+            elif input_sock["type"] == "VEC4":
+                self.inputs.new("SocketVector4", input_sock["name"])
+            elif input_sock["type"] == "MAT4":
+                self.inputs.new("SocketMat4", input_sock["name"])
+            elif input_sock["type"] == "SAMPLER2D":
+                self.inputs.new("SocketSampler2D", input_sock["name"])
+        for output_sock in CustomNode.output_sets[self.node_type]:
+            if output_sock["type"] == "INT":
+                self.outputs.new("NodeSocketInt", output_sock["name"])
+            elif output_sock["type"] == "FLOAT":
+                self.outputs.new("NodeSocketFloat", output_sock["name"])
+            elif output_sock["type"] == "VEC2":
+                self.outputs.new("SocketVector2", output_sock["name"])
+            elif output_sock["type"] == "VEC3":
+                self.outputs.new("SocketVector3", output_sock["name"])
+            elif output_sock["type"] == "VEC4":
+                self.outputs.new("SocketVector4", output_sock["name"])
+            elif output_sock["type"] == "MAT4":
+                self.outputs.new("SocketMat4", output_sock["name"])
+            elif output_sock["type"] == "SAMPLER2D":
+                self.outputs.new("SocketSampler2D", output_sock["name"])
+
+    node_type = bpy.props.EnumProperty(name="Type",
+                                       description="Function type of the node",
+                                       items=node_types,
+                                       update=update_type)
+
+    def init(self, context):
+        pass
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "node_type")
+
+
 class VertexNodeCategory(NodeCategory):
     @classmethod
     def poll(clscls, context):
@@ -312,6 +379,12 @@ class FragmentNodeCategory(NodeCategory):
         return context.space_data.tree_type == 'FragmentShaderTree'
 
 
+class VertexFragmentNodeCategory(NodeCategory):
+    @classmethod
+    def poll(clscls, context):
+        return context.space_data.tree_type == 'FragmentShaderTree' or context.space_data.tree_type == 'VertexShaderTree'
+
+
 node_categories = [
     VertexNodeCategory("INPUT", "Input", items=[
         NodeItem("UniformNodeType")
@@ -322,6 +395,9 @@ node_categories = [
     ]),
     VertexNodeCategory("OUTPUT", "Output", items=[
         NodeItem("VaryingVertexNodeType")
+    ]),
+    VertexFragmentNodeCategory("SHARED_NODES", "Shared Nodes", items=[
+        NodeItem("CustomNodeType")
     ])
 ]
 
@@ -334,7 +410,33 @@ def draw_func_shader_graphs(self, context):
     layout.prop(ob.active_material, "fragment_shader")
 
 
+def load_node_def(definition):
+    print("Loading custom node definition for: ", definition["name"])
+    #print(definition)
+    if definition["type"] == "BOTH":
+        CustomNode.node_types.append((definition["name"], definition["name"], definition["name"]))
+        if "inputs" in definition:
+            CustomNode.input_sets[definition["name"]] = definition["inputs"]
+        else:
+            CustomNode.input_sets[definition["name"]] = []
+        if "outputs" in definition:
+            CustomNode.output_sets[definition["name"]] = definition["outputs"]
+        else:
+            CustomNode.output_sets[definition["name"]] = []
+
+
+def load_node_defs():
+    def_path = os.path.join(os.path.dirname(__file__), "shader_nodes")
+    for root, dirs, files in os.walk(def_path):
+        for node_def in files:
+            if node_def.endswith(".yml"):
+                with open(os.path.join(def_path, node_def)) as f:
+                    node_def = yaml.load(f.read())
+                    load_node_def(node_def)
+
+
 def register():
+    load_node_defs()
     print("Registering Shader Node Tree")
     bpy.utils.register_class(VertexShaderTree)
     bpy.utils.register_class(FragmentShaderTree)
@@ -346,6 +448,7 @@ def register():
     bpy.utils.register_class(UniformNode)
     bpy.utils.register_class(VaryingVertexNode)
     bpy.utils.register_class(VaryingFragmentNode)
+    bpy.utils.register_class(CustomNode)
 
     nodeitems_utils.register_node_categories("CUSTOM_NODES", node_categories)
 
@@ -368,6 +471,7 @@ def unregister():
     bpy.utils.unregister_class(UniformNode)
     bpy.utils.unregister_class(VaryingVertexNode)
     bpy.utils.unregister_class(VaryingFragmentNode)
+    bpy.utils.unregister_class(CustomNode)
 
     nodeitems_utils.unregister_node_categories("CUSTOM_NODES")
 
