@@ -25,6 +25,15 @@ class VertexShaderTree(NodeTree):
     bl_icon = 'NODETREE'
 
 
+class FragmentShaderTree(NodeTree):
+    """
+    The Node tree for fragment shader
+    """
+    bl_idname = 'FragmentShaderTree'
+    bl_label = 'Fragment Shader'
+    bl_icon = 'NODETREE'
+
+
 class SocketSampler2D(NodeSocket):
     """
     Socket class for Sampler2D types
@@ -109,6 +118,7 @@ class SocketVector4(NodeSocket):
     def draw_color(self, context, node):
         return 0.0, 0.0, 1.0, 0.5
 
+
 class SocketMat4(NodeSocket):
     """
         Socket class for Vector4 types
@@ -117,8 +127,8 @@ class SocketMat4(NodeSocket):
     bl_label = 'Matrix4'
 
     col_1 = bpy.props.FloatVectorProperty(name="Matrix4_col1",
-                                           description="The mat4",
-                                           size=4)
+                                          description="The mat4",
+                                          size=4)
 
     col_2 = bpy.props.FloatVectorProperty(name="Matrix4_col2",
                                           description="The mat4",
@@ -234,7 +244,7 @@ class VaryingVertexNode(Node, VertexNode):
             self.inputs.new("SocketSampler2D", "input")
 
     varying_type = bpy.props.EnumProperty(name="Type",
-                                          description="Data type of the uniform",
+                                          description="Data type of the varying",
                                           items=shader_data_types,
                                           default="INT",
                                           update=update_type)
@@ -249,15 +259,66 @@ class VaryingVertexNode(Node, VertexNode):
         layout.prop(self, "varying_type")
 
 
+class VaryingFragmentNode(Node, FragmentNode):
+    """
+    A Node representing a Varying in the Fragment Shader
+    """
+    bl_idname = 'VaryingFragmentNodeType'
+    bl_label = 'Varying Node'
+    bl_icon = 'SOUND'
+
+    def update_type(self, context):
+        self.outputs.remove(self.outputs[0])
+        if self.varying_type == "INT":
+            self.outputs.new("NodeSocketInt", "input")
+        elif self.varying_type == "FLOAT":
+            self.outputs.new("NodeSocketFloat", "input")
+        elif self.varying_type == "VEC2":
+            self.outputs.new("SocketVector2", "input")
+        elif self.varying_type == "VEC3":
+            self.outputs.new("SocketVector3", "input")
+        elif self.varying_type == "VEC4":
+            self.outputs.new("SocketVector4", "input")
+        elif self.varying_type == "MAT4":
+            self.outputs.new("SocketMat4", "input")
+        elif self.varying_type == "SAMPLER2D":
+            self.outputs.new("SocketSampler2D", "input")
+
+    varying_type = bpy.props.EnumProperty(name="Type",
+                                          description="Data type of the varying",
+                                          items=shader_data_types,
+                                          default="INT",
+                                          update=update_type)
+
+    varying_name = bpy.props.StringProperty(name="Name", description="Name of the varying", default="varying")
+
+    def init(self, context):
+        self.outputs.new("NodeSocketInt", "input")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "varying_name")
+        layout.prop(self, "varying_type")
+
+
 class VertexNodeCategory(NodeCategory):
     @classmethod
     def poll(clscls, context):
         return context.space_data.tree_type == 'VertexShaderTree'
 
 
+class FragmentNodeCategory(NodeCategory):
+    @classmethod
+    def poll(clscls, context):
+        return context.space_data.tree_type == 'FragmentShaderTree'
+
+
 node_categories = [
     VertexNodeCategory("INPUT", "Input", items=[
         NodeItem("UniformNodeType")
+    ]),
+    FragmentNodeCategory("INPUT", "Input", items=[
+        NodeItem("UniformNodeType"),
+        NodeItem("VaryingFragmentNodeType")
     ]),
     VertexNodeCategory("OUTPUT", "Output", items=[
         NodeItem("VaryingVertexNodeType")
@@ -265,9 +326,18 @@ node_categories = [
 ]
 
 
+def draw_func_shader_graphs(self, context):
+    layout = self.layout
+    ob = context.object
+    layout.prop(ob.active_material, "export_shaders")
+    layout.prop(ob.active_material, "vertex_shader")
+    layout.prop(ob.active_material, "fragment_shader")
+
+
 def register():
     print("Registering Shader Node Tree")
     bpy.utils.register_class(VertexShaderTree)
+    bpy.utils.register_class(FragmentShaderTree)
     bpy.utils.register_class(SocketVector2)
     bpy.utils.register_class(SocketVector3)
     bpy.utils.register_class(SocketVector4)
@@ -275,13 +345,21 @@ def register():
     bpy.utils.register_class(SocketSampler2D)
     bpy.utils.register_class(UniformNode)
     bpy.utils.register_class(VaryingVertexNode)
+    bpy.utils.register_class(VaryingFragmentNode)
 
     nodeitems_utils.register_node_categories("CUSTOM_NODES", node_categories)
+
+    bpy.types.Material.vertex_shader = bpy.props.PointerProperty(type=NodeTree, name="Vertex Shader")
+    bpy.types.Material.fragment_shader = bpy.props.PointerProperty(type=NodeTree, name="Fragment Shader")
+    bpy.types.Material.export_shaders = bpy.props.BoolProperty(name="Export Shaders",
+                                                               description="Toogle shader export for material")
+    bpy.types.MATERIAL_PT_context_material.append(draw_func_shader_graphs)
 
 
 def unregister():
     print("Unregistering Shader Node Tree")
     bpy.utils.unregister_class(VertexShaderTree)
+    bpy.utils.unregister_class(FragmentShaderTree)
     bpy.utils.unregister_class(SocketVector2)
     bpy.utils.unregister_class(SocketVector3)
     bpy.utils.unregister_class(SocketVector4)
@@ -289,5 +367,9 @@ def unregister():
     bpy.utils.unregister_class(SocketSampler2D)
     bpy.utils.unregister_class(UniformNode)
     bpy.utils.unregister_class(VaryingVertexNode)
+    bpy.utils.unregister_class(VaryingFragmentNode)
 
     nodeitems_utils.unregister_node_categories("CUSTOM_NODES")
+
+    bpy.types.MATERIAL_PT_context_material.remove(draw_func_shader_graphs)
+    del bpy.types.Material.vertex_shader
