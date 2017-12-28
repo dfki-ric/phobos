@@ -1,7 +1,19 @@
 import bpy
 from bpy.types import NodeTree, Node, NodeSocket
+import mathutils
+from mathutils import Matrix
 import nodeitems_utils
 from nodeitems_utils import NodeCategory, NodeItem
+
+shader_data_types = [
+    ("INT", "Integer", "Integer value"),
+    ("FLOAT", "Float", "Float value"),
+    ("VEC2", "Vec2", "Vector2 value"),
+    ("VEC3", "Vec3", "Vector3 value"),
+    ("VEC4", "Vec4", "Vector4 value"),
+    ("MAT4", "Mat4", "Matrix4 value"),
+    ("SAMPLER2D", "Sampler2D", "Sampler2D value"),
+]
 
 
 class VertexShaderTree(NodeTree):
@@ -11,6 +23,21 @@ class VertexShaderTree(NodeTree):
     bl_idname = 'VertexShaderTree'
     bl_label = 'Vertex Shader'
     bl_icon = 'NODETREE'
+
+
+class SocketSampler2D(NodeSocket):
+    """
+    Socket class for Sampler2D types
+    """
+    bl_idname = 'SocketSampler2D'
+    bl_label = 'Sampler 2D'
+
+    def draw(self, context, layout, node, text):
+        layout.label(text)
+
+    # Socket color
+    def draw_color(self, context, node):
+        return 1.0, 1.0, 1.0, 1.0
 
 
 class SocketVector2(NodeSocket):
@@ -50,7 +77,9 @@ class SocketVector3(NodeSocket):
         if self.is_output or self.is_linked:
             layout.label(text)
         else:
-            layout.prop(self, "values")
+            split = layout.split()
+            column = split.column()
+            column.prop(self, "values")
 
     # Socket color
     def draw_color(self, context, node):
@@ -72,11 +101,52 @@ class SocketVector4(NodeSocket):
         if self.is_output or self.is_linked:
             layout.label(text)
         else:
-            layout.prop(self, "values")
+            split = layout.split()
+            column = split.column()
+            column.prop(self, "values")
 
     # Socket color
     def draw_color(self, context, node):
         return 0.0, 0.0, 1.0, 0.5
+
+class SocketMat4(NodeSocket):
+    """
+        Socket class for Vector4 types
+        """
+    bl_idname = 'SocketMat4'
+    bl_label = 'Matrix4'
+
+    col_1 = bpy.props.FloatVectorProperty(name="Matrix4_col1",
+                                           description="The mat4",
+                                           size=4)
+
+    col_2 = bpy.props.FloatVectorProperty(name="Matrix4_col2",
+                                          description="The mat4",
+                                          size=4)
+
+    col_3 = bpy.props.FloatVectorProperty(name="Matrix4_col3",
+                                          description="The mat4",
+                                          size=4)
+
+    col_4 = bpy.props.FloatVectorProperty(name="Matrix4_col4",
+                                          description="The mat4",
+                                          size=4)
+
+    def draw(self, context, layout, node, text):
+        if self.is_output or self.is_linked:
+            layout.label(text)
+        else:
+            split = layout.split()
+            column1 = split.column()
+            column2 = split.column()
+            column1.prop(self, "col_1")
+            column1.prop(self, "col_2")
+            column2.prop(self, "col_3")
+            column2.prop(self, "col_4")
+
+    # Socket color
+    def draw_color(self, context, node):
+        return 0.0, 0.5, 0.5, 0.5
 
 
 class VertexNode:
@@ -84,10 +154,12 @@ class VertexNode:
     def poll(cls, ntree):
         return ntree.bl_idname == 'VertexShaderTree'
 
+
 class FragmentNode:
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'FragmentShaderTree'
+
 
 class VertexFragmentNode:
     @classmethod
@@ -103,16 +175,6 @@ class UniformNode(Node, VertexFragmentNode):
     bl_label = 'Uniform Node'
     bl_icon = 'SOUND'
 
-    uniform_types = [
-        ("INT", "Integer", "Integer value"),
-        ("FLOAT", "Float", "Float value"),
-        ("VEC2", "Vec2", "Vector2 value"),
-        ("VEC3", "Vec3", "Vector3 value"),
-        ("VEC4", "Vec4", "Vector4 value"),
-        ("MAT4", "Mat4", "Matrix4 value"),
-        ("SAMPLER2D", "Sampler2D", "Sampler2D value"),
-    ]
-
     def update_type(self, context):
         self.outputs.remove(self.outputs[0])
         if self.uniform_type == "INT":
@@ -125,10 +187,14 @@ class UniformNode(Node, VertexFragmentNode):
             self.outputs.new("SocketVector3", "output")
         elif self.uniform_type == "VEC4":
             self.outputs.new("SocketVector4", "output")
+        elif self.uniform_type == "MAT4":
+            self.outputs.new("SocketMat4", "output")
+        elif self.uniform_type == "SAMPLER2D":
+            self.outputs.new("SocketSampler2D", "output")
 
     uniform_type = bpy.props.EnumProperty(name="Type",
                                           description="Data type of the uniform",
-                                          items=uniform_types,
+                                          items=shader_data_types,
                                           default="INT",
                                           update=update_type)
 
@@ -150,16 +216,6 @@ class VaryingVertexNode(Node, VertexNode):
     bl_label = 'Varying Node'
     bl_icon = 'SOUND'
 
-    varying_types = [
-        ("INT", "Integer", "Integer value"),
-        ("FLOAT", "Float", "Float value"),
-        ("VEC2", "Vec2", "Vector2 value"),
-        ("VEC3", "Vec3", "Vector3 value"),
-        ("VEC4", "Vec4", "Vector4 value"),
-        ("MAT4", "Mat4", "Matrix4 value"),
-        ("SAMPLER2D", "Sampler2D", "Sampler2D value"),
-    ]
-
     def update_type(self, context):
         self.inputs.remove(self.inputs[0])
         if self.varying_type == "INT":
@@ -172,10 +228,14 @@ class VaryingVertexNode(Node, VertexNode):
             self.inputs.new("SocketVector3", "input")
         elif self.varying_type == "VEC4":
             self.inputs.new("SocketVector4", "input")
+        elif self.varying_type == "MAT4":
+            self.inputs.new("SocketMat4", "input")
+        elif self.varying_type == "SAMPLER2D":
+            self.inputs.new("SocketSampler2D", "input")
 
     varying_type = bpy.props.EnumProperty(name="Type",
                                           description="Data type of the uniform",
-                                          items=varying_types,
+                                          items=shader_data_types,
                                           default="INT",
                                           update=update_type)
 
@@ -211,6 +271,8 @@ def register():
     bpy.utils.register_class(SocketVector2)
     bpy.utils.register_class(SocketVector3)
     bpy.utils.register_class(SocketVector4)
+    bpy.utils.register_class(SocketMat4)
+    bpy.utils.register_class(SocketSampler2D)
     bpy.utils.register_class(UniformNode)
     bpy.utils.register_class(VaryingVertexNode)
 
@@ -223,6 +285,8 @@ def unregister():
     bpy.utils.unregister_class(SocketVector2)
     bpy.utils.unregister_class(SocketVector3)
     bpy.utils.unregister_class(SocketVector4)
+    bpy.utils.unregister_class(SocketMat4)
+    bpy.utils.unregister_class(SocketSampler2D)
     bpy.utils.unregister_class(UniformNode)
     bpy.utils.unregister_class(VaryingVertexNode)
 
