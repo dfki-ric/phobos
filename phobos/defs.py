@@ -117,6 +117,17 @@ definitions = {'motors': {},
                'model': {}
                }
 
+# definitions of data types for shader graphs
+shader_data_types = [
+    ("INT", "Integer", "Integer value"),
+    ("FLOAT", "Float", "Float value"),
+    ("VEC2", "Vec2", "Vector2 value"),
+    ("VEC3", "Vec3", "Vector3 value"),
+    ("VEC4", "Vec4", "Vector4 value"),
+    ("MAT4", "Mat4", "Matrix4 value"),
+    ("SAMPLER2D", "Sampler2D", "Sampler2D value")
+]
+
 
 def updateDefs(defsFolderPath):
     """Updates the definitions with all yml files in the given folder

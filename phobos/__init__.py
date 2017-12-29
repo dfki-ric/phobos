@@ -142,7 +142,7 @@ def register():
 
     """
     phobos.phobosgui.register()
-    phobos.shaderNodeTree.register()
+    phobos.shader.register()
     bpy.utils.register_module(__name__)
 
 
@@ -153,5 +153,5 @@ def unregister():
     print("Unregistering Phobos...")
     # TODO delete all imported modules to resolve reregistration conflicts
     phobos.phobosgui.unregister()
-    phobos.shaderNodeTree.unregister()
+    phobos.shader.unregister()
     bpy.utils.unregister_module(__name__)

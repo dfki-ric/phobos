@@ -1,196 +1,36 @@
+import bpy
+from bpy.types import Node
 import os
 import yaml
 
-import bpy
-from bpy.types import NodeTree, Node, NodeSocket
-import mathutils
-from mathutils import Matrix
-import nodeitems_utils
-from nodeitems_utils import NodeCategory, NodeItem
-
-shader_data_types = [
-    ("INT", "Integer", "Integer value"),
-    ("FLOAT", "Float", "Float value"),
-    ("VEC2", "Vec2", "Vector2 value"),
-    ("VEC3", "Vec3", "Vector3 value"),
-    ("VEC4", "Vec4", "Vector4 value"),
-    ("MAT4", "Mat4", "Matrix4 value"),
-    ("SAMPLER2D", "Sampler2D", "Sampler2D value"),
-]
-
-
-class VertexShaderTree(NodeTree):
-    """
-    The Node tree for vertex shader
-    """
-    bl_idname = 'VertexShaderTree'
-    bl_label = 'Vertex Shader'
-    bl_icon = 'NODETREE'
-
-
-class FragmentShaderTree(NodeTree):
-    """
-    The Node tree for fragment shader
-    """
-    bl_idname = 'FragmentShaderTree'
-    bl_label = 'Fragment Shader'
-    bl_icon = 'NODETREE'
-
-
-class SocketSampler2D(NodeSocket):
-    """
-    Socket class for Sampler2D types
-    """
-    bl_idname = 'SocketSampler2D'
-    bl_label = 'Sampler 2D'
-
-    def draw(self, context, layout, node, text):
-        layout.label(text)
-
-    # Socket color
-    def draw_color(self, context, node):
-        return 1.0, 1.0, 1.0, 1.0
-
-
-class SocketVector2(NodeSocket):
-    """
-    Socket class for Vector2 types
-    """
-    bl_idname = 'SocketVector2'
-    bl_label = 'Vector2'
-
-    values = bpy.props.FloatVectorProperty(name="Vector2",
-                                           description="The vec2",
-                                           size=2)
-
-    def draw(self, context, layout, node, text):
-        if self.is_output or self.is_linked:
-            layout.label(text)
-        else:
-            layout.label(text)
-            layout.prop(self, "values")
-
-    # Socket color
-    def draw_color(self, context, node):
-        return 0.0, 0.0, 1.0, 0.5
-
-
-class SocketVector3(NodeSocket):
-    """
-    Socket class for Vector3 types
-    """
-    bl_idname = 'SocketVector3'
-    bl_label = 'Vector3'
-
-    values = bpy.props.FloatVectorProperty(name="Vector3",
-                                           description="The vec3",
-                                           size=3)
-
-    def draw(self, context, layout, node, text):
-        if self.is_output or self.is_linked:
-            layout.label(text)
-        else:
-            layout.label(text)
-            split = layout.split()
-            column = split.column()
-            column.prop(self, "values")
-
-    # Socket color
-    def draw_color(self, context, node):
-        return 0.0, 0.0, 1.0, 0.5
-
-
-class SocketVector4(NodeSocket):
-    """
-    Socket class for Vector4 types
-    """
-    bl_idname = 'SocketVector4'
-    bl_label = 'Vector4'
-
-    values = bpy.props.FloatVectorProperty(name="Vector4",
-                                           description="The vec4",
-                                           size=4)
-
-    def draw(self, context, layout, node, text):
-        if self.is_output or self.is_linked:
-            layout.label(text)
-        else:
-            layout.label(text)
-            split = layout.split()
-            column = split.column()
-            column.prop(self, "values")
-
-    # Socket color
-    def draw_color(self, context, node):
-        return 0.0, 0.0, 1.0, 0.5
-
-
-class SocketMat4(NodeSocket):
-    """
-        Socket class for Vector4 types
-        """
-    bl_idname = 'SocketMat4'
-    bl_label = 'Matrix4'
-
-    col_1 = bpy.props.FloatVectorProperty(name="Matrix4_col1",
-                                          description="The mat4",
-                                          size=4)
-
-    col_2 = bpy.props.FloatVectorProperty(name="Matrix4_col2",
-                                          description="The mat4",
-                                          size=4)
-
-    col_3 = bpy.props.FloatVectorProperty(name="Matrix4_col3",
-                                          description="The mat4",
-                                          size=4)
-
-    col_4 = bpy.props.FloatVectorProperty(name="Matrix4_col4",
-                                          description="The mat4",
-                                          size=4)
-
-    def draw(self, context, layout, node, text):
-        if self.is_output or self.is_linked:
-            layout.label(text)
-        else:
-            layout.label(text)
-            split = layout.split()
-            column1 = split.column()
-            column2 = split.column()
-            column1.prop(self, "col_1")
-            column1.prop(self, "col_2")
-            column2.prop(self, "col_3")
-            column2.prop(self, "col_4")
-
-    # Socket color
-    def draw_color(self, context, node):
-        return 0.0, 0.5, 0.5, 0.5
+import phobos.defs as defs
 
 
 class VertexNode:
     @classmethod
     def poll(cls, ntree):
-        return ntree.bl_idname == 'VertexShaderTree'
+        return ntree.bl_idname == "VertexShaderTree"
 
 
 class FragmentNode:
     @classmethod
     def poll(cls, ntree):
-        return ntree.bl_idname == 'FragmentShaderTree'
+        return ntree.bl_idname == "FragmentShaderTree"
 
 
 class VertexFragmentNode:
     @classmethod
     def poll(cls, ntree):
-        return ntree.bl_idname == 'VertexShaderTree' or ntree.bl_idname == 'FragmentShaderTree'
+        return ntree.bl_idname == "VertexShaderTree" or ntree.bl_idname == "FragmentShaderTree"
 
 
 class UniformNode(Node, VertexFragmentNode):
     """
     A Node representing a Uniform
     """
-    bl_idname = 'UniformNodeType'
-    bl_label = 'Uniform Node'
-    bl_icon = 'SOUND'
+    bl_idname = "UniformNode"
+    bl_label = "Uniform Node"
+    bl_icon = "SOUND"
 
     def update_type(self, context):
         self.outputs.remove(self.outputs[0])
@@ -211,7 +51,7 @@ class UniformNode(Node, VertexFragmentNode):
 
     uniform_type = bpy.props.EnumProperty(name="Type",
                                           description="Data type of the uniform",
-                                          items=shader_data_types,
+                                          items=defs.shader_data_types,
                                           default="INT",
                                           update=update_type)
 
@@ -229,9 +69,9 @@ class VaryingVertexNode(Node, VertexNode):
     """
     A Node representing a Varying in the Vertex Shader
     """
-    bl_idname = 'VaryingVertexNodeType'
-    bl_label = 'Varying Node'
-    bl_icon = 'SOUND'
+    bl_idname = "VaryingVertexNodeType"
+    bl_label = "Varying Node"
+    bl_icon = "SOUND"
 
     def update_type(self, context):
         self.inputs.remove(self.inputs[0])
@@ -252,7 +92,7 @@ class VaryingVertexNode(Node, VertexNode):
 
     varying_type = bpy.props.EnumProperty(name="Type",
                                           description="Data type of the varying",
-                                          items=shader_data_types,
+                                          items=defs.shader_data_types,
                                           default="INT",
                                           update=update_type)
 
@@ -270,9 +110,9 @@ class VaryingFragmentNode(Node, FragmentNode):
     """
     A Node representing a Varying in the Fragment Shader
     """
-    bl_idname = 'VaryingFragmentNodeType'
-    bl_label = 'Varying Node'
-    bl_icon = 'SOUND'
+    bl_idname = "VaryingFragmentNodeType"
+    bl_label = "Varying Node"
+    bl_icon = "SOUND"
 
     def update_type(self, context):
         self.outputs.remove(self.outputs[0])
@@ -293,7 +133,7 @@ class VaryingFragmentNode(Node, FragmentNode):
 
     varying_type = bpy.props.EnumProperty(name="Type",
                                           description="Data type of the varying",
-                                          items=shader_data_types,
+                                          items=defs.shader_data_types,
                                           default="INT",
                                           update=update_type)
 
@@ -311,9 +151,9 @@ class CustomNode(Node, VertexFragmentNode):
     """
     A custom node for vertex shader
     """
-    bl_idname = 'CustomNodeType'
-    bl_label = 'Custom Node'
-    bl_icon = 'SOUND'
+    bl_idname = "CustomNodeType"
+    bl_label = "Custom Node"
+    bl_icon = "SOUND"
 
     node_types = []
     input_sets = {}
@@ -367,52 +207,8 @@ class CustomNode(Node, VertexFragmentNode):
         layout.prop(self, "node_type")
 
 
-class VertexNodeCategory(NodeCategory):
-    @classmethod
-    def poll(clscls, context):
-        return context.space_data.tree_type == 'VertexShaderTree'
-
-
-class FragmentNodeCategory(NodeCategory):
-    @classmethod
-    def poll(clscls, context):
-        return context.space_data.tree_type == 'FragmentShaderTree'
-
-
-class VertexFragmentNodeCategory(NodeCategory):
-    @classmethod
-    def poll(clscls, context):
-        return context.space_data.tree_type == 'FragmentShaderTree' or context.space_data.tree_type == 'VertexShaderTree'
-
-
-node_categories = [
-    VertexNodeCategory("INPUT", "Input", items=[
-        NodeItem("UniformNodeType")
-    ]),
-    FragmentNodeCategory("INPUT", "Input", items=[
-        NodeItem("UniformNodeType"),
-        NodeItem("VaryingFragmentNodeType")
-    ]),
-    VertexNodeCategory("OUTPUT", "Output", items=[
-        NodeItem("VaryingVertexNodeType")
-    ]),
-    VertexFragmentNodeCategory("SHARED_NODES", "Shared Nodes", items=[
-        NodeItem("CustomNodeType")
-    ])
-]
-
-
-def draw_func_shader_graphs(self, context):
-    layout = self.layout
-    ob = context.object
-    layout.prop(ob.active_material, "export_shaders")
-    layout.prop(ob.active_material, "vertex_shader")
-    layout.prop(ob.active_material, "fragment_shader")
-
-
 def load_node_def(definition):
     print("Loading custom node definition for: ", definition["name"])
-    #print(definition)
     if definition["type"] == "BOTH":
         CustomNode.node_types.append((definition["name"], definition["name"], definition["name"]))
         if "inputs" in definition:
@@ -426,7 +222,7 @@ def load_node_def(definition):
 
 
 def load_node_defs():
-    def_path = os.path.join(os.path.dirname(__file__), "shader_nodes")
+    def_path = os.path.join(os.path.dirname(__file__), "..", "shader_nodes")
     for root, dirs, files in os.walk(def_path):
         for node_def in files:
             if node_def.endswith(".yml"):
@@ -436,44 +232,17 @@ def load_node_defs():
 
 
 def register():
+    print("Registering shader node types")
     load_node_defs()
-    print("Registering Shader Node Tree")
-    bpy.utils.register_class(VertexShaderTree)
-    bpy.utils.register_class(FragmentShaderTree)
-    bpy.utils.register_class(SocketVector2)
-    bpy.utils.register_class(SocketVector3)
-    bpy.utils.register_class(SocketVector4)
-    bpy.utils.register_class(SocketMat4)
-    bpy.utils.register_class(SocketSampler2D)
     bpy.utils.register_class(UniformNode)
     bpy.utils.register_class(VaryingVertexNode)
     bpy.utils.register_class(VaryingFragmentNode)
     bpy.utils.register_class(CustomNode)
 
-    nodeitems_utils.register_node_categories("CUSTOM_NODES", node_categories)
-
-    bpy.types.Material.vertex_shader = bpy.props.PointerProperty(type=NodeTree, name="Vertex Shader")
-    bpy.types.Material.fragment_shader = bpy.props.PointerProperty(type=NodeTree, name="Fragment Shader")
-    bpy.types.Material.export_shaders = bpy.props.BoolProperty(name="Export Shaders",
-                                                               description="Toogle shader export for material")
-    bpy.types.MATERIAL_PT_context_material.append(draw_func_shader_graphs)
-
 
 def unregister():
-    print("Unregistering Shader Node Tree")
-    bpy.utils.unregister_class(VertexShaderTree)
-    bpy.utils.unregister_class(FragmentShaderTree)
-    bpy.utils.unregister_class(SocketVector2)
-    bpy.utils.unregister_class(SocketVector3)
-    bpy.utils.unregister_class(SocketVector4)
-    bpy.utils.unregister_class(SocketMat4)
-    bpy.utils.unregister_class(SocketSampler2D)
+    print("Unregistering shader node types")
     bpy.utils.unregister_class(UniformNode)
     bpy.utils.unregister_class(VaryingVertexNode)
     bpy.utils.unregister_class(VaryingFragmentNode)
     bpy.utils.unregister_class(CustomNode)
-
-    nodeitems_utils.unregister_node_categories("CUSTOM_NODES")
-
-    bpy.types.MATERIAL_PT_context_material.remove(draw_func_shader_graphs)
-    del bpy.types.Material.vertex_shader

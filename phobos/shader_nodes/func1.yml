@@ -1,0 +1,4 @@
+name: func1
+type: BOTH
+outputs:
+  - {name: result, type: VEC4}
