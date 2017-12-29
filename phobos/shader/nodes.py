@@ -24,6 +24,68 @@ class VertexFragmentNode:
         return ntree.bl_idname == "VertexShaderTree" or ntree.bl_idname == "FragmentShaderTree"
 
 
+class BackfaceNormalNode(Node, VertexFragmentNode):
+    """
+    A node for backface normal operation
+    """
+    bl_idname = "BackfaceNormalNode"
+    bl_label = "Backface Normal Node"
+    bl_icon = "SOUND"
+
+    def init(self, context):
+        self.inputs.new("SocketVector3", "n")
+        self.outputs.new("SocketVector3", "n")
+
+
+class ComposeVectorNode(Node, VertexFragmentNode):
+    """
+    A node for a vector composing operation
+    """
+    bl_idname = "ComposeVectorNode"
+    bl_label = "Compose Vector Node"
+    bl_icon = "SOUND"
+
+    vector_types = [("VEC2", "Vec2", "Vector2 value"),
+                    ("VEC3", "Vec3", "Vector3 value"),
+                    ("VEC4", "Vec4", "Vector4 value")
+                    ]
+
+    def update_type(self, context):
+        for input_sock in self.inputs:
+            self.inputs.remove(input_sock)
+        for output_sock in self.outputs:
+            self.outputs.remove(output_sock)
+        if self.vector_type == "VEC2":
+            self.outputs.new("SocketVector2", "vector")
+            self.inputs.new("NodeSocketFloat", "x")
+            self.inputs.new("NodeSocketFloat", "y")
+        elif self.vector_type == "VEC3":
+            self.outputs.new("SocketVector3", "vector")
+            self.inputs.new("NodeSocketFloat", "x")
+            self.inputs.new("NodeSocketFloat", "y")
+            self.inputs.new("NodeSocketFloat", "z")
+        elif self.vector_type == "VEC4":
+            self.outputs.new("SocketVector4", "vector")
+            self.inputs.new("NodeSocketFloat", "x")
+            self.inputs.new("NodeSocketFloat", "y")
+            self.inputs.new("NodeSocketFloat", "z")
+            self.inputs.new("NodeSocketFloat", "w")
+
+    vector_type = bpy.props.EnumProperty(name="Type",
+                                         description="Data type of the vector",
+                                         items=vector_types,
+                                         default="VEC2",
+                                         update=update_type)
+
+    def init(self, context):
+        self.outputs.new("SocketVector2", "vector")
+        self.inputs.new("NodeSocketFloat", "x")
+        self.inputs.new("NodeSocketFloat", "y")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "vector_type")
+
+
 class UniformNode(Node, VertexFragmentNode):
     """
     A Node representing a Uniform
@@ -69,7 +131,7 @@ class VaryingVertexNode(Node, VertexNode):
     """
     A Node representing a Varying in the Vertex Shader
     """
-    bl_idname = "VaryingVertexNodeType"
+    bl_idname = "VaryingVertexNode"
     bl_label = "Varying Node"
     bl_icon = "SOUND"
 
@@ -110,7 +172,7 @@ class VaryingFragmentNode(Node, FragmentNode):
     """
     A Node representing a Varying in the Fragment Shader
     """
-    bl_idname = "VaryingFragmentNodeType"
+    bl_idname = "VaryingFragmentNode"
     bl_label = "Varying Node"
     bl_icon = "SOUND"
 
@@ -151,7 +213,7 @@ class CustomNode(Node, VertexFragmentNode):
     """
     A custom node for vertex shader
     """
-    bl_idname = "CustomNodeType"
+    bl_idname = "CustomNode"
     bl_label = "Custom Node"
     bl_icon = "SOUND"
 
@@ -238,6 +300,8 @@ def register():
     bpy.utils.register_class(VaryingVertexNode)
     bpy.utils.register_class(VaryingFragmentNode)
     bpy.utils.register_class(CustomNode)
+    bpy.utils.register_class(BackfaceNormalNode)
+    bpy.utils.register_class(ComposeVectorNode)
 
 
 def unregister():
@@ -246,3 +310,5 @@ def unregister():
     bpy.utils.unregister_class(VaryingVertexNode)
     bpy.utils.unregister_class(VaryingFragmentNode)
     bpy.utils.unregister_class(CustomNode)
+    bpy.utils.unregister_class(BackfaceNormalNode)
+    bpy.utils.unregister_class(ComposeVectorNode)
