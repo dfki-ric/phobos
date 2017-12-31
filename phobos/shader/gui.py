@@ -40,7 +40,8 @@ node_categories = [
     VertexFragmentNodeCategory("SHARED_NODES", "Shared Nodes", items=[
         NodeItem("CustomNode"),
         NodeItem("BackfaceNormalNode"),
-        NodeItem("ComposeVectorNode")
+        NodeItem("ComposeVectorNode"),
+        NodeItem("DecomposeVectorNode")
     ])
 ]
 

@@ -37,6 +37,55 @@ class BackfaceNormalNode(Node, VertexFragmentNode):
         self.outputs.new("SocketVector3", "n")
 
 
+class DecomposeVectorNode(Node, VertexFragmentNode):
+    """
+    A node for a vector decomposing operation
+    """
+    bl_idname = "DecomposeVectorNode"
+    bl_label = "Decompose Vector Node"
+    bl_icon = "SOUND"
+
+    vector_types = [("VEC2", "Vec2", "Vector2 value"),
+                    ("VEC3", "Vec3", "Vector3 value"),
+                    ("VEC4", "Vec4", "Vector4 value")
+                    ]
+
+    def update_type(self, context):
+        for input_sock in self.inputs:
+            self.inputs.remove(input_sock)
+        for output_sock in self.outputs:
+            self.outputs.remove(output_sock)
+        if self.vector_type == "VEC2":
+            self.inputs.new("SocketVector2", "vector")
+            self.outputs.new("NodeSocketFloat", "x")
+            self.outputs.new("NodeSocketFloat", "y")
+        elif self.vector_type == "VEC3":
+            self.inputs.new("SocketVector3", "vector")
+            self.outputs.new("NodeSocketFloat", "x")
+            self.outputs.new("NodeSocketFloat", "y")
+            self.outputs.new("NodeSocketFloat", "z")
+        elif self.vector_type == "VEC4":
+            self.inputs.new("SocketVector4", "vector")
+            self.outputs.new("NodeSocketFloat", "x")
+            self.outputs.new("NodeSocketFloat", "y")
+            self.outputs.new("NodeSocketFloat", "z")
+            self.outputs.new("NodeSocketFloat", "w")
+
+    vector_type = bpy.props.EnumProperty(name="Type",
+                                         description="Data type of the vector",
+                                         items=vector_types,
+                                         default="VEC2",
+                                         update=update_type)
+
+    def init(self, context):
+        self.inputs.new("SocketVector2", "vector")
+        self.outputs.new("NodeSocketFloat", "x")
+        self.outputs.new("NodeSocketFloat", "y")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "vector_type")
+
+
 class ComposeVectorNode(Node, VertexFragmentNode):
     """
     A node for a vector composing operation
@@ -302,6 +351,7 @@ def register():
     bpy.utils.register_class(CustomNode)
     bpy.utils.register_class(BackfaceNormalNode)
     bpy.utils.register_class(ComposeVectorNode)
+    bpy.utils.register_class(DecomposeVectorNode)
 
 
 def unregister():
@@ -312,3 +362,4 @@ def unregister():
     bpy.utils.unregister_class(CustomNode)
     bpy.utils.unregister_class(BackfaceNormalNode)
     bpy.utils.unregister_class(ComposeVectorNode)
+    bpy.utils.unregister_class(DecomposeVectorNode)
