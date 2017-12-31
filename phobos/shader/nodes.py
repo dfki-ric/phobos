@@ -65,6 +65,56 @@ class BackfaceNormalNode(Node, VertexFragmentNode):
         self.outputs.new("SocketVector3", "n")
 
 
+class VectorMathNode(Node, VertexFragmentNode):
+    """
+    A node for a vector math operation of the form (vec_a+vec_b)*scalar
+    """
+    bl_idname = "VectorMathNode"
+    bl_label = "Vector Math Node"
+    bl_icon = "SOUND"
+
+    vector_types = [("VEC2", "Vec2", "Vector2 value"),
+                    ("VEC3", "Vec3", "Vector3 value"),
+                    ("VEC4", "Vec4", "Vector4 value")
+                    ]
+
+    def update_type(self, context):
+        for input_sock in self.inputs:
+            self.inputs.remove(input_sock)
+        for output_sock in self.outputs:
+            self.outputs.remove(output_sock)
+        if self.vector_type == "VEC2":
+            self.inputs.new("SocketVector2", "vector_a")
+            self.inputs.new("SocketVector2", "vector_b")
+            self.inputs.new("NodeSocketFloat", "scalar").default_value = 1.0
+            self.outputs.new("SocketVector2", "vector")
+        elif self.vector_type == "VEC3":
+            self.inputs.new("SocketVector3", "vector_a")
+            self.inputs.new("SocketVector3", "vector_b")
+            self.inputs.new("NodeSocketFloat", "scalar").default_value = 1.0
+            self.outputs.new("SocketVector3", "vector")
+        elif self.vector_type == "VEC4":
+            self.inputs.new("SocketVector4", "vector_a")
+            self.inputs.new("SocketVector4", "vector_b")
+            self.inputs.new("NodeSocketFloat", "scalar").default_value = 1.0
+            self.outputs.new("SocketVector4", "vector")
+
+    vector_type = bpy.props.EnumProperty(name="Type",
+                                         description="Data type of the vector",
+                                         items=vector_types,
+                                         default="VEC2",
+                                         update=update_type)
+
+    def init(self, context):
+        self.inputs.new("SocketVector2", "vector_a")
+        self.inputs.new("SocketVector2", "vector_b")
+        self.inputs.new("NodeSocketFloat", "scalar").default_value = 1.0
+        self.outputs.new("SocketVector2", "vector")
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, "vector_type")
+
+
 class DecomposeVectorNode(Node, VertexFragmentNode):
     """
     A node for a vector decomposing operation
@@ -382,6 +432,7 @@ def register():
     bpy.utils.register_class(DecomposeVectorNode)
     bpy.utils.register_class(FragInfoNode)
     bpy.utils.register_class(VertInfoNode)
+    bpy.utils.register_class(VectorMathNode)
 
 
 def unregister():
@@ -395,3 +446,4 @@ def unregister():
     bpy.utils.unregister_class(DecomposeVectorNode)
     bpy.utils.unregister_class(FragInfoNode)
     bpy.utils.unregister_class(VertInfoNode)
+    bpy.utils.unregister_class(VectorMathNode)

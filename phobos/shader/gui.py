@@ -43,7 +43,8 @@ node_categories = [
         NodeItem("CustomNode"),
         NodeItem("BackfaceNormalNode"),
         NodeItem("ComposeVectorNode"),
-        NodeItem("DecomposeVectorNode")
+        NodeItem("DecomposeVectorNode"),
+        NodeItem("VectorMathNode")
     ])
 ]
 
