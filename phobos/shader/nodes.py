@@ -6,19 +6,42 @@ import yaml
 import phobos.defs as defs
 
 
-class VertexNode:
+class ShaderNode:
+    def get_clean_name(self):
+        """
+        Replaces spaces and dots in the name with underscores
+        :return: The cleaned up name
+        """
+        return (self.name.replace(" ", "_")).replace(".", "_")
+
+    def export(self):
+        node = dict(outgoing={}, incoming={}, name=self.get_clean_name(), type="ShaderNode")
+        for output_socket in self.outputs:
+            node["outgoing"][output_socket.name] = self.get_clean_name() + "_" + output_socket.name
+        for input_socket in self.inputs:
+            if input_socket.is_linked:
+                link = input_socket.links[0]
+                node["incoming"][input_socket.name] = link.from_node.get_clean_name() + "_" + link.from_socket.name
+            else:
+                node["incoming"][input_socket.name] = input_socket.get_default_value()
+        return node
+
+
+class VertexNode(ShaderNode):
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == "VertexShaderTree"
 
 
-class FragmentNode:
+
+class FragmentNode(ShaderNode):
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == "FragmentShaderTree"
 
 
-class VertexFragmentNode:
+
+class VertexFragmentNode(ShaderNode):
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == "VertexShaderTree" or ntree.bl_idname == "FragmentShaderTree"
@@ -39,6 +62,11 @@ class FragInfoNode(Node, FragmentNode):
         self.outputs.new("SocketVector4", "emission")
         self.outputs.new("SocketVector2", "texCoord")
 
+    def export(self):
+        result = super().export()
+        result["type"] = "fragInfo"
+        return result
+
 
 class FragOutNode(Node, FragmentNode):
     """
@@ -50,6 +78,11 @@ class FragOutNode(Node, FragmentNode):
 
     def init(self, contex):
         self.inputs.new("SocketVector4", "color")
+
+    def export(self):
+        result = super().export()
+        result["type"] = "fragOut"
+        return result
 
 
 class VertOutNode(Node, VertexNode):
@@ -65,6 +98,11 @@ class VertOutNode(Node, VertexNode):
         self.inputs.new("SocketVector4", "modelPos")
         self.inputs.new("SocketVector3", "normalVarying")
 
+    def export(self):
+        result = super().export()
+        result["type"] = "vertexOut"
+        return result
+
 
 class VertInfoNode(Node, VertexNode):
     """
@@ -76,6 +114,11 @@ class VertInfoNode(Node, VertexNode):
 
     def init(self, contex):
         self.outputs.new("SocketVector3", "normal")
+
+    def export(self):
+        result = super().export()
+        result["type"] = "vertexInfo"
+        return result
 
 
 class BackfaceNormalNode(Node, VertexFragmentNode):
@@ -89,6 +132,11 @@ class BackfaceNormalNode(Node, VertexFragmentNode):
     def init(self, context):
         self.inputs.new("SocketVector3", "n")
         self.outputs.new("SocketVector3", "n")
+
+    def export(self):
+        result = super().export()
+        result["type"] = "backfaceNormal"
+        return result
 
 
 class VectorMathNode(Node, VertexFragmentNode):
@@ -112,17 +160,17 @@ class VectorMathNode(Node, VertexFragmentNode):
         if self.vector_type == "VEC2":
             self.inputs.new("SocketVector2", "vector_a")
             self.inputs.new("SocketVector2", "vector_b")
-            self.inputs.new("NodeSocketFloat", "scalar").default_value = 1.0
+            self.inputs.new("SocketFloat", "scalar").default_value = 1.0
             self.outputs.new("SocketVector2", "vector")
         elif self.vector_type == "VEC3":
             self.inputs.new("SocketVector3", "vector_a")
             self.inputs.new("SocketVector3", "vector_b")
-            self.inputs.new("NodeSocketFloat", "scalar").default_value = 1.0
+            self.inputs.new("SocketFloat", "scalar").default_value = 1.0
             self.outputs.new("SocketVector3", "vector")
         elif self.vector_type == "VEC4":
             self.inputs.new("SocketVector4", "vector_a")
             self.inputs.new("SocketVector4", "vector_b")
-            self.inputs.new("NodeSocketFloat", "scalar").default_value = 1.0
+            self.inputs.new("SocketFloat", "scalar").default_value = 1.0
             self.outputs.new("SocketVector4", "vector")
 
     vector_type = bpy.props.EnumProperty(name="Type",
@@ -134,11 +182,21 @@ class VectorMathNode(Node, VertexFragmentNode):
     def init(self, context):
         self.inputs.new("SocketVector2", "vector_a")
         self.inputs.new("SocketVector2", "vector_b")
-        self.inputs.new("NodeSocketFloat", "scalar").default_value = 1.0
+        self.inputs.new("SocketFloat", "scalar").default_value = 1.0
         self.outputs.new("SocketVector2", "vector")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "vector_type")
+
+    def export(self):
+        result = super().export()
+        if self.vector_type == "VEC2":
+            result["type"] = "math_vec2"
+        elif self.vector_type == "VEC3":
+            result["type"] = "math_vec3"
+        elif self.vector_type == "VEC4":
+            result["type"] = "math_vec4"
+        return result
 
 
 class DecomposeVectorNode(Node, VertexFragmentNode):
@@ -161,19 +219,19 @@ class DecomposeVectorNode(Node, VertexFragmentNode):
             self.outputs.remove(output_sock)
         if self.vector_type == "VEC2":
             self.inputs.new("SocketVector2", "vector")
-            self.outputs.new("NodeSocketFloat", "x")
-            self.outputs.new("NodeSocketFloat", "y")
+            self.outputs.new("SocketFloat", "x")
+            self.outputs.new("SocketFloat", "y")
         elif self.vector_type == "VEC3":
             self.inputs.new("SocketVector3", "vector")
-            self.outputs.new("NodeSocketFloat", "x")
-            self.outputs.new("NodeSocketFloat", "y")
-            self.outputs.new("NodeSocketFloat", "z")
+            self.outputs.new("SocketFloat", "x")
+            self.outputs.new("SocketFloat", "y")
+            self.outputs.new("SocketFloat", "z")
         elif self.vector_type == "VEC4":
             self.inputs.new("SocketVector4", "vector")
-            self.outputs.new("NodeSocketFloat", "x")
-            self.outputs.new("NodeSocketFloat", "y")
-            self.outputs.new("NodeSocketFloat", "z")
-            self.outputs.new("NodeSocketFloat", "w")
+            self.outputs.new("SocketFloat", "x")
+            self.outputs.new("SocketFloat", "y")
+            self.outputs.new("SocketFloat", "z")
+            self.outputs.new("SocketFloat", "w")
 
     vector_type = bpy.props.EnumProperty(name="Type",
                                          description="Data type of the vector",
@@ -183,11 +241,21 @@ class DecomposeVectorNode(Node, VertexFragmentNode):
 
     def init(self, context):
         self.inputs.new("SocketVector2", "vector")
-        self.outputs.new("NodeSocketFloat", "x")
-        self.outputs.new("NodeSocketFloat", "y")
+        self.outputs.new("SocketFloat", "x")
+        self.outputs.new("SocketFloat", "y")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "vector_type")
+
+    def export(self):
+        result = super().export()
+        if self.vector_type == "VEC2":
+            result["type"] = "decompose_vec2"
+        elif self.vector_type == "VEC3":
+            result["type"] = "decompose_vec3"
+        elif self.vector_type == "VEC4":
+            result["type"] = "decompose_vec4"
+        return result
 
 
 class ComposeVectorNode(Node, VertexFragmentNode):
@@ -210,19 +278,19 @@ class ComposeVectorNode(Node, VertexFragmentNode):
             self.outputs.remove(output_sock)
         if self.vector_type == "VEC2":
             self.outputs.new("SocketVector2", "vector")
-            self.inputs.new("NodeSocketFloat", "x")
-            self.inputs.new("NodeSocketFloat", "y")
+            self.inputs.new("SocketFloat", "x")
+            self.inputs.new("SocketFloat", "y")
         elif self.vector_type == "VEC3":
             self.outputs.new("SocketVector3", "vector")
-            self.inputs.new("NodeSocketFloat", "x")
-            self.inputs.new("NodeSocketFloat", "y")
-            self.inputs.new("NodeSocketFloat", "z")
+            self.inputs.new("SocketFloat", "x")
+            self.inputs.new("SocketFloat", "y")
+            self.inputs.new("SocketFloat", "z")
         elif self.vector_type == "VEC4":
             self.outputs.new("SocketVector4", "vector")
-            self.inputs.new("NodeSocketFloat", "x")
-            self.inputs.new("NodeSocketFloat", "y")
-            self.inputs.new("NodeSocketFloat", "z")
-            self.inputs.new("NodeSocketFloat", "w")
+            self.inputs.new("SocketFloat", "x")
+            self.inputs.new("SocketFloat", "y")
+            self.inputs.new("SocketFloat", "z")
+            self.inputs.new("SocketFloat", "w")
 
     vector_type = bpy.props.EnumProperty(name="Type",
                                          description="Data type of the vector",
@@ -232,11 +300,21 @@ class ComposeVectorNode(Node, VertexFragmentNode):
 
     def init(self, context):
         self.outputs.new("SocketVector2", "vector")
-        self.inputs.new("NodeSocketFloat", "x")
-        self.inputs.new("NodeSocketFloat", "y")
+        self.inputs.new("SocketFloat", "x")
+        self.inputs.new("SocketFloat", "y")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "vector_type")
+
+    def export(self):
+        result = super().export()
+        if self.vector_type == "VEC2":
+            result["type"] = "compose_vec2"
+        elif self.vector_type == "VEC3":
+            result["type"] = "compose_vec3"
+        elif self.vector_type == "VEC4":
+            result["type"] = "compose_vec4"
+        return result
 
 
 class UniformNode(Node, VertexFragmentNode):
@@ -250,9 +328,9 @@ class UniformNode(Node, VertexFragmentNode):
     def update_type(self, context):
         self.outputs.remove(self.outputs[0])
         if self.uniform_type == "INT":
-            self.outputs.new("NodeSocketInt", "output")
+            self.outputs.new("SocketFloat", "output")
         elif self.uniform_type == "FLOAT":
-            self.outputs.new("NodeSocketFloat", "output")
+            self.outputs.new("SocketFloat", "output")
         elif self.uniform_type == "VEC2":
             self.outputs.new("SocketVector2", "output")
         elif self.uniform_type == "VEC3":
@@ -273,7 +351,7 @@ class UniformNode(Node, VertexFragmentNode):
     uniform_name = bpy.props.StringProperty(name="Name", description="Name of the Uniform", default="uniform")
 
     def init(self, context):
-        self.outputs.new("NodeSocketInt", "output")
+        self.outputs.new("SocketFloat", "output")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "uniform_name")
@@ -291,9 +369,9 @@ class VaryingVertexNode(Node, VertexNode):
     def update_type(self, context):
         self.inputs.remove(self.inputs[0])
         if self.varying_type == "INT":
-            self.inputs.new("NodeSocketInt", "input")
+            self.inputs.new("SocketFloat", "input")
         elif self.varying_type == "FLOAT":
-            self.inputs.new("NodeSocketFloat", "input")
+            self.inputs.new("SocketFloat", "input")
         elif self.varying_type == "VEC2":
             self.inputs.new("SocketVector2", "input")
         elif self.varying_type == "VEC3":
@@ -314,7 +392,7 @@ class VaryingVertexNode(Node, VertexNode):
     varying_name = bpy.props.StringProperty(name="Name", description="Name of the varying", default="varying")
 
     def init(self, context):
-        self.inputs.new("NodeSocketInt", "input")
+        self.inputs.new("SocketFloat", "input")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "varying_name")
@@ -332,9 +410,9 @@ class VaryingFragmentNode(Node, FragmentNode):
     def update_type(self, context):
         self.outputs.remove(self.outputs[0])
         if self.varying_type == "INT":
-            self.outputs.new("NodeSocketInt", "input")
+            self.outputs.new("SocketFloat", "input")
         elif self.varying_type == "FLOAT":
-            self.outputs.new("NodeSocketFloat", "input")
+            self.outputs.new("SocketFloat", "input")
         elif self.varying_type == "VEC2":
             self.outputs.new("SocketVector2", "input")
         elif self.varying_type == "VEC3":
@@ -355,7 +433,7 @@ class VaryingFragmentNode(Node, FragmentNode):
     varying_name = bpy.props.StringProperty(name="Name", description="Name of the varying", default="varying")
 
     def init(self, context):
-        self.outputs.new("NodeSocketInt", "input")
+        self.outputs.new("SocketFloat", "input")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "varying_name")
@@ -381,9 +459,9 @@ class CustomNode(Node, VertexFragmentNode):
             self.outputs.remove(output_sock)
         for input_sock in CustomNode.input_sets[self.node_type]:
             if input_sock["type"] == "INT":
-                self.inputs.new("NodeSocketInt", input_sock["name"])
+                self.inputs.new("SocketFloat", input_sock["name"])
             elif input_sock["type"] == "FLOAT":
-                self.inputs.new("NodeSocketFloat", input_sock["name"])
+                self.inputs.new("SocketFloat", input_sock["name"])
             elif input_sock["type"] == "VEC2":
                 self.inputs.new("SocketVector2", input_sock["name"])
             elif input_sock["type"] == "VEC3":
@@ -396,9 +474,9 @@ class CustomNode(Node, VertexFragmentNode):
                 self.inputs.new("SocketSampler2D", input_sock["name"])
         for output_sock in CustomNode.output_sets[self.node_type]:
             if output_sock["type"] == "INT":
-                self.outputs.new("NodeSocketInt", output_sock["name"])
+                self.outputs.new("SocketFloat", output_sock["name"])
             elif output_sock["type"] == "FLOAT":
-                self.outputs.new("NodeSocketFloat", output_sock["name"])
+                self.outputs.new("SocketFloat", output_sock["name"])
             elif output_sock["type"] == "VEC2":
                 self.outputs.new("SocketVector2", output_sock["name"])
             elif output_sock["type"] == "VEC3":
@@ -420,6 +498,11 @@ class CustomNode(Node, VertexFragmentNode):
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "node_type")
+
+    def export(self):
+        result = super().export()
+        result["type"] = self.node_type
+        return result
 
 
 def load_node_def(definition):
