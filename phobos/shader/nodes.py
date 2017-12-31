@@ -40,6 +40,32 @@ class FragInfoNode(Node, FragmentNode):
         self.outputs.new("SocketVector2", "texCoord")
 
 
+class FragOutNode(Node, FragmentNode):
+    """
+    A node for the fragment shader output
+    """
+    bl_idname = "FragOutNode"
+    bl_label = "Fragment Output Node"
+    bl_icon = "SOUND"
+
+    def init(self, contex):
+        self.inputs.new("SocketVector4", "color")
+
+
+class VertOutNode(Node, VertexNode):
+    """
+    A node for the vertex shader output
+    """
+    bl_idname = "VertOutNode"
+    bl_label = "Vertex Output Node"
+    bl_icon = "SOUND"
+
+    def init(self, contex):
+        self.inputs.new("SocketVector4", "viewPos")
+        self.inputs.new("SocketVector4", "modelPos")
+        self.inputs.new("SocketVector3", "normalVarying")
+
+
 class VertInfoNode(Node, VertexNode):
     """
     A node for providing information for the vertex shader
@@ -433,6 +459,8 @@ def register():
     bpy.utils.register_class(FragInfoNode)
     bpy.utils.register_class(VertInfoNode)
     bpy.utils.register_class(VectorMathNode)
+    bpy.utils.register_class(FragOutNode)
+    bpy.utils.register_class(VertOutNode)
 
 
 def unregister():
@@ -447,3 +475,5 @@ def unregister():
     bpy.utils.unregister_class(FragInfoNode)
     bpy.utils.unregister_class(VertInfoNode)
     bpy.utils.unregister_class(VectorMathNode)
+    bpy.utils.unregister_class(FragOutNode)
+    bpy.utils.unregister_class(VertOutNode)

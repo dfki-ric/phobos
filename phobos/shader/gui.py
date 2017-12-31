@@ -34,10 +34,11 @@ node_categories = [
         NodeItem("FragInfoNode")
     ]),
     VertexNodeCategory("VERTEX_OUTPUT", "Output", items=[
-        NodeItem("VaryingVertexNode")
+        NodeItem("VaryingVertexNode"),
+        NodeItem("VertOutNode")
     ]),
     FragmentNodeCategory("FRAGMENT_OUTPUT", "Output", items=[
-
+        NodeItem("FragOutNode")
     ]),
     VertexFragmentNodeCategory("SHARED_NODES", "Shared Nodes", items=[
         NodeItem("CustomNode"),
