@@ -2,12 +2,63 @@ import bpy
 from bpy.types import NodeSocket
 
 
+class SocketFloat(NodeSocket):
+    """
+    Socket class for Float types
+    """
+    bl_idname = "SocketFloat"
+    bl_label = "Float"
+
+    value = bpy.props.FloatProperty()
+
+    def get_default_value(self):
+        return str(self.value)
+
+    def draw(self, context, layout, node, text):
+        if self.is_output or self.is_linked:
+            layout.label(text)
+        else:
+            layout.label(text)
+            layout.prop(self, "value")
+
+    # Socket color
+    def draw_color(self, context, node):
+        return 1.0, 1.0, 1.0, 1.0
+
+
+class SocketInt(NodeSocket):
+    """
+    Socket class for Integer types
+    """
+    bl_idname = "SocketInt"
+    bl_label = "Integer"
+
+    value = bpy.props.IntProperty()
+
+    def get_default_value(self):
+        return str(self.value)
+
+    def draw(self, context, layout, node, text):
+        if self.is_output or self.is_linked:
+            layout.label(text)
+        else:
+            layout.label(text)
+            layout.prop(self, "value")
+
+    # Socket color
+    def draw_color(self, context, node):
+        return 1.0, 1.0, 1.0, 1.0
+
+
 class SocketSampler2D(NodeSocket):
     """
     Socket class for Sampler2D types
     """
     bl_idname = "SocketSampler2D"
     bl_label = "Sampler 2D"
+
+    def get_default_value(self):
+        return "SHOULD_NEVER_USE_DEFAULT_VALUE"
 
     def draw(self, context, layout, node, text):
         layout.label(text)
@@ -27,6 +78,9 @@ class SocketVector2(NodeSocket):
     values = bpy.props.FloatVectorProperty(name="Vector2",
                                            description="The vec2",
                                            size=2)
+
+    def get_default_value(self):
+        return "vec2({},{})".format(self.values[0], self.values[1])
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -50,6 +104,9 @@ class SocketVector3(NodeSocket):
     values = bpy.props.FloatVectorProperty(name="Vector3",
                                            description="The vec3",
                                            size=3)
+
+    def get_default_value(self):
+        return "vec2({},{},{})".format(self.values[0], self.values[1], self.values[2])
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -75,6 +132,9 @@ class SocketVector4(NodeSocket):
     values = bpy.props.FloatVectorProperty(name="Vector4",
                                            description="The vec4",
                                            size=4)
+
+    def get_default_value(self):
+        return "vec2({},{},{},{})".format(self.values[0], self.values[1], self.values[2], self.values[3])
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -113,6 +173,9 @@ class SocketMat4(NodeSocket):
                                           description="The mat4",
                                           size=4)
 
+    def get_default_value(self):
+        return "NOT_YET_IMPLEMENTED"
+
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
             layout.label(text)
@@ -138,6 +201,8 @@ def register():
     bpy.utils.register_class(SocketVector4)
     bpy.utils.register_class(SocketMat4)
     bpy.utils.register_class(SocketSampler2D)
+    bpy.utils.register_class(SocketInt)
+    bpy.utils.register_class(SocketFloat)
 
 
 def unregister():
@@ -147,3 +212,5 @@ def unregister():
     bpy.utils.unregister_class(SocketVector4)
     bpy.utils.unregister_class(SocketMat4)
     bpy.utils.unregister_class(SocketSampler2D)
+    bpy.utils.unregister_class(SocketInt)
+    bpy.utils.unregister_class(SocketFloat)
