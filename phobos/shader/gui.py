@@ -25,7 +25,8 @@ class VertexFragmentNodeCategory(NodeCategory):
 
 node_categories = [
     VertexNodeCategory("VERTEX_INPUT", "Input", items=[
-        NodeItem("UniformNode")
+        NodeItem("UniformNode"),
+        NodeItem("VertInfoNode")
     ]),
     FragmentNodeCategory("FRAGMENT_INPUT", "Input", items=[
         NodeItem("UniformNode"),

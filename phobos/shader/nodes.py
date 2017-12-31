@@ -40,6 +40,18 @@ class FragInfoNode(Node, FragmentNode):
         self.outputs.new("SocketVector2", "texCoord")
 
 
+class VertInfoNode(Node, VertexNode):
+    """
+    A node for providing information for the vertex shader
+    """
+    bl_idname = "VertInfoNode"
+    bl_label = "Vertex Info Node"
+    bl_icon = "SOUND"
+
+    def init(self, contex):
+        self.outputs.new("SocketVector3", "normal")
+
+
 class BackfaceNormalNode(Node, VertexFragmentNode):
     """
     A node for backface normal operation
@@ -369,6 +381,7 @@ def register():
     bpy.utils.register_class(ComposeVectorNode)
     bpy.utils.register_class(DecomposeVectorNode)
     bpy.utils.register_class(FragInfoNode)
+    bpy.utils.register_class(VertInfoNode)
 
 
 def unregister():
@@ -381,3 +394,4 @@ def unregister():
     bpy.utils.unregister_class(ComposeVectorNode)
     bpy.utils.unregister_class(DecomposeVectorNode)
     bpy.utils.unregister_class(FragInfoNode)
+    bpy.utils.unregister_class(VertInfoNode)
