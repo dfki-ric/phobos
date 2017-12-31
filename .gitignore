@@ -4,3 +4,4 @@ yamlpath.conf
 .*
 *.orig
 __pycache__
+venv

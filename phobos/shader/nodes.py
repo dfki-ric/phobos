@@ -357,6 +357,11 @@ class UniformNode(Node, VertexFragmentNode):
         layout.prop(self, "uniform_name")
         layout.prop(self, "uniform_type")
 
+    def export(self):
+        result = super().export()
+        result["type"] = "uniform"
+        return result
+
 
 class VaryingVertexNode(Node, VertexNode):
     """
@@ -398,6 +403,11 @@ class VaryingVertexNode(Node, VertexNode):
         layout.prop(self, "varying_name")
         layout.prop(self, "varying_type")
 
+    def export(self):
+        result = super().export()
+        result["type"] = "varying_vertex"
+        return result
+
 
 class VaryingFragmentNode(Node, FragmentNode):
     """
@@ -438,6 +448,11 @@ class VaryingFragmentNode(Node, FragmentNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, "varying_name")
         layout.prop(self, "varying_type")
+
+    def export(self):
+        result = super().export()
+        result["type"] = "varying_fragment"
+        return result
 
 
 class CustomNode(Node, VertexFragmentNode):
