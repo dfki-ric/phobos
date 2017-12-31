@@ -24,17 +24,18 @@ class VertexFragmentNodeCategory(NodeCategory):
 
 
 node_categories = [
-    VertexNodeCategory("INPUT", "Input", items=[
+    VertexNodeCategory("VERTEX_INPUT", "Input", items=[
         NodeItem("UniformNode")
     ]),
-    FragmentNodeCategory("INPUT", "Input", items=[
+    FragmentNodeCategory("FRAGMENT_INPUT", "Input", items=[
         NodeItem("UniformNode"),
-        NodeItem("VaryingFragmentNode")
+        NodeItem("VaryingFragmentNode"),
+        NodeItem("FragInfoNode")
     ]),
-    VertexNodeCategory("OUTPUT", "Output", items=[
+    VertexNodeCategory("VERTEX_OUTPUT", "Output", items=[
         NodeItem("VaryingVertexNode")
     ]),
-    FragmentNodeCategory("OUTPUT", "Output", items=[
+    FragmentNodeCategory("FRAGMENT_OUTPUT", "Output", items=[
 
     ]),
     VertexFragmentNodeCategory("SHARED_NODES", "Shared Nodes", items=[

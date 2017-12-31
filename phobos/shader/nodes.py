@@ -24,6 +24,22 @@ class VertexFragmentNode:
         return ntree.bl_idname == "VertexShaderTree" or ntree.bl_idname == "FragmentShaderTree"
 
 
+class FragInfoNode(Node, FragmentNode):
+    """
+    A node for providing information for the fragment shader
+    """
+    bl_idname = "FragInfoNode"
+    bl_label = "Fragment Info Node"
+    bl_icon = "SOUND"
+
+    def init(self, contex):
+        self.outputs.new("SocketVector4", "ambient")
+        self.outputs.new("SocketVector4", "diffuse")
+        self.outputs.new("SocketVector4", "specular")
+        self.outputs.new("SocketVector4", "emission")
+        self.outputs.new("SocketVector2", "texCoord")
+
+
 class BackfaceNormalNode(Node, VertexFragmentNode):
     """
     A node for backface normal operation
@@ -352,6 +368,7 @@ def register():
     bpy.utils.register_class(BackfaceNormalNode)
     bpy.utils.register_class(ComposeVectorNode)
     bpy.utils.register_class(DecomposeVectorNode)
+    bpy.utils.register_class(FragInfoNode)
 
 
 def unregister():
@@ -363,3 +380,4 @@ def unregister():
     bpy.utils.unregister_class(BackfaceNormalNode)
     bpy.utils.unregister_class(ComposeVectorNode)
     bpy.utils.unregister_class(DecomposeVectorNode)
+    bpy.utils.unregister_class(FragInfoNode)
