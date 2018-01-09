@@ -15,6 +15,28 @@ def count_links(sockets):
     return link_counter
 
 
+def validate_shader(ntree):
+    """Iterates over all linked input sockets and checks if the incoming data matches the required data type.
+    If not, an error dict is appended to the returned list, containing information about the connected nodes,
+    sockets and data types
+
+    :param ntree: The tree to check
+    :return: List containing error dicts. Empty if no errors were found.
+    """
+    errors = []
+    for node in ntree.nodes:
+        for input_socket in node.inputs:
+            if not input_socket.is_linked:
+                break
+            origin_type = input_socket.links[0].from_socket.bl_idname
+            if not origin_type == input_socket.bl_idname:
+                errors.append(dict(node=node.name, socket=input_socket.name, from_socket_type=origin_type,
+                                   socket_type=input_socket.bl_idname,
+                                   from_socket=input_socket.links[0].from_socket.name,
+                                   from_node=input_socket.links[0].from_node.name))
+    return errors
+
+
 def topological_sort(ntree):
     """ Performs a topological sorting after Kahn (https://en.wikipedia.org/wiki/Topological_sorting) on a NodeTree
 
