@@ -7,7 +7,7 @@ class SocketFloat(NodeSocket):
     Socket class for Float types
     """
     bl_idname = "SocketFloat"
-    bl_label = "Float"
+    bl_label = "FLOAT"
 
     value = bpy.props.FloatProperty()
 
@@ -31,7 +31,7 @@ class SocketInt(NodeSocket):
     Socket class for Integer types
     """
     bl_idname = "SocketInt"
-    bl_label = "Integer"
+    bl_label = "INT"
 
     value = bpy.props.IntProperty()
 
@@ -55,7 +55,7 @@ class SocketSampler2D(NodeSocket):
     Socket class for Sampler2D types
     """
     bl_idname = "SocketSampler2D"
-    bl_label = "Sampler 2D"
+    bl_label = "SAMPLER2D"
 
     def get_default_value(self):
         return "SHOULD_NEVER_USE_DEFAULT_VALUE"
@@ -73,7 +73,7 @@ class SocketVector2(NodeSocket):
     Socket class for Vector2 types
     """
     bl_idname = "SocketVector2"
-    bl_label = "Vector2"
+    bl_label = "VEC2"
 
     values = bpy.props.FloatVectorProperty(name="Vector2",
                                            description="The vec2",
@@ -99,7 +99,7 @@ class SocketVector3(NodeSocket):
     Socket class for Vector3 types
     """
     bl_idname = "SocketVector3"
-    bl_label = "Vector3"
+    bl_label = "VEC3"
 
     values = bpy.props.FloatVectorProperty(name="Vector3",
                                            description="The vec3",
@@ -127,7 +127,7 @@ class SocketVector4(NodeSocket):
     Socket class for Vector4 types
     """
     bl_idname = "SocketVector4"
-    bl_label = "Vector4"
+    bl_label = "VEC4"
 
     values = bpy.props.FloatVectorProperty(name="Vector4",
                                            description="The vec4",
@@ -155,7 +155,7 @@ class SocketMat4(NodeSocket):
     Socket class for Vector4 types
     """
     bl_idname = "SocketMat4"
-    bl_label = "Matrix4"
+    bl_label = "MAT4"
 
     col_1 = bpy.props.FloatVectorProperty(name="Matrix4_col1",
                                           description="The mat4",
