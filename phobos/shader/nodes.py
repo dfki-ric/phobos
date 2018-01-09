@@ -358,6 +358,8 @@ class UniformNode(Node, VertexFragmentNode):
     def export(self):
         result = super().export()
         result["type"] = "uniform"
+        result["uniform_name"] = self.uniform_name
+        result["uniform_type"] = self.uniform_type.lower()
         return result
 
 
@@ -404,6 +406,8 @@ class VaryingVertexNode(Node, VertexNode):
     def export(self):
         result = super().export()
         result["type"] = "varying_vertex"
+        result["varying_name"] = self.varying_name
+        result["varying_type"] = self.varying_type.lower()
         return result
 
 
@@ -450,6 +454,8 @@ class VaryingFragmentNode(Node, FragmentNode):
     def export(self):
         result = super().export()
         result["type"] = "varying_fragment"
+        result["varying_name"] = self.varying_name
+        result["varying_type"] = self.varying_type.lower()
         return result
 
 
