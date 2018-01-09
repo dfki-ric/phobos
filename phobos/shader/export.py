@@ -46,7 +46,7 @@ def topological_sort(ntree):
     tree_copy = ntree.copy()  # For removing links from the tree without corrupting original Node Tree
     sorted_nodes = []
     no_incoming = set()
-    if len(tree_copy.nodes) == 0:  # Cancel algorithm is node list is empty
+    if len(tree_copy.nodes) == 0:  # Cancel algorithm if node list is empty
         return sorted_nodes
     # Initialising no_incoming set with all nodes that have no incoming edges
     for node in tree_copy.nodes:
