@@ -1,6 +1,7 @@
 # The functions in this module will have to be moved to the proper places in the phobos structure
 
 import bpy
+import phobos.shader.nodes as nodes
 
 
 def count_links(sockets):
@@ -30,11 +31,37 @@ def validate_shader(ntree):
                 break
             origin_type = input_socket.links[0].from_socket.bl_idname
             if not origin_type == input_socket.bl_idname:
-                errors.append(dict(node=node.name, socket=input_socket.name, from_socket_type=origin_type,
-                                   socket_type=input_socket.bl_idname,
+                errors.append(dict(node=node.name, socket=input_socket.name,
+                                   from_socket_type=input_socket.links[0].from_socket.bl_label,
+                                   socket_type=input_socket.bl_label,
                                    from_socket=input_socket.links[0].from_socket.name,
                                    from_node=input_socket.links[0].from_node.name))
     return errors
+
+
+def solve_errors(ntree, errors):
+    """This function alters the given node tree by trying to add converting nodes into the graph to erase type
+    incompatibilities. The returned list contains the errors that could not be solved.
+
+    :param ntree: The node tree to alter. !The node tree will be altered!
+    :param errors: The errors to solve
+    :return: The remaining errors not solved
+    """
+    remains = []
+    for error in errors:
+        func_name = error["from_socket_type"] + "_to_" + error["socket_type"]
+        if (func_name.lower(), func_name.lower(), func_name.lower()) in nodes.CustomNode.node_types:
+            faulty_link = ntree.nodes[error["node"]].inputs[error["socket"]].links[0]
+            from_socket = faulty_link.from_socket
+            to_socket = faulty_link.to_socket
+            ntree.links.remove(faulty_link)
+            converter_node = ntree.nodes.new("CustomNode")
+            converter_node.node_type = func_name.lower()
+            ntree.links.new(converter_node.inputs[0], from_socket)
+            ntree.links.new(to_socket, converter_node.outputs[0])
+        else:
+            remains.append(error)
+    return remains
 
 
 def topological_sort(ntree):
