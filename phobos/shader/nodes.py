@@ -326,7 +326,7 @@ class UniformNode(Node, VertexFragmentNode):
     def update_type(self, context):
         self.outputs.remove(self.outputs[0])
         if self.uniform_type == "INT":
-            self.outputs.new("SocketFloat", "output")
+            self.outputs.new("SocketInt", "output")
         elif self.uniform_type == "FLOAT":
             self.outputs.new("SocketFloat", "output")
         elif self.uniform_type == "VEC2":
@@ -372,7 +372,7 @@ class VaryingVertexNode(Node, VertexNode):
     def update_type(self, context):
         self.inputs.remove(self.inputs[0])
         if self.varying_type == "INT":
-            self.inputs.new("SocketFloat", "input")
+            self.inputs.new("SocketInt", "input")
         elif self.varying_type == "FLOAT":
             self.inputs.new("SocketFloat", "input")
         elif self.varying_type == "VEC2":
