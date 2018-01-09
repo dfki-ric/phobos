@@ -418,7 +418,7 @@ class VaryingFragmentNode(Node, FragmentNode):
     def update_type(self, context):
         self.outputs.remove(self.outputs[0])
         if self.varying_type == "INT":
-            self.outputs.new("SocketFloat", "input")
+            self.outputs.new("SocketInt", "input")
         elif self.varying_type == "FLOAT":
             self.outputs.new("SocketFloat", "input")
         elif self.varying_type == "VEC2":
