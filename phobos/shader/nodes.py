@@ -526,7 +526,7 @@ class CustomNode(Node, VertexFragmentNode):
 
 def load_node_def(definition):
     print("Loading custom node definition for: ", definition["name"])
-    if definition["type"] == "BOTH":
+    if "type" in definition and definition["type"] == "BOTH":
         CustomNode.node_types.append((definition["name"], definition["name"], definition["name"]))
         CustomNode.input_sets[definition["name"]] = []
         CustomNode.output_sets[definition["name"]] = []
