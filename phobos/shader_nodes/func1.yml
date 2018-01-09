@@ -1,5 +1,0 @@
-name: func1
-type: BOTH
-params:
-  out:
-    result: {index: 0, type: vec4}
