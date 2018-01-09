@@ -54,7 +54,7 @@ def solve_errors(ntree, errors):
             faulty_link = ntree.nodes[error["node"]].inputs[error["socket"]].links[0]
             from_socket = faulty_link.from_socket
             to_socket = faulty_link.to_socket
-            ntree.links.remove(faulty_link)
+            # ntree.links.remove(faulty_link)  # Done automatically by creating new links
             converter_node = ntree.nodes.new("CustomNode")
             converter_node.node_type = func_name.lower()
             ntree.links.new(converter_node.inputs[0], from_socket)
