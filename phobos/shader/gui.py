@@ -76,3 +76,5 @@ def unregister():
 
     bpy.types.MATERIAL_PT_context_material.remove(draw_func_shader_graphs)
     del bpy.types.Material.vertex_shader
+    del bpy.types.Material.fragment_shader
+    del.bpy.types.Material.export_shaders
