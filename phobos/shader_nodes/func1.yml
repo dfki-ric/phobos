@@ -1,4 +1,5 @@
 name: func1
 type: BOTH
-outputs:
-  - {name: result, type: VEC4}
+params:
+  out:
+    result: {index: 0, type: vec4}

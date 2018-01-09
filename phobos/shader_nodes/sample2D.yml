@@ -1,7 +1,8 @@
 name: sample2D
 type: BOTH
-inputs:
-  - {name: texCoord, type: VEC2}
-  - {name: texture, type: SAMPLER2D}
-outputs:
-  - {name: color, type: VEC4}
+params:
+  in:
+    texCoord: {index: 0, type: vec2}
+    texture: {index: 1, type: sampler2D}
+  out:
+    color: {index: 2, type: vec4}
