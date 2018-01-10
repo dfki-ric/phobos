@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 
 # Copyright 2017, University of Bremen & DFKI GmbH Robotics Innovation Center
 #
@@ -53,18 +53,16 @@ def makeConfigFile():
     global addonpath
 
     if operating_system == 'linux':
-        addonpath = path.expanduser(('~/.config/blender/{0}/scripts/' +
-                                     'addons').format(blenderversion))
+        addonpath = path.normpath(path.expanduser('~/.config/blender/{0}/scripts/' +
+                                                  'addons'.format(blenderversion)))
     # CHECK works with darwin?
     elif operating_system == 'darwin':
-        addonpath = path.expanduser(('~/Library/Application\ Support/' +
-                                     'Blender/{0}/scripts/addons'.format(
-                                         blenderversion)))
+        addonpath = path.normpath(path.expanduser('~/Library/Application Support/' +
+                                                  'Blender/{0}/scripts/addons'.format(blenderversion)))
     # CHECK works with Windows?
     elif operating_system == 'win32':
-        addonpath = path.expanduser(('~/AppData/Roaming/Blender\ Foundation' +
-                                     '/{0}/scripts/addons'.format(
-                                         blenderversion)))
+        addonpath = path.normpath(path.expanduser('~/AppData/Roaming/Blender Foundation/Blender' +
+                                                  '/{0}/scripts/addons'.format(blenderversion)))
     else:
         addonpath = ('ERROR: System not supported yet: "{0}". Please contact' +
                      ' the developers.').format(operating_system)
