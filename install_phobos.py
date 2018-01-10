@@ -53,21 +53,22 @@ def makeConfigFile():
     global addonpath
 
     if operating_system == 'linux':
-        addonpath = path.normpath(path.expanduser('~/.config/blender/{0}/scripts/' +
-                                                  'addons'.format(blenderversion)))
-    # CHECK works with darwin?
+        addonpath = path.normpath(path.expanduser(
+            '~/.config/blender/{0}/scripts/addons'.format(blenderversion)))
     elif operating_system == 'darwin':
-        addonpath = path.normpath(path.expanduser('~/Library/Application Support/' +
-                                                  'Blender/{0}/scripts/addons'.format(blenderversion)))
-    # CHECK works with Windows?
+        addonpath = path.normpath(path.expanduser(
+            '~/Library/Application Support/Blender/{0}/scripts/addons'.format(blenderversion)))
     elif operating_system == 'win32':
-        addonpath = path.normpath(path.expanduser('~/AppData/Roaming/Blender Foundation/Blender' +
-                                                  '/{0}/scripts/addons'.format(blenderversion)))
+        addonpath = path.normpath(path.expanduser(
+            '~/AppData/Roaming/Blender Foundation/Blender/{0}/scripts/addons'.format(blenderversion)))
     else:
-        addonpath = ('ERROR: System not supported yet: "{0}". Please contact' +
-                     ' the developers.').format(operating_system)
+        addonpath = ('ERROR: System not supported yet:' +
+                     ' "{0}". Please contact the developers.').format(operating_system)
 
     pythoncommand = input('What is your Python 3 command? (e.g. python3) ')
+    # make sure we have a python command
+    if not pythoncommand:
+        pythoncommand = 'python3'
     with open(configfile, 'w') as conffile:
         conffile.writelines([
             'blenderversion={0}\n'.format(blenderversion),
