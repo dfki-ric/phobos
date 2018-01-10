@@ -126,7 +126,7 @@ def exportSRDF(model, path, mesh_format=''):
                 collisionExclusives.append((link1['name'], link2['name']))
         except KeyError:
             pass
-    with open(os.path.join(path, model['name'], '.srdf'), 'w') as outputfile:
+    with open(os.path.join(path, model['name'] + '.srdf'), 'w') as outputfile:
         outputfile.write(''.join(output))
 
 

@@ -35,7 +35,7 @@ import phobos.utils.selection as sUtils
 from phobos.phoboslog import log
 
 
-def deriveEntity(light, outpath, savetosubfolder):
+def deriveEntity(light, outpath):
     """This function handles a light entity in a scene to export it
 
     :param entity: The lights root object.

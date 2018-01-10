@@ -7,7 +7,7 @@ import phobos.defs as defs
 from phobos.phoboslog import log
 
 
-def exportYAML(model, path, mesh_format=''):
+def exportYAML(model, path):
     """This function exports a given robot model to a specified filepath as YAML.
 
     :param model: The robot model to export
