@@ -52,10 +52,10 @@ def deriveGenericEntity(entityobj, outpath=None):
                       '../meshes/' if structured else '')
 
 
-def exportGenericEntity():
+def exportGenericEntity(entity, outpath):
     pass
 
 # registering import/export functions of types with Phobos
-entity_type_dict = {'smurf': {'export': exportGenericEntity,
+entity_type_dict = {'generic': {'export': exportGenericEntity,
                               'extensions': ('yaml',)}
                     }
