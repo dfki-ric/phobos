@@ -94,19 +94,17 @@ bl_info = {
 }
 
 # TODO rework yaml import: loading module twice if yaml is not found...
-yamlconfpath = os.path.dirname(__file__) + "/yamlpath.conf"
+yamlconfpath = os.path.dirname(__file__) + "/python_dist_packages.conf"
 if os.path.isfile(yamlconfpath):
     f = open(yamlconfpath)
-    path = f.read()
+    distpath = f.read()
     f.close()
-    # CHECK is this if still required?
-    if path == "v" or path == "i":
-        print("There is no YAML installation for python 3.4 or greater on this computer")
-    else:
-        sys.path.insert(0, path.replace('/yaml', ''))
-        import yaml
+    sys.path.insert(0, os.path.normpath(distpath))
+    import yaml
+    # OPT here we could add additional required imports
+# stop execution, when yaml cannot be imported
 else:
-    print('No yamlpath.conf file found. Please reinstall phobos.')
+    raise FileNotFoundError('No python_dist_packages.conf file found. Please reinstall phobos.')
 
 
 # Add custom YAML (de-)serializer
