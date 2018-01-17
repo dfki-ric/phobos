@@ -1,5 +1,5 @@
 install.conf
-yamlpath.conf
+python_dist_packages.conf
 *~
 .*
 *.orig

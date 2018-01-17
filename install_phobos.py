@@ -133,8 +133,8 @@ if __name__ == '__main__':
         print('Phobos installed.')
 
         # look for existing yamlpath configuration
-        if path.isfile('yamlpath.conf'):
-            print('yamlpath.conf found! Configuration done.')
+        if path.isfile('python_dist_packages.conf'):
+            print('python_dist_packages.conf found! Configuration done.')
         # check for existing YAML installation
         else:
             try:
@@ -147,13 +147,15 @@ if __name__ == '__main__':
                       'https://github.com/rock-simulation/phobos/wiki/Installation')
                 print('YAML configuration aborted. Installation incomplete.')
                 sys.exit(0)
+            # OPT here we could add additional requirement checks
 
             yamlpath = yaml.__file__
 
-            # write yamlpath into config file
-            with open('yamlpath.conf', 'w') as yamlconffile:
-                yamlconffile.truncate()
-                yamlconffile.write(yamlpath.strip('__init__.py'))
+            # write python dist packages path into config file
+            with open('python_dist_packages.conf', 'w') as distconffile:
+                distconffile.truncate()
+                distpath = os.path.split(os.path.split(yamlpath)[0])[0]
+                distconffile.write(path.normpath(distpath))
 
-        shutil.copy2('yamlpath.conf', os.path.join(phobospath, 'yamlpath.conf'))
+        shutil.copy2('python_dist_packages.conf', os.path.join(phobospath, 'python_dist_packages.conf'))
 
