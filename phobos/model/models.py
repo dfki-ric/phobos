@@ -51,6 +51,7 @@ import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.editing as eUtils
 import phobos.utils.io as ioUtils
+import phobos.shader.export as shaderExport
 from phobos.phoboslog import log
 from phobos.utils.general import epsilonToZero
 from phobos.model.poses import deriveObjectPose
@@ -65,6 +66,26 @@ from phobos.model.geometries import deriveGeometry
 #                joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
 # except KeyError:
 #print("Joint " + motor['joint'] + " does not exist", "ERROR")
+
+
+def collectShaders(objectlist):
+    shaders = dict()
+    for obj in objectlist:
+        if obj.phobostype == 'visual':
+            try:
+                mat = obj.active_material
+                if mat.export_shaders:
+                    if mat.vertex_shader and mat.vertex_shader.name not in shaders:
+                        shaders[mat.vertex_shader.name] = deriveShader(mat.vertex_shader)
+                    if mat.fragment_shader and mat.fragment_shader.name not in shaders:
+                        shaders[mat.fragment_shader.name] = deriveShader(mat.fragment_shader)
+            except AttributeError:
+                log("Could not parse material in object " + obj.name, "ERROR")
+    return shaders
+
+
+def deriveShader(shader):
+    return shaderExport.export_shader(shader)
 
 
 def collectMaterials(objectlist):
@@ -98,6 +119,12 @@ def deriveMaterial(mat):
     """
     material = initObjectProperties(mat, 'material')
     material['name'] = mat.name
+    if mat.export_shaders:
+        material["shader"] = dict(provider="phobosGraph")
+        if mat.vertex_shader:
+            material["shader"]["vertex"] = os.path.join(ioUtils.getExportPath("shader"), mat.vertex_shader.name + ".yaml")
+        if mat.fragment_shader:
+            material["shader"]["fragment"] = os.path.join(ioUtils.getExportPath("shader"), mat.fragment_shader.name + ".yaml")
     material['diffuseColor'] = dict(zip(['r', 'g', 'b'],
                                         [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
     material['ambientColor'] = dict(zip(['r', 'g', 'b'],
@@ -858,6 +885,7 @@ def buildModelDictionary(root):
              'motors': {},
              'controllers': {},
              'materials': {},
+             'shaders': {},
              'meshes': {},
              'lights': {},
              'groups': {},
@@ -976,6 +1004,9 @@ def buildModelDictionary(root):
             props = deriveDictEntry(obj)
             model[obj.phobostype + 's'][nUtils.getObjectName(obj)] = props
 
+    #parse shaders
+    log("Parsing shaders...", "INFO", "buildModelDictionary")
+    model["shaders"] = collectShaders(objectlist)
     # parse materials
     log("Parsing materials...", "INFO", "buildModelDictionary")
     model['materials'] = collectMaterials(objectlist)
