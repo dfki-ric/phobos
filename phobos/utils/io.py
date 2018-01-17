@@ -112,12 +112,19 @@ def getOutputMeshpath(path, meshtype=None):
         return path
 
 
-def getExportPath():
-    # DOCU add some docstring
-    if os.path.isabs(getExpSettings().path):
-        return getExpSettings().path
+def getExportPath(structure=""):
+    """Returns the export path joined with the subfolder structure if structured export is enabled
+
+    :param structure: The name of the subfolder to append to the path
+    :return: The export path
+    """
+    path_fragment = getExpSettings().path
+    if getExpSettings().structureExport and structure:
+        path_fragment = os.path.join(path_fragment, structure)
+    if os.path.isabs(path_fragment):
+        return path_fragment
     else:
-        return os.path.normpath(os.path.join(bpy.path.abspath('//'), getExpSettings().path))
+        return os.path.normpath(os.path.join(bpy.path.abspath('//'), path_fragment))
 
 
 def getAbsolutePath(path):
