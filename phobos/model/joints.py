@@ -52,13 +52,17 @@ def createJoint(joint, linkobj=None):
 
     # set axis
     if 'axis' in joint:
-        bpy.ops.object.mode_set(mode='EDIT')
-        editbone = linkobj.data.edit_bones[0]
-        #oldaxis = editbone.vector
-        length = editbone.length
-        axis = mathutils.Vector(tuple(joint['axis']))
-        #oldaxis.cross(axis) # rotation axis
-        editbone.tail = editbone.head + axis.normalized() * length
+        # Providing a zero axis joint will size the editbone to zero scale
+        if mathutils.Vector(tuple(joint['axis'])).length == 0.:
+            log('Faulty joint definition ({0}): Axis is of zero length.'.format(joint['name']), 'ERROR')
+        else:
+            bpy.ops.object.mode_set(mode='EDIT')
+            editbone = linkobj.data.edit_bones[0]
+            #oldaxis = editbone.vector
+            length = editbone.length
+            axis = mathutils.Vector(tuple(joint['axis']))
+            #oldaxis.cross(axis) # rotation axis
+            editbone.tail = editbone.head + axis.normalized() * length
 
     # add constraints
     for param in ['effort', 'velocity']:
