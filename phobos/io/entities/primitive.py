@@ -37,7 +37,7 @@ from phobos.phoboslog import log
 from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 
-def deriveEntity(primitive, outpath, savetosubfolder=True):
+def deriveEntity(primitive, outpath):
     """This function handles a primitive entity in a scene to export it
 
     # TODO is this even a heightmap?
