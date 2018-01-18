@@ -50,7 +50,7 @@ def cloneGit(name, url, destination):
     except subprocess.CalledProcessError:
         log("Problem cloning git repository. Destination is either not empty or remote is incorrect.",
             "ERROR")
-        return False
+    return False
 
 
 def switchToBranch(branch, workingdir):

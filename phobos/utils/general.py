@@ -30,6 +30,8 @@ import re
 from datetime import datetime
 import mathutils
 from phobos.phoboslog import log
+import os
+import shutil
 
 
 def is_float(s):
@@ -200,3 +202,18 @@ def outerProduct(v, u):
     for vi in v:
         lines.append([vi * ui for ui in u])
     return mathutils.Matrix(lines)
+
+
+def copyTree(src, dst, symlinks=False, ignore=None):
+    """Copies the folder tree from src to dst."""
+    if not os.path.exists(dst):
+        os.makedirs(dst)
+
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, symlinks, ignore)
+        else:
+            shutil.copy2(s, d)
+
