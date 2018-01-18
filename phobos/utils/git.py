@@ -29,11 +29,20 @@ Created on 2 Jun 2017
 import subprocess
 import yaml
 import bpy
+import os
 from phobos.phoboslog import log
 
 
 def cloneGit(name, url, destination):
-    # DOCU add some docstring
+    # check for existing git first
+    try:
+        if os.path.exists(os.path.join(destination,name)):
+            subprocess.check_output(['git', 'status'], cwd=os.path.join(destination, name))
+            return True
+    except subprocess.CalledProcessError:
+        pass
+
+    # clone git if not existing already
     try:
         subprocess.check_output(['git', 'clone', url, name], cwd=destination, universal_newlines=True)
         log("Cloned git into " + destination + ".", "INFO")
