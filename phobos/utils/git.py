@@ -54,7 +54,6 @@ def cloneGit(name, url, destination):
 
 
 def switchToBranch(branch, workingdir):
-    # DOCU add some docstring
     if not branch or not workingdir:
         log("No branch specified.", "ERROR")
         return False
@@ -66,9 +65,23 @@ def switchToBranch(branch, workingdir):
         try:  # checking out remote branch
             subprocess.check_output(['git', 'checkout', '-b', branch, 'origin/' + branch], cwd=workingdir,
                                     universal_newlines=True)
+            return True
         except subprocess.CalledProcessError:
             log("Could not switch to branch " + branch + ".", "ERROR")
             return False
+
+
+def createNewBranch(branch, workingdir):
+    if not branch or not workingdir:
+        log("No branch specified.", "ERROR")
+        return False
+    try:
+        subprocess.check_output(['git', 'checkout', '-b', branch], cwd=workingdir, universal_newlines=True)
+        log("Created branch " + branch + ".", "INFO")
+        return True
+    except subprocess.CalledProcessError:
+        log("Could not create branch " + branch + ".", "ERROR")
+        return False
 
 
 def checkoutCommit(commit, workingdir):
@@ -101,12 +114,15 @@ def getgitbranch():
         return None
 
 
-def getGitRemotes(category=''):
+def getGitRemotes(category='', folder=None):
     """Returns a dictionary with git remotes of the shape {name: url, ...} if valid
     category is provided, else {'fetch': {name: url, ...}, 'push': {name: url, ...}}.
     """
     try:
-        output = str(subprocess.check_output(['git', 'remote', '-v'], cwd=bpy.path.abspath('//'),
+        if not folder:
+            folder = bpy.path.abspath('//')
+        print('Checking git folder: ', folder)
+        output = str(subprocess.check_output(['git', 'remote', '-v'], cwd=folder,
                                              universal_newlines=True))
         remotes = {'fetch': {}, 'push': {}}
         for line in [a for a in output.split('\n') if a != '']:
@@ -132,8 +148,8 @@ def getGitRemotes(category=''):
         return None
 
 
-def getPushRemotesList(self, context):
-    remotes = getGitRemotes('push')
+def getPushRemotesList(self, context, folder=None):
+    remotes = getGitRemotes('push', folder=folder)
     remoteslist = [remotes[a] for a in remotes]
     print(remoteslist)
     return [(url,)*3 for url in remoteslist]
