@@ -120,11 +120,14 @@ def deriveMaterial(mat):
     material = initObjectProperties(mat, 'material')
     material['name'] = mat.name
     if mat.export_shaders:
-        material["shader"] = dict(provider="phobosGraph")
+        # TODO: path calculation a bit hacky?
+        shader_path = os.path.relpath(ioUtils.getExportPath("shader"), ioUtils.getExportPath("smurf"))
+        material["shader"] = dict(provider="phobosGraph",
+                                  custom=os.path.join(shader_path, "custom"))
         if mat.vertex_shader:
-            material["shader"]["vertex"] = os.path.join(ioUtils.getExportPath("shader"), mat.vertex_shader.name + ".yaml")
+            material["shader"]["vertex"] = os.path.join(shader_path, mat.vertex_shader.name + ".yaml")
         if mat.fragment_shader:
-            material["shader"]["fragment"] = os.path.join(ioUtils.getExportPath("shader"), mat.fragment_shader.name + ".yaml")
+            material["shader"]["fragment"] = os.path.join(shader_path, mat.fragment_shader.name + ".yaml")
     material['diffuseColor'] = dict(zip(['r', 'g', 'b'],
                                         [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
     material['ambientColor'] = dict(zip(['r', 'g', 'b'],

@@ -97,7 +97,7 @@ def topological_sort(ntree):
 
 
 def export_shader(ntree):
-    shader = dict(name="", type="", sort=[], nodes={})
+    shader = dict(name="", type="", sort=[], nodes={}, custom=set())
 
     shader["name"] = ntree.name
     if ntree.bl_idname == "VertexShaderTree":
@@ -109,5 +109,7 @@ def export_shader(ntree):
     shader["sort"] = topological_sort(ntree)
     for node in ntree.nodes:
         shader["nodes"][node.get_clean_name()] = node.export()
-    # TODO: Handle collection of all custom nodes for additional data export
+        if node.bl_idname == "CustomNode":
+            shader["custom"].add(node.node_type)
+    shader["custom"] = list(shader["custom"])
     return shader

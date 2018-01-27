@@ -544,7 +544,7 @@ def load_node_defs():
     def_path = os.path.join(os.path.dirname(__file__), "..", "shader_nodes")
     for root, dirs, files in os.walk(def_path):
         for node_def in files:
-            if node_def.endswith(".yml"):
+            if node_def.endswith(".yaml"):
                 with open(os.path.join(def_path, node_def)) as f:
                     node_def = yaml.load(f.read())
                     load_node_def(node_def)
