@@ -1,0 +1,15 @@
+name: envMap
+type: BOTH
+params:
+  in:
+    texCoord: {index: 0, type: vec2}
+    envMapCol: {index: 1, type: sampler2D}
+    RCol: {index: 2, type: sampler2D}
+    GCol: {index: 3, type: sampler2D}
+    BCol: {index: 4, type: sampler2D}
+    ACol: {index: 5, type: sampler2D}
+  out:
+    color: {index: 6, type: vec4}
+uniforms:
+  vec4:
+    - {name: envMapScale}

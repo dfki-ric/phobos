@@ -1,0 +1,7 @@
+name: vec2_to_vec3
+type: BOTH
+params:
+  in:
+    input: {index: 0, type: vec2}
+  out:
+    output: {index: 1, type: vec3}

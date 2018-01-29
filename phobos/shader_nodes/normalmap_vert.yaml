@@ -1,0 +1,12 @@
+name: normalmap_vert
+type: BOTH
+params:
+  in:
+    n: {index: 0, type: vec3}
+minVersion: 120
+varyings:
+  mat3:
+    - {name: ttw}
+attributes:
+  vec4:
+    - {name: vertexTangent}

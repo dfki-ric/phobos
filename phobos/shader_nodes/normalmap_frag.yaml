@@ -1,0 +1,16 @@
+name: normalmap_frag
+type: BOTH
+params:
+  in:
+    nt: {index: 0, type: vec4}
+    n: {index: 1 , type: vec3}
+  out:
+    n: {index: 0, type: vec3}
+varyings:
+  mat3:
+    - {name: ttw}
+uniforms:
+  float:
+    - {name: bumpNorFac}
+  sampler2D:
+    - {name: normalMap}

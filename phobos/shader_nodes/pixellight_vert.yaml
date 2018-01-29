@@ -1,0 +1,66 @@
+name: pixellight_vert
+type: BOTH
+params:
+  in:
+    baseColor: {index: 0, type: vec4}
+    normal: {index: 1, type: vec3}
+  out:
+    shadedColor: {index: 0, type: vec4}
+minVersion: 120
+varyings:
+  vec3:
+    - {name: eyeVec}
+    - {name: normalVarying}
+  vec3[]:
+    - {name: lightVec, arraySize: numLights}
+    - {name: spotDir, arraySize: numLights}
+  vec4:
+    - {name: positionVarying}
+    - {name: modelVertex}
+  vec4[]:
+    - {name: diffuse, arraySize: numLights}
+    - {name: specular, arraySize: numLights}
+uniforms:
+  vec2:
+    - {name: osgShadow_ambientBias}
+  vec3:
+    - {name: lineLaserPos}
+    - {name: lineLaserNormal}
+    - {name: lineLaserDirection}
+  vec3[]:
+    - {name: lightEmission, arraySize: numLights}
+  vec4:
+    - {name: lineLaserColor}
+  vec4[]:
+    - {name: lightAmbient, arraySize: numLights}
+  int:
+    - {name: useShadow}
+    - {name: numLights}
+    - {name: useFog}
+    - {name: useNoise}
+    - {name: drawLineLaser}
+    - {name: shadowSamples}
+  int[]:
+    - {name: lightIsSpot, arraySize: numLights}
+    - {name: lightIsSet, arraySize: numLights}
+    - {name: lightIsDirectional, arraySize: numLights}
+  float:
+    - {name: brightness}
+    - {name: alpha}
+    - {name: shadowScale}
+    - {name: invShadowSamples}
+    - {name: invShadowTextureSize}
+    - {name: lineLaserOpeningAngle}
+  float[]:
+    - {name: lightCosCutoff, arraySize: numLights}
+    - {name: lightSpotExponent, arraySize: numLights}
+    - {name: lightConstantAtt, arraySize: numLights}
+    - {name: lightLinearAtt, arraySize: numLights}
+    - {name: lightQuadraticAtt, arraySize: numLights}
+  mat4:
+    - {name: osg_ViewMatrixInverse}
+    - {name: osg_ViewMatrix}
+  sampler2D:
+    - {name: NoiseMap}
+  sampler2DShadow:
+    - {name: osgShadow_shadowTexture}

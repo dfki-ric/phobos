@@ -1,0 +1,7 @@
+name: backfaceNormal
+type: BOTH
+params:
+  in:
+    n: {index: 0, type: vec3}
+  out:
+    n: {index: 0, type: vec3}

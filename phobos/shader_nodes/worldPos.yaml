@@ -1,0 +1,10 @@
+name: worldPos
+type: BOTH
+params:
+  in:
+    viewPos: {index: 0, type: vec4}
+  out:
+    worldPos: {index: 0, type: vec4}
+varyings:
+  vec4:
+    - {name: positionVarying}

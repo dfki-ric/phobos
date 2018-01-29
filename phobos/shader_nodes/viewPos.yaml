@@ -1,0 +1,7 @@
+name: viewPos
+type: BOTH
+params:
+  in:
+    modelPos: {index: 0, type: vec4}
+  out:
+    viewPos: {index: 0, type: vec4}

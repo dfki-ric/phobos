@@ -1,0 +1,40 @@
+name: phong_frag
+type: BOTH
+params:
+  in:
+    normal: {index: 0, type: vec3}
+    ambient_base: {index: 1, type: vec4}
+    diffuse_base: {index: 2, type: vec4}
+    specular_base: {index: 3, type: vec4}
+    Ie: {index: 4, type: vec4}
+  out:
+    If: {index: 0, type: vec4}
+minVersion: 120
+varyings:
+  vec3:
+    - {name: eyeVec}
+  vec3[]:
+    - {name: lightDir, arraySize: numLights}
+  float[]:
+      - {name: atten, arraySize: numLights}
+uniforms:
+  int:
+    - {name: numLights}
+  vec3[]:
+    - {name: lightSpotDir, arraySize: numLights}
+  vec4[]:
+    - {name: lightAmbient, arraySize: numLights}
+    - {name: lightDiffuse, arraySize: numLights}
+    - {name: lightSpecular, arraySize: numLights}
+  int[]:
+    - {name: lightIsSpot, arraySize: numLights}
+    - {name: lightIsSet, arraySize: numLights}
+    - {name: lightIsDirectional, arraySize: numLights}
+  float[]:
+    - {name: lightConstantAtt, arraySize: numLights}
+    - {name: lightLinearAtt, arraySize: numLights}
+    - {name: lightQuadraticAtt, arraySize: numLights}
+    - {name: lightCosCutoff, arraySize: numLights}
+    - {name: lightSpotExponent, arraySize: numLights}
+  float:
+    - {name: brightness}

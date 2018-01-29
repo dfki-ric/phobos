@@ -14,8 +14,11 @@ def export_shader(model, outpath):
         export_path = os.path.join(outpath, "custom")
         ioUtils.securepath(export_path)
         for custom_node in shader["custom"]:
-            shutil.copy2(os.path.join(node_path, custom_node + ".yaml"), export_path)
-            shutil.copy2(os.path.join(node_path, custom_node + ".c"), export_path)
+            try:
+                shutil.copy2(os.path.join(node_path, custom_node + ".yaml"), export_path)
+                shutil.copy2(os.path.join(node_path, custom_node + ".c"), export_path)
+            except FileNotFoundError:
+                pass  # TODO: Handle missing files better
 
 
 def import_shader(filepath):

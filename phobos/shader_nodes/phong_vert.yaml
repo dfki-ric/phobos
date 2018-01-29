@@ -1,0 +1,21 @@
+name: phong_vert
+type: BOTH
+params:
+  in:
+    worldPos: {index: 0, type: vec4}
+minVersion: 120
+varyings:
+  vec3:
+    - {name: eyeVec}
+  vec3[]:
+    - {name: lightDir, arraySize: numLights}
+uniforms:
+  vec3[]:
+    - {name: lightPos, arraySize: numLights}
+  int:
+    - {name: numLights}
+  int[]:
+    - {name: lightIsDirectional, arraySize: numLights}
+    - {name: lightIsSet, arraySize: numLights}
+  mat4:
+    - {name: osg_ViewMatrixInverse}
