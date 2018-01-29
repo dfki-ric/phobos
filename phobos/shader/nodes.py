@@ -17,7 +17,8 @@ class ShaderNode:
     def export(self):
         node = dict(outgoing={}, incoming={}, name=self.get_clean_name(), type="ShaderNode")
         for output_socket in self.outputs:
-            node["outgoing"][output_socket.name] = self.get_clean_name() + "_" + output_socket.name
+            node["outgoing"][output_socket.name] = dict(name=self.get_clean_name() + "_" + output_socket.name,
+                                                        type=output_socket.bl_label.lower())
         for input_socket in self.inputs:
             if input_socket.is_linked:
                 link = input_socket.links[0]
