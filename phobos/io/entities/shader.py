@@ -15,7 +15,7 @@ def export_shader(model, outpath):
         ioUtils.securepath(export_path)
         for custom_node in shader["custom"]:
             shutil.copy2(os.path.join(node_path, custom_node + ".yaml"), export_path)
-            shutil.copy2(os.path.join(node_path, custom_node + ".frag"), export_path)
+            shutil.copy2(os.path.join(node_path, custom_node + ".c"), export_path)
 
 
 def import_shader(filepath):
