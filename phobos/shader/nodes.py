@@ -22,7 +22,12 @@ class ShaderNode:
         for input_socket in self.inputs:
             if input_socket.is_linked:
                 link = input_socket.links[0]
-                node["incoming"][input_socket.name] = link.from_node.get_clean_name() + "_" + link.from_socket.name
+                if link.from_node.bl_idname == "UniformNode":
+                    node["incoming"][input_socket.name] = link.from_node.uniform_name
+                elif link.from_node.bl_idname == "VaryingFragmentNode":
+                    node["incoming"][input_socket.name] = link.from_node.varying_name
+                else:
+                    node["incoming"][input_socket.name] = link.from_node.get_clean_name() + "_" + link.from_socket.name
             else:
                 node["incoming"][input_socket.name] = input_socket.get_default_value()
         return node
