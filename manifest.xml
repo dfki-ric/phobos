@@ -1,0 +1,37 @@
+<package>
+  <description brief="Phobos is a Blender Add-On for modeling robots">
+    Phobos is an add-on for the open-source 3D modeling software [Blender](http://www.blender.org)
+    that enables the creation and modification of WYSIWYG robot models for use in robot
+    frameworks like ROS and ROCK or in real-time simulations such as MARS or Gazebo.
+    Phobos allows to export completed models in formats such as URDF or SMURF and meshes
+    as STereoLithography (.stl), Wavefront (.obj) or Collada (.dae).
+  </description>
+  <author>Kai/kai_alexander.von_szadkowski@dfki.de, Simon/simon.reichel@dfki.de</author>
+  <maintainer>Kai/kai_alexander.von_szadkowski@dfki.de</maintainer>
+  <license>LPGL 3</license>
+  <url>https://robotik.dfki-bremen.de/en/research/softwaretools/phobos.html</url>
+  <logo>https://github.com/rock-simulation/phobos/wiki/img/phobos_logo_small.png</logo>
+
+  <depend package="blender"/>
+  <depend package="pyyaml"/>
+
+  <keywords>
+    <keyword>Simulation</keyword>
+    <keyword>Representation</keyword>
+    <keyword>Mechanics</keyword>
+  </keywords>
+
+  <stage>0</stage>
+  <use>single project</use>
+  <activity>active</activity>
+
+  <classifiers>
+    <classifier>gui</classifier>
+    <classifier>python</classifier>
+    <classifier>blender</classifier>
+    <classifier>add-on</classifier>
+    <classifier>windows</classifier>
+    <classifier>ubuntu</classifier>
+    <classifier>macos</classifier>
+  </classifiers>
+</package>

@@ -1,0 +1,3 @@
+# The following python packages need to be installed
+# in order for Phobos to work properly.
+python-yaml
