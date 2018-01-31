@@ -106,14 +106,8 @@ def installPhobos():
     if path.isdir(phobospath):
         return copyphobos(phobospath)
     else:
-        yn = input(('Phobos folder does not exist, create phobos folder ' +
-                    'in {0}? (y/n) ').format(phobospath))
-        if yn == 'y':
-            os.makedirs(phobospath)
-            return copyphobos(phobospath)
-        else:
-            print('No folder for Phobos created.')
-            return False
+        os.makedirs(phobospath)
+        return copyphobos(phobospath)
 
 
 if __name__ == '__main__':
