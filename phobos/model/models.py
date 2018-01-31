@@ -122,7 +122,7 @@ def deriveMaterial(mat):
     if mat.export_shaders:
         # TODO: path calculation a bit hacky?
         shader_path = os.path.relpath(ioUtils.getExportPath("shader"), ioUtils.getExportPath("smurf"))
-        material["shader"] = dict(provider="phobosGraph",
+        material["shader"] = dict(provider="PhobosGraph",
                                   custom=os.path.join(shader_path, "custom"))
         if mat.vertex_shader:
             material["shader"]["vertex"] = os.path.join(shader_path, mat.vertex_shader.name + ".yaml")

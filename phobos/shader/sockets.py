@@ -106,7 +106,7 @@ class SocketVector3(NodeSocket):
                                            size=3)
 
     def get_default_value(self):
-        return "vec2({},{},{})".format(self.values[0], self.values[1], self.values[2])
+        return "vec3({},{},{})".format(self.values[0], self.values[1], self.values[2])
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:
@@ -134,7 +134,7 @@ class SocketVector4(NodeSocket):
                                            size=4)
 
     def get_default_value(self):
-        return "vec2({},{},{},{})".format(self.values[0], self.values[1], self.values[2], self.values[3])
+        return "vec4({},{},{},{})".format(self.values[0], self.values[1], self.values[2], self.values[3])
 
     def draw(self, context, layout, node, text):
         if self.is_output or self.is_linked:

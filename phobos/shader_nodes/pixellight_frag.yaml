@@ -1,5 +1,6 @@
 name: pixellight_frag
 type: BOTH
+source: /shader/plight.frag
 params:
   in:
     baseColor: {index: 0, type: vec4}

@@ -81,7 +81,7 @@ class FragOutNode(Node, FragmentNode):
     bl_icon = "SOUND"
 
     def init(self, contex):
-        self.inputs.new("SocketVector4", "color")
+        self.inputs.new("SocketVector4", "col")
 
     def export(self):
         result = super().export()
