@@ -54,6 +54,7 @@ def draw_func_shader_graphs(self, context):
     layout = self.layout
     ob = context.object
     layout.prop(ob.active_material, "export_shaders")
+    layout.prop(ob.active_material, "print_shaders")
     layout.prop(ob.active_material, "vertex_shader")
     layout.prop(ob.active_material, "fragment_shader")
 
@@ -66,6 +67,8 @@ def register():
     bpy.types.Material.fragment_shader = bpy.props.PointerProperty(type=NodeTree, name="Fragment Shader")
     bpy.types.Material.export_shaders = bpy.props.BoolProperty(name="Export Shaders",
                                                                description="Toogle shader export for material")
+    bpy.types.Material.print_shaders = bpy.props.BoolProperty(name="Print Shader",
+                                                               description="Toogle shader debug print for material")
     bpy.types.MATERIAL_PT_context_material.append(draw_func_shader_graphs)
 
 

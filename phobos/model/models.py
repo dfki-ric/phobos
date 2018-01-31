@@ -119,6 +119,8 @@ def deriveMaterial(mat):
     """
     material = initObjectProperties(mat, 'material')
     material['name'] = mat.name
+    if mat.print_shaders:
+        material["printShader"] = "$true"
     if mat.export_shaders:
         # TODO: path calculation a bit hacky?
         shader_path = os.path.relpath(ioUtils.getExportPath("shader"), ioUtils.getExportPath("smurf"))
