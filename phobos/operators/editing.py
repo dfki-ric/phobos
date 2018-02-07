@@ -1221,9 +1221,21 @@ class CreateLinksOperator(Operator):
     bl_label = "Create Link(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
+    # Find all custom made orientations
+    def getOrientationFrames(self, context):
+        """ Returns the keys of all possible orientations"""
+        return [(category,) * 3 for category in sorted(bpy.context.scene.orientations.keys())]
+
+    # Change the orientation of the current object
+    def changeOrientation(self):
+        """ Changes the orientation of the current object"""
+        bpy.context.active_object.matrix_world =  bpy.context.active_object.matrix_world * bpy.context.scene.orientations[self.orientationFrames].matrix.to_4x4()
+        return 'Orientation changed'
+
     linktype = EnumProperty(
         items=(('3D cursor',) * 3,
-               ('selected objects',) * 3),
+               ('selected objects',) * 3,
+               ),
         default='selected objects',
         name='Location',
         description='Where to create new link(s)?'
@@ -1265,9 +1277,26 @@ class CreateLinksOperator(Operator):
         default='link'
     )
 
+    orientation = BoolProperty(
+        name = 'Orientation',
+        default = False,
+        description = 'Apply custom orientation'
+    )
+
+    orientationFrames = EnumProperty(
+        items = getOrientationFrames,
+        name = "Orientations",
+        description = "Custom Orientations"
+    )
+
     def execute(self, context):
         if self.linktype == '3D cursor':
             links.createLink({'name': self.name, 'scale': self.size})
+            # Check if custom orientation will be used and is present
+            if self.orientation and self.orientationFrames:
+                self.changeOrientation()
+
+
         else:
             for obj in context.selected_objects:
                 tmpnamepartindices = [int(p) for p in self.namepartindices.split()]
@@ -1276,6 +1305,10 @@ class CreateLinksOperator(Operator):
                                            namepartindices=tmpnamepartindices,
                                            separator=self.separator,
                                            prefix=self.prefix)
+            # Check if custom orientation will be used and is present
+            if self.orientation and self.orientationFrames:
+                self.changeOrientation()
+
         return {'FINISHED'}
 
     def draw(self, context):
@@ -1283,10 +1316,14 @@ class CreateLinksOperator(Operator):
         layout.prop(self, "linktype")
         layout.prop(self, "size")
         layout.prop(self, "parenting")
+        layout.prop(self, "orientation")
 
         # show parentobject only when using parenting hierarchy
         if self.parenting:
             layout.prop(self, "parentobject")
+        # show parameters only when using custom orientation
+        if self.orientation:
+            layout.prop(self, "orientationFrames")
 
         layout.prop(self, "namepartindices")
         layout.prop(self, "separator")
@@ -1508,6 +1545,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
         items=getDeviceTypes,
         name="Device Type",
         description="Device Types")
+
 
     @classmethod
     def poll(cls, context):
