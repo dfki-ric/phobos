@@ -53,21 +53,19 @@ def cloneGit(name, url, destination):
     return False
 
 
-def switchToBranch(branch, workingdir):
+def checkoutBranch(branch, workingdir, create=False):
     if not branch or not workingdir:
         log("No branch specified.", "ERROR")
         return False
     try:
         subprocess.check_output(['git', 'checkout', branch], cwd=workingdir, universal_newlines=True)
-        log("Switched to branch " + branch + ".", "INFO")
+        log("Checkout branch " + branch + " successful.", "INFO")
         return True
     except subprocess.CalledProcessError:
-        try:  # checking out remote branch
-            subprocess.check_output(['git', 'checkout', '-b', branch, 'origin/' + branch], cwd=workingdir,
-                                    universal_newlines=True)
-            return True
-        except subprocess.CalledProcessError:
-            log("Could not switch to branch " + branch + ".", "ERROR")
+        if create:
+            createNewBranch(branch, workingdir)
+        else:
+            log("Could not checkout branch " + branch + ".", "ERROR")
             return False
 
 
@@ -98,7 +96,7 @@ def checkoutCommit(commit, workingdir):
         return False
 
 
-def getgitbranch():
+def getGitBranch():
     """Checks whether working directory (of .blend file) contains a git repository.
     Returns branch if repository is found.
     """
