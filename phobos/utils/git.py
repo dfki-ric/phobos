@@ -33,6 +33,10 @@ import os
 from phobos.phoboslog import log
 
 
+def isGit(folder):
+    """Checks whether the folder contains a git directory."""
+    return os.path.exists(os.path.join(folder, '.git'))
+
 def cloneGit(name, url, destination):
     # check for existing git first
     try:
