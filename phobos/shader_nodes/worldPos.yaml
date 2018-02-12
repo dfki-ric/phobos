@@ -1,4 +1,5 @@
 name: worldPos
+source: /graph_shader/worldPos.vert
 type: BOTH
 params:
   in:

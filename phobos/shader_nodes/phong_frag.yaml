@@ -1,4 +1,5 @@
 name: phong_frag
+source: /graph_shader/phong.frag
 type: BOTH
 params:
   in:

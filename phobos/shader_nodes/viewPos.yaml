@@ -1,4 +1,5 @@
 name: viewPos
+source: /graph_shader/viewPos.vert
 type: BOTH
 params:
   in:

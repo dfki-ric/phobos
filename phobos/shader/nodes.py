@@ -354,16 +354,23 @@ class UniformNode(Node, VertexFragmentNode):
 
     uniform_name = bpy.props.StringProperty(name="Name", description="Name of the Uniform", default="uniform")
 
+    uniform_builtin = bpy.props.BoolProperty(name="Builtin", description="Is the uniform builtin?", default=False)
+
     def init(self, context):
         self.outputs.new("SocketFloat", "output")
 
     def draw_buttons(self, context, layout):
         layout.prop(self, "uniform_name")
         layout.prop(self, "uniform_type")
+        layout.prop(self, "uniform_builtin")
 
     def export(self):
         result = super().export()
         result["type"] = "uniform"
+        if self.uniform_builtin:
+            result["builtin"] = "$true"
+        else:
+            result["builtin"] = "$false"
         result["uniform_name"] = self.uniform_name
         result["uniform_type"] = self.uniform_type.lower()
         return result

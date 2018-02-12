@@ -1,4 +1,5 @@
 name: phong_vert
+source: /graph_shader/phong.vert
 type: BOTH
 params:
   in:
