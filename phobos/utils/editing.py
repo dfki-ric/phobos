@@ -30,6 +30,7 @@ import bpy
 import mathutils
 import math
 from . import selection as sUtils
+from . import naming as nUtils
 from phobos.phoboslog import log
 
 
@@ -114,12 +115,16 @@ def instantiateAssembly(assemblyname, instancename, version='1.0'):
     bpy.ops.object.group_instance_add(group=interfaces.name)
     #interfaceobj = bpy.context.active_object
     bpy.ops.object.duplicates_make_real()
+    for obj in bpy.context.selected_objects:
+        nUtils.addNamespace(obj, instancename)
+        obj.name = obj.name.rsplit('.')[0]
     sUtils.selectObjects(objects=[assemblyobj]+bpy.context.selected_objects, clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
     sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
-                                  if a.type == 'EMPTY' and a.name.startswith('interfaces')],
+                                  if a.type == 'EMPTY' and 'interface' in a.name],
                          clear=True, active=0)
     bpy.ops.object.delete(use_global=False)
+    return assemblyobj
 
 
 def defineAssembly(assemblyname, version='', objects=None):
@@ -175,18 +180,18 @@ def connectInterfaces(parentinterface, childinterface):
     #    del childassembly['modelname']
     #except KeyError:
     #    pass
-
-    try:
-        # parent visual and collision objects to new parent
-        viscols = sUtils.getImmediateChildren(parent, ['visual', 'collision', 'interface'])
-        print(viscols)
-        sUtils.selectObjects(viscols, True, 0)
-        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-        print()
-        sUtils.selectObjects([sUtils.getEffectiveParent(parent, ignore_selection=True)] + viscols, True, 0)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
-    except IndexError:
-        pass  # no objects to re-parent
+    #TODO: re-implement this for MECHANICS models
+    # try:
+    #     # parent visual and collision objects to new parent
+    #     children = sUtils.getImmediateChildren(parent, ['visual', 'collision', 'interface'])
+    #     print(children)
+    #     sUtils.selectObjects(children, True, 0)
+    #     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+    #     print()
+    #     sUtils.selectObjects([sUtils.getEffectiveParent(parent, ignore_selection=True)] + children, True, 0)
+    #     bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    # except (IndexError, AttributeError):
+    #     pass  # no objects to re-parent
     parentinterface.show_name = False
     childinterface.show_name = False
 
