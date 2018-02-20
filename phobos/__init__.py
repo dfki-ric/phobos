@@ -97,7 +97,7 @@ bl_info = {
 yamlconfpath = os.path.dirname(__file__) + "/python_dist_packages.conf"
 if os.path.isfile(yamlconfpath):
     f = open(yamlconfpath)
-    distpath = f.read()
+    distpath = f.read().replace('\n', '')
     f.close()
     sys.path.insert(0, os.path.normpath(distpath))
     import yaml
