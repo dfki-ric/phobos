@@ -949,7 +949,7 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = "Phobos Models"
-    bl_label = "Locally Model Library"
+    bl_label = "Local Model Library"
 
     def draw_header(self, context):
         pcoll = prev_collections["phobos"]
