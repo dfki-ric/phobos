@@ -27,9 +27,14 @@
 # You also have to delete the old install.conf to run this script
 # correctly.
 
+'''
+This short script installs Phobos to the appropriate Blender folder and checks
+for missing dependencies.
+'''
+
+import os
 import os.path as path
 import sys
-import os
 import shutil
 
 configfile = 'install.conf'
@@ -47,10 +52,10 @@ def copytree(src, dst, symlinks=False, ignore=None):
             shutil.copy2(s, d)
 
 
-def makeConfigFile(blenderversion=None, pythoncommand=None):
+def makeConfigFile(blenderversion=None):
     operating_system = sys.platform
     if not blenderversion:
-        blenderversion = input('Enter your Blender version (e.g. "2.78") ')
+        blenderversion = input('Enter your Blender version (e.g., 2.78) > ')
     global addonpath
 
     if operating_system == 'linux':
@@ -65,16 +70,10 @@ def makeConfigFile(blenderversion=None, pythoncommand=None):
     else:
         addonpath = ('ERROR: System not supported yet:' +
                      ' "{0}". Please contact the developers.').format(operating_system)
-    
-    if not pythoncommand:
-        pythoncommand = input('What is your Python 3 command? (e.g. python3) ')
-    # use default on empty entry
-    if not pythoncommand:
-        pythoncommand = 'python3'
+
     with open(configfile, 'w') as conffile:
         conffile.writelines([
             'blenderversion={0}\n'.format(blenderversion),
-            'pythoncom={0}\n'.format(pythoncommand),
             'addonpath={0}\n'.format(addonpath)])
 
 
@@ -105,24 +104,29 @@ def installPhobos():
 
     if path.isdir(phobospath):
         return copyphobos(phobospath)
-    else:
-        os.makedirs(phobospath)
-        return copyphobos(phobospath)
+    os.makedirs(phobospath)
+    return copyphobos(phobospath)
 
 
 if __name__ == '__main__':
+    # check whether the right python version is used
+    pyver = sys.version_info
+    if pyver.major != 3 or pyver.minor != 5:
+        print('You started this script with the wrong python version: ')
+        print('Current: ' + str(pyver.major) + '.' + str(pyver.minor))
+        print('Blender python uses: 3.5')
+        print('Installation aborted.')
+        sys.exit(0)
+
     # digest parameters
-    print(sys.argv)
     version = None
-    pythoncommand = None
     if len(sys.argv) > 1:
         version = sys.argv[1]
-        pythoncommand = sys.argv[2]
-    
+
     # work always from installation folder
     os.chdir(os.path.abspath(os.path.dirname(__file__)))
     # check for existing configfile
-    if not version and not pythoncommand:
+    if not version:
         if path.isfile(configfile):
             print('Found installation configuration.')
             with open(configfile, 'r') as conffile:
@@ -131,7 +135,7 @@ if __name__ == '__main__':
         else:
             makeConfigFile()
     else:
-        makeConfigFile(version, pythoncommand)
+        makeConfigFile(version)
 
     # install Phobos
     if not installPhobos():
@@ -156,12 +160,12 @@ if __name__ == '__main__':
                 sys.exit(0)
             # OPT here we could add additional requirement checks
 
-            yamlpath = yaml.__file__
+            import site
 
             # write python dist packages path into config file
             with open('python_dist_packages.conf', 'w') as distconffile:
                 distconffile.truncate()
-                distpath = os.path.split(os.path.split(yamlpath)[0])[0]
+                distpath = site.getsitepackages()[0]
                 distconffile.write(path.normpath(distpath))
 
         shutil.copy2('python_dist_packages.conf', os.path.join(phobospath,
