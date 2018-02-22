@@ -35,63 +35,90 @@ from phobos.phoboslog import log
 from bpy.props import StringProperty, BoolProperty
 
 model_data = {}
-preview_collections = {}
+model_previews = {}
+categories = set([])
 
 
 def getModelListForEnumProperty(self, context):
-    # DOCU missing some docstring
+    ''' Returns a list of (str, str, str) elements which contains the models
+    contained in the currently selected model category.
+    If there are no model categories (i.e. '-') return ('-', '-', '-').
+    '''
     category = context.window_manager.category
-    try:
-        items = sorted(preview_collections[category].enum_items)
-    except KeyError:
-        items = []
-    return items
+    if category == '-' or category == '':
+        return [('-',) * 3]
+    return sorted(model_previews[category].enum_items)
 
 
 def getCategoriesForEnumProperty(self, context):
-    # DOCU missing some docstring
-    try:
-        categories = [(category,) * 3 for category in sorted(preview_collections.keys())]
-    except:
-        log('Unable to compile category list.', 'ERROR')
-        categories = []
-    return categories
+    ''' Return a list of (str, str, str) elements, each referring to an
+    available category in the model library.
+    If there are no categories return ('-', '-', '-').
+    '''
+    if len(categories) == 0:
+        print('-')
+        return [('-',) * 3]
+    return [(item,) * 3 for item in categories]
 
 
 def compileModelList():
+    from bpy.props import EnumProperty
+    from bpy.types import WindowManager
     # DOCU missing some docstring
     log("Compiling model list from local library...", "INFO", 'compileModelList')
-    for previews in preview_collections.values():
+
+    # clear old preview collections
+    for previews in model_previews.values():
         bpy.utils.previews.remove(previews)
-    preview_collections.clear()
+    model_previews.clear()
     model_data.clear()
 
     rootpath = bpy.context.user_preferences.addons["phobos"].preferences.modelsfolder
     i = 0
-    if rootpath != '' and os.path.exists(rootpath):
-        for category in os.listdir(rootpath):
-            model_data[category] = {}
-            newpreviewcollection = bpy.utils.previews.new()
-            enum_items = []
-            categorypath = os.path.join(rootpath, category)
-            for modelname in os.listdir(categorypath):
-                modelpath = os.path.join(categorypath, modelname)
-                if os.path.exists(os.path.join(modelpath, 'blender', modelname+'.blend')):
-                    model_data[category][modelname] = {'path': modelpath}
-                    if os.path.exists(os.path.join(modelpath, 'thumbnails')):
-                        preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'thumbnails', modelname+'.png'), 'IMAGE')
-                        log("Adding model to path: " + os.path.join(modelpath, 'thumbnails', modelname+'.png'),
-                            'DEBUG', 'compileModelList')
-                    else:
-                        preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'blender', modelname + '.blend'), 'BLEND')
-                        log("Adding model to path: " + os.path.join(os.path.join(modelpath, 'blender', modelname + '.blend')),
-                            'DEBUG', 'compileModelList')
-                    enum_items.append((modelname, modelname, "", preview.icon_id, i))
-                    i += 1
-            newpreviewcollection.enum_items = enum_items
-            preview_collections[category] = newpreviewcollection
-    else:
+    if rootpath == '' or not os.path.exists(rootpath):
         log('Model library folder does not exist.')
+        return
+
+    # parse the model folder
+    for category in os.listdir(rootpath):
+        categorypath = os.path.join(rootpath, category)
+        # skip all non folders
+        if not os.path.isdir(categorypath):
+            continue
+
+        # initialise new dictionaries
+        model_data[category] = {}
+        newpreviewcollection = bpy.utils.previews.new()
+        enum_items = []
+
+        # parse category folder
+        for modelname in os.listdir(categorypath):
+            modelpath = os.path.join(categorypath, modelname)
+
+            # check for valid blender savefile in the model folder
+            if os.path.exists(os.path.join(modelpath, 'blender', modelname+'.blend')):
+                model_data[category][modelname] = {'path': modelpath}
+
+                # use existing thumbnail if available
+                if os.path.exists(os.path.join(modelpath, 'thumbnails')):
+                    preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'thumbnails', modelname+'.png'), 'IMAGE')
+                    log("Adding model to preview: " + os.path.join(modelpath, 'thumbnails', modelname+'.png'),
+                        'DEBUG', 'compileModelList')
+                # otherwise create one from the blend file
+                else:
+                    preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'blender', modelname + '.blend'), 'BLEND')
+                    log("Adding model to preview: " + os.path.join(os.path.join(modelpath, 'blender', modelname + '.blend')),
+                        'DEBUG', 'compileModelList')
+                enum_items.append((modelname, modelname, "", preview.icon_id, i))
+                i += 1
+                categories.add(category)
+        # save the category
+        newpreviewcollection.enum_items = enum_items
+        model_previews[category] = newpreviewcollection
+
+    # reregister the enumproperty to ensure new items are displayed
+    WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
+    WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
 
 
 class UpdateModelLibraryOperator(bpy.types.Operator):
@@ -167,7 +194,7 @@ def register():
 
 
 def unregister():
-    for previews in preview_collections.values():
+    for previews in model_previews.values():
         bpy.utils.previews.remove(previews)
-    preview_collections.clear()
+    model_previews.clear()
     model_data.clear()

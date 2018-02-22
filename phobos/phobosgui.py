@@ -87,7 +87,7 @@ class PhobosPrefs(AddonPreferences):
     modelsfolder = StringProperty(
         name="modelsfolder",
         subtype="DIR_PATH",
-        default='',
+        default=''
     )
 
     exportpluginsfolder = StringProperty(
@@ -959,11 +959,24 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         wm = context.window_manager
+        modelsfolder = bpy.context.user_preferences.addons["phobos"].preferences.modelsfolder
+        if modelsfolder == '':
+            layout.label('Model folder not configured.')
+            return
+
         layout.operator("phobos.update_model_library", icon="FILE_REFRESH")
-        layout.prop(wm, 'category')
-        layout.template_icon_view(wm, 'modelpreview', show_labels=True, scale=5.0)
-        layout.prop(wm, 'modelpreview')
-        layout.operator("phobos.import_model_from_library", icon="IMPORT")
+
+        if wm.category != '-':
+            layout.prop(wm, 'category')
+
+            if wm.modelpreview != '-':
+                layout.template_icon_view(wm, 'modelpreview', show_labels=True, scale=5.0)
+                layout.prop(wm, 'modelpreview')
+                layout.operator("phobos.import_model_from_library", icon="IMPORT")
+            else:
+                layout.label('No models in this category.')
+        else:
+            layout.label('Model library is empty.')
 
 def get_operator_manuals():
     """Returns a tuple with the Phobos wiki Operator page and pairs of operator
