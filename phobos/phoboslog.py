@@ -103,7 +103,11 @@ def log(message, level="INFO", origin=None, prefix=""):
     #    originname = origin.bl_idname
     #else:
     #    originname = origin
-    originname = inspect.stack()[1][1].split('addons/')[-1] + ' - ' + inspect.stack()[1][3]
+    #originname = inspect.stack()[1][1].split('addons/')[-1] + ' - ' + inspect.stack()[1][3]
+    callerframerecord = inspect.stack()[1]
+    frame = callerframerecord[0]
+    info = inspect.getframeinfo(frame)
+    originname = info.filename.split('addons/')[-1] + ' - ' + info.function + '(' + str(info.lineno) + ')'
 
     # Display only messages up to preferred log level
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
