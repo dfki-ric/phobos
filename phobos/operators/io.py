@@ -76,15 +76,13 @@ class ExportSceneOperator(Operator):
         # identify all entities' roots in the scene
         entities = ioUtils.getExportEntities()
         if not entities:
-            log("There are no entities to export!",
-                "WARNING", __name__ + ".exportSMURFsScene")
+            log("There are no entities to export!", "WARNING")
             return {'CANCELLED'}
 
         # derive entities and export if necessary
         models = set()
         for root in entities:
-            log("Adding entity '" +
-                str(root["entity/name"]) + "' to scene.", "INFO")
+            log("Adding entity '" + str(root["entity/name"]) + "' to scene.", "INFO")
             if root["entity/type"] in entity_types:
                 # TODO delete me?
                 # try:
@@ -153,8 +151,7 @@ class ExportModelOperator(Operator):
     def execute(self, context):
         roots = ioUtils.getExportModels()
         if not roots:
-            log("No properly defined models selected or present in scene.",
-                "WARNING")
+            log("No properly defined models selected or present in scene.", "WARNING")
             return {'CANCELLED'}
         elif not self.exportall:
             roots = [root for root in roots if root['modelname'] == self.modelname]
@@ -167,10 +164,9 @@ class ExportModelOperator(Operator):
             # setup paths
             exportpath = ioUtils.getExportPath()
             if not securepath(exportpath):
-                log("Could not secure path to export to.",
-                    "ERROR", 'ExportModelOperator')
+                log("Could not secure path to export to.", "ERROR")
                 continue
-            log("Export path: " + exportpath, "DEBUG", 'ExportModelOperator')
+            log("Export path: " + exportpath, "DEBUG")
             exportModel(root, exportpath)
 
         # select all exported models after export is done
@@ -185,7 +181,7 @@ class ExportModelOperator(Operator):
             bpy.ops.phobos.select_model()
 
         # report success to user
-        log("Export successful.", "INFO", "ExportModelOperator")
+        log("Export successful.", "INFO")
         return {'FINISHED'}
 
 
@@ -212,10 +208,10 @@ def exportModel(root, export_path, entitytypes=None, model=None):
         try:
             entities.entity_types[entitytype]['export'](model, model_path)
             log("Export model: " + model['name'] + ' as ' + entitytype +
-                " to " + model_path, "DEBUG", 'exportModel')
+                " to " + model_path, "DEBUG")
         except KeyError:
             log("No export function available for selected model type: " +
-                entitytype, "ERROR", "ExportModelOperator")
+                entitytype, "ERROR")
             continue
 
     # TODO: Move mesh export to individual formats? This is practically SMURF
@@ -231,7 +227,7 @@ def exportModel(root, export_path, entitytypes=None, model=None):
                         model['meshes'][meshname], mesh_path)
         except KeyError:
             log("No export function available for selected mesh function: " +
-                meshtype, "ERROR", "ExportModelOperator")
+                meshtype, "ERROR")
             print(sys.exc_info()[0])
 
     # TODO: Move texture export to individual formats? This is practically SMURF
@@ -248,14 +244,12 @@ def exportModel(root, export_path, entitytypes=None, model=None):
                     if os.path.isfile(sourcepath):
                         texture_path = securepath(
                             os.path.join(export_path, 'textures'))
-                        log("Exporting textures to " + texture_path,
-                            "INFO", "ExportModelOperator")
+                        log("Exporting textures to " + texture_path, "INFO")
                         try:
                             shutil.copy(sourcepath, os.path.join(
                                 texture_path, os.path.basename(mat[texturetype])))
                         except shutil.SameFileError:
-                            log("{} already in place".format(texturetype),
-                                "INFO", "ExportModelOperator")
+                            log("{} already in place".format(texturetype), "INFO")
 
 
 class ImportModelOperator(bpy.types.Operator):
@@ -280,8 +274,7 @@ class ImportModelOperator(bpy.types.Operator):
 
     def execute(self, context):
         try:
-            log("Importing " + self.filepath + ' as ' +
-                self.entitytype, "INFO", 'ImportModelOperator')
+            log("Importing " + self.filepath + ' as ' + self.entitytype, "INFO")
             model = entities.entity_types[
                 self.entitytype]['import'](self.filepath)
             # bUtils.cleanScene()
@@ -289,8 +282,7 @@ class ImportModelOperator(bpy.types.Operator):
             for layer in ['link', 'inertial', 'visual', 'collision', 'sensor']:
                 bUtils.toggleLayer(defs.layerTypes[layer], True)
         except KeyError:
-            log("No import function available for selected model type: " + self.entitytype,
-                "ERROR", "ImportModelOperator")
+            log("No import function available for selected model type: " + self.entitytype, "ERROR")
         return {'FINISHED'}
 
     def invoke(self, context, event):

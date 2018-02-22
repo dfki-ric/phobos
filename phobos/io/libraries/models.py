@@ -64,7 +64,7 @@ def compileModelList():
     from bpy.props import EnumProperty
     from bpy.types import WindowManager
     # DOCU missing some docstring
-    log("Compiling model list from local library...", "INFO", 'compileModelList')
+    log("Compiling model list from local library...", "INFO")
 
     # clear old preview collections
     for previews in model_previews.values():

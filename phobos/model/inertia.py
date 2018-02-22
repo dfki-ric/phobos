@@ -532,7 +532,7 @@ def fuseInertiaData(inertials):
         if objdict:
             objects.append(objdict)
     if len(objects) > 0:
-        log("Fusing inertials: " + str([i.name for i in inertials]), "DEBUG", "fuseInertiaData")
+        log("Fusing inertials: " + str([i.name for i in inertials]), "DEBUG")
         mass, com, inertia = compound_inertia_analysis_3x3(objects)
         log("Fused mass: " + str(mass), "DEBUG")
         return mass, com, inertia

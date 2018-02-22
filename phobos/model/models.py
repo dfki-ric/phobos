@@ -884,7 +884,7 @@ def buildModelDictionary(root):
     linklist = [link for link in objectlist if link.phobostype == 'link']
 
     # digest all the links to derive link and joint information
-    log("Parsing links, joints and motors..."+(str(len(linklist))), "INFO", "buildModelDictionary")
+    log("Parsing links, joints and motors..."+(str(len(linklist))), "INFO")
     for link in linklist:
         # parse link and extract joint and motor information
         linkdict, jointdict, motordict = deriveKinematics(link)
@@ -904,8 +904,7 @@ def buildModelDictionary(root):
             if props is not None:
                 model['links'][linkdict['name']]['inertial'] = props
         except KeyError:
-            log("No inertia for link " +
-                linkdict['name'], "WARNING", "buildModelDictionary")
+            log("No inertia for link " + linkdict['name'], "WARNING")
 
     # combine inertia if certain objects are left out, and overwrite it
     inertials = (i for i in objectlist if i.phobostype ==
@@ -936,8 +935,7 @@ def buildModelDictionary(root):
             }
 
     # complete link information by parsing visuals and collision objects
-    log("Parsing visual and collision (approximation) objects...",
-        "INFO", "buildModelDictionary")
+    log("Parsing visual and collision (approximation) objects...", "INFO")
     for obj in objectlist:
         # try:
         if obj.phobostype in ['visual', 'collision']:
@@ -970,14 +968,14 @@ def buildModelDictionary(root):
         link['collision_bitmask'] = bitmask
 
     # parse sensors and controllers
-    log("Parsing sensors and controllers...", "INFO", "buildModelDictionary")
+    log("Parsing sensors and controllers...", "INFO")
     for obj in objectlist:
         if obj.phobostype in ['sensor', 'controller']:
             props = deriveDictEntry(obj)
             model[obj.phobostype + 's'][nUtils.getObjectName(obj)] = props
 
     # parse materials
-    log("Parsing materials...", "INFO", "buildModelDictionary")
+    log("Parsing materials...", "INFO")
     model['materials'] = collectMaterials(objectlist)
     for obj in objectlist:
         if obj.phobostype == 'visual':
@@ -991,11 +989,10 @@ def buildModelDictionary(root):
                 model['links'][linkname]['visual'][nUtils.getObjectName(obj)][
                     'material'] = mat.name
             except AttributeError:
-                log("Could not parse material for object " +
-                    obj.name, "ERROR", 'buildModelDictionary')
+                log("Could not parse material for object " + obj.name, "ERROR")
 
     # identify unique meshes
-    log("Parsing meshes...", "INFO", "buildModelDictionary")
+    log("Parsing meshes...", "INFO")
     for obj in objectlist:
         try:
             if ((obj.phobostype == 'visual' or
@@ -1007,11 +1004,10 @@ def buildModelDictionary(root):
                     if lod.object.data.name not in model['meshes']:
                         model['meshes'][lod.object.data.name] = lod.object
         except KeyError:
-            log("Undefined geometry type in object " +
-                obj.name, "ERROR", "buildModelDictionary")
+            log("Undefined geometry type in object " + obj.name, "ERROR")
 
     # gather information on groups of objects
-    log("Parsing groups...", "INFO", "buildModelDictionary")
+    log("Parsing groups...", "INFO")
     # TODO: get rid of the "data" part and check for relation to robot
     for group in bpy.data.groups:
         if (len(group.objects) > 0 and
@@ -1020,7 +1016,7 @@ def buildModelDictionary(root):
                 group, 'group')] = deriveGroupEntry(group)
 
     # gather information on chains of objects
-    log("Parsing chains...", "INFO", "buildModelDictionary")
+    log("Parsing chains...", "INFO")
     chains = []
     for obj in objectlist:
         if obj.phobostype == 'link' and 'endChain' in obj:
@@ -1029,7 +1025,7 @@ def buildModelDictionary(root):
         model['chains'][chain['name']] = chain
 
     # gather information on lights
-    log("Parsing lights...", "INFO", "buildModelDictionary")
+    log("Parsing lights...", "INFO")
     for obj in objectlist:
         if obj.phobostype == 'light':
             model['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
@@ -1038,7 +1034,7 @@ def buildModelDictionary(root):
     model.update(deriveTextData(model['name']))
 
     # shorten numbers in dictionary to n decimalPlaces and return it
-    log("Rounding numbers...", "INFO", "buildModelDictionary")
+    log("Rounding numbers...", "INFO")
     # TODO: implement this separately
     epsilon = 10**(-ioUtils.getExpSettings().decimalPlaces)
     return epsilonToZero(model, epsilon,
@@ -1049,25 +1045,25 @@ def buildModelFromDictionary(model):
     """Creates the Blender representation of the imported model, using a model dictionary.
     """
     # DOCU add some more docstring
-    log("Creating Blender model...", 'INFO', 'buildModelFromDictionary')
+    log("Creating Blender model...", 'INFO')
 
-    log("Creating links...", 'INFO', 'buildModelFromDictionary')
+    log("Creating links...", 'INFO')
     for l in model['links']:
         link = model['links'][l]
         linkmodel.createLink(link)
 
-    log("Creating joints...", 'INFO', 'buildModelFromDictionary')
+    log("Creating joints...", 'INFO')
     for j in model['joints']:
         joint = model['joints'][j]
         jointmodel.createJoint(joint)
 
     # build tree recursively and correct translation & rotation on the fly
-    log("Placing links...", 'INFO', 'buildModelFromDictionary')
+    log("Placing links...", 'INFO')
     for l in model['links']:
         if 'parent' not in model['links'][l]:
             root = model['links'][l]
             linkmodel.placeChildLinks(model, root)
-            log("Assigning model name...", 'INFO', 'buildModelFromDictionary')
+            log("Assigning model name...", 'INFO')
             try:
                 rootlink = sUtils.getRoot(bpy.data.objects[root['name']])
                 rootlink['modelname'] = model['name']
@@ -1075,61 +1071,57 @@ def buildModelFromDictionary(model):
             except KeyError:
                 log("Could not assign model name to root link.", "ERROR")
 
-    log("Placing visual and collision objects...",
-        'INFO', 'buildModelFromDictionary')
+    log("Placing visual and collision objects...", 'INFO')
     for link in model['links']:
         linkmodel.placeLinkSubelements(model['links'][link])
 
     try:
-        log("Creating sensors...", 'INFO', 'buildModelFromDictionary')
+        log("Creating sensors...", 'INFO')
         for s in model['sensors']:
             sensormodel.createSensor(model['sensors'][s])
     except KeyError:
         log("No sensors in model " +
-            model['name'], 'INFO', 'buildModelFromDictionary')
+            model['name'], 'INFO')
 
     try:
-        log("Creating motors...", 'INFO', 'buildModelFromDictionary')
+        log("Creating motors...", 'INFO')
         for m in model['motors']:
             eUtils.addDictionaryToObj(model['motors'][m],
                                       model['joints'][
                                           model['motors'][m]['joint']],
                                       category='motor')
     except KeyError:
-        log("No motors in model " + model['name'],
-            'INFO', 'buildModelFromDictionary')
+        log("No motors in model " + model['name'], 'INFO')
 
     try:
-        log("Creating controllers...", 'INFO', 'buildModelFromDictionary')
+        log("Creating controllers...", 'INFO')
         for c in model['controllers']:
             controllermodel.createController(model['controllers'][c])
     except KeyError:
-        log("No controllers in model " +
-            model['name'], 'INFO', 'buildModelFromDictionary')
+        log("No controllers in model " + model['name'], 'INFO')
 
     try:
-        log("Creating groups...", 'INFO', 'buildModelFromDictionary')
+        log("Creating groups...", 'INFO')
         for g in model['groups']:
             createGroup(model['groups'][g])
     except KeyError:
         log("No kinematic groups in model " +
-            model['name'], 'INFO', 'buildModelFromDictionary')
+            model['name'], 'INFO')
 
     try:
-        log("Creating chains...", 'INFO', 'buildModelFromDictionary')
+        log("Creating chains...", 'INFO')
         for ch in model['chains']:
             createChain(model['chains'][ch])
     except KeyError:
         log("No kinematic chains in model " +
-            model['name'], 'INFO', 'buildModelFromDictionary')
+            model['name'], 'INFO')
 
     try:
-        log("Creating lights...", 'INFO', 'buildModelFromDictionary')
+        log("Creating lights...", 'INFO')
         for l in model['lights']:
             lightmodel.createLight(model['lights'][l])
     except KeyError:
-        log("No lights in model " + model['name'],
-            'INFO', 'buildModelFromDictionary')
+        log("No lights in model " + model['name'], 'INFO')
 
     # FIXME: this is a trick to force Blender to apply matrix_local
     # AAAAAARGH: THIS DOES NOT WORK!

@@ -1122,7 +1122,7 @@ class DefineJointConstraintsOperator(Operator):
                 joint['joint/passive'] = "$true"
             else:
                 # TODO show up in text edit which joints are to change?
-                log("Please add motor to active joint in " + joint.name, "INFO", "DefineJointConstraintsOperator")
+                log("Please add motor to active joint in " + joint.name, "INFO")
         return {'FINISHED'}
 
     @classmethod

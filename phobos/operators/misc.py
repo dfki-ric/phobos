@@ -134,7 +134,7 @@ class MeasureDistanceOperator(Operator):
 
     def execute(self, context):
         self.distance, self.distVector = gUtils.distance(context.selected_objects)
-        log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO", origin=self)
+        log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO")
         return {'FINISHED'}
 
     @classmethod

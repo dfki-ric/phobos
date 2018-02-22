@@ -136,9 +136,9 @@ def getRoots():
     """
     roots = [obj for obj in bpy.context.scene.objects if isRoot(obj)]
     if roots is None:
-        log("Phobos: No root objects found.", "WARNING", "getRoots")
+        log("Phobos: No root objects found.", "WARNING")
     else:
-        log("Phobos: Found " + str(len(roots)) + " root object(s): " + str(roots), "DEBUG", "getRoots")
+        log("Phobos: Found " + str(len(roots)) + " root object(s): " + str(roots), "DEBUG")
     return roots  # TODO: Should we change this and all other list return values in a tuple or generator expression?
 
 
@@ -253,8 +253,7 @@ def getObjectByNameAndType(name, phobostype):
     for obj in bpy.data.objects:
         if name_tag in obj and name == obj[name_tag]:
             return obj
-    log("No object of type " + phobostype + " with name " + name + " found.",
-        "WARNING", "getObjectByNameAndType")
+    log("No object of type " + phobostype + " with name " + name + " found.", "WARNING")
     return None
 
 

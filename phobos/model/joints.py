@@ -242,7 +242,7 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
     :param upper: The constraints upper limit.
     :type upper:float
     """
-    log("Processing joint: " + joint.name, 'DEBUG', 'setJointConstraints')
+    log("Processing joint: " + joint.name, 'DEBUG')
     bpy.ops.object.mode_set(mode='POSE')
     for c in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(c)
@@ -385,7 +385,7 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
             crot.max_z = 0
             crot.owner_space = 'LOCAL'
         else:
-            log("Unknown joint type for joint " + joint.name, "WARNING", "setJointConstraints")
+            log("Unknown joint type for joint " + joint.name, "WARNING")
         joint['joint/type'] = jointtype
         bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -400,4 +400,4 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
                     joint["joint/maxspeed_coefficients"] = maxspeed_approximation["coefficients"]
             except KeyError:
                 log("Approximation for max effort and/or speed ill-defined in joint object " + joint.name,
-                    "ERROR", "setJointConstraints")
+                    "ERROR")

@@ -145,7 +145,7 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False,
             tmpname = separator.join([nameparts[p] for p in namepartindices])
         except IndexError:
             log('Wrong name segment indices given for obj' +
-                nUtils.getObjectName(obj), level="WARNING", origin="deriveLinkFromObject")
+                nUtils.getObjectName(obj), 'WARNING')
     if prefix != '':
         tmpname = prefix + separator + tmpname
     if tmpname == nUtils.getObjectName(obj):

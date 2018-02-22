@@ -370,7 +370,7 @@ def exportSmurf(model, path):
     # TODO delete me?
     ## write custom yml files
     #if bpy.data.worlds[0].exportCustomData:
-    #    log("Exporting custom files to to " + path + "...", "INFO", "exportModelToSMURF")
+    #    log("Exporting custom files to to " + path + "...", "INFO")
     #    for text in customtexts:
     #        with open(os.path.join(path, text.name), 'w') as op:
     #            op.write('\n'.join(line.body for line in text.lines))

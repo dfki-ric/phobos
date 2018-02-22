@@ -542,7 +542,7 @@ def importUrdf(filepath):
 
     # parse joints
     joints = {}
-    log("Parsing joints...", "INFO", 'importUrdf')
+    log("Parsing joints...", "INFO")
     for joint in root.iter('joint'):
         # this is needed as there are "joint" tags e.g. in transmission
         if joint.find('parent') is not None:
@@ -559,14 +559,14 @@ def importUrdf(filepath):
             links[link]['pose'] = parsePose(None)
 
     # write parent-child information to nodes
-    log("Writing parent-child information to nodes...", "INFO", 'importUrdf')
+    log("Writing parent-child information to nodes...", "INFO")
     for j in model['joints']:
         joint = model['joints'][j]
         model['links'][joint['child']]['parent'] = joint['parent']
 
     # parse materials
     model['materials'] = []
-    log("Parsing materials..", 'INFO', 'importUrdf')
+    log("Parsing materials..", 'INFO')
     for material in root.iter('material'):
         newmaterial = {a: material.attrib[a] for a in material.attrib}
         color = material.find('color')
