@@ -56,7 +56,6 @@ def getCategoriesForEnumProperty(self, context):
     If there are no categories return ('-', '-', '-').
     '''
     if len(categories) == 0:
-        print('-')
         return [('-',) * 3]
     return [(item,) * 3 for item in categories]
 
