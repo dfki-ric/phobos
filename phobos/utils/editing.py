@@ -97,11 +97,14 @@ def restructureKinematicTree(link):
 def instantiateAssembly(assemblyname, instancename, version='1.0'):
     assembly = None
     interfaces = None
+
+    # find the existing groups with assemblies and interfaces
     for group in bpy.data.groups:
         if group.name.startswith('assembly') and assemblyname in group.name:
             assembly = group
         if group.name.startswith('interfaces') and assemblyname in group.name:
             interfaces = group
+
     if not assembly or not interfaces:
         raise RuntimeError('Assembly and/or interfaces templates do not exist.')
     # add the assembly and write in data
