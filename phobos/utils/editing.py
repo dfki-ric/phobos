@@ -85,13 +85,11 @@ def restructureKinematicTree(link):
     # unparent all links
     sUtils.selectObjects(links, True)
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-    i = 0
-    for l in range(len(links)-1):
+    for i in range(len(links) - 2):
         parent = links[i]
         child = links[i+1]
         sUtils.selectObjects((parent, child), True, active=0)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
-        i += 1
 
 
 def instantiateAssembly(assemblyname, instancename, version='1.0', size=1.):
