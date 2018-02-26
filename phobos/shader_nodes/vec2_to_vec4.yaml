@@ -1,0 +1,8 @@
+name: vec2_to_vec4
+type: BOTH
+source: vec2_to_vec4.c
+params:
+  in:
+    input: {index: 0, type: vec2}
+  out:
+    output: {index: 1, type: vec4}

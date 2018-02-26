@@ -1,0 +1,4 @@
+blenderversion=2.79
+useP=yes
+pythoncom=python3
+addonpath=/home/dfki.uni-bremen.de/oschwiegert/.config/blender/2.79/scripts/addons
