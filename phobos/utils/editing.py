@@ -94,7 +94,7 @@ def restructureKinematicTree(link):
         i += 1
 
 
-def instantiateAssembly(assemblyname, instancename, version='1.0'):
+def instantiateAssembly(assemblyname, instancename, version='1.0', size=1.):
     assembly = None
     interfaces = None
 
@@ -114,6 +114,7 @@ def instantiateAssembly(assemblyname, instancename, version='1.0'):
     assemblyobj['assemblyname'] = assemblyname
     assemblyobj['version'] = version
     assemblyobj.name = instancename
+    assemblyobj.empty_draw_size = size
     # add the interfaces, make them real and get rid of parent empty object
     bpy.ops.object.group_instance_add(group=interfaces.name)
     #interfaceobj = bpy.context.active_object
