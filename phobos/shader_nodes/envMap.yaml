@@ -1,4 +1,4 @@
-name: envMap
+name: envmap_color_frag
 type: BOTH
 params:
   in:

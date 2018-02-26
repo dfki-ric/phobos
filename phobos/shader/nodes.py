@@ -368,11 +368,13 @@ class UniformNode(Node, VertexFragmentNode):
         result = super().export()
         result["type"] = "uniform"
         if self.uniform_builtin:
-            result["builtin"] = "$true"
+            result["uniform_builtin"] = "$true"
         else:
-            result["builtin"] = "$false"
+            result["uniform_builtin"] = "$false"
         result["uniform_name"] = self.uniform_name
         result["uniform_type"] = self.uniform_type.lower()
+        if self.uniform_type == "SAMPLER2D":
+            result["uniform_type"] = "sampler2D"
         return result
 
 
@@ -421,6 +423,8 @@ class VaryingVertexNode(Node, VertexNode):
         result["type"] = "varying_vertex"
         result["varying_name"] = self.varying_name
         result["varying_type"] = self.varying_type.lower()
+        if self.varying_type == "SAMPLER2D":
+            result["varying_type"] = "sampler2D"
         return result
 
 
@@ -469,6 +473,8 @@ class VaryingFragmentNode(Node, FragmentNode):
         result["type"] = "varying_fragment"
         result["varying_name"] = self.varying_name
         result["varying_type"] = self.varying_type.lower()
+        if self.varying_type == "SAMPLER2D":
+            result["varying_type"] = "sampler2D"
         return result
 
 
