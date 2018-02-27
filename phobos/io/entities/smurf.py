@@ -242,7 +242,8 @@ def exportSmurf(model, path):
                   'controllers': model['controllers'] != {},
                   'collision': collisiondata != {},
                   'visuals': lodsettings != {},
-                  'lights': model['lights'] != {}
+                  'lights': model['lights'] != {},
+                  'submechanisms': model['submechanisms'] != []
                   }
 
     # create all filenames
@@ -255,8 +256,10 @@ def exportSmurf(model, path):
                  'collision': model['name'] + "_collision.yml",
                  'visuals': model['name'] + "_visuals.yml",
                  'lights': model['name'] + "_lights.yml",
+                 'submechanisms': model['name'] + "_submechanisms.yml"
                  }
-    fileorder = ['collision', 'visuals', 'materials', 'motors', 'sensors', 'controllers', 'state', 'lights']
+    fileorder = ['collision', 'visuals', 'materials', 'motors', 'sensors',
+                 'controllers', 'state', 'lights', 'submechanisms']
     urdf_path = '../urdf/'
     urdf_filename = model['name'] + '.urdf'
 
@@ -366,6 +369,11 @@ def exportSmurf(model, path):
             with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)
                 op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
+
+    # write submechanisms
+    with open(os.path.join(path, filenames['submechanisms']), 'w') as op:
+        op.write('#submechanisms' + infostring)
+        op.write(yaml.dump({'submechanisms': model['submechanisms']}))#, default_flow_style=False))
 
     # TODO delete me?
     ## write custom yml files

@@ -1601,6 +1601,89 @@ class DefineAssembly(Operator):
         return {'FINISHED'}
 
 
+class DefineSubmechanism(Operator):
+    """Define a submechanism in the model"""
+    bl_idname = "phobos.define_submechanism"
+    bl_label = "Define Submechanism"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    mechanism_type = EnumProperty(
+        name="Submechanism type",
+        items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
+        )
+            #maybe add size in brackets? lambda_mechanism(3) / [3] lambda_mechanism
+
+    #mechanism_category = EnumProperty(
+    #    name="Submechanism category",
+    #    items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
+    #    )
+
+    mechanism_name = StringProperty()
+
+    def compileSubmechanismEnum(self, context):
+        return bUtils.compileEnumPropertyList(
+            defs.definitions['submechanisms'][self.mechanism_type]['joints']['spanningtree'])
+
+    jointtype0 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype1 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype2 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype3 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype4 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype5 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype6 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype7 = EnumProperty(items=compileSubmechanismEnum)
+
+    @classmethod
+    def poll(cls, context):
+        return (len(bpy.context.selected_objects) > 0 and
+                any((a.phobostype == 'link' for a in bpy.context.selected_objects)))
+
+    # def invoke(self, context, event):
+    #    for in in range(len(context.selected_objects)):
+    #        setattr(self, 'joint' + str(i), context.selected_objects[i].name)
+
+    def draw(self, context):
+        self.layout.prop(self, 'mechanism_type')
+        size = defs.definitions['submechanisms'][self.mechanism_type]['size']
+        if size == len(context.selected_objects):
+            self.layout.prop(self, 'mechanism_name')
+            glayout = self.layout.split()
+            c1 = glayout.column(align=True)
+            c2 = glayout.column(align=True)
+            for i in range(size):
+                c1.label(context.selected_objects[i].name+':')
+                c2.prop(self, "jointtype" + str(i), text='')
+        else:
+            self.layout.label('Please choose a valid type for selected joints.')
+
+    def execute(self, context):
+        joints = context.selected_objects
+        mechanismdata = defs.definitions['submechanisms'][self.mechanism_type]
+        size = mechanismdata['size']
+        if len(joints) == size:
+            root = context.active_object
+            jointmap = {getattr(self, 'jointtype'+str(i)): joints[i] for i in range(len(joints))}
+            # Steps taken:
+            # create group
+            sUtils.selectObjects(joints, True, 0)
+            bpy.ops.group.create(name='submechanism:' + self.mechanism_name)
+            # assign attributes
+            for i in range(len(joints)):
+                joints[i]['submechanism/jointname'] = getattr(self, 'jointtype'+str(i))
+            root['submechanism/category'] = mechanismdata['category']
+            root['submechanism/type'] = mechanismdata['type']
+            root['submechanism/name'] = self.mechanism_name
+            try:
+                root['submechanism/spanningtree'] = [jointmap[j] for j in mechanismdata['joints']['spanningtree']]
+                root['submechanism/active'] = [jointmap[j] for j in mechanismdata['joints']['active']]
+                root['submechanism/independent'] = [jointmap[j] for j in mechanismdata['joints']['independent']]
+            except KeyError:
+                log("Joints not assigned correctly.", 'WARNING')
+        else:
+            log("Number of joints not valid for selected submechanism type.", 'ERROR')
+        return {'FINISHED'}
+
+
 class ToggleInterfaces(Operator):
     """Instantiate an assembly"""
     bl_idname = "phobos.toggle_interfaces"

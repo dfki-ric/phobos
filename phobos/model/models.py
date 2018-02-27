@@ -144,7 +144,7 @@ def deriveLink(obj):
     """
     log("Deriving link " + obj.name, "DEBUG")
     props = initObjectProperties(obj, phobostype='link', ignoretypes=[
-                                 'joint', 'motor', 'entity'])
+                                 'joint', 'motor', 'entity', 'submechanism'])
     parent = sUtils.getEffectiveParent(obj)
     props['parent'] = parent.name if parent else None
     props["pose"] = deriveObjectPose(obj)
@@ -204,7 +204,7 @@ def deriveJoint(obj, adjust=True):
     if 'joint/type' not in obj.keys():
         jt, crot = jointmodel.deriveJointType(obj, adjust=adjust)
     props = initObjectProperties(obj, phobostype='joint', ignoretypes=[
-                                 'link', 'motor', 'entity'])
+                                 'link', 'motor', 'entity', 'submechanism'])
 
     parent = sUtils.getEffectiveParent(obj)
     props['parent'] = nUtils.getObjectName(parent)
@@ -1029,6 +1029,24 @@ def buildModelDictionary(root):
     for obj in objectlist:
         if obj.phobostype == 'light':
             model['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
+
+    # gather submechanism information from links
+    log("Parsing submechanisms...", "INFO")
+    submechanisms = []
+    for link in linklist:
+        if 'submechanism/name' in link.keys():
+            #for key in [key for key in link.keys() if key.startswith('submechanism/')]:
+            #    submechanisms.append({key.replace('submechanism/', ''): value
+            #                        for key, value in link.items()})
+            submech = {'name': link['submechanism/category'],
+                       'type': link['submechanism/type'] ,
+                       'contextual_name': link['submechanism/name'],
+                       'jointnames_independent': [j.name for j in link['submechanism/independent']],
+                       'jointnames_spanningtree': [j.name for j in link['submechanism/spanningtree']],
+                       'jointnames_active': [j.name for j in link['submechanism/active']]
+                       }
+            submechanisms.append(submech)
+    model['submechanisms'] = submechanisms
 
     # add additional data to model
     model.update(deriveTextData(model['name']))

@@ -114,7 +114,8 @@ definitions = {'motors': {},
                'controllers': {},
                'algorithms': {},
                'materials': {},
-               'model': {}
+               'model': {},
+               'submechanisms': {}
                }
 
 
