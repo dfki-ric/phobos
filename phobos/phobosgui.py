@@ -684,11 +684,13 @@ class PhobosModelPanel(bpy.types.Panel):
         c2 = inlayout.column(align=True)
         c1.operator('phobos.set_phobostype')
         c1.operator('phobos.batch_rename')
-        c1.operator('phobos.edityamldictionary', icon='TEXT')
-        c2.operator('phobos.batch_property', icon='GREASEPENCIL')
-        c2.operator('phobos.copy_props', icon='GHOST')
-        c2.operator('phobos.rename_custom_property', icon='SYNTAX_OFF')
+        c2.label(text="Custom properties")
+        c2.operator('phobos.rename_custom_property', text="Rename", icon='SYNTAX_OFF')
+        c2.operator('phobos.batch_property', text="Edit", icon='GREASEPENCIL')
+        c2.operator('phobos.edityamldictionary', text="Edit Dictionary", icon='TEXT')
+        c2.operator('phobos.copy_props', text="Copy", icon='GHOST')
 
+        # Kinematics
         layout.separator()
         kinlayout = layout.split()
         kc1 = kinlayout.column(align=True)
@@ -703,9 +705,9 @@ class PhobosModelPanel(bpy.types.Panel):
         kc2.operator('phobos.create_collision_objects')
         kc2.operator('phobos.define_geometry')
         kc2.operator('phobos.set_collision_group')
-        kc2.operator('phobos.smoothen_surface')
+        #kc2.operator('phobos.smoothen_surface')
 
-        # Masses, Inertia & Hardware
+        # Hardware
         layout.separator()
         minlayout = layout.split()
         hw1 = minlayout.column(align=True)
@@ -713,6 +715,7 @@ class PhobosModelPanel(bpy.types.Panel):
         hw1.operator('phobos.add_motor')
         hw1.operator("phobos.add_annotations")
 
+        # Masses & Inertia
         mc1 = minlayout.column(align=True)
         mc1.label(text="Masses & Inertia", icon='PHYSICS')
         mc1.operator('phobos.calculate_mass')
