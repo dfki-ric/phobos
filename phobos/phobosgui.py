@@ -562,98 +562,99 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
             dictprops = deriveFullLinkInformation(obj)
         else:
             dictprops = deriveDictEntry(obj)
-        proplist = dictprops.keys()
+        if dictprops is not None:
+            proplist = dictprops.keys()
 
-        # add parent object if available
-        if obj.parent:
-            leftLayout.label('Parent object')
-            op = rightLayout.operator('phobos.goto_object',
-                                      text='{0}'.format(obj.parent.name))
-            op.objectname = obj.parent.name
+            # add parent object if available
+            if obj.parent:
+                leftLayout.label('Parent object')
+                op = rightLayout.operator('phobos.goto_object',
+                                        text='{0}'.format(obj.parent.name))
+                op.objectname = obj.parent.name
 
-        categories = {}
+            categories = {}
 
-        # check whether the general category is needed
-        generalProp = set([propname for propname in proplist
-                           if type(dictprops[propname]) is not dict])
-        if len(generalProp - ignoredProps) > 0:
-            general = originalLayout.box()
-            generalTable = general.split()
-            generalL = generalTable.column()
-            generalR = generalTable.column()
-            categories['general'] = [general, generalL, generalR, [0, 0]]
+            # check whether the general category is needed
+            generalProp = set([propname for propname in proplist
+                            if type(dictprops[propname]) is not dict])
+            if len(generalProp - ignoredProps) > 0:
+                general = originalLayout.box()
+                generalTable = general.split()
+                generalL = generalTable.column()
+                generalR = generalTable.column()
+                categories['general'] = [general, generalL, generalR, [0, 0]]
 
-        # remove the unimportant properties and iterate over the rest
-        proplist = set(proplist) - ignoredProps
-        for prop in proplist:
-            params = self.checkParams(prop)
-            value = dictprops[prop]
+            # remove the unimportant properties and iterate over the rest
+            proplist = set(proplist) - ignoredProps
+            for prop in proplist:
+                params = self.checkParams(prop)
+                value = dictprops[prop]
 
-            # check for categories
-            if type(value) is dict:
-                category = prop
+                # check for categories
+                if type(value) is dict:
+                    category = prop
 
-                # look for existing category layout
-                if category in categories:
-                    layout = categories[category]
-                # add a new category layout
-                else:
-                    # use custom icons for supported categories
-                    if category in supportedCategories:
-                        originalLayout.label(
-                            category.upper(),
-                            icon_value=supportedCategories[category][
-                                'icon_value'])
+                    # look for existing category layout
+                    if category in categories:
+                        layout = categories[category]
+                    # add a new category layout
                     else:
-                        originalLayout.label(category.upper())
-
-                    # create column hierarchy
-                    box = originalLayout.box()
-                    catTable = box.split()
-                    catL = catTable.column()
-                    catR = catTable.column()
-                    categories[category] = [box, catL, catR, [0, 0]]
-                    layout = categories[category]
-
-                # add each subproperty to the layout
-                for propT2 in dictprops[category].keys():
-                    params = self.checkParams(category + '/' + propT2)
-
-                    value = dictprops[category][propT2]
-                    if propT2 not in ignoredProps:
-                        # is it a linkable object?
-                        if type(value) is bpy.types.Object or (
-                                type(value) is str and
-                                value in context.scene.objects):
-                            # a string identifier for an object
-                            if type(value) is str:
-                                value = context.scene.objects[value]
-                            self.addObjLink(propT2, value, layout, params)
-                        # is it another dictionary with values?
-                        elif type(value) is dict:
-                            props = value.keys()
-                            values = [value[key] for key in props]
-                            paramkeys = [category + '/' + propT2 + '/' +
-                                         propkey for propkey in props]
-                            paramlist = []
-                            for paramkey in paramkeys:
-                                paramlist.append(self.checkParams(paramkey))
-                            props = [propT2 + '/' +
-                                     propkey for propkey in props]
-                            self.addProp(props, values, layout, paramlist)
-                        # just another value
+                        # use custom icons for supported categories
+                        if category in supportedCategories:
+                            originalLayout.label(
+                                category.upper(),
+                                icon_value=supportedCategories[category][
+                                    'icon_value'])
                         else:
-                            self.addProp([propT2], [value], layout, [params])
-            # just a value for the general category
-            else:
-                layout = categories['general']
-                if type(value) is bpy.types.Object or (
-                        type(value) is str and value in context.scene.objects):
-                    if type(value) is str:
-                        value = context.scene.objects[value]
-                    self.addObjLink(prop, value, layout, params)
+                            originalLayout.label(category.upper())
+
+                        # create column hierarchy
+                        box = originalLayout.box()
+                        catTable = box.split()
+                        catL = catTable.column()
+                        catR = catTable.column()
+                        categories[category] = [box, catL, catR, [0, 0]]
+                        layout = categories[category]
+
+                    # add each subproperty to the layout
+                    for propT2 in dictprops[category].keys():
+                        params = self.checkParams(category + '/' + propT2)
+
+                        value = dictprops[category][propT2]
+                        if propT2 not in ignoredProps:
+                            # is it a linkable object?
+                            if type(value) is bpy.types.Object or (
+                                    type(value) is str and
+                                    value in context.scene.objects):
+                                # a string identifier for an object
+                                if type(value) is str:
+                                    value = context.scene.objects[value]
+                                self.addObjLink(propT2, value, layout, params)
+                            # is it another dictionary with values?
+                            elif type(value) is dict:
+                                props = value.keys()
+                                values = [value[key] for key in props]
+                                paramkeys = [category + '/' + propT2 + '/' +
+                                            propkey for propkey in props]
+                                paramlist = []
+                                for paramkey in paramkeys:
+                                    paramlist.append(self.checkParams(paramkey))
+                                props = [propT2 + '/' +
+                                        propkey for propkey in props]
+                                self.addProp(props, values, layout, paramlist)
+                            # just another value
+                            else:
+                                self.addProp([propT2], [value], layout, [params])
+                # just a value for the general category
                 else:
-                    self.addProp([prop], [value], layout, [params])
+                    layout = categories['general']
+                    if type(value) is bpy.types.Object or (
+                            type(value) is str and value in context.scene.objects):
+                        if type(value) is str:
+                            value = context.scene.objects[value]
+                        self.addObjLink(prop, value, layout, params)
+                    else:
+                        self.addProp([prop], [value], layout, [params])
 
 
 class PhobosModelPanel(bpy.types.Panel):
