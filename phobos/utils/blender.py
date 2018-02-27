@@ -35,6 +35,10 @@ from phobos.phoboslog import log
 from . import selection as sUtils
 
 
+def compileEnumPropertyList(iterable):
+    return (((a,)*3 for a in iterable))
+
+
 def getBlenderVersion():
     # DOCU add some docstring
     return bpy.app.version[0] * 100 + bpy.app.version[1]
