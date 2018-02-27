@@ -584,7 +584,7 @@ def deriveDictEntry(obj):
         elif obj.phobostype == 'light':
             props = deriveLight(obj)
     except KeyError:
-        log("A KeyError occurred due to unspecifiable missing model data.", "DEBUG")
+        log("A KeyError occurred due to missing data in object" + obj.name, "DEBUG")
         return None, None
     return props
 
@@ -1098,8 +1098,7 @@ def buildModelFromDictionary(model):
         for s in model['sensors']:
             sensormodel.createSensor(model['sensors'][s])
     except KeyError:
-        log("No sensors in model " +
-            model['name'], 'INFO')
+        log("No sensors in model " + model['name'], 'INFO')
 
     try:
         log("Creating motors...", 'INFO')
@@ -1123,16 +1122,14 @@ def buildModelFromDictionary(model):
         for g in model['groups']:
             createGroup(model['groups'][g])
     except KeyError:
-        log("No kinematic groups in model " +
-            model['name'], 'INFO')
+        log("No kinematic groups in model " + model['name'], 'INFO')
 
     try:
         log("Creating chains...", 'INFO')
         for ch in model['chains']:
             createChain(model['chains'][ch])
     except KeyError:
-        log("No kinematic chains in model " +
-            model['name'], 'INFO')
+        log("No kinematic chains in model " + model['name'], 'INFO')
 
     try:
         log("Creating lights...", 'INFO')
