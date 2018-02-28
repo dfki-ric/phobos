@@ -19,46 +19,44 @@ GNU Lesser General Public License for more details.
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
-File entities.py
+File phobosgui.py
 
 Created on 3 Nov 2016
 
-@author: Kai von Szadkowski, Simon Reichel
+@author: Kai von Szadkowski
 """
 
-# FIXME this is not working at the moment. Fix it and reactivate the file. See #129
+import bpy
+import phobos.model.models as models
+import phobos.utils.naming as nUtils
+from phobos.phoboslog import log
 
-# import bpy
-# import phobos.model.models as models
-# import phobos.utils.naming as nUtils
-# from phobos.phoboslog import log
+# TODO this function won't work at all... Finish this
+def deriveGenericEntity(entityobj, outpath=None):
+    """This function handles an entity of unknown type by simply exporting its custom properties.
 
-# # TODO this function won't work at all... Finish this
-# def deriveGenericEntity(entityobj, outpath=None):
-#     """This function handles an entity of unknown type by simply exporting its custom properties.
+    :param entityobj: The object representing the entity.
+    :type entityobj: bpy.types.Object
+    :param outpath: If True data will be exported into subfolders.
+    :type outpath: str
+    :return: dict - An entry for the scenes entitiesList
 
-#     :param entityobj: The object representing the entity.
-#     :type entityobj: bpy.types.Object
-#     :param outpath: If True data will be exported into subfolders.
-#     :type outpath: str
-#     :return: dict - An entry for the scenes entitiesList
+    """
+    log("Exporting " + nUtils.getObjectName(entityobj, 'entity') + " as entity of type 'generic", "INFO")
+    entity = models.initObjectProperties(entityobj, 'entity', ['geometry'])
+    return entity
 
-#     """
-#     log("Exporting " + nUtils.getObjectName(entityobj, 'entity') + " as entity of type 'generic", "INFO")
-#     entity = models.initObjectProperties(entityobj, 'entity', ['geometry'])
-#     return entity
-
-#     # write urdf
-#     urdf_path = "../urdf/" if structured else ''
-#     urdf_filename = model['name'] + ".urdf"
-#     exportModelToURDF(model, os.path.join(path, urdf_path, urdf_filename),
-#                       '../meshes/' if structured else '')
+    # write urdf
+    urdf_path = "../urdf/" if structured else ''
+    urdf_filename = model['name'] + ".urdf"
+    exportModelToURDF(model, os.path.join(path, urdf_path, urdf_filename),
+                      '../meshes/' if structured else '')
 
 
-# def exportGenericEntity(entity, outpath):
-#     pass
+def exportGenericEntity(entity, outpath):
+    pass
 
-# # registering import/export functions of types with Phobos
-# entity_type_dict = {'generic': {'export': exportGenericEntity,
-#                               'extensions': ('yaml',)}
-#                     }
+# registering import/export functions of types with Phobos
+entity_type_dict = {'generic': {'export': exportGenericEntity,
+                              'extensions': ('yaml',)}
+                    }
