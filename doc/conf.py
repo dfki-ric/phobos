@@ -262,3 +262,5 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 autodoc_mock_imports = ['bpy', 'mathutils', 'bgl', 'blf']
+
+html_logo = "./img/phobos_logo_small.png"
