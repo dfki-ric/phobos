@@ -48,7 +48,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Phobos'
-copyright = u'2018, Kai Alexander von Szadkowski, Simon Reichel'
+copyright = u'2018, DFKI GmbH'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -201,7 +201,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index', 'Phobos.tex', u'Phobos Documentation',
-   u'Kai Alexander von Szadkowski, Simon Reichel', 'manual'),
+   u'DFKI GmbH', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -231,7 +231,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'phobos', u'Phobos Documentation',
-     [u'Kai Alexander von Szadkowski, Simon Reichel'], 1)
+     [u'DFKI GmbH'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -245,7 +245,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'Phobos', u'Phobos Documentation',
-   u'Kai Alexander von Szadkowski, Simon Reichel', 'Phobos', 'One line description of project.',
+   u'DFKI GmbH', 'Phobos', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -264,3 +264,5 @@ texinfo_documents = [
 autodoc_mock_imports = ['bpy', 'mathutils', 'bgl', 'blf']
 
 html_logo = "./img/phobos_logo_small.png"
+
+copyright = "2014-2018, DFKI GmbH"
