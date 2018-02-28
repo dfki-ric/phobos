@@ -4,3 +4,4 @@ python_dist_packages.conf
 .*
 *.orig
 __pycache__
+doc/_build
