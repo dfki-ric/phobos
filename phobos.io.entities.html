@@ -1,0 +1,786 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>phobos.io.entities package &#8212; Phobos 0.7 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 0.7 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="phobos-io-entities-package">
+<h1>phobos.io.entities package<a class="headerlink" href="#phobos-io-entities-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phobos.io.entities.entities">
+<span id="phobos-io-entities-entities-module"></span><h2>phobos.io.entities.entities module<a class="headerlink" href="#module-phobos.io.entities.entities" title="Permalink to this headline">¶</a></h2>
+<p>Copyright 2014-2016, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File phobosgui.py</p>
+<p>Created on 3 Nov 2016</p>
+<p>&#64;author: Kai von Szadkowski</p>
+<dl class="function">
+<dt id="phobos.io.entities.entities.deriveGenericEntity">
+<code class="descclassname">phobos.io.entities.entities.</code><code class="descname">deriveGenericEntity</code><span class="sig-paren">(</span><em>entityobj</em>, <em>outpath=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.entities.deriveGenericEntity" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function handles an entity of unknown type by simply exporting its custom properties.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>entityobj</strong> (<em>bpy.types.Object</em>) – The object representing the entity.</li>
+<li><strong>outpath</strong> (<em>str</em>) – If True data will be exported into subfolders.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict - An entry for the scenes entitiesList</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.entities.exportGenericEntity">
+<code class="descclassname">phobos.io.entities.entities.</code><code class="descname">exportGenericEntity</code><span class="sig-paren">(</span><em>entity</em>, <em>outpath</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.entities.exportGenericEntity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phobos.io.entities.heightmap">
+<span id="phobos-io-entities-heightmap-module"></span><h2>phobos.io.entities.heightmap module<a class="headerlink" href="#module-phobos.io.entities.heightmap" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.export.heightmap"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File heightmap.py</p>
+<p>Created on 12 Sep 2016</p>
+<dl class="function">
+<dt id="phobos.io.entities.heightmap.deriveEntity">
+<code class="descclassname">phobos.io.entities.heightmap.</code><code class="descname">deriveEntity</code><span class="sig-paren">(</span><em>entity</em>, <em>outpath</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.heightmap.deriveEntity" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function handles a heightmap entity in a scene to export it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>smurf</strong> (<em>bpy.types.Object</em>) – The heightmap root object.</li>
+<li><strong>outpath</strong> (<em>str</em>) – The path to export to.</li>
+<li><strong>savetosubfolder</strong> (<em>bool</em>) – If True data will be exported into subfolders.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict - An entry for the scenes entitiesList</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.io.entities.light">
+<span id="phobos-io-entities-light-module"></span><h2>phobos.io.entities.light module<a class="headerlink" href="#module-phobos.io.entities.light" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.export.light"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File light.py</p>
+<p>Created on 12 Sep 2016</p>
+<dl class="function">
+<dt id="phobos.io.entities.light.deriveEntity">
+<code class="descclassname">phobos.io.entities.light.</code><code class="descname">deriveEntity</code><span class="sig-paren">(</span><em>light</em>, <em>outpath</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.light.deriveEntity" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function handles a light entity in a scene to export it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>entity</strong> (<em>bpy.types.Object</em>) – The lights root object.</li>
+<li><strong>outpath</strong> (<em>str</em>) – The path to export to. Not used for light entity</li>
+<li><strong>savetosubfolder</strong> (<em>bool</em>) – If True data will be exported into subfolders. Not used for light entity</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict - An entry for the scenes entitiesList</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.io.entities.primitive">
+<span id="phobos-io-entities-primitive-module"></span><h2>phobos.io.entities.primitive module<a class="headerlink" href="#module-phobos.io.entities.primitive" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.export.primitive"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File primitive.py</p>
+<p>Created on 12 Sep 2016</p>
+<dl class="function">
+<dt id="phobos.io.entities.primitive.deriveEntity">
+<code class="descclassname">phobos.io.entities.primitive.</code><code class="descname">deriveEntity</code><span class="sig-paren">(</span><em>primitive</em>, <em>outpath</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.primitive.deriveEntity" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function handles a primitive entity in a scene to export it</p>
+<p># TODO is this even a heightmap?
+:param smurf: The heightmap root object.
+:type smurf: bpy.types.Object
+:param outpath: The path to export to. Not used for primitives
+:type outpath: str
+:param savetosubfolder: If True data will be exported into subfolders. Not used for primitives
+:type savetosubfolder: bool
+:return: dict - An entry for the scenes entitiesList</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.primitive.exportPrimitive">
+<code class="descclassname">phobos.io.entities.primitive.</code><code class="descname">exportPrimitive</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.primitive.exportPrimitive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phobos.io.entities.smurf">
+<span id="phobos-io-entities-smurf-module"></span><h2>phobos.io.entities.smurf module<a class="headerlink" href="#module-phobos.io.entities.smurf" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.export.smurf"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File smurf.py</p>
+<p>Created on 12 Sep 2016</p>
+<dl class="function">
+<dt id="phobos.io.entities.smurf.deriveEntity">
+<code class="descclassname">phobos.io.entities.smurf.</code><code class="descname">deriveEntity</code><span class="sig-paren">(</span><em>root</em>, <em>outpath</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.smurf.deriveEntity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives the dictionary for a SMURF entity from the phobos model dictionary.</p>
+<p># TODO savetosubfolder is not a parameter
+:param root: The smurf root object.
+:type root: bpy.types.Object
+:param outpath: The path to export the smurf to.
+:type outpath: str
+:param savetosubfolder: If True the export path has a subfolder for this smurf entity.
+:type savetosubfolder: bool
+:return: dict - An entry for the scenes entitiesList</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.smurf.deriveRefinedCollisionData">
+<code class="descclassname">phobos.io.entities.smurf.</code><code class="descname">deriveRefinedCollisionData</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.smurf.deriveRefinedCollisionData" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function collects all collision bitmasks in a given model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>dict</em>) – The robot model to search in.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict – a dictionary containing all bitmasks with corresponding element name (key).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.smurf.exportSmurf">
+<code class="descclassname">phobos.io.entities.smurf.</code><code class="descname">exportSmurf</code><span class="sig-paren">(</span><em>model</em>, <em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.smurf.exportSmurf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.smurf.gatherAnnotations">
+<code class="descclassname">phobos.io.entities.smurf.</code><code class="descname">gatherAnnotations</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.smurf.gatherAnnotations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gathers custom properties annotating elements of the robot
+across the model. These annotations were created in the model.py
+module and are marked with a leading ‘$’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>dict</em>) – The robot model dictionary.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict – A dictionary of the gathered annotations.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.smurf.gatherLevelOfDetailSettings">
+<code class="descclassname">phobos.io.entities.smurf.</code><code class="descname">gatherLevelOfDetailSettings</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.smurf.gatherLevelOfDetailSettings" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function collects all level of detail settings in a given model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> – The robot model to search in.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict – a dictionary containing all bitmasks with corresponding element name (key).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.smurf.sort_dict_list">
+<code class="descclassname">phobos.io.entities.smurf.</code><code class="descname">sort_dict_list</code><span class="sig-paren">(</span><em>dict_list</em>, <em>sort_key</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.smurf.sort_dict_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO Please add doc ASAP
+:param dict_list:
+:param sort_key:
+:return:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.smurf.sort_for_yaml_dump">
+<code class="descclassname">phobos.io.entities.smurf.</code><code class="descname">sort_for_yaml_dump</code><span class="sig-paren">(</span><em>structure</em>, <em>category</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.smurf.sort_for_yaml_dump" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO Please add doc ASAP
+:param structure:
+:param category:
+:return:</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.io.entities.srdf">
+<span id="phobos-io-entities-srdf-module"></span><h2>phobos.io.entities.srdf module<a class="headerlink" href="#module-phobos.io.entities.srdf" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.export.entities"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File srdf.py</p>
+<p>Created on Nov 8 2016</p>
+<dl class="function">
+<dt id="phobos.io.entities.srdf.buildBitmasks">
+<code class="descclassname">phobos.io.entities.srdf.</code><code class="descname">buildBitmasks</code><span class="sig-paren">(</span><em>self</em>, <em>collision_Groups</em>, <em>robot</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.srdf.buildBitmasks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.srdf.buildCollisionDictionary">
+<code class="descclassname">phobos.io.entities.srdf.</code><code class="descname">buildCollisionDictionary</code><span class="sig-paren">(</span><em>self</em>, <em>collision_exclusives</em>, <em>robot</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.srdf.buildCollisionDictionary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.srdf.buildCollisionExclusives">
+<code class="descclassname">phobos.io.entities.srdf.</code><code class="descname">buildCollisionExclusives</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.srdf.buildCollisionExclusives" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.srdf.buildCollisionGroups">
+<code class="descclassname">phobos.io.entities.srdf.</code><code class="descname">buildCollisionGroups</code><span class="sig-paren">(</span><em>self</em>, <em>dic</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.srdf.buildCollisionGroups" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.srdf.checkGroup">
+<code class="descclassname">phobos.io.entities.srdf.</code><code class="descname">checkGroup</code><span class="sig-paren">(</span><em>self</em>, <em>group</em>, <em>colls</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.srdf.checkGroup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.srdf.exportSRDF">
+<code class="descclassname">phobos.io.entities.srdf.</code><code class="descname">exportSRDF</code><span class="sig-paren">(</span><em>model</em>, <em>path</em>, <em>mesh_format=''</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.srdf.exportSRDF" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function exports the SRDF-relevant data from the dictionary to a specified path.
+Further detail on different elements of SRDF:</p>
+<p>&lt;group&gt;
+Groups in SRDF can contain <em>links</em>, <em>joints</em>, <em>chains</em> and other <em>groups</em> (the latter two of which have to be specified
+upstream. As nested groups is just a shortcut for adding links and joints to a group, it is not supported and the
+user will have to add all links and joints explicitly to each group.
+Originally both links and their associated parent joints were added. SRDF however implicitly assumes this, so the
+current implementation only adds the links.</p>
+<p>&lt;chain&gt;
+Chains are elements to simplify defining groups and are supported. The dictionary also contains a list of all
+elements belonging to that chain, which is discarded and not written to SRDF, however. It might be written to SMURF
+in the future.</p>
+<p>&lt;link_sphere_approximatio&gt;
+SRDF defines the convention that if no sphere is defined, one large sphere is
+assumed for that link. If one wants to have no sphere at all, it is necessary to define a sphere of radius 0.
+As one large sphere can be explicitly added by the user and should be if that is what he intends (WYSIWYG),
+we add a sphere of radius 0 by default if no sphere is specified.</p>
+<p>&lt;passive_joint&gt;
+Marks a joint as passive.</p>
+<p>&lt;disable_collisions&gt;
+Disables collisions between pairs of links to simplify collision checking and avoid collisions
+of parents and children at their joints.</p>
+<p>Currently not supported:
+- &lt;group_state&gt;
+- &lt;virtual_joint&gt;</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> (<em>dict</em>) – a robot model dictionary.</li>
+<li><strong>path</strong> (<em>str</em>) – the outpath for the file.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.srdf.parseSRDFModel">
+<code class="descclassname">phobos.io.entities.srdf.</code><code class="descname">parseSRDFModel</code><span class="sig-paren">(</span><em>self</em>, <em>robot</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.srdf.parseSRDFModel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.srdf.processGroup">
+<code class="descclassname">phobos.io.entities.srdf.</code><code class="descname">processGroup</code><span class="sig-paren">(</span><em>self</em>, <em>group</em>, <em>link</em>, <em>colls</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.srdf.processGroup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phobos.io.entities.thumbnail">
+<span id="phobos-io-entities-thumbnail-module"></span><h2>phobos.io.entities.thumbnail module<a class="headerlink" href="#module-phobos.io.entities.thumbnail" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phobos.io.entities.thumbnail.exportPreview">
+<code class="descclassname">phobos.io.entities.thumbnail.</code><code class="descname">exportPreview</code><span class="sig-paren">(</span><em>model</em>, <em>path</em>, <em>mesh_format=''</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.thumbnail.exportPreview" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function exports a given robot model to a specified filepath as YAML.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> (<em>dict -- the generated robot model dictionary</em>) – The robot model to export</li>
+<li><strong>path</strong> (<em>str</em>) – The filepath to export the robot to. <em>WITH filename!</em></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.io.entities.urdf">
+<span id="phobos-io-entities-urdf-module"></span><h2>phobos.io.entities.urdf module<a class="headerlink" href="#module-phobos.io.entities.urdf" title="Permalink to this headline">¶</a></h2>
+<p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File model.py</p>
+<p>Created on 28 Jul 2014</p>
+<p>&#64;author: Kai von Szadkowski, Stefan Rahms</p>
+<dl class="function">
+<dt id="phobos.io.entities.urdf.add_quaternion">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">add_quaternion</code><span class="sig-paren">(</span><em>rot1</em>, <em>rot2</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.add_quaternion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds two rotations in quaternion format and returns the result as tuple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>rot1</strong> (<em>list</em>) – The first summand.</li>
+<li><strong>rot2</strong> (<em>list</em>) – The second summand.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.calc_pose_formats">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">calc_pose_formats</code><span class="sig-paren">(</span><em>position</em>, <em>rotation</em>, <em>pivot=(0</em>, <em>0</em>, <em>0)</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.calc_pose_formats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a dictionary containing various representations of the pose
+represented by ‘position’ and ‘rotation’:</p>
+<blockquote>
+<div><ul class="simple">
+<li>translation == position</li>
+<li>rotation_quaternion == rotation</li>
+<li>rotation_euler: euler angles</li>
+<li>matrix: position and rotation in 4x4 matrix form</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>position</strong> (<em>list</em>) – The position to include in the dictionary.</li>
+<li><strong>rotation</strong> (<em>list</em>) – The rotation to include into the dictionary. It can either be an euler angle or a quaternion.</li>
+<li><strong>pivot</strong> (<em>list</em>) – The pivot point.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.exportUrdf">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">exportUrdf</code><span class="sig-paren">(</span><em>model</em>, <em>outpath</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.exportUrdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>This functions writes the URDF of a given model into a file at the given filepath.
+An existing file with this path will be overwritten.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> (<em>dict</em>) – Dictionary of the model to be exported as URDF.</li>
+<li><strong>outpath</strong> (<em>str</em>) – The path of the exported file.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.get_phobos_joint_name">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">get_phobos_joint_name</code><span class="sig-paren">(</span><em>mars_name</em>, <em>has_limits</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.get_phobos_joint_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function gets a mars joint name and returns the corresponding urdf joint type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mars_name</strong> (<em>str</em>) – The mars name for the joint.</li>
+<li><strong>has_limits</strong> (<em>bool</em>) – Additional information to determine correct urdf joint name if mars_name is <em>hinge</em>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.handle_missing_geometry">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">handle_missing_geometry</code><span class="sig-paren">(</span><em>no_visual_geo</em>, <em>no_collision_geo</em>, <em>link_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.handle_missing_geometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle missing visual and collision geometry.
+I hope it was meant like that …
+# DOCU this documentation needs update</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.importUrdf">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">importUrdf</code><span class="sig-paren">(</span><em>filepath</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.importUrdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function parses the whole URDF representation of the model and builds the model dictionary from it.
+The created model is stored in the model value of the parser and the URDF file is specified by the filepath
+given to the Parser.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Nothing.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.parseInertial">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">parseInertial</code><span class="sig-paren">(</span><em>link_dict</em>, <em>link_xml</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.parseInertial" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.parseJoint">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">parseJoint</code><span class="sig-paren">(</span><em>joint</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.parseJoint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.parseLink">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">parseLink</code><span class="sig-paren">(</span><em>link</em>, <em>sourcefilepath=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.parseLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function parses the link from the given link dict object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>link</strong> – The link you want to</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.parsePose">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">parsePose</code><span class="sig-paren">(</span><em>origin</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.parsePose" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function parses the robot models pose and returns it as a dictionary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>origin</strong> – The origin blender object to parse the pose from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict – The origins pose.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.pos_rot_tree_to_lists">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">pos_rot_tree_to_lists</code><span class="sig-paren">(</span><em>position</em>, <em>rotation</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.pos_rot_tree_to_lists" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the xml representations of a position and a rotation to lists.
+If either is ‘None’, return a list of zeroes instead.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>position</strong> (<em>str</em>) – The xml representation of a position.</li>
+<li><strong>rotation</strong> (<em>str</em>) – The xml representation of a rotation.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple of two lists</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.round_float">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">round_float</code><span class="sig-paren">(</span><em>float_as_str</em>, <em>decimal=6</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.round_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Casts ‘float_as_str’ to float and round to ‘decimal’ decimal places. The possible exception <strong>ValueError</strong> is
+not handled in the function itself!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>float_as_str</strong> (<em>str</em>) – The string you want to cast into a float.</li>
+<li><strong>decimal</strong> (<em>int</em>) – The number of decimal places you want to round to. Its default is 6.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">float</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.sort_urdf_elements">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">sort_urdf_elements</code><span class="sig-paren">(</span><em>elems</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.sort_urdf_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sort a collection of elements. By default, this method simply wraps the standard ‘sorted()’ method.
+This is done in order to be able to easily change the element ordering.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>elems</strong> – a collection</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">sorted colletion</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.store_element_order">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">store_element_order</code><span class="sig-paren">(</span><em>element_order</em>, <em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.store_element_order" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function dumps whatever pythonic yaml structure to a given filepath and appends <em>_element_order_debug.yml</em>
+to the end of path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>element_order</strong> (<em>dict</em>) – The dictionary you want to dump into a yaml file.</li>
+<li><strong>path</strong> (<em>str</em>) – The path you want to write the yaml dump to.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.entities.urdf.writeURDFGeometry">
+<code class="descclassname">phobos.io.entities.urdf.</code><code class="descname">writeURDFGeometry</code><span class="sig-paren">(</span><em>output</em>, <em>element</em>, <em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.urdf.writeURDFGeometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>This functions writes the URDF geometry for a given element at the end of a given String.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>output</strong> (<em>str</em>) – The String to append the URDF output string on.</li>
+<li><strong>element</strong> (<em>dict</em>) – A certain element to parse into URDF.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">str – The extended String</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.io.entities.yaml">
+<span id="phobos-io-entities-yaml-module"></span><h2>phobos.io.entities.yaml module<a class="headerlink" href="#module-phobos.io.entities.yaml" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phobos.io.entities.yaml.exportYAML">
+<code class="descclassname">phobos.io.entities.yaml.</code><code class="descname">exportYAML</code><span class="sig-paren">(</span><em>model</em>, <em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.entities.yaml.exportYAML" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function exports a given robot model to a specified filepath as YAML.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> (<em>dict -- the generated robot model dictionary</em>) – The robot model to export</li>
+<li><strong>path</strong> (<em>str</em>) – The filepath to export the robot to. <em>WITH filename!</em></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.io.entities">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phobos.io.entities" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">phobos.io.entities package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-phobos.io.entities.entities">phobos.io.entities.entities module</a></li>
+<li><a class="reference internal" href="#module-phobos.io.entities.heightmap">phobos.io.entities.heightmap module</a></li>
+<li><a class="reference internal" href="#module-phobos.io.entities.light">phobos.io.entities.light module</a></li>
+<li><a class="reference internal" href="#module-phobos.io.entities.primitive">phobos.io.entities.primitive module</a></li>
+<li><a class="reference internal" href="#module-phobos.io.entities.smurf">phobos.io.entities.smurf module</a></li>
+<li><a class="reference internal" href="#module-phobos.io.entities.srdf">phobos.io.entities.srdf module</a></li>
+<li><a class="reference internal" href="#module-phobos.io.entities.thumbnail">phobos.io.entities.thumbnail module</a></li>
+<li><a class="reference internal" href="#module-phobos.io.entities.urdf">phobos.io.entities.urdf module</a></li>
+<li><a class="reference internal" href="#module-phobos.io.entities.yaml">phobos.io.entities.yaml module</a></li>
+<li><a class="reference internal" href="#module-phobos.io.entities">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/phobos.io.entities.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 0.7 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Kai Alexander von Szadkowski, Simon Reichel.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1493 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>phobos.model package &#8212; Phobos 0.7 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 0.7 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="phobos-model-package">
+<h1>phobos.model package<a class="headerlink" href="#phobos-model-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phobos.model.controllers">
+<span id="phobos-model-controllers-module"></span><h2>phobos.model.controllers module<a class="headerlink" href="#module-phobos.model.controllers" title="Permalink to this headline">¶</a></h2>
+<p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File controllers.py</p>
+<p>Created on 30 Jan 2014</p>
+<p>&#64;author: Kai von Szadkowski</p>
+<dl class="function">
+<dt id="phobos.model.controllers.addController">
+<code class="descclassname">phobos.model.controllers.</code><code class="descname">addController</code><span class="sig-paren">(</span><em>controller</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.controllers.addController" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function inits and calls the phobos_add_controller operator.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.model.geometries">
+<span id="phobos-model-geometries-module"></span><h2>phobos.model.geometries module<a class="headerlink" href="#module-phobos.model.geometries" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="phobos.model.geometries.createGeometry">
+<code class="descclassname">phobos.model.geometries.</code><code class="descname">createGeometry</code><span class="sig-paren">(</span><em>viscol</em>, <em>geomsrc</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.geometries.createGeometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates geometrical Blender object for visual or collision objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>viscol</strong> (<em>dict</em>) – The visual/collision dictionary element you want to create the geometry for.</li>
+<li><strong>geomsrc</strong> (<em>str</em>) – The new viscols phobostype.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.geometries.deriveGeometry">
+<code class="descclassname">phobos.model.geometries.</code><code class="descname">deriveGeometry</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.geometries.deriveGeometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives the geometry from an object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the geometry from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.geometries.getLargestDimension">
+<code class="descclassname">phobos.model.geometries.</code><code class="descname">getLargestDimension</code><span class="sig-paren">(</span><em>geometry</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.geometries.getLargestDimension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phobos.model.inertia">
+<span id="phobos-model-inertia-module"></span><h2>phobos.model.inertia module<a class="headerlink" href="#module-phobos.model.inertia" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.model.inertia"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File inertia.py</p>
+<p>Created on 13 Feb 2014</p>
+<dl class="function">
+<dt id="phobos.model.inertia.calculateBoxInertia">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">calculateBoxInertia</code><span class="sig-paren">(</span><em>mass</em>, <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.calculateBoxInertia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns upper diagonal of inertia tensor of a box as tuple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mass</strong> (<em>double</em>) – The box’ mass.</li>
+<li><strong>size</strong> (<em>double</em>) – The box’ size.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple(6)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.calculateCapsuleInertia">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">calculateCapsuleInertia</code><span class="sig-paren">(</span><em>mass</em>, <em>r</em>, <em>h</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.calculateCapsuleInertia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns upper diagonal of inertia tensor of a capsule as tuple.</p>
+<p>Code adapted from <a class="reference external" href="http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856">http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856</a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mass</strong> (<em>float.</em>) – The capsule’s mass.</li>
+<li><strong>r</strong> – The capsule’s radius.</li>
+<li><strong>h</strong> – float.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple(6).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.calculateCylinderInertia">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">calculateCylinderInertia</code><span class="sig-paren">(</span><em>mass</em>, <em>r</em>, <em>h</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.calculateCylinderInertia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns upper diagonal of inertia tensor of a cylinder as tuple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mass</strong> (<em>double</em>) – The cylinders mass.</li>
+<li><strong>r</strong> (<em>double</em>) – The cylinders radius.</li>
+<li><strong>h</strong> (<em>double</em>) – The cylinders height.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple(6)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.calculateEllipsoidInertia">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">calculateEllipsoidInertia</code><span class="sig-paren">(</span><em>mass</em>, <em>size</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.calculateEllipsoidInertia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns upper diagonal of inertia tensor of an ellipsoid as tuple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mass</strong> (<em>double</em>) – The ellipsoids mass.</li>
+<li><strong>size</strong> – The ellipsoids size.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple(6)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.calculateInertia">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">calculateInertia</code><span class="sig-paren">(</span><em>mass</em>, <em>geometry</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.calculateInertia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the inertia of an object given its <em>geometry</em> and <em>mass</em> and
+returns the upper diagonal of the inertia 3x3 inertia tensor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mass</strong> (<em>double</em>) – The objects mass.</li>
+<li><strong>geometry</strong> (<em>dict</em>) – The object dictionaries geometry part.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple(6)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.calculateMassOfLink">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">calculateMassOfLink</code><span class="sig-paren">(</span><em>link</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.calculateMassOfLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the masses of visual and collision objects found in a link,
+compares it to mass in link inertial object if present and returns the max of both, warning if they are not equal.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>link</strong> (<em>dict</em>) – The link you want to calculate the visuals and collision objects mass of.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">double</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.calculateMeshInertia">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">calculateMeshInertia</code><span class="sig-paren">(</span><em>data</em>, <em>mass</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.calculateMeshInertia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the inertia tensor of arbitrary mesh objects.</p>
+<p>Implemented after the general idea of ‘Finding the Inertia Tensor of a 3D Solid Body,
+Simply and Quickly’ (2004) by Jonathan Blow (1)
+with formulas for tetrahedron inertia from ‘Explicit Exact Formulas for the 3-D Tetrahedron
+Inertia Tensor in Terms of its Vertex Coordinates’ (2004) by F. Tonon. (2)</p>
+<dl class="docutils">
+<dt>Links: (1) <a class="reference external" href="http://number-none.com/blow/inertia/body_i.html">http://number-none.com/blow/inertia/body_i.html</a></dt>
+<dd><ol class="first last arabic simple" start="2">
+<li><a class="reference external" href="http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf">http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf</a></li>
+</ol>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>bpy.types.BlendData.</em>) – The mesh object’s data.</li>
+<li><strong>mass</strong> (<em>float.</em>) – The object’s mass.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple(6)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.calculateSphereInertia">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">calculateSphereInertia</code><span class="sig-paren">(</span><em>mass</em>, <em>r</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.calculateSphereInertia" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns upper diagonal of inertia tensor of a sphere as tuple.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mass</strong> (<em>double</em>) – The spheres mass.</li>
+<li><strong>r</strong> (<em>double</em>) – The spheres radius.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple(6)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.combine_com_3x3">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">combine_com_3x3</code><span class="sig-paren">(</span><em>objects</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.combine_com_3x3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines center of mass (COM) of a list of bodies given their masses and COMs.
+This code was adapted from an implementation generously provided by Bertold Bongardt.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>objects</strong> (<em>list containing phobos dicts</em>) – The list of objects you want to combine the COG.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.compound_inertia_analysis_3x3">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">compound_inertia_analysis_3x3</code><span class="sig-paren">(</span><em>objects</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.compound_inertia_analysis_3x3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes total mass, common center of mass and inertia matrix at CCOM</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.createInertial">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">createInertial</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.createInertial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an empty inertial object with the same world transform as the corresponding
+object and parents it to the correct link.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The object you want to copy the world transform from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bpy_types.Object – the newly created inertia.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.createInertialFromDictionary">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">createInertialFromDictionary</code><span class="sig-paren">(</span><em>name</em>, <em>inertial</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.createInertialFromDictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Blender representation of a given intertial provided a dictionary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> – The intertials name.</li>
+<li><strong>type</strong> – str</li>
+<li><strong>inertial</strong> – The intertial you want to create in blender form.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bpy_types.Object – the newly created blender inertial object.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.createMajorInertialObjects">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">createMajorInertialObjects</code><span class="sig-paren">(</span><em>link</em>, <em>autocalc=True</em>, <em>selected_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.createMajorInertialObjects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates inertial representations from minor inertials of a link.
+The new link inertial can contain automatically calculated inertia or
+remain empty (based on the autocalc parameter). If the selected_only
+parameter is used the inertia is calculated including only the selected
+minor inertials objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>link</strong> (<em>bpy_types.Object</em>) – The link you want to create the inertial for.</li>
+<li><strong>autocalc</strong> – If set to False the new inertial object will contain no</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>inertia information.
+:type empty: bool.
+:param selected_only: If set to True the inertia calculation uses only the
+currently selected inertial objects.
+:type selected_only: bool.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.createMinorInertialObjects">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">createMinorInertialObjects</code><span class="sig-paren">(</span><em>link</em>, <em>autocalc=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.createMinorInertialObjects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates inertial representations for minor inertials from the visual/
+collision objects of a link. The new inertials can be calculated
+automatically or remain empty (based on the autocalc parameter)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>link</strong> (<em>bpy_types.Object</em>) – the link which contains the visual/collision objects</li>
+<li><strong>autocalc</strong> – If set to False the new inertial object will contain no</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>inertia information.
+:type autocalc: bool</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.fuseInertiaData">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">fuseInertiaData</code><span class="sig-paren">(</span><em>inertials</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.fuseInertiaData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns mass, center of mass and inertia of a link as a whole, taking a list of inertials.</p>
+<p><em>mass</em>: double
+<em>com</em>: mathutils:Vector(3)
+<em>inertia</em>: mathutils:Matrix(3)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>inertials</strong> (<em>list</em>) – The alist of objects relevant for the inertia of a link.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple(3) – see description for content.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.getInertiaRelevantObjects">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">getInertiaRelevantObjects</code><span class="sig-paren">(</span><em>link</em>, <em>selected_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.getInertiaRelevantObjects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of visual and collision objects of a link.
+If name-pairs of visual and collision objects are detected,
+the one with the latest change-date is used. If this is not clear,
+visual objects are omitted in favor of collision objects. If the
+selected_only parameter is used, only the selected objects are considered.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>link</strong> (<em>bpy_types.Object</em>) – The link you want to gather the inertia relevant objects for.</li>
+<li><strong>selected_only</strong> (<em>bool</em>) – return only relevant objects which are selected</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.inertiaListToMatrix">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">inertiaListToMatrix</code><span class="sig-paren">(</span><em>il</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.inertiaListToMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a tuple or list representing the upper diagonal of a 3x3 inertia tensor and returns the full tensor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>il</strong> (<em>tuple</em><em>(</em><em>6</em><em>) or </em><em>list</em><em>[</em><em>6</em><em>]</em>) – The upper diagonal of a 3x3 inertia tensor.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">mathutil.Matrix</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.inertiaMatrixToList">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">inertiaMatrixToList</code><span class="sig-paren">(</span><em>im</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.inertiaMatrixToList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a full 3x3 inertia tensor and returns a tuple representing the upper diagonal.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>im</strong> (<em>mathutil.Matrix</em>) – The inertia tensor matrix.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple(6)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.shift_com_inertia_3x3">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">shift_com_inertia_3x3</code><span class="sig-paren">(</span><em>mass</em>, <em>com</em>, <em>inertia_com</em>, <em>ref_point=&lt;sphinx.ext.autodoc.importer._MockObject object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.shift_com_inertia_3x3" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Shifts the center</dt>
+<dd><p class="first">This code was adapted from an implementation generously provided by Bertold Bongardt.</p>
+<p>shift inertia matrix, steiner theorem / parallel axis theorem, private method</p>
+<ul class="simple">
+<li>without changing the orientation  -</li>
+</ul>
+<p>see SCISIC B.12 or featherstone 2.63, but not Selig (sign swap, not COG)</p>
+<blockquote class="last">
+<div><p>c   = COG - O
+I_O = I_COG + m · c× (c× )T</p>
+<p>changed the formula to (Wikipedia):
+mathbf{J} = mathbf{I} + m left[left(mathbf{R} cdot mathbf{R}</p>
+</div></blockquote>
+</dd>
+</dl>
+<p>ight) mathbf{E}_{3} - mathbf{R} otimes mathbf{R} 
+ight],</p>
+<blockquote>
+<div>This was necessary as previous calculations founded on math libraries of cad2sim.</div></blockquote>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.inertia.spin_inertia_3x3">
+<code class="descclassname">phobos.model.inertia.</code><code class="descname">spin_inertia_3x3</code><span class="sig-paren">(</span><em>inertia_3x3</em>, <em>rotmat</em>, <em>passive=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.spin_inertia_3x3" title="Permalink to this definition">¶</a></dt>
+<dd><p>rotate the inertia matrix</p>
+<p>active and passive interpretation</p>
+<blockquote>
+<div>“passive”   – the object stands still but the inertia is expressed with respect to a rotated reference frame
+“active”    – the object moves and therefore its inertia</div></blockquote>
+<p>consistent with 6x6 method :</p>
+<blockquote>
+<div>active     – consistent with   N’  =  (H^T)^{-1}  *  N  *  H^{-1}
+passive    – consistent with   N’  =  (H^T)       *  N  *  H</div></blockquote>
+<p>WHERE IS a COMBINED METHOD of shifted and rotated inertia ? does it exist ?</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.model.joints">
+<span id="phobos-model-joints-module"></span><h2>phobos.model.joints module<a class="headerlink" href="#module-phobos.model.joints" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.exporter"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File joints.py</p>
+<p>Created on 7 Jan 2014</p>
+<dl class="function">
+<dt id="phobos.model.joints.createJoint">
+<code class="descclassname">phobos.model.joints.</code><code class="descname">createJoint</code><span class="sig-paren">(</span><em>joint</em>, <em>linkobj=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.joints.createJoint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.joints.deriveJointType">
+<code class="descclassname">phobos.model.joints.</code><code class="descname">deriveJointType</code><span class="sig-paren">(</span><em>joint</em>, <em>adjust=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.joints.deriveJointType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives the type of the joint defined by the armature object ‘joint’
+based on the constraints defined in the joint. If the constraints do not
+match the specified joint type, a warning is logged. By using the adjust
+parameter it is possible to overwrite the joint type according to the
+specified joint constraints.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>joint</strong> (<em>bpy_types.Object</em>) – The joint you want to derive its type from.</li>
+<li><strong>adjust</strong> – Decides whether or not the type of the joint is corrected</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>according to the constraints (overwriting the existing joint type)
+:type adjust: bool.
+:return: tuple(2) – jtype, crot</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.joints.getJointConstraint">
+<code class="descclassname">phobos.model.joints.</code><code class="descname">getJointConstraint</code><span class="sig-paren">(</span><em>joint</em>, <em>ctype</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.joints.getJointConstraint" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function gets the constraints out of a given joint.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>joint</strong> (<em>bpy_types.Object</em>) – The joint you want to extract the constraints from.</li>
+<li><strong>ctype</strong> – Specifies the constraint type you want to extract.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.joints.getJointConstraints">
+<code class="descclassname">phobos.model.joints.</code><code class="descname">getJointConstraints</code><span class="sig-paren">(</span><em>joint</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.joints.getJointConstraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the constraints defined in the joint as a combination of two lists, ‘axis’ and ‘limits’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>joint</strong> (<em>bpy_types.Object</em>) – The joint you want to get the constraints from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple – containing the axis and limits lists.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.joints.setJointConstraints">
+<code class="descclassname">phobos.model.joints.</code><code class="descname">setJointConstraints</code><span class="sig-paren">(</span><em>joint</em>, <em>jointtype</em>, <em>lower=0.0</em>, <em>upper=0.0</em>, <em>spring=0.0</em>, <em>damping=0.0</em>, <em>maxeffort_approximation=None</em>, <em>maxspeed_approximation=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.joints.setJointConstraints" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function sets the constraints for a given joint and jointtype.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>joint</strong> (<em>bpy_types.Object</em>) – The joint you want to set the constraints for.</li>
+<li><strong>jointtype</strong> (<em>str</em>) – The joints type. its one of the following:
+- revolute
+- continuous
+- prismatic
+- fixed
+- floating</li>
+<li><strong>lower</strong> (<em>float</em>) – The constraints lower limit.</li>
+<li><strong>upper</strong> – The constraints upper limit.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>:type upper:float</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.model.lights">
+<span id="phobos-model-lights-module"></span><h2>phobos.model.lights module<a class="headerlink" href="#module-phobos.model.lights" title="Permalink to this headline">¶</a></h2>
+<p>Copyright 2015, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File sensors.py</p>
+<p>Created on 9 Apr 2015</p>
+<p>&#64;author: Stefan Rahms</p>
+<dl class="function">
+<dt id="phobos.model.lights.addLight">
+<code class="descclassname">phobos.model.lights.</code><code class="descname">addLight</code><span class="sig-paren">(</span><em>light_dict</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.lights.addLight" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phobos.model.links">
+<span id="phobos-model-links-module"></span><h2>phobos.model.links module<a class="headerlink" href="#module-phobos.model.links" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.exporter"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File links.py</p>
+<p>Created on 14 Apr 2014</p>
+<dl class="function">
+<dt id="phobos.model.links.createLink">
+<code class="descclassname">phobos.model.links.</code><code class="descname">createLink</code><span class="sig-paren">(</span><em>link</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.links.createLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the blender representation of a given link and its parent joint.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>link</strong> (<em>dict</em>) – The link you want to create a representation of.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bpy_types.Object – the newly created blender link object.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.links.deriveLinkfromObject">
+<code class="descclassname">phobos.model.links.</code><code class="descname">deriveLinkfromObject</code><span class="sig-paren">(</span><em>obj</em>, <em>scale=0.2</em>, <em>parenting=True</em>, <em>parentobjects=False</em>, <em>namepartindices=[]</em>, <em>separator='_'</em>, <em>prefix='link'</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.links.deriveLinkfromObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives a link from an object that defines a joint through its position,
+orientation and parent-child relationships.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>bpy_types.Object</em>) – The object to derive a link from.</li>
+<li><strong>scale</strong> (<em>float</em>) – The scale to apply to the link.</li>
+<li><strong>parenting</strong> (<em>bool.</em>) – Whether to automate the parenting of the new link or not.</li>
+<li><strong>parentobjects</strong> (<em>bool.</em>) – Whether to parent all the objects to the new link or not.</li>
+<li><strong>namepartindices</strong> (<em>list with two elements.</em>) – Parts of the objects name you want to reuse in the links name.</li>
+<li><strong>separator</strong> (<em>str</em>) – The separator to use to separate the links name with. Its ‘_’ per default</li>
+<li><strong>prefix</strong> (<em>str</em>) – The prefix to use for the new links name. Its ‘link’ per default.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">the new created link</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.links.getGeometricElements">
+<code class="descclassname">phobos.model.links.</code><code class="descname">getGeometricElements</code><span class="sig-paren">(</span><em>link</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.links.getGeometricElements" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.links.placeChildLinks">
+<code class="descclassname">phobos.model.links.</code><code class="descname">placeChildLinks</code><span class="sig-paren">(</span><em>model</em>, <em>parent</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.links.placeChildLinks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates parent-child-relationship for a given parent and all existing children in Blender.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>parent</strong> – This is the parent link you want to set the children for.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.links.placeLinkSubelements">
+<code class="descclassname">phobos.model.links.</code><code class="descname">placeLinkSubelements</code><span class="sig-paren">(</span><em>link</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.links.placeLinkSubelements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds all subelements for a given link and sets the appropriate relations.
+In this case subelements are interials, visuals and collisions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>link</strong> (<em>dict</em>) – The parent link you want to set the subelements for</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.model.materials">
+<span id="phobos-model-materials-module"></span><h2>phobos.model.materials module<a class="headerlink" href="#module-phobos.model.materials" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.materials"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File materials.py</p>
+<p>Created on 7 Jan 2014</p>
+<dl class="function">
+<dt id="phobos.model.materials.assignMaterial">
+<code class="descclassname">phobos.model.materials.</code><code class="descname">assignMaterial</code><span class="sig-paren">(</span><em>obj</em>, <em>materialname</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.materials.assignMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assigns a material to an object, avoiding creating multiple copies.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – The object to assign the material to.</li>
+<li><strong>materialname</strong> (<em>str</em>) – The materials name.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.materials.createMaterial">
+<code class="descclassname">phobos.model.materials.</code><code class="descname">createMaterial</code><span class="sig-paren">(</span><em>name</em>, <em>diffuse</em>, <em>specular</em>, <em>alpha</em>, <em>diffuse_intensity=1.0</em>, <em>texture=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.materials.createMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a Blender material specified by the input parameters</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em>) – The name of the new material.</li>
+<li><strong>diffuse</strong> (<em>float array with 3 elements.</em>) – The color of the new material.</li>
+<li><strong>specular</strong> (<em>float array with 3 elements.</em>) – The specular color of the new material.</li>
+<li><strong>alpha</strong> (<em>float in</em><em> [</em><em>0</em><em>,</em><em>1.0</em><em>]</em><em></em>) – The transparency of the material.</li>
+<li><strong>diffuse_intensity</strong> (<em>float in</em><em> [</em><em>0</em><em>,</em><em>1.0</em><em>]</em><em></em>) – The amount of diffuse reflection. The default is 1.0.</li>
+<li><strong>texture</strong> (<em>NOT IMPLEMENTED YET.</em>) – NOT IMPEMENTED YET.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bpy.types.Material</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.materials.createPhobosMaterials">
+<code class="descclassname">phobos.model.materials.</code><code class="descname">createPhobosMaterials</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.materials.createPhobosMaterials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a list of standard materials used in Phobos.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.model.models">
+<span id="phobos-model-models-module"></span><h2>phobos.model.models module<a class="headerlink" href="#module-phobos.model.models" title="Permalink to this headline">¶</a></h2>
+<p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File model.py</p>
+<p>Created on 28 Jul 2014</p>
+<p>&#64;author: Kai von Szadkowski, Stefan Rahms</p>
+<dl class="function">
+<dt id="phobos.model.models.buildModelDictionary">
+<code class="descclassname">phobos.model.models.</code><code class="descname">buildModelDictionary</code><span class="sig-paren">(</span><em>root</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.buildModelDictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Builds a python dictionary representation of a Phobos model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>root</strong> – bpy.types.objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.buildModelFromDictionary">
+<code class="descclassname">phobos.model.models.</code><code class="descname">buildModelFromDictionary</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.buildModelFromDictionary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the Blender representation of the imported model, using a model dictionary.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.collectMaterials">
+<code class="descclassname">phobos.model.models.</code><code class="descname">collectMaterials</code><span class="sig-paren">(</span><em>objectlist</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.collectMaterials" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function collects all materials from a list of objects and sorts them into a dictionary</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>objectlist</strong> (<em>list</em>) – The objectlist to grab the materials from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.createChain">
+<code class="descclassname">phobos.model.models.</code><code class="descname">createChain</code><span class="sig-paren">(</span><em>group</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.createChain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.createGroup">
+<code class="descclassname">phobos.model.models.</code><code class="descname">createGroup</code><span class="sig-paren">(</span><em>group</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.createGroup" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveApproxsphere">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveApproxsphere</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveApproxsphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives an SRDF approximation sphere from a given blender object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the approxsphere from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveCapsule">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveCapsule</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveCapsule" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives a capsule from a given blender object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the capsule from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveChainEntry">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveChainEntry</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveChainEntry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives a phobos dict entry for a kinematic chain ending in the provided object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveCollision">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveCollision</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveCollision" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives the collision information from an object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the collision information from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveController">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveController</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveController" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives a controller from a given blender object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the controller from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveDictEntry">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveDictEntry</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveDictEntry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives a phobos dictionary entry from the provided object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The object to derive the dict entry (phobos data structure) from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveFullLinkInformation">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveFullLinkInformation</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveFullLinkInformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives the full link information (including joint and
+motor data) from a blender object and creates its initial phobos data
+structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the link from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveGroupEntry">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveGroupEntry</code><span class="sig-paren">(</span><em>group</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveGroupEntry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives a list of phobos link skeletons for a provided group object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>group</strong> (<em>bpy_types.Group</em>) – The blender group to extract the links from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveInertial">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveInertial</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveInertial" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives the inertial from the given object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The object to derive the inertial from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveJoint">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveJoint</code><span class="sig-paren">(</span><em>obj</em>, <em>adjust=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveJoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives a joint from a blender object and creates its initial phobos data structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – The blender object to derive the joint from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveJointState">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveJointState</code><span class="sig-paren">(</span><em>joint</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveJointState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the state of a joint from the state of the link armature.
+Note that this is the current state and not the zero state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>joint</strong> (<em>bpy_types.Object</em>) – The joint(armature) to derive its state from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveKinematics">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveKinematics</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveKinematics" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes an object and derives a link, joint and motor from it, if possible.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The object to derive its kinematics from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveLight">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveLight</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveLight" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives a light from a given blender object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the light from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveLink">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveLink</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives a link from a blender object and creates its initial phobos data structure.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the link from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveMaterial">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveMaterial</code><span class="sig-paren">(</span><em>mat</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function takes a blender material and creates a phobos representation from it</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mat</strong> (<em>bpy.types.Material</em>) – The blender material to derive a phobos material from</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveModelDictionaryFromAssemblies">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveModelDictionaryFromAssemblies</code><span class="sig-paren">(</span><em>modelname</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveModelDictionaryFromAssemblies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveMotor">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveMotor</code><span class="sig-paren">(</span><em>obj</em>, <em>joint</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveMotor" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives a motor from an object and joint.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the motor from.</li>
+<li><strong>joint</strong> (<em>dict</em>) – The phobos joint to derive the constraints from.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveSensor">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveSensor</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveSensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives a sensor from a given blender object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the sensor from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveTextData">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveTextData</code><span class="sig-paren">(</span><em>modelname</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveTextData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect additional data stored for a specific model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>modelname</strong> – Name of the model for which data should be derived.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A dictionary containing additional data.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.deriveVisual">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveVisual</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveVisual" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function derives the visual information from an object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the visuals from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.getPoses">
+<code class="descclassname">phobos.model.models.</code><code class="descname">getPoses</code><span class="sig-paren">(</span><em>modelname</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.getPoses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the names of the poses that have been stored for a robot.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>modelname</strong> – The model’s name.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A list containing the poses’ names.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.initObjectProperties">
+<code class="descclassname">phobos.model.models.</code><code class="descname">initObjectProperties</code><span class="sig-paren">(</span><em>obj</em>, <em>phobostype=None</em>, <em>ignoretypes=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.initObjectProperties" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function initializes a phobos data structure with a given object
+and derives basic information from its custom properties.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>bpy_types.Object</em>) – The object to derive initial properties from.</li>
+<li><strong>phobostype</strong> (<em>str</em>) – This parameter can specify the type of the given object to include more specific information.</li>
+<li><strong>ignoretypes</strong> (<em>list</em>) – This list contains properties that should be ignored while initializing the objects properties.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.loadPose">
+<code class="descclassname">phobos.model.models.</code><code class="descname">loadPose</code><span class="sig-paren">(</span><em>modelname</em>, <em>posename</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.loadPose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load and apply a robot’s stored pose.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>modelname</strong> (<em>str.</em>) – The model’s name.</li>
+<li><strong>posename</strong> (<em>str.</em>) – The name the pose is stored under.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>:return Nothing.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.namespaceJoint">
+<code class="descclassname">phobos.model.models.</code><code class="descname">namespaceJoint</code><span class="sig-paren">(</span><em>joint</em>, <em>namespace</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.namespaceJoint" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.namespaceLink">
+<code class="descclassname">phobos.model.models.</code><code class="descname">namespaceLink</code><span class="sig-paren">(</span><em>link</em>, <em>namespace</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.namespaceLink" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.namespaceMotor">
+<code class="descclassname">phobos.model.models.</code><code class="descname">namespaceMotor</code><span class="sig-paren">(</span><em>motor</em>, <em>namespace</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.namespaceMotor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.namespaced">
+<code class="descclassname">phobos.model.models.</code><code class="descname">namespaced</code><span class="sig-paren">(</span><em>name</em>, <em>namespace</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.namespaced" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.models.storePose">
+<code class="descclassname">phobos.model.models.</code><code class="descname">storePose</code><span class="sig-paren">(</span><em>modelname</em>, <em>posename</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.storePose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores the current pose of all of a robot’s selected joints.
+Existing poses of the same name will be overwritten.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>modelname</strong> (<em>str.</em>) – The robot the pose belongs to.</li>
+<li><strong>posename</strong> (<em>str.</em>) – The name the pose will be stored under.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Nothing.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.model.poses">
+<span id="phobos-model-poses-module"></span><h2>phobos.model.poses module<a class="headerlink" href="#module-phobos.model.poses" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.exporter"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File meshes.py</p>
+<p>Created on 13 Feb 2014</p>
+<dl class="function">
+<dt id="phobos.model.poses.bakeModel">
+<code class="descclassname">phobos.model.poses.</code><code class="descname">bakeModel</code><span class="sig-paren">(</span><em>objlist</em>, <em>modelname</em>, <em>posename=''</em>, <em>decimate_type='COLLAPSE'</em>, <em>decimate_parameter=0.1</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.poses.bakeModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function gets a list of objects and creates a single, simplified mesh from it and exports it to .stl.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>objlist</strong> (<em>list</em>) – The list of blender objects to join and export as simplified stl file.</li>
+<li><strong>modelname</strong> (<em>str</em>) – The new models name and filename.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.poses.deriveObjectPose">
+<code class="descclassname">phobos.model.poses.</code><code class="descname">deriveObjectPose</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.poses.deriveObjectPose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives a pose of link, visual or collision object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the pose from.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.model.sensors">
+<span id="phobos-model-sensors-module"></span><h2>phobos.model.sensors module<a class="headerlink" href="#module-phobos.model.sensors" title="Permalink to this headline">¶</a></h2>
+<p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File sensors.py</p>
+<p>Created on 6 Jan 2014</p>
+<p>&#64;author: Kai von Szadkowski</p>
+<dl class="function">
+<dt id="phobos.model.sensors.attachSensor">
+<code class="descclassname">phobos.model.sensors.</code><code class="descname">attachSensor</code><span class="sig-paren">(</span><em>self</em>, <em>sensor</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.sensors.attachSensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function attaches a given sensor to its parent link.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>sensor</strong> (<em>dict</em>) – The sensor you want to attach to its parent link.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.sensors.cameraRotLock">
+<code class="descclassname">phobos.model.sensors.</code><code class="descname">cameraRotLock</code><span class="sig-paren">(</span><em>object</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.sensors.cameraRotLock" title="Permalink to this definition">¶</a></dt>
+<dd><p>DOCU: PLEASE ADD PYDOC. What should this do exactly?</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>object</strong> (<em>bpy_types.Object</em>) – The object to lock the rotation for</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.model.sensors.createSensor">
+<code class="descclassname">phobos.model.sensors.</code><code class="descname">createSensor</code><span class="sig-paren">(</span><em>sensor</em>, <em>reference</em>, <em>origin=&lt;sphinx.ext.autodoc.importer._MockObject object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.sensors.createSensor" title="Permalink to this definition">¶</a></dt>
+<dd><p>This function creates a new sensor specified by its parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>sensor</strong> (<em>dict</em>) – The phobos representation of the new sensor.</li>
+<li><strong>reference</strong> (<em>bpy_types.Object</em>) – This is an object to add a parent relationship to.</li>
+<li><strong>origin</strong> (<em>mathutils.Matrix</em>) – The new sensors origin.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">The newly created sensor object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-phobos.model">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phobos.model" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">phobos.model package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-phobos.model.controllers">phobos.model.controllers module</a></li>
+<li><a class="reference internal" href="#module-phobos.model.geometries">phobos.model.geometries module</a></li>
+<li><a class="reference internal" href="#module-phobos.model.inertia">phobos.model.inertia module</a></li>
+<li><a class="reference internal" href="#module-phobos.model.joints">phobos.model.joints module</a></li>
+<li><a class="reference internal" href="#module-phobos.model.lights">phobos.model.lights module</a></li>
+<li><a class="reference internal" href="#module-phobos.model.links">phobos.model.links module</a></li>
+<li><a class="reference internal" href="#module-phobos.model.materials">phobos.model.materials module</a></li>
+<li><a class="reference internal" href="#module-phobos.model.models">phobos.model.models module</a></li>
+<li><a class="reference internal" href="#module-phobos.model.poses">phobos.model.poses module</a></li>
+<li><a class="reference internal" href="#module-phobos.model.sensors">phobos.model.sensors module</a></li>
+<li><a class="reference internal" href="#module-phobos.model">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/phobos.model.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 0.7 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Kai Alexander von Szadkowski, Simon Reichel.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+    </div>
+  </body>
+</html>

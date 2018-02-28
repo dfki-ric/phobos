@@ -1,0 +1,286 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>phobos.operators package &#8212; Phobos 0.7 documentation</title>
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 0.7 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="phobos-operators-package">
+<h1>phobos.operators package<a class="headerlink" href="#phobos-operators-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-phobos.operators.editing">
+<span id="phobos-operators-editing-module"></span><h2>phobos.operators.editing module<a class="headerlink" href="#module-phobos.operators.editing" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.operators.editing"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<p>File operators/editing.py</p>
+<p>&#64;author: Kai von Szadkowski, Stefan Rahms, Simon Reichel</p>
+<dl class="function">
+<dt id="phobos.operators.editing.getControllerParameters">
+<code class="descclassname">phobos.operators.editing.</code><code class="descname">getControllerParameters</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.editing.getControllerParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the controller parameters for the controller type with the provided
+name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str.</em>) – the name of the controller type.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.editing.getDefaultControllerParameters">
+<code class="descclassname">phobos.operators.editing.</code><code class="descname">getDefaultControllerParameters</code><span class="sig-paren">(</span><em>scene</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.editing.getDefaultControllerParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the default controller parameters for the controller of the active
+object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.editing.register">
+<code class="descclassname">phobos.operators.editing.</code><code class="descname">register</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.editing.register" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.editing.unregister">
+<code class="descclassname">phobos.operators.editing.</code><code class="descname">unregister</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.editing.unregister" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phobos.operators.io">
+<span id="phobos-operators-io-module"></span><h2>phobos.operators.io module<a class="headerlink" href="#module-phobos.operators.io" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.operators.io"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<dl class="function">
+<dt id="phobos.operators.io.exportModel">
+<code class="descclassname">phobos.operators.io.</code><code class="descname">exportModel</code><span class="sig-paren">(</span><em>root</em>, <em>export_path</em>, <em>entitytypes=None</em>, <em>model=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.io.exportModel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.io.generateLibEntries">
+<code class="descclassname">phobos.operators.io.</code><code class="descname">generateLibEntries</code><span class="sig-paren">(</span><em>param1</em>, <em>param2</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.io.generateLibEntries" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.io.loadModelsAndPoses">
+<code class="descclassname">phobos.operators.io.</code><code class="descname">loadModelsAndPoses</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.io.loadModelsAndPoses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.io.register">
+<code class="descclassname">phobos.operators.io.</code><code class="descname">register</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.io.register" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.io.unregister">
+<code class="descclassname">phobos.operators.io.</code><code class="descname">unregister</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.io.unregister" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phobos.operators.misc">
+<span id="phobos-operators-misc-module"></span><h2>phobos.operators.misc module<a class="headerlink" href="#module-phobos.operators.misc" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.operators.misc"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<dl class="function">
+<dt id="phobos.operators.misc.draw_preview_callback">
+<code class="descclassname">phobos.operators.misc.</code><code class="descname">draw_preview_callback</code><span class="sig-paren">(</span><em>self</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.misc.draw_preview_callback" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.misc.get_pose_names">
+<code class="descclassname">phobos.operators.misc.</code><code class="descname">get_pose_names</code><span class="sig-paren">(</span><em>scene</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.misc.get_pose_names" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.misc.get_robot_names">
+<code class="descclassname">phobos.operators.misc.</code><code class="descname">get_robot_names</code><span class="sig-paren">(</span><em>scene</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.misc.get_robot_names" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.misc.register">
+<code class="descclassname">phobos.operators.misc.</code><code class="descname">register</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.misc.register" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.misc.unregister">
+<code class="descclassname">phobos.operators.misc.</code><code class="descname">unregister</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.misc.unregister" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phobos.operators.naming">
+<span id="phobos-operators-naming-module"></span><h2>phobos.operators.naming module<a class="headerlink" href="#module-phobos.operators.naming" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.operators.naming"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<dl class="function">
+<dt id="phobos.operators.naming.register">
+<code class="descclassname">phobos.operators.naming.</code><code class="descname">register</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.naming.register" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.naming.unregister">
+<code class="descclassname">phobos.operators.naming.</code><code class="descname">unregister</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.naming.unregister" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phobos.operators.selection">
+<span id="phobos-operators-selection-module"></span><h2>phobos.operators.selection module<a class="headerlink" href="#module-phobos.operators.selection" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-phobos.operators.selection"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
+<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
+<p>Phobos is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License
+as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version.</p>
+<p>Phobos is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Lesser General Public License for more details.</p>
+<p>You should have received a copy of the GNU Lesser General Public License
+along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<dl class="function">
+<dt id="phobos.operators.selection.register">
+<code class="descclassname">phobos.operators.selection.</code><code class="descname">register</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.selection.register" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="phobos.operators.selection.unregister">
+<code class="descclassname">phobos.operators.selection.</code><code class="descname">unregister</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.operators.selection.unregister" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-phobos.operators">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phobos.operators" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">phobos.operators package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-phobos.operators.editing">phobos.operators.editing module</a></li>
+<li><a class="reference internal" href="#module-phobos.operators.io">phobos.operators.io module</a></li>
+<li><a class="reference internal" href="#module-phobos.operators.misc">phobos.operators.misc module</a></li>
+<li><a class="reference internal" href="#module-phobos.operators.naming">phobos.operators.naming module</a></li>
+<li><a class="reference internal" href="#module-phobos.operators.selection">phobos.operators.selection module</a></li>
+<li><a class="reference internal" href="#module-phobos.operators">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/phobos.operators.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 0.7 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Kai Alexander von Szadkowski, Simon Reichel.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
+    </div>
+  </body>
+</html>
