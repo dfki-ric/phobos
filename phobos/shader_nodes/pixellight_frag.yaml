@@ -1,5 +1,5 @@
 name: pixellight_frag
-type: BOTH
+type: FRAGMENT
 source: /shader/plight.frag
 params:
   in:

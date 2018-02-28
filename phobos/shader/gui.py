@@ -43,6 +43,12 @@ node_categories = [
     FragmentNodeCategory("FRAGMENT_OUTPUT", "Output", items=[
         NodeItem("FragOutNode")
     ]),
+    FragmentNodeCategory("FRAGMENT_NODES", "Nodes", items= [
+        NodeItem("CustomNodeFragment")
+    ]),
+    VertexNodeCategory("VERTEX_NODES", "Nodes", items=[
+        NodeItem("CustomNodeVertex")
+    ]),
     VertexFragmentNodeCategory("SHARED_NODES", "Shared Nodes", items=[
         NodeItem("CustomNode"),
         NodeItem("BackfaceNormalNode"),

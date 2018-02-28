@@ -1,6 +1,6 @@
 name: phong_frag
 source: /graph_shader/phong.frag
-type: BOTH
+type: FRAGMENT
 params:
   in:
     normal: {index: 0, type: vec3}

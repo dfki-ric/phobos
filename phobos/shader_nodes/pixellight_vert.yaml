@@ -1,5 +1,5 @@
 name: pixellight_vert
-type: BOTH
+type: VERTEX
 params:
   in:
     worldPos: {index: 0, type: vec4}

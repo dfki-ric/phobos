@@ -1,6 +1,6 @@
 name: phong_vert
 source: /graph_shader/phong.vert
-type: BOTH
+type: VERTEX
 params:
   in:
     worldPos: {index: 0, type: vec4}

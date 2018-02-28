@@ -1,6 +1,6 @@
 name: worldPos
 source: /graph_shader/worldPos.vert
-type: BOTH
+type: VERTEX
 params:
   in:
     viewPos: {index: 0, type: vec4}

@@ -109,7 +109,7 @@ def export_shader(ntree):
     shader["sort"] = topological_sort(ntree)
     for node in ntree.nodes:
         shader["nodes"][node.get_clean_name()] = node.export()
-        if node.bl_idname == "CustomNode":
+        if node.bl_idname == "CustomNode" or node.bl_idname == "CustomNodeFragment" or node.bl_idname == "CustomNodeVertex":
             shader["custom"].add(node.node_type)
     shader["custom"] = list(shader["custom"])
     return shader

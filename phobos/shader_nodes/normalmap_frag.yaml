@@ -1,5 +1,5 @@
 name: normalmap_frag
-type: BOTH
+type: FRAGMENT
 params:
   in:
     nt: {index: 0, type: vec4}

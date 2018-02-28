@@ -1,6 +1,6 @@
 name: viewPos
 source: /graph_shader/viewPos.vert
-type: BOTH
+type: VERTEX
 params:
   in:
     modelPos: {index: 0, type: vec4}
