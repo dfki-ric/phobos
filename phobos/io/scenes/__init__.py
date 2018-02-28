@@ -50,7 +50,7 @@ for filename in os.listdir(os.path.dirname(__file__)):
         # try reading the entity dictionary and add it to the existing entities
         if hasattr(py_mod, 'scene_type_dict'):
             scene_types.update(py_mod.scene_type_dict.copy())
-            print('Registered scene plugin:', list(py_mod.entity_type_dict.keys()))
+            print('Registered scene plugin:', list(py_mod.scene_type_dict.keys()))
         else:
             print('ERROR in scenes/__init__: "' +
                   filename + '" has no valid scene plugin interface.')
