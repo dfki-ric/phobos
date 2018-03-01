@@ -1195,10 +1195,47 @@ class AddSensorOperator(Operator):
     bl_label = "Add/Edit Sensor"
     bl_options = {'REGISTER', 'UNDO'}
 
-    sensor_type = EnumProperty(
-        name="Sensor Type",
-        default='undefined',
-        items=tuple([(t,) * 3 for t in defs.definitions['sensors']]),
+
+    def getSensorCategories(self, context):
+        '''Create an enum for the sensor categories. For phobos preset categories,
+        the phobosIcon is added to the enum.
+        '''
+        from phobos.phobosgui import prev_collections
+
+        phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
+        categories = [t for t in defs.definitions['sensor_categories']]
+
+        icon = ''
+        items = []
+        i = 1
+        for categ in categories:
+            # assign an icon to the phobos preset categories
+            if categ in ['scanning', 'camera', 'internal', 'environmental', 'communication']:
+                if categ == 'scanning':
+                    icon = 'OUTLINER_OB_FORCE_FIELD'
+                elif categ == 'camera':
+                    icon = 'CAMERA_DATA'
+                elif categ == 'internal':
+                    icon = 'PHYSICS'
+                elif categ == 'environmental':
+                    icon = 'WORLD'
+                elif categ == 'communication':
+                    icon = 'SPEAKER'
+                else:
+                    icon = phobosIcon
+            else:
+                icon = 'LAYER_USED'
+
+            items.append((categ, categ, categ, icon, i))
+            i += 1
+
+        # make undefined category the default
+        items.insert(0, ('undefined', 'undefined', 'undefined', 'CANCEL', 0))
+        return items
+
+    sensor_category = EnumProperty(
+        name="Sensor category",
+        items=getSensorCategories,
         description="Type of the sensor to be created"
     )
 
@@ -1254,56 +1291,56 @@ class AddSensorOperator(Operator):
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "sensor_name", text="Sensor Name")
-        layout.prop(self, "sensor_type", text="Sensor Type")
-        if self.sensor_type in ['CameraSensor', 'ScanningSonar', 'RaySensor',
-                                'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            layout.prop(self, "add_link", "Attach to New Link")
-        if self.sensor_type == "custom":
-            layout.prop(self, "custom_type", text="Custom Type")
-        else:
-            for key in defs.definitions['sensors'][self.sensor_type]:
-                layout.prop(self, key, text=key)
+        layout.prop(self, "sensor_category")
+        # if self.sensor_type in ['CameraSensor', 'ScanningSonar', 'RaySensor',
+        #                         'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
+        #     layout.prop(self, "add_link", "Attach to New Link")
+        # if self.sensor_type == "custom":
+        #     layout.prop(self, "custom_type", text="Custom Type")
+        # else:
+        #     for key in defs.definitions['sensor_category'][self.sensor_category]:
+        #         layout.prop(self, key, text=key)
 
     # TODO fix this operator and test it
     def execute(self, context):
         # create a dictionary holding the sensor definition
-        sensor = {'name': self.sensor_name,
-                  'type': self.custom_type if self.sensor_type == 'Custom' else self.sensor_type,
-                  'props': {}
-                  }
-        parent = context.active_object
-        for key in defs.definitions['sensors'][self.sensor_type]:
-            if type(defs.definitions['sensors'][self.sensor_type][key]) == type(True):
-                value = getattr(self, key)
-                sensor['props'][key] = '$true' if value else '$false'
-            else:
-                sensor['props'][key] = getattr(self, key)
-        # type-specific settings
-        if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
-                              'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            if self.add_link:
-                link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(),
-                                        name='link_' + self.sensor_name)
-                sensorObj = sensors.createSensor(sensor, link, link.matrix_world)
-            else:
-                sensorObj = sensors.createSensor(sensor, context.active_object, context.active_object.matrix_world)
-            if self.add_link:
-                sUtils.selectObjects([parent, link], clear=True, active=0)
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
-                sUtils.selectObjects([link, sensorObj], clear=True, active=0)
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            sensors.cameraRotLock(sensorObj)
-        elif sensor['type'] in ['Joint6DOF']:
-            for obj in context.selected_objects:
-                if obj.phobostype == 'link':
-                    sensor['name'] = "sensor_joint6dof_" + nUtils.getObjectName(obj, phobostype="joint")
-                    sensors.createSensor(sensor, obj, obj.matrix_world)
-        elif 'Node' in sensor['type']:
-            sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
-                         mathutils.Matrix.Translation(context.scene.cursor_location))
-        elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
-            sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
-                         mathutils.Matrix.Translation(context.scene.cursor_location))
+        # sensor = {'name': self.sensor_name,
+        #           'type': self.custom_type if self.sensor_type == 'Custom' else self.sensor_type,
+        #           'props': {}
+        #           }
+        # parent = context.active_object
+        # for key in defs.definitions['sensors'][self.sensor_type]:
+        #     if type(defs.definitions['sensors'][self.sensor_type][key]) == type(True):
+        #         value = getattr(self, key)
+        #         sensor['props'][key] = '$true' if value else '$false'
+        #     else:
+        #         sensor['props'][key] = getattr(self, key)
+        # # type-specific settings
+        # if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
+        #                       'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
+        #     if self.add_link:
+        #         link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(),
+        #                                 name='link_' + self.sensor_name)
+        #         sensorObj = sensors.createSensor(sensor, link, link.matrix_world)
+        #     else:
+        #         sensorObj = sensors.createSensor(sensor, context.active_object, context.active_object.matrix_world)
+        #     if self.add_link:
+        #         sUtils.selectObjects([parent, link], clear=True, active=0)
+        #         bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        #         sUtils.selectObjects([link, sensorObj], clear=True, active=0)
+        #         bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        #     sensors.cameraRotLock(sensorObj)
+        # elif sensor['type'] in ['Joint6DOF']:
+        #     for obj in context.selected_objects:
+        #         if obj.phobostype == 'link':
+        #             sensor['name'] = "sensor_joint6dof_" + nUtils.getObjectName(obj, phobostype="joint")
+        #             sensors.createSensor(sensor, obj, obj.matrix_world)
+        # elif 'Node' in sensor['type']:
+        #     sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
+        #                  mathutils.Matrix.Translation(context.scene.cursor_location))
+        # elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
+        #     sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
+        #                  mathutils.Matrix.Translation(context.scene.cursor_location))
         return {'FINISHED'}
 
 def getControllerParameters(name):

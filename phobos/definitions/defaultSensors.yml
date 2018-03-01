@@ -1,149 +1,247 @@
 #If you want to evaluate numeric expressions in this yaml file, just enclose your expression with '&'. In that simple expressions you can use the python math module.
 
-sensors:
-    RaySensor:
-        width:
-            required: true
-            default: 144
-        height:
-            required: true
-            default: 1
-        opening_width:
-            required: true
-            default: &0.5*math.pi&
-        opening_height:
-            required: true
-            default: &0.5*math.pi&
-        maxDistance:
-            required: true
-            default: 100
-    RotatingRaySensor:
-        bands:
-            required: true
-            default: 16
-        lasers:
-            required: true
-            default: 32
-        maxDistance:
-            required: true
-            default: 100.0
-        draw_rays:
-            required: true
-            default: True
-        horizontal_resolution:
-            required: true
-            default: &(1/180)*math.pi&
-        horizontal_offset:
-            required: true
-            default: 0.0
-        vertical_offset:
-            required: true
-            default: 0.0
-    CameraSensor:
-        width:
-            required: true
-            default: 640
-        height:
-            required: true
-            default: 480
-        show_cam:
-            required: true
-            default: true
-        opening_width:
-            required: true
-            default: 90
-        opening_height:
-            required: true
-            default: 90
-        hud_pos:
-            required: true
-            default: 0
-        hud_width:
-            required: true
-            default: 320
-        hud_height:
-            required: true
-            default: 240
-        depthImage:
-            required: true
-            default: false
-    ScanningSonar:
-        width:
-            required: true
-            default: 64
-        height:
-            required: true
-            default: 512
-        resolution:
-            required: true
-            default: 0.1
-        maxDist:
-            required: true
-            default: 100.0
-        hud_pos:
-            required: true
-            default: 0
-        updateRate:
-            required: true
-            default: 10
-        gain:
-            required: true
-            default: 1
-        show_cam:
-            required: true
-            default: false
-        only_ray:
-            required: true
-            default: false
-        extension:
-            required: true
-            default:
-                - 0.010000
-                - 0.004000
-                - 0.004000
-        left_limit:
-            required: true
-            default: &math.pi&
-        right_limit:
-            required: true
-            default: &(-1)*math.pi&
-        ping_pong_mode:
-            required: true
-            default: false
-    MultiLevelLaserRangeFinder:
-        numRaysVertical:
-            required: true
-            default: 32
-        numRaysHorizontal:
-            required: true
-            default: 1900
-        rttResolutionX:
-            required: true
-            default:  512 # 128*4
-        rttResolutionY:
-            required: true
-            default:  256 # 128 * 2
-        verticalOpeningAngle:
-            required: true
-            default: &40/180.0 * math.pi&
-        horizontalOpeningAngle:
-            required: true
-            default: &2*math.pi*1899/ 1900&
-        maxDistance:
-            required: true
-            default: 100.0
-    JointPosition: {}
-    JointVelocity: {}
-    JointLoad: {}
-    JointTorque: {}
-    JointAVGTorque: {}
-    Joint6DOF: {}
-    NodeContact: {}
-    NodePosition: {}
-    NodeRotation: {}
-    NodeContactForce: {}
-    NodeCOM: {}
-    NodeVelocity: {}
-    NodeAngularVelocity: {}
-    MotorCurrent: {}
-    undefined: {}
+# IMPORTANT: if adding new categories to the internal phobos, also change the
+# visual representation of these in the addSensor Operator!
+sensor_categories:
+    scanning:
+        Ray Sensor:
+            custom: false
+            compatibility:
+                - SMURF
+            width:
+                required: true
+                default: 144
+            height:
+                required: true
+                default: 1
+            opening_width:
+                required: true
+                default: &0.5*math.pi&
+            opening_height:
+                required: true
+                default: &0.5*math.pi&
+            maxDistance:
+                required: true
+                default: 100
+
+        Rotating Ray Sensor:
+            custom: false
+            compatibility:
+                - SMURF
+            bands:
+                required: true
+                default: 16
+            lasers:
+                required: true
+                default: 32
+            maxDistance:
+                required: true
+                default: 100.0
+            draw_rays:
+                required: true
+                default: True
+            horizontal_resolution:
+                required: true
+                default: &(1/180)*math.pi&
+            horizontal_offset:
+                required: true
+                default: 0.0
+            vertical_offset:
+                required: true
+                default: 0.0
+
+        Scanning Sonar:
+            custom: false
+            compatibility:
+                - SMURF
+            width:
+                required: true
+                default: 64
+            height:
+                required: true
+                default: 512
+            resolution:
+                required: true
+                default: 0.1
+            maxDist:
+                required: true
+                default: 100.0
+            hud_pos:
+                required: true
+                default: 0
+            updateRate:
+                required: true
+                default: 10
+            gain:
+                required: true
+                default: 1
+            show_cam:
+                required: true
+                default: false
+            only_ray:
+                required: true
+                default: false
+            extension:
+                required: true
+                default:
+                    - 0.010000
+                    - 0.004000
+                    - 0.004000
+            left_limit:
+                required: true
+                default: &math.pi&
+            right_limit:
+                required: true
+                default: &(-1)*math.pi&
+            ping_pong_mode:
+                required: true
+                default: false
+
+        Multi Level Laser Range Finder:
+            custom: false
+            compatibility:
+                - SMURF
+            numRaysVertical:
+                required: true
+                default: 32
+            numRaysHorizontal:
+                required: true
+                default: 1900
+            rttResolutionX:
+                required: true
+                default:  512 # 128*4
+            rttResolutionY:
+                required: true
+                default:  256 # 128 * 2
+            verticalOpeningAngle:
+                required: true
+                default: &40/180.0 * math.pi&
+            horizontalOpeningAngle:
+                required: true
+                default: &2*math.pi*1899/ 1900&
+            maxDistance:
+                required: true
+                default: 100.0
+
+    camera:
+        Camera Sensor:
+            custom: false
+            compatibility:
+                - SMURF
+            width:
+                required: true
+                default: 640
+            height:
+                required: true
+                default: 480
+            show_cam:
+                required: true
+                default: true
+            opening_width:
+                required: true
+                default: 90
+            opening_height:
+                required: true
+                default: 90
+            hud_pos:
+                required: true
+                default: 0
+            hud_width:
+                required: true
+                default: 320
+            hud_height:
+                required: true
+                default: 240
+            depthImage:
+                required: true
+                default: false
+
+    internal:
+        Joint Position:
+            custom: false
+            compatibility:
+                - SMURF
+        Joint Velocity:
+            custom: false
+            compatibility:
+                - SMURF
+        Joint Load:
+            custom: false
+            compatibility:
+                - SMURF
+        Joint Torque:
+            custom: false
+            compatibility:
+                - SMURF
+        Joint AVG Torque:
+            custom: false
+            compatibility:
+                - SMURF
+        Joint 6 DOF:
+            custom: false
+            compatibility:
+                - SMURF
+        Node Contact:
+            custom: false
+            compatibility:
+                - SMURF
+        Node Position:
+            custom: false
+            compatibility:
+                - SMURF
+        Node Rotation:
+            custom: false
+            compatibility:
+                - SMURF
+        Node Contact Force:
+            custom: false
+            compatibility:
+                - SMURF
+        Node COM:
+            custom: false
+            compatibility:
+                - SMURF
+        Node Velocity:
+            custom: false
+            compatibility:
+                - SMURF
+        Node Angular Velocity:
+            custom: false
+            compatibility:
+                - SMURF
+        Motor Current:
+            custom: false
+            compatibility:
+                - SMURF
+        Inertial Measurement Unit:
+            custom: false
+            compatibility:
+                - SDF
+
+    environmental:
+        Altimeter:
+            custom: false
+            compatibility:
+                - SDF
+        Magnetometer:
+            custom: false
+            compatibility:
+                - SDF
+        GPS:
+            custom: false
+            compatibility:
+                - SDF
+
+    communication:
+        Wireless Transceiver:
+            custom: false
+            compatibility:
+                - SDF
+        RFID Sensor:
+            custom: false
+            compatibility:
+                - SDF
+        RFID Tag:
+            custom: false
+            compatibility:
+                - SDF
