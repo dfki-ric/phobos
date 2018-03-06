@@ -12,34 +12,6 @@ bl_info = {
 import bpy
 import os
 
-# this example uses the following file layout
-# located in blender's addons folder
-#object_factory/
-#    __init__.py
-#    custom_data/
-#        Female_body
-#        RacingCar
-#        iPhone
-#        Male_body
-#        Tank
-#        Toaster
-
-# this is the dirname that contains the object data
-# it is located in the addon folder next to this file
-obj_dir_name = 'custom_data'
-
-# these names match files located in the addons obj_dir_name
-# we can't access the filesystem during registration so
-# we need to maintain this list manually
-obj_list = [
-    'Female_body',
-    'RacingCar',
-    'iPhone',
-    'Male_body',
-    'Tank',
-    'Toaster'
-]
-
 yaml_categ = [
     'none',
     'ray',
@@ -48,9 +20,9 @@ yaml_categ = [
 ]
 
 yaml_sensors = {
-    'ray': {'laser': [1], 'deathray': {'power': 40, 'death': 50000, 'doom': 23}},
-    'camera': {'spycam': [1], 'omnieye': [2]},
-    'environment': {'thermo': [1], 'co2': [2]}
+    'ray': {'laser': {'energy': 20}, 'deathray': {'power': 40, 'death': 'short', 'doom': 0.5, 'abort': False}},
+    'camera': {'spycam': {'tinyness': 'extreme', 'battery': 2.5}, 'omnieye': {'roentgen': True}},
+    'environment': {'thermo': {'min_temp': 20., 'max_temp': 40.}}
 }
 
 # this holds the custom operators so we can cleanup when turned off
@@ -65,16 +37,19 @@ def clearCustomItems():
 
 class TestStuff(bpy.types.PropertyGroup):
     name = bpy.props.StringProperty()
-    stuff = bpy.props.IntProperty()
+    intProp = bpy.props.IntProperty()
+    boolProp = bpy.props.BoolProperty()
+    stringProp = bpy.props.StringProperty()
+    floatProp = bpy.props.FloatProperty()
 
 
-def registerSensorOperator(name):
-    sens = 'deathray'
+def registerSensorOperator(category, name):
     try:
         bpy.utils.unregister_class(TemporarySensorOperator)
     except UnboundLocalError:
         pass
     operatorIdName = 'object.add_sensor_' + name
+    print(operatorIdName)
     class TemporarySensorOperator(bpy.types.Operator):
         """Temporary sensor operator"""
         bl_idname = operatorIdName
@@ -83,23 +58,43 @@ def registerSensorOperator(name):
         bl_options = {'REGISTER'}
 
         sensor_data = bpy.props.CollectionProperty(type=TestStuff)
-        categ = bpy.props.StringProperty(default='ray')
-        sensor = bpy.props.StringProperty(default='deathray')
+        categ = category
+        sensor = name
         
         def draw(self, context):
             layout = self.layout
             if 'sensor_data' in dir(self):
                 for i in range(len(self.sensor_data)):
-                    layout.prop(self.sensor_data[i], 'stuff', text=self.sensor_data[i].name)
+                    name = self.sensor_data[i].name[2:]
+                    if self.sensor_data[i].name[0] == 'i':
+                        layout.prop(self.sensor_data[i], 'intProp', text=name)
+                    elif self.sensor_data[i].name[0] == 'b':
+                        layout.prop(self.sensor_data[i], 'boolProp', text=name)
+                    elif self.sensor_data[i].name[0] == 's':
+                        layout.prop(self.sensor_data[i], 'stringProp', text=name)
+                    elif self.sensor_data[i].name[0] == 'f':
+                        layout.prop(self.sensor_data[i], 'floatProp', text=name)
                     
         def invoke(self, context, event):
-            print(self.categ, type(self.categ))
-            print(self.sensor, type(self.sensor))
-            data = yaml_sensors['ray']['deathray']
+            data = yaml_sensors[self.categ][self.sensor]
             for dat in data.keys():
                 piece = self.sensor_data.add()
-                piece.name = dat
-                piece.stuff = data[dat]
+                prefix = ''
+                print(type(data[dat]))
+                if type(data[dat]) is int:
+                    piece.intProp = data[dat]
+                    prefix = 'i'
+                elif type(data[dat]) is bool:
+                    piece.boolProp = data[dat]
+                    prefix = 'b'
+                elif type(data[dat]) is str:
+                    piece.stringProp = data[dat]
+                    prefix = 's'
+                elif type(data[dat]) is float:
+                    piece.floatProp = data[dat]
+                    prefix = 'f'
+                piece.name = prefix + '_' + dat
+                print(piece.name)
             return context.window_manager.invoke_props_dialog(self)
             
         def execute(self, context):
@@ -135,7 +130,7 @@ class AddingOperator(bpy.types.Operator):
         
         #layout.template_list('whatever', '', self, 'test', active_dataptr)
         if self.categ != 'none':
-            layout.prop(self, 'sensor', expand=True)
+            layout.prop(self, 'sensor')
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
@@ -144,7 +139,7 @@ class AddingOperator(bpy.types.Operator):
         return True
 
     def execute(self, context):
-        operatorName = registerSensorOperator('deathray')
+        operatorName = registerSensorOperator(self.categ, self.sensor)
         operator = eval('bpy.ops.' + operatorName + "('INVOKE_DEFAULT')")
         print(operator)
         return {'FINISHED'}
@@ -162,6 +157,8 @@ class TestPanel(bpy.types.Panel):
         layout = self.layout
         layout.operator('object.adding_operator')
         layout.operator('object.add_sensor_deathray')
+        layout.operator('object.add_sensor_ray')
+        layout.operator('object.add_sensor_spycam')
 
 
 def register():
