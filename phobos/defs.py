@@ -141,7 +141,9 @@ def updateDefs(defsFolderPath):
                     log("Entry for "+category+'/'+key+" will be overwritten while parsing definitions.", "WARNING")
                 definitions[category][key] = value
     # Extending model definition
-    definitions['model']['sensors']['$forElem']['$selection__type'] = definitions['sensors']
+    # TODO remove the old code line
+    # definitions['model']['sensors']['$forElem']['$selection__type'] = definitions['sensors']
+    definitions['model']['sensors'] = definitions['sensors']
 
 
 def __evaluateString(s):
@@ -179,11 +181,11 @@ def __parseAllYAML(path):
     for file in glob.iglob(os.path.join(path, '**/*.yml'), recursive=True):
         print('  ' + os.path.basename(file))
         try:
-            file = open(file, 'r')
-            tmpstring = file.read()
-            file.close()
+            with open(os.path.join(path, file), 'r') as f:
+                tmpstring = f.read()
 
             try:
+                print('  ' + file)
                 tmpyaml = yaml.load(__evaluateString(tmpstring))
 
                 if not tmpyaml:
