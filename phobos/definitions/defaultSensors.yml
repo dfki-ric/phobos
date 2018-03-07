@@ -2,12 +2,10 @@
 
 # IMPORTANT: if adding new categories to the internal phobos, also change the
 # visual representation of these in the addSensor Operator!
-sensor_categories:
+sensors:
     scanning:
         Ray Sensor:
             custom: false
-            compatibility:
-                - SMURF
             width:
                 required: true
                 default: 144
@@ -26,8 +24,6 @@ sensor_categories:
 
         Rotating Ray Sensor:
             custom: false
-            compatibility:
-                - SMURF
             bands:
                 required: true
                 default: 16
@@ -52,8 +48,6 @@ sensor_categories:
 
         Scanning Sonar:
             custom: false
-            compatibility:
-                - SMURF
             width:
                 required: true
                 default: 64
@@ -99,8 +93,6 @@ sensor_categories:
 
         Multi Level Laser Range Finder:
             custom: false
-            compatibility:
-                - SMURF
             numRaysVertical:
                 required: true
                 default: 32
@@ -126,8 +118,6 @@ sensor_categories:
     camera:
         Camera Sensor:
             custom: false
-            compatibility:
-                - SMURF
             width:
                 required: true
                 default: 640
@@ -159,89 +149,47 @@ sensor_categories:
     internal:
         Joint Position:
             custom: false
-            compatibility:
-                - SMURF
         Joint Velocity:
             custom: false
-            compatibility:
-                - SMURF
         Joint Load:
             custom: false
-            compatibility:
-                - SMURF
         Joint Torque:
             custom: false
-            compatibility:
-                - SMURF
         Joint AVG Torque:
             custom: false
-            compatibility:
-                - SMURF
         Joint 6 DOF:
             custom: false
-            compatibility:
-                - SMURF
         Node Contact:
             custom: false
-            compatibility:
-                - SMURF
         Node Position:
             custom: false
-            compatibility:
-                - SMURF
         Node Rotation:
             custom: false
-            compatibility:
-                - SMURF
         Node Contact Force:
             custom: false
-            compatibility:
-                - SMURF
         Node COM:
             custom: false
-            compatibility:
-                - SMURF
         Node Velocity:
             custom: false
-            compatibility:
-                - SMURF
         Node Angular Velocity:
             custom: false
-            compatibility:
-                - SMURF
         Motor Current:
             custom: false
-            compatibility:
-                - SMURF
         Inertial Measurement Unit:
             custom: false
-            compatibility:
-                - SDF
 
     environmental:
         Altimeter:
             custom: false
-            compatibility:
-                - SDF
         Magnetometer:
             custom: false
-            compatibility:
-                - SDF
         GPS:
             custom: false
-            compatibility:
-                - SDF
 
     communication:
         Wireless Transceiver:
             custom: false
-            compatibility:
-                - SDF
         RFID Sensor:
             custom: false
-            compatibility:
-                - SDF
         RFID Tag:
             custom: false
-            compatibility:
-                - SDF

@@ -126,7 +126,7 @@ definitions = {'motors': {},
 
 
 def updateDefs(defsFolderPath):
-    """Updates the definitions with all yml files in the given folder
+    """Updates the definitions with all yml files in the given folder.
 
     :param defsFolderPath: path to the folder with yaml files for definitions
     :type defsFolderPath: str
@@ -137,13 +137,14 @@ def updateDefs(defsFolderPath):
             for key, value in diction[category].items():
                 if category not in definitions:
                     definitions[category] = {}
+
+                # TODO we need to insert user data, instead overwriting existing
                 if key in definitions[category]:
-                    log("Entry for "+category+'/'+key+" will be overwritten while parsing definitions.", "WARNING")
+                    log("Entry for " + category + '/' + key +
+                        " will be overwritten while parsing definitions.", "WARNING")
                 definitions[category][key] = value
-    # Extending model definition
-    # TODO remove the old code line
-    # definitions['model']['sensors']['$forElem']['$selection__type'] = definitions['sensors']
-    definitions['model']['sensors'] = definitions['sensors']
+    # TODO remove print
+    print(yaml.dump(definitions))
 
 
 def __evaluateString(s):
@@ -193,9 +194,9 @@ def __parseAllYAML(path):
                     continue
                 dicts.append(tmpyaml)
             except yaml.scanner.ScannerError:
-                log(file + " could not be parsed!", 'ERROR')
+                log(os.path.relpath(file, path=path) + " could not be parsed!", 'ERROR')
         except FileNotFoundError:
-            log(file + " was not found.", 'ERROR')
+            log(os.path.relpath(file, path=path) + " was not found.", 'ERROR')
     return dicts
 
 
