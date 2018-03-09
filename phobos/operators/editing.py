@@ -55,6 +55,9 @@ import phobos.model.links as links
 from phobos.phoboslog import log
 
 
+ZERO_PRECISION = 1e-3
+
+
 class SortObjectsToLayersOperator(Operator):
     """Sort all selected objects to their according layers"""
     bl_idname = "phobos.sort_objects_to_layers"
@@ -859,12 +862,23 @@ class CreateCollisionObjects(Operator):
             center = gUtils.calcBoundingBoxCenter(bBox)
             rotation = mathutils.Matrix.Identity(4)
             size = list(vis.dimensions)
+            zero = min(size) * ZERO_PRECISION
 
             # calculate size for cylinder, capsule or sphere
             if self.property_colltype in ['cylinder', 'capsule']:
                 axes = ('X', 'Y', 'Z')
-                long_side = axes[size.index(max(size))]
-                length = max(size)
+                if abs(size[0] - size[1]) <= zero and\
+                   abs((size[0] + size[1]/2) - size[2]) >= zero:
+                    long_side = 'Z'
+                elif abs(size[0] - size[2]) <= zero and\
+                     abs((size[0] + size[2]/2) - size[1]) >= zero:
+                    long_side = 'Y'
+                elif abs(size[1] - size[2]) <= zero and\
+                     abs((size[1] + size[2]/2) - size[0]) >= zero:
+                    long_side = 'X'
+                else:
+                    long_side = axes[size.index(max(size))]
+                length = size[axes.index(long_side)]
                 radii = [s for s in size if s != length]
                 radius = max(radii) / 2 if radii != [] else length / 2
                 size = (radius, length)
@@ -922,7 +936,7 @@ class CreateCollisionObjects(Operator):
                 bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
                                               TRANSFORM_OT_translate={"value": (0, 0, 0)})
                 # TODO: copy mesh? This was taken from pull request #102
-                # ob = blenderUtils.createPrimitive(collname, 'cylinder', (1,1,1),
+                # ob = bUtils.createPrimitive(collname, 'cylinder', (1,1,1),
                 #                                   defs.layerTypes['collision'], materialname, center,
                 #                                   rotation_euler)
                 # ob.data = vis.data
