@@ -131,67 +131,109 @@ sensors:
         Joint Position:
             general:
                 type: joint position
+                shape: ico
+                size: 0.2
         Joint Velocity:
             general:
                 type: joint velocity
+                shape: ico
+                size: 0.2
         Joint Load:
             general:
                 type: joint load
+                shape: ico
+                size: 0.2
         Joint Torque:
             general:
                 type: joint torque
+                shape: ico
+                size: 0.2
         Joint AVG Torque:
             general:
                 type: joint avg torque
+                shape: ico
+                size: 0.2
         Joint 6 DOF:
             general:
                 type: joint 6 dof
+                shape: ico
+                size: 0.2
         Node Contact:
             general:
                 type: node contact
+                shape: ico
+                size: 0.2
         Node Position:
             general:
                 type: node position
+                shape: ico
+                size: 0.2
         Node Rotation:
             general:
                 type: node rotation
+                shape: ico
+                size: 0.2
         Node Contact Force:
             general:
                 type: node contact force
+                shape: ico
+                size: 0.2
         Node COM:
             general:
                 type: node com
+                shape: ico
+                size: 0.2
         Node Velocity:
             general:
                 type: node velocity
+                shape: ico
+                size: 0.2
         Node Angular Velocity:
             general:
                 type: node angular velocity
+                shape: ico
+                size: 0.2
         Motor Current:
             general:
                 type: motor current
+                shape: ico
+                size: 0.2
         Inertial Measurement Unit:
             general:
                 type: inertial measurement unit
+                shape: ico
+                size: 0.2
 
     environmental:
         Altimeter:
             general:
                 type: altimeter
+                shape: ico
+                size: 0.2
         Magnetometer:
             general:
                 type: magnetometer
+                shape: ico
+                size: 0.2
         GPS:
             general:
                 type: gps
+                shape: ico
+                size: 0.2
 
     communication:
         Wireless Transceiver:
             general:
                 type: wireless transceiver
+                shape: ico
+                size: 0.2
         RFID Sensor:
             general:
                 type: rfid sensor
+                shape: ico
+                size: 0.2
         RFID Tag:
             general:
                 type: rfid tag
+                shape: ico
+                size: 0.2
