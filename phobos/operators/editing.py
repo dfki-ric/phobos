@@ -1014,6 +1014,8 @@ class DefineJointConstraintsOperator(Operator):
         for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
             context.scene.objects.active = joint
             joints.setJointConstraints(joint, self.joint_type, lower, upper, self.spring, self.damping)
+
+            # TODO is this still needed? Or better move it to the utility function
             if self.joint_type != 'fixed':
                 joint['joint/maxeffort'] = self.maxeffort
                 joint['joint/maxvelocity'] = velocity
@@ -1297,7 +1299,7 @@ def addSensorFromYaml(category, name):
                     'scale': 1.,
                     'name': 'link_' + self.sensorName,
                     'matrix': original_obj.matrix_world})
-                # TODO give this link a fixed joint
+                joints.setJointConstraints(newlink, 'fixed', 0., 0., 0., 0.)
 
             # we don't need to check the parentlink, as the calling operator
             # does make sure it exists (or a new link is created instead)
