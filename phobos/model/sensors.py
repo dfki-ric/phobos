@@ -30,29 +30,11 @@ Created on 6 Jan 2014
 import bpy
 import mathutils
 from phobos import defs
+from phobos.phoboslog import log
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
 
-
-def createSensor(self, sensor):
-    if 'link' in sensor:
-        reference = [sensor['link']]
-    elif 'joint' in sensor:
-        reference = [sensor['joint']]
-        pass
-    elif 'links' in sensor:
-        reference = sensor['links']
-    elif 'joints' in sensor:
-        reference = sensor['joints']
-    elif 'motors' in sensor:
-        reference = sensor['motors']
-    else:
-        reference = None
-
-    # FIXME: This needs to be resolved in a generic way!
-    createSensor(sensor, reference)
-    attachSensor(sensor)
 
 
 def attachSensor(self, sensor):
@@ -112,6 +94,25 @@ def cameraRotLock(object):
     object.constraints["Limit Rotation"].min_z = object.rotation_euler[2]
     object.constraints["Limit Rotation"].max_z = object.rotation_euler[2]
 
+# FIXME there are two functions for creating sensors!
+# def createSensor(self, sensor):
+#     if 'link' in sensor:
+#         reference = [sensor['link']]
+#     elif 'joint' in sensor:
+#         reference = [sensor['joint']]
+#         pass
+#     elif 'links' in sensor:
+#         reference = sensor['links']
+#     elif 'joints' in sensor:
+#         reference = sensor['joints']
+#     elif 'motors' in sensor:
+#         reference = sensor['motors']
+#     else:
+#         reference = None
+
+#     # FIXME: This needs to be resolved in a generic way!
+#     createSensor(sensor, reference)
+#     attachSensor(sensor)
 
 def createSensor(sensor, reference, origin=mathutils.Matrix()):
     """This function creates a new sensor specified by its parameters.
@@ -125,60 +126,49 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
       The newly created sensor object
 
     """
-    bUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
+    layers = defs.layerTypes['sensor']
+    bUtils.toggleLayer(layers, value=True)
+
     # create sensor object
-    if 'Camera' in sensor['type']:
-        bpy.ops.object.add(type='CAMERA', location=origin.to_translation(),
-                           rotation=origin.to_euler(),
-                           layers=bUtils.defLayers([defs.layerTypes['sensor']]))
-        newsensor = bpy.context.active_object
-        if reference is not None:
-            sUtils.selectObjects([newsensor, reference], clear=True, active=1)
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
-    elif sensor['type'] in ['RaySensor', 'RotatingRaySensor', 'ScanningSonar', 'MultiLevelLaserRangeFinder']:
-        # TODO: create a proper ray sensor scanning layer disc here
-        newsensor = bUtils.createPrimitive(sensor['name'], 'disc', (0.5, 36),
-                                            defs.layerTypes['sensor'], 'phobos_laserscanner',
-                                            origin.to_translation(), protation=origin.to_euler())
-        if reference is not None:
-            sUtils.selectObjects([newsensor, reference], clear=True, active=1)
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    newsensor = bUtils.createPrimitive(
+        sensor['name'], sensor['shape'], sensor['size'], layers,
+        plocation=origin.to_translation(), protation=origin.to_euler())
+
+    # assign the parent if available
+    if reference is not None:
+        sUtils.selectObjects([newsensor, reference], clear=True, active=1)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+
     # contact, force and torque sensors (or unknown sensors)
-    else:
-        newsensor = bUtils.createPrimitive(sensor['name'], 'sphere', 0.05,
-                                            defs.layerTypes['sensor'], 'phobos_sensor',
-                                            origin.to_translation(), protation=origin.to_euler())
-        if sensor['type'] == 'Joint6DOF':
-            # TODO delete me? handle this
-            #newsensor['sensor/nodes'] = nUtils.getObjectName(reference)
-            pass
-        elif 'Node' in sensor['type']:
-            newsensor['sensor/nodes'] = sorted([nUtils.getObjectName(ref) for ref in reference])
-        elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
-            newsensor['sensor/joints'] = sorted([nUtils.getObjectName(ref) for ref in reference])
-        if reference is not None:
-            sUtils.selectObjects([newsensor, reference], clear=True, active=1)
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    #else:
+    #    newsensor = bUtils.createPrimitive(
+    #        sensor['name'], 'ico', 0.05, layers, 'phobos_sensor',
+    #        origin.to_translation(), protation=origin.to_euler())
+    #    if sensor['name'] == 'Joint6DOF':
+    #        # TODO delete me? handle this
+    #        #newsensor['sensor/nodes'] = nUtils.getObjectName(reference)
+    #        pass
+    #    elif 'Node' in sensor['type']:
+    #        newsensor['sensor/nodes'] = sorted([nUtils.getObjectName(ref) for ref in reference])
+    #    elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
+    #        newsensor['sensor/joints'] = sorted([nUtils.getObjectName(ref) for ref in reference])
+
     # set sensor properties
     newsensor.phobostype = 'sensor'
     newsensor.name = sensor['name']
-    newsensor['sensor/type'] = sensor['type']
+    newsensor['type'] = sensor['type']
 
-    # TODO delete me?
-    #for prop in ['link', 'joint', 'links', 'joints', 'motors']:
-    #    if prop in sensor:
-    #        newsensor['sensor/'+prop] = sensor[prop]
-
-    # add custom properties
-    #for prop in sensor:
-    #    if prop.startswith('$'):
-    #        for tag in sensor[prop]:
-    #            newsensor[prop[1:]+'/'+tag] = sensor[prop][tag]
+    # write the custom properties to the sensor
+    for prop in sensor['props'].keys():
+        newsensor[prop] = sensor['props'][prop]
 
     # throw warning if type is not known
-    if sensor['type'] not in defs.sensortypes:
-        print("### Warning: sensor", sensor['name'], "is of unknown/custom type.")
-    sUtils.selectObjects([newsensor], clear=False, active=0)
+    # TODO we need to link this error to the sensor type specifications
+    if sensor['type'] not in defs.definitions['sensors'][sensor['category']]:
+        log("Sensor " + sensor['name'] + " is of unknown/custom type.", 'WARNING')
+
+    # select the new sensor
+    sUtils.selectObjects([newsensor], clear=True, active=0)
     return newsensor
 
 # TODO this class should reside at operators... give it a dev branch

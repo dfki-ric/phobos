@@ -127,8 +127,10 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0,
         bpy.ops.mesh.primitive_cone_add(vertices=32, radius=psize[0], depth=psize[1], cap_end=True,
                                         layers=players, location=plocation, rotation=protation)
     elif ptype == 'disc':
-        bpy.ops.mesh.primitive_circle_add(vertices=psize[1], radius=psize[0], fill_type='TRIFAN',
-                                          location=plocation, rotation=protation, layers=players)
+        bpy.ops.mesh.primitive_circle_add(vertices=psize[1], radius=psize[0], fill_type='TRIFAN', location=plocation,
+                                          rotation=protation, layers=players)
+    elif ptype == 'ico':
+        bpy.ops.mesh.primitive_ico_sphere_add(size=psize, layers=players, location=plocation, rotation=protation)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj = bpy.context.object
     if phobostype:

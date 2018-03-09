@@ -4,147 +4,89 @@
 # visual representation of these in the addSensor Operator!
 sensors:
     scanning:
-        Ray Sensor:
-            custom: false
-            width:
-                required: true
-                default: 144
-            height:
-                required: true
-                default: 1
-            opening_width:
-                required: true
-                default: &0.5*math.pi&
-            opening_height:
-                required: true
-                default: &0.5*math.pi&
-            maxDistance:
-                required: true
-                default: 100
+        Ray sensor:
+            general:
+                type: ray sensor
+                shape: disc
+                size:
+                    - 0.2
+                    - 36
+            width: 144
+            height: 1
+            opening_width: &0.5*math.pi&
+            opening_height: &0.5*math.pi&
+            maxDistance: 100
+            # TODO we need to make the naming consistent! not camel and snakes mixed...
 
-        Rotating Ray Sensor:
-            custom: false
-            bands:
-                required: true
-                default: 16
-            lasers:
-                required: true
-                default: 32
-            maxDistance:
-                required: true
-                default: 100.0
-            draw_rays:
-                required: true
-                default: True
-            horizontal_resolution:
-                required: true
-                default: &(1/180)*math.pi&
-            horizontal_offset:
-                required: true
-                default: 0.0
-            vertical_offset:
-                required: true
-                default: 0.0
+        Rotating ray sensor:
+            general:
+                type: rotating ray sensor
+                shape: disc
+                size:
+                    - 0.2
+                    - 36
+            bands: 16
+            lasers: 32
+            maxDistance: 100.0
+            draw_rays: True
+            horizontal_resolution: &(1/180)*math.pi&
+            horizontal_offset: 0.0
+            vertical_offset: 0.0
 
         Scanning Sonar:
-            custom: false
-            width:
-                required: true
-                default: 64
-            height:
-                required: true
-                default: 512
-            resolution:
-                required: true
-                default: 0.1
-            maxDist:
-                required: true
-                default: 100.0
-            hud_pos:
-                required: true
-                default: 0
-            updateRate:
-                required: true
-                default: 10
-            gain:
-                required: true
-                default: 1
-            show_cam:
-                required: true
-                default: false
-            only_ray:
-                required: true
-                default: false
+            general:
+                type: scanning sensor
+                shape: disc
+                size:
+                    - 0.2
+                    - 36
+            width: 64
+            height: 512
+            resolution: 0.1
+            maxDist: 100.0
+            hud_pos: 0
+            updateRate: 10
+            gain: 1
+            show_cam: false
+            only_ray: false
             extension:
-                required: true
-                default:
-                    - 0.010000
-                    - 0.004000
-                    - 0.004000
-            left_limit:
-                required: true
-                default: &math.pi&
-            right_limit:
-                required: true
-                default: &(-1)*math.pi&
-            ping_pong_mode:
-                required: true
-                default: false
+                - 0.010000
+                - 0.004000
+                - 0.004000
+            left_limit: &math.pi&
+            right_limit: &(-1)*math.pi&
+            ping_pong_mode: false
 
-        Multi Level Laser Range Finder:
-            custom: false
-            numRaysVertical:
-                required: true
-                default: 32
-            numRaysHorizontal:
-                required: true
-                default: 1900
-            rttResolutionX:
-                required: true
-                default:  512 # 128*4
-            rttResolutionY:
-                required: true
-                default:  256 # 128 * 2
-            verticalOpeningAngle:
-                required: true
-                default: &40/180.0 * math.pi&
-            horizontalOpeningAngle:
-                required: true
-                default: &2*math.pi*1899/ 1900&
-            maxDistance:
-                required: true
-                default: 100.0
+        Multi level laser range finder:
+            general:
+                type: multi level laser range finder
+                shape: disc
+                size:
+                    - 0.2
+                    - 36
+            numRaysVertical: 32
+            numRaysHorizontal: 1900
+            rttResolutionX:  512 # 128*4
+            rttResolutionY:  256 # 128 * 2
+            verticalOpeningAngle: &40/180.0 * math.pi&
+            horizontalOpeningAngle: &2*math.pi*1899/ 1900&
+            maxDistance: 100.0
 
     camera:
-        Camera Sensor:
-            custom: false
-            width:
-                required: true
-                default: 640
-            height:
-                required: true
-                default: 480
-            show_cam:
-                required: true
-                default: true
-            opening_width:
-                required: true
-                default: 90
-            opening_height:
-                required: true
-                default: 90
-            hud_pos:
-                required: true
-                default: 0
-            hud_width:
-                required: true
-                default: 320
-            hud_height:
-                required: true
-                default: 240
-            depthImage:
-                required: true
-                default: false
+        Camera sensor:
+            general:
+                type: camera
+                shape: ico
+                size: 0.2
+            width: 640
+            height: 480
+            show_cam: true
+            opening_width: 90
+            opening_height: 90
+            hud_pos: 0
+            hud_width: 320
+            hud_height: 240
+            depthImage: false
 
     internal:
         Joint Position:

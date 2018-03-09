@@ -54,6 +54,7 @@ import phobos.utils.editing as eUtils
 import phobos.utils.validation as vUtils
 import phobos.model.joints as joints
 import phobos.model.links as modellinks
+import phobos.model.sensors as sensors
 from phobos.phoboslog import log
 
 
@@ -1189,25 +1190,158 @@ class CreateLinksOperator(Operator):
 
 # TODO write more info in documentation once method works (where to add sensor
 # etc.)
+
+# TODO where can we put this...?
+class DynamicProperty(bpy.types.PropertyGroup):
+    """A support class to handle dynamic properties in a temporary operator."""
+    name = bpy.props.StringProperty()
+    intProp = bpy.props.IntProperty()
+    boolProp = bpy.props.BoolProperty()
+    stringProp = bpy.props.StringProperty()
+    floatProp = bpy.props.FloatProperty()
+
+
+def addSensorFromYaml(category, name):
+    """This registers a temporary sensor Operator.
+    The data for the properties is provided by the parsed yaml files of the
+    sensors. The operator then adds a sensor object and writes the information
+    to custom properties.
+    The name is changed to fit the blender format of name1_name2_name3.
+    """
+    # unregister other temporary operators first
+    try:
+        bpy.utils.unregister_class(TempSensorOperator)
+    except UnboundLocalError:
+        pass
+
+    blender_name = name.replace(' ', '_').lower()
+    operatorBlenderId = 'phobos.add_sensor_' + blender_name
+
+    # create the temporary operator class
+    class TempSensorOperator(bpy.types.Operator):
+        """Temporary operator for sensor adding ."""
+        bl_idname = operatorBlenderId
+        bl_label = 'Add ' + name
+        bl_description ='Add a ' + name + ' sensor from the ' + category + ' category.'
+        bl_options = {'REGISTER'}
+
+        # this contains all the single entries of the dictionary after invoking
+        sensor_data = bpy.props.CollectionProperty(type=DynamicProperty)
+        categ = category
+        sensorName = name
+
+        def draw(self, context):
+            layout = self.layout
+
+            # expose the parameters as the right Property
+            for i in range(len(self.sensor_data)):
+                # use the dynamic props name in the GUI, but without the type id
+                name = self.sensor_data[i].name[2:].replace('_', ' ')
+                if self.sensor_data[i].name[0] == 'i':
+                    layout.prop(self.sensor_data[i], 'intProp', text=name)
+                elif self.sensor_data[i].name[0] == 'b':
+                    layout.prop(self.sensor_data[i], 'boolProp', text=name)
+                elif self.sensor_data[i].name[0] == 's':
+                    layout.prop(self.sensor_data[i], 'stringProp', text=name)
+                elif self.sensor_data[i].name[0] == 'f':
+                    layout.prop(self.sensor_data[i], 'floatProp', text=name)
+
+        def invoke(self, context, event):
+            # load the sensor definitions of the current sensor
+            data = defs.definitions['sensors'][self.categ][self.sensorName]
+
+            hidden_props = ['general']
+            # identify the property type for all the stuff in the definition
+            for propname in data.keys():
+                if propname in hidden_props:
+                    continue
+                item = self.sensor_data.add()
+                prefix = ''
+                if type(data[propname]) is int:
+                    item.intProp = data[propname]
+                    prefix = 'i'
+                elif type(data[propname]) is str:
+                    import re
+
+                    # make sure eval is called only with true or false
+                    if re.match('true|false', data[propname][1:], re.IGNORECASE):
+                        booleanString = data[propname][1:]
+                        booleanString = booleanString[0].upper() + booleanString[1:].lower()
+                        item.boolProp = eval(booleanString)
+                        prefix = 'b'
+                    else:
+                        item.stringProp = data[propname]
+                        prefix = 's'
+                elif type(data[propname]) is float:
+                    item.floatProp = data[propname]
+                    prefix = 'f'
+                # TODO what about lists?
+                item.name = prefix + '_' + propname
+
+            # open up the operator GUI
+            return context.window_manager.invoke_props_dialog(self)
+
+        def execute(self, context):
+            parent_obj = context.active_object
+            sensordefs = defs.definitions['sensors'][self.categ][self.sensorName]
+            # create a dictionary holding the sensor definition
+            sensor_dict = {'name': self.sensorName,
+                           'category': self.categ,
+                           'props': {}
+            }
+
+            # add the general settings for this sensor
+            general_settings = sensordefs['general']
+            for gensetting in general_settings.keys():
+                sensor_dict[gensetting] = general_settings[gensetting]
+
+            # store collected sensor data properties in the props dictionary
+            for i in range(len(self.sensor_data)):
+                if self.sensor_data[i].name[0] == 'b':
+                    store = '$' + str(bool(self.sensor_data[i]['boolProp'])).lower()
+                elif self.sensor_data[i].name[0] == 'i':
+                    store = self.sensor_data[i]['intProp']
+                elif self.sensor_data[i].name[0] == 's':
+                    store = self.sensor_data[i]['stringProp']
+                elif self.sensor_data[i].name[0] == 'f':
+                    store = self.sensor_data[i]['floatProp']
+
+                sensor_dict['props'][self.sensor_data[i].name[2:]] = store
+
+            pos_matrix = parent_obj.matrix_world
+            sensor_obj = sensors.createSensor(sensor_dict, parent_obj, pos_matrix)
+
+            return {'FINISHED'}
+
+    # register the temporary operator and return its blender id
+    bpy.utils.register_class(TempSensorOperator)
+    return operatorBlenderId
+
+
 class AddSensorOperator(Operator):
-    """Add/edit a sensor"""
+    """Add a sensor to the currently active link"""
     bl_idname = "phobos.add_sensor"
-    bl_label = "Add/Edit Sensor"
+    bl_label = "Add Sensor"
     bl_options = {'REGISTER', 'UNDO'}
 
+    def sensorlist(self, context):
+        items = []
+        for sensor in defs.definitions['sensors'][self.categ]:
+            items.append((sensor,) * 3)
+        return items
 
-    def getSensorCategories(self, context):
+    def categorylist(self, context):
         '''Create an enum for the sensor categories. For phobos preset categories,
         the phobosIcon is added to the enum.
         '''
         from phobos.phobosgui import prev_collections
 
         phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
-        categories = [t for t in defs.definitions['sensor_categories']]
+        categories = [t for t in defs.definitions['sensors']]
 
         icon = ''
         items = []
-        i = 1
+        i = 0
         for categ in categories:
             # assign an icon to the phobos preset categories
             if categ in ['scanning', 'camera', 'internal', 'environmental', 'communication']:
@@ -1229,29 +1363,63 @@ class AddSensorOperator(Operator):
             items.append((categ, categ, categ, icon, i))
             i += 1
 
-        # make undefined category the default
-        items.insert(0, ('undefined', 'undefined', 'undefined', 'CANCEL', 0))
         return items
 
-    sensor_category = EnumProperty(
-        name="Sensor category",
-        items=getSensorCategories,
-        description="Type of the sensor to be created"
+    categ = EnumProperty(
+        items=categorylist,
+        description='The sensor category'
     )
-
-    custom_type = StringProperty(
-        name="Custom Type",
-        default='',
-        description="Type of the custom sensor to be created"
+    sensor = EnumProperty(
+        items=sensorlist,
+        description='The sensor type'
     )
-
-    sensor_name = StringProperty(
-        name="Sensor Name",
+    addLink = BoolProperty(
+        name="Add link",
+        default=True,
+        description="Add additional link as sensor mounting"
+    )
+    sensorName = StringProperty(
+        name="Sensor name",
         default='new_sensor',
         description="Name of the sensor"
     )
 
-    add_link = BoolProperty(name="add_link", default=True, description="add additional link as sensor mounting")
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'sensorName')
+        layout.prop(self, 'categ', text='Sensor category')
+
+        layout.prop(self, 'sensor', text='Sensor type')
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def check(self, context):
+        return True
+
+    def execute(self, context):
+        import re
+        operatorName = addSensorFromYaml(self.categ, self.sensor)
+        operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
+        if operatorPattern.match(operatorName):
+            eval('bpy.ops.' + operatorName + "('INVOKE_DEFAULT')")
+        else:
+            log('This sensor name is not following the naming convention: ' +
+                operatorName + '. It can not be converted into an operator.',
+                'ERROR')
+        return {'FINISHED'}
+
+
+'''
+class AddOLDSensorOperator(Operator):
+    """Add/edit a sensor"""
+    bl_idname = "phobos.add_old_sensor"
+    bl_label = "Add/Edit Sensor"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def getSensorCategories(self, context):
+        return None
+    add_link = True
 
     # the following is a set of all properties that exist within MARS' sensors
     # TODO: we should get rid of gui-settings such as hud and rename stuff (eg. maxDistance - maxDist)
@@ -1289,7 +1457,6 @@ class AddSensorOperator(Operator):
     extension = FloatVectorProperty(name='Extension', default=(0, 0, 0), description='Extension')
 
     def draw(self, context):
-        layout = self.layout
         layout.prop(self, "sensor_name", text="Sensor Name")
         layout.prop(self, "sensor_category")
         # if self.sensor_type in ['CameraSensor', 'ScanningSonar', 'RaySensor',
@@ -1303,45 +1470,40 @@ class AddSensorOperator(Operator):
 
     # TODO fix this operator and test it
     def execute(self, context):
-        # create a dictionary holding the sensor definition
-        # sensor = {'name': self.sensor_name,
-        #           'type': self.custom_type if self.sensor_type == 'Custom' else self.sensor_type,
-        #           'props': {}
-        #           }
-        # parent = context.active_object
-        # for key in defs.definitions['sensors'][self.sensor_type]:
-        #     if type(defs.definitions['sensors'][self.sensor_type][key]) == type(True):
-        #         value = getattr(self, key)
-        #         sensor['props'][key] = '$true' if value else '$false'
-        #     else:
-        #         sensor['props'][key] = getattr(self, key)
-        # # type-specific settings
-        # if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
-        #                       'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-        #     if self.add_link:
-        #         link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(),
-        #                                 name='link_' + self.sensor_name)
-        #         sensorObj = sensors.createSensor(sensor, link, link.matrix_world)
-        #     else:
-        #         sensorObj = sensors.createSensor(sensor, context.active_object, context.active_object.matrix_world)
-        #     if self.add_link:
-        #         sUtils.selectObjects([parent, link], clear=True, active=0)
-        #         bpy.ops.object.parent_set(type='BONE_RELATIVE')
-        #         sUtils.selectObjects([link, sensorObj], clear=True, active=0)
-        #         bpy.ops.object.parent_set(type='BONE_RELATIVE')
-        #     sensors.cameraRotLock(sensorObj)
-        # elif sensor['type'] in ['Joint6DOF']:
-        #     for obj in context.selected_objects:
-        #         if obj.phobostype == 'link':
-        #             sensor['name'] = "sensor_joint6dof_" + nUtils.getObjectName(obj, phobostype="joint")
-        #             sensors.createSensor(sensor, obj, obj.matrix_world)
-        # elif 'Node' in sensor['type']:
-        #     sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
-        #                  mathutils.Matrix.Translation(context.scene.cursor_location))
-        # elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
-        #     sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
-        #                  mathutils.Matrix.Translation(context.scene.cursor_location))
+        parent = context.active_object
+            if type(defs.definitions['sensors'][self.sensor_type][key]) == type(True):
+                value = getattr(self, key)
+                sensor['props'][key] = '$true' if value else '$false'
+            else:
+                sensor['props'][key] = getattr(self, key)
+        # type-specific settings
+        if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
+                              'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
+            if self.add_link:
+                link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(),
+                                        name='link_' + self.sensor_name)
+                sensorObj = sensors.createSensor(sensor, link, link.matrix_world)
+            else:
+                sensorObj = sensors.createSensor(sensor, context.active_object, context.active_object.matrix_world)
+            if self.add_link:
+                sUtils.selectObjects([parent, link], clear=True, active=0)
+                bpy.ops.object.parent_set(type='BONE_RELATIVE')
+                sUtils.selectObjects([link, sensorObj], clear=True, active=0)
+                bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            sensors.cameraRotLock(sensorObj)
+        elif sensor['type'] in ['Joint6DOF']:
+            for obj in context.selected_objects:
+                if obj.phobostype == 'link':
+                    sensor['name'] = "sensor_joint6dof_" + nUtils.getObjectName(obj, phobostype="joint")
+                    sensors.createSensor(sensor, obj, obj.matrix_world)
+        elif 'Node' in sensor['type']:
+            sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
+                         mathutils.Matrix.Translation(context.scene.cursor_location))
+        elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
+            sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
+                         mathutils.Matrix.Translation(context.scene.cursor_location))
         return {'FINISHED'}
+'''
 
 def getControllerParameters(name):
     """Returns the controller parameters for the controller type with the provided
@@ -2062,12 +2224,14 @@ class SetModelRoot(Operator):
 
 def register():
     print("Registering operators.editing...")
+    # TODO this seems not to be very convenient...
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.register_class(classdef)
 
 
 def unregister():
     print("Unregistering operators.editing...")
+    # TODO this seems not to be very convenient...
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.unregister_class(classdef)
 
