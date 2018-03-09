@@ -1211,6 +1211,7 @@ def addSensorFromYaml(category, name):
     The name is changed to fit the blender format of name1_name2_name3.
     """
     # unregister other temporary operators first
+    # TODO use a proper if instead of try except
     try:
         bpy.utils.unregister_class(TempSensorOperator)
     except UnboundLocalError:
@@ -1221,10 +1222,11 @@ def addSensorFromYaml(category, name):
 
     # create the temporary operator class
     class TempSensorOperator(bpy.types.Operator):
-        """Temporary operator for sensor adding ."""
+        """Temporary operator to add a {0} sensor.""".format(name)
         bl_idname = operatorBlenderId
         bl_label = 'Add ' + name
-        bl_description ='Add a ' + name + ' sensor from the ' + category + ' category.'
+        bl_description = 'Add a {0} sensor from the {1} category.'.format(
+            name, category)
         bl_options = {'REGISTER'}
 
         # this contains all the single entries of the dictionary after invoking
@@ -1289,6 +1291,7 @@ def addSensorFromYaml(category, name):
             # create a dictionary holding the sensor definition
             sensor_dict = {'name': self.sensorName,
                            'category': self.categ,
+                           'material': 'phobos_sensor',
                            'props': {}
             }
             original_obj = context.active_object
@@ -1308,7 +1311,6 @@ def addSensorFromYaml(category, name):
                     original_obj, ignore_selection=True)
             else:
                 parentlink = original_obj
-            print(parentlink)
 
             # add the general settings for this sensor
             general_settings = sensordefs['general']
@@ -1362,7 +1364,9 @@ def addSensorFromYaml(category, name):
 
 
 class AddSensorOperator(Operator):
-    """Add a sensor to the currently active link"""
+    """Add a sensor at the position of the selected object.
+    It is possible to create a new link for the sensor on the fly. Otherwise,
+    the next link in the hierarchy will be used to parent the sensor to."""
     bl_idname = "phobos.add_sensor"
     bl_label = "Add Sensor"
     bl_options = {'REGISTER', 'UNDO'}
@@ -1387,19 +1391,16 @@ class AddSensorOperator(Operator):
         i = 0
         for categ in categories:
             # assign an icon to the phobos preset categories
-            if categ in ['scanning', 'camera', 'internal', 'environmental', 'communication']:
-                if categ == 'scanning':
-                    icon = 'OUTLINER_OB_FORCE_FIELD'
-                elif categ == 'camera':
-                    icon = 'CAMERA_DATA'
-                elif categ == 'internal':
-                    icon = 'PHYSICS'
-                elif categ == 'environmental':
-                    icon = 'WORLD'
-                elif categ == 'communication':
-                    icon = 'SPEAKER'
-                else:
-                    icon = phobosIcon
+            if categ == 'scanning':
+                icon = 'OUTLINER_OB_FORCE_FIELD'
+            elif categ == 'camera':
+                icon = 'CAMERA_DATA'
+            elif categ == 'internal':
+                icon = 'PHYSICS'
+            elif categ == 'environmental':
+                icon = 'WORLD'
+            elif categ == 'communication':
+                icon = 'SPEAKER'
             else:
                 icon = 'LAYER_USED'
 
@@ -1469,99 +1470,6 @@ class AddSensorOperator(Operator):
                 'ERROR')
         return {'FINISHED'}
 
-
-'''
-class AddOLDSensorOperator(Operator):
-    """Add/edit a sensor"""
-    bl_idname = "phobos.add_old_sensor"
-    bl_label = "Add/Edit Sensor"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def getSensorCategories(self, context):
-        return None
-    add_link = True
-
-    # the following is a set of all properties that exist within MARS' sensors
-    # TODO: we should get rid of gui-settings such as hud and rename stuff (eg. maxDistance - maxDist)
-    width = IntProperty(name='Width', default=0, description='Width')
-    height = IntProperty(name='Height', default=0, description='Height')
-    resolution = FloatProperty(name='Resolution', default=0, description='Resolution')
-    horizontal_resolution = FloatProperty(name='Horizontal Resolution', default=0, description='Horizontal resolution')
-    opening_width = FloatProperty(name='Opening Width', default=0, description='Opening width')
-    opening_height = FloatProperty(name='Opening Height', default=0, description='Opening height')
-    maxDistance = FloatProperty(name='Max Distance', default=0, description='Maximum distance')
-    maxDist = FloatProperty(name='Max Dist', default=0, description='Max dist')
-    verticalOpeningAngle = FloatProperty(name='Vertical Opening Angle', default=0, description='Vertical opening angle')
-    horizontalOpeningAngle = FloatProperty(name='Horizontal Opening Angle', default=0,
-                                           description='horizontal opening angle')
-    hud_pos = IntProperty(name='HUD Position', default=0, description='HUD position')
-    hud_width = IntProperty(name='HUD Width', default=0, description='HUD width')
-    hud_height = IntProperty(name='HUD Height', default=0, description='HUD height')
-    updateRate = FloatProperty(name='Update Rate', default=0, description='Update rate')
-    vertical_offset = FloatProperty(name='Vertical Offset', default=0, description='Vertical offset')
-    horizontal_offset = FloatProperty(name='Horizontal Offset', default=0, description='Horizontal offset')
-    gain = FloatProperty(name='Gain', default=0, description='Gain')
-    left_limit = FloatProperty(name='Left Limit', default=0, description='Left limit')
-    right_limit = FloatProperty(name='Right Limit', default=0, description='Right limit')
-    rttResolutionX = FloatProperty(name='RTT Resolution x', default=0, description='RTT resolution x')
-    rttResolutionY = FloatProperty(name='RTT Resolution y', default=0, description='RTT resolution y')
-    numRaysHorizontal = FloatProperty(name='Number Rays Horizontal', default=0, description='Number of horizontal rays')
-    numRaysVertical = FloatProperty(name='Number Rays Vertical', default=0, description='Number of vertical rays')
-    draw_rays = BoolProperty(name='Draw Rays', default=False, description='Draw rays')
-    depthImage = BoolProperty(name='Depth Image', default=False, description='Depth of the image')
-    show_cam = BoolProperty(name='Show Camera', default=False, description='Show the camera?')
-    only_ray = BoolProperty(name='Only Ray', default=False, description='Only ray')
-    ping_pong_mode = BoolProperty(name='Ping Pong Mode', default=False, description='Ping pong mode')
-    bands = IntProperty(name='Bands', default=0, description='Bands')
-    lasers = IntProperty(name='Lasers', default=0, description='Lasers')
-    extension = FloatVectorProperty(name='Extension', default=(0, 0, 0), description='Extension')
-
-    def draw(self, context):
-        layout.prop(self, "sensor_name", text="Sensor Name")
-        layout.prop(self, "sensor_category")
-        # if self.sensor_type in ['CameraSensor', 'ScanningSonar', 'RaySensor',
-        #                         'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-        #     layout.prop(self, "add_link", "Attach to New Link")
-        # if self.sensor_type == "custom":
-        #     layout.prop(self, "custom_type", text="Custom Type")
-        # else:
-        #     for key in defs.definitions['sensor_category'][self.sensor_category]:
-        #         layout.prop(self, key, text=key)
-
-    # TODO fix this operator and test it
-    def execute(self, context):
-        parent = context.active_object
-            if type(defs.definitions['sensors'][self.sensor_type][key]) == type(True):
-                value = getattr(self, key)
-                sensor['props'][key] = '$true' if value else '$false'
-            else:
-                sensor['props'][key] = getattr(self, key)
-        # type-specific settings
-        if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
-                              'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
-            if self.add_link:
-                sensorObj = sensors.createSensor(sensor, link, link.matrix_world)
-            else:
-                sensorObj = sensors.createSensor(sensor, context.active_object, context.active_object.matrix_world)
-            if self.add_link:
-                sUtils.selectObjects([parent, link], clear=True, active=0)
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
-                sUtils.selectObjects([link, sensorObj], clear=True, active=0)
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            sensors.cameraRotLock(sensorObj)
-        elif sensor['type'] in ['Joint6DOF']:
-            for obj in context.selected_objects:
-                if obj.phobostype == 'link':
-                    sensor['name'] = "sensor_joint6dof_" + nUtils.getObjectName(obj, phobostype="joint")
-                    sensors.createSensor(sensor, obj, obj.matrix_world)
-        elif 'Node' in sensor['type']:
-            sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
-                         mathutils.Matrix.Translation(context.scene.cursor_location))
-        elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
-            sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
-                         mathutils.Matrix.Translation(context.scene.cursor_location))
-        return {'FINISHED'}
-'''
 
 def getControllerParameters(name):
     """Returns the controller parameters for the controller type with the provided

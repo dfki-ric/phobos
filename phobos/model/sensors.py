@@ -132,7 +132,8 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     # create sensor object
     newsensor = bUtils.createPrimitive(
         sensor['name'], sensor['shape'], sensor['size'], layers,
-        plocation=origin.to_translation(), protation=origin.to_euler())
+        plocation=origin.to_translation(), protation=origin.to_euler(),
+        pmaterial=sensor['material'])
 
     # assign the parent if available
     if reference is not None:
@@ -140,6 +141,8 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
     # TODO we need to deal with other types of parameters for sensors
+
+    # TODO cameraRotLock() use or dispose?
     # contact, force and torque sensors (or unknown sensors)
     #else:
     #    newsensor = bUtils.createPrimitive(
@@ -153,6 +156,18 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     #        newsensor['sensor/nodes'] = sorted([nUtils.getObjectName(ref) for ref in reference])
     #    elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
     #        newsensor['sensor/joints'] = sorted([nUtils.getObjectName(ref) for ref in reference])
+#         elif sensor['type'] in ['Joint6DOF']:
+#             for obj in context.selected_objects:
+#                 if obj.phobostype == 'link':
+#                     sensor['name'] = "sensor_joint6dof_" + nUtils.getObjectName(obj, phobostype="joint")
+#                     sensors.createSensor(sensor, obj, obj.matrix_world)
+#         elif 'Node' in sensor['type']:
+#             sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
+#                          mathutils.Matrix.Translation(context.scene.cursor_location))
+#         elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
+#             sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
+#                          mathutils.Matrix.Translation(context.scene.cursor_location))
+
 
     # set sensor properties
     newsensor.phobostype = 'sensor'
