@@ -2,6 +2,45 @@
 
 # IMPORTANT: if adding new categories to the internal phobos, also change the
 # visual representation of these in the addSensor Operator!
+#
+# we have these sensors defined by MARS:
+# ray sensor
+# rotating ray sensor
+# camera sensor
+# scanning sonar
+# multi level laser range finder
+# joint position
+# joint velocity
+# joint load
+# joint torque
+# joint avg torque
+# joint 6 dof
+# node contact
+# node position
+# node rotation
+# node contact force
+# node com
+# node velocity
+# node angular velocity
+# motor current
+# undefined
+
+# SDF provides these sensors:
+# altimeter
+# camera
+# contact
+# gps
+# imu
+# logical camera
+# magnetometer
+# ray
+# rfidtag
+# rfid
+# sonar
+# transceiver
+# force torque
+#
+
 sensors:
     scanning:
         Ray sensor:
@@ -90,48 +129,69 @@ sensors:
 
     internal:
         Joint Position:
-            custom: false
+            general:
+                type: joint position
         Joint Velocity:
-            custom: false
+            general:
+                type: joint velocity
         Joint Load:
-            custom: false
+            general:
+                type: joint load
         Joint Torque:
-            custom: false
+            general:
+                type: joint torque
         Joint AVG Torque:
-            custom: false
+            general:
+                type: joint avg torque
         Joint 6 DOF:
-            custom: false
+            general:
+                type: joint 6 dof
         Node Contact:
-            custom: false
+            general:
+                type: node contact
         Node Position:
-            custom: false
+            general:
+                type: node position
         Node Rotation:
-            custom: false
+            general:
+                type: node rotation
         Node Contact Force:
-            custom: false
+            general:
+                type: node contact force
         Node COM:
-            custom: false
+            general:
+                type: node com
         Node Velocity:
-            custom: false
+            general:
+                type: node velocity
         Node Angular Velocity:
-            custom: false
+            general:
+                type: node angular velocity
         Motor Current:
-            custom: false
+            general:
+                type: motor current
         Inertial Measurement Unit:
-            custom: false
+            general:
+                type: inertial measurement unit
 
     environmental:
         Altimeter:
-            custom: false
+            general:
+                type: altimeter
         Magnetometer:
-            custom: false
+            general:
+                type: magnetometer
         GPS:
-            custom: false
+            general:
+                type: gps
 
     communication:
         Wireless Transceiver:
-            custom: false
+            general:
+                type: wireless transceiver
         RFID Sensor:
-            custom: false
+            general:
+                type: rfid sensor
         RFID Tag:
-            custom: false
+            general:
+                type: rfid tag
