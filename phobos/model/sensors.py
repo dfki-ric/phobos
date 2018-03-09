@@ -139,6 +139,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
         sUtils.selectObjects([newsensor, reference], clear=True, active=1)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
+    # TODO we need to deal with other types of parameters for sensors
     # contact, force and torque sensors (or unknown sensors)
     #else:
     #    newsensor = bUtils.createPrimitive(

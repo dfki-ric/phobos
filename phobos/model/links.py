@@ -59,6 +59,7 @@ def getGeometricElements(link):
     return visuals, collisions
 
 
+# DOCU we should add the parameters, that can be inserted in the dictionary
 def createLink(link):
     """Creates the blender representation of a given link and its parent joint.
 
@@ -74,6 +75,7 @@ def createLink(link):
     bpy.ops.object.select_all(action='DESELECT')
     bpy.ops.object.armature_add(layers=bUtils.defLayers([defs.layerTypes['link']]))
     newlink = bpy.context.active_object
+
     # Move bone when adding at selected objects location
     if 'matrix' in link:
         newlink.matrix_world = link['matrix']
@@ -81,6 +83,7 @@ def createLink(link):
     if link['name'] in bpy.data.objects.keys():
         log('Object with name of new link already exists: ' + link['name'], 'WARNING')
     nUtils.safelyName(newlink, link['name'])
+
 
     # set the size of the link
     visuals, collisions = getGeometricElements(link)
@@ -100,7 +103,7 @@ def createLink(link):
     for prop in link:
         if prop.startswith('$'):
             for tag in link[prop]:
-                newlink['link/'+prop[1:]+'/'+tag] = link[prop][tag]
+                newlink['link/' + prop[1:] + '/' + tag] = link[prop][tag]
 
     # create inertial
     if 'inertial' in link:

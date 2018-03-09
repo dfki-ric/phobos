@@ -1229,6 +1229,7 @@ def addSensorFromYaml(category, name):
         sensor_data = bpy.props.CollectionProperty(type=DynamicProperty)
         categ = category
         sensorName = name
+        addLink = BoolProperty(default=False)
 
         def draw(self, context):
             layout = self.layout
@@ -1282,13 +1283,30 @@ def addSensorFromYaml(category, name):
             return context.window_manager.invoke_props_dialog(self)
 
         def execute(self, context):
-            parent_obj = context.active_object
             sensordefs = defs.definitions['sensors'][self.categ][self.sensorName]
             # create a dictionary holding the sensor definition
             sensor_dict = {'name': self.sensorName,
                            'category': self.categ,
                            'props': {}
             }
+            original_obj = context.active_object
+
+            newlink = None
+            if self.addLink:
+                newlink = links.createLink({
+                    'scale': 1.,
+                    'name': 'link_' + self.sensorName,
+                    'matrix': original_obj.matrix_world})
+                # TODO give this link a fixed joint
+
+            # we don't need to check the parentlink, as the calling operator
+            # does make sure it exists (or a new link is created instead)
+            if 'phobostype' in original_obj and original_obj.phobostype != 'link':
+                parentlink = sUtils.getEffectiveParent(
+                    original_obj, ignore_selection=True)
+            else:
+                parentlink = original_obj
+            print(parentlink)
 
             # add the general settings for this sensor
             general_settings = sensordefs['general']
@@ -1308,8 +1326,31 @@ def addSensorFromYaml(category, name):
 
                 sensor_dict['props'][self.sensor_data[i].name[2:]] = store
 
-            pos_matrix = parent_obj.matrix_world
+            # the parent object will be either a new or an existing link
+            if newlink:
+                parent_obj = newlink
+            else:
+                parent_obj = parentlink
+
+            pos_matrix = original_obj.matrix_world
             sensor_obj = sensors.createSensor(sensor_dict, parent_obj, pos_matrix)
+
+            # parent to the added link
+            if newlink:
+                # parent newlink to parent link if there is any
+                if parentlink:
+                    sUtils.selectObjects([newlink, parentlink], clear=True, active=1)
+                    bpy.ops.object.parent_set(type='BONE_RELATIVE')
+
+            # parent sensor to its superior link
+            sUtils.selectObjects([sensor_obj, parent_obj], clear=True, active=1)
+            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+
+            # select the newly added objects
+            if newlink:
+                sUtils.selectObjects([sensor_obj, newlink], clear=True, active=0)
+            else:
+                sUtils.selectObjects([sensor_obj], clear=True, active=0)
 
             return {'FINISHED'}
 
@@ -1387,9 +1428,10 @@ class AddSensorOperator(Operator):
     def draw(self, context):
         layout = self.layout
         layout.prop(self, 'sensorName')
+        layout.separator()
         layout.prop(self, 'categ', text='Sensor category')
-
         layout.prop(self, 'sensor', text='Sensor type')
+        layout.prop(self, 'addLink')
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
@@ -1397,12 +1439,28 @@ class AddSensorOperator(Operator):
     def check(self, context):
         return True
 
+    @classmethod
+    def poll(cls, context):
+        return context.active_object
+
     def execute(self, context):
+        # make sure a link is selected or created
+        if not self.addLink and not sUtils.getEffectiveParent(
+                context.active_object, ignore_selection=True):
+            log('You have no link to add the sensor to. Select one ' +
+                    'or create it with the operator.', 'INFO')
+            return {'CANCELLED'}
+
+        # match the operator to avoid dangers of eval
         import re
         operatorName = addSensorFromYaml(self.categ, self.sensor)
         operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
+
+        # run the operator and pass on add link (to allow undo both new link and sensor)
         if operatorPattern.match(operatorName):
-            eval('bpy.ops.' + operatorName + "('INVOKE_DEFAULT')")
+            eval('bpy.ops.' + operatorName + "('INVOKE_DEFAULT', " +
+                 "addLink=" + str(self.addLink) +
+                 ")")
         else:
             log('This sensor name is not following the naming convention: ' +
                 operatorName + '. It can not be converted into an operator.',
@@ -1480,8 +1538,6 @@ class AddOLDSensorOperator(Operator):
         if sensor['type'] in ['CameraSensor', 'ScanningSonar', 'RaySensor',
                               'MultiLevelLaserRangeFinder', 'RotatingRaySensor']:
             if self.add_link:
-                link = links.createLink(scale=0.1, position=context.active_object.matrix_world.to_translation(),
-                                        name='link_' + self.sensor_name)
                 sensorObj = sensors.createSensor(sensor, link, link.matrix_world)
             else:
                 sensorObj = sensors.createSensor(sensor, context.active_object, context.active_object.matrix_world)
