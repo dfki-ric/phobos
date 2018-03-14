@@ -95,25 +95,16 @@ def log(message, level="INFO", origin=None, prefix=""):
     :type prefix: str.
     :return: None.
     """
-    # TODO delete me?
-    # Generate name of origin
-    #if origin is None:
-    #    originname='phoboslog'
-    #elif type(origin) is not str:
-    #    originname = origin.bl_idname
-    #else:
-    #    originname = origin
-    #originname = inspect.stack()[1][1].split('addons/')[-1] + ' - ' + inspect.stack()[1][3]
     callerframerecord = inspect.stack()[1]
     frame = callerframerecord[0]
     info = inspect.getframeinfo(frame)
-    originname = info.filename.split('addons/')[-1] + ' - ' + info.function + '(' + str(info.lineno) + ')'
+    originname = info.filename.split('addons/')[-1] + ' - ' + info.function + '(l' + str(info.lineno) + ')'
 
     # Display only messages up to preferred log level
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
     if loglevels.index(level) <= loglevels.index(prefs.loglevel):
         date = datetime.now().strftime("%Y%m%d_%H:%M")
-        msg = "[" + date + "] " + level + " " + message + " (" + originname + ")"
+        msg = date + " - " + level + " " + message + " (" + originname + ")"
         terminalmsg = prefix + "[" + date + "] " + decorate(level) + " " + message +\
                       col.DIM + " (" + originname + ")" + col.ENDC
 
@@ -121,11 +112,9 @@ def log(message, level="INFO", origin=None, prefix=""):
         if prefs.logtofile:
             try:
                 with open(prefs.logfile, "a") as lf:
-                    lf.write(date + "  " + msg + "\n")
+                    lf.write(msg + "\n")
             except IOError:
-                # FIXME Infinite loop can occur when harddrive has an error!
-                # Thus, logging the IOError should be handled differently...
-                log("Cannot write to log file! Resetting it: " + __name__ + ".log", "ERROR")
+                print("Cannot write to log file!")
 
         # log to terminal or Blender
         if prefs.logtoterminal:
