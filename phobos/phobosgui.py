@@ -32,10 +32,11 @@ import inspect
 import bpy
 # import bgl
 from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
-                       PointerProperty, CollectionProperty)
+                       PointerProperty, CollectionProperty, FloatProperty)
 from bpy.types import AddonPreferences
 
 from . import defs
+from . import display
 from phobos.phoboslog import loglevels
 from phobos.io import entities
 from phobos.io import meshes
@@ -90,6 +91,13 @@ class PhobosPrefs(AddonPreferences):
         default=''
     )
 
+    configfolder = StringProperty(
+        name="configfolder",
+        subtype="DIR_PATH",
+        description="Path to the system-dependent config folder of Phobos.",
+        default=''
+    )
+
     exportpluginsfolder = StringProperty(
         name='exportpluginsfolder',
         subtype='DIR_PATH',
@@ -108,8 +116,7 @@ class PhobosPrefs(AddonPreferences):
         layout.separator()
         layout.label(text="Folders")
         layout.prop(self, "modelsfolder", text="models folder")
-        # TODO how should plugins be handled?
-        # layout.prop(self, 'pluginspath', text="Path for plugins")
+        layout.prop(self, "configfolder", text="models folder")
 
 prev_collections = {}
 phobosIcon = 0
@@ -253,6 +260,7 @@ class PhobosToolsPanel(bpy.types.Panel):
         tsc1.operator('phobos.select_objects_by_phobostype',
                       text="by Phobostype")
         tsc1.operator('phobos.select_objects_by_name', text="by Name")
+        tsc1.prop(bpy.window_manager, 'draw_phobos_info')
         tsc2 = tsinlayout.column(align=True)
         tsc2.label(text="Tools", icon='MODIFIER')
         tsc2.operator('phobos.sort_objects_to_layers', icon='IMGDISPLAY')
@@ -698,6 +706,7 @@ class PhobosModelPanel(bpy.types.Panel):
         kc2 = kinlayout.column(align=True)
         kc1.label(text='Kinematics', icon='POSE_DATA')
         kc1.operator("phobos.create_links")
+        kc1.operator("phobos.merge_links")
         kc1.operator('phobos.define_joint_constraints')
         kc1.operator("phobos.create_mimic_joint")
         kc1.operator('phobos.add_kinematic_chain', icon='CONSTRAINT')
@@ -1003,6 +1012,14 @@ def register():
         items=defs.phobostypes,
         name="type",
         description="Phobos object type")
+
+    bpy.types.WindowManager.draw_phobos_infos = BoolProperty(
+        name='Draw Phobos Infos', default=True, update=display.start_draw_operator,
+        decription="Draw additional data visualization for Phobos items in 3D View.")
+
+    bpy.types.WindowManager.progress = FloatProperty(
+        name='Progress', default=0,
+        decription="Progress value of custom Phobos progress bar.")
 
     # Add settings to world to preserve settings for every model
     for meshtype in meshes.mesh_types:
