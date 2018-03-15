@@ -1,3 +1,4 @@
+import collections
 import bpy
 import bgl
 import blf
@@ -6,6 +7,19 @@ from mathutils import Vector
 
 
 progressinfo = None
+colors = {'debug': (1.0, 0.0, 1.0),
+          'info': (0.0, 1.0, 0.0),
+          'warning': (0.5, 0.25, 0.25),
+          'error': (1.0, 0.0, 0.0),
+          'none': (1.0, 1.0, 1.0)
+          }
+messages = collections.deque([], 5)
+slotheight = 22
+slotlower = [4 + slotheight*slot for slot in range(5)]
+
+
+def push_message(text, msgtype='none'):
+    messages.appendleft({'text': text, 'type': msgtype})
 
 
 def start_draw_operator(self, context):
@@ -30,6 +44,7 @@ def to2d(coords):
 
 def draw_2dpolgyon(points, linecolor=None, fillcolor=None, distance=0.2):
     # background
+    bgl.glEnable(bgl.GL_BLEND)
     if fillcolor:
         bgl.glColor4f(*fillcolor)
         bgl.glBegin(bgl.GL_POLYGON)
@@ -48,9 +63,19 @@ def draw_2dpolgyon(points, linecolor=None, fillcolor=None, distance=0.2):
 
 def draw_text(text, position, color=(1, 1, 1, 1), size=14, dpi=150, font_id=0):
     bgl.glColor4f(*color)
-    blf.position(font_id, *position, 1.0)
+    blf.position(font_id, *position, 0.25)
     blf.size(font_id, size, dpi)
     blf.draw(font_id, text)
+
+
+def draw_message(text, msgtype, slot):
+    blf.size(0, 6, 150)
+    width = bpy.context.region.width
+    start = width - blf.dimensions(0, text)[0]-6
+    points = ((start, slotlower[slot]), (width-2, slotlower[slot]),
+              (width-2, slotlower[slot]+slotheight-4), (start, slotlower[slot]+slotheight-4))
+    draw_2dpolgyon(points, fillcolor=(*colors[msgtype], 0.2))
+    draw_text(text, (start+2, slotlower[slot]+4), size=6)
 
 
 def draw_progressbar(value):
@@ -153,6 +178,9 @@ def draw_callback_px(self, context):
 
     if context.window_manager.progress not in [0, 1]:
         draw_progressbar(context.window_manager.progress)
+    for m in range(len(messages)):
+        msg = messages[m]
+        draw_message(msg['text'], msg['type'], m)
 
     bgl.glDisable(bgl.GL_BLEND)
 

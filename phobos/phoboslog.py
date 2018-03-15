@@ -35,6 +35,7 @@ Created on 05 Dec 2014
 import inspect
 import bpy
 from datetime import datetime
+import phobos.display as display
 
 # levels of detail for logging
 loglevels = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
@@ -141,3 +142,4 @@ def log(message, level="INFO", origin=None, prefix=""):
                 msg = msg.split(level)[1][1:]
                 msg = msg.split(originname)[0][:-2]
                 origin.report({level}, msg)
+    display.push_message(message, level.lower())
