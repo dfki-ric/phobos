@@ -44,6 +44,7 @@ from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
                        FloatProperty, FloatVectorProperty, BoolVectorProperty)
 
 import phobos.defs as defs
+import phobos.display as display
 import phobos.model.inertia as inertia
 import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
@@ -531,13 +532,8 @@ class SmoothenSurfaceOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        show_progress = bUtils.getBlenderVersion() >= 269
-        objs = filter(lambda e: e.type == "MESH", context.selected_objects)
-        if show_progress:
-            wm = context.window_manager
-            total = float(len(context.selected_objects))
-            wm.progress_begin(0, total)
-            i = 1
+        objs = [obj for obj in context.selected_objects if obj.type == "MESH"]
+        i = 1
         for obj in objs:
             context.scene.objects.active = obj
             bpy.ops.object.mode_set(mode='EDIT')
@@ -546,11 +542,8 @@ class SmoothenSurfaceOperator(Operator):
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.shade_smooth()
             bpy.ops.object.modifier_add(type='EDGE_SPLIT')
-            if show_progress:
-                wm.progress_update(i)
-                i += 1
-        if show_progress:
-            wm.progress_end()
+            display.setProgress(i/len(context.selected_objects))
+            i += 1
         return {'FINISHED'}
 
     @classmethod
@@ -627,15 +620,7 @@ class CreateLinkInertialOperator(Operator):
         links = [obj for obj in context.selected_objects
                  if obj.phobostype == 'link']
         selected = context.selected_objects
-
-        # show progress when available
-        show_progress = bUtils.getBlenderVersion() >= 269
-        if show_progress:
-            wm = context.window_manager
-            total = float(len(links))
-            wm.progress_begin(0, total)
-            i = 1
-
+        i = 1
         # calculate inertial objects for each link
         for link in links:
             # delete inertials which are overwritten
@@ -655,11 +640,8 @@ class CreateLinkInertialOperator(Operator):
             # calculate the link inertials
             inertia.createMajorInertialObjects(link, self.autocalc,
                                                self.from_selected_only)
-            if show_progress:
-                wm.progress_update(i)
-                i += 1
-        if show_progress:
-            wm.progress_end()
+            display.setProgress(i/len(links))
+            i += 1
         return {'FINISHED'}
 
     @classmethod
@@ -732,15 +714,7 @@ class CreateMinorInertialOperator(Operator):
         links = [obj for obj in context.selected_objects
                  if obj.phobostype == 'link']
         selected = context.selected_objects
-
-        # show progress if possible
-        show_progress = bUtils.getBlenderVersion() >= 269
-        if show_progress:
-            wm = context.window_manager
-            total = float(len(links))
-            wm.progress_begin(0, total)
-            i = 1
-
+        i = 1
         # create inertials for each link
         for link in links:
             # delete inertials which are overwritten
@@ -759,14 +733,11 @@ class CreateMinorInertialOperator(Operator):
             sUtils.selectObjects(selected, clear=True)
 
             inertia.createMinorInertialObjects(link, self.autocalc)
-            if show_progress:
-                wm.progress_update(i)
-                i += 1
+            display.setProgress(i/len(links))
+            i += 1
 
         # reselect the initial objects
         sUtils.selectObjects(selected, clear=True)
-        if show_progress:
-            wm.progress_end()
         return {'FINISHED'}
 
     @classmethod

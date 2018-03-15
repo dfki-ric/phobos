@@ -5,46 +5,76 @@ from bpy_extras import view3d_utils
 from mathutils import Vector
 
 
+progressinfo = None
+
+
 def start_draw_operator(self, context):
     if self.draw_phobos_infos:
         bpy.ops.phobos.draw_infos_operator('INVOKE_DEFAULT')
     return None
 
 
-def draw_polgyon(points, linecolor=None, fillcolor=None):
+def getRegionData():
+    # region = [area.region for area in bpy.context.screen.areas if area.type == 'VIEW_3D'][0]
+    return bpy.context.region, bpy.context.space_data.region_3d
+
+
+def to3d(coords, distance=1.0):
+    # bgl.glUnProject()
+    return view3d_utils.region_2d_to_origin_3d(*getRegionData(), (coords), distance)
+
+
+def to2d(coords):
+    return view3d_utils.location_3d_to_region_2d(*getRegionData(), coords)
+
+
+def draw_2dpolgyon(points, linecolor=None, fillcolor=None, distance=0.2):
     # background
-    bgl.glColor4f(*fillcolor)
-    bgl.glBegin(bgl.GL_POLYGON)
-    for p in points:
-        bgl.glVertex2i(*p)
-    bgl.glEnd()
+    if fillcolor:
+        bgl.glColor4f(*fillcolor)
+        bgl.glBegin(bgl.GL_POLYGON)
+        for p in points:
+            bgl.glVertex3f(*p, distance)
+        bgl.glEnd()
     # frame
-    bgl.glColor4f(*linecolor)
-    bgl.glBegin(bgl.GL_LINE_STRIP)
-    for p in points:
-        bgl.glVertex2i(*p)
-    bgl.glVertex2i(*(points[0]))
-    bgl.glEnd()
+    if linecolor:
+        bgl.glColor4f(*linecolor)
+        bgl.glBegin(bgl.GL_LINE_STRIP)
+        for p in points:
+            bgl.glVertex3f(*p, distance)
+        bgl.glVertex3f(*points[0], distance)
+        bgl.glEnd()
 
 
-def draw_text(text, position, color=(1, 1, 1, 1), size=16, dpi=72, font_id=0):
+def draw_text(text, position, color=(1, 1, 1, 1), size=14, dpi=150, font_id=0):
     bgl.glColor4f(*color)
-    blf.position(font_id, *position)
+    blf.position(font_id, *position, 1.0)
     blf.size(font_id, size, dpi)
     blf.draw(font_id, text)
 
 
-def draw_progressbar(value, region):
+def draw_progressbar(value):
+    region = bpy.context.region
     text = str(round(value*100))+'%'
-    lc = bgl.glColor4f(0.0, 1.0, 0.0, 1.0)
-    fc = bgl.glColor4f(0.0, 1.0, 0.0, 0.3)
-    points = ((100, region.height - 40),
-              (region.width - 100, region.height - 40),
-              (region.width - 100, region.height - 20),
-              (100, region.height - 20))
-    draw_polgyon(points, linecolor=lc, fillcolor=fc)
-    draw_polgyon(points, fillcolor=lc)
-    draw_text(text, (region.width - 60, region.height - 35, 0))
+    lc = (0.0, 1.0, 0.0, 1.0)
+    fc = (0.0, 1.0, 0.0, 0.3)
+    min = region.width*0.2
+    max = region.width*0.8
+    span = max-min
+    points = ((min, region.height-10),
+              (max, region.height-10),
+              (max, region.height-25),
+              (min, region.height-25))
+    progresspoints = ((min, region.height-10),
+                      (min+value*span, region.height-10),
+                      (min+value*span, region.height-25),
+                      (min, region.height-25))
+    framepoints = ((0, 1), (2, 1), (2, 2), (0, 2))
+    draw_2dpolgyon(points, linecolor=lc, fillcolor=fc)
+    draw_2dpolgyon(progresspoints, fillcolor=lc, distance=0.2)
+    draw_text(text, position=(max+20, region.height-25), size=9)
+    if progressinfo:
+        draw_text(progressinfo, position=(min + 10, region.height - 42), size=6)
 
 
 def draw_joint(joint):
@@ -61,7 +91,7 @@ def draw_joint(joint):
     bgl.glEnd()
 
 
-def draw_submechanism(elements, viewvec):
+def draw_submechanism(elements):
     linecolor = (0.0, 1.0, 0.0, 0.8)
     areacolor = (0.0, 1.0, 0.0, 0.5)
 
@@ -71,7 +101,8 @@ def draw_submechanism(elements, viewvec):
 
     vecs = []
     # offset = Vector((-sum(elements[0].dimensions), 0.0, 0.0))
-    offset = viewvec
+    region, rv3d = getRegionData()
+    offset = view3d_utils.region_2d_to_origin_3d(region, rv3d, (region.width/2.0, region.height/2.0)).normalized()
     vecs.append(Vector(elements[0].matrix_world.to_translation()) + offset)
 
     for e in range(len(elements)):
@@ -92,28 +123,38 @@ def draw_submechanism(elements, viewvec):
 
 def draw_callback_px(self, context):
     # define common variables
-    region = context.region
-    rv3d = context.region_data
-    viewvec = view3d_utils.region_2d_to_origin_3d(region, rv3d, (region.width / 2.0, region.height / 2.0)).normalized()
+    region, rv3d = getRegionData()
     active = context.object
     selected = context.selected_objects
 
-    # setup OpenGl
+    # ----- 3D Drawing -----
     bgl.glEnable(bgl.GL_BLEND)
 
-    if context.window_manager.progress != 0:
-        draw_progressbar(context.window_manager.progress, region)
+    if active:
+        if 'submechanism/spanningtree' in context.object:
+            draw_submechanism(context.object['submechanism/spanningtree'])
 
-    if 'submechanism/spanningtree' in context.object:
-        draw_submechanism(context.object['submechanism/spanningtree'], viewvec)
-
-    for j in [o for o in selected if o.phobostype == 'link']:
-        draw_joint(j)
+    if len(selected) > 0:
+        for j in [o for o in selected if o.phobostype == 'link']:
+            draw_joint(j)
 
     # restore opengl defaults
     bgl.glLineWidth(1)
     bgl.glDisable(bgl.GL_BLEND)
     bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
+
+    # ----- 2D Drawing -----
+    bgl.glMatrixMode(bgl.GL_PROJECTION)
+    bgl.glLoadIdentity()
+    bgl.gluOrtho2D(0, bpy.context.region.width, 0, bpy.context.region.height)
+    bgl.glMatrixMode(bgl.GL_MODELVIEW)
+    bgl.glLoadIdentity()
+    bgl.glEnable(bgl.GL_BLEND)
+
+    if context.window_manager.progress not in [0, 1]:
+        draw_progressbar(context.window_manager.progress)
+
+    bgl.glDisable(bgl.GL_BLEND)
 
 
 class DrawInfosOperator(bpy.types.Operator):
@@ -122,7 +163,11 @@ class DrawInfosOperator(bpy.types.Operator):
     bl_label = "Draw Additional Phobos Information"
 
     def modal(self, context, event):
-        context.area.tag_redraw()
+        #TODO: check this
+        try:
+            context.area.tag_redraw()
+        except AttributeError:
+            pass
 
         if not context.window_manager.draw_phobos_infos:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
@@ -141,9 +186,18 @@ class DrawInfosOperator(bpy.types.Operator):
             return {'CANCELLED'}
 
 
-def setProgress(value):
-    bpy.context.window_manager.progress = value
-
+def setProgress(value, info=None):
+    global progressinfo
+    c = bpy.context
+    c.window_manager.progress = value
+    bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
+    progressinfo = info
+    #
+    # for area in c.screen.areas:
+    #     if area.type == 'VIEW_3D':
+    #         override = {'window': c.window, 'screen': c.screen, 'area': area}
+    #         area.tag_redraw()
+    #         break
 
 def register():
     bpy.utils.register_class(DrawInfosOperator)

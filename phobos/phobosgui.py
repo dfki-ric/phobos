@@ -260,7 +260,7 @@ class PhobosToolsPanel(bpy.types.Panel):
         tsc1.operator('phobos.select_objects_by_phobostype',
                       text="by Phobostype")
         tsc1.operator('phobos.select_objects_by_name', text="by Name")
-        tsc1.prop(bpy.window_manager, 'draw_phobos_info')
+        tsc1.prop(bpy.context.window_manager, 'draw_phobos_infos')
         tsc2 = tsinlayout.column(align=True)
         tsc2.label(text="Tools", icon='MODIFIER')
         tsc2.operator('phobos.sort_objects_to_layers', icon='IMGDISPLAY')
@@ -1014,12 +1014,12 @@ def register():
         description="Phobos object type")
 
     bpy.types.WindowManager.draw_phobos_infos = BoolProperty(
-        name='Draw Phobos Infos', default=True, update=display.start_draw_operator,
-        decription="Draw additional data visualization for Phobos items in 3D View.")
+        name='Draw Phobos Infos', default=False, update=display.start_draw_operator,
+        description="Draw additional data visualization for Phobos items in 3D View.")
 
     bpy.types.WindowManager.progress = FloatProperty(
         name='Progress', default=0,
-        decription="Progress value of custom Phobos progress bar.")
+        description="Progress value of custom Phobos progress bar.")
 
     # Add settings to world to preserve settings for every model
     for meshtype in meshes.mesh_types:

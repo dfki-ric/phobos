@@ -40,6 +40,7 @@ from bpy.props import (EnumProperty, StringProperty, FloatProperty,
                        IntProperty, BoolProperty)
 
 import phobos.defs as defs
+import phobos.display as display
 from phobos.phoboslog import log
 import phobos.model.models as models
 import phobos.model.links as links
@@ -216,6 +217,10 @@ def exportModel(root, export_path, entitytypes=None, model=None):
 
     # TODO: Move mesh export to individual formats? This is practically SMURF
     # export meshes in selected formats
+    i = 1
+    mt = len([m for m in meshes.mesh_types if getattr(bpy.data.worlds[0], "export_mesh_"+m)])
+    mc = len(model['meshes'])
+    n = mt*mc
     for meshtype in meshes.mesh_types:
         mesh_path = ioUtils.getOutputMeshpath(export_path, meshtype)
         try:
@@ -223,12 +228,14 @@ def exportModel(root, export_path, entitytypes=None, model=None):
             if getattr(bpy.data.worlds[0], typename):
                 securepath(mesh_path)
                 for meshname in model['meshes']:
-                    meshes.mesh_types[meshtype]['export'](
-                        model['meshes'][meshname], mesh_path)
+                    meshes.mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_path)
+                    display.setProgress(i/n, 'Exporting '+meshname+'.'+meshtype+'...')
+                    i += 1
         except KeyError:
             log("No export function available for selected mesh function: " +
                 meshtype, "ERROR")
             print(sys.exc_info()[0])
+    display.setProgress(0)
 
     # TODO: Move texture export to individual formats? This is practically SMURF
     # TODO: Also, this does not properly take care of textures embedded in a .blend file
@@ -712,7 +719,6 @@ class ExportAllPosesOperator(Operator):
             root, selected_only=True, include_hidden=False)
         sUtils.selectObjects(objectlist)
         poses = models.getPoses(root['modelname'])
-        bpy.context.window_manager.progress_begin(0, len(poses))
         i = 1
         for pose in poses:
             sUtils.selectObjects([root] + objectlist, clear=True, active=0)
@@ -724,9 +730,8 @@ class ExportAllPosesOperator(Operator):
                 parameter = self.decimate_angle_limit
             exporter.bakeModel(objectlist, root[
                                'modelname'], pose, decimate_type=self.decimate_type, decimate_parameter=parameter)
-            bpy.context.window_manager.progress_update(i)
+            display.setProgress(i/len(poses))
             i += 1
-        bpy.context.window_manager.progress_end()
         sUtils.selectObjects([root] + objectlist, clear=True, active=0)
         bpy.ops.scene.reload_models_and_poses_operator()
         return {'FINISHED'}
