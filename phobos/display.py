@@ -13,9 +13,9 @@ colors = {'debug': (1.0, 0.0, 1.0),
           'error': (1.0, 0.0, 0.0),
           'none': (1.0, 1.0, 1.0)
           }
-messages = collections.deque([], 5)
+messages = collections.deque([], 50)
 slotheight = 22
-slotlower = [4 + slotheight*slot for slot in range(5)]
+slotlower = [4 + slotheight*slot for slot in range(50)]
 
 
 def push_message(text, msgtype='none'):
@@ -42,7 +42,7 @@ def to2d(coords):
     return view3d_utils.location_3d_to_region_2d(*getRegionData(), coords)
 
 
-def draw_2dpolgyon(points, linecolor=None, fillcolor=None, distance=0.2):
+def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2):
     # background
     bgl.glEnable(bgl.GL_BLEND)
     if fillcolor:
@@ -68,15 +68,17 @@ def draw_text(text, position, color=(1, 1, 1, 1), size=14, dpi=150, font_id=0):
     blf.draw(font_id, text)
 
 
-def draw_message(text, msgtype, slot):
+def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
     blf.size(0, 6, 150)
     width = bpy.context.region.width
     start = width - blf.dimensions(0, text)[0]-6
     points = ((start, slotlower[slot]), (width-2, slotlower[slot]),
               (width-2, slotlower[slot]+slotheight-4), (start, slotlower[slot]+slotheight-4))
-    draw_2dpolgyon(points, fillcolor=(*colors[msgtype], 0.2))
-    draw_text(text, (start+2, slotlower[slot]+4), size=6)
-
+    draw_2dpolygon(points, fillcolor=(*colors[msgtype], 0.2*opacity))
+    draw_text(text, (start+2, slotlower[slot]+4), size=6, color=(1, 1, 1, opacity))
+    if slot == 0 and offset > 0:
+        #draw_text(str(offset) + ' \u25bc', (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, opacity))
+        draw_text('+'+str(offset), (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, 1))
 
 def draw_progressbar(value):
     region = bpy.context.region
@@ -95,8 +97,8 @@ def draw_progressbar(value):
                       (min+value*span, region.height-25),
                       (min, region.height-25))
     framepoints = ((0, 1), (2, 1), (2, 2), (0, 2))
-    draw_2dpolgyon(points, linecolor=lc, fillcolor=fc)
-    draw_2dpolgyon(progresspoints, fillcolor=lc, distance=0.2)
+    draw_2dpolygon(points, linecolor=lc, fillcolor=fc)
+    draw_2dpolygon(progresspoints, fillcolor=lc, distance=0.2)
     draw_text(text, position=(max+20, region.height-25), size=9)
     if progressinfo:
         draw_text(progressinfo, position=(min + 10, region.height - 42), size=6)
@@ -151,6 +153,7 @@ def draw_callback_px(self, context):
     region, rv3d = getRegionData()
     active = context.object
     selected = context.selected_objects
+    wm = context.window_manager
 
     # ----- 3D Drawing -----
     bgl.glEnable(bgl.GL_BLEND)
@@ -176,11 +179,22 @@ def draw_callback_px(self, context):
     bgl.glLoadIdentity()
     bgl.glEnable(bgl.GL_BLEND)
 
+    # progress bar
     if context.window_manager.progress not in [0, 1]:
-        draw_progressbar(context.window_manager.progress)
-    for m in range(len(messages)):
-        msg = messages[m]
-        draw_message(msg['text'], msg['type'], m)
+        draw_progressbar(wm.progress)
+    # log messages
+    for m in range(wm.phobos_msg_count):
+        opacity = 1.0
+        if 1 >= m <= wm.phobos_msg_offset-1 or m >= wm.phobos_msg_count-2:
+            opacity = 0.5
+        if wm.phobos_msg_offset > 1 > m or m >= wm.phobos_msg_count-1:
+            opacity = 0.1
+        try:
+            msg = messages[m+wm.phobos_msg_offset]
+            draw_message(msg['text'], msg['type'], m, opacity, offset=wm.phobos_msg_offset)
+        except IndexError:
+            pass
+
 
     bgl.glDisable(bgl.GL_BLEND)
 

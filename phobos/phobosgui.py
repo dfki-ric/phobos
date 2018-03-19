@@ -261,6 +261,8 @@ class PhobosToolsPanel(bpy.types.Panel):
                       text="by Phobostype")
         tsc1.operator('phobos.select_objects_by_name', text="by Name")
         tsc1.prop(bpy.context.window_manager, 'draw_phobos_infos')
+        tsc1.prop(bpy.context.window_manager, 'phobos_msg_count')
+        tsc1.prop(bpy.context.window_manager, 'phobos_msg_offset')
         tsc2 = tsinlayout.column(align=True)
         tsc2.label(text="Tools", icon='MODIFIER')
         tsc2.operator('phobos.sort_objects_to_layers', icon='IMGDISPLAY')
@@ -1012,6 +1014,14 @@ def register():
         items=defs.phobostypes,
         name="type",
         description="Phobos object type")
+
+    bpy.types.WindowManager.phobos_msg_count = IntProperty(
+        name='messages to show', default=5, min=0, max=20,
+        description="How many Phobos log messages to show on screen")
+
+    bpy.types.WindowManager.phobos_msg_offset = IntProperty(
+        name='message start index', default=0, min=0, max=50,
+        description="The Phobos log message index to start with")
 
     bpy.types.WindowManager.draw_phobos_infos = BoolProperty(
         name='Draw Phobos Infos', default=False, update=display.start_draw_operator,
