@@ -1484,6 +1484,9 @@ class AddAnnotationsOperator(bpy.types.Operator):
     def poll(cls, context):
         return context is not None
 
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=500)
+
     def draw(self, context):
         l = self.layout
         l.prop(self, 'filepath')
@@ -1491,9 +1494,11 @@ class AddAnnotationsOperator(bpy.types.Operator):
             l.prop(self, 'annotationtype')
             l.prop(self, 'devicetype')
             b = self.layout.box()
-            for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
-                b.label(text=key+': '+str(value))
-
+            try:
+                for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
+                    b.label(text=key+': '+str(value))
+            except KeyError:
+                pass  # no valid key selected yet
 
     def execute(self, context):
         if self.filepath != '':
@@ -1509,6 +1514,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
             for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
                 for obj in context.selected_objects:
                     obj[self.devicetype+'/'+key] = value
+        return {'FINISHED'}
 
 
 class InstantiateAssembly(Operator):
