@@ -44,7 +44,6 @@ def deriveObjectPose(obj):
     :param obj: The blender object to derive the pose from.
     :type obj: bpy_types.Object
     :return: dict
-
     """
     effectiveparent = sUtils.getEffectiveParent(obj)
     matrix = eUtils.getCombinedTransform(obj, effectiveparent)
@@ -56,68 +55,8 @@ def deriveObjectPose(obj):
             }
     return pose
 
-
-def createPreview(objects, export_path, modelname, previewfile, render_resolution=256):
-    """Creates a thumbnail of the given objects.
-
-    :param obj: List of objects for the thumbnail.
-    :type obj: list
-    :param Resolution used for the render.
-    :type int
-
-    """
-    # thumbnail
-
-    # check/create camera
-    # TODO create camera if there is no
-    cam_ob = bpy.context.scene.camera
-    # cam = bpy.data.cameras.new("Camera")
-    # delete_cam = False
-    if not cam_ob:
-        log("No Camera found! Can not create thumbnail", "WARNING", __name__ + ".bakeModel")
-        return
-        #cam_ob = bpy.data.objects.new("Camera", cam)
-        #bpy.context.scene.objects.link(cam_ob)
-        #delete_cam = True
-    #bpy.context.scene.camera = cam_ob
-
-    log("Creating thumbnail of model: "+modelname, "INFO",__name__+".bakeModel")
-    # hide all other objects from rendering
-    for ob in bpy.data.objects:
-        if not (ob in objects) and not(ob.type == 'LAMP'):
-            ob.hide_render = True
-            ob.hide = True
-
-    # set render settings
-#    bpy.context.scene.render.resolution_x = render_resolution
-#    bpy.context.scene.render.resolution_y = render_resolution
-#    bpy.context.scene.render.resolution_percentage = 100
-    # render
-    #bpy.ops.render.render(use_viewport=True)
-    bpy.ops.render.opengl(view_context=True)
-    # save image
-    bpy.context.scene.render.image_settings.file_format = 'PNG'
-#    bpy.data.images['Render Result'].file_format = bpy.context.scene.render.image_settings.file_format
-
-    #print(bpy.data.images['Render Result'].file_format)
-    log("saving preview to: "+os.path.join(export_path,previewfile+'.png'), "INFO",__name__+".bakeModel")
-
-    bpy.data.images['Render Result'].save_render(os.path.join(export_path,previewfile+'.png'))
-
-
-    # make all objects visible again
-    for ob in bpy.data.objects:
-        ob.hide_render = False
-        ob.hide = False
-
-    # delete camera if needed
-    #if delete_cam:
-    #    bpy.ops.object.select_all(action='DESELECT')
-    #    cam_ob.select = True
-    #    bpy.ops.object.delete()
-
+# TODO delete me?
 #def bakeAllPoses(objlist, modelname, posename="", savetosubfolder=True):
-
 
 
 def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimate_parameter=0.1):
@@ -127,13 +66,15 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
     :type objlist: list
     :param modelname: The new models name and filename.
     :type modelname: str
-
     """
     if bpy.data.worlds[0].phobosexportsettings.relativePath:
+        # CHECK careful with path consistency (Windows)
         outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.data.worlds[0].phobosexportsettings.path)))
     else:
+        # CHECK careful with path consistency (Windows)
         outpath = securepath(os.path.expanduser(bpy.data.worlds[0].phobosexportsettings.path))
 
+    # TODO delete me?
     #bake_outpath = securepath(os.path.join(outpath, modelname) if savetosubfolder else outpath)
     bake_outpath = outpath
 
@@ -141,25 +82,25 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
         securepath(os.path.join(bake_outpath, 'bakes'))
         bake_outpath = os.path.join(bake_outpath, 'bakes/')
 
-    export_name = modelname+ '_' + posename
+    export_name = modelname + '_' + posename
 
     visuals = [o for o in objlist if ("phobostype" in o and o.phobostype == "visual")]
     if len(visuals) > 0:
 
-        log("Baking model to " + bake_outpath, "INFO",__name__+".bakeModel")
+        log("Baking model to " + bake_outpath, "INFO")
         sUtils.selectObjects(visuals, active=0)
-        log("Copying objects for joining...", "INFO",__name__+".bakeModel")
+        log("Copying objects for joining...", "INFO")
         bpy.ops.object.duplicate(linked=False, mode='TRANSLATION')
-        log("Joining...", "INFO",__name__+".bakeModel")
+        log("Joining...", "INFO")
         bpy.ops.object.join()
         obj = bpy.context.active_object
-        log("Deleting vertices...", "INFO",__name__+".bakeModel")
+        log("Deleting vertices...", "INFO")
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.select_all(action='TOGGLE')
         bpy.ops.mesh.select_all(action='TOGGLE')
         bpy.ops.mesh.remove_doubles()
         bpy.ops.object.editmode_toggle()
-        log("Adding modifier...", "INFO",__name__+".bakeModel")
+        log("Adding modifier...", "INFO")
 
         bpy.ops.object.modifier_add(type='DECIMATE')
         bpy.context.object.modifiers["Decimate"].decimate_type = decimate_type
@@ -170,12 +111,12 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
         elif decimate_type == 'DISSOLVE':
             bpy.context.object.modifiers["Decimate"].angle_limit = decimate_parameter
 
-
-        log("Applying modifier...", "INFO",__name__+".bakeModel")
+        log("Applying modifier...", "INFO")
         bpy.ops.object.modifier_apply(apply_as='DATA', modifier="Decimate")
         obj.name = export_name + ".obj"
 
-        bpy.ops.export_scene.obj(filepath=os.path.join(bake_outpath, obj.name),use_selection=True)
+        # TODO use_selection might cause bugs, depending on Blender version
+        bpy.ops.export_scene.obj(filepath=os.path.join(bake_outpath, obj.name), use_selection=True)
 
         obj.hide_render = True
         previewfile = export_name
@@ -187,6 +128,7 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
         log("Done baking...", "INFO")
 
     else:
-        log("No visuals to bake!","WARNING")
+        log("No visuals to bake!", "WARNING")
 
+    # TODO better use logging, right?
     print("Done baking...")

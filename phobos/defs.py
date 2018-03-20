@@ -47,7 +47,9 @@ layerTypes = {
     "sensor": 4,
     "decoration": 5,
     "light": 6,
-    "approxsphere": 13
+    "approxsphere": 13,
+    'interface': 10,
+    'assembly': 10
 }
 
 # types of blender objects phobos differentiates
@@ -61,8 +63,12 @@ phobostypes = (('undefined',) * 3,
                ('approxsphere',) * 3,
                ('light',) * 3,
                ('entity',) * 3,
+               ('frame',) * 3,
+               ('interface',) * 3,
+               ('assembly',) * 3
                )
 
+# DOCU add some comments for these...
 subtypes = ("visual", "joint", "motor", "collision", "sensor", "link", "inertial", "controller", "light", "approxsphere")
 
 jointtypes = (('revolute',) * 3,
@@ -95,7 +101,11 @@ type_properties = {"undefined": (),
                    "controller": ('name',),
                    "controller_default": ("controller",),
                    "light": ('name', 'light/directional', 'light/exponent'),
-                   "light_default": ('new_light', 'true', '1.0')
+                   "light_default": ('new_light', 'true', '1.0'),
+                   "interface": (),
+                   "interface_default": (),
+                   "assembly": (),
+                   "assembly_default": ()
                    }
 
 # definitions of model elements to be read in
@@ -104,7 +114,8 @@ definitions = {'motors': {},
                'controllers': {},
                'algorithms': {},
                'materials': {},
-               'model': {}
+               'model': {},
+               'submechanisms': {}
                }
 
 
@@ -113,7 +124,6 @@ def updateDefs(defsFolderPath):
 
     :param defsFolderPath: The path to the folder with the definitions yaml files.
     :type defsFolderPath: str
-
     """
     dicts = __parseAllYAML(defsFolderPath)
     for dict in dicts:
@@ -136,7 +146,9 @@ def __evaluateString(s):
     :type s: str
     :return: str -- the evaluated string.
     """
-    import math  # needed for evaluation of strings (see below)
+    # TODO math is not needed anymore...
+    # needed for evaluation of strings (see below)
+    import math
     p = compile('&.*&')
     for ma in p.findall(s):
         try:
@@ -154,7 +166,6 @@ def __parseAllYAML(path):
     :param path: The path from which to parse all files.
     :type path: str
     :return: dict -- The dictionary with all parsed YAML files.
-
     """
     dicts = []
     for root, dirs, files in os.walk(path):
@@ -170,6 +181,7 @@ def __parseAllYAML(path):
                         dicts.append(tmpyaml)
                     except yaml.scanner.ScannerError:
                         log("Error while parsing YAML file", "ERROR")
+                # TODO filenotfounderror is not imported or so...
                 except FileNotFoundError:
                     log("The file "+file+" was not found.", "ERROR")
     return dicts

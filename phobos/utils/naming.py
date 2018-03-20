@@ -33,7 +33,7 @@ import phobos.utils.selection as selection
 
 
 def getObjectName(obj, phobostype=None):
-    """This function returns the name for an object depending on its phobostype.
+    """Returns the name for an object depending on its phobostype.
     For links and objects lacking a '*phobostype*/name' property, the object's
     name is used instead, cleaned of namespaces.
 
@@ -41,7 +41,6 @@ def getObjectName(obj, phobostype=None):
     :type obj: bpy.types.Object
     :param phobostype: The phobostype you want this objects name for.
     :return: str -- The objects name.
-
     """
     if obj is None:
         return None
@@ -49,58 +48,60 @@ def getObjectName(obj, phobostype=None):
     if nametype != 'link' and nametype + "/name" in obj:
         return obj[nametype + "/name"]
     else:
-        return obj.name.split(':')[-1]
+        return obj.name.split('::')[-1]
 
 
 def replaceNameElement(prop, old, new):
     """For all selected elements in Blender, replace an *old* part of a string *prop*erty with *new*.
-
     """
     for obj in bpy.context.selected_objects:
         if prop in obj and obj[prop].find(old) > -1:
             obj[prop] = obj[prop].replace(old, new)
 
 
-def addNamespace(obj):
-    """This function namespaces a given blender object.
+def addNamespace(obj, namespace=None):
+    """Namespaces a given blender object.
 
     :param obj: The object to namespace.
     :type obj: bpy.types.Object
-
     """
-    types = defs.subtypes
-    name = obj.name
-    root = selection.getRoot(obj)
     try:
-        namespace = root["entity/name"]
-        obj.name = namespace + "::" + name
-        for ptype in types:
-            typetag = ptype + "/type"
-            nametag = ptype + "/name"
-            if (typetag in obj or ("phobostype" in obj and obj.phobostype == ptype)) and nametag not in obj:
-                obj[nametag] = name
+        if not namespace:
+            namespace = selection.getRoot(obj)["entity/name"]
+        obj.name = namespace + "::" + obj.name
+        # for ptype in defs.subtypes:
+        #     typetag = ptype + "/type"
+        #     nametag = ptype + "/name"
+        #     if (typetag in obj or ("phobostype" in obj and obj.phobostype == ptype)) and nametag not in obj:
+        #         obj[nametag] = obj.name
     except (TypeError, KeyError):
-        log(getObjectName(obj) + " is not part of a well-defined entity.", "ERROR", "utils/naming/addNamespace")
+        log(getObjectName(obj) + " is not part of a well-defined entity.", "ERROR")
 
 
 def removeNamespace(obj):
-    """This function removes the namespace from an object if present.
+    """Removes the namespace from an object if present.
 
     :param obj: The object to remove the namespace from.
     :type obj: bpy.types.Object
-
     """
-    types = defs.subtypes
-    name = obj.name.split("::")[-1]
-    obj.name = name
-    for pType in types:
+    obj.name = obj.name.split("::")[-1]
+    for pType in defs.subtypes:
         nameTag = pType + "/name"
-        if nameTag in obj and obj[nameTag] == name:
+        if nameTag in obj and obj[nameTag] == obj.name:
             del obj[nameTag]
 
 
-def namesAreExplicit(nameset, objnames):
-    """This function checks whether two sets of names have equal names.
+def gatherNamespaces(separator='::'):
+    """Gathers all existing namespaces.
+    """
+    namespaces = []
+    for obj in bpy.data.objects:
+        if separator in obj.name:
+            namespaces.append(obj.name.split(separator)[0])
+    return namespaces
 
+
+def namesAreExplicit(nameset, objnames):
+    """Checks whether two sets of names have equal names.
     """
     return len(nameset.intersection(objnames)) == 0

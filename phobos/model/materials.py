@@ -52,7 +52,6 @@ def createMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, textur
     :param texture: NOT IMPEMENTED YET.
     :type texture: NOT IMPLEMENTED YET.
     :return: bpy.types.Material
-
     """
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = diffuse
@@ -74,12 +73,11 @@ def createMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, textur
 
 def createPhobosMaterials():
     """Creates a list of standard materials used in Phobos.
-
     """
     materials = bpy.data.materials.keys()
     for material in defs.definitions['materials']:
         mat = defs.definitions['materials'][material]
-        if not material in materials:
+        if material not in materials:
             createMaterial(material, mat['diffuse'], mat['specular'], mat['alpha'], mat['diffuse_intensity'])
 
 
@@ -90,13 +88,12 @@ def assignMaterial(obj, materialname):
     :type obj: bpy.types.Object
     :param materialname: The materials name.
     :type materialname: str
-
     """
     if materialname not in bpy.data.materials:
         if materialname in defs.definitions['materials']:
             createPhobosMaterials()
         else:
-            log("Material to be assigned does not exist.", "ERROR", "assignMaterial")
+            log("Material to be assigned does not exist.", "ERROR")
             return None
     obj.data.materials.append(bpy.data.materials[materialname])
     if bpy.data.materials[materialname].use_transparency:

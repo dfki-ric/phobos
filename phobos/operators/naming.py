@@ -32,7 +32,6 @@ import inspect
 import bpy
 from bpy.types import Operator
 from bpy.props import BoolProperty, StringProperty
-import phobos.defs as defs
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.io as iUtils
@@ -64,8 +63,7 @@ class ToggleNamespaces(Operator):
                 if nUtils.namesAreExplicit({obj.name.split("::")[-1]}, objnames):
                     nUtils.removeNamespace(obj)
                 else:
-                    log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit",
-                        "ERROR", op=self)
+                    log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit", "ERROR")
             else:
                 nUtils.addNamespace(obj)
         return {'FINISHED'}

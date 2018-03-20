@@ -70,7 +70,7 @@ def writeURDFGeometry(output, element, path):
         elif geometry['type'] == "sphere":
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
-            #FIXME: the following will crash if unstructured export is used
+            # FIXME: the following will crash if unstructured export is used
             log("writeURDFGeometry: "+path + ' ' + ioUtils.getOutputMeshpath(os.path.dirname(path)), "DEBUG")
             meshpath = ioUtils.getOutputMeshpath(os.path.dirname(path))
             output.append(xmlline(5, 'mesh', ['filename', 'scale'],
@@ -78,12 +78,13 @@ def writeURDFGeometry(output, element, path):
                                                 geometry['filename'] + '.' + ioUtils.getOutputMeshtype()),
                                    l2str(geometry['scale'])]))
         elif geometry['type'] == 'capsule':
-            output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))  # FIXME: real capsules here!
+            # FIXME: real capsules here!
+            output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))
         else:
             raise TypeError("Unknown geometry type")
         output.append(indent * 4 + '</geometry>\n')
     except (KeyError, TypeError) as err:
-        log("Misdefined geometry in element " + element['name'] + " " + str(err), "ERROR", "writeURDFGeometry")
+        log("Misdefined geometry in element " + element['name'] + " " + str(err), "ERROR")
 
 
 def exportUrdf(model, outpath):
@@ -96,10 +97,11 @@ def exportUrdf(model, outpath):
     :type outpath: str
 
     """
-    log("Export URDF to " + outpath, "INFO", "exportModelToURDF")
+    log("Export URDF to " + outpath, "INFO")
     filename = os.path.join(outpath, model['name']+'.urdf')
 
     stored_element_order = None
+    # CHECK test Windows path consistency
     order_file_name = model['name'] + '_urdf_order'
     if order_file_name in bpy.data.texts:
         stored_element_order = yaml.load(bpy.data.texts[order_file_name].as_string())
@@ -118,7 +120,7 @@ def exportUrdf(model, outpath):
     for l in sorted_link_keys:
         if l in model['links']:
             link = model['links'][l]
-            output.append(indent * 2 + '<link name="' + l + '">\n')
+            output.append(indent * 2 + '<link name="' + link['name'] + '">\n')
             if 'mass' in link['inertial'] and 'inertia' in link['inertial']:
                 output.append(indent * 3 + '<inertial>\n')
                 if 'pose' in link['inertial']:
@@ -206,7 +208,8 @@ def exportUrdf(model, outpath):
             if 'limits' in joint:
                 for limit_value in ['effort', 'velocity']:
                     if limit_value not in joint['limits']:
-                        log("joint '" + joint['name'] + "' does not specify a maximum " + limit_value + "!")
+                        log("joint '" + joint['name'] + "' does not specify a maximum "
+                            + limit_value + "!", "WARNING")
                         missing_values = True
                 used_limits = []
                 for limit in ['lower', 'upper', 'effort', 'velocity']:
@@ -215,12 +218,13 @@ def exportUrdf(model, outpath):
                 output.append(
                     xmlline(3, 'limit', used_limits, [joint['limits'][p] for p in used_limits]))
             elif joint['type'] in ['revolute', 'prismatic']:
-                log("joint '" + joint['name'] + "' does not specify limits, even though its type is " + joint['type'] + "!")
+                log("joint '" + joint['name'] + "' does not specify limits, even though its type is "
+                    + joint['type'] + "!", "WARNING")
                 missing_values = True
             output.append(indent * 2 + '</joint>\n\n')
     # export material information
     if missing_values:
-        log("Created URDF is invalid due to missing values!", "WARNING", "exportUrdf")
+        log("Created URDF is invalid due to missing values!", "WARNING")
     if stored_element_order is None:
         sorted_material_keys = sorted(model['materials'])
     else:
@@ -232,7 +236,8 @@ def exportUrdf(model, outpath):
         sorted_material_keys += sort_urdf_elements(new_keys)
     for m in sorted_material_keys:
         if m in model['materials']:
-            if model['materials'][m]['users'] > 0:  # FIXME: change back to 1 when implemented in urdfloader
+            # FIXME: change back to 1 when implemented in urdfloader
+            if model['materials'][m]['users'] > 0:
                 output.append(indent * 2 + '<material name="' + m + '">\n')
                 color = model['materials'][m]['diffuseColor']
                 transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
@@ -246,7 +251,7 @@ def exportUrdf(model, outpath):
     with open(filename, 'w') as outputfile:
         outputfile.write(''.join(output))
     # FIXME: different joint transformations needed for fixed joints
-    log("Writing model data to " + filename, "INFO", "exportModelToURDF")
+    log("Writing model data to " + filename, "INFO")
 
 
 def store_element_order(element_order, path):
@@ -259,6 +264,7 @@ def store_element_order(element_order, path):
     :type path: str
 
     """
+    # TODO delete me?
     #element_order = {}
     #link_order = []
     #viscol_order = {}
@@ -344,15 +350,16 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
     :param pivot: The pivot point.
     :type pivot: list
     :return: dict
-
     """
     px, py, pz = position
     if len(rotation) == 3:
         rot = mathutils.Euler(rotation).to_quaternion()
+        # TODO delete me?
         #print(rotation)
     else:
         rot = mathutils.Quaternion(rotation)
 
+    # TODO delete me?
     #if angle_offset is not 0.0:
     #    axis_vec = mathutils.Vector(axis)
 
@@ -368,6 +375,7 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
     pivot_translation = mathutils.Matrix.Translation(pivot)
     rotation_matrix = mathutils.Quaternion(rot).to_matrix().to_4x4()
     translation = mathutils.Matrix.Translation(position)
+    # TODO delete me?
     #print()
     #print("translation:", translation)
     #print("neg_pivot_translation:", neg_pivot_translation)
@@ -390,6 +398,7 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
     euler = rot.to_euler()
     pose_dict['rotation_euler'] = [euler.x, euler.y, euler.z]
 
+    # TODO delete me?
     #translation = [px, py, pz]
     #quaternion = mathutils.Quaternion([rw, rx, ry, rz])
     #euler = quaternion.to_euler()
@@ -431,25 +440,31 @@ def add_quaternion(rot1, rot2):
 def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
     """Handle missing visual and collision geometry.
     I hope it was meant like that ...
+    # DOCU this documentation needs update
     """
     if no_visual_geo or no_collision_geo:
+        # TODO change to log?
         print("\n### WARNING: Missing geometry information in", link_dict['name'], ".")
     if no_visual_geo:
+        # TODO change to log?
         print('Affected visual elements are:', no_visual_geo, '.\n\
                 Trying to get missing information from collision elements.')
         for visual in no_visual_geo:
             try:
                 link_dict['visual'][visual]['geometry'] = link_dict['collision']['collision' + no_visual_geo[len('visual'):]]['geometry']
             except:
-                pass # TODO: print something?
+                # TODO: print something or handle it?
+                pass
     elif no_collision_geo:
+        # TODO change to log?
         print('Affected collision elements are:', no_visual_geo, '.\n\
                 Trying to get missing information from visual elements.')
         for collision in no_collision_geo:
             try:
                 link_dict['collision'][collision]['geometry'] = link_dict['visual']['visual' + no_collision_geo[len('collision'):]]['geometry']
             except:
-                pass # TODO: print something?
+                # TODO: print something or handle it?
+                pass
 
 
 def get_phobos_joint_name(mars_name, has_limits):
@@ -504,9 +519,12 @@ def importUrdf(filepath):
 
     """
     model = {}
+    # TODO delete me?
     #element_order = {'links': [], 'joints': [], 'viscol': {}, 'materials': []}
-    log("Parsing URDF model from " + filepath, "INFO", 'importUrdf')
+    log("Parsing URDF model from " + filepath, "INFO")
+    # TODO filepath consistency?
     tree = ET.parse(filepath)
+    # TODO comment needed?
     root = tree.getroot()#[0]
     model["name"] = root.attrib["name"]
     if 'version' in root.attrib:
@@ -514,19 +532,22 @@ def importUrdf(filepath):
 
     # parse links
     links = {}
-    log("Parsing links...", "INFO", 'importUrdf')
+    log("Parsing links...", "INFO")
     for link in root.iter('link'):
         links[link.attrib['name']] = parseLink(link, filepath)
+        # TODO delete me?
         #element_order['links'].append(links.attrib['name'])
         #viscol_order = {'visual': [], 'collision': []}
     model['links'] = links
 
     # parse joints
     joints = {}
-    log("Parsing joints...", "INFO", 'importUrdf')
+    log("Parsing joints...", "INFO")
     for joint in root.iter('joint'):
-        if joint.find('parent') is not None:  # this is needed as there are "joint" tags e.g. in transmission
+        # this is needed as there are "joint" tags e.g. in transmission
+        if joint.find('parent') is not None:
             newjoint, pose = parseJoint(joint)
+            # TODO delete me?
             #element_order['joints'].append(joint.attrib['name'])
             model['links'][newjoint['child']]['pose'] = pose
             joints[newjoint['name']] = newjoint
@@ -538,14 +559,14 @@ def importUrdf(filepath):
             links[link]['pose'] = parsePose(None)
 
     # write parent-child information to nodes
-    log("Writing parent-child information to nodes...", "INFO", 'importUrdf')
+    log("Writing parent-child information to nodes...", "INFO")
     for j in model['joints']:
         joint = model['joints'][j]
         model['links'][joint['child']]['parent'] = joint['parent']
 
     # parse materials
     model['materials'] = []
-    log("Parsing materials..", 'INFO', 'importUrdf')
+    log("Parsing materials..", 'INFO')
     for material in root.iter('material'):
         newmaterial = {a: material.attrib[a] for a in material.attrib}
         color = material.find('color')
@@ -556,6 +577,7 @@ def importUrdf(filepath):
     for m in model['materials']:
         #TODO: handle duplicate names? urdf_modelname_xxx?
         materials.createMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1])
+        # TODO delete me?
         #element_order['materials'].append(m['name'])
     return model
 
@@ -567,12 +589,14 @@ def parseLink(link, sourcefilepath=None):
     :return:
 
     """
+    # TODO delete me?
     #print(link.attrib['name'] + ', ', end='')
     newlink = {a: link.attrib[a] for a in link.attrib}
 
     link_name = link.attrib['name']
 
     parseInertial(newlink, link)
+    # TODO delete me?
     #no_visual_geo = parseVisual(newlink, link)
     #no_collision_geo = parseCollision(newlink, link)
     #handle_missing_geometry(no_visual_geo, no_collision_geo, newlink)
@@ -588,6 +612,7 @@ def parseLink(link, sourcefilepath=None):
                 i += 1
             newlink[objtype][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
             dictelement = newlink[objtype][elementname]
+            # TODO delete me?
             #viscol_order[objtype].append(elementname)
             dictelement['name'] = elementname
             dictelement['pose'] = parsePose(xmlelement.find('origin'))
@@ -596,6 +621,7 @@ def parseLink(link, sourcefilepath=None):
                 dictelement['geometry'] = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
                 dictelement['geometry']['type'] = geometry[0].tag
                 if geometry[0].tag == 'mesh':
+                    # CHECK be careful about path consistency (Windows)
                     dictelement['geometry']['filename'] = geometry[0].attrib['filename']
                     if sourcefilepath:
                         dictelement['geometry']['sourcefilepath'] = sourcefilepath
@@ -609,11 +635,13 @@ def parseLink(link, sourcefilepath=None):
                 # We don't need to do the following, as any material with color or texture
                 # will be parsed in the parsing of materials in parseModel
                 # This might be necessary if there are name conflicts etc.
+                # TODO delete me?
                 #color = material.find('color')
                 #if color is not None:
                 #    dictelement['material']['color'] = parse_text(color.attrib['rgba'])
     #element_order['viscol'][link_name] = viscol_order
     if newlink == {}:
+        # TODO convert to log?
         print("\n### WARNING:", newlink['name'], "is empty.")
     return newlink
 
@@ -621,8 +649,10 @@ def parseLink(link, sourcefilepath=None):
 def parseInertial(link_dict, link_xml):
     '''
     '''
+    # DOCU add a docstring around here
     inertial = link_xml.find('inertial')
-    if inertial is not None:  # 'if Element' yields None if the Element contains no children, thus this notation
+    # 'if Element' yields None if the Element contains no children, thus this notation
+    if inertial is not None:
         link_dict['inertial'] = {}
         link_dict['inertial']['pose'] = parsePose(inertial.find('origin'))
         mass = inertial.find('mass')
@@ -646,6 +676,7 @@ def parseJoint(joint):
     limit = joint.find('limit')
     if limit is not None:
         newjoint['limits'] = {a: gUtils.parse_text(limit.attrib[a]) for a in limit.attrib}
+    # TODO delete me?
     #calibration
     #dynamics
     #limit
@@ -659,4 +690,3 @@ entity_type_dict = {'urdf': {'export': exportUrdf,
                              'import': importUrdf,
                              'extensions': ('urdf', 'xml')}
                     }
-

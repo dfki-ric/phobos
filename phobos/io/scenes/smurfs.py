@@ -45,13 +45,13 @@ def exportSMURFScene(entities, path):
     :type subfolder: bool
 
     """
-
+    # TODO path consistency (Windows)
     with open(path + '.smurfs', 'w') as outputfile:
         sceneinfo = "# SMURF scene created at " + path + " " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
         log(sceneinfo, "INFO")
         sceneinfo += "# created with Phobos " + version + " - https://github.com/rock-simulation/phobos\n\n"
         securepath(path)
-        log("Exporting scene to " + path+'.smurfs', "INFO", "exportSMURFsScene")
+        log("Exporting scene to " + path+'.smurfs', "INFO")
         outputfile.write(sceneinfo)
         epsilon = 10**(-bpy.data.worlds[0].phobosexportsettings.decimalPlaces)  # TODO: implement this separately
         entitiesdict = epsilonToZero({'entities': entities}, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces)
@@ -60,4 +60,4 @@ def exportSMURFScene(entities, path):
 # registering import/export functions of types with Phobos
 scene_type_dict = {'smurfs': {'export': exportSMURFScene,
                               'extensions': ('smurfs',)}
-                    }
+                   }

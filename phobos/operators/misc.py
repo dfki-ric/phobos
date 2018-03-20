@@ -45,10 +45,12 @@ import phobos.utils.validation as vUtils
 # FIXME: this is ugly
 current_robot_name = ''
 
+
 # FIXME: this should be treated in selection utils
 def get_robot_names(scene, context):
     robot_names = [(root['modelname'],)*3 for root in sUtils.getRoots()]
     return robot_names
+
 
 # FIXME: this should not go here either
 def get_pose_names(scene, context):
@@ -57,6 +59,7 @@ def get_pose_names(scene, context):
     return pose_items
 
 
+# TODO remove or use? Give it a dev branch
 # class SelectErrorOperator(Operator):
 #     """Select an object with check errors"""
 #     bl_idname = "phobos.select_error"
@@ -131,7 +134,7 @@ class MeasureDistanceOperator(Operator):
 
     def execute(self, context):
         self.distance, self.distVector = gUtils.distance(context.selected_objects)
-        log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO", origin=self)
+        log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO")
         return {'FINISHED'}
 
     @classmethod
@@ -187,6 +190,7 @@ class StorePoseOperator2(Operator):
         newPose.parent = robot_name
         newPose.name = robot_name + '_' + self.pose_name
         newPose.label = self.pose_name
+        # TODO delete me?
         #newPose.path = pose["robotpath"]
         newPose.type = "robot_pose"
         newPose.robot_name = robot_name
@@ -287,12 +291,12 @@ def draw_preview_callback(self):
     modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
     activeModelPoseIndex = bpy.context.scene.active_ModelPose
 
-    if (len(modelsPosesColl)>0) and area:
+    if (len(modelsPosesColl) > 0) and area:
 
         # Draw a textured quad
-        area_widths  = [region.width for region in bpy.context.area.regions if region.type=='WINDOW']
+        area_widths = [region.width for region in bpy.context.area.regions if region.type=='WINDOW']
         area_heights = [region.height for region in bpy.context.area.regions if region.type=='WINDOW']
-        if (len(area_widths)>0) and (len(area_heights)>0):
+        if (len(area_widths) > 0) and (len(area_heights) > 0):
 
             active_preview = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
             im = bpy.data.images[activeModelPoseIndex]
@@ -306,11 +310,11 @@ def draw_preview_callback(self):
             if im.size[0] < view_width:
                 diff = int((view_width-im.size[0])/2)
                 tex_start_x = diff
-                tex_end_x   = diff+im.size[0]
+                tex_end_x = diff+im.size[0]
             if im.size[1] < view_height:
                 diff = int((view_height-im.size[1])/2)
                 tex_start_y = diff
-                tex_end_y   = diff+im.size[1]
+                tex_end_y = diff+im.size[1]
 
             # Draw information
             font_id = 0  # XXX, need to find out how best to get this.
@@ -368,7 +372,7 @@ class ChangePreviewOperator(bpy.types.Operator):
                     root = sUtils.getRoot(context.scene.objects.active)
                 if not bpy.context.scene.preview_visible and \
                         (bpy.data.images[activeModelPoseIndex].type == 'IMAGE') and \
-                        (root == None or not sUtils.isRoot(root) or not (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name] != root["modelname"]) or len(bpy.context.selected_objects) == 0):
+                        (root is None or not sUtils.isRoot(root) or not (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name] != root["modelname"]) or len(bpy.context.selected_objects) == 0):
                     bpy.ops.view3d.draw_preview_operator()
                     bpy.context.scene.preview_visible = True
 
@@ -390,9 +394,11 @@ class DrawPreviewOperator(bpy.types.Operator):
     bl_label = "Draw preview to the View3D"
 
     def modal(self, context, event):
-        if event.type in {'LEFTMOUSE','RIGHTMOUSE','ESC'}:
+        if event.type in {'LEFTMOUSE', 'RIGHTMOUSE', 'ESC'}:
+            # TODO delete me?
 #            if bpy.context.scene.preview_visible:
             bpy.context.scene.preview_visible = False
+            # TODO delete me?
  #           else:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
             return {'CANCELLED'}
@@ -404,7 +410,7 @@ class DrawPreviewOperator(bpy.types.Operator):
         args = (self,)
         # Add the region OpenGL drawing callback
         # draw in view space with 'POST_VIEW' and 'PRE_VIEW'
-        if hasattr(self,"_handle") and self._handle:
+        if hasattr(self, "_handle") and self._handle:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
 
         self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_preview_callback, args, 'WINDOW', 'POST_PIXEL')
@@ -423,4 +429,3 @@ def unregister():
     print("Unregistering operators.misc...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.unregister_class(classdef)
-

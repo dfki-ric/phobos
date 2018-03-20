@@ -32,11 +32,14 @@ Created on 05 Dec 2014
 
 """
 
+import inspect
 import bpy
 from datetime import datetime
+import phobos.display as display
 
 # levels of detail for logging
 loglevels = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
+
 
 class col:
     """
@@ -77,7 +80,8 @@ def decorate(level):
 
 
 def log(message, level="INFO", origin=None, prefix=""):
-    """Logs a given message to the blender console and logging file if present
+    """
+    Logs a given message to the blender console and logging file if present
     and if log level is low enough. The origin can be defined as string.
     The message is logged by the operator depending on the loglevel
     settings.
@@ -92,19 +96,16 @@ def log(message, level="INFO", origin=None, prefix=""):
     :type prefix: str.
     :return: None.
     """
-    # Generate name of origin
-    if origin is None:
-        originname='phoboslog'
-    elif type(origin) is not str:
-        originname = origin.bl_idname
-    else:
-        originname = origin
+    callerframerecord = inspect.stack()[1]
+    frame = callerframerecord[0]
+    info = inspect.getframeinfo(frame)
+    originname = info.filename.split('addons/')[-1] + ' - ' + info.function + '(l' + str(info.lineno) + ')'
 
     # Display only messages up to preferred log level
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
     if loglevels.index(level) <= loglevels.index(prefs.loglevel):
         date = datetime.now().strftime("%Y%m%d_%H:%M")
-        msg = "[" + date + "] " + level + " " + message + " (" + originname + ")"
+        msg = date + " - " + level + " " + message + " (" + originname + ")"
         terminalmsg = prefix + "[" + date + "] " + decorate(level) + " " + message +\
                       col.DIM + " (" + originname + ")" + col.ENDC
 
@@ -112,11 +113,9 @@ def log(message, level="INFO", origin=None, prefix=""):
         if prefs.logtofile:
             try:
                 with open(prefs.logfile, "a") as lf:
-                    lf.write(date + "  " + msg + "\n")
+                    lf.write(msg + "\n")
             except IOError:
-                # TODO Infinite loop can occur when harddrive has an error!
-                # Thus, logging the IOError should be handled differently...
-                log("Cannot write to log file! Resetting it.", "ERROR", __name__+".log")
+                print("Cannot write to log file!")
 
         # log to terminal or Blender
         if prefs.logtoterminal:
@@ -138,8 +137,9 @@ def log(message, level="INFO", origin=None, prefix=""):
 
             # show message in Blender status bar.
             if origin is not None and type(origin) is not str:
+                # CHECK are the messages in status bar working?
                 # format report message to remove loging level and originname
                 msg = msg.split(level)[1][1:]
                 msg = msg.split(originname)[0][:-2]
                 origin.report({level}, msg)
-
+    display.push_message(message, level.lower())

@@ -1,3 +1,5 @@
+# TODO this is not used? remove it or make an idea pool somewhere...
+
 # class MARSModelParser(RobotModelParser):
 #     """
 #     Class derived from RobotModelParser which parses a MARS scene.

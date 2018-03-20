@@ -24,6 +24,10 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
+
+File operators/editing.py
+
+@author: Kai von Szadkowski, Stefan Rahms, Simon Reichel
 """
 
 import math
@@ -40,13 +44,14 @@ from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
                        FloatProperty, FloatVectorProperty, BoolVectorProperty)
 
 import phobos.defs as defs
+import phobos.display as display
 import phobos.model.inertia as inertia
 import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
+import phobos.utils.editing as eUtils
 import phobos.model.joints as joints
-import phobos.model.sensors as sensors
 import phobos.model.links as links
 from phobos.phoboslog import log
 
@@ -71,8 +76,7 @@ class SortObjectsToLayersOperator(Operator):
 
             # undefined type will be shown in statusbar
             if phobosType == 'undefined':
-                log("The phobostype of the object '" + obj.name + "' is" +
-                    "undefined", "INFO", self)
+                log("The phobostype of the object '" + obj.name + "' is" + "undefined", "ERROR")
         return {'FINISHED'}
 
     @classmethod
@@ -141,8 +145,9 @@ class SetMassOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.active_object and len(list(filter(lambda e: "phobostype" in e and
-            e.phobostype in ("visual", "collision", "inertial"), context.selected_objects))) >= 1
+        return (bpy.context.active_object is not None and
+                len([e.phobostype in ("visual", "collision", "inertial")
+                     for e in context.selected_objects]) > 0)
 
     def invoke(self, context, event):
         if 'mass' in context.active_object:
@@ -150,7 +155,8 @@ class SetMassOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
-        objs = filter(lambda e: "phobostype" in e and e.phobostype in ("visual", "collision", "inertial"), context.selected_objects)
+        objs = [obj for obj in bpy.context.selected_objects
+                if obj.phobostype in ("visual", "collision", "inertial")]
         for obj in objs:
             # check for old mass value
             try:
@@ -165,7 +171,7 @@ class SetMassOperator(Operator):
                 except AttributeError:
                     obj['mass'] = 0.001
                     log("The object '" + obj.name + "' has no rigid body" +
-                        "properties. Set mass to 0.001", "ERROR", self)
+                        "properties. Set mass to 0.001", "ERROR")
             # use provided mass
             else:
                 obj['mass'] = self.mass
@@ -175,11 +181,6 @@ class SetMassOperator(Operator):
                 t = datetime.now()
                 obj['masschanged'] = t.isoformat()
         return {'FINISHED'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None and len(list(filter(lambda e: "phobostype" in e and
-            e.phobostype in ("visual", "collision", "inertial"), context.selected_objects))) >= 1
 
     def invoke(self, context, event):
         if 'mass' in context.active_object:
@@ -214,8 +215,8 @@ class SyncMassesOperator(Operator):
         # FIXME NoneTypeError although objects are selected
         links = [obj.name for obj in context.selected_objects if obj.phobostype == 'link']
         t = datetime.now()
-        objdict = {obj.name: obj for obj in bpy.data.objects if obj.phobostype in ['visual', 'collision']
-                   and obj.parent.name in links}
+        objdict = {obj.name: obj for obj in bpy.data.objects if obj.phobostype in ['visual', 'collision'] and
+                   obj.parent.name in links}
 
         # gather all name bases of objects for which both visual and collision are present
         for obj in objdict.keys():
@@ -235,7 +236,8 @@ class SyncMassesOperator(Operator):
                 try:
                     tv = gUtils.datetimeFromIso(objdict['visual_' + basename]['masschanged'])
                     tc = gUtils.datetimeFromIso(objdict['collision_' + basename]['masschanged'])
-                    if tc < tv:  # if collision information is older than visual information
+                    # if collision information is older than visual information
+                    if tc < tv:
                         sourcelist.append('visual_' + basename)
                         targetlist.append('collision_' + basename)
                     else:
@@ -285,9 +287,9 @@ class SetXRayOperator(Operator):
         description="Show objects via x-ray")
 
     show = BoolProperty(
-        name="Show",
+        name="Enable X-Ray",
         default=True,
-        description="Set to")
+        description="Enable or disable X-Ray")
 
     namepart = StringProperty(
         name="Name Contains",
@@ -303,7 +305,7 @@ class SetXRayOperator(Operator):
         layout.label(text="Select items for X-ray view")
 
         layout.prop(self, "objects")
-        layout.prop(self, "show", text="enable X-Ray view" if self.show else "disable X-Ray view")
+        layout.prop(self, "show")
 
         # show name text field only when changing by name
         if self.objects == 'by name':
@@ -450,7 +452,7 @@ class RenameCustomProperty(Operator):
             for obj in objs:
                 if self.replace in obj and not self.overwrite:
                     log("Property '" + self.replace + "' already present in" +
-                        "object '" + obj.name + "'", "ERROR", self)
+                        "object '" + obj.name + "'", "ERROR")
                 else:
                     obj[self.replace] = obj[self.find]
                     del obj[self.find]
@@ -481,7 +483,7 @@ class SetGeometryType(Operator):
                 obj['geometry/type'] = self.geomType
             else:
                 log("The object '" + obj.name + "' is no collision or visual.",
-                   "INFO", self)
+                   "INFO")
         return {'FINISHED'}
 
     @classmethod
@@ -530,13 +532,8 @@ class SmoothenSurfaceOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        show_progress = bUtils.getBlenderVersion() >= 269
-        objs = filter(lambda e: e.type == "MESH", context.selected_objects)
-        if show_progress:
-            wm = context.window_manager
-            total = float(len(context.selected_objects))
-            wm.progress_begin(0, total)
-            i = 1
+        objs = [obj for obj in context.selected_objects if obj.type == "MESH"]
+        i = 1
         for obj in objs:
             context.scene.objects.active = obj
             bpy.ops.object.mode_set(mode='EDIT')
@@ -545,11 +542,8 @@ class SmoothenSurfaceOperator(Operator):
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.object.shade_smooth()
             bpy.ops.object.modifier_add(type='EDGE_SPLIT')
-            if show_progress:
-                wm.progress_update(i)
-                i += 1
-        if show_progress:
-            wm.progress_end()
+            display.setProgress(i/len(context.selected_objects))
+            i += 1
         return {'FINISHED'}
 
     @classmethod
@@ -557,44 +551,201 @@ class SmoothenSurfaceOperator(Operator):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
-class CreateInertialOperator(Operator):
-    """Create inertial objects based on existing links"""
-    bl_idname = "phobos.create_inertial_objects"
-    bl_label = "Create Inertial Object(s)"
+
+class CreateLinkInertialOperator(Operator):
+    """Create inertial object(s) for link(s)"""
+    bl_idname = "phobos.create_link_inertials"
+    bl_label = "Create link inertia"
     bl_options = {'REGISTER', 'UNDO'}
 
-    auto_compute = BoolProperty(
-        name='Calculate Automatically',
-        default=True,
-        description='Calculate inertia automatically'
+    def getMajorInertials(self, context, link=None):
+        """
+        Returns all link inertials of the selected links (in the current
+        context) or of the specified link.
+
+        :param context: Blender context
+        :param link: the link of which to find the inertials (optional)
+
+        :return: dictionary of links with list of Blender objects or just a list.
+        """
+        links = [obj for obj in context.selected_objects
+                 if obj.phobostype == 'link']
+
+        major_inertials = {}
+        # append the link inertials for each link
+        if link:
+            inertials = sUtils.getImmediateChildren(
+                link, phobostypes=('inertial'), include_hidden=True)
+            major_inertials = [inert for inert in inertials if 'inertial/inertia' in inert]
+
+        else:
+            for link in links:
+                linkname = link['link/name']
+                inertials = sUtils.getImmediateChildren(
+                    link, phobostypes=('inertial'), include_hidden=True)
+                major_inertials[linkname] = [inert for inert in inertials if 'inertial/inertia' in inert]
+
+        return major_inertials
+
+    from_selected_only = BoolProperty(
+        name='From selected objects', default=False,
+        description='Include only the selected ' +
+        'visual/collision object(s) into the link inertial(s).'
     )
 
-    preserve_children = BoolProperty(
-        name='Preserve Child Inertials',
-        default=False,
-        description='Preserve child inertials'
+    autocalc = BoolProperty(
+        name='Calculate automatically',
+        default=True,
+        description='Calculate inertial(s) automatically. Otherwise' +
+                    ' create objects with empty inertia data.'
     )
+
+    overwrite = BoolProperty(
+        name='Overwrite existing',
+        default=True,
+        description='Replace existing link inertial(s).'
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=500)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "from_selected_only")
+        layout.prop(self, "autocalc")
+        layout.prop(self, "overwrite")
 
     def execute(self, context):
-        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
-        show_progress = bUtils.getBlenderVersion() >= 269
-        if show_progress:
-            wm = context.window_manager
-            total = float(len(links))
-            wm.progress_begin(0, total)
-            i = 1
+        # keep the currently selected objects
+        links = [obj for obj in context.selected_objects
+                 if obj.phobostype == 'link']
+        selected = context.selected_objects
+        i = 1
+        # calculate inertial objects for each link
         for link in links:
-            inertia.createInertials(link, not self.auto_compute, self.preserve_children)
-            if show_progress:
-                wm.progress_update(i)
-                i += 1
-        if show_progress:
-            wm.progress_end()
+            # delete inertials which are overwritten
+            if self.overwrite:
+                major_inertials = self.getMajorInertials(context, link)
+                sUtils.selectObjects(major_inertials, clear=True)
+
+                # remove deleted inertials from the selection
+                for inert in major_inertials:
+                    if inert in selected:
+                        selected.remove(inert)
+
+                bpy.ops.object.delete()
+
+            # reselect the initial objects
+            sUtils.selectObjects(selected, clear=True)
+            # calculate the link inertials
+            inertia.createMajorInertialObjects(link, self.autocalc,
+                                               self.from_selected_only)
+            display.setProgress(i/len(links))
+            i += 1
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
-        return len(context.selected_objects) > 0
+        # only enable button when there are links selected
+        links = [obj for obj in context.selected_objects
+                 if obj.phobostype == 'link']
+        return len(links) > 0
+
+
+class CreateMinorInertialOperator(Operator):
+    """Create minor inertial object(s) from collision/visual objects of a link"""
+    bl_idname = "phobos.create_minor_inertials"
+    bl_label = "Create minor inertials"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def getMinorInertials(self, context, link=None):
+        """
+        Returns all minor inertials of the selected links (in the current
+        context) or of the specified link.
+
+        :param context: Blender context
+        :param link: the link of which to find the inertials (optional)
+
+        :return: dictionary of links with list of Blender objects or just a list.
+        """
+        if not link:
+            links = [obj for obj in context.selected_objects
+                     if obj.phobostype == 'link']
+
+        minor_inertials = {}
+        # append the link inertials for each link
+        if link:
+            inertials = sUtils.getImmediateChildren(
+                link, phobostypes=('inertial'), include_hidden=True)
+            minor_inertials = [inert for inert in inertials if 'inertia' in inert]
+
+        else:
+            for link in links:
+                linkname = link['link/name']
+                inertials = sUtils.getImmediateChildren(
+                    link, phobostypes=('inertial'), include_hidden=True)
+                minor_inertials[linkname] = [inert for inert in inertials if 'inertia' in inert]
+
+        return minor_inertials
+
+    autocalc = BoolProperty(
+        name='Calculate automatically',
+        default=True,
+        description='Calculate inertial(s) automatically. Otherwise' +
+                    ' create objects with empty inertia data.'
+    )
+
+    overwrite = BoolProperty(
+        name='Overwrite existing',
+        default=True,
+        description='Replace existing link inertial(s).'
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=500)
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, "autocalc")
+        layout.prop(self, "overwrite")
+
+    def execute(self, context):
+        # keep currently selected objects
+        links = [obj for obj in context.selected_objects
+                 if obj.phobostype == 'link']
+        selected = context.selected_objects
+        i = 1
+        # create inertials for each link
+        for link in links:
+            # delete inertials which are overwritten
+            if self.overwrite:
+                minor_inertials = self.getMinorInertials(context, link)
+                sUtils.selectObjects(minor_inertials, clear=True)
+
+                # remove deleted inertials from the selection
+                for inert in minor_inertials:
+                    if inert in selected:
+                        selected.remove(inert)
+
+                bpy.ops.object.delete()
+
+            # reselect the initial objects
+            sUtils.selectObjects(selected, clear=True)
+
+            inertia.createMinorInertialObjects(link, self.autocalc)
+            display.setProgress(i/len(links))
+            i += 1
+
+        # reselect the initial objects
+        sUtils.selectObjects(selected, clear=True)
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        # only enable button when there are links selected
+        links = [obj for obj in context.selected_objects
+                 if obj.phobostype == 'link']
+        return len(links) > 0
 
 
 class EditYAMLDictionary(Operator):
@@ -612,7 +763,8 @@ class EditYAMLDictionary(Operator):
 
         # write object properties to short python script
         for key in tmpdict:
-            if hasattr(tmpdict[key], 'to_list'):  # transform Blender id_arrays into lists
+            # transform Blender id_arrays into lists
+            if hasattr(tmpdict[key], 'to_list'):
                 tmpdict[key] = list(tmpdict[key])
         contents = [variablename + ' = """',
                     yaml.dump(bUtils.cleanObjectProperties(tmpdict),
@@ -705,8 +857,8 @@ class CreateCollisionObjects(Operator):
             # create Mesh
             if self.property_colltype != 'capsule' and self.property_colltype != 'mesh':
                 ob = bUtils.createPrimitive(collname, self.property_colltype, size,
-                                             defs.layerTypes['collision'], materialname, center,
-                                             rotation_euler)
+                                            defs.layerTypes['collision'], materialname, center,
+                                            rotation_euler)
             elif self.property_colltype == 'capsule':
                 # TODO reimplement capsules
                 # prevent length from turning negative
@@ -718,16 +870,16 @@ class CreateCollisionObjects(Operator):
 
                 # create cylinder and spheres and join them
                 ob = bUtils.createPrimitive(collname, 'cylinder', size,
-                                             defs.layerTypes['collision'], materialname, center,
-                                             rotation_euler)
+                                            defs.layerTypes['collision'], materialname, center,
+                                            rotation_euler)
                 sph1 = bUtils.createPrimitive('tmpsph1', 'sphere', radius,
-                                               defs.layerTypes['collision'], materialname,
-                                               tmpsph1_location,
-                                               rotation_euler)
+                                              defs.layerTypes['collision'], materialname,
+                                              tmpsph1_location,
+                                              rotation_euler)
                 sph2 = bUtils.createPrimitive('tmpsph2', 'sphere', radius,
-                                               defs.layerTypes['collision'], materialname,
-                                               tmpsph2_location,
-                                               rotation_euler)
+                                              defs.layerTypes['collision'], materialname,
+                                              tmpsph2_location,
+                                              rotation_euler)
                 sUtils.selectObjects([ob, sph1, sph2], True, 0)
                 bpy.ops.object.join()
 
@@ -740,7 +892,11 @@ class CreateCollisionObjects(Operator):
                 # FIXME: simply turn this into object.duplicate?
                 bpy.ops.object.duplicate_move(OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
                                               TRANSFORM_OT_translate={"value": (0, 0, 0)})
-                # TODO: copy mesh!!
+                # TODO: copy mesh? This was taken from pull request #102
+                # ob = blenderUtils.createPrimitive(collname, 'cylinder', (1,1,1),
+                #                                   defs.layerTypes['collision'], materialname, center,
+                #                                   rotation_euler)
+                # ob.data = vis.data
 
             # set properties of new collision object
             ob.phobostype = 'collision'
@@ -751,6 +907,14 @@ class CreateCollisionObjects(Operator):
             if vis.parent:
                 ob.select = True
                 bpy.ops.object.transform_apply(scale=True)
+                # CHECK test whether mesh option does work
+                # this was taken from pull request #102
+                # try:
+                #     bpy.ops.object.transform_apply(scale=True)
+                # except RuntimeError:
+                #     log("Cannot apply scale. Mesh " + ob.data.name +
+                #         " is shared between several objects.", "WARNING",
+                #         "CreateCollisionObjects")
                 vis.parent.select = True
                 context.scene.objects.active = vis.parent
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
@@ -785,6 +949,7 @@ class SetCollisionGroupOperator(Operator):
             self.groups = context.active_object.rigid_body.collision_groups
         # create rigid body settings if not existent in active object
         except AttributeError:
+            obj = context.active_object
             bpy.ops.rigidbody.object_add(type='ACTIVE')
             obj.rigid_body.kinematic = True
             obj.rigid_body.collision_groups = self.groups
@@ -811,6 +976,7 @@ class SetCollisionGroupOperator(Operator):
     def poll(cls, context):
         ob = context.active_object
         return ob is not None and ob.phobostype == 'collision' and ob.mode == 'OBJECT'
+
 
 class DefineJointConstraintsOperator(Operator):
     """Add bone constraints to the joint (link)"""
@@ -927,7 +1093,7 @@ class DefineJointConstraintsOperator(Operator):
                 joint['joint/passive'] = "$true"
             else:
                 # TODO show up in text edit which joints are to change?
-                log("Please add motor to active joint in " + joint.name, "INFO", "DefineJointConstraintsOperator")
+                log("Please add motor to active joint in " + joint.name, "INFO")
         return {'FINISHED'}
 
     @classmethod
@@ -935,6 +1101,7 @@ class DefineJointConstraintsOperator(Operator):
         ob = context.active_object
         # due to invoke the active object needs to be a link
         return ob is not None and ob.phobostype == 'link' and ob.mode == 'OBJECT'
+
 
 class AddMotorOperator(Operator):
     """Attach motor values to selected joints"""
@@ -1018,6 +1185,7 @@ class AddMotorOperator(Operator):
         # due to invoke the active object needs to be a link
         return ob is not None and ob.phobostype == 'link' and ob.mode == 'OBJECT'
 
+
 class CreateLinksOperator(Operator):
     """Create link(s), optionally based on existing objects"""
     bl_idname = "phobos.create_links"
@@ -1088,12 +1256,13 @@ class CreateLinksOperator(Operator):
         layout.prop(self, "parenting")
 
         # show parentobject only when using parenting hierarchy
-        if self.parenting == True:
+        if self.parenting:
             layout.prop(self, "parentobject")
 
         layout.prop(self, "namepartindices")
         layout.prop(self, "separator")
         layout.prop(self, "prefix")
+
 
 def getControllerParameters(name):
     """
@@ -1169,8 +1338,372 @@ class CreateMimicJointOperator(Operator):
         ob = context.active_object
         objs = list(filter(lambda e: "phobostype" in e and e.phobostype ==
                            "link", context.selected_objects))
-        return (ob is not None and ob.phobostype == 'link'
-                and len(objs) > 1)
+        return (ob is not None and ob.phobostype == 'link' and len(objs) > 1)
+
+
+class AddHeightmapOperator(Operator):
+    """Add a heightmap object to the 3D-Cursors location"""
+    bl_idname = "phobos.add_heightmap"
+    bl_label = "Create heightmap"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    name = StringProperty(
+        name="Name",
+        description="The name of the new heightmap object",
+        default="heightmap")
+
+    cutNo = IntProperty(
+        name="Number of cuts",
+        description="Number of cuts for subdivision",
+        default=100)
+
+    strength = FloatProperty(
+        name="Displacement strength",
+        description="Strength of the displacement effect",
+        default=0.1)
+
+    subsurf = BoolProperty(
+        name="Use subsurf",
+        description="Use subsurf modifier to smoothen surface",
+        default=False)
+
+    subsurflvl = IntProperty(
+        name="Subsurf subdivisions",
+        description="Number of divisions for subsurf smoothing",
+        default=2)
+
+    filepath = StringProperty(subtype="FILE_PATH")
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'name')
+        layout.prop(self, 'cutNo')
+        layout.prop(self, 'strength')
+        layout.prop(self, 'subsurf')
+        if self.subsurf:
+            layout.prop(self, 'subsurflvl')
+
+    def execute(self, context):
+        if os.path.basename(self.filepath) not in bpy.data.images:
+            try:
+                img = bpy.data.images.load(self.filepath)
+            except RuntimeError:
+                log("Cannot load image from file! Aborting.", "ERROR")
+                return {"CANCELLED"}
+        else:
+            log("Image already imported. Using cached version.", "INFO")
+            img = bpy.data.images[os.path.basename(self.filepath)]
+
+        # Create texture from image
+        h_tex = bpy.data.textures.new(self.name, type='IMAGE')
+        h_tex.image = img
+
+        # Add plane as single object (phobostype visual)
+        if context.scene.objects.active:
+            bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.ops.mesh.primitive_plane_add(view_align=False, enter_editmode=False)
+        plane = context.active_object
+        plane['phobostype'] = 'visual'
+
+        # subdivide plane
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.subdivide(number_cuts=self.cutNo)
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+        # create displacement
+        plane.modifiers.new('displace_heightmap', 'DISPLACE')
+        plane.modifiers['displace_heightmap'].texture = h_tex
+        plane.modifiers['displace_heightmap'].strength = self.strength
+
+        # create subsurf
+        if self.subsurf:
+            plane.modifiers.new('subsurf_heightmap', 'SUBSURF')
+            plane.modifiers['subsurf_heightmap'].render_levels = self.subsurflvl
+
+        # enable smooth shading
+        bpy.ops.phobos.smoothen_surface()
+
+        # Add root link for heightmap
+        root = links.deriveLinkfromObject(plane, scale=1.0, parenting=True,
+                                          parentobjects=True)
+
+        # set names and custom properties
+        # FIXME: what about the namespaces? @HEIGHTMAP (14)
+        plane.name = self.name + '_visual::heightmap'
+        root.name = self.name + "::heightmap"
+        root['entity/type'] = 'heightmap'
+        root['entity/name'] = self.name
+        root['image'] = os.path.relpath(os.path.basename(self.filepath), bpy.data.filepath)
+        root['joint/type'] = 'fixed'
+
+        # select the plane object for further adjustments
+        context.scene.objects.active = plane
+
+        # FIXME this GUI "hack" does not work, as the buttons context enum is not updated while the operator is running @HEIGHTMAP (30)
+        # current_screen = bpy.context.screen.name
+        # screen = bpy.data.screens[current_screen]
+        # for area in screen.areas:
+        #     if area.type == 'PROPERTIES':
+        #         area.tag_redraw()
+        #         area.spaces[0].context = 'MODIFIER'
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        # create the open file dialog
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
+class AddAnnotationsOperator(bpy.types.Operator):
+    """Add annotations defined in a YAML file"""
+    bl_idname = "phobos.add_annotations"
+    bl_label = "Add Annotations"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'FILE'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def getAnnotationTypes(self, context):
+        return [(category,) * 3 for category in sorted(defs.definitions.keys())]
+
+    def getDeviceTypes(self, context):
+        return [(category,) * 3 for category in sorted(defs.definitions[self.annotationtype].keys())]
+
+    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+
+    annotationtype = EnumProperty(
+        items=getAnnotationTypes,
+        name="Annotation Type",
+        description="Annotation Types")
+
+    devicetype = EnumProperty(
+        items=getDeviceTypes,
+        name="Device Type",
+        description="Device Types")
+
+    @classmethod
+    def poll(cls, context):
+        return context is not None
+
+    def draw(self, context):
+        l = self.layout
+        l.prop(self, 'filepath')
+        if self.filepath == '':
+            l.prop(self, 'annotationtype')
+            l.prop(self, 'devicetype')
+            b = self.layout.box()
+            for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
+                b.label(text=key+': '+str(value))
+
+
+    def execute(self, context):
+        if self.filepath != '':
+            try:
+                with open(self.filepath, 'r') as annotationfile:
+                    annotations = yaml.load(annotationfile.read())
+                for category in annotations:
+                    for key, value in annotations[category].items():
+                        context.active_object[category+'/'+key] = value
+            except FileNotFoundError:
+                log("Annotation file seems to be invalid.", "ERROR")
+        else:
+            for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
+                for obj in context.selected_objects:
+                    obj[self.devicetype+'/'+key] = value
+
+
+class InstantiateAssembly(Operator):
+    """Instantiate an assembly"""
+    bl_idname = "phobos.instantiate_assembly"
+    bl_label = "Instantiate Assembly"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def getAssembliesListForEnumProperty(self, context):
+        assemblieslist = [a.name.replace('assembly:', '') for a in bpy.data.groups
+                          if a.name.startswith('assembly')]
+        return [(a,)*3 for a in assemblieslist]
+
+    assemblyname = EnumProperty(
+        name="Assembly name",
+        description="Name of the assembly",
+        items=getAssembliesListForEnumProperty
+    )
+
+    instancename = StringProperty(
+        name="Instance name",
+        default=''
+    )
+
+    def invoke(self, context, event):
+        i = 0
+        while self.assemblyname+'_'+str(i) in bpy.data.objects:
+            i += 1
+        self.instancename = self.assemblyname+'_'+str(i)
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def execute(self, context):
+        eUtils.instantiateAssembly(self.assemblyname, self.instancename)
+        return {'FINISHED'}
+
+
+class DefineAssembly(Operator):
+    """Instantiate an assembly"""
+    bl_idname = "phobos.define_assembly"
+    bl_label = "Define Assembly"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    assemblyname = StringProperty(
+        name="Assembly name",
+        description="Name of the assembly",
+        default=''
+    )
+
+    version = StringProperty(
+        name="Version name",
+        description="Name of the assembly version",
+        default=''
+    )
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def execute(self, context):
+        eUtils.defineAssembly(self.assemblyname, self.version)
+        return {'FINISHED'}
+
+
+class DefineSubmechanism(Operator):
+    """Define a submechanism in the model"""
+    bl_idname = "phobos.define_submechanism"
+    bl_label = "Define Submechanism"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    mechanism_type = EnumProperty(
+        name="Submechanism type",
+        items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
+        )
+            #maybe add size in brackets? lambda_mechanism(3) / [3] lambda_mechanism
+
+    #mechanism_category = EnumProperty(
+    #    name="Submechanism category",
+    #    items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
+    #    )
+
+    mechanism_name = StringProperty()
+
+    def compileSubmechanismEnum(self, context):
+        return bUtils.compileEnumPropertyList(
+            defs.definitions['submechanisms'][self.mechanism_type]['joints']['spanningtree'])
+
+    jointtype0 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype1 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype2 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype3 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype4 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype5 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype6 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype7 = EnumProperty(items=compileSubmechanismEnum)
+
+    @classmethod
+    def poll(cls, context):
+        return (len(bpy.context.selected_objects) > 0 and
+                any((a.phobostype == 'link' for a in bpy.context.selected_objects)))
+
+    # def invoke(self, context, event):
+    #    for in in range(len(context.selected_objects)):
+    #        setattr(self, 'joint' + str(i), context.selected_objects[i].name)
+
+    def draw(self, context):
+        self.layout.prop(self, 'mechanism_type')
+        size = defs.definitions['submechanisms'][self.mechanism_type]['size']
+        if size == len(context.selected_objects):
+            self.layout.prop(self, 'mechanism_name')
+            glayout = self.layout.split()
+            c1 = glayout.column(align=True)
+            c2 = glayout.column(align=True)
+            for i in range(size):
+                c1.label(context.selected_objects[i].name+':')
+                c2.prop(self, "jointtype" + str(i), text='')
+        else:
+            self.layout.label('Please choose a valid type for selected joints.')
+
+    def execute(self, context):
+        joints = context.selected_objects
+        mechanismdata = defs.definitions['submechanisms'][self.mechanism_type]
+        size = mechanismdata['size']
+        if len(joints) == size:
+            root = context.active_object
+            jointmap = {getattr(self, 'jointtype'+str(i)): joints[i] for i in range(len(joints))}
+            # Steps taken:
+            # create group
+            sUtils.selectObjects(joints, True, 0)
+            bpy.ops.group.create(name='submechanism:' + self.mechanism_name)
+            # assign attributes
+            for i in range(len(joints)):
+                joints[i]['submechanism/jointname'] = getattr(self, 'jointtype'+str(i))
+            root['submechanism/category'] = mechanismdata['category']
+            root['submechanism/type'] = mechanismdata['type']
+            root['submechanism/name'] = self.mechanism_name
+            try:
+                root['submechanism/spanningtree'] = [jointmap[j] for j in mechanismdata['joints']['spanningtree']]
+                root['submechanism/active'] = [jointmap[j] for j in mechanismdata['joints']['active']]
+                root['submechanism/independent'] = [jointmap[j] for j in mechanismdata['joints']['independent']]
+            except KeyError:
+                log("Joints not assigned correctly.", 'WARNING')
+        else:
+            log("Number of joints not valid for selected submechanism type.", 'ERROR')
+        return {'FINISHED'}
+
+
+class ToggleInterfaces(Operator):
+    """Instantiate an assembly"""
+    bl_idname = "phobos.toggle_interfaces"
+    bl_label = "Toggle interfaces"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    mode = EnumProperty(
+        name="Version name",
+        description="Name of the assembly version",
+        items=(('toggle',) * 3, ('activate',) * 3, ('deactivate',) * 3)
+    )
+
+    def execute(self, context):
+        eUtils.toggleInterfaces(None, self.mode)
+        return {'FINISHED'}
+
+
+class ConnectInterfacesOperator(Operator):
+    """Connects assemblies at interfaces"""
+    bl_idname = "phobos.connect_interfaces"
+    bl_label = "Connect Interfaces"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        try:
+            if (context.active_object is None or len(context.selected_objects) != 2 or not
+                    all([obj.phobostype == 'interface' for obj in context.selected_objects])):
+                return False
+            else:
+                parentinterface = bpy.context.active_object
+                childinterface = [a for a in bpy.context.selected_objects if a != bpy.context.active_object][0]
+                if ((parentinterface['interface/type'] == childinterface['interface/type']) and
+                    (parentinterface['interface/direction'] != childinterface['interface/direction']) or
+                    (parentinterface['interface/direction'] == 'bidirectional' and
+                     childinterface['interface/direction'] == 'bidirectional')):
+                    return True
+                else:
+                    return False
+        except (KeyError, IndexError):  # if relevant data or selection is incorrect
+            return False
+
+    def execute(self, context):
+        pi = 0 if context.selected_objects[0] == context.active_object else 1
+        ci = int(not pi)  #0 if pi == 1 else 1
+        parentinterface = context.selected_objects[pi]
+        childinterface = context.selected_objects[ci]
+        eUtils.connectInterfaces(parentinterface, childinterface)
+        return {'FINISHED'}
 
 
 def register():

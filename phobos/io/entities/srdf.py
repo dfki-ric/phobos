@@ -90,6 +90,7 @@ def exportSRDF(model, path, mesh_format=''):
         chain = model['chains'][chainname]
         output.append(indent * 3 + '<chain base_link="' + chain['start'] + '" tip_link="' + chain['end'] + '" />\n')
         output.append(indent * 2 + '</group>\n\n')
+    # TODO delete me?
     #for joint in model['state']['joints']:
     #    pass
     # passive joints
@@ -120,6 +121,7 @@ def exportSRDF(model, path, mesh_format=''):
         # TODO: we might want to automatically add parent/child link combinations
         try:
             if link1['collision_bitmask'] & link2['collision_bitmask'] == 0:
+                # TODO delete me?
                 #output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (link1['name'], link2['name'])))
                 collisionExclusives.append((link1['name'], link2['name']))
         except KeyError:
@@ -139,7 +141,8 @@ def parseSRDFModel(self, robot):
 def buildBitmasks(self, collision_Groups, robot):
     bits = len(collision_Groups)
     if bits > 20:
-        print("The blender bitmask is not capable of more than 20 bit. The bitmask will be cutted!")
+        # CHECK this was moved to logging. Is it printed twice?
+        print("The Blender bitmask is not capable of more than 20 bit. The bitmask will be cutted!")
         bits = 20
     for link in robot['links']:
         for i in range(0, bits):
@@ -161,6 +164,7 @@ def buildCollisionExclusives(self):
     for disabled_coll in self.root.iter('disable_collisions'):
         pair = (disabled_coll.attrib['link1'], disabled_coll.attrib['link2'])
         collision_Exclusives.append(pair)
+        # TODO delete me?
         #print("Append ", pair, " to collision Exclusives")
     return collision_Exclusives
 
@@ -183,6 +187,7 @@ def buildCollisionDictionary(self, collision_exclusives, robot):
                     dic[pair[1]].append(pair[0])
         else:
             pass
+            # TODO handle this somehow...
             #print("Pair: ", pair, " not included")
     print("Collision Dictionary:\n", dic)
     return dic
@@ -215,17 +220,20 @@ def processGroup(self, group, link, colls):
 def buildCollisionGroups(self, dic):
     groups=[]
     for link in dic:
-        #rint("Current link: ", link)
+        # TODO remove me?
+        #print("Current link: ", link)
         colls = dic[link]
+        # TODO remove me?
         #print("Current colls: ", colls)
         for group in groups:
+            # TODO remove me?
             #print("Current group: ", group)
             self.processGroup(group, link, colls)
         while len(colls) > 0:
             newgroup = [link, colls.pop()]
             groups.append(newgroup)
             self.processGroup(newgroup, link, colls)
-    print ("Number of collision Groups: ", len(groups))
+    print("Number of collision Groups: ", len(groups))
     #print ("Collision Groups:\n", groups)
     return groups
 

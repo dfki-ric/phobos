@@ -43,22 +43,15 @@ from phobos.phoboslog import log
 
 
 def getGeometricElements(link):
-    visuals = False
-    collisions = False
+    # DOCU add some docstring
+    visuals = []
+    collisions = []
     if 'visual' in link:
         visuals = [link['visual'][v] for v in link['visual']]
     if 'collision' in link:
         collisions = [link['collision'][v] for v in link['collision']]
+    return collisions + visuals
 
-    # avoid uninitialized variables from manually created links
-    if (visuals and not collisions):
-        return visuals
-    elif (collisions and not visuals):
-        return collisions
-    elif (collisions and visuals):
-        return collisions and visuals
-    else:
-        return None
 
 def createLink(link):
     """Creates the blender representation of a given link and its parent joint.
@@ -66,7 +59,6 @@ def createLink(link):
     :param link: The link you want to create a representation of.
     :type link: dict
     :return: bpy_types.Object -- the newly created blender link object.
-
     """
     # create armature/bone
     bUtils.toggleLayer(defs.layerTypes['link'], True)
@@ -81,6 +73,24 @@ def createLink(link):
     # FIXME: This is a hack and should be checked before creation!
     # this is a backup in case an object with the link's name already exists
     newlink["link/name"] = link['name']
+
+    # FIXME geometric dimensions are not intiallized properly, thus scale always 0.2!
+    # set the size of the link
+    elements = getGeometricElements(link)
+    scale = max((geometrymodel.getLargestDimension(element['geometry']) for element in elements)) if elements else 0.2
+
+    # use scaling factor provided by user
+    #FIXME where would this *scale* come from?
+    if 'scale' in link:
+        scale *= link['scale']
+    newlink.scale = (scale, scale, scale)
+    bpy.ops.object.transform_apply(scale=True)
+
+    # add custom properties
+    for prop in link:
+        if prop.startswith('$'):
+            for tag in link[prop]:
+                newlink['link/'+prop[1:]+'/'+tag] = link[prop][tag]
 
     # create inertial
     if 'inertial' in link:
@@ -97,23 +107,6 @@ def createLink(link):
         for c in link['collision']:
             collision = link['collision'][c]
             geometrymodel.createGeometry(collision, 'collision')
-
-    # FIXME geometric dimensions are not intiallized properly, thus scale always 0.2!
-    # set the size of the link
-    elements = getGeometricElements(link)
-    scale = max((geometrymodel.getLargestDimension(element['geometry']) for element in elements)) if elements else 0.2
-
-    # use scaling factor provided by user
-    if 'scale' in link:
-        scale *= link['scale']
-    newlink.scale = (scale, scale, scale)
-    bpy.ops.object.transform_apply(scale=True)
-
-    # add custom properties
-    for prop in link:
-        if prop.startswith('$'):
-            for tag in link[prop]:
-                newlink['link/'+prop[1:]+'/'+tag] = link[prop][tag]
 
     return newlink
 
@@ -138,9 +131,9 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False,
     :type separator: str
     :param prefix: The prefix to use for the new links name. Its 'link' per default.
     :type prefix: str
-
+    :return: the new created link
     """
-    log('Deriving link from' + nUtils.getObjectName(obj), level="INFO",
+    log('Deriving link from ' + nUtils.getObjectName(obj), level="INFO",
         origin="deriveLinkFromObject")
     nameparts = nUtils.getObjectName(obj).split('_')
     rotation = obj.matrix_world.to_euler()
@@ -152,13 +145,13 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False,
             tmpname = separator.join([nameparts[p] for p in namepartindices])
         except IndexError:
             log('Wrong name segment indices given for obj' +
-                nUtils.getObjectName(obj), level="WARNING", origin="deriveLinkFromObject")
+                nUtils.getObjectName(obj), 'WARNING')
     if prefix != '':
         tmpname = prefix + separator + tmpname
     if tmpname == nUtils.getObjectName(obj):
         obj.name += '*'
     link = createLink({'scale': scale, 'name': tmpname, 'matrix':
-                    obj.matrix_world})
+                       obj.matrix_world})
 
     # parent objects and other links together
     if parenting:
@@ -179,13 +172,14 @@ def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False,
             sUtils.selectObjects([child, link], True, 1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
+    return link
+
 
 def placeChildLinks(model, parent):
     """Creates parent-child-relationship for a given parent and all existing children in Blender.
 
     :param parent: This is the parent link you want to set the children for.
     :type: dict
-
     """
     bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])
     children = []
@@ -199,8 +193,10 @@ def placeChildLinks(model, parent):
         sUtils.selectObjects([childLink, parentLink], True, 1)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
         # 2: move to parents origin by setting the world matrix to the parents world matrix
-        childLink.matrix_world = parentLink.matrix_world        # removing this line does not seem to make a difference
+        # removing this line does not seem to make a difference (TODO delete me?)
+        childLink.matrix_world = parentLink.matrix_world
 
+        # TODO delete me?
         # #bpy.context.scene.objects.active = childLink
         # if 'pivot' in child:
         #     pivot = child['pivot']
@@ -225,22 +221,24 @@ def placeLinkSubelements(link):
 
     :param link: The parent link you want to set the subelements for
     :type link: dict
-
     """
     elements = getGeometricElements(link) + ([link['inertial']] if 'inertial' in link else [])
     bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
     parentlink = bpy.data.objects[link['name']]
+    log('Placing subelements for link: ' + link['name'] + ': ' + ', '.join([elem['name'] for elem in elements]), 'DEBUG')
     for element in elements:
         if 'pose' in element:
+            log('Pose detected for element: ' + element['name'], 'DEBUG')
             location = mathutils.Matrix.Translation(element['pose']['translation'])
             rotation = mathutils.Euler(tuple(element['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
         else:
+            log('No pose in element: ' + element['name'], 'DEBUG')
             location = mathutils.Matrix.Identity(4)
             rotation = mathutils.Matrix.Identity(4)
         try:
             obj = bpy.data.objects[element['name']]
         except KeyError:
-            log('Missing link element for placement: ' + element['name'], 'ERROR', 'placeLinkSubelements')
+            log('Missing link element for placement: ' + element['name'], 'ERROR')
             continue
         sUtils.selectObjects([obj, parentlink], True, 1)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
@@ -248,5 +246,4 @@ def placeLinkSubelements(link):
         try:
             obj.scale = mathutils.Vector(element['geometry']['scale'])
         except KeyError:
-            pass
-        # sUtils.selectObjects([element, parentlink], True, 1)
+            log('No scale defined for element ' + element['name'], 'DEBUG')

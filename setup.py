@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.5
 
 # Copyright 2017, University of Bremen & DFKI GmbH Robotics Innovation Center
 #
@@ -27,9 +27,14 @@
 # You also have to delete the old install.conf to run this script
 # correctly.
 
+'''
+This short script installs Phobos to the appropriate Blender folder and checks
+for missing dependencies.
+'''
+
+import os
 import os.path as path
 import sys
-import os
 import shutil
 
 configfile = 'install.conf'
@@ -47,9 +52,10 @@ def copytree(src, dst, symlinks=False, ignore=None):
             shutil.copy2(s, d)
 
 
-def makeConfigFile():
+def makeConfigFile(blenderversion=None):
     operating_system = sys.platform
-    blenderversion = input('Enter your Blender version (e.g. "2.78") ')
+    if not blenderversion:
+        blenderversion = input('Enter your Blender version (e.g., 2.78) > ')
     global addonpath
 
     if operating_system == 'linux':
@@ -65,14 +71,9 @@ def makeConfigFile():
         addonpath = ('ERROR: System not supported yet:' +
                      ' "{0}". Please contact the developers.').format(operating_system)
 
-    pythoncommand = input('What is your Python 3 command? (e.g. python3) ')
-    # make sure we have a python command
-    if not pythoncommand:
-        pythoncommand = 'python3'
     with open(configfile, 'w') as conffile:
         conffile.writelines([
             'blenderversion={0}\n'.format(blenderversion),
-            'pythoncom={0}\n'.format(pythoncommand),
             'addonpath={0}\n'.format(addonpath)])
 
 
@@ -103,28 +104,38 @@ def installPhobos():
 
     if path.isdir(phobospath):
         return copyphobos(phobospath)
-    else:
-        yn = input(('Phobos folder does not exist, create phobos folder ' +
-                    'in {0}? (y/n) ').format(phobospath))
-        if yn == 'y':
-            os.makedirs(phobospath)
-            return copyphobos(phobospath)
-        else:
-            print('No folder for Phobos created.')
-            return False
+    os.makedirs(phobospath)
+    return copyphobos(phobospath)
 
 
 if __name__ == '__main__':
+    # check whether the right python version is used
+    pyver = sys.version_info
+    if pyver.major != 3 or pyver.minor != 5:
+        print('You started this script with the wrong python version: ')
+        print('Current: ' + str(pyver.major) + '.' + str(pyver.minor))
+        print('Blender python uses: 3.5')
+        print('Installation aborted.')
+        sys.exit(0)
+
+    # digest parameters
+    version = None
+    if len(sys.argv) > 1:
+        version = sys.argv[1]
+
     # work always from installation folder
     os.chdir(os.path.abspath(os.path.dirname(__file__)))
     # check for existing configfile
-    if path.isfile(configfile):
-        print('Found installation configuration.')
-        with open(configfile, 'r') as conffile:
-            lines = conffile.readlines()
-            addonpath = lines[2].split('=')[1].strip('\n')
+    if not version:
+        if path.isfile(configfile):
+            print('Found installation configuration.')
+            with open(configfile, 'r') as conffile:
+                lines = conffile.readlines()
+                addonpath = lines[2].split('=')[1].strip('\n')
+        else:
+            makeConfigFile()
     else:
-        makeConfigFile()
+        makeConfigFile(version)
 
     # install Phobos
     if not installPhobos():
@@ -133,8 +144,8 @@ if __name__ == '__main__':
         print('Phobos installed.')
 
         # look for existing yamlpath configuration
-        if path.isfile('yamlpath.conf'):
-            print('yamlpath.conf found! Configuration done.')
+        if path.isfile('python_dist_packages.conf'):
+            print('python_dist_packages.conf found! Configuration done.')
         # check for existing YAML installation
         else:
             try:
@@ -147,13 +158,16 @@ if __name__ == '__main__':
                       'https://github.com/rock-simulation/phobos/wiki/Installation')
                 print('YAML configuration aborted. Installation incomplete.')
                 sys.exit(0)
+            # OPT here we could add additional requirement checks
 
-            yamlpath = yaml.__file__
+            import site
 
-            # write yamlpath into config file
-            with open('yamlpath.conf', 'w') as yamlconffile:
-                yamlconffile.truncate()
-                yamlconffile.write(yamlpath.strip('__init__.py'))
+            # write python dist packages path into config file
+            with open('python_dist_packages.conf', 'w') as distconffile:
+                distconffile.truncate()
+                distpath = site.getsitepackages()[0]
+                distconffile.write(path.normpath(distpath))
 
-        shutil.copy2('yamlpath.conf', os.path.join(phobospath, 'yamlpath.conf'))
+        shutil.copy2('python_dist_packages.conf', os.path.join(phobospath,
+            'python_dist_packages.conf'))
 

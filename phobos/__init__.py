@@ -87,27 +87,24 @@ bl_info = {
     "blender": (2, 69, 0),
     "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
-    "wiki_url": "",
+    "wiki_url": "https://github.com/rock-simulation/phobos/wiki",
     "support": "COMMUNITY",
     "tracker_url": "https://github.com/rock-simulation/phobos/issues",
     "category": "Development"
 }
 
 # TODO rework yaml import: loading module twice if yaml is not found...
-
-yamlconfpath = os.path.dirname(__file__) + "/yamlpath.conf"
+yamlconfpath = os.path.dirname(__file__) + "/python_dist_packages.conf"
 if os.path.isfile(yamlconfpath):
     f = open(yamlconfpath)
-    path = f.read()
+    distpath = f.read().replace('\n', '')
     f.close()
-    # CHECK is this if still required?
-    if path == "v" or path == "i":
-        print("There is no YAML installation for python 3.4 or greater on this computer")
-    else:
-        sys.path.insert(0, path.replace('/yaml', ''))
-        import yaml
+    sys.path.insert(0, os.path.normpath(distpath))
+    import yaml
+    # OPT here we could add additional required imports
+# stop execution, when yaml cannot be imported
 else:
-    print('No yamlpath.conf file found. Please reinstall phobos.')
+    raise FileNotFoundError('No python_dist_packages.conf file found. Please reinstall phobos.')
 
 
 # Add custom YAML (de-)serializer
@@ -147,11 +144,9 @@ def register():
 
 
 def unregister():
-    """This function unregisters all modules to blender.
-
-    :return: Nothing
-
+    """This function unregisters all modules in Blender.
     """
+    print("\n" + "-" * 100)
     print("Unregistering Phobos...")
     # TODO delete all imported modules to resolve reregistration conflicts
     phobos.phobosgui.unregister()
