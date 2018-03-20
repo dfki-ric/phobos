@@ -51,10 +51,7 @@ def exportMesh(obj, path, meshtype):
         bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False,
                                  use_mesh_modifiers=True)
     elif meshtype == 'stl':
-        if bpy.app.version[0] * 100 + bpy.app.version[1] >= 277:
-            bpy.ops.export_mesh.stl(filepath=outpath, use_selection=True, use_mesh_modifiers=True)
-        else:
-            bpy.ops.export_mesh.stl(filepath=outpath, use_mesh_modifiers=True)
+        bpy.ops.export_mesh.stl(filepath=outpath, use_selection=True, use_mesh_modifiers=True)
     elif meshtype == 'dae':
         bpy.ops.wm.collada_export(filepath=outpath, selected=True)
     bpy.ops.object.select_all(action='DESELECT')
