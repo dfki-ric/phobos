@@ -1,7 +1,6 @@
 
 # TODO add shebang and document introduction
 import os
-import re
 import bpy
 import phobos.defs as defs
 import phobos.utils.naming as nUtils
@@ -76,31 +75,10 @@ def createGeometry(viscol, geomsrc):
     geomtype = geom['type']
     # create the Blender object
     if geomtype == 'mesh':
-        # TODO delete me?
-        # if hasattr(self, 'zipped') and self.zipped:
-        #     if not os.path.isdir(os.path.join(self.tmp_path, tmp_dir_name)):
-        #         os.mkdir(os.path.join(self.tmp_path, tmp_dir_name))
-        #     archive = zipfile.ZipFile(self.filepath)
-        #     archive.extract(geom['filename'], path=os.path.join(self.tmp_path, tmp_dir_name))
-        #     geom_path = os.path.join(os.path.abspath(os.path.join(self.tmp_path, tmp_dir_name)), geom['filename'])
-        # else:
-        if 'sourcefilepath' in geom:
-            geom_path = os.path.normpath(os.path.join(os.path.dirname(geom['sourcefilepath']), geom['filename']))
-            log('sourcefilepath: ' + geom_path, 'DEBUG')
-        else:
-            geom_path = geom['filename']
-        # TODO still up to date?
-        # Remove 'urdf/package://{package_name}' to workaround the lack
-        # of rospack here. This supposes that the urdf file is in the
-        # urdf folder and that the meshes are in the meshes folder at
-        # the same level as the urdf folder.
-        if 'package://' in geom_path:
-            geom_path = re.sub(r'(.*)urdf/package://([^/]+)/(.*)', '\\1\\3', geom_path)
-
         bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
         meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
-        if not os.path.isfile(geom_path):
-            log(geom_path + " is no file. Object " + viscol['name'] +
+        if not os.path.isfile(geom['filename']):
+            log(geom['filename'] + " is no file. Object " + viscol['name'] +
                 " will have empty mesh!", "ERROR")
             bpy.data.meshes.new(meshname)
         if meshname in bpy.data.meshes:
@@ -111,7 +89,7 @@ def createGeometry(viscol, geomsrc):
         else:
             log('Importing mesh for link element ' + viscol['name'], 'INFO')
             filetype = geom['filename'].split('.')[-1].lower()
-            newgeom = meshes.importMesh(geom_path, filetype)
+            newgeom = meshes.importMesh(geom['filename'], filetype)
             newgeom.data.name = meshname
             if not newgeom:
                 log('Failed to import mesh file ' + geom['filename'], 'ERROR')
