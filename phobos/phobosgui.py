@@ -714,7 +714,6 @@ class PhobosModelPanel(bpy.types.Panel):
         hw1 = minlayout.column(align=True)
         hw1.label(text="Hardware", icon='MOD_SCREW')
         hw1.operator('phobos.add_motor')
-        hw1.operator("phobos.add_annotations")
 
         # Masses & Inertia
         mc1 = minlayout.column(align=True)

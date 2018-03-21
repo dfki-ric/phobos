@@ -1483,63 +1483,6 @@ class AddHeightmapOperator(Operator):
         return {'RUNNING_MODAL'}
 
 
-class AddAnnotationsOperator(bpy.types.Operator):
-    """Add annotations defined in a YAML file"""
-    bl_idname = "phobos.add_annotations"
-    bl_label = "Add Annotations"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'FILE'
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def getAnnotationTypes(self, context):
-        return [(category,) * 3 for category in sorted(defs.definitions.keys())]
-
-    def getDeviceTypes(self, context):
-        return [(category,) * 3 for category in sorted(defs.definitions[self.annotationtype].keys())]
-
-    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
-
-    annotationtype = EnumProperty(
-        items=getAnnotationTypes,
-        name="Annotation Type",
-        description="Annotation Types")
-
-    devicetype = EnumProperty(
-        items=getDeviceTypes,
-        name="Device Type",
-        description="Device Types")
-
-    @classmethod
-    def poll(cls, context):
-        return context is not None
-
-    def draw(self, context):
-        l = self.layout
-        l.prop(self, 'filepath')
-        if self.filepath == '':
-            l.prop(self, 'annotationtype')
-            l.prop(self, 'devicetype')
-            b = self.layout.box()
-            for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
-                b.label(text=key+': '+str(value))
-
-
-    def execute(self, context):
-        if self.filepath != '':
-            try:
-                with open(self.filepath, 'r') as annotationfile:
-                    annotations = yaml.load(annotationfile.read())
-                for category in annotations:
-                    for key, value in annotations[category].items():
-                        context.active_object[category+'/'+key] = value
-            except FileNotFoundError:
-                log("Annotation file seems to be invalid.", "ERROR")
-        else:
-            for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
-                for obj in context.selected_objects:
-                    obj[self.devicetype+'/'+key] = value
-
-
 class InstantiateAssembly(Operator):
     """Instantiate an assembly"""
     bl_idname = "phobos.instantiate_assembly"
