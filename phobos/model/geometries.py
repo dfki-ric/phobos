@@ -1,7 +1,6 @@
 
 # TODO add shebang and document introduction
 import os
-import re
 import bpy
 import phobos.defs as defs
 import phobos.utils.naming as nUtils
@@ -76,11 +75,10 @@ def createGeometry(viscol, geomsrc):
     geomtype = geom['type']
     # create the Blender object
     if geomtype == 'mesh':
-        geom_path = geom['filename']
         bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
         meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
-        if not os.path.isfile(geom_path):
-            log(geom_path + " is no file. Object " + viscol['name'] +
+        if not os.path.isfile(geom['filename']):
+            log(geom['filename'] + " is no file. Object " + viscol['name'] +
                 " will have empty mesh!", "ERROR")
             bpy.data.meshes.new(meshname)
         if meshname in bpy.data.meshes:
@@ -91,7 +89,7 @@ def createGeometry(viscol, geomsrc):
         else:
             log('Importing mesh for link element ' + viscol['name'], 'INFO')
             filetype = geom['filename'].split('.')[-1].lower()
-            newgeom = meshes.importMesh(geom_path, filetype)
+            newgeom = meshes.importMesh(geom['filename'], filetype)
             newgeom.data.name = meshname
             if not newgeom:
                 log('Failed to import mesh file ' + geom['filename'], 'ERROR')

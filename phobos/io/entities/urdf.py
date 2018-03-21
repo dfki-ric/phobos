@@ -26,12 +26,13 @@ Created on 28 Jul 2014
 @author: Kai von Szadkowski, Stefan Rahms
 """
 
-import bpy
-import mathutils
-import os
+from os import path
+import re
 import yaml
 import xml.etree.ElementTree as ET
 
+import bpy
+import mathutils
 from phobos.utils.io import l2str, xmlline, indent, xmlHeader
 import phobos.model.materials as materials
 import phobos.utils.general as gUtils
@@ -50,7 +51,7 @@ def sort_urdf_elements(elems):
     return sorted(elems)
 
 
-def writeURDFGeometry(output, element, path):
+def writeURDFGeometry(output, element, filepath):
     """This functions writes the URDF geometry for a given element at the end of a given String.
 
     :param output: The String to append the URDF output string on.
@@ -71,11 +72,11 @@ def writeURDFGeometry(output, element, path):
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
             # FIXME: the following will crash if unstructured export is used
-            log("writeURDFGeometry: "+path + ' ' + ioUtils.getOutputMeshpath(os.path.dirname(path)), "DEBUG")
-            meshpath = ioUtils.getOutputMeshpath(os.path.dirname(path))
+            log("writeURDFGeometry: " + filepath + ' ' + ioUtils.getOutputMeshpath(path.dirname(filepath)), "DEBUG")
+            meshpath = ioUtils.getOutputMeshpath(path.dirname(filepath))
             output.append(xmlline(5, 'mesh', ['filename', 'scale'],
-                                  [os.path.join(ioUtils.os.path.relpath(meshpath, path),
-                                                geometry['filename'] + '.' + ioUtils.getOutputMeshtype()),
+                                  [path.join(path.relpath(meshpath, filepath),
+                                             geometry['filename'] + '.' + ioUtils.getOutputMeshtype()),
                                    l2str(geometry['scale'])]))
         elif geometry['type'] == 'capsule':
             # FIXME: real capsules here!
@@ -98,7 +99,7 @@ def exportUrdf(model, outpath):
 
     """
     log("Export URDF to " + outpath, "INFO")
-    filename = os.path.join(outpath, model['name']+'.urdf')
+    filename = path.join(outpath, model['name']+'.urdf')
 
     stored_element_order = None
     # CHECK test Windows path consistency
@@ -582,19 +583,15 @@ def importUrdf(filepath):
     return model
 
 
-def parseLink(link, sourcefilepath=None):
-    """This function parses the link from the given link dict object.
+def parseLink(link, urdffilepath=None):
+    """This function parses the link from the given URDF xml object.
 
-    :param link: The link you want to
+    :param link: The link to be parsed
     :return:
 
     """
-    # TODO delete me?
-    #print(link.attrib['name'] + ', ', end='')
     newlink = {a: link.attrib[a] for a in link.attrib}
-
-    link_name = link.attrib['name']
-
+    log('Parsing link ' + newlink['name'] + '...', 'INFO')
     parseInertial(newlink, link)
     # TODO delete me?
     #no_visual_geo = parseVisual(newlink, link)
@@ -602,56 +599,42 @@ def parseLink(link, sourcefilepath=None):
     #handle_missing_geometry(no_visual_geo, no_collision_geo, newlink)
     #parse visual and collision objects
     for objtype in ['visual', 'collision']:
+        log('Parsing ' + objtype + ' elements...', 'INFO')
         newlink[objtype] = {}
-        i = 0
         for xmlelement in link.iter(objtype):
             try:
                 elementname = xmlelement.attrib['name']
             except KeyError:
-                elementname = objtype + '_' + str(i) + '_' + newlink['name']
-                i += 1
+                elementname = objtype + '_' + str(len(newlink[objtype])) + '_' + newlink['name']
             newlink[objtype][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
-            dictelement = newlink[objtype][elementname]
+            elementdict = newlink[objtype][elementname]
             # TODO delete me?
             #viscol_order[objtype].append(elementname)
-            dictelement['name'] = elementname
-            dictelement['pose'] = parsePose(xmlelement.find('origin'))
+            elementdict['name'] = elementname
+            elementdict['pose'] = parsePose(xmlelement.find('origin'))
             geometry = xmlelement.find('geometry')
             if geometry is not None:
-                dictelement['geometry'] = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-                dictelement['geometry']['type'] = geometry[0].tag
+                elementdict['geometry'] = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+                elementdict['geometry']['type'] = geometry[0].tag
                 if geometry[0].tag == 'mesh':
-                    # CHECK be careful about path consistency (Windows)
-                    dictelement['geometry']['filename'] = geometry[0].attrib['filename']
-                    if sourcefilepath:
-                        dictelement['geometry']['sourcefilepath'] = sourcefilepath
+                    # interpret filename
+                    filename = geometry[0].attrib['filename']
+                    filepath = path.normpath(path.join(path.dirname(urdffilepath), filename))
+                    log('filepath for element ' + elementname + ': ' + filepath, 'DEBUG')
+                    # Remove 'urdf/package://{package_name}' to workaround the lack of rospack here, assuming the
+                    # urdf file is in the 'urdf' folder and meshes are in the 'meshes' folder at the same level.
+                    if 'package://' in filepath:
+                        filepath = re.sub(r'(.*)urdf/package://([^/]+)/(.*)', '\\1\\3', filepath)
+                    elementdict['geometry']['filename'] = filepath
+                    # read scale
                     try:
-                        dictelement['geometry']['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
+                        elementdict['geometry']['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
                     except KeyError:
-                        dictelement['geometry']['scale'] = [1.0, 1.0, 1.0]
-
-                                        # if hasattr(self, 'zipped') and self.zipped:
-                    #     if not os.path.isdir(os.path.join(self.tmp_path, tmp_dir_name)):
-                    #         os.mkdir(os.path.join(self.tmp_path, tmp_dir_name))
-                    #     archive = zipfile.ZipFile(self.filepath)
-                    #     archive.extract(geom['filename'], path=os.path.join(self.tmp_path, tmp_dir_name))
-                    #     geom_path = os.path.join(os.path.abspath(os.path.join(self.tmp_path, tmp_dir_name)), geom['filename'])
-                    # else:
-                    if 'sourcefilepath' in geom:
-                        geom_path = os.path.normpath(os.path.join(os.path.dirname(geom['sourcefilepath']), geom['filename']))
-                        log('sourcefilepath: ' + geom_path, 'DEBUG', 'createGeometry')
-                    else:
-                        geom_path = geom['filename']
-                    # Remove 'urdf/package://{package_name}' to workaround the lack
-                    # of rospack here. This supposes that the urdf file is in the
-                    # urdf folder and that the meshes are in the meshes folder at
-                    # the same level as the urdf folder.
-                    if 'package://' in geom_path:
-                        geom_path = re.sub(r'(.*)urdf/package://([^/]+)/(.*)', '\\1\\3', geom_path)
+                        elementdict['geometry']['scale'] = [1.0, 1.0, 1.0]
 
             material = xmlelement.find('material')
             if material is not None:
-                dictelement['material'] = {'name': material.attrib['name']}
+                elementdict['material'] = {'name': material.attrib['name']}
                 # We don't need to do the following, as any material with color or texture
                 # will be parsed in the parsing of materials in parseModel
                 # This might be necessary if there are name conflicts etc.
