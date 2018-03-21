@@ -708,7 +708,6 @@ class PhobosModelPanel(bpy.types.Panel):
         kc2 = kinlayout.column(align=True)
         kc1.label(text='Kinematics', icon='POSE_DATA')
         kc1.operator("phobos.create_links")
-        kc1.operator("phobos.merge_links")
         kc1.operator('phobos.define_joint_constraints')
         kc1.operator("phobos.create_mimic_joint")
         kc1.operator('phobos.add_kinematic_chain', icon='CONSTRAINT')
