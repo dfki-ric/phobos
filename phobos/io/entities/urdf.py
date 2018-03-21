@@ -669,23 +669,23 @@ def parseInertial(link_dict, link_xml):
 
 
 def parseJoint(joint):
-    newjoint = {a: joint.attrib[a] for a in joint.attrib}
+    jointdict = {a: joint.attrib[a] for a in joint.attrib}
     pose = parsePose(joint.find('origin'))
-    newjoint['parent'] = joint.find('parent').attrib['link']
-    newjoint['child'] = joint.find('child').attrib['link']
+    jointdict['parent'] = joint.find('parent').attrib['link']
+    jointdict['child'] = joint.find('child').attrib['link']
     axis = joint.find('axis')
     if axis is not None:
-        newjoint['axis'] = gUtils.parse_text(axis.attrib['xyz'])
+        jointdict['axis'] = gUtils.parse_text(axis.attrib['xyz'])
     limit = joint.find('limit')
     if limit is not None:
-        newjoint['limits'] = {a: gUtils.parse_text(limit.attrib[a]) for a in limit.attrib}
-    # TODO delete me?
-    #calibration
-    #dynamics
-    #limit
-    #mimic
-    #safety_controller
-    return newjoint, pose
+        jointdict['limits'] = {a: gUtils.parse_text(limit.attrib[a]) for a in limit.attrib}
+    for category in ('dynamics', 'calibration', 'safety_controller', 'mimic'):
+        data = joint.find(category)
+        try:
+            jointdict[category] = {a: gUtils.parse_text(data.attrib[a]) for a in data.attrib}
+        except AttributeError:
+            pass  # no such category
+    return jointdict, pose
 
 
 # registering export functions of types with Phobos
