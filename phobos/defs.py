@@ -68,7 +68,8 @@ phobostypes = (('undefined',) * 3,
                ('entity',) * 3,
                ('frame',) * 3,
                ('interface',) * 3,
-               ('submodel',) * 3
+               ('submodel',) * 3,
+               ('annotation',) * 3
                )
 
 jointtypes = (('revolute',) * 3,
