@@ -36,7 +36,7 @@ from re import compile
 from phobos.phoboslog import log
 
 # phobos version number
-version = '0.7'
+version = '0.8'
 
 # definitions of which elements are assigned to which default layers
 layerTypes = {
