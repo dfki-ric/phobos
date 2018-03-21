@@ -155,3 +155,15 @@ def importBlenderModel(filepath, namespace='', prefix=True):
         return True
     else:
         return False
+
+
+def getConfigPath():
+    return bpy.context.user_preferences.addons["phobos"].preferences.configfolder
+
+
+def getResource(type, name, filepath=None):
+    if not filepath:
+        os.path.join(getConfigPath(), 'resources', 'resources.blend')
+        with bpy.data.libraries.load(filepath) as (data_from, data_to):
+            objects = [{'name': obj} for obj in data_from.objects if obj.phobostype == type and obj.name == name]
+        bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
