@@ -80,6 +80,7 @@ def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
         #draw_text(str(offset) + ' \u25bc', (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, opacity))
         draw_text('+'+str(offset), (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, 1))
 
+
 def draw_progressbar(value):
     region = bpy.context.region
     text = str(round(value*100))+'%'
@@ -210,6 +211,11 @@ class DrawInfosOperator(bpy.types.Operator):
             context.area.tag_redraw()
         except AttributeError:
             pass
+
+        if event.type == 'PAGE_UP':
+            context.window_manager.phobos_msg_offset += 1
+        if event.type == 'PAGE_DOWN':
+            context.window_manager.phobos_msg_offset -= 1
 
         if not context.window_manager.draw_phobos_infos:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
