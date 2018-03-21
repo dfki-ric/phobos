@@ -1262,10 +1262,10 @@ def addSensorFromYaml(category, name):
                     continue
                 item = self.sensor_data.add()
                 prefix = ''
-                if type(data[propname]) is int:
+                if isinstance(data[propname], int):
                     item.intProp = data[propname]
                     prefix = 'i'
-                elif type(data[propname]) is str:
+                elif isinstance(data[propname], str):
                     import re
 
                     # make sure eval is called only with true or false
@@ -1277,7 +1277,7 @@ def addSensorFromYaml(category, name):
                     else:
                         item.stringProp = data[propname]
                         prefix = 's'
-                elif type(data[propname]) is float:
+                elif isinstance(data[propname], float):
                     item.floatProp = data[propname]
                     prefix = 'f'
                 # TODO what about lists?
