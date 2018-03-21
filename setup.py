@@ -64,10 +64,10 @@ if __name__ == '__main__':
               'Aborting installation.')
         sys.exit(0)
 
-    # install resources
-    copied_files = updateFolderContents(os.path.join(os.getcwd(), 'resources'), getResourcesPath())
-    if not len(copied_files) > 0:
-        print('Something went wrong with copying resource files.')
+    ## install resources
+    #copied_files = updateFolderContents(os.path.join(os.getcwd(), 'resources'), getResourcesPath())
+    #if not len(copied_files) > 0:
+    #    print('Something went wrong with copying resource files.')
 
     # install templates
     templatespath = path.join(getScriptsPath(), 'templates_py')
