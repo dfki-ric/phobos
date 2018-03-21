@@ -1,4 +1,4 @@
-Phobos (0.7)
+Phobos (0.8)
 ============
 
 Phobos is an add-on for the open-source 3D modeling software [Blender](http://www.blender.org) that enables the creation and modification of WYSIWYG robot models for use in robot frameworks like ROS and ROCK or in real-time simulations such as MARS or Gazebo. Phobos allows to export completed models in formats such as URDF or SMURF and meshes as STereoLithography (.stl), Wavefront (.obj) or Collada (.dae).
