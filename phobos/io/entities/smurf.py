@@ -105,6 +105,7 @@ def gatherAnnotations(model):
       dict -- A dictionary of the gathered annotations.
 
     """
+    # TODO check this stuff
     annotations = {}
     elementlist = []
     types = ('links', 'joints', 'sensors', 'motors', 'controllers', 'materials')
@@ -114,6 +115,7 @@ def gatherAnnotations(model):
             tmpdict = model[objtype][elementname]
             tmpdict['temp_type'] = objtype[:-1]
             elementlist.append(tmpdict)
+
     # add information from types hidden in links
     for linkname in model['links']:
         for objtype in ('collision', 'visual'):
@@ -126,6 +128,7 @@ def gatherAnnotations(model):
             tmpdict = model['links'][linkname]['inertial']
             tmpdict['temp_type'] = 'inertial'
             elementlist.append(tmpdict)
+
     # loop through the list of annotated elements and categorize the data
     for element in elementlist:
         delkeys = []
@@ -234,7 +237,6 @@ def sort_dict_list(dict_list, sort_key):
 
 
 def exportSmurf(model, path):
-    log(model['name'] + ' ' + path, "DEBUG")
     """This function exports a given model to a specific path as a smurf representation.
 
     :param model: The model you want to export.
