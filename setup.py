@@ -55,29 +55,35 @@ if __name__ == '__main__':
         print('Installation aborted.')
         sys.exit(0)
 
+    phoboshome = os.path.dirname(os.path.abspath(__file__))
+
     # install addon
     if os.path.exists(addonpath):
         shutil.rmtree(addonpath)  # always clean install folder
-    copied_files = updateFolderContents(os.path.join(os.getcwd(), 'phobos'), addonpath)
+    copied_files = updateFolderContents(
+        os.path.join(phoboshome, 'phobos'),
+        addonpath)
     if not len(copied_files) > 0:
         print('Something went wrong with copying the addon files to your Blender installation.\n',
               'Aborting installation.')
         sys.exit(0)
 
     ## install resources
-    #copied_files = updateFolderContents(os.path.join(os.getcwd(), 'resources'), getResourcesPath())
+    #copied_files = updateFolderContents(os.path.join(phoboshome, 'resources'), getResourcesPath())
     #if not len(copied_files) > 0:
     #    print('Something went wrong with copying resource files.')
 
     # install templates
     templatespath = path.join(getScriptsPath(), 'templates_py')
-    copied_files = updateFolderContents(os.path.join(os.getcwd(), 'templates_py'), templatespath)
+    copied_files = updateFolderContents(
+        os.path.join(phoboshome, 'templates_py'),
+        templatespath)
     if not len(copied_files) > 0:
         print('Something went wrong with copying operator presets.')
 
     ## install presets
     #presetspath = path.join(getScriptsPath(), 'presets', 'operator')
-    #copied_files = updateFolderContents(os.path.join(os.getcwd(), 'presets'), presetspath)
+    #copied_files = updateFolderContents(os.path.join(phoboshome, 'presets'), presetspath)
     #if not len(copied_files) > 0:
     #    print('Something went wrong with copying operator presets.')
 
