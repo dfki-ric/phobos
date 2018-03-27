@@ -1524,9 +1524,11 @@ class InstantiateAssembly(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def getAssembliesListForEnumProperty(self, context):
-        assemblieslist = [a.name.replace('assembly:', '') for a in bpy.data.groups
+        """Returns an enum list of available assemblies to add"""
+        assemblieslist = [a.name.replace('assembly:', '')
+                          for a in bpy.data.groups
                           if a.name.startswith('assembly')]
-        return [(a,)*3 for a in assemblieslist]
+        return [(a, a, a + ' assembly') for a in assemblieslist]
 
     assemblyname = EnumProperty(
         name="Assembly name",
@@ -1540,15 +1542,19 @@ class InstantiateAssembly(Operator):
     )
 
     def invoke(self, context, event):
+        """Initialise proper naming before showing the properties"""
         i = 0
-        while self.assemblyname+'_'+str(i) in bpy.data.objects:
+        while self.assemblyname + '_' + str(i) in bpy.data.objects:
             i += 1
-        self.instancename = self.assemblyname+'_'+str(i)
+        self.instancename = self.assemblyname + '_' + str(i)
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
-        eUtils.instantiateAssembly(self.assemblyname, self.instancename)
+        """Creates an instance of the chosen assembly"""
+        if not eUtils.instantiateAssembly(
+                self.assemblyname, self.instancename):
+            return {'CANCELLED'}
         return {'FINISHED'}
 
 

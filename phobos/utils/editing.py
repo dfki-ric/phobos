@@ -31,6 +31,7 @@ import mathutils
 import math
 from . import selection as sUtils
 from . import naming as nUtils
+from . import blender as bUtils
 from phobos.phoboslog import log
 
 
@@ -92,7 +93,20 @@ def restructureKinematicTree(link):
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
 
-def instantiateAssembly(assemblyname, instancename, version='1.0', size=1.):
+def instantiateAssembly(assemblyname, instancename, version='1.0', size=1.,
+                        layers=None):
+    """
+    Create an assembly instance from an existing Blender group.
+    The object is created based on the provided parameters.
+
+    Returns the new instance object or None if there occurs an error.
+
+    :param assemblyname: the name of the assembly
+    :param instancename: the name of the new instance
+    :param version: the version of the new instance
+    :param size: the size of the new instance
+    :param layers: the layers where the instance will be placed
+    """
     assembly = None
     interfaces = None
 
@@ -104,23 +118,30 @@ def instantiateAssembly(assemblyname, instancename, version='1.0', size=1.):
             interfaces = group
 
     if not assembly or not interfaces:
-        raise RuntimeError('Assembly and/or interfaces templates do not exist.')
+        log('Assembly and/or interfaces templates do not exist.', 'ERROR')
+        return None
+
+    if not layers:
+        layers = bUtils.defLayers(0)
+
     # add the assembly and write in data
-    bpy.ops.object.group_instance_add(group=assembly.name)
-    assemblyobj = bpy.context.active_object
+    bpy.ops.object.group_instance_add(group=assembly.name, layers=layers)
+    assemblyobj = bpy.context.scene.objects.active
     assemblyobj.phobostype = 'assembly'
     assemblyobj['assemblyname'] = assemblyname
     assemblyobj['version'] = version
     assemblyobj.name = instancename
     assemblyobj.empty_draw_size = size
+
     # add the interfaces, make them real and get rid of parent empty object
     bpy.ops.object.group_instance_add(group=interfaces.name)
-    #interfaceobj = bpy.context.active_object
     bpy.ops.object.duplicates_make_real()
     for obj in bpy.context.selected_objects:
         nUtils.addNamespace(obj, instancename)
         obj.name = obj.name.rsplit('.')[0]
-    sUtils.selectObjects(objects=[assemblyobj]+bpy.context.selected_objects, clear=True, active=0)
+    sUtils.selectObjects(
+        objects=[assemblyobj] + bpy.context.selected_objects,
+        clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
     sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
                                   if a.type == 'EMPTY' and 'interface' in a.name],
