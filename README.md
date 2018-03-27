@@ -1,19 +1,19 @@
-Phobos (0.7)
-============
+![Phobos](https://github.com/rock-simulation/phobos/wiki/img/phobos_logo_small.png)
 
-Phobos is an add-on for the open-source 3D modeling software [Blender](http://www.blender.org) that enables the creation and modification of WYSIWYG robot models for use in robot frameworks like ROS and ROCK or in real-time simulations such as MARS or Gazebo. Phobos allows to export completed models in formats such as URDF or SMURF and meshes as STereoLithography (.stl), Wavefront (.obj) or Collada (.dae).
+Phobos is an add-on for the open-source 3D modeling software [Blender](http://www.blender.org) that enables the creation of WYSIWYG robot models for use in robot frameworks like ROS and ROCK or in real-time simulations such as MARS or Gazebo. Phobos exports formats such as URDF or SMURF and common mesh formats(STereoLithography (.stl), Wavefront (.obj) or Collada (.dae)).
 
 Phobos was initiated and is currently developed at the [Robotics Innovation Center](http://robotik.dfki-bremen.de/en/startpage.html) of the [German Research Center for Artificial Intelligence (DFKI)](http://www.dfki.de) in Bremen, together with the [Robotics Group](http://www.informatik.uni-bremen.de/robotik/index_en.php) of the [University of Bremen](http://www.uni-bremen.de/en.html).
 
-User documentation can be found in the [Phobos Wiki](https://github.com/rock-simulation/phobos/wiki) and source documentation on [Phobos' Github Page](http://rock-simulation.github.io/phobos).
-
 Please contact [Kai von Szadkowski](http://robotik.dfki-bremen.de/en/about-us/staff/kavo01.html) for any inquiries, or any questions and feedback not suited for the issues page.
 
-## Announcements
+## Documentation
 
-**2017-10-24** - Phobos' current development is focused on adding new features after the major refactoring that was finished earlier this year. Some of the new features and updating of existing features takes longer than expected and we don't want to roll out a release that is still missing a lot of important components. Allowing time to update the documentation as well, this means that new versions of Phobos will not be released before the end of the year.
-Please note that the current version of Phobos (i.e. the *master* branch of this repo) does not necessarily work with the latest version of Blender (at the time of writing, 2.79) due to changes in its API and internal python version, such that previous versions may have to be used (e.g. 2.74).
+- User documentation: [Phobos Wiki](https://github.com/rock-simulation/phobos/wiki)
+- Source documentation: [Phobos' Github Page](http://rock-simulation.github.io/phobos).
 
+## Installation
+
+Please refer to the Wiki's [installation page](https://github.com/rock-simulation/phobos/wiki/Installation).
 
 ## Overview
 
