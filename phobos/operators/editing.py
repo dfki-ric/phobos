@@ -1576,6 +1576,15 @@ class AddSubmodel(Operator):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
+    @classmethod
+    def poll(cls, context):
+        """ Hide the operator when no submodels are defined"""
+        for group in bpy.data.groups:
+            if 'submodeltype' in group:
+                return True
+        return False
+
+
     def execute(self, context):
         """create an instance of the submodel"""
         i = 1
