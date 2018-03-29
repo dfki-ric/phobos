@@ -37,7 +37,7 @@ import phobos.defs as defs
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
-import phobos.model.inertia as inertiamodel
+import phobos.model.inertia as inertia
 import phobos.model.geometries as geometrymodel
 from phobos.phoboslog import log
 
@@ -94,7 +94,7 @@ def createLink(link):
 
     # create inertial
     if 'inertial' in link:
-        inertiamodel.createInertialFromDictionary(link['name'], link['inertial'])
+        inertia.createInertial(link['name'], link['inertial'])
 
     # create visual elements
     if 'visual' in link:
