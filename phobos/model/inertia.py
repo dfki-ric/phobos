@@ -95,12 +95,12 @@ def createInertial(obj):
     return inertial
 
 
-def createMajorInertialObjects(link, autocalc=True, selected_only=False):
-    """Creates inertial representations from minor inertials of a link.
+def createLinkInertialObjects(link, autocalc=True, selected_only=False):
+    """Creates inertial representations from helper inertials of a link.
     The new link inertial can contain automatically calculated inertia or
     remain empty (based on the autocalc parameter). If the selected_only
     parameter is used the inertia is calculated including only the selected
-    minor inertials objects.
+    helper inertials objects.
 
     :param link: The link you want to create the inertial for.
     :type link: bpy_types.Object
@@ -130,8 +130,8 @@ def createMajorInertialObjects(link, autocalc=True, selected_only=False):
         createInertial(link)
 
 
-def createMinorInertialObjects(link, autocalc=True):
-    """Creates inertial representations for minor inertials from the visual/
+def createHelperInertialObjects(link, autocalc=True):
+    """Creates inertial representations for helper inertials from the visual/
     collision objects of a link. The new inertials can be calculated
     automatically or remain empty (based on the autocalc parameter)
 

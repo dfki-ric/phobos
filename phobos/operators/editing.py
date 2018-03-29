@@ -550,7 +550,7 @@ class CreateLinkInertialOperator(Operator):
     bl_label = "Create link inertia"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def getMajorInertials(self, context, link=None):
+    def getLinkInertials(self, context, link=None):
         """
         Returns all link inertials of the selected links (in the current
         context) or of the specified link.
@@ -563,21 +563,21 @@ class CreateLinkInertialOperator(Operator):
         links = [obj for obj in context.selected_objects
                  if obj.phobostype == 'link']
 
-        major_inertials = {}
+        link_inertials = {}
         # append the link inertials for each link
         if link:
             inertials = sUtils.getImmediateChildren(
                 link, phobostypes=('inertial'), include_hidden=True)
-            major_inertials = [inert for inert in inertials if 'inertial/inertia' in inert]
+            link_inertials = [inert for inert in inertials if 'inertial/inertia' in inert]
 
         else:
             for link in links:
                 linkname = link['link/name']
                 inertials = sUtils.getImmediateChildren(
                     link, phobostypes=('inertial'), include_hidden=True)
-                major_inertials[linkname] = [inert for inert in inertials if 'inertial/inertia' in inert]
+                link_inertials[linkname] = [inert for inert in inertials if 'inertial/inertia' in inert]
 
-        return major_inertials
+        return link_inertials
 
     from_selected_only = BoolProperty(
         name='From selected objects', default=False,
@@ -617,11 +617,11 @@ class CreateLinkInertialOperator(Operator):
         for link in links:
             # delete inertials which are overwritten
             if self.overwrite:
-                major_inertials = self.getMajorInertials(context, link)
-                sUtils.selectObjects(major_inertials, clear=True)
+                link_inertials = self.getLinkInertials(context, link)
+                sUtils.selectObjects(link_inertials, clear=True)
 
                 # remove deleted inertials from the selection
-                for inert in major_inertials:
+                for inert in link_inertials:
                     if inert in selected:
                         selected.remove(inert)
 
@@ -630,7 +630,7 @@ class CreateLinkInertialOperator(Operator):
             # reselect the initial objects
             sUtils.selectObjects(selected, clear=True)
             # calculate the link inertials
-            inertia.createMajorInertialObjects(link, self.autocalc,
+            inertia.createLinkInertialObjects(link, self.autocalc,
                                                self.from_selected_only)
             display.setProgress(i/len(links))
             i += 1
@@ -644,15 +644,15 @@ class CreateLinkInertialOperator(Operator):
         return len(links) > 0
 
 
-class CreateMinorInertialOperator(Operator):
-    """Create minor inertial object(s) from collision/visual objects of a link"""
-    bl_idname = "phobos.create_minor_inertials"
-    bl_label = "Create minor inertials"
+class CreateHelperInertialOperator(Operator):
+    """Create helper inertial object(s) from collision/visual objects of a link"""
+    bl_idname = "phobos.create_helper_inertials"
+    bl_label = "Create helper inertials"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def getMinorInertials(self, context, link=None):
+    def getHelperInertials(self, context, link=None):
         """
-        Returns all minor inertials of the selected links (in the current
+        Returns all helper inertials of the selected links (in the current
         context) or of the specified link.
 
         :param context: Blender context
@@ -664,21 +664,21 @@ class CreateMinorInertialOperator(Operator):
             links = [obj for obj in context.selected_objects
                      if obj.phobostype == 'link']
 
-        minor_inertials = {}
+        helper_inertials = {}
         # append the link inertials for each link
         if link:
             inertials = sUtils.getImmediateChildren(
                 link, phobostypes=('inertial'), include_hidden=True)
-            minor_inertials = [inert for inert in inertials if 'inertia' in inert]
+            helper_inertials = [inert for inert in inertials if 'inertia' in inert]
 
         else:
             for link in links:
                 linkname = link['link/name']
                 inertials = sUtils.getImmediateChildren(
-                    link, phobostypes=('inertial'), include_hidden=True)
-                minor_inertials[linkname] = [inert for inert in inertials if 'inertia' in inert]
+                    link, phobostypes=('inertial',), include_hidden=True)
+                helper_inertials[linkname] = [inert for inert in inertials if 'inertia' in inert]
 
-        return minor_inertials
+        return helper_inertials
 
     autocalc = BoolProperty(
         name='Calculate automatically',
@@ -711,11 +711,11 @@ class CreateMinorInertialOperator(Operator):
         for link in links:
             # delete inertials which are overwritten
             if self.overwrite:
-                minor_inertials = self.getMinorInertials(context, link)
-                sUtils.selectObjects(minor_inertials, clear=True)
+                helper_inertials = self.getHelperInertials(context, link)
+                sUtils.selectObjects(helper_inertials, clear=True)
 
                 # remove deleted inertials from the selection
-                for inert in minor_inertials:
+                for inert in helper_inertials:
                     if inert in selected:
                         selected.remove(inert)
 
@@ -724,7 +724,7 @@ class CreateMinorInertialOperator(Operator):
             # reselect the initial objects
             sUtils.selectObjects(selected, clear=True)
 
-            inertia.createMinorInertialObjects(link, self.autocalc)
+            inertia.createHelperInertialObjects(link, self.autocalc)
             display.setProgress(i/len(links))
             i += 1
 
