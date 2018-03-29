@@ -560,21 +560,18 @@ class CreateLinkInertialOperator(Operator):
 
         :return: dictionary of links with list of Blender objects or just a list.
         """
-        links = [obj for obj in context.selected_objects
-                 if obj.phobostype == 'link']
+        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
 
         link_inertials = {}
         # append the link inertials for each link
         if link:
-            inertials = sUtils.getImmediateChildren(
-                link, phobostypes=('inertial'), include_hidden=True)
+            inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',), include_hidden=True)
             link_inertials = [inert for inert in inertials if 'inertial/inertia' in inert]
 
         else:
             for link in links:
                 linkname = link['link/name']
-                inertials = sUtils.getImmediateChildren(
-                    link, phobostypes=('inertial'), include_hidden=True)
+                inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',), include_hidden=True)
                 link_inertials[linkname] = [inert for inert in inertials if 'inertial/inertia' in inert]
 
         return link_inertials
@@ -609,8 +606,7 @@ class CreateLinkInertialOperator(Operator):
 
     def execute(self, context):
         # keep the currently selected objects
-        links = [obj for obj in context.selected_objects
-                 if obj.phobostype == 'link']
+        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
         selected = context.selected_objects
         i = 1
         # calculate inertial objects for each link
@@ -630,8 +626,7 @@ class CreateLinkInertialOperator(Operator):
             # reselect the initial objects
             sUtils.selectObjects(selected, clear=True)
             # calculate the link inertials
-            inertia.createLinkInertialObjects(link, self.autocalc,
-                                               self.from_selected_only)
+            inertia.createLinkInertialObjects(link, self.autocalc, self.from_selected_only)
             display.setProgress(i/len(links))
             i += 1
         return {'FINISHED'}
@@ -639,8 +634,7 @@ class CreateLinkInertialOperator(Operator):
     @classmethod
     def poll(cls, context):
         # only enable button when there are links selected
-        links = [obj for obj in context.selected_objects
-                 if obj.phobostype == 'link']
+        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
         return len(links) > 0
 
 
@@ -661,21 +655,18 @@ class CreateHelperInertialOperator(Operator):
         :return: dictionary of links with list of Blender objects or just a list.
         """
         if not link:
-            links = [obj for obj in context.selected_objects
-                     if obj.phobostype == 'link']
+            links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
 
         helper_inertials = {}
         # append the link inertials for each link
         if link:
-            inertials = sUtils.getImmediateChildren(
-                link, phobostypes=('inertial'), include_hidden=True)
+            inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial'), include_hidden=True)
             helper_inertials = [inert for inert in inertials if 'inertia' in inert]
 
         else:
             for link in links:
                 linkname = link['link/name']
-                inertials = sUtils.getImmediateChildren(
-                    link, phobostypes=('inertial',), include_hidden=True)
+                inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',), include_hidden=True)
                 helper_inertials[linkname] = [inert for inert in inertials if 'inertia' in inert]
 
         return helper_inertials
@@ -703,8 +694,7 @@ class CreateHelperInertialOperator(Operator):
 
     def execute(self, context):
         # keep currently selected objects
-        links = [obj for obj in context.selected_objects
-                 if obj.phobostype == 'link']
+        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
         selected = context.selected_objects
         i = 1
         # create inertials for each link
@@ -735,8 +725,7 @@ class CreateHelperInertialOperator(Operator):
     @classmethod
     def poll(cls, context):
         # only enable button when there are links selected
-        links = [obj for obj in context.selected_objects
-                 if obj.phobostype == 'link']
+        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
         return len(links) > 0
 
 
