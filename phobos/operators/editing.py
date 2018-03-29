@@ -202,12 +202,6 @@ class SyncMassesOperator(Operator):
         default="vtc",
         description="Phobos object type")
 
-    updateinertial = BoolProperty(
-        name='robotupdate inertial',
-        default=False,
-        description='Update inertials'
-    )
-
     def execute(self, context):
         sourcelist = []
         targetlist = []
@@ -265,8 +259,6 @@ class SyncMassesOperator(Operator):
                 masssum += obj['mass']
             link['mass'] = masssum
             link['masschanged'] = t.isoformat()
-            if self.updateinertial:
-                inertia.createInertials(link)
         return {'FINISHED'}
 
     @classmethod
