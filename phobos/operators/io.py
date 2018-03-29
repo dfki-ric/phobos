@@ -293,8 +293,7 @@ class ImportModelOperator(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        # TODO delete me?
-        # wm.invoke_props_dialog(self,width=300,height=100)
+        self.filepath = context.user_preferences.addons["phobos"].preferences.modelsfolder
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
