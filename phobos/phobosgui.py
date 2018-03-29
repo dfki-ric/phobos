@@ -733,7 +733,7 @@ class PhobosModelPanel(bpy.types.Panel):
         mc1.operator('phobos.calculate_mass')
         mc1.operator('phobos.set_mass')
         mc1.operator('phobos.sync_masses')
-        mc1.operator('phobos.create_minor_inertials')
+        mc1.operator('phobos.create_helper_inertials')
         mc1.operator('phobos.create_link_inertials')
         mc1.operator('phobos.edit_inertia')
 
