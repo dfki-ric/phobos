@@ -743,7 +743,7 @@ def deriveTextData(modelname):
     return datadict
 
 
-def deriveModelDictionaryFromAssemblies(modelname):
+def deriveModelDictionaryFromSubmodel(modelname):
     model = {'links': {},
              'joints': {},
              'sensors': {},
@@ -754,55 +754,60 @@ def deriveModelDictionaryFromAssemblies(modelname):
              'lights': {},
              'groups': {},
              'chains': {}
-             }
+            }
+
+    # collect general model properties
     model['date'] = datetime.now().strftime("%Y%m%d_%H:%M")
     model['name'] = modelname
-    assemblies = [a for a in bpy.data.objects if a.phobostype == 'assembly']
-    for a in assemblies:
-        print('-----------------------', a.name, a['assemblyname'], '\n')
+
+    # collect all submodels
+    submodels = [a for a in bpy.data.objects if a.phobostype == 'submodel']
+
+    # namespace links, joints, motors etc for each submodel
+    for subm in submodels:
+        print('-----------------------', subm.name, subm['submodelname'], '\n')
         rootlink = [r for r in bpy.data.objects if sUtils.isRoot(r)
-                    and r['modelname'] == a['assemblyname']][0]
+                    and r['modelname'] == subm['submodelname']][0]
         adict = buildModelDictionary(rootlink)
         for l in adict['links']:
-            model['links'][namespaced(l, a.name)] = namespaceLink(adict['links'][l], a.name)
+            model['links'][namespaced(l, subm.name)] = namespaceLink(
+                adict['links'][l], subm.name)
         for j in adict['joints']:
-            model['joints'][namespaced(j, a.name)] = namespaceJoint(adict['joints'][j], a.name)
+            model['joints'][namespaced(j, subm.name)] = namespaceJoint(
+                adict['joints'][j], subm.name)
         for m in adict['motors']:
-            model['motors'][namespaced(m, a.name)] = namespaceMotor(adict['motors'][m], a.name)
+            model['motors'][namespaced(m, subm.name)] = namespaceMotor(
+                adict['motors'][m], subm.name)
         for mat in adict['materials']:
             if mat not in model['materials']:
                 model['materials'][mat] = adict['materials'][mat]
         for mesh in adict['meshes']:
-            model['meshes'][namespaced(mesh, a.name)] = adict['meshes'][mesh]
+            model['meshes'][namespaced(mesh, subm.name)] = adict['meshes'][mesh]
         print('\n\n')
-    for a in assemblies:
+
+    for subm in submodels:
         rootlink = [r for r in bpy.data.objects if sUtils.isRoot(r)
-                    and r['modelname'] == a['assemblyname']][0]
-        if a.parent:
-            #print('combining...:', a.name)
-            #print([l for l in model['links']])
-            parentassemblyname = a.parent.parent.parent['assemblyname']
-            #print(parentassemblyname)
-            parentinterfacename = a.parent.parent['interface/name']
-            #print(parentinterfacename)
-            parentassembly = [r for r in bpy.data.objects if sUtils.isRoot(r)
-                              and r['modelname'] == parentassemblyname][0]
-            #print(parentassembly)
-            parentinterface = [i for i in sUtils.getChildren(parentassembly, ('interface',))
+                    and r['modelname'] == subm['submodelname']][0]
+        if subm.parent:
+            # get interfaces and parents
+            parentsubmodelname = subm.parent.parent.parent['submodelname']
+            parentinterfacename = subm.parent.parent['interface/name']
+            parentsubmodel = [r for r in bpy.data.objects if sUtils.isRoot(r)
+                              and r['modelname'] == parentsubmodelname][0]
+            parentinterface = [i for i in sUtils.getChildren(parentsubmodel,
+                                                             ('interface',))
                                if i['interface/name'] == parentinterfacename][0]
-            #print(parentinterface)
             parentlinkname = parentinterface.parent.name
-            #print(parentlinkname)
 
             # derive link pose for root link
-            matrix = eUtils.getCombinedTransform(a, a.parent.parent.parent)
+            matrix = eUtils.getCombinedTransform(subm, subm.parent.parent.parent)
             pose = {'rawmatrix': matrix,
                     'matrix': [list(vector) for vector in list(matrix)],
                     'translation': list(matrix.to_translation()),
                     'rotation_euler': list(matrix.to_euler()),
                     'rotation_quaternion': list(matrix.to_quaternion())
                     }
-            model['links'][namespaced(rootlink.name, a.name)]['pose'] = pose
+            model['links'][namespaced(rootlink.name, subm.name)]['pose'] = pose
 
             # derive additional joint
             model['joints'][a.name] = deriveJoint(rootlink)
@@ -865,17 +870,20 @@ def buildModelDictionary(root):
              }
     # timestamp of model
     model["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
-    if root.phobostype not in ['link', 'assembly']:
-        log("Found no 'link/assembly' object as root of the robot model.", "ERROR")
+    if root.phobostype not in ['link', 'submodel']:
+        log("Found no 'link' or 'submodel' object as root of the robot model.",
+            "ERROR")
         raise Exception(root.name + " is  no valid root link.")
     else:
         if 'modelname' in root:
             model['name'] = root["modelname"]
         else:
-            log("No name for the model defines, setting to 'unnamed_model'", "WARNING")
+            log("No name for the model defines, setting to 'unnamed_model'",
+                "WARNING")
             model['name'] = 'unnamed_model'
 
-    log("Creating dictionary for robot " + model['name'] + " from object " + root.name, "INFO")
+    log("Creating dictionary for robot " + model['name'] + " from object " +
+        root.name, "INFO")
 
     # create tuples of objects belonging to model
     objectlist = sUtils.getChildren(

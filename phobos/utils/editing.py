@@ -121,7 +121,7 @@ def instantiateSubmodel(submodelname, instancename, size=1.):
     if not interfaces:
         log('No interfaces defined for this submodel.', 'INFO')
 
-    # add the assembly and write in data
+    # add the submodel and write in data
     bpy.ops.object.group_instance_add(group=submodel.name)
     submodelobj = bpy.context.active_object
     submodelobj.phobostype = 'submodel'
@@ -174,7 +174,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
     interfaces.
 
     :param submodelname: descriptive name of the submodel
-    :param submodeltype: type of the submodel (e.g. 'assembly', 'mechanics')
+    :param submodeltype: type of the submodel (e.g. 'fmu', 'mechanics')
     :param version: a version string (e.g. '1.0', 'dangerous')
     :param objects: the objects which belong to the submodel (None will derive
         objects from the selection)
@@ -191,6 +191,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
     submodelgroupname = submodeltype + ':' + submodelname
     if version != '':
         submodelgroupname += '/' + version
+    # TODO what about overwriting groups with same names?
     bpy.ops.group.create(name=submodelgroupname)
     submodelgroup = bpy.data.groups[submodelgroupname]
     submodelgroup['submodeltype'] = submodeltype
@@ -214,6 +215,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
         interfacegroupname = 'interfaces:' + submodelname
         if version != '':
             interfacegroupname += '/' + version
+        # TODO what about overwriting groups with same names?
         bpy.ops.group.create(name=interfacegroupname)
         interfacegroup = bpy.data.groups[interfacegroupname]
         interfacegroup['submodeltype'] = 'interfaces'
@@ -252,20 +254,22 @@ def connectInterfaces(parentinterface, childinterface):
     parent = childinterface.parent
     if root != parent:
         restructureKinematicTree(parent)
-    childassembly = childinterface.parent
+    childsubmodel = childinterface.parent
 
     # connect the interfaces
     sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-    sUtils.selectObjects(objects=[childinterface, childassembly], clear=True, active=0)
+    sUtils.selectObjects(objects=[childinterface, childsubmodel], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
     eul = mathutils.Euler((math.radians(180.0), 0.0, math.radians(180.0)), 'XYZ')
     sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
     childinterface.matrix_world = parentinterface.matrix_world * eul.to_matrix().to_4x4()
-    #try:
-    #    del childassembly['modelname']
-    #except KeyError:
+
+    # TODO clean this up
+    # try:
+    #    del childsubmodel['modelname']
+    # except KeyError:
     #    pass
     #TODO: re-implement this for MECHANICS models
     # try:

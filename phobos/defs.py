@@ -103,10 +103,11 @@ type_properties = {"undefined": (),
                    "controller_default": ("controller",),
                    "light": ('name', 'light/directional', 'light/exponent'),
                    "light_default": ('new_light', 'true', '1.0'),
+# TODO we should handle these someway different when actually using submodels
                    "interface": (),
                    "interface_default": (),
-                   "assembly": (),
-                   "assembly_default": ()
+                   "submodel": (),
+                   "submodel_default": ()
                    }
 
 # definitions of model elements to be read in
