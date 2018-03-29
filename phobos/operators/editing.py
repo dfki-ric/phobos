@@ -1523,16 +1523,34 @@ class AddSubmodel(Operator):
     bl_label = "Add submodel"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def submodellist(self, context):
-        """Returns a list of submodels in the blender scene for use as enum"""
+    def submodelnames(self, context):
+        """Returns a list of submodels of the chosen type for use as enum"""
         submodellist = [a.name for a in bpy.data.groups
+                        if 'submodeltype' in a
+                        and a['submodeltype'] == self.submodeltype]
+        return [(a,
+                 a.split(':')[1],
+                 a.split(':')[1].split('/')[0] +
+                 ' version ' + a.split(':')[1].split('/')[1] + ' submodel')
+                for a in submodellist]
+
+    def submodeltypes(self, context):
+        """Returns a list of submodel types in the scene for use as enum"""
+        submodellist = [a['submodeltype'] for a in bpy.data.groups
                         if 'submodeltype' in a]
-        return [(a, a, a + ' submodel') for a in submodellist]
+        submodellist = set(submodellist)
+        return [(a, a, a + ' submodel type') for a in submodellist]
+
+    submodeltype = EnumProperty(
+        name="Submodel type",
+        description="Type of the submodel",
+        items=submodeltypes
+    )
 
     submodelname = EnumProperty(
         name="Submodel name",
         description="Name of the submodel",
-        items=submodellist
+        items=submodelnames
     )
 
     instancename = StringProperty(
@@ -1541,24 +1559,30 @@ class AddSubmodel(Operator):
     )
 
     def check(self, context):
-        """Make sure invoke is updated when the enum is switched"""
         return True
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'submodeltype')
+        layout.prop(self, 'submodelname')
+        layout.prop(self, 'instancename')
 
     def invoke(self, context, event):
         """
         Start off the instance numbering based on Blender objects and show
         a property dialog
         """
-        i = 1
-        while self.submodelname + '_{0:03d}'.format(i) in bpy.data.objects:
-            i += 1
-        self.instancename = self.submodelname + '_{0:03d}'.format(i)
+        self.instancename = self.submodelname.split(':')[1].split('/')[0]
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
         """create an instance of the submodel"""
-        eUtils.instantiateSubmodel(self.submodelname, self.instancename)
+        i = 1
+        while self.instancename + '_{0:03d}'.format(i) in bpy.data.objects:
+            i += 1
+        objectname = self.instancename + '_{0:03d}'.format(i)
+        eUtils.instantiateSubmodel(self.submodelname, objectname)
         return {'FINISHED'}
 
 
@@ -1705,7 +1729,7 @@ class ToggleInterfaces(Operator):
 
 
 class ConnectInterfacesOperator(Operator):
-    """Connects assemblies at interfaces"""
+    """Connects submodels at interfaces"""
     bl_idname = "phobos.connect_interfaces"
     bl_label = "Connect Interfaces"
     bl_options = {'REGISTER', 'UNDO'}
