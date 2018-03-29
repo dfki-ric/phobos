@@ -1,0 +1,11 @@
+# This file holds definitions of submodel types.
+
+submodeltypes:
+  mechanism:
+    definitions:
+      dummy: 'dummy'
+      # here go informations that will be custom properties of the group
+    interfaces:
+      dummy: 'dummy'
+      # here we add the interface definitions which will end up in the
+      # interface group

@@ -29,9 +29,11 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 import bpy
 import mathutils
 import math
+from phobos.phoboslog import log
 from . import selection as sUtils
 from . import naming as nUtils
-from phobos.phoboslog import log
+from . import blender as bUtils
+from .. import defs
 
 
 def addDictionaryToObj(dict, obj, category=None):
@@ -92,59 +94,142 @@ def restructureKinematicTree(link):
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
 
-def instantiateAssembly(assemblyname, instancename, version='1.0', size=1.):
-    assembly = None
+def instantiateSubmodel(submodelname, instancename, size=1.):
+    """
+    Creates an instance of the submodel specified by the submodelname.
+
+    The instance receives the definitions of the group as it is generated.
+
+    :param submodelname: name of the submodel (Blender group) to create an
+        instance of
+    :param instancename: name the instance object will receive
+    """
+    submodel = None
     interfaces = None
 
-    # find the existing groups with assemblies and interfaces
+    # find the existing group for submodel and interface
     for group in bpy.data.groups:
-        if group.name.startswith('assembly') and assemblyname in group.name:
-            assembly = group
-        if group.name.startswith('interfaces') and assemblyname in group.name:
+        # search for namespaced groups with the exact name
+        if ':' in group.name and submodelname == group.name:
+            submodel = group
+        if (group.name.startswith('interfaces:') and
+                submodelname.split(':')[1] in group.name):
             interfaces = group
 
-    if not assembly or not interfaces:
-        raise RuntimeError('Assembly and/or interfaces templates do not exist.')
+    if not submodel:
+        log('Selected submodel is not defined.', 'ERROR')
+    if not interfaces:
+        log('No interfaces defined for this submodel.', 'INFO')
+
     # add the assembly and write in data
-    bpy.ops.object.group_instance_add(group=assembly.name)
-    assemblyobj = bpy.context.active_object
-    assemblyobj.phobostype = 'assembly'
-    assemblyobj['assemblyname'] = assemblyname
-    assemblyobj['version'] = version
-    assemblyobj.name = instancename
-    assemblyobj.empty_draw_size = size
-    # add the interfaces, make them real and get rid of parent empty object
-    bpy.ops.object.group_instance_add(group=interfaces.name)
-    #interfaceobj = bpy.context.active_object
-    bpy.ops.object.duplicates_make_real()
-    for obj in bpy.context.selected_objects:
-        nUtils.addNamespace(obj, instancename)
-        obj.name = obj.name.rsplit('.')[0]
-    sUtils.selectObjects(objects=[assemblyobj]+bpy.context.selected_objects, clear=True, active=0)
-    bpy.ops.object.parent_set(type='OBJECT')
-    sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
-                                  if a.type == 'EMPTY' and 'interface' in a.name],
-                         clear=True, active=0)
-    bpy.ops.object.delete(use_global=False)
-    return assemblyobj
+    bpy.ops.object.group_instance_add(group=submodel.name)
+    submodelobj = bpy.context.active_object
+    submodelobj.phobostype = 'submodel'
+    # TODO currently this works only by name binding, we should add links to
+    # the group here
+    submodelobj['submodelname'] = submodelname
+    # copy custom props from group to instance
+    for key in submodel.keys():
+        submodelobj[key] = submodel[key]
+    submodelobj.name = instancename
+    submodelobj.empty_draw_size = size
+
+    # add the interfaces if available
+    if interfaces:
+        bpy.ops.object.group_instance_add(group=interfaces.name)
+        bpy.ops.object.duplicates_make_real()
+        for obj in bpy.context.selected_objects:
+            nUtils.addNamespace(obj, instancename)
+            obj.name = obj.name.rsplit('.')[0]
+        sUtils.selectObjects(
+            objects=[submodelobj] + bpy.context.selected_objects,
+            clear=True, active=0)
+        bpy.ops.object.parent_set(type='OBJECT')
+
+        # delete empty parent object
+        sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
+                                      if a.type == 'EMPTY' and
+                                      'interface' in a.name],
+                             clear=True, active=0)
+        bpy.ops.object.delete(use_global=False)
+    return submodelobj
 
 
-def defineAssembly(assemblyname, version='', objects=None):
+def defineSubmodel(submodelname, submodeltype, version='', objects=None):
+    """
+    Defines a new submodule group with the specified name and type.
+
+    The group will be named like so:
+        'submodeltype:submodelname/version'
+
+    Objects with the phobostype 'interface' (if present) are handled separately
+    and put into a respective submodel group (which features the 'interface'
+    submodeltype).
+
+    If the version is omitted, the respective part of the name is dropped, too.
+    If no object list is provided the objects are derived from selection.
+    The submodeltype is also added as dict entry to the group in Blender.
+
+    The selected objects are moved to the respective layer for submodels or
+    interfaces.
+
+    :param submodelname: descriptive name of the submodel
+    :param submodeltype: type of the submodel (e.g. 'assembly', 'mechanics')
+    :param version: a version string (e.g. '1.0', 'dangerous')
+    :param objects: the objects which belong to the submodel (None will derive
+        objects from the selection)
+    """
     if not objects:
         objects = bpy.context.selected_objects
+
+    # split interface from physical objects
     interfaces = [i for i in objects if i.phobostype == 'interface']
     physical_objects = [p for p in objects if p.phobostype != 'interface']
+
+    # make the physical group
     sUtils.selectObjects(physical_objects, True, 0)
-    bpy.ops.group.create(name='assembly:' + assemblyname + '/' + version)
-    sUtils.selectObjects(interfaces, True, 0)
-    bpy.ops.group.create(name='interfaces:' + assemblyname + '/' + version)
+    submodelgroupname = submodeltype + ':' + submodelname
+    if version != '':
+        submodelgroupname += '/' + version
+    bpy.ops.group.create(name=submodelgroupname)
+    submodelgroup = bpy.data.groups[submodelgroupname]
+    submodelgroup['submodeltype'] = submodeltype
+    submodelgroup['version'] = version
+
+    modeldefs = defs.definitions['submodeltypes'][submodeltype]
+
+    # copy the definition parameters to the group properties
+    for key in modeldefs['definitions']:
+        submodelgroup[key] = modeldefs['definitions'][key]
+
+    # move objects to submodel layer
+    for obj in physical_objects:
+        obj.layers = bUtils.defLayers(defs.layerTypes['submodel'])
+    log('Created submodel group ' + submodelname + ' of type "' + submodeltype
+        + '".', 'DEBUG')
+
+    # make the interface group
+    if interfaces != []:
+        sUtils.selectObjects(interfaces, True, 0)
+        interfacegroupname = 'interfaces:' + submodelname
+        if version != '':
+            interfacegroupname += '/' + version
+        bpy.ops.group.create(name=interfacegroupname)
+        interfacegroup = bpy.data.groups[interfacegroupname]
+        interfacegroup['submodeltype'] = 'interfaces'
+
+        # copy interface definitions from submodel definitions
+        for key in modeldefs['interfaces']:
+            interfacegroup[key] = modeldefs['interfaces'][key]
+
+        # move objects to interface layer
+        for obj in interfaces:
+            obj.layers = bUtils.defLayers(defs.layerTypes['interface'])
+        log('Created interface group for submodel ' + submodelname + '.',
+            'DEBUG')
+
     for i in interfaces:
         i.show_name = True
-    # i = 0
-    # while objects[i].parent in objects:
-    #     i += 1
-    # if objects[i].parent and objects[i].parent in objects:
-    #     log()
 
 
 def toggleInterfaces(interfaces=None, modename='toggle'):

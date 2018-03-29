@@ -1517,21 +1517,22 @@ class AddAnnotationsOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class InstantiateAssembly(Operator):
-    """Instantiate an assembly"""
-    bl_idname = "phobos.instantiate_assembly"
-    bl_label = "Instantiate Assembly"
+class AddSubmodel(Operator):
+    """Add a submodel instance to the scene"""
+    bl_idname = "phobos.add_submodel"
+    bl_label = "Add submodel"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def getAssembliesListForEnumProperty(self, context):
-        assemblieslist = [a.name.replace('assembly:', '') for a in bpy.data.groups
-                          if a.name.startswith('assembly')]
-        return [(a,)*3 for a in assemblieslist]
+    def submodellist(self, context):
+        """Returns a list of submodels in the blender scene for use as enum"""
+        submodellist = [a.name for a in bpy.data.groups
+                        if 'submodeltype' in a]
+        return [(a, a, a + ' submodel') for a in submodellist]
 
-    assemblyname = EnumProperty(
-        name="Assembly name",
-        description="Name of the assembly",
-        items=getAssembliesListForEnumProperty
+    submodelname = EnumProperty(
+        name="Submodel name",
+        description="Name of the submodel",
+        items=submodellist
     )
 
     instancename = StringProperty(
@@ -1539,42 +1540,62 @@ class InstantiateAssembly(Operator):
         default=''
     )
 
+    def check(self, context):
+        """Make sure invoke is updated when the enum is switched"""
+        return True
+
     def invoke(self, context, event):
-        i = 0
-        while self.assemblyname+'_'+str(i) in bpy.data.objects:
+        """
+        Start off the instance numbering based on Blender objects and show
+        a property dialog
+        """
+        i = 1
+        while self.submodelname + '_{0:03d}'.format(i) in bpy.data.objects:
             i += 1
-        self.instancename = self.assemblyname+'_'+str(i)
+        self.instancename = self.submodelname + '_{0:03d}'.format(i)
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
-        eUtils.instantiateAssembly(self.assemblyname, self.instancename)
+        """create an instance of the submodel"""
+        eUtils.instantiateSubmodel(self.submodelname, self.instancename)
         return {'FINISHED'}
 
 
-class DefineAssembly(Operator):
-    """Instantiate an assembly"""
-    bl_idname = "phobos.define_assembly"
-    bl_label = "Define Assembly"
+class DefineSubmodel(Operator):
+    """Define a new submodel from objects"""
+    bl_idname = "phobos.define_submodel"
+    bl_label = "Define submodel"
     bl_options = {'REGISTER', 'UNDO'}
 
-    assemblyname = StringProperty(
-        name="Assembly name",
-        description="Name of the assembly",
-        default=''
+    submodelname = StringProperty(
+        name="Submodel name",
+        description="Name of the submodel",
+        default='newsubmodel'
     )
 
     version = StringProperty(
         name="Version name",
-        description="Name of the assembly version",
-        default=''
+        description="Name of the submodel version",
+        default='1.0'
+    )
+
+    submodeltype = EnumProperty(
+        items=tuple([(sub,) * 3 for sub in defs.definitions['submodeltypes']]),
+        name="Submodel type",
+        default="mechanism",
+        description="The type for the new submodel"
     )
 
     def invoke(self, context, event):
+        """Show a property dialog"""
         return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
-        eUtils.defineAssembly(self.assemblyname, self.version)
+        """Create a submodel based on selected objects"""
+        eUtils.defineSubmodel(self.submodelname,
+                              self.submodeltype,
+                              self.version)
         return {'FINISHED'}
 
 
@@ -1667,14 +1688,14 @@ class DefineSubmechanism(Operator):
 
 
 class ToggleInterfaces(Operator):
-    """Instantiate an assembly"""
+    """Toggle interfaces of a submodel"""
     bl_idname = "phobos.toggle_interfaces"
     bl_label = "Toggle interfaces"
     bl_options = {'REGISTER', 'UNDO'}
 
     mode = EnumProperty(
-        name="Version name",
-        description="Name of the assembly version",
+        name="Toggle mode",
+        description="The mode in which to display the interfaces",
         items=(('toggle',) * 3, ('activate',) * 3, ('deactivate',) * 3)
     )
 
