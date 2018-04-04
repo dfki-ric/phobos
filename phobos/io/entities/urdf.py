@@ -584,15 +584,18 @@ def importUrdf(filepath):
 
 
 def parseLink(link, urdffilepath=None):
-    """This function parses the link from the given URDF xml object.
+    """Parses a URDF link xml definition.
 
-    :param link: The link to be parsed
+    :param link: link to be parsed
+    :param urdffilepath: path of originating urdf file (for filename handling)
     :return:
 
     """
     newlink = {a: link.attrib[a] for a in link.attrib}
     log('Parsing link ' + newlink['name'] + '...', 'INFO')
-    parseInertial(newlink, link)
+    inertial = parseInertial(link)
+    if inertial:
+        newlink['inertial'] = inertial
     # TODO delete me?
     #no_visual_geo = parseVisual(newlink, link)
     #no_collision_geo = parseCollision(newlink, link)
@@ -649,23 +652,27 @@ def parseLink(link, urdffilepath=None):
     return newlink
 
 
-def parseInertial(link_dict, link_xml):
-    '''
-    '''
-    # DOCU add a docstring around here
-    inertial = link_xml.find('inertial')
-    # 'if Element' yields None if the Element contains no children, thus this notation
-    if inertial is not None:
-        link_dict['inertial'] = {}
-        link_dict['inertial']['pose'] = parsePose(inertial.find('origin'))
-        mass = inertial.find('mass')
+def parseInertial(link_xml):
+    """
+    Parses the URDF xml definition of inertial data.
+    :param link_xml: xml representation of 'inertial' field of URDF link
+    :type link_xml: ElementTree.Element
+    :return: dict -- of inertial data
+    """
+    inertial_dict = {}
+    inertial_data = link_xml.find('inertial')
+    if inertial_data is not None:  # Element.find() yields None, not []
+        inertial_dict['pose'] = parsePose(inertial_data.find('origin'))
+        mass = inertial_data.find('mass')
         if mass is not None:
-            link_dict['inertial']['mass'] = float(mass.attrib['value'])
-        inertia = inertial.find('inertia')
+            inertial_dict['mass'] = float(mass.attrib['value'])
+        inertia = inertial_data.find('inertia')
         if inertia is not None:
-            values = []
-            link_dict['inertial']['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
-        link_dict['inertial']['name'] = 'inertial_' + link_dict['name']
+            inertial_dict['inertia'] = [float(inertia.attrib[a]) for a in inertia.attrib]
+        inertial_dict['name'] = 'inertial_' + link_xml.attrib['name']
+        return inertial_dict
+    else:
+        return None
 
 
 def parseJoint(joint):

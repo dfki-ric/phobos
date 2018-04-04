@@ -37,7 +37,7 @@ import phobos.defs as defs
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
-import phobos.model.inertia as inertiamodel
+import phobos.model.inertia as inertia
 import phobos.model.geometries as geometrymodel
 from phobos.phoboslog import log
 
@@ -94,7 +94,7 @@ def createLink(link):
 
     # create inertial
     if 'inertial' in link:
-        inertiamodel.createInertialFromDictionary(link['name'], link['inertial'])
+        inertia.createInertial(link['name'], link['inertial'], newlink)
 
     # create visual elements
     if 'visual' in link:
@@ -216,13 +216,12 @@ def placeChildLinks(model, parent):
 
 
 def placeLinkSubelements(link):
-    """Finds all subelements for a given link and sets the appropriate relations.
-    In this case subelements are interials, visuals and collisions.
+    """Places visual and collision objects for a given link.
 
     :param link: The parent link you want to set the subelements for
     :type link: dict
     """
-    elements = getGeometricElements(link) + ([link['inertial']] if 'inertial' in link else [])
+    elements = getGeometricElements(link)
     bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
     parentlink = bpy.data.objects[link['name']]
     log('Placing subelements for link: ' + link['name'] + ': ' + ', '.join([elem['name'] for elem in elements]), 'DEBUG')

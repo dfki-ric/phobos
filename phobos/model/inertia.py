@@ -37,101 +37,84 @@ from phobos.phoboslog import log
 import phobos.utils.general as gUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
-import phobos.utils.naming as nUtils
 from phobos.model.geometries import deriveGeometry
-from phobos.model.materials import assignMaterial
 from phobos.model.poses import deriveObjectPose
 
 
-def createInertialFromDictionary(name, inertial):
-    """Creates the Blender representation of a given intertial provided a dictionary.
+def createInertial(parentname, inertialdict, parentobj=None, helper=False):
+    """Creates the Blender representation of a given inertial provided a dictionary.
 
-    :param name: The intertials name.
-    :param type: str
-    :param inertial: The intertial you want to create in blender form.
-    :type intertial: dict
+    :param parentname: inertial object's parent's name
+    :type parentname: str
+    :param inertialdict: intertial data
+    :type inertialdict: dict
+    :param parentobj: link or visual/collision with which the inertial obj is associated
+    :type parentobj: bpy_types.Object
+    :param helper: whether or not the object is a helper inertial
+    :type helper: bool
     :return: bpy_types.Object -- the newly created blender inertial object.
     """
-    # FIXME: this needs work to get rid of duplicate code
-    bpy.ops.object.select_all(action='DESELECT')
-    inert = bUtils.createPrimitive('inertial_'+name, 'box', [0.06, 0.06, 0.06], player='inertial')
-    inert.select = True
+    size = 0.015 if helper else 0.06
+    try:
+        origin = mathutils.Vector(inertialdict['pose']['translation'])
+    except KeyError:
+        origin = mathutils.Vector()
+    inertialobject = bUtils.createPrimitive('inertial_' + parentname, 'box', (size,) * 3,
+                                            defs.layerTypes["inertial"], 'phobos_inertial')
+    sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(scale=True)
-    for prop in inertial:
-        if prop not in ['pose'] and inertial[prop] is not None:
-            if not prop.startswith('$'):
-                inert[prop] = inertial[prop]
-            else:
-                for tag in inertial[prop]:
-                    inert[prop[1:]+'/'+tag] = inertial[prop][tag]
-    inert.phobostype = 'inertial'
-    assignMaterial(inert, 'phobos_inertial')
-    return inert
+    inertialobject.phobostype = 'inertial'
+    if parentobj:
+        inertialobject.matrix_world = parentobj.matrix_world
+        parent = parentobj if parentobj.phobostype == 'link' else parentobj.parent
+        sUtils.selectObjects((inertialobject, parent), clear=True, active=1)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
+        sUtils.selectObjects((inertialobject,), clear=True, active=0)
+        bpy.ops.object.transform_apply(scale=True)  # force matrix_world update
+    # set properties
+    for prop in ('mass', 'inertia'):
+        if helper:
+            inertialobject[prop] = inertialdict[prop]
+        else:
+            inertialobject['inertial/' + prop] = inertialdict[prop]
+    return inertialobject
 
 
-def createInertial(obj):
-    """Creates an empty inertial object with the same world transform as the corresponding
-    object and parents it to the correct link.
-
-    :param obj: The object you want to copy the world transform from.
-    :type obj: bpy_types.Object
-    :return: bpy_types.Object -- the newly created inertia.
-    """
-    if obj.phobostype == 'link':
-        parent = obj
-        size = (0.06, 0.06, 0.06)
-    else:
-        parent = obj.parent
-        size = (0.015, 0.015, 0.015)
-    rotation = obj.matrix_world.to_euler()
-    center = obj.matrix_world.to_translation()
-    inertial = bUtils.createPrimitive('inertial_' + nUtils.getObjectName(obj, phobostype="link"), 'box', size,
-                                      defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    inertial.phobostype = 'inertial'
-    bpy.ops.object.select_all(action="DESELECT")
-    sUtils.selectObjects((inertial, parent), clear=True, active=1)
-    bpy.ops.object.parent_set(type='BONE_RELATIVE')
-    return inertial
-
-
-def createMajorInertialObjects(link, autocalc=True, selected_only=False):
-    """Creates inertial representations from minor inertials of a link.
+def createLinkInertialObjects(link, autocalc=True, selected_only=False):
+    """Creates inertial representations from helper inertials of a link.
     The new link inertial can contain automatically calculated inertia or
     remain empty (based on the autocalc parameter). If the selected_only
     parameter is used the inertia is calculated including only the selected
-    minor inertials objects.
+    helper inertials objects.
 
     :param link: The link you want to create the inertial for.
     :type link: bpy_types.Object
     :param autocalc: If set to False the new inertial object will contain no
     inertia information.
-    :type empty: bool.
+    :type autocalc: bool.
     :param selected_only: If set to True the inertia calculation uses only the
     currently selected inertial objects.
     :type selected_only: bool.
 
     """
-    inertias = sUtils.getImmediateChildren(link, ('inertial'),
-                                           selected_only, True)
-    # compose inertial object for link from minor inertials
+    inertias = sUtils.getImmediateChildren(link, ('inertial',), selected_only, True)
+    inertialdata = {'mass': 0, 'inertia': (0, 0, 0, 0, 0, 0),
+                    'pose': {'translation': mathutils.Vector((0, 0, 0))}
+                    }
+    # compose inertial object for link from helper inertials
     if autocalc:
         mass, com, inert = fuseInertiaData(inertias)
         if mass and com and inert:
-            inertial = createInertial(link)
-            com_translate = mathutils.Matrix.Translation(com)
-            inertial.matrix_local = com_translate
-            # FIXME: this is a trick to force Blender to apply matrix_local
-            bpy.ops.transform.translate(value=(0, 0, 0))
-            inertial['inertial/mass'] = mass
-            inertial['inertial/inertia'] = inertiaMatrixToList(inert)
+            inertialdata['mass'] = mass
+            inertialdata['inertia'] = inertiaMatrixToList(inert)
+            inertialdata['pose'] = {'translation': com}
     # create empty inertial object
-    else:
-        createInertial(link)
+    createInertial(link.name, inertialdata, parentobj=link)
 
 
-def createMinorInertialObjects(link, autocalc=True):
-    """Creates inertial representations for minor inertials from the visual/
+def createHelperInertialObjects(link, autocalc=True):
+    """Creates inertial representations for helper inertials from the visual/
     collision objects of a link. The new inertials can be calculated
     automatically or remain empty (based on the autocalc parameter)
 
@@ -143,31 +126,29 @@ def createMinorInertialObjects(link, autocalc=True):
     """
     viscols = getInertiaRelevantObjects(link)
     for obj in viscols:
+        inertialdata = {'mass': 0, 'inertia': [0, 0, 0, 0, 0, 0],
+                        'pose': {'translation': obj.matrix_local.to_translation()}
+                        }
         if autocalc:
             mass = obj['mass'] if 'mass' in obj else None
             geometry = deriveGeometry(obj)
-            if mass is not None and geometry is not None:
-                if geometry['type'] == 'mesh':
-                    sUtils.selectObjects([obj])
-                    bpy.context.scene.objects.active = obj
-                    inert = calculateMeshInertia(obj.data, mass)
-                else:
-                    inert = calculateInertia(mass, geometry)
+            data = geometry if geometry['type'] != 'mesh' else obj.data
+            if mass is not None and data is not None:
+                inert = calculateInertia(mass, data)
                 if inert is not None:
-                    inertial = createInertial(obj)
-                    inertial['mass'] = mass
-                    inertial['inertia'] = inert
-        else:
-            createInertial(obj)
+                    inertialdata['mass'] = mass
+                    inertialdata['inertia'] = inert
+        createInertial(obj.name, inertialdata, parentobj=obj, helper=True)
 
 
 def calculateMassOfLink(link):
-    """Calculates the masses of visual and collision objects found in a link,
-    compares it to mass in link inertial object if present and returns the max of both, warning if they are not equal.
+    """Sums the masses of visual and collision objects found in a link,
+    compares it to mass in link inertial object if present and returns the max of both,
+    warning if they are not equal.
 
     :param link: The link you want to calculate the visuals and collision objects mass of.
     :type link: dict
-    :return: double
+    :return: float
     """
     objects = getInertiaRelevantObjects(link, ['visual', 'collision'])
     inertials = sUtils.getImmediateChildren(link, ['inertial'])
@@ -179,29 +160,28 @@ def calculateMassOfLink(link):
     return max(objectsmass, inertialmass)
 
 
-def calculateInertia(mass, geometry):
+def calculateInertia(mass, data):
     """Calculates the inertia of an object given its *geometry* and *mass* and
     returns the upper diagonal of the inertia 3x3 inertia tensor.
 
     :param mass: The objects mass.
-    :type mass: double
-    :param geometry: The object dictionaries geometry part.
-    :type geometry: dict
+    :type mass: float
+    :param data: The object dictionaries geometry part.
+    :type data: dict
     :return: tuple(6)
     """
     inertia = None
-    gt = geometry['type']
+    gt = data['type']
     if gt == 'box':
-        inertia = calculateBoxInertia(mass, geometry['size'])
+        inertia = calculateBoxInertia(mass, data['size'])
     elif gt == 'cylinder':
-        inertia = calculateCylinderInertia(mass, geometry['radius'], geometry['length'])
+        inertia = calculateCylinderInertia(mass, data['radius'], data['length'])
     elif gt == 'sphere':
-        inertia = calculateSphereInertia(mass, geometry['radius'])
+        inertia = calculateSphereInertia(mass, data['radius'])
     elif gt == 'capsule':
-        inertia = calculateCapsuleInertia(mass, geometry['radius'], geometry['length'])
-    # TODO delete or make it a dev branche or issue
-    #elif gt == 'mesh':
-    #    inertia = calculateEllipsoidInertia(mass, geometry['size'])
+        inertia = calculateCapsuleInertia(mass, data['radius'], data['length'])
+    elif gt == 'mesh':
+        inertia = calculateMeshInertia(mass, data)
     return inertia
 
 
@@ -209,9 +189,9 @@ def calculateBoxInertia(mass, size):
     """Returns upper diagonal of inertia tensor of a box as tuple.
 
     :param mass: The box' mass.
-    :type mass: double
+    :type mass: float
     :param size: The box' size.
-    :type size: double
+    :type size: float
     :return: tuple(6)
     """
     i = mass / 12
@@ -228,11 +208,11 @@ def calculateCylinderInertia(mass, r, h):
     """Returns upper diagonal of inertia tensor of a cylinder as tuple.
 
     :param mass: The cylinders mass.
-    :type mass: double
+    :type mass: float
     :param r: The cylinders radius.
-    :type r: double
+    :type r: float
     :param h: The cylinders height.
-    :type h: double
+    :type h: float
     :return: tuple(6)
     """
     i = mass / 12 * (3 * r**2 + h**2)
@@ -249,9 +229,9 @@ def calculateSphereInertia(mass, r):
     """Returns upper diagonal of inertia tensor of a sphere as tuple.
 
     :param mass: The spheres mass.
-    :type mass: double
+    :type mass: float
     :param r: The spheres radius.
-    :type r: double
+    :type r: float
     :return: tuple(6)
     """
     i = 0.4 * mass * r**2
@@ -265,15 +245,17 @@ def calculateSphereInertia(mass, r):
 
 
 def calculateCapsuleInertia(mass, r, h):
-    """
-    Returns upper diagonal of inertia tensor of a capsule as tuple.
+    """Returns upper diagonal of inertia tensor of a capsule as tuple.
 
-    Code adapted from http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856
+    Code adapted from:
+    http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856
 
     :param mass: The capsule's mass.
-    :type mass: float.
+    :type mass: float
     :param r: The capsule's radius.
-    :param h: float.
+    :type r: float
+    :param h: The capsule's height.
+    :type h: float
     :return: tuple(6).
     """
 
@@ -303,9 +285,9 @@ def calculateEllipsoidInertia(mass, size):
     """Returns upper diagonal of inertia tensor of an ellipsoid as tuple.
 
     :param mass: The ellipsoids mass.
-    :type mass: double
+    :type mass: float
     :param size: The ellipsoids size.
-    :type r: double
+    :type r: float
     :return: tuple(6)
     """
     i = mass / 5
@@ -318,14 +300,13 @@ def calculateEllipsoidInertia(mass, size):
     return ixx, ixy, ixz, iyy, iyz, izz
 
 
-def calculateMeshInertia(data, mass):
-    """
-    Calculates the inertia tensor of arbitrary mesh objects.
+def calculateMeshInertia(mass, data):
+    """Calculates the inertia tensor of arbitrary mesh objects.
 
     Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
-    Simply and Quickly' (2004) by Jonathan Blow (1)
-    with formulas for tetrahedron inertia from 'Explicit Exact Formulas for the 3-D Tetrahedron
-    Inertia Tensor in Terms of its Vertex Coordinates' (2004) by F. Tonon. (2)
+    Simply and Quickly' (2004) by Jonathan Blow (1) with formulas for tetrahedron inertia
+    from 'Explicit Exact Formulas for the 3-D Tetrahedron Inertia Tensor in Terms of its
+    Vertex Coordinates' (2004) by F. Tonon. (2)
 
     Links: (1) http://number-none.com/blow/inertia/body_i.html
            (2) http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf
@@ -430,7 +411,8 @@ def calculateMeshInertia(data, mass):
 
 
 def inertiaListToMatrix(il):
-    """Takes a tuple or list representing the upper diagonal of a 3x3 inertia tensor and returns the full tensor.
+    """Transforms iterable representing the upper diagonal of a 3x3 inertia tensor
+    and returns the full tensor as a matrix.
 
     :param il: The upper diagonal of a 3x3 inertia tensor.
     :type il: tuple(6) or list[6]
@@ -445,7 +427,8 @@ def inertiaListToMatrix(il):
 
 
 def inertiaMatrixToList(im):
-    """Takes a full 3x3 inertia tensor and returns a tuple representing the upper diagonal.
+    """Takes a full 3x3 inertia tensor as a matrix and returns a tuple representing
+    the upper diagonal.
 
     :param im: The inertia tensor matrix.
     :type im: mathutil.Matrix
@@ -502,9 +485,9 @@ def getInertiaRelevantObjects(link, selected_only=False):
 
 
 def fuseInertiaData(inertials):
-    """Returns mass, center of mass and inertia of a link as a whole, taking a list of inertials.
+    """Computes combined mass, center of mass and inertia given an iterable of inertial objects.
 
-    *mass*: double
+    *mass*: float
     *com*: mathutils:Vector(3)
     *inertia*: mathutils:Matrix(3)
 
@@ -539,10 +522,6 @@ def fuseInertiaData(inertials):
     else:
         log("No inertial found to fuse.", "DEBUG")
         return None, None, None
-
-# TODO this should be removed or documented otherwise
-###############################################################################
-# From here on we have code modified from Berti's implementation
 
 
 def combine_com_3x3(objects):
@@ -592,8 +571,7 @@ def shift_com_inertia_3x3(mass, com, inertia_com, ref_point=mathutils.Vector((0.
 
 
 def spin_inertia_3x3(inertia_3x3, rotmat, passive=True):
-    """
-    rotate the inertia matrix
+    """Rotates an inertia matrix.
 
     active and passive interpretation
 
@@ -625,8 +603,7 @@ def spin_inertia_3x3(inertia_3x3, rotmat, passive=True):
 
 
 def compound_inertia_analysis_3x3(objects):
-    """
-    Computes total mass, common center of mass and inertia matrix at CCOM
+    """Computes total mass, common center of mass and inertia matrix at CCOM
     """
     total_mass, common_com = combine_com_3x3(objects)
 
