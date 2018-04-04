@@ -150,7 +150,7 @@ def isRoot(obj):
     :type obj: bpy.types.Object.
     :return: bool - True if obj is Phobos model root, else False.
     """
-    return None if obj is None else ('modelname' in obj and obj.phobostype in ['link', 'assembly']
+    return None if obj is None else ('modelname' in obj and obj.phobostype in ['link', 'submodel']
                                      and obj.parent is None)
 
 

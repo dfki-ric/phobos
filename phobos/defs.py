@@ -49,7 +49,7 @@ layerTypes = {
     "light": 6,
     "approxsphere": 13,
     'interface': 10,
-    'assembly': 10
+    'submodel': 10
 }
 
 # types of blender objects phobos differentiates
@@ -65,11 +65,12 @@ phobostypes = (('undefined',) * 3,
                ('entity',) * 3,
                ('frame',) * 3,
                ('interface',) * 3,
-               ('assembly',) * 3
+               ('submodel',) * 3
                )
 
 # DOCU add some comments for these...
 subtypes = ("visual", "joint", "motor", "collision", "sensor", "link", "inertial", "controller", "light", "approxsphere")
+
 
 jointtypes = (('revolute',) * 3,
               ('continuous',) * 3,
@@ -102,10 +103,11 @@ type_properties = {"undefined": (),
                    "controller_default": ("controller",),
                    "light": ('name', 'light/directional', 'light/exponent'),
                    "light_default": ('new_light', 'true', '1.0'),
+# TODO we should handle these someway different when actually using submodels
                    "interface": (),
                    "interface_default": (),
-                   "assembly": (),
-                   "assembly_default": ()
+                   "submodel": (),
+                   "submodel_default": ()
                    }
 
 # definitions of model elements to be read in
@@ -115,7 +117,8 @@ definitions = {'motors': {},
                'algorithms': {},
                'materials': {},
                'model': {},
-               'submechanisms': {}
+               'submechanisms': {},
+               'submodeltypes': {}
                }
 
 
@@ -126,9 +129,9 @@ def updateDefs(defsFolderPath):
     :type defsFolderPath: str
     """
     dicts = __parseAllYAML(defsFolderPath)
-    for dict in dicts:
-        for category in dict:
-            for key, value in dict[category].items():
+    for diction in dicts:
+        for category in diction:
+            for key, value in diction[category].items():
                 if category not in definitions:
                     definitions[category] = {}
                 if key in definitions[category]:

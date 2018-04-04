@@ -1517,21 +1517,40 @@ class AddAnnotationsOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class InstantiateAssembly(Operator):
-    """Instantiate an assembly"""
-    bl_idname = "phobos.instantiate_assembly"
-    bl_label = "Instantiate Assembly"
+class AddSubmodel(Operator):
+    """Add a submodel instance to the scene"""
+    bl_idname = "phobos.add_submodel"
+    bl_label = "Add submodel"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def getAssembliesListForEnumProperty(self, context):
-        assemblieslist = [a.name.replace('assembly:', '') for a in bpy.data.groups
-                          if a.name.startswith('assembly')]
-        return [(a,)*3 for a in assemblieslist]
+    def submodelnames(self, context):
+        """Returns a list of submodels of the chosen type for use as enum"""
+        submodellist = [a.name for a in bpy.data.groups
+                        if 'submodeltype' in a
+                        and a['submodeltype'] == self.submodeltype]
+        return [(a,
+                 a.split(':')[1],
+                 a.split(':')[1].split('/')[0] +
+                 ' version ' + a.split(':')[1].split('/')[1] + ' submodel')
+                for a in submodellist]
 
-    assemblyname = EnumProperty(
-        name="Assembly name",
-        description="Name of the assembly",
-        items=getAssembliesListForEnumProperty
+    def submodeltypes(self, context):
+        """Returns a list of submodel types in the scene for use as enum"""
+        submodellist = [a['submodeltype'] for a in bpy.data.groups
+                        if 'submodeltype' in a]
+        submodellist = set(submodellist)
+        return [(a, a, a + ' submodel type') for a in submodellist]
+
+    submodeltype = EnumProperty(
+        name="Submodel type",
+        description="Type of the submodel",
+        items=submodeltypes
+    )
+
+    submodelname = EnumProperty(
+        name="Submodel name",
+        description="Name of the submodel",
+        items=submodelnames
     )
 
     instancename = StringProperty(
@@ -1539,42 +1558,77 @@ class InstantiateAssembly(Operator):
         default=''
     )
 
+    def check(self, context):
+        return True
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'submodeltype')
+        layout.prop(self, 'submodelname')
+        layout.prop(self, 'instancename')
+
     def invoke(self, context, event):
-        i = 0
-        while self.assemblyname+'_'+str(i) in bpy.data.objects:
-            i += 1
-        self.instancename = self.assemblyname+'_'+str(i)
+        """
+        Start off the instance numbering based on Blender objects and show
+        a property dialog
+        """
+        self.instancename = self.submodelname.split(':')[1].split('/')[0]
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
+    @classmethod
+    def poll(cls, context):
+        """ Hide the operator when no submodels are defined"""
+        for group in bpy.data.groups:
+            if 'submodeltype' in group:
+                return True
+        return False
+
+
     def execute(self, context):
-        eUtils.instantiateAssembly(self.assemblyname, self.instancename)
+        """create an instance of the submodel"""
+        i = 1
+        while self.instancename + '_{0:03d}'.format(i) in bpy.data.objects:
+            i += 1
+        objectname = self.instancename + '_{0:03d}'.format(i)
+        eUtils.instantiateSubmodel(self.submodelname, objectname)
         return {'FINISHED'}
 
 
-class DefineAssembly(Operator):
-    """Instantiate an assembly"""
-    bl_idname = "phobos.define_assembly"
-    bl_label = "Define Assembly"
+class DefineSubmodel(Operator):
+    """Define a new submodel from objects"""
+    bl_idname = "phobos.define_submodel"
+    bl_label = "Define submodel"
     bl_options = {'REGISTER', 'UNDO'}
 
-    assemblyname = StringProperty(
-        name="Assembly name",
-        description="Name of the assembly",
-        default=''
+    submodelname = StringProperty(
+        name="Submodel name",
+        description="Name of the submodel",
+        default='newsubmodel'
     )
 
     version = StringProperty(
         name="Version name",
-        description="Name of the assembly version",
-        default=''
+        description="Name of the submodel version",
+        default='1.0'
+    )
+
+    submodeltype = EnumProperty(
+        items=tuple([(sub,) * 3 for sub in defs.definitions['submodeltypes']]),
+        name="Submodel type",
+        default="mechanism",
+        description="The type for the new submodel"
     )
 
     def invoke(self, context, event):
+        """Show a property dialog"""
         return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
-        eUtils.defineAssembly(self.assemblyname, self.version)
+        """Create a submodel based on selected objects"""
+        eUtils.defineSubmodel(self.submodelname,
+                              self.submodeltype,
+                              self.version)
         return {'FINISHED'}
 
 
@@ -1667,14 +1721,14 @@ class DefineSubmechanism(Operator):
 
 
 class ToggleInterfaces(Operator):
-    """Instantiate an assembly"""
+    """Toggle interfaces of a submodel"""
     bl_idname = "phobos.toggle_interfaces"
     bl_label = "Toggle interfaces"
     bl_options = {'REGISTER', 'UNDO'}
 
     mode = EnumProperty(
-        name="Version name",
-        description="Name of the assembly version",
+        name="Toggle mode",
+        description="The mode in which to display the interfaces",
         items=(('toggle',) * 3, ('activate',) * 3, ('deactivate',) * 3)
     )
 
@@ -1684,7 +1738,7 @@ class ToggleInterfaces(Operator):
 
 
 class ConnectInterfacesOperator(Operator):
-    """Connects assemblies at interfaces"""
+    """Connects submodels at interfaces"""
     bl_idname = "phobos.connect_interfaces"
     bl_label = "Connect Interfaces"
     bl_options = {'REGISTER', 'UNDO'}

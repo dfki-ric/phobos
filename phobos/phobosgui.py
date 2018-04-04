@@ -35,13 +35,14 @@ from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
                        PointerProperty, CollectionProperty, FloatProperty)
 from bpy.types import AddonPreferences
 
-from . import defs
-from . import display
-from phobos.phoboslog import loglevels
 from phobos.io import entities
 from phobos.io import meshes
 from phobos.io import scenes
 from phobos.io import libraries
+from phobos.phoboslog import loglevels
+
+from . import defs
+from . import display
 
 
 class ModelPoseProp(bpy.types.PropertyGroup):
@@ -898,9 +899,9 @@ class PhobosImportPanel(bpy.types.Panel):
                              text="Import Robot Model", icon="IMPORT")
 
 
-class PhobosAssembliesPanel(bpy.types.Panel):
-    bl_idname = "TOOLS_ASSEMBLIES_PT_PHOBOS"
-    bl_label = "Assemblies"
+class PhobosSubmodelsPanel(bpy.types.Panel):
+    bl_idname = "TOOLS_SUBMODELS_PT_PHOBOS"
+    bl_label = "Submodels"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_category = 'Phobos Models'
@@ -910,8 +911,8 @@ class PhobosAssembliesPanel(bpy.types.Panel):
         pass
 
     def draw(self, context):
-        self.layout.operator("phobos.define_assembly")
-        self.layout.operator("phobos.instantiate_assembly")
+        self.layout.operator("phobos.define_submodel")
+        self.layout.operator("phobos.add_submodel")
         self.layout.operator("phobos.toggle_interfaces")
         self.layout.operator("phobos.connect_interfaces")
 
@@ -1126,7 +1127,7 @@ def register():
     bpy.utils.register_class(PhobosModelPanel)
     # TODO delete me?
     # bpy.utils.register_class(PhobosScenePanel)
-    bpy.utils.register_class(PhobosAssembliesPanel)
+    bpy.utils.register_class(PhobosSubmodelsPanel)
     bpy.utils.register_class(PhobosExportPanel)
     bpy.utils.register_class(PhobosImportPanel)
     bpy.utils.register_class(PhobosObjectPanel)
