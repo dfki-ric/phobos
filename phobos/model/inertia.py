@@ -42,11 +42,11 @@ from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 
 
-def createInertial(name, inertialdict, parentobj=None, helper=False):
+def createInertial(parentname, inertialdict, parentobj=None, helper=False):
     """Creates the Blender representation of a given inertial provided a dictionary.
 
-    :param name: inertial object's parent's name
-    :type name: str
+    :param parentname: inertial object's parent's name
+    :type parentname: str
     :param inertialdict: intertial data
     :type inertialdict: dict
     :param parentobj: link or visual/collision with which the inertial obj is associated
@@ -56,29 +56,29 @@ def createInertial(name, inertialdict, parentobj=None, helper=False):
     :return: bpy_types.Object -- the newly created blender inertial object.
     """
     size = 0.015 if helper else 0.06
-    rotation = (0, 0, 0)
-    center = mathutils.Vector(inertialdict['origin']) if 'origin' in inertialdict else mathutils.Vector()
-    if parentobj:
-        rotation = parentobj.matrix_world.to_euler()
-        center += parentobj.matrix_world.to_translation()
-    bpy.ops.object.select_all(action='DESELECT')
-    inertialobject = bUtils.createPrimitive('inertial_' + name, 'box', (size,) * 3,
-                                            defs.layerTypes["inertial"], 'phobos_inertial', center, rotation)
-    inertialobject.select = True
+    try:
+        origin = mathutils.Vector(inertialdict['pose']['translation'])
+    except KeyError:
+        origin = mathutils.Vector()
+    inertialobject = bUtils.createPrimitive('inertial_' + parentname, 'box', (size,) * 3,
+                                            defs.layerTypes["inertial"], 'phobos_inertial')
+    sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(scale=True)
     inertialobject.phobostype = 'inertial'
     if parentobj:
+        inertialobject.matrix_world = parentobj.matrix_world
         parent = parentobj if parentobj.phobostype == 'link' else parentobj.parent
         sUtils.selectObjects((inertialobject, parent), clear=True, active=1)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
+        sUtils.selectObjects((inertialobject,), clear=True, active=0)
+        bpy.ops.object.transform_apply(scale=True)  # force matrix_world update
     # set properties
-    for prop in inertialdict:
-        if prop not in ['pose'] and inertialdict[prop] is not None:
-            if not prop.startswith('$'):
-                inertialobject['inertial/'+prop] = inertialdict[prop]
-            else:
-                for tag in inertialdict[prop]:
-                    inertialobject[prop[1:]+'/'+tag] = inertialdict[prop][tag]
+    for prop in ('mass', 'inertia'):
+        if helper:
+            inertialobject[prop] = inertialdict[prop]
+        else:
+            inertialobject['inertial/' + prop] = inertialdict[prop]
     return inertialobject
 
 
@@ -100,14 +100,16 @@ def createLinkInertialObjects(link, autocalc=True, selected_only=False):
 
     """
     inertias = sUtils.getImmediateChildren(link, ('inertial',), selected_only, True)
-    inertialdata = {'mass': 0, 'com': mathutils.Vector((0, 0, 0)), 'inertia': (0, 0, 0, 0, 0, 0)}
+    inertialdata = {'mass': 0, 'inertia': (0, 0, 0, 0, 0, 0),
+                    'pose': {'translation': mathutils.Vector((0, 0, 0))}
+                    }
     # compose inertial object for link from helper inertials
     if autocalc:
         mass, com, inert = fuseInertiaData(inertias)
         if mass and com and inert:
             inertialdata['mass'] = mass
             inertialdata['inertia'] = inertiaMatrixToList(inert)
-            inertialdata['origin'] = com
+            inertialdata['pose'] = {'translation': com}
     # create empty inertial object
     createInertial(link.name, inertialdata, parentobj=link)
 
@@ -125,7 +127,9 @@ def createHelperInertialObjects(link, autocalc=True):
     """
     viscols = getInertiaRelevantObjects(link)
     for obj in viscols:
-        inertialdata = {'mass': 0, 'inertia': [0, 0, 0, 0, 0, 0]}
+        inertialdata = {'mass': 0, 'inertia': [0, 0, 0, 0, 0, 0],
+                        'pose': {'translation': obj.matrix_local.to_translation()}
+                        }
         if autocalc:
             mass = obj['mass'] if 'mass' in obj else None
             geometry = deriveGeometry(obj)

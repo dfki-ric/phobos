@@ -94,7 +94,7 @@ def createLink(link):
 
     # create inertial
     if 'inertial' in link:
-        inertia.createInertial(link['name'], link['inertial'])
+        inertia.createInertial(link['name'], link['inertial'], newlink)
 
     # create visual elements
     if 'visual' in link:
@@ -222,7 +222,7 @@ def placeLinkSubelements(link):
     :param link: The parent link you want to set the subelements for
     :type link: dict
     """
-    elements = getGeometricElements(link) + ([link['inertial']] if 'inertial' in link else [])
+    elements = getGeometricElements(link)
     bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
     parentlink = bpy.data.objects[link['name']]
     log('Placing subelements for link: ' + link['name'] + ': ' + ', '.join([elem['name'] for elem in elements]), 'DEBUG')
