@@ -593,7 +593,9 @@ def parseLink(link, urdffilepath=None):
     """
     newlink = {a: link.attrib[a] for a in link.attrib}
     log('Parsing link ' + newlink['name'] + '...', 'INFO')
-    newlink['inertial'] = parseInertial(link)
+    inertial = parseInertial(link)
+    if inertial:
+        newlink['inertial'] = inertial
     # TODO delete me?
     #no_visual_geo = parseVisual(newlink, link)
     #no_collision_geo = parseCollision(newlink, link)
@@ -668,8 +670,10 @@ def parseInertial(link_xml):
         if inertia is not None:
             values = []
             inertial_dict['inertia'] = values.append(inertia.attrib[a] for a in inertia.attrib)
-    inertial_dict['name'] = 'inertial_' + link_xml.attrib['name']
-    return inertial_dict
+        inertial_dict['name'] = 'inertial_' + link_xml.attrib['name']
+        return inertial_dict
+    else:
+        return None
 
 
 def parseJoint(joint):
