@@ -609,9 +609,8 @@ class CreateLinkInertialOperator(Operator):
 
     def execute(self, context):
         # keep the currently selected objects
-        links = [obj for obj in context.selected_objects
-                 if obj.phobostype == 'link']
         selected = context.selected_objects
+        links = [obj for obj in selected if obj.phobostype == 'link']
         i = 1
         # calculate inertial objects for each link
         for link in links:

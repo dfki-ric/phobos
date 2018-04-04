@@ -216,8 +216,7 @@ def placeChildLinks(model, parent):
 
 
 def placeLinkSubelements(link):
-    """Finds all subelements for a given link and sets the appropriate relations.
-    In this case subelements are interials, visuals and collisions.
+    """Places visual and collision objects for a given link.
 
     :param link: The parent link you want to set the subelements for
     :type link: dict
