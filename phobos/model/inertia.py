@@ -37,7 +37,6 @@ from phobos.phoboslog import log
 import phobos.utils.general as gUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
-import phobos.utils.naming as nUtils
 from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 
@@ -144,11 +143,12 @@ def createHelperInertialObjects(link, autocalc=True):
 
 def calculateMassOfLink(link):
     """Sums the masses of visual and collision objects found in a link,
-    compares it to mass in link inertial object if present and returns the max of both, warning if they are not equal.
+    compares it to mass in link inertial object if present and returns the max of both,
+    warning if they are not equal.
 
     :param link: The link you want to calculate the visuals and collision objects mass of.
     :type link: dict
-    :return: double
+    :return: float
     """
     objects = getInertiaRelevantObjects(link, ['visual', 'collision'])
     inertials = sUtils.getImmediateChildren(link, ['inertial'])
@@ -165,7 +165,7 @@ def calculateInertia(mass, data):
     returns the upper diagonal of the inertia 3x3 inertia tensor.
 
     :param mass: The objects mass.
-    :type mass: double
+    :type mass: float
     :param data: The object dictionaries geometry part.
     :type data: dict
     :return: tuple(6)
@@ -189,9 +189,9 @@ def calculateBoxInertia(mass, size):
     """Returns upper diagonal of inertia tensor of a box as tuple.
 
     :param mass: The box' mass.
-    :type mass: double
+    :type mass: float
     :param size: The box' size.
-    :type size: double
+    :type size: float
     :return: tuple(6)
     """
     i = mass / 12
@@ -208,11 +208,11 @@ def calculateCylinderInertia(mass, r, h):
     """Returns upper diagonal of inertia tensor of a cylinder as tuple.
 
     :param mass: The cylinders mass.
-    :type mass: double
+    :type mass: float
     :param r: The cylinders radius.
-    :type r: double
+    :type r: float
     :param h: The cylinders height.
-    :type h: double
+    :type h: float
     :return: tuple(6)
     """
     i = mass / 12 * (3 * r**2 + h**2)
@@ -229,9 +229,9 @@ def calculateSphereInertia(mass, r):
     """Returns upper diagonal of inertia tensor of a sphere as tuple.
 
     :param mass: The spheres mass.
-    :type mass: double
+    :type mass: float
     :param r: The spheres radius.
-    :type r: double
+    :type r: float
     :return: tuple(6)
     """
     i = 0.4 * mass * r**2
@@ -245,15 +245,17 @@ def calculateSphereInertia(mass, r):
 
 
 def calculateCapsuleInertia(mass, r, h):
-    """
-    Returns upper diagonal of inertia tensor of a capsule as tuple.
+    """Returns upper diagonal of inertia tensor of a capsule as tuple.
 
-    Code adapted from http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856
+    Code adapted from:
+    http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856
 
     :param mass: The capsule's mass.
-    :type mass: float.
+    :type mass: float
     :param r: The capsule's radius.
-    :param h: float.
+    :type r: float
+    :param h: The capsule's height.
+    :type h: float
     :return: tuple(6).
     """
 
@@ -283,9 +285,9 @@ def calculateEllipsoidInertia(mass, size):
     """Returns upper diagonal of inertia tensor of an ellipsoid as tuple.
 
     :param mass: The ellipsoids mass.
-    :type mass: double
+    :type mass: float
     :param size: The ellipsoids size.
-    :type r: double
+    :type r: float
     :return: tuple(6)
     """
     i = mass / 5
@@ -299,8 +301,7 @@ def calculateEllipsoidInertia(mass, size):
 
 
 def calculateMeshInertia(mass, data):
-    """
-    Calculates the inertia tensor of arbitrary mesh objects.
+    """Calculates the inertia tensor of arbitrary mesh objects.
 
     Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
     Simply and Quickly' (2004) by Jonathan Blow (1) with formulas for tetrahedron inertia
@@ -410,7 +411,8 @@ def calculateMeshInertia(mass, data):
 
 
 def inertiaListToMatrix(il):
-    """Takes a tuple or list representing the upper diagonal of a 3x3 inertia tensor and returns the full tensor.
+    """Transforms iterable representing the upper diagonal of a 3x3 inertia tensor
+    and returns the full tensor as a matrix.
 
     :param il: The upper diagonal of a 3x3 inertia tensor.
     :type il: tuple(6) or list[6]
@@ -425,7 +427,8 @@ def inertiaListToMatrix(il):
 
 
 def inertiaMatrixToList(im):
-    """Takes a full 3x3 inertia tensor and returns a tuple representing the upper diagonal.
+    """Takes a full 3x3 inertia tensor as a matrix and returns a tuple representing
+    the upper diagonal.
 
     :param im: The inertia tensor matrix.
     :type im: mathutil.Matrix
@@ -482,9 +485,9 @@ def getInertiaRelevantObjects(link, selected_only=False):
 
 
 def fuseInertiaData(inertials):
-    """Returns mass, center of mass and inertia of a link as a whole, taking a list of inertials.
+    """Computes combined mass, center of mass and inertia given an iterable of inertial objects.
 
-    *mass*: double
+    *mass*: float
     *com*: mathutils:Vector(3)
     *inertia*: mathutils:Matrix(3)
 
@@ -519,10 +522,6 @@ def fuseInertiaData(inertials):
     else:
         log("No inertial found to fuse.", "DEBUG")
         return None, None, None
-
-# TODO this should be removed or documented otherwise
-###############################################################################
-# From here on we have code modified from Berti's implementation
 
 
 def combine_com_3x3(objects):
@@ -572,8 +571,7 @@ def shift_com_inertia_3x3(mass, com, inertia_com, ref_point=mathutils.Vector((0.
 
 
 def spin_inertia_3x3(inertia_3x3, rotmat, passive=True):
-    """
-    rotate the inertia matrix
+    """Rotates an inertia matrix.
 
     active and passive interpretation
 
@@ -605,8 +603,7 @@ def spin_inertia_3x3(inertia_3x3, rotmat, passive=True):
 
 
 def compound_inertia_analysis_3x3(objects):
-    """
-    Computes total mass, common center of mass and inertia matrix at CCOM
+    """Computes total mass, common center of mass and inertia matrix at CCOM
     """
     total_mass, common_com = combine_com_3x3(objects)
 
