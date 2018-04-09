@@ -125,6 +125,7 @@ def instantiateSubmodel(submodelname, instancename, size=1.):
     bpy.ops.object.group_instance_add(group=submodel.name)
     submodelobj = bpy.context.active_object
     submodelobj.phobostype = 'submodel'
+    submodelobj['submodeltype'] = submodel.name.split(':')[0]
     # TODO currently this works only by name binding, we should add links to
     # the group here
     submodelobj['submodelname'] = submodelname
@@ -141,6 +142,7 @@ def instantiateSubmodel(submodelname, instancename, size=1.):
         for obj in bpy.context.selected_objects:
             nUtils.addNamespace(obj, instancename)
             obj.name = obj.name.rsplit('.')[0]
+            obj['submodeltype'] = 'interface'
         sUtils.selectObjects(
             objects=[submodelobj] + bpy.context.selected_objects,
             clear=True, active=0)

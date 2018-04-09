@@ -65,7 +65,7 @@ def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
 
 def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidden=False):
     """
-    Finds all immediate children for a given object and phoboytypes.
+    Finds all immediate children for a given object and phobostypes.
     If phobostypes is not provided, it is ignored. Search can be limited to
     selected objects and restricted to hidden objects.
 
