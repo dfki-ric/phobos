@@ -236,6 +236,39 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
         i.show_name = True
 
 
+def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
+    """
+    Removes a submodel definition from the Blender project.
+    Returns True or False depending on whether groups have been removed or not.
+
+    :param submodelname: the name of the submodel
+    :param submodeltype: the submodeltype of the submodel
+    :param version: optional version of the submodel
+    :param interfaces: True if interface should also be deleted, else False.
+    :returns: True if groups have been removed, else False.
+    """
+    # build the group name to look for
+    submodelgroupname = submodeltype + ':' + submodelname
+    if version != '':
+        submodelgroupname += '/' + version
+
+    # remove the submodelgroup
+    if submodelgroupname in bpy.data.groups:
+        bpy.data.groups.remove(bpy.data.groups[submodelgroupname])
+        if not interfaces:
+            return True
+
+    if interfaces:
+        interfacegroupname = 'interfaces:' + submodelname
+        if version != '':
+            interfacegroupname += '/' + version
+
+        if interfacegroupname in bpy.data.groups:
+            bpy.data.groups.remove(bpy.data.groups[interfacegroupname])
+            return True
+    return False
+
+
 def toggleInterfaces(interfaces=None, modename='toggle'):
     modedict = {'toggle': 0, 'activate': 1, 'deactivate': 2}
     mode = modedict[modename]
