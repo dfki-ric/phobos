@@ -180,6 +180,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
     :param version: a version string (e.g. '1.0', 'dangerous')
     :param objects: the objects which belong to the submodel (None will derive
         objects from the selection)
+    :returns: a tuple of the submodelgroup and interfacegroup/None
     """
     if not objects:
         objects = bpy.context.selected_objects
@@ -211,6 +212,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
     log('Created submodel group ' + submodelname + ' of type "' + submodeltype
         + '".', 'DEBUG')
 
+    interfacegroup = None
     # make the interface group
     if interfaces != []:
         sUtils.selectObjects(interfaces, True, 0)
@@ -234,6 +236,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
 
     for i in interfaces:
         i.show_name = True
+    return (submodelgroup, interfacegroup)
 
 
 def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
