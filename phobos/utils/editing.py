@@ -163,7 +163,8 @@ def instantiateSubmodel(submodelname, instancename, size=1.):
         # delete empty parent object of interfaces
         sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
                                       if a.type == 'EMPTY' and
-                                      'interface' in a.name],
+                                      'submodeltype' in a and
+                                      a['submodeltype'] == 'interface'],
                              clear=True, active=0)
         bpy.ops.object.delete(use_global=False)
     return submodelobj
