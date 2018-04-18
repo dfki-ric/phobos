@@ -52,7 +52,7 @@ def getCombinedTransform(obj, effectiveparent):
     return matrix
 
 
-def restructureKinematicTree(link):
+def restructureKinematicTree(link, root=None):
     """
     Restructures a tree such that the *link* provided becomes the root of the tree. For
     instance, the following tree:
@@ -70,15 +70,22 @@ def restructureKinematicTree(link):
       / \
      D   E
      Currently, this function ignores all options such as unselected or hidden objects.
-    :param link:
-    :return:
+    :param link: the link which will become the new root object
+    :param root: the current root object
+    (otherwise, phobos.utils.selection.getRoot will be used)
     """
-    root = sUtils.getRoot(link)
+    if not root:
+        root = sUtils.getRoot(link)
     links = [link]
     obj = link
 
+    # stop right now when the link is already root
+    if not obj.parent:
+        log('No restructure necessary. Link is already root.', 'DEBUG')
+        return
+
     # gather chain of links ascending the tree
-    while not obj.parent == root:
+    while obj.parent.name != root.name:
         obj = obj.parent
         if obj.phobostype == 'link':
             links.append(obj)
@@ -87,9 +94,9 @@ def restructureKinematicTree(link):
     # unparent all links
     sUtils.selectObjects(links, True)
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-    for i in range(len(links) - 2):
+    for i in range(len(links) - 1):
         parent = links[i]
-        child = links[i+1]
+        child = links[i + 1]
         sUtils.selectObjects((parent, child), True, active=0)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
@@ -137,18 +144,23 @@ def instantiateSubmodel(submodelname, instancename, size=1.):
 
     # add the interfaces if available
     if interfaces:
+        # create group and make real
         bpy.ops.object.group_instance_add(group=interfaces.name)
         bpy.ops.object.duplicates_make_real()
+
+        # write interface parameters and change namespace
         for obj in bpy.context.selected_objects:
             nUtils.addNamespace(obj, instancename)
             obj.name = obj.name.rsplit('.')[0]
             obj['submodeltype'] = 'interface'
+
+        # parent interfaces to submodel empty
         sUtils.selectObjects(
             objects=[submodelobj] + bpy.context.selected_objects,
             clear=True, active=0)
         bpy.ops.object.parent_set(type='OBJECT')
 
-        # delete empty parent object
+        # delete empty parent object of interfaces
         sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
                                       if a.type == 'EMPTY' and
                                       'interface' in a.name],
