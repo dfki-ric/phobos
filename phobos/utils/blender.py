@@ -281,7 +281,6 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
         bpy.data.cameras[cam.data.name].type = 'ORTHO'
         bpy.data.scenes[0].camera = cam
         sUtils.selectObjects(objects, True, 0)
-        bpy.ops.view3d.camera_to_view_selected()
         # create light
         bpy.ops.object.lamp_add(type='SUN', radius=1)
         light = bpy.context.scene.objects.active
