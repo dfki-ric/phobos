@@ -266,7 +266,10 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
         if not (ob in objects):
             ob.hide_render = True
             ob.hide = True
-    bpy.ops.view3d.view_selected()  # zoom in to objects
+    bpy.ops.view3d.view_selected()
+    # TODO this does not always create nice previews!
+    # depending on the region overlap setting (user prefs) the image changes
+    # and the whitespace around the corners is too much
 
     # render the preview
     if opengl:  # use the viewport representation to create preview
