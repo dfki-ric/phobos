@@ -1707,7 +1707,8 @@ class DefineSubmechanism(Operator):
             except KeyError:
                 log("Joints not assigned correctly.", 'WARNING')
         else:
-            log("Number of joints not valid for selected submechanism type.", 'ERROR')
+            log('Number of joints not valid for selected submechanism type: ' +
+                self.mechanism_type, 'ERROR')
         return {'FINISHED'}
 
 
