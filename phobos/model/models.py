@@ -1018,8 +1018,16 @@ def buildModelDictionary(root):
     log("Parsing groups...", "INFO")
     # TODO: get rid of the "data" part and check for relation to robot
     for group in bpy.data.groups:
-        if (len(group.objects) > 0 and
-                nUtils.getObjectName(group, 'group') != "RigidBodyWorld"):
+        # skip empty groups
+        if not group.objects:
+            continue
+
+        # handle submodel groups separately from other groups
+        if 'submodeltype' in group.keys():
+            continue
+            # TODO create code to derive Submodels
+            # model['submodels'] = deriveSubmodel(group)
+        elif nUtils.getObjectName(group, 'group') != "RigidBodyWorld":
             model['groups'][nUtils.getObjectName(
                 group, 'group')] = deriveGroupEntry(group)
 
