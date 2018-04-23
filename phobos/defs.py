@@ -52,8 +52,9 @@ layerTypes = {
     "light": 6,
     "approxsphere": 13,
     'interface': 10,
-    'submodel': 10
-}
+    'submodel': 10,
+    'annotation': 14
+    }
 
 # types of blender objects phobos differentiates
 phobostypes = (('undefined',) * 3,
