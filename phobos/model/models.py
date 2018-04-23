@@ -585,48 +585,52 @@ def deriveLight(obj):
     return light
 
 
-def initObjectProperties(obj, phobostype=None, ignoretypes=()):
-    """This function initializes a phobos data structure with a given object
-    and derives basic information from its custom properties.
+def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotations=True,
+                         ignorename=False):
+    """Initializes phobos dictionary of *obj*, including information stored in custom properties.
 
     Args:
-      obj(bpy_types.Object): The object to derive initial properties from.
-      phobostype(str, optional): optional phobostype of the object (Default value = None)
-      ignoretypes(list, optional): phobostypes to ignore during parsing (Default value = ()
+      obj(bpy_types.Object): object to derive initial properties from.
+      phobostype(str, optional): limit parsing of data fields to this phobostype
+      ignoretypes(list, optional): list of properties ignored while initializing the objects properties.
+      ignorename(bool, optional): whether or not to add the object's name
 
     Returns:
       dict
 
     """
     # allow duplicated names differentiated by types
-    props = {'name': nUtils.getObjectName(obj, phobostype)}
+    props = {} if ignorename else {'name': nUtils.getObjectName(obj, phobostype)}
     # if no phobostype is defined, everything is parsed
     if not phobostype:
         for key, value in obj.items():
             props[key] = value
-    # if a phobostype is defined, we search for special custom properties
+    # search for type-specific properties if phobostype is defined
     else:
         for key, value in obj.items():
             # transform Blender id_arrays into lists
             if hasattr(value, 'to_list'):
                 value = list(value)
-            if '/' in key:
-                if phobostype + '/' in key:
-                    specs = key.split('/')[1:]
-                    if len(specs) == 1:
-                        props[key.replace(phobostype + '/', '')] = value
-                    elif len(specs) == 2:
-                        category, specifier = specs
-                        if '$' + category not in props:
-                            props['$' + category] = {}
-                        props['$' + category][specifier] = value
-                # ignore two-level specifiers if phobostype is not present
-                elif key.count('/') == 1:
-                    category, specifier = key.split('/')
-                    if category not in ignoretypes:
-                        if '$' + category not in props:
-                            props['$' + category] = {}
-                        props['$' + category][specifier] = value
+            if key.startswith(phobostype + '/'):
+                if key.count('/') == 1:
+                    props[key.replace(phobostype + '/', '')] = value
+                elif key.count('/') == 2:
+                    category, specifier = key.split('/')[1:]
+                    if '$' + category not in props:
+                        props['$' + category] = {}
+                    props['$' + category][specifier] = value
+            # ignore two-level specifiers if phobostype is not present
+            elif key.count('/') == 1:
+                category, specifier = key.split('/')
+                if category not in ignoretypes:
+                    if '$' + category not in props:
+                        props['$' + category] = {}
+                    props['$' + category][specifier] = value
+    if includeannotations:
+        annotationobjs = sUtils.getImmediateChildren(obj, ('annotation',), selected_only=True)
+        for obj in annotationobjs:
+            props.update(initObjectProperties(obj, phobostype, ignoretypes, includeannotations,
+                                              ignorename=True))
     return props
 
 
