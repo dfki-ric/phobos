@@ -1756,7 +1756,8 @@ class MergeLinks(Operator):
 
     @classmethod
     def poll(cls, context):
-        return (context.active_object.phobostype == 'link'
+        return (context.active_object is not None and
+                context.active_object.phobostype == 'link'
                 and len([obj for obj in context.selected_objects
                          if obj.phobostype == 'link' and obj != context.active_object]) > 0)
 
