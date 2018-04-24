@@ -1178,76 +1178,64 @@ class CreateLinksOperator(Operator):
     bl_label = "Create Link(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    linktype = EnumProperty(
+    location = EnumProperty(
         items=(('3D cursor',) * 3,
                ('selected objects',) * 3),
-        default='selected objects',
+        default='3D cursor',
         name='Location',
         description='Where to create new link(s)?'
     )
 
     size = FloatProperty(
-        name="Visual Link Size",
+        name="Visual Size",
         default=1.0,
         description="Size of the created link"
     )
 
-    parenting = BoolProperty(
-        name='Parenting hierarchy',
+    parent_link = BoolProperty(
+        name="Parent Link",
         default=False,
-        description='Use parenting hierarchy for links?'
+        description="Parent link to object's parents"
     )
 
-    parentobject = BoolProperty(
-        name='Include selected Object(s)',
+    parent_objects = BoolProperty(
+        name='Parent Objects',
         default=False,
-        description='Add selected objects to link hierarchy?'
+        description='Parent children of object to new link'
     )
 
-    namepartindices = StringProperty(
-        name="Name Segment Indices",
-        description="Allow reusing parts of objects' names, specified as e.g. '2 3'",
+    nameformat = StringProperty(
+        name="Name Format",
+        description="Provide a string containing {0} {1} etc. to reuse parts of objects' names.",
         default=''
     )
 
-    separator = StringProperty(
-        name="Separator",
-        description="Separator to split object names with, e.g. '_'",
-        default='_'
-    )
-
-    prefix = StringProperty(
-        name="Prefix",
-        description="Prefix to put before names, e.g. 'link'",
-        default='link'
+    linkname = StringProperty(
+        name="Link Name",
+        description="A name for a single newly created link.",
+        default='new_link'
     )
 
     def execute(self, context):
-        if self.linktype == '3D cursor':
-            links.createLink({'name': self.name, 'scale': self.size})
+        if self.location == '3D cursor':
+            links.createLink({'name': self.linkname, 'scale': self.size})
         else:
             for obj in context.selected_objects:
-                tmpnamepartindices = [int(p) for p in self.namepartindices.split()]
-                links.deriveLinkfromObject(obj, scale=self.size, parenting=self.parenting,
-                                           parentobjects=self.parentobject,
-                                           namepartindices=tmpnamepartindices,
-                                           separator=self.separator,
-                                           prefix=self.prefix)
+                links.deriveLinkfromObject(obj, scale=self.size, parent_link=self.parent_link,
+                                           parent_objects=self.parent_objects,
+                                           nameformat=self.nameformat)
         return {'FINISHED'}
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "linktype")
+        layout.prop(self, "location")
         layout.prop(self, "size")
-        layout.prop(self, "parenting")
-
-        # show parentobject only when using parenting hierarchy
-        if self.parenting:
-            layout.prop(self, "parentobject")
-
-        layout.prop(self, "namepartindices")
-        layout.prop(self, "separator")
-        layout.prop(self, "prefix")
+        if self.location == '3D cursor':
+            layout.prop(self, 'linkname')
+        else:
+            layout.prop(self, "nameformat")
+            layout.prop(self, "parent_link")
+            layout.prop(self, "parent_objects")
 
 
 def getControllerParameters(name):

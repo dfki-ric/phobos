@@ -33,6 +33,7 @@ Created on 14 Apr 2014
 import bpy
 import mathutils
 import math
+import re
 import phobos.defs as defs
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
@@ -69,18 +70,19 @@ def createLink(link):
     if 'matrix' in link:
         newlink.matrix_world = link['matrix']
     newlink.phobostype = 'link'
+    if link['name'] in bpy.data.objects.keys():
+        log('Object with name of new link already exists: ' + link['name'], 'WARNING')
     newlink.name = link['name']
-    # FIXME: This is a hack and should be checked before creation!
-    # this is a backup in case an object with the link's name already exists
     newlink["link/name"] = link['name']
 
-    # FIXME geometric dimensions are not intiallized properly, thus scale always 0.2!
     # set the size of the link
     elements = getGeometricElements(link)
-    scale = max((geometrymodel.getLargestDimension(element['geometry']) for element in elements)) if elements else 0.2
+    if elements:
+        scale = max((geometrymodel.getLargestDimension(e['geometry']) for e in elements))
+    else:
+        scale = 0.2
 
     # use scaling factor provided by user
-    #FIXME where would this *scale* come from?
     if 'scale' in link:
         scale *= link['scale']
     newlink.scale = (scale, scale, scale)
@@ -111,67 +113,45 @@ def createLink(link):
     return newlink
 
 
-def deriveLinkfromObject(obj, scale=0.2, parenting=True, parentobjects=False,
-                         namepartindices=[], separator='_', prefix='link'):
-    """
-    Derives a link from an object that defines a joint through its position,
-    orientation and parent-child relationships.
+def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False, nameformat=''):
+    """Derives a link from an object using its name, transformation and parenting.
 
-    :param obj: The object to derive a link from.
+    :param obj: object to derive a link from
     :type obj: bpy_types.Object
-    :param scale: The scale to apply to the link.
+    :param scale: scale factor for bone size
     :type scale: float
-    :param parenting: Whether to automate the parenting of the new link or not.
-    :type parenting: bool.
-    :param parentobjects: Whether to parent all the objects to the new link or not.
-    :type parentobjects: bool.
-    :param namepartindices: Parts of the objects name you want to reuse in the links name.
-    :type namepartindices: list with two elements.
-    :param separator: The separator to use to separate the links name with. Its '_' per default
-    :type separator: str
-    :param prefix: The prefix to use for the new links name. Its 'link' per default.
-    :type prefix: str
-    :return: the new created link
+    :param parent_link: whether to automate the parenting of the new link or not.
+    :type parent_link: bool
+    :param parent_objects: whether to parent all the objects to the new link or not
+    :type parent_objects: bool
+    :param nameformat: re-formatting template for obj names
+    :type nameformat: str
+    :return: newly created link
     """
-    log('Deriving link from ' + nUtils.getObjectName(obj), level="INFO",
-        origin="deriveLinkFromObject")
-    nameparts = nUtils.getObjectName(obj).split('_')
-    rotation = obj.matrix_world.to_euler()
-    if 'invertAxis' in obj and obj['invertAxis'] == 1:
-        rotation.x += math.pi if rotation.x < 0 else -math.pi
-    tmpname = nUtils.getObjectName(obj)
-    if namepartindices:
-        try:
-            tmpname = separator.join([nameparts[p] for p in namepartindices])
-        except IndexError:
-            log('Wrong name segment indices given for obj' +
-                nUtils.getObjectName(obj), 'WARNING')
-    if prefix != '':
-        tmpname = prefix + separator + tmpname
-    if tmpname == nUtils.getObjectName(obj):
-        obj.name += '*'
-    link = createLink({'scale': scale, 'name': tmpname, 'matrix':
-                       obj.matrix_world})
+    log('Deriving link from ' + nUtils.getObjectName(obj), level="INFO")
+    try:
+        nameparts = [p for p in re.split('[^a-zA-Z]', nUtils.getObjectName(obj)) if p != '']
+        linkname = nameformat.format(*nameparts)
+    except IndexError:
+        log('Invalid name format (indices) for naming: ' + nUtils.getObjectName(obj), 'WARNING')
+        linkname = 'link_' + nUtils.getObjectName(obj)
+    link = createLink({'scale': scale, 'name': linkname, 'matrix': obj.matrix_world})
 
-    # parent objects and other links together
-    if parenting:
+    # parent link to object's parent
+    if parent_link:
         if obj.parent:
             sUtils.selectObjects([link, obj.parent], True, 1)
             if obj.parent.phobostype == 'link':
                 bpy.ops.object.parent_set(type='BONE_RELATIVE')
             else:
                 bpy.ops.object.parent_set(type='OBJECT')
-
-        # parent children to link
-        children = sUtils.getImmediateChildren(obj)
-        if parentobjects:
-            children.append(obj)
-        for child in children:
-            sUtils.selectObjects([child], True, 0)
-            bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-            sUtils.selectObjects([child, link], True, 1)
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
-
+    # parent children of object to link
+    if parent_objects:
+        children = [obj] + sUtils.getImmediateChildren(obj)
+        sUtils.selectObjects(children, True, 0)
+        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+        sUtils.selectObjects([link] + children, True, 0)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
     return link
 
 
