@@ -193,7 +193,7 @@ def selectObjects(objects, clear=True, active=-1):
 
 def getObjectByName(name):
     """
-    Gets blender object by its name (blender objects name or subtypes name).
+    Gets blender object by its name (blender objects name or type name).
 
     :param name: The exact object name to find.
     :type name: str.
@@ -204,9 +204,8 @@ def getObjectByName(name):
         if name == obj.name:
             objlist.append(obj)
         else:
-            for subtype in defs.subtypes:
-                nametag = subtype + "/name"
-                if nametag in obj and name == obj[nametag]:
+            for key in obj.keys():
+                if obj[key].endswith('/name') and name == obj[key]:
                     objlist.append(obj)
     return objlist
 
@@ -225,12 +224,11 @@ def getObjectsByPattern(pattern, match_case=False):
     """
     obj_list = []
     for obj in bpy.data.objects:
-        for subtype in defs.subtypes:
-            name_tag = subtype + '/name'
-            if name_tag in obj:
-                obj_name = obj[name_tag]
-                if (match_case and pattern in obj_name) \
-                        or (not match_case and pattern.lower() in obj_name.lower()):
+        for key in obj.keys():
+            if obj[key].endswith('/name'):
+                obj_name = obj[key]
+                if ((match_case and pattern in obj_name)
+                    or (not match_case and pattern.lower() in obj_name.lower())):
                     obj_list.append(obj)
         if (match_case and pattern in obj.name) \
                 or (not match_case and pattern.lower() in obj.name.lower()):

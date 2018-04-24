@@ -85,10 +85,9 @@ def removeNamespace(obj):
     :type obj: bpy.types.Object
     """
     obj.name = obj.name.split("::")[-1]
-    for pType in defs.subtypes:
-        nameTag = pType + "/name"
-        if nameTag in obj and obj[nameTag] == obj.name:
-            del obj[nameTag]
+    for key in obj.keys():
+        if obj[key].endswith("/name") and obj[key] == obj.name:
+                del obj[key]
 
 
 def gatherNamespaces(separator='::'):

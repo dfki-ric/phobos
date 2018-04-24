@@ -68,10 +68,6 @@ phobostypes = (('undefined',) * 3,
                ('submodel',) * 3
                )
 
-# DOCU add some comments for these...
-subtypes = ("visual", "joint", "motor", "collision", "sensor", "link", "inertial", "controller", "light", "approxsphere")
-
-
 jointtypes = (('revolute',) * 3,
               ('continuous',) * 3,
               ('prismatic',) * 3,

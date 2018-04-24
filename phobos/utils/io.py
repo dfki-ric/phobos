@@ -146,10 +146,9 @@ def importBlenderModel(filepath, namespace='', prefix=True):
                     # set prefix instead of namespace
                     obj.name = namespace + '__' + obj.name
                     # make sure no internal name-properties remain
-                    for ptype in defs.subtypes:
-                        nametag = ptype + "/name"
-                        if nametag in obj:
-                            del obj[nametag]
+                    for key in obj.keys():
+                        if obj[key].endswidth("/name"):
+                            del obj[key]
             else:
                 for obj in bpy.context.selected_objects:
                     nUtils.addNamespace(obj, namespace)
