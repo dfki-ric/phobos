@@ -1746,6 +1746,28 @@ class ConnectInterfacesOperator(Operator):
         return {'FINISHED'}
 
 
+class MergeLinks(Operator):
+    """Merge links"""
+    bl_idname = "phobos.merge_links"
+    bl_label = "Merge Links"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    movetotarget = BoolProperty(name='move to target', default=False)
+
+    @classmethod
+    def poll(cls, context):
+        return (context.active_object.phobostype == 'link'
+                and len([obj for obj in context.selected_objects
+                         if obj.phobostype == 'link' and obj != context.active_object]) > 0)
+
+    def execute(self, context):
+        mergelinks = [obj for obj in context.selected_objects
+                      if obj.phobostype == 'link' and obj != context.active_object]
+        eUtils.mergeLinks(mergelinks, targetlink=context.active_object,
+                          movetotarget=self.movetotarget)
+        return {'FINISHED'}
+
+
 def register():
     print("Registering operators.editing...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
