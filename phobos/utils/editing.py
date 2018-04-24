@@ -351,3 +351,18 @@ def getPropertiesSubset(obj, category=None):
     except KeyError:
         log("Failed filtering properties for category " + category, "ERROR")
     return dict
+
+
+def mergeLinks(links, targetlink, movetotarget=False):
+    for link in links:
+        if movetotarget:
+            link.matrix_world = targetlink.matrix_world
+        sUtils.selectObjects([link], clear=True, active=0)
+        bpy.ops.object.select_grouped(type='CHILDREN')
+        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+        sUtils.selectObjects([targetlink] + bpy.context.selected_objects, clear=True, active=0)
+        try:
+            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        except RuntimeError as e:
+            log("Cannot resolve new parent hierarchy: " + str(e), 'ERROR')
+        del link
