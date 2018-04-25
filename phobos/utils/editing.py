@@ -299,7 +299,7 @@ def toggleInterfaces(interfaces=None, modename='toggle'):
             i.show_name = False
 
 
-def connectInterfaces(parentinterface, childinterface):
+def connectInterfaces(parentinterface, childinterface, transform=None):
     # first check if the interface is child of the root object and if not, restructure the tree
     root = sUtils.getRoot(childinterface)
     parent = childinterface.parent
@@ -315,7 +315,11 @@ def connectInterfaces(parentinterface, childinterface):
     eul = mathutils.Euler((math.radians(180.0), 0.0, math.radians(180.0)), 'XYZ')
     sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
-    childinterface.matrix_world = parentinterface.matrix_world * eul.to_matrix().to_4x4()
+    # apply additional transform
+    if transform:
+        childinterface.matrix_world = parentinterface.matrix_world * transform
+    else:
+        childinterface.matrix_world = parentinterface.matrix_world * eul.to_matrix().to_4x4()
 
     # TODO clean this up
     # try:
