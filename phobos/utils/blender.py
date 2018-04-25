@@ -301,3 +301,15 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
     for ob in bpy.data.objects:
         ob.hide_render = False
         ob.hide = False
+
+
+def toggleTransformLock(obj, setting=None):
+    obj.lock_location[0] = setting if setting is not None else not obj.lock_location[0]
+    obj.lock_location[1] = setting if setting is not None else not obj.lock_location[1]
+    obj.lock_location[2] = setting if setting is not None else not obj.lock_location[2]
+    obj.lock_rotation[0] = setting if setting is not None else not obj.lock_rotation[0]
+    obj.lock_rotation[1] = setting if setting is not None else not obj.lock_rotation[1]
+    obj.lock_rotation[2] = setting if setting is not None else not obj.lock_rotation[2]
+    obj.lock_scale[0] = setting if setting is not None else not obj.lock_scale[0]
+    obj.lock_scale[1] = setting if setting is not None else not obj.lock_scale[1]
+    obj.lock_scale[2] = setting if setting is not None else not obj.lock_scale[2]
