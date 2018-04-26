@@ -68,30 +68,158 @@ def cloneGit(name, url, destination):
             "ERROR")
     return False
 
+def initGit(destination, filename, url=None, readmetxt=''):
+    """Creates a new Phobos git in the specified destination folder.
+    This also creates the required folder structure.
+    Optionally, the git can be pushed to the specified url (as origin) and an
+    initial commit can be created.
 
-def checkoutBranch(branch, workingdir, create=False):
+    :param destination: TODO
+    :param url: TODO
+    :param initialCommit: TODO
+    :param readmetxt: TODO
+    :returns: TODO
+    """
+    if isGit(destination):
+        log('Could not initialise git: Folder already existing!', 'ERROR')
+        return False
+    elif os.listdir(destination):
+        log('Could not initialise git: Folder is not empty!', 'ERROR')
+        return False
+
+    # Initialise git locally and make first push for new repositories
+    log('Initialising the new git...', 'INFO')
+    # TODO add fully featured checks for the requirements and exceptions
+    try:
+        subprocess.check_output(
+            ['git', 'init'],
+            cwd=destination, universal_newlines=True)
+        if readmetxt != '':
+            readmetxt = '# Initial commit'
+        with open(os.path.join(destination,
+                               'Readme.md'), 'w') as readme:
+            readme.write(readmetxt)
+        with open(os.path.join(destination,
+                               '.gitignore'), 'w') as gitignore:
+            gitignore.write('*.blend1\n')
+
+        # Add readme and gitignore
+        subprocess.check_output(
+            ['git', 'add', 'Readme.md'],
+            cwd=destination, universal_newlines=True)
+        subprocess.check_output(
+            ['git', 'add', '.gitignore'],
+            cwd=destination, universal_newlines=True)
+        subprocess.check_output(
+            ['git', 'commit', '-m', '"Initial commit"'],
+            cwd=destination, universal_newlines=True)
+
+        subprocess.check_output(
+            ['git', 'remote', 'add', 'origin', url],
+            cwd=destination, universal_newlines=True)
+        subprocess.check_output(
+            ['git', 'push', '-u', 'origin', 'master'],
+            cwd=destination, universal_newlines=True)
+    except subprocess.CalledProcessError as error:
+        log('Could not initialise git folder: ' + error, 'ERROR')
+        return False
+
+    makeGitFolders(destination)
+    # saving the initial folder state
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(destination,
+                                                      'blender',
+                                                      filename + '.blend'))
+    log('Git initialised successfully.', 'DEBUG')
+
+    if not commit(destination):
+        return False
+    return True
+
+
+def commit(destination, message='Automated commit', ignore=[]):
+    """Commits the current status in the git folder at destination.
+    This can ignore the first level subfolders and files specified in the
+    optional parameter.
+
+    :returns: TODO
+    """
+    # Add the subfolders and files to git
+    # TODO test this functionality
+    for direc in os.listdir(destination):
+        if direc not in ignore:
+            try:
+                subprocess.check_output(
+                    ['git', 'add', direc],
+                    cwd=destination, universal_newlines=True)
+            except subprocess.CalledProcessError:
+                log('Could not add to git: ' + direc, 'ERROR')
+                return False
+
+    # Commit the changes
+    try:
+        subprocess.check_output(
+            ['git', 'commit', '-m',
+                '"{0}"'.format(message)],
+            cwd=destination, universal_newlines=True)
+        subprocess.check_output(
+            ['git', 'push', 'origin'],
+            cwd=destination, universal_newlines=True)
+        log('Commit to ' + destination + ' successful.', 'DEBUG')
+        return True
+    except subprocess.CalledProcessError as error:
+        log('Could not commit and push: ' + str(error), 'ERROR')
+        return False
+
+
+def makeGitFolders(destination):
+    """Create the Phobos folder structure for a git at the destination.
+
+    :param destination: TODO
+    :returns: TODO
+    """
+    from os.path import exists, join
+    if not exists(join(destination, 'blender')):
+        os.makedirs(join(destination, 'blender'))
+
+    if not exists(join(destination, 'urdf')):
+        os.makedirs(join(destination, 'urdf'))
+
+    if not exists(join(destination, 'smurf')):
+        os.makedirs(join(destination, 'smurf'))
+
+    if not exists(join(destination, 'meshes')):
+        os.makedirs(join(destination, 'meshes'))
+
+
+def checkoutBranch(branch, workingdir, create=False, pushorigin=False):
     if not branch or not workingdir:
         log("No branch specified.", "ERROR")
         return False
     try:
-        subprocess.check_output(['git', 'checkout', branch], cwd=workingdir, universal_newlines=True)
+        subprocess.check_output(['git', 'fetch'], cwd=workingdir,
+                                universal_newlines=True)
+        subprocess.check_output(['git', 'checkout', branch], cwd=workingdir,
+                                universal_newlines=True)
         log("Checkout branch " + branch + " successful.", "INFO")
         return True
     except subprocess.CalledProcessError:
         if create:
-            createNewBranch(branch, workingdir)
-        else:
-            log("Could not checkout branch " + branch + ".", "ERROR")
-            return False
+            return createNewBranch(branch, workingdir)
+        log("Could not checkout branch " + branch + ".", "ERROR")
+        return False
 
 
-def createNewBranch(branch, workingdir):
+def createNewBranch(branch, workingdir, pushorigin=False):
     if not branch or not workingdir:
         log("No branch specified.", "ERROR")
         return False
     try:
         subprocess.check_output(['git', 'checkout', '-b', branch], cwd=workingdir, universal_newlines=True)
         log("Created branch " + branch + ".", "INFO")
+        if pushorigin:
+            subprocess.check_output(
+                ['git', 'push', '-u', 'origin', branch],
+                cwd=workingdir, universal_newlines=True)
         return True
     except subprocess.CalledProcessError:
         log("Could not create branch " + branch + ".", "ERROR")
