@@ -117,7 +117,7 @@ class PhobosPrefs(AddonPreferences):
         layout.separator()
         layout.label(text="Folders")
         layout.prop(self, "modelsfolder", text="models folder")
-        layout.prop(self, "configfolder", text="models folder")
+        layout.prop(self, "configfolder", text="config folder")
 
 prev_collections = {}
 phobosIcon = 0
