@@ -1110,6 +1110,12 @@ class AddMotorOperator(Operator):
         default=0.0,
         description="D value")
 
+    addcontrollerparameters = BoolProperty(
+        name="add controller parameters",
+        default=False,
+        description="whether or not to add PID control values"
+    )
+
     vmax = FloatProperty(
         name="Maximum Velocity [m/s] or [rad/s]",
         default=1.0,
@@ -1129,11 +1135,12 @@ class AddMotorOperator(Operator):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(self, "motortype", text="motor_type")
+        layout.prop(self, "motortype")
+        layout.prop(self, "addcontrollerparameters")
         if not self.motortype == 'none':
             layout.prop(self, "taumax", text="maximum torque [Nm]")
             layout.prop(self, "vmax", text="maximum velocity [m/s] or [rad/s]")
-            if self.motortype == 'PID':
+            if self.addcontrollerparameters:
                 layout.prop(self, "P", text="P")
                 layout.prop(self, "I", text="I")
                 layout.prop(self, "D", text="D")
@@ -1150,8 +1157,7 @@ class AddMotorOperator(Operator):
         for joint in objs:
             # add motor properties
             if not self.motortype == 'none':
-                # TODO: these keys have to be adapted
-                if self.motortype == 'PID':
+                if self.addcontrollerparameters:
                     joint['motor/p'] = self.P
                     joint['motor/i'] = self.I
                     joint['motor/d'] = self.D
