@@ -68,17 +68,21 @@ def cloneGit(name, url, destination):
             "ERROR")
     return False
 
-def initGit(destination, filename, url=None, readmetxt=''):
+def initGit(destination, filename=None, initialsave=False, url=None, readmetxt=''):
     """Creates a new Phobos git in the specified destination folder.
     This also creates the required folder structure.
     Optionally, the git can be pushed to the specified url (as origin) and an
     initial commit can be created.
 
-    :param destination: TODO
-    :param url: TODO
-    :param initialCommit: TODO
-    :param readmetxt: TODO
-    :returns: TODO
+    :param destination: the destination folder on the filesystem where to
+        initialise the git repository
+    :param filename: the filename of the blender file to save
+        (only useful in combination with initialsave)
+    :param initialsave: True if the blendfile shall be saved for the first
+        commit already, False if not
+    :param url: the url of the origin repository (it needs to be empty!)
+    :param readmetxt: a string which will be written to the Readme.md
+    :returns: True if the initialisation was successful, False if not
     """
     if isGit(destination):
         log('Could not initialise git: Folder already existing!', 'ERROR')
@@ -114,6 +118,7 @@ def initGit(destination, filename, url=None, readmetxt=''):
             ['git', 'commit', '-m', '"Initial commit"'],
             cwd=destination, universal_newlines=True)
 
+        # TODO what if the origin repository is not empty?
         subprocess.check_output(
             ['git', 'remote', 'add', 'origin', url],
             cwd=destination, universal_newlines=True)
@@ -125,14 +130,16 @@ def initGit(destination, filename, url=None, readmetxt=''):
         return False
 
     makeGitFolders(destination)
+
     # saving the initial folder state
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(destination,
-                                                      'blender',
-                                                      filename + '.blend'))
+    if initialsave and filename:
+        bpy.ops.wm.save_as_mainfile(filepath=os.path.join(destination,
+                                                          'blender',
+                                                          filename + '.blend'))
+        if not commit(destination):
+            return False
     log('Git initialised successfully.', 'DEBUG')
 
-    if not commit(destination):
-        return False
     return True
 
 
@@ -204,7 +211,7 @@ def checkoutBranch(branch, workingdir, create=False, pushorigin=False):
         return True
     except subprocess.CalledProcessError:
         if create:
-            return createNewBranch(branch, workingdir)
+            return createNewBranch(branch, workingdir, pushorigin)
         log("Could not checkout branch " + branch + ".", "ERROR")
         return False
 
