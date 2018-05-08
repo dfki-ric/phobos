@@ -79,7 +79,7 @@ def decorate(level):
         return level
 
 
-def log(message, level="INFO", origin=None, prefix=""):
+def log(message, level="INFO", origin=None, prefix="", guionly=False):
     """
     Logs a given message to the blender console and logging file if present
     and if log level is low enough. The origin can be defined as string.
@@ -115,7 +115,7 @@ def log(message, level="INFO", origin=None, prefix=""):
                 with open(prefs.logfile, "a") as lf:
                     lf.write(msg + "\n")
             except IOError:
-                print("Cannot write to log file!")
+                log("Cannot write to log file!", 'ERROR', guionly=True)
 
         # log to terminal or Blender
         if prefs.logtoterminal:
