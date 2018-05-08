@@ -112,7 +112,7 @@ class PhobosPrefs(AddonPreferences):
         layout.label(text="Log Settings")
         layout.prop(self, "logfile", text="log file path")
         layout.prop(self, "logtofile", text="write to logfile")
-        layout.prop(self, "logtoterminal", text="only display in terminal")
+        layout.prop(self, "logtoterminal", text="write to terminal")
         layout.prop(self, "loglevel", text="log level")
         layout.separator()
         layout.label(text="Folders")

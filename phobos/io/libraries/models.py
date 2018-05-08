@@ -141,7 +141,7 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
     namespace = StringProperty(
         name="Namespace",
         default="",
-        description="Namespace with which to wrap the imported model. Avoids duplicate names of Blender objects."
+        description="Namespace with which to wrap the imported model."
     )
 
     use_prefix = BoolProperty(

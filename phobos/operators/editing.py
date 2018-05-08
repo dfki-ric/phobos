@@ -1578,7 +1578,7 @@ class AddSubmodel(Operator):
 class DefineSubmodel(Operator):
     """Define a new submodel from objects"""
     bl_idname = "phobos.define_submodel"
-    bl_label = "Define submodel"
+    bl_label = "Define Submodel"
     bl_options = {'REGISTER', 'UNDO'}
 
     submodelname = StringProperty(
@@ -1704,7 +1704,7 @@ class DefineSubmechanism(Operator):
 class ToggleInterfaces(Operator):
     """Toggle interfaces of a submodel"""
     bl_idname = "phobos.toggle_interfaces"
-    bl_label = "Toggle interfaces"
+    bl_label = "Toggle Interfaces"
     bl_options = {'REGISTER', 'UNDO'}
 
     mode = EnumProperty(

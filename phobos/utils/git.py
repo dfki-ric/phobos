@@ -126,7 +126,7 @@ def initGit(destination, filename=None, initialsave=False, url=None, readmetxt='
             ['git', 'push', '-u', 'origin', 'master'],
             cwd=destination, universal_newlines=True)
     except subprocess.CalledProcessError as error:
-        log('Could not initialise git folder: ' + error, 'ERROR')
+        log('Could not initialise git folder: ' + str(error), 'ERROR')
         return False
 
     makeGitFolders(destination)
@@ -134,8 +134,7 @@ def initGit(destination, filename=None, initialsave=False, url=None, readmetxt='
     # saving the initial folder state
     if initialsave and filename:
         bpy.ops.wm.save_as_mainfile(filepath=os.path.join(destination,
-                                                          'blender',
-                                                          filename + '.blend'))
+                                                          'blender', filename + '.blend'))
         if not commit(destination):
             return False
     log('Git initialised successfully.', 'DEBUG')

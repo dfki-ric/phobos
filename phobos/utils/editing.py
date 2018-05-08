@@ -101,7 +101,7 @@ def restructureKinematicTree(link, root=None):
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
 
-def instantiateSubmodel(submodelname, instancename, size=1.):
+def instantiateSubmodel(submodelname, instancename, size=1.0):
     """
     Creates an instance of the submodel specified by the submodelname.
 
