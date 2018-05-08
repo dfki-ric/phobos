@@ -65,9 +65,8 @@ def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
 
 def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidden=False):
     """
-    Finds all immediate children for a given object and phobostypes.
-    If phobostypes is not provided, it is ignored. Search can be limited to
-    selected objects and restricted to hidden objects.
+    Returns all immediate children for a given object and phobostypes (if provided).
+    Search can be limited to selected objects and non-hidden objects.
 
     :param obj: object to start search from.
     :type obj: bpy.types.Object.
@@ -79,7 +78,7 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
     :type: include_hidden: bool.
     :return: list - Blender objects which are immediate children of obj.
     """
-    return [child for child in bpy.context.scene.objects if child.parent == obj and
+    return [child for child in obj.children if
             (child.phobostype in phobostypes if phobostypes else True) and
             (not child.hide or include_hidden) and
             (child.select or not selected_only)]
