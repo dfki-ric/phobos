@@ -6,6 +6,7 @@ from phobos import defs
 from phobos.phoboslog import log
 from phobos.utils import selection as sUtils
 from phobos.utils import naming as nUtils
+from phobos.utils import blender as bUtils
 
 
 indent = '  '
@@ -161,9 +162,32 @@ def getConfigPath():
     return bpy.context.user_preferences.addons["phobos"].preferences.configfolder
 
 
-def getResource(type, name, filepath=None):
+def importResources(restuple, filepath=None):
+    """
+    Accepts a tuple of pairs (tuples) describing resource objects to import. For instance,
+    the call reslist=(('joint', 'continuous'), ('sensor', 'camera')) would import two
+    resource objects.
+    :param restuple: tuple of tuples of length 2
+    :param filepath: path to file from which to load resource
+    :return:
+    """
+    currentscene = bpy.context.scene.name
+    bUtils.switchToScene('resources')
     if not filepath:
-        os.path.join(getConfigPath(), 'resources', 'resources.blend')
-        with bpy.data.libraries.load(filepath) as (data_from, data_to):
-            objects = [{'name': obj} for obj in data_from.objects if obj.phobostype == type and obj.name == name]
+        filepath = os.path.join(getConfigPath(), 'resources', 'resources.blend')
+    with bpy.data.libraries.load(filepath) as (data_from, data_to):
+        objects = []
+        for resource in restuple:
+            resobjname = resource[0] + '_' + resource[1]
+            resobj = None
+            for objectname in data_from.objects:
+                if objectname == resobjname:
+                    resobj = objectname
+                    break
+            if not resobj:
+                return None
+            objects.append({'name': resobj})
         bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
+    objects = bpy.context.selected_objects
+    bUtils.switchToScene(currentscene)
+    return objects
