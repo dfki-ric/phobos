@@ -173,21 +173,28 @@ def importResources(restuple, filepath=None):
     """
     currentscene = bpy.context.scene.name
     bUtils.switchToScene('resources')
+    # gather previously imported objects to avoid multiple imports
+    imported_objects = [nUtils.stripNamespaceFromName(obj.name)
+                        for obj in bpy.data.scenes['resources'].objects]
+    # if no filepath is provided, use the path from the preferences
     if not filepath:
         filepath = os.path.join(getConfigPath(), 'resources', 'resources.blend')
+    # import new objects from resources.blend
     with bpy.data.libraries.load(filepath) as (data_from, data_to):
         objects = []
         for resource in restuple:
             resobjname = resource[0] + '_' + resource[1]
-            resobj = None
-            for objectname in data_from.objects:
-                if objectname == resobjname:
-                    resobj = objectname
-                    break
-            if not resobj:
-                return None
-            objects.append({'name': resobj})
-        bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
+            if resobjname in imported_objects:
+                continue
+            if resobjname in data_from.objects:
+                objects.append({'name': resobjname})
+        if objects != []:
+            bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
+        else:
+            bUtils.switchToScene(currentscene)
+            return None
     objects = bpy.context.selected_objects
+    for obj in objects:
+        nUtils.addNamespace(obj, 'resource')
     bUtils.switchToScene(currentscene)
     return objects
