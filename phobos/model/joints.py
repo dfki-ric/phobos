@@ -37,6 +37,7 @@ from phobos.phoboslog import log
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
+import phobos.utils.io as ioUtils
 
 
 def createJoint(joint, linkobj=None):
@@ -47,7 +48,7 @@ def createJoint(joint, linkobj=None):
     if joint['name'] != linkobj.name:
         linkobj['joint/name'] = joint['name']
     # get hold of object
-    bUtils.toggleLayer(defs.layerTypes['link'], True)
+    bUtils.toggleLayer(defs.layerTypes['link'], True)  # FIXME: assumes link is on link layer
     sUtils.selectObjects([linkobj], clear=True, active=0)
 
     # set axis
@@ -401,3 +402,8 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
             except KeyError:
                 log("Approximation for max effort and/or speed ill-defined in joint object " + joint.name,
                     "ERROR")
+
+        # set link/joint visualization
+        resources = ioUtils.importResources((('joint', jointtype),))
+        joint.pose.bones[0].custom_shape = resources[0]
+
