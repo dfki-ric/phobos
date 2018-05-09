@@ -153,6 +153,7 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
             nUtils.addNamespace(obj, instancename)
             obj.name = obj.name.rsplit('.')[0]
             obj['submodeltype'] = 'interface'
+            bUtils.toggleTransformLock(obj, True)
 
         # parent interfaces to submodel empty
         sUtils.selectObjects(
