@@ -313,3 +313,10 @@ def toggleTransformLock(obj, setting=None):
     obj.lock_scale[0] = setting if setting is not None else not obj.lock_scale[0]
     obj.lock_scale[1] = setting if setting is not None else not obj.lock_scale[1]
     obj.lock_scale[2] = setting if setting is not None else not obj.lock_scale[2]
+
+
+def switchToScene(scenename):
+    if scenename not in bpy.data.scenes.keys():
+        bpy.data.scenes.new(scenename)
+    bpy.context.screen.scene = bpy.data.scenes[scenename]
+    return bpy.data.scenes[scenename]

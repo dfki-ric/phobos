@@ -6,6 +6,7 @@ from phobos import defs
 from phobos.phoboslog import log
 from phobos.utils import selection as sUtils
 from phobos.utils import naming as nUtils
+from phobos.utils import blender as bUtils
 
 
 indent = '  '
@@ -155,3 +156,45 @@ def importBlenderModel(filepath, namespace='', prefix=True):
         return True
     else:
         return False
+
+
+def getConfigPath():
+    return bpy.context.user_preferences.addons["phobos"].preferences.configfolder
+
+
+def importResources(restuple, filepath=None):
+    """
+    Accepts a tuple of pairs (tuples) describing resource objects to import. For instance,
+    the call reslist=(('joint', 'continuous'), ('sensor', 'camera')) would import two
+    resource objects.
+    :param restuple: tuple of tuples of length 2
+    :param filepath: path to file from which to load resource
+    :return:
+    """
+    currentscene = bpy.context.scene.name
+    bUtils.switchToScene('resources')
+    # gather previously imported objects to avoid multiple imports
+    imported_objects = [nUtils.stripNamespaceFromName(obj.name)
+                        for obj in bpy.data.scenes['resources'].objects]
+    # if no filepath is provided, use the path from the preferences
+    if not filepath:
+        filepath = os.path.join(getConfigPath(), 'resources', 'resources.blend')
+    # import new objects from resources.blend
+    with bpy.data.libraries.load(filepath) as (data_from, data_to):
+        objects = []
+        for resource in restuple:
+            resobjname = resource[0] + '_' + resource[1]
+            if resobjname in imported_objects:
+                continue
+            if resobjname in data_from.objects:
+                objects.append({'name': resobjname})
+        if objects != []:
+            bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
+        else:
+            bUtils.switchToScene(currentscene)
+            return None
+    objects = bpy.context.selected_objects
+    for obj in objects:
+        nUtils.addNamespace(obj, 'resource')
+    bUtils.switchToScene(currentscene)
+    return objects
