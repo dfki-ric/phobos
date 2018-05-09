@@ -208,7 +208,8 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
     submodelgroupname = submodeltype + ':' + submodelname
     if version != '':
         submodelgroupname += '/' + version
-    # TODO what about overwriting groups with same names?
+    if submodelgroupname in bpy.data.groups.keys():
+        log('submodelgroupname ' + 'already exists', 'WARNING')
     bpy.ops.group.create(name=submodelgroupname)
     submodelgroup = bpy.data.groups[submodelgroupname]
     submodelgroup['submodeltype'] = submodeltype
