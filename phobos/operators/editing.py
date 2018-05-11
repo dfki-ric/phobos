@@ -1612,10 +1612,10 @@ class DefineSubmodel(Operator):
         return {'FINISHED'}
 
 
-class DefineSubmechanism(Operator):
-    """Define a submechanism in the model"""
-    bl_idname = "phobos.define_submechanism"
-    bl_label = "Define Submechanism"
+class AssignSubmechanism(Operator):
+    """Assign a submechanism to the model"""
+    bl_idname = "phobos.assign_submechanism"
+    bl_label = "Assign Submechanism"
     bl_options = {'REGISTER', 'UNDO'}
 
     mechanism_type = EnumProperty(
