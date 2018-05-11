@@ -1629,11 +1629,30 @@ class AssignSubmechanism(Operator):
     #    items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
     #    )
 
+    linear_chain = BoolProperty(name='Linear Chain')
+
     mechanism_name = StringProperty(name='Name')
+
+    joints = []
 
     def compileSubmechanismTreeEnum(self, context):
         return bUtils.compileEnumPropertyList(
             defs.definitions['submechanisms'][context.window_manager.mechanismpreview]['joints']['spanningtree'])
+
+    def isLinearChain(self, joints):
+        leafs = [joint for joint in joints if all([c not in joints for c in joint.children])]
+        chain = []
+        if len(leafs) == 1:
+            count = 1
+            child = leafs[0]
+            chain.append(child)
+            while child.parent in joints:
+                child = child.parent
+                chain.append(child)
+                count += 1
+            return count == len(joints), chain
+        else:
+            return False, joints
 
     jointtype0 = EnumProperty(items=compileSubmechanismTreeEnum)
     jointtype1 = EnumProperty(items=compileSubmechanismTreeEnum)
@@ -1649,60 +1668,71 @@ class AssignSubmechanism(Operator):
         return (len(bpy.context.selected_objects) > 0 and
                 any((a.phobostype == 'link' for a in bpy.context.selected_objects)))
 
-    # def invoke(self, context, event):
-    #    for in in range(len(context.selected_objects)):
-    #        setattr(self, 'joint' + str(i), context.selected_objects[i].name)
+    def invoke(self, context, event):
+        self.joints = []
+        self.linear_chain, self.joints = self.isLinearChain([obj for obj in bpy.context.selected_objects
+                                                             if obj.phobostype == 'link'])
+        print(self.joints)
+        return self.execute(context)
 
     def draw(self, context):
         wm = context.window_manager
         layout = self.layout
-        joints = [obj for obj in context.selected_objects if obj.phobostype == 'link']
-        layout.label('Selection contains {0} joints.'.format(len(joints)))
-        layout.template_icon_view(wm, 'mechanismpreview', show_labels=True, scale=5.0)
-        layout.prop(wm, 'mechanismpreview')
-        size = defs.definitions['submechanisms'][wm.mechanismpreview]['size']
-        if size == len(context.selected_objects):
-            layout.prop(self, 'mechanism_name')
-            glayout = layout.split()
-            c1 = glayout.column(align=True)
-            c2 = glayout.column(align=True)
-            for i in range(size):
-                c1.label(context.selected_objects[i].name+':')
-                c2.prop(self, "jointtype" + str(i), text='')
-        else:
-            layout.label('Please choose a valid type for selected joints.')
+        layout.label('Selection contains {0} joints.'.format(len(self.joints)))
+        if self.linear_chain:
+            layout.prop(self, 'linear_chain')
+        layout.prop(self, 'mechanism_name')
+        if not self.linear_chain:
+            layout.template_icon_view(wm, 'mechanismpreview', show_labels=True, scale=5.0)
+            layout.prop(wm, 'mechanismpreview')
+            size = defs.definitions['submechanisms'][wm.mechanismpreview]['size']
+            if size == len(context.selected_objects):
+                glayout = layout.split()
+                c1 = glayout.column(align=True)
+                c2 = glayout.column(align=True)
+                for i in range(size):
+                    c1.label(context.selected_objects[i].name+':')
+                    c2.prop(self, "jointtype" + str(i), text='')
+            else:
+                layout.label('Please choose a valid type for selected joints.')
 
     def execute(self, context):
-        joints = [obj for obj in context.selected_objects if obj.phobostype == 'link']
-
         # display names to simplify assignment
-        for joint in joints:
+        for joint in self.joints:
             joint.show_name = True
 
-        mechanismdata = defs.definitions['submechanisms'][context.window_manager.mechanismpreview]
-        size = mechanismdata['size']
-        if len(joints) == size:
-            root = context.active_object
-            jointmap = {getattr(self, 'jointtype'+str(i)): joints[i] for i in range(len(joints))}
-            # Steps taken:
-            # create group
-            sUtils.selectObjects(joints, True, 0)
-            bpy.ops.group.create(name='submechanism:' + self.mechanism_name)
-            # assign attributes
-            for i in range(len(joints)):
-                joints[i]['submechanism/jointname'] = getattr(self, 'jointtype'+str(i))
-            root['submechanism/category'] = mechanismdata['category']
-            root['submechanism/type'] = mechanismdata['type']
-            root['submechanism/name'] = self.mechanism_name
-            try:
-                root['submechanism/spanningtree'] = [jointmap[j] for j in mechanismdata['joints']['spanningtree']]
-                root['submechanism/active'] = [jointmap[j] for j in mechanismdata['joints']['active']]
-                root['submechanism/independent'] = [jointmap[j] for j in mechanismdata['joints']['independent']]
-            except KeyError:
-                log("Joints not assigned correctly.", 'WARNING')
+        # prepare data used in both cases
+        sUtils.selectObjects(self.joints, True, -1)
+        root = context.active_object
+        root['submechanism/name'] = self.mechanism_name
+        # create group
+        bpy.ops.group.create(name='submechanism:' + self.mechanism_name)
+        jointnames = [nUtils.getObjectName(joint) for joint in self.joints]
+        if self.linear_chain:
+            root['submechanism/category'] = 'linear'
+            root['submechanism/type'] = '{0}R'.format(len(self.joints))
+            root['submechanism/spanningtree'] = list(reversed(jointnames))
+            root['submechanism/active'] = list(reversed(jointnames))
+            root['submechanism/independent'] = list(reversed(jointnames))
         else:
-            log('Number of joints not valid for selected submechanism type: ' +
-                context.window_manager.mechanismpreview, 'ERROR')
+            mechanismdata = defs.definitions['submechanisms'][context.window_manager.mechanismpreview]
+            size = mechanismdata['size']
+            if len(self.joints) == size:
+                jointmap = {getattr(self, 'jointtype'+str(i)): self.joints[i] for i in range(len(self.joints))}
+                # assign attributes
+                for i in range(len(self.joints)):
+                    joints[i]['submechanism/jointname'] = getattr(self, 'jointtype'+str(i))
+                root['submechanism/category'] = mechanismdata['category']
+                root['submechanism/type'] = mechanismdata['type']
+                try:
+                    root['submechanism/spanningtree'] = [jointmap[j] for j in mechanismdata['joints']['spanningtree']]
+                    root['submechanism/active'] = [jointmap[j] for j in mechanismdata['joints']['active']]
+                    root['submechanism/independent'] = [jointmap[j] for j in mechanismdata['joints']['independent']]
+                except KeyError:
+                    log("Joints not assigned correctly.", 'WARNING')
+            else:
+                log('Number of joints not valid for selected submechanism type: ' +
+                    context.window_manager.mechanismpreview, 'ERROR')
         return {'FINISHED'}
 
 
