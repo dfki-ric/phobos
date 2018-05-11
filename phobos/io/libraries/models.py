@@ -31,6 +31,7 @@ import bpy
 import bpy.utils.previews
 import phobos.utils.naming as nUtils
 import phobos.utils.io as ioUtils
+import phobos.utils.blender as bUtils
 from phobos.phoboslog import log
 from bpy.props import StringProperty, BoolProperty
 
@@ -72,7 +73,7 @@ def compileModelList():
     model_previews.clear()
     model_data.clear()
 
-    rootpath = bpy.context.user_preferences.addons["phobos"].preferences.modelsfolder
+    rootpath = bUtils.getPhobosPreferences().modelsfolder
     i = 0
     if rootpath == '' or not os.path.exists(rootpath):
         log('Model library folder does not exist.')

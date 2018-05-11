@@ -44,6 +44,10 @@ def getBlenderVersion():
     return bpy.app.version[0] * 100 + bpy.app.version[1]
 
 
+def getPhobosPreferences():
+    return bpy.context.user_preferences.addons["phobos"].preferences
+
+
 def printMatrices(obj, info=None):
     """This function prints the matrices of an object to the screen.
 

@@ -183,8 +183,7 @@ class Models_Poses_UIList(bpy.types.UIList):
                   active_propname, index):
         self.use_filter_show = False
         im = item
-        modelsPosesColl = bpy.context.user_preferences.addons[
-            "phobos"].preferences.models_poses
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         if im.name in modelsPosesColl.keys():
             coll_item = modelsPosesColl[im.name]
             if coll_item.type == "robot_name":
@@ -204,8 +203,7 @@ class Models_Poses_UIList(bpy.types.UIList):
         images = getattr(data, propname)
         flt_flags = [self.bitflag_filter_item] * len(images)
 
-        modelsPosesColl = bpy.context.user_preferences.addons[
-            "phobos"].preferences.models_poses
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
 
         # Filter items. Only show robots. Hide all other images
         for idx, im in enumerate(images):
