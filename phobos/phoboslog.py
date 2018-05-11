@@ -79,7 +79,7 @@ def decorate(level):
         return level
 
 
-def log(message, level="INFO", origin=None, prefix="", guionly=False):
+def log(message, level="INFO", origin=None, prefix="", guionly=False, end="\n"):
     """
     Logs a given message to the blender console and logging file if present
     and if log level is low enough. The origin can be defined as string.
@@ -94,6 +94,10 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False):
     :type origin: str. or obj.
     :param prefix: Any string that should be printed before message (e.g. "\n")
     :type prefix: str.
+    :param guionly: if True, only prints to GUI
+    :type guiolny: bool
+    :param end: string to be used at the end of the resulting print statement
+    :type end: str
     :return: None.
     """
     callerframerecord = inspect.stack()[1]
@@ -113,13 +117,13 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False):
         if prefs.logtofile:
             try:
                 with open(prefs.logfile, "a") as lf:
-                    lf.write(msg + "\n")
+                    lf.write(msg + end)
             except IOError:
                 log("Cannot write to log file!", 'ERROR', guionly=True)
 
         # log to terminal or Blender
         if prefs.logtoterminal:
-            print(terminalmsg)
+            print(terminalmsg, end=end)
         else:
             # log in GUI depending on loglevel
             import sys

@@ -161,7 +161,7 @@ class StorePoseOperator2(Operator):
 
     @classmethod
     def poll(self, context):
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         root = sUtils.isRoot(context.scene.objects.active)
         return root and bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()
@@ -171,7 +171,7 @@ class StorePoseOperator2(Operator):
         return wm.invoke_props_dialog(self,width=300,height=100)
 
     def draw(self, context):
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         row = self.layout
         if modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose':
@@ -181,7 +181,7 @@ class StorePoseOperator2(Operator):
         row.prop(self, "pose_name")
 
     def execute(self, context):
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         robot_name = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name
         models.storePose(robot_name, self.pose_name)
@@ -206,7 +206,7 @@ class LoadPoseOperator2(Operator):
     @classmethod
     def poll(self, context):
         result = False
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         root = sUtils.isRoot(context.scene.objects.active)
         if root and \
@@ -217,7 +217,7 @@ class LoadPoseOperator2(Operator):
         return result
 
     def execute(self, context):
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         modelPose = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
         root = sUtils.getRoot(context.scene.objects.active)
@@ -288,7 +288,7 @@ def draw_preview_callback(self):
                 if oArea.type == 'VIEW_3D':
                     area = oArea
 
-    modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+    modelsPosesColl = bUtils.getPhobosPreferences().models_poses
     activeModelPoseIndex = bpy.context.scene.active_ModelPose
 
     if (len(modelsPosesColl) > 0) and area:
@@ -361,7 +361,7 @@ class ChangePreviewOperator(bpy.types.Operator):
     bl_label = "Change the preview texture"
 
     def execute(self, context):
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         if bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys():
             activeModelPose = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]

@@ -24,22 +24,20 @@ def getScriptsPath():
         scriptspath = path.normpath(path.expanduser(
             '~/AppData/Roaming/Blender Foundation/Blender/{0}/scripts'.format(blenderversion)))
     else:
-        scriptspath = ('ERROR: System not supported yet:' +
-                     ' "{0}". Please contact the developers.').format(sys.platform)
+        scriptspath = 'ERROR: {0} not supported,'.format(sys.platform)
     return scriptspath
 
 
-def getResourcesPath():
+def getConfigPath():
     if sys.platform == 'linux':
-        resourcespath = path.normpath(path.expanduser('~/.config/phobos/resources'))
+        configpath = path.normpath(path.expanduser('~/.config/phobos'))
     elif sys.platform == 'darwin':
-        resourcespath = path.normpath(path.expanduser('~/Library/Application Support/phobos/resources'))
+        configpath = path.normpath(path.expanduser('~/Library/Application Support/phobos'))
     elif sys.platform == 'win32':
-        resourcespath = path.normpath(path.expanduser('~/AppData/Roaming/phobos/resources'))
+        configpath = path.normpath(path.expanduser('~/AppData/Roaming/phobos'))
     else:
-        resourcespath = ('ERROR: System not supported yet:' +
-                     ' "{0}". Please contact the developers.').format(sys.platform)
-    return resourcespath
+        configpath = 'ERROR: {0} not supported,'.format(sys.platform)
+    return configpath
 
 
 addonpath = path.join(getScriptsPath(), 'addons', 'phobos')
@@ -68,10 +66,10 @@ if __name__ == '__main__':
               'Aborting installation.')
         sys.exit(0)
 
-    # install resources
-    copied_files = updateFolderContents(os.path.join(phoboshome, 'resources'), getResourcesPath())
+    # install config files
+    copied_files = updateFolderContents(os.path.join(phoboshome, 'config'), getConfigPath())
     if not len(copied_files) > 0:
-        print('Something went wrong with copying resource files.')
+        print('Something went wrong with copying config files.')
 
     # install templates
     templatespath = path.join(getScriptsPath(), 'templates_py')

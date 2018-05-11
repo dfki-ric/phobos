@@ -293,7 +293,7 @@ class ImportModelOperator(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
-        self.filepath = context.user_preferences.addons["phobos"].preferences.modelsfolder
+        self.filepath = bUtils.getPhobosPreferences().modelsfolder
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
 
@@ -319,13 +319,11 @@ def generateLibEntries(param1, param2):
 
 def loadModelsAndPoses():
     # DOCU add some docstring
-    if bpy.context.user_preferences.addons["phobos"].preferences.modelsfolder:
-        modelsfolder = os.path.abspath(bpy.context.user_preferences.addons[
-                                       "phobos"].preferences.modelsfolder)
+    if bUtils.getPhobosPreferences().modelsfolder:
+        modelsfolder = os.path.abspath(bUtils.getPhobosPreferences().modelsfolder)
     else:
         modelsfolder = ''
-    modelsPosesColl = bpy.context.user_preferences.addons[
-        "phobos"].preferences.models_poses
+    modelsPosesColl = bUtils.getPhobosPreferences().models_poses
     robots_found = []
     print(modelsfolder)
     for root, dirs, files in os.walk(modelsfolder):
@@ -391,8 +389,7 @@ class ReloadModelsAndPosesOperator(bpy.types.Operator):
 
     def execute(self, context):
         loadModelsAndPoses()
-        modelsPosesColl = bpy.context.user_preferences.addons[
-            "phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         for model_pose in modelsPosesColl:
             if model_pose.name not in bpy.data.images.keys():
                 if model_pose.type == 'robot_name':
@@ -463,8 +460,7 @@ class ImportSelectedLibRobot(Operator):
     @classmethod
     def poll(self, context):
         result = False
-        modelsPosesColl = bpy.context.user_preferences.addons[
-            "phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         root = None
         # TODO delete me?
@@ -486,8 +482,7 @@ class ImportSelectedLibRobot(Operator):
 
     def invoke(self, context, event):
         wm = context.window_manager
-        modelsPosesColl = bpy.context.user_preferences.addons[
-            "phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
 
         selected_robot = modelsPosesColl[
@@ -503,8 +498,7 @@ class ImportSelectedLibRobot(Operator):
 
     def execute(self, context):
         log("Import robot bake", "INFO")
-        modelsPosesColl = bpy.context.user_preferences.addons[
-            "phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         selected_robot = modelsPosesColl[
             bpy.data.images[activeModelPoseIndex].name]
@@ -598,8 +592,7 @@ class ExportCurrentPoseOperator(Operator):
 
     @classmethod
     def poll(self, context):
-        modelsPosesColl = bpy.context.user_preferences.addons[
-            "phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         return (context.selected_objects and context.active_object and sUtils.isRoot(context.active_object) and
                 bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys() and
@@ -641,8 +634,7 @@ class ExportCurrentPoseOperator(Operator):
     def execute(self, context):
         root = sUtils.getRoot(context.selected_objects[0])
 
-        modelsPosesColl = bpy.context.user_preferences.addons[
-            'phobos'].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         selected_robot = modelsPosesColl[
             bpy.data.images[activeModelPoseIndex].name]

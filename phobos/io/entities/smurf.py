@@ -36,6 +36,7 @@ import bpy
 import phobos.defs as defs
 import phobos.model.models as models
 import phobos.utils.io as ioUtils
+import phobos.utils.blender as bUtils
 from phobos.io.entities.urdf import sort_urdf_elements
 from phobos.phoboslog import log
 
@@ -65,7 +66,7 @@ def deriveEntity(root, outpath):
     if "isReference" in entity:
         entity.pop("isReference")
         bpy.ops.scene.reload_models_and_poses_operator()
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         for robot_model in modelsPosesColl:
             if (root["modelname"] == robot_model.robot_name) and (root["entity/pose"] == robot_model.label):
                 pass

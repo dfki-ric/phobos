@@ -183,8 +183,7 @@ class Models_Poses_UIList(bpy.types.UIList):
                   active_propname, index):
         self.use_filter_show = False
         im = item
-        modelsPosesColl = bpy.context.user_preferences.addons[
-            "phobos"].preferences.models_poses
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
         if im.name in modelsPosesColl.keys():
             coll_item = modelsPosesColl[im.name]
             if coll_item.type == "robot_name":
@@ -204,8 +203,7 @@ class Models_Poses_UIList(bpy.types.UIList):
         images = getattr(data, propname)
         flt_flags = [self.bitflag_filter_item] * len(images)
 
-        modelsPosesColl = bpy.context.user_preferences.addons[
-            "phobos"].preferences.models_poses
+        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
 
         # Filter items. Only show robots. Hide all other images
         for idx, im in enumerate(images):
@@ -713,7 +711,7 @@ class PhobosModelPanel(bpy.types.Panel):
         kc1.operator('phobos.define_joint_constraints')
         kc1.operator("phobos.create_mimic_joint")
         kc1.operator('phobos.add_kinematic_chain', icon='CONSTRAINT')
-        kc1.operator('phobos.define_submechanism')
+        kc1.operator('phobos.assign_submechanism')
         kc2.label(text='Visual/Collision', icon='GROUP')
         kc2.operator('phobos.create_collision_objects')
         kc2.operator('phobos.define_geometry')

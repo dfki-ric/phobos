@@ -31,6 +31,7 @@ import bpy
 import bpy.utils.previews
 import phobos.utils.naming as nUtils
 import phobos.utils.io as ioUtils
+import phobos.utils.blender as bUtils
 from phobos.phoboslog import log
 from bpy.props import StringProperty, BoolProperty
 
@@ -72,7 +73,7 @@ def compileModelList():
     model_previews.clear()
     model_data.clear()
 
-    rootpath = bpy.context.user_preferences.addons["phobos"].preferences.modelsfolder
+    rootpath = bUtils.getPhobosPreferences().modelsfolder
     i = 0
     if rootpath == '' or not os.path.exists(rootpath):
         log('Model library folder does not exist.')
@@ -100,14 +101,14 @@ def compileModelList():
 
                 # use existing thumbnail if available
                 if os.path.exists(os.path.join(modelpath, 'thumbnails')):
-                    preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'thumbnails', modelname+'.png'), 'IMAGE')
-                    log("Adding model to preview: " + os.path.join(modelpath, 'thumbnails', modelname+'.png'),
-                        'DEBUG', 'compileModelList')
+                    thumbnailpath = os.path.join(modelpath,'thumbnails', modelname+'.png')
+                    preview = newpreviewcollection.load(modelname, thumbnailpath, 'IMAGE')
+                    log("Adding model to preview: " + thumbnailpath, 'DEBUG')
                 # otherwise create one from the blend file
                 else:
-                    preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'blender', modelname + '.blend'), 'BLEND')
-                    log("Adding model to preview: " + os.path.join(os.path.join(modelpath, 'blender', modelname + '.blend')),
-                        'DEBUG', 'compileModelList')
+                    blendfilepath = os.path.join(modelpath, 'blender', modelname + '.blend')
+                    preview = newpreviewcollection.load(modelname, blendfilepath, 'BLEND')
+                    log("Adding model to preview: " + blendfilepath, 'DEBUG')
                 enum_items.append((modelname, modelname, "", preview.icon_id, i))
                 i += 1
                 categories.add(category)
