@@ -101,14 +101,14 @@ def compileModelList():
 
                 # use existing thumbnail if available
                 if os.path.exists(os.path.join(modelpath, 'thumbnails')):
-                    preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'thumbnails', modelname+'.png'), 'IMAGE')
-                    log("Adding model to preview: " + os.path.join(modelpath, 'thumbnails', modelname+'.png'),
-                        'DEBUG', 'compileModelList')
+                    thumbnailpath = os.path.join(modelpath,'thumbnails', modelname+'.png')
+                    preview = newpreviewcollection.load(modelname, thumbnailpath, 'IMAGE')
+                    log("Adding model to preview: " + thumbnailpath, 'DEBUG')
                 # otherwise create one from the blend file
                 else:
-                    preview = newpreviewcollection.load(modelname, os.path.join(modelpath, 'blender', modelname + '.blend'), 'BLEND')
-                    log("Adding model to preview: " + os.path.join(os.path.join(modelpath, 'blender', modelname + '.blend')),
-                        'DEBUG', 'compileModelList')
+                    blendfilepath = os.path.join(modelpath, 'blender', modelname + '.blend')
+                    preview = newpreviewcollection.load(modelname, blendfilepath, 'BLEND')
+                    log("Adding model to preview: " + blendfilepath, 'DEBUG')
                 enum_items.append((modelname, modelname, "", preview.icon_id, i))
                 i += 1
                 categories.add(category)
