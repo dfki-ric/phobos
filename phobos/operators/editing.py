@@ -1618,10 +1618,10 @@ class AssignSubmechanism(Operator):
     bl_label = "Assign Submechanism"
     bl_options = {'REGISTER', 'UNDO'}
 
-    mechanism_type = EnumProperty(
-        name="Submechanism type",
-        items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
-        )
+    #mechanism_type = EnumProperty(
+    #    name="Submechanism type",
+    #    items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
+    #    )
             #maybe add size in brackets? lambda_mechanism(3) / [3] lambda_mechanism
 
     #mechanism_category = EnumProperty(
@@ -1629,20 +1629,20 @@ class AssignSubmechanism(Operator):
     #    items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
     #    )
 
-    mechanism_name = StringProperty()
+    mechanism_name = StringProperty(name='Name')
 
-    def compileSubmechanismEnum(self, context):
+    def compileSubmechanismTreeEnum(self, context):
         return bUtils.compileEnumPropertyList(
-            defs.definitions['submechanisms'][self.mechanism_type]['joints']['spanningtree'])
+            defs.definitions['submechanisms'][context.window_manager.mechanismpreview]['joints']['spanningtree'])
 
-    jointtype0 = EnumProperty(items=compileSubmechanismEnum)
-    jointtype1 = EnumProperty(items=compileSubmechanismEnum)
-    jointtype2 = EnumProperty(items=compileSubmechanismEnum)
-    jointtype3 = EnumProperty(items=compileSubmechanismEnum)
-    jointtype4 = EnumProperty(items=compileSubmechanismEnum)
-    jointtype5 = EnumProperty(items=compileSubmechanismEnum)
-    jointtype6 = EnumProperty(items=compileSubmechanismEnum)
-    jointtype7 = EnumProperty(items=compileSubmechanismEnum)
+    jointtype0 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype1 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype2 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype3 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype4 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype5 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype6 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype7 = EnumProperty(items=compileSubmechanismTreeEnum)
 
     @classmethod
     def poll(cls, context):
@@ -1654,27 +1654,32 @@ class AssignSubmechanism(Operator):
     #        setattr(self, 'joint' + str(i), context.selected_objects[i].name)
 
     def draw(self, context):
-        self.layout.prop(self, 'mechanism_type')
-        size = defs.definitions['submechanisms'][self.mechanism_type]['size']
+        wm = context.window_manager
+        layout = self.layout
+        joints = [obj for obj in context.selected_objects if obj.phobostype == 'link']
+        layout.label('Selection contains {0} joints.'.format(len(joints)))
+        layout.template_icon_view(wm, 'mechanismpreview', show_labels=True, scale=5.0)
+        layout.prop(wm, 'mechanismpreview')
+        size = defs.definitions['submechanisms'][wm.mechanismpreview]['size']
         if size == len(context.selected_objects):
-            self.layout.prop(self, 'mechanism_name')
-            glayout = self.layout.split()
+            layout.prop(self, 'mechanism_name')
+            glayout = layout.split()
             c1 = glayout.column(align=True)
             c2 = glayout.column(align=True)
             for i in range(size):
                 c1.label(context.selected_objects[i].name+':')
                 c2.prop(self, "jointtype" + str(i), text='')
         else:
-            self.layout.label('Please choose a valid type for selected joints.')
+            layout.label('Please choose a valid type for selected joints.')
 
     def execute(self, context):
-        joints = context.selected_objects
+        joints = [obj for obj in context.selected_objects if obj.phobostype == 'link']
 
         # display names to simplify assignment
         for joint in joints:
             joint.show_name = True
 
-        mechanismdata = defs.definitions['submechanisms'][self.mechanism_type]
+        mechanismdata = defs.definitions['submechanisms'][context.window_manager.mechanismpreview]
         size = mechanismdata['size']
         if len(joints) == size:
             root = context.active_object
@@ -1697,7 +1702,7 @@ class AssignSubmechanism(Operator):
                 log("Joints not assigned correctly.", 'WARNING')
         else:
             log('Number of joints not valid for selected submechanism type: ' +
-                self.mechanism_type, 'ERROR')
+                context.window_manager.mechanismpreview, 'ERROR')
         return {'FINISHED'}
 
 
