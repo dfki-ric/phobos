@@ -103,15 +103,16 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False, end="\n"):
     callerframerecord = inspect.stack()[1]
     frame = callerframerecord[0]
     info = inspect.getframeinfo(frame)
-    originname = info.filename.split('addons/')[-1] + ' - ' + info.function + '(l' + str(info.lineno) + ')'
+    originname = '{0} - {1} (l{2})'.format(info.filename.split('addons/')[-1], info.function,
+                                           info.lineno)
 
     # Display only messages up to preferred log level
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
     if loglevels.index(level) <= loglevels.index(prefs.loglevel):
-        date = datetime.now().strftime("%Y%m%d_%H:%M")
+        date = datetime.now().strftime("%Y%m%d_%H:%M:%S")
         msg = date + " - " + level + " " + message + " (" + originname + ")"
-        terminalmsg = prefix + "[" + date + "] " + decorate(level) + " " + message +\
-                      col.DIM + " (" + originname + ")" + col.ENDC
+        terminalmsg = '{0}[{1}] {2} {3}{4} ({5}){6}'.format(prefix, date, decorate(level), message,
+                                                            col.DIM, originname, col.ENDC)
 
         # log to file if activated
         if prefs.logtofile:
