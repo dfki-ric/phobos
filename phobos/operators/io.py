@@ -280,16 +280,12 @@ class ImportModelOperator(bpy.types.Operator):
         return context is not None
 
     def execute(self, context):
-        try:
-            log("Importing " + self.filepath + ' as ' + self.entitytype, "INFO")
-            model = entities.entity_types[
-                self.entitytype]['import'](self.filepath)
-            # bUtils.cleanScene()
-            models.buildModelFromDictionary(model)
-            for layer in ['link', 'inertial', 'visual', 'collision', 'sensor']:
-                bUtils.toggleLayer(defs.layerTypes[layer], True)
-        except KeyError:
-            log("No import function available for selected model type: " + self.entitytype, "ERROR")
+        log("Importing " + self.filepath + ' as ' + self.entitytype, "INFO")
+        model = entities.entity_types[self.entitytype]['import'](self.filepath)
+        # bUtils.cleanScene()
+        models.buildModelFromDictionary(model)
+        for layer in ['link', 'inertial', 'visual', 'collision', 'sensor']:
+            bUtils.toggleLayer(defs.layerTypes[layer], True)
         return {'FINISHED'}
 
     def invoke(self, context, event):
