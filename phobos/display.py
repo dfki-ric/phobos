@@ -142,11 +142,11 @@ def draw_submechanism(elements):
     bgl.glVertex3f(*vecs[0])
     bgl.glEnd()
 
-    bgl.glBegin(bgl.GL_POLYGON);
-    bgl.glColor4f(*areacolor);
+    bgl.glBegin(bgl.GL_POLYGON)
+    bgl.glColor4f(*areacolor)
     for v in vecs:
         bgl.glVertex3f(*v)
-    bgl.glEnd();
+    bgl.glEnd()
 
 
 def draw_callback_px(self, context):
