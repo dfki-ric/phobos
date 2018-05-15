@@ -160,8 +160,12 @@ def draw_callback_px(self, context):
     bgl.glEnable(bgl.GL_BLEND)
 
     if active:
-        if 'submechanism/spanningtree' in context.object:
-            draw_submechanism(context.object['submechanism/spanningtree'])
+        if any('submechanism' in prop for prop in active.keys()):
+            groups = active.users_group
+            for group in groups:
+                for obj in group.objects:
+                    if 'submechanism/spanningtree' in obj:
+                        draw_submechanism(obj['submechanism/spanningtree'])
 
     if len(selected) > 0:
         for j in [o for o in selected if o.phobostype == 'link']:
