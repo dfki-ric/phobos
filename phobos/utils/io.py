@@ -173,28 +173,40 @@ def importResources(restuple, filepath=None):
     """
     currentscene = bpy.context.scene.name
     bUtils.switchToScene('resources')
-    # gather previously imported objects to avoid multiple imports
+    # avoid importing the same objects multiple times
     imported_objects = [nUtils.stripNamespaceFromName(obj.name)
                         for obj in bpy.data.scenes['resources'].objects]
+    requested_objects = [resource[0] + '_' + resource[1] for resource in restuple]
+    new_objects = [obj for obj in requested_objects if obj not in imported_objects]
+
     # if no filepath is provided, use the path from the preferences
     if not filepath:
         filepath = os.path.join(getConfigPath(), 'resources', 'resources.blend')
+
     # import new objects from resources.blend
-    with bpy.data.libraries.load(filepath) as (data_from, data_to):
-        objects = []
-        for resource in restuple:
-            resobjname = resource[0] + '_' + resource[1]
-            if resobjname in imported_objects:
-                continue
-            if resobjname in data_from.objects:
-                objects.append({'name': resobjname})
-        if objects != []:
-            bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
-        else:
-            bUtils.switchToScene(currentscene)
-            return None
+    if new_objects:
+        with bpy.data.libraries.load(filepath) as (data_from, data_to):
+            objects = [{'name': name} for name in new_objects if name in data_from.objects]
+            if objects:
+                bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
+            else:
+                log('Resource objects could not be imported.', 'ERROR')
+                bUtils.switchToScene(currentscene)
+                return None
     objects = bpy.context.selected_objects
     for obj in objects:
         nUtils.addNamespace(obj, 'resource')
     bUtils.switchToScene(currentscene)
     return objects
+
+
+def getResource(restype, resname):
+    try:
+        resobjname = nUtils.addNamespaceToName(restype + '_' + resname, 'resource')
+        return bpy.data.scenes['resources'].objects[resobjname]
+    except KeyError:  # no resource scene or key not in scene
+        newobjects = importResources(((restype, resname),))
+        if newobjects:
+            return newobjects[0]
+        else:
+            return None
