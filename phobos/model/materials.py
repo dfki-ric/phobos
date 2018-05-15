@@ -78,7 +78,8 @@ def createPhobosMaterials():
     for material in defs.definitions['materials']:
         mat = defs.definitions['materials'][material]
         if material not in materials:
-            createMaterial(material, mat['diffuse'], mat['specular'], mat['alpha'], mat['diffuse_intensity'])
+            createMaterial(material, mat['diffuse'], mat['specular'],
+                           mat['alpha'], mat['diffuse_intensity'])
 
 
 def assignMaterial(obj, materialname):
@@ -93,7 +94,7 @@ def assignMaterial(obj, materialname):
         if materialname in defs.definitions['materials']:
             createPhobosMaterials()
         else:
-            log("Material to be assigned does not exist.", "ERROR")
+            log("Material '" + materialname + "' does not exist.", "ERROR")
             return None
     obj.data.materials.append(bpy.data.materials[materialname])
     if bpy.data.materials[materialname].use_transparency:
