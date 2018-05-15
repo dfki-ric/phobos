@@ -70,7 +70,7 @@ def compileMechanismList():
 
     i = 1
     for mechanism in defs.definitions['submechanisms']:
-        size = defs.definitions['submechanisms'][mechanism]['size']
+        size = len(defs.definitions['submechanisms'][mechanism]['joints']['spanningtree'])
         imagepath = os.path.join(imagefolderpath, mechanism + '.png')
         if not (os.path.exists(imagepath) and os.path.isfile(imagepath)):
             log("No preview found, using default.", 'DEBUG')

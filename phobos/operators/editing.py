@@ -1685,7 +1685,7 @@ class AssignSubmechanism(Operator):
         if not self.linear_chain:
             layout.template_icon_view(wm, 'mechanismpreview', show_labels=True, scale=5.0)
             layout.prop(wm, 'mechanismpreview')
-            size = defs.definitions['submechanisms'][wm.mechanismpreview]['size']
+            size = len(defs.definitions['submechanisms'][wm.mechanismpreview]['joints']['spanningtree'])
             if size == len(context.selected_objects):
                 glayout = layout.split()
                 c1 = glayout.column(align=True)
@@ -1709,14 +1709,14 @@ class AssignSubmechanism(Operator):
         bpy.ops.group.create(name='submechanism:' + self.mechanism_name)
         jointnames = [nUtils.getObjectName(joint) for joint in self.joints]
         if self.linear_chain:
-            root['submechanism/category'] = 'linear'
+            root['submechanism/category'] = 'serial'
             root['submechanism/type'] = '{0}R'.format(len(self.joints))
             root['submechanism/spanningtree'] = list(reversed(jointnames))
             root['submechanism/active'] = list(reversed(jointnames))
             root['submechanism/independent'] = list(reversed(jointnames))
         else:
             mechanismdata = defs.definitions['submechanisms'][context.window_manager.mechanismpreview]
-            size = mechanismdata['size']
+            size = len(mechanismdata['joints']['spanningtree'])
             if len(self.joints) == size:
                 jointmap = {getattr(self, 'jointtype'+str(i)): self.joints[i] for i in range(len(self.joints))}
                 # assign attributes
