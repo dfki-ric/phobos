@@ -128,8 +128,8 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
     def updateExportPath(self, context):
         # DOCU missing description
-        if not bpy.data.worlds[0].phobosexportsettings.path.endswith('/'):
-            bpy.data.worlds[0].phobosexportsettings.path += '/'
+        if not bpy.data.window_managers[0].phobosexportsettings.path.endswith('/'):
+            bpy.data.window_managers[0].phobosexportsettings.path += '/'
 
     def getMeshTypeListForEnumProp(self, context):
         # DOCU missing description
@@ -817,7 +817,7 @@ class PhobosExportPanel(bpy.types.Panel):
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
-        expsets = bpy.data.worlds[0].phobosexportsettings
+        expsets = bpy.data.window_managers[0].phobosexportsettings
         layout = self.layout
 
         # export robot model options
@@ -851,7 +851,7 @@ class PhobosExportPanel(bpy.types.Panel):
             if 'export' in meshes.mesh_types[meshtype]:
                 typename = "export_mesh_" + meshtype
                 cmesh.prop(bpy.data.worlds[0], typename)
-        cmesh.prop(bpy.data.worlds[0].phobosexportsettings, 'outputMeshtype')
+        cmesh.prop(bpy.data.window_managers[0].phobosexportsettings, 'outputMeshtype')
 
         cscene = inlayout.column(align=True)
         cscene.label(text="Scenes")
@@ -1132,8 +1132,9 @@ def register():
     bpy.utils.register_class(PhobosObjectPanel)
 
     # add phobos settings to scene/world
-    bpy.types.World.phobosexportsettings = PointerProperty(
+    bpy.types.WindowManager.phobosexportsettings = PointerProperty(
         type=PhobosExportSettings)
+    # TODO move other stuff to windowmanager instead of world
     bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(
         name="Index of current pose", default=0, update=showPreview)
     bpy.types.Scene.preview_visible = bpy.props.BoolProperty(

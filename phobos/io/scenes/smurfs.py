@@ -53,8 +53,10 @@ def exportSMURFScene(entities, path):
         securepath(path)
         log("Exporting scene to " + path+'.smurfs', "INFO")
         outputfile.write(sceneinfo)
-        epsilon = 10**(-bpy.data.worlds[0].phobosexportsettings.decimalPlaces)  # TODO: implement this separately
-        entitiesdict = epsilonToZero({'entities': entities}, epsilon, bpy.data.worlds[0].phobosexportsettings.decimalPlaces)
+        # TODO: implement this separately
+        epsilon = 10**(-bpy.data.window_managers[0].phobosexportsettings.decimalPlaces)
+        entitiesdict = epsilonToZero({'entities': entities}, epsilon,
+                                     bpy.data.window_managers[0].phobosexportsettings.decimalPlaces)
         outputfile.write(yaml.dump(entitiesdict))
 
 # registering import/export functions of types with Phobos

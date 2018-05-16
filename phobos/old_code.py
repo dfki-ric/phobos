@@ -294,11 +294,11 @@ __author__ = 'kavonszadkowski'
 #
 #     # set up path
 #     if not path:
-#         if os.path.isabs(bpy.data.worlds[0].phobosexportsettings.path:
+#         if os.path.isabs(bpy.data.window_managers[0].phobosexportsettings.path:
 #             outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"),
-#                                                                  bpy.data.worlds[0].phobosexportsettings.path)))
+#                                                                  bpy.data.window_managers[0].phobosexportsettings.path)))
 #         else:
-#             outpath = securepath(os.path.expanduser(bpy.data.worlds[0].phobosexportsettings.path))
+#             outpath = securepath(os.path.expanduser(bpy.data.window_managers[0].phobosexportsettings.path))
 #     else:
 #         outpath = path
 #     if not outpath.endswith(os.path.sep):
@@ -307,15 +307,15 @@ __author__ = 'kavonszadkowski'
 #     log("Export path: " + outpath, "DEBUG", "export")
 #
 #     # parse export settings
-#     yaml = bpy.data.worlds[0].phobosexportsettings.exportYAML
-#     urdf = bpy.data.worlds[0].phobosexportsettings.exportURDF
-#     srdf = bpy.data.worlds[0].phobosexportsettings.exportSRDF
-#     smurf = bpy.data.worlds[0].phobosexportsettings.exportSMURF
-#     meshexp = bpy.data.worlds[0].phobosexportsettings.exportMeshes
-#     texexp = bpy.data.worlds[0].phobosexportsettings.exportTextures
-#     objexp = bpy.data.worlds[0].phobosexportsettings.useObj
-#     stlexp = bpy.data.worlds[0].phobosexportsettings.useStl
-#     daeexp = bpy.data.worlds[0].phobosexportsettings.useDae
+#     yaml = bpy.data.window_managers[0].phobosexportsettings.exportYAML
+#     urdf = bpy.data.window_managers[0].phobosexportsettings.exportURDF
+#     srdf = bpy.data.window_managers[0].phobosexportsettings.exportSRDF
+#     smurf = bpy.data.window_managers[0].phobosexportsettings.exportSMURF
+#     meshexp = bpy.data.window_managers[0].phobosexportsettings.exportMeshes
+#     texexp = bpy.data.window_managers[0].phobosexportsettings.exportTextures
+#     objexp = bpy.data.window_managers[0].phobosexportsettings.useObj
+#     stlexp = bpy.data.window_managers[0].phobosexportsettings.useStl
+#     daeexp = bpy.data.window_managers[0].phobosexportsettings.useDae
 #
 #     # export data
 #     if yaml or urdf or smurf:
@@ -324,14 +324,14 @@ __author__ = 'kavonszadkowski'
 #         if srdf:
 #             exportModelToSRDF(model, outpath + model["modelname"] + ".srdf")
 #         if smurf:
-#             if bpy.data.worlds[0].phobosexportsettings.structureExport:
+#             if bpy.data.window_managers[0].phobosexportsettings.structureExport:
 #                 securepath(os.path.join(outpath, 'smurf'))
 #                 securepath(os.path.join(outpath, 'urdf'))
 #                 exportModelToSMURF(model, os.path.join(outpath, 'smurf/'))
 #             else:
 #                 exportModelToSMURF(model, outpath)
 #         elif urdf:
-#             if bpy.data.worlds[0].phobosexportsettings.structureExport:
+#             if bpy.data.window_managers[0].phobosexportsettings.structureExport:
 #                 securepath(os.path.join(outpath, 'urdf'))
 #                 exportModelToURDF(model, os.path.join(outpath, 'urdf', model["modelname"] + ".urdf"))
 #             else:

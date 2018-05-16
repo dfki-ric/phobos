@@ -73,7 +73,7 @@ def securepath(path):
 
 def getExpSettings():
     # DOCU add some docstring
-    return bpy.data.worlds[0].phobosexportsettings
+    return bpy.data.window_managers[0].phobosexportsettings
 
 
 def getExportModels():
