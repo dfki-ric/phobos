@@ -843,14 +843,14 @@ class PhobosExportPanel(bpy.types.Panel):
             if ('export' in entities.entity_types[entitytype] and
                     'extensions' in entities.entity_types[entitytype]):
                 typename = "export_entity_" + entitytype
-                cmodel.prop(bpy.data.worlds[0], typename)
+                cmodel.prop(bpy.data.window_managers[0], typename)
 
         cmesh = inlayout.column(align=True)
         cmesh.label(text="Meshes")
         for meshtype in sorted(meshes.mesh_types):
             if 'export' in meshes.mesh_types[meshtype]:
                 typename = "export_mesh_" + meshtype
-                cmesh.prop(bpy.data.worlds[0], typename)
+                cmesh.prop(bpy.data.window_managers[0], typename)
         cmesh.prop(bpy.data.window_managers[0].phobosexportsettings, 'outputMeshtype')
 
         cscene = inlayout.column(align=True)
@@ -858,7 +858,7 @@ class PhobosExportPanel(bpy.types.Panel):
         for scenetype in sorted(scenes.scene_types):
             if 'export' in scenes.scene_types[scenetype]:
                 typename = "export_scene_" + scenetype
-                cscene.prop(bpy.data.worlds[0], typename)
+                cscene.prop(bpy.data.window_managers[0], typename)
 
         # TODO delete me?
         # c2.prop(expsets, "exportCustomData", text="Export custom data")
@@ -1034,19 +1034,19 @@ def register():
     for meshtype in meshes.mesh_types:
         if 'export' in meshes.mesh_types[meshtype]:
             typename = "export_mesh_" + meshtype
-            setattr(bpy.types.World, typename, BoolProperty(
+            setattr(bpy.types.WindowManager, typename, BoolProperty(
                 name=meshtype, default=False))
 
     for entitytype in entities.entity_types:
         if 'export' in entities.entity_types[entitytype]:
             typename = "export_entity_" + entitytype
-            setattr(bpy.types.World, typename, BoolProperty(
+            setattr(bpy.types.WindowManager, typename, BoolProperty(
                 name=entitytype, default=False))
 
     for scenetype in scenes.scene_types:
         if 'export' in scenes.scene_types[scenetype]:
             typename = "export_scene_" + scenetype
-            setattr(bpy.types.World, typename, BoolProperty(
+            setattr(bpy.types.WindowManager, typename, BoolProperty(
                 name=scenetype, default=False))
 
     # Load custom icons

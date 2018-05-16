@@ -114,7 +114,7 @@ class ExportSceneOperator(Operator):
         for scenetype in scene_types:
             typename = "export_scene_" + scenetype
             # check if format exists and should be exported
-            if getattr(bpy.data.worlds[0], typename):
+            if getattr(bpy.data.window_managers[0], typename):
                 scene_types[scenetype]['export'](exportlist, os.path.join(
                     ioUtils.getExportPath(), self.sceneName))
         return {'FINISHED'}
@@ -198,7 +198,7 @@ def exportModel(root, export_path, entitytypes=None, model=None):
     for entitytype in entitytypes:
         typename = "export_entity_" + entitytype
         # check if format exists and should be exported
-        if not getattr(bpy.data.worlds[0], typename, False):
+        if not getattr(bpy.data.window_managers[0], typename, False):
             continue
         # format exists and is exported:
         if ioUtils.getExpSettings().structureExport:
@@ -218,14 +218,14 @@ def exportModel(root, export_path, entitytypes=None, model=None):
     # TODO: Move mesh export to individual formats? This is practically SMURF
     # export meshes in selected formats
     i = 1
-    mt = len([m for m in meshes.mesh_types if getattr(bpy.data.worlds[0], "export_mesh_"+m)])
+    mt = len([m for m in meshes.mesh_types if getattr(bpy.data.window_managers[0], "export_mesh_"+m)])
     mc = len(model['meshes'])
     n = mt*mc
     for meshtype in meshes.mesh_types:
         mesh_path = ioUtils.getOutputMeshpath(export_path, meshtype)
         try:
             typename = "export_mesh_" + meshtype
-            if getattr(bpy.data.worlds[0], typename):
+            if getattr(bpy.data.window_managers[0], typename):
                 securepath(mesh_path)
                 for meshname in model['meshes']:
                     meshes.mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_path)

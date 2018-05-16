@@ -64,7 +64,7 @@ def deriveEntity(entity, outpath):
     log("Exporting " + heightmap["entity/name"] + " as a heightmap entity", "INFO")
     entitypose = models.deriveObjectPose(heightmap)
     heightmapMesh = sUtils.getImmediateChildren(heightmap)[0]
-    if bpy.data.worlds[0].heightmapMesh:
+    if bpy.data.window_managers[0].heightmapMesh:
         exMesh = heightmapMesh.to_mesh(bpy.context.scene, True, "PREVIEW")
         exMesh.name = "hm_" + heightmap["entity/name"]
         oldMesh = heightmapMesh.data
@@ -72,13 +72,13 @@ def deriveEntity(entity, outpath):
         heightmapMesh.modifiers["displace_heightmap"].show_render = False
         heightmapMesh.modifiers["displace_heightmap"].show_viewport = False
         # CHECK are the heightmaps exported to the right directory?
-        if bpy.data.worlds[0].useObj:
+        if bpy.data.window_managers[0].useObj:
             ioUtils.exportObj(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".obj")
-        elif bpy.data.worlds[0].useStl:
+        elif bpy.data.window_managers[0].useStl:
             ioUtils.exportStl(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".stl")
-        elif bpy.data.worlds[0].useDae:
+        elif bpy.data.window_managers[0].useDae:
             ioUtils.exportDae(heightmap_outpath, heightmapMesh)
             filename = os.path.join("heightmaps", exMesh.name + ".dae")
         else:
