@@ -48,7 +48,7 @@ def cloneGit(name, url, destination):
     '''
     # check for existing git first
     try:
-        if os.path.exists(os.path.join(destination, name, '.git')):
+        if isGit(os.path.join(destination, name)):
             if not os.path.exists(os.path.join(destination, name, '.git', 'config')):
                 log('Git folder found, but the config seems corrupted. Cloning aborted.', 'ERROR')
                 return False
