@@ -35,6 +35,9 @@ import phobos.utils.blender as bUtils
 from phobos.phoboslog import log
 from bpy.props import StringProperty, BoolProperty
 
+# FIXME: the global variables get overwritten by the reload function
+#        in phobos' __init__ 
+
 model_data = {}
 model_previews = {}
 categories = set([])
@@ -58,7 +61,7 @@ def getCategoriesForEnumProperty(self, context):
     '''
     if len(categories) == 0:
         return [('-',) * 3]
-    return [(item,) * 3 for item in categories]
+    return sorted([(item,) * 3 for item in categories])
 
 
 def compileModelList():
@@ -74,12 +77,12 @@ def compileModelList():
     model_data.clear()
 
     rootpath = bUtils.getPhobosPreferences().modelsfolder
-    i = 0
     if rootpath == '' or not os.path.exists(rootpath):
         log('Model library folder does not exist.')
         return
 
     # parse the model folder
+    i = 0
     for category in os.listdir(rootpath):
         categorypath = os.path.join(rootpath, category)
         # skip all non folders
@@ -101,24 +104,24 @@ def compileModelList():
 
                 # use existing thumbnail if available
                 if os.path.exists(os.path.join(modelpath, 'thumbnails')):
-                    thumbnailpath = os.path.join(modelpath,'thumbnails', modelname+'.png')
-                    preview = newpreviewcollection.load(modelname, thumbnailpath, 'IMAGE')
-                    log("Adding model to preview: " + thumbnailpath, 'DEBUG')
+                    previewpath = os.path.join(modelpath,'thumbnails', modelname+'.png')
+                    preview = newpreviewcollection.load(modelname, previewpath, 'IMAGE')
                 # otherwise create one from the blend file
                 else:
-                    blendfilepath = os.path.join(modelpath, 'blender', modelname + '.blend')
-                    preview = newpreviewcollection.load(modelname, blendfilepath, 'BLEND')
-                    log("Adding model to preview: " + blendfilepath, 'DEBUG')
+                    previewpath = os.path.join(modelpath, 'blender', modelname + '.blend')
+                    preview = newpreviewcollection.load(modelname, previewpath, 'BLEND')
+                log("Adding model to preview: " + previewpath, 'DEBUG')
                 enum_items.append((modelname, modelname, "", preview.icon_id, i))
                 i += 1
                 categories.add(category)
         # save the category
         newpreviewcollection.enum_items = enum_items
         model_previews[category] = newpreviewcollection
+        log("Finished parsing model folder. Imported {0} models.".format(i), 'INFO')
 
-    # reregister the enumproperty to ensure new items are displayed
-    WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
-    WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
+    ## reregister the enumproperty to ensure new items are displayed
+    #WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
+    #WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
 
 
 class UpdateModelLibraryOperator(bpy.types.Operator):
@@ -176,8 +179,8 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
         if ioUtils.importBlenderModel(filepath, self.namespace, self.use_prefix):
             return {'FINISHED'}
         else:
-            log("Model " + wm.modelpreview + " could not be loaded from library: No valid .blend file.",
-                "ERROR")
+            log("Model " + wm.modelpreview + " could not be loaded from library:"
+                "No valid .blend file.", "ERROR")
             return {'CANCELLED'}
 
 
@@ -191,7 +194,6 @@ def register():
     WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
     WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
     compileModelList()
-
 
 def unregister():
     for previews in model_previews.values():
