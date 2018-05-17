@@ -1662,6 +1662,15 @@ class AssignSubmechanism(Operator):
     jointtype5 = EnumProperty(items=compileSubmechanismTreeEnum)
     jointtype6 = EnumProperty(items=compileSubmechanismTreeEnum)
     jointtype7 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype8 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype9 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype10 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype11 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype12 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype13 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype14 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype15 = EnumProperty(items=compileSubmechanismTreeEnum)
+
 
     @classmethod
     def poll(cls, context):
