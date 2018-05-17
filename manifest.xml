@@ -13,7 +13,7 @@
   <logo>https://github.com/rock-simulation/phobos/wiki/img/phobos_logo_small.png</logo>
 
   <depend package="blender"/>
-  <depend package="pyyaml"/>
+  <depend package="python3-yaml"/>
 
   <keywords>
     <keyword>Simulation</keyword>
