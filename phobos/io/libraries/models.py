@@ -36,7 +36,7 @@ from phobos.phoboslog import log
 from bpy.props import StringProperty, BoolProperty
 
 # FIXME: the global variables get overwritten by the reload function
-#        in phobos' __init__ 
+#        in phobos' __init__
 
 model_data = {}
 model_previews = {}
@@ -174,6 +174,9 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
 
     def execute(self, context):
         wm = context.window_manager
+        # FIXME: the following is a hack to fix the problem mentioned at the top
+        if not model_data:
+            compileModelList()
         filepath = os.path.join(model_data[wm.category][wm.modelpreview]['path'],
                                 'blender', wm.modelpreview+'.blend')
         if ioUtils.importBlenderModel(filepath, self.namespace, self.use_prefix):
