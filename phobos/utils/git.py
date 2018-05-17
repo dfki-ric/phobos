@@ -48,9 +48,17 @@ def cloneGit(name, url, destination):
     '''
     # check for existing git first
     try:
-        if os.path.exists(os.path.join(destination,name)):
-            subprocess.check_output(['git', 'status'], cwd=os.path.join(destination, name))
-            return True
+        if os.path.exists(os.path.join(destination, name, '.git')):
+            if not os.path.exists(os.path.join(destination, name, '.git', 'config')):
+                log('Git folder found, but the config seems corrupted. Cloning aborted.', 'ERROR')
+                return False
+            # compare the git url with the existing git folder
+            with open(os.path.join(destination, name, '.git', 'config'), 'r') as gitconfigfile:
+                if url in gitconfigfile.read():
+                    log('Git already cloned.', 'INFO')
+                    return True
+                log('Git folder found, but with different url. Cloning aborted.', 'ERROR')
+                return False
     except subprocess.CalledProcessError:
         pass
 
