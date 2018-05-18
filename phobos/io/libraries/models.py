@@ -149,8 +149,8 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
     )
 
     use_prefix = BoolProperty(
-       name='Use prefix',
-       default=True,
+       name='Use Prefix',
+       default=False,
        description="Import model with fixed prefixed instead of removable namespace.")
 
     #as_reference = BoolProperty(

@@ -129,15 +129,24 @@ def getAbsolutePath(path):
         return os.path.join(bpy.path.abspath('//'), path)
 
 
-def importBlenderModel(filepath, namespace='', prefix=True):
-    if (os.path.exists(filepath) and os.path.isfile(filepath) and
-       filepath.endswith('.blend')):
+def importBlenderModel(filepath, namespace='', prefix=False):
+    if os.path.exists(filepath) and os.path.isfile(filepath) and filepath.endswith('.blend'):
         log("Importing Blender model" + filepath, "INFO")
         objects = []
         with bpy.data.libraries.load(filepath) as (data_from, data_to):
-            for obj in data_from.objects:
-                objects.append({'name': obj})
+            for objname in data_from.objects:
+                objects.append({'name': objname})
         bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
+        imported_objects = bpy.context.selected_objects
+        resources = [obj for obj in imported_objects if obj.name.startswith('resource::')]
+        new_objects = [obj for obj in imported_objects if not obj.name.startswith('resource::')]
+        if resources:
+            if 'resources' not in bpy.data.scenes.keys():
+                bpy.data.scenes.new('resources')
+            sUtils.selectObjects(resources)
+            bpy.ops.object.make_links_scene(scene='resources')
+            bpy.ops.object.delete(use_global=False)
+            sUtils.selectObjects(new_objects)
         bpy.ops.view3d.view_selected(use_all_regions=False)
         # allow the use of both prefixes and namespaces, thus truly merging
         # models or keeping them separate for export
@@ -148,8 +157,11 @@ def importBlenderModel(filepath, namespace='', prefix=True):
                     obj.name = namespace + '__' + obj.name
                     # make sure no internal name-properties remain
                     for key in obj.keys():
-                        if obj[key].endswidth("/name"):
-                            del obj[key]
+                        try:
+                            if obj[key].endswidth("/name"):
+                                del obj[key]
+                        except AttributeError:  # prevent exceptions from non-string properties
+                            pass
             else:
                 for obj in bpy.context.selected_objects:
                     nUtils.addNamespace(obj, namespace)
