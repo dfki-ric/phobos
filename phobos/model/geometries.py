@@ -60,13 +60,14 @@ def deriveGeometry(obj):
 
 
 def createGeometry(viscol, geomsrc):
-    """Creates geometrical Blender object for visual or collision objects.
+    """Creates Blender object for visual or collision objects.
+    Returns reference to new object or None if creation failed.
 
-    :param viscol: The visual/collision dictionary element you want to create the geometry for.
+    :param viscol: visual/collision dictionary element
     :type viscol: dict
-    :param geomsrc: The new viscols phobostype.
+    :param geomsrc: new object's phobostype
     :type geomsrc: str
-
+    :return: bpy.types.Object or None
     """
     if 'geometry' not in viscol or viscol['geometry'] is {}:
         return None
@@ -106,18 +107,19 @@ def createGeometry(viscol, geomsrc):
         elif geomtype == 'sphere':
             dimensions = geom['radius']
         else:
-            log("Could not determine geometry type of " + geomsrc + viscol['name']
+            log("Unknown geometry type of " + geomsrc + viscol['name']
                 + '. Placing empty coordinate system.', "ERROR")
             bpy.ops.object.empty_add(type='PLAIN_AXES', radius=0.2)
-            bpy.context.active_object.name = viscol['name']
+            obj = bpy.context.object
+            obj.phobostype = geomsrc
+            nUtils.safelyName(bpy.context.active_object, viscol['name'], phobostype=geomsrc)
             return None
-        log('Creating primtive for obj ' + viscol['name'], 'INFO')
-        newgeom = bUtils.createPrimitive(viscol['name'], geomtype, dimensions, player=geomsrc)
+        log('Creating primtive for {0}: {1}'.format(geomsrc, viscol['name']), 'INFO')
+        newgeom = bUtils.createPrimitive(viscol['name'], geomtype, dimensions, phobostype=geomsrc)
         newgeom.select = True
         bpy.ops.object.transform_apply(scale=True)
 
     # from here it's the same for both meshes and primitives
-    newgeom.phobostype = geomsrc
     newgeom['geometry/type'] = geomtype
     if geomsrc == 'visual':
         try:
