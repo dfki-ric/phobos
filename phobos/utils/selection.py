@@ -254,19 +254,22 @@ def getObjectByNameAndType(name, phobostype):
     return None
 
 
-def selectByName(name, match_case=False):
+def selectByName(name, match_case=False, exact=False):
     """
     Uses getObjectsByPattern to select the found objects.
 
-    :param pattern: The pattern to search for.
-    :type pattern: str.
+    :param name: The name (pattern) to search for.
+    :type name: str.
     :param match_case: Indicate whether to match the object names' case to the pattern.
     :type match_case: bool.
+    :param exact: whether to search for exact string or not
+    :type exact: bool.
     :return: None.
     """
-    # TODO delete me?
-    # selectObjects(getObjectByName(name), True)
-    selectObjects(getObjectsByPattern(name, match_case), True)
+    if exact:
+        selectObjects(getObjectByName(name), True)
+    else:
+        selectObjects(getObjectsByPattern(name, match_case), True)
 
 
 def getSelectedObjects():
