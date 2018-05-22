@@ -32,6 +32,32 @@ import phobos.defs as defs
 import phobos.utils.selection as selection
 
 
+def safelyName(obj, name, phobostype=None):
+    """Assigns a name to an object in a safe way with regard to the internal
+     name handling in Blender. If no phobostype is provided or the phobostype
+     is the same as the object itself, the actual object is renamed, generating
+     a name that no other object in Blender has, using Blender's own naming
+     scheme. This prevents Blender to assign the name and change another object's
+     name that previously held that name. If the *name* provided cannot be
+     assigned to the object, it is stored in a custom variable '*phobostype*/name'
+     Note that other '*/name' variables in the object are not updated.
+     :return: str -- name of obj after function call
+     """
+    objectname = name
+    if not phobostype:
+        phobostype = obj.phobostype
+    if obj.phobostype == phobostype:
+        i = 0
+        while objectname in bpy.data.objects:
+            numberstr = '.{0:03d}'.format(i)
+            objectname = objectname[:63-len(numberstr)] + numberstr
+            i +=1
+        obj.name = objectname
+    if objectname != name:
+        obj[phobostype+'/name'] = name
+    return obj.name
+
+
 def getObjectName(obj, phobostype=None):
     """Returns the name for an object depending on its phobostype.
     For links and objects lacking a '*phobostype*/name' property, the object's
