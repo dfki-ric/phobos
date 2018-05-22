@@ -33,6 +33,7 @@ import phobos.defs as defs
 import phobos.model.materials as materials
 from phobos.phoboslog import log
 from . import selection as sUtils
+from . import naming as nUtils
 
 
 def compileEnumPropertyList(iterable):
@@ -65,8 +66,8 @@ def printMatrices(obj, info=None):
           "\n\nbasis:\n", obj.matrix_basis)
 
 
-def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(0, 0, 0), protation=(0, 0, 0),
-                    verbose=False):
+def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0, 0, 0),
+                    protation=(0, 0, 0), phobostype=None):
     """Generates the primitive specified by the input parameters
 
     :param pname: The primitives new name.
@@ -81,13 +82,12 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
     :type plocation: tuple
     :param protation: The new primitives rotation.
     :type protation: tuple
+    :param phobostype: phobostype of object to be created
+    :type phobostype: str
     :return: bpy.types.Object - the new blender object.
     """
-    if verbose:
-        log(ptype + psize, "INFO", "createPrimitive")
+    # TODO: allow placing on currently active layer?
     try:
-        # TODO delete me?
-        # n_layer = bpy.context.scene.active_layer
         n_layer = int(player)
     except ValueError:
         n_layer = defs.layerTypes[player]
@@ -99,20 +99,22 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial="None", plocation=(
         obj = bpy.context.object
         obj.dimensions = psize
     if ptype == "sphere":
-        bpy.ops.mesh.primitive_uv_sphere_add(size=psize, layers=players, location=plocation, rotation=protation)
+        bpy.ops.mesh.primitive_uv_sphere_add(size=psize, layers=players, location=plocation,
+                                             rotation=protation)
     elif ptype == "cylinder":
-        bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=psize[0], depth=psize[1], layers=players,
-                                            location=plocation, rotation=protation)
+        bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=psize[0], depth=psize[1],
+                                            layers=players, location=plocation, rotation=protation)
     elif ptype == "cone":
-        bpy.ops.mesh.primitive_cone_add(vertices=32, radius=psize[0], depth=psize[1], cap_end=True, layers=players,
-                                        location=plocation, rotation=protation)
+        bpy.ops.mesh.primitive_cone_add(vertices=32, radius=psize[0], depth=psize[1], cap_end=True,
+                                        layers=players, location=plocation, rotation=protation)
     elif ptype == 'disc':
-        bpy.ops.mesh.primitive_circle_add(vertices=psize[1], radius=psize[0], fill_type='TRIFAN', location=plocation,
-                                          rotation=protation, layers=players)
+        bpy.ops.mesh.primitive_circle_add(vertices=psize[1], radius=psize[0], fill_type='TRIFAN',
+                                          location=plocation, rotation=protation, layers=players)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj = bpy.context.object
-    obj.name = pname
-    if pmaterial != 'None':
+    obj.phobostype = phobostype
+    nUtils.safelyName(obj, pname, phobostype)
+    if pmaterial:
         materials.assignMaterial(obj, pmaterial)
     return obj
 
