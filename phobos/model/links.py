@@ -72,9 +72,7 @@ def createLink(link):
     newlink.phobostype = 'link'
     if link['name'] in bpy.data.objects.keys():
         log('Object with name of new link already exists: ' + link['name'], 'WARNING')
-    newlink.name = link['name']
-    if newlink.name != link['name']:
-        newlink["link/name"] = link['name']  # fallback-option in case an object of the same name already exists
+    nUtils.safelyName(newlink, link['name'])
 
     # set the size of the link
     elements = getGeometricElements(link)
