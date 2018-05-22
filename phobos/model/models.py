@@ -42,7 +42,6 @@ import mathutils
 import phobos.model.links as linkmodel
 import phobos.model.inertia as inertiamodel
 import phobos.model.joints as jointmodel
-import phobos.model.controllers as controllermodel
 import phobos.model.sensors as sensormodel
 import phobos.model.lights as lightmodel
 import phobos.model.poses as poses
