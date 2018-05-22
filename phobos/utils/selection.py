@@ -192,7 +192,8 @@ def selectObjects(objects, clear=True, active=-1):
 
 def getObjectByName(name):
     """
-    Gets blender object by its name (blender objects name or type name).
+    Returns list of objects that either have a specific *name* or contain a custom
+    name property with that name.
 
     :param name: The exact object name to find.
     :type name: str.
@@ -211,8 +212,8 @@ def getObjectByName(name):
 
 def getObjectsByPattern(pattern, match_case=False):
     """
-    Find objects in the scene that match a name pattern. The pattern may match
-    either the object's actual name or the value of the 'phobostype/name'
+    Return a list of objects in the scene that match a name pattern. The pattern
+    may match either the object's actual name or the value of the 'phobostype/name'
     property.
 
     :param pattern: The pattern to search for.
@@ -221,18 +222,18 @@ def getObjectsByPattern(pattern, match_case=False):
     :type match_case: bool.
     :return: list - all matching objects.
     """
-    obj_list = []
+    objlist = []
     for obj in bpy.data.objects:
         for key in obj.keys():
             if obj[key].endswith('/name'):
-                obj_name = obj[key]
-                if ((match_case and pattern in obj_name)
-                    or (not match_case and pattern.lower() in obj_name.lower())):
-                    obj_list.append(obj)
+                objname = obj[key]
+                if ((match_case and pattern in objname) or
+                        (not match_case and pattern.lower() in objname.lower())):
+                    objlist.append(obj)
         if (match_case and pattern in obj.name) \
                 or (not match_case and pattern.lower() in obj.name.lower()):
-            obj_list.append(obj)
-    return obj_list
+            objlist.append(obj)
+    return objlist
 
 
 def getObjectByNameAndType(name, phobostype):
