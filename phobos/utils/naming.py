@@ -97,34 +97,27 @@ def addNamespace(obj, namespace=None):
     :param obj: The object to namespace.
     :type obj: bpy.types.Object
     """
-    try:
-        if not namespace:
-            namespace = selection.getRoot(obj)["entity/name"]
-        obj.name = addNamespaceToName(obj.name, namespace)
-        # for ptype in defs.subtypes:
-        #     typetag = ptype + "/type"
-        #     nametag = ptype + "/name"
-        #     if (typetag in obj or ("phobostype" in obj and obj.phobostype == ptype)) and nametag not in obj:
-        #         obj[nametag] = obj.name
-    except (TypeError, KeyError):
-        log(getObjectName(obj) + " is not part of a well-defined entity.", "ERROR")
+    obj.name = safelyName(obj, addNamespaceToName(obj.name, namespace))
 
 
 def stripNamespaceFromName(name):
     return name.split('::')[-1]
 
 
-def removeNamespace(obj):
+def removeNamespace(obj, renameproperties=False):
     """Removes the namespace from an object if present.
 
     :param obj: The object to remove the namespace from.
     :type obj: bpy.types.Object
     """
-    obj.name = stripNamespaceFromName(obj.name)
-    for key in obj.keys():
-        if obj[key].endswith("/name") and obj[key] == obj.name:
-                del obj[key]
+    obj.name = safelyName(obj, stripNamespaceFromName(obj.name))
 
+
+def toggleNamespace(obj, namespace=''):
+    if not namespace or namespace + '::' in obj.name:
+        removeNamespace(obj)
+    else:
+        addNamespace(obj, namespace)
 
 def gatherNamespaces(separator='::'):
     """Gathers all existing namespaces.
@@ -134,9 +127,3 @@ def gatherNamespaces(separator='::'):
         if separator in obj.name:
             namespaces.append(obj.name.split(separator)[0])
     return namespaces
-
-
-def namesAreExplicit(nameset, objnames):
-    """Checks whether two sets of names have equal names.
-    """
-    return len(nameset.intersection(objnames)) == 0

@@ -50,22 +50,25 @@ class ToggleNamespaces(Operator):
         description="Convert the complete robot"
     )
 
+    namespace = StringProperty()
+
     def execute(self, context):
-        objlist = context.selected_objects
         if self.complete:
-            roots = list(set([sUtils.getRoot(obj) for obj in context.selected_objects]))
-            if None in roots:
-                roots.remove(None)
-            objlist = [elem for sublist in [sUtils.getChildren(root) for root in roots] for elem in sublist]
-        objnames = [o.name for o in bpy.data.objects]
+            roots = set([sUtils.getRoot(obj) for obj in context.selected_objects]) - {None}
+            objects = set()
+            for root in roots:
+                objects = objects | set(sUtils.getChildren(root))
+            objlist = list(objects)
+        else:
+            objlist = [bpy.context.active_object]
         for obj in objlist:
-            if "::" in obj.name:
-                if nUtils.namesAreExplicit({obj.name.split("::")[-1]}, objnames):
-                    nUtils.removeNamespace(obj)
-                else:
-                    log("Cannot remove namespace from " + obj.name + ". Name wouldn't be explicit", "ERROR")
-            else:
-                nUtils.addNamespace(obj)
+            try:
+                entityname = sUtils.getRoot(obj)['entity/name']
+            except (KeyError, TypeError):
+                entityname = ''
+                log(nUtils.getObjectName(obj) + " is not part of a well-defined entity.", "WARNING")
+            namespace = self.namespace if self.namespace else entityname
+            nUtils.toggleNamespace(obj, namespace)
         return {'FINISHED'}
 
 
