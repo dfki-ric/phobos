@@ -28,7 +28,6 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 
 import bpy
 from phobos.phoboslog import log
-import phobos.defs as defs
 import phobos.utils.selection as selection
 
 
@@ -59,22 +58,25 @@ def safelyName(obj, name, phobostype=None):
 
 
 def getObjectName(obj, phobostype=None):
-    """Returns the name for an object depending on its phobostype.
-    For links and objects lacking a '*phobostype*/name' property, the object's
-    name is used instead, cleaned of namespaces.
+    """Returns the name of an object relevant to Phobos.
+    An optional *phobostype* parameter can be provided for objects with multiple
+    uses, such as link objects (which also contain joint and motor information).
+    If no *phobostype* is provided, the phobostype of the object is used.
+    The contents of the custom property *phobostype*/name are returned, if present,
+    else the object name itself is returned, stripped of namespaces.
 
-    :param obj: The object you want the name for.
+    :param obj: object for which the name is requested
     :type obj: bpy.types.Object
-    :param phobostype: The phobostype you want this objects name for.
-    :return: str -- The objects name.
+    :param phobostype: phobostype if relevant (e.g. 'motor')
+    :return: str -- The object's name
     """
     if obj is None:
         return None
     nametype = phobostype if phobostype else obj.phobostype
-    if nametype != 'link' and nametype + "/name" in obj:
+    try:
         return obj[nametype + "/name"]
-    else:
-        return obj.name.split('::')[-1]
+    except KeyError:
+        return stripNamespaceFromName(obj.name)
 
 
 def replaceNameElement(prop, old, new):
