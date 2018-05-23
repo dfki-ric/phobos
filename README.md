@@ -40,10 +40,7 @@ By attaching meshes or primitives to the bones, Phobos allows to add visual and 
   - Auto-generation of collision objects
   - Auto-generation of inertia tensors from mass and shape
   - Calculation of merged inertia for complex links
-- Numerous tools for error-free editing:
   - Verbose logging
-  - Measurements (e.g. distance of parts, sum of masses)
-  - Synchronization of mass information
 - Import and export of URDF, SMURF and other formats
 - Export with defined floating point precision
 
