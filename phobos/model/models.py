@@ -824,12 +824,23 @@ def namespaced(name, namespace):
     return namespace+'_'+name
 
 
-def buildModelDictionary(root):
+def buildModelDictionary(root, name=''):
     """Builds a python dictionary representation of a Phobos model.
 
     :param root: bpy.types.Object
     :return: dict
     """
+    if root.phobostype not in ['link', 'submodel']:
+        log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
+        return None
+
+    if name:
+        modelname = name
+    elif 'modelname' in root:
+        modelname = root['modelname']
+    else:
+        modelname = 'unnamed'
+
     model = {'links': {},
              'joints': {},
              'sensors': {},
@@ -839,24 +850,12 @@ def buildModelDictionary(root):
              'meshes': {},
              'lights': {},
              'groups': {},
-             'chains': {}
+             'chains': {},
+             'date': datetime.now().strftime("%Y%m%d_%H:%M"),
+             'name': modelname
              }
-    # timestamp of model
-    model["date"] = datetime.now().strftime("%Y%m%d_%H:%M")
-    if root.phobostype not in ['link', 'submodel']:
-        log("Found no 'link' or 'submodel' object as root of the robot model.",
-            "ERROR")
-        raise Exception(root.name + " is  no valid root link.")
-    else:
-        if 'modelname' in root:
-            model['name'] = root["modelname"]
-        else:
-            log("No name for the model defines, setting to 'unnamed_model'",
-                "WARNING")
-            model['name'] = 'unnamed_model'
 
-    log("Creating dictionary for robot " + model['name'] + " from object " +
-        root.name, "INFO")
+    log("Creating dictionary for model " + modelname + " with root " + root.name, "INFO")
 
     # create tuples of objects belonging to model
     objectlist = sUtils.getChildren(root,
