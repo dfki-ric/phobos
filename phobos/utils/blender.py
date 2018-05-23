@@ -112,7 +112,8 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0,
                                           location=plocation, rotation=protation, layers=players)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj = bpy.context.object
-    obj.phobostype = phobostype
+    if phobostype:
+        obj.phobostype = phobostype
     nUtils.safelyName(obj, pname, phobostype)
     if pmaterial:
         materials.assignMaterial(obj, pmaterial)

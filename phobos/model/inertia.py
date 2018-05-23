@@ -60,10 +60,11 @@ def createInertial(parentname, inertialdict, parentobj=None, helper=False):
     except KeyError:
         origin = mathutils.Vector()
     inertialobject = bUtils.createPrimitive('inertial_' + parentname, 'box', (size,) * 3,
-                                            defs.layerTypes["inertial"], 'phobos_inertial')
+                                            defs.layerTypes["inertial"],
+                                            pmaterial='phobos_inertial',
+                                            phobostype='inertial')
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(scale=True)
-    inertialobject.phobostype = 'inertial'
     if parentobj:
         inertialobject.matrix_world = parentobj.matrix_world
         parent = parentobj if parentobj.phobostype == 'link' else parentobj.parent
