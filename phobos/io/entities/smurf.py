@@ -141,7 +141,8 @@ def gatherAnnotations(model):
                 delkeys.append(key)
         delkeys.append('temp_type')
         for key in delkeys:
-            del element[key]
+            if key in element:
+                del element[key]
     return annotations
 
 
