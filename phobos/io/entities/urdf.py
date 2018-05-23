@@ -42,8 +42,8 @@ from phobos.phoboslog import log
 
 def sort_urdf_elements(elems):
     """
-    Sort a collection of elements. By default, this method simply wraps the standard 'sorted()' method.
-    This is done in order to be able to easily change the element ordering.
+    Sort a collection of elements. By default, this method simply wraps the standard
+    'sorted()' method. This is done in order to be able to easily change the element ordering.
 
     :param elems: a collection
     :return: sorted colletion
@@ -67,18 +67,21 @@ def writeURDFGeometry(output, element, filepath):
         if geometry['type'] == 'box':
             output.append(xmlline(5, 'box', ['size'], [l2str(geometry['size'])]))
         elif geometry['type'] == "cylinder":
-            output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))
+            output.append(xmlline(5, 'cylinder', ['radius', 'length'],
+                                  [geometry['radius'], geometry['length']]))
         elif geometry['type'] == "sphere":
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
             meshpath = ioUtils.getOutputMeshpath(path.dirname(filepath))
             output.append(xmlline(5, 'mesh', ['filename', 'scale'],
                                   [path.join(path.relpath(meshpath, filepath),
-                                             geometry['filename'] + '.' + ioUtils.getOutputMeshtype()),
+                                             geometry['filename'] + '.'
+                                             + ioUtils.getOutputMeshtype()),
                                    l2str(geometry['scale'])]))
         elif geometry['type'] == 'capsule':
             # FIXME: real capsules here!
-            output.append(xmlline(5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]))
+            output.append(xmlline(5, 'cylinder', ['radius', 'length'],
+                                  [geometry['radius'], geometry['length']]))
         else:
             raise TypeError("Unknown geometry type")
         output.append(indent * 4 + '</geometry>\n')
@@ -123,8 +126,9 @@ def exportUrdf(model, outpath):
             if 'mass' in link['inertial'] and 'inertia' in link['inertial']:
                 output.append(indent * 3 + '<inertial>\n')
                 if 'pose' in link['inertial']:
-                    output.append(xmlline(4, 'origin', ['xyz', 'rpy'], [l2str(link['inertial']['pose']['translation']),
-                                                                        l2str(link['inertial']['pose']['rotation_euler'])]))
+                    output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
+                                          [l2str(link['inertial']['pose']['translation']),
+                                           l2str(link['inertial']['pose']['rotation_euler'])]))
                 output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
                 output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'],
                                       [str(i) for i in link['inertial']['inertia']]))
@@ -145,22 +149,26 @@ def exportUrdf(model, outpath):
                         vis = link['visual'][v]
                         output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
-                                              [l2str(vis['pose']['translation']), l2str(vis['pose']['rotation_euler'])]))
+                                              [l2str(vis['pose']['translation']),
+                                               l2str(vis['pose']['rotation_euler'])]))
                         writeURDFGeometry(output, vis, outpath)
                         if 'material' in vis:
                             # FIXME: change back to 1 when implemented in urdfloader
                             if model['materials'][vis['material']]['users'] == 0:
                                 mat = model['materials'][vis['material']]
-                                output.append(indent * 4 + '<material name="' + mat['name'] + '">\n')
+                                output.append(indent * 4 + '<material name="'
+                                              + mat['name'] + '">\n')
                                 color = mat['diffuseColor']
-                                output.append(
-                                    indent * 5 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
-                                        mat["transparency"]) + '"/>\n')
+                                output.append(indent * 5 + '<color rgba="'
+                                              + l2str([color[num] for num in ['r', 'g', 'b']])
+                                              + ' ' + str(mat["transparency"]) + '"/>\n')
                                 if 'diffuseTexture' in mat:
-                                    output.append(indent * 5 + '<texture filename="' + mat['diffuseTexture'] + '"/>\n')
+                                    output.append(indent * 5 + '<texture filename="'
+                                                  + mat['diffuseTexture'] + '"/>\n')
                                 output.append(indent * 4 + '</material>\n')
                             else:
-                                output.append(indent * 4 + '<material name="' + vis["material"] + '"/>\n')
+                                output.append(indent * 4 + '<material name="'
+                                              + vis["material"] + '"/>\n')
                         output.append(indent * 3 + '</visual>\n')
             # collision object
             if link['collision']:
@@ -178,7 +186,8 @@ def exportUrdf(model, outpath):
                         col = link['collision'][c]
                         output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
                         output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
-                                              [l2str(col['pose']['translation']), l2str(col['pose']['rotation_euler'])]))
+                                              [l2str(col['pose']['translation']),
+                                               l2str(col['pose']['rotation_euler'])]))
                         writeURDFGeometry(output, col, outpath)
                         output.append(indent * 3 + '</collision>\n')
             output.append(indent * 2 + '</link>\n\n')
@@ -196,10 +205,12 @@ def exportUrdf(model, outpath):
     for j in sorted_joint_keys:
         if j in model['joints']:
             joint = model['joints'][j]
-            output.append(indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n')
+            output.append(indent * 2 + '<joint name="' + joint['name']
+                          + '" type="' + joint["type"] + '">\n')
             child = model['links'][joint["child"]]
             output.append(xmlline(3, 'origin', ['xyz', 'rpy'],
-                                  [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])]))
+                                  [l2str(child['pose']['translation']),
+                                   l2str(child['pose']['rotation_euler'])]))
             output.append(indent * 3 + '<parent link="' + joint["parent"] + '"/>\n')
             output.append(indent * 3 + '<child link="' + joint["child"] + '"/>\n')
             if 'axis' in joint:
@@ -240,8 +251,8 @@ def exportUrdf(model, outpath):
                 output.append(indent * 2 + '<material name="' + m + '">\n')
                 color = model['materials'][m]['diffuseColor']
                 transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
-                output.append(indent * 3 + '<color rgba="' + l2str([color[num] for num in ['r', 'g', 'b']]) + ' ' + str(
-                    1.0 - transparency) + '"/>\n')
+                output.append(indent * 3 + '<color rgba="' + l2str([color[num]
+                            for num in ['r', 'g', 'b']]) + ' ' + str(1.0 - transparency) + '"/>\n')
                 if 'diffuseTexture' in model['materials'][m]:
                     output.append(indent * 3 + '<texture filename="' + model['materials'][m]['diffuseTexture'] + '"/>\n')
                 output.append(indent * 2 + '</material>\n\n')
@@ -254,8 +265,8 @@ def exportUrdf(model, outpath):
 
 
 def store_element_order(element_order, path):
-    """This function dumps whatever pythonic yaml structure to a given filepath and appends *_element_order_debug.yml*
-    to the end of path.
+    """This function dumps whatever pythonic yaml structure to a given filepath and appends
+    *_element_order_debug.yml* to the end of path.
 
     :param element_order: The dictionary you want to dump into a yaml file.
     :type element_order: dict
@@ -293,8 +304,8 @@ def store_element_order(element_order, path):
 
 
 def round_float(float_as_str, decimal=6):
-    """Casts 'float_as_str' to float and round to 'decimal' decimal places. The possible exception **ValueError** is
-    not handled in the function itself!
+    """Casts 'float_as_str' to float and round to 'decimal' decimal places. The possible exception
+    **ValueError** is not handled in the function itself!
 
     :param float_as_str: The string you want to cast into a float.
     :type float_as_str: str
@@ -344,7 +355,7 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
 
     :param position: The position to include in the dictionary.
     :type position: list
-    :param rotation: The rotation to include into the dictionary. It can either be an euler angle or a quaternion.
+    :param rotation: The rotation to include into the dictionary, either euler angle or quaternion.
     :type rotation: list
     :param pivot: The pivot point.
     :type pivot: list
