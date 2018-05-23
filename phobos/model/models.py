@@ -1023,8 +1023,7 @@ def buildModelDictionary(root, name=''):
             #for key in [key for key in link.keys() if key.startswith('submechanism/')]:
             #    submechanisms.append({key.replace('submechanism/', ''): value
             #                        for key, value in link.items()})
-            submech = {'name': link['submechanism/category'],
-                       'type': link['submechanism/type'] ,
+            submech = {'type': link['submechanism/type'],
                        'contextual_name': link['submechanism/name'],
                        'jointnames_independent': [j.name for j in link['submechanism/independent']],
                        'jointnames_spanningtree': [j.name for j in link['submechanism/spanningtree']],
