@@ -130,7 +130,7 @@ def deriveLink(obj):
     log("Deriving link from obj " + obj.name, "DEBUG")
     props = initObjectProperties(obj, phobostype='link', ignoretypes=linkobjignoretypes-{'link'})
     parent = sUtils.getEffectiveParent(obj)
-    props['parent'] = parent.name if parent else None
+    props['parent'] = nUtils.getObjectName(parent) if parent else None
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
     props["visual"] = {}
