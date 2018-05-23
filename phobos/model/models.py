@@ -505,8 +505,7 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=()):
     :return: dict
     """
     # allow duplicated names differentiated by types
-    props = {'name': nUtils.getObjectName(
-        obj, phobostype)}
+    props = {'name': nUtils.getObjectName(obj, phobostype)}
     # if no phobostype is defined, everything is parsed
     if not phobostype:
         for key, value in obj.items():
@@ -828,12 +827,9 @@ def namespaced(name, namespace):
 def buildModelDictionary(root):
     """Builds a python dictionary representation of a Phobos model.
 
-    :param root: bpy.types.objects
+    :param root: bpy.types.Object
     :return: dict
     """
-    # TODO remove this comment
-    # os.system('clear')
-
     model = {'links': {},
              'joints': {},
              'sensors': {},
@@ -863,9 +859,9 @@ def buildModelDictionary(root):
         root.name, "INFO")
 
     # create tuples of objects belonging to model
-    objectlist = sUtils.getChildren(
-        root, selected_only=ioUtils.getExpSettings().selectedOnly,
-        include_hidden=False)
+    objectlist = sUtils.getChildren(root,
+                                    selected_only=ioUtils.getExpSettings().selectedOnly,
+                                    include_hidden=False)
     linklist = [link for link in objectlist if link.phobostype == 'link']
 
     # digest all the links to derive link and joint information
@@ -892,8 +888,7 @@ def buildModelDictionary(root):
             log("No inertia for link " + linkdict['name'], "WARNING")
 
     # combine inertia if certain objects are left out, and overwrite it
-    inertials = (i for i in objectlist if i.phobostype ==
-                 'inertial' and "inertial/inertia" in i)
+    inertials = (i for i in objectlist if i.phobostype == 'inertial' and "inertial/inertia" in i)
     editlinks = {}
     for i in inertials:
         if i.parent not in linklist:
@@ -1048,8 +1043,7 @@ def buildModelDictionary(root):
     log("Rounding numbers...", "INFO")
     # TODO: implement this separately
     epsilon = 10**(-ioUtils.getExpSettings().decimalPlaces)
-    return epsilonToZero(model, epsilon,
-                         ioUtils.getExpSettings().decimalPlaces)
+    return epsilonToZero(model, epsilon, ioUtils.getExpSettings().decimalPlaces)
 
 
 def buildModelFromDictionary(model):
