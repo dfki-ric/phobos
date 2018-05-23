@@ -136,6 +136,14 @@ def deriveLink(obj):
     props["visual"] = {}
     props["inertial"] = {}
     props['approxcollision'] = []
+
+    # add inertial information to link
+    try:
+        inertia = deriveDictEntry(bpy.context.scene.objects['inertial_' + props['name']])
+        if inertia is not None:
+            props['inertial'] = inertia
+    except KeyError:
+        log("No inertia for link " + props['name'], "WARNING")
     return props
 
 
@@ -875,16 +883,6 @@ def buildModelDictionary(root, name=''):
         # motor may be None if no motor is attached or link is a root
         if motordict:
             model['motors'][motordict['name']] = motordict
-        # add inertial information to link
-        # if this link-inertial object is no present, we ignore the inertia!
-        try:
-            inertial = bpy.context.scene.objects[
-                'inertial_' + linkdict['name']]
-            props = deriveDictEntry(inertial)
-            if props is not None:
-                model['links'][linkdict['name']]['inertial'] = props
-        except KeyError:
-            log("No inertia for link " + linkdict['name'], "WARNING")
 
     # combine inertia if certain objects are left out, and overwrite it
     inertials = (i for i in objectlist if i.phobostype == 'inertial' and "inertial/inertia" in i)
