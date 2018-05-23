@@ -27,8 +27,6 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import bpy
-from phobos.phoboslog import log
-import phobos.utils.selection as selection
 
 
 def safelyName(obj, name, phobostype=None):
@@ -50,7 +48,7 @@ def safelyName(obj, name, phobostype=None):
         while objectname in bpy.data.objects:
             numberstr = '.{0:03d}'.format(i)
             objectname = objectname[:63-len(numberstr)] + numberstr
-            i +=1
+            i += 1
         obj.name = objectname
     if objectname != name:
         obj[phobostype+'/name'] = name
@@ -104,7 +102,7 @@ def stripNamespaceFromName(name):
     return name.split('::')[-1]
 
 
-def removeNamespace(obj, renameproperties=False):
+def removeNamespace(obj):
     """Removes the namespace from an object if present.
 
     :param obj: The object to remove the namespace from.
@@ -118,6 +116,7 @@ def toggleNamespace(obj, namespace=''):
         removeNamespace(obj)
     else:
         addNamespace(obj, namespace)
+
 
 def gatherNamespaces(separator='::'):
     """Gathers all existing namespaces.
