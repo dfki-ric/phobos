@@ -226,7 +226,7 @@ def getObjectsByPattern(pattern, match_case=False):
     objlist = []
     for obj in bpy.data.objects:
         for key in obj.keys():
-            if obj[key].endswith('/name'):
+            if key.endswith('/name'):
                 objname = obj[key]
                 if ((match_case and pattern in objname) or
                         (not match_case and pattern.lower() in objname.lower())):
