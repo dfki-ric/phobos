@@ -156,7 +156,7 @@ def calculateMassOfLink(link):
     if len(inertials) == 1:
         inertialmass = inertials[0]['mass'] if 'mass' in inertials[0] else 0
     if objectsmass != inertialmass:
-        log("Warning: Masses are inconsistent, sync masses of link!", "WARNING")
+        log("Warning: Masses are inconsistent.", "WARNING")
     return max(objectsmass, inertialmass)
 
 

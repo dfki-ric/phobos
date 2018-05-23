@@ -26,19 +26,14 @@ Created on 28 Jul 2014
 @author: Kai von Szadkowski, Stefan Rahms
 """
 
-# import from standard Python
 import os
 import copy
 from datetime import datetime
-
-# imports from additional modules
 import yaml
 
-# import from Blender
 import bpy
 import mathutils
 
-# import from Phobos
 import phobos.model.links as linkmodel
 import phobos.model.inertia as inertiamodel
 import phobos.model.joints as jointmodel
@@ -281,7 +276,7 @@ def deriveMotor(obj, joint):
 
 
 def deriveKinematics(obj):
-    """This function takes an object and derives a link, joint and motor from it, if possible.
+    """Returns dictionaries for link, joint and motor derived from passed object.
 
     :param obj: The object to derive its kinematics from.
     :type obj: bpy_types.Object
@@ -293,11 +288,6 @@ def deriveKinematics(obj):
     motor = None
     # joints and motors of root elements are only relevant for scenes, not within models
     if sUtils.getEffectiveParent(obj):
-        # TODO: here we have to identify root joints and write their properties to SMURF!
-        # --> namespacing parent = "blub::blublink1"
-        # --> how to mark separate smurfs in phobos (simply modelname?)
-        # -> cut models in pieces but adding modelnames
-        # -> automatic namespacing
         joint = deriveJoint(obj)
         motor = deriveMotor(obj, joint)
     return link, joint, motor
@@ -520,9 +510,9 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=()):
 
     :param obj: The object to derive initial properties from.
     :type obj: bpy_types.Object
-    :param phobostype: This parameter can specify the type of the given object to include more specific information.
+    :param phobostype: optional phobostype of the object
     :type phobostype: str
-    :param ignoretypes: This list contains properties that should be ignored while initializing the objects properties.
+    :param ignoretypes: phobostypes to ignore during parsing
     :type ignoretypes: list
     :return: dict
     """
@@ -891,15 +881,15 @@ def buildModelDictionary(root):
     linklist = [link for link in objectlist if link.phobostype == 'link']
 
     # digest all the links to derive link and joint information
-    log("Parsing links, joints and motors..."+(str(len(linklist))), "INFO")
+    log("Parsing links, joints and motors..." + (str(len(linklist))), "INFO")
     for link in linklist:
         # parse link and extract joint and motor information
         linkdict, jointdict, motordict = deriveKinematics(link)
         model['links'][linkdict['name']] = linkdict
-        # joint will be None if link is a root
+        # joint may be None if link is a root
         if jointdict:
             model['joints'][jointdict['name']] = jointdict
-        # motor will be None if no motor is attached or link is a root
+        # motor may be None if no motor is attached or link is a root
         if motordict:
             model['motors'][motordict['name']] = motordict
         # add inertial information to link

@@ -137,7 +137,8 @@ def getRoots():
     if roots is None:
         log("Phobos: No root objects found.", "WARNING")
     else:
-        log("Phobos: Found " + str(len(roots)) + " root object(s): " + str(roots), "DEBUG")
+        rootnames = ', '.join((root.name for root in roots))
+        log("Phobos: Found {0} root object(s): {1}".format(len(roots), rootnames), "DEBUG")
     return roots  # TODO: Should we change this and all other list return values in a tuple or generator expression?
 
 

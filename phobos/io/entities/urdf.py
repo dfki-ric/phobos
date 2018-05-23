@@ -71,8 +71,6 @@ def writeURDFGeometry(output, element, filepath):
         elif geometry['type'] == "sphere":
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
-            # FIXME: the following will crash if unstructured export is used
-            log("writeURDFGeometry: " + filepath + ' ' + ioUtils.getOutputMeshpath(path.dirname(filepath)), "DEBUG")
             meshpath = ioUtils.getOutputMeshpath(path.dirname(filepath))
             output.append(xmlline(5, 'mesh', ['filename', 'scale'],
                                   [path.join(path.relpath(meshpath, filepath),
@@ -219,7 +217,7 @@ def exportUrdf(model, outpath):
                 output.append(
                     xmlline(3, 'limit', used_limits, [joint['limits'][p] for p in used_limits]))
             elif joint['type'] in ['revolute', 'prismatic']:
-                log("joint '" + joint['name'] + "' does not specify limits, even though its type is "
+                log("joint '" + joint['name'] + "' does not specify limits, though its type is "
                     + joint['type'] + "!", "WARNING")
                 missing_values = True
             output.append(indent * 2 + '</joint>\n\n')

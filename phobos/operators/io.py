@@ -206,14 +206,12 @@ def exportModel(root, export_path, entitytypes=None, model=None):
         else:
             model_path = export_path
         securepath(model_path)
-        try:
-            entities.entity_types[entitytype]['export'](model, model_path)
-            log("Export model: " + model['name'] + ' as ' + entitytype +
-                " to " + model_path, "DEBUG")
-        except KeyError:
-            log("No export function available for selected model type: " +
-                entitytype, "ERROR")
-            continue
+
+        # the following is not surrounded by try..catch as that may mask exceptions occurring
+        # inside the export function; also, only existing functionars register to display anyway
+        entities.entity_types[entitytype]['export'](model, model_path)
+        log("Export model: " + model['name'] + ' as ' + entitytype +
+            " to " + model_path, "DEBUG")
 
     # TODO: Move mesh export to individual formats? This is practically SMURF
     # export meshes in selected formats

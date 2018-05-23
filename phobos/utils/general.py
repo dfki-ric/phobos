@@ -150,7 +150,7 @@ def epsilonToZero(data, epsilon, decimals):
      """
     if is_float(data):
         if type(data) == str:
-            log("The number " + data + " is skipped during rounding due to its type 'str'", "WARNING")
+            log("Skipping rounding of " + data + " due to its type 'str'", "WARNING")
             return data
         return 0 if abs(data) < epsilon else round(data, decimals)
     elif type(data) is list:
@@ -169,8 +169,8 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            log(obj.phobostype + " object " + obj.name + " does not contain '" + numeric_prop +
-                "'", "WARNING")
+            log("{0} object {1} does not contain '{2}'".format(obj.phobostype, obj.name,
+                                                               numeric_prop), "WARNING")
     return numsum
 
 

@@ -141,7 +141,6 @@ class SelectModelOperator(Operator):
             log("No model name provided, deriving from selection...", "INFO")
             roots = set()
             for obj in bpy.context.selected_objects:
-                print("Selecting", sUtils.getRoot(obj).name)
                 roots.add(sUtils.getRoot(obj))
             for root in list(roots):
                 selection.extend(sUtils.getChildren(root))
