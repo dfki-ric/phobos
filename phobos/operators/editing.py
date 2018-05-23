@@ -67,9 +67,8 @@ class SortObjectsToLayersOperator(Operator):
         # TODO maybe clear layers first of all objects without phobostype?
         for obj in objs:
             phobosType = obj.phobostype
-            # TODO what about controllers?
             # sort phobostypes to layers defined in defs
-            if phobosType != 'controller' and phobosType != 'undefined':
+            if phobosType != 'undefined':
                 layers = 20 * [False]
                 layers[defs.layerTypes[phobosType]] = True
                 obj.layers = layers
@@ -178,8 +177,7 @@ class SetMassOperator(Operator):
 
             # only keep oldmass when it exists
             if obj['mass'] != oldmass and oldmass:
-                t = datetime.now()
-                obj['masschanged'] = t.isoformat()
+                obj['masschanged'] = datetime.now().isoformat()
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -482,7 +480,7 @@ class CreateLinkInertialOperator(Operator):
 
         :return: dictionary of links with list of Blender objects or just a list.
         """
-        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
+        linklist = [obj for obj in context.selected_objects if obj.phobostype == 'link']
 
         link_inertials = {}
         # append the link inertials for each link
@@ -492,7 +490,7 @@ class CreateLinkInertialOperator(Operator):
             link_inertials = [inert for inert in inertials if 'inertial/inertia' in inert]
 
         else:
-            for link in links:
+            for link in linklist:
                 linkname = link['link/name']
                 inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
                                                         include_hidden=True)
