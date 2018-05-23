@@ -49,16 +49,7 @@ from phobos.phoboslog import log
 from phobos.utils.general import epsilonToZero
 from phobos.model.poses import deriveObjectPose
 from phobos.model.geometries import deriveGeometry
-
-# TODO delete me?
-#    if prop != 'joint':
-#        if not prop.startswith('$'):
-#            joint['motor/'+prop] = motor[prop]
-#        else:
-#            for tag in motor[prop]:
-#                joint['motor/'+prop[1:]+'/'+tag] = motor[prop][tag]
-# except KeyError:
-#print("Joint " + motor['joint'] + " does not exist", "ERROR")
+from phobos.defs import linkobjignoretypes
 
 
 def collectMaterials(objectlist):
@@ -136,9 +127,8 @@ def deriveLink(obj):
     :type obj: bpy_types.Object
     :return: dict
     """
-    log("Deriving link " + obj.name, "DEBUG")
-    props = initObjectProperties(obj, phobostype='link', ignoretypes=[
-                                 'joint', 'motor', 'entity', 'submechanism'])
+    log("Deriving link from obj " + obj.name, "DEBUG")
+    props = initObjectProperties(obj, phobostype='link', ignoretypes=linkobjignoretypes-{'link'})
     parent = sUtils.getEffectiveParent(obj)
     props['parent'] = parent.name if parent else None
     props["pose"] = deriveObjectPose(obj)
@@ -197,8 +187,7 @@ def deriveJoint(obj, adjust=True):
     """
     if 'joint/type' not in obj.keys():
         jt, crot = jointmodel.deriveJointType(obj, adjust=adjust)
-    props = initObjectProperties(obj, phobostype='joint', ignoretypes=[
-                                 'link', 'motor', 'entity', 'submechanism'])
+    props = initObjectProperties(obj, phobostype='joint', ignoretypes=linkobjignoretypes-{'joint'})
 
     parent = sUtils.getEffectiveParent(obj)
     props['parent'] = nUtils.getObjectName(parent)
@@ -253,8 +242,7 @@ def deriveMotor(obj, joint):
     :type joint: dict
     :return: dict
     """
-    props = initObjectProperties(
-        obj, phobostype='motor', ignoretypes=['link', 'joint'])
+    props = initObjectProperties(obj, phobostype='motor', ignoretypes=linkobjignoretypes-{'motor'})
     # if there are any 'motor' tags and not only a name
     if len(props) > 1:
         props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name

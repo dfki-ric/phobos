@@ -81,6 +81,8 @@ geometrytypes = (('box',) * 3,
                  ('capsule',) * 3,
                  ('mesh',) * 3)
 
+linkobjignoretypes = {'link', 'joint', 'motor', 'submechanism', 'entity'}
+
 type_properties = {"undefined": (),
                    "undefined_default": (),
                    "link": ('name',),
