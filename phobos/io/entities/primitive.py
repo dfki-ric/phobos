@@ -39,15 +39,17 @@ from phobos.model.poses import deriveObjectPose
 
 def deriveEntity(primitive, outpath):
     """This function handles a primitive entity in a scene to export it
-
+    
     # TODO is this even a heightmap?
-    :param smurf: The heightmap root object.
-    :type smurf: bpy.types.Object
-    :param outpath: The path to export to. Not used for primitives
-    :type outpath: str
-    :param savetosubfolder: If True data will be exported into subfolders. Not used for primitives
-    :type savetosubfolder: bool
-    :return: dict - An entry for the scenes entitiesList
+
+    Args:
+      smurf(bpy.types.Object): The heightmap root object.
+      outpath(str): The path to export to. Not used for primitives
+      savetosubfolder(bool): If True data will be exported into subfolders. Not used for primitives
+      primitive: 
+
+    Returns:
+      dict - An entry for the scenes entitiesList
 
     """
     entity = models.initObjectProperties(primitive, 'entity', ['geometry'])

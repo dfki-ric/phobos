@@ -46,13 +46,14 @@ structure_subfolder = "heightmaps"
 def deriveEntity(entity, outpath):
     """This function handles a heightmap entity in a scene to export it
 
-    :param smurf: The heightmap root object.
-    :type smurf: bpy.types.Object
-    :param outpath: The path to export to.
-    :type outpath: str
-    :param savetosubfolder: If True data will be exported into subfolders.
-    :type savetosubfolder: bool
-    :return: dict - An entry for the scenes entitiesList
+    Args:
+      smurf(bpy.types.Object): The heightmap root object.
+      outpath(str): The path to export to.
+      savetosubfolder(bool): If True data will be exported into subfolders.
+      entity: 
+
+    Returns:
+      dict - An entry for the scenes entitiesList
 
     """
 

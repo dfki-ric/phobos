@@ -69,9 +69,14 @@ def restructureKinematicTree(link, root=None):
       / \
      D   E
      Currently, this function ignores all options such as unselected or hidden objects.
-    :param link: the link which will become the new root object
-    :param root: the current root object
-    (otherwise, phobos.utils.selection.getRoot will be used)
+
+    Args:
+      link: the link which will become the new root object
+      root: the current root object
+    (otherwise, phobos.utils.selection.getRoot will be used) (Default value = None)
+
+    Returns:
+
     """
     if not root:
         root = sUtils.getRoot(link)
@@ -102,12 +107,17 @@ def restructureKinematicTree(link, root=None):
 
 def instantiateSubmodel(submodelname, instancename, size=1.0):
     """Creates an instance of the submodel specified by the submodelname.
-
+    
     The instance receives the definitions of the group as it is generated.
 
-    :param submodelname: name of the submodel (Blender group) to create an
-        instance of
-    :param instancename: name the instance object will receive
+    Args:
+      submodelname: name of the submodel (Blender group) to create an
+    instance of
+      instancename: name the instance object will receive
+      size:  (Default value = 1.0)
+
+    Returns:
+
     """
     submodel = None
     interfaces = None
@@ -171,27 +181,31 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
 
 def defineSubmodel(submodelname, submodeltype, version='', objects=None):
     """Defines a new submodule group with the specified name and type.
-
+    
     The group will be named like so:
         'submodeltype:submodelname/version'
-
+    
     Objects with the phobostype 'interface' (if present) are handled separately
     and put into a respective submodel group (which features the 'interface'
     submodeltype).
-
+    
     If the version is omitted, the respective part of the name is dropped, too.
     If no object list is provided the objects are derived from selection.
     The submodeltype is also added as dict entry to the group in Blender.
-
+    
     The selected objects are moved to the respective layer for submodels or
     interfaces.
 
-    :param submodelname: descriptive name of the submodel
-    :param submodeltype: type of the submodel (e.g. 'fmu', 'mechanics')
-    :param version: a version string (e.g. '1.0', 'dangerous')
-    :param objects: the objects which belong to the submodel (None will derive
-        objects from the selection)
-    :returns: a tuple of the submodelgroup and interfacegroup/None
+    Args:
+      submodelname: descriptive name of the submodel
+      submodeltype: type of the submodel (e.g. 'fmu', 'mechanics')
+      version: a version string (e.g. '1.0', 'dangerous') (Default value = '')
+      objects: the objects which belong to the submodel (None will derive
+    objects from the selection) (Default value = None)
+
+    Returns:
+      a tuple of the submodelgroup and interfacegroup/None
+
     """
     if not objects:
         objects = bpy.context.selected_objects
@@ -255,11 +269,15 @@ def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
     """Removes a submodel definition from the Blender project.
     Returns True or False depending on whether groups have been removed or not.
 
-    :param submodelname: the name of the submodel
-    :param submodeltype: the submodeltype of the submodel
-    :param version: optional version of the submodel
-    :param interfaces: True if interface should also be deleted, else False.
-    :returns: True if groups have been removed, else False.
+    Args:
+      submodelname: the name of the submodel
+      submodeltype: the submodeltype of the submodel
+      version: optional version of the submodel (Default value = '')
+      interfaces: True if interface should also be deleted, else False. (Default value = True)
+
+    Returns:
+      True if groups have been removed, else False.
+
     """
     # build the group name to look for
     submodelgroupname = submodeltype + ':' + submodelname

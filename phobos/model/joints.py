@@ -93,12 +93,14 @@ def deriveJointType(joint, adjust=False):
     parameter it is possible to overwrite the joint type according to the
     specified joint constraints.
 
-    :param joint: The joint you want to derive its type from.
-    :type joint: bpy_types.Object
-    :param adjust: Decides whether or not the type of the joint is corrected
-    according to the constraints (overwriting the existing joint type)
-    :type adjust: bool.
-    :return: tuple(2) -- jtype, crot
+    Args:
+      joint(bpy_types.Object): The joint you want to derive its type from.
+      adjust(bool, optional): Decides whether or not the type of the joint is corrected
+    according to the constraints (overwriting the existing joint type) (Default value = False)
+
+    Returns:
+      tuple(2) -- jtype, crot
+
     """
     # 'universal' in MARS nomenclature
     jtype = 'floating'
@@ -154,9 +156,12 @@ def deriveJointType(joint, adjust=False):
 def getJointConstraints(joint):
     """Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'.
 
-    :param joint: The joint you want to get the constraints from.
-    :type joint: bpy_types.Object
-    :return: tuple -- containing the axis and limits lists.
+    Args:
+      joint(bpy_types.Object): The joint you want to get the constraints from.
+
+    Returns:
+      tuple -- containing the axis and limits lists.
+
     """
     jt, crot = deriveJointType(joint)
     axis = None
@@ -214,9 +219,12 @@ def getJointConstraints(joint):
 def getJointConstraint(joint, ctype):
     """This function gets the constraints out of a given joint.
 
-    :param joint: The joint you want to extract the constraints from.
-    :type joint: bpy_types.Object
-    :param ctype: Specifies the constraint type you want to extract.
+    Args:
+      joint(bpy_types.Object): The joint you want to extract the constraints from.
+      ctype: Specifies the constraint type you want to extract.
+
+    Returns:
+
     """
     con = None
     for c in joint.pose.bones[0].constraints:
@@ -229,19 +237,23 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
                         maxeffort_approximation=None, maxspeed_approximation=None):
     """This function sets the constraints for a given joint and jointtype.
 
-    :param joint: The joint you want to set the constraints for.
-    :type joint: bpy_types.Object
-    :param jointtype: The joints type. its one of the following:
-        - revolute
-        - continuous
-        - prismatic
-        - fixed
-        - floating
-    :type jointtype: str
-    :param lower: The constraints lower limit.
-    :type lower: float
-    :param upper: The constraints upper limit.
-    :type upper:float
+    Args:
+      joint(bpy_types.Object): The joint you want to set the constraints for.
+      jointtype(str): The joints type. its one of the following:
+    - revolute
+    - continuous
+    - prismatic
+    - fixed
+    - floating
+      lower(float, optional): The constraints lower limit. (Default value = 0.0)
+      upper(float, optional): The constraints upper limit. (Default value = 0.0)
+      spring:  (Default value = 0.0)
+      damping:  (Default value = 0.0)
+      maxeffort_approximation:  (Default value = None)
+      maxspeed_approximation:  (Default value = None)
+
+    Returns:
+
     """
     log("Processing joint: " + joint.name, 'DEBUG')
     bpy.ops.object.mode_set(mode='POSE')

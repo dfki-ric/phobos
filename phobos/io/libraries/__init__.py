@@ -33,7 +33,13 @@ import importlib.util
 
 def register():
     """Register the library plugins by calling each individual register function
-    for every python file in this folder. """
+    for every python file in this folder.
+
+    Args:
+
+    Returns:
+
+    """
     # this loops over every python file in this subfolder
     for filename in os.listdir(os.path.dirname(__file__)):
         mod_name, file_ext = os.path.splitext(os.path.split(filename)[-1])

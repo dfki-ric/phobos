@@ -47,6 +47,12 @@ def getModelListForEnumProperty(self, context):
     """Returns a list of (str, str, str) elements which contains the models
     contained in the currently selected model category.
     If there are no model categories (i.e. '-') return ('-', '-', '-').
+
+    Args:
+      context: 
+
+    Returns:
+
     """
     category = context.window_manager.category
     if category == '-' or category == '':
@@ -55,9 +61,15 @@ def getModelListForEnumProperty(self, context):
 
 
 def getCategoriesForEnumProperty(self, context):
-    """Return a list of (str, str, str) elements, each referring to an
-    available category in the model library.
-    If there are no categories return ('-', '-', '-').
+    """
+
+    Args:
+      context: 
+
+    Returns:
+      available category in the model library.
+      If there are no categories return ('-', '-', '-').
+
     """
     if len(categories) == 0:
         return [('-',) * 3]

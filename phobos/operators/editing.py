@@ -471,14 +471,16 @@ class CreateLinkInertialOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def getLinkInertials(self, context, link=None):
-        """
-        Returns all link inertials of the selected links (in the current
+        """Returns all link inertials of the selected links (in the current
         context) or of the specified link.
 
-        :param context: Blender context
-        :param link: the link of which to find the inertials (optional)
+        Args:
+          context: Blender context
+          link: the link of which to find the inertials (optional) (Default value = None)
 
-        :return: dictionary of links with list of Blender objects or just a list.
+        Returns:
+          dictionary of links with list of Blender objects or just a list.
+
         """
         linklist = [obj for obj in context.selected_objects if obj.phobostype == 'link']
 
@@ -568,14 +570,16 @@ class CreateHelperInertialOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def getHelperInertials(self, context, link=None):
-        """
-        Returns all helper inertials of the selected links (in the current
+        """Returns all helper inertials of the selected links (in the current
         context) or of the specified link.
 
-        :param context: Blender context
-        :param link: the link of which to find the inertials (optional)
+        Args:
+          context: Blender context
+          link: the link of which to find the inertials (optional) (Default value = None)
 
-        :return: dictionary of links with list of Blender objects or just a list.
+        Returns:
+          dictionary of links with list of Blender objects or just a list.
+
         """
         if not link:
             links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
@@ -1168,8 +1172,11 @@ def getControllerParameters(name):
     """Returns the controller parameters for the controller type with the provided
     name.
 
-    :param name: the name of the controller type.
-    :type name: str.
+    Args:
+      name(str): the name of the controller type.
+
+    Returns:
+
     """
     try:
         return defs.definitions['controllers'][name]['parameters'].keys()
@@ -1180,6 +1187,13 @@ def getControllerParameters(name):
 def getDefaultControllerParameters(scene, context):
     """Returns the default controller parameters for the controller of the active
     object.
+
+    Args:
+      scene:
+      context:
+
+    Returns:
+
     """
     try:
         name = bpy.context.active_object['motor/controller']
@@ -1422,7 +1436,14 @@ class AddSubmodel(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def submodelnames(self, context):
-        """Returns a list of submodels of the chosen type for use as enum"""
+        """Returns a list of submodels of the chosen type for use as enum
+
+        Args:
+          context:
+
+        Returns:
+
+        """
         submodellist = [a.name for a in bpy.data.groups
                         if 'submodeltype' in a
                         and a['submodeltype'] == self.submodeltype]
@@ -1433,7 +1454,14 @@ class AddSubmodel(Operator):
                 for a in submodellist]
 
     def submodeltypes(self, context):
-        """Returns a list of submodel types in the scene for use as enum"""
+        """Returns a list of submodel types in the scene for use as enum
+
+        Args:
+          context:
+
+        Returns:
+
+        """
         submodellist = [a['submodeltype'] for a in bpy.data.groups
                         if 'submodeltype' in a]
         submodellist = set(submodellist)
@@ -1466,9 +1494,15 @@ class AddSubmodel(Operator):
         layout.prop(self, 'instancename')
 
     def invoke(self, context, event):
-        """
-        Start off the instance numbering based on Blender objects and show
+        """Start off the instance numbering based on Blender objects and show
         a property dialog
+
+        Args:
+          context:
+          event:
+
+        Returns:
+
         """
         self.instancename = self.submodelname.split(':')[1].split('/')[0]
         wm = context.window_manager
@@ -1476,7 +1510,14 @@ class AddSubmodel(Operator):
 
     @classmethod
     def poll(cls, context):
-        """ Hide the operator when no submodels are defined"""
+        """Hide the operator when no submodels are defined
+
+        Args:
+          context:
+
+        Returns:
+
+        """
         for group in bpy.data.groups:
             if 'submodeltype' in group:
                 return True
@@ -1484,7 +1525,14 @@ class AddSubmodel(Operator):
 
 
     def execute(self, context):
-        """create an instance of the submodel"""
+        """create an instance of the submodel
+
+        Args:
+          context:
+
+        Returns:
+
+        """
         i = 1
         while self.instancename + '_{0:03d}'.format(i) in bpy.data.objects:
             i += 1
@@ -1519,11 +1567,26 @@ class DefineSubmodel(Operator):
     )
 
     def invoke(self, context, event):
-        """Show a property dialog"""
+        """Show a property dialog
+
+        Args:
+          context:
+          event:
+
+        Returns:
+
+        """
         return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
-        """Create a submodel based on selected objects"""
+        """Create a submodel based on selected objects
+
+        Args:
+          context:
+
+        Returns:
+
+        """
         eUtils.defineSubmodel(self.submodelname,
                               self.submodeltype,
                               self.version)

@@ -57,9 +57,12 @@ def getGeometricElements(link):
 def createLink(link):
     """Creates the blender representation of a given link and its parent joint.
 
-    :param link: The link you want to create a representation of.
-    :type link: dict
-    :return: bpy_types.Object -- the newly created blender link object.
+    Args:
+      link(dict): The link you want to create a representation of.
+
+    Returns:
+      bpy_types.Object -- the newly created blender link object.
+
     """
     # create armature/bone
     bUtils.toggleLayer(defs.layerTypes['link'], True)
@@ -115,17 +118,16 @@ def createLink(link):
 def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False, nameformat=''):
     """Derives a link from an object using its name, transformation and parenting.
 
-    :param obj: object to derive a link from
-    :type obj: bpy_types.Object
-    :param scale: scale factor for bone size
-    :type scale: float
-    :param parent_link: whether to automate the parenting of the new link or not.
-    :type parent_link: bool
-    :param parent_objects: whether to parent all the objects to the new link or not
-    :type parent_objects: bool
-    :param nameformat: re-formatting template for obj names
-    :type nameformat: str
-    :return: newly created link
+    Args:
+      obj(bpy_types.Object): object to derive a link from
+      scale(float, optional): scale factor for bone size (Default value = 0.2)
+      parent_link(bool, optional): whether to automate the parenting of the new link or not. (Default value = True)
+      parent_objects(bool, optional): whether to parent all the objects to the new link or not (Default value = False)
+      nameformat(str, optional): re-formatting template for obj names (Default value = '')
+
+    Returns:
+      newly created link
+
     """
     log('Deriving link from ' + nUtils.getObjectName(obj), level="INFO")
     try:
@@ -157,8 +159,12 @@ def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False,
 def placeChildLinks(model, parent):
     """Creates parent-child-relationship for a given parent and all existing children in Blender.
 
-    :param parent: This is the parent link you want to set the children for.
-    :type: dict
+    Args:
+      parent: This is the parent link you want to set the children for.
+      model: 
+
+    Returns:
+
     """
     bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])
     children = []
@@ -197,8 +203,11 @@ def placeChildLinks(model, parent):
 def placeLinkSubelements(link):
     """Places visual and collision objects for a given link.
 
-    :param link: The parent link you want to set the subelements for
-    :type link: dict
+    Args:
+      link(dict): The parent link you want to set the subelements for
+
+    Returns:
+
     """
     elements = getGeometricElements(link)
     bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])

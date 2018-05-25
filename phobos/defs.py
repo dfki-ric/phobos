@@ -123,8 +123,11 @@ definitions = {'motors': {},
 def updateDefs(defsFolderPath):
     """Updates the definitions with all yml files in the given folder
 
-    :param defsFolderPath: The path to the folder with the definitions yaml files.
-    :type defsFolderPath: str
+    Args:
+      defsFolderPath(str): The path to the folder with the definitions yaml files.
+
+    Returns:
+
     """
     dicts = __parseAllYAML(defsFolderPath)
     for diction in dicts:

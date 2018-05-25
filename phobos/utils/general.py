@@ -36,6 +36,12 @@ import shutil
 
 def is_float(s):
     """Tests if an input variable (string) is a float number.
+
+    Args:
+      s: 
+
+    Returns:
+
     """
     try:
         float(s)
@@ -46,6 +52,12 @@ def is_float(s):
 
 def is_int(s):
     """Tests if an input variable (string) is an int number.
+
+    Args:
+      s: 
+
+    Returns:
+
     """
     try:
         int(s)
@@ -57,6 +69,12 @@ def is_int(s):
 def parse_number(s):
     """Takes an input variable (string) and determines whether it represents
     a float number, int or string
+
+    Args:
+      s: 
+
+    Returns:
+
     """
     if is_int(s):
         return int(s)
@@ -68,6 +86,12 @@ def parse_number(s):
 
 def only_contains_int(stringlist):
     """Checks if a list of strings contains int numbers exclusively.
+
+    Args:
+      stringlist: 
+
+    Returns:
+
     """
     for num in stringlist:
         if not is_int(num):
@@ -77,6 +101,12 @@ def only_contains_int(stringlist):
 
 def only_contains_float(stringlist):
     """Checks if a list of strings contains float numbers exclusively.
+
+    Args:
+      stringlist: 
+
+    Returns:
+
     """
     for num in stringlist:
         if not is_float(num):
@@ -87,6 +117,14 @@ def only_contains_float(stringlist):
 def find_in_list(alist, prop, value):
     """Returns the index of the first object in a list which has a field
     named *prop* with value *value*. If no such object is found, returns -1.
+
+    Args:
+      alist: 
+      prop: 
+      value: 
+
+    Returns:
+
     """
     n = -1
     for i in range(len(alist)):
@@ -102,6 +140,14 @@ def find_in_list(alist, prop, value):
 def retrieve_from_list(alist, prop, value):
     """Returns the first object in a list which has a field named
     *prop* with value *value*. If no such object is found, returns 'None'.
+
+    Args:
+      alist: 
+      prop: 
+      value: 
+
+    Returns:
+
     """
     n = -1
     for i in range(len(alist)):
@@ -120,6 +166,12 @@ def retrieve_from_list(alist, prop, value):
 def parse_text(s):
     """Parses a text by splitting up elements separated by whitespace and tries
     to determine whether it is a list of floats, ints or strings.
+
+    Args:
+      s: 
+
+    Returns:
+
     """
     numstrings = s.split()
     if not numstrings:
@@ -139,6 +191,12 @@ def parse_text(s):
 
 def calcBoundingBoxCenter(boundingbox):
     """Calculates the center of a bounding box
+
+    Args:
+      boundingbox: 
+
+    Returns:
+
     """
     c = sum((mathutils.Vector(b) for b in boundingbox), mathutils.Vector())
     return c / 8
@@ -147,7 +205,15 @@ def calcBoundingBoxCenter(boundingbox):
 def epsilonToZero(data, epsilon, decimals):
     """Recursively loops through a dictionary and sets all floating values
      < epsilon equal to zero.
-     """
+
+    Args:
+      data: 
+      epsilon: 
+      decimals: 
+
+    Returns:
+
+    """
     if is_float(data):
         if type(data) == str:
             log("Skipping rounding of " + data + " due to its type 'str'", "WARNING")
@@ -163,6 +229,13 @@ def epsilonToZero(data, epsilon, decimals):
 
 def calculateSum(objects, numeric_prop):
     """Returns sum of *numeric_prop* in *objects*.
+
+    Args:
+      objects: 
+      numeric_prop: 
+
+    Returns:
+
     """
     numsum = 0
     for obj in objects:
@@ -176,6 +249,12 @@ def calculateSum(objects, numeric_prop):
 
 def datetimeFromIso(iso):
     """Accepts a date-time string in iso format and returns a datetime object.
+
+    Args:
+      iso: 
+
+    Returns:
+
     """
     try:
         dtime = datetime(*[int(a) for a in re.split(":|-|T| |\.", iso)])
@@ -188,8 +267,11 @@ def datetimeFromIso(iso):
 def distance(objects):
     """Returns the distance between two blender objects.
 
-    :param objects: The two objects to calculate the distance for.
-    :type objects: list -- with exactly two elements
+    Args:
+      objects(list -- with exactly two elements): The two objects to calculate the distance for.
+
+    Returns:
+
     """
     v = objects[0].matrix_world.to_translation() - objects[1].matrix_world.to_translation()
     return v.length, v
@@ -197,6 +279,13 @@ def distance(objects):
 
 def outerProduct(v, u):
     """Returns a mathutils.Matrix representing the outer product of vectors v and u.
+
+    Args:
+      v: 
+      u: 
+
+    Returns:
+
     """
     lines = []
     for vi in v:
@@ -205,7 +294,17 @@ def outerProduct(v, u):
 
 
 def copyTree(src, dst, symlinks=False, ignore=None):
-    """Copies the folder tree from src to dst."""
+    """Copies the folder tree from src to dst.
+
+    Args:
+      src: 
+      dst: 
+      symlinks:  (Default value = False)
+      ignore:  (Default value = None)
+
+    Returns:
+
+    """
     if not os.path.exists(dst):
         os.makedirs(dst)
 

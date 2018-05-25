@@ -39,19 +39,17 @@ from phobos.phoboslog import log
 def createMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
     """Returns a Blender material specified by the input parameters
 
-    :param name: The name of the new material.
-    :type name: str
-    :param diffuse: The color of the new material.
-    :type diffuse: float array with 3 elements.
-    :param specular: The specular color of the new material.
-    :type specular: float array with 3 elements.
-    :param alpha: The transparency of the material.
-    :type alpha: float in [0,1.0].
-    :param diffuse_intensity: The amount of diffuse reflection. The default is 1.0.
-    :type diffuse_intensity: float in [0,1.0].
-    :param texture: NOT IMPEMENTED YET.
-    :type texture: NOT IMPLEMENTED YET.
-    :return: bpy.types.Material
+    Args:
+      name(str): The name of the new material.
+      diffuse(float array with 3 elements.): The color of the new material.
+      specular(float array with 3 elements.): The specular color of the new material.
+      alpha(float in [0,1.0].): The transparency of the material.
+      diffuse_intensity(float in [0,1.0], optional): The amount of diffuse reflection. The default is 1.0.
+      texture(NOT IMPLEMENTED YET, optional): NOT IMPEMENTED YET. (Default value = None)
+
+    Returns:
+      bpy.types.Material
+
     """
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = diffuse
@@ -72,8 +70,7 @@ def createMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, textur
 
 
 def createPhobosMaterials():
-    """Creates a list of standard materials used in Phobos.
-    """
+    """Creates a list of standard materials used in Phobos."""
     materials = bpy.data.materials.keys()
     for material in defs.definitions['materials']:
         mat = defs.definitions['materials'][material]
@@ -85,10 +82,12 @@ def createPhobosMaterials():
 def assignMaterial(obj, materialname):
     """Assigns a material to an object, avoiding creating multiple copies.
 
-    :param obj: The object to assign the material to.
-    :type obj: bpy.types.Object
-    :param materialname: The materials name.
-    :type materialname: str
+    Args:
+      obj(bpy.types.Object): The object to assign the material to.
+      materialname(str): The materials name.
+
+    Returns:
+
     """
     if materialname not in bpy.data.materials:
         if materialname in defs.definitions['materials']:

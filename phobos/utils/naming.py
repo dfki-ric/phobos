@@ -39,7 +39,15 @@ def safelyName(obj, name, phobostype=None):
      assigned to the object, it is stored in a custom variable '*phobostype*/name'
      Note that other '*/name' variables in the object are not updated.
      :return: str -- name of obj after function call
-     """
+
+    Args:
+      obj: 
+      name: 
+      phobostype:  (Default value = None)
+
+    Returns:
+
+    """
     objectname = name
     if not phobostype:
         phobostype = obj.phobostype
@@ -63,10 +71,13 @@ def getObjectName(obj, phobostype=None):
     The contents of the custom property *phobostype*/name are returned, if present,
     else the object name itself is returned, stripped of namespaces.
 
-    :param obj: object for which the name is requested
-    :type obj: bpy.types.Object
-    :param phobostype: phobostype if relevant (e.g. 'motor')
-    :return: str -- The object's name
+    Args:
+      obj(bpy.types.Object): object for which the name is requested
+      phobostype: phobostype if relevant (e.g. 'motor') (Default value = None)
+
+    Returns:
+      str -- The object's name
+
     """
     if obj is None:
         return None
@@ -79,6 +90,14 @@ def getObjectName(obj, phobostype=None):
 
 def replaceNameElement(prop, old, new):
     """For all selected elements in Blender, replace an *old* part of a string *prop*erty with *new*.
+
+    Args:
+      prop: 
+      old: 
+      new: 
+
+    Returns:
+
     """
     for obj in bpy.context.selected_objects:
         if prop in obj and obj[prop].find(old) > -1:
@@ -92,8 +111,12 @@ def addNamespaceToName(name, namespace):
 def addNamespace(obj, namespace=None):
     """Namespaces a given blender object.
 
-    :param obj: The object to namespace.
-    :type obj: bpy.types.Object
+    Args:
+      obj(bpy.types.Object): The object to namespace.
+      namespace:  (Default value = None)
+
+    Returns:
+
     """
     obj.name = safelyName(obj, addNamespaceToName(obj.name, namespace))
 
@@ -105,8 +128,11 @@ def stripNamespaceFromName(name):
 def removeNamespace(obj):
     """Removes the namespace from an object if present.
 
-    :param obj: The object to remove the namespace from.
-    :type obj: bpy.types.Object
+    Args:
+      obj(bpy.types.Object): The object to remove the namespace from.
+
+    Returns:
+
     """
     obj.name = safelyName(obj, stripNamespaceFromName(obj.name))
 
@@ -120,6 +146,12 @@ def toggleNamespace(obj, namespace=''):
 
 def gatherNamespaces(separator='::'):
     """Gathers all existing namespaces.
+
+    Args:
+      separator:  (Default value = '::')
+
+    Returns:
+
     """
     namespaces = []
     for obj in bpy.data.objects:

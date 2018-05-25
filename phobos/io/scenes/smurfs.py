@@ -39,10 +39,13 @@ def exportSMURFScene(entities, path):
     """Exports an arranged scene into SMURFS. It will export only entities
     with a valid entity/name, and entity/type property.
 
-    :param selected_only: If True only selected entities get exported.
-    :type selected_only: bool
-    :param subfolder: If True the models are exported into separate subfolders
-    :type subfolder: bool
+    Args:
+      selected_only(bool): If True only selected entities get exported.
+      subfolder(bool): If True the models are exported into separate subfolders
+      entities: 
+      path: 
+
+    Returns:
 
     """
     # TODO path consistency (Windows)

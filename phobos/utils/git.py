@@ -34,7 +34,14 @@ from phobos.phoboslog import log
 
 
 def isGit(folder):
-    """Checks whether the folder contains a git directory."""
+    """Checks whether the folder contains a git directory.
+
+    Args:
+      folder: 
+
+    Returns:
+
+    """
     return os.path.exists(os.path.join(folder, '.git'))
 
 def cloneGit(name, url, destination):
@@ -45,6 +52,14 @@ def cloneGit(name, url, destination):
     If the destination folder is a git already, it will not be cloned, but True
     will be returned.
     If the destination folder does not exist, it is created on the fly.
+
+    Args:
+      name: 
+      url: 
+      destination: 
+
+    Returns:
+
     """
     # check for existing git first
     try:
@@ -82,15 +97,19 @@ def initGit(destination, filename=None, initialsave=False, url=None, readmetxt='
     Optionally, the git can be pushed to the specified url (as origin) and an
     initial commit can be created.
 
-    :param destination: the destination folder on the filesystem where to
-        initialise the git repository
-    :param filename: the filename of the blender file to save
-        (only useful in combination with initialsave)
-    :param initialsave: True if the blendfile shall be saved for the first
-        commit already, False if not
-    :param url: the url of the origin repository (it needs to be empty!)
-    :param readmetxt: a string which will be written to the Readme.md
-    :returns: True if the initialisation was successful, False if not
+    Args:
+      destination: the destination folder on the filesystem where to
+    initialise the git repository
+      filename: the filename of the blender file to save
+    (only useful in combination with initialsave) (Default value = None)
+      initialsave: True if the blendfile shall be saved for the first
+    commit already, False if not (Default value = False)
+      url: the url of the origin repository (it needs to be empty!) (Default value = None)
+      readmetxt: a string which will be written to the Readme.md (Default value = '')
+
+    Returns:
+      True if the initialisation was successful, False if not
+
     """
     if isGit(destination):
         log('Could not initialise git: Folder already existing!', 'ERROR')
@@ -155,7 +174,14 @@ def commit(destination, message='Automated commit', ignore=[]):
     This can ignore the first level subfolders and files specified in the
     optional parameter.
 
-    :returns: TODO
+    Args:
+      destination: 
+      message:  (Default value = 'Automated commit')
+      ignore:  (Default value = [])
+
+    Returns:
+      TODO
+
     """
     # Add the subfolders and files to git
     # TODO test this functionality
@@ -188,8 +214,12 @@ def commit(destination, message='Automated commit', ignore=[]):
 def makeGitFolders(destination):
     """Create the Phobos folder structure for a git at the destination.
 
-    :param destination: TODO
-    :returns: TODO
+    Args:
+      destination: TODO
+
+    Returns:
+      TODO
+
     """
     from os.path import exists, join
     if not exists(join(destination, 'blender')):
@@ -257,6 +287,11 @@ def checkoutCommit(commit, workingdir):
 def getGitBranch():
     """Checks whether working directory (of .blend file) contains a git repository.
     Returns branch if repository is found.
+
+    Args:
+
+    Returns:
+
     """
     try:
         output = str(subprocess.check_output(['git', 'branch'], cwd=bpy.path.abspath('//'),
@@ -273,6 +308,13 @@ def getGitBranch():
 def getGitRemotes(category='', folder=None):
     """Returns a dictionary with git remotes of the shape {name: url, ...} if valid
     category is provided, else {'fetch': {name: url, ...}, 'push': {name: url, ...}}.
+
+    Args:
+      category:  (Default value = '')
+      folder:  (Default value = None)
+
+    Returns:
+
     """
     try:
         if not folder:

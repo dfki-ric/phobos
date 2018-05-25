@@ -111,10 +111,11 @@ def importDae(filepath):
 def exportObj(obj, path):
     """This function exports a specific object to a chosen path as an .obj
 
-    :param path: The path you want the object export to. *without the filename!*
-    :type path: str
-    :param obj: The blender object you want to export.
-    :type obj: .types.Object
+    Args:
+      path(str): The path you want the object export to. *without the filename!*
+      obj(types.Object): The blender object you want to export.
+
+    Returns:
 
     """
     exportMesh(obj, path, 'obj')
@@ -123,10 +124,11 @@ def exportObj(obj, path):
 def exportStl(obj, path):
     """This function exports a specific object to a chosen path as a .stl
 
-    :param path: The path you want the object exported to. *without filename!*
-    :type path: str
-    :param obj: The blender object you want to export.
-    :type obj: bpy.types.Object
+    Args:
+      path(str): The path you want the object exported to. *without filename!*
+      obj(bpy.types.Object): The blender object you want to export.
+
+    Returns:
 
     """
     exportMesh(obj, path, 'stl')
@@ -135,10 +137,11 @@ def exportStl(obj, path):
 def exportDae(obj, path):
     """This function exports a specific object to a chosen path as a .dae
 
-    :param path: The path you want the object exported to. *without filename!*
-    :type path: str
-    :param obj: The blender object you want to export.
-    :type obj: bpy.types.Object
+    Args:
+      path(str): The path you want the object exported to. *without filename!*
+      obj(bpy.types.Object): The blender object you want to export.
+
+    Returns:
 
     """
     exportMesh(obj, path, 'dae')

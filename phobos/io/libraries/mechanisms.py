@@ -40,6 +40,12 @@ mechanismpreviewcollection = []
 def getMechanismListForEnumProperty(self, context):
     """Returns a list of (str, str, str) elements which contains the mechanisms
     currently loaded. If there are none, returns ('-', '-', '-').
+
+    Args:
+      context: 
+
+    Returns:
+
     """
     try:
         return sorted(mechanismpreviewcollection.enum_items)

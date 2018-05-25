@@ -52,10 +52,12 @@ def getPhobosPreferences():
 def printMatrices(obj, info=None):
     """This function prints the matrices of an object to the screen.
 
-    :param obj: The object to print the matrices from.
-    :type obj: bpy.types.Object
-    :param info: If True the objects name will be included into the printed info.
-    :type info: bool
+    Args:
+      obj(bpy.types.Object): The object to print the matrices from.
+      info(bool, optional): If True the objects name will be included into the printed info. (Default value = None)
+
+    Returns:
+
     """
     if not info:
         info = obj.name
@@ -70,21 +72,20 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0,
                     protation=(0, 0, 0), phobostype=None):
     """Generates the primitive specified by the input parameters
 
-    :param pname: The primitives new name.
-    :type pname: str
-    :param ptype: The new primitives type. Can be one of *box, sphere, cylinder, cone, disc*
-    :type ptype: str
-    :param psize: The new primitives size. Depending on the ptype it can be either a single float or a tuple.
-    :type psize: float or list
-    :param player: The layer bitmask for the new blender object.
-    :param pmaterial: The new primitives material.
-    :param plocation: The new primitives location.
-    :type plocation: tuple
-    :param protation: The new primitives rotation.
-    :type protation: tuple
-    :param phobostype: phobostype of object to be created
-    :type phobostype: str
-    :return: bpy.types.Object - the new blender object.
+    Args:
+      pname(str): The primitives new name.
+      ptype(str): The new primitives type. Can be one of *box, sphere, cylinder, cone, disc*
+      psize(float or list): The new primitives size. Depending on the ptype it can be either a single float or a tuple.
+      player: The layer bitmask for the new blender object. (Default value = 0)
+      pmaterial: The new primitives material. (Default value = None)
+      plocation(tuple, optional): The new primitives location. (Default value = (0)
+      protation(tuple): The new primitives rotation.
+      phobostype(str): phobostype of object to be created
+      0: 
+
+    Returns:
+      bpy.types.Object - the new blender object.
+
     """
     # TODO: allow placing on currently active layer?
     try:
@@ -129,10 +130,12 @@ def setObjectLayersActive(obj):
 def toggleLayer(index, value=None):
     """This function toggles a specific layer or sets it to a desired value.
 
-    :param index: The layer index you want to change.
-    :type index: int
-    :param value: True if visible, None for toggle.
-    :type value: bool
+    Args:
+      index(int): The layer index you want to change.
+      value(bool, optional): True if visible, None for toggle. (Default value = None)
+
+    Returns:
+
     """
     if value:
         bpy.context.scene.layers[index] = value
@@ -142,6 +145,12 @@ def toggleLayer(index, value=None):
 
 def defLayers(layerlist):
     """Returns a list of 20 elements encoding the visible layers according to layerlist
+
+    Args:
+      layerlist: 
+
+    Returns:
+
     """
     if type(layerlist) is not list:
         layerlist = [layerlist]
@@ -154,10 +163,12 @@ def defLayers(layerlist):
 def updateTextFile(textfilename, newContent):
     """This function updates a blender textfile or creates a new one if it is not existent.
 
-    :param textfilename: The blender textfiles file name.
-    :type textfilename: str
-    :param newContent: The textfiles new content.
-    :type newContent: str
+    Args:
+      textfilename(str): The blender textfiles file name.
+      newContent(str): The textfiles new content.
+
+    Returns:
+
     """
     try:
         bpy.data.texts.remove(bpy.data.texts[textfilename])
@@ -171,9 +182,12 @@ def updateTextFile(textfilename, newContent):
 def readTextFile(textfilename):
     """This function returns the content of a specified text file.
 
-    :param textfilename: The blender textfiles name.
-    :type textfilename: str
-    :return: str - the textfiles content.
+    Args:
+      textfilename(str): The blender textfiles name.
+
+    Returns:
+      str - the textfiles content.
+
     """
     try:
         return "\n".join([l.body for l in bpy.data.texts[textfilename].lines])
@@ -185,10 +199,12 @@ def readTextFile(textfilename):
 def createNewTextfile(textfilename, contents):
     """This function creates a new blender text file with the given content.
 
-    :param textfilename: The new blender texts name.
-    :type textfilename: str
-    :param contents: The new textfiles content.
-    :type contents: str
+    Args:
+      textfilename(str): The new blender texts name.
+      contents(str): The new textfiles content.
+
+    Returns:
+
     """
     for text in bpy.data.texts:
         text.tag = True
@@ -207,8 +223,11 @@ def openScriptInEditor(scriptname):
     """This function opens a script/textfile in an open blender text window. Nothing happens if there is no
     available text window.
 
-    :param scriptname: The scripts name.
-    :type scriptname: str
+    Args:
+      scriptname(str): The scripts name.
+
+    Returns:
+
     """
     if scriptname in bpy.data.texts:
         for area in bpy.context.screen.areas:
@@ -220,6 +239,12 @@ def openScriptInEditor(scriptname):
 
 def cleanObjectProperties(props):
     """Cleans a predefined list of Blender-specific or other properties from the dictionary.
+
+    Args:
+      props: 
+
+    Returns:
+
     """
     getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
     if props:
@@ -230,8 +255,7 @@ def cleanObjectProperties(props):
 
 
 def cleanScene():
-    """This function cleans up the scene and removes all blender objects, meshes, materials and lights.
-    """
+    """This function cleans up the scene and removes all blender objects, meshes, materials and lights."""
     # select all objects
     bpy.ops.object.select_all(action="SELECT")
 
@@ -255,10 +279,17 @@ def cleanScene():
 def createPreview(objects, export_path, modelname, render_resolution=256, opengl=False):
     """Creates a thumbnail of the given objects.
 
-    :param obj: List of objects for the thumbnail.
-    :type obj: list
-    :param Resolution used for the render.
-    :type int
+    Args:
+      obj(list): List of objects for the thumbnail.
+      Resolution: used for the render.
+      objects: 
+      export_path: 
+      modelname: 
+      render_resolution:  (Default value = 256)
+      opengl:  (Default value = False)
+
+    Returns:
+
     """
     log("Creating thumbnail of model: "+modelname, "INFO")
 

@@ -58,8 +58,11 @@ def createSensor(self, sensor):
 def attachSensor(self, sensor):
     """This function attaches a given sensor to its parent link.
 
-    :param sensor: The sensor you want to attach to its parent link.
-    :type sensor: dict
+    Args:
+      sensor(dict): The sensor you want to attach to its parent link.
+
+    Returns:
+
     """
     bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
     # TODO delete me?
@@ -89,8 +92,11 @@ def attachSensor(self, sensor):
 def cameraRotLock(object):
     """DOCU: PLEASE ADD PYDOC. What should this do exactly?
 
-    :param object: The object to lock the rotation for
-    :type object: bpy_types.Object
+    Args:
+      object(bpy_types.Object): The object to lock the rotation for
+
+    Returns:
+
     """
     sUtils.selectObjects([object], active=0)
     bpy.ops.transform.rotate(value=-1.5708, axis=(-1, 0, 0), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
@@ -110,13 +116,14 @@ def cameraRotLock(object):
 def createSensor(sensor, reference, origin=mathutils.Matrix()):
     """This function creates a new sensor specified by its parameters.
 
-    :param sensor: The phobos representation of the new sensor.
-    :type sensor: dict
-    :param reference: This is an object to add a parent relationship to.
-    :type reference: bpy_types.Object
-    :param origin: The new sensors origin.
-    :type origin: mathutils.Matrix
-    :return: The newly created sensor object
+    Args:
+      sensor(dict): The phobos representation of the new sensor.
+      reference(bpy_types.Object): This is an object to add a parent relationship to.
+      origin(mathutils.Matrix, optional): The new sensors origin. (Default value = mathutils.Matrix()
+
+    Returns:
+      The newly created sensor object
+
     """
     bUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
     # create sensor object

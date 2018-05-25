@@ -55,9 +55,12 @@ from phobos.defs import linkobjignoretypes
 def collectMaterials(objectlist):
     """This function collects all materials from a list of objects and sorts them into a dictionary
 
-    :param objectlist: The objectlist to grab the materials from.
-    :type objectlist: list
-    :return: dict
+    Args:
+      objectlist(list: list): The objectlist to grab the materials from.
+
+    Returns:
+      dict
+
     """
     materials = {}
     for obj in objectlist:
@@ -77,9 +80,12 @@ def collectMaterials(objectlist):
 def deriveMaterial(mat):
     """This function takes a blender material and creates a phobos representation from it
 
-    :param mat: The blender material to derive a phobos material from
-    :type mat: bpy.types.Material
-    :return: dict
+    Args:
+      mat(bpy.types.Material): The blender material to derive a phobos material from
+
+    Returns:
+      dict
+
     """
     material = initObjectProperties(mat, 'material')
     material['name'] = mat.name
@@ -123,9 +129,12 @@ def deriveMaterial(mat):
 def deriveLink(obj):
     """This function derives a link from a blender object and creates its initial phobos data structure.
 
-    :param obj: The blender object to derive the link from.
-    :type obj: bpy_types.Object
-    :return: dict
+    Args:
+      obj(bpy_types.Object): The blender object to derive the link from.
+
+    Returns:
+      dict
+
     """
     log("Deriving link from obj " + obj.name, "DEBUG")
     props = initObjectProperties(obj, phobostype='link', ignoretypes=linkobjignoretypes-{'link'})
@@ -152,9 +161,12 @@ def deriveFullLinkInformation(obj):
     motor data) from a blender object and creates its initial phobos data
     structure.
 
-    :param obj: The blender object to derive the link from.
-    :type obj: bpy_types.Object
-    :return: dict
+    Args:
+      obj(bpy_types.Object): The blender object to derive the link from.
+
+    Returns:
+      dict
+
     """
     props = initObjectProperties(obj, phobostype='link', ignoretypes=[
                                  'joint', 'motor', 'entity'])
@@ -190,8 +202,13 @@ def deriveFullLinkInformation(obj):
 def deriveJoint(obj, adjust=True):
     """This function derives a joint from a blender object and creates its initial phobos data structure.
 
-    :param obj: The blender object to derive the joint from.
-    :return: dict
+    Args:
+      obj: The blender object to derive the joint from.
+      adjust:  (Default value = True)
+
+    Returns:
+      dict
+
     """
     if 'joint/type' not in obj.keys():
         jt, crot = jointmodel.deriveJointType(obj, adjust=adjust)
@@ -229,9 +246,12 @@ def deriveJointState(joint):
     """Calculates the state of a joint from the state of the link armature.
     Note that this is the current state and not the zero state.
 
-    :param joint: The joint(armature) to derive its state from.
-    :type joint: bpy_types.Object
-    :return: dict
+    Args:
+      joint(bpy_types.Object): The joint(armature) to derive its state from.
+
+    Returns:
+      dict
+
     """
     state = {'matrix': [list(vector) for vector in list(joint.pose.bones[0].matrix_basis)],
              'translation': list(joint.pose.bones[0].matrix_basis.to_translation()),
@@ -244,11 +264,13 @@ def deriveJointState(joint):
 def deriveMotor(obj, joint):
     """This function derives a motor from an object and joint.
 
-    :param obj: The blender object to derive the motor from.
-    :type obj: bpy_types.Object
-    :param joint: The phobos joint to derive the constraints from.
-    :type joint: dict
-    :return: dict
+    Args:
+      obj(bpy_types.Object): The blender object to derive the motor from.
+      joint(dict): The phobos joint to derive the constraints from.
+
+    Returns:
+      dict
+
     """
     props = initObjectProperties(obj, phobostype='motor', ignoretypes=linkobjignoretypes-{'motor'})
     # if there are any 'motor' tags and not only a name
@@ -274,9 +296,11 @@ def deriveMotor(obj, joint):
 def deriveKinematics(obj):
     """Returns dictionaries for link, joint and motor derived from passed object.
 
-    :param obj: The object to derive its kinematics from.
-    :type obj: bpy_types.Object
-    :return: tuple
+    Args:
+      obj(bpy_types.Object): The object to derive its kinematics from.
+
+    Returns:
+      tuple
 
     """
     link = deriveLink(obj)
@@ -292,9 +316,12 @@ def deriveKinematics(obj):
 def deriveInertial(obj):
     """This function derives the inertial from the given object.
 
-    :param obj: The object to derive the inertial from.
-    :type obj: bpy_types.Object
-    :return: dict
+    Args:
+      obj(bpy_types.Object): The object to derive the inertial from.
+
+    Returns:
+      dict
+
     """
     try:
         props = initObjectProperties(obj, phobostype='inertial')
@@ -309,9 +336,12 @@ def deriveInertial(obj):
 def deriveVisual(obj):
     """This function derives the visual information from an object.
 
-    :param obj: The blender object to derive the visuals from.
-    :type obj: bpy_types.Object
-    :return: dict
+    Args:
+      obj(bpy_types.Object): The blender object to derive the visuals from.
+
+    Returns:
+      dict
+
     """
     try:
         visual = initObjectProperties(
@@ -340,9 +370,12 @@ def deriveVisual(obj):
 def deriveCollision(obj):
     """This function derives the collision information from an object.
 
-    :param obj: The blender object to derive the collision information from.
-    :type obj: bpy_types.Object
-    :return: dict
+    Args:
+      obj(bpy_types.Object): The blender object to derive the collision information from.
+
+    Returns:
+      dict
+
     """
     try:
         collision = initObjectProperties(
@@ -370,9 +403,12 @@ def deriveCollision(obj):
 def deriveCapsule(obj):
     """This function derives a capsule from a given blender object
 
-    :param obj: The blender object to derive the capsule from.
-    :type obj: bpy_types.Object
-    :return: tuple
+    Args:
+      obj(bpy_types.Object): The blender object to derive the capsule from.
+
+    Returns:
+      tuple
+
     """
     viscol_dict = {}
     capsule_pose = poses.deriveObjectPose(obj)
@@ -418,9 +454,12 @@ def deriveCapsule(obj):
 def deriveApproxsphere(obj):
     """This function derives an SRDF approximation sphere from a given blender object
 
-    :param obj: The blender object to derive the approxsphere from.
-    :type obj: bpy_types.Object
-    :return: tuple
+    Args:
+      obj(bpy_types.Object): The blender object to derive the approxsphere from.
+
+    Returns:
+      tuple
+
     """
     try:
         sphere = initObjectProperties(obj)
@@ -436,9 +475,12 @@ def deriveApproxsphere(obj):
 def deriveSensor(obj):
     """This function derives a sensor from a given blender object
 
-    :param obj: The blender object to derive the sensor from.
-    :type obj: bpy_types.Object
-    :return: dict
+    Args:
+      obj(bpy_types.Object): The blender object to derive the sensor from.
+
+    Returns:
+      dict
+
     """
     try:
         props = initObjectProperties(obj, phobostype='sensor')
@@ -452,9 +494,12 @@ def deriveSensor(obj):
 def deriveController(obj):
     """This function derives a controller from a given blender object
 
-    :param obj: The blender object to derive the controller from.
-    :type obj: bpy_types.Object
-    :return: dict
+    Args:
+      obj(bpy_types.Object): The blender object to derive the controller from.
+
+    Returns:
+      dict
+
     """
     try:
         props = initObjectProperties(obj, phobostype='controller')
@@ -467,9 +512,12 @@ def deriveController(obj):
 def deriveLight(obj):
     """This function derives a light from a given blender object
 
-    :param obj: The blender object to derive the light from.
-    :type obj: bpy_types.Object
-    :return: tuple
+    Args:
+      obj(bpy_types.Object): The blender object to derive the light from.
+
+    Returns:
+      tuple
+
     """
     light = initObjectProperties(obj, phobostype='light')
     light_data = obj.data
@@ -504,13 +552,14 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=()):
     """This function initializes a phobos data structure with a given object
     and derives basic information from its custom properties.
 
-    :param obj: The object to derive initial properties from.
-    :type obj: bpy_types.Object
-    :param phobostype: optional phobostype of the object
-    :type phobostype: str
-    :param ignoretypes: phobostypes to ignore during parsing
-    :type ignoretypes: list
-    :return: dict
+    Args:
+      obj(bpy_types.Object): The object to derive initial properties from.
+      phobostype(str, optional): optional phobostype of the object (Default value = None)
+      ignoretypes(list, optional): phobostypes to ignore during parsing (Default value = ()
+
+    Returns:
+      dict
+
     """
     # allow duplicated names differentiated by types
     props = {'name': nUtils.getObjectName(obj, phobostype)}
@@ -547,9 +596,12 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=()):
 def deriveDictEntry(obj):
     """Derives a phobos dictionary entry from the provided object.
 
-    :param obj: The object to derive the dict entry (phobos data structure) from.
-    :type obj: bpy_types.Object
-    :return: tuple
+    Args:
+      obj(bpy_types.Object): The object to derive the dict entry (phobos data structure) from.
+
+    Returns:
+      tuple
+
     """
     props = {}
     try:
@@ -576,9 +628,12 @@ def deriveDictEntry(obj):
 def deriveGroupEntry(group):
     """Derives a list of phobos link skeletons for a provided group object.
 
-    :param group: The blender group to extract the links from.
-    :type group: bpy_types.Group
-    :return: list
+    Args:
+      group(bpy_types.Group): The blender group to extract the links from.
+
+    Returns:
+      list
+
     """
     links = []
     for obj in group.objects:
@@ -593,8 +648,11 @@ def deriveGroupEntry(group):
 def deriveChainEntry(obj):
     """Derives a phobos dict entry for a kinematic chain ending in the provided object.
 
-    :param obj:
-    :return:
+    Args:
+      obj: return:
+
+    Returns:
+
     """
     returnchains = []
     if 'endChain' in obj:
@@ -628,11 +686,13 @@ def storePose(modelname, posename):
     """Stores the current pose of all of a robot's selected joints.
     Existing poses of the same name will be overwritten.
 
-    :param modelname: The robot the pose belongs to.
-    :type modelname: str.
-    :param posename: The name the pose will be stored under.
-    :type posename: str.
-    :return: Nothing.
+    Args:
+      modelname(str): The robot the pose belongs to.
+      posename(str): The name the pose will be stored under.
+
+    Returns:
+      Nothing.
+
     """
     rootlink = None
     for root in sUtils.getRoots():
@@ -661,11 +721,13 @@ def storePose(modelname, posename):
 def loadPose(modelname, posename):
     """Load and apply a robot's stored pose.
 
-    :param modelname: The model's name.
-    :type modelname: str.
-    :param posename: The name the pose is stored under.
-    :type posename: str.
-    :return Nothing.
+    Args:
+      modelname(str): The model's name.
+      posename(str.
+:return Nothing.): The name the pose is stored under.
+
+    Returns:
+
     """
     load_file = bUtils.readTextFile(modelname + '::poses')
     if load_file == '':
@@ -690,8 +752,12 @@ def loadPose(modelname, posename):
 def getPoses(modelname):
     """Get the names of the poses that have been stored for a robot.
 
-    :param modelname: The model's name.
-    :return: A list containing the poses' names.
+    Args:
+      modelname: The model's name.
+
+    Returns:
+      A list containing the poses' names.
+
     """
     load_file = bUtils.readTextFile(modelname + '::poses')
     if load_file == '':
@@ -703,8 +769,12 @@ def getPoses(modelname):
 def deriveTextData(modelname):
     """Collect additional data stored for a specific model.
 
-    :param modelname: Name of the model for which data should be derived.
-    :return: A dictionary containing additional data.
+    Args:
+      modelname: Name of the model for which data should be derived.
+
+    Returns:
+      A dictionary containing additional data.
+
     """
     datadict = {}
     datatextfiles = [
@@ -831,8 +901,13 @@ def namespaced(name, namespace):
 def buildModelDictionary(root, name=''):
     """Builds a python dictionary representation of a Phobos model.
 
-    :param root: bpy.types.Object
-    :return: dict
+    Args:
+      root: bpy.types.Object
+      name:  (Default value = '')
+
+    Returns:
+      dict
+
     """
     if root.phobostype not in ['link', 'submodel']:
         log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
@@ -1040,6 +1115,12 @@ def buildModelDictionary(root, name=''):
 
 def buildModelFromDictionary(model):
     """Creates the Blender representation of the imported model, using a model dictionary.
+
+    Args:
+      model:
+
+    Returns:
+
     """
     # DOCU add some more docstring
     log("Creating Blender model...", 'INFO')

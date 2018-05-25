@@ -43,15 +43,16 @@ from phobos.phoboslog import log
 
 def deriveEntity(root, outpath):
     """Derives the dictionary for a SMURF entity from the phobos model dictionary.
-
+    
     # TODO savetosubfolder is not a parameter
-    :param root: The smurf root object.
-    :type root: bpy.types.Object
-    :param outpath: The path to export the smurf to.
-    :type outpath: str
-    :param savetosubfolder: If True the export path has a subfolder for this smurf entity.
-    :type savetosubfolder: bool
-    :return: dict - An entry for the scenes entitiesList
+
+    Args:
+      root(bpy.types.Object): The smurf root object.
+      outpath(str): The path to export the smurf to.
+      savetosubfolder(bool): If True the export path has a subfolder for this smurf entity.
+
+    Returns:
+      dict - An entry for the scenes entitiesList
 
     """
     entitypose = models.deriveObjectPose(root)
@@ -99,9 +100,11 @@ def gatherAnnotations(model):
     across the model. These annotations were created in the model.py
     module and are marked with a leading '$'.
 
-    :param model: The robot model dictionary.
-    :type model: dict
-    :return: dict -- A dictionary of the gathered annotations.
+    Args:
+      model(dict): The robot model dictionary.
+
+    Returns:
+      dict -- A dictionary of the gathered annotations.
 
     """
     annotations = {}
@@ -149,9 +152,11 @@ def gatherAnnotations(model):
 def deriveRefinedCollisionData(model):
     """This function collects all collision bitmasks in a given model.
 
-    :param model: The robot model to search in.
-    :type model: dict
-    :return: dict -- a dictionary containing all bitmasks with corresponding element name (key).
+    Args:
+      model(dict): The robot model to search in.
+
+    Returns:
+      dict -- a dictionary containing all bitmasks with corresponding element name (key).
 
     """
     collisiondata = {}
@@ -169,8 +174,11 @@ def deriveRefinedCollisionData(model):
 def gatherLevelOfDetailSettings(model):
     """This function collects all level of detail settings in a given model.
 
-    :param model: The robot model to search in.
-    :return: dict -- a dictionary containing all bitmasks with corresponding element name (key).
+    Args:
+      model: The robot model to search in.
+
+    Returns:
+      dict -- a dictionary containing all bitmasks with corresponding element name (key).
 
     """
     lods = {}
@@ -184,9 +192,12 @@ def gatherLevelOfDetailSettings(model):
 
 def sort_for_yaml_dump(structure, category):
     """TODO Please add doc ASAP
-    :param structure:
-    :param category:
-    :return:
+
+    Args:
+      structure: param category:
+      category: 
+
+    Returns:
 
     """
     if category in ['materials', 'motors', 'sensors']:
@@ -202,9 +213,12 @@ def sort_for_yaml_dump(structure, category):
 
 def sort_dict_list(dict_list, sort_key):
     """TODO Please add doc ASAP
-    :param dict_list:
-    :param sort_key:
-    :return:
+
+    Args:
+      dict_list: param sort_key:
+      sort_key: 
+
+    Returns:
 
     """
     sorted_dict_list = []

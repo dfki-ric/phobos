@@ -61,6 +61,11 @@ class ModelPoseProp(bpy.types.PropertyGroup):
 class PhobosPrefs(AddonPreferences):
     """The general Phobos addon settings are stored in this class.
     They can be edited in the User Preferences of Blender under the Addon tab.
+
+    Args:
+
+    Returns:
+
     """
     bl_idname = __package__
 
@@ -372,7 +377,13 @@ class MatrixPropGroup(bpy.types.PropertyGroup):
 # CHECK will this stay here? Give it its own file?
 class PhobosMatrixPanel(bpy.types.Panel):
     """Contains summary information and editing possibilities in the Buttons
-    Window"""
+    Window
+
+    Args:
+
+    Returns:
+
+    """
     bl_idname = "INFOBAR_PT_PHOBOS_TOOLS"
     bl_label = "Phobos Matrix Information"
     bl_space_type = "PROPERTIES"
@@ -423,7 +434,13 @@ class PhobosMatrixPanel(bpy.types.Panel):
 
 class PhobosObjectInformationPanel(bpy.types.Panel):
     """Contains information like parent, immediate children etc. in the
-    Buttons Window"""
+    Buttons Window
+
+    Args:
+
+    Returns:
+
+    """
     bl_idname = "OBJINFO_PT_PHOBOS_TOOLS"
     bl_label = "Phobos Object Information"
     bl_space_type = "PROPERTIES"
@@ -802,8 +819,7 @@ class PhobosModelPanel(bpy.types.Panel):
 
 
 class PhobosExportPanel(bpy.types.Panel):
-    """Contains the export settings for models/meshes etc. in the Phobos viewport toolbar
-    """
+    """Contains the export settings for models/meshes etc. in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_EXPORT_PT_PHOBOS"
     bl_label = "Export"
     bl_space_type = 'VIEW_3D'
@@ -879,8 +895,7 @@ class PhobosExportPanel(bpy.types.Panel):
 
 
 class PhobosImportPanel(bpy.types.Panel):
-    """Contains the import settings in the Phobos viewport toolbar
-    """
+    """Contains the import settings in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_IMPORT_PT_PHOBOS"
     bl_label = "Import"
     bl_space_type = 'VIEW_3D'
@@ -916,8 +931,7 @@ class PhobosSubmodelsPanel(bpy.types.Panel):
 
 
 class PhobosObjectPanel(bpy.types.Panel):
-    """Contains the custom properties of objects in the Buttons Window
-    """
+    """Contains the custom properties of objects in the Buttons Window"""
     bl_idname = "phobos.PT_PHOBOS"
     bl_label = "Phobos properties"
     bl_space_type = 'PROPERTIES'
@@ -996,6 +1010,11 @@ def get_operator_manuals():
     """Returns a tuple with the Phobos wiki Operator page and pairs of operator
     names and wiki page anchor names to allow for linking from Blender to wiki.
     :return: tuple
+
+    Args:
+
+    Returns:
+
     """
     # CHECK does the linking work with the new wiki?
     url_manual_prefix = "https://github.com/rock-simulation/phobos/wiki/Operators#"

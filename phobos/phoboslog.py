@@ -42,9 +42,7 @@ loglevels = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
 
 
 class col:
-    """
-    Provides the color ids for different terminal messages.
-    """
+    """Provides the color ids for different terminal messages."""
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
@@ -62,9 +60,12 @@ def decorate(level):
     """Provides a simple wrapper to color the log level according to the colors
     from class col.
 
-    :param level: the loging level as described by loglevels.
-    :type level: str.
-    :return: str - decorated string of level
+    Args:
+      level(str): the loging level as described by loglevels.
+
+    Returns:
+      str - decorated string of level
+
     """
     if level == "INFO":
         return col.BOLD+col.OKGREEN+level+col.ENDC
@@ -84,19 +85,17 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False, end="\n"):
     The message is logged by the operator depending on the loglevel
     settings.
 
-    :param message: The message to log.
-    :type message: str.
-    :param level: Valid log level for the message as defined by 'loglevels'.
-    :type level: str.
-    :param origin: If set the message is prefixed with the origin.
-    :type origin: str. or obj.
-    :param prefix: Any string that should be printed before message (e.g. "\n")
-    :type prefix: str.
-    :param guionly: if True, only prints to GUI
-    :type guiolny: bool
-    :param end: string to be used at the end of the resulting print statement
-    :type end: str
-    :return: None.
+    Args:
+      message(str): The message to log.
+      level(str, optional): Valid log level for the message as defined by 'loglevels'. (Default value = "INFO")
+      origin(str. or obj, optional): If set the message is prefixed with the origin. (Default value = None)
+      prefix(str, optional): Any string that should be printed before message (e.g. "\n") (Default value = "")
+      guionly: if True, only prints to GUI (Default value = False)
+      end(str, optional): string to be used at the end of the resulting print statement (Default value = "\n")
+
+    Returns:
+      None.
+
     """
     callerframerecord = inspect.stack()[1]
     frame = callerframerecord[0]

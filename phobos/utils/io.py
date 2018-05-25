@@ -18,15 +18,15 @@ def xmlline(ind, tag, names, values):
     To use this function you need to know the indentation level you need for this line.
     Make sure the names and values list have the correct order.
 
-    :param ind: Indentation level
-    :type ind: int >= 0
-    :param tag: xml element tag
-    :type tag: String
-    :param names: Names of xml element's attributes
-    :type names: list (same order as for values)
-    :param values: Values of xml element's attributes
-    :type values: list (same order as for names)
-    :return: String -- Generated xml line.
+    Args:
+      ind(int >= 0): Indentation level
+      tag(String): xml element tag
+      names(list (same order as for values)): Names of xml element's attributes
+      values(list (same order as for names)): Values of xml element's attributes
+
+    Returns:
+      String -- Generated xml line.
+
     """
     line = [indent * max(0, ind) + '<' + tag]
     for i in range(len(names)):
@@ -38,13 +38,14 @@ def xmlline(ind, tag, names, values):
 def l2str(items, start=0, end=-1):
     """Generates string from (part of) a list.
 
-    :param items: List from which the string is derived (elements need to implement str())
-    :type items: list
-    :param start: Inclusive start index for iteration
-    :type start: int
-    :param end: Exclusive end index for iteration
-    :type end: int
-    :return: str - Generated string.
+    Args:
+      items(list): List from which the string is derived (elements need to implement str())
+      start(int, optional): Inclusive start index for iteration (Default value = 0)
+      end(int, optional): Exclusive end index for iteration (Default value = -1)
+
+    Returns:
+      str - Generated string.
+
     """
     start = max(start, 0)
     end = end if end >= 0 else len(items)
@@ -54,9 +55,12 @@ def l2str(items, start=0, end=-1):
 def securepath(path):
     """Checks whether directories of a path exist and generates them if necessary.
 
-    :param path: The path to be secured (directories only)
-    :type path: str
-    :return: String -- secured path as absolute path, None on error
+    Args:
+      path(str): The path to be secured (directories only)
+
+    Returns:
+      String -- secured path as absolute path, None on error
+
     """
     path = os.path.abspath(path)
     if not os.path.exists(path):
@@ -178,9 +182,13 @@ def importResources(restuple, filepath=None):
     """Accepts a tuple of pairs (tuples) describing resource objects to import. For instance,
     the call reslist=(('joint', 'continuous'), ('sensor', 'camera')) would import two
     resource objects.
-    :param restuple: tuple of tuples of length 2
-    :param filepath: path to file from which to load resource
-    :return:
+
+    Args:
+      restuple: tuple of tuples of length 2
+      filepath: path to file from which to load resource (Default value = None)
+
+    Returns:
+
     """
     currentscene = bpy.context.scene.name
     bUtils.switchToScene('resources')

@@ -39,41 +39,43 @@ from phobos.utils.io import l2str, xmlline, indent, xmlHeader
 def exportSRDF(model, path, mesh_format=''):
     """This function exports the SRDF-relevant data from the dictionary to a specified path.
     Further detail on different elements of SRDF:
-
+    
     <group>
     Groups in SRDF can contain *links*, *joints*, *chains* and other *groups* (the latter two of which have to be specified
     upstream. As nested groups is just a shortcut for adding links and joints to a group, it is not supported and the
     user will have to add all links and joints explicitly to each group.
     Originally both links and their associated parent joints were added. SRDF however implicitly assumes this, so the
     current implementation only adds the links.
-
+    
     <chain>
     Chains are elements to simplify defining groups and are supported. The dictionary also contains a list of all
     elements belonging to that chain, which is discarded and not written to SRDF, however. It might be written to SMURF
     in the future.
-
+    
     <link_sphere_approximatio>
     SRDF defines the convention that if no sphere is defined, one large sphere is
     assumed for that link. If one wants to have no sphere at all, it is necessary to define a sphere of radius 0.
     As one large sphere can be explicitly added by the user and should be if that is what he intends (WYSIWYG),
     we add a sphere of radius 0 by default if no sphere is specified.
-
+    
     <passive_joint>
     Marks a joint as passive.
-
+    
     <disable_collisions>
     Disables collisions between pairs of links to simplify collision checking and avoid collisions
     of parents and children at their joints.
-
-
+    
+    
     Currently not supported:
     - <group_state>
     - <virtual_joint>
 
-    :param model: a robot model dictionary.
-    :type model: dict
-    :param path: the outpath for the file.
-    :type path: str
+    Args:
+      model(dict): a robot model dictionary.
+      path(str): the outpath for the file.
+      mesh_format:  (Default value = '')
+
+    Returns:
 
     """
     output = [xmlHeader, indent + '<robot name="' + model['name'] + '">\n\n']

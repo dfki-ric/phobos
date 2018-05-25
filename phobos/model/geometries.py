@@ -27,9 +27,12 @@ def getLargestDimension(geometry):
 def deriveGeometry(obj):
     """This function derives the geometry from an object.
 
-    :param obj: The blender object to derive the geometry from.
-    :type obj: bpy_types.Object
-    :return: dict
+    Args:
+      obj(bpy_types.Object): The blender object to derive the geometry from.
+
+    Returns:
+      dict
+
     """
     try:
         geometry = {'type': obj['geometry/type']}
@@ -63,11 +66,13 @@ def createGeometry(viscol, geomsrc):
     """Creates Blender object for visual or collision objects.
     Returns reference to new object or None if creation failed.
 
-    :param viscol: visual/collision dictionary element
-    :type viscol: dict
-    :param geomsrc: new object's phobostype
-    :type geomsrc: str
-    :return: bpy.types.Object or None
+    Args:
+      viscol(dict): visual/collision dictionary element
+      geomsrc(str): new object's phobostype
+
+    Returns:
+      bpy.types.Object or None
+
     """
     if 'geometry' not in viscol or viscol['geometry'] is {}:
         return None

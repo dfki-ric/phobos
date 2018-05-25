@@ -44,8 +44,12 @@ def sort_urdf_elements(elems):
     """Sort a collection of elements. By default, this method simply wraps the standard
     'sorted()' method. This is done in order to be able to easily change the element ordering.
 
-    :param elems: a collection
-    :return: sorted colletion
+    Args:
+      elems: a collection
+
+    Returns:
+      sorted colletion
+
     """
     return sorted(elems)
 
@@ -53,11 +57,13 @@ def sort_urdf_elements(elems):
 def writeURDFGeometry(output, element, filepath):
     """This functions writes the URDF geometry for a given element at the end of a given String.
 
-    :param output: The String to append the URDF output string on.
-    :type output: str
-    :param element: A certain element to parse into URDF.
-    :type element: dict
-    :return: str -- The extended String
+    Args:
+      output(str): The String to append the URDF output string on.
+      element(dict): A certain element to parse into URDF.
+      filepath: 
+
+    Returns:
+      str -- The extended String
 
     """
     geometry = element['geometry']
@@ -92,10 +98,11 @@ def exportUrdf(model, outpath):
     """This functions writes the URDF of a given model into a file at the given filepath.
     An existing file with this path will be overwritten.
 
-    :param model: Dictionary of the model to be exported as URDF.
-    :type model: dict
-    :param outpath: The path of the exported file.
-    :type outpath: str
+    Args:
+      model(dict): Dictionary of the model to be exported as URDF.
+      outpath(str): The path of the exported file.
+
+    Returns:
 
     """
     log("Export URDF to " + outpath, "INFO")
@@ -267,10 +274,11 @@ def store_element_order(element_order, path):
     """This function dumps whatever pythonic yaml structure to a given filepath and appends
     *_element_order_debug.yml* to the end of path.
 
-    :param element_order: The dictionary you want to dump into a yaml file.
-    :type element_order: dict
-    :param path: The path you want to write the yaml dump to.
-    :type path: str
+    Args:
+      element_order(dict): The dictionary you want to dump into a yaml file.
+      path(str): The path you want to write the yaml dump to.
+
+    Returns:
 
     """
     # TODO delete me?
@@ -306,11 +314,12 @@ def round_float(float_as_str, decimal=6):
     """Casts 'float_as_str' to float and round to 'decimal' decimal places. The possible exception
     **ValueError** is not handled in the function itself!
 
-    :param float_as_str: The string you want to cast into a float.
-    :type float_as_str: str
-    :param decimal: The number of decimal places you want to round to. Its default is 6.
-    :type decimal: int
-    :return: float
+    Args:
+      float_as_str(str: str): The string you want to cast into a float.
+      decimal(int, optional): The number of decimal places you want to round to. Its default is 6.
+
+    Returns:
+      float
 
     """
     return round(float(float_as_str), decimal)
@@ -320,11 +329,12 @@ def pos_rot_tree_to_lists(position, rotation):
     """Convert the xml representations of a position and a rotation to lists.
     If either is 'None', return a list of zeroes instead.
 
-    :param position: The xml representation of a position.
-    :type position: str
-    :param rotation: The xml representation of a rotation.
-    :type rotation: str
-    :return: tuple of two lists
+    Args:
+      position(str): The xml representation of a position.
+      rotation(str): The xml representation of a rotation.
+
+    Returns:
+      tuple of two lists
 
     """
     if position:
@@ -352,13 +362,15 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
         - rotation_euler: euler angles
         - matrix: position and rotation in 4x4 matrix form
 
-    :param position: The position to include in the dictionary.
-    :type position: list
-    :param rotation: The rotation to include into the dictionary, either euler angle or quaternion.
-    :type rotation: list
-    :param pivot: The pivot point.
-    :type pivot: list
-    :return: dict
+    Args:
+      position(list): The position to include in the dictionary.
+      rotation(list): The rotation to include into the dictionary, either euler angle or quaternion.
+      pivot(list, optional): The pivot point. (Default value = (0)
+      0: 
+
+    Returns:
+      dict
+
     """
     px, py, pz = position
     if len(rotation) == 3:
@@ -433,11 +445,12 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
 def add_quaternion(rot1, rot2):
     """Adds two rotations in quaternion format and returns the result as tuple.
 
-    :param rot1: The first summand.
-    :type rot1: list
-    :param rot2: The second summand.
-    :type rot2: list
-    :return: tuple
+    Args:
+      rot1(list): The first summand.
+      rot2(list): The second summand.
+
+    Returns:
+      tuple
 
     """
     quat1 = mathutils.Quaternion(rot1)
@@ -450,6 +463,14 @@ def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
     """Handle missing visual and collision geometry.
     I hope it was meant like that ...
     # DOCU this documentation needs update
+
+    Args:
+      no_visual_geo: 
+      no_collision_geo: 
+      link_dict: 
+
+    Returns:
+
     """
     if no_visual_geo or no_collision_geo:
         # TODO change to log?
@@ -479,11 +500,12 @@ def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
 def get_phobos_joint_name(mars_name, has_limits):
     """This function gets a mars joint name and returns the corresponding urdf joint type.
 
-    :param mars_name: The mars name for the joint.
-    :type mars_name: str
-    :param has_limits: Additional information to determine correct urdf joint name if mars_name is *hinge*.
-    :type has_limits: bool
-    :return: str
+    Args:
+      mars_name(str): The mars name for the joint.
+      has_limits(bool): Additional information to determine correct urdf joint name if mars_name is *hinge*.
+
+    Returns:
+      str
 
     """
     if mars_name == 'hinge':
@@ -498,9 +520,11 @@ def get_phobos_joint_name(mars_name, has_limits):
 def parsePose(origin):
     """This function parses the robot models pose and returns it as a dictionary.
 
-    :param origin: The origin blender object to parse the pose from.
-    :type orign: blender object.
-    :return: dict -- The origins pose.
+    Args:
+      origin: The origin blender object to parse the pose from.
+
+    Returns:
+      dict -- The origins pose.
 
     """
     pose = {}
@@ -523,8 +547,13 @@ def importUrdf(filepath):
     """This function parses the whole URDF representation of the model and builds the model dictionary from it.
     The created model is stored in the model value of the parser and the URDF file is specified by the filepath
     given to the Parser.
-
+    
     :return: Nothing.
+
+    Args:
+      filepath: 
+
+    Returns:
 
     """
     model = {}
@@ -594,9 +623,11 @@ def importUrdf(filepath):
 def parseLink(link, urdffilepath=None):
     """Parses a URDF link xml definition.
 
-    :param link: link to be parsed
-    :param urdffilepath: path of originating urdf file (for filename handling)
-    :return:
+    Args:
+      link: link to be parsed
+      urdffilepath: path of originating urdf file (for filename handling) (Default value = None)
+
+    Returns:
 
     """
     newlink = {a: link.attrib[a] for a in link.attrib}
@@ -662,9 +693,13 @@ def parseLink(link, urdffilepath=None):
 
 def parseInertial(link_xml):
     """Parses the URDF xml definition of inertial data.
-    :param link_xml: xml representation of 'inertial' field of URDF link
-    :type link_xml: ElementTree.Element
-    :return: dict -- of inertial data
+
+    Args:
+      link_xml(ElementTree.Element): xml representation of 'inertial' field of URDF link
+
+    Returns:
+      dict -- of inertial data
+
     """
     inertial_dict = {}
     inertial_data = link_xml.find('inertial')

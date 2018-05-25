@@ -44,13 +44,13 @@ def import_submodules(package, recursive=True, verbose=False):
         Recursion can be turned off.
         The imported modules are returned as dictionary.
 
-    :param package: package (name or actual module)
-    :type package: str | module
-    :param recursive: recursion active
-    :type recursive: bool
-    :param verbose: import feedback active
-    :type verbose: bool
-    :rtype: dict[str, types.ModuleType]
+    Args:
+      package(str | module): package (name or actual module)
+      recursive(bool, optional): recursion active (Default value = True)
+      verbose(bool, optional): import feedback active (Default value = False)
+
+    Returns:
+
     """
     modules = sys.modules
 
@@ -135,8 +135,12 @@ import_submodules(phobos, verbose=True)
 
 def register():
     """This function registers all modules to blender.
-
+    
     :return: Nothing
+
+    Args:
+
+    Returns:
 
     """
     phobos.phobosgui.register()
@@ -144,8 +148,7 @@ def register():
 
 
 def unregister():
-    """This function unregisters all modules in Blender.
-    """
+    """This function unregisters all modules in Blender."""
     print("\n" + "-" * 100)
     print("Unregistering Phobos...")
     # TODO delete all imported modules to resolve reregistration conflicts

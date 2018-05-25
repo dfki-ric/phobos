@@ -38,13 +38,14 @@ from phobos.phoboslog import log
 def deriveEntity(light, outpath):
     """This function handles a light entity in a scene to export it
 
-    :param entity: The lights root object.
-    :type entity: bpy.types.Object
-    :param outpath: The path to export to. Not used for light entity
-    :type outpath: str
-    :param savetosubfolder: If True data will be exported into subfolders. Not used for light entity
-    :type savetosubfolder: bool
-    :return: dict - An entry for the scenes entitiesList
+    Args:
+      entity(bpy.types.Object): The lights root object.
+      outpath(str): The path to export to. Not used for light entity
+      savetosubfolder(bool): If True data will be exported into subfolders. Not used for light entity
+      light: 
+
+    Returns:
+      dict - An entry for the scenes entitiesList
 
     """
     log("Exporting " + light["entity/name"] + " as a light entity", "INFO")

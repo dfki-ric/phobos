@@ -12,6 +12,7 @@ for link in links:
     bpy.ops.object.mode_set(mode='EDIT')
     print(link.name, len(link.data.bones), len(link.data.edit_bones))
     link.data.edit_bones[0].name = link.name
+    
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
