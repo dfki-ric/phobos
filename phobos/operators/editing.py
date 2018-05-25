@@ -1165,8 +1165,7 @@ class CreateLinksOperator(Operator):
 
 
 def getControllerParameters(name):
-    """
-    Returns the controller parameters for the controller type with the provided
+    """Returns the controller parameters for the controller type with the provided
     name.
 
     :param name: the name of the controller type.
@@ -1179,8 +1178,7 @@ def getControllerParameters(name):
 
 
 def getDefaultControllerParameters(scene, context):
-    """
-    Returns the default controller parameters for the controller of the active
+    """Returns the default controller parameters for the controller of the active
     object.
     """
     try:

@@ -186,7 +186,7 @@ def datetimeFromIso(iso):
 
 
 def distance(objects):
-    """ Returns the distance between two blender objects.
+    """Returns the distance between two blender objects.
 
     :param objects: The two objects to calculate the distance for.
     :type objects: list -- with exactly two elements

@@ -39,7 +39,7 @@ import phobos
 
 
 def import_submodules(package, recursive=True, verbose=False):
-    """ Import all submodules of a module, recursively, including subpackages.
+    """Import all submodules of a module, recursively, including subpackages.
         If a module is already imported it is reloaded instead.
         Recursion can be turned off.
         The imported modules are returned as dictionary.

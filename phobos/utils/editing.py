@@ -53,8 +53,7 @@ def getCombinedTransform(obj, effectiveparent):
 
 
 def restructureKinematicTree(link, root=None):
-    """
-    Restructures a tree such that the *link* provided becomes the root of the tree. For
+    """Restructures a tree such that the *link* provided becomes the root of the tree. For
     instance, the following tree:
              A
            /  \
@@ -102,8 +101,7 @@ def restructureKinematicTree(link, root=None):
 
 
 def instantiateSubmodel(submodelname, instancename, size=1.0):
-    """
-    Creates an instance of the submodel specified by the submodelname.
+    """Creates an instance of the submodel specified by the submodelname.
 
     The instance receives the definitions of the group as it is generated.
 
@@ -172,8 +170,7 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
 
 
 def defineSubmodel(submodelname, submodeltype, version='', objects=None):
-    """
-    Defines a new submodule group with the specified name and type.
+    """Defines a new submodule group with the specified name and type.
 
     The group will be named like so:
         'submodeltype:submodelname/version'
@@ -255,8 +252,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
 
 
 def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
-    """
-    Removes a submodel definition from the Blender project.
+    """Removes a submodel definition from the Blender project.
     Returns True or False depending on whether groups have been removed or not.
 
     :param submodelname: the name of the submodel

@@ -38,7 +38,7 @@ mechanismpreviewcollection = []
 
 
 def getMechanismListForEnumProperty(self, context):
-    """ Returns a list of (str, str, str) elements which contains the mechanisms
+    """Returns a list of (str, str, str) elements which contains the mechanisms
     currently loaded. If there are none, returns ('-', '-', '-').
     """
     try:

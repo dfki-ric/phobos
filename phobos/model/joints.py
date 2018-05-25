@@ -87,7 +87,7 @@ def createJoint(joint, linkobj=None):
 
 
 def deriveJointType(joint, adjust=False):
-    """ Derives the type of the joint defined by the armature object 'joint'
+    """Derives the type of the joint defined by the armature object 'joint'
     based on the constraints defined in the joint. If the constraints do not
     match the specified joint type, a warning is logged. By using the adjust
     parameter it is possible to overwrite the joint type according to the
@@ -152,7 +152,7 @@ def deriveJointType(joint, adjust=False):
 
 
 def getJointConstraints(joint):
-    """ Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'.
+    """Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'.
 
     :param joint: The joint you want to get the constraints from.
     :type joint: bpy_types.Object

@@ -59,8 +59,7 @@ class col:
 
 
 def decorate(level):
-    """
-    Provides a simple wrapper to color the log level according to the colors
+    """Provides a simple wrapper to color the log level according to the colors
     from class col.
 
     :param level: the loging level as described by loglevels.
@@ -80,8 +79,7 @@ def decorate(level):
 
 
 def log(message, level="INFO", origin=None, prefix="", guionly=False, end="\n"):
-    """
-    Logs a given message to the blender console and logging file if present
+    """Logs a given message to the blender console and logging file if present
     and if log level is low enough. The origin can be defined as string.
     The message is logged by the operator depending on the loglevel
     settings.

@@ -175,8 +175,7 @@ def getConfigPath():
 
 
 def importResources(restuple, filepath=None):
-    """
-    Accepts a tuple of pairs (tuples) describing resource objects to import. For instance,
+    """Accepts a tuple of pairs (tuples) describing resource objects to import. For instance,
     the call reslist=(('joint', 'continuous'), ('sensor', 'camera')) would import two
     resource objects.
     :param restuple: tuple of tuples of length 2

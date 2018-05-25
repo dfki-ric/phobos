@@ -625,8 +625,7 @@ def deriveChainEntry(obj):
 
 
 def storePose(modelname, posename):
-    """
-    Stores the current pose of all of a robot's selected joints.
+    """Stores the current pose of all of a robot's selected joints.
     Existing poses of the same name will be overwritten.
 
     :param modelname: The robot the pose belongs to.
@@ -660,8 +659,7 @@ def storePose(modelname, posename):
 
 
 def loadPose(modelname, posename):
-    """
-    Load and apply a robot's stored pose.
+    """Load and apply a robot's stored pose.
 
     :param modelname: The model's name.
     :type modelname: str.
@@ -690,8 +688,7 @@ def loadPose(modelname, posename):
 
 
 def getPoses(modelname):
-    """
-    Get the names of the poses that have been stored for a robot.
+    """Get the names of the poses that have been stored for a robot.
 
     :param modelname: The model's name.
     :return: A list containing the poses' names.
@@ -704,8 +701,7 @@ def getPoses(modelname):
 
 
 def deriveTextData(modelname):
-    """
-    Collect additional data stored for a specific model.
+    """Collect additional data stored for a specific model.
 
     :param modelname: Name of the model for which data should be derived.
     :return: A dictionary containing additional data.

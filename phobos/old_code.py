@@ -183,9 +183,9 @@ __author__ = 'kavonszadkowski'
 
 
 # def get_axis_rotation_matrix(axis, angle):
-#     '''
+#     """
 #     unnecessary
-#     '''
+#     """
 #
 #     import math
 #
@@ -226,12 +226,12 @@ __author__ = 'kavonszadkowski'
 
 # from urdf.py
 #def apply_rel_ids_old(self, nodes):
-#    '''
+#    """
 #    Collect the absolute poses for all nodes.
 
 #   Does not work like that since it calculates poses relative to root,
 #   but may become useful again.
-#    '''
+#    """
     #base_poses = {}
     #rel_poses = {}
     #for node in nodes:

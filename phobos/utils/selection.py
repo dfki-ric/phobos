@@ -32,8 +32,7 @@ from phobos.phoboslog import log
 
 
 def getObjectsByPhobostypes(phobostypes):
-    """
-    Returns list of all objects in the current scene matching phobostype
+    """Returns list of all objects in the current scene matching phobostype
 
     :param phobostypes: the phobostypes to match objects with.
     :type phobostypes: list.
@@ -43,8 +42,7 @@ def getObjectsByPhobostypes(phobostypes):
 
 
 def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
-    """
-    Finds all (selected or unselected / hidden or unhidden) children of a
+    """Finds all (selected or unselected / hidden or unhidden) children of a
     given root object and phobostypes. If phobostypes is not provided, it is ignored.
 
     :param root: object to start search from.
@@ -64,8 +62,7 @@ def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
 
 
 def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidden=False):
-    """
-    Returns all immediate children for a given object and phobostypes (if provided).
+    """Returns all immediate children for a given object and phobostypes (if provided).
     Search can be limited to selected objects and non-hidden objects.
 
     :param obj: object to start search from.
@@ -85,8 +82,7 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
 
 
 def getEffectiveParent(obj, ignore_selection=False, include_hidden=False):
-    """
-    Returns the parent of an object, i.e. the first *link* ascending the
+    """Returns the parent of an object, i.e. the first *link* ascending the
     object tree that is selected, starting from the obj, optionally also excluding
     hidden objects.
 
@@ -106,8 +102,7 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False):
 
 
 def getRoot(obj=None):
-    """
-    Returns the root object of a model the Blender object obj or, if obj is
+    """Returns the root object of a model the Blender object obj or, if obj is
     not provided, the active object is part of, traversing up the tree.
     If no such object is found, returns None.
 
@@ -127,8 +122,7 @@ def getRoot(obj=None):
 
 
 def getRoots():
-    """
-    Returns a list of all of the current scene's root links, i.e. links containing a model
+    """Returns a list of all of the current scene's root links, i.e. links containing a model
     name or entity name.
 
     :return: list - all root links.
@@ -143,8 +137,7 @@ def getRoots():
 
 
 def isRoot(obj):
-    """
-    Returns whether or not the object passed to obj is a Phobos model root.
+    """Returns whether or not the object passed to obj is a Phobos model root.
 
     :param obj: The object for which model root status is tested.
     :type obj: bpy.types.Object.
@@ -155,8 +148,7 @@ def isRoot(obj):
 
 
 def isEntity(obj):
-    """
-    Returns whether or not the opject passed is an Phobos entity.
+    """Returns whether or not the opject passed is an Phobos entity.
 
     :param obj: The object for which entity status is tested.
     :type obj: bpy.types.Object.
@@ -166,8 +158,7 @@ def isEntity(obj):
 
 
 def selectObjects(objects, clear=True, active=-1):
-    """
-    Selects all objects provided in list, clears current selection if clear is True
+    """Selects all objects provided in list, clears current selection if clear is True
     and sets one of the objects the active objects if a valid index is provided.
 
     :param objects: the objects to be selected.
@@ -192,8 +183,7 @@ def selectObjects(objects, clear=True, active=-1):
 
 
 def getObjectByName(name):
-    """
-    Returns list of objects that either have a specific *name* or contain a custom
+    """Returns list of objects that either have a specific *name* or contain a custom
     name property with that name.
 
     :param name: The exact object name to find.
@@ -212,8 +202,7 @@ def getObjectByName(name):
 
 
 def getObjectsByPattern(pattern, match_case=False):
-    """
-    Return a list of objects in the scene that match a name pattern. The pattern
+    """Return a list of objects in the scene that match a name pattern. The pattern
     may match either the object's actual name or the value of the 'phobostype/name'
     property.
 
@@ -238,8 +227,7 @@ def getObjectsByPattern(pattern, match_case=False):
 
 
 def getObjectByNameAndType(name, phobostype):
-    """
-    Find an object with a specified phobostype and having the property
+    """Find an object with a specified phobostype and having the property
     "phobostype/'name' == name".
 
     :param name: The name to search for.
@@ -257,8 +245,7 @@ def getObjectByNameAndType(name, phobostype):
 
 
 def selectByName(name, match_case=False, exact=False):
-    """
-    Uses getObjectsByPattern to select the found objects.
+    """Uses getObjectsByPattern to select the found objects.
 
     :param name: The name (pattern) to search for.
     :type name: str.
@@ -275,8 +262,7 @@ def selectByName(name, match_case=False, exact=False):
 
 
 def getSelectedObjects():
-    """
-    Returns a generator of all selected objects independent of bpy.context.
+    """Returns a generator of all selected objects independent of bpy.context.
 
     # DOCU fill this in
     :return:

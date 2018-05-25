@@ -41,8 +41,7 @@ from phobos.phoboslog import log
 
 
 def sort_urdf_elements(elems):
-    """
-    Sort a collection of elements. By default, this method simply wraps the standard
+    """Sort a collection of elements. By default, this method simply wraps the standard
     'sorted()' method. This is done in order to be able to easily change the element ordering.
 
     :param elems: a collection
@@ -662,8 +661,7 @@ def parseLink(link, urdffilepath=None):
 
 
 def parseInertial(link_xml):
-    """
-    Parses the URDF xml definition of inertial data.
+    """Parses the URDF xml definition of inertial data.
     :param link_xml: xml representation of 'inertial' field of URDF link
     :type link_xml: ElementTree.Element
     :return: dict -- of inertial data

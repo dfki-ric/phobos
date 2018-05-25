@@ -38,14 +38,14 @@ def isGit(folder):
     return os.path.exists(os.path.join(folder, '.git'))
 
 def cloneGit(name, url, destination):
-    '''Clones the git repository which is specified by its url into the folder
+    """Clones the git repository which is specified by its url into the folder
     with the specified name in the destination folder. If the url provides the
     https:// start, it might be necessary to enter gituser and password into
     commandline, so better use the git@git start.
     If the destination folder is a git already, it will not be cloned, but True
     will be returned.
     If the destination folder does not exist, it is created on the fly.
-    '''
+    """
     # check for existing git first
     try:
         if isGit(os.path.join(destination, name)):

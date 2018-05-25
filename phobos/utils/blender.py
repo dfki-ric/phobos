@@ -127,7 +127,7 @@ def setObjectLayersActive(obj):
 
 
 def toggleLayer(index, value=None):
-    """ This function toggles a specific layer or sets it to a desired value.
+    """This function toggles a specific layer or sets it to a desired value.
 
     :param index: The layer index you want to change.
     :type index: int

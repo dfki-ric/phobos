@@ -40,7 +40,7 @@ def generateCheckMessages(param1, param2):
 
 
 def check_dict(dic, validator, messages):
-    """ This function validates a given dictionary against a validation.
+    """This function validates a given dictionary against a validation.
     It writes all messages to the given messages list
 
     :param dic: The dictionary you want to validate.

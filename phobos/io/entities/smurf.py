@@ -71,7 +71,7 @@ def deriveEntity(root, outpath):
             if (root["modelname"] == robot_model.robot_name) and (root["entity/pose"] == robot_model.label):
                 pass
         entity['file'] = os.path.join(os.path.relpath(robot_model.path, outpath), root["name"] + ".smurf")
-        '''
+        """
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
             robots = yaml.load(f.read())
             sourcepath = robots[smurf["modelname"]]
@@ -83,7 +83,7 @@ def deriveEntity(root, outpath):
                     # remove old folders to prevent errors in copytree
                     shutil.rmtree(os.path.join(smurf_outpath, filename), True)
                     shutil.copytree(fullpath, os.path.join(smurf_outpath, filename))
-        '''
+        """
     else:
         modelpath = os.path.join(outpath, root['modelname'])
         if ioUtils.getExpSettings().structureExport:
@@ -183,7 +183,7 @@ def gatherLevelOfDetailSettings(model):
 
 
 def sort_for_yaml_dump(structure, category):
-    """ TODO Please add doc ASAP
+    """TODO Please add doc ASAP
     :param structure:
     :param category:
     :return:
