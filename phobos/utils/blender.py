@@ -358,3 +358,13 @@ def switchToScene(scenename):
         bpy.data.scenes.new(scenename)
     bpy.context.screen.scene = bpy.data.scenes[scenename]
     return bpy.data.scenes[scenename]
+
+
+def getCombinedDimensions(objects):
+    bbpoints = []
+    for o in objects:
+        for p in o.bound_box:
+            bbpoints.append(o.matrix_world * mathutils.Vector(p))
+    mindims = [min([bbpoint[i] for bbpoint in bbpoints]) for i in (0, 1, 2)]
+    maxdims = [max([bbpoint[i] for bbpoint in bbpoints]) for i in (0, 1, 2)]
+    return [abs(maxdims[i]-mindims[i]) for i in (0, 1, 2)]
