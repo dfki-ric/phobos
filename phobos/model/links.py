@@ -161,77 +161,22 @@ def placeChildLinks(model, parent):
     """Creates parent-child-relationship for a given parent and all existing children in Blender.
 
     Args:
-      parent: This is the parent link you want to set the children for.
-      model: 
+      parent(dict): parent link you want to set the children for.
+      model(dict):
 
     Returns:
 
     """
     bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])
-    children = []
-    for l in model['links']:
-        if 'parent' in model['links'][l] and model['links'][l]['parent'] == parent['name']:
-            children.append(model['links'][l])
-    for child in children:
-        # 1: set parent relationship (this makes the parent inverse the inverse of the parents world transform)
-        parentLink = bpy.data.objects[parent['name']]
-        childLink = bpy.data.objects[child['name']]
-        sUtils.selectObjects([childLink, parentLink], True, 1)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
-        # 2: move to parents origin by setting the world matrix to the parents world matrix
-        # removing this line does not seem to make a difference (TODO delete me?)
-        childLink.matrix_world = parentLink.matrix_world
-
-        # TODO delete me?
-        # #bpy.context.scene.objects.active = childLink
-        # if 'pivot' in child:
-        #     pivot = child['pivot']
-        #     cursor_location = bpy.context.scene.cursor_location
-        #     bpy.context.scene.cursor_location = mathutils.Vector((-pivot[0]*0.3, -pivot[1]*0.3, -pivot[2]*0.3))
-        #     bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-        #     bpy.context.scene.cursor_location = cursor_location
-
-        # 3: apply local transform as saved in model (changes matrix_local)
+    for c in parent['children']:
+        child = model['links'][c]
+        # apply transform as saved in model
         location = mathutils.Matrix.Translation(child['pose']['translation'])
         rotation = mathutils.Euler(tuple(child['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+        log('Placing link {0}'.format(child['name']), 'DEBUG')
         transform_matrix = location * rotation
-        childLink.matrix_local = transform_matrix
-        # 4: be happy, as world and basis are now the same and local is the transform to be exported to urdf
-        # 5: take care of the rest of the tree
+        log("Joint transform: {0}".format(transform_matrix), 'DEBUG')
+        child['object'].matrix_local = transform_matrix
+
+        # traverse the tree
         placeChildLinks(model, child)
-
-
-def placeLinkSubelements(link):
-    """Places visual and collision objects for a given link.
-
-    Args:
-      link(dict): The parent link you want to set the subelements for
-
-    Returns:
-
-    """
-    elements = getGeometricElements(link)
-    bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
-    parentlink = bpy.data.objects[link['name']]
-    log('Placing subelements for link: ' + link['name'] + ': ' + ', '.join([elem['name'] for elem in elements]), 'DEBUG')
-    for element in elements:
-        if 'pose' in element:
-            log('Pose detected for element: ' + element['name'], 'DEBUG')
-            location = mathutils.Matrix.Translation(element['pose']['translation'])
-            rotation = mathutils.Euler(tuple(element['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
-        else:
-            log('No pose in element: ' + element['name'], 'DEBUG')
-            location = mathutils.Matrix.Identity(4)
-            rotation = mathutils.Matrix.Identity(4)
-        try:
-            obj = bpy.data.objects[element['name']]
-        except KeyError:
-            log('Missing link element for placement: ' + element['name'], 'ERROR')
-            continue
-        sUtils.selectObjects([obj, parentlink], True, 1)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
-        obj.matrix_local = location * rotation
-        try:
-            obj.scale = mathutils.Vector(element['geometry']['scale'])
-        except KeyError:
-            log('No scale defined for element ' + element['name'], 'DEBUG')

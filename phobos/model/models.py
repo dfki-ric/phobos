@@ -1128,30 +1128,38 @@ def buildModelFromDictionary(model):
     log("Creating links...", 'INFO')
     for l in model['links']:
         link = model['links'][l]
-        linkmodel.createLink(link)
+        model['links'][l]['object'] = linkmodel.createLink(link)
+
+    log("Setting parent-child relationships", 'INFO')
+    for l in model['links']:
+        parent = model['links'][l]
+        for c in parent['children']:
+            child = model['links'][c]
+            child['object'].matrix_world = parent['object'].matrix_world
+            sUtils.selectObjects([child['object'], parent['object']], True, 1)
+            bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
     log("Creating joints...", 'INFO')
     for j in model['joints']:
         joint = model['joints'][j]
         jointmodel.createJoint(joint)
+    log('...finished.', 'INFO')
 
-    # build tree recursively and correct translation & rotation on the fly
+    # set transformations
     log("Placing links...", 'INFO')
     for l in model['links']:
         if 'parent' not in model['links'][l]:
             root = model['links'][l]
-            linkmodel.placeChildLinks(model, root)
-            log("Assigning model name...", 'INFO')
-            try:
-                rootlink = sUtils.getRoot(bpy.data.objects[root['name']])
-                rootlink['modelname'] = model['name']
-                rootlink.location = (0, 0, 0)
-            except KeyError:
-                log("Could not assign model name to root link.", "ERROR")
+            break
+    linkmodel.placeChildLinks(model, root)
 
-    log("Placing visual and collision objects...", 'INFO')
-    for link in model['links']:
-        linkmodel.placeLinkSubelements(model['links'][link])
+    log("Assigning model name...", 'INFO')
+    try:
+        rootlink = sUtils.getRoot(bpy.data.objects[root['name']])
+        rootlink['modelname'] = model['name']
+        rootlink.location = (0, 0, 0)
+    except (KeyError, NameError):
+        log("Could not assign model name to root link.", "ERROR")
 
     try:
         log("Creating sensors...", 'INFO')

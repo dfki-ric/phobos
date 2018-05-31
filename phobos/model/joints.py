@@ -32,7 +32,6 @@ Created on 7 Jan 2014
 
 import bpy
 import mathutils
-import phobos.defs as defs
 from phobos.phoboslog import log
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
@@ -41,28 +40,36 @@ import phobos.utils.io as ioUtils
 
 
 def createJoint(joint, linkobj=None):
-    # TODO add some docstring
+    """Adds joint data to 'link' object.
+
+    Args:
+        joint (dict): dictionary containing the joint definition
+        linkobj (bpy.types.Object): the obj of phobostype 'link' that receives the joint
+
+    Returns:
+
+    """
     # add joint information
     if not linkobj:
-        linkobj = bpy.data.objects[joint['child']]  # TODO: Make this generic?
+        linkobj = sUtils.getObjectByName(joint['child'])
+        if isinstance(linkobj, list):
+            log("Could not identify object to define joint '{0}'.".format(joint['name']), 'ERROR')
+            return
     if joint['name'] != linkobj.name:
         linkobj['joint/name'] = joint['name']
     # get hold of object
-    bUtils.toggleLayer(defs.layerTypes['link'], True)  # FIXME: assumes link is on link layer
+    bUtils.toggleLayer(list(linkobj.layers).index(True), True)  # any layer containing the object
     sUtils.selectObjects([linkobj], clear=True, active=0)
 
     # set axis
     if 'axis' in joint:
-        # Providing a zero axis joint will size the editbone to zero scale
         if mathutils.Vector(tuple(joint['axis'])).length == 0.:
-            log('Faulty joint definition ({0}): Axis is of zero length.'.format(joint['name']), 'ERROR')
+            log('Axis of joint {0} is of zero length: '.format(joint['name']), 'ERROR')
         else:
             bpy.ops.object.mode_set(mode='EDIT')
             editbone = linkobj.data.edit_bones[0]
-            #oldaxis = editbone.vector
             length = editbone.length
             axis = mathutils.Vector(tuple(joint['axis']))
-            #oldaxis.cross(axis) # rotation axis
             editbone.tail = editbone.head + axis.normalized() * length
 
     # add constraints
@@ -71,8 +78,7 @@ def createJoint(joint, linkobj=None):
             if 'limits' in joint:
                 linkobj['joint/max'+param] = joint['limits'][param]
         except KeyError:
-            # TODO more details
-            log("Key Error in adding joint constraints for joint", joint['name'])
+            log("Joint limits incomplete for joint {0}".format(joint['name']), 'ERROR')
     try:
         lower = joint['limits']['lower']
         upper = joint['limits']['upper']
@@ -102,7 +108,6 @@ def deriveJointType(joint, adjust=False):
       tuple(2) -- jtype, crot
 
     """
-    # 'universal' in MARS nomenclature
     jtype = 'floating'
     cloc = None
     crot = None
@@ -154,13 +159,13 @@ def deriveJointType(joint, adjust=False):
 
 
 def getJointConstraints(joint):
-    """Returns the constraints defined in the joint as a combination of two lists, 'axis' and 'limits'.
+    """Returns the constraints defined in the joint as tuple of two lists.
 
     Args:
-      joint(bpy_types.Object): The joint you want to get the constraints from.
+      joint(bpy_types.Object): The joint you want to get the constraints from
 
     Returns:
-      tuple -- containing the axis and limits lists.
+      tuple -- lists containing axis and limit data
 
     """
     jt, crot = deriveJointType(joint)
@@ -217,11 +222,11 @@ def getJointConstraints(joint):
 
 
 def getJointConstraint(joint, ctype):
-    """This function gets the constraints out of a given joint.
+    """Returns the constraints of a given joint.
 
     Args:
-      joint(bpy_types.Object): The joint you want to extract the constraints from.
-      ctype: Specifies the constraint type you want to extract.
+      joint(bpy_types.Object): the joint in question
+      ctype: constraint type to retrieve
 
     Returns:
 
@@ -235,18 +240,13 @@ def getJointConstraint(joint, ctype):
 
 def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damping=0.0,
                         maxeffort_approximation=None, maxspeed_approximation=None):
-    """This function sets the constraints for a given joint and jointtype.
+    """Sets the constraints for a given joint and jointtype.
 
     Args:
-      joint(bpy_types.Object): The joint you want to set the constraints for.
-      jointtype(str): The joints type. its one of the following:
-    - revolute
-    - continuous
-    - prismatic
-    - fixed
-    - floating
-      lower(float, optional): The constraints lower limit. (Default value = 0.0)
-      upper(float, optional): The constraints upper limit. (Default value = 0.0)
+      joint(bpy_types.Object): the joint to be edited
+      jointtype(str): joint type
+      lower(float, optional): The constraints' lower limit. (Default value = 0.0)
+      upper(float, optional): The constraints' upper limit. (Default value = 0.0)
       spring:  (Default value = 0.0)
       damping:  (Default value = 0.0)
       maxeffort_approximation:  (Default value = None)
@@ -255,7 +255,7 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
     Returns:
 
     """
-    log("Processing joint: " + joint.name, 'DEBUG')
+    log(joint.name, 'INFO', end=' ')
     bpy.ops.object.mode_set(mode='POSE')
     for c in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(c)
