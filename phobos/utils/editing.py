@@ -107,7 +107,7 @@ def restructureKinematicTree(link, root=None):
 
 def instantiateSubmodel(submodelname, instancename, size=1.0):
     """Creates an instance of the submodel specified by the submodelname.
-    
+
     The instance receives the definitions of the group as it is generated.
 
     Args:
@@ -181,18 +181,18 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
 
 def defineSubmodel(submodelname, submodeltype, version='', objects=None):
     """Defines a new submodule group with the specified name and type.
-    
+
     The group will be named like so:
         'submodeltype:submodelname/version'
-    
+
     Objects with the phobostype 'interface' (if present) are handled separately
     and put into a respective submodel group (which features the 'interface'
     submodeltype).
-    
+
     If the version is omitted, the respective part of the name is dropped, too.
     If no object list is provided the objects are derived from selection.
     The submodeltype is also added as dict entry to the group in Blender.
-    
+
     The selected objects are moved to the respective layer for submodels or
     interfaces.
 
@@ -382,3 +382,5 @@ def mergeLinks(links, targetlink, movetotarget=False):
         except RuntimeError as e:
             log("Cannot resolve new parent hierarchy: " + str(e), 'ERROR')
         del link
+
+

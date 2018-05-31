@@ -81,7 +81,7 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0,
       plocation(tuple, optional): The new primitives location. (Default value = (0)
       protation(tuple): The new primitives rotation.
       phobostype(str): phobostype of object to be created
-      0: 
+      0:
 
     Returns:
       bpy.types.Object - the new blender object.
@@ -147,7 +147,7 @@ def defLayers(layerlist):
     """Returns a list of 20 elements encoding the visible layers according to layerlist
 
     Args:
-      layerlist: 
+      layerlist:
 
     Returns:
 
@@ -241,7 +241,7 @@ def cleanObjectProperties(props):
     """Cleans a predefined list of Blender-specific or other properties from the dictionary.
 
     Args:
-      props: 
+      props:
 
     Returns:
 
@@ -282,9 +282,9 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
     Args:
       obj(list): List of objects for the thumbnail.
       Resolution: used for the render.
-      objects: 
-      export_path: 
-      modelname: 
+      objects:
+      export_path:
+      modelname:
       render_resolution:  (Default value = 256)
       opengl:  (Default value = False)
 
@@ -361,6 +361,18 @@ def switchToScene(scenename):
 
 
 def getCombinedDimensions(objects):
+    """Returns the dimension of the space the objects passed occupy.
+
+    Args:
+        objects(list): list of
+
+    Returns:
+        list of floats (x, y, z) of dimensions
+
+    Raises:
+        ValueError: If empty object list is passed.
+
+    """
     bbpoints = []
     for o in objects:
         for p in o.bound_box:

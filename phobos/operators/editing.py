@@ -971,6 +971,7 @@ class DefineJointConstraintsOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
+        log('Defining joint constraints for joint: ', 'INFO')
         lower = 0
         upper = 0
 
