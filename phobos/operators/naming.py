@@ -159,8 +159,7 @@ class BatchRename(Operator):
 
     @classmethod
     def poll(cls, context):
-        ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
+        return len(context.selected_objects) > 0
 
 
 def register():
