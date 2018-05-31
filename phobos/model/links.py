@@ -32,7 +32,6 @@ Created on 14 Apr 2014
 
 import bpy
 import mathutils
-import math
 import re
 import phobos.defs as defs
 import phobos.utils.naming as nUtils
@@ -44,14 +43,20 @@ from phobos.phoboslog import log
 
 
 def getGeometricElements(link):
-    # DOCU add some docstring
+    """Returns all geometric elements of a link, i.e. 'visual' and 'collision' objects.
+    Args:
+        link(dict): definition of link
+
+    Returns(list): lists of visual and collision object definitions
+
+    """
     visuals = []
     collisions = []
     if 'visual' in link:
         visuals = [link['visual'][v] for v in link['visual']]
     if 'collision' in link:
         collisions = [link['collision'][v] for v in link['collision']]
-    return collisions + visuals
+    return visuals, collisions
 
 
 def createLink(link):
@@ -78,9 +83,10 @@ def createLink(link):
     nUtils.safelyName(newlink, link['name'])
 
     # set the size of the link
-    elements = getGeometricElements(link)
-    if elements:
-        scale = max((geometrymodel.getLargestDimension(e['geometry']) for e in elements))
+    visuals, collisions = getGeometricElements(link)
+    if visuals or collisions:
+        scale = max((geometrymodel.getLargestDimension(e['geometry'])
+                     for e in visuals + collisions))
     else:
         scale = 0.2
 
@@ -100,18 +106,13 @@ def createLink(link):
     if 'inertial' in link:
         inertia.createInertial(link['name'], link['inertial'], newlink)
 
-    # create visual elements
-    if 'visual' in link:
-        for v in link['visual']:
-            visual = link['visual'][v]
-            geometrymodel.createGeometry(visual, 'visual')
-
-    # create collision elements
-    if 'collision' in link:
-        for c in link['collision']:
-            collision = link['collision'][c]
-            geometrymodel.createGeometry(collision, 'collision')
-
+    # create geometric elements
+    log("Creating visual and collision objects for link '{0}': {1}".format(
+        link['name'], ', '.join([elem['name'] for elem in visuals + collisions])), 'DEBUG')
+    for v in visuals:
+            geometrymodel.createGeometry(v, 'visual', newlink)
+    for c in collisions:
+            geometrymodel.createGeometry(c, 'collision', newlink)
     return newlink
 
 
