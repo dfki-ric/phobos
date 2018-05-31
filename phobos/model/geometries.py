@@ -128,13 +128,9 @@ def createGeometry(viscol, geomsrc):
     newgeom['geometry/type'] = geomtype
     if geomsrc == 'visual':
         try:
-            if 'name' in viscol['material']:
-                assignMaterial(newgeom, viscol['material']['name'])
-            else:
-                assignMaterial(newgeom, viscol['material'])
+            assignMaterial(newgeom, viscol['material'])
         except KeyError:
-            log('No material for obj ' + viscol['name'], 'DEBUG')
-    # FIXME: place empty coordinate system and return...what? Error handling of file import!
+            log('No material for visual ' + viscol['name'], 'DEBUG')
     for prop in viscol:
         if prop.startswith('$'):
             for tag in viscol[prop]:

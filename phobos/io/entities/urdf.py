@@ -603,18 +603,17 @@ def importUrdf(filepath):
         model['links'][joint['child']]['parent'] = joint['parent']
 
     # parse materials
-    model['materials'] = []
     log("Parsing materials..", 'INFO')
+    materiallist = []
     for material in root.iter('material'):
         newmaterial = {a: material.attrib[a] for a in material.attrib}
         color = material.find('color')
         if color is not None:
             newmaterial['color'] = gUtils.parse_text(color.attrib['rgba'])
-            if newmaterial not in model['materials']:
-                model['materials'].append(newmaterial)
-    for m in model['materials']:
-        #TODO: handle duplicate names? urdf_modelname_xxx?
+            materiallist.append(newmaterial)  # simply overwrite duplicates
+    for m in materiallist:
         materials.createMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1])
+    model['materials'] = {m['name']: m for m in materiallist}
         # TODO delete me?
         #element_order['materials'].append(m['name'])
     return model
@@ -676,14 +675,7 @@ def parseLink(link, urdffilepath=None):
 
             material = xmlelement.find('material')
             if material is not None:
-                elementdict['material'] = {'name': material.attrib['name']}
-                # We don't need to do the following, as any material with color or texture
-                # will be parsed in the parsing of materials in parseModel
-                # This might be necessary if there are name conflicts etc.
-                # TODO delete me?
-                #color = material.find('color')
-                #if color is not None:
-                #    dictelement['material']['color'] = parse_text(color.attrib['rgba'])
+                elementdict['material'] = material.attrib['name']
     #element_order['viscol'][link_name] = viscol_order
     if newlink == {}:
         # TODO convert to log?

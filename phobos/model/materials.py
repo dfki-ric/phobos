@@ -93,7 +93,7 @@ def assignMaterial(obj, materialname):
         if materialname in defs.definitions['materials']:
             createPhobosMaterials()
         else:
-            log("Material '" + materialname + "' does not exist.", "ERROR")
+            log("Material '" + materialname + "' is not defined.", "ERROR")
             return None
     obj.data.materials.append(bpy.data.materials[materialname])
     if bpy.data.materials[materialname].use_transparency:
