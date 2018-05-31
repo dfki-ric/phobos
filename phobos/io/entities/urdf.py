@@ -60,7 +60,7 @@ def writeURDFGeometry(output, element, filepath):
     Args:
       output(str): The String to append the URDF output string on.
       element(dict): A certain element to parse into URDF.
-      filepath: 
+      filepath:
 
     Returns:
       str -- The extended String
@@ -366,7 +366,7 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
       position(list): The position to include in the dictionary.
       rotation(list): The rotation to include into the dictionary, either euler angle or quaternion.
       pivot(list, optional): The pivot point. (Default value = (0)
-      0: 
+      0:
 
     Returns:
       dict
@@ -465,9 +465,9 @@ def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
     # DOCU this documentation needs update
 
     Args:
-      no_visual_geo: 
-      no_collision_geo: 
-      link_dict: 
+      no_visual_geo:
+      no_collision_geo:
+      link_dict:
 
     Returns:
 
@@ -547,11 +547,11 @@ def importUrdf(filepath):
     """This function parses the whole URDF representation of the model and builds the model dictionary from it.
     The created model is stored in the model value of the parser and the URDF file is specified by the filepath
     given to the Parser.
-    
+
     :return: Nothing.
 
     Args:
-      filepath: 
+      filepath:
 
     Returns:
 
