@@ -79,7 +79,7 @@ def decorate(level):
         return level
 
 
-def log(message, level="INFO", origin=None, prefix="", guionly=False, end="\n"):
+def log(message, level="INFO", origin=None, prefix="", guionly=False, end='\n'):
     """Logs a given message to the blender console and logging file if present
     and if log level is low enough. The origin can be defined as string.
     The message is logged by the operator depending on the loglevel
@@ -107,9 +107,13 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False, end="\n"):
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
     if loglevels.index(level) <= loglevels.index(prefs.loglevel):
         date = datetime.now().strftime("%Y%m%d_%H:%M:%S")
-        msg = date + " - " + level + " " + message + " (" + originname + ")"
-        terminalmsg = '{0}[{1}] {2} {3}{4} ({5}){6}'.format(prefix, date, decorate(level), message,
-                                                            col.DIM, originname, col.ENDC)
+        if end == '\n':  # no end of line assumes some sort of listing, dropping the shebang
+            msg = date + " - " + level + " " + message + " (" + originname + ")"
+            terminalmsg = '{0}[{1}] {2} {3}{4} ({5}){6}'.format(prefix, date, decorate(level), message,
+                                                                col.DIM, originname, col.ENDC)
+        else:
+            msg = message
+            terminalmsg = col.OKBLUE + message + col.ENDC
 
         # log to file if activated
         if prefs.logtofile:
