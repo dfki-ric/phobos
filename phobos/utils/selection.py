@@ -207,11 +207,14 @@ def getObjectByName(name):
     """Returns list of objects that either have a specific *name* or contain a custom
     name property with that name.
 
+    As the function returns either an empty list, a unique object or a list of objects,
+    it is possible to test for uniqueness of the result by calling `isinstance(result, list)`.
+
     Args:
       name(str): The exact object name to find.
 
     Returns:
-      list - all found objects.
+      bpy.types.Object or list - one or list of objects matching name
 
     """
     objlist = []
@@ -220,9 +223,12 @@ def getObjectByName(name):
             objlist.append(obj)
         else:
             for key in obj.keys():
-                if obj[key].endswith('/name') and name == obj[key]:
-                    objlist.append(obj)
-    return objlist
+                try:
+                    if obj[key].endswith('/name') and name == obj[key]:
+                        objlist.append(obj)
+                except AttributeError:
+                    continue
+    return objlist[0] if len(objlist) == 1 else objlist
 
 
 def getObjectsByPattern(pattern, match_case=False):
@@ -264,6 +270,7 @@ def getObjectByNameAndType(name, phobostype):
       bpy.types.Object - the matching object.
 
     """
+    # FIXME: make this API-compatible with geObjectByName
     name_tag = phobostype + "/name"
     for obj in bpy.data.objects:
         if name_tag in obj and name == obj[name_tag]:
@@ -285,7 +292,8 @@ def selectByName(name, match_case=False, exact=False):
 
     """
     if exact:
-        selectObjects(getObjectByName(name), True)
+        obj = getObjectByName(name)
+        selectObjects(object if isinstance(obj, list) else [obj], True)
     else:
         selectObjects(getObjectsByPattern(name, match_case), True)
 
