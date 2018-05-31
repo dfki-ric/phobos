@@ -596,11 +596,14 @@ def importUrdf(filepath):
         if 'pose' not in links[link]:
             links[link]['pose'] = parsePose(None)
 
-    # write parent-child information to nodes
-    log("Writing parent-child information to nodes...", "INFO")
+    # write parent-child information to links
+    log("Writing parent-child information to links...", "INFO")
     for j in model['joints']:
         joint = model['joints'][j]
-        model['links'][joint['child']]['parent'] = joint['parent']
+        parentlink = model['links'][joint['parent']]
+        childlink = model['links'][joint['child']]
+        childlink['parent'] = joint['parent']
+        parentlink['children'].append(joint['child'])
 
     # parse materials
     log("Parsing materials..", 'INFO')
@@ -630,6 +633,7 @@ def parseLink(link, urdffilepath=None):
 
     """
     newlink = {a: link.attrib[a] for a in link.attrib}
+    newlink['children'] = []
     log('Parsing link ' + newlink['name'] + '...', 'INFO')
     inertial = parseInertial(link)
     if inertial:
