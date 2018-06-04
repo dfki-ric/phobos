@@ -1752,20 +1752,24 @@ class ConnectInterfacesOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """Hide operator if there are more than two objects are selected and the interfaces do not
+        match."""
         try:
+            # no interface selected
             if (context.active_object is None or len(context.selected_objects) != 2 or not
                     all([obj.phobostype == 'interface' for obj in context.selected_objects])):
                 return False
+
+            parentinterface = context.active_object
+            childinterface = [a for a in context.selected_objects if a != context.active_object][0]
+            # check for same interface type and directions
+            if ((parentinterface['interface/type'] == childinterface['interface/type']) and
+                (parentinterface['interface/direction'] != childinterface['interface/direction'])
+                or (parentinterface['interface/direction'] == 'bidirectional' and
+                    childinterface['interface/direction'] == 'bidirectional')):
+                return True
             else:
-                parentinterface = bpy.context.active_object
-                childinterface = [a for a in bpy.context.selected_objects if a != bpy.context.active_object][0]
-                if ((parentinterface['interface/type'] == childinterface['interface/type']) and
-                    (parentinterface['interface/direction'] != childinterface['interface/direction']) or
-                    (parentinterface['interface/direction'] == 'bidirectional' and
-                     childinterface['interface/direction'] == 'bidirectional')):
-                    return True
-                else:
-                    return False
+                return False
         except (KeyError, IndexError):  # if relevant data or selection is incorrect
             return False
 
