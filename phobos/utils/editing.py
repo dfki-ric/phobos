@@ -358,6 +358,37 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
     childinterface.show_name = False
 
 
+def disconnectInterfaces(parentinterface, childinterface, transform=None):
+    # unparent the child
+    sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+
+    # select the former parent of the interface as new root
+    if childinterface.children and len(childinterface.children) > 0:
+        # prefer submodel instances
+        for child in childinterface.children:
+            if child.phobostype == 'submodel':
+                root = child
+                break
+        # otherwise just use the first child
+        else:
+            root = childinterface.children[0]
+
+    # restructure the kinematic tree to make the interface child of the submodel again
+    sUtils.selectObjects(objects=[root], clear=True, active=0)
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+    sUtils.selectObjects(objects=[root, childinterface], clear=True, active=0)
+    bpy.ops.object.parent_set(type='OBJECT')
+
+    # apply additional transform
+    if transform:
+        childinterface.matrix_world = root.matrix_world * transform
+
+    # make the interfaces active again
+    parentinterface.show_name = True
+    childinterface.show_name = True
+
+
 def getPropertiesSubset(obj, category=None):
     if not category:
         category = obj.phobostype
