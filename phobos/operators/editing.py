@@ -1778,6 +1778,50 @@ class ConnectInterfacesOperator(Operator):
         return {'FINISHED'}
 
 
+class DisconnectInterfaceOperator(Operator):
+    """Disconnects submodels at interface"""
+    bl_idname = "phobos.disconnect_interface"
+    bl_label = "Disconnect Interface"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        """Hide operator if there is more than one object selected.
+        Also, the selected object has to be a connected interface.
+        """
+        # no interface selected
+        if (context.active_object is None or len(context.selected_objects) != 1 or not
+                context.active_object.phobostype == 'interface'):
+            return False
+
+        # interface needs to be connect to another interface
+        interface = bpy.context.active_object
+        if (interface.parent and interface.parent.phobostype == 'interface'):
+            return True
+        elif (interface.children and any([obj.phobostype for obj in interface.children])):
+            return True
+        return False
+
+    def execute(self, context):
+        """Execute disconnection"""
+        interface = context.active_object
+        if (interface.parent and interface.parent.phobostype == 'interface'):
+            log('Selected interface is child.', 'DEBUG')
+            child = interface
+            parent = interface.parent
+        else:
+            log('Selected interface is parent.', 'DEBUG')
+            parent = interface
+            for curchild in interface.children:
+                if curchild.phobostype == 'interface':
+                    child = curchild
+                    break
+            log('Selected ' + child.name + ' as child.', 'DEBUG')
+
+        eUtils.disconnectInterfaces(parent, child)
+        return {'FINISHED'}
+
+
 class MergeLinks(Operator):
     """Merge links"""
     bl_idname = "phobos.merge_links"
