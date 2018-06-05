@@ -135,9 +135,8 @@ def createHelperInertialObjects(link, autocalc=True):
         if autocalc:
             mass = obj['mass'] if 'mass' in obj else None
             geometry = deriveGeometry(obj)
-            data = geometry if geometry['type'] != 'mesh' else obj.data
-            if mass is not None and data is not None:
-                inert = calculateInertia(mass, data)
+            if mass is not None and geometry is not None:
+                inert = calculateInertia(mass, geometry, obj.data if geometry['type'] == 'mesh' else None)
                 if inert is not None:
                     inertialdata['mass'] = mass
                     inertialdata['inertia'] = inert
@@ -166,30 +165,31 @@ def calculateMassOfLink(link):
     return max(objectsmass, inertialmass)
 
 
-def calculateInertia(mass, data):
+def calculateInertia(mass, geometry, meshdata=None):
     """Calculates the inertia of an object given its *geometry* and *mass* and
     returns the upper diagonal of the inertia 3x3 inertia tensor.
 
     Args:
-      mass(float): The objects mass.
-      data(dict): The object dictionaries geometry part.
+      mass(float): object's mass.
+      geometry(dict): object dictionary's geometry part.
+      meshdata(bpy.types.Mesh): data of the mesh if geometry is type 'mesh'
 
     Returns:
       tuple(6)
 
     """
     inertia = None
-    gt = data['type']
+    gt = geometry['type']
     if gt == 'box':
-        inertia = calculateBoxInertia(mass, data['size'])
+        inertia = calculateBoxInertia(mass, geometry['size'])
     elif gt == 'cylinder':
-        inertia = calculateCylinderInertia(mass, data['radius'], data['length'])
+        inertia = calculateCylinderInertia(mass, geometry['radius'], geometry['length'])
     elif gt == 'sphere':
-        inertia = calculateSphereInertia(mass, data['radius'])
+        inertia = calculateSphereInertia(mass, geometry['radius'])
     elif gt == 'capsule':
-        inertia = calculateCapsuleInertia(mass, data['radius'], data['length'])
+        inertia = calculateCapsuleInertia(mass, geometry['radius'], geometry['length'])
     elif gt == 'mesh':
-        inertia = calculateMeshInertia(mass, data)
+        inertia = calculateMeshInertia(mass, meshdata)
     return inertia
 
 
