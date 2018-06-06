@@ -141,6 +141,8 @@ def deriveLink(obj):
     props = initObjectProperties(obj, phobostype='link', ignoretypes=linkobjignoretypes-{'link'})
     parent = sUtils.getEffectiveParent(obj)
     props['parent'] = nUtils.getObjectName(parent) if parent else None
+    props['children'] = [child.name for child in obj.children if child.phobostype == 'link']
+    props['object'] = obj
     props["pose"] = deriveObjectPose(obj)
     props["collision"] = {}
     props["visual"] = {}
