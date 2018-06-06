@@ -36,8 +36,25 @@ from . import selection as sUtils
 from . import naming as nUtils
 
 
+def update():
+    """Forces Blender to update scene contents (i.e. transformations).
+
+    Sometimes when e.g. manipulating internal matrices of Blender objects such as
+    matrix_world or matrix_local, Blender will not recalculate all related transforms,
+    especially not the visual transform. The bpy.context.scene.update() function often
+    named as the solution to this will lead to the matrices being updated, but not the
+    visual transforms. This Function runs code (may be updated with new Blender verions)
+    that forces Blender to update the visual transforms.
+
+    Returns: None
+
+    """
+    bpy.context.scene.frame_set(1)
+    bpy.context.scene.frame_set(0)
+
+
 def compileEnumPropertyList(iterable):
-    return (((a,)*3 for a in iterable))
+    return ((a,)*3 for a in iterable)
 
 
 def getBlenderVersion():
