@@ -34,6 +34,7 @@ import yaml
 import bpy
 import mathutils
 
+import phobos.defs as defs
 import phobos.model.links as linkmodel
 import phobos.model.inertia as inertiamodel
 import phobos.model.joints as jointmodel
@@ -1131,6 +1132,7 @@ def buildModelFromDictionary(model):
         model['links'][l]['object'] = linkmodel.createLink(link)
 
     log("Setting parent-child relationships", 'INFO')
+    bUtils.toggleLayer(defs.layerTypes['link'], True)
     for l in model['links']:
         parent = model['links'][l]
         for c in parent['children']:
@@ -1206,13 +1208,14 @@ def buildModelFromDictionary(model):
     except KeyError:
         log("No lights in model " + model['name'], 'INFO')
 
-    # FIXME: this is a trick to force Blender to apply matrix_local
-    # AAAAAARGH: THIS DOES NOT WORK!
+    # display all objects after import
     for obj in bpy.data.objects:
         bUtils.setObjectLayersActive(obj)
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.object.select_all(action='SELECT')
-    bpy.ops.transform.translate(value=(0, 0, 0))
+    bpy.ops.view3d.view_selected()
+    # update transformations
+    bUtils.update()
 
 
 def createGroup(group):
