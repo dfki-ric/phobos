@@ -458,7 +458,7 @@ def inertiaMatrixToList(im):
       tuple(6)
 
     """
-    return (im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2][2],)
+    return im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2][2]
 
 
 def getInertiaRelevantObjects(link, selected_only=False):

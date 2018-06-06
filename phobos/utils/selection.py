@@ -194,8 +194,6 @@ def selectObjects(objects, clear=True, active=-1):
     if bpy.context.scene.objects.active:
         bpy.ops.object.mode_set(mode='OBJECT')
     if clear:
-        # TODO delete me?
-        # bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
         obj.select = True
