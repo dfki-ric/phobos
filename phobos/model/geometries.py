@@ -137,6 +137,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
                 newgeom[prop[1:]+'/'+tag] = viscol[prop][tag]
     nUtils.safelyName(newgeom, viscol['name'])
     newgeom[geomsrc+"/name"] = viscol['name']
+    newgeom.phobostype = geomsrc
 
     # place geometric object relative to its parent link
     if linkobj:
