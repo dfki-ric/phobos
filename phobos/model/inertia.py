@@ -352,13 +352,10 @@ def calculateMeshInertia(mass, data):
         tri_normal = triangle.normal
         tri_centre = triangle.center
         ref_tri_vector = tri_centre - origin
-        normal_angle = ref_tri_vector.angle(tri_normal, 90)
-        if normal_angle > 90:
-            sign = -1
-        elif normal_angle == 90:
-            sign = 0
-        else:
-            sign = 1
+        # angle returns the angle in radians
+        normal_angle = ref_tri_vector.angle(tri_normal, math.pi/2.0)
+
+        sign = -1 if normal_angle > math.pi/2.0 else 1
 
         J = mathutils.Matrix(((verts[0][0], verts[0][1], verts[0][2], 1),
                               (verts[1][0], verts[1][1], verts[1][2], 1),
