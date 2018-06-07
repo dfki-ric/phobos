@@ -104,6 +104,14 @@ def restructureKinematicTree(link, root=None):
         sUtils.selectObjects((parent, child), True, active=0)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
+    # copy properties
+    if 'modelname' in root:
+        link['modelname'] = root['modelname']
+        del root['modelname']
+    if 'version' in root:
+        link['version'] = root['version']
+        del root['version']
+
 
 def instantiateSubmodel(submodelname, instancename, size=1.0):
     """Creates an instance of the submodel specified by the submodelname.

@@ -1849,6 +1849,21 @@ class MergeLinks(Operator):
         return {'FINISHED'}
 
 
+class SetModelRoot(Operator):
+    """Set Model Root"""
+    bl_idname = "phobos.set_model_root"
+    bl_label = "Set Model Root"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and context.active_object.phobostype == 'link'
+
+    def execute(self, context):
+        eUtils.restructureKinematicTree(context.object)
+        return {'FINISHED'}
+
+
 def register():
     print("Registering operators.editing...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):

@@ -729,6 +729,7 @@ class PhobosModelPanel(bpy.types.Panel):
         kc1.operator("phobos.create_mimic_joint")
         kc1.operator('phobos.add_kinematic_chain', icon='CONSTRAINT')
         kc1.operator('phobos.assign_submechanism')
+        kc1.operator('phobos.set_model_root')
         kc2.label(text='Visual/Collision', icon='GROUP')
         kc2.operator('phobos.create_collision_objects')
         kc2.operator('phobos.define_geometry')
