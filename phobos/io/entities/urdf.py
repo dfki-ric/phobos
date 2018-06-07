@@ -706,7 +706,7 @@ def parseInertial(link_xml):
             inertial_dict['mass'] = float(mass.attrib['value'])
         inertia = inertial_data.find('inertia')
         if inertia is not None:
-            inertial_dict['inertia'] = [float(inertia.attrib[a]) for a in inertia.attrib]
+            inertial_dict['inertia'] = [float(inertia.attrib[a]) for a in sorted(inertia.attrib.keys())]
         inertial_dict['name'] = 'inertial_' + link_xml.attrib['name']
         return inertial_dict
     else:
