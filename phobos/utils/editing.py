@@ -249,7 +249,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
 
     interfacegroup = None
     # make the interface group
-    if interfaces != []:
+    if interfaces:
         sUtils.selectObjects(interfaces, True, 0)
         interfacegroupname = 'interfaces:' + submodelname
         if version != '':
@@ -268,6 +268,8 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
             obj.layers = bUtils.defLayers(defs.layerTypes['interface'])
         log('Created interface group for submodel ' + submodelname + '.',
             'DEBUG')
+    else:
+        log('No interfaces for this submodel.', 'DEBUG')
 
     for i in interfaces:
         i.show_name = True
@@ -377,16 +379,15 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
     sUtils.selectObjects(objects=[childinterface, childsubmodel], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
-    eul = mathutils.Euler((math.radians(180.0), 0.0, math.radians(180.0)), 'XYZ')
     sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
 
     loc, rot, sca = parentinterface.matrix_world.decompose()
     # apply additional transform (ignoring the scale of the parent interface)
-    if transform:
-        childinterface.matrix_world = loc * rot * transform
-    else:
-        childinterface.matrix_world = loc * rot * eul.to_matrix().to_4x4()
+    if not transform:
+        transform = mathutils.Euler((math.radians(180.0), 0.0, math.radians(180.0)), 'XYZ').to_matrix().to_4x4()
+
+    childinterface.matrix_world = mathutils.Matrix.Translation(loc) * rot.to_matrix().to_4x4() * transform
 
     # TODO clean this up
     # try:
