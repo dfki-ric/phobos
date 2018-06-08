@@ -380,11 +380,13 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
     eul = mathutils.Euler((math.radians(180.0), 0.0, math.radians(180.0)), 'XYZ')
     sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
-    # apply additional transform
+
+    loc, rot, sca = parentinterface.matrix_world.decompose()
+    # apply additional transform (ignoring the scale of the parent interface)
     if transform:
-        childinterface.matrix_world = parentinterface.matrix_world * transform
+        childinterface.matrix_world = loc * rot * transform
     else:
-        childinterface.matrix_world = parentinterface.matrix_world * eul.to_matrix().to_4x4()
+        childinterface.matrix_world = loc * rot * eul.to_matrix().to_4x4()
 
     # TODO clean this up
     # try:
