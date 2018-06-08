@@ -86,7 +86,10 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
         if not os.path.isfile(geom['filename']):
             log(geom['filename'] + " is no file. Object " + viscol['name'] + " will have empty mesh!", "ERROR")
-            bpy.data.meshes.new(meshname)
+            #bpy.data.meshes.new(meshname)
+            bpy.ops.object.add(type='MESH')
+            newgeom = bpy.context.active_object
+            nUtils.safelyName(newgeom, viscol['name'], phobostype=geomsrc)
         else:
             if meshname in bpy.data.meshes:
                 log('Assigning copy of existing mesh ' + meshname + ' to ' + viscol['name'], 'INFO')
