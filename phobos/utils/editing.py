@@ -33,6 +33,7 @@ from phobos.phoboslog import log
 from . import selection as sUtils
 from . import naming as nUtils
 from . import blender as bUtils
+from . import io as ioUtils
 from .. import defs
 
 
@@ -307,6 +308,46 @@ def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
             bpy.data.groups.remove(bpy.data.groups[interfacegroupname])
             return True
     return False
+
+
+def createInterface(ifdict, parent=None):
+    """Create an interface object and optionally parent to existing object.
+
+    ifdict is expected as:
+    ifdict = {'type': str,
+              'direction': str,
+              'model': str,
+              'name': str,
+              'parent': bpy.types.Object (optional),
+              'scale': float (optional)
+              }
+
+    Args:
+        ifdict(dict): interface data
+        parent(bpy.types.Object): designated parent object
+
+    Returns(bpy.data.Object): newly created interface object
+
+    """
+    if not parent:
+        try:
+            parent = ifdict['parent']
+            assert isinstance(parent, bpy.types.Object)
+        except (AttributeError, AssertionError, KeyError):
+            parent = None
+    location = parent.matrix_world.translation if parent else mathutils.Vector()
+    rotation = parent.matrix_world.to_euler() if parent else mathutils.Euler()
+
+    model = ifdict['model'] if 'model' in ifdict else 'default'
+    templateobj = ioUtils.getResource(('interface', model, ifdict['direction']))
+    scale = ifdict['scale'] if 'scale' in ifdict else 1.0
+    ifobj = bUtils.createPrimitive(ifdict['name'], 'box', (1.0, 1.0, 1.0), defs.layerTypes['interface'],
+                                   plocation=location, protation=rotation, phobostype='interface')
+    nUtils.safelyName(ifobj, ifdict['name'], 'interface')
+    ifobj.data = templateobj.data
+    ifobj.scale = (scale,)*3
+    ifobj['type'] = ifdict['type']
+    ifobj['direction'] = ifdict['direction']
 
 
 def toggleInterfaces(interfaces=None, modename='toggle'):

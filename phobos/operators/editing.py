@@ -305,6 +305,57 @@ class BatchEditPropertyOperator(Operator):
         return ob is not None and len(context.selected_objects) > 0 and ob.mode == 'OBJECT'
 
 
+class CreateInterfaceOperator(Operator):
+    """Create interface and optionally attach to parent"""
+    bl_idname = "phobos.create_interface"
+    bl_label = "Create Interface"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    interface_name = StringProperty(
+        name='name',
+        default='interface')
+
+    interface_type = StringProperty(
+        name='type',
+        default='default')
+
+    interface_direction = EnumProperty(
+        name='direction',
+        items=bUtils.compileEnumPropertyList(('outgoing', 'incoming', 'bidirectional')),
+        default='outgoing')
+
+    all_selected = BoolProperty(
+        name='all selected',
+        default=False
+    )
+
+    scale = FloatProperty(
+        name='scale',
+        default=1.0
+    )
+
+    def execute(self, context):
+        ifdict = {'type': self.interface_type,
+                  'direction': self.interface_direction,
+                  'name': self.interface_name,
+                  'scale': self.scale}
+        if self.all_selected:
+            for link in [obj for obj in context.selected_objects if obj.phobostype == 'link']:
+                ifdict['parent'] = link
+                ifdict['name'] = link.name + '_' + self.interface_name
+                eUtils.createInterface(ifdict, link)
+        else:
+            eUtils.createInterface(ifdict, context.object)
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        if context.object:
+            return context.object.mode == 'OBJECT'
+        else:
+            return True
+
+
 class CopyCustomProperties(Operator):
     """Copy custom properties of selected object(s)"""
     bl_idname = "phobos.copy_props"
