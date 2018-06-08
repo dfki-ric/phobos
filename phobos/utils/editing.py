@@ -346,8 +346,8 @@ def createInterface(ifdict, parent=None):
     nUtils.safelyName(ifobj, ifdict['name'], 'interface')
     ifobj.data = templateobj.data
     ifobj.scale = (scale,)*3
-    ifobj['type'] = ifdict['type']
-    ifobj['direction'] = ifdict['direction']
+    ifobj['interface/type'] = ifdict['type']
+    ifobj['interface/direction'] = ifdict['direction']
 
 
 def toggleInterfaces(interfaces=None, modename='toggle'):
