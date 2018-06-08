@@ -174,10 +174,6 @@ def importBlenderModel(filepath, namespace='', prefix=False):
         return False
 
 
-def getConfigPath():
-    return bpy.context.user_preferences.addons["phobos"].preferences.configfolder
-
-
 def importResources(restuple, filepath=None):
     """Accepts a tuple of pairs (tuples) describing resource objects to import. For instance,
     the call reslist=(('joint', 'continuous'), ('sensor', 'camera')) would import two
@@ -200,7 +196,7 @@ def importResources(restuple, filepath=None):
 
     # if no filepath is provided, use the path from the preferences
     if not filepath:
-        filepath = os.path.join(getConfigPath(), 'resources', 'resources.blend')
+        filepath = os.path.join(bUtils.getPhobosConfigPath(), 'resources', 'resources.blend')
 
     # import new objects from resources.blend
     if new_objects:

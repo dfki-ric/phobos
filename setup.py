@@ -6,41 +6,16 @@ import sys
 import shutil
 from distutils.dir_util import copy_tree
 from distutils.errors import DistutilsFileError
+import importlib.util
 
-blenderversion = '2.79'
+spec = importlib.util.spec_from_file_location('phobossystem', 'phobos/phobossystem.py')
+ps= importlib.util.module_from_spec(spec)
+spec.loader.exec_module(ps)
+addonpath = path.join(ps.getScriptsPath(), 'addons', 'phobos')
+
 
 def updateFolderContents(src, dst):
     return copy_tree(src, dst, update=True, verbose=True, dry_run=False)
-
-
-def getScriptsPath():
-    if sys.platform == 'linux':
-        scriptspath = path.normpath(path.expanduser(
-            '~/.config/blender/{0}/scripts'.format(blenderversion)))
-    elif sys.platform == 'darwin':
-        scriptspath = path.normpath(path.expanduser(
-            '~/Library/Application Support/Blender/{0}/scripts'.format(blenderversion)))
-    elif sys.platform == 'win32':
-        scriptspath = path.normpath(path.expanduser(
-            '~/AppData/Roaming/Blender Foundation/Blender/{0}/scripts'.format(blenderversion)))
-    else:
-        scriptspath = 'ERROR: {0} not supported,'.format(sys.platform)
-    return scriptspath
-
-
-def getConfigPath():
-    if sys.platform == 'linux':
-        configpath = path.normpath(path.expanduser('~/.config/phobos'))
-    elif sys.platform == 'darwin':
-        configpath = path.normpath(path.expanduser('~/Library/Application Support/phobos'))
-    elif sys.platform == 'win32':
-        configpath = path.normpath(path.expanduser('~/AppData/Roaming/phobos'))
-    else:
-        configpath = 'ERROR: {0} not supported,'.format(sys.platform)
-    return configpath
-
-
-addonpath = path.join(getScriptsPath(), 'addons', 'phobos')
 
 
 if __name__ == '__main__':
@@ -67,12 +42,12 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # install config files
-    copied_files = updateFolderContents(os.path.join(phoboshome, 'config'), getConfigPath())
+    copied_files = updateFolderContents(os.path.join(phoboshome, 'config'), ps.getConfigPath())
     if not len(copied_files) > 0:
         print('Something went wrong with copying config files.')
 
     # install templates
-    templatespath = path.join(getScriptsPath(), 'templates_py')
+    templatespath = path.join(ps.getScriptsPath(), 'templates_py')
     copied_files = updateFolderContents(os.path.join(phoboshome, 'templates_py'), templatespath)
     if not len(copied_files) > 0:
         print('Something went wrong with copying operator presets.')

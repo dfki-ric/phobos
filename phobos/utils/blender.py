@@ -32,6 +32,7 @@ import mathutils
 import phobos.defs as defs
 import phobos.model.materials as materials
 from phobos.phoboslog import log
+from phobos.phobossystem import getConfigPath
 from . import selection as sUtils
 from . import naming as nUtils
 
@@ -397,3 +398,14 @@ def getCombinedDimensions(objects):
     mindims = [min([bbpoint[i] for bbpoint in bbpoints]) for i in (0, 1, 2)]
     maxdims = [max([bbpoint[i] for bbpoint in bbpoints]) for i in (0, 1, 2)]
     return [abs(maxdims[i]-mindims[i]) for i in (0, 1, 2)]
+
+
+def getPhobosConfigPath():
+    """Returns the user-defined config path if set or the default-path
+
+    Returns(str): (user-defined) config path
+    """
+    if bpy.context.user_preferences.addons["phobos"].preferences.configfolder != '':
+        return bpy.context.user_preferences.addons["phobos"].preferences.configfolder
+    else:  # the following if copied from setup.py, may be imported somehow in the future
+        return getConfigPath()
