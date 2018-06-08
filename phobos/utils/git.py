@@ -114,9 +114,11 @@ def initGit(destination, filename=None, initialsave=False, url=None, readmetxt='
     if isGit(destination):
         log('Could not initialise git: Folder already existing!', 'ERROR')
         return False
-    elif os.listdir(destination):
+    elif os.path.exists(destination) and os.listdir(destination):
         log('Could not initialise git: Folder is not empty!', 'ERROR')
         return False
+    else:
+        os.makedirs(destination)
 
     # Initialise git locally and make first push for new repositories
     log('Initialising the new git...', 'INFO')
@@ -265,8 +267,8 @@ def createNewBranch(branch, workingdir, pushorigin=False):
                 ['git', 'push', '-u', 'origin', branch],
                 cwd=workingdir, universal_newlines=True)
         return True
-    except subprocess.CalledProcessError:
-        log("Could not create branch " + branch + ".", "ERROR")
+    except subprocess.CalledProcessError as e:
+        log("Could not create branch " + branch + ": " + str(e), "ERROR")
         return False
 
 
