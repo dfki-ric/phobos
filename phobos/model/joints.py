@@ -416,4 +416,4 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
                     "ERROR")
 
         # set link/joint visualization
-        joint.pose.bones[0].custom_shape = ioUtils.getResource('joint', jointtype)
+        joint.pose.bones[0].custom_shape = ioUtils.getResource(('joint', jointtype))

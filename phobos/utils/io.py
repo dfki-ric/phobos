@@ -175,15 +175,16 @@ def importBlenderModel(filepath, namespace='', prefix=False):
 
 
 def importResources(restuple, filepath=None):
-    """Accepts a tuple of pairs (tuples) describing resource objects to import. For instance,
-    the call reslist=(('joint', 'continuous'), ('sensor', 'camera')) would import two
-    resource objects.
+    """Accepts an iterable of iterables describing resource objects to import. For instance,
+    reslist=(('joint', 'continuous'), ('interface', 'default', 'bidirectional'))
+    would import the resource objects named 'joint_continuous' and
+    'interface_default_bidirectional'.
 
     Args:
-      restuple: tuple of tuples of length 2
+      restuple: iterable of iterables containing import objects
       filepath: path to file from which to load resource (Default value = None)
 
-    Returns:
+    Returns(tuple of bpy.types.Object): imported objects
 
     """
     currentscene = bpy.context.scene.name
@@ -191,12 +192,13 @@ def importResources(restuple, filepath=None):
     # avoid importing the same objects multiple times
     imported_objects = [nUtils.stripNamespaceFromName(obj.name)
                         for obj in bpy.data.scenes['resources'].objects]
-    requested_objects = [resource[0] + '_' + resource[1] for resource in restuple]
+    requested_objects = ['_'.join(resource) for resource in restuple]
     new_objects = [obj for obj in requested_objects if obj not in imported_objects]
 
     # if no filepath is provided, use the path from the preferences
     if not filepath:
         filepath = os.path.join(bUtils.getPhobosConfigPath(), 'resources', 'resources.blend')
+        print(filepath)
 
     # import new objects from resources.blend
     if new_objects:
@@ -215,12 +217,20 @@ def importResources(restuple, filepath=None):
     return objects
 
 
-def getResource(restype, resname):
+def getResource(specifiers):
+    """Imports one resource defined by an iterable of strings.
+
+    Args:
+        specifiers(iterable): iterable of strings specifying the resource
+
+    Returns(bpy.types.Object): imported object
+
+    """
     try:
-        resobjname = nUtils.addNamespaceToName(restype + '_' + resname, 'resource')
+        resobjname = nUtils.addNamespaceToName('_'.join(specifiers), 'resource')
         return bpy.data.scenes['resources'].objects[resobjname]
     except KeyError:  # no resource scene or key not in scene
-        newobjects = importResources(((restype, resname),))
+        newobjects = importResources((specifiers,))
         if newobjects:
             return newobjects[0]
         else:
