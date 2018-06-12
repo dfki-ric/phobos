@@ -264,9 +264,6 @@ class PhobosToolsPanel(bpy.types.Panel):
         tsc1.operator('phobos.select_objects_by_phobostype',
                       text="by Phobostype")
         tsc1.operator('phobos.select_objects_by_name', text="by Name")
-        tsc1.prop(bpy.context.window_manager, 'draw_phobos_infos')
-        tsc1.prop(bpy.context.window_manager, 'phobos_msg_count')
-        tsc1.prop(bpy.context.window_manager, 'phobos_msg_offset')
         tsc2 = tsinlayout.column(align=True)
         tsc2.label(text="Tools", icon='MODIFIER')
         tsc2.operator('phobos.sort_objects_to_layers', icon='IMGDISPLAY')
@@ -511,6 +508,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
             if type(value[i]) is float:
                 value[i] = '{0:.4f}'.format(value[i])
 
+            # use custom properties for special operators or icons
             # use custom properties for special operators or icons
             if params[i]:
                 colL.label(text='{0}'.format(prop[i]))
@@ -1025,6 +1023,35 @@ def get_operator_manuals():
     return url_manual_prefix, url_manual_ops
 
 
+class PhobosDisplayPanel(bpy.types.Panel):
+    bl_idname = "TOOLS_DISPLAY_PT_PHOBOS"
+    bl_label = "Display"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'TOOLS'
+    bl_category = 'Phobos'
+
+    def draw_header(self, context):
+        #self.layout.label(icon='IMPORT')
+        pass
+
+    def draw(self, context):
+        wm = context.window_manager
+        self.layout.prop(wm, "draw_phobos_infos")
+        if wm.draw_phobos_infos:
+            self.layout.separator()
+            self.layout.label('Draw...')
+            dlayout = self.layout.split()
+            dc1 = dlayout.column(align=True)
+            dc2 = dlayout.column(align=True)
+            dc1.prop(wm, "draw_jointaxes")
+            dc1.prop(wm, "jointaxes_length")
+            dc1.prop(wm, "draw_submechanisms")
+            dc1.prop(wm, "draw_progress")
+            dc2.prop(wm, "draw_messages")
+            dc2.prop(bpy.context.window_manager, 'phobos_msg_count')
+            dc2.prop(bpy.context.window_manager, 'phobos_msg_offset')
+
+
 def register():
     print("\nRegistering phobosgui...")
 
@@ -1034,17 +1061,33 @@ def register():
         name="type",
         description="Phobos object type")
 
-    bpy.types.WindowManager.phobos_msg_count = IntProperty(
-        name='messages to show', default=5, min=0, max=20,
-        description="How many Phobos log messages to show on screen")
-
-    bpy.types.WindowManager.phobos_msg_offset = IntProperty(
-        name='message start index', default=0, min=0, max=50,
-        description="The Phobos log message index to start with")
-
+    # add display properties to window manager
     bpy.types.WindowManager.draw_phobos_infos = BoolProperty(
         name='Draw Phobos Infos', default=False, update=display.start_draw_operator,
         description="Draw additional data visualization for Phobos items in 3D View.")
+
+    bpy.types.WindowManager.draw_jointaxes = BoolProperty(
+        name='Joint Axes', default=True)
+
+    bpy.types.WindowManager.jointaxes_length = FloatProperty(
+        name='Length', default=0.3)
+
+    bpy.types.WindowManager.draw_submechanisms = BoolProperty(
+        name='Submechanisms', default=True)
+
+    bpy.types.WindowManager.draw_messages = BoolProperty(
+        name='Messages', default=True)
+
+    bpy.types.WindowManager.phobos_msg_count = IntProperty(
+        name='show', default=5, min=0, max=20,
+        description="How many Phobos log messages to show on screen")
+
+    bpy.types.WindowManager.phobos_msg_offset = IntProperty(
+        name='offset', default=0, min=0, max=50,
+        description="The Phobos log message index to start with")
+
+    bpy.types.WindowManager.draw_progress = BoolProperty(
+        name='Progress', default=True)
 
     bpy.types.WindowManager.progress = FloatProperty(
         name='Progress', default=0,
@@ -1143,6 +1186,7 @@ def register():
     bpy.types.Scene.phobospropcategories = EnumProperty(items=[])
 
     bpy.utils.register_class(PhobosToolsPanel)
+    bpy.utils.register_class(PhobosDisplayPanel)
     bpy.utils.register_class(PhobosModelPanel)
     # TODO delete me?
     # bpy.utils.register_class(PhobosScenePanel)
