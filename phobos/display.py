@@ -120,20 +120,20 @@ def draw_joint(joint, length):
 
 def draw_submechanism(spanningtree, independent=None, active=None):
     linecolor = (0.0, 1.0, 0.0, 0.7)
-    vecs = []
+    origins = []
     region, rv3d = getRegionData()
     offset = view3d_utils.region_2d_to_origin_3d(region, rv3d, (region.width/2.0,
                                                                 region.height/2.0)).normalized()
     for e in range(len(spanningtree)):
-        vecs.append(Vector(spanningtree[e].matrix_world.to_translation()) + offset)
+        origins.append(Vector(spanningtree[e].matrix_world.to_translation()) + offset)
 
     bgl.glEnable(bgl.GL_BLEND)
     bgl.glLineWidth(4)
 
     bgl.glBegin(bgl.GL_LINE_STRIP)
     bgl.glColor4f(*linecolor)
-    for v in vecs:
-        bgl.glVertex3f(*v)
+    for o in origins:
+        bgl.glVertex3f(*o)
     bgl.glEnd()
     bgl.glDisable(bgl.GL_BLEND)
 
@@ -225,8 +225,7 @@ class DrawInfosOperator(bpy.types.Operator):
         if event.type == 'PAGE_DOWN' and event.value == 'PRESS':
             context.window_manager.phobos_msg_offset -= 1
         if event.shift and event.type == 'LEFTMOUSE' and event.value == 'CLICK':
-            print('WOOOOHOOOO!')
-
+            pass
         if not context.window_manager.draw_phobos_infos:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
             return {'CANCELLED'}
