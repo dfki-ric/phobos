@@ -29,6 +29,15 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 import bpy
 
 
+def getUniqueName(newname, names):
+    i = 0
+    while newname in names:
+        numberstr = '.{0:03d}'.format(i)
+        newname = newname[:63 - len(numberstr)] + numberstr
+        i += 1
+    return newname
+
+
 def safelyName(obj, name, phobostype=None):
     """Assigns a name to an object in a safe way with regard to the internal
      name handling in Blender. If no phobostype is provided or the phobostype
@@ -52,11 +61,7 @@ def safelyName(obj, name, phobostype=None):
     if not phobostype:
         phobostype = obj.phobostype
     if obj.phobostype == phobostype:
-        i = 0
-        while objectname in bpy.data.objects:
-            numberstr = '.{0:03d}'.format(i)
-            objectname = objectname[:63-len(numberstr)] + numberstr
-            i += 1
+        objectname = getUniqueName(objectname, bpy.data.objects)
         obj.name = objectname
     if objectname != name:
         obj[phobostype+'/name'] = name
