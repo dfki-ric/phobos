@@ -191,6 +191,24 @@ def draw_callback_2d(self, context):
 
     bgl.glEnable(bgl.GL_BLEND)
 
+    # submechanisms
+    if selected and wm.draw_submechanisms:
+        for obj in [obj for obj in selected if obj.phobostype == 'link']:
+            if 'submechanism/jointname' in obj:
+                jointname = obj['submechanism/jointname']
+                origin = to2d(obj.matrix_world.translation) + Vector((16, 0))
+                blf.size(0, 8, 150)
+                width = blf.dimensions(0, jointname)[0]
+                height = blf.dimensions(0, jointname)[1]
+                border = 6
+                points = ((origin + Vector((-border, -border * 1.5)),
+                           origin + Vector((width + border, -border * 1.5)),
+                           origin + Vector((width + border, height + border)),
+                           origin + Vector((-border, height + border))))
+                draw_2dpolygon(points, fillcolor=colors['background'],
+                               linecolor=colors['submechanism'], linewidth=2)
+                draw_text(jointname, position=origin, size=8, color=colors['submechanism'])
+
     # progress bar
     if wm.draw_progress and context.window_manager.progress not in [0, 1]:
         draw_progressbar(wm.progress)
