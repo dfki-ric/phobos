@@ -11,7 +11,9 @@ colors = {'debug': (1.0, 0.0, 1.0),
           'info': (0.0, 1.0, 0.0),
           'warning': (0.5, 0.25, 0.25),
           'error': (1.0, 0.0, 0.0),
-          'none': (1.0, 1.0, 1.0)
+          'none': (1.0, 1.0, 1.0),
+          'submechanism': (1.0, 0.8, 0.1, 1.0),
+          'background': (0.1, 0.1, 0.1, 0.8),
           }
 messages = collections.deque([], 50)
 slotheight = 22
@@ -119,7 +121,6 @@ def draw_joint(joint, length):
 
 
 def draw_submechanism(spanningtree, independent=None, active=None):
-    linecolor = (0.0, 1.0, 0.0, 0.7)
     origins = []
     region, rv3d = getRegionData()
     offset = view3d_utils.region_2d_to_origin_3d(region, rv3d, (region.width/2.0,
@@ -131,7 +132,7 @@ def draw_submechanism(spanningtree, independent=None, active=None):
     bgl.glLineWidth(4)
 
     bgl.glBegin(bgl.GL_LINE_STRIP)
-    bgl.glColor4f(*linecolor)
+    bgl.glColor4f(*colors['submechanism'])
     for o in origins:
         bgl.glVertex3f(*o)
     bgl.glEnd()
