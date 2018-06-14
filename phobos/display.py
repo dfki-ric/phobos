@@ -66,7 +66,7 @@ def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2, linewid
     bgl.glDisable(bgl.GL_BLEND)
 
 
-def draw_text(text, position, color=(1, 1, 1, 1), size=14, dpi=150, font_id=0):
+def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font_id=0):
     bgl.glColor4f(*color)
     blf.position(font_id, *position, 0.25)
     blf.size(font_id, size, dpi)
