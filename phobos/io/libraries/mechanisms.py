@@ -62,10 +62,9 @@ def compileMechanismList():
 
     log("Compiling mechanism list from local library...", "INFO")
 
-    imagefolderpath = os.path.join(bUtils.getPhobosPreferences().configfolder,
-                                   'images', 'mechanisms')
+    imagefolderpath = os.path.join(bUtils.getPhobosConfigPath(), 'images', 'mechanisms')
     if imagefolderpath == '' or not os.path.exists(imagefolderpath):
-        log('Visual mechanism representations cold not be found.')
+        log('Visual mechanism representations could not be found.')
         return
 
     # read in mechanism thumbnails
