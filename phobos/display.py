@@ -44,9 +44,10 @@ def to2d(coords):
     return view3d_utils.location_3d_to_region_2d(*getRegionData(), coords)
 
 
-def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2):
+def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2, linewidth=1):
     # background
     bgl.glEnable(bgl.GL_BLEND)
+    bgl.glLineWidth(linewidth)
     if fillcolor:
         bgl.glColor4f(*fillcolor)
         bgl.glBegin(bgl.GL_POLYGON)
@@ -61,6 +62,7 @@ def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2):
             bgl.glVertex3f(*p, distance)
         bgl.glVertex3f(*points[0], distance)
         bgl.glEnd()
+    bgl.glLineWidth(1)
     bgl.glDisable(bgl.GL_BLEND)
 
 
