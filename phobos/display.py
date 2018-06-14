@@ -73,6 +73,11 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
     blf.draw(font_id, text)
 
 
+# def draw_textbox(text, position, textsize, textcolor, backgroundcolor, linewidth):
+#     draw_2dpolygon(points, fillcolor=(*colors[msgtype], 0.2 * opacity))
+#     draw_text(text, position, color=textcolor, size=textsize)
+
+
 def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
     blf.size(0, 6, 150)
     width = bpy.context.region.width
