@@ -86,7 +86,7 @@ def draw_textbox(text, origin, textsize=6, textcolor=colors['white'],
                origin + Vector((-hborder, height + vborder))))
     draw_2dpolygon(points, fillcolor=backgroundcolor,
                    linecolor=textcolor, linewidth=linewidth)
-    draw_text(text, position=origin, size=8, color=textcolor)
+    draw_text(text, position=origin, size=textsize, color=textcolor)
 
 
 def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
