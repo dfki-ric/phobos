@@ -4,6 +4,7 @@ import bgl
 import blf
 from bpy_extras import view3d_utils
 from mathutils import Vector
+from phobos.utils import naming as nUtils
 
 
 progressinfo = None
@@ -210,6 +211,18 @@ def draw_callback_2d(self, context):
                 jointname = obj['submechanism/jointname']
                 origin = to2d(obj.matrix_world.translation) + Vector((16, 0))
                 draw_textbox(jointname, origin, textsize=8, textcolor=colors['submechanism'])
+
+    # interfaces
+    if selected:
+        for interface in [obj for obj in selected if obj.phobostype == 'interface']:
+            color = interface.active_material.diffuse_color
+            maxc = max(color)
+            color = [0.6 + c/maxc * 0.4 for c in color]
+            bgcolor = [c * 0.4 for c in interface.active_material.diffuse_color]
+            draw_textbox(nUtils.getObjectName(interface), to2d(interface.matrix_world.translation),
+                         textsize=6, textcolor=(*color, 1.0 if interface.show_name else 0.4),
+                         backgroundcolor=(*bgcolor, 1.0) if interface.show_name else colors['background'],
+                         linewidth=3 if interface.show_name else 2)
 
     # progress bar
     if wm.draw_progress and context.window_manager.progress not in [0, 1]:
