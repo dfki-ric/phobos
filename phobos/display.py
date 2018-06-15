@@ -129,11 +129,8 @@ def draw_joint(joint, length):
 
 def draw_submechanism(spanningtree, independent=None, active=None):
     origins = []
-    region, rv3d = getRegionData()
-    offset = view3d_utils.region_2d_to_origin_3d(region, rv3d, (region.width/2.0,
-                                                                region.height/2.0)).normalized()
     for e in range(len(spanningtree)):
-        origins.append(Vector(spanningtree[e].matrix_world.to_translation()) + offset)
+        origins.append(spanningtree[e].matrix_world.to_translation())
 
     bgl.glEnable(bgl.GL_BLEND)
     bgl.glLineWidth(4)
@@ -149,7 +146,6 @@ def draw_submechanism(spanningtree, independent=None, active=None):
 def draw_callback_3d(self, context):
     """Callback function for 3d drawing.
     """
-    # FIXME: does not work for perspective view, only for ortho
     active = context.object
     selected = context.selected_objects
     wm = context.window_manager
