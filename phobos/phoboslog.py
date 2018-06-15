@@ -116,11 +116,13 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False, end='\n'):
             terminalmsg = col.OKBLUE + message + col.ENDC
 
         # log to file if activated
-        if prefs.logtofile:
+        if prefs.logtofile and not guionly:
             try:
                 with open(prefs.logfile, "a") as lf:
                     lf.write(msg + end)
-            except IOError:
+            except (FileNotFoundError, IsADirectoryError):
+                log("Invalid log file path, cannot write to log file!", 'ERROR', guionly=True)
+            except (IOError, OSError):
                 log("Cannot write to log file!", 'ERROR', guionly=True)
 
         # log to terminal or Blender
