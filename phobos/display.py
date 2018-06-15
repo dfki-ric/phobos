@@ -14,6 +14,7 @@ colors = {'debug': (1.0, 0.0, 1.0),
           'none': (1.0, 1.0, 1.0),
           'submechanism': (1.0, 0.8, 0.1, 1.0),
           'background': (0.1, 0.1, 0.1, 0.8),
+          'white': (1.0, 1.0, 1.0, 1.0),
           }
 messages = collections.deque([], 50)
 slotheight = 22
@@ -73,9 +74,19 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
     blf.draw(font_id, text)
 
 
-# def draw_textbox(text, position, textsize, textcolor, backgroundcolor, linewidth):
-#     draw_2dpolygon(points, fillcolor=(*colors[msgtype], 0.2 * opacity))
-#     draw_text(text, position, color=textcolor, size=textsize)
+def draw_textbox(text, origin, textsize=6, textcolor=colors['white'],
+                 backgroundcolor=colors['background'], linewidth=2,
+                 hborder=6, vborder=6):
+    blf.size(0, textsize, 150)
+    width = blf.dimensions(0, text)[0]
+    height = blf.dimensions(0, text)[1]
+    points = ((origin + Vector((-hborder, -vborder * 1.5)),
+               origin + Vector((width + hborder, -vborder * 1.5)),
+               origin + Vector((width + hborder, height + vborder)),
+               origin + Vector((-hborder, height + vborder))))
+    draw_2dpolygon(points, fillcolor=backgroundcolor,
+                   linecolor=textcolor, linewidth=linewidth)
+    draw_text(text, position=origin, size=8, color=textcolor)
 
 
 def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
@@ -198,17 +209,7 @@ def draw_callback_2d(self, context):
             if 'submechanism/jointname' in obj:
                 jointname = obj['submechanism/jointname']
                 origin = to2d(obj.matrix_world.translation) + Vector((16, 0))
-                blf.size(0, 8, 150)
-                width = blf.dimensions(0, jointname)[0]
-                height = blf.dimensions(0, jointname)[1]
-                border = 6
-                points = ((origin + Vector((-border, -border * 1.5)),
-                           origin + Vector((width + border, -border * 1.5)),
-                           origin + Vector((width + border, height + border)),
-                           origin + Vector((-border, height + border))))
-                draw_2dpolygon(points, fillcolor=colors['background'],
-                               linecolor=colors['submechanism'], linewidth=2)
-                draw_text(jointname, position=origin, size=8, color=colors['submechanism'])
+                draw_textbox(jointname, origin, textsize=8, textcolor=colors['submechanism'])
 
     # progress bar
     if wm.draw_progress and context.window_manager.progress not in [0, 1]:
