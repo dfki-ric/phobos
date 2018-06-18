@@ -4,27 +4,27 @@ Thanks for taking the time to consider contributing to Phobos! We know time is a
 
 Most likely you've found your way to this page because you're a robotics specialist, and you're missing a feature or found a problem in Phobos corresponding to your field of expertise. That's great, because we've been developing Phobos for years with our own requirements in mind, and you're surely thinking of something we haven't considered, yet. That makes your input very valuable.
 
-Even before you start implementing new features on your fork of Phobos and send us [pull requests](https://github.com/rock-simulation/phobos/pulls), please feel free to create [issues](https://github.com/rock-simulation/phobos/issues) to report bugs or propose new features, or contribute to the ongoing discussions.
+Even before you start implementing new features on your fork of Phobos and send us [pull requests](https://github.com/dfki-ric/phobos/pulls), please feel free to create [issues](https://github.com/dfki-ric/phobos/issues) to report bugs or propose new features, or contribute to the ongoing discussions.
 
 You may also consider to post a question or point of discussion on [StackExchange Robotics](https://robotics.stackexchange.com/) or [ROS Discourse](https://discourse.ros.org/).
 
 
 ## Documentation
 
-We have two separate documentation pages. One is the user documentation, residing in the [Phobos wiki](https://github.com/rock-simulation/phobos/wiki). The code documentation, compiled using Sphinx, can be found at our [GitHub.io pages](http://rock-simulation.github.io/phobos).
+We have two separate documentation pages. One is the user documentation, residing in the [Phobos wiki](https://github.com/dfki-ric/phobos/wiki). The code documentation, compiled using Sphinx, can be found at our [GitHub.io pages](http://dfki-ric.github.io/phobos).
 
 
 ## How to get started
 
-As always on GitHub, go ahead and create your own fork of Phobos ([GitHub Help: Fork a repo]([https://help.github.com/articles/fork-a-repo/)) to create your own code playground. It facilitates sending us [pull requests](https://github.com/rock-simulation/phobos/pulls) later.
+As always on GitHub, go ahead and create your own fork of Phobos ([GitHub Help: Fork a repo]([https://help.github.com/articles/fork-a-repo/)) to create your own code playground. It facilitates sending us [pull requests](https://github.com/dfki-ric/phobos/pulls) later.
 
-Phobos is based on Blender, so if you haven't familiarized yourself with [Blender Basics](https://github.com/rock-simulation/phobos/wiki/Blender%20Basics) yet, it's a good idea to start here and get to know the environment we work with. We rely on its functionality a lot in our code. For instance, some operations such as importing or creating new meshes use the same operators that a user can access from Blender's GUI. You can play around with Phobos a bit and check out the code of the operators you use to get an idea of how we handle the related data in Blender.
+Phobos is based on Blender, so if you haven't familiarized yourself with [Blender Basics](https://github.com/dfki-ric/phobos/wiki/Blender%20Basics) yet, it's a good idea to start here and get to know the environment we work with. We rely on its functionality a lot in our code. For instance, some operations such as importing or creating new meshes use the same operators that a user can access from Blender's GUI. You can play around with Phobos a bit and check out the code of the operators you use to get an idea of how we handle the related data in Blender.
 
 It also probably helps to have a basic understanding of [URDF](http://wiki.ros.org/urdf), as it largely served as a template for how we organize robot models in Phobos.
 
 
 ## Issues
-Congratulations! You found a bug which slipped through our fingers or you came up with a useful feature we haven't thought of, yet. Check out the existing [issues](https://github.com/rock-simulation/phobos/issues) to see if the subject has already been covered. If that is the case, consider joining the discussion! If not, create a new issue and make use of the provided template as far as it is helpful. The more information you provide, the more likely it is that we can address it quickly.
+Congratulations! You found a bug which slipped through our fingers or you came up with a useful feature we haven't thought of, yet. Check out the existing [issues](https://github.com/dfki-ric/phobos/issues) to see if the subject has already been covered. If that is the case, consider joining the discussion! If not, create a new issue and make use of the provided template as far as it is helpful. The more information you provide, the more likely it is that we can address it quickly.
 
 
 ## Submitting changes

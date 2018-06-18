@@ -21,7 +21,7 @@ def exportYAML(model, path):
     with open(os.path.join(path, model['name'] + '.yaml'), 'w') as outputfile:
         outputfile.write('# YAML dump of robot model "' + model['name'] + '", ' + datetime.now().strftime(
             "%Y%m%d_%H:%M") + "\n")
-        outputfile.write("# created with Phobos" + defs.version + " - https://github.com/rock-simulation/phobos\n\n")
+        outputfile.write("# created with Phobos" + defs.version + " - https://github.com/dfki-ric/phobos\n\n")
         # TODO delete me?
         outputfile.write(yaml.dump(
             model))  # default_flow_style=False))

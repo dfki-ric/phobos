@@ -52,7 +52,7 @@ def exportSMURFScene(entities, path):
     with open(path + '.smurfs', 'w') as outputfile:
         sceneinfo = "# SMURF scene created at " + path + " " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
         log(sceneinfo, "INFO")
-        sceneinfo += "# created with Phobos " + version + " - https://github.com/rock-simulation/phobos\n\n"
+        sceneinfo += "# created with Phobos " + version + " - https://github.com/dfki-ric/phobos\n\n"
         securepath(path)
         log("Exporting scene to " + path+'.smurfs', "INFO")
         outputfile.write(sceneinfo)

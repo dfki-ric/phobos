@@ -10,7 +10,7 @@ Phobos is an add-on for the open-source 3D modeling software Blender that enable
 
 Phobos was initiated and is currently developed at the Robotics Innovation Center of the German Research Center for Artificial Intelligence (DFKI) in Bremen, together with the Robotics Group of the University of Bremen.
 
-User documentation can be found in the Phobos Wiki at https://github.com/rock-simulation/phobos/wiki .
+User documentation can be found in the Phobos Wiki at https://github.com/dfki-ric/phobos/wiki .
 
 Please contact Kai von Szadkowski for any inquiries, or any questions and feedback not suited for the issues page.
 

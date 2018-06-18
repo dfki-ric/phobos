@@ -10,7 +10,7 @@
   <maintainer>Kai/kai_alexander.von_szadkowski@dfki.de</maintainer>
   <license>LPGL 3</license>
   <url>https://robotik.dfki-bremen.de/en/research/softwaretools/phobos.html</url>
-  <logo>https://github.com/rock-simulation/phobos/wiki/img/phobos_logo_small.png</logo>
+  <logo>https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png</logo>
 
   <depend package="blender"/>
   <depend package="python3-yaml"/>

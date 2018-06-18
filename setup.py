@@ -70,7 +70,7 @@ if __name__ == '__main__':
                   '\n\n' +
                   '  pip3 install PyYaml\n\n')
             print('Please make sure you followed the instructions on ' +
-                  'https://github.com/rock-simulation/phobos/wiki/Installation')
+                  'https://github.com/dfki-ric/phobos/wiki/Installation')
             print('YAML configuration aborted. Installation incomplete.')
             sys.exit(0)
         # OPT here we could add additional requirement checks

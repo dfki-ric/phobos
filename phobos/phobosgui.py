@@ -1017,7 +1017,7 @@ def get_operator_manuals():
 
     """
     # CHECK does the linking work with the new wiki?
-    url_manual_prefix = "https://github.com/rock-simulation/phobos/wiki/Operators#"
+    url_manual_prefix = "https://github.com/dfki-ric/phobos/wiki/Operators#"
     url_manual_ops = tuple(('bpy.ops.phobos.' + opname, opname.replace('_', '-'),)
                            for opname in dir(bpy.ops.phobos) if not opname.startswith("__"))
     return url_manual_prefix, url_manual_ops

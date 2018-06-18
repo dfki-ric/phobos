@@ -87,9 +87,9 @@ bl_info = {
     "blender": (2, 69, 0),
     "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
-    "wiki_url": "https://github.com/rock-simulation/phobos/wiki",
+    "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
     "support": "COMMUNITY",
-    "tracker_url": "https://github.com/rock-simulation/phobos/issues",
+    "tracker_url": "https://github.com/dfki-ric/phobos/issues",
     "category": "Development"
 }
 
