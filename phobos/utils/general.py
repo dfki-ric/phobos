@@ -202,27 +202,27 @@ def calcBoundingBoxCenter(boundingbox):
     return c / 8
 
 
-def epsilonToZero(data, epsilon, decimals):
+def roundFloatsInDict(data, decimals):
     """Recursively loops through a dictionary and sets all floating values
      < epsilon equal to zero.
 
     Args:
-      data: 
-      epsilon: 
-      decimals: 
+      data(dict): data dictionary
+      decimals(int): number of decimals floats should be rounded to
 
     Returns:
 
     """
+    epsilon = 10**-decimals
     if is_float(data):
         if type(data) == str:
             log("Skipping rounding of " + data + " due to its type 'str'", "WARNING")
             return data
         return 0 if abs(data) < epsilon else round(data, decimals)
     elif type(data) is list:
-        return [epsilonToZero(a, epsilon, decimals) for a in data]
+        return [roundFloatsInDict(a, decimals) for a in data]
     elif type(data) is dict:
-        return {key: epsilonToZero(value, epsilon, decimals) for key, value in data.items()}
+        return {key: roundFloatsInDict(value, decimals) for key, value in data.items()}
     else:  # any other type, such as string
         return data
 

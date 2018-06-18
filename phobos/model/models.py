@@ -47,7 +47,7 @@ import phobos.utils.blender as bUtils
 import phobos.utils.editing as eUtils
 import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
-from phobos.utils.general import epsilonToZero
+from phobos.utils.general import roundFloatsInDict
 from phobos.model.poses import deriveObjectPose
 from phobos.model.geometries import deriveGeometry
 from phobos.defs import linkobjignoretypes
@@ -1112,8 +1112,7 @@ def buildModelDictionary(root, name=''):
     # shorten numbers in dictionary to n decimalPlaces and return it
     log("Rounding numbers...", "INFO")
     # TODO: implement this separately
-    epsilon = 10**(-ioUtils.getExpSettings().decimalPlaces)
-    return epsilonToZero(model, epsilon, ioUtils.getExpSettings().decimalPlaces)
+    return roundFloatsInDict(model, ioUtils.getExpSettings().decimalPlaces)
 
 
 def buildModelFromDictionary(model):

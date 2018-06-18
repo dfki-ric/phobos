@@ -30,7 +30,7 @@ import yaml
 from datetime import datetime
 import bpy
 from phobos.defs import version
-from phobos.utils.general import epsilonToZero
+from phobos.utils.general import roundFloatsInDict
 from phobos.phoboslog import log
 from phobos.utils.io import securepath
 
@@ -56,10 +56,7 @@ def exportSMURFScene(entities, path):
         securepath(path)
         log("Exporting scene to " + path+'.smurfs', "INFO")
         outputfile.write(sceneinfo)
-        # TODO: implement this separately
-        epsilon = 10**(-bpy.data.window_managers[0].phobosexportsettings.decimalPlaces)
-        entitiesdict = epsilonToZero({'entities': entities}, epsilon,
-                                     bpy.data.window_managers[0].phobosexportsettings.decimalPlaces)
+        entitiesdict = roundFloatsInDict({'entities': entities}, ioUtils.getExpSettings().decimalPlaces)
         outputfile.write(yaml.dump(entitiesdict))
 
 # registering import/export functions of types with Phobos
