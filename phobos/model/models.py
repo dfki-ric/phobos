@@ -821,7 +821,7 @@ def deriveModelDictionaryFromSubmodel(modelname):
         print('-----------------------', subm.name, subm['submodelname'], '\n')
         rootlink = [r for r in bpy.data.objects if sUtils.isRoot(r)
                     and r['modelname'] == subm['submodelname']][0]
-        adict = buildModelDictionary(rootlink)
+        adict = deriveModelDictionary(rootlink)
         for l in adict['links']:
             model['links'][namespaced(l, subm.name)] = namespaceLink(
                 adict['links'][l], subm.name)
@@ -901,8 +901,8 @@ def namespaced(name, namespace):
     return namespace+'_'+name
 
 
-def buildModelDictionary(root, name=''):
-    """Builds a python dictionary representation of a Phobos model.
+def deriveModelDictionary(root, name=''):
+    """Derives a python dictionary representation of a Phobos model.
 
     Args:
       root: bpy.types.Object
