@@ -320,21 +320,20 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
         if not (ob in objects):
             ob.hide_render = True
             ob.hide = True
-    bpy.ops.view3d.view_selected()
-    # TODO this does not always create nice previews!
-    # depending on the region overlap setting (user prefs) the image changes
-    # and the whitespace around the corners is too much
 
     # render the preview
     if opengl:  # use the viewport representation to create preview
+        bpy.ops.view3d.view_selected()
         bpy.ops.render.opengl(view_context=True)
     else:  # use real rendering
         # create camera
         bpy.ops.object.camera_add(view_align=True)
         cam = bpy.context.scene.objects.active
         bpy.data.cameras[cam.data.name].type = 'ORTHO'
-        bpy.data.scenes[0].camera = cam
+        bpy.data.scenes[0].camera = cam  # set camera as active camera
+
         sUtils.selectObjects(objects, True, 0)
+        bpy.ops.view3d.camera_to_view_selected()
         # create light
         bpy.ops.object.lamp_add(type='SUN', radius=1)
         light = bpy.context.scene.objects.active
