@@ -28,12 +28,11 @@ Created on 3 Nov 2016
 
 import yaml
 from datetime import datetime
-import bpy
 from phobos.defs import version
 from phobos.defs import repository
+from phobos.utils import io as ioUtils
 from phobos.utils.general import roundFloatsInDict
 from phobos.phoboslog import log
-from phobos.utils.io import securepath
 
 
 def exportSMURFScene(entities, path):
@@ -49,13 +48,12 @@ def exportSMURFScene(entities, path):
     Returns:
 
     """
-    # TODO path consistency (Windows)
+    log("Exporting scene to " + path+'.smurfs', "INFO")
     with open(path + '.smurfs', 'w') as outputfile:
         sceneinfo = "# SMURF scene created at " + path + " " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
         log(sceneinfo, "INFO")
-        securepath(path)
-        log("Exporting scene to " + path+'.smurfs', "INFO")
         sceneinfo += "# created with Phobos " + version + " - " + repository + "\n\n"
+        ioUtils.securepath(path)
         outputfile.write(sceneinfo)
         entitiesdict = roundFloatsInDict({'entities': entities}, ioUtils.getExpSettings().decimalPlaces)
         outputfile.write(yaml.dump(entitiesdict))

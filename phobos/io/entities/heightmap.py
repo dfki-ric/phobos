@@ -60,7 +60,7 @@ def deriveEntity(entity, outpath):
     heightmap = entity
 
     # determine outpath for the heightmap export
-    heightmap_outpath = securepath(os.path.join(outpath, structure_subfolder) if ioUtils.getExportSettings().structureExport else outpath)
+    heightmap_outpath = securepath(os.path.join(outpath, structure_subfolder))
 
     log("Exporting " + heightmap["entity/name"] + " as a heightmap entity", "INFO")
     entitypose = models.deriveObjectPose(heightmap)

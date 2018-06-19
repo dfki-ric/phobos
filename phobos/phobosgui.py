@@ -40,6 +40,7 @@ from phobos.io import meshes
 from phobos.io import scenes
 from phobos.io import libraries
 from phobos.phoboslog import loglevels
+import phobos.utils.io as ioUtils
 
 from . import defs
 from . import display
@@ -142,9 +143,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
     path = StringProperty(name='path', subtype='DIR_PATH', default='../',
                           update=updateExportPath)
-    # CHECK which props are visible in GUI?
-    structureExport = BoolProperty(name="Structure export", default=True,
-                                   description="Create structured subfolders")
+    # TODO: CHECK which props are visible in GUI?
     selectedOnly = BoolProperty(name="Selected only", default=True,
                                 description="Export only selected objects")
     decimalPlaces = IntProperty(name="decimals", description="Number of " +
@@ -841,7 +840,6 @@ class PhobosExportPanel(bpy.types.Panel):
         g1 = ginlayout.column(align=True)
         # FIXME remove this?
         # g1.prop(expsets, "relativePaths")
-        # g1.prop(expsets, "structureExport")
         g1.prop(expsets, "exportTextures")
         g1.prop(expsets, "selectedOnly")
         g2 = ginlayout.column(align=True)
@@ -854,11 +852,9 @@ class PhobosExportPanel(bpy.types.Panel):
 
         cmodel = inlayout.column(align=True)
         cmodel.label(text="Models")
-        for entitytype in sorted(entities.entity_types):
-            if ('export' in entities.entity_types[entitytype] and
-                    'extensions' in entities.entity_types[entitytype]):
-                typename = "export_entity_" + entitytype
-                cmodel.prop(bpy.data.window_managers[0], typename)
+        for entitytype in ioUtils.getEntityTypesForExport():
+            typename = "export_entity_" + entitytype
+            cmodel.prop(bpy.data.window_managers[0], typename)
 
         cmesh = inlayout.column(align=True)
         cmesh.label(text="Meshes")
@@ -870,16 +866,12 @@ class PhobosExportPanel(bpy.types.Panel):
 
         cscene = inlayout.column(align=True)
         cscene.label(text="Scenes")
-        for scenetype in sorted(scenes.scene_types):
-            if 'export' in scenes.scene_types[scenetype]:
-                typename = "export_scene_" + scenetype
-                cscene.prop(bpy.data.window_managers[0], typename)
+        for scenetype in ioUtils.getSceneTypesForExport():
+            typename = "export_scene_" + scenetype
+            cscene.prop(bpy.data.window_managers[0], typename)
 
         # TODO delete me?
         # c2.prop(expsets, "exportCustomData", text="Export custom data")
-
-        # CHECK issue with export and import of models with new generic system
-        # ec2 = layout.column(align=True)
 
         # TODO delete me?
         # layout.separator()
@@ -1048,8 +1040,8 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc1.prop(wm, "draw_submechanisms")
             dc1.prop(wm, "draw_progress")
             dc2.prop(wm, "draw_messages")
-            dc2.prop(bpy.context.window_manager, 'phobos_msg_count')
-            dc2.prop(bpy.context.window_manager, 'phobos_msg_offset')
+            dc2.prop(wm, 'phobos_msg_count')
+            dc2.prop(wm, 'phobos_msg_offset')
 
 
 def register():
@@ -1097,20 +1089,17 @@ def register():
     for meshtype in meshes.mesh_types:
         if 'export' in meshes.mesh_types[meshtype]:
             typename = "export_mesh_" + meshtype
-            setattr(bpy.types.WindowManager, typename, BoolProperty(
-                name=meshtype, default=False))
+            setattr(bpy.types.WindowManager, typename, BoolProperty(name=meshtype))
 
     for entitytype in entities.entity_types:
         if 'export' in entities.entity_types[entitytype]:
             typename = "export_entity_" + entitytype
-            setattr(bpy.types.WindowManager, typename, BoolProperty(
-                name=entitytype, default=False))
+            setattr(bpy.types.WindowManager, typename, BoolProperty(name=entitytype))
 
     for scenetype in scenes.scene_types:
         if 'export' in scenes.scene_types[scenetype]:
             typename = "export_scene_" + scenetype
-            setattr(bpy.types.WindowManager, typename, BoolProperty(
-                name=scenetype, default=False))
+            setattr(bpy.types.WindowManager, typename, BoolProperty(name=scenetype))
 
     # Load custom icons
     import os

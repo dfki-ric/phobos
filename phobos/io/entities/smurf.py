@@ -86,9 +86,7 @@ def deriveEntity(root, outpath):
                     shutil.copytree(fullpath, os.path.join(smurf_outpath, filename))
         """
     else:
-        modelpath = os.path.join(outpath, root['modelname'])
-        if ioUtils.getExpSettings().structureExport:
-            modelpath = os.path.join(modelpath, 'smurf')
+        modelpath = os.path.join(outpath, root['modelname'], 'smurf')
         # TODO why the spacing between the paths?
         log("Scene paths: " + outpath + ' ' + modelpath, "DEBUG")
         entity['file'] = os.path.join(os.path.relpath(modelpath, os.path.dirname(outpath)), root['modelname']+".smurf")
@@ -387,9 +385,10 @@ def exportSmurf(model, path):
                 op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
     # write submechanisms
-    with open(os.path.join(path, filenames['submechanisms']), 'w') as op:
-        op.write('#submechanisms' + infostring)
-        op.write(yaml.dump({'submechanisms': model['submechanisms']}))#, default_flow_style=False))
+    if model['submechanisms']:
+        with open(os.path.join(path, filenames['submechanisms']), 'w') as op:
+            op.write('#submechanisms' + infostring)
+            op.write(yaml.dump({'submechanisms': model['submechanisms']}))#, default_flow_style=False))
 
     # TODO delete me?
     ## write custom yml files
