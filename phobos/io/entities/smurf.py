@@ -307,7 +307,7 @@ def exportSmurf(model, path):
     # append custom data
     with open(os.path.join(path, smurf_filename), 'w') as op:
         op.write('# main SMURF file of model "' + model['name'] + '"\n')
-        op.write('# created with Phobos ' + defs.version + ' - https://github.com/dfki-ric/phobos\n\n')
+        op.write('# created with Phobos ' + defs.version + ' - ' + defs.repository + '\n\n')
         op.write("SMURF version: " + defs.version + "\n")
         op.write("modelname: " + model['name'] + "\n")
         op.write(yaml.dump(modeldata, default_flow_style=False))

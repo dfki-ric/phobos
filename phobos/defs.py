@@ -35,8 +35,9 @@ import yaml
 from re import compile
 from phobos.phoboslog import log
 
-# phobos version number
+# Phobos information
 version = '0.7'
+repository = 'https://github.com/dfki-ric/phobos'
 
 # definitions of which elements are assigned to which default layers
 layerTypes = {
