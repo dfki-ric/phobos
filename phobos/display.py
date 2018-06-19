@@ -150,7 +150,7 @@ def draw_submechanism(spanningtree, independent=None, active=None):
     bgl.glBegin(bgl.GL_LINE_STRIP)
     bgl.glColor4f(*colors['submechanism'])
     for o in origins:
-        bgl.glVertex3f(*o)
+        bgl.glVertex2f(*to2d(o))
     bgl.glEnd()
     bgl.glDisable(bgl.GL_BLEND)
 
@@ -163,17 +163,6 @@ def draw_callback_3d(self, context):
     wm = context.window_manager
 
     bgl.glEnable(bgl.GL_BLEND)
-
-    # submechanisms
-    if active and wm.draw_submechanisms:
-        if any('submechanism' in prop for prop in active.keys()):
-            groups = active.users_group
-            for group in groups:
-                for obj in group.objects:
-                    if 'submechanism/spanningtree' in obj:
-                        draw_submechanism(obj['submechanism/spanningtree'],
-                                          obj['submechanism/independent'],
-                                          obj['submechanism/active'])
 
     # joint axes
     if len(selected) > 0:
@@ -192,6 +181,7 @@ def draw_callback_2d(self, context):
     """
     active = context.object
     selected = context.selected_objects
+    objects = set(selected + [active])
     wm = context.window_manager
 
     # code that can be used to draw on 2d surface in 3d mode, not used any more
@@ -205,12 +195,23 @@ def draw_callback_2d(self, context):
     bgl.glEnable(bgl.GL_BLEND)
 
     # submechanisms
-    if selected and wm.draw_submechanisms:
-        for obj in [obj for obj in selected if obj.phobostype == 'link']:
+    if objects and wm.draw_submechanisms:
+        # draw spanning tree
+        submechanism_groups = set([group for obj in objects for group in obj.users_group
+                                   if group.name.startswith('submechanism:')])
+        for group in submechanism_groups:
+            for joint in group.objects:
+                if 'submechanism/spanningtree' in joint:
+                    draw_submechanism(joint['submechanism/spanningtree'],
+                                      joint['submechanism/independent'],
+                                      joint['submechanism/active'])
+        # draw labels
+        for obj in [obj for obj in objects if obj.phobostype == 'link']:
             if 'submechanism/jointname' in obj:
                 jointname = obj['submechanism/jointname']
                 origin = to2d(obj.matrix_world.translation) + Vector((16, 0))
-                draw_textbox(jointname, origin, textsize=8, textcolor=colors['submechanism'])
+                draw_textbox(jointname, origin, textsize=8,
+                             textcolor=colors['submechanism'])
 
     # interfaces
     if selected:
