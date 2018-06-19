@@ -127,35 +127,35 @@ def deriveMaterial(mat):
     return material
 
 
-def deriveLink(obj):
+def deriveLink(linkobj):
     """This function derives a link from a blender object and creates its initial phobos data structure.
 
     Args:
-      obj(bpy_types.Object): The blender object to derive the link from.
+      linkobj(bpy_types.Object): The blender object to derive the link from.
 
     Returns:
       dict
 
     """
-    log("Deriving link from obj " + obj.name, "DEBUG")
-    props = initObjectProperties(obj, phobostype='link', ignoretypes=linkobjignoretypes-{'link'})
-    parent = sUtils.getEffectiveParent(obj)
+    log("Deriving link from obj " + linkobj.name, "DEBUG")
+    props = initObjectProperties(linkobj, phobostype='link', ignoretypes=linkobjignoretypes - {'link'})
+    parent = sUtils.getEffectiveParent(linkobj)
     props['parent'] = nUtils.getObjectName(parent) if parent else None
-    props['children'] = [child.name for child in obj.children if child.phobostype == 'link']
-    props['object'] = obj
-    props["pose"] = deriveObjectPose(obj)
+    props['children'] = [child.name for child in linkobj.children if child.phobostype == 'link']
+    props['object'] = linkobj
+    props["pose"] = deriveObjectPose(linkobj)
     props["collision"] = {}
     props["visual"] = {}
     props["inertial"] = {}
     props['approxcollision'] = []
 
     # add inertial information to link
-    try:
-        inertia = deriveDictEntry(bpy.context.scene.objects['inertial_' + props['name']])
-        if inertia is not None:
-            props['inertial'] = inertia
-    except KeyError:
-        log("No inertia for link " + props['name'], "WARNING")
+    inertialobjs = [obj for obj in linkobj.children if obj.phobostype == 'inertial'
+                   and 'inertial/inertia' in obj]
+    if len(inertialobjs) == 1:
+        props['inertial'] = deriveDictEntry(inertialobjs[0])
+    else:
+        log("No valid inertial data for link " + props['name'], "WARNING")
     return props
 
 
