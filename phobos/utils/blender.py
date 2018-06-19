@@ -273,7 +273,7 @@ def cleanObjectProperties(props):
 
 
 def cleanScene():
-    """This function cleans up the scene and removes all blender objects, meshes, materials and lights."""
+    """Clean up blend file (remove all objects, meshes, materials and lights)"""
     # select all objects
     bpy.ops.object.select_all(action="SELECT")
 
@@ -298,13 +298,11 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
     """Creates a thumbnail of the given objects.
 
     Args:
-      obj(list): List of objects for the thumbnail.
-      Resolution: used for the render.
-      objects:
-      export_path:
-      modelname:
-      render_resolution:  (Default value = 256)
-      opengl:  (Default value = False)
+      objects(list of bpy.types.Object): list of objects for the thumbnail
+      export_path(str): folder to export image to
+      modelname(str): name of model (used as file name)
+      render_resolution(int): side length of resulting image in pixels (Default value = 256)
+      opengl(bool): whether to use opengl rendering or not (Default value = False)
 
     Returns:
 
@@ -360,6 +358,7 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
 
 
 def toggleTransformLock(obj, setting=None):
+    """Toogle transform lock for the referred object"""
     obj.lock_location[0] = setting if setting is not None else not obj.lock_location[0]
     obj.lock_location[1] = setting if setting is not None else not obj.lock_location[1]
     obj.lock_location[2] = setting if setting is not None else not obj.lock_location[2]
@@ -372,6 +371,7 @@ def toggleTransformLock(obj, setting=None):
 
 
 def switchToScene(scenename):
+    """Switch to Blender scene of the given name"""
     if scenename not in bpy.data.scenes.keys():
         bpy.data.scenes.new(scenename)
     bpy.context.screen.scene = bpy.data.scenes[scenename]
