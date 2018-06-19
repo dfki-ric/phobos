@@ -1735,10 +1735,10 @@ class AssignSubmechanism(Operator):
                                           if obj.phobostype == 'link'])
         # prepare data used in both cases
         roots = [link for link in self.joints if link.parent not in self.joints]
-        print(roots)
         if len(roots) != 1:
-            log("Selected joints are not all connected.", 'ERROR')
-            return {'CANCELLED'}
+            log("Selected joints are not all connected.", 'WARNING')
+            if self.linear_chain:
+                return {'CANCELLED'}
         if self.mechanism_name:
             root = roots[0]
             if self.linear_chain:
