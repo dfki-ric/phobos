@@ -897,16 +897,18 @@ def namespaceJoint(joint, namespace):
     joint['parent'] = namespaced(joint['parent'], namespace)
     return joint
 
+
 def namespaced(name, namespace):
     return namespace+'_'+name
 
 
-def deriveModelDictionary(root, name=''):
+def deriveModelDictionary(root, name='', objectlist=[]):
     """Derives a python dictionary representation of a Phobos model.
 
     Args:
       root: bpy.types.Object
       name:  (Default value = '')
+      objectlist(list): list of bpy.types.Object to derive the model from
 
     Returns:
       dict
@@ -940,9 +942,10 @@ def deriveModelDictionary(root, name=''):
     log("Creating dictionary for model " + modelname + " with root " + root.name, "INFO")
 
     # create tuples of objects belonging to model
-    objectlist = sUtils.getChildren(root,
-                                    selected_only=ioUtils.getExpSettings().selectedOnly,
-                                    include_hidden=False)
+    if not objectlist:
+        objectlist = sUtils.getChildren(root,
+                                        selected_only=ioUtils.getExpSettings().selectedOnly,
+                                        include_hidden=False)
     linklist = [link for link in objectlist if link.phobostype == 'link']
 
     # digest all the links to derive link and joint information
@@ -992,8 +995,7 @@ def deriveModelDictionary(root, name=''):
         if obj.phobostype in ['visual', 'collision']:
             props = deriveDictEntry(obj)
             parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
-            model['links'][parentname][obj.phobostype][
-                nUtils.getObjectName(obj)] = props
+            model['links'][parentname][obj.phobostype][nUtils.getObjectName(obj)] = props
         elif obj.phobostype == 'approxsphere':
             props = deriveDictEntry(obj)
             parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
