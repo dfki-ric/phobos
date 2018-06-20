@@ -1740,8 +1740,8 @@ class AssignSubmechanism(Operator):
             if self.linear_chain:
                 return {'CANCELLED'}
         if self.mechanism_name:
-            root = roots[0]
             if self.linear_chain:
+                root = roots[0]
                 root['submechanism/type'] = '{0}R'.format(len(self.joints))
                 root['submechanism/spanningtree'] = list(self.joints)
                 root['submechanism/active'] = list(self.joints)
@@ -1749,6 +1749,7 @@ class AssignSubmechanism(Operator):
                 for i in range(len(self.joints)):
                     self.joints[i]['submechanism/jointname'] = str(i+1)
             else:
+                root, freeloader_joints = eUtils.getNearestCommonParent(self.joints)
                 mechanismdata = defs.definitions['submechanisms'][context.window_manager.mechanismpreview]
                 size = len(mechanismdata['joints']['spanningtree'])
                 if len(self.joints) == size:
@@ -1761,6 +1762,8 @@ class AssignSubmechanism(Operator):
                         root['submechanism/spanningtree'] = [jointmap[j] for j in mechanismdata['joints']['spanningtree']]
                         root['submechanism/active'] = [jointmap[j] for j in mechanismdata['joints']['active']]
                         root['submechanism/independent'] = [jointmap[j] for j in mechanismdata['joints']['independent']]
+                        root['submechanism/root'] = root
+                        root['submechanism/freeloader'] = freeloader_joints
                     except KeyError:
                         log("Incomplete joint definition.")
                 else:
@@ -1770,6 +1773,7 @@ class AssignSubmechanism(Operator):
             root['submechanism/name'] = self.mechanism_name
             # create group
             name = nUtils.getUniqueName('submechanism:' + self.mechanism_name, bpy.data.groups)
+            sUtils.selectObjects([root] + self.joints + freeloader_joints, active=0)
             bpy.ops.group.create(name=name)
             group = bpy.data.groups[name]
         else:
