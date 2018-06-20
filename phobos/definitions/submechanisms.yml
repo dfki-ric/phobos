@@ -17,9 +17,9 @@ submechanisms:
   spherical:
     type: RRR
     joints:
-        active: ['revolute1', 'revolute2', revolute3']
-        independent: ['revolute1', 'revolute2', revolute3']
-        spanningtree: ['revolute1', 'revolute2', revolute3']
+        active: ['revolute1', 'revolute2', 'revolute3']
+        independent: ['revolute1', 'revolute2', 'revolute3']
+        spanningtree: ['revolute1', 'revolute2', 'revolute3']
   lambda_mechanism:
     type: rrPr
     joints:
@@ -37,4 +37,4 @@ submechanisms:
     joints:
         active: ['prismatic3', 'prismatic6']
         independent: ['revolute7', 'revolute8']
-        spanningtree: ['revolute1', 'revolute2', 'prismatic3', 'revolute4', 'revolute5', 'prismatic6', 'revolute7', 'revolute8']        
+        spanningtree: ['revolute1', 'revolute2', 'prismatic3', 'revolute4', 'revolute5', 'prismatic6', 'revolute7', 'revolute8']
