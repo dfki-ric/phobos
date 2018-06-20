@@ -114,6 +114,31 @@ def restructureKinematicTree(link, root=None):
         del root['version']
 
 
+def getNearestCommonParent(objs):
+    anchor = objs[0]  # pick one link as the anchor link
+    rest = objs[1:]  # get other link to iterate over
+    in_all = False  # this will be true if all rest branches have parent as a common parent
+    parent = anchor  # the candidate for common parent
+    inter_objects = set()
+    while not in_all and parent.parent:
+        in_all = True
+        parent = parent.parent  # go up the anchor branch
+        inter_objects.add(parent)
+        for obj in rest:  # start at base of each rest branch
+            o = obj
+            while o.parent and o.parent != parent:  # as long as there is a parent that is not the candidate parent
+                o = o.parent
+                inter_objects.add(o)
+            if o.parent != parent:  # check which break condition happened, break if not arrived at parent
+                in_all = False
+                break
+    if not in_all:  # this isonly true is none of the branches set it to False and broke afterwards
+        return None
+    else:
+        inter_objects.remove(parent)
+        return parent, list(inter_objects)
+
+
 def instantiateSubmodel(submodelname, instancename, size=1.0):
     """Creates an instance of the submodel specified by the submodelname.
 
