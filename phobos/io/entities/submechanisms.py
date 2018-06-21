@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # coding=utf-8
 
-import os
 from phobos.phoboslog import log
 import phobos.utils.selection as sUtils
 from phobos.model.models import deriveModelDictionary
