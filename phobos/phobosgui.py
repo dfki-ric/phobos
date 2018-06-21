@@ -1206,6 +1206,7 @@ def register():
 
 def unregister():
     print("Unregistering phobosgui...")
+    libraries.unregister()
 
     # Unregister icons
     for pcoll in prev_collections.values():
