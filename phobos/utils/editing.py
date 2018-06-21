@@ -375,6 +375,7 @@ def createInterface(ifdict, parent=None):
     ifobj.scale = (scale,)*3
     ifobj['interface/type'] = ifdict['type']
     ifobj['interface/direction'] = ifdict['direction']
+    bpy.ops.object.make_single_user(object=True, obdata=True)
 
 
 def toggleInterfaces(interfaces=None, modename='toggle'):
@@ -400,7 +401,12 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
     childsubmodel = childinterface.parent
 
     # connect the interfaces
+    sUtils.selectObjects(objects=[parentinterface], clear=True, active=0)
+    bpy.ops.object.make_single_user(object=True, obdata=True)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
+    bpy.ops.object.make_single_user(object=True, obdata=True)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
     sUtils.selectObjects(objects=[childinterface, childsubmodel], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
