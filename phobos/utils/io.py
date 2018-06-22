@@ -250,6 +250,11 @@ def importBlenderModel(filepath, namespace='', prefix=False):
             else:
                 for obj in bpy.context.selected_objects:
                     nUtils.addNamespace(obj, namespace)
+        submechanism_roots = [obj for obj in bpy.data.objects if obj.phobostype == 'link'
+                              and 'submechanism/spanningtree' in obj]
+        for root in submechanism_roots:
+            sUtils.selectObjects([root] + root['submechanism/spanningtree'] + root['submechanism/freeloader'], active=0)
+            bpy.ops.group.create(name='submechanism:' + root['submechanism/name'])
         return True
     else:
         return False
