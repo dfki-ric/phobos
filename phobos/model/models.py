@@ -966,7 +966,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     editlinks = {}
     for i in inertials:
         if i.parent not in linklist:
-            realparent = sUtils.getEffectiveParent(i)
+            realparent = sUtils.getEffectiveParent(i, ignore_selection=bool(objectlist))
             if realparent:
                 parentname = nUtils.getObjectName(realparent)
                 if parentname in editlinks:
@@ -994,11 +994,12 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         # try:
         if obj.phobostype in ['visual', 'collision']:
             props = deriveDictEntry(obj)
-            parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
+            parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
+            print(parentname, obj, props)
             model['links'][parentname][obj.phobostype][nUtils.getObjectName(obj)] = props
         elif obj.phobostype == 'approxsphere':
             props = deriveDictEntry(obj)
-            parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
+            parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
             model['links'][parentname]['approxcollision'].append(props)
 
         # TODO delete me?
@@ -1038,7 +1039,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                     # this should actually never happen
                     model['materials'][mat.name] = deriveMaterial(
                         mat)
-                linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
+                linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
                 model['links'][linkname]['visual'][nUtils.getObjectName(obj)][
                     'material'] = mat.name
             except AttributeError:
