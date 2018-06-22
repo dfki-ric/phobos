@@ -29,12 +29,12 @@ submechanisms:
   ankle_mechanism:
     type: 2sPrr+1u
     joints:
-        active: ['prismatic3', 'prismatic6']
-        independent: ['revolute7', 'revolute8']
-        spanningtree: ['revolute1', 'revolute2', 'prismatic3', 'revolute4', 'revolute5', 'prismatic6', 'revolute7', 'revolute8', 'revolute9', 'revolute10']
+        active: ['prismatic7', 'prismatic10']
+        independent: ['revolute1', 'revolute2']
+        spanningtree: ['revolute1', 'revolute2', 'revolute3', 'revolute4', 'revolute5', 'revolute6', 'prismatic7', 'revolute8', 'revolute9', 'prismatic10']
   torso_mechanism:
     type: 2sPu+1u
     joints:
-        active: ['prismatic3', 'prismatic6']
-        independent: ['revolute7', 'revolute8']
-        spanningtree: ['revolute1', 'revolute2', 'prismatic3', 'revolute4', 'revolute5', 'prismatic6', 'revolute7', 'revolute8']
+        active: ['prismatic5', 'prismatic8']
+        independent: ['revolute1', 'revolute2']
+        spanningtree: ['revolute1', 'revolute2', 'revolute3', 'revolute4', 'prismatic5', 'revolute6', 'revolute7', 'prismatic8']
