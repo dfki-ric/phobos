@@ -148,18 +148,21 @@ def draw_joint(joint, length):
     bgl.glEnd()
 
 
-def draw_submechanism(spanningtree, independent=None, active=None):
+def draw_path(path, color=colors['white'], dim3=False):
     origins = []
-    for e in range(len(spanningtree)):
-        origins.append(spanningtree[e].matrix_world.to_translation())
+    for e in range(len(path)):
+        origins.append(path[e].matrix_world.to_translation())
 
     bgl.glEnable(bgl.GL_BLEND)
     bgl.glLineWidth(4)
 
     bgl.glBegin(bgl.GL_LINE_STRIP)
-    bgl.glColor4f(*colors['submechanism'])
+    bgl.glColor4f(*color)
     for o in origins:
-        bgl.glVertex2f(*to2d(o))
+        if dim3:
+            bgl.glVertex3f(o)
+        else:
+            bgl.glVertex2f(*to2d(o))
     bgl.glEnd()
     bgl.glDisable(bgl.GL_BLEND)
 
@@ -215,9 +218,9 @@ def draw_callback_2d(self, context):
         for group in submechanism_groups:
             for joint in group.objects:
                 if 'submechanism/spanningtree' in joint:
-                    draw_submechanism(joint['submechanism/spanningtree'],
-                                      joint['submechanism/independent'],
-                                      joint['submechanism/active'])
+                    draw_path(joint['submechanism/spanningtree'], color=colors['submechanism'])
+                                      #joint['submechanism/independent'],
+                                      #joint['submechanism/active'])
         # draw labels
         for obj in [obj for obj in objects if obj.phobostype == 'link']:
             if 'submechanism/jointname' in obj:
