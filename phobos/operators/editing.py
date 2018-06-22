@@ -1662,7 +1662,7 @@ class AssignSubmechanism(Operator):
     #    items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
     #    )
 
-    linear_chain = BoolProperty(name='Linear Chain', default=False)
+    linear_chain = BoolProperty(name='Serial Chain', default=False)
 
     mechanism_name = StringProperty(name='Name')
 
@@ -1725,7 +1725,7 @@ class AssignSubmechanism(Operator):
                 c1 = glayout.column(align=True)
                 c2 = glayout.column(align=True)
                 for i in range(size):
-                    c1.label(self.joints[i].name + ':')
+                    c1.label(nUtils.getObjectName(self.joints[i], 'joint') + ':')
                     c2.prop(self, "jointtype" + str(i), text='')
             else:
                 layout.label('Please choose a valid type for selected joints.')
