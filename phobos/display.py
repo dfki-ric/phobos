@@ -181,7 +181,10 @@ def draw_callback_2d(self, context):
     """
     active = context.object
     selected = context.selected_objects
-    objects = set(selected + [active])
+    if active and selected:
+        objects = set(selected + [active])
+    else:
+        objects = []
     wm = context.window_manager
 
     # code that can be used to draw on 2d surface in 3d mode, not used any more
@@ -196,8 +199,9 @@ def draw_callback_2d(self, context):
 
     # submechanisms
     if objects and wm.draw_submechanisms:
+        groupedobjects = [o for o in objects if hasattr(o, 'users_group')]
         # draw spanning tree
-        submechanism_groups = set([group for obj in objects for group in obj.users_group
+        submechanism_groups = set([group for obj in groupedobjects for group in obj.users_group
                                    if group.name.startswith('submechanism:')])
         for group in submechanism_groups:
             for joint in group.objects:
