@@ -229,10 +229,15 @@ def draw_callback_2d(self, context):
         # draw labels
         for obj in [obj for obj in objects if obj.phobostype == 'link']:
             if 'submechanism/jointname' in obj:
-                jointname = obj['submechanism/jointname']
-                origin = to2d(obj.matrix_world.translation) + Vector((16, 0))
-                draw_textbox(jointname, origin, textsize=8,
-                             textcolor=colors['submechanism'])
+                origin = to2d(obj.matrix_world.translation)
+                draw_textbox(obj['submechanism/jointname'], origin, textsize=6,
+                             textcolor=colors['dark_grey'],
+                             backgroundcolor=(*colors['submechanism'][:3], 0.7),
+                             offset=Vector((16, 0))
+                             )
+                draw_textbox(nUtils.getObjectName(obj, 'joint'), origin, textsize=6,
+                             textcolor=colors['dark_grey'], backgroundcolor=colors['bright_background'],
+                             rightalign=True, offset=Vector((-16, 0)))
 
     # interfaces
     if selected:
