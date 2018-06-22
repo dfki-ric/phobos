@@ -1101,9 +1101,9 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             #                        for key, value in link.items()})
             submech = {'type': link['submechanism/type'],
                        'contextual_name': link['submechanism/name'],
-                       'jointnames_independent': [j.name for j in link['submechanism/independent']],
-                       'jointnames_spanningtree': [j.name for j in link['submechanism/spanningtree']],
-                       'jointnames_active': [j.name for j in link['submechanism/active']]
+                       'jointnames_independent': [nUtils.getObjectName(j, 'joint') for j in link['submechanism/independent']],
+                       'jointnames_spanningtree': [nUtils.getObjectName(j, 'joint') for j in link['submechanism/spanningtree']],
+                       'jointnames_active': [nUtils.getObjectName(j, 'joint') for j in link['submechanism/active']]
                        }
             submechanisms.append(submech)
     model['submechanisms'] = submechanisms
