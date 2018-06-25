@@ -29,10 +29,12 @@ Created on 06 Feb 2017
 import os
 import bpy
 
-from phobos.utils.io import l2str, indent, xmlHeader
+from phobos.utils.io import xmlHeader
+from phobos.utils.io import indent as phobosindentation
+from phobos.utils.io import l2str as list_to_string
 from phobos.phoboslog import log
 
-version = "1.5"
+sdfversion = "1.5"
 
 class xmlTagger(object):
     """ A simple class to create a syntax conform xml file. The line
@@ -550,7 +552,7 @@ def exportSdf(model, filepath):
     """ Export function used for the entity.
     This exports a SDF file to the specified filepath.
     """
-    log("Export SDF (version " + version + ") to " + filepath, "INFO", "exportSdf")
+    log("Export SDF (version " + sdfversion + ") to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
     errors = False
 
@@ -583,10 +585,10 @@ def exportSdf(model, filepath):
     # print('name\n')
 
     # create tagger and add headers
-    xml = xmlTagger(indent=indent)
+    xml = xmlTagger(indent=phobosindentation)
     try:
         xml.write(xmlHeader)
-        xml.descend('sdf', {"version": version})
+        xml.descend('sdf', {"version": sdfversion})
 
         # xml.descend('world', params={'name': 'default'})
         # xml.descend('include')
@@ -755,7 +757,7 @@ def exportSdf(model, filepath):
             if 'axis' in joint.keys():
                 xml.descend('axis')
                 # axis is defined in local coord space of parent link
-                xml.attrib('xyz', l2str(joint['axis']))
+                xml.attrib('xyz', list_to_string(joint['axis']))
                 # OPT: xml.descend('dynamics')
                 # OPT: xml.attrib('damping', ...)
                 # OPT: xml.attrib('friction', ...)
@@ -787,7 +789,7 @@ def exportSdf(model, filepath):
                 xml.ascend()
             # if 'axis2' in joint.keys():
                 # OPT: xml.descend('axis2')
-                # REQ: xml.attrib('xyz', l2str(joint['axis']))
+                # REQ: xml.attrib('xyz', list_to_string(joint['axis']))
                 # REQ: xml.attrib('use_parent_model_frame', ...)
                 # OPT: xml.descend('dynamics')
                 # OPT: xml.attrib('damping', ...)
