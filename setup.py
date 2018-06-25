@@ -1,4 +1,12 @@
 #!/usr/bin/env python3.5
+"""
+This module should be run to install Phobos properly.
+
+It moves the required files to the Blender config folder of your system and also installs the
+ressources etc to your user config folder.
+
+Make sure you run it with the appropriate python version (3.5).
+"""
 
 import os
 import os.path as path
@@ -19,6 +27,11 @@ addonpath = path.join(phobossystem.getScriptsPath(), 'addons', 'phobos')
 
 
 def updateFolderContents(src, dst):
+    """ Updates the directory tree at dst with everything from src.
+
+    :param src: source path
+    :param dst: destination path
+    """
     return copy_tree(src, dst, update=True, verbose=True, dry_run=False)
 
 
@@ -86,8 +99,8 @@ if __name__ == '__main__':
             distpath = site.getsitepackages()[0]
             distconffile.write(path.normpath(distpath))
 
-    shutil.copy2('python_dist_packages.conf', os.path.join(addonpath,
-        'python_dist_packages.conf'))
+    shutil.copy2('python_dist_packages.conf',
+                 os.path.join(addonpath, 'python_dist_packages.conf'))
 
 
 """
@@ -99,7 +112,7 @@ Thoughts on importing external packages:
 Possible solutions:
   a) install packages of same python version as blender's internal to internal site packages
   b) setup virtual environment somewhere in the system and add to blender python's path environment
-  
+
 Solutions in detail:
 
 a) Install into blender python
@@ -112,20 +125,22 @@ a) Install into blender python
    The /path/to/blender can be retrieved from within blender by executing:
         import site
         sitepackagepath = site.getsitepackages()[0]
-        
+
     This could be retrieved to this script by calling blender as follows:
     blender -b -P script.py
-    
-    with script.py writing out the sitepackagepath and closing blender.
-    For this, however, the appropriate binary for blender is required, which would already suffice to derive the path.
-    
-    Another alternative would thus be to try importing external packages upon phobos startup, and run a shell command
-    to install missing packages of the correct version to blender's then-known-location by using --target.
-    
-b) This script could set up a virtual environment with the correct python version and install all packages, then place
-   a file containing the path of that environment to phobos, which would expand the path upon startup.
-   In fact, the install file itself could set up the environment, asking the user where to put it. Alternatively
-   and more simply, the environment could be created where the file it situated. That saves us one
-   temp file to store the path of the environment in.
-"""
 
+    with script.py writing out the sitepackagepath and closing blender.
+    For this, however, the appropriate binary for blender is required, which would already suffice
+    to derive the path.
+
+    Another alternative would thus be to try importing external packages upon phobos startup, and
+    run a shell command to install missing packages of the correct version to blender's
+    then-known-location by using
+    --target.
+
+b) This script could set up a virtual environment with the correct python version and install all
+   packages, then place a file containing the path of that environment to phobos, which would expand
+   the path upon startup.  In fact, the install file itself could set up the environment, asking the
+   user where to put it. Alternatively and more simply, the environment could be created where the
+   file it situated. That saves us one temp file to store the path of the environment in.
+"""
