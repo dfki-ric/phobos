@@ -51,7 +51,7 @@ if __name__ == '__main__':
     copied_files = updateFolderContents(
         os.path.join(phoboshome, 'phobos'),
         addonpath)
-    if not len(copied_files) > 0:
+    if not copied_files:
         print('Something went wrong with copying the addon files to your Blender installation.\n',
               'Aborting installation.')
         sys.exit(0)
@@ -59,19 +59,19 @@ if __name__ == '__main__':
     # install config files
     copied_files = updateFolderContents(os.path.join(phoboshome, 'config'),
                                         phobossystem.getConfigPath())
-    if not len(copied_files) > 0:
+    if not copied_files:
         print('Something went wrong with copying config files.')
 
     # install templates
     templatespath = path.join(phobossystem.getScriptsPath(), 'templates_py')
     copied_files = updateFolderContents(path.join(phoboshome, 'templates_py'), templatespath)
-    if not len(copied_files) > 0:
+    if not copied_files:
         print('Something went wrong with copying operator presets.')
 
     # # install presets
     # presetspath = path.join(phobossystem.getScriptsPath(), 'presets', 'operator')
     # copied_files = updateFolderContents(path.join(phoboshome, 'presets'), presetspath)
-    # if not len(copied_files) > 0:
+    # if not copied_files:
     #    print('Something went wrong with copying operator presets.')
 
     # look for existing yamlpath configuration
