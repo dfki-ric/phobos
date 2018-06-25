@@ -32,6 +32,7 @@ Created on 13 Feb 2014
 import math
 import bpy
 import mathutils
+import numpy
 import phobos.defs as defs
 from phobos.phoboslog import log
 import phobos.utils.general as gUtils
@@ -41,7 +42,7 @@ from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 
 
-def createInertial(parentname, inertialdict, parentobj=None, helper=False):
+def createInertial(parentname, inertialdict, parentobj=None, autocorrect = True):
     """Creates the Blender representation of a given inertial provided a dictionary.
 
     Args:
@@ -54,14 +55,22 @@ def createInertial(parentname, inertialdict, parentobj=None, helper=False):
       bpy_types.Object -- the newly created blender inertial object.
 
     """
-    size = 0.015 if helper else 0.06
+    size = 0.03
+
     try:
         origin = mathutils.Vector(inertialdict['pose']['translation'])
     except KeyError:
         origin = mathutils.Vector()
+
+    # Check the inertia data for consistency
+    if checkInertiaData(inertialdict):
+        material = 'phobos_inertial'
+    elif not checkInertiaData(inertialdict):
+        material = 'phobos_error'
+
     inertialobject = bUtils.createPrimitive('inertial_' + parentname, 'box', (size,) * 3,
                                             defs.layerTypes["inertial"],
-                                            pmaterial='phobos_inertial',
+                                            pmaterial= material,
                                             phobostype='inertial')
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(scale=True)
@@ -75,10 +84,7 @@ def createInertial(parentname, inertialdict, parentobj=None, helper=False):
         bpy.ops.object.transform_apply(scale=True)  # force matrix_world update
     # set properties
     for prop in ('mass', 'inertia'):
-        if helper:
-            inertialobject[prop] = inertialdict[prop]
-        else:
-            inertialobject['inertial/' + prop] = inertialdict[prop]
+        inertialobject[prop] = inertialdict[prop]
     return inertialobject
 
 
@@ -140,7 +146,7 @@ def createHelperInertialObjects(link, autocalc=True):
                 if inert is not None:
                     inertialdata['mass'] = mass
                     inertialdata['inertia'] = inert
-        createInertial(obj.name, inertialdata, parentobj=obj, helper=True)
+        createInertial(obj.name, inertialdata, parentobj=obj)
 
 
 def calculateMassOfLink(link):
@@ -423,6 +429,82 @@ def calculateMeshInertia(mass, data):
         i += inertiaListToMatrix([a, -b_bar, -c_bar, b, -a_bar, c])
 
     return i[0][0], i[0][1], i[0][2], i[1][1], i[1][2], i[2][2]
+
+
+def checkInertiaData(inertialdict):
+    """Checks the inertial data to be physical consistent. Returns a boolean which
+    is TRUE if the data is consistent and FALSE if not.
+
+    Args:
+     inertialdict(dict): Dictionary with the inertia data
+
+    Returns:
+     boolean
+
+    """
+
+    if not isinstance(inertialdict, dict):
+        return False
+
+    # Check for mass and inertia
+    if 'mass' in inertialdict.keys():
+        mass = inertialdict['mass']
+        consistency = checkMass(mass)
+        if 'inertia' in inertialdict.keys() and consistency:
+            inertia = inertialdict['inertia']
+            return consistency and checkInertia(inertia)
+        return consistency
+    return False
+
+
+def checkMass(mass):
+    """ Checks if the mass of an object is positive definite.
+
+    Args:
+     mass(float) : Mass of the object.
+
+    Returs:
+     boolean
+
+    """
+    return mass > 0.
+
+def checkInertia(inertia):
+    """ Checks if the inertia of an object leads to positive definite inertia matrix.
+
+    Args:
+     inertia(list, tuple or matrix): Inertia of the object.
+
+    Returns:
+     boolean
+
+    """
+
+    if isinstance(inertia, (list , tuple, mathutils.Matrix)):
+        consistency = True
+        # Convert to matrix if necessary
+        if not isinstance(inertia, mathutils.Matrix):
+            inertia = numpy.array(inertiaListToMatrix(inertia))
+        # Check the main diagonal for stricly positive values
+        consistency = all(element >= 0.0 for element in inertia.diagonal())
+        if not consistency:
+            log("Negative semidefinite main diagonal found !", "WARNING")
+            return consistency
+        # Calculate the determinant iff consistent
+        else:
+            consistency = numpy.linalg.det(inertia) > 0.0
+        if not consistency:
+            log("Negative semidefinite determinant found !", "WARNING")
+            return consistency
+        # Calculate the eigenvalues iff consistent
+        else:
+            consistency = all(element > 0.0 for element in numpy.linalg.eigvals(inertia))
+        if not consistency:
+            log("Negative semidefinite eigenvalues found !", "WARNING")
+        return consistency
+    else:
+        return False
+
 
 
 def inertiaListToMatrix(il):
