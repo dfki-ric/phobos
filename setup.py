@@ -5,13 +5,17 @@ import os.path as path
 import sys
 import shutil
 from distutils.dir_util import copy_tree
-from distutils.errors import DistutilsFileError
 import importlib.util
 
-spec = importlib.util.spec_from_file_location('phobossystem', 'phobos/phobossystem.py')
-ps= importlib.util.module_from_spec(spec)
-spec.loader.exec_module(ps)
-addonpath = path.join(ps.getScriptsPath(), 'addons', 'phobos')
+# make installation originate from the path of this setup file
+phoboshome = os.path.dirname(os.path.abspath(__file__))
+
+# load the phobossystem as module from file
+module_spec = importlib.util.spec_from_file_location(
+    'phobossystem', path.join(phoboshome, 'phobos/phobossystem.py'))
+phobossystem = importlib.util.module_from_spec(module_spec)
+module_spec.loader.exec_module(phobossystem)
+addonpath = path.join(phobossystem.getScriptsPath(), 'addons', 'phobos')
 
 
 def updateFolderContents(src, dst):
@@ -28,8 +32,6 @@ if __name__ == '__main__':
         print('Installation aborted.')
         sys.exit(0)
 
-    phoboshome = os.path.dirname(os.path.abspath(__file__))
-
     # install addon
     if os.path.exists(addonpath):
         shutil.rmtree(addonpath)  # always clean install folder
@@ -42,20 +44,21 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # install config files
-    copied_files = updateFolderContents(os.path.join(phoboshome, 'config'), ps.getConfigPath())
+    copied_files = updateFolderContents(os.path.join(phoboshome, 'config'),
+                                        phobossystem.getConfigPath())
     if not len(copied_files) > 0:
         print('Something went wrong with copying config files.')
 
     # install templates
-    templatespath = path.join(ps.getScriptsPath(), 'templates_py')
-    copied_files = updateFolderContents(os.path.join(phoboshome, 'templates_py'), templatespath)
+    templatespath = path.join(phobossystem.getScriptsPath(), 'templates_py')
+    copied_files = updateFolderContents(path.join(phoboshome, 'templates_py'), templatespath)
     if not len(copied_files) > 0:
         print('Something went wrong with copying operator presets.')
 
-    ## install presets
-    #presetspath = path.join(getScriptsPath(), 'presets', 'operator')
-    #copied_files = updateFolderContents(os.path.join(phoboshome, 'presets'), presetspath)
-    #if not len(copied_files) > 0:
+    # # install presets
+    # presetspath = path.join(phobossystem.getScriptsPath(), 'presets', 'operator')
+    # copied_files = updateFolderContents(path.join(phoboshome, 'presets'), presetspath)
+    # if not len(copied_files) > 0:
     #    print('Something went wrong with copying operator presets.')
 
     # look for existing yamlpath configuration
