@@ -32,6 +32,7 @@ import bpy
 from phobos.utils.io import l2str, indent, xmlHeader
 from phobos.phoboslog import log
 
+version = "1.5"
 
 class xmlTagger(object):
     """ A simple class to create a syntax conform xml file. The line
@@ -546,13 +547,16 @@ def material(materialdata, indentation):
 
 
 def exportSdf(model, filepath):
-    log("Export SDF to " + filepath, "INFO", "exportSdf")
+    """ Export function used for the entity.
+    This exports a SDF file to the specified filepath.
+    """
+    log("Export SDF (version " + version + ") to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
     errors = False
 
     # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains',
     # 'meshes', 'lights', 'motors', 'groups', 'joints', 'name'
-    log('Exporting "{0}"...'.format(model['name'], "DEBUG", "exportSdf"))
+    log('Exporting "{0}"...'.format(model['name']), "DEBUG", "exportSdf")
     # FINAL remove debugging information
     # print('sensors\n')
     # print(model['sensors'])
@@ -582,7 +586,7 @@ def exportSdf(model, filepath):
     xml = xmlTagger(indent=indent)
     try:
         xml.write(xmlHeader)
-        xml.descend('sdf', {"version": 1.5})
+        xml.descend('sdf', {"version": version})
 
         # xml.descend('world', params={'name': 'default'})
         # xml.descend('include')
@@ -878,7 +882,7 @@ def importSdf():
     pass
 
 # registering export functions of types with Phobos
-entity_type_dict = {'sdf': {'export': exportSdf,
-                            'import': importSdf,
-                            'extensions': ('sdf', 'xml')}
-                    }
+entity_type_dict = {'sdf': {
+    'export': exportSdf,
+    'import': importSdf,
+    'extensions': ('sdf', 'xml')}}
