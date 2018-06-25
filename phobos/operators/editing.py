@@ -514,114 +514,114 @@ class SmoothenSurfaceOperator(Operator):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
+# OLD CODE
+#class CreateLinkInertialOperator(Operator):
+#    """Create inertial object(s) for link(s)"""
+#    bl_idname = "phobos.create_link_inertials"
+#    bl_label = "Create link inertia"
+#    bl_options = {'REGISTER', 'UNDO'}
+#
+#    def getLinkInertials(self, context, link=None):
+#        """Returns all link inertials of the selected links (in the current
+#        context) or of the specified link.
+#
+#        Args:
+#          context: Blender context
+#          link: the link of which to find the inertials (optional) (Default value = None)
+#
+#        Returns:
+#          dictionary of links with list of Blender objects or just a list.
+#
+#        """
+#        linklist = [obj for obj in context.selected_objects if obj.phobostype == 'link']
+#
+#        link_inertials = {}
+#        # append the link inertials for each link
+#        if link:
+#            inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
+#                                                    include_hidden=True)
+#            link_inertials = [inert for inert in inertials if 'inertial/inertia' in inert]
+#
+#        else:
+#            for link in linklist:
+#                linkname = link['link/name']
+#                inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
+#                                                        include_hidden=True)
+#                link_inertials[linkname] = [inert for inert in inertials
+#                                            if 'inertial/inertia' in inert]
+#
+#        return link_inertials
+#
+#    from_selected_only = BoolProperty(
+#        name='From selected objects', default=False,
+#        description='Include only the selected ' +
+#        'visual/collision object(s) into the link inertial(s).'
+#    )
+#
+#    autocalc = BoolProperty(
+#        name='Calculate automatically',
+#        default=True,
+#        description='Calculate inertial(s) automatically. Otherwise' +
+#                    ' create objects with empty inertia data.'
+#    )
+#
+#    overwrite = BoolProperty(
+#        name='Overwrite existing',
+#        default=True,
+#        description='Replace existing link inertial(s).'
+#    )
+#
+#    def invoke(self, context, event):
+#        return context.window_manager.invoke_props_dialog(self, width=500)
+#
+#    def draw(self, context):
+#        layout = self.layout
+#        layout.prop(self, "from_selected_only")
+#        layout.prop(self, "autocalc")
+#        layout.prop(self, "overwrite")
+#
+#    def execute(self, context):
+#        # keep the currently selected objects
+#        selected = context.selected_objects
+#        links = [obj for obj in selected if obj.phobostype == 'link']
+#        i = 1
+#        # calculate inertial objects for each link
+#        for link in links:
+#            # delete inertials which are overwritten
+#            if self.overwrite:
+#                link_inertials = self.getLinkInertials(context, link)
+#                sUtils.selectObjects(link_inertials, clear=True)
+#
+#                # remove deleted inertials from the selection
+#                for inert in link_inertials:
+#                    if inert in selected:
+#                        selected.remove(inert)
+#
+#                bpy.ops.object.delete()
+#
+#            # reselect the initial objects
+#            sUtils.selectObjects(selected, clear=True)
+#            # calculate the link inertials
+#            inertia.createLinkInertialObjects(link, self.autocalc, self.from_selected_only)
+#            display.setProgress(i/len(links))
+#            i += 1
+#        return {'FINISHED'}
+#
+#    @classmethod
+#    def poll(cls, context):
+#        # only enable button when there are links selected
+#        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
+#        return len(links) > 0
 
-class CreateLinkInertialOperator(Operator):
-    """Create inertial object(s) for link(s)"""
-    bl_idname = "phobos.create_link_inertials"
-    bl_label = "Create link inertia"
+
+class CreateInertialOperator(Operator):
+    """Create inertial object(s) from collision/visual objects of a link"""
+    bl_idname = "phobos.create_inertials"
+    bl_label = "Create inertial objects"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def getLinkInertials(self, context, link=None):
-        """Returns all link inertials of the selected links (in the current
-        context) or of the specified link.
-
-        Args:
-          context: Blender context
-          link: the link of which to find the inertials (optional) (Default value = None)
-
-        Returns:
-          dictionary of links with list of Blender objects or just a list.
-
-        """
-        linklist = [obj for obj in context.selected_objects if obj.phobostype == 'link']
-
-        link_inertials = {}
-        # append the link inertials for each link
-        if link:
-            inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
-                                                    include_hidden=True)
-            link_inertials = [inert for inert in inertials if 'inertial/inertia' in inert]
-
-        else:
-            for link in linklist:
-                linkname = link['link/name']
-                inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
-                                                        include_hidden=True)
-                link_inertials[linkname] = [inert for inert in inertials
-                                            if 'inertial/inertia' in inert]
-
-        return link_inertials
-
-    from_selected_only = BoolProperty(
-        name='From selected objects', default=False,
-        description='Include only the selected ' +
-        'visual/collision object(s) into the link inertial(s).'
-    )
-
-    autocalc = BoolProperty(
-        name='Calculate automatically',
-        default=True,
-        description='Calculate inertial(s) automatically. Otherwise' +
-                    ' create objects with empty inertia data.'
-    )
-
-    overwrite = BoolProperty(
-        name='Overwrite existing',
-        default=True,
-        description='Replace existing link inertial(s).'
-    )
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width=500)
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "from_selected_only")
-        layout.prop(self, "autocalc")
-        layout.prop(self, "overwrite")
-
-    def execute(self, context):
-        # keep the currently selected objects
-        selected = context.selected_objects
-        links = [obj for obj in selected if obj.phobostype == 'link']
-        i = 1
-        # calculate inertial objects for each link
-        for link in links:
-            # delete inertials which are overwritten
-            if self.overwrite:
-                link_inertials = self.getLinkInertials(context, link)
-                sUtils.selectObjects(link_inertials, clear=True)
-
-                # remove deleted inertials from the selection
-                for inert in link_inertials:
-                    if inert in selected:
-                        selected.remove(inert)
-
-                bpy.ops.object.delete()
-
-            # reselect the initial objects
-            sUtils.selectObjects(selected, clear=True)
-            # calculate the link inertials
-            inertia.createLinkInertialObjects(link, self.autocalc, self.from_selected_only)
-            display.setProgress(i/len(links))
-            i += 1
-        return {'FINISHED'}
-
-    @classmethod
-    def poll(cls, context):
-        # only enable button when there are links selected
-        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
-        return len(links) > 0
-
-
-class CreateHelperInertialOperator(Operator):
-    """Create helper inertial object(s) from collision/visual objects of a link"""
-    bl_idname = "phobos.create_helper_inertials"
-    bl_label = "Create helper inertials"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def getHelperInertials(self, context, link=None):
-        """Returns all helper inertials of the selected links (in the current
+    def getInertials(self, context, link=None):
+        """Returns all inertials of the selected links (in the current
         context) or of the specified link.
 
         Args:
@@ -635,21 +635,18 @@ class CreateHelperInertialOperator(Operator):
         if not link:
             links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
 
-        helper_inertials = {}
+        inertials = {}
         # append the link inertials for each link
         if link:
             inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
                                                     include_hidden=True)
-            helper_inertials = [inert for inert in inertials if 'inertia' in inert]
 
         else:
             for link in links:
                 linkname = link['link/name']
                 inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
                                                         include_hidden=True)
-                helper_inertials[linkname] = [inert for inert in inertials if 'inertia' in inert]
-
-        return helper_inertials
+        return inertials
 
     autocalc = BoolProperty(
         name='Calculate automatically',
@@ -681,11 +678,11 @@ class CreateHelperInertialOperator(Operator):
         for link in links:
             # delete inertials which are overwritten
             if self.overwrite:
-                helper_inertials = self.getHelperInertials(context, link)
-                sUtils.selectObjects(helper_inertials, clear=True)
+                inertials = self.getInertials(context, link)
+                sUtils.selectObjects(inertials, clear=True)
 
                 # remove deleted inertials from the selection
-                for inert in helper_inertials:
+                for inert in inertials:
                     if inert in selected:
                         selected.remove(inert)
 
@@ -694,7 +691,7 @@ class CreateHelperInertialOperator(Operator):
             # reselect the initial objects
             sUtils.selectObjects(selected, clear=True)
 
-            inertia.createHelperInertialObjects(link, self.autocalc)
+            inertia.createInertialObjects(link, self.autocalc)
             display.setProgress(i/len(links))
             i += 1
 
