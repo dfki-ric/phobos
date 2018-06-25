@@ -747,8 +747,8 @@ class PhobosModelPanel(bpy.types.Panel):
         mc1.label(text="Masses & Inertia", icon='PHYSICS')
         mc1.operator('phobos.calculate_mass')
         mc1.operator('phobos.set_mass')
-        mc1.operator('phobos.create_helper_inertials')
-        mc1.operator('phobos.create_link_inertials')
+        mc1.operator('phobos.create_inertials')
+        # mc1.operator('phobos.create_link_inertials')
         mc1.operator('phobos.edit_inertia')
 
 
