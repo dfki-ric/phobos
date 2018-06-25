@@ -438,9 +438,11 @@ def inertiaListToMatrix(il):
     """
     if type(il) == mathutils.Matrix:
         return il
+
     inertia = [[il[0], il[1], il[2]],
-               [0.0, il[3], il[4]],
-               [0.0, 0.0, il[5]]]
+               [il[1], il[3], il[4]],
+               [il[2], il[4], il[5]]]
+
     return mathutils.Matrix(inertia)
 
 
