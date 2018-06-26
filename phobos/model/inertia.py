@@ -59,7 +59,6 @@ def createInertial(parentname, inertialdict, parentobj=None, effectiveParent = N
 
     try:
         origin = mathutils.Vector(inertialdict['pose']['translation'])
-        print(origin)
     except KeyError:
         origin = mathutils.Vector()
 
@@ -78,23 +77,15 @@ def createInertial(parentname, inertialdict, parentobj=None, effectiveParent = N
     bpy.ops.object.transform_apply(scale=True)
     if parentobj:
         inertialobject.matrix_world = parentobj.matrix_world
-        parent = parentobj if parentobj.phobostype in ['link', 'visual', 'collision'] else parentobj.parent
+        parent = parentobj if parentobj.phobostype == 'link' else parentobj.parent
         sUtils.selectObjects((inertialobject, parent), clear=True, active=1)
-        if parentobj.phobostype == 'link':
-            # Create the inertial object relative to the link / joint
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
-        else:
-            # Create the inertial object relative to its parent
-            bpy.ops.object.parent_set(type='OBJECT')
-            inertialobject.matrix_local = mathutils.Matrix.Translation(mathutils.Vector())
 
-
+        # Create the inertial object relative to the link / joint
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
         sUtils.selectObjects((inertialobject,), clear=True, active=0)
         bpy.ops.object.transform_apply(scale=True)  # force matrix_world update
-    if effectiveParent:
-        # Add the effective parent
-        inertialobject['effectiveParent'] = effectiveParent
+
     # set properties
     for prop in ('mass', 'inertia'):
         inertialobject[prop] = inertialdict[prop]
