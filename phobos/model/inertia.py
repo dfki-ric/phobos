@@ -451,6 +451,7 @@ def checkMass(mass):
     """
     return mass > 0.
 
+
 def checkInertia(inertia):
     """ Checks if the inertia of an object leads to positive definite inertia matrix.
 
@@ -486,7 +487,6 @@ def checkInertia(inertia):
         return consistency
     else:
         return False
-
 
 
 def inertiaListToMatrix(il):
@@ -573,6 +573,31 @@ def getInertiaRelevantObjects(link, selected_only=False):
     return inertiaobjects
 
 
+def getInertiaChildren(link, selected_only = False):
+    """Returns a list of the inertia objects which are children of a link.
+
+    Args:
+     link(bpy_types.Object): The link you want to gather the inertia relevant objects for.
+     selected_only(bool, optional): return only relevant objects which are selected (Default value = False)
+
+   Returns:
+     list
+
+    """
+
+    # Get the inertia objects
+    inertiaobjects = sUtils.getImmediateChildren(link, ('inertial'), selected_only)
+
+    # Get the visuals and collisions
+    viscols = getInertiaRelevantObjects(link, selected_only)
+    # Iterate over the objects and get the inertia objects
+    for obj in viscols:
+        # Add inertia objects to the list
+        inertiaobjects += sUtils.getImmediateChildren(obj, ('inertial'), selected_only)
+
+    return inertiaobjects
+
+
 def fuseInertiaData(inertials):
     """Computes combined mass, center of mass and inertia given an iterable of inertial objects.
 
@@ -611,6 +636,12 @@ def fuseInertiaData(inertials):
     else:
         log("No inertial found to fuse.", "DEBUG")
         return None, None, None
+
+
+def fuseLinkInertia(link, inertials):
+    # TODO Placeholder
+    return None
+
 
 
 def combine_com_3x3(objects):

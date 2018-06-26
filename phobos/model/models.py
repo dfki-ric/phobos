@@ -150,10 +150,16 @@ def deriveLink(linkobj):
     props['approxcollision'] = []
 
     # add inertial information to link
-    inertialobjs = [obj for obj in linkobj.children if obj.phobostype == 'inertial'
-                   and 'inertial/inertia' in obj]
+    #inertialobjs = [obj for obj in linkobj.children if obj.phobostype == 'inertial'
+    #               and 'inertial/inertia' in obj]
+    inertialobjs = inertiamodel.getInertiaChildren(linkobj)
+
     if len(inertialobjs) == 1:
         props['inertial'] = deriveDictEntry(inertialobjs[0])
+        print(props['inertial'])
+    elif len(inertialobjs) > 1:
+        mass, com, inertia = inertiamodel.fuseInertiaData(inertialobjs)
+        print(mass, com, inertia)
     else:
         log("No valid inertial data for link " + props['name'], "WARNING")
     return props
@@ -192,8 +198,7 @@ def deriveFullLinkInformation(obj):
     for visualobj in visualObjects:
         visualDict[visualobj.name] = visualobj
     props["visual"] = visualDict
-    inertialObjects = sUtils.getImmediateChildren(
-        obj, phobostypes=('inertial'), include_hidden=True)
+    inertialObjects = inertiamodel.getInertiaChildren(obj)
     inertialDict = {}
     for inertialobj in inertialObjects:
         inertialDict[inertialobj.name] = inertialobj
@@ -328,7 +333,7 @@ def deriveInertial(obj):
     """
     try:
         props = initObjectProperties(obj, phobostype='inertial')
-        props['inertia'] = list(map(float, obj['inertial/inertia']))
+        props['inertia'] = list(map(float, obj['inertia']))
         props['pose'] = deriveObjectPose(obj)
     except KeyError as e:
         log("Missing data in inertial object " + obj.name + str(e), "ERROR")
@@ -726,8 +731,7 @@ def loadPose(modelname, posename):
 
     Args:
       modelname(str): The model's name.
-      posename(str.
-:return Nothing.): The name the pose is stored under.
+      posename(str): The name the pose is stored under.
 
     Returns:
 
@@ -962,7 +966,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             model['motors'][motordict['name']] = motordict
 
     # combine inertia if certain objects are left out, and overwrite it
-    inertials = (i for i in objectlist if i.phobostype == 'inertial' and "inertial/inertia" in i)
+    inertials = (i for i in objectlist if i.phobostype == 'inertial' and "inertia" in i)
     editlinks = {}
     for i in inertials:
         if i.parent not in linklist:
@@ -995,7 +999,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         if obj.phobostype in ['visual', 'collision']:
             props = deriveDictEntry(obj)
             parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
-            print(parentname, obj, props)
+            #print(parentname, obj, props)
             model['links'][parentname][obj.phobostype][nUtils.getObjectName(obj)] = props
         elif obj.phobostype == 'approxsphere':
             props = deriveDictEntry(obj)
