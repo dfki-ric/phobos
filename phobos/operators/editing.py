@@ -617,7 +617,7 @@ class SmoothenSurfaceOperator(Operator):
 class CreateInertialOperator(Operator):
     """Create inertial object(s) from collision/visual objects of a link"""
     bl_idname = "phobos.create_inertials"
-    bl_label = "Create inertial objects"
+    bl_label = "Create Inertial Object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
     def getInertials(self, context, link=None):

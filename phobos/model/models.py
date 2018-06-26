@@ -156,10 +156,14 @@ def deriveLink(linkobj):
 
     if len(inertialobjs) == 1:
         props['inertial'] = deriveDictEntry(inertialobjs[0])
-        print(props['inertial'])
-    elif len(inertialobjs) > 1:
-        mass, com, inertia = inertiamodel.fuseInertiaData(inertialobjs)
-        print(mass, com, inertia)
+        
+    # TODO Check if needed
+    #elif len(inertialobjs) > 1:
+    #    print('More! @ link {}'.format(linkobj.name))
+    #    mass, com, inertia = inertiamodel.fuseInertiaData(inertialobjs)
+    #    props['inertial'] =
+    #    print(mass, com, inertia)
+
     else:
         log("No valid inertial data for link " + props['name'], "WARNING")
     return props
@@ -333,6 +337,7 @@ def deriveInertial(obj):
     """
     try:
         props = initObjectProperties(obj, phobostype='inertial')
+        props['mass'] = obj['mass']
         props['inertia'] = list(map(float, obj['inertia']))
         props['pose'] = deriveObjectPose(obj)
     except KeyError as e:
@@ -968,6 +973,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     # combine inertia if certain objects are left out, and overwrite it
     inertials = (i for i in objectlist if i.phobostype == 'inertial' and "inertia" in i)
     editlinks = {}
+
     for i in inertials:
         if i.parent not in linklist:
             realparent = sUtils.getEffectiveParent(i, ignore_selection=bool(objectlist))
@@ -977,6 +983,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                     editlinks[parentname].append(i)
                 else:
                     editlinks[parentname] = [i]
+
     for linkname in editlinks:
         inertials = editlinks[linkname]
         try:
