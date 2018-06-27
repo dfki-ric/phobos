@@ -27,6 +27,10 @@ Created on 06 Feb 2017
 """
 
 import os
+from xml.dom import minidom
+from xml.etree import ElementTree as ET
+from xml.etree.ElementTree import Element, SubElement
+
 import bpy
 
 from phobos.utils.io import xmlHeader
@@ -150,6 +154,16 @@ class xmlTagger(object):
 
         return self.output
 
+
+def getIndentedETString(elementtree):
+    """Return the specified elementtree as an indented string which can be saved to a file.
+
+    The indentation is based on the phobos.utils.io.indent variable.
+
+    :param elementtree: the elementtree to be converted to string
+    :return: string representation of the elementtree
+    """
+    return minidom.parseString(ET.tostring(elementtree)).toprettyxml(indent=phobosindentation)
 
 def pose(poseobject, relativepose, indentation, world):
     """ Simple wrapper for pose data.
@@ -554,8 +568,10 @@ def exportSdf(model, filepath):
     """
     log("Export SDF (version " + sdfversion + ") to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
+    modelconffile = os.path.join(filepath, 'model.config')
     errors = False
 
+    # TODO add version to model dictionary!
     # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains',
     # 'meshes', 'lights', 'motors', 'groups', 'joints', 'name'
     log('Exporting "{0}"...'.format(model['name']), "DEBUG", "exportSdf")
@@ -861,6 +877,23 @@ def exportSdf(model, filepath):
         # REQ: xml.attrib('palm_link')
         # xml.ascend()
 
+        modelconf = Element('model')
+        SubElement(modelconf, 'name').text = modelname
+        SubElement(modelconf, 'version').text = 'DUMMY'
+
+        SubElement(modelconf, 'sdf', version=sdfversion).text = modelname + '.sdf'
+
+        # TODO remove when below works
+        authorEL = SubElement(modelconf, 'author')
+        SubElement(authorEL, 'name').text = "DUMMY"
+        SubElement(authorEL, 'email').text = "dummy@dummy.mail"
+
+        # TODO use the phobos settings for this information
+        # SubElement(authorEL, 'name').text = SETTINGS
+        # SubElement(authorEL, 'email').text = SETTINGS
+        # TODO allow user to edit a txt file in blender which contains the description OR take README?
+        # SubElement(modelconf, 'description').text = PARSEFROMTXTEDITOR
+
     # FINAL remove this when finished
     except Exception:
         import sys
@@ -872,9 +905,15 @@ def exportSdf(model, filepath):
     finally:
         outputtext = xml.get_output()
 
-        log("Writing model data to " + filename, "DEBUG", "exportSdf")
+        log("Writing model sdf file to " + filename, "DEBUG")
         with open(filename, 'w') as outputfile:
             outputfile.writelines(outputtext)
+
+        log("Writing model.config file to " + modelconffile, "DEBUG")
+        with open(modelconffile, 'w') as outputfile:
+            outputfile.write(getIndentedETString(modelconf))
+        # modelconfTree.write(modelconffile, encoding="UTF-8", xml_declaration=True)
+
     finishmessage = "Export finished with " + \
         ("no " if not errors else "") + "errors."
     log(finishmessage, "INFO", "exportModelToSDF")
