@@ -444,41 +444,43 @@ def checkMass(mass):
 
 
 def checkInertia(inertia):
-    """ Checks if the inertia of an object leads to positive definite inertia matrix.
+    """Checks if the inertia of an object leads to positive definite inertia matrix.
 
-    Args:
-     inertia(list, tuple or matrix): Inertia of the object.
+    :param inertia: inertia of the object.
+    :type inertia: list, tuple or matrix
 
-    Returns:
-     boolean
-
+    :return: true if inertia matrix is positive definite, false if not
+    :rtype: bool
     """
+    assert isinstance(inertia, (list, tuple, mathutils.Matrix)), ("Wrong inertia type: " +
+                                                                  type(inertia) + ".")
 
-    if isinstance(inertia, (list , tuple, mathutils.Matrix)):
-        consistency = True
-        # Convert to matrix if necessary
-        if not isinstance(inertia, mathutils.Matrix):
-            inertia = numpy.array(inertiaListToMatrix(inertia))
-        # Check the main diagonal for stricly positive values
-        consistency = all(element >= 0.0 for element in inertia.diagonal())
-        if not consistency:
-            log("Negative semidefinite main diagonal found !", "WARNING")
-            return consistency
-        # Calculate the determinant iff consistent
-        else:
-            consistency = numpy.linalg.det(inertia) > 0.0
-        if not consistency:
-            log("Negative semidefinite determinant found !", "WARNING")
-            return consistency
-        # Calculate the eigenvalues iff consistent
-        else:
-            consistency = all(element > 0.0 for element in numpy.linalg.eigvals(inertia))
-        if not consistency:
-            log("Negative semidefinite eigenvalues found !", "WARNING")
+    consistency = True
+
+    # Convert to matrix if necessary
+    if not isinstance(inertia, mathutils.Matrix):
+        inertia = numpy.array(inertiaListToMatrix(inertia))
+
+    # Check the main diagonal for strictly positive values
+    consistency = all(element >= 0.0 for element in inertia.diagonal())
+
+    if not consistency:
+        log("Negative semidefinite main diagonal found!", "WARNING")
         return consistency
-    else:
-        return False
 
+    # Calculate the determinant if consistent
+    consistency = numpy.linalg.det(inertia) > 0.0
+
+    if not consistency:
+        log("Negative semidefinite determinant found!", "WARNING")
+        return consistency
+
+    # Calculate the eigenvalues if consistent
+    consistency = all(element > 0.0 for element in numpy.linalg.eigvals(inertia))
+
+    if not consistency:
+        log("Negative semidefinite eigenvalues found!", "WARNING")
+    return consistency
 
 def inertiaListToMatrix(il):
     """Transforms iterable representing the upper diagonal of a 3x3 inertia tensor
