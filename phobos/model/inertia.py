@@ -482,20 +482,23 @@ def checkInertia(inertia):
         log("Negative semidefinite eigenvalues found!", "WARNING")
     return consistency
 
-def inertiaListToMatrix(il):
-    """Transforms iterable representing the upper diagonal of a 3x3 inertia tensor
-    and returns the full tensor as a matrix.
 
-    Args:
-      il(tuple(6) or list[6]): The upper diagonal of a 3x3 inertia tensor.
+def inertiaListToMatrix(inertialist):
+    """Transforms a list (upper diagonal of a 3x3 tensor) and returns a full tensor matrix.
 
-    Returns:
-      mathutil.Matrix
+    :param inertialist: the upper diagonal of a 3x3 inertia tensor
+    :type inertialist: tuple(6) or list[6]
+
+    :return: full tensor matrix generated from the list
+    :rtype: mathutil.Matrix
 
     """
+    if isinstance(inertialist, mathutils.Matrix):
+        return inertialist
     if type(il) == mathutils.Matrix:
         return il
 
+    il = inertialist
     inertia = [[il[0], il[1], il[2]],
                [il[1], il[3], il[4]],
                [il[2], il[4], il[5]]]
