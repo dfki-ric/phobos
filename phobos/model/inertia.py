@@ -587,22 +587,25 @@ def getInertiaRelevantObjects(link, selected_only=False):
     return inertiaobjects
 
 
-def getInertiaChildren(link, selected_only=False):
+def getInertiaChildren(link, selected_only=False, include_hidden=False):
     """Returns a list of the inertia objects which are children of a link.
 
     :param link: The link you want to gather the inertia relevant objects for
     :type link: bpy.types.Object
     :param selected_only: return only relevant objects which are selected
     :type selected_only: bool
+    :param include_hidden: include hidden inertia objects
+    :type include_hidden: bool
 
     :return: list of child inertial objects of the link
     :rtype: list
     """
     assert link.phobostype == 'link', "Object is not a link."
     assert isinstance(selected_only, bool), "Not a boolean: " + type(selected_only)
+    assert isinstance(include_hidden, bool), "Not a boolean: " + type(include_hidden)
 
     # Get the inertia objects
-    inertiaobjects = sUtils.getImmediateChildren(link, ('inertial'), selected_only)
+    inertiaobjects = sUtils.getImmediateChildren(link, ('inertial'), selected_only, include_hidden)
 
     # Get the visuals and collisions
     viscols = getInertiaRelevantObjects(link, selected_only)
@@ -610,7 +613,8 @@ def getInertiaChildren(link, selected_only=False):
     # Iterate over the objects and get the inertia objects
     for obj in viscols:
         # Add inertia objects to the list
-        inertiaobjects += sUtils.getImmediateChildren(obj, ('inertial'), selected_only)
+        inertiaobjects += sUtils.getImmediateChildren(obj, ('inertial'),
+                                                      selected_only, include_hidden)
 
     return inertiaobjects
 

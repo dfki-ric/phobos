@@ -552,8 +552,7 @@ class CreateInertialOperator(Operator):
         for link in links:
             # delete inertials which are overwritten
             if self.overwrite:
-                inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
-                                                        include_hidden=True)
+                inertials = modelinertia.getInertiaChildren(link, include_hidden=True)
                 sUtils.selectObjects(inertials, clear=True)
 
                 # remove deleted inertials from the selection
