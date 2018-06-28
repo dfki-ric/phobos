@@ -52,7 +52,7 @@ import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.editing as eUtils
 import phobos.model.joints as joints
-import phobos.model.links as links
+import phobos.model.links as modellinks
 from phobos.phoboslog import log
 
 
@@ -1198,10 +1198,10 @@ class CreateLinksOperator(Operator):
 
     def execute(self, context):
         if self.location == '3D cursor':
-            links.createLink({'name': self.linkname, 'scale': self.size})
+            modellinks.createLink({'name': self.linkname, 'scale': self.size})
         else:
             for obj in context.selected_objects:
-                links.deriveLinkfromObject(obj, scale=self.size, parent_link=self.parent_link,
+                modellinks.deriveLinkfromObject(obj, scale=self.size, parent_link=self.parent_link,
                                            parent_objects=self.parent_objects,
                                            nameformat=self.nameformat)
         return {'FINISHED'}
@@ -1386,7 +1386,7 @@ class AddHeightmapOperator(Operator):
         bpy.ops.phobos.smoothen_surface()
 
         # Add root link for heightmap
-        root = links.deriveLinkfromObject(plane, scale=1.0, parenting=True,
+        root = modellinks.deriveLinkfromObject(plane, scale=1.0, parenting=True,
                                           parentobjects=True)
 
         # set names and custom properties
