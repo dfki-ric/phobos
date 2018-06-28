@@ -95,33 +95,31 @@ def createInertial(parentname, inertialdict, parentobj=None, effectiveParent=Non
 
 
 def createInertialObjects(link, autocalc=True):
-    """Creates inertial representations for helper inertials from the visual/
-    collision objects of a link. The new inertials can be calculated
-    automatically or remain empty (based on the autocalc parameter)
+    """Creates inertial objects for helper inertials from the visual/collision objects of a link.
 
-    Args:
-      link(bpy_types.Object): the link which contains the visual/collision objects
-      autocalc(bool, optional): If set to False the new inertial object will contain no
-    inertia information. (Default value = True)
+    The new inertials can be calculated automatically or remain empty (based on the autocalc
+    parameter).
 
-    Returns:
-
+    :param link: the link which contains the visual/collision objects
+    :type link: bpy_types.Object
+    :param autocalc: If set to False the new inertial object will contain no inertia information.
+    :type autocalc: bool
     """
     viscols = getInertiaRelevantObjects(link)
     for obj in viscols:
         inertialdata = {'mass': 0, 'inertia': [0, 0, 0, 0, 0, 0],
-                        'pose': {'translation': obj.matrix_local.to_translation()}
-                        }
+                        'pose': {'translation': obj.matrix_local.to_translation()}}
         if autocalc:
             mass = obj['mass'] if 'mass' in obj else None
             geometry = deriveGeometry(obj)
             if mass is not None and geometry is not None:
-                inert = calculateInertia(mass, geometry, obj.data if geometry['type'] == 'mesh' else None)
+                inert = calculateInertia(mass, geometry, (obj.data if geometry['type'] == 'mesh'
+                                                          else None))
                 if inert is not None:
                     inertialdata['mass'] = mass
                     inertialdata['inertia'] = inert
         # Create the object as a child of the parent object
-        createInertial(obj.name, inertialdata, parentobj=obj, effectiveParent = link)
+        createInertial(obj.name, inertialdata, parentobj=obj, effectiveParent=link)
 
 
 def calculateMassOfLink(link):
