@@ -38,6 +38,10 @@ from phobos.utils.io import indent as phobosindentation
 from phobos.utils.io import l2str as list_to_string
 from phobos.phoboslog import log
 
+# For future updates of the SDF spec version look at:
+# https://bitbucket.org/osrf/sdformat/src/ --> Migration.md
+# https://bitbucket.org/osrf/sdformat/src/ --> sdf/Migration.md
+# https://bitbucket.org/osrf/sdformat/src/ --> sdf/*.sdf files
 sdfversion = "1.5"
 
 class xmlTagger(object):
