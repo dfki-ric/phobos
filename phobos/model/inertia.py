@@ -30,9 +30,9 @@ Created on 13 Feb 2014
 """
 
 import math
+import numpy
 import bpy
 import mathutils
-import numpy
 import phobos.defs as defs
 from phobos.phoboslog import log
 import phobos.utils.general as gUtils
@@ -42,18 +42,20 @@ from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 
 
-def createInertial(parentname, inertialdict, parentobj=None, effectiveParent = None):
+def createInertial(parentname, inertialdict, parentobj=None, effectiveParent=None):
     """Creates the Blender representation of a given inertial provided a dictionary.
 
-    Args:
-      parentname(str): inertial object's parent's name
-      inertialdict(dict: dict): intertial data
-      parentobj(bpy_types.Object, optional): link or visual/collision with which the inertial obj is associated (Default value = None)
-      helper(bool, optional): whether or not the object is a helper inertial (Default value = False)
+    :param parentname: inertial object's parent's name
+    :type parentname: str
+    :param inertialdict: intertial data
+    :type inertialdict: dict
+    :param parentobj: link or visual/collision with which the inertial obj is associated
+    :type parentobj: bpy.types.Object
+    :param helper: whether or not the object is a helper inertial
+    :type helper: bool
 
-    Returns:
-      bpy_types.Object -- the newly created blender inertial object.
-
+    :return: the newly created blender inertial object.
+    :rtype: bpy_types.Object
     """
     size = 0.03
 
@@ -66,12 +68,12 @@ def createInertial(parentname, inertialdict, parentobj=None, effectiveParent = N
     if checkInertiaData(inertialdict):
         material = 'phobos_inertial'
     elif not checkInertiaData(inertialdict):
-        log('Inconsistent Inertia Data found for object {} !'.format(parentname), "WARNING")
+        log('Inconsistent inertia data found for object {}!'.format(parentname), "WARNING")
         material = 'phobos_error'
 
     inertialobject = bUtils.createPrimitive('inertial_' + parentname, 'box', (size,) * 3,
                                             defs.layerTypes["inertial"],
-                                            pmaterial= material,
+                                            pmaterial=material,
                                             phobostype='inertial')
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(scale=True)
