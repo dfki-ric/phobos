@@ -95,7 +95,7 @@ def createInertial(parentname, inertialdict, parentobj=None, effectiveParent=Non
 
 
 def createInertialObjects(link, autocalc=True):
-    """Creates inertial objects for helper inertials from the visual/collision objects of a link.
+    """Creates inertial objects from inertials of the visual/collision objects of a link.
 
     The new inertials can be calculated automatically or remain empty (based on the autocalc
     parameter).
@@ -105,6 +105,7 @@ def createInertialObjects(link, autocalc=True):
     :param autocalc: If set to False the new inertial object will contain no inertia information.
     :type autocalc: bool
     """
+    assert link.phobostype == 'link', 'Not a link object: ' + link.phobostype + '.'
     viscols = getInertiaRelevantObjects(link)
     for obj in viscols:
         inertialdata = {'mass': 0, 'inertia': [0, 0, 0, 0, 0, 0],
@@ -112,9 +113,8 @@ def createInertialObjects(link, autocalc=True):
         if autocalc:
             mass = obj['mass'] if 'mass' in obj else None
             geometry = deriveGeometry(obj)
-            if mass is not None and geometry is not None:
-                inert = calculateInertia(mass, geometry, (obj.data if geometry['type'] == 'mesh'
-                                                          else None))
+            if mass and geometry:
+                inert = calculateInertia(obj, mass, geometry)
                 if inert is not None:
                     inertialdata['mass'] = mass
                     inertialdata['inertia'] = inert
@@ -144,31 +144,34 @@ def calculateMassOfLink(link):
     return max(objectsmass, inertialmass)
 
 
-def calculateInertia(mass, geometry, meshdata=None):
-    """Calculates the inertia of an object given its *geometry* and *mass* and
-    returns the upper diagonal of the inertia 3x3 inertia tensor.
+def calculateInertia(obj, mass, geometry):
+    """Calculates the inertia of an object using the specified mass and geometry.
 
-    Args:
-      mass(float): object's mass.
-      geometry(dict): object dictionary's geometry part.
-      meshdata(bpy.types.Mesh): data of the mesh if geometry is type 'mesh'
+    Returns the upper diagonal of the inertia 3x3 inertia tensor.
 
-    Returns:
-      tuple(6)
+    :param obj: object to calculate inertia from
+    :type obj: bpy.types.Object
+    :param mass: object mass
+    :type mass: float
+    :param geometry: geometry part of the object dictionary
+    :type geometry: dict
 
+    :return: upper diagonal of the inertia 3x3 tensor
+    :rtype: tuple(6)
     """
     inertia = None
-    gt = geometry['type']
-    if gt == 'box':
+    geometrytype = geometry['type']
+    if geometrytype == 'box':
         inertia = calculateBoxInertia(mass, geometry['size'])
-    elif gt == 'cylinder':
+    elif geometrytype == 'cylinder':
         inertia = calculateCylinderInertia(mass, geometry['radius'], geometry['length'])
-    elif gt == 'sphere':
+    elif geometrytype == 'sphere':
         inertia = calculateSphereInertia(mass, geometry['radius'])
-    elif gt == 'capsule':
+    elif geometrytype == 'capsule':
         inertia = calculateCapsuleInertia(mass, geometry['radius'], geometry['length'])
-    elif gt == 'mesh':
-        inertia = calculateMeshInertia(mass, meshdata)
+    elif geometrytype == 'mesh':
+        sUtils.selectObjects((obj,), clear=True, active=0)
+        inertia = calculateMeshInertia(mass, obj.data)
     return inertia
 
 
