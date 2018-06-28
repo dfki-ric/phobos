@@ -620,39 +620,11 @@ class CreateInertialOperator(Operator):
     bl_label = "Create Inertial Object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def getInertials(self, context, link=None):
-        """Returns all inertials of the selected links (in the current
-        context) or of the specified link.
-
-        Args:
-          context: Blender context
-          link: the link of which to find the inertials (optional) (Default value = None)
-
-        Returns:
-          dictionary of links with list of Blender objects or just a list.
-
-        """
-        if not link:
-            links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
-
-        inertials = {}
-        # append the link inertials for each link
-        if link:
-            inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
-                                                    include_hidden=True)
-
-        else:
-            for link in links:
-                linkname = link['link/name']
-                inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
-                                                        include_hidden=True)
-        return inertials
-
     autocalc = BoolProperty(
         name='Calculate automatically',
         default=True,
-        description='Calculate inertial(s) automatically. Otherwise' +
-                    ' create objects with empty inertia data.'
+        description=('Calculate inertial(s) automatically. ' +
+                     ' Otherwise create objects with empty inertia data.')
     )
 
     overwrite = BoolProperty(
@@ -679,7 +651,8 @@ class CreateInertialOperator(Operator):
         for link in links:
             # delete inertials which are overwritten
             if self.overwrite:
-                inertials = self.getInertials(context, link)
+                inertials = sUtils.getImmediateChildren(link, phobostypes=('inertial',),
+                                                        include_hidden=True)
                 sUtils.selectObjects(inertials, clear=True)
 
                 # remove deleted inertials from the selection
@@ -702,9 +675,10 @@ class CreateInertialOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        # only enable button when there are links selected
+        """Poll operator if no links are selected.
+        """
         links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
-        return len(links) > 0
+        return links
 
 
 class EditYAMLDictionary(Operator):
