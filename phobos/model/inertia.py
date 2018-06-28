@@ -495,8 +495,8 @@ def inertiaListToMatrix(inertialist):
     """
     if isinstance(inertialist, mathutils.Matrix):
         return inertialist
-    if type(il) == mathutils.Matrix:
-        return il
+
+    assert len(inertialist) == 6, "List is insufficient to generate a tensor matrix."
 
     il = inertialist
     inertia = [[il[0], il[1], il[2]],
