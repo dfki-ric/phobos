@@ -308,7 +308,7 @@ def calculateEllipsoidInertia(mass, size):
 
 
 def calculateMeshInertia(mass, data):
-    """Calculates the inertia tensor of arbitrary mesh objects.
+    """Calculates and returns the inertia tensor of arbitrary mesh objects.
 
     Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
     Simply and Quickly' (2004) by Jonathan Blow (1) with formulas for tetrahedron inertia
@@ -318,13 +318,13 @@ def calculateMeshInertia(mass, data):
     Links: (1) http://number-none.com/blow/inertia/body_i.html
            (2) http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf
 
-    Args:
-      data(bpy.types.BlendData.): The mesh object's data.
-      mass(float): The object's mass.
+    :param data: mesh data of the object
+    :type data: bpy.types.BlendData
+    :param mass: mass of the object
+    :type mass: float
 
-    Returns:
-      tuple(6)
-
+    :return: inertia tensor
+    :rtype: tuple(6)
     """
     tetrahedra = []
     mesh_volume = 0
@@ -357,14 +357,14 @@ def calculateMeshInertia(mass, data):
 
         volume = sign * abs_det_J / 6
 
-        centre_of_mass = mathutils.Vector(((verts[0][0] + verts[1][0] + verts[2][0] + origin[0]) / 4,
-                                           (verts[0][1] + verts[1][1] + verts[2][1] + origin[1]) / 4,
-                                           (verts[0][2] + verts[1][2] + verts[2][2] + origin[2]) / 4))
+        com = mathutils.Vector(((verts[0][0] + verts[1][0] + verts[2][0] + origin[0]) / 4,
+                                (verts[0][1] + verts[1][1] + verts[2][1] + origin[1]) / 4,
+                                (verts[0][2] + verts[1][2] + verts[2][2] + origin[2]) / 4))
 
-        tetrahedra.append({'sign': sign, 'abs(det(J))': abs_det_J, 'J': J, 'centre_of_mass': centre_of_mass})
+        tetrahedra.append({'sign': sign, 'abs(det(J))': abs_det_J, 'J': J, 'centre_of_mass': com})
         mesh_volume += volume
 
-    d = mass / mesh_volume
+    density = mass / mesh_volume
     i = mathutils.Matrix().to_3x3()
     i.zero()
     for tetrahedron in tetrahedra:
@@ -386,30 +386,36 @@ def calculateMeshInertia(mass, data):
         abs_det_J = tetrahedron['abs(det(J))']
         sign = tetrahedron['sign']
 
-        # CHECK this might be easier with numpy (and more beautiful)
-        a = sign * d * abs_det_J * (y1**2 + y1*y2 + y2**2 + y1*y3 + y2*y3 + y3**2 +
+        # TODO this might be easier with numpy (and more beautiful)
+        a = sign * density * abs_det_J * (
+            y1**2 + y1*y2 + y2**2 + y1*y3 + y2*y3 + y3**2 +
             y1*y4 + y2*y4 + y3*y4 + y4**2 + z1**2 + z1*z2 + z2**2 + z1*z3 +
             z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
 
-        b = sign * d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2 +
+        b = sign * density * abs_det_J * (
+            x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2 +
             x1*x4 + x2*x4 + x3*x4 + x4**2 + z1**2 + z1*z2 + z2**2 + z1*z3 +
             z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
 
-        c = sign * d * abs_det_J * (x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2 +
+        c = sign * density * abs_det_J * (
+            x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2 +
             x1*x4 + x2*x4 + x3*x4 + x4**2 + y1**2 + y1*y2 + y2**2 + y1*y3 +
             y2*y3 + y3**2 + y1*y4 + y2*y4 + y3*y4 + y4**2) / 60
 
-        a_bar = sign * d * abs_det_J * (2*y1*z1 + y2*z1 + y3*z1 + y4*z1 + y1*z2 +
-                2*y2*z2 + y3*z2 + y4*z2 + y1*z3 + y2*z3 + 2*y3*z3 +
-                y4*z3 + y1*z4 + y2*z4 + y3*z4 + 2*y4*z4) / 120
+        a_bar = sign * density * abs_det_J * (
+            2*y1*z1 + y2*z1 + y3*z1 + y4*z1 + y1*z2 +
+            2*y2*z2 + y3*z2 + y4*z2 + y1*z3 + y2*z3 + 2*y3*z3 +
+            y4*z3 + y1*z4 + y2*z4 + y3*z4 + 2*y4*z4) / 120
 
-        b_bar = sign * d * abs_det_J * (2*x1*z1 + x2*z1 + x3*z1 + x4*z1 + x1*z2 +
-                2*x2*z2 + x3*z2 + x4*z2 + x1*z3 + x2*z3 + 2*x3*z3 +
-                x4*z3 + x1*z4 + x2*z4 + x3*z4 + 2*x4*z4) / 120
+        b_bar = sign * density * abs_det_J * (
+            2*x1*z1 + x2*z1 + x3*z1 + x4*z1 + x1*z2 +
+            2*x2*z2 + x3*z2 + x4*z2 + x1*z3 + x2*z3 + 2*x3*z3 +
+            x4*z3 + x1*z4 + x2*z4 + x3*z4 + 2*x4*z4) / 120
 
-        c_bar = sign * d * abs_det_J * (2*x1*y1 + x2*y1 + x3*y1 + x4*y1 + x1*y2 +
-                2*x2*y2 + x3*y2 + x4*y2 + x1*y3 + x2*y3 + 2*x3*y3 +
-                x4*y3 + x1*y4 + x2*y4 + x3*y4 + 2*x4*y4) / 120
+        c_bar = sign * density * abs_det_J * (
+            2*x1*y1 + x2*y1 + x3*y1 + x4*y1 + x1*y2 +
+            2*x2*y2 + x3*y2 + x4*y2 + x1*y3 + x2*y3 + 2*x3*y3 +
+            x4*y3 + x1*y4 + x2*y4 + x3*y4 + 2*x4*y4) / 120
 
         i += inertiaListToMatrix([a, -b_bar, -c_bar, b, -a_bar, c])
 
