@@ -566,14 +566,42 @@ def material(materialdata, indentation):
     return "".join(tagger.get_output())
 
 
+def modelConf(model):
+    """Creates a model.config element from the specified information.
+
+    :param model: the model dictionary of the phobos model
+    :returns: xml.etree.ElementTree.Element of the model
+    """
+    modelconf = Element('model')
+    SubElement(modelconf, 'name').text = model['name']
+    SubElement(modelconf, 'version').text = 'DUMMY'
+
+    SubElement(modelconf, 'sdf', version=sdfversion).text = model['name'] + '.sdf'
+
+    # TODO remove when below works
+    authorEL = SubElement(modelconf, 'author')
+    SubElement(authorEL, 'name').text = "DUMMY"
+    SubElement(authorEL, 'email').text = "dummy@dummy.mail"
+
+    # TODO use the phobos settings for this information
+    # SubElement(authorEL, 'name').text = SETTINGS
+    # SubElement(authorEL, 'email').text = SETTINGS
+    # TODO allow user to edit a txt file in blender which contains the description OR take README?
+    # SubElement(modelconf, 'description').text = PARSEFROMTXTEDITOR
+
+    return modelconf
+
+
 def exportSdf(model, filepath):
     """ Export function used for the entity.
-    This exports a SDF file to the specified filepath.
+    This exports a model SDF file as well as its model.conf to the specified filepath.
     """
     log("Export SDF (version " + sdfversion + ") to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
     modelconffile = os.path.join(filepath, 'model.config')
     errors = False
+
+    modelconf = modelConf(model)
 
     # TODO add version to model dictionary!
     # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains',
@@ -880,23 +908,6 @@ def exportSdf(model, filepath):
         # REQ/OPT?: xml.attrib('gripper_link')
         # REQ: xml.attrib('palm_link')
         # xml.ascend()
-
-        modelconf = Element('model')
-        SubElement(modelconf, 'name').text = modelname
-        SubElement(modelconf, 'version').text = 'DUMMY'
-
-        SubElement(modelconf, 'sdf', version=sdfversion).text = modelname + '.sdf'
-
-        # TODO remove when below works
-        authorEL = SubElement(modelconf, 'author')
-        SubElement(authorEL, 'name').text = "DUMMY"
-        SubElement(authorEL, 'email').text = "dummy@dummy.mail"
-
-        # TODO use the phobos settings for this information
-        # SubElement(authorEL, 'name').text = SETTINGS
-        # SubElement(authorEL, 'email').text = SETTINGS
-        # TODO allow user to edit a txt file in blender which contains the description OR take README?
-        # SubElement(modelconf, 'description').text = PARSEFROMTXTEDITOR
 
     # FINAL remove this when finished
     except Exception:
