@@ -104,9 +104,14 @@ def createInertialObjects(link, autocalc=True):
     :type link: bpy_types.Object
     :param autocalc: If set to False the new inertial object will contain no inertia information.
     :type autocalc: bool
+
+    :return: the newly created inertial objects
+    :rtype: list of bpy.types.Object
     """
     assert link.phobostype == 'link', 'Not a link object: ' + link.phobostype + '.'
     viscols = getInertiaRelevantObjects(link)
+
+    inertialobjs = []
     for obj in viscols:
         inertialdata = {'mass': 0, 'inertia': [0, 0, 0, 0, 0, 0],
                         'pose': {'translation': obj.matrix_local.to_translation()}}
@@ -119,7 +124,11 @@ def createInertialObjects(link, autocalc=True):
                     inertialdata['mass'] = mass
                     inertialdata['inertia'] = inert
         # Create the object as a child of the parent object
-        createInertial(obj.name, inertialdata, parentobj=obj, effectiveParent=link)
+        inertialobjs.append(createInertial(obj.name, inertialdata, parentobj=obj,
+                                           effectiveParent=link))
+    if not inertialobjs:
+        log('No objects to calculate inertias from.', 'WARNING')
+    return inertialobjs
 
 
 def calculateMassOfLink(link):

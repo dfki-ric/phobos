@@ -674,6 +674,7 @@ class CreateInertialOperator(Operator):
         links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
         selected = context.selected_objects
         i = 1
+        inertialobjs = []
         # create inertials for each link
         for link in links:
             # delete inertials which are overwritten
@@ -688,15 +689,15 @@ class CreateInertialOperator(Operator):
 
                 bpy.ops.object.delete()
 
-            # reselect the initial objects
-            sUtils.selectObjects(selected, clear=True)
-
-            inertia.createInertialObjects(link, self.autocalc)
+            inertialobjs.extend(inertia.createInertialObjects(link, self.autocalc))
             display.setProgress(i/len(links))
             i += 1
 
-        # reselect the initial objects
-        sUtils.selectObjects(selected, clear=True)
+        # select the new inertialobjs
+        if inertialobjs:
+            sUtils.selectObjects(inertialobjs, clear=True)
+        else:
+            sUtils.selectObjects(selected, clear=True)
         return {'FINISHED'}
 
     @classmethod
