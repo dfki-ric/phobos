@@ -405,25 +405,25 @@ def calculateMeshInertia(mass, data):
 
 
 def checkInertiaData(inertialdict):
-    """Checks the inertial data to be physical consistent. Returns a boolean which
-    is TRUE if the data is consistent and FALSE if not.
+    """Checks the inertial data to be physical consistent.
 
-    Args:
-     inertialdict(dict): Dictionary with the inertia data
+    Returns true if the data is consistent otherwise false.
 
-    Returns:
-     boolean
+    :param inertialdict: Dictionary with the inertia data
+    :type inertialdict: dict
 
+    :return: true if consistent, false if not
+    :rtype: bool
     """
-
-    if not isinstance(inertialdict, dict):
-        return False
+    assert isinstance(inertialdict, dict), 'Wrong datatype: ' + type(inertialdict) + '.'
 
     # Check for mass and inertia
-    if 'mass' in inertialdict.keys():
+    if 'mass' in inertialdict:
         mass = inertialdict['mass']
         consistency = checkMass(mass)
-        if 'inertia' in inertialdict.keys() and consistency:
+
+        # check inertial only if it is available
+        if 'inertia' in inertialdict and consistency:
             inertia = inertialdict['inertia']
             return consistency and checkInertia(inertia)
         return consistency
