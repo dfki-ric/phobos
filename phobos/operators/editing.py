@@ -45,7 +45,7 @@ from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
 
 import phobos.defs as defs
 import phobos.display as display
-import phobos.model.inertia as inertia
+import phobos.model.inertia as modelinertia
 import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
 import phobos.utils.blender as bUtils
@@ -563,7 +563,7 @@ class CreateInertialOperator(Operator):
 
                 bpy.ops.object.delete()
 
-            inertialobjs.extend(inertia.createInertialObjects(link, self.autocalc))
+            inertialobjs.extend(modelinertia.createInertialObjects(link, self.autocalc))
             display.setProgress(i/len(links))
             i += 1
 
