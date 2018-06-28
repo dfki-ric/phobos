@@ -433,13 +433,13 @@ def checkInertiaData(inertialdict):
 def checkMass(mass):
     """ Checks if the mass of an object is positive definite.
 
-    Args:
-     mass(float) : Mass of the object.
+    :param mass:: mass of the object
+    :type mass: float
 
-    Returs:
-     boolean
-
+    :return: true if the mass is positive definite, false if not
+    :rtype: bool
     """
+    assert isinstance(mass, float), "Mass is not a float."
     return mass > 0.
 
 
