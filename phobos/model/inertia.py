@@ -32,6 +32,7 @@ Created on 13 Feb 2014
 import math
 import bpy
 import mathutils
+import numpy
 import phobos.defs as defs
 from phobos.phoboslog import log
 import phobos.utils.general as gUtils
@@ -41,7 +42,7 @@ from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 
 
-def createInertial(parentname, inertialdict, parentobj=None, helper=False):
+def createInertial(parentname, inertialdict, parentobj=None, effectiveParent = None):
     """Creates the Blender representation of a given inertial provided a dictionary.
 
     Args:
@@ -54,14 +55,23 @@ def createInertial(parentname, inertialdict, parentobj=None, helper=False):
       bpy_types.Object -- the newly created blender inertial object.
 
     """
-    size = 0.015 if helper else 0.06
+    size = 0.03
+
     try:
         origin = mathutils.Vector(inertialdict['pose']['translation'])
     except KeyError:
         origin = mathutils.Vector()
+
+    # Check the inertia data for consistency
+    if checkInertiaData(inertialdict):
+        material = 'phobos_inertial'
+    elif not checkInertiaData(inertialdict):
+        log('Inconsistent Inertia Data found for object {} !'.format(parentname), "WARNING")
+        material = 'phobos_error'
+
     inertialobject = bUtils.createPrimitive('inertial_' + parentname, 'box', (size,) * 3,
                                             defs.layerTypes["inertial"],
-                                            pmaterial='phobos_inertial',
+                                            pmaterial= material,
                                             phobostype='inertial')
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(scale=True)
@@ -69,52 +79,20 @@ def createInertial(parentname, inertialdict, parentobj=None, helper=False):
         inertialobject.matrix_world = parentobj.matrix_world
         parent = parentobj if parentobj.phobostype == 'link' else parentobj.parent
         sUtils.selectObjects((inertialobject, parent), clear=True, active=1)
+
+        # Create the inertial object relative to the link / joint
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
         inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
         sUtils.selectObjects((inertialobject,), clear=True, active=0)
         bpy.ops.object.transform_apply(scale=True)  # force matrix_world update
+
     # set properties
     for prop in ('mass', 'inertia'):
-        if helper:
-            inertialobject[prop] = inertialdict[prop]
-        else:
-            inertialobject['inertial/' + prop] = inertialdict[prop]
+        inertialobject[prop] = inertialdict[prop]
     return inertialobject
 
 
-def createLinkInertialObjects(link, autocalc=True, selected_only=False):
-    """Creates inertial representations from helper inertials of a link.
-    The new link inertial can contain automatically calculated inertia or
-    remain empty (based on the autocalc parameter). If the selected_only
-    parameter is used the inertia is calculated including only the selected
-    helper inertials objects.
-
-    Args:
-      link(bpy_types.Object): The link you want to create the inertial for.
-      autocalc(bool, optional): If set to False the new inertial object will contain no
-    inertia information. (Default value = True)
-      selected_only(bool, optional): If set to True the inertia calculation uses only the
-    currently selected inertial objects. (Default value = False)
-
-    Returns:
-
-    """
-    inertias = sUtils.getImmediateChildren(link, ('inertial',), selected_only, True)
-    inertialdata = {'mass': 0, 'inertia': (0, 0, 0, 0, 0, 0),
-                    'pose': {'translation': mathutils.Vector((0, 0, 0))}
-                    }
-    # compose inertial object for link from helper inertials
-    if autocalc:
-        mass, com, inert = fuseInertiaData(inertias)
-        if mass and com and inert:
-            inertialdata['mass'] = mass
-            inertialdata['inertia'] = inertiaMatrixToList(inert)
-            inertialdata['pose'] = {'translation': com}
-    # create empty inertial object
-    createInertial(link.name, inertialdata, parentobj=link)
-
-
-def createHelperInertialObjects(link, autocalc=True):
+def createInertialObjects(link, autocalc=True):
     """Creates inertial representations for helper inertials from the visual/
     collision objects of a link. The new inertials can be calculated
     automatically or remain empty (based on the autocalc parameter)
@@ -140,7 +118,8 @@ def createHelperInertialObjects(link, autocalc=True):
                 if inert is not None:
                     inertialdata['mass'] = mass
                     inertialdata['inertia'] = inert
-        createInertial(obj.name, inertialdata, parentobj=obj, helper=True)
+        # Create the object as a child of the parent object
+        createInertial(obj.name, inertialdata, parentobj=obj, effectiveParent = link)
 
 
 def calculateMassOfLink(link):
@@ -425,6 +404,82 @@ def calculateMeshInertia(mass, data):
     return i[0][0], i[0][1], i[0][2], i[1][1], i[1][2], i[2][2]
 
 
+def checkInertiaData(inertialdict):
+    """Checks the inertial data to be physical consistent. Returns a boolean which
+    is TRUE if the data is consistent and FALSE if not.
+
+    Args:
+     inertialdict(dict): Dictionary with the inertia data
+
+    Returns:
+     boolean
+
+    """
+
+    if not isinstance(inertialdict, dict):
+        return False
+
+    # Check for mass and inertia
+    if 'mass' in inertialdict.keys():
+        mass = inertialdict['mass']
+        consistency = checkMass(mass)
+        if 'inertia' in inertialdict.keys() and consistency:
+            inertia = inertialdict['inertia']
+            return consistency and checkInertia(inertia)
+        return consistency
+    return False
+
+
+def checkMass(mass):
+    """ Checks if the mass of an object is positive definite.
+
+    Args:
+     mass(float) : Mass of the object.
+
+    Returs:
+     boolean
+
+    """
+    return mass > 0.
+
+
+def checkInertia(inertia):
+    """ Checks if the inertia of an object leads to positive definite inertia matrix.
+
+    Args:
+     inertia(list, tuple or matrix): Inertia of the object.
+
+    Returns:
+     boolean
+
+    """
+
+    if isinstance(inertia, (list , tuple, mathutils.Matrix)):
+        consistency = True
+        # Convert to matrix if necessary
+        if not isinstance(inertia, mathutils.Matrix):
+            inertia = numpy.array(inertiaListToMatrix(inertia))
+        # Check the main diagonal for stricly positive values
+        consistency = all(element >= 0.0 for element in inertia.diagonal())
+        if not consistency:
+            log("Negative semidefinite main diagonal found !", "WARNING")
+            return consistency
+        # Calculate the determinant iff consistent
+        else:
+            consistency = numpy.linalg.det(inertia) > 0.0
+        if not consistency:
+            log("Negative semidefinite determinant found !", "WARNING")
+            return consistency
+        # Calculate the eigenvalues iff consistent
+        else:
+            consistency = all(element > 0.0 for element in numpy.linalg.eigvals(inertia))
+        if not consistency:
+            log("Negative semidefinite eigenvalues found !", "WARNING")
+        return consistency
+    else:
+        return False
+
+
 def inertiaListToMatrix(il):
     """Transforms iterable representing the upper diagonal of a 3x3 inertia tensor
     and returns the full tensor as a matrix.
@@ -438,9 +493,11 @@ def inertiaListToMatrix(il):
     """
     if type(il) == mathutils.Matrix:
         return il
+
     inertia = [[il[0], il[1], il[2]],
-               [0.0, il[3], il[4]],
-               [0.0, 0.0, il[5]]]
+               [il[1], il[3], il[4]],
+               [il[2], il[4], il[5]]]
+
     return mathutils.Matrix(inertia)
 
 
@@ -507,6 +564,31 @@ def getInertiaRelevantObjects(link, selected_only=False):
     return inertiaobjects
 
 
+def getInertiaChildren(link, selected_only = False):
+    """Returns a list of the inertia objects which are children of a link.
+
+    Args:
+     link(bpy_types.Object): The link you want to gather the inertia relevant objects for.
+     selected_only(bool, optional): return only relevant objects which are selected (Default value = False)
+
+   Returns:
+     list
+
+    """
+
+    # Get the inertia objects
+    inertiaobjects = sUtils.getImmediateChildren(link, ('inertial'), selected_only)
+
+    # Get the visuals and collisions
+    viscols = getInertiaRelevantObjects(link, selected_only)
+    # Iterate over the objects and get the inertia objects
+    for obj in viscols:
+        # Add inertia objects to the list
+        inertiaobjects += sUtils.getImmediateChildren(obj, ('inertial'), selected_only)
+
+    return inertiaobjects
+
+
 def fuseInertiaData(inertials):
     """Computes combined mass, center of mass and inertia given an iterable of inertial objects.
 
@@ -522,19 +604,16 @@ def fuseInertiaData(inertials):
 
     """
     objects = []
-    for o in inertials:
+    for inertia_object in inertials:
         objdict = None
         try:
-            pose = deriveObjectPose(o)
-            # FIXME the following is really a short cut that points to a bigger problem
-            inertia = o['inertia'] if 'inertia' in o else o['inertial/inertia']
-            mass = o['mass'] if 'mass' in o else o['inertial/mass']
-            objdict = {'name': o.name,
-                       'mass': mass,
+            pose = deriveObjectPose(inertia_object)
+            objdict = {'name': inertia_object.name,
+                       'mass': inertia_object['mass'],
                        # FIXME: this is not nice, as we invert what is one when deriving the pose
                        'com': mathutils.Vector(pose['translation']),
                        'rot': pose['rawmatrix'].to_3x3(),
-                       'inertia': inertia
+                       'inertia': inertia_object['inertia']
                        }
         except KeyError as e:
             log('Inertial object ' + o.name + ' is missing data: '+str(e), "WARNING")
@@ -548,6 +627,12 @@ def fuseInertiaData(inertials):
     else:
         log("No inertial found to fuse.", "DEBUG")
         return None, None, None
+
+
+def fuseLinkInertia(link, inertials):
+    # TODO Placeholder
+    return None
+
 
 
 def combine_com_3x3(objects):

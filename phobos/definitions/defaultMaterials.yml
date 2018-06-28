@@ -64,3 +64,8 @@ materials:
         specular: [1, 1, 1]
         alpha: 1.0
         diffuse_intensity: 1.0
+    phobos_error:
+        diffuse: [1, 0, 0]
+        specular: [1, 1, 1]
+        alpha: 1.0
+        diffuse_intensity: 1.0
