@@ -600,17 +600,22 @@ def getInertiaChildren(link, selected_only=False):
 def fuseInertiaData(inertials):
     """Computes combined mass, center of mass and inertia given an iterable of inertial objects.
 
-    *mass*: float
-    *com*: mathutils:Vector(3)
-    *inertia*: mathutils:Matrix(3)
+    If no inertials are found (None, None, None) is returned.
 
-    Args:
-      inertials(list): The alist of objects relevant for the inertia of a link.
+    If successful, the tuple contains this information:
+        *mass*: float
+        *com*: mathutils.Vector(3)
+        *inertia*: mathutils.Matrix(3)
 
-    Returns:
-      tuple(3) -- see description for content.
+    :param inertials: the alist of objects relevant for the inertia of a link
+    :type inertials: list
 
+    :return: tuple of mass, COM and inertia or None(3) if no inertials are found
+    :rtype: tuple(3)
     """
+    assert isinstance(inertials, (tuple, list)), "Inertials is not iterable."
+
+    # collect objects which contain inertias
     objects = []
     for inertia_object in inertials:
         objdict = None
@@ -621,26 +626,22 @@ def fuseInertiaData(inertials):
                        # FIXME: this is not nice, as we invert what is one when deriving the pose
                        'com': mathutils.Vector(pose['translation']),
                        'rot': pose['rawmatrix'].to_3x3(),
-                       'inertia': inertia_object['inertia']
-                       }
+                       'inertia': inertia_object['inertia']}
         except KeyError as e:
-            log('Inertial object ' + o.name + ' is missing data: '+str(e), "WARNING")
-        if objdict:
-            objects.append(objdict)
-    if len(objects) > 0:
+            log('Inertial object ' + inertia_object.name + ' is missing data: ' + str(e), "WARNING")
+            continue
+
+        objects.append(objdict)
+
+    # fuse inertias of objects
+    if objects:
         log("Fusing inertials: " + str([i.name for i in inertials]), "DEBUG")
         mass, com, inertia = compound_inertia_analysis_3x3(objects)
         log("Fused mass: " + str(mass), "DEBUG")
         return mass, com, inertia
-    else:
-        log("No inertial found to fuse.", "DEBUG")
-        return None, None, None
 
-
-def fuseLinkInertia(link, inertials):
-    # TODO Placeholder
-    return None
-
+    log("No inertial found to fuse.", "DEBUG")
+    return (None, None, None)
 
 
 def combine_com_3x3(objects):
