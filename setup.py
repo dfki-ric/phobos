@@ -75,7 +75,7 @@ if __name__ == '__main__':
     #    print('Something went wrong with copying operator presets.')
 
     # look for existing yamlpath configuration
-    if path.isfile('python_dist_packages.conf'):
+    if path.isfile(path.join(phoboshome, 'python_dist_packages.conf')):
         print('python_dist_packages.conf found! Configuration done.')
     # check for existing YAML installation
     else:
@@ -94,12 +94,12 @@ if __name__ == '__main__':
         import site
 
         # write python dist packages path into config file
-        with open('python_dist_packages.conf', 'w') as distconffile:
+        with open(path.join(phoboshome, 'python_dist_packages.conf'), 'w') as distconffile:
             distconffile.truncate()
             distpath = site.getsitepackages()[0]
             distconffile.write(path.normpath(distpath))
 
-    shutil.copy2('python_dist_packages.conf',
+    shutil.copy2(path.join(phoboshome, 'python_dist_packages.conf'),
                  os.path.join(addonpath, 'python_dist_packages.conf'))
 
 
