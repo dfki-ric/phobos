@@ -160,7 +160,7 @@ def deriveLink(linkobj):
     # TODO Check if needed
     #elif len(inertialobjs) > 1:
     #    print('More! @ link {}'.format(linkobj.name))
-    #    mass, com, inertia = inertiamodel.fuseInertiaData(inertialobjs)
+    #    mass, com, inertia = inertiamodel.fuse_inertia_data(inertialobjs)
     #    props['inertial'] =
     #    print(mass, com, inertia)
 
@@ -990,7 +990,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             inertials.append(bpy.context.scene.objects['inertial_' + linkname])
         except KeyError:
             pass
-        mv, cv, iv = inertiamodel.fuseInertiaData(inertials)
+        mv, cv, iv = inertiamodel.fuse_inertia_data(inertials)
         iv = inertiamodel.inertiaMatrixToList(iv)
         if mv is not None and cv is not None and iv is not None:
             model['links'][linkname]['inertial'] = {

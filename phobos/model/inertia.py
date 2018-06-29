@@ -619,8 +619,8 @@ def getInertiaChildren(link, selected_only=False, include_hidden=False):
     return inertiaobjects
 
 
-def fuseInertiaData(inertials):
-    """Computes combined mass, center of mass and inertia given an iterable of inertial objects.
+def fuse_inertia_data(inertials):
+    """Computes combined mass, center of mass and inertia given a list of inertial objects.
 
     If no inertials are found (None, None, None) is returned.
 
@@ -636,8 +636,9 @@ def fuseInertiaData(inertials):
     :rtype: tuple(3)
     """
     assert isinstance(inertials, (tuple, list)), "Inertials is not iterable."
+    assert inertials, "No inertial objects to fuse."
 
-    # collect objects which contain inertias
+    # collect objects which contain inertia
     objects = []
     for inertia_object in inertials:
         objdict = None
@@ -648,21 +649,21 @@ def fuseInertiaData(inertials):
                        # FIXME: this is not nice, as we invert what is one when deriving the pose
                        'com': mathutils.Vector(pose['translation']),
                        'rot': pose['rawmatrix'].to_3x3(),
-                       'inertia': inertia_object['inertia']}
+                       'inertia': list(inertia_object['inertia'])}
         except KeyError as e:
-            log('Inertial object ' + inertia_object.name + ' is missing data: ' + str(e), "WARNING")
+            log('Inertial object ' + inertia_object.name + ' is missing data: ' + str(e), 'WARNING')
             continue
 
         objects.append(objdict)
 
     # fuse inertias of objects
     if objects:
-        log("Fusing inertials: " + str([i.name for i in inertials]), "DEBUG")
+        log("   Fusing inertials: " + str([i.name for i in inertials]), 'DEBUG')
         mass, com, inertia = compound_inertia_analysis_3x3(objects)
-        log("Fused mass: " + str(mass), "DEBUG")
+        log("   Fused mass: " + str(mass), 'DEBUG')
         return mass, com, inertia
 
-    log("No inertial found to fuse.", "DEBUG")
+    log("No inertial found to fuse.", 'DEBUG')
     return (None, None, None)
 
 
