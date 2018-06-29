@@ -759,31 +759,39 @@ def storePose(modelname, posename):
 def loadPose(modelname, posename):
     """Load and apply a robot's stored pose.
 
-    Args:
-      modelname(str): The model's name.
-      posename(str): The name the pose is stored under.
-
-    Returns:
-
+    :param modelname: the model's name
+    :type modelname: str
+    :param posename: the name the pose is stored under
+    :type posename: str
     """
+    assert isinstance(modelname, str), "Model name needs to be a string."
+    assert isinstance(posename, str), "Pose name needs to be a string."
+
     load_file = bUtils.readTextFile(modelname + '::poses')
     if load_file == '':
         log('No poses stored.', 'ERROR')
         return
-    poses = yaml.load(load_file)
+
+    loadedposes = yaml.load(load_file)
+    if posename not in loadedposes:
+        log('No pose with name ' + posename + ' stored for model ' + modelname, 'ERROR')
+        return
+    prev_mode = bpy.context.mode
+    pose = loadedposes[posename]
+
+    # apply rotations to all joints defined by the pose
     try:
-        pose = poses[posename]
-        prev_mode = bpy.context.mode
         bpy.ops.object.mode_set(mode='POSE')
         for obj in sUtils.getObjectsByPhobostypes(['link']):
             if nUtils.getObjectName(obj, 'joint') in pose['joints']:
                 obj.pose.bones['Bone'].rotation_mode = 'XYZ'
                 obj.pose.bones['Bone'].rotation_euler.y = float(
                     pose['joints'][nUtils.getObjectName(obj, 'joint')])
+    except KeyError as error:
+        log("Could not apply the pose: " + str(error), 'ERROR')
+    finally:
+        # restore previous mode
         bpy.ops.object.mode_set(mode=prev_mode)
-    except KeyError:
-        log('No pose with name ' + posename +
-            ' stored for model ' + modelname, 'ERROR')
 
 
 def getPoses(modelname):
