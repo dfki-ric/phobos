@@ -90,7 +90,7 @@ def getExpSettings():
 def getExportModels():
     """Returns a list of objects representing a model (root) in the Blender scene"""
     if getExpSettings().selectedOnly:
-        roots = {root for root in sUtils.getRoots() if root.select}
+        roots = [root for root in sUtils.getRoots() if root.select]
     else:
         roots = sUtils.getRoots()
     return list(roots)
