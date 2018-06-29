@@ -678,7 +678,7 @@ def combine_com_3x3(objects):
 
     """
     if not objects:
-        log("No Proper object list...", "DEBUG")
+        log("No proper object list...", 'DEBUG')
         return 0.0, mathutils.Vector((0.0,)*3)
     combined_com = mathutils.Vector((0.0,)*3)
     combined_mass = 0
@@ -686,8 +686,7 @@ def combine_com_3x3(objects):
         combined_com = combined_com + obj['com'] * obj['mass']
         combined_mass += obj['mass']
     combined_com = combined_com / combined_mass
-    log("Combined center of mass: " + str(combined_com)
-        + ", combined mass: " + str(combined_mass), "DEBUG")
+    log("   Combined center of mass: " + str(combined_com), 'DEBUG')
     return combined_mass, combined_com
 
 
