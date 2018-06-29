@@ -137,7 +137,7 @@ def derive_link(linkobj):
         *pose*: deriveObjectPose of the linkobj
         *collision*: empty dictionary
         *visual*: empty dictionary
-        *inertial*: deriveInertia of all child inertials of the link
+        *inertial*: derive_inertia of all child inertials of the link
         *approxcollision*: empty dictionary
 
     :param linkobj: blender object to derive the link from.
@@ -147,12 +147,14 @@ def derive_link(linkobj):
     :rtype: dict
 
     .. seealso deriveObjectPose
-    .. seealso deriveInertia
+    .. seealso derive_inertia
     """
     assert linkobj.phobostype == 'link', ("Wrong phobostype: " + linkobj.phobostype +
                                           " instead of link.")
 
     log("Deriving link from object " + linkobj.name + ".", 'DEBUG')
+    props = initObjectProperties(linkobj, phobostype='link',
+                                 ignoretypes=linkobjignoretypes - {'link'})
     parent = sUtils.getEffectiveParent(linkobj)
     props['parent'] = nUtils.getObjectName(parent) if parent else None
     props['children'] = [child.name for child in linkobj.children if child.phobostype == 'link']
@@ -167,16 +169,8 @@ def derive_link(linkobj):
 
     log("   Deriving inertial...", 'DEBUG')
     # add inertial information to link
-    if len(inertialobjs) == 1:
-        props['inertial'] = deriveDictEntry(inertialobjs[0])
-        
-    # TODO Check if needed
-    #elif len(inertialobjs) > 1:
-    #    print('More! @ link {}'.format(linkobj.name))
-    #    mass, com, inertia = inertiamodel.fuse_inertia_data(inertialobjs)
-    #    props['inertial'] =
-    #    print(mass, com, inertia)
-
+    if inertialobjs:
+        props['inertial'] = derive_inertia(inertialobjs)
     else:
         log("No valid inertial data for link " + props['name'] + ". " + str(len(inertialobjs)) +
             " inertial objects selected.", 'WARNING')
@@ -330,46 +324,44 @@ def deriveMotor(obj, joint):
         return None
 
 
-def deriveKinematics(obj):
-    """Returns dictionaries for link, joint and motor derived from passed object.
+def derive_inertia(objects):
+    """Derives the inertial information from the specified objects.
 
-    Args:
-      obj(bpy_types.Object): The object to derive its kinematics from.
+    Objects should be the list of objects of a specific link (could also contain just a single
+    object).
 
-    Returns:
-      tuple
+    Contains these keys:
+        *mass*: float
+        *inertia*: list
+        *pose*: inertiapose containing:
+            *translation*: center of mass of the objects
+            *rotation*: [0., 0., 0.]
 
+    :param objects: list of objects to derive inertia from
+    :type objects: list of bpy.types.Object
+
+    :return: representation of the inertia or None if errors occur
+    :rtype: dict
     """
-    link = derive_link(obj)
-    joint = None
-    motor = None
-    # joints and motors of root elements are only relevant for scenes, not within models
-    if sUtils.getEffectiveParent(obj):
-        joint = deriveJoint(obj)
-        motor = deriveMotor(obj, joint)
-    return link, joint, motor
+    for singleobj in objects:
+        assert singleobj.phobostype == 'inertial', ("Not an inertial object: " +
+                                                    singleobj.name + ".")
 
-
-def deriveInertial(obj):
-    """This function derives the inertial from the given object.
-
-    Args:
-      obj(bpy_types.Object): The object to derive the inertial from.
-
-    Returns:
-      dict
-
-    """
-    try:
-        props = initObjectProperties(obj, phobostype='inertial')
-        props['mass'] = obj['mass']
-        props['inertia'] = list(map(float, obj['inertia']))
-        props['pose'] = deriveObjectPose(obj)
-    except KeyError as e:
-        log("Missing data in inertial object " + obj.name + str(e), "ERROR")
-        return None
-    return props
-
+    if objects:
+        # TODO we do not add the initObjectProperties of the fused object! Are they needed?
+        # props = initObjectProperties(objects[0], phobostype='inertial')
+        props = {}
+        mass, com, inertia = inertiamodel.fuse_inertia_data(objects)
+        inertia = inertiamodel.inertiaMatrixToList(inertia)
+        props['mass'] = mass
+        props['inertia'] = inertia
+        # TODO do we need to consider a rotation of the "ghost" inertial object?
+        # old code didn't use it either (unless the link inertial was rotated manually)
+        props['pose'] = {'translation': com, 'rotation_euler': [0., 0., 0.]}
+        log("   Success.", 'DEBUG')
+        return props
+    log("No inertia objects to derive information from.", 'ERROR')
+    return None
 
 def deriveVisual(obj):
     """This function derives the visual information from an object.
@@ -644,7 +636,7 @@ def deriveDictEntry(obj):
     props = {}
     try:
         if obj.phobostype == 'inertial':
-            props = deriveInertial(obj)
+            props = derive_inertia([obj])
         elif obj.phobostype == 'visual':
             props = deriveVisual(obj)
         elif obj.phobostype == 'collision':
@@ -999,15 +991,18 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     # digest all the links to derive link and joint information
     log("Parsing links, joints and motors... " + (str(len(linklist))) + " total.", "INFO")
     for link in linklist:
-        # parse link and extract joint and motor information
-        linkdict, jointdict, motordict = deriveKinematics(link)
-        model['links'][linkdict['name']] = linkdict
-        # joint may be None if link is a root
-        if jointdict:
+        # parse link information (including inertia)
+        model['links'][nUtils.getObjectName(link, 'link')] = derive_link(link)
+
+        if sUtils.getEffectiveParent(link):
+            # joint may be None if link is a root
+            jointdict = deriveJoint(link)
             model['joints'][jointdict['name']] = jointdict
-        # motor may be None if no motor is attached or link is a root
-        if motordict:
-            model['motors'][motordict['name']] = motordict
+
+            motordict = deriveMotor(link, jointdict)
+            # motor may be None if no motor is attached
+            if motordict:
+                model['motors'][motordict['name']] = motordict
 
     # combine inertia if certain objects are left out, and overwrite it
     inertials = (i for i in objectlist if i.phobostype == 'inertial' and "inertia" in i)
@@ -1041,7 +1036,6 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     # complete link information by parsing visuals and collision objects
     log("Parsing visual and collision (approximation) objects...", 'INFO')
     for obj in objectlist:
-        # try:
         if obj.phobostype in ['visual', 'collision']:
             props = deriveDictEntry(obj)
             parentname = nUtils.getObjectName(
