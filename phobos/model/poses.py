@@ -41,15 +41,27 @@ from phobos.utils.io import securepath
 def deriveObjectPose(obj):
     """Derives a pose of link, visual or collision object.
 
-    Args:
-      obj(bpy_types.Object): The blender object to derive the pose from.
+    The transformations of the object are calculated according to
+    phobos.utils.edititing.getCombinedTransform.
 
-    Returns:
-      dict
+    The returned dictionary contains this information:
+        *rawmatrix*: mathutils.Matrix
+        *matrix*: list representation (list of lists) of mathutils.Matrix
+        *translation*: list (according to mathutils.Matrix.to_translation)
+        *rotation_euler*: list (according to mathutils.Matrix.to_euler)
+        *rotation_quaternion*: list (according to mathutils.Matrix.to_quaternion)
 
+    :param obj: blender object to derive the pose from
+    :type obj: bpy.types.Object
+
+    :return: pose information of the object
+    :rtype: dict
+
+    .. seealso phobos.utils.editing.getCombinedTransform
     """
     effectiveparent = sUtils.getEffectiveParent(obj)
     matrix = eUtils.getCombinedTransform(obj, effectiveparent)
+
     pose = {'rawmatrix': matrix,
             'matrix': [list(vector) for vector in list(matrix)],
             'translation': list(matrix.to_translation()),
