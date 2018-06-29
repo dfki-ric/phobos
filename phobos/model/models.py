@@ -1011,34 +1011,42 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             if motordict:
                 model['motors'][motordict['name']] = motordict
 
+    # TODO what was this supposed to do?
+    # as it is only ever used by deriveSubmechanism we might want to move it...?
+
     # combine inertia if certain objects are left out, and overwrite it
-    inertials = (i for i in objectlist if i.phobostype == 'inertial' and "inertia" in i)
-    editlinks = {}
+    # inertials = (i for i in objectlist if i.phobostype == 'inertial' and 'inertia' in i)
+    # editlinks = {}
 
-    for i in inertials:
-        if i.parent not in linklist:
-            realparent = sUtils.getEffectiveParent(i, ignore_selection=bool(objectlist))
-            if realparent:
-                parentname = nUtils.getObjectName(realparent)
-                if parentname in editlinks:
-                    editlinks[parentname].append(i)
-                else:
-                    editlinks[parentname] = [i]
+    # for i in inertials:
+    #     if i.parent not in linklist:
+    #         realparent = sUtils.getEffectiveParent(i, ignore_selection=bool(objectlist))
+    #         if realparent:
+    #             parentname = nUtils.getObjectName(realparent)
+    #             if parentname in editlinks:
+    #                 editlinks[parentname].append(i)
+    #             else:
+    #                 editlinks[parentname] = [i]
 
-    for linkname in editlinks:
-        inertials = editlinks[linkname]
-        try:
-            inertials.append(bpy.context.scene.objects['inertial_' + linkname])
-        except KeyError:
-            pass
-        mv, cv, iv = inertiamodel.fuse_inertia_data(inertials)
-        iv = inertiamodel.inertiaMatrixToList(iv)
-        if mv is not None and cv is not None and iv is not None:
-            model['links'][linkname]['inertial'] = {
-                'mass': mv, 'inertia': iv,
-                'pose': {'translation': list(cv),
-                         'rotation_euler': [0, 0, 0]}
-            }
+    # for linkname in editlinks:
+    #     inertials = editlinks[linkname]
+    #     try:
+    #         inertials.append(bpy.context.scene.objects['inertial_' + linkname])
+    #     except KeyError:
+    #         pass
+
+    #     # get inertia data
+    #     mass, com, inertia = inertiamodel.fuse_inertia_data(inertials)
+    #     if not any(mass, com, inertia):
+    #         continue
+
+    #     # add inertia to model
+    #     inertia = inertiamodel.inertiaMatrixToList(inertia)
+    #     model['links'][linkname]['inertial'] = {
+    #         'mass': mass, 'inertia': inertia,
+    #         'pose': {'translation': list(com),
+    #                  'rotation_euler': [0, 0, 0]}
+    #     }
 
     # complete link information by parsing visuals and collision objects
     log("Parsing visual and collision (approximation) objects...", 'INFO')
