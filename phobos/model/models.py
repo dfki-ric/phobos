@@ -183,44 +183,55 @@ def derive_link(linkobj):
     return props
 
 
-def deriveFullLinkInformation(obj):
-    """This function derives the full link information (including joint and
-    motor data) from a blender object and creates its initial phobos data
-    structure.
+def get_link_information(linkobj):
+    """Returns the full link information including joint and motor data from a blender object.
 
-    Args:
-      obj(bpy_types.Object): The blender object to derive the link from.
+    :param linkobj: blender object to derive the link from
+    :type linkobj: bpy.types.Object
 
-    Returns:
-      dict
+    :return: representation of the link including motor and joint data
+    :rtype: dict
 
+    .. seealso:: derive_link
     """
-    props = initObjectProperties(obj, phobostype='link', ignoretypes=[
-                                 'joint', 'motor', 'entity'])
-    parent = sUtils.getEffectiveParent(obj)
+    assert linkobj.phobostype == 'link', ("Wrong phobostype: " + linkobj.phobostype +
+                                          " instead of link.")
+
+    props = initObjectProperties(linkobj, phobostype='link',
+                                 ignoretypes=['joint', 'motor', 'entity'])
+
+    parent = sUtils.getEffectiveParent(linkobj)
     props['parent'] = parent.name if parent else None
-    props["pose"] = deriveObjectPose(obj)
-    props["joint"] = deriveJoint(obj, adjust=False)
-    del props["joint"]["parent"]
-    if any(item.startswith('motor') for item in props.keys()):
-        props["motor"] = deriveMotor(obj, props['joint'])
-    collisionObjects = sUtils.getImmediateChildren(
-        obj, phobostypes=('collision'), include_hidden=True)
-    collisionDict = {}
-    for colobj in collisionObjects:
-        collisionDict[colobj.name] = colobj
-    props["collision"] = collisionDict
-    visualObjects = sUtils.getImmediateChildren(
-        obj, phobostypes=('visual'), include_hidden=True)
-    visualDict = {}
-    for visualobj in visualObjects:
-        visualDict[visualobj.name] = visualobj
-    props["visual"] = visualDict
-    inertialObjects = inertiamodel.getInertiaChildren(obj)
-    inertialDict = {}
-    for inertialobj in inertialObjects:
-        inertialDict[inertialobj.name] = inertialobj
-    props["inertial"] = inertialDict
+    props['pose'] = deriveObjectPose(linkobj)
+    props['joint'] = deriveJoint(linkobj, adjust=False)
+    del props['joint']['parent']
+
+    # derive Motor
+    if any(item.startswith('motor') for item in props):
+        props['motor'] = deriveMotor(linkobj, props['joint'])
+
+    # collect collision objs for link
+    collisionobjs = sUtils.getImmediateChildren(
+        linkobj, phobostypes=('collision'), include_hidden=True)
+    collisiondict = {}
+    for colobj in collisionobjs:
+        collisiondict[colobj.name] = colobj
+    props['collision'] = collisiondict
+
+    # collect visual objs for link
+    visualobjects = sUtils.getImmediateChildren(
+        linkobj, phobostypes=('visual'), include_hidden=True)
+    visualdict = {}
+    for visualobj in visualobjects:
+        visualdict[visualobj.name] = visualobj
+    props["visual"] = visualdict
+
+    # collect inertial objects
+    inertialobjects = inertiamodel.getInertiaChildren(linkobj)
+    inertialdict = {}
+    for inertialobj in inertialobjects:
+        inertialdict[inertialobj.name] = inertialobj
+    props["inertial"] = inertialdict
     props['approxcollision'] = []
     return props
 

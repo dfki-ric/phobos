@@ -565,7 +565,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
     def draw(self, context):
         from phobos.model.models import deriveDictEntry
-        from phobos.model.models import deriveFullLinkInformation
+        from phobos.model.models import get_link_information
         import bpy
         layout = self.layout
         originalLayout = layout
@@ -582,7 +582,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
         # derive object information as dictionary
         if obj.phobostype == 'link':
-            dictprops = deriveFullLinkInformation(obj)
+            dictprops = get_link_information(obj)
         else:
             dictprops = deriveDictEntry(obj)
         if dictprops is not None:
