@@ -127,33 +127,46 @@ def deriveMaterial(mat):
     return material
 
 
-def deriveLink(linkobj):
-    """This function derives a link from a blender object and creates its initial phobos data structure.
+def derive_link(linkobj):
+    """Derives a link from a blender object and creates its initial phobos data structure.
 
-    Args:
-      linkobj(bpy_types.Object): The blender object to derive the link from.
+    The dictionary contains (besides any generic object properties) this information:
+        *parent*: name of parent object or None
+        *children*: list of names of the links child links
+        *object*: bpy.types.Object which represents the link
+        *pose*: deriveObjectPose of the linkobj
+        *collision*: empty dictionary
+        *visual*: empty dictionary
+        *inertial*: deriveInertia of all child inertials of the link
+        *approxcollision*: empty dictionary
 
-    Returns:
-      dict
+    :param linkobj: blender object to derive the link from.
+    :type linkobj: bpy.types.Object
 
+    :return: representation of the link
+    :rtype: dict
+
+    .. seealso deriveObjectPose
+    .. seealso deriveInertia
     """
-    log("Deriving link from obj " + linkobj.name, "DEBUG")
-    props = initObjectProperties(linkobj, phobostype='link', ignoretypes=linkobjignoretypes - {'link'})
+    assert linkobj.phobostype == 'link', ("Wrong phobostype: " + linkobj.phobostype +
+                                          " instead of link.")
+
+    log("Deriving link from object " + linkobj.name + ".", 'DEBUG')
     parent = sUtils.getEffectiveParent(linkobj)
     props['parent'] = nUtils.getObjectName(parent) if parent else None
     props['children'] = [child.name for child in linkobj.children if child.phobostype == 'link']
     props['object'] = linkobj
-    props["pose"] = deriveObjectPose(linkobj)
-    props["collision"] = {}
-    props["visual"] = {}
-    props["inertial"] = {}
+    props['pose'] = deriveObjectPose(linkobj)
+    props['collision'] = {}
+    props['visual'] = {}
+    props['inertial'] = {}
     props['approxcollision'] = []
 
-    # add inertial information to link
-    #inertialobjs = [obj for obj in linkobj.children if obj.phobostype == 'inertial'
-    #               and 'inertial/inertia' in obj]
     inertialobjs = inertiamodel.getInertiaChildren(linkobj)
 
+    log("   Deriving inertial...", 'DEBUG')
+    # add inertial information to link
     if len(inertialobjs) == 1:
         props['inertial'] = deriveDictEntry(inertialobjs[0])
         
@@ -165,7 +178,8 @@ def deriveLink(linkobj):
     #    print(mass, com, inertia)
 
     else:
-        log("No valid inertial data for link " + props['name'], "WARNING")
+        log("No valid inertial data for link " + props['name'] + ". " + str(len(inertialobjs)) +
+            " inertial objects selected.", 'WARNING')
     return props
 
 
@@ -315,7 +329,7 @@ def deriveKinematics(obj):
       tuple
 
     """
-    link = deriveLink(obj)
+    link = derive_link(obj)
     joint = None
     motor = None
     # joints and motors of root elements are only relevant for scenes, not within models
