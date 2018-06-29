@@ -127,8 +127,11 @@ def deriveMaterial(mat):
     return material
 
 
-def derive_link(linkobj):
+def derive_link(linkobj, inertialobjs=None):
     """Derives a link from a blender object and creates its initial phobos data structure.
+
+    If inertialobjs are provided, the inertia will be calculated from the specified list instead
+    of the getInertiaChildren.
 
     The dictionary contains (besides any generic object properties) this information:
         *parent*: name of parent object or None
@@ -142,11 +145,14 @@ def derive_link(linkobj):
 
     :param linkobj: blender object to derive the link from.
     :type linkobj: bpy.types.Object
+    :param inertialobjs: override the link inertial objects
+    :type inertialobjs: list of bpy.types.Object
 
     :return: representation of the link
     :rtype: dict
 
     .. seealso deriveObjectPose
+    .. seealso deriveInertiaChildren
     .. seealso derive_inertia
     """
     assert linkobj.phobostype == 'link', ("Wrong phobostype: " + linkobj.phobostype +
@@ -165,7 +171,8 @@ def derive_link(linkobj):
     props['inertial'] = {}
     props['approxcollision'] = []
 
-    inertialobjs = inertiamodel.getInertiaChildren(linkobj)
+    if not inertialobjs:
+        inertialobjs = inertiamodel.getInertiaChildren(linkobj)
 
     log("   Deriving inertial...", 'DEBUG')
     # add inertial information to link
