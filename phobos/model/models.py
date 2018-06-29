@@ -945,21 +945,26 @@ def namespaced(name, namespace):
 
 
 def deriveModelDictionary(root, name='', objectlist=[]):
-    """Derives a python dictionary representation of a Phobos model.
+    """Derives a dictionary representation of a Phobos model.
 
-    Args:
-      root: bpy.types.Object
-      name:  (Default value = '')
-      objectlist(list): list of bpy.types.Object to derive the model from
+    If name is not specified, it overrides the modelname in the root. If the modelname is not
+    defined at all, 'unnamed' will be used instead.
 
-    Returns:
-      dict
+    :param root: root object of the model
+    :type root: bpy.types.Object
+    :param name: name for the derived model
+    :type name: str
+    :param objectlist: objects to derive the model from
+    :type objectlist: list of bpy.types.Object
 
+    :return: representation of the model based on the root object
+    :rtype: dict
     """
     if root.phobostype not in ['link', 'submodel']:
         log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
         return None
 
+    # define model name
     if name:
         modelname = name
     elif 'modelname' in root:
@@ -967,21 +972,22 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     else:
         modelname = 'unnamed'
 
-    model = {'links': {},
-             'joints': {},
-             'sensors': {},
-             'motors': {},
-             'controllers': {},
-             'materials': {},
-             'meshes': {},
-             'lights': {},
-             'groups': {},
-             'chains': {},
-             'date': datetime.now().strftime("%Y%m%d_%H:%M"),
-             'name': modelname
-             }
+    model = {
+        'links': {},
+        'joints': {},
+        'sensors': {},
+        'motors': {},
+        'controllers': {},
+        'materials': {},
+        'meshes': {},
+        'lights': {},
+        'groups': {},
+        'chains': {},
+        'date': datetime.now().strftime("%Y%m%d_%H:%M"),
+        'name': modelname
+    }
 
-    log("Creating dictionary for model " + modelname + " with root " + root.name, "INFO")
+    log("Creating dictionary for model " + modelname + " with root " + root.name + ".", 'INFO')
 
     # create tuples of objects belonging to model
     if not objectlist:
@@ -991,7 +997,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     linklist = [link for link in objectlist if link.phobostype == 'link']
 
     # digest all the links to derive link and joint information
-    log("Parsing links, joints and motors..." + (str(len(linklist))), "INFO")
+    log("Parsing links, joints and motors... " + (str(len(linklist))) + " total.", "INFO")
     for link in linklist:
         # parse link and extract joint and motor information
         linkdict, jointdict, motordict = deriveKinematics(link)
@@ -1033,25 +1039,19 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             }
 
     # complete link information by parsing visuals and collision objects
-    log("Parsing visual and collision (approximation) objects...", "INFO")
+    log("Parsing visual and collision (approximation) objects...", 'INFO')
     for obj in objectlist:
         # try:
         if obj.phobostype in ['visual', 'collision']:
             props = deriveDictEntry(obj)
-            parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
-            #print(parentname, obj, props)
+            parentname = nUtils.getObjectName(
+                sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
             model['links'][parentname][obj.phobostype][nUtils.getObjectName(obj)] = props
         elif obj.phobostype == 'approxsphere':
             props = deriveDictEntry(obj)
-            parentname = nUtils.getObjectName(sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
+            parentname = nUtils.getObjectName(
+                sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
             model['links'][parentname]['approxcollision'].append(props)
-
-        # TODO delete me?
-        # except KeyError:
-        #    try:
-        #        log(parentname + " not found", "ERROR")
-        #    except TypeError:
-        #        log("No parent found for " + obj.name, "ERROR")
 
     # combine collision information for links
     for linkname in model['links']:
@@ -1066,14 +1066,14 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         link['collision_bitmask'] = bitmask
 
     # parse sensors and controllers
-    log("Parsing sensors and controllers...", "INFO")
+    log("Parsing sensors and controllers...", 'INFO')
     for obj in objectlist:
         if obj.phobostype in ['sensor', 'controller']:
             props = deriveDictEntry(obj)
             model[obj.phobostype + 's'][nUtils.getObjectName(obj)] = props
 
     # parse materials
-    log("Parsing materials...", "INFO")
+    log("Parsing materials...", 'INFO')
     model['materials'] = collectMaterials(objectlist)
     for obj in objectlist:
         if obj.phobostype == 'visual':
@@ -1083,7 +1083,8 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                     # this should actually never happen
                     model['materials'][mat.name] = deriveMaterial(
                         mat)
-                linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
+                linkname = nUtils.getObjectName(
+                    sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
                 model['links'][linkname]['visual'][nUtils.getObjectName(obj)][
                     'material'] = mat.name
             except AttributeError:
@@ -1105,7 +1106,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             log("Undefined geometry type in object " + obj.name, "ERROR")
 
     # gather information on groups of objects
-    log("Parsing groups...", "INFO")
+    log("Parsing groups...", 'INFO')
     # TODO: get rid of the "data" part and check for relation to robot
     for group in bpy.data.groups:
         # skip empty groups
@@ -1140,16 +1141,17 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     log("Parsing submechanisms...", "INFO")
     submechanisms = []
     for link in linklist:
-        if 'submechanism/name' in link.keys():
-            #for key in [key for key in link.keys() if key.startswith('submechanism/')]:
-            #    submechanisms.append({key.replace('submechanism/', ''): value
-            #                        for key, value in link.items()})
-            submech = {'type': link['submechanism/type'],
-                       'contextual_name': link['submechanism/name'],
-                       'jointnames_independent': [nUtils.getObjectName(j, 'joint') for j in link['submechanism/independent']],
-                       'jointnames_spanningtree': [nUtils.getObjectName(j, 'joint') for j in link['submechanism/spanningtree']],
-                       'jointnames_active': [nUtils.getObjectName(j, 'joint') for j in link['submechanism/active']]
-                       }
+        if 'submechanism/name' in link:
+            indep = [nUtils.getObjectName(j, 'joint') for j in link['submechanism/independent']]
+            spann = [nUtils.getObjectName(j, 'joint') for j in link['submechanism/spanningtree']]
+            active = [nUtils.getObjectName(j, 'joint') for j in link['submechanism/active']]
+            submech = {
+                'type': link['submechanism/type'],
+                'contextual_name': link['submechanism/name'],
+                'jointnames_independent': indep,
+                'jointnames_spanningtree': spann,
+                'jointnames_active': active
+            }
             submechanisms.append(submech)
     model['submechanisms'] = submechanisms
 
