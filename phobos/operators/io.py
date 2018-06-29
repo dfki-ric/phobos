@@ -118,20 +118,20 @@ class ExportModelOperator(Operator):
 
     def invoke(self, context, event):
         modellist = ioUtils.getModelListForEnumProp(self, context)
+        # show selection dialog for models
         if len(modellist) > 1:
             return context.window_manager.invoke_props_dialog(self)
-        else:
-            try:
-                self.modelname = modellist[0][0]
-                return self.execute(context)
-            except IndexError:
-                log("No propely defined models to export.", "ERROR")
-                return {'CANCELLED'}
+        # unless only one model is available
+        elif modellist:
+            self.modelname = modellist[0][0]
+            return self.execute(context)
+        log("No propely defined models to export.", 'ERROR')
+        return {'CANCELLED'}
 
     def execute(self, context):
         roots = ioUtils.getExportModels()
         if not roots:
-            log("No properly defined models selected or present in scene.", "WARNING")
+            log("No properly defined models selected or present in scene.", 'ERROR')
             return {'CANCELLED'}
         elif not self.exportall:
             roots = [root for root in roots if root['modelname'] == self.modelname]
@@ -151,9 +151,10 @@ class ExportModelOperator(Operator):
 
         # select all exported models after export is done
         if ioUtils.getExpSettings().selectedOnly:
-            objectlist = sUtils.getChildren(
-                root, selected_only=True, include_hidden=False)
-            sUtils.selectObjects(objectlist, clear=False)
+            for root in roots:
+                objectlist = sUtils.getChildren(
+                    root, selected_only=True, include_hidden=False)
+                sUtils.selectObjects(objectlist, clear=False)
         else:
             bpy.ops.object.select_all(action='DESELECT')
             for root in roots:
