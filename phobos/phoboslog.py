@@ -40,8 +40,8 @@ import bpy
 
 import phobos.display as display
 
-# levels of detail for logging
-loglevels = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
+#: Levels of detail for the logging information
+LOGLEVELS = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
 
 
 class Col(Enum):
@@ -108,7 +108,7 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False, end='\n'):
 
     # Display only messages up to preferred log level
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
-    if loglevels.index(level) <= loglevels.index(prefs.loglevel):
+    if LOGLEVELS.index(level) <= LOGLEVELS.index(prefs.loglevel):
         date = datetime.now().strftime("%Y%m%d_%H:%M:%S")
         if end == '\n':  # no end of line assumes some sort of listing, dropping the shebang
             msg = date + " - " + level + " " + message + " (" + originname + ")"

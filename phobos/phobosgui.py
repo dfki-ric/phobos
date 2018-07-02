@@ -39,7 +39,7 @@ from phobos.io import entities
 from phobos.io import meshes
 from phobos.io import scenes
 from phobos.io import libraries
-from phobos.phoboslog import loglevels
+from phobos.phoboslog import LOGLEVELS
 import phobos.utils.io as ioUtils
 
 from . import defs
@@ -78,7 +78,7 @@ class PhobosPrefs(AddonPreferences):
 
     loglevel = EnumProperty(
         name="loglevel",
-        items=tuple(((l,) * 3 for l in loglevels)),
+        items=tuple(((l,) * 3 for l in LOGLEVELS)),
         default="ERROR"
     )
 
