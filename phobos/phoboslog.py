@@ -33,15 +33,18 @@ Created on 05 Dec 2014
 """
 
 import inspect
-import bpy
 from datetime import datetime
+from enum import Enum
+
+import bpy
+
 import phobos.display as display
 
 # levels of detail for logging
 loglevels = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
 
 
-class col:
+class Col(Enum):
     """Provides the color ids for different terminal messages."""
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -57,26 +60,25 @@ class col:
 
 
 def decorate(level):
-    """Provides a simple wrapper to color the log level according to the colors
-    from class col.
+    """Simple wrapper to color the log level according to the colors from :class:`.Col`.
 
-    Args:
-      level(str): the loging level as described by loglevels.
+    If there is no decorator for this level, an undecorated string will be returned.
 
-    Returns:
-      str - decorated string of level
+    :param level:: the loging level as described by :data:`LOGLEVELS`.
+    :type level: str
 
+    :return: decorated string of the specific level
+    :rtype: str
     """
     if level == "INFO":
-        return col.BOLD+col.OKGREEN+level+col.ENDC
+        return Col.BOLD.value + Col.OKGREEN.value + level + Col.ENDC.value
     if level == "WARNING":
-        return col.BOLD+col.WARNING+level+col.ENDC
+        return Col.BOLD + Col.WARNING + level + Col.ENDC.value
     if level == "ERROR":
-        return col.BOLD+col.FAIL+level+col.ENDC
+        return Col.BOLD.value + Col.FAIL.value + level + Col.ENDC.value
     if level == "DEBUG":
-        return col.BOLD+col.DEBUG+level+col.ENDC
-    else:
-        return level
+        return Col.BOLD.value + Col.DEBUG.value + level + Col.ENDC.value
+    return level
 
 
 def log(message, level="INFO", origin=None, prefix="", guionly=False, end='\n'):
@@ -85,13 +87,13 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False, end='\n'):
     The origin can be defined as string or an object. The message is logged by the operator
     depending on the loglevel settings.
 
-    :param message: The message to log
+    :param message: message to log
     :type message: str
-    :param level: Valid log level for the message as defined by .. data:: loglevels
+    :param level: valid log level for the message as defined by :data:`.LOGLEVELS`
     :type level: str
-    :param origin: If set the message is prefixed with the origin
+    :param origin: if set the message is prefixed with the origin
     :type origin: str or obj
-    :param prefix: Any string that should be printed before message (e.g. "\n")
+    :param prefix: any string that should be printed before the message
     :type prefix: str
     :param guionly: if True, only prints to GUI
     :type guionly: bool
@@ -111,10 +113,10 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False, end='\n'):
         if end == '\n':  # no end of line assumes some sort of listing, dropping the shebang
             msg = date + " - " + level + " " + message + " (" + originname + ")"
             terminalmsg = '{0}[{1}] {2} {3}{4} ({5}){6}'.format(prefix, date, decorate(level), message,
-                                                                col.DIM, originname, col.ENDC)
+                                                                Col.DIM.value, originname, Col.ENDC.value)
         else:
             msg = message
-            terminalmsg = col.OKBLUE + message + col.ENDC
+            terminalmsg = Col.OKBLUE.value + message + Col.ENDC.value
 
         # log to file if activated
         if prefs.logtofile and not guionly:
