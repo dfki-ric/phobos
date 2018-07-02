@@ -80,22 +80,23 @@ def decorate(level):
 
 
 def log(message, level="INFO", origin=None, prefix="", guionly=False, end='\n'):
-    """Logs a given message to the blender console and logging file if present
-    and if log level is low enough. The origin can be defined as string.
-    The message is logged by the operator depending on the loglevel
-    settings.
+    """Logs a given message to the blender console/logging file and if log level is low enough.
 
-    Args:
-      message(str): The message to log.
-      level(str, optional): Valid log level for the message as defined by 'loglevels'. (Default value = "INFO")
-      origin(str. or obj, optional): If set the message is prefixed with the origin. (Default value = None)
-      prefix(str, optional): Any string that should be printed before message (e.g. "\n") (Default value = "")
-      guionly: if True, only prints to GUI (Default value = False)
-      end(str, optional): string to be used at the end of the resulting print statement (Default value = "\n")
+    The origin can be defined as string or an object. The message is logged by the operator
+    depending on the loglevel settings.
 
-    Returns:
-      None.
-
+    :param message: The message to log
+    :type message: str
+    :param level: Valid log level for the message as defined by .. data:: loglevels
+    :type level: str
+    :param origin: If set the message is prefixed with the origin
+    :type origin: str or obj
+    :param prefix: Any string that should be printed before message (e.g. "\n")
+    :type prefix: str
+    :param guionly: if True, only prints to GUI
+    :type guionly: bool
+    :param end: string to be used at the end of the resulting print statement
+    :type end: str
     """
     callerframerecord = inspect.stack()[1]
     frame = callerframerecord[0]
