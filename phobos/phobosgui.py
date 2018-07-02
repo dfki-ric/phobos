@@ -69,6 +69,17 @@ class PhobosPrefs(AddonPreferences):
     """
     bl_idname = __package__
 
+    username = StringProperty(
+        name='username',
+        default='Anonymous',
+        description="Name of the user/company (used for export information etc.)"
+    )
+
+    useremail = StringProperty(
+        name='useremail',
+        default='None',
+        description="E-mail adress of the user/company (used for export information etc.)"
+    )
     logfile = StringProperty(
         name="logfile",
         subtype="FILE_PATH",
@@ -114,15 +125,30 @@ class PhobosPrefs(AddonPreferences):
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text="Log Settings")
-        layout.prop(self, "logfile", text="log file path")
-        layout.prop(self, "logtofile", text="write to logfile")
-        layout.prop(self, "logtoterminal", text="write to terminal")
-        layout.prop(self, "loglevel", text="log level")
+        box = layout.box()
+        box.label(text="Folders")
+        box.prop(self, "modelsfolder", text="models folder")
+        box.prop(self, "configfolder", text="config folder")
         layout.separator()
-        layout.label(text="Folders")
-        layout.prop(self, "modelsfolder", text="models folder")
-        layout.prop(self, "configfolder", text="config folder")
+
+        box = layout.box()
+        box.label(text="User information")
+        box.prop(self, "username", text="user name")
+        box.prop(self, "useremail", text="user email")
+        layout.separator()
+
+        box = layout.box()
+        row = box.row()
+        row.label(text="Logging")
+        row.prop(self, "logactive", text="")
+        if self.logactive:
+            box.prop(self, "logfile", text="log file path")
+            box.prop(self, "logtofile", text="write to logfile")
+            box.prop(self, "logtoterminal", text="write to terminal")
+            box.prop(self, "loglevel", text="log level")
+        else:
+            self.logtofile = False
+            self.logtoterminal = False
 
 prev_collections = {}
 phobosIcon = 0
