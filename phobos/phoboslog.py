@@ -4,8 +4,8 @@
 """
 .. module:: phobos.phoboslog
     :platform: Unix, Windows, Mac
-    :synopsis: TODO: This module offers a simple way to log messages from phobos and uses blender integrated tools
-    to display them.
+    :synopsis: Offers a simple way to log messages from Phobos and uses Blender integrated tools \
+            to display them.
 
 .. moduleauthor:: Ole Schwiegert, Kai von Szadkowski, Simon Reichel
 
