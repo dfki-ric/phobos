@@ -69,6 +69,27 @@ class PhobosPrefs(AddonPreferences):
     """
     bl_idname = __package__
 
+    # folder for robot/scene models (used for previews and imports)
+    modelsfolder = StringProperty(
+        name="modelsfolder",
+        subtype="DIR_PATH",
+        default=''
+    )
+
+    # user config folder for Phobos
+    configfolder = StringProperty(
+        name="configfolder",
+        subtype="DIR_PATH",
+        description="Path to the system-dependent config folder of Phobos.",
+        default=''
+    )
+
+    exportpluginsfolder = StringProperty(
+        name='exportpluginsfolder',
+        subtype='DIR_PATH',
+        default='.'
+    )
+
     username = StringProperty(
         name='username',
         default='Anonymous',
@@ -80,6 +101,13 @@ class PhobosPrefs(AddonPreferences):
         default='None',
         description="E-mail adress of the user/company (used for export information etc.)"
     )
+
+    logactive = BoolProperty(
+        default=False,
+        name='logactive',
+        description="Activate logging"
+    )
+
     logfile = StringProperty(
         name="logfile",
         subtype="FILE_PATH",
@@ -100,25 +128,6 @@ class PhobosPrefs(AddonPreferences):
     logtoterminal = BoolProperty(
         name="logtoterminal",
         default=True
-    )
-
-    modelsfolder = StringProperty(
-        name="modelsfolder",
-        subtype="DIR_PATH",
-        default=''
-    )
-
-    configfolder = StringProperty(
-        name="configfolder",
-        subtype="DIR_PATH",
-        description="Path to the system-dependent config folder of Phobos.",
-        default=''
-    )
-
-    exportpluginsfolder = StringProperty(
-        name='exportpluginsfolder',
-        subtype='DIR_PATH',
-        default='.'
     )
 
     models_poses = CollectionProperty(type=ModelPoseProp)
