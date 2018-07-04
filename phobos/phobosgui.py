@@ -154,6 +154,20 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
                                   description="Mesh type to use in exported " +
                                   "entity/scene files.")
 
+    # obj optional information
+    axis_forward_items = ((item, item + ' forward', item) for item in (
+        'X', 'Y', 'Z', '-X', '-Y', '-Z'))
+    axis_up_items = ((item, item + ' up', item) for item in (
+        'X', 'Y', 'Z', '-X', '-Y', '-Z'))
+    obj_axis_forward = EnumProperty(items=axis_forward_items,
+                                    name='Forward',
+                                    description="Forward axis of the obj export.",
+                                    default='-Z')
+    obj_axis_up = EnumProperty(items=axis_up_items,
+                               name='Up',
+                               description="Up axis of the obj export.",
+                               default='Y')
+
 
 class Mesh_Export_UIList(bpy.types.UIList):
     # DOCU missing class description
@@ -870,6 +884,14 @@ class PhobosExportPanel(bpy.types.Panel):
             typename = "export_scene_" + scenetype
             cscene.prop(bpy.data.window_managers[0], typename)
 
+        # additional obj parameters
+        if bpy.data.window_managers[0].export_mesh_obj:
+            layout.separator()
+            box = layout.box()
+            box.label('OBJ axis')
+            box.prop(bpy.data.window_managers[0].phobosexportsettings, 'obj_axis_forward')
+            box.prop(bpy.data.window_managers[0].phobosexportsettings, 'obj_axis_up')
+
         # TODO delete me?
         # c2.prop(expsets, "exportCustomData", text="Export custom data")
 
@@ -884,6 +906,9 @@ class PhobosExportPanel(bpy.types.Panel):
         layout.separator()
         layout.operator("phobos.export_model", icon="EXPORT")
         layout.operator("phobos.export_scene", icon="WORLD_DATA")
+
+    def check(self, context):
+        return True
 
 
 class PhobosImportPanel(bpy.types.Panel):

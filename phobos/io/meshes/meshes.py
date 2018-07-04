@@ -48,8 +48,12 @@ def exportMesh(obj, path, meshtype):
     tmpobject.data = obj.data
     outpath = os.path.join(path, obj.data.name + "." + meshtype)
     if meshtype == 'obj':
-        bpy.ops.export_scene.obj(filepath=outpath, use_selection=True, use_normals=True, use_materials=False,
-                                 use_mesh_modifiers=True)
+        axis_forward = bpy.data.window_managers[0].phobosexportsettings.obj_axis_forward
+        axis_up = bpy.data.window_managers[0].phobosexportsettings.obj_axis_up
+        bpy.ops.export_scene.obj(filepath=outpath, use_selection=True,
+                                 use_normals=True, use_materials=False,
+                                 use_mesh_modifiers=True,
+                                 axis_forward=axis_forward, axis_up=axis_up)
     elif meshtype == 'stl':
         bpy.ops.export_mesh.stl(filepath=outpath, use_selection=True, use_mesh_modifiers=True)
     elif meshtype == 'dae':
