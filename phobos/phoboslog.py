@@ -35,6 +35,7 @@ Created on 05 Dec 2014
 import inspect
 from datetime import datetime
 from enum import Enum
+from types import SimpleNamespace
 
 import bpy
 
@@ -108,6 +109,14 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
 
     # display only messages up to preferred log level
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
+
+    # Phobos preferences might not be initialised yet! Use a dummy namespace instead.
+    if not prefs:
+        prefs = SimpleNamespace()
+        prefs.loglevel = 'DEBUG'
+        prefs.logtofile = False
+        prefs.logtoterminal = True
+
     if LOGLEVELS.index(level) > LOGLEVELS.index(prefs.loglevel):
         return
 
