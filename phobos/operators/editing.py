@@ -683,9 +683,11 @@ class CreateCollisionObjects(Operator):
             elif self.property_colltype == 'sphere':
                 size = max(size) / 2
 
-            # calculate rotation and center coordinates
-            rotation_euler = (vis.matrix_world * rotation).to_euler()
-            center = vis.matrix_world.to_translation() + vis.matrix_world.to_quaternion() * center
+            # combine bbox center with the object transformation
+            center = (vis.matrix_world * mathutils.Matrix.Translation(center)).to_translation()
+            # combine center with optional rotation (cylinder and capsule) and object transformation
+            rotation_euler = (vis.matrix_world * rotation *
+                              mathutils.Matrix.Translation(center)).to_euler()
 
             # create Mesh
             if self.property_colltype != 'capsule' and self.property_colltype != 'mesh':
