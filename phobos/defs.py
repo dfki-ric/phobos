@@ -31,8 +31,8 @@ Created on 7 Jan 2014
 """
 
 import os
+import re
 import yaml
-from re import compile
 from phobos.phoboslog import log
 
 # Phobos information
@@ -124,11 +124,8 @@ definitions = {'motors': {},
 def updateDefs(defsFolderPath):
     """Updates the definitions with all yml files in the given folder
 
-    Args:
-      defsFolderPath(str): The path to the folder with the definitions yaml files.
-
-    Returns:
-
+    :param defsFolderPath: path to the folder with yaml files for definitions
+    :type defsFolderPath: str
     """
     dicts = __parseAllYAML(defsFolderPath)
     for diction in dicts:
@@ -154,7 +151,7 @@ def __evaluateString(s):
     # TODO math is not needed anymore...
     # needed for evaluation of strings (see below)
     import math
-    p = compile('&.*&')
+    p = re.compile('&.*&')
     for ma in p.findall(s):
         try:
             s = s.replace(ma, str(eval(ma[1:-1])))
@@ -166,11 +163,13 @@ def __evaluateString(s):
 
 def __parseAllYAML(path):
     """Reads all .yml files in the given path and loads them.
-    It also evaluates the expressions enclosed by '&' in those files.
 
-    :param path: The path from which to parse all files.
+    Expressions are evaluated if they are enclosed by '&' in those files.
+
+    :param path: path from which to parse all files
     :type path: str
-    :return: dict -- The dictionary with all parsed YAML files.
+    :return: dictionary containing all parsed YAML files
+    :rtype: dict
     """
     dicts = []
     for root, dirs, files in os.walk(path):
