@@ -40,7 +40,7 @@ import bpy
 
 import phobos.display as display
 
-#: Levels of detail for the logging information
+#: Levels of detail for the logging information.
 LOGLEVELS = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
 
 
@@ -73,7 +73,7 @@ def decorate(level):
     if level == "INFO":
         return Col.BOLD.value + Col.OKGREEN.value + level + Col.ENDC.value
     if level == "WARNING":
-        return Col.BOLD + Col.WARNING + level + Col.ENDC.value
+        return Col.BOLD.value + Col.WARNING.value + level + Col.ENDC.value
     if level == "ERROR":
         return Col.BOLD.value + Col.FAIL.value + level + Col.ENDC.value
     if level == "DEBUG":
