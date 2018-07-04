@@ -31,7 +31,9 @@ Created on 7 Jan 2014
 """
 
 import os
+import glob
 import re
+
 import yaml
 from phobos.phoboslog import log
 
@@ -172,22 +174,24 @@ def __parseAllYAML(path):
     :rtype: dict
     """
     dicts = []
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            print('  '+file)
-            if file.endswith(".yml"):
-                try:
-                    f = open(os.path.join(path, file), 'r')
-                    tmpstring = f.read()
-                    f.close()
-                    try:
-                        tmpyaml = yaml.load(__evaluateString(tmpstring))
-                        dicts.append(tmpyaml)
-                    except yaml.scanner.ScannerError:
-                        log("Error while parsing YAML file", "ERROR")
-                # TODO filenotfounderror is not imported or so...
-                except FileNotFoundError:
-                    log("The file "+file+" was not found.", "ERROR")
+    for file in glob.iglob(os.path.join(path, '**/*.yml'), recursive=True):
+        print('  ' + os.path.basename(file))
+        try:
+            file = open(file, 'r')
+            tmpstring = file.read()
+            file.close()
+
+            try:
+                tmpyaml = yaml.load(__evaluateString(tmpstring))
+
+                if not tmpyaml:
+                    log(file + " does not contain any yaml information.", 'ERROR')
+                    continue
+                dicts.append(tmpyaml)
+            except yaml.scanner.ScannerError:
+                log(file + " could not be parsed!", 'ERROR')
+        except FileNotFoundError:
+            log(file + " was not found.", 'ERROR')
     return dicts
 
 
