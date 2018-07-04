@@ -43,6 +43,9 @@ import phobos.display as display
 #: Levels of detail for the logging information.
 LOGLEVELS = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
 
+#: Calling functions that will never be logged to the GUI of Blender.
+FUNCTION_BLACKLIST = ('register')
+
 
 class Col(Enum):
     """Provides the color ids for different terminal messages."""
@@ -81,7 +84,7 @@ def decorate(level):
     return level
 
 
-def log(message, level="INFO", origin=None, prefix="", guionly=False, end='\n'):
+def log(message, level="INFO", prefix="", guionly=False, end='\n'):
     """Logs a given message to the blender console/logging file and if log level is low enough.
 
     The origin can be defined as string or an object. The message is logged by the operator
@@ -91,8 +94,6 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False, end='\n'):
     :type message: str
     :param level: valid log level for the message as defined by :data:`.LOGLEVELS`
     :type level: str
-    :param origin: if set the message is prefixed with the origin
-    :type origin: str or obj
     :param prefix: any string that should be printed before the message
     :type prefix: str
     :param guionly: if True, only prints to GUI
@@ -100,57 +101,78 @@ def log(message, level="INFO", origin=None, prefix="", guionly=False, end='\n'):
     :param end: string to be used at the end of the resulting print statement
     :type end: str
     """
-    callerframerecord = inspect.stack()[1]
-    frame = callerframerecord[0]
+    frame = inspect.stack()[1][0]
     info = inspect.getframeinfo(frame)
     originname = '{0} - {1} (l{2})'.format(info.filename.split('addons/')[-1], info.function,
                                            info.lineno)
 
-    # Display only messages up to preferred log level
+    # display only messages up to preferred log level
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
-    if LOGLEVELS.index(level) <= LOGLEVELS.index(prefs.loglevel):
-        date = datetime.now().strftime("%Y%m%d_%H:%M:%S")
-        if end == '\n':  # no end of line assumes some sort of listing, dropping the shebang
-            msg = date + " - " + level + " " + message + " (" + originname + ")"
-            terminalmsg = '{0}[{1}] {2} {3}{4} ({5}){6}'.format(prefix, date, decorate(level), message,
-                                                                Col.DIM.value, originname, Col.ENDC.value)
-        else:
-            msg = message
-            terminalmsg = Col.OKBLUE.value + message + Col.ENDC.value
+    if LOGLEVELS.index(level) > LOGLEVELS.index(prefs.loglevel):
+        return
 
-        # log to file if activated
-        if prefs.logtofile and not guionly:
-            try:
-                with open(prefs.logfile, "a") as lf:
-                    lf.write(msg + end)
-            except (FileNotFoundError, IsADirectoryError):
-                log("Invalid log file path, cannot write to log file!", 'ERROR', guionly=True)
-            except (IOError, OSError):
-                log("Cannot write to log file!", 'ERROR', guionly=True)
+    date = datetime.now().strftime("%Y%m%d_%H:%M:%S")
+    # end of line will add the date and level information before the message
+    if end == '\n':
+        msg = date + " - " + level + " " + message + " (" + originname + ")"
+        terminalmsg = '{0}[{1}] {2} {3}{4} ({5}){6}'.format(
+            prefix, date, decorate(level), message, Col.DIM.value, originname, Col.ENDC.value)
+    else:
+        msg = message
+        terminalmsg = Col.OKBLUE.value + message + Col.ENDC.value
 
-        # log to terminal or Blender
-        if prefs.logtoterminal:
-            print(terminalmsg, end=end)
-        else:
-            # log in GUI depending on loglevel
-            import sys
-            # start from this function
-            frame = sys._getframe(1)
-            f_name = frame.f_code.co_name
-            # go back until operator (using execute)
-            while f_name != 'execute' and frame is not None:
-                frame = frame.f_back
-                f_name = frame.f_code.co_name
+    # log to file if activated
+    if prefs.logtofile and not guionly:
+        try:
+            with open(prefs.logfile, "a") as logfile:
+                logfile.write(msg + end)
+        except (FileNotFoundError, IsADirectoryError):
+            log("Invalid log file path, cannot write to log file!", 'ERROR', guionly=True)
+        except (IOError, OSError):
+            log("Cannot write to log file!", 'ERROR', guionly=True)
 
-            # use operator to show message in Blender
-            if 'self' in frame.f_locals:
-                origin = frame.f_locals['self']
+    # log to terminal or Blender
+    if prefs.logtoterminal and not guionly:
+        print(terminalmsg, end=end)
+    # log in GUI depending on loglevel
+    else:
+        origin = find_calling_operator(inspect.currentframe())
 
-            # show message in Blender status bar.
-            if origin is not None and type(origin) is not str:
-                # CHECK are the messages in status bar working?
-                # format report message to remove loging level and originname
-                msg = msg.split(level)[1][1:]
-                msg = msg.split(originname)[0][:-2]
-                origin.report({level}, msg)
+        # show message in Blender status bar.
+        if origin:
+            # format report message to remove loging level and originname
+            msg = msg.split(level)[1][1:]
+            msg = msg.split(originname)[0][:-2]
+            origin.report({level}, msg)
+    # push message to the Phobos message history
     display.push_message(message, level.lower())
+
+
+def find_calling_operator(frame):
+    """Finds the calling operator of a log call from the specified frame.
+
+    If one intermediary function name is in the :data:`FUNCTION_BLACKLIST`, the search is
+    interrupted.
+
+    If nothing is found or the search is interrupted, None will be returned.
+
+    :param frame: call frame to begin search from
+    :type frame: frame
+
+    :return: execute function of the calling operator or None
+    :rtype: function
+    """
+    # check for next frame up the stack
+    while frame.f_back:
+        frame = frame.f_back
+
+        # if we find the execute function of an operator we return the function object
+        if frame.f_code.co_name == 'execute':
+            if 'self' in frame.f_locals:
+                return frame.f_locals['self']
+
+        # finding a function in the blacklist needs to interupt the search
+        elif frame.f_code.co_name in FUNCTION_BLACKLIST:
+            break
+    else:
+        return None
