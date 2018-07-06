@@ -66,11 +66,6 @@ class ModelPoseProp(bpy.types.PropertyGroup):
 class PhobosPrefs(AddonPreferences):
     """The general Phobos addon settings are stored in this class.
     They can be edited in the User Preferences of Blender under the Addon tab.
-
-    Args:
-
-    Returns:
-
     """
     bl_idname = __package__
 
@@ -138,8 +133,8 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
     def updateExportPath(self, context):
         # DOCU missing description
-        if not bpy.data.window_managers[0].phobosexportsettings.path.endswith('/'):
-            bpy.data.window_managers[0].phobosexportsettings.path += '/'
+        if not bpy.context.scene.phobosexportsettings.path.endswith('/'):
+            bpy.context.scene.phobosexportsettings.path += '/'
 
     def getMeshTypeListForEnumProp(self, context):
         # DOCU missing description
@@ -391,13 +386,7 @@ class MatrixPropGroup(bpy.types.PropertyGroup):
 # CHECK will this stay here? Give it its own file?
 class PhobosMatrixPanel(bpy.types.Panel):
     """Contains summary information and editing possibilities in the Buttons
-    Window
-
-    Args:
-
-    Returns:
-
-    """
+    Window"""
     bl_idname = "INFOBAR_PT_PHOBOS_TOOLS"
     bl_label = "Phobos Matrix Information"
     bl_space_type = "PROPERTIES"
@@ -448,11 +437,6 @@ class PhobosMatrixPanel(bpy.types.Panel):
 
 class PhobosObjectInformationPanel(bpy.types.Panel):
     """Contains information like parent, immediate children etc. in the Buttons Window.
-
-    Args:
-
-    Returns:
-
     """
     bl_idname = "OBJINFO_PT_PHOBOS_TOOLS"
     bl_label = "Phobos Object Information"
@@ -461,11 +445,9 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
     bl_context = "object"
 
     def draw_header(self, context):
-        """Draws phobosicon in the header."""
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
-        """Draw panel layout."""
         import phobos.utils.selection as sUtils
         layout = self.layout
         obj = context.active_object
@@ -644,11 +626,9 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         return {'infoparams': {}}
 
     def draw_header(self, context):
-        """Show phobosicon in the header."""
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
-        """Draw information panel."""
         layout = self.layout
         obj = context.active_object
 
@@ -901,7 +881,7 @@ class PhobosExportPanel(bpy.types.Panel):
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
-        expsets = bpy.data.window_managers[0].phobosexportsettings
+        expsets = bpy.context.scene.phobosexportsettings
         layout = self.layout
 
         # export robot model options
@@ -924,29 +904,29 @@ class PhobosExportPanel(bpy.types.Panel):
         cmodel.label(text="Models")
         for entitytype in ioUtils.getEntityTypesForExport():
             typename = "export_entity_" + entitytype
-            cmodel.prop(bpy.data.window_managers[0], typename)
+            cmodel.prop(bpy.context.scene, typename)
 
         cmesh = inlayout.column(align=True)
         cmesh.label(text="Meshes")
         for meshtype in sorted(meshes.mesh_types):
             if 'export' in meshes.mesh_types[meshtype]:
                 typename = "export_mesh_" + meshtype
-                cmesh.prop(bpy.data.window_managers[0], typename)
-        cmesh.prop(bpy.data.window_managers[0].phobosexportsettings, 'outputMeshtype')
+                cmesh.prop(bpy.context.scene, typename)
+        cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputMeshtype')
 
         cscene = inlayout.column(align=True)
         cscene.label(text="Scenes")
         for scenetype in ioUtils.getSceneTypesForExport():
             typename = "export_scene_" + scenetype
-            cscene.prop(bpy.data.window_managers[0], typename)
+            cscene.prop(bpy.context.scene, typename)
 
         # additional obj parameters
         if bpy.data.window_managers[0].export_mesh_obj:
             layout.separator()
             box = layout.box()
             box.label('OBJ axis')
-            box.prop(bpy.data.window_managers[0].phobosexportsettings, 'obj_axis_forward')
-            box.prop(bpy.data.window_managers[0].phobosexportsettings, 'obj_axis_up')
+            box.prop(ioUtils.getExpSettings(), 'obj_axis_forward')
+            box.prop(ioUtils.getExpSettings(), 'obj_axis_up')
 
         # TODO delete me?
         # c2.prop(expsets, "exportCustomData", text="Export custom data")
@@ -1125,21 +1105,21 @@ def register():
         name='Progress', default=0,
         description="Progress value of custom Phobos progress bar.")
 
-    # Add settings to world to preserve settings for every model
+    # add i/o settings to scene to preserve settings for every model
     for meshtype in meshes.mesh_types:
         if 'export' in meshes.mesh_types[meshtype]:
             typename = "export_mesh_" + meshtype
-            setattr(bpy.types.WindowManager, typename, BoolProperty(name=meshtype))
+            setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=False))
 
     for entitytype in entities.entity_types:
         if 'export' in entities.entity_types[entitytype]:
             typename = "export_entity_" + entitytype
-            setattr(bpy.types.WindowManager, typename, BoolProperty(name=entitytype))
+            setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=False))
 
     for scenetype in scenes.scene_types:
         if 'export' in scenes.scene_types[scenetype]:
             typename = "export_scene_" + scenetype
-            setattr(bpy.types.WindowManager, typename, BoolProperty(name=scenetype))
+            setattr(bpy.types.Scene, typename, BoolProperty(name=scenetype, default=False))
 
     # Load custom icons
     import os
@@ -1234,8 +1214,8 @@ def register():
     bpy.utils.register_class(PhobosExportPanel)
     bpy.utils.register_class(PhobosImportPanel)
 
-    # add phobos settings to scene/world
-    bpy.types.WindowManager.phobosexportsettings = PointerProperty(
+    # add phobos settings to scene
+    bpy.types.Scene.phobosexportsettings = PointerProperty(
         type=PhobosExportSettings)
     # TODO move other stuff to windowmanager instead of world
     bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(

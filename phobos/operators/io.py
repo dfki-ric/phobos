@@ -96,6 +96,12 @@ class ExportSceneOperator(Operator):
             else:
                 entity = deriveGenericEntity(root)
             exportlist.append(entity)
+        for scenetype in scene_types:
+            typename = "export_scene_" + scenetype
+            # check if format exists and should be exported
+            if getattr(bpy.context.scene, typename):
+                scene_types[scenetype]['export'](exportlist, os.path.join(
+                    ioUtils.getExportPath(), self.sceneName))
         return {'FINISHED'}
 
 

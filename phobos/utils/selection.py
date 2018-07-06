@@ -100,7 +100,7 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False):
     """
     parent = obj.parent
     while (parent and ((parent.hide and not include_hidden) or
-            (not parent.select and bpy.data.window_managers[0].phobosexportsettings.selectedOnly
+            (not parent.select and bpy.context.scene.phobosexportsettings.selectedOnly
              and not ignore_selection)
              or parent.phobostype != 'link')):
         parent = parent.parent

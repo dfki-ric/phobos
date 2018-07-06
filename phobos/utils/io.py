@@ -84,7 +84,7 @@ def securepath(path):
 
 def getExpSettings():
     """Returns Phobos' export settings as displayed in the GUI"""
-    return bpy.data.window_managers[0].phobosexportsettings
+    return bpy.context.scene.phobosexportsettings
 
 
 def getExportModels():

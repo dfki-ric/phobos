@@ -87,21 +87,18 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
     Returns:
 
     """
-    if bpy.data.window_managers[0].phobosexportsettings.relativePath:
+    if bpy.context.scene.phobosexportsettings.relativePath:
         # CHECK careful with path consistency (Windows)
-        outpath = securepath(os.path.expanduser(
-            os.path.join(bpy.path.abspath("//"),
-                         bpy.data.window_managers[0].phobosexportsettings.path)))
+        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.context.scene.phobosexportsettings.path)))
     else:
         # CHECK careful with path consistency (Windows)
-        outpath = securepath(os.path.expanduser(
-            bpy.data.window_managers[0].phobosexportsettings.path))
+        outpath = securepath(os.path.expanduser(bpy.context.scene.phobosexportsettings.path))
 
     # TODO delete me?
     #bake_outpath = securepath(os.path.join(outpath, modelname) if savetosubfolder else outpath)
     bake_outpath = outpath
 
-    if bpy.data.window_managers[0].phobosexportsettings.structureExport:
+    if bpy.context.scene.phobosexportsettings.structureExport:
         securepath(os.path.join(bake_outpath, 'bakes'))
         bake_outpath = os.path.join(bake_outpath, 'bakes/')
 
