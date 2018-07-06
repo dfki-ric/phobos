@@ -40,31 +40,39 @@ def getUniqueName(newname, names):
 
 def safelyName(obj, name, phobostype=None):
     """Assigns a name to an object in a safe way with regard to the internal
-     name handling in Blender. If no phobostype is provided or the phobostype
-     is the same as the object itself, the actual object is renamed, generating
-     a name that no other object in Blender has, using Blender's own naming
-     scheme. This prevents Blender to assign the name and change another object's
-     name that previously held that name. If the *name* provided cannot be
-     assigned to the object, it is stored in a custom variable '*phobostype*/name'
-     Note that other '*/name' variables in the object are not updated.
-     :return: str -- name of obj after function call
+     name handling in Blender.
+
+     If no phobostype is provided or the phobostype is the same as the object
+     itself, the actual object is renamed, generating a name that no other
+     object in Blender has, using Blender's own naming scheme. This prevents
+     Blender to assign the name and change another object's name that
+     previously held that name.
+
+     If the *name* provided cannot be assigned to the object, it is stored in a
+     custom variable '*phobostype*/name' Note that other '*/name' variables in
+     the object are not updated.
 
     Args:
-      obj: 
-      name: 
-      phobostype:  (Default value = None)
+        obj (bpy.types.Object): object to rename
+        name (str): new name for the object
+        phobostype (str, optional): only rename if the specified phobostype is
+            matched
 
     Returns:
-
+        str: new name of the Blender object
     """
     objectname = name
     if not phobostype:
         phobostype = obj.phobostype
+
     if obj.phobostype == phobostype:
         objectname = getUniqueName(objectname, bpy.data.objects)
         obj.name = objectname
+
+    # use custom property if the object.name can not be set properly
     if objectname != name:
         obj[phobostype+'/name'] = name
+
     return obj.name
 
 
