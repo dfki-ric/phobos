@@ -35,6 +35,7 @@ from bpy.props import BoolProperty, StringProperty
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.io as iUtils
+import phobos.utils.validation as validation
 from phobos.phoboslog import log
 
 
@@ -160,6 +161,28 @@ class BatchRename(Operator):
     @classmethod
     def poll(cls, context):
         return len(context.selected_objects) > 0
+
+
+class FixObjectNames(Operator):
+    """Cleans up the redundant names of the active object"""
+    bl_idname = "phobos.fix_object_names"
+    bl_label = "Rename Object"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        obj = context.active_object
+        errors = validation.validateObjectNames(obj)
+
+        for error in errors:
+            if error.message[:9] == 'Redundant':
+                log("Deleting redundant name '" + error.information + "'.", 'INFO')
+                del obj[error.information]
+
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object
 
 
 def register():
