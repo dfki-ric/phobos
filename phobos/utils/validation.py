@@ -214,3 +214,31 @@ def add_message(messages, key, message):
         messages[key].append(message)
     else:
         messages[key] = [message]
+
+
+class ValidateMessage():
+    """Resembles a message from a validation describing an issue in the model/object etc."""
+
+    def __init__(self, message, level, obj=None, operator=None, information=None):
+        """Create a new ValidateMessage object.
+
+        Args:
+            message (str): message of the issue
+            level (str): severity level of the issue
+            obj (bpy.types.Object, optional): Blender object in which the issue occured
+            operator (str, optional): bl_idname of the operator to fix the issue
+            information (dict, str, optional): information which is used to fix the issue
+        """
+        self.message = message
+        self.level = level
+        self.obj = obj
+        self.operator = operator
+        self.information = information
+
+    def __lt__(self, other):
+        """Returns true if the error message of this object is less than the other.
+
+        Returns:
+            bool: error message of this obj < error message of the other obj
+        """
+        return self.message.__lt__(other.message)
