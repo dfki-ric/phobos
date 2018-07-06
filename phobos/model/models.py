@@ -1155,28 +1155,31 @@ def deriveModelDictionary(root, name='', objectlist=[]):
 
     # gather submechanism information from links
     log("Parsing submechanisms...", "INFO")
-    submechanisms = []
-    for link in linklist:
-        if 'submechanism/name' in link:
-            indep = [nUtils.getObjectName(j, 'joint') for j in link['submechanism/independent']]
-            spann = [nUtils.getObjectName(j, 'joint') for j in link['submechanism/spanningtree']]
-            active = [nUtils.getObjectName(j, 'joint') for j in link['submechanism/active']]
-            submech = {
-                'type': link['submechanism/type'],
-                'contextual_name': link['submechanism/name'],
-                'jointnames_independent': indep,
-                'jointnames_spanningtree': spann,
-                'jointnames_active': active
-            }
-            submechanisms.append(submech)
-    model['submechanisms'] = submechanisms
+
+    def getSubmechanisms(link):
+        if 'submechanism/name' in link.keys():
+            submech = {'type': link['submechanism/type'],
+                       'contextual_name': link['submechanism/name'],
+                       'jointnames_independent': [nUtils.getObjectName(j, 'joint') for j in
+                                                  link['submechanism/independent']],
+                       'jointnames_spanningtree': [nUtils.getObjectName(j, 'joint') for j in
+                                                   link['submechanism/spanningtree']],
+                       'jointnames_active': [nUtils.getObjectName(j, 'joint') for j in
+                                             link['submechanism/active']]
+                       }
+        mechanisms = [submech]
+        for l in link.children:
+            if l.phobostype == 'link' and l in objectlist:
+                mechanisms.extend(getSubmechanisms(l))
+        return mechanisms
+
+    model['submechanisms'] = getSubmechanisms(root)
 
     # add additional data to model
     model.update(deriveTextData(model['name']))
 
     # shorten numbers in dictionary to n decimalPlaces and return it
     log("Rounding numbers...", "INFO")
-    # TODO: implement this separately
     return roundFloatsInDict(model, ioUtils.getExpSettings().decimalPlaces)
 
 
