@@ -607,39 +607,41 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         labels = ['joint', 'child']
 
         # get the existing layout columns
-        leftLayout = layout[1]
-        rightLayout = layout[2]
+        left = layout[1]
+        right = layout[2]
         # put the link left or right?
         if layout[3][0] <= layout[3][1]:
             layout[3][0] += 1
-            column = leftLayout
+            column = left
         else:
             layout[3][1] += 1
-            column = rightLayout
+            column = right
 
         label = [prop if prop in labels else ''][0]
-        # use custom params (like icons etc) from the dictionary
-        if params:
-            op = column.operator('phobos.goto_object',
-                                 text=(label +
-                                       [': ' if len(label) > 0 else ''][0] +
-                                       '{1}'.format(label, value.name)),
-                                 **params['infoparams'])
-            op.objectname = value.name
-        else:
-            op = column.operator('phobos.goto_object',
-                                 text=(label +
-                                       [': ' if len(label) > 0 else ''][0] +
-                                       '{1}'.format(label, value.name)))
-            op.objectname = value.name
+
+        # use custom params (like icons etc) from the dictionary by passing **params
+        goto_op = column.operator(
+            'phobos.goto_object',
+            text=(label + [': ' if label else ''][0] + '{0}'.format(value.name)),
+            **params['infoparams'],
+            icon='FILE_PARENT')
+        goto_op.objectname = value.name
 
     def checkParams(self, item):
-        if item in supportedProps:
-            params = supportedProps[item]
-        else:
-            params = None
+        """Looks for a property name in the .. data:supportedProps.
 
-        return params
+        If the property is not defined in .. data:supportedProps, the returned dictionary contains
+        empty information required for drawing.
+
+        Args:
+            item (str): property name to look for
+
+        Returns:
+            dict: entry in .. data:supportedProps
+        """
+        if item in supportedProps:
+            return supportedProps[item]
+        return {'infoparams': {}}
 
     def draw_header(self, context):
         self.layout.label(icon_value=phobosIcon)
