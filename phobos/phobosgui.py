@@ -39,6 +39,8 @@ from phobos.io import entities
 from phobos.io import meshes
 from phobos.io import scenes
 from phobos.io import libraries
+from phobos.model.models import deriveDictEntry
+from phobos.model.models import get_link_information
 from phobos.phoboslog import LOGLEVELS
 import phobos.utils.validation as validation
 import phobos.utils.io as ioUtils
@@ -559,41 +561,46 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "object"
 
-    def addProp(self, prop, value, layout, params):
-        # get the existing layout columns
-        leftLayout = layout[1]
-        rightLayout = layout[2]
+    def addProp(self, props, values, layout, params):
+        """Add a property/list of properties to the specified layout category.
 
-        # put the value left or right?
+        Args:
+            props (list/str): property or list of property names to add
+            values: list of or single float, str etc which corresponds to the property name
+            layout (list): sublayout description as defined in :func:draw
+            params (list/dict): list of or single dictionary containing additional call parameters
+                for the label/prop/operator calls
+        """
+        # get the existing layout columns
+        left = layout[1]
+        right = layout[2]
+
+        # put the property in the left or right column?
         if layout[3][0] <= layout[3][1]:
-            layout[3][0] += len(prop)
-            column = leftLayout
+            layout[3][0] += len(props)
+            column = left
         else:
-            layout[3][1] += len(prop)
-            column = rightLayout
+            layout[3][1] += len(props)
+            column = right
 
         # add all properties in sequence
-        for i in range(len(prop)):
+        for _, (prop, value, param) in enumerate(zip(props, values, params)):
             subtable = column.split(percentage=0.45)
-            colL = subtable.column()
-            colR = subtable.column()
-            # use custom params (like icons etc) from the dictionary
-            if type(value[i]) is float:
-                value[i] = '{0:.4f}'.format(value[i])
+            descr = subtable.column()
+            content = subtable.column()
 
-            # use custom properties for special operators or icons
-            # use custom properties for special operators or icons
-            if params[i]:
-                colL.label(text='{0}'.format(prop[i]))
-                if 'operator' in params[i]:
-                    colR.operator(params[i]['operator'],
-                                  text='{0}'.format(value[i]))
-                else:
-                    colR.label(text='{0}'.format(value[i]),
-                               **params[i]['infoparams'])
+            # use custom params (like icons etc) from the dictionary
+            if isinstance(value, float):
+                value = '{0:.4f}'.format(value)
+
+            # add without additional settings
+            descr.label(text='{0}'.format(prop))
+
+            # show operators as button and other as label
+            if 'operator' in param:
+                content.operator(param['operator'], text=str(value), **param['infoparams'])
             else:
-                colL.label(text='{0}'.format(prop[i]))
-                colR.label(text='{0}'.format(value[i]))
+                content.label(text=str(value), **param['infoparams'])
 
     def addObjLink(self, prop, value, layout, params):
         # this list is used to force labelling of special keywords
