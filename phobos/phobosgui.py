@@ -459,9 +459,11 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
     bl_context = "object"
 
     def draw_header(self, context):
+        """Draws phobosicon in the header."""
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        """Draw panel layout."""
         import phobos.utils.selection as sUtils
         layout = self.layout
         obj = context.active_object
@@ -469,20 +471,29 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
         rootname = ''
 
         root = sUtils.getRoot(obj)
-        if 'modelname' in root.keys():
+        if 'modelname' in root:
             modelname = root['modelname']
         rootname = root.name
 
-        datatop = layout.split()
-        datatopl = datatop.column(align=True)
-        datatopr = datatop.column(align=True)
-        # dataright = layout.column(align=True)
+        row = layout.row()
+        descr = row.column()
+        content = row.column()
 
-        datatopl.operator('phobos.name_model', text=('Part of model: ' + modelname),
-                          icon='POSE_DATA')
+        descr.label(text='Part of model', icon='POSE_DATA')
+        content.operator('phobos.name_model', text=modelname, icon='OUTLINER_DATA_FONT')
 
-        datatopr.operator('phobos.select_root', text=('Root object: ' + rootname),
-                          icon='OOPS')
+        descr.label(text='Root object', icon='OOPS')
+        if obj == root:
+            content.label("selected", icon='MATCUBE')
+        else:
+            content.operator('phobos.select_root', text=rootname, icon='FILE_PARENT')
+
+        # add parent object if available
+        if obj.parent:
+            descr.label('Parent object', icon='CONSTRAINT')
+            goto_op = content.operator('phobos.goto_object', icon='FILE_PARENT',
+                                       text='{0}'.format(obj.parent.name))
+            goto_op.objectname = obj.parent.name
 
         layout.separator()
         row = layout.row()
@@ -491,8 +502,9 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
 
         # show object name as button
         row = layout.row()
-        row.label(icon="COPY_ID", text="Object name")
-        row.operator('phobos.change_object_name', text=nUtils.getObjectName(obj))
+        row.label(icon='COPY_ID', text="Object name")
+        row.operator('phobos.change_object_name', icon='OUTLINER_DATA_FONT',
+                     text=nUtils.getObjectName(obj))
 
 
 class PhobosModelWarningsPanel(bpy.types.Panel):
