@@ -1186,9 +1186,22 @@ def register():
         }
     }
 
+    #: contains categories which are supported by the Phobosgui (non-generic)
+    #: Currently, only ``icon_value``s can be added (either as integer or string from Blender)
     global supportedCategories
     supportedCategories = {
-        # CHECK this might become interesting in the future otherwise just delete it
+        'collision': {
+            'icon_value': 'PHYSICS'
+        },
+        'visual': {
+            'icon_value': 'RESTRICT_VIEW_OFF'
+        },
+        'inertial': {
+            'icon_value': 'TEXTURE_SHADED'
+        },
+        'joint': {
+            'icon_value': 'FORCE_HARMONIC'
+        }
     }
 
     # TODO delete me?
