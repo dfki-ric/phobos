@@ -241,7 +241,7 @@ class SetXRayOperator(Operator):
 
 
 class SetPhobosType(Operator):
-    """Edit phobostype of selected object(s)"""
+    """Change phobostype of selected object(s)"""
     bl_idname = "phobos.set_phobostype"
     bl_label = "Set Phobostype"
     bl_options = {'REGISTER', 'UNDO'}
@@ -253,18 +253,26 @@ class SetPhobosType(Operator):
         description="Phobostype")
 
     def execute(self, context):
+        """Change phobostype of all selected objects.
+        """
+        if self.phobostype == 'undefined':
+            log("Setting phobostype 'undefined' for selected objects.", 'WARNING')
+
         for obj in context.selected_objects:
             obj.phobostype = self.phobostype
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
-        return len(context.selected_objects) > 0 and (
-                context.selected_objects[0].mode == 'OBJECT')
+        """Disable if no objects are available.
+        """
+        return context.selected_objects and (context.selected_objects[0].mode == 'OBJECT')
 
     def invoke(self, context, event):
+        """Preselect the phobostype of the active object.
+        """
         # take phobostype from active object
-        if 'phobostype' in context.active_object:
+        if context.active_object and 'phobostype' in context.active_object:
             objtype = context.active_object['phobostype']
             self.phobostype = defs.phobostypes[objtype][0]
         return self.execute(context)
