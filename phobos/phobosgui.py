@@ -486,13 +486,13 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
 
         layout.separator()
         row = layout.row()
-        row.label(icon="OBJECT_DATA")
-        row.prop(context.active_object, 'phobostype')
+        row.label(icon="OBJECT_DATA", text="Phobostype")
+        row.prop(context.active_object, 'phobostype', text="")
 
         # show object name as button
-        layout.operator('phobos.change_object_name', text=nUtils.getObjectName(obj))
-
-        # layout.operator('phobos.name_model', text='Test', emboss=False)
+        row = layout.row()
+        row.label(icon="COPY_ID", text="Object name")
+        row.operator('phobos.change_object_name', text=nUtils.getObjectName(obj))
 
 
 class PhobosModelWarningsPanel(bpy.types.Panel):
