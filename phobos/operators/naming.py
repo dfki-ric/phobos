@@ -31,7 +31,7 @@ import inspect
 
 import bpy
 from bpy.types import Operator
-from bpy.props import BoolProperty, StringProperty
+from bpy.props import BoolProperty, StringProperty, EnumProperty
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.io as iUtils
@@ -183,6 +183,81 @@ class FixObjectNames(Operator):
     @classmethod
     def poll(cls, context):
         return context.active_object
+
+
+class ChangeObjectName(Operator):
+    """Changes the name of the object"""
+    bl_idname = "phobos.change_object_name"
+    bl_label = "Change Object Name"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    newname = StringProperty(
+        name="New name",
+        description="New name of the object",
+        default=""
+    )
+
+    jointname = StringProperty(
+        name="Joint name",
+        description="Name of the joint",
+        default=""
+    )
+
+    def execute(self, context):
+        obj = context.active_object
+
+        # rename only if necessary
+        if self.newname != '' and self.newname != nUtils.getObjectName(obj):
+            log("Renaming " + obj.phobostype + " '" + nUtils.getObjectName(obj) + "' to '" +
+                self.newname + "'.", 'INFO')
+            nUtils.safelyName(obj, self.newname)
+        elif self.newname == '':
+            log("Removing custom name from " + obj.phobostype + " '" + obj.name + "'.", 'INFO')
+            if obj.phobostype + '/name' in obj:
+                del obj[obj.phobostype + '/name']
+
+        # only links have joint names
+        if obj.phobostype == 'link':
+            if self.jointname != '':
+                # only change/add joint/name if it was changed
+                if 'joint/name' not in obj or (
+                        'joint/name' in obj and self.jointname != obj['joint/name']):
+                    log("Renaming joint of " + obj.phobostype + " '" + nUtils.getObjectName(obj) +
+                        "' to '" + self.jointname + "'.", 'INFO')
+                    obj['joint/name'] = self.jointname
+            # remove joint/name when empty
+            elif self.jointname == '':
+                if 'joint/name' in obj:
+                    log("Removing joint name from " + obj.phobostype + " '" + obj.name + "'.",
+                        'INFO')
+                    del obj['joint/name']
+
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object
+
+    def invoke(self, context, event):
+        wm = context.window_manager
+        obj = context.active_object
+
+        self.newname = nUtils.getObjectName(obj)
+        if 'joint/name' in obj:
+            self.jointname = obj['joint/name']
+        return wm.invoke_props_dialog(self)
+
+    def draw(self, context):
+        obj = context.active_object
+        layout = self.layout
+
+        if obj.phobostype == 'link':
+            layout.prop(self, 'newname', text="Link name")
+            layout.prop(self, 'jointname')
+        else:
+            layout.prop(self, 'newname')
+            self.jointname = ''
+            layout.label("Phobostype: " + obj.phobostype)
 
 
 def register():
