@@ -644,24 +644,14 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         return {'infoparams': {}}
 
     def draw_header(self, context):
+        """Show phobosicon in the header."""
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
-        from phobos.model.models import deriveDictEntry
-        from phobos.model.models import get_link_information
-        import bpy
+        """Draw information panel."""
         layout = self.layout
         originalLayout = layout
         obj = context.active_object
-
-        # add phobostype
-        box = originalLayout.box()
-        table = box.split()
-        leftLayout = table.column()
-        rightLayout = table.column()
-        leftLayout.label('Phobostype')
-        # OPT: change icon_value from phobostypeIcons
-        rightLayout.label(obj.phobostype, icon_value=phobosIcon)
 
         # derive object information as dictionary
         if obj.phobostype == 'link':
