@@ -40,7 +40,9 @@ from phobos.io import meshes
 from phobos.io import scenes
 from phobos.io import libraries
 from phobos.phoboslog import LOGLEVELS
+import phobos.utils.validation as validation
 import phobos.utils.io as ioUtils
+import phobos.utils.naming as nUtils
 
 from . import defs
 from . import display
@@ -443,8 +445,7 @@ class PhobosMatrixPanel(bpy.types.Panel):
 
 
 class PhobosObjectInformationPanel(bpy.types.Panel):
-    """Contains information like parent, immediate children etc. in the
-    Buttons Window
+    """Contains information like parent, immediate children etc. in the Buttons Window.
 
     Args:
 
@@ -477,12 +478,59 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
         datatopr = datatop.column(align=True)
         # dataright = layout.column(align=True)
 
-        datatopl.operator('phobos.name_model', text=('Part of model: ' +
-                          modelname), icon='POSE_DATA')
+        datatopl.operator('phobos.name_model', text=('Part of model: ' + modelname),
+                          icon='POSE_DATA')
 
-        datatopr.operator('phobos.select_root', text=('Root object: ' +
-                          rootname), icon='OOPS')
+        datatopr.operator('phobos.select_root', text=('Root object: ' + rootname),
+                          icon='OOPS')
+
+        layout.separator()
+        row = layout.row()
+        row.label(icon="OBJECT_DATA")
+        row.prop(context.active_object, 'phobostype')
+
+        # show object name as button
+        layout.operator('phobos.change_object_name', text=nUtils.getObjectName(obj))
+
         # layout.operator('phobos.name_model', text='Test', emboss=False)
+
+
+class PhobosModelWarningsPanel(bpy.types.Panel):
+    bl_idname = "MODELWARNINGS_PT_PHOBOS_TOOLS"
+    bl_label = "Phobos Model Warnings"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "object"
+
+    def draw_header(self, context):
+        self.layout.label(icon_value=phobosIcon)
+
+    def draw(self, context):
+        import phobos.utils.selection as sUtils
+        layout = self.layout
+        obj = context.active_object
+
+        # show naming errors in the UI
+        errors = validation.validateObjectNames(obj)
+        if errors:
+            layout.separator()
+            errorname = ""
+            for error in sorted(errors):
+                if errorname != error.message[:5]:
+                    row = layout.row(align=True)
+                    errorname = error.message[:5]
+                    col1 = row.column(align=True)
+                    col2 = row.column(align=True)
+                    col3 = row.column(align=True)
+                if error.level == 'WARNING':
+                    col1.label(icon='ERROR')
+                elif error.level == 'ERROR':
+                    col1.label(icon='CANCEL')
+                else:
+                    col1.label(icon='QUESTION')
+
+                col2.label(text=error.message)
+                col3.operator(error.operator, text="Fix")
 
 
 ignoredProps = set([
@@ -692,6 +740,45 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                         self.addObjLink(prop, value, layout, params)
                     else:
                         self.addProp([prop], [value], layout, [params])
+
+
+class PhobosObjectPanel(bpy.types.Panel):
+    """Contains the custom properties of objects in the Buttons Window"""
+    bl_idname = "phobos.PT_PHOBOS"
+    bl_label = "Phobos properties"
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "object"
+    bl_category = 'Phobos'
+
+    def draw_header(self, context):
+        self.layout.label(icon_value=phobosIcon)
+
+    def draw(self, context):
+        layout = self.layout
+
+        # TODO what is this?
+        # the following for real pre-defined rather than custom properties
+        # row_type.prop(bpy.context.active_object, "type")
+        # row_type.prop_enum(bpy.context.active_object, '["type"]', "node")
+        # row_type.prop_enum(bpy.context.active_object, 'phobostype')
+
+        # FIXME this box is empty most of the time...
+        box_props = layout.box()
+        try:
+            for prop in defs.type_properties[bpy.context.active_object.phobostype]:
+                # CHECK what is this for?
+                # box_props.label(prop)
+                if prop in bpy.context.active_object:
+                    box_props.prop(bpy.context.active_object,
+                                   '["' + prop + '"]')
+        except KeyError:
+            # FIXME this should be logged, right?
+            print("Key could not be found.")
+            # TODO delete me?
+            # else:
+            #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.phobostype+"_default"]
+
 
 
 class PhobosModelPanel(bpy.types.Panel):
@@ -947,47 +1034,6 @@ class PhobosSubmodelsPanel(bpy.types.Panel):
         self.layout.operator("phobos.connect_interfaces")
 
 
-class PhobosObjectPanel(bpy.types.Panel):
-    """Contains the custom properties of objects in the Buttons Window"""
-    bl_idname = "phobos.PT_PHOBOS"
-    bl_label = "Phobos properties"
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = "object"
-    bl_category = 'Phobos'
-
-    def draw_header(self, context):
-        self.layout.label(icon_value=phobosIcon)
-
-    def draw(self, context):
-        layout = self.layout
-
-        # TODO what is this?
-        # the following for real pre-defined rather than custom properties
-        # row_type.prop(bpy.context.active_object, "type")
-        row_type = layout.row()
-        row_type.label(icon="OBJECT_DATA")
-        # row_type.prop_enum(bpy.context.active_object, '["type"]', "node")
-        # row_type.prop_enum(bpy.context.active_object, 'phobostype')
-        row_type.prop(bpy.context.active_object, 'phobostype')
-
-        # FIXME this box is empty most of the time...
-        box_props = layout.box()
-        try:
-            for prop in defs.type_properties[bpy.context.active_object.phobostype]:
-                # CHECK what is this for?
-                # box_props.label(prop)
-                if prop in bpy.context.active_object:
-                    box_props.prop(bpy.context.active_object,
-                                   '["' + prop + '"]')
-        except KeyError:
-            # FIXME this should be logged, right?
-            print("Key could not be found.")
-            # TODO delete me?
-            # else:
-            #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.phobostype+"_default"]
-
-
 class PhobosModelLibraryPanel(bpy.types.Panel):
     # DOCU add some docstring and update bl_idname
     bl_idname = "TOOLS_PT_PHOBOS_LOCALMODELS"
@@ -1196,6 +1242,7 @@ def register():
     bpy.utils.register_class(PhobosMatrixPanel)
     bpy.utils.register_class(PhobosObjectInformationPanel)
     bpy.utils.register_class(PhobosPropertyInformationPanel)
+    bpy.utils.register_class(PhobosModelWarningsPanel)
     bpy.types.Object.phobosmatrixinfo = PointerProperty(type=MatrixPropGroup)
     bpy.types.Scene.phobospropcategories = EnumProperty(items=[])
 
