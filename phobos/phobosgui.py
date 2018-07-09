@@ -1167,9 +1167,6 @@ def register():
                 'icon_value': phobosIcon
             }
         },
-        'geometry/type': {
-            'infoparams': {}
-        },
         'motor/type': {
             'operator': 'phobos.add_motor',
             'infoparams': {
