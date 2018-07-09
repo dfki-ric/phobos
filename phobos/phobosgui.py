@@ -742,45 +742,6 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                         self.addProp([prop], [value], layout, [params])
 
 
-class PhobosObjectPanel(bpy.types.Panel):
-    """Contains the custom properties of objects in the Buttons Window"""
-    bl_idname = "phobos.PT_PHOBOS"
-    bl_label = "Phobos properties"
-    bl_space_type = 'PROPERTIES'
-    bl_region_type = 'WINDOW'
-    bl_context = "object"
-    bl_category = 'Phobos'
-
-    def draw_header(self, context):
-        self.layout.label(icon_value=phobosIcon)
-
-    def draw(self, context):
-        layout = self.layout
-
-        # TODO what is this?
-        # the following for real pre-defined rather than custom properties
-        # row_type.prop(bpy.context.active_object, "type")
-        # row_type.prop_enum(bpy.context.active_object, '["type"]', "node")
-        # row_type.prop_enum(bpy.context.active_object, 'phobostype')
-
-        # FIXME this box is empty most of the time...
-        box_props = layout.box()
-        try:
-            for prop in defs.type_properties[bpy.context.active_object.phobostype]:
-                # CHECK what is this for?
-                # box_props.label(prop)
-                if prop in bpy.context.active_object:
-                    box_props.prop(bpy.context.active_object,
-                                   '["' + prop + '"]')
-        except KeyError:
-            # FIXME this should be logged, right?
-            print("Key could not be found.")
-            # TODO delete me?
-            # else:
-            #    bpy.context.active_object[prop] = defs.type_properties[bpy.context.active_object.phobostype+"_default"]
-
-
-
 class PhobosModelPanel(bpy.types.Panel):
     """Contains all model editing tools in the Phobos viewport toolbar"""
     bl_idname = "TOOLS_PT_PHOBOS_MODEL"
@@ -1254,7 +1215,6 @@ def register():
     bpy.utils.register_class(PhobosSubmodelsPanel)
     bpy.utils.register_class(PhobosExportPanel)
     bpy.utils.register_class(PhobosImportPanel)
-    bpy.utils.register_class(PhobosObjectPanel)
 
     # add phobos settings to scene/world
     bpy.types.WindowManager.phobosexportsettings = PointerProperty(
