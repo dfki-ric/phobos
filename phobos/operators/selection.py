@@ -78,17 +78,20 @@ class GotoObjectOperator(Operator):
     """Selection operator for buttons to jump to the specified object"""
     bl_idname = "phobos.goto_object"
     bl_label = "Goto Object"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'UNDO', 'INTERNAL'}
 
     objectname = StringProperty(
         name="Object Name",
         default='',
         description="The name of the object to jump to")
 
+    @classmethod
+    def poll(cls, context):
+        return context.scene.objects
+
     def execute(self, context):
-        bpy.ops.object.select_all(action='DESELECT')
-        context.scene.objects[self.objectname].select = True
-        context.scene.objects.active = context.scene.objects[self.objectname]
+        log("Jumping to object " + self.objectname + ".", 'DEBUG')
+        sUtils.selectObjects([context.scene.objects[self.objectname]], clear=True, active=0)
         return {'FINISHED'}
 
 
