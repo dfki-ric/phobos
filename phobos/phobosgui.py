@@ -924,7 +924,7 @@ class PhobosExportPanel(bpy.types.Panel):
             cscene.prop(bpy.context.scene, typename)
 
         # additional obj parameters
-        if bpy.data.window_managers[0].export_mesh_obj:
+        if getattr(bpy.context.scene, 'export_mesh_obj', False):
             layout.separator()
             box = layout.box()
             box.label('OBJ axis')
@@ -1220,7 +1220,6 @@ def register():
     # add phobos settings to scene
     bpy.types.Scene.phobosexportsettings = PointerProperty(
         type=PhobosExportSettings)
-    # TODO move other stuff to windowmanager instead of world
     bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(
         name="Index of current pose", default=0, update=showPreview)
     bpy.types.Scene.preview_visible = bpy.props.BoolProperty(

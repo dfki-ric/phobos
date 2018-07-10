@@ -342,7 +342,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
     for entitytype in entitytypes:
         typename = "export_entity_" + entitytype
         # check if format exists and should be exported
-        if not getattr(bpy.data.window_managers[0], typename, False):
+        if not getattr(bpy.context.scene, typename, False):
             continue
         # format exists and is exported:
         model_path = os.path.join(exportpath, entitytype)
@@ -356,24 +356,20 @@ def exportModel(model, exportpath='.', entitytypes=None):
 
     # export meshes in selected formats
     i = 1
-    mt = len([m for m in mesh_types if
-              getattr(bpy.data.window_managers[0], "export_mesh_" + m)])
+    mt = len([m for m in mesh_types if getattr(bpy.context.scene, "export_mesh_" + m, False)])
     mc = len(model['meshes'])
     n = mt * mc
     for meshtype in mesh_types:
         mesh_path = getOutputMeshpath(exportpath, meshtype)
         try:
-            typename = "export_mesh_" + meshtype
-            if getattr(bpy.data.window_managers[0], typename):
+            if getattr(bpy.context.scene, "export_mesh_" + meshtype, False):
                 securepath(mesh_path)
                 for meshname in model['meshes']:
                     mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_path)
                     display.setProgress(i / n, 'Exporting ' + meshname + '.' + meshtype + '...')
                     i += 1
-        except KeyError:
-            log("No export function available for selected mesh function: " +
-                meshtype, "ERROR")
-            print(sys.exc_info()[0])
+        except KeyError as e:
+            log("Error exporting mesh {0} as {1}: {2}".format(meshname, meshtype, str(e)), "ERROR")
     display.setProgress(0)
 
     # TODO: Move texture export to individual formats? This is practically SMURF
@@ -422,5 +418,5 @@ def exportScene(scenedict, exportpath='.', scenetypes=None, export_entity_models
     for scenetype in scenetypes:
         gui_typename = "export_scene_" + scenetype
         # check if format exists and should be exported
-        if getattr(bpy.data.window_managers[0], gui_typename):
+        if getattr(bpy.context.scene, gui_typename):
             scene_types[scenetype]['export'](scenedict['entities'], os.path.join(exportpath, scenedict['name']))
