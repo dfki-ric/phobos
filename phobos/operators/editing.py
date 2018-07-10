@@ -56,6 +56,103 @@ import phobos.model.links as modellinks
 from phobos.phoboslog import log
 
 
+class SafelyRemoveObjectsFromSceneOperator(Operator):
+    """Removes all selected objects from scene, warning if they are deleted"""
+    bl_idname = "phobos.safely_remove_objects_from_scene"
+    bl_label = "Safely Remove Objects From Scene"
+    bl_options = {'UNDO'}
+
+    def execute(self, context):
+        objs_to_delete = [o for o in context.selected_objects if len(o.users_scene) > 1]
+        objs_to_keep = [o for o in context.selected_objects if len(o.users_scene) == 1]
+        sUtils.selectObjects(objs_to_delete, clear=True)
+        bpy.ops.object.delete()
+        sUtils.selectObjects(objs_to_keep, clear=True)
+        if len(objs_to_keep) > 0:
+            log('Some objects were not removed as they are unique to this scene.', 'WARNING')
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) > 0
+
+
+class MoveToSceneOperator(Operator):
+    """Moves all selected objects to (new) scene"""
+    bl_idname = "phobos.move_to_scene"
+    bl_label = "Move To Scene"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def getSceneEnumProperty(self, context):
+        return bUtils.compileEnumPropertyList(bpy.data.scenes.keys())
+
+    scenename = StringProperty(name='Scene Name',
+                               default='new',
+                               description='Name of the scene to which to add selection')
+
+    scene = EnumProperty(name='Scene',
+                         items=getSceneEnumProperty,
+                         description='List of available scenes')
+
+    move = BoolProperty(name='Move', default=False,
+                        description="Remove selected objects from active scene")
+
+    init = BoolProperty(name='Init', default=True,
+                        description="Init new scene with items from active scene")
+
+    new = BoolProperty(name='New', default=True,
+                        description="Create new scene to move items to")
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=500)
+
+    def check(self, context):
+        if not self.new:
+            self.scenename = self.scene
+        return True
+
+    def draw(self, context):
+        self.layout.prop(self, 'scene')
+        self.layout.prop(self, 'new')
+        if self.new:
+            self.layout.prop(self, 'scenename', text="Scene Name (if new)")
+            self.layout.prop(self, 'init')
+        self.layout.prop(self, 'move')
+
+    def execute(self, context):
+        moveobjs = context.selected_objects
+        oldscene = context.scene
+        if self.new and self.scenename not in bpy.data.scenes:
+            bpy.data.scenes.new(name=self.scenename)
+            # copy all objects from active scene if new scene is created
+            if self.init:
+                for obj in oldscene.objects:
+                    try:
+                        bpy.data.scenes[self.scenename].objects.link(obj)
+                    except RuntimeError as e:
+                        log(str(e), 'WARNING')
+        # in any case, make sure to move selected objects objects to scene
+        for obj in moveobjs:
+            try:
+                bpy.data.scenes[self.scenename].objects.link(obj)
+            except RuntimeError as e:
+                log(str(e), 'WARNING')
+        # remove objects from active scene
+        if self.move:
+            for obj in moveobjs:
+                try:
+                    oldscene.objects.unlink(obj)
+                except RuntimeError as e:
+                    log(str(e), 'WARNING')
+        bpy.context.screen.scene = bpy.data.scenes[self.scenename]
+        bpy.data.scenes[self.scenename].update()
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return len(context.selected_objects) > 0
+
+
 class SortObjectsToLayersOperator(Operator):
     """Sort all selected objects to their according layers"""
     bl_idname = "phobos.sort_objects_to_layers"
