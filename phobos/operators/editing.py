@@ -63,19 +63,13 @@ class SortObjectsToLayersOperator(Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        objs = filter(lambda e: "phobostype" in e, context.selected_objects)
-        # TODO maybe clear layers first of all objects without phobostype?
-        for obj in objs:
-            phobosType = obj.phobostype
-            # sort phobostypes to layers defined in defs
-            if phobosType != 'undefined':
+        for obj in context.selected_objects:
+            if obj.phobostype != 'undefined':
                 layers = 20 * [False]
-                layers[defs.layerTypes[phobosType]] = True
+                layers[defs.layerTypes[obj.phobostype]] = True
                 obj.layers = layers
-
-            # undefined type will be shown in statusbar
-            if phobosType == 'undefined':
-                log("The phobostype of the object '" + obj.name + "' is" + "undefined", "ERROR")
+            else:
+                log("The phobostype of object '" + obj.name + "' is" + "undefined", "ERROR")
         return {'FINISHED'}
 
     @classmethod
@@ -264,17 +258,11 @@ class SetPhobosType(Operator):
 
     @classmethod
     def poll(cls, context):
-        """Disable if no objects are available.
-        """
-        return context.selected_objects and (context.selected_objects[0].mode == 'OBJECT')
+        return context.selected_objects
 
     def invoke(self, context, event):
-        """Preselect the phobostype of the active object.
-        """
-        # take phobostype from active object
-        if context.active_object and 'phobostype' in context.active_object:
-            objtype = context.active_object['phobostype']
-            self.phobostype = defs.phobostypes[objtype][0]
+        if context.object:
+            self.phobostype = context.object.phobostype
         return self.execute(context)
 
 
