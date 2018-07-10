@@ -1171,7 +1171,9 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                        'jointnames_active': [nUtils.getObjectName(j, 'joint') for j in
                                              link['submechanism/active']]
                        }
-        mechanisms = [submech]
+        else:
+            submech = None
+        mechanisms = [submech] if submech else []
         for l in link.children:
             if l.phobostype == 'link' and l in objectlist:
                 mechanisms.extend(getSubmechanisms(l))
