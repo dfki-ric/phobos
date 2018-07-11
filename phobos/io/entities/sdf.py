@@ -36,6 +36,7 @@ import bpy
 from phobos.utils.io import xmlHeader
 from phobos.utils.io import indent as phobosindentation
 from phobos.utils.io import l2str as list_to_string
+from phobos.utils.blender import getPhobosPreferences
 from phobos.phoboslog import log
 
 # For future updates of the SDF spec version look at:
@@ -578,14 +579,19 @@ def modelConf(model):
 
     SubElement(modelconf, 'sdf', version=sdfversion).text = model['name'] + '.sdf'
 
-    # TODO remove when below works
-    authorEL = SubElement(modelconf, 'author')
-    SubElement(authorEL, 'name').text = "DUMMY"
-    SubElement(authorEL, 'email').text = "dummy@dummy.mail"
+    phobosprefs = getPhobosPreferences()
+    if phobosprefs.username != '':
+        username = phobosprefs.username
+    else:
+        username = "Undefined"
+    if phobosprefs.useremail != '':
+        useremail = phobosprefs.useremail
+    else:
+        useremail = "Undefined"
 
-    # TODO use the phobos settings for this information
-    # SubElement(authorEL, 'name').text = SETTINGS
-    # SubElement(authorEL, 'email').text = SETTINGS
+    authorEL = SubElement(modelconf, 'author')
+    SubElement(authorEL, 'name').text = username
+    SubElement(authorEL, 'email').text = useremail
     # TODO allow user to edit a txt file in blender which contains the description OR take README?
     # SubElement(modelconf, 'description').text = PARSEFROMTXTEDITOR
 
