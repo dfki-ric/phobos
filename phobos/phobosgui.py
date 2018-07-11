@@ -1192,6 +1192,9 @@ def register():
         },
         'joint': {
             'icon_value': 'FORCE_HARMONIC'
+        },
+        'sensor': {
+            'icon_value': 'OUTLINER_OB_FORCE_FIELD'
         }
     }
 
