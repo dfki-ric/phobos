@@ -549,7 +549,7 @@ class PhobosModelWarningsPanel(bpy.types.Panel):
 
 ignoredProps = set([
     'cycles', 'cycles_visibility', 'phobosmatrixinfo', 'phobostype', 'name',
-    'pose', 'size', 'scale', 'parent'
+    'pose', 'size', 'scale', 'parent', 'approxcollision'
 ])
 
 
@@ -668,7 +668,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         categories = {}
 
         # generate general category only if needed
-        props = set([propname for propname in proplist if isinstance(dictprops[propname], dict)])
+        props = set([key for key in proplist if not isinstance(dictprops[key], dict)])
         if props - ignoredProps:
             box = layout.box()
             row = box.split()
