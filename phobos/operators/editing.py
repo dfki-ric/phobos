@@ -1298,7 +1298,7 @@ def addSensorFromYaml(category, name):
 
             newlink = None
             if self.addLink:
-                newlink = links.createLink({
+                newlink = modellinks.createLink({
                     'scale': 1.,
                     'name': 'link_' + self.sensorName,
                     'matrix': original_obj.matrix_world})
