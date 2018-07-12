@@ -577,16 +577,16 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
             descr = subtable.column()
             content = subtable.column()
 
-            # use custom params (like icons etc) from the dictionary
-            if isinstance(value, float):
-                value = '{0:.4f}'.format(value)
-
             # add without additional settings
             descr.label(text='{0}'.format(prop))
 
             # show operators as button and other as label
             if 'operator' in param:
                 content.operator(param['operator'], text=str(value), **param['infoparams'])
+            # show property as a customprop
+            elif 'object' in param and 'customprop' in param:
+                content.prop(param['object'], '["{0}"]'.format(param['customprop']), text="")
+            # just show it as text
             else:
                 content.label(text=str(value), **param['infoparams'])
 
@@ -659,6 +659,12 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
             # just a value for the general category
             if not isinstance(value, dict):
+                # show properties as customproperties
+                params['object'] = obj
+                if prop in obj:
+                    params['customprop'] = prop
+                elif obj.phobostype + '/' + prop in obj:
+                    params['customprop'] = obj.phobostype + '/' + prop
                 self.addProp([prop], [value], categories['general'], [params])
                 continue
 
