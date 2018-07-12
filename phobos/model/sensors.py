@@ -172,11 +172,11 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     # set sensor properties
     newsensor.phobostype = 'sensor'
     newsensor.name = sensor['name']
-    newsensor['type'] = sensor['type']
+    newsensor['sensor/type'] = sensor['type']
 
     # write the custom properties to the sensor
     for prop in sensor['props'].keys():
-        newsensor[prop] = sensor['props'][prop]
+        newsensor['sensor/' + prop] = sensor['props'][prop]
 
     # throw warning if type is not known
     # TODO we need to link this error to the sensor type specifications
