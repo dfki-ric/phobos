@@ -27,6 +27,7 @@ along with Phobos.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import bpy
+import re
 
 
 def getUniqueName(newname, names):
@@ -104,6 +105,19 @@ def getObjectName(obj, phobostype=None):
         return obj[nametype + "/name"]
     except KeyError:
         return stripNamespaceFromName(obj.name)
+
+
+def isValidModelname(name):
+    """Returns if a name contains characters other than alphanumeric, '_' and '-'"""
+    return not re.search(r'[^A-Za-z0-9_\-\\]', name)
+
+
+def getModelName(obj):
+    """Returns the name of the model encoded by obj, provided that obj is a valid model root.
+
+    If obj does not contained a defined 'modelname', the object name is returned with a '*' added
+    ad the start, ensuring that the return value will not be treated as a valid model name."""
+    return obj['modelname'] if 'modelname' in obj else '*' + obj.name
 
 
 def replaceNameElement(prop, old, new):
