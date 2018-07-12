@@ -213,6 +213,15 @@ def get_link_information(linkobj):
     inertialdict = {nUtils.getObjectName(obj): obj for obj in linkobj.children
                     if obj.phobostype == 'inertial'}
     props["inertial"] = inertialdict
+
+    # collect sensor objects
+    sensorobjects = sUtils.getImmediateChildren(
+        linkobj, phobostypes=('sensor'), include_hidden=True)
+    sensordict = {}
+    for sensorobj in sensorobjects:
+        sensordict[sensorobj.name] = sensorobj
+    props["sensor"] = sensordict
+
     props['approxcollision'] = []
     return props
 
