@@ -493,7 +493,7 @@ def deriveSensor(obj):
     """
     try:
         props = initObjectProperties(obj, phobostype='sensor')
-        props['link'] = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
+        props['link'] = sUtils.getEffectiveParent(obj)
     except KeyError:
         log("Missing data in sensor " + obj.name, "ERROR")
         return None
