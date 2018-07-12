@@ -653,7 +653,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
         # remove the unimportant properties and iterate over the rest
         proplist = set(proplist) - ignoredProps
-        for prop in proplist:
+        for prop in sorted(proplist):
             params = self.checkParams(prop)
             value = dictprops[prop]
 
@@ -692,7 +692,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                 categories[category] = [box, left, right, [0, 0]]
 
             # add each subproperty to the layout
-            for prop_t2 in dictprops[category]:
+            for prop_t2 in sorted(dictprops[category]):
                 params = self.checkParams(category + '/' + prop_t2)
 
                 value = dictprops[category][prop_t2]
