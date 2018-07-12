@@ -103,10 +103,8 @@ def getEntityRoots():
         list: roots of well-defined entities in the scene
 
     """
-    if getExpSettings().selectedOnly:
-        roots = [obj for obj in sUtils.getSelectedObjects() if sUtils.isEntity(obj)]
-    else:
-        roots = [obj for obj in bpy.context.scene.objects if sUtils.isEntity(obj)]
+    roots = [obj for obj in bpy.context.scene.objects if sUtils.isEntity(obj)
+             and (not getExpSettings().selectedOnly or obj.select)]
     return roots
 
 

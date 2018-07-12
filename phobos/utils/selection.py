@@ -287,20 +287,6 @@ def selectByName(name, match_case=False, exact=False):
         selectObjects(getObjectsByPattern(name, match_case), True)
 
 
-def getSelectedObjects():
-    """Returns a generator of all selected objects independent of bpy.context.
-
-    # DOCU fill this in
-    :return:
-
-    Args:
-
-    Returns:
-
-    """
-    return (obj for obj in bpy.context.scene.objects if obj.select)
-
-
 def getObjectsByProperty(property, value):
     # DOCU add some docstring
     candidate = None
