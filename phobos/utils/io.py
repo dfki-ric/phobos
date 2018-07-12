@@ -99,9 +99,8 @@ def getExportModels():
 def getEntityRoots():
     """Returns all objects for which entity properties are specified.
 
-    This list typically consits
-
     Returns:
+        list: roots of well-defined entities in the scene
 
     """
     if getExpSettings().selectedOnly:
@@ -134,6 +133,7 @@ def getOutputMeshpath(path, meshtype=None):
         meshtype(str): a valid mesh type, otherwise the type set in the GUI is used
 
     Returns:
+        string: output path for meshes
 
     """
     return os.path.join(path, 'meshes', meshtype if meshtype else getOutputMeshtype())
@@ -351,8 +351,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
         # the following is not surrounded by try..catch as that may mask exceptions occurring
         # inside the export function; also, only existing functionars register to display anyway
         entity_types[entitytype]['export'](model, model_path)
-        log("Export model: " + model['name'] + ' as ' + entitytype +
-            " to " + model_path, "DEBUG")
+        log("Export model '" + model['name'] + "' as " + entitytype + " to " + model_path, "DEBUG")
 
     # export meshes in selected formats
     i = 1

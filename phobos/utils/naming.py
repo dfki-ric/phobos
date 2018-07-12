@@ -110,9 +110,9 @@ def replaceNameElement(prop, old, new):
     """For all selected elements in Blender, replace an *old* part of a string *prop*erty with *new*.
 
     Args:
-      prop: 
-      old: 
-      new: 
+      prop:
+      old:
+      new:
 
     Returns:
 

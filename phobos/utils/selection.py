@@ -131,14 +131,14 @@ def getRoot(obj=None):
 
 
 def getRoots():
-    """Returns a list of all of the current scene's root links, i.e. links containing a model
-    name or entity name.
+    """Returns a list of all of the current scene's root objects.
 
     :return: list - all root links.
 
     Args:
 
     Returns:
+        list: bpy.types.Object
 
     """
     roots = [obj for obj in bpy.context.scene.objects if isRoot(obj)]
@@ -147,7 +147,7 @@ def getRoots():
     else:
         rootnames = ', '.join((root.name for root in roots))
         log("Phobos: Found {0} root object(s): {1}".format(len(roots), rootnames), "DEBUG")
-    return roots  # TODO: Should we change this and all other list return values in a tuple or generator expression?
+    return roots
 
 
 def isRoot(obj):
@@ -155,13 +155,8 @@ def isRoot(obj):
 
     Args:
       obj(bpy.types.Object): The object for which model root status is tested.
-
-    Returns:
-      bool - True if obj is Phobos model root, else False.
-
     """
-    return None if obj is None else ('modelname' in obj and obj.phobostype in ['link', 'submodel']
-                                     and obj.parent is None)
+    return obj is not None and obj.phobostype in ['link', 'submodel'] and not obj.parent
 
 
 def isEntity(obj):
@@ -169,12 +164,8 @@ def isEntity(obj):
 
     Args:
       obj(bpy.types.Object): The object for which entity status is tested.
-
-    Returns:
-      bool - True if obj is an entity, else False.
-
     """
-    return None if obj is None else ('entity/type' in obj and 'entity/name' in obj)
+    return obj is not None and 'entity/type' in obj and 'entity/name' in obj
 
 
 def selectObjects(objects, clear=True, active=-1):

@@ -997,7 +997,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         'name': modelname
     }
 
-    log("Creating dictionary for model " + modelname + " with root " + root.name + ".", 'INFO')
+    log("Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.", 'INFO')
 
     # create tuples of objects belonging to model
     if not objectlist:
