@@ -38,6 +38,7 @@ from phobos.phoboslog import log
 
 
 def exportMesh(obj, path, meshtype):
+    import phobos.utils.io as ioUtils
     # DOCU add some docstring
     objname = nUtils.getObjectName(obj)
     tmpobjname = obj.name
