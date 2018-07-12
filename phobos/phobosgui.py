@@ -567,6 +567,12 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
         # add all properties in sequence
         for _, (prop, value, param) in enumerate(zip(props, values, params)):
+
+            # objects are shown as goto operator
+            if isinstance(value, bpy.types.Object):
+                self.addObjLink(prop, value, column, param)
+                continue
+
             subtable = column.split(percentage=0.45)
             descr = subtable.column()
             content = subtable.column()
@@ -584,20 +590,9 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
             else:
                 content.label(text=str(value), **param['infoparams'])
 
-    def addObjLink(self, prop, value, layout, params):
+    def addObjLink(self, prop, value, column, params):
         # this list is used to force labelling of special keywords
         labels = ['joint', 'child']
-
-        # get the existing layout columns
-        left = layout[1]
-        right = layout[2]
-        # put the link left or right?
-        if layout[3][0] <= layout[3][1]:
-            layout[3][0] += 1
-            column = left
-        else:
-            layout[3][1] += 1
-            column = right
 
         label = [prop if prop in labels else ''][0]
 
@@ -664,13 +659,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
             # just a value for the general category
             if not isinstance(value, dict):
-                if isinstance(value, bpy.types.Object) or (isinstance(value, str) and value in
-                                                           context.scene.objects):
-                    if isinstance(value, str):
-                        value = context.scene.objects[value]
-                    self.addObjLink(prop, value, categories['general'], params)
-                else:
-                    self.addProp([prop], [value], categories['general'], [params])
+                self.addProp([prop], [value], categories['general'], [params])
                 continue
 
             # check for categories
@@ -705,14 +694,6 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                 # skip ignored properties
                 if prop_t2 in ignoredProps:
                     continue
-
-                # is it a linkable object?
-                if isinstance(value, bpy.types.Object) or (isinstance(value, str) and value in
-                                                           context.scene.objects):
-                    # a string identifier for an object
-                    if isinstance(value, str):
-                        value = context.scene.objects[value]
-                    self.addObjLink(prop_t2, value, categories[category], params)
 
                 # is it another dictionary with values?
                 elif isinstance(value, dict):
