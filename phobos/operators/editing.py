@@ -1227,7 +1227,7 @@ def addSensorFromYaml(category, name):
         bl_label = 'Add ' + name
         bl_description = 'Add a {0} sensor from the {1} category.'.format(
             name, category)
-        bl_options = {'REGISTER'}
+        bl_options = {'INTERNAL'}
 
         # this contains all the single entries of the dictionary after invoking
         sensor_data = bpy.props.CollectionProperty(type=DynamicProperty)
@@ -1448,26 +1448,22 @@ class AddSensorOperator(Operator):
 
     def execute(self, context):
         # make sure a link is selected or created
-        if not self.addLink and not sUtils.getEffectiveParent(
-                context.active_object, ignore_selection=True):
+        if not self.addLink and not context.active_object.phobostype == 'link':
             log('You have no link to add the sensor to. Select one ' +
-                    'or create it with the operator.', 'INFO')
+                'or create it with the operator.', 'INFO')
             return {'CANCELLED'}
 
         # match the operator to avoid dangers of eval
         import re
-        operatorName = addSensorFromYaml(self.categ, self.sensor)
+        opName = addSensorFromYaml(self.categ, self.sensor)
         operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
 
         # run the operator and pass on add link (to allow undo both new link and sensor)
-        if operatorPattern.match(operatorName):
-            eval('bpy.ops.' + operatorName + "('INVOKE_DEFAULT', " +
-                 "addLink=" + str(self.addLink) +
-                 ")")
+        if operatorPattern.match(opName):
+            eval('bpy.ops.' + opName + "('INVOKE_DEFAULT', addLink=" + str(self.addLink) + ")")
         else:
-            log('This sensor name is not following the naming convention: ' +
-                operatorName + '. It can not be converted into an operator.',
-                'ERROR')
+            log('This sensor name is not following the naming convention: ' + opName +
+                '. It can not be converted into an operator.', 'ERROR')
         return {'FINISHED'}
 
 
