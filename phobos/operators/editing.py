@@ -1712,14 +1712,33 @@ class AddAnnotationsOperator(bpy.types.Operator):
     def getAnnotationTypes(self, context):
         return [(category,) * 3 for category in sorted(defs.definitions.keys())]
 
-    def getDeviceTypes(self, context):
-        return [(category,) * 3 for category in sorted(defs.definitions[self.annotationtype].keys())]
+    def getAnnotationCategories(self, context):
+        subcategories = [(category,) * 3 for category in
+                         sorted(defs.def_subcategories[self.annotationtype])]
 
+        # do not use single categories
+        if not subcategories:
+            subcategories = [('None',) * 3]
+        return subcategories
+
+    def getDeviceTypes(self, context):
+        devicetypes = [(device,) * 3 for device in sorted(
+            defs.definitions[self.annotationtype].keys()) if self.annotationcategories in
+            defs.def_settings[self.annotationtype][device]['categories']]
+
+        if not devicetypes:
+            devicetypes = [('None',) * 3]
+        return devicetypes
 
     annotationtype = EnumProperty(
         items=getAnnotationTypes,
         name="Annotation Type",
         description="Annotation Types")
+
+    annotationcategories = EnumProperty(
+        items=getAnnotationCategories,
+        name="Categories",
+        description="Categories of this annotation type.")
 
     devicetype = EnumProperty(
         items=getDeviceTypes,
@@ -1741,6 +1760,11 @@ class AddAnnotationsOperator(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         layout.prop(self, 'annotationtype')
+
+        if self.annotationcategories == 'None':
+            layout.label('No categories available.')
+        else:
+            layout.prop(self, 'annotationcategories')
 
         # hide devicetype property when empty
         if self.devicetype == 'None':
@@ -1768,6 +1792,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
                 # use the dynamic props name in the GUI, but without the type id
                 self.annotation_data[i].draw(box, name)
+
     def execute(self, context):
         if self.filepath != '':
             try:
