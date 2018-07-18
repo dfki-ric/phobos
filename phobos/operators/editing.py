@@ -1295,6 +1295,12 @@ def addSensorFromYaml(category, name):
                 # use the dynamic props name in the GUI, but without the type id
                 self.sensor_data[i].draw(layout, name)
 
+            if self.annotation_checks:
+                box = layout.box()
+                box.label('Include annotations:')
+                for i in range(len(self.annotation_checks)):
+                    name = self.annotation_checks[i].name[2:].replace('_', ' ')
+                    self.annotation_checks[i].draw(box, name)
 
         def invoke(self, context, event):
             # load the sensor definitions of the current sensor
@@ -1302,10 +1308,16 @@ def addSensorFromYaml(category, name):
 
             # ignore properties which should not show up in the GUI
             hidden_props = ['general']
+
             # identify the property type for all the stuff in the definition
             unsupported = DynamicProperty.assignDict(self.sensor_data.add, data,
                                                      ignore=hidden_props)
 
+            if unsupported:
+                for key in unsupported:
+                    boolprop = self.annotation_checks.add()
+                    boolprop.name = 'b_' + key
+                    boolprop.boolProp = False
 
             # open up the operator GUI
             return context.window_manager.invoke_props_dialog(self)
