@@ -124,6 +124,9 @@ definitions = {'motors': {},
                'submodeltypes': {}
                }
 
+def_settings = {key: {} for key in definitions.keys()}
+
+def_subcategories = {key: set([]) for key in definitions.keys()}
 
 def updateDefs(defsFolderPath):
     """Updates the definitions with all yml files in the given folder.
@@ -136,15 +139,36 @@ def updateDefs(defsFolderPath):
         for category in diction:
             for key, value in diction[category].items():
                 if category not in definitions:
+                    log("Creating new definition type: " + category, 'INFO')
                     definitions[category] = {}
+                    def_settings[category] = {}
+                    def_subcategories[category] = set([])
 
                 # TODO we need to insert user data, instead overwriting existing
                 if key in definitions[category]:
                     log("Entry for " + category + '/' + key +
                         " will be overwritten while parsing definitions.", "WARNING")
+
+                # parse def_settings to other dictionary
+                if isinstance(value, dict) and 'general' in value and value['general']:
+                    def_settings[category][key] = value['general']
+                    del value['general']
+                else:
+                    # add undefined stuff to other category
+                    def_settings[category][key] = {'categories': ['other']}
                 definitions[category][key] = value
+
+    # update category sets
+    for definition in def_settings.keys():
+        for entry in def_settings[definition]:
+            if 'categories' in def_settings[definition][entry]:
+                categs = set(def_settings[definition][entry]['categories'])
+                def_subcategories[definition] = def_subcategories[definition].union(categs)
+
     # TODO remove print
     print(yaml.dump(definitions))
+    print(yaml.dump(def_settings))
+    print(yaml.dump(def_subcategories))
 
 
 def __evaluateString(s):
