@@ -1252,7 +1252,7 @@ class DynamicProperty(bpy.types.PropertyGroup):
         elif self.name[0] == 'f':
             layout.prop(self, 'floatProp', text=name)
 
-def addSensorFromYaml(category, name):
+def addSensorFromYaml(name, sensortype):
     """This registers a temporary sensor Operator.
     The data for the properties is provided by the parsed yaml files of the
     sensors. The operator then adds a sensor object and writes the information
@@ -1274,15 +1274,14 @@ def addSensorFromYaml(category, name):
         """Temporary operator to add a {0} sensor.""".format(name)
         bl_idname = operatorBlenderId
         bl_label = 'Add ' + name
-        bl_description = 'Add a {0} sensor from the {1} category.'.format(
-            name, category)
+        bl_description = 'Add a {0} sensor.'.format(name)
         bl_options = {'INTERNAL'}
 
         # this contains all the single entries of the dictionary after invoking
         sensor_data = bpy.props.CollectionProperty(type=DynamicProperty)
         annotation_checks = bpy.props.CollectionProperty(type=DynamicProperty)
-        categ = category
         sensorName = name
+        sensorType = sensortype
         addLink = BoolProperty(default=False)
 
         def draw(self, context):
@@ -1304,7 +1303,7 @@ def addSensorFromYaml(category, name):
 
         def invoke(self, context, event):
             # load the sensor definitions of the current sensor
-            data = defs.definitions['sensors'][self.categ][self.sensorName]
+            data = defs.definitions['sensors'][self.sensorType]
 
             # ignore properties which should not show up in the GUI
             hidden_props = ['general']
@@ -1323,11 +1322,11 @@ def addSensorFromYaml(category, name):
             return context.window_manager.invoke_props_dialog(self)
 
         def execute(self, context):
-            sensordefs = defs.definitions['sensors'][self.categ][self.sensorName]
             # create a dictionary holding the sensor definition
             sensor_dict = {'name': self.sensorName,
-                           'category': self.categ,
+                           'category': defs.def_settings['sensors'][self.sensorType]['categories'],
                            'material': 'phobos_sensor',
+                           'type': self.sensorType,
                            'props': {}
             }
             original_obj = context.active_object
@@ -1349,7 +1348,7 @@ def addSensorFromYaml(category, name):
                 parentlink = original_obj
 
             # add the general settings for this sensor
-            general_settings = sensordefs['general']
+            general_settings = defs.def_settings['sensors'][self.sensorType]
             for gensetting in general_settings.keys():
                 sensor_dict[gensetting] = general_settings[gensetting]
 
@@ -1408,9 +1407,8 @@ class AddSensorOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def sensorlist(self, context):
-        items = []
-        for sensor in defs.definitions['sensors'][self.categ]:
-            items.append((sensor,) * 3)
+        items = [(sensor,) * 3 for sensor in sorted(defs.definitions['sensors'])
+                 if self.categ in defs.def_settings['sensors'][sensor]['categories']]
         return items
 
     def categorylist(self, context):
@@ -1420,7 +1418,7 @@ class AddSensorOperator(Operator):
         from phobos.phobosgui import prev_collections
 
         phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
-        categories = [t for t in defs.definitions['sensors']]
+        categories = [t for t in defs.def_subcategories['sensors']]
 
         icon = ''
         items = []
@@ -1449,7 +1447,7 @@ class AddSensorOperator(Operator):
         items=categorylist,
         description='The sensor category'
     )
-    sensor = EnumProperty(
+    sensorType = EnumProperty(
         items=sensorlist,
         description='The sensor type'
     )
@@ -1469,7 +1467,7 @@ class AddSensorOperator(Operator):
         layout.prop(self, 'sensorName')
         layout.separator()
         layout.prop(self, 'categ', text='Sensor category')
-        layout.prop(self, 'sensor', text='Sensor type')
+        layout.prop(self, 'sensorType', text='Sensor type')
         layout.prop(self, 'addLink')
 
     def invoke(self, context, event):
@@ -1491,7 +1489,7 @@ class AddSensorOperator(Operator):
 
         # match the operator to avoid dangers of eval
         import re
-        opName = addSensorFromYaml(self.categ, self.sensor)
+        opName = addSensorFromYaml(self.sensorName, self.sensorType)
         operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
 
         # run the operator and pass on add link (to allow undo both new link and sensor)

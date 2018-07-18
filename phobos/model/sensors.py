@@ -180,7 +180,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
 
     # throw warning if type is not known
     # TODO we need to link this error to the sensor type specifications
-    if sensor['type'] not in defs.definitions['sensors'][sensor['category']]:
+    if sensor['type'] not in defs.def_settings['sensors']:
         log("Sensor " + sensor['name'] + " is of unknown/custom type.", 'WARNING')
 
     # select the new sensor
