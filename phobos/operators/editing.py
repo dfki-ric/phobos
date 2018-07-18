@@ -1715,7 +1715,6 @@ class AddAnnotationsOperator(bpy.types.Operator):
     def getDeviceTypes(self, context):
         return [(category,) * 3 for category in sorted(defs.definitions[self.annotationtype].keys())]
 
-    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
 
     annotationtype = EnumProperty(
         items=getAnnotationTypes,
@@ -1727,6 +1726,8 @@ class AddAnnotationsOperator(bpy.types.Operator):
         name="Device Type",
         description="Device Types")
 
+    annotation_data = bpy.props.CollectionProperty(type=DynamicProperty)
+
     @classmethod
     def poll(cls, context):
         return context is not None
@@ -1734,19 +1735,39 @@ class AddAnnotationsOperator(bpy.types.Operator):
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=500)
 
-    def draw(self, context):
-        l = self.layout
-        l.prop(self, 'filepath')
-        if self.filepath == '':
-            l.prop(self, 'annotationtype')
-            l.prop(self, 'devicetype')
-            b = self.layout.box()
-            try:
-                for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
-                    b.label(text=key+': '+str(value))
-            except KeyError:
-                pass  # no valid key selected yet
+    def check(self, context):
+        return True
 
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'annotationtype')
+
+        # hide devicetype property when empty
+        if self.devicetype == 'None':
+            layout.label('No devices defined.')
+            return
+
+        layout.prop(self, 'devicetype')
+        data = defs.definitions[self.annotationtype][self.devicetype]
+
+        hidden_props = ['general']
+        # identify the property type for all the stuff in the definition
+        self.annotation_data.clear()
+        unsupported = DynamicProperty.assignDict(self.annotation_data.add, data,
+                                                 ignore=hidden_props)
+
+        if unsupported:
+            log("These properties are not supported for generic editing: " + str(list(unsupported)),
+                'DEBUG')
+
+        # expose the parameters as the right Property
+        if self.annotation_data:
+            box = layout.box()
+            for i in range(len(self.annotation_data)):
+                name = self.annotation_data[i].name[2:].replace('_', ' ')
+
+                # use the dynamic props name in the GUI, but without the type id
+                self.annotation_data[i].draw(box, name)
     def execute(self, context):
         if self.filepath != '':
             try:
