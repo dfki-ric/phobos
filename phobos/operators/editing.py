@@ -1280,6 +1280,7 @@ def addSensorFromYaml(category, name):
 
         # this contains all the single entries of the dictionary after invoking
         sensor_data = bpy.props.CollectionProperty(type=DynamicProperty)
+        annotation_checks = bpy.props.CollectionProperty(type=DynamicProperty)
         categ = category
         sensorName = name
         addLink = BoolProperty(default=False)
@@ -1289,48 +1290,22 @@ def addSensorFromYaml(category, name):
 
             # expose the parameters as the right Property
             for i in range(len(self.sensor_data)):
-                # use the dynamic props name in the GUI, but without the type id
                 name = self.sensor_data[i].name[2:].replace('_', ' ')
-                if self.sensor_data[i].name[0] == 'i':
-                    layout.prop(self.sensor_data[i], 'intProp', text=name)
-                elif self.sensor_data[i].name[0] == 'b':
-                    layout.prop(self.sensor_data[i], 'boolProp', text=name)
-                elif self.sensor_data[i].name[0] == 's':
-                    layout.prop(self.sensor_data[i], 'stringProp', text=name)
-                elif self.sensor_data[i].name[0] == 'f':
-                    layout.prop(self.sensor_data[i], 'floatProp', text=name)
+
+                # use the dynamic props name in the GUI, but without the type id
+                self.sensor_data[i].draw(layout, name)
+
 
         def invoke(self, context, event):
             # load the sensor definitions of the current sensor
             data = defs.definitions['sensors'][self.categ][self.sensorName]
 
+            # ignore properties which should not show up in the GUI
             hidden_props = ['general']
             # identify the property type for all the stuff in the definition
-            for propname in data.keys():
-                if propname in hidden_props:
-                    continue
-                item = self.sensor_data.add()
-                prefix = ''
-                if isinstance(data[propname], int):
-                    item.intProp = data[propname]
-                    prefix = 'i'
-                elif isinstance(data[propname], str):
-                    import re
+            unsupported = DynamicProperty.assignDict(self.sensor_data.add, data,
+                                                     ignore=hidden_props)
 
-                    # make sure eval is called only with true or false
-                    if re.match('true|false', data[propname][1:], re.IGNORECASE):
-                        booleanString = data[propname][1:]
-                        booleanString = booleanString[0].upper() + booleanString[1:].lower()
-                        item.boolProp = eval(booleanString)
-                        prefix = 'b'
-                    else:
-                        item.stringProp = data[propname]
-                        prefix = 's'
-                elif isinstance(data[propname], float):
-                    item.floatProp = data[propname]
-                    prefix = 'f'
-                # TODO what about lists?
-                item.name = prefix + '_' + propname
 
             # open up the operator GUI
             return context.window_manager.invoke_props_dialog(self)
