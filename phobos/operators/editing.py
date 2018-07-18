@@ -1700,7 +1700,7 @@ class AddHeightmapOperator(Operator):
 
 
 class AddAnnotationsOperator(bpy.types.Operator):
-    """Add annotations defined in a YAML file"""
+    """Add annotations defined by the Phobos definitions """
     bl_idname = "phobos.add_annotations"
     bl_label = "Add Annotations"
     bl_space_type = 'VIEW_3D'
@@ -1778,10 +1778,6 @@ class AddAnnotationsOperator(bpy.types.Operator):
         unsupported = DynamicProperty.assignDict(self.annotation_data.add, data,
                                                  ignore=hidden_props)
 
-        if unsupported:
-            log("These properties are not supported for generic editing: " + str(list(unsupported)),
-                'DEBUG')
-
         # expose the parameters as the right Property
         if self.annotation_data:
             box = layout.box()
@@ -1790,6 +1786,14 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
                 # use the dynamic props name in the GUI, but without the type id
                 self.annotation_data[i].draw(box, name)
+
+            # add unsupported stuff as labels
+            for item in unsupported:
+                box.label(item, icon='ERROR')
+
+        if unsupported:
+            log("These properties are not supported for generic editing: " + str(list(unsupported)),
+                'DEBUG')
 
     def execute(self, context):
         if self.filepath != '':
