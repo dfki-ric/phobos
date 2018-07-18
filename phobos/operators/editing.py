@@ -1202,6 +1202,30 @@ class DynamicProperty(bpy.types.PropertyGroup):
     stringProp = bpy.props.StringProperty()
     floatProp = bpy.props.FloatProperty()
 
+    def assignValue(self, name, value):
+        prefix = ''
+        if isinstance(value, int):
+            self.intProp = value
+            prefix = 'i'
+        elif isinstance(value, str):
+            import re
+
+            # make sure eval is called only with true or false
+            if re.match('true|false', value[1:], re.IGNORECASE):
+                booleanString = value[1:]
+                booleanString = booleanString[0].upper() + booleanString[1:].lower()
+                self.boolProp = eval(booleanString)
+                prefix = 'b'
+            else:
+                self.stringProp = value
+                prefix = 's'
+        elif isinstance(value, float):
+            self.floatProp = value
+            prefix = 'f'
+        # TODO what about lists?
+
+        self.name = prefix + '_' + name
+
 
 def addSensorFromYaml(category, name):
     """This registers a temporary sensor Operator.
