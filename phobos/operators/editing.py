@@ -1226,6 +1226,22 @@ class DynamicProperty(bpy.types.PropertyGroup):
 
         self.name = prefix + '_' + name
 
+    def assignDict(addfunc, dictionary, ignore=[]):
+        unsupported = {}
+        for propname in dictionary:
+            if propname in ignore:
+                continue
+
+            # skip subcategories
+            if isinstance(dictionary[propname], dict):
+                unsupported[propname] = dictionary[propname]
+                continue
+
+            subprop = addfunc()
+            subprop.assignValue(propname, dictionary[propname])
+
+        return unsupported
+
 
 def addSensorFromYaml(category, name):
     """This registers a temporary sensor Operator.
