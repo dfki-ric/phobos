@@ -1242,6 +1242,15 @@ class DynamicProperty(bpy.types.PropertyGroup):
 
         return unsupported
 
+    def draw(self, layout, name):
+        if self.name[0] == 'i':
+            layout.prop(self, 'intProp', text=name)
+        elif self.name[0] == 'b':
+            layout.prop(self, 'boolProp', text=name)
+        elif self.name[0] == 's':
+            layout.prop(self, 'stringProp', text=name)
+        elif self.name[0] == 'f':
+            layout.prop(self, 'floatProp', text=name)
 
 def addSensorFromYaml(category, name):
     """This registers a temporary sensor Operator.
