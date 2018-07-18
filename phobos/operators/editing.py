@@ -1796,19 +1796,9 @@ class AddAnnotationsOperator(bpy.types.Operator):
                 'DEBUG')
 
     def execute(self, context):
-        if self.filepath != '':
-            try:
-                with open(self.filepath, 'r') as annotationfile:
-                    annotations = yaml.load(annotationfile.read())
-                for category in annotations:
-                    for key, value in annotations[category].items():
-                        context.active_object[category+'/'+key] = value
-            except FileNotFoundError:
-                log("Annotation file seems to be invalid.", "ERROR")
-        else:
-            for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
-                for obj in context.selected_objects:
-                    obj[self.devicetype+'/'+key] = value
+        for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
+            for obj in context.selected_objects:
+                obj[self.devicetype+'/'+key] = value
         return {'FINISHED'}
 
 
