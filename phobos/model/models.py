@@ -54,41 +54,33 @@ from phobos.defs import linkobjignoretypes
 
 
 def collectMaterials(objectlist):
-    """This function collects all materials from a list of objects and sorts them into a dictionary
+    """Returns a dictionary of materials contained in a list of objects
 
     Args:
-      objectlist(list: list): The objectlist to grab the materials from.
-
-    Returns:
-      dict
-
+      objectlist(list): list of objects to derive dictionary from
     """
     materials = {}
     for obj in objectlist:
         if obj.phobostype == 'visual':
-            try:
                 mat = obj.active_material
                 if mat.name not in materials:
                     materials[mat.name] = deriveMaterial(mat)
                     materials[mat.name]['users'] = 1
                 else:
                     materials[mat.name]['users'] += 1
-            except AttributeError:
-                log("Could not parse material in object " + obj.name, "ERROR")
     return materials
 
 
 def deriveMaterial(mat):
-    """This function takes a blender material and creates a phobos representation from it
+    """Returns a Phobos representation of a Blender material.
 
     Args:
-      mat(bpy.types.Material): The blender material to derive a phobos material from
-
-    Returns:
-      dict
+      mat(bpy.types.Material): Blender material to derive a Phobos description from
 
     """
-    material = initObjectProperties(mat, 'material')
+    # TODO: annotations to materials could be used to fuse annotation objects' materials for different
+    #       graphics engines of simulations etc., currently works by adding custom properties
+    material = initObjectProperties(mat, 'material', includeannotations=False)
     material['name'] = mat.name
     material['diffuseColor'] = dict(zip(['r', 'g', 'b'],
                                         [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
@@ -1098,17 +1090,12 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     for obj in objectlist:
         if obj.phobostype == 'visual':
             mat = obj.active_material
-            try:
-                if mat.name not in model['materials']:
-                    # this should actually never happen
-                    model['materials'][mat.name] = deriveMaterial(
-                        mat)
-                linkname = nUtils.getObjectName(
-                    sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
-                model['links'][linkname]['visual'][nUtils.getObjectName(obj)][
-                    'material'] = mat.name
-            except AttributeError:
-                log("Could not parse material for object " + obj.name, "ERROR")
+            # TODO: check if this ever happens, because it shouldn't
+            if mat.name not in model['materials']:
+                model['materials'][mat.name] = deriveMaterial(mat)
+                linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj,
+                    ignore_selection=bool(objectlist)))
+                model['links'][linkname]['visual'][nUtils.getObjectName(obj)]['material'] = mat.name
 
     # identify unique meshes
     log("Parsing meshes...", "INFO")
