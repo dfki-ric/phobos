@@ -84,7 +84,7 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
             (child.select or not selected_only)]
 
 
-def getEffectiveParent(obj, ignore_selection=False, include_hidden=False):
+def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, objectlist=[]):
     """Returns the parent of an object, i.e. the first *link* ascending the
     object tree that is selected, starting from the obj, optionally also excluding
     hidden objects.
@@ -93,16 +93,17 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False):
       obj(bpy.types.Object): object of which to find the parent.
       include_hidden(bool, optional): True to include hidden objects, else False. (Default value = False)
       ignore_selection:  (Default value = False)
-
-    Returns:
-      bpy.types.Object - the effective parent of the obj.
-
+      objectlist: list of bpy.types.Object to which possible parents are restricted
     """
+    if not objectlist:
+        objectlist = list(bpy.data.objects)
+
     parent = obj.parent
-    while (parent and ((parent.hide and not include_hidden) or
-            (not parent.select and bpy.context.scene.phobosexportsettings.selectedOnly
-             and not ignore_selection)
-             or parent.phobostype != 'link')):
+    while (parent and parent in objectlist
+           and ((parent.hide and not include_hidden)
+                or (not parent.select and bpy.context.scene.phobosexportsettings.selectedOnly
+                and not ignore_selection)
+                or parent.phobostype != 'link')):
         parent = parent.parent
     return parent
 
