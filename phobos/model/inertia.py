@@ -38,24 +38,19 @@ from phobos.phoboslog import log
 import phobos.utils.general as gUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
+import phobos.utils.naming as nUtils
 from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 
 
-def createInertial(parentname, inertialdict, parentobj=None, effectiveParent=None):
+def createInertial(inertialdict, obj=None):
     """Creates the Blender representation of a given inertial provided a dictionary.
 
-    :param parentname: inertial object's parent's name
-    :type parentname: str
-    :param inertialdict: intertial data
-    :type inertialdict: dict
-    :param parentobj: link or visual/collision with which the inertial obj is associated
-    :type parentobj: bpy.types.Object
-    :param helper: whether or not the object is a helper inertial
-    :type helper: bool
-
-    :return: the newly created blender inertial object.
-    :rtype: bpy_types.Object
+    Args:
+        inertialdict(dict): intertial data
+        obj(bpy.types.Object): link or visual/collision reference object
+    Returns:
+        bpy_types.Object: newly created blender inertial object
     """
     size = 0.03
 
@@ -64,22 +59,17 @@ def createInertial(parentname, inertialdict, parentobj=None, effectiveParent=Non
     except KeyError:
         origin = mathutils.Vector()
 
-    # Check the inertia data for consistency
-    if checkInertiaData(inertialdict):
-        material = 'phobos_inertial'
-    elif not checkInertiaData(inertialdict):
-        log('Inconsistent inertia data found for object {}!'.format(parentname), "WARNING")
-        material = 'phobos_error'
+    if not isInertiaDataValid(inertialdict):
+        return None
 
-    inertialobject = bUtils.createPrimitive('inertial_' + parentname, 'box', (size,) * 3,
-                                            defs.layerTypes["inertial"],
-                                            pmaterial=material,
-                                            phobostype='inertial')
+    name = nUtils.getUniqueName('inertial_' + nUtils.getObjectName(obj), bpy.data.objects)
+    inertialobject = bUtils.createPrimitive(name, 'box', (size,) * 3, defs.layerTypes["inertial"],
+                                            pmaterial='phobos_inertial', phobostype='inertial')
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(scale=True)
-    if parentobj:
-        inertialobject.matrix_world = parentobj.matrix_world
-        parent = parentobj if parentobj.phobostype == 'link' else parentobj.parent
+    if obj:
+        inertialobject.matrix_world = obj.matrix_world
+        parent = obj if obj.phobostype == 'link' else obj.parent
         sUtils.selectObjects((inertialobject, parent), clear=True, active=1)
 
         # Create the inertial object relative to the link / joint
@@ -90,95 +80,36 @@ def createInertial(parentname, inertialdict, parentobj=None, effectiveParent=Non
 
     # set properties
     for prop in ('mass', 'inertia'):
-        inertialobject[prop] = inertialdict[prop]
+        inertialobject['inertia/' + prop] = inertialdict[prop]
     return inertialobject
 
 
-def createInertialObjects(link, autocalc=True):
-    """Creates inertial objects from inertials of the visual/collision objects of a link.
-
-    The new inertials can be calculated automatically or remain empty (based on the autocalc
-    parameter).
-
-    :param link: the link which contains the visual/collision objects
-    :type link: bpy_types.Object
-    :param autocalc: If set to False the new inertial object will contain no inertia information.
-    :type autocalc: bool
-
-    :return: the newly created inertial objects
-    :rtype: list of bpy.types.Object
-    """
-    assert link.phobostype == 'link', 'Not a link object: ' + link.phobostype + '.'
-    viscols = getInertiaRelevantObjects(link)
-
-    inertialobjs = []
-    for obj in viscols:
-        inertialdata = {'mass': 0, 'inertia': [0, 0, 0, 0, 0, 0],
-                        'pose': {'translation': obj.matrix_local.to_translation()}}
-        if autocalc:
-            mass = obj['mass'] if 'mass' in obj else None
-            geometry = deriveGeometry(obj)
-            if mass and geometry:
-                inert = calculateInertia(obj, mass, geometry)
-                if inert is not None:
-                    inertialdata['mass'] = mass
-                    inertialdata['inertia'] = inert
-        # Create the object as a child of the parent object
-        inertialobjs.append(createInertial(obj.name, inertialdata, parentobj=obj,
-                                           effectiveParent=link))
-    if not inertialobjs:
-        log('No objects to calculate inertias from.', 'WARNING')
-    return inertialobjs
-
-
-def calculateMassOfLink(link):
-    """Sums the masses of visual and collision objects found in a link,
-    compares it to mass in link inertial object if present and returns the max of both,
-    warning if they are not equal.
+def calculateInertia(obj, mass, geometry=None):
+    """Calculates the inertia of an object using the specified mass and
+       optionally geometry.
 
     Args:
-      link(dict): The link you want to calculate the visuals and collision objects mass of.
+        obj(bpy.types.Object): object to calculate inertia from
+        mass(float): mass of object
+        geometry(dict, optional): geometry part of the object dictionary
 
-    Returns:
-      float
-
-    """
-    objects = getInertiaRelevantObjects(link, ['visual', 'collision'])
-    inertials = sUtils.getImmediateChildren(link, ['inertial'])
-    objectsmass = sUtils.calculateSum(objects, 'mass')
-    if len(inertials) == 1:
-        inertialmass = inertials[0]['mass'] if 'mass' in inertials[0] else 0
-    if objectsmass != inertialmass:
-        log("Warning: Masses are inconsistent.", "WARNING")
-    return max(objectsmass, inertialmass)
-
-
-def calculateInertia(obj, mass, geometry):
-    """Calculates the inertia of an object using the specified mass and geometry.
-
-    Returns the upper diagonal of the inertia 3x3 inertia tensor.
-
-    :param obj: object to calculate inertia from
-    :type obj: bpy.types.Object
-    :param mass: object mass
-    :type mass: float
-    :param geometry: geometry part of the object dictionary
-    :type geometry: dict
-
-    :return: upper diagonal of the inertia 3x3 tensor
-    :rtype: tuple(6)
+    Returns(tuple):
+        tuple(6) of upper diagonal of the inertia 3x3 tensor
     """
     inertia = None
-    geometrytype = geometry['type']
-    if geometrytype == 'box':
+    if not geometry:
+        geometry = deriveGeometry(obj)
+        if not geometry:
+            return None
+    if geometry['type'] == 'box':
         inertia = calculateBoxInertia(mass, geometry['size'])
-    elif geometrytype == 'cylinder':
+    elif geometry['type'] == 'cylinder':
         inertia = calculateCylinderInertia(mass, geometry['radius'], geometry['length'])
-    elif geometrytype == 'sphere':
+    elif geometry['type'] == 'sphere':
         inertia = calculateSphereInertia(mass, geometry['radius'])
-    elif geometrytype == 'capsule':
+    elif geometry['type'] == 'capsule':
         inertia = calculateCapsuleInertia(mass, geometry['radius'], geometry['length'])
-    elif geometrytype == 'mesh':
+    elif geometry['type'] == 'mesh':
         sUtils.selectObjects((obj,), clear=True, active=0)
         inertia = calculateMeshInertia(mass, obj.data)
     return inertia
@@ -189,7 +120,7 @@ def calculateBoxInertia(mass, size):
 
     Args:
       mass(float): The box' mass.
-      size(float): The box' size.
+      size(iterable): The box' size.
 
     Returns:
       tuple(6)
@@ -422,83 +353,23 @@ def calculateMeshInertia(mass, data):
     return i[0][0], i[0][1], i[0][2], i[1][1], i[1][2], i[2][2]
 
 
-def checkInertiaData(inertialdict):
-    """Checks the inertial data to be physical consistent.
-
-    Returns true if the data is consistent otherwise false.
-
-    :param inertialdict: Dictionary with the inertia data
-    :type inertialdict: dict
-
-    :return: true if consistent, false if not
-    :rtype: bool
+def isInertiaDataValid(inertialdict):
+    """Returns True if the inertial data to be physical consistent, else False.
     """
-    assert isinstance(inertialdict, dict), 'Wrong datatype: ' + type(inertialdict) + '.'
-
-    # Check for mass and inertia
-    if 'mass' in inertialdict:
-        mass = inertialdict['mass']
-        consistency = checkMass(mass)
-
-        # check inertial only if it is available
-        if 'inertia' in inertialdict and consistency:
-            inertia = inertialdict['inertia']
-            return consistency and checkInertia(inertia)
-        return consistency
-    return False
-
-
-def checkMass(mass):
-    """ Checks if the mass of an object is positive definite.
-
-    :param mass:: mass of the object
-    :type mass: float
-
-    :return: true if the mass is positive definite, false if not
-    :rtype: bool
-    """
-    assert isinstance(mass, float), "Mass is not a float."
-    return mass > 0.
-
-
-def checkInertia(inertia):
-    """Checks if the inertia of an object leads to positive definite inertia matrix.
-
-    :param inertia: inertia of the object.
-    :type inertia: list, tuple or matrix
-
-    :return: true if inertia matrix is positive definite, false if not
-    :rtype: bool
-    """
-    assert isinstance(inertia, (list, tuple, mathutils.Matrix)), ("Wrong inertia type: " +
-                                                                  type(inertia) + ".")
-
-    consistency = True
-
-    # Convert to matrix if necessary
-    if not isinstance(inertia, mathutils.Matrix):
-        inertia = numpy.array(inertiaListToMatrix(inertia))
-
-    # Check the main diagonal for strictly positive values
-    consistency = all(element >= 0.0 for element in inertia.diagonal())
-
-    if not consistency:
-        log("Negative semidefinite main diagonal found!", "WARNING")
-        return consistency
-
+    # Check inertia vector for various properties
+    inertia = numpy.array(inertiaListToMatrix(inertialdict['inertia']))
+    if not all(element >= 0.0 for element in inertia.diagonal()):
+        log("Negative semidefinite main diagonal in inertia data!", "WARNING")
+        return False
     # Calculate the determinant if consistent
-    consistency = numpy.linalg.det(inertia) > 0.0
-
-    if not consistency:
-        log("Negative semidefinite determinant found!", "WARNING")
-        return consistency
-
+    if numpy.linalg.det(inertia) <= 0.0:
+        log("Negative semidefinite determinant in inertia data!", "WARNING")
+        return False
     # Calculate the eigenvalues if consistent
-    consistency = all(element > 0.0 for element in numpy.linalg.eigvals(inertia))
-
-    if not consistency:
-        log("Negative semidefinite eigenvalues found!", "WARNING")
-    return consistency
+    if any(element < 0.0 for element in numpy.linalg.eigvals(inertia)):
+        log("Negative semidefinite eigenvalues in inertia data!", "WARNING")
+        return False
+    return 'mass' in inertialdict and inertialdict['mass'] > 0
 
 
 def inertiaListToMatrix(inertialist):
@@ -509,18 +380,11 @@ def inertiaListToMatrix(inertialist):
 
     :return: full tensor matrix generated from the list
     :rtype: mathutil.Matrix
-
     """
-    if isinstance(inertialist, mathutils.Matrix):
-        return inertialist
-
-    assert len(inertialist) == 6, "List is insufficient to generate a tensor matrix."
-
     il = inertialist
     inertia = [[il[0], il[1], il[2]],
                [il[1], il[3], il[4]],
                [il[2], il[4], il[5]]]
-
     return mathutils.Matrix(inertia)
 
 
@@ -533,90 +397,8 @@ def inertiaMatrixToList(im):
 
     Returns:
       tuple(6)
-
     """
     return im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2][2]
-
-
-def getInertiaRelevantObjects(link, selected_only=False):
-    """Returns a list of visual and collision objects of a link.
-    If name-pairs of visual and collision objects are detected,
-    the one with the latest change-date is used. If this is not clear,
-    visual objects are omitted in favor of collision objects. If the
-    selected_only parameter is used, only the selected objects are considered.
-
-    Args:
-      link(bpy_types.Object): The link you want to gather the inertia relevant objects for.
-      selected_only(bool, optional): return only relevant objects which are selected (Default value = False)
-
-    Returns:
-      list
-
-    """
-    objdict = {obj.name: obj for obj in
-               sUtils.getImmediateChildren(link, ['visual', 'collision'],
-                                           selected_only)}
-    basenames = set()
-    inertiaobjects = []
-    for objname in objdict.keys():
-        if 'mass' in objdict[objname]:
-            if not objname.startswith('visual_') and not objname.startswith('collision_'):
-                inertiaobjects.append(objdict[objname])
-            else:
-                basename = objname.replace(objdict[objname].phobostype + '_', '')
-                if basename not in basenames:
-                    basenames.add(basename)
-                    collision = 'collision_'+basename if 'collision_'+basename in objdict.keys()\
-                        and 'mass' in objdict['collision_'+basename] else None
-                    visual = 'visual_'+basename if 'visual_'+basename in objdict.keys()\
-                        and 'mass' in objdict['visual_'+basename] else None
-                    if visual and collision:
-                        try:
-                            tv = gUtils.datetimeFromIso(objdict[visual]['masschanged'])
-                            tc = gUtils.datetimeFromIso(objdict[collision]['masschanged'])
-                            # if collision information is older than visual information
-                            if tc < tv:
-                                inertiaobjects.append(objdict[visual])
-                            else:
-                                inertiaobjects.append(objdict[collision])
-                        # if masschanged not present in both
-                        except KeyError:
-                            inertiaobjects.append(objdict[collision])
-                    else:
-                        inertiaobjects.append(objdict[collision] if collision else objdict[visual])
-    return inertiaobjects
-
-
-def getInertiaChildren(link, selected_only=False, include_hidden=False):
-    """Returns a list of the inertia objects which are children of a link.
-
-    :param link: The link you want to gather the inertia relevant objects for
-    :type link: bpy.types.Object
-    :param selected_only: return only relevant objects which are selected
-    :type selected_only: bool
-    :param include_hidden: include hidden inertia objects
-    :type include_hidden: bool
-
-    :return: list of child inertial objects of the link
-    :rtype: list
-    """
-    assert link.phobostype == 'link', "Object is not a link."
-    assert isinstance(selected_only, bool), "Not a boolean: " + type(selected_only)
-    assert isinstance(include_hidden, bool), "Not a boolean: " + type(include_hidden)
-
-    # Get the inertia objects
-    inertiaobjects = sUtils.getImmediateChildren(link, ('inertial'), selected_only, include_hidden)
-
-    # Get the visuals and collisions
-    viscols = getInertiaRelevantObjects(link, selected_only)
-
-    # Iterate over the objects and get the inertia objects
-    for obj in viscols:
-        # Add inertia objects to the list
-        inertiaobjects += sUtils.getImmediateChildren(obj, ('inertial'),
-                                                      selected_only, include_hidden)
-
-    return inertiaobjects
 
 
 def fuse_inertia_data(inertials):
@@ -635,9 +417,6 @@ def fuse_inertia_data(inertials):
     :return: tuple of mass, COM and inertia or None(3) if no inertials are found
     :rtype: tuple(3)
     """
-    assert isinstance(inertials, (tuple, list)), "Inertials is not iterable."
-    assert inertials, "No inertial objects to fuse."
-
     # collect objects which contain inertia
     objects = []
     for inertia_object in inertials:
@@ -653,8 +432,8 @@ def fuse_inertia_data(inertials):
         except KeyError as e:
             log('Inertial object ' + inertia_object.name + ' is missing data: ' + str(e), 'WARNING')
             continue
-
-        objects.append(objdict)
+        if objdict:
+            objects.append(objdict)
 
     # fuse inertias of objects
     if objects:
@@ -664,7 +443,7 @@ def fuse_inertia_data(inertials):
         return mass, com, inertia
 
     log("No inertial found to fuse.", 'DEBUG')
-    return (None, None, None)
+    return None, None, None
 
 
 def combine_com_3x3(objects):

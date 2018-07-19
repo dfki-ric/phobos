@@ -103,10 +103,21 @@ class CalculateMassOperator(Operator):
     bl_idname = "phobos.calculate_mass"
     bl_label = "Calculate Mass"
 
+    mass = FloatProperty(
+        name='Mass',
+        default=0.0,
+        description="Calculated sum of masses")
+
+    def invoke(self, context, event):
+        self.mass = gUtils.calculateSum(context.selected_objects, 'inertial/mass')
+        return context.window_manager.invoke_popup(self)
+
     def execute(self, context):
-        mass = gUtils.calculateSum(context.selected_objects, 'mass')
-        log("The calculated mass is: " + str(mass), "INFO")
+        log("The calculated mass is: " + str(self.mass), "INFO")
         return {'FINISHED'}
+
+    def draw(self, context):
+        self.layout.label("Sum of masses: " + str(self.mass))
 
 
 class MeasureDistanceOperator(Operator):

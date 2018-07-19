@@ -45,7 +45,7 @@ from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
 
 import phobos.defs as defs
 import phobos.display as display
-import phobos.model.inertia as modelinertia
+import phobos.model.inertia as inertialib
 import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
 import phobos.utils.blender as bUtils
@@ -215,66 +215,6 @@ class AddKinematicChainOperator(Operator):
     @classmethod
     def poll(cls, context):
         return len(context.selected_objects) == 2
-
-
-class SetMassOperator(Operator):
-    """Set the mass of the selected object(s)"""
-    bl_idname = "phobos.set_mass"
-    bl_label = "Set Mass"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    mass = FloatProperty(
-        name='Mass',
-        default=0.001,
-        description='Mass (of active object) in kg')
-
-    userbmass = BoolProperty(
-        name='Use Rigid Body Mass',
-        default=False,
-        description='If true, mass entry from rigid body data is used')
-
-    @classmethod
-    def poll(cls, context):
-        return (bpy.context.active_object is not None and
-                len([e.phobostype in ("visual", "collision", "inertial")
-                     for e in context.selected_objects]) > 0)
-
-    def invoke(self, context, event):
-        if 'mass' in context.active_object:
-            self.mass = context.active_object['mass']
-        return self.execute(context)
-
-    def execute(self, context):
-        objs = [obj for obj in bpy.context.selected_objects
-                if obj.phobostype in ("visual", "collision", "inertial")]
-        for obj in objs:
-            # check for old mass value
-            try:
-                oldmass = obj['mass']
-            except KeyError:
-                oldmass = None
-
-            # use rigid body mass
-            if self.userbmass:
-                try:
-                    obj['mass'] = obj.rigid_body.mass
-                except AttributeError:
-                    obj['mass'] = 0.001
-                    log("The object '" + obj.name + "' has no rigid body" +
-                        "properties. Set mass to 0.001", "ERROR")
-            # use provided mass
-            else:
-                obj['mass'] = self.mass
-
-            # only keep oldmass when it exists
-            if obj['mass'] != oldmass and oldmass:
-                obj['masschanged'] = datetime.now().isoformat()
-        return {'FINISHED'}
-
-    def invoke(self, context, event):
-        if 'mass' in context.active_object:
-            self.mass = context.active_object['mass']
-        return self.execute(context)
 
 
 class SetXRayOperator(Operator):
@@ -538,47 +478,13 @@ class SetGeometryType(Operator):
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
                 obj['geometry/type'] = self.geomType
             else:
-                log("The object '" + obj.name + "' is no collision or visual.",
-                   "INFO")
+                log("The object '" + obj.name + "' is no collision or visual.", "INFO")
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
-
-
-class EditInertia(Operator):
-    """Edit inertia of selected object(s)"""
-    bl_idname = "phobos.edit_inertia"
-    bl_label = "Edit Inertia"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    inertiavector = FloatVectorProperty(
-        name="Inertia Vector",
-        default=[0, 0, 0, 0, 0, 0],
-        subtype='NONE',
-        size=6,
-        description="Set inertia for a link"
-    )
-
-    def invoke(self, context, event):
-        # use inertia of active object
-        if 'inertia' in context.active_object:
-            self.inertiavector = mathutils.Vector(context.active_object['inertia'])
-        return self.execute(context)
-
-    def execute(self, context):
-        objs = [obj for obj in context.selected_objects if obj.phobostype == "inertial"]
-        for obj in objs:
-            obj['inertia'] = self.inertiavector
-        return {'FINISHED'}
-
-    @classmethod
-    def poll(cls, context):
-        ob = context.active_object
-        return (ob is not None and ob.mode == 'OBJECT' and ob.phobostype == 'inertial'
-                and len(context.selected_objects) > 0)
 
 
 class SmoothenSurfaceOperator(Operator):
@@ -608,70 +514,163 @@ class SmoothenSurfaceOperator(Operator):
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
 
-class CreateInertialOperator(Operator):
-    """Create inertial object(s) from collision/visual objects of a link"""
-    bl_idname = "phobos.create_inertials"
-    bl_label = "Create Inertial Object(s)"
+class EditInertialData(Operator):
+    """Edit inertia of selected object(s)"""
+    bl_idname = "phobos.edit_inertial_data"
+    bl_label = "Edit Mass/Inertia"
     bl_options = {'REGISTER', 'UNDO'}
 
-    autocalc = BoolProperty(
-        name='Calculate automatically',
-        default=True,
-        description=('Calculate inertial(s) automatically. ' +
-                     ' Otherwise create objects with empty inertia data.')
+    inertiavector = FloatVectorProperty(
+        name="Inertia Vector",
+        default=[0, 0, 0, 0, 0, 0],
+        subtype='NONE',
+        size=6,
+        description="Set inertia for a link"
     )
 
-    overwrite = BoolProperty(
-        name='Overwrite existing',
-        default=True,
-        description='Replace existing link inertial(s).'
-    )
+    mass = FloatProperty(
+        name='Mass',
+        default=0.001,
+        description="Mass (of active object) in kg")
 
     def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width=500)
-
-    def draw(self, context):
-        layout = self.layout
-        layout.prop(self, "autocalc")
-        layout.prop(self, "overwrite")
+        # read initial parameter values from active object is possible
+        if context.active_object:
+            if 'inertial/mass' in context.active_object:
+                self.mass = context.active_object['inertial/mass']
+            if 'inertial/inertia' in context.active_object:
+                self.inertiavector = mathutils.Vector(context.active_object['inertial/inertia'])
+        return self.execute(context)
 
     def execute(self, context):
-        # keep currently selected objects
-        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
-        selected = context.selected_objects
-        i = 1
-        inertialobjs = []
-        # create inertials for each link
-        for link in links:
-            # delete inertials which are overwritten
-            if self.overwrite:
-                inertials = modelinertia.getInertiaChildren(link, include_hidden=True)
-                sUtils.selectObjects(inertials, clear=True)
-
-                # remove deleted inertials from the selection
-                for inert in inertials:
-                    if inert in selected:
-                        selected.remove(inert)
-
-                bpy.ops.object.delete()
-
-            inertialobjs.extend(modelinertia.createInertialObjects(link, self.autocalc))
-            display.setProgress(i/len(links))
-            i += 1
-
-        # select the new inertialobjs
-        if inertialobjs:
-            sUtils.selectObjects(inertialobjs, clear=True)
-        else:
-            sUtils.selectObjects(selected, clear=True)
+        objs = [obj for obj in context.selected_objects if obj.phobostype == "inertial"]
+        for obj in objs:
+            obj['inertial/mass'] = self.mass
+            obj['inertial/inertia'] = self.inertiavector
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
-        """Poll operator if no links are selected.
-        """
-        links = [obj for obj in context.selected_objects if obj.phobostype == 'link']
-        return links
+        return bool([obj for obj in context.selected_objects if obj.phobostype == 'inertial'])
+
+
+class GenerateInertialObjectsOperator(Operator):
+    """Creates inertial object(s) to add mass and inertia data to links"""
+    bl_idname = "phobos.generate_inertial_objects"
+    bl_label = "Define Mass/Inertia"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    mass = FloatProperty(
+        name='Mass',
+        default=0.001,
+        description="Mass (of active object) in kg")
+
+    inertiavector = FloatVectorProperty(
+        name="Inertia Vector",
+        default=[0, 0, 0, 0, 0, 0],
+        subtype='NONE',
+        size=6,
+        description="Set inertia for a link"
+    )
+
+    derive_inertia_from_geometry = BoolProperty(
+        name="Calculate inertia from geometry ",
+        default=True,
+        description="Derive inertia value(s) from geometry of visual or collision objects."
+    )
+
+    clear = BoolProperty(
+        name="Clear existing inertial objects",
+        default=True,
+        description="Clear existing inertial objects of selected links."
+    )
+
+    # this is only necessary to prevent crashing
+    run = BoolProperty(
+        name="Run operator with settings",
+        default=False,
+        description="Confirm to run the operator with these settings"
+    )
+
+    # TODO: running this operator as dialog leads Blender to crash
+    def invoke(self, context, event):
+        self.run = False
+        return self.execute(context)
+    #     return context.window_manager.invoke_props_dialog(self, width=300)
+    #
+    # def check(self, context):
+    #     return True
+
+    def draw(self, context):
+        layout = self.layout
+        if not self.run:
+            layout.prop(self, 'clear')
+            geometric_objects = [obj for obj in context.selected_objects
+                                 if obj.phobostype in ['visual', 'collision']]
+            if geometric_objects:
+                layout.prop(self, 'derive_inertia_from_geometry')
+            else:
+                self.derive_inertia_from_geometry = False
+            if not self.derive_inertia_from_geometry:
+                layout.prop(self, 'inertiavector')
+            layout.prop(self, 'mass')
+            layout.separator()
+            layout.prop(self, 'run', toggle=True)
+        else:
+            layout.label('Done')
+
+    def execute(self, context):
+        if self.run:
+            # store previously selected objects
+            selection = context.selected_objects
+
+            geometric_objects = [obj for obj in selection
+                                 if obj.phobostype in ['visual', 'collision']]
+            if self.derive_inertia_from_geometry:
+                link_objects = list(set([obj.parent for obj in selection
+                                         if obj.phobostype in ['visual', 'collision']]))
+            else:
+                link_objects = [obj for obj in selection if obj.phobostype == 'link']
+            inertial_objects = [obj for link in link_objects for obj in link.children
+                                if obj.phobostype == 'inertial']
+
+            new_inertial_objects = []
+            if self.derive_inertia_from_geometry:
+                i = 1
+                for obj in geometric_objects:
+                    inertialdict = {'mass': self.mass,
+                                    'inertia': inertialib.calculateInertia(obj, self.mass),
+                                    'pose': {'translation': obj.matrix_local.to_translation()}}
+                    newinertial = inertialib.createInertial(inertialdict, obj)
+                    if newinertial:
+                        new_inertial_objects.append(newinertial)
+                    display.setProgress(i / len(geometric_objects))
+                    i += 1
+            else:
+                i = 1
+                for obj in link_objects:
+                    inertialdict = {'mass': self.mass,
+                                    'inertia': self.inertiavector,
+                                    'pose': {'translation': mathutils.Vector((0.0, 0.0, 0.0))}}
+                    newinertial = inertialib.createInertial(inertialdict, obj)
+                    if newinertial:
+                        new_inertial_objects.append(newinertial)
+                    display.setProgress(i / len(link_objects))
+                    i += 1
+
+            if new_inertial_objects:  # select the new inertialobjs if created
+                sUtils.selectObjects(new_inertial_objects, clear=True)
+
+            if self.clear:
+                for obj in inertial_objects:
+                    bpy.data.objects.remove(obj)
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return (context.selected_objects is not None and
+                bool({'visual', 'collision', 'inertial', 'link'} &
+                     set([o.phobostype for o in context.selected_objects])))
 
 
 class EditYAMLDictionary(Operator):

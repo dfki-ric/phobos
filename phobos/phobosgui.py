@@ -799,10 +799,8 @@ class PhobosModelPanel(bpy.types.Panel):
         mc1 = minlayout.column(align=True)
         mc1.label(text="Masses & Inertia", icon='PHYSICS')
         mc1.operator('phobos.calculate_mass')
-        mc1.operator('phobos.set_mass')
-        mc1.operator('phobos.create_inertials')
-        # mc1.operator('phobos.create_link_inertials')
-        mc1.operator('phobos.edit_inertia')
+        mc1.operator('phobos.generate_inertial_objects')
+        mc1.operator('phobos.edit_inertial_data')
 
 
 # TODO bring this back or just delete it
