@@ -174,7 +174,7 @@ def selectObjects(objects, clear=True, active=-1):
     and sets one of the objects the active objects if a valid index is provided.
 
     Args:
-      objects(list of bpy.types.Object): the objects to be selected.
+      objects(iterable of bpy.types.Object): the objects to be selected.
       clear(bool, optional): clear current selection? (Default value = True)
       active(int, optional): index of the object to set active. (Default value = -1)
 
