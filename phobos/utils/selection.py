@@ -144,10 +144,10 @@ def getRoots():
     """
     roots = [obj for obj in bpy.context.scene.objects if isRoot(obj)]
     if roots is None:
-        log("Phobos: No root objects found.", "WARNING")
+        log("No root objects found.", "WARNING")
     else:
         rootnames = ', '.join((root.name for root in roots))
-        log("Phobos: Found {0} root object(s): {1}".format(len(roots), rootnames), "DEBUG")
+        log("Found {0} root object(s): {1}".format(len(roots), rootnames), "DEBUG")
     return roots
 
 
