@@ -1385,11 +1385,21 @@ def addSensorFromYaml(name, sensortype):
             sUtils.selectObjects([sensor_obj, parent_obj], clear=True, active=1)
             bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
+            annotation_objs = []
+            # add annotation objects for other categories
+            for custom_anno in self.annotation_checks:
+                if custom_anno.boolProp:
+                    annotation_objs.append(eUtils.addAnnotationObject(
+                        sensor_obj,
+                        defs.definitions['sensors'][self.sensorType][custom_anno.name[2:]],
+                        name=nUtils.getObjectName(sensor_obj) + '_' + custom_anno.name[2:],
+                        namespace='sensor/' + custom_anno.name[2:]))
+
             # select the newly added objects
             if newlink:
-                sUtils.selectObjects([sensor_obj, newlink], clear=True, active=0)
+                sUtils.selectObjects([sensor_obj, newlink] + annotation_objs, clear=True, active=0)
             else:
-                sUtils.selectObjects([sensor_obj], clear=True, active=0)
+                sUtils.selectObjects([sensor_obj] + annotation_objs, clear=True, active=0)
 
             return {'FINISHED'}
 
