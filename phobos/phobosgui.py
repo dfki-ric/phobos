@@ -772,7 +772,7 @@ class PhobosModelPanel(bpy.types.Panel):
         kinlayout = layout.split()
         kc1 = kinlayout.column(align=True)
         kc2 = kinlayout.column(align=True)
-        kc1.label(text='Kinematics', icon='POSE_DATA')
+        kc1.label(text='Kinematics', icon='ARMATURE_DATA')
         kc1.operator("phobos.create_links")
         kc1.operator('phobos.merge_links')
         kc1.operator('phobos.define_joint_constraints')
@@ -781,10 +781,16 @@ class PhobosModelPanel(bpy.types.Panel):
         kc1.operator('phobos.assign_submechanism')
         kc1.operator('phobos.set_model_root')
         kc2.label(text='Visual/Collision', icon='GROUP')
-        kc2.operator('phobos.create_collision_objects')
         kc2.operator('phobos.define_geometry')
+        kc2.operator('phobos.smoothen_surface')
+        kc2.operator('phobos.create_collision_objects')
         kc2.operator('phobos.set_collision_group')
-        #kc2.operator('phobos.smoothen_surface')
+
+        kc2.separator()
+        kc2.label(text='Poses', icon='POSE_HLT')
+        kc2.operator('phobos.store_pose')
+        kc2.operator('phobos.load_pose')
+
 
         # Hardware
         layout.separator()
