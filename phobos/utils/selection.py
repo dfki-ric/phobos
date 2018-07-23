@@ -160,6 +160,10 @@ def isRoot(obj):
     return obj is not None and obj.phobostype in ['link', 'submodel'] and not obj.parent
 
 
+def getRootsOfSelection():
+    return list(set([getRoot(obj) for obj in bpy.context.selected_objects]))
+
+
 def isEntity(obj):
     """Returns whether or not the opject passed is an Phobos entity.
 
