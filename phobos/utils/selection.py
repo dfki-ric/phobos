@@ -292,8 +292,8 @@ def selectByName(name, match_case=False, exact=False):
         selectObjects(getObjectsByPattern(name, match_case), True)
 
 
-def getObjectsByProperty(property, value):
-    # DOCU add some docstring
+def getObjectByProperty(property, value):
+    """Returns the first object found in the .blend file data with matching property and value"""
     candidate = None
     for obj in bpy.data.objects:
         if property in obj and obj[property] == value:
