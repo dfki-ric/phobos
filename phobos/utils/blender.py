@@ -131,6 +131,12 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0,
                                           rotation=protation, layers=players)
     elif ptype == 'ico':
         bpy.ops.mesh.primitive_ico_sphere_add(size=psize, layers=players, location=plocation, rotation=protation)
+    else:
+        log("Primitive type not found: " + ptype + ". Adding default cube instead.", 'WARNING')
+        bpy.ops.mesh.primitive_cube_add(layers=players, location=plocation, rotation=protation)
+        obj = bpy.context.object
+        obj.dimensions = psize
+
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
     obj = bpy.context.object
     if phobostype:
