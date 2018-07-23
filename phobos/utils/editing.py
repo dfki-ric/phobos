@@ -503,3 +503,55 @@ def mergeLinks(links, targetlink, movetotarget=False):
         del link
 
 
+def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
+    """Add a new annotation object with the specified annotations to the object.
+
+    The annotation object will receive 'annotation_object' as its default name, unless a name is
+    provided. Naming is done using :function:`phobos.utils.naming.safelyName`.
+
+    The annotation object will be scaled according to the `size` parameter.
+
+    If `namespace` is provided, the annotations will be saved with this string prepended.
+    This is done using :function:`addAnnotation`.
+
+    Args:
+        obj (bpy.types.Object): object to add annotation object to
+        annotation (dict): annotations that will be added
+        name (str, optional): name for the new annotation object
+        size (int/float, optional): size of the new annotation object
+        namespace (str, optional): namespace that will be prepended to the annotations
+
+    Returns:
+        bpy.types.Object - the new annotation object
+    """
+    loc = obj.matrix_world.to_translation()
+    bpy.ops.object.empty_add(type='SPHERE', location=loc,
+                             layers=bUtils.defLayers(defs.layerTypes['annotation']))
+    annot_obj = bpy.context.scene.objects.active
+    annot_obj.phobostype = 'annotation'
+    annot_obj.empty_draw_size = size
+
+    # parent annotation object
+    sUtils.selectObjects([obj, annot_obj], clear=True, active=0)
+    bpy.ops.object.parent_set(type='OBJECT')
+
+    if not name:
+        nUtils.safelyName(annot_obj, 'annotation_object')
+    else:
+        nUtils.safelyName(annot_obj, name)
+
+    addAnnotation(annot_obj, annotation, namespace=namespace)
+    return annot_obj
+
+def addAnnotation(obj, annotation, namespace=None):
+    """Adds the specified annotations to the object.
+
+    If provided, the namespace will be prepended to the annotation keys and separated with a /.
+
+    Args:
+        obj (bpy.types.Object): object to add the annotations to
+        annotation (dict): annotations to add to the object
+        namespace (str, optional): namespace which will be prepended to the annotations
+    """
+    for key, value in annotation.items():
+        obj[str(namespace + '/' if namespace else '') + key] = value
