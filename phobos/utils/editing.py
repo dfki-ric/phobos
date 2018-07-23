@@ -531,10 +531,15 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
     annot_obj.phobostype = 'annotation'
     annot_obj.empty_draw_size = size
 
+    # make sure all layers are enabled for parenting
+    originallayers = list(bpy.context.scene.layers)
+    bpy.context.scene.layers = [True for i in range(20)]
+
     # parent annotation object
     sUtils.selectObjects([obj, annot_obj], clear=True, active=0)
     bpy.ops.object.parent_set(type='OBJECT')
 
+    bpy.context.scene.layers = originallayers
     if not name:
         nUtils.safelyName(annot_obj, 'annotation_object')
     else:
