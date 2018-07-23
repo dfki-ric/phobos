@@ -62,7 +62,8 @@ def collectMaterials(objectlist):
     materials = {}
     for obj in objectlist:
         if obj.phobostype == 'visual':
-                mat = obj.active_material
+            mat = obj.active_material
+            if mat:
                 if mat.name not in materials:
                     materials[mat.name] = deriveMaterial(mat)
                     materials[mat.name]['users'] = 1
@@ -957,12 +958,12 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     for obj in objectlist:
         if obj.phobostype == 'visual':
             mat = obj.active_material
-            # TODO: check if this ever happens, because it shouldn't
-            if mat.name not in model['materials']:
-                model['materials'][mat.name] = deriveMaterial(mat)
-                linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj,
-                    ignore_selection=bool(objectlist)))
-                model['links'][linkname]['visual'][nUtils.getObjectName(obj)]['material'] = mat.name
+            if mat:
+                if mat.name not in model['materials']:
+                    model['materials'][mat.name] = deriveMaterial(mat)
+                    linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj,
+                        ignore_selection=bool(objectlist)))
+                    model['links'][linkname]['visual'][nUtils.getObjectName(obj)]['material'] = mat.name
 
     # identify unique meshes
     log("Parsing meshes...", "INFO")

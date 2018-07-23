@@ -110,7 +110,7 @@ def getEntityRoots():
 
 def getModelListForEnumProp(self, context):
     """Returns list of all exportable models in the scene formatted for an EnumProperty"""
-    rootnames = set([r['modelname'] for r in getExportModels()])
+    rootnames = set([nUtils.getModelName(r) for r in getExportModels()])
     return sorted([(r,) * 3 for r in rootnames])
 
 

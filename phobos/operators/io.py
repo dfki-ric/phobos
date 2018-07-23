@@ -46,6 +46,7 @@ import phobos.model.links as links
 import phobos.utils.selection as sUtils
 import phobos.utils.io as ioUtils
 import phobos.utils.blender as bUtils
+import phobos.utils.naming as nUtils
 from phobos.utils.io import securepath
 import phobos.io.entities as entity_io
 from phobos.io.entities import entity_types
@@ -140,7 +141,7 @@ class ExportModelOperator(Operator):
             log("No properly defined models selected or present in scene.", 'ERROR')
             return {'CANCELLED'}
         elif not self.exportall:
-            roots = [root for root in roots if root['modelname'] == self.modelname]
+            roots = [root for root in roots if nUtils.getModelName(root) == self.modelname]
             if len(roots) > 1:
                 log("Ambiguous model definitions: " + self.modelname + " exists "
                     + str(len(roots)) + " times.", "ERROR")
