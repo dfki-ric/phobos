@@ -169,7 +169,6 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
 #             sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
 #                          mathutils.Matrix.Translation(context.scene.cursor_location))
 
-
     # set sensor properties
     newsensor.phobostype = 'sensor'
     newsensor.name = sensor['name']
@@ -180,8 +179,9 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
 
     # throw warning if type is not known
     # TODO we need to link this error to the sensor type specifications
-    if sensor['type'] not in defs.def_settings['sensors']:
-        log("Sensor " + sensor['name'] + " is of unknown/custom type.", 'WARNING')
+    if sensor['type'] not in [key.lower() for key in defs.def_settings['sensors']]:
+        log("Sensor " + sensor['name'] + " is of unknown/custom type: " + sensor['type'] + ".",
+            'WARNING')
 
     # select the new sensor
     sUtils.selectObjects([newsensor], clear=True, active=0)
