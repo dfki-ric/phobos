@@ -34,6 +34,7 @@ from phobos.phoboslog import log
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
+import phobos.utils.editing as eUtils
 
 
 
@@ -175,8 +176,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     newsensor['sensor/type'] = sensor['type']
 
     # write the custom properties to the sensor
-    for prop in sensor['props'].keys():
-        newsensor['sensor/' + prop] = sensor['props'][prop]
+    eUtils.addAnnotation(sensor, sensor['props'], namespace='sensor')
 
     # throw warning if type is not known
     # TODO we need to link this error to the sensor type specifications
