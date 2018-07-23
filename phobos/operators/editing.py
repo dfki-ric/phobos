@@ -1728,6 +1728,12 @@ class AddAnnotationsOperator(bpy.types.Operator):
             devicetypes = [('None',) * 3]
         return devicetypes
 
+    asObject = BoolProperty(
+        name="Add as objects",
+        description="Add annotation as object(s)",
+        default=True
+    )
+
     annotationtype = EnumProperty(
         items=getAnnotationTypes,
         name="Annotation Type",
@@ -1757,6 +1763,12 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
     def draw(self, context):
         layout = self.layout
+        if self.asObject:
+            layout.prop(self, 'asObject', text='add annotations as object(s)', icon='FORCE_LENNARDJONES')
+        else:
+            layout.prop(self, 'asObject', text='add annotations to object', icon='REC')
+        layout.separator()
+
         layout.prop(self, 'annotationtype')
 
         if self.annotationcategories == 'None':
@@ -1796,9 +1808,22 @@ class AddAnnotationsOperator(bpy.types.Operator):
                 'DEBUG')
 
     def execute(self, context):
-        for key, value in defs.definitions[self.annotationtype][self.devicetype].items():
-            for obj in context.selected_objects:
-                obj[self.devicetype+'/'+key] = value
+        objects = context.selected_objects
+        annotation = defs.definitions[self.annotationtype][self.devicetype]
+
+        # add annotation (objects) to the selected objects
+        annot_objects = []
+        for obj in objects:
+            if self.asObject:
+                annot_objects.append(eUtils.addAnnotationObject(
+                    obj, annotation, name=obj.name + '_annotation',
+                    namespace=self.annotationtype.rstrip('s')))
+            else:
+                eUtils.addAnnotation(obj, annotation, namespace=self.annotationtype.rstrip('s'))
+
+        # reselect the original objects and additional annotation objects
+        sUtils.selectObjects(objects + annot_objects, clear=True)
+        bUtils.toggleLayer(defs.layerTypes['annotation'], value=True)
         return {'FINISHED'}
 
 
