@@ -210,7 +210,7 @@ def readTextFile(textfilename):
     try:
         return "\n".join([l.body for l in bpy.data.texts[textfilename].lines])
     except KeyError:
-        log("No text file " + textfilename + " found. Setting", "ERROR")
+        log("No text file " + textfilename + " found.", "WARNING")
         return ""
 
 
