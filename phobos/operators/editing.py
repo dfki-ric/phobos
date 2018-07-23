@@ -51,6 +51,7 @@ import phobos.utils.general as gUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.editing as eUtils
+import phobos.utils.validation as vUtils
 import phobos.model.joints as joints
 import phobos.model.links as modellinks
 from phobos.phoboslog import log
@@ -1894,3 +1895,97 @@ def unregister():
     print("Unregistering operators.editing...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.unregister_class(classdef)
+
+
+# TODO remove or use? Give it a dev branch
+# class SelectErrorOperator(Operator):
+#     """Select an object with check errors"""
+#     bl_idname = "phobos.select_error"
+#     bl_label = "Select Erroneous Object"
+#     bl_options = {'REGISTER', 'UNDO'}
+#
+#     errorObj = EnumProperty(
+#         name="Erroneous Objects",
+#         items=defs.generateCheckMessages,
+#         description="The objects containing errors")
+#
+#     def execute(self, context):
+#         sUtils.selectByName(self.errorObj)
+#         for message in vUtils.checkMessages[self.errorObj]:
+#             log(message, 'INFO')
+#
+#         return {'FINISHED'}
+
+
+class ValidateOperator(Operator):
+    """Check the robot dictionary"""
+    bl_idname = "phobos.validate"
+    bl_label = "Validate"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        messages = {}
+        root = sUtils.getRoot(context.selected_objects[0])
+        model, objectlist = models.deriveModelDictionary(root)
+        vUtils.check_dict(model, defs.definitions['model'], messages)
+        vUtils.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
+        for entry in messages:
+            log("Errors in object " + entry + ":", 'INFO')
+            for error in messages[entry]:
+                log(error, 'INFO')
+        return {'FINISHED'}
+
+
+class CalculateMassOperator(Operator):
+    """Display mass of the selected objects in a pop-up window"""
+    bl_idname = "phobos.calculate_mass"
+    bl_label = "Calculate Mass"
+
+    mass = FloatProperty(
+        name='Mass',
+        default=0.0,
+        description="Calculated sum of masses")
+
+    def invoke(self, context, event):
+        self.mass = gUtils.calculateSum(context.selected_objects, 'inertial/mass')
+        return context.window_manager.invoke_popup(self)
+
+    def execute(self, context):
+        log("The calculated mass is: " + str(self.mass), "INFO")
+        return {'FINISHED'}
+
+    def draw(self, context):
+        self.layout.label("Sum of masses: " + str(self.mass))
+
+
+class MeasureDistanceOperator(Operator):
+    """Show distance between two selected objects in world coordinates"""
+    bl_idname = "phobos.measure_distance"
+    bl_label = "Measure Distance"
+    bl_options = {'REGISTER'}
+
+    distance = FloatProperty(
+        name="Distance",
+        default=0.0,
+        subtype='DISTANCE',
+        unit='LENGTH',
+        precision=6,
+        description="Distance between objects")
+
+    distVector = FloatVectorProperty(
+        name="Distance Vector",
+        default=(0.0, 0.0, 0.0,),
+        subtype='TRANSLATION',
+        unit='LENGTH',
+        size=3,
+        precision=6,
+        description="Distance vector between objects")
+
+    def execute(self, context):
+        self.distance, self.distVector = gUtils.distance(context.selected_objects)
+        log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO")
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(self, context):
+        return len(context.selected_objects) == 2

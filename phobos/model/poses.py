@@ -20,6 +20,7 @@ of the License, or (at your option) any later version.
 Phobos is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
@@ -31,9 +32,14 @@ Created on 13 Feb 2014
 """
 
 import os
+import yaml
 import bpy
 import phobos.utils.selection as sUtils
 import phobos.utils.editing as eUtils
+import phobos.utils.naming as nUtils
+import phobos.utils.blender as bUtils
+import phobos.utils.general as gUtils
+import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 from phobos.utils.io import securepath
 
@@ -140,7 +146,7 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
 
         obj.hide_render = True
         previewfile = export_name
-        createPreview(visuals, export_path=bake_outpath, modelname=modelname, previewfile=previewfile)
+        bUtils.createPreview(visuals, export_path=bake_outpath, modelname=modelname, previewfile=previewfile)
 
         obj.select = True
 
@@ -150,5 +156,90 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
     else:
         log("No visuals to bake!", "WARNING")
 
-    # TODO better use logging, right?
-    print("Done baking...")
+
+def storePose(root, posename):
+    """Stores the current pose of all of a model's selected joints.
+
+    Existing poses of the same name will be overwritten.
+
+    Args:
+      root(bpy_types.Object): root of the model the pose belongs to
+      posename(str): name the pose will be stored under
+
+    Returns:
+      Nothing.
+
+    """
+    if root:
+        filename = nUtils.getModelName(root) + '::poses'
+        posedict = yaml.load(bUtils.readTextFile(filename))
+        if not posedict:
+            posedict = {posename: {'name': posename, 'joints': {}}}
+        else:
+            posedict[posename] = {'name': posename, 'joints': {}}
+        links = sUtils.getChildren(root, ('link',), True, False)
+        sUtils.selectObjects([root]+links, clear=True, active=0)
+        bpy.ops.object.mode_set(mode='POSE')
+        for link in (link for link in links if 'joint/type' in link and
+                     link['joint/type'] not in ['fixed', 'floating']):
+            link.pose.bones['Bone'].rotation_mode = 'XYZ'
+            posedict[posename]['joints'][nUtils.getObjectName(link, 'joint')] = link.pose.bones[
+                'Bone'].rotation_euler.y
+        bpy.ops.object.mode_set(mode='OBJECT')
+        posedict = gUtils.roundFloatsInDict(posedict, ioUtils.getExpSettings().decimalPlaces)
+        bUtils.updateTextFile(filename, yaml.dump(posedict, default_flow_style=False))
+    else:
+        log("No model root provided to store the pose for", "ERROR")
+
+
+def loadPose(modelname, posename):
+    """Load and apply a robot's stored pose.
+
+    :param modelname: the model's name
+    :type modelname: str
+    :param posename: the name the pose is stored under
+    :type posename: str
+    """
+
+    load_file = bUtils.readTextFile(modelname + '::poses')
+    if load_file == '':
+        log('No poses stored.', 'ERROR')
+        return
+
+    loadedposes = yaml.load(load_file)
+    if posename not in loadedposes:
+        log('No pose with name ' + posename + ' stored for model ' + modelname, 'ERROR')
+        return
+    prev_mode = bpy.context.mode
+    pose = loadedposes[posename]
+
+    # apply rotations to all joints defined by the pose
+    try:
+        bpy.ops.object.mode_set(mode='POSE')
+        for obj in sUtils.getObjectsByPhobostypes(['link']):
+            if nUtils.getObjectName(obj, 'joint') in pose['joints']:
+                obj.pose.bones['Bone'].rotation_mode = 'XYZ'
+                obj.pose.bones['Bone'].rotation_euler.y = float(
+                    pose['joints'][nUtils.getObjectName(obj, 'joint')])
+    except KeyError as error:
+        log("Could not apply the pose: " + str(error), 'ERROR')
+    finally:
+        # restore previous mode
+        bpy.ops.object.mode_set(mode=prev_mode)
+
+
+def getPoses(modelname):
+    """Get the names of the poses that have been stored for a robot.
+
+    Args:
+      modelname: The model's name.
+
+    Returns:
+      A list containing the poses' names.
+
+    """
+    load_file = bUtils.readTextFile(modelname + '::poses')
+    if load_file == '':
+        return []
+    poses = yaml.load(load_file)
+    return poses.keys()
