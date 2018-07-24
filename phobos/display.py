@@ -154,13 +154,13 @@ def draw_joint(joint, length):
     bgl.glEnd()
 
 
-def draw_path(path, color=colors['white'], dim3=False):
+def draw_path(path, color=colors['white'], dim3=False, width=4):
     origins = []
     for e in range(len(path)):
         origins.append(path[e].matrix_world.to_translation())
 
     bgl.glEnable(bgl.GL_BLEND)
-    bgl.glLineWidth(4)
+    bgl.glLineWidth(width)
 
     bgl.glBegin(bgl.GL_LINE_STRIP)
     bgl.glColor4f(*color)
@@ -221,7 +221,14 @@ def draw_callback_2d(self, context):
         # draw spanning trees
         for root in submechanism_roots:
             if 'submechanism/spanningtree' in root:
-                draw_path(root['submechanism/spanningtree'], color=colors['submechanism'])
+                if set(root['submechanism/spanningtree']).intersection(
+                        set(bpy.context.selected_objects)):
+                    linecolor = colors['submechanism']
+                    linewidth = 5
+                else:
+                    linecolor = (*colors['submechanism'][:3], 0.4)
+                    linewidth = 3
+                draw_path(root['submechanism/spanningtree'], color=linecolor, width=linewidth)
                                   #joint['submechanism/independent'],
                                   #joint['submechanism/active'])
                 avgpos = Vector()
@@ -229,7 +236,7 @@ def draw_callback_2d(self, context):
                     avgpos += obj.matrix_world.translation
                 origin = to2d(avgpos/len(root['submechanism/spanningtree']))
                 draw_textbox(root['submechanism/name'], origin, textsize=8,
-                             textcolor=(*colors['submechanism'][:3], 0.8),
+                             textcolor=linecolor,
                              backgroundcolor=colors['background'],
                              offset=Vector((-30, 0))
                              )
