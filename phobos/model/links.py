@@ -104,7 +104,7 @@ def createLink(link):
 
     # create inertial
     if 'inertial' in link:
-        inertia.createInertial(link['name'], link['inertial'], newlink)
+        inertia.createInertial(link['inertial'], newlink)
 
     # create geometric elements
     log("Creating visual and collision objects for link '{0}': {1}".format(
