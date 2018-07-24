@@ -1028,12 +1028,13 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                        # TODO: this should work in almost all cases, still a bit of a hack:
                        'file_path': '../submechanisms/urdf/' + link['submechanism/name'] + '.urdf'
                        }
+            log('    ' + submech['contextual_name'], 'DEBUG')
         else:
             submech = None
         mechanisms = [submech] if submech else []
-        for l in link.children:
-            if l.phobostype == 'link' and l in objectlist:
-                mechanisms.extend(getSubmechanisms(l))
+        for c in link.children:
+            if c.phobostype in ['link', 'interface'] and c in objectlist:
+                mechanisms.extend(getSubmechanisms(c))
         return mechanisms
 
     model['submechanisms'] = getSubmechanisms(root)
