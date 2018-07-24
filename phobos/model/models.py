@@ -1024,7 +1024,9 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                        'jointnames_spanningtree': [nUtils.getObjectName(j, 'joint') for j in
                                                    link['submechanism/spanningtree']],
                        'jointnames_active': [nUtils.getObjectName(j, 'joint') for j in
-                                             link['submechanism/active']]
+                                             link['submechanism/active']],
+                       # TODO: this should work in almost all cases, still a bit of a hack:
+                       'file_path': '../submechanisms/urdf/' + link['submechanism/name'] + '.urdf'
                        }
         else:
             submech = None
