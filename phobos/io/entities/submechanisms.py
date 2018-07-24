@@ -20,7 +20,10 @@ def exportSubmechanisms(model, path):
     log("Phobos Submechanisms export: Creating submechanisms data at " + path, "INFO")
     for submechanism in model['submechanisms']:
         root = sUtils.getObjectByProperty('submechanism/name', submechanism['contextual_name'])
-        linkobjs = [root] + root['submechanism/freeloader'] + root['submechanism/spanningtree']
+        linkobjs = [root] + root['submechanism/spanningtree']
+        if 'submechanism/freeloader' in root:
+            linkobjs += root['submechanism/freeloader']
+
         objects = [o for link in linkobjs for o in link.children if o.phobostype in
                    ['visual', 'collision', 'inertial']] + linkobjs
         model = deriveModelDictionary(root, root['submechanism/name'], objects)
