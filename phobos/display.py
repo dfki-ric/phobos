@@ -1,5 +1,6 @@
 import collections
 import bpy
+import mathutils
 import bgl
 import blf
 from bpy_extras import view3d_utils
@@ -216,16 +217,22 @@ def draw_callback_2d(self, context):
 
     # submechanisms
     if objects and wm.draw_submechanisms:
-        groupedobjects = [o for o in objects if hasattr(o, 'users_group')]
-        # draw spanning tree
-        submechanism_groups = set([group for obj in groupedobjects for group in obj.users_group
-                                   if group.name.startswith('submechanism:')])
-        for group in submechanism_groups:
-            for joint in group.objects:
-                if 'submechanism/spanningtree' in joint:
-                    draw_path(joint['submechanism/spanningtree'], color=colors['submechanism'])
-                                      #joint['submechanism/independent'],
-                                      #joint['submechanism/active'])
+        submechanism_roots = [obj for obj in bpy.data.objects if 'submechanism/name' in obj]
+        # draw spanning trees
+        for root in submechanism_roots:
+            if 'submechanism/spanningtree' in root:
+                draw_path(root['submechanism/spanningtree'], color=colors['submechanism'])
+                                  #joint['submechanism/independent'],
+                                  #joint['submechanism/active'])
+                avgpos = Vector()
+                for obj in root['submechanism/spanningtree']:
+                    avgpos += obj.matrix_world.translation
+                origin = to2d(avgpos/len(root['submechanism/spanningtree']))
+                draw_textbox(root['submechanism/name'], origin, textsize=8,
+                             textcolor=(*colors['submechanism'][:3], 0.8),
+                             backgroundcolor=colors['background'],
+                             offset=Vector((-30, 0))
+                             )
         # draw labels
         for obj in [obj for obj in objects if obj.phobostype == 'link']:
             if 'submechanism/jointname' in obj:

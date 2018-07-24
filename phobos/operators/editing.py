@@ -1738,11 +1738,6 @@ class AssignSubmechanism(Operator):
                         context.window_manager.mechanismpreview, 'ERROR')
                     return {'FINISHED'}
             root['submechanism/name'] = self.mechanism_name
-            # create group
-            name = nUtils.getUniqueName('submechanism:' + self.mechanism_name, bpy.data.groups)
-            sUtils.selectObjects([root] + self.joints + freeloader_joints, active=0)
-            bpy.ops.group.create(name=name)
-            group = bpy.data.groups[name]
         else:
             log('Submechanism definition requires valid name.', 'WARNING')
         return {'FINISHED'}
