@@ -115,9 +115,14 @@ def restructureKinematicTree(link, root=None):
 
 
 def getNearestCommonParent(objs):
+    """Returns hierarchically lowest common parent of the provided objects
+
+    Args:
+        objs: list of objects (bpy_types.Object)
+    """
     anchor = objs[0]  # pick one link as the anchor link
-    rest = objs[1:]  # get other link to iterate over
-    in_all = False  # this will be true if all rest branches have parent as a common parent
+    rest = objs[1:]  # get other links to iterate over
+    in_all = False  # this will be true if all 'rest' branches have parent as a common parent
     parent = anchor  # the candidate for common parent
     inter_objects = set()
     while not in_all and parent.parent:
@@ -132,7 +137,7 @@ def getNearestCommonParent(objs):
             if o.parent != parent:  # check which break condition happened, break if not arrived at parent
                 in_all = False
                 break
-    if not in_all:  # this isonly true is none of the branches set it to False and broke afterwards
+    if not in_all:  # this is only true if none of the branches set it to False and broke afterwards
         return None
     else:
         inter_objects.remove(parent)
