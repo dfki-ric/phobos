@@ -87,7 +87,7 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
 
 def draw_textbox(text, origin, textsize=6, textcolor=colors['white'],
                  backgroundcolor=colors['background'], offset=Vector((0.0, 0.0)),
-                 linewidth=2, hborder=3, vborder=3, rightalign=False,
+                 linewidth=2, hborder=3, vborder=4, rightalign=False,
                  indicator_line=True):
     blf.size(0, textsize, 150)
     width = blf.dimensions(0, text)[0]
