@@ -1743,6 +1743,29 @@ class AssignSubmechanism(Operator):
         return {'FINISHED'}
 
 
+class SelectSubmechanism(Operator):
+    """Select all objects of a submechanism"""
+    bl_idname = "phobos.select_submechanism"
+    bl_label = "Select Submechanism"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def get_submechanism_roots(self, context):
+        return bUtils.compileEnumPropertyList([r['submechanism/name']
+                                               for r in sUtils.getSubmechanismRoots()])
+
+    submechanism = EnumProperty(
+        name="Submechanism",
+        description="submechanism which to select",
+        items=get_submechanism_roots
+    )
+
+    def execute(self, context):
+        root = sUtils.getObjectByProperty('submechanism/name', self.submechanism)
+        jointlist = root['submechanism/spanningtree']
+        sUtils.selectObjects([root] + jointlist, clear=True, active=0)
+        return {'FINISHED'}
+
+
 class ToggleInterfaces(Operator):
     """Toggle interfaces of a submodel"""
     bl_idname = "phobos.toggle_interfaces"

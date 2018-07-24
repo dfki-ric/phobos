@@ -300,3 +300,13 @@ def getObjectByProperty(property, value):
             candidate = obj
             break
     return candidate
+
+
+def getSubmechanismRoots():
+    return [obj for obj in bpy.data.objects if 'submechanism/name' in obj]
+
+
+def getSubmechanismRootForJoint(jointobj):
+    for root in getSubmechanismRoots():
+        if jointobj in root['submechanism/spanningtree']:
+            return root
