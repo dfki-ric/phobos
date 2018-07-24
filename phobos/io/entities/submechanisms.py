@@ -3,6 +3,7 @@
 
 from phobos.phoboslog import log
 import phobos.utils.selection as sUtils
+import phobos.utils.naming as nUtils
 from phobos.model.models import deriveModelDictionary
 from phobos.utils.io import exportModel
 
@@ -27,6 +28,10 @@ def exportSubmechanisms(model, path):
         objects = [o for link in linkobjs for o in link.children if o.phobostype in
                    ['visual', 'collision', 'inertial']] + linkobjs
         model = deriveModelDictionary(root, root['submechanism/name'], objects)
+        jointname = nUtils.getObjectName(root, 'joint')
+        if jointname in model['joints']:
+            del model['joints'][jointname]
+            log('Removed joint which is not part of submodel: ' + jointname, 'DEBUG')
         exportModel(model, path, ['urdf'])
 
 
