@@ -117,7 +117,7 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0,
         bpy.ops.mesh.primitive_cube_add(layers=players, location=plocation, rotation=protation)
         obj = bpy.context.object
         obj.dimensions = psize
-    if ptype == "sphere":
+    elif ptype == "sphere":
         bpy.ops.mesh.primitive_uv_sphere_add(size=psize, layers=players, location=plocation,
                                              rotation=protation)
     elif ptype == "cylinder":
