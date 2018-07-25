@@ -481,11 +481,12 @@ def deriveApproxsphere(obj):
     return sphere
 
 
-def deriveSensor(obj):
+def deriveSensor(obj, names=False):
     """This function derives a sensor from a given blender object
 
     Args:
       obj(bpy_types.Object): The blender object to derive the sensor from.
+      names(bool): return the link object name instead of an object link.
 
     Returns:
       dict
@@ -493,7 +494,10 @@ def deriveSensor(obj):
     """
     try:
         props = initObjectProperties(obj, phobostype='sensor')
-        props['link'] = sUtils.getEffectiveParent(obj)
+        if names:
+            props['link'] = nUtils.getObjectName(sUtils.getEffectiveParent(obj), phobostype='sensor')
+        else:
+            props['link'] = sUtils.getEffectiveParent(obj)
     except KeyError:
         log("Missing data in sensor " + obj.name, "ERROR")
         return None
@@ -606,11 +610,16 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
     return props
 
 
-def deriveDictEntry(obj):
-    """Returns dictionary representation of the provided object for Phobos' model dictionary.
+def deriveDictEntry(obj, names=False):
+    """Derives a phobos dictionary entry from the provided object.
 
     Args:
-      obj(bpy_types.Object): object to derive the dictionary from
+      obj(bpy_types.Object): The object to derive the dict entry (phobos data structure) from.
+      names(bool): use object names as dict entries instead of object links.
+
+    Returns:
+      tuple
+
     """
     props = {}
     try:
@@ -623,7 +632,7 @@ def deriveDictEntry(obj):
         elif obj.phobostype == 'approxsphere':
             props = deriveApproxsphere(obj)
         elif obj.phobostype == 'sensor':
-            props = deriveSensor(obj)
+            props = deriveSensor(obj, names=names)
         elif obj.phobostype == 'controller':
             props = deriveController(obj)
         elif obj.phobostype == 'light':
@@ -961,7 +970,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     log("Parsing sensors and controllers...", 'INFO')
     for obj in objectlist:
         if obj.phobostype in ['sensor', 'controller']:
-            props = deriveDictEntry(obj)
+            props = deriveDictEntry(obj, names=True)
             model[obj.phobostype + 's'][nUtils.getObjectName(obj)] = props
 
     # parse materials
