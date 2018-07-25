@@ -34,7 +34,6 @@ import os
 import bpy
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
-import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 
 
@@ -49,8 +48,8 @@ def exportMesh(obj, path, meshtype):
     tmpobject.data = obj.data
     outpath = os.path.join(path, obj.data.name + "." + meshtype)
     if meshtype == 'obj':
-        axis_forward = ioUtils.getExpSettings().obj_axis_forward
-        axis_up = ioUtils.getExpSettings().obj_axis_up
+        axis_forward = bpy.context.scene.phobosexportsettings.obj_axis_forward
+        axis_up = bpy.context.scene.phobosexportsettings.obj_axis_up
         bpy.ops.export_scene.obj(filepath=outpath, use_selection=True,
                                  use_normals=True, use_materials=False,
                                  use_mesh_modifiers=True,
