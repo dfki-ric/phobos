@@ -201,8 +201,17 @@ def sort_for_yaml_dump(structure, category):
     Returns:
 
     """
-    if category in ['materials', 'motors', 'sensors']:
+    if category in ['materials', 'motors']:
         return {category: sort_dict_list(structure[category], 'name')}
+    elif category == 'sensors':
+        dictionary = {'sensors': sort_dict_list(structure[category], 'name')}
+        for sensor in dictionary['sensors']:
+            if 'mars' in sensor['type']:
+                sensor['type'] = sensor['mars']['type']
+            else:
+                log('Sensor ' + sensor['name'] + ' is not compatible with MARS.', 'WARNING')
+                sensor['type'] = 'undefined'
+        return dictionary
     elif category == 'simulation':
         return_dict = {}
         for viscol in ['collision', 'visual']:
