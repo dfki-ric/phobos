@@ -1019,7 +1019,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         if 'submechanism/name' in link.keys():
             submech = {'type': link['submechanism/type'],
                        'contextual_name': link['submechanism/name'],
-                       'name': link['submechanism/subtype'],
+                       'name': link['submechanism/subtype'] if 'submechanism/subtype' in link else link['submechanism/type'],
                        'jointnames_independent': [nUtils.getObjectName(j, 'joint') for j in
                                                   link['submechanism/independent']],
                        'jointnames_spanningtree': [nUtils.getObjectName(j, 'joint') for j in
