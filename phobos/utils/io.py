@@ -314,6 +314,7 @@ def getResource(specifiers):
 
     """
     try:
+        log("Searching for resource " + '_'.join(specifiers) + ".", 'DEBUG')
         resobjname = nUtils.addNamespaceToName('_'.join(specifiers), 'resource')
         return bpy.data.scenes['resources'].objects[resobjname]
     except KeyError:  # no resource scene or key not in scene
