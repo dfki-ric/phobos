@@ -46,7 +46,7 @@ sensors:
     Ray_sensor:
         general:
             type: ray_sensor
-            shape: disc
+            shape: resource://ray
             size:
                 - 0.2
                 - 36
@@ -123,7 +123,7 @@ sensors:
     Camera:
         general:
             type: camera
-            shape: ico
+            shape: resource://camera
             size: 0.2
             categories:
                 - camera
@@ -239,7 +239,7 @@ sensors:
     Inertial_measurement_unit:
         general:
             type: inertial_measurement_unit
-            shape: ico
+            shape: resource://imu
             size: 0.2
             categories:
                 - internal
@@ -248,21 +248,21 @@ sensors:
     Altimeter:
         general:
             type: altimeter
-            shape: ico
+            shape: resource://altimeter
             size: 0.2
             categories:
                 - environmental
     Magnetometer:
         general:
             type: magnetometer
-            shape: ico
+            shape: resource://magnetometer
             size: 0.2
             categories:
                 - environmental
     GPS:
         general:
             type: gps
-            shape: ico
+            shape: resource://gps
             size: 0.2
             categories:
                 - environmental
@@ -271,21 +271,21 @@ sensors:
     Wireless_transceiver:
         general:
             type: wireless_transceiver
-            shape: ico
+            shape: resource://wireless
             size: 0.2
             categories:
                 - communication
     RFID_sensor:
         general:
             type: rfid_sensor
-            shape: ico
+            shape: resource://rfid_sensor
             size: 0.2
             categories:
                 - communication
     RFID_tag:
         general:
             type: rfid_tag
-            shape: ico
+            shape: resource://rfid_tag
             size: 0.2
             categories:
                 - communication
