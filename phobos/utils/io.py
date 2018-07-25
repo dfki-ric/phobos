@@ -251,7 +251,10 @@ def importBlenderModel(filepath, namespace='', prefix=False):
         submechanism_roots = [obj for obj in bpy.data.objects if obj.phobostype == 'link'
                               and 'submechanism/spanningtree' in obj]
         for root in submechanism_roots:
-            sUtils.selectObjects([root] + root['submechanism/spanningtree'] + root['submechanism/freeloader'], active=0)
+            partlist = [root] + root['submechanism/spanningtree']
+            if 'submechanism/freeloader' in root:
+                partlist += root['submechanism/freeloader']
+            sUtils.selectObjects(partlist, active=0)
             bpy.ops.group.create(name='submechanism:' + root['submechanism/name'])
         return True
     else:
