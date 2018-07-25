@@ -175,7 +175,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     newsensor['sensor/type'] = sensor['type']
 
     # write the custom properties to the sensor
-    eUtils.addAnnotation(sensor, sensor['props'], namespace='sensor')
+    eUtils.addAnnotation(newsensor, sensor['props'], namespace='sensor')
 
     # throw warning if type is not known
     # TODO we need to link this error to the sensor type specifications
