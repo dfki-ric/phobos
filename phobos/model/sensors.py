@@ -35,6 +35,7 @@ import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.editing as eUtils
+import phobos.utils.io as ioUtils
 
 
 
@@ -131,10 +132,23 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     bUtils.toggleLayer(layers, value=True)
 
     # create sensor object
-    newsensor = bUtils.createPrimitive(
-        sensor['name'], sensor['shape'], sensor['size'], layers,
-        plocation=origin.to_translation(), protation=origin.to_euler(),
-        pmaterial=sensor['material'])
+    if sensor['shape'].startswith('resource'):
+        newsensor = bUtils.createPrimitive(
+            sensor['name'], 'box', [1, 1, 1], layers,
+            plocation=origin.to_translation(), protation=origin.to_euler(),
+            pmaterial=sensor['material'])
+        # use resource name provided as: "resource:whatever_name"
+        resource_obj = ioUtils.getResource(['sensor'] + sensor['shape'].split('://')[1].split('_'))
+        if resource_obj:
+            log("Assigned resource mesh and materials to new sensor object.", 'DEBUG')
+            newsensor.data = resource_obj.data
+        else:
+            log("Could not use resource mesh for sensor. Default cube used instead.", 'WARNING')
+    else:
+        newsensor = bUtils.createPrimitive(
+            sensor['name'], sensor['shape'], sensor['size'], layers,
+            plocation=origin.to_translation(), protation=origin.to_euler(),
+            pmaterial=sensor['material'])
 
     # assign the parent if available
     if reference is not None:
