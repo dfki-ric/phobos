@@ -1726,6 +1726,7 @@ class AssignSubmechanism(Operator):
                         for i in range(len(self.joints)):
                             self.joints[i]['submechanism/jointname'] = getattr(self, 'jointtype'+str(i))
                         root['submechanism/type'] = mechanismdata['type']
+                        root['submechanism/subtype'] = context.window_manager.mechanismpreview
                         root['submechanism/spanningtree'] = [jointmap[j] for j in mechanismdata['joints']['spanningtree']]
                         root['submechanism/active'] = [jointmap[j] for j in mechanismdata['joints']['active']]
                         root['submechanism/independent'] = [jointmap[j] for j in mechanismdata['joints']['independent']]
