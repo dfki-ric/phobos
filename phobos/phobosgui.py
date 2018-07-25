@@ -1064,6 +1064,7 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc1 = dlayout.column(align=True)
             dc2 = dlayout.column(align=True)
             dc1.prop(wm, "draw_jointaxes")
+            dc1.prop(wm, "draw_jointnames")
             dc1.prop(wm, "jointaxes_length")
             dc1.prop(wm, "draw_submechanisms")
             dc1.prop(wm, "draw_progress")
@@ -1094,6 +1095,9 @@ def register():
 
     bpy.types.WindowManager.draw_submechanisms = BoolProperty(
         name='Submechanisms', default=True)
+
+    bpy.types.WindowManager.draw_jointnames = BoolProperty(
+        name='Joint names', default=True)
 
     bpy.types.WindowManager.draw_messages = BoolProperty(
         name='Messages', default=True)
