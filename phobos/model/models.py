@@ -887,34 +887,37 @@ def deriveModelDictionary(root, name='', objectlist=[]):
 
     # combine inertia for each link, taking into account inactive links
     inertials = (i for i in objectlist if i.phobostype == 'inertial' and 'inertial/inertia' in i)
-    editlinks = {}
+    inertials_per_link = {}
 
     for i in inertials:
         if i.parent not in linklist:
             realparent = sUtils.getEffectiveParent(i, ignore_selection=bool(objectlist))
             if realparent:
                 parentname = nUtils.getObjectName(realparent)
-                if parentname in editlinks:
-                    editlinks[parentname].append(i)
+                if parentname in inertials_per_link:
+                    inertials_per_link[parentname].append(i)
                 else:
-                    editlinks[parentname] = [i]
+                    inertials_per_link[parentname] = [i]
+        else:
+            parentname = nUtils.getObjectName(i.parent)
+            if parentname in inertials_per_link:
+                inertials_per_link[parentname].append(i)
+            else:
+                inertials_per_link[parentname] = [i]
 
-    for linkname in editlinks:
-        inertials = editlinks[linkname]
-        try:
-            inertials.append(bpy.context.scene.objects['inertial_' + linkname])
-        except KeyError:
-            pass
+    for linkname in inertials_per_link:
+        additional_inertials = inertials_per_link[linkname]
 
         # get inertia data
-        mass, com, inertia = inertiamodel.fuse_inertia_data(inertials)
-        if not any(mass, com, inertia):
+        mass, com, inertia = inertiamodel.fuse_inertia_data(additional_inertials)
+        if not any([mass, com, inertia]):
             continue
 
         # add inertia to model
         inertia = inertiamodel.inertiaMatrixToList(inertia)
         model['links'][linkname]['inertial'] = {
-            'mass': mass, 'inertia': inertia,
+            'mass': mass,
+            'inertia': list(inertia),
             'pose': {'translation': list(com),
                      'rotation_euler': [0, 0, 0]}
         }

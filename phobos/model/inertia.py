@@ -424,11 +424,11 @@ def fuse_inertia_data(inertials):
         try:
             pose = deriveObjectPose(inertia_object)
             objdict = {'name': inertia_object.name,
-                       'mass': inertia_object['mass'],
+                       'mass': inertia_object['inertial/mass'],
                        # FIXME: this is not nice, as we invert what is one when deriving the pose
                        'com': mathutils.Vector(pose['translation']),
                        'rot': pose['rawmatrix'].to_3x3(),
-                       'inertia': list(inertia_object['inertia'])}
+                       'inertia': list(inertia_object['inertial/inertia'])}
         except KeyError as e:
             log('Inertial object ' + inertia_object.name + ' is missing data: ' + str(e), 'WARNING')
             continue
