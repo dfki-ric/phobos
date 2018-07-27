@@ -4,25 +4,25 @@
 # visual representation of these in the add_sensor Operator!
 #
 # we have these sensors defined by MARS:
-# ray_sensor
-# rotating_ray_sensor
-# camera_sensor
-# scanning_sonar
-# multi_level_laser_range_finder
-# joint_position
-# joint_velocity
-# joint_load
-# joint_torque
-# joint_avg_torque
-# joint_6_dof
-# node_contact
-# node_position
-# node_rotation
-# node_contact_force
-# node_com
-# node_velocity
-# node_angular_velocity
-# motor_current
+# RaySensor
+# RotatingRaySensor
+# CameraSensor
+# ScanningSonar
+# MultiLevelLaserRangeFinder
+# JointPosition
+# JointVelocity
+# JointLoad
+# JointTorque
+# JointAVGTorque
+# Joint6DOF
+# NodeContact
+# NodePosition
+# NodeRotation
+# NodeContactForce
+# NodeCOM
+# NodeVelocity
+# NodeAngularVelocity
+# MotorCurrent
 # undefined
 
 # SDF provides these sensors:
@@ -39,7 +39,6 @@
 # sonar
 # transceiver
 # force_torque
-#
 
 sensors:
     # scanning sensors
@@ -58,9 +57,7 @@ sensors:
         opening_height: &0.5*math.pi&
         max_distance: 100
         mars:
-            next: true
-        sdf:
-            otherparam: false
+            type: RaySensor
     Rotating_ray_sensor:
         general:
             type: rotating_ray_sensor
@@ -77,6 +74,8 @@ sensors:
         horizontal_resolution: &(1/180)*math.pi&
         horizontal_offset: 0.0
         vertical_offset: 0.0
+        mars:
+            type: RotatingRaySensor
     Scanning_sonar:
         general:
             type: scanning_sensor
@@ -102,6 +101,8 @@ sensors:
         left_limit: &math.pi&
         right_limit: &(-1)*math.pi&
         ping_pong_mode: false
+        mars:
+            type: ScanningSonar
     Multi_level_laser_range_finder:
         general:
             type: multi_level_laser_range_finder
@@ -118,6 +119,8 @@ sensors:
         vertical_opening_angle: &40/180.0 * math.pi&
         horizontal_opening_angle: &2*math.pi*1899/ 1900&
         max_distance: 100.0
+        mars:
+            type: MultiLevelLaserRangeFinder
 
     # camera sensors
     Camera:
@@ -136,6 +139,8 @@ sensors:
         hud_width: 320
         hud_height: 240
         depth_image: false
+        mars:
+            type: CameraSensor
 
     # internal sensors
     Joint_position:
@@ -145,6 +150,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: JointPosition
     Joint_velocity:
         general:
             type: joint_velocity
@@ -152,6 +159,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: JointVelocity
     Joint_load:
         general:
             type: joint_load
@@ -159,6 +168,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: JointLoad
     Joint_torque:
         general:
             type: joint_torque
@@ -166,6 +177,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: JointTorque
     Joint_AVG_torque:
         general:
             type: joint_avg_torque
@@ -173,6 +186,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: JointAVGTorque
     Joint_6_DOF:
         general:
             type: joint_6_dof
@@ -180,6 +195,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: Joint6DOF
     Node_contact:
         general:
             type: node_contact
@@ -187,6 +204,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: NodeContact
     Node_position:
         general:
             type: node_position
@@ -194,6 +213,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: NodePosition
     Node_rotation:
         general:
             type: node_rotation
@@ -201,6 +222,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: NodeRotation
     Node_contact_force:
         general:
             type: node_contact_force
@@ -208,6 +231,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: NodeContactForce
     Node_COM:
         general:
             type: node_com
@@ -215,6 +240,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: NodeCOM
     Node_velocity:
         general:
             type: node_velocity
@@ -222,6 +249,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: NodeVelocity
     Node_angular_velocity:
         general:
             type: node_angular_velocity
@@ -229,6 +258,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: NodeAngularVelocity
     Motor_current:
         general:
             type: motor_current
@@ -236,6 +267,8 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+            type: MotorCurrent
     Inertial_measurement_unit:
         general:
             type: inertial_measurement_unit
