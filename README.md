@@ -4,7 +4,7 @@ Phobos is an add-on for the open-source 3D modeling software [Blender](http://ww
 
 Phobos was initiated and is currently developed at the [Robotics Innovation Center](http://robotik.dfki-bremen.de/en/startpage.html) of the [German Research Center for Artificial Intelligence (DFKI)](http://www.dfki.de) in Bremen, together with the [Robotics Group](http://www.informatik.uni-bremen.de/robotik/index_en.php) of the [University of Bremen](http://www.uni-bremen.de/en.html).
 
-Please contact [Kai von Szadkowski](http://robotik.dfki-bremen.de/en/about-us/staff/kavo01.html) for any inquiries, or any questions and feedback not suited for the issues page.
+Please contact [Simon V. Reichel](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/sire01.html) for any inquiries, or any questions and feedback not suited for the issues page.
 
 ## Documentation
 
