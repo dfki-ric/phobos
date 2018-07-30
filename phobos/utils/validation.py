@@ -281,3 +281,31 @@ def validateObjectNames(obj):
 
     # TODO add unique name checks etc
     return errors
+
+def validate(name):
+    def validation(function):
+        def validation_wrapper(obj, *args, logging=False, **kwargs):
+            if name == 'joint':
+                errors = validateJoint(obj, *args, **kwargs)
+            elif name == 'joint_type':
+                errors = validateJointType(obj, *args, **kwargs)
+            elif name == 'material':
+                errors = validateMaterial(obj, *args, **kwargs)
+            elif name == 'link':
+                errors = validateLink(obj, *args, **kwargs)
+            elif name == 'object_pose':
+                errors = validateObjectPose(obj, *args, **kwargs)
+            else:
+                log('This validation type is not defined!', 'ERROR')
+                errors = []
+
+            kwargs['errors'] = errors
+
+            if logging:
+                for error in errors:
+                    error.log()
+
+            return function(obj, *args, logging=logging, **kwargs)
+
+        return validation_wrapper
+    return validation
