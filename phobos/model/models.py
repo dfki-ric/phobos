@@ -46,6 +46,7 @@ import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.editing as eUtils
 import phobos.utils.io as ioUtils
+from phobos.utils.validation import validate
 from phobos.phoboslog import log
 from phobos.utils.general import roundFloatsInDict
 from phobos.model.poses import deriveObjectPose
@@ -72,33 +73,60 @@ def collectMaterials(objectlist):
     return materials
 
 
-def deriveMaterial(mat):
+@validate('material')
+def deriveMaterial(mat, errors=None):
     """Returns a Phobos representation of a Blender material.
 
-    Args:
-      mat(bpy.types.Material): Blender material to derive a Phobos description from
+    Colors are returned as a dictionary with three keys ('r', 'g', 'b').
 
+    It contains always:
+        *name*: name of the material
+        *diffuseColor*: the diffuse color of the material
+        *ambientColor*: the ambient color of the material
+        *specularColor*: the specular color of the material
+
+    Depending on the material and texture configuration it might also contain:
+        *emissionColor*: the emission color of the material
+        *transparency*: the transparency of the material
+        *diffuseTexture*: the diffuse texture file path of the material
+        *normalTexture*: the normal texture file path of the material
+        *displacementTexture*: the displacement texture file path of the material
+
+    Args:
+      mat (bpy.types.Material): Blender material to derive a Phobos description from
+
+    Returns:
+        dict -- Phobos representation of the material
     """
     # TODO: annotations to materials could be used to fuse annotation objects' materials for different
     #       graphics engines of simulations etc., currently works by adding custom properties
     material = initObjectProperties(mat, 'material', includeannotations=False)
+
     material['name'] = mat.name
-    material['diffuseColor'] = dict(zip(['r', 'g', 'b'],
-                                        [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
-    material['ambientColor'] = dict(zip(['r', 'g', 'b'],
-                                        [mat.ambient * mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
-    material['specularColor'] = dict(zip(['r', 'g', 'b'],
-                                         [mat.specular_intensity * num for num in list(mat.specular_color)]))
+
+    # create color dictionaries
+    material['diffuseColor'] = dict(
+        zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
+    material['ambientColor'] = dict(
+        zip(['r', 'g', 'b'], [mat.ambient * mat.diffuse_intensity * num for num in list(
+            mat.diffuse_color)]))
+    material['specularColor'] = dict(
+        zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
     if mat.emit > 0:
-        material['emissionColor'] = dict(zip(['r', 'g', 'b'],
-                                             [mat.emit * mat.specular_intensity * num for num in list(mat.specular_color)]))
+        material['emissionColor'] = dict(
+            zip(['r', 'g', 'b'], [mat.emit * mat.specular_intensity * num for num in list(
+                mat.specular_color)]))
     material['shininess'] = mat.specular_hardness / 2
     if mat.use_transparency:
         material['transparency'] = 1.0 - mat.alpha
+
+    # return material without texture information if there are validation errors
+    if errors:
+        return material
+
     # there are always 18 slots, regardless of whether they are filled or not
     for tex in mat.texture_slots:
         if tex is not None:
-            try:
                 # regular diffuse color texture
                 if tex.use_map_color_diffuse:
                     # grab the first texture
@@ -114,9 +142,6 @@ def deriveMaterial(mat):
                     # grab the first texture
                     material['displacementTexture'] = mat.texture_slots[
                         0].texture.image.filepath.replace('//', '')
-            except (KeyError, AttributeError):
-                log("None or incomplete texture data for material "
-                    + nUtils.getObjectName(mat, 'material'), "WARNING")
     return material
 
 

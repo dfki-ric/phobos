@@ -343,6 +343,55 @@ def validateJointType(link, adjust=False):
     return errors
 
 
+
+
+def validateMaterial(material):
+    """Validate the specified material.
+
+    Args:
+        material (bpy.types.Material): material to validate
+
+    Returns:
+        list(ValidateMessage) -- validation errors for the material
+    """
+    errors = []
+
+    # there are always 18 slots, regardless of whether they are filled or not
+    for tex in material.texture_slots:
+        if tex is not None:
+            try:
+                # regular diffuse color texture
+                if tex.use_map_color_diffuse:
+                    # grab the first texture
+                    material.texture_slots[0].texture.image.filepath.replace('//', '')
+            except (KeyError, AttributeError):
+                errors.append(ValidateMessage(
+                    "Diffuse texture incomplete/undefined.",
+                    'WARNING',
+                    material, None, {}))
+            try:
+                # normal map
+                if tex.use_map_normal:
+                    # grab the first texture
+                    material.texture_slots[0].texture.image.filepath.replace('//', '')
+            except (KeyError, AttributeError):
+                errors.append(ValidateMessage(
+                    "Normal texture incomplete/undefined.",
+                    'WARNING',
+                    material, None, {}))
+            try:
+                # displacement map
+                if tex.use_map_displacement:
+                    # grab the first texture
+                    material.texture_slots[0].texture.image.filepath.replace('//', '')
+            except (KeyError, AttributeError):
+                errors.append(ValidateMessage(
+                    "Displacement texture incomplete/undefined.",
+                    'WARNING',
+                    material, None, {}))
+    return errors
+
+
 def validate(name):
     def validation(function):
         def validation_wrapper(obj, *args, logging=False, **kwargs):
