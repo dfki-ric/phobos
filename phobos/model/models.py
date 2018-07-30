@@ -210,7 +210,7 @@ def get_link_information(linkobj):
     parent = sUtils.getEffectiveParent(linkobj)
     props['parent'] = parent.name if parent else None
     props['pose'] = deriveObjectPose(linkobj)
-    props['joint'] = deriveJoint(linkobj, adjust=False)
+    props['joint'] = deriveJoint(linkobj, logging=False, adjust=False)
     del props['joint']['parent']
 
     # derive Motor
@@ -250,16 +250,16 @@ def get_link_information(linkobj):
     return props
 
 
-def deriveJoint(obj, adjust=True):
-    """This function derives a joint from a blender object and creates its initial phobos data structure.
+@validate('joint')
+def deriveJoint(obj, logging=False, adjust=False, errors=None):
+    """Derives a joint from a blender object and creates its initial phobos data structure.
 
     Args:
-      obj: The blender object to derive the joint from.
-      adjust:  (Default value = True)
+      obj (bpy.types.Object): object to derive the joint from
+      adjust (bool): TODO
 
     Returns:
       dict
-
     """
     joint_type, crot = jointmodel.deriveJointType(obj, adjust=adjust, logging=logging)
     props = initObjectProperties(obj, phobostype='joint', ignoretypes=linkobjignoretypes-{'joint'})
@@ -919,7 +919,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         # parse joint and motor information
         if sUtils.getEffectiveParent(link):
             # joint may be None if link is a root
-            jointdict = deriveJoint(link)
+            jointdict = deriveJoint(link, logging=True, adjust=True)
             model['joints'][jointdict['name']] = jointdict
 
             motordict = deriveMotor(link, jointdict)

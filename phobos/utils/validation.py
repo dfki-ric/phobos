@@ -297,6 +297,32 @@ def validateObjectNames(obj):
     # TODO add unique name checks etc
     return errors
 
+def validateJoint(link, adjust=False):
+    """Checks for errors in the joint definitions of the specified link.
+
+        If autocomplete is set, the missing dictionary entries are complemented.
+
+    Args:
+        link (bpy.types.Object): link object which forms the joint
+        autocomplete (bool): add missing keys to the link object
+
+    Returns:
+        list(ValidateMessage) -- error messages of the validation
+    """
+    errors = []
+
+    # a link without parent can not be a joint
+    if not link.parent:
+        errors.append(ValidateMessage(
+            "No joint parent!",
+            'WARNING',
+            None, {}))
+
+    # make sure the joint type is validated
+    errors.extend(validateJointType(link, adjust=adjust))
+
+    return errors
+
 
 def validateJointType(link, adjust=False):
     """Validate the joint type of the specified link.
