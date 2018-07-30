@@ -37,6 +37,7 @@ import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.io as ioUtils
+from phobos.utils.validation import validate
 
 
 def createJoint(joint, linkobj=None):
@@ -92,72 +93,6 @@ def createJoint(joint, linkobj=None):
                 linkobj['joint/'+prop[1:]+'/'+tag] = joint[prop][tag]
 
 
-def deriveJointType(joint, adjust=False):
-    """Derives the type of the joint defined by the armature object 'joint'
-    based on the constraints defined in the joint. If the constraints do not
-    match the specified joint type, a warning is logged. By using the adjust
-    parameter it is possible to overwrite the joint type according to the
-    specified joint constraints.
-
-    Args:
-      joint(bpy_types.Object): The joint you want to derive its type from.
-      adjust(bool, optional): Decides whether or not the type of the joint is corrected
-    according to the constraints (overwriting the existing joint type) (Default value = False)
-
-    Returns:
-      tuple(2) -- jtype, crot
-
-    """
-    jtype = 'floating'
-    cloc = None
-    crot = None
-    limrot = None
-    # we pick the first bone in the armature as there is only one
-    for c in joint.pose.bones[0].constraints:
-        if c.type == 'LIMIT_LOCATION':
-            cloc = [c.use_min_x and c.min_x == c.max_x,
-                    c.use_min_y and c.min_y == c.max_y,
-                    c.use_min_z and c.min_z == c.max_z]
-        elif c.type == 'LIMIT_ROTATION':
-            limrot = c
-            crot = [c.use_limit_x and (c.min_x != 0 or c.max_x != 0),
-                    c.use_limit_y and (c.min_y != 0 or c.max_y != 0),
-                    c.use_limit_z and (c.min_z != 0 or c.max_z != 0)]
-    ncloc = sum(cloc) if cloc else None
-    ncrot = sum((limrot.use_limit_x, limrot.use_limit_y,
-                 limrot.use_limit_z,)) if limrot else None
-    # all but floating joints have translational limits
-    if cloc:
-        # fixed, revolute or continuous
-        if ncloc == 3:
-            if ncrot == 3:
-                if sum(crot) > 0:
-                    jtype = 'revolute'
-                else:
-                    jtype = 'fixed'
-            elif ncrot == 2:
-                jtype = 'continuous'
-        elif ncloc == 2:
-            jtype = 'prismatic'
-        elif ncloc == 1:
-            jtype = 'planar'
-
-    # warn user if the constraints do not match the specified joint type
-    try:
-        if jtype != joint['joint/type']:
-            log(("The specified joint type '{0}' at link '{1}' does not match " +
-                "the required constraints (set to '{2}' instead).").format(
-                    joint['joint/type'], joint['link/name'], jtype), "WARNING")
-    except KeyError:
-        log("No joint type specified for joint " + joint.name, "WARNING")
-
-    if adjust:
-        joint['joint/type'] = jtype
-        log("Set type of joint '" + nUtils.getObjectName(joint) + "'to '" +
-            jtype + "'.", "INFO")
-    return jtype, crot
-
-
 def getJointConstraints(joint):
     """Returns the constraints defined in the joint as tuple of two lists.
 
@@ -168,7 +103,7 @@ def getJointConstraints(joint):
       tuple -- lists containing axis and limit data
 
     """
-    jt, crot = deriveJointType(joint)
+    jt, crot = deriveJointType(joint, adjust=False)
     axis = None
     limits = None
     if jt not in ['floating', 'fixed']:
@@ -417,3 +352,61 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
 
         # set link/joint visualization
         joint.pose.bones[0].custom_shape = ioUtils.getResource(('joint', jointtype))
+
+
+def getJointType(joint):
+    jtype = 'floating'
+    cloc = None
+    crot = None
+    limrot = None
+    # we pick the first bone in the armature as there is only one
+    for c in joint.pose.bones[0].constraints:
+        if c.type == 'LIMIT_LOCATION':
+            cloc = [c.use_min_x and c.min_x == c.max_x,
+                    c.use_min_y and c.min_y == c.max_y,
+                    c.use_min_z and c.min_z == c.max_z]
+        elif c.type == 'LIMIT_ROTATION':
+            limrot = c
+            crot = [c.use_limit_x and (c.min_x != 0 or c.max_x != 0),
+                    c.use_limit_y and (c.min_y != 0 or c.max_y != 0),
+                    c.use_limit_z and (c.min_z != 0 or c.max_z != 0)]
+    ncloc = sum(cloc) if cloc else None
+    ncrot = sum((limrot.use_limit_x, limrot.use_limit_y,
+                 limrot.use_limit_z,)) if limrot else None
+    # all but floating joints have translational limits
+    if cloc:
+        # fixed, revolute or continuous
+        if ncloc == 3:
+            if ncrot == 3:
+                if sum(crot) > 0:
+                    jtype = 'revolute'
+                else:
+                    jtype = 'fixed'
+            elif ncrot == 2:
+                jtype = 'continuous'
+        elif ncloc == 2:
+            jtype = 'prismatic'
+        elif ncloc == 1:
+            jtype = 'planar'
+    return jtype, crot
+
+
+@validate('joint_type')
+def deriveJointType(joint, logging=False, adjust=False, errors=None):
+    """Derives the type of the joint defined by the armature object.
+
+    If the constraints do not match the specified joint type, a warning is logged. By using the
+    adjust parameter it is possible to overwrite the joint type according to the specified joint
+    constraints.
+
+    Args:
+        joint (bpy_types.Object): link object to derive the joint type from
+        adjust (bool, optional): whether or not the type of the joint is corrected for the object
+            according to the constraints (overwriting the existing joint type)
+
+    Returns:
+        tuple(2) -- jtype, crot
+    """
+    joint_type, crot = getJointType(joint)
+
+    return joint_type, crot

@@ -297,6 +297,52 @@ def validateObjectNames(obj):
     # TODO add unique name checks etc
     return errors
 
+
+def validateJointType(link, adjust=False):
+    """Validate the joint type of the specified link.
+
+    If adjust is `True`, the validation errors are fixed on the fly.
+
+    Args:
+        link (bpy.types.Object): link representing the joint to validate
+        adjust (bool): if True, the validation errors are fixed on the fly.
+
+    Returns:
+        list(ValidateMessage) -- validation errors
+    """
+    import phobos.model.joints as jointmodel
+    errors = []
+    if 'joint/type' not in link:
+        errors.append(ValidateMessage(
+            "No joint type specified!",
+            'WARNING',
+            link,
+            "phobos.define_joint_constraints",
+            {}))
+        # make sure we get no KeyErrors from this
+        if adjust:
+            link['joint/type'] = 'undefined'
+
+    joint_type, crot = jointmodel.getJointType(link)
+
+    # warn user if the constraints do not match the specified joint type
+    if 'joint/type' in link and joint_type != link['joint/type']:
+        if not adjust:
+            errors.append(ValidateMessage(
+                "The specified joint type does not match the constraints:",
+                'WARNING',
+                link, None,
+                {'log_info': str("'" + link['joint/type'] + "' should be set to '" +
+                                 joint_type + "' instead.")}))
+        else:
+            link['joint/type'] = joint_type
+            errors.append(ValidateMessage(
+                "Adjusted joint type to '" + joint_type + "'.",
+                'INFO', link, None, {}))
+
+    return errors
+
+
 def validate(name):
     def validation(function):
         def validation_wrapper(obj, *args, logging=False, **kwargs):

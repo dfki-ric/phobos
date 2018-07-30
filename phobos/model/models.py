@@ -237,8 +237,7 @@ def deriveJoint(obj, adjust=True):
       dict
 
     """
-    if 'joint/type' not in obj.keys():
-        jt, crot = jointmodel.deriveJointType(obj, adjust=adjust)
+    joint_type, crot = jointmodel.deriveJointType(obj, adjust=adjust, logging=logging)
     props = initObjectProperties(obj, phobostype='joint', ignoretypes=linkobjignoretypes-{'joint'})
 
     parent = sUtils.getEffectiveParent(obj)
