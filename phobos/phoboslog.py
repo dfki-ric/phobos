@@ -122,7 +122,7 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
 
     date = datetime.now().strftime("%Y%m%d_%H:%M:%S")
     # end of line will add the date and level information before the message
-    if end == '\n':
+    if end == '\n' or end == '\n\n':
         msg = date + " - " + level + " " + message + " (" + originname + ")"
         terminalmsg = '{0}[{1}] {2} {3}{4} ({5}){6}'.format(
             prefix, date, decorate(level), message, Col.DIM.value, originname, Col.ENDC.value)

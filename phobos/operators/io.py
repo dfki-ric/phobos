@@ -169,7 +169,7 @@ class ExportModelOperator(Operator):
             bpy.ops.phobos.select_model()
 
         # report success to user
-        log("Export successful.", "INFO")
+        log("Export successful.", "INFO", end="\n\n")
         return {'FINISHED'}
 
 
