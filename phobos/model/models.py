@@ -55,10 +55,17 @@ from phobos.defs import linkobjignoretypes
 
 
 def collectMaterials(objectlist):
-    """Returns a dictionary of materials contained in a list of objects
+    """Returns a dictionary of materials contained in a list of objects.
+
+    Only visual objects are considered and the dict keys represent the material names.
+
+    If a material is used by multiple objects, the *user* count is increased by one.
 
     Args:
-      objectlist(list): list of objects to derive dictionary from
+        objectlist(list): list of objects to derive dictionary from
+
+    Returns:
+        dict -- dictionary of materials
     """
     materials = {}
     for obj in objectlist:
