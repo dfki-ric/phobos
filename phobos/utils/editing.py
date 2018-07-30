@@ -44,7 +44,18 @@ def addDictionaryToObj(dict, obj, category=None):
 
 
 def getCombinedTransform(obj, effectiveparent):
-    # DOCU add some docstring
+    """Get the combined transform of the object relative to the effective parent.
+
+    This combines all transformations in the parenting hierarchy up to the specified effective
+    parent.
+
+    Args:
+        obj (bpy.types.Object): the child object
+        effectiveparent (bpy.types.Object): the effective parent of the child object
+
+    Returns:
+        bpy.types.Matrix -- the combined transformations of the child object
+    """
     parent = obj.parent
     matrix = obj.matrix_local
     while parent != effectiveparent and parent is not None:
