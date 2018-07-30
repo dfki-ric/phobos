@@ -81,7 +81,7 @@ def collectMaterials(objectlist):
 
 
 @validate('material')
-def deriveMaterial(mat, errors=None):
+def deriveMaterial(mat, logging=False, errors=None):
     """Returns a Phobos representation of a Blender material.
 
     Colors are returned as a dictionary with three keys ('r', 'g', 'b').
