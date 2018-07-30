@@ -343,6 +343,14 @@ def validateJointType(link, adjust=False):
     return errors
 
 
+def validateLink(link):
+    errors = []
+
+    # TODO add validation tests
+
+    return errors
+
+
 
 
 def validateMaterial(material):

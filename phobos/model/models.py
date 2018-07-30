@@ -145,7 +145,8 @@ def deriveMaterial(mat, errors=None):
     return material
 
 
-def deriveLink(linkobj, objectlist=[]):
+@validate('link')
+def deriveLink(linkobj, logging=False, objectlist=[]):
     """Derives a dictionary for the link represented by the provided obj.
 
     If objectlist is provided, only objects contained in the list are taken into account
@@ -168,12 +169,9 @@ def deriveLink(linkobj, objectlist=[]):
     .. seealso deriveObjectPose
     .. seealso deriveInertial
     """
-    if not linkobj.phobostype == 'link':
-        log("Could not parse link from {0}. No valid link object.".format(linkobj.name), 'ERROR')
-        return None
-
+    # use scene objects if no objects are defined
     if not objectlist:
-        objectlist = list(bpy.data.objects)
+        objectlist = list(bpy.context.scene.objects)
 
     log("Deriving link from object " + linkobj.name + ".", 'DEBUG')
     props = initObjectProperties(linkobj, phobostype='link',
@@ -188,6 +186,7 @@ def deriveLink(linkobj, objectlist=[]):
     props['visual'] = {}
     props['inertial'] = {}
     props['approxcollision'] = []
+
     return props
 
 
@@ -829,7 +828,7 @@ def deriveTextData(modelname):
 #             model['links'][namespaced(rootlink.name, subm.name)]['pose'] = pose
 
 #             # derive additional joint
-#             model['joints'][a.name] = deriveJoint(rootlink)
+#             model['joints'][a.name] = deriveJoint(rootlink, adjust=True)
 #             # print(yaml.dump(model['joints'][a.name]))
 #             model['joints'][a.name]['name'] = namespaced(rootlink.name, a.name)
 #             model['joints'][a.name]['parent'] = namespaced(parentlinkname, a.parent.parent.parent.name)
@@ -915,8 +914,9 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     log("Parsing links, joints and motors... " + (str(len(linklist))) + " total.", "INFO")
     for link in linklist:
         # parse link information (including inertia)
-        model['links'][nUtils.getObjectName(link, 'link')] = deriveLink(link)
+        model['links'][nUtils.getObjectName(link, 'link')] = deriveLink(link, logging=True)
 
+        # parse joint and motor information
         if sUtils.getEffectiveParent(link):
             # joint may be None if link is a root
             jointdict = deriveJoint(link)
