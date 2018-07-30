@@ -252,6 +252,14 @@ class ValidateMessage():
             ('\n' + 4 * ' ' + self.information['log_info'] if 'log_info' in self.information
              else '') + " @" + nUtils.getObjectName(self.obj), self.level)
 
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.message == other
+        elif isinstance(other, ValidateMessage):
+            return self.message == other.message and self.obj == other.obj
+        else:
+            return False
+
 
 def validateObjectNames(obj):
     """Check for naming errors of the specified object.
