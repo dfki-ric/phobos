@@ -369,7 +369,7 @@ def validateJointType(link, adjust=False):
     return errors
 
 
-def validateLink(link):
+def validateLink(link, objectlist=None):
     errors = []
 
     # TODO add validation tests

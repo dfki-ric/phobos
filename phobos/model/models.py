@@ -153,7 +153,7 @@ def deriveMaterial(mat, errors=None):
 
 
 @validate('link')
-def deriveLink(linkobj, logging=False, objectlist=[]):
+def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
     """Derives a dictionary for the link represented by the provided obj.
 
     If objectlist is provided, only objects contained in the list are taken into account
@@ -193,6 +193,18 @@ def deriveLink(linkobj, logging=False, objectlist=[]):
     props['visual'] = {}
     props['inertial'] = {}
     props['approxcollision'] = []
+
+    # gather all visual/collision objects for the link from the objectlist
+    for obj in [item for item in objectlist if item.phobostype in ['visual', 'collision',
+                                                                   'approxsphere']]:
+        effectiveparent = sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist))
+        if effectiveparent == linkobj:
+            log("  Adding " + obj.phobostype + " '" + nUtils.getObjectName(obj) + "' to link.",
+                'DEBUG')
+            if obj.phobostype == 'approxsphere':
+                props['approxcollision'].append(deriveDictEntry(obj))
+            else:
+                props[obj.phobostype][nUtils.getObjectName(obj)] = deriveDictEntry(obj)
 
     return props
 
@@ -902,7 +914,8 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     log("Parsing links, joints and motors... " + (str(len(linklist))) + " total.", "INFO")
     for link in linklist:
         # parse link information (including inertia)
-        model['links'][nUtils.getObjectName(link, 'link')] = deriveLink(link, logging=True)
+        model['links'][nUtils.getObjectName(link, 'link')] = deriveLink(link, logging=True,
+                                                                        objectlist=objectlist)
 
         # parse joint and motor information
         if sUtils.getEffectiveParent(link):
@@ -951,20 +964,6 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             'pose': {'translation': list(com),
                      'rotation_euler': [0, 0, 0]}
         }
-
-    # complete link information by parsing visuals and collision objects
-    log("Parsing visual and collision (approximation) objects...", 'INFO')
-    for obj in objectlist:
-        if obj.phobostype in ['visual', 'collision']:
-            props = deriveDictEntry(obj)
-            parentname = nUtils.getObjectName(
-                sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
-            model['links'][parentname][obj.phobostype][nUtils.getObjectName(obj)] = props
-        elif obj.phobostype == 'approxsphere':
-            props = deriveDictEntry(obj)
-            parentname = nUtils.getObjectName(
-                sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
-            model['links'][parentname]['approxcollision'].append(props)
 
     # combine collision information for links
     for linkname in model['links']:
