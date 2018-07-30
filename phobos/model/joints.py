@@ -410,3 +410,22 @@ def deriveJointType(joint, logging=False, adjust=False, errors=None):
     joint_type, crot = getJointType(joint)
 
     return joint_type, crot
+
+
+def deriveJointState(joint):
+    """Calculates the state of a joint from the state of the link armature.
+    Note that this is the current state and not the zero state.
+
+    Args:
+      joint(bpy_types.Object): The joint(armature) to derive its state from.
+
+    Returns:
+      dict
+
+    """
+    state = {'matrix': [list(vector) for vector in list(joint.pose.bones[0].matrix_basis)],
+             'translation': list(joint.pose.bones[0].matrix_basis.to_translation()),
+             'rotation_euler': list(joint.pose.bones[0].matrix_basis.to_euler()),
+             'rotation_quaternion': list(joint.pose.bones[0].matrix_basis.to_quaternion())}
+    # TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
+    return state
