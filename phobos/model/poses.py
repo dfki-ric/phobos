@@ -40,11 +40,13 @@ import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.general as gUtils
 import phobos.utils.io as ioUtils
+from phobos.utils.validation import validate
 from phobos.phoboslog import log
 from phobos.utils.io import securepath
 
 
-def deriveObjectPose(obj):
+@validate('object_pose')
+def deriveObjectPose(obj, logging=False):
     """Derives a pose of link, visual or collision object.
 
     The transformations of the object are calculated according to
@@ -72,12 +74,12 @@ def deriveObjectPose(obj):
             'matrix': [list(vector) for vector in list(matrix)],
             'translation': list(matrix.to_translation()),
             'rotation_euler': list(matrix.to_euler()),
-            'rotation_quaternion': list(matrix.to_quaternion())
-            }
-    return pose
+            'rotation_quaternion': list(matrix.to_quaternion())}
 
-# TODO delete me?
-#def bakeAllPoses(objlist, modelname, posename="", savetosubfolder=True):
+    if logging:
+        log("Location: " + str(pose['translation']) + " Rotation: " + str(pose['rotation_euler']),
+            'DEBUG')
+    return pose
 
 
 def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimate_parameter=0.1):

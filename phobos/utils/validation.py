@@ -377,6 +377,12 @@ def validateLink(link):
     return errors
 
 
+def validateObjectPose(obj):
+    errors = []
+
+    # TODO add validation tests
+
+    return errors
 
 
 def validateMaterial(material):
