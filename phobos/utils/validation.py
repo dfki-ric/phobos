@@ -29,6 +29,8 @@ Created on 26 March 2015
 from copy import deepcopy as dc
 
 import phobos.defs as defs
+import phobos.utils.naming as nUtils
+from phobos.phoboslog import log
 
 
 checkMessages = {"NoObject": []}
@@ -244,6 +246,11 @@ class ValidateMessage():
             bool: error message of this obj < error message of the other obj
         """
         return self.message.__lt__(other.message)
+
+    def log(self):
+        log(self.message +
+            ('\n' + 4 * ' ' + self.information['log_info'] if 'log_info' in self.information
+             else '') + " @" + nUtils.getObjectName(self.obj), self.level)
 
 
 def validateObjectNames(obj):
