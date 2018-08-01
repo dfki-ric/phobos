@@ -560,21 +560,13 @@ class EditInertialData(Operator):
 class GenerateInertialObjectsOperator(Operator):
     """Creates inertial object(s) to add mass and inertia data to links"""
     bl_idname = "phobos.generate_inertial_objects"
-    bl_label = "Define Mass/Inertia"
+    bl_label = "Create Inertials"
     bl_options = {'REGISTER', 'UNDO'}
 
     mass = FloatProperty(
         name='Mass',
         default=0.001,
         description="Mass (of active object) in kg")
-
-    inertiavector = FloatVectorProperty(
-        name="Inertia Vector",
-        default=[0, 0, 0, 0, 0, 0],
-        subtype='NONE',
-        size=6,
-        description="Set inertia for a link"
-    )
 
     derive_inertia_from_geometry = BoolProperty(
         name="Calculate inertia from geometry ",
@@ -588,85 +580,80 @@ class GenerateInertialObjectsOperator(Operator):
         description="Clear existing inertial objects of selected links."
     )
 
-    # this is only necessary to prevent crashing
-    run = BoolProperty(
-        name="Run operator with settings",
-        default=False,
-        description="Confirm to run the operator with these settings"
-    )
-
-    # TODO: running this operator as dialog leads Blender to crash
     def invoke(self, context, event):
-        self.run = False
-        return self.execute(context)
-    #     return context.window_manager.invoke_props_dialog(self, width=300)
-    #
-    # def check(self, context):
-    #     return True
+        geometric_objects = [obj for obj in context.selected_objects
+                             if obj.phobostype in ['visual', 'collision']]
+
+        # initialise the geometry parameter correctly
+        if not geometric_objects:
+            self.derive_inertia_from_geometry = False
+        else:
+            self.derive_inertia_from_geometry = True
+
+        return context.window_manager.invoke_props_dialog(self, width=300)
 
     def draw(self, context):
         layout = self.layout
-        if not self.run:
-            layout.prop(self, 'clear')
-            geometric_objects = [obj for obj in context.selected_objects
-                                 if obj.phobostype in ['visual', 'collision']]
-            if geometric_objects:
-                layout.prop(self, 'derive_inertia_from_geometry')
-            else:
-                self.derive_inertia_from_geometry = False
-            if not self.derive_inertia_from_geometry:
-                layout.prop(self, 'inertiavector')
-            layout.prop(self, 'mass')
-            layout.separator()
-            layout.prop(self, 'run', toggle=True)
-        else:
-            layout.label('Done')
+        layout.prop(self, 'clear')
+        geometric_objects = [obj for obj in context.selected_objects
+                             if obj.phobostype in ['visual', 'collision']]
+
+        if geometric_objects:
+            layout.prop(self, 'derive_inertia_from_geometry')
+
+        layout.prop(self, 'mass')
 
     def execute(self, context):
-        if self.run:
-            # store previously selected objects
-            selection = context.selected_objects
+        # store previously selected objects
+        selection = context.selected_objects
+        viscols = [obj for obj in selection if obj.phobostype in ['visual', 'collision']]
+        links = list(set([obj.parent for obj in viscols] +
+                         [obj for obj in selection if obj.phobostype == 'link']))
 
-            geometric_objects = [obj for obj in selection
-                                 if obj.phobostype in ['visual', 'collision']]
-            if self.derive_inertia_from_geometry:
-                link_objects = list(set([obj.parent for obj in selection
-                                         if obj.phobostype in ['visual', 'collision']]))
-            else:
-                link_objects = [obj for obj in selection if obj.phobostype == 'link']
-            inertial_objects = [obj for link in link_objects for obj in link.children
+        # gather list of objects to generate inertial for
+        if self.derive_inertia_from_geometry:
+            objectlist = viscols
+        else:
+            objectlist = links
+
+        # remove the old inertial objects
+        if self.clear:
+            inertial_objects = [obj for link in links for obj in link.children
                                 if obj.phobostype == 'inertial']
+            log("Removing old inertial objects: " + str(inertial_objects), 'DEBUG')
+            for obj in inertial_objects:
+                bpy.data.objects.remove(obj)
 
-            new_inertial_objects = []
+        linkcount = len(objectlist)
+        new_inertial_objects = []
+        for obj in objectlist:
+            i = 1
+
+            # calculate pose and inertia for the new object
             if self.derive_inertia_from_geometry:
-                i = 1
-                for obj in geometric_objects:
-                    inertialdict = {'mass': self.mass,
-                                    'inertia': inertialib.calculateInertia(obj, self.mass),
-                                    'pose': {'translation': obj.matrix_local.to_translation()}}
-                    newinertial = inertialib.createInertial(inertialdict, obj)
-                    if newinertial:
-                        new_inertial_objects.append(newinertial)
-                    display.setProgress(i / len(geometric_objects))
-                    i += 1
+                inertia = inertialib.calculateInertia(obj, self.mass, adjust=True, logging=True)
+                pose = obj.matrix_local.to_translation()
             else:
-                i = 1
-                for obj in link_objects:
-                    inertialdict = {'mass': self.mass,
-                                    'inertia': self.inertiavector,
-                                    'pose': {'translation': mathutils.Vector((0.0, 0.0, 0.0))}}
-                    newinertial = inertialib.createInertial(inertialdict, obj)
-                    if newinertial:
-                        new_inertial_objects.append(newinertial)
-                    display.setProgress(i / len(link_objects))
-                    i += 1
+                inertia = [1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3]
+                pose = mathutils.Vector((0.0, 0.0, 0.0))
 
-            if new_inertial_objects:  # select the new inertialobjs if created
-                sUtils.selectObjects(new_inertial_objects, clear=True)
+            # create object from dictionary
+            inertialdict = {'mass': self.mass,
+                            'inertia': inertia,
+                            'pose': {'translation': pose}}
+            newinertial = inertialib.createInertial(inertialdict, obj, adjust=True, logging=True)
 
-            if self.clear:
-                for obj in inertial_objects:
-                    bpy.data.objects.remove(obj)
+            if newinertial:
+                new_inertial_objects.append(newinertial)
+
+            # update progress bar
+            display.setProgress(i / linkcount)
+            i += 1
+
+        # select the new inertialobjects
+        if new_inertial_objects:
+            sUtils.selectObjects(new_inertial_objects, clear=True)
+
         return {'FINISHED'}
 
     @classmethod
