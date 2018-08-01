@@ -80,7 +80,7 @@ def createInertial(inertialdict, obj=None):
 
     # set properties
     for prop in ('mass', 'inertia'):
-        inertialobject['inertia/' + prop] = inertialdict[prop]
+        inertialobject['inertial/' + prop] = inertialdict[prop]
     return inertialobject
 
 
