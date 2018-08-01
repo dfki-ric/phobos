@@ -90,9 +90,9 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, object
     hidden objects.
 
     Args:
-      obj(bpy.types.Object): object of which to find the parent.
-      include_hidden(bool, optional): True to include hidden objects, else False. (Default value = False)
-      ignore_selection:  (Default value = False)
+      obj (bpy.types.Object): object of which to find the parent.
+      include_hidden (bool, optional): True to include hidden objects, else False. (Default value = False)
+      ignore_selection (bool, optional): whether or not to use the current selection as limitation
       objectlist: list of bpy.types.Object to which possible parents are restricted
     """
     if not objectlist:
