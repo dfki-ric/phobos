@@ -10,6 +10,7 @@ import phobos.utils.selection as sUtils
 import phobos.io.meshes.meshes as meshes
 from phobos.model.materials import assignMaterial
 from phobos.phoboslog import log
+from phobos.utils.validation import validate
 
 
 def getLargestDimension(geometry):
@@ -25,42 +26,48 @@ def getLargestDimension(geometry):
         return max(geometry['size']) if 'size' in geometry else 0.2
 
 
-def deriveGeometry(obj):
+@validate('geometry_type')
+def deriveGeometry(obj, **kwargs):
     """This function derives the geometry from an object.
 
+    The returned dictionary contains this information (depending on the geometry type):
+        *type*: geometry type of the object
+        *size*: dimensions of the object (only for box and mesh)
+        *radius*: radius of the object (only for cylinder, capsule and sphere)
+        *lenght*: length of the object (only for cylinder and capsule)
+        *scale*: scale of the object (only for mesh)
+
     Args:
-      obj(bpy_types.Object): The blender object to derive the geometry from.
+        obj (bpy_types.Object): object to derive the geometry from
 
     Returns:
-      dict
-
+        dict -- dictionary representation of the geometry
     """
-    try:
-        geometry = {'type': obj['geometry/type']}
-        gt = obj['geometry/type']
-        if gt == 'box':
-            geometry['size'] = list(obj.dimensions)
-        elif gt == 'cylinder' or gt == 'capsule':
-            geometry['radius'] = obj.dimensions[0]/2
-            geometry['length'] = obj.dimensions[2]
-        elif gt == 'capsule':
-            geometry['radius'] = obj.dimensions[0]/2
-            geometry['length'] = obj.dimensions[2] - obj.dimensions[0]
-        elif gt == 'sphere':
-            geometry['radius'] = obj.dimensions[0]/2
-        elif gt == 'mesh':
-            geometry['filename'] = obj.data.name
-            geometry['scale'] = list(obj.scale)
-            # FIXME: is this needed to calculate an approximate inertia
-            geometry['size'] = list(obj.dimensions)
-        # any other geometry type, i.e. 'plane'
-        else:
-            geometry['size'] = list(obj.dimensions)
-        return geometry
-    except KeyError as err:
-        log("Undefined geometry for object " + nUtils.getObjectName(obj) +
-            " " + str(err), "ERROR")
-        return None
+    geometry = {'type': obj['geometry/type']}
+    gtype = obj['geometry/type']
+
+    # enrich the dictionary with sizes, lengths, etc depending on geometry type
+    if gtype == 'box':
+        geometry['size'] = list(obj.dimensions)
+
+    elif gtype == 'cylinder':
+        geometry['radius'] = obj.dimensions[0]/2
+        geometry['length'] = obj.dimensions[2]
+
+    elif gtype == 'capsule':
+        geometry['radius'] = obj.dimensions[0]/2
+        geometry['length'] = obj.dimensions[2] - obj.dimensions[0]
+
+    elif gtype == 'sphere':
+        geometry['radius'] = obj.dimensions[0]/2
+
+    elif gtype == 'mesh':
+        geometry['filename'] = obj.data.name
+        geometry['scale'] = list(obj.scale)
+        # FIXME: is this needed to calculate an approximate inertia
+        geometry['size'] = list(obj.dimensions)
+
+    return geometry
 
 
 def createGeometry(viscol, geomsrc, linkobj=None):
