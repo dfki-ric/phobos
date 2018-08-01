@@ -54,14 +54,13 @@ def createInertial(inertialdict, obj=None):
         bpy_types.Object: newly created blender inertial object
     """
     size = 0.03
+    if errors and not adjust:
+        log('Can not create inertial object.', 'ERROR')
 
     try:
         origin = mathutils.Vector(inertialdict['pose']['translation'])
     except KeyError:
         origin = mathutils.Vector()
-
-    if not isInertiaDataValid(inertialdict):
-        return None
 
     name = nUtils.getUniqueName('inertial_' + nUtils.getObjectName(obj), bpy.data.objects)
     inertialobject = bUtils.createPrimitive(name, 'box', (size,) * 3, defs.layerTypes["inertial"],
@@ -356,25 +355,6 @@ def calculateMeshInertia(mass, data):
         i += inertiaListToMatrix([a, -b_bar, -c_bar, b, -a_bar, c])
 
     return i[0][0], i[0][1], i[0][2], i[1][1], i[1][2], i[2][2]
-
-
-def isInertiaDataValid(inertialdict):
-    """Returns True if the inertial data to be physical consistent, else False.
-    """
-    # Check inertia vector for various properties
-    inertia = numpy.array(inertiaListToMatrix(inertialdict['inertia']))
-    if not all(element >= 0.0 for element in inertia.diagonal()):
-        log("Negative semidefinite main diagonal in inertia data!", "WARNING")
-        return False
-    # Calculate the determinant if consistent
-    if numpy.linalg.det(inertia) <= 0.0:
-        log("Negative semidefinite determinant in inertia data!", "WARNING")
-        return False
-    # Calculate the eigenvalues if consistent
-    if any(element < 0.0 for element in numpy.linalg.eigvals(inertia)):
-        log("Negative semidefinite eigenvalues in inertia data!", "WARNING")
-        return False
-    return 'mass' in inertialdict and inertialdict['mass'] > 0
 
 
 def inertiaListToMatrix(inertialist):

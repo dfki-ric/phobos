@@ -23,11 +23,12 @@ File validation.py
 
 Created on 26 March 2015
 
-@author: Ole Schwiegert
+@author: Ole Schwiegert, Simon Reichel
 """
 
 from copy import deepcopy as dc
 
+import bpy
 import phobos.defs as defs
 import phobos.utils.naming as nUtils
 from phobos.phoboslog import log
@@ -462,6 +463,100 @@ def validateGeometryType(obj, *args, geometry_dict=None):
     return errors
 
 
+def validateInertiaData(obj, *args, adjust=False):
+    from phobos.model.inertia import inertiaListToMatrix
+    import numpy
+    errors = []
+
+    # check dictionary parameters (most of the time pre object creation)
+    if isinstance(obj, dict):
+        missing = []
+        if 'inertia' not in obj:
+            missing.append('inertia')
+
+        if 'mass' not in obj:
+            missing.append('mass')
+
+        if missing:
+            errors.append(ValidateMessage(
+                "Inertia dictionary not fully defined!",
+                'WARNING',
+                None, None,
+                {'log_info': "Missing: " + ' '.join(["'{0}'".format(miss) for miss in missing]) +
+                 " Set to default 1e-3."}))
+
+            if 'inertia' in missing:
+                obj['inertia'] = (1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3)
+            if 'mass' in missing:
+                obj['mass'] = 1e-3
+
+        inertia = obj['inertia']
+        mass = obj['mass']
+    # check existing object properties
+    elif isinstance(obj, bpy.types.Object):
+        if 'inertial/inertia' not in obj:
+            errors.append(ValidateMessage(
+                "Inertia not defined!",
+                'WARNING',
+                obj,
+                'phobos.generate_inertial_objects',
+                {'log_info': "Set to default 1e-3."}))
+            obj['inertial/inertia'] = (1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3)
+
+        if 'inertial/mass' not in obj:
+            errors.append(ValidateMessage(
+                "Mass is not defined!",
+                'WARNING',
+                obj,
+                'phobos.generate_inertial_objects',
+                {'log_info': "Set to default 1e-3."}))
+            obj['inertial/mass'] = 1e-3
+        inertia = obj['inertial/inertia']
+        mass = obj['inertial/mass']
+
+    # Check inertia vector for various properties
+    inertia = numpy.array(inertiaListToMatrix(inertia))
+    if not all(element >= 0.0 for element in inertia.diagonal()):
+        errors.append(ValidateMessage(
+            "Negative semidefinite main diagonal in inertia data!",
+            'WARNING',
+            None if isinstance(obj, dict) else obj,
+            None, {'log_info': "Diagonal: " + str(inertia.diagonal())}))
+
+    # TODO this looks wrong to me
+    # Calculate the determinant if consistent
+    if numpy.linalg.det(inertia) <= 0.0:
+        errors.append(ValidateMessage(
+            "Negative semidefinite determinant in inertia data!",
+            'WARNING',
+            None if isinstance(obj, dict) else obj,
+            None, {'log_info': "Determinant: " + str(numpy.linalg.det(inertia))}))
+
+    # Calculate the eigenvalues if consistent
+    if any(element < 0.0 for element in numpy.linalg.eigvals(inertia)):
+        errors.append(ValidateMessage(
+            "Negative semidefinite eigenvalues in inertia data!",
+            'WARNING',
+            None if isinstance(obj, dict) else obj,
+            None, {'log_info': "Eigenvalues: " + str(numpy.linalg.eigvals(inertia))}))
+
+    if mass <= 0.:
+        errors.append(ValidateMessage(
+            "Mass is {}!".format('zero' if mass == 0. else 'negative'),
+            'WARNING',
+            None if isinstance(obj, dict) else obj,
+            None, {}))
+
+    if adjust and isinstance(obj, bpy.types.Object):
+        obj['inertial/inertia'] = inertia
+        obj['inertial/mass'] = mass
+    elif adjust:
+        obj['inertia'] = inertia
+        obj['mass'] = mass
+
+    return errors, obj
+
+
 def validate(name):
     def validation(function):
         def validation_wrapper(obj, *args, logging=False, **kwargs):
@@ -477,8 +572,10 @@ def validate(name):
                 errors = validateObjectPose(obj, *args, **kwargs)
             elif name == 'geometry_type':
                 errors = validateGeometryType(obj, *args, **kwargs)
+            elif name == 'inertia_data':
+                errors, obj = validateInertiaData(obj, *args, **kwargs)
             else:
-                log('This validation type is not defined!', 'ERROR')
+                log("This validation type is not defined! '{}'". format(name), 'ERROR')
                 errors = []
 
             kwargs['errors'] = errors
