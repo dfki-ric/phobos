@@ -89,7 +89,7 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
 
 
 @validate('geometry_type')
-def calculateInertia(obj, mass, geometry_dict=None, errors=None, logging=False):
+def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, logging=False):
     """Calculates the inertia of an object using the specified mass and
        optionally geometry.
 
@@ -101,14 +101,15 @@ def calculateInertia(obj, mass, geometry_dict=None, errors=None, logging=False):
     Returns(tuple):
         tuple(6) of upper diagonal of the inertia 3x3 tensor
     """
-    if errors:
-        log("Can not calculate inertia from object.", 'ERROR')
+    if errors and not adjust:
+        if logging:
+            log("Can not calculate inertia from object.", 'ERROR')
         return None
 
     inertia = None
     if not geometry_dict:
         geometry = deriveGeometry(obj)
-            return None
+
     if geometry['type'] == 'box':
         inertia = calculateBoxInertia(mass, geometry['size'])
     elif geometry['type'] == 'cylinder':
