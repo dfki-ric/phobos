@@ -297,6 +297,7 @@ def validateObjectNames(obj):
     # TODO add unique name checks etc
     return errors
 
+
 def validateJoint(link, adjust=False):
     """Checks for errors in the joint definitions of the specified link.
 
@@ -432,6 +433,35 @@ def validateMaterial(material):
     return errors
 
 
+def validateGeometryType(obj, *args, geometry_dict=None):
+    errors = []
+    # make sure the geometry is defined
+    if 'geometry/type' not in obj and (not geometry_dict or 'type' not in geometry_dict):
+        errors.append(ValidateMessage(
+            "Geometry type undefined!",
+            'ERROR',
+            obj, 'phobos.define_geometry', {}))
+        return errors
+
+    if not geometry_dict:
+        geometry_dict = {'type': obj['geometry/type']}
+
+    # check for valid geometry type
+    geometry_types = [entry[0] for entry in defs.geometrytypes]
+    if geometry_dict['type'] not in geometry_types:
+        errors.append(ValidateMessage(
+            "Geometry type not supported!",
+            'ERROR',
+            obj, 'phobos.define_geometry',
+            {'log_info': geometry_dict['type']}))
+        return errors
+
+    # ensure the geometry type is added to the object
+    obj['geometry/type'] = geometry_dict['type']
+
+    return errors
+
+
 def validate(name):
     def validation(function):
         def validation_wrapper(obj, *args, logging=False, **kwargs):
@@ -445,6 +475,8 @@ def validate(name):
                 errors = validateLink(obj, *args, **kwargs)
             elif name == 'object_pose':
                 errors = validateObjectPose(obj, *args, **kwargs)
+            elif name == 'geometry_type':
+                errors = validateGeometryType(obj, *args, **kwargs)
             else:
                 log('This validation type is not defined!', 'ERROR')
                 errors = []
