@@ -27,7 +27,7 @@ def getLargestDimension(geometry):
 
 
 @validate('geometry_type')
-def deriveGeometry(obj, **kwargs):
+def deriveGeometry(obj, adjust=False, **kwargs):
     """This function derives the geometry from an object.
 
     The returned dictionary contains this information (depending on the geometry type):

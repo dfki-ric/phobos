@@ -434,7 +434,7 @@ def validateMaterial(material):
     return errors
 
 
-def validateGeometryType(obj, *args, geometry_dict=None):
+def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
     errors = []
     # make sure the geometry is defined
     if 'geometry/type' not in obj and (not geometry_dict or 'type' not in geometry_dict):
@@ -457,8 +457,9 @@ def validateGeometryType(obj, *args, geometry_dict=None):
             {'log_info': geometry_dict['type']}))
         return errors
 
-    # ensure the geometry type is added to the object
-    obj['geometry/type'] = geometry_dict['type']
+    if adjust:
+        # ensure the geometry type is added to the object
+        obj['geometry/type'] = geometry_dict['type']
 
     return errors
 
