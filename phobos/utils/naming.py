@@ -31,6 +31,18 @@ import re
 
 
 def getUniqueName(newname, names):
+    """Generates a new name similar to the Blender internal convention.
+
+    This ensures, that the Blender internal limit to object name lengths (63 characters) is matched
+    without omitting the number. That way, unwanted naming behaviour is avoided.
+
+    Args:
+        newname: desired object name
+        names: list of existing names (e.g. bpy.data.objects)
+
+    Returns:
+        str -- new name that is unique in the Blender namespace
+    """
     i = 0
     while newname in names:
         numberstr = '.{0:03d}'.format(i)
