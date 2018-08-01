@@ -41,6 +41,7 @@ import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
+from phobos.utils.validation import validate
 
 
 def createInertial(inertialdict, obj=None):
@@ -84,22 +85,26 @@ def createInertial(inertialdict, obj=None):
     return inertialobject
 
 
-def calculateInertia(obj, mass, geometry=None):
+@validate('geometry_type')
+def calculateInertia(obj, mass, geometry_dict=None, errors=None, logging=False):
     """Calculates the inertia of an object using the specified mass and
        optionally geometry.
 
     Args:
-        obj(bpy.types.Object): object to calculate inertia from
-        mass(float): mass of object
-        geometry(dict, optional): geometry part of the object dictionary
+        obj (bpy.types.Object): object to calculate inertia from
+        mass (float): mass of object
+        geometry_dict (dict, optional): geometry part of the object dictionary
 
     Returns(tuple):
         tuple(6) of upper diagonal of the inertia 3x3 tensor
     """
+    if errors:
+        log("Can not calculate inertia from object.", 'ERROR')
+        return None
+
     inertia = None
-    if not geometry:
+    if not geometry_dict:
         geometry = deriveGeometry(obj)
-        if not geometry:
             return None
     if geometry['type'] == 'box':
         inertia = calculateBoxInertia(mass, geometry['size'])
