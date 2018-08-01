@@ -44,16 +44,16 @@ from phobos.model.poses import deriveObjectPose
 from phobos.utils.validation import validate
 
 
-def createInertial(inertialdict, obj=None):
+@validate('inertia_data')
+def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logging=False):
     """Creates the Blender representation of a given inertial provided a dictionary.
 
     Args:
-        inertialdict(dict): intertial data
-        obj(bpy.types.Object): link or visual/collision reference object
+        inertialdict (dict): intertial data
+        obj (bpy.types.Object): link or visual/collision reference object
     Returns:
-        bpy_types.Object: newly created blender inertial object
+        bpy_types.Object -- newly created blender inertial object
     """
-    size = 0.03
     if errors and not adjust:
         log('Can not create inertial object.', 'ERROR')
 
@@ -62,23 +62,27 @@ def createInertial(inertialdict, obj=None):
     except KeyError:
         origin = mathutils.Vector()
 
+    # create new inertial object
     name = nUtils.getUniqueName('inertial_' + nUtils.getObjectName(obj), bpy.data.objects)
     inertialobject = bUtils.createPrimitive(name, 'box', (size,) * 3, defs.layerTypes["inertial"],
                                             pmaterial='phobos_inertial', phobostype='inertial')
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(scale=True)
-    if obj:
-        inertialobject.matrix_world = obj.matrix_world
-        parent = obj if obj.phobostype == 'link' else obj.parent
-        sUtils.selectObjects((inertialobject, parent), clear=True, active=1)
 
-        # Create the inertial object relative to the link / joint
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
-        inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
-        sUtils.selectObjects((inertialobject,), clear=True, active=0)
-        bpy.ops.object.transform_apply(scale=True)  # force matrix_world update
+    # set position according to the parent link
+    inertialobject.matrix_world = obj.matrix_world
+    parent = obj
+    if parent.phobostype != 'link':
+        parent = sUtils.getEffectiveParent(obj, ignore_selection=True)
+    sUtils.selectObjects((inertialobject, parent), clear=True, active=1)
 
-    # set properties
+    # position and parent the inertial object relative to the link
+    bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
+    sUtils.selectObjects((inertialobject,), clear=True, active=0)
+    bpy.ops.object.transform_apply(scale=True)
+
+    # add properties to the object
     for prop in ('mass', 'inertia'):
         inertialobject['inertial/' + prop] = inertialdict[prop]
     return inertialobject
