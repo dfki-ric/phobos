@@ -364,11 +364,11 @@ def calculateMeshInertia(mass, data):
 def inertiaListToMatrix(inertialist):
     """Transforms a list (upper diagonal of a 3x3 tensor) and returns a full tensor matrix.
 
-    :param inertialist: the upper diagonal of a 3x3 inertia tensor
-    :type inertialist: tuple(6) or list[6]
+    Args:
+        inertialist (tuple(6)/list[6]): the upper diagonal of a 3x3 inertia tensor
 
-    :return: full tensor matrix generated from the list
-    :rtype: mathutil.Matrix
+    Returns:
+    mathutils.Matrix -- full tensor matrix generated from the list
     """
     il = inertialist
     inertia = [[il[0], il[1], il[2]],
