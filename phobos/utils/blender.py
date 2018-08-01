@@ -46,9 +46,6 @@ def update():
     named as the solution to this will lead to the matrices being updated, but not the
     visual transforms. This Function runs code (may be updated with new Blender verions)
     that forces Blender to update the visual transforms.
-
-    Returns: None
-
     """
     bpy.context.scene.frame_set(1)
     bpy.context.scene.frame_set(0)
