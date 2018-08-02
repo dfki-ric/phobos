@@ -548,13 +548,16 @@ class EditInertialData(Operator):
         precision=10)
 
     def invoke(self, context, event):
-        # read initial parameter values from active object is possible
-        if context.active_object:
-            if 'inertial/mass' in context.active_object:
-                self.mass = context.active_object['inertial/mass']
-            if 'inertial/inertia' in context.active_object:
-                self.inertiavector = mathutils.Vector(context.active_object['inertial/inertia'])
-        return self.execute(context)
+        # read initial parameter values from active object
+        if context.active_object and context.active_object.phobostype == 'inertial':
+            errors, *_ = vUtils.validateInertiaData(context.active_object, adjust=True)
+            for error in errors:
+                error.log()
+
+            self.mass = context.active_object['inertial/mass']
+            self.inertiavector = mathutils.Vector(context.active_object['inertial/inertia'])
+
+        return context.window_manager.invoke_props_dialog(self, width=200)
 
     def execute(self, context):
         if not self.changeMass and not self.changeInertia:
