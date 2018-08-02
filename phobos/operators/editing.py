@@ -518,23 +518,34 @@ class SmoothenSurfaceOperator(Operator):
 
 
 class EditInertialData(Operator):
-    """Edit inertia of selected object(s)"""
+    """Edit mass/inertia of selected object(s)"""
     bl_idname = "phobos.edit_inertial_data"
     bl_label = "Edit Mass/Inertia"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'UNDO'}
+
+    changeInertia = BoolProperty(
+        name="Change inertia",
+        default=True,
+        description="Change inertia values")
 
     inertiavector = FloatVectorProperty(
         name="Inertia Vector",
-        default=[0, 0, 0, 0, 0, 0],
+        default=[1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3],
         subtype='NONE',
+        precision=10,
         size=6,
-        description="Set inertia for a link"
-    )
+        description="New inertia values for the inertial objects")
+
+    changeMass = BoolProperty(
+        name="Change mass",
+        default=True,
+        description="Change mass values")
 
     mass = FloatProperty(
         name='Mass',
-        default=0.001,
-        description="Mass (of active object) in kg")
+        default=1e-3,
+        description="New mass for the inertial objects (in kg)",
+        precision=10)
 
     def invoke(self, context, event):
         # read initial parameter values from active object is possible
@@ -546,11 +557,49 @@ class EditInertialData(Operator):
         return self.execute(context)
 
     def execute(self, context):
+        if not self.changeMass and not self.changeInertia:
+            log("Cancelled inertia/mass editing: nothing to change.", 'INFO')
+            return {'CANCELLED'}
+
         objs = [obj for obj in context.selected_objects if obj.phobostype == "inertial"]
+        user_inertia = {'inertia': self.inertiavector, 'mass': self.mass}
+
+        # validate user data
+        errors, inertia_dict = vUtils.validateInertiaData(user_inertia, adjust=True)
+        for error in errors:
+            error.log()
+
+        newmass = inertia_dict['mass']
+        newinertia = inertia_dict['inertia']
+        # change object properties accordingly
         for obj in objs:
-            obj['inertial/mass'] = self.mass
-            obj['inertial/inertia'] = self.inertiavector
+            if self.changeMass:
+                obj['inertial/mass'] = newmass
+            if self.changeInertia:
+                obj['inertial/inertia'] = newinertia
+
+        if self.changeMass:
+            log("Changed mass to " + str(newmass) + " for {} objects.".format(len(objs)), 'INFO')
+        if self.changeInertia:
+            log("Changed inertia to " + str(newinertia) + " for {} objects.".format(len(objs)),
+                'INFO')
         return {'FINISHED'}
+
+    def draw(self, context):
+        layout = self.layout
+
+        layout.prop(self, 'changeMass', toggle=True)
+        if self.changeMass:
+            layout.prop(self, 'mass')
+
+        layout.separator()
+        layout.prop(self, 'changeInertia', toggle=True)
+        if self.changeInertia:
+            col = layout.column()
+            col.prop(self, 'inertiavector')
+
+    def check(self, context):
+        return True
 
     @classmethod
     def poll(cls, context):
