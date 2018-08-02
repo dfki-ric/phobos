@@ -610,10 +610,19 @@ class GenerateInertialObjectsOperator(Operator):
 
         if geometric_objects:
             layout.prop(self, 'derive_inertia_from_geometry')
+            visuals = [obj for obj in geometric_objects if obj.phobostype == 'visual']
+            collisions = [obj for obj in geometric_objects if obj.phobostype == 'collision']
+
             layout.label("Use geometry objects:")
             row = layout.row(align=True)
-            row.prop(self, 'visuals', toggle=True)
-            row.prop(self, 'collisions', toggle=True)
+            if not visuals:
+                row.label('visuals')
+            else:
+                row.prop(self, 'visuals', toggle=True)
+            if not collisions:
+                row.label('collisions')
+            else:
+                row.prop(self, 'collisions', toggle=True)
 
         layout.prop(self, 'mass')
 
