@@ -2344,11 +2344,12 @@ class CalculateMassOperator(Operator):
         description="Calculated sum of masses")
 
     def invoke(self, context, event):
-        self.mass = gUtils.calculateSum(context.selected_objects, 'inertial/mass')
+        inertials = [obj for obj in context.selected_objects if obj.phobostype == 'inertial']
+        self.mass = gUtils.calculateSum(inertials, 'inertial/mass')
+        log("The calculated mass is: " + str(self.mass), 'INFO')
         return context.window_manager.invoke_popup(self)
 
     def execute(self, context):
-        log("The calculated mass is: " + str(self.mass), "INFO")
         return {'FINISHED'}
 
     def draw(self, context):

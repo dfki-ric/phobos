@@ -231,11 +231,11 @@ def calculateSum(objects, numeric_prop):
     """Returns sum of *numeric_prop* in *objects*.
 
     Args:
-      objects: 
-      numeric_prop: 
+        objects (list(bpy.types.Object)): objects to sum up the property for
+        numeric_prop (str): name of the custom property to sum
 
     Returns:
-
+        float/int -- sum of the values in the property of the objects
     """
     numsum = 0
     for obj in objects:
@@ -244,6 +244,10 @@ def calculateSum(objects, numeric_prop):
         except KeyError:
             log("{0} object {1} does not contain '{2}'".format(obj.phobostype, obj.name,
                                                                numeric_prop), "WARNING")
+        except TypeError:
+            import phobos.utils.naming as nUtils
+            log("Could not add this type to the sum: " + str(type(obj[numeric_prop])) + " @" +
+                nUtils.getObjectName(obj), 'WARNING')
     return numsum
 
 
