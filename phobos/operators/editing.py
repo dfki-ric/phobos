@@ -580,6 +580,16 @@ class GenerateInertialObjectsOperator(Operator):
         description="Clear existing inertial objects of selected links."
     )
 
+    visuals = BoolProperty(
+        name="visual",
+        default=True,
+        description="Use the selected visual objects for inertial creation.")
+
+    collisions = BoolProperty(
+        name="collision",
+        default=True,
+        description="Use the selected visual objects for inertial creation.")
+
     def invoke(self, context, event):
         geometric_objects = [obj for obj in context.selected_objects
                              if obj.phobostype in ['visual', 'collision']]
@@ -600,6 +610,10 @@ class GenerateInertialObjectsOperator(Operator):
 
         if geometric_objects:
             layout.prop(self, 'derive_inertia_from_geometry')
+            layout.label("Use geometry objects:")
+            row = layout.row(align=True)
+            row.prop(self, 'visuals', toggle=True)
+            row.prop(self, 'collisions', toggle=True)
 
         layout.prop(self, 'mass')
 
@@ -612,7 +626,15 @@ class GenerateInertialObjectsOperator(Operator):
 
         # gather list of objects to generate inertial for
         if self.derive_inertia_from_geometry:
-            objectlist = viscols
+            objectlist = []
+            if self.visuals:
+                objectlist.extend([obj for obj in viscols if obj.phobostype == 'visual'])
+            if self.collisions:
+                objectlist.extend([obj for obj in viscols if obj.phobostype == 'collision'])
+
+            if not objectlist:
+                log("No objects to create inertial objects from.", 'ERROR')
+                return {'CANCELLED'}
         else:
             objectlist = links
 
