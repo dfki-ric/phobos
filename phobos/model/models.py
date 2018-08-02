@@ -600,19 +600,24 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
     """
     # allow duplicated names differentiated by types
     props = {} if ignorename else {'name': nUtils.getObjectName(obj, phobostype)}
+
     # if no phobostype is defined, everything is parsed
     if not phobostype:
         for key, value in obj.items():
             props[key] = value
+
     # search for type-specific properties if phobostype is defined
     else:
         for key, value in obj.items():
             # transform Blender id_arrays into lists
             if hasattr(value, 'to_list'):
                 value = list(value)
+
+            # remove phobostype namespaces for the object
             if key.startswith(phobostype + '/'):
                 if key.count('/') == 1:
                     props[key.replace(phobostype + '/', '')] = value
+                # TODO why do we need the $?
                 elif key.count('/') == 2:
                     category, specifier = key.split('/')[1:]
                     if '$' + category not in props:
@@ -625,6 +630,8 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
                     if '$' + category not in props:
                         props['$' + category] = {}
                     props['$' + category][specifier] = value
+
+    # collect phobostype specific annotations from child objects
     if includeannotations:
         annotationobjs = sUtils.getImmediateChildren(obj, ('annotation',), selected_only=True)
         for obj in annotationobjs:
@@ -924,6 +931,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             jointdict = deriveJoint(link, logging=True, adjust=True)
             model['joints'][jointdict['name']] = jointdict
 
+            # TODO check this
             motordict = deriveMotor(link, jointdict)
             # motor may be None if no motor is attached
             if motordict:
