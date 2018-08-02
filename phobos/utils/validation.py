@@ -465,7 +465,7 @@ def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
 
 
 def validateInertiaData(obj, *args, adjust=False):
-    from phobos.model.inertia import inertiaListToMatrix
+    from phobos.model.inertia import inertiaListToMatrix, inertiaMatrixToList
     import numpy
     errors = []
 
@@ -517,16 +517,15 @@ def validateInertiaData(obj, *args, adjust=False):
 
     # Check inertia vector for various properties
     inertia = numpy.array(inertiaListToMatrix(inertia))
-    if not all(element >= 0.0 for element in inertia.diagonal()):
+    if any(element < 0.0 for element in inertia.diagonal()):
         errors.append(ValidateMessage(
             "Negative semidefinite main diagonal in inertia data!",
             'WARNING',
             None if isinstance(obj, dict) else obj,
             None, {'log_info': "Diagonal: " + str(inertia.diagonal())}))
 
-    # TODO this looks wrong to me
     # Calculate the determinant if consistent
-    if numpy.linalg.det(inertia) <= 0.0:
+    if numpy.linalg.det(inertia) < 0.0:
         errors.append(ValidateMessage(
             "Negative semidefinite determinant in inertia data!",
             'WARNING',
@@ -547,6 +546,8 @@ def validateInertiaData(obj, *args, adjust=False):
             'WARNING',
             None if isinstance(obj, dict) else obj,
             None, {}))
+
+    inertia = inertiaMatrixToList(inertia)
 
     if adjust and isinstance(obj, bpy.types.Object):
         obj['inertial/inertia'] = inertia
