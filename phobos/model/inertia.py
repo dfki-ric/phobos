@@ -427,9 +427,9 @@ def fuse_inertia_data(inertials):
 
     # fuse inertias of objects
     if objects:
-        log("   Fusing inertials: " + str([i.name for i in inertials]), 'DEBUG')
+        log("  Fusing inertials: " + str([i.name for i in inertials]), 'DEBUG')
         mass, com, inertia = compound_inertia_analysis_3x3(objects)
-        log("   Fused mass: " + str(mass), 'DEBUG')
+        log("  Fused mass: " + str(mass), 'DEBUG')
         return mass, com, inertia
 
     log("No inertial found to fuse.", 'DEBUG')
@@ -455,7 +455,7 @@ def combine_com_3x3(objects):
         combined_com = combined_com + obj['com'] * obj['mass']
         combined_mass += obj['mass']
     combined_com = combined_com / combined_mass
-    log("   Combined center of mass: " + str(combined_com), 'DEBUG')
+    log("  Combined center of mass: " + str(combined_com), 'DEBUG')
     return combined_mass, combined_com
 
 
@@ -559,3 +559,45 @@ def compound_inertia_analysis_3x3(objects):
         total_inertia_at_common_com = total_inertia_at_common_com + inertia
 
     return total_mass, common_com, total_inertia_at_common_com
+
+
+def gatherInertialChilds(obj, objectlist):
+    """Gathers recursively all inertial object children from the specified object.
+
+    The inertia objects need to be in the specified objectlist to be encluded. Also, links which
+    are not in the objectlist, will be considered, too. This will gather inertial objects which are
+    child of a link *not* in the list.
+
+    Args:
+        obj (bpy.types.Object): object to start the recursion (preferably a link)
+        objectlist (list(bpy.types.Object)): objects to consider for the recursion
+
+    Returns:
+        list(bpy.types.Object) -- inertial objects which belong to the specified obj
+    """
+    from phobos.utils.validation import validateInertiaData
+
+    # only gather the links that are not in the list
+    childlinks = [link for link in obj.children if link.phobostype == 'link' and
+                  link not in objectlist]
+    # only gathe the inertials that are in the list
+    inertialobjs = [inert for inert in obj.children if inert.phobostype == 'inertial' and
+                    inert in objectlist]
+
+    inertials = []
+    for inertial in inertialobjs:
+        # log inertials with errors
+        errors, *_ = validateInertiaData(inertial, adjust=True)
+        if errors:
+            for error in errors:
+                error.log()
+
+        # add inertial to list
+        inertials.append(inertial)
+
+    # collect optional inertials in sublinks
+    for link in childlinks:
+        if link.children:
+            inertials.extend(gatherInertialChilds(link, objectlist=objectlist))
+
+    return inertials
