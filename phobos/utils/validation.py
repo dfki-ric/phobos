@@ -505,8 +505,8 @@ def validateInertiaData(obj, *args, adjust=False):
                 "Inertia dictionary not fully defined!",
                 'WARNING',
                 None, None,
-                {'log_info': "Missing: " + ' '.join(["'{0}'".format(miss) for miss in missing]) +
-                 " Set to default 1e-3."}))
+                {'log_info': "Missing: " +
+                 ' '.join(["'{0}'".format(miss) for miss in missing]) + " Set to default 1e-3."}))
 
             if 'inertia' in missing:
                 obj['inertia'] = (1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3)
@@ -567,7 +567,8 @@ def validateInertiaData(obj, *args, adjust=False):
             "Mass is {}!".format('zero' if mass == 0. else 'negative'),
             'WARNING',
             None if isinstance(obj, dict) else obj,
-            None, {}))
+            None, {} if not adjust else {'log_info': "Adjusted to 1e-3."}))
+        mass = 1e-3
 
     inertia = inertiaMatrixToList(inertia)
 
