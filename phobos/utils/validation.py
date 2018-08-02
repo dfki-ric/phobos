@@ -467,6 +467,26 @@ def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
 
 
 def validateInertiaData(obj, *args, adjust=False):
+    """Validates an inertia dictionary or object.
+
+    This checks for the *inertia* and *mass* values in the dictionary (*inertial/inertia* and
+    *inertial/mass* for an object respectively).
+
+    Also, the inertia values are checked to be positive definite (for diagonal, determinant and
+    eigenvalues).
+
+    If adjust is set, values are adjusted/fixed for the returned dict/object. E.g. this sets a
+    negative mass to 1e-3.
+
+    Args:
+        obj (dict/bpy.types.Object): inertia dictionary or object to validate
+        *args: other arguments
+        adjust: if True, bad values will be fixed/complemented
+
+    Returns:
+        (list(ValidateMessage), dict/bpy.types.Object) -- error messages and the fixed dictionary
+            or object
+    """
     from phobos.model.inertia import inertiaListToMatrix, inertiaMatrixToList
     import numpy
     errors = []
