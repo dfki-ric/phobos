@@ -206,6 +206,22 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
             else:
                 props[obj.phobostype][nUtils.getObjectName(obj)] = deriveDictEntry(obj)
 
+    # gather the inertials for fusing the link inertia
+    inertials = inertiamodel.gatherInertialChilds(linkobj, objectlist)
+
+    # get inertia data
+    mass, com, inertia = inertiamodel.fuse_inertia_data(inertials)
+
+    if not any([mass, com, inertia]):
+        log("No inertia information for link object " + linkobj.name + ".", 'DEBUG')
+    else:
+        # add inertia to link
+        inertia = inertiamodel.inertiaMatrixToList(inertia)
+        props['inertial'] = {
+            'mass': mass,
+            'inertia': list(inertia),
+            'pose': {'translation': list(com), 'rotation_euler': [0, 0, 0]}}
+
     return props
 
 
@@ -936,44 +952,6 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             # motor may be None if no motor is attached
             if motordict:
                 model['motors'][motordict['name']] = motordict
-
-    # combine inertia for each link, taking into account inactive links
-    inertials = (i for i in objectlist if i.phobostype == 'inertial' and 'inertial/inertia' in i)
-    inertials_per_link = {}
-
-    for i in inertials:
-        if i.parent not in linklist:
-            realparent = sUtils.getEffectiveParent(i, ignore_selection=bool(objectlist))
-            if realparent:
-                parentname = nUtils.getObjectName(realparent)
-                if parentname in inertials_per_link:
-                    inertials_per_link[parentname].append(i)
-                else:
-                    inertials_per_link[parentname] = [i]
-        else:
-            parentname = nUtils.getObjectName(i.parent)
-            if parentname in inertials_per_link:
-                inertials_per_link[parentname].append(i)
-            else:
-                inertials_per_link[parentname] = [i]
-
-    for linkname in inertials_per_link:
-        additional_inertials = inertials_per_link[linkname]
-
-        # get inertia data
-        mass, com, inertia = inertiamodel.fuse_inertia_data(additional_inertials)
-        if not any([mass, com, inertia]):
-            continue
-
-        # add inertia to model
-        inertia = inertiamodel.inertiaMatrixToList(inertia)
-        model['links'][linkname]['inertial'] = {
-            'mass': mass,
-            'inertia': list(inertia),
-            'pose': {'translation': list(com),
-                     'rotation_euler': [0, 0, 0]}
-        }
-
     # combine collision information for links
     for linkname in model['links']:
         link = model['links'][linkname]
