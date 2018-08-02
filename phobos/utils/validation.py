@@ -250,8 +250,10 @@ class ValidateMessage():
 
     def log(self):
         log(self.message +
-            ('\n' + 4 * ' ' + self.information['log_info'] if 'log_info' in self.information
-             else '') + '' if not self.obj else " @" + nUtils.getObjectName(self.obj), self.level)
+            str('' if not self.obj else " @" + nUtils.getObjectName(self.obj)) +
+            str(('\n' + 4 * ' ' + self.information['log_info']) if 'log_info' in self.information
+                else ''),
+            self.level)
 
     def __eq__(self, other):
         if isinstance(other, str):
