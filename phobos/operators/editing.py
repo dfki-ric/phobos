@@ -109,7 +109,7 @@ class MoveToSceneOperator(Operator):
                         description="Init new scene with items from active scene")
 
     new = BoolProperty(name='New', default=True,
-                        description="Create new scene to move items to")
+                       description="Create new scene to move items to")
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=500)
@@ -158,6 +158,13 @@ class MoveToSceneOperator(Operator):
                     log(str(e), 'WARNING')
         bpy.context.screen.scene = bpy.data.scenes[self.scenename]
         bpy.data.scenes[self.scenename].update()
+
+        log("{} {} object{}".format('Moved' if self.move else 'Added', len(moveobjs),
+                                    's' if len(moveobjs) > 1 else '')
+            + " to {}{}export configuration '{}'.".format('new ' if self.new else '',
+                                                          'initialized ' if self.init else '',
+                                                          self.scenename), 'INFO')
+        log("    Objects: " + str([obj.name for obj in moveobjs]), 'DEBUG')
         return {'FINISHED'}
 
     @classmethod
