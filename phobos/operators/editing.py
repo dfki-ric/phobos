@@ -144,22 +144,25 @@ class MoveToSceneOperator(Operator):
         oldscene = context.scene
         if self.new and self.scenename not in bpy.data.scenes:
             bpy.data.scenes.new(name=self.scenename)
+
             # copy all objects from active scene if new scene is created
             if self.init:
                 for obj in oldscene.objects:
+                    # TODO what error could occur here?
                     try:
                         bpy.data.scenes[self.scenename].objects.link(obj)
                     except RuntimeError as e:
                         log(str(e), 'WARNING')
+
         # in any case, make sure to move selected objects objects to scene
         for obj in moveobjs:
-            try:
+            if obj.name not in bpy.data.scenes[self.scenename].objects:
                 bpy.data.scenes[self.scenename].objects.link(obj)
-            except RuntimeError as e:
-                log(str(e), 'WARNING')
+
         # remove objects from active scene
         if self.move:
             for obj in moveobjs:
+                # TODO what errors could occur here?
                 try:
                     oldscene.objects.unlink(obj)
                 except RuntimeError as e:
