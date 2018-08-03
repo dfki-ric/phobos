@@ -70,13 +70,19 @@ class SafelyRemoveObjectsFromSceneOperator(Operator):
         sUtils.selectObjects(objs_to_delete, clear=True)
         bpy.ops.object.delete()
         sUtils.selectObjects(objs_to_keep, clear=True)
-        if len(objs_to_keep) > 0:
+
+        log("Removed {} object{}".format(len(objs_to_delete),
+                                         's' if len(objs_to_delete) > 1 else '')
+            + " from configuration.", 'INFO')
+        log("    Objects: " + str([obj.name for obj in objs_to_delete]), 'DEBUG')
+        if objs_to_keep:
             log('Some objects were not removed as they are unique to this scene.', 'WARNING')
+            log("    Objects: " + str([obj.name for obj in objs_to_keep]), 'DEBUG')
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
-        return len(context.selected_objects) > 0
+        return context.selected_objects
 
 
 class MoveToSceneOperator(Operator):
