@@ -2231,6 +2231,21 @@ class SelectSubmechanism(Operator):
         items=get_submechanism_roots
     )
 
+    @classmethod
+    def poll(cls, context):
+        # make sure we have a root object with mechanisms
+        if not sUtils.getSubmechanismRoots():
+            return False
+        return True
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=300)
+
+    def draw(self, context):
+        layout = self.layout
+
+        layout.prop(self, 'submechanism')
+
     def execute(self, context):
         root = sUtils.getObjectByProperty('submechanism/name', self.submechanism)
         jointlist = root['submechanism/spanningtree']
