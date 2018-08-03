@@ -466,7 +466,7 @@ class SetGeometryType(Operator):
     """Edit geometry type of selected object(s)"""
     bl_idname = "phobos.define_geometry"
     bl_label = "Define Geometry"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'UNDO'}
 
     geomType = EnumProperty(
         items=defs.geometrytypes,
@@ -475,18 +475,30 @@ class SetGeometryType(Operator):
         description="Phobos geometry type")
 
     def execute(self, context):
-        objs = filter(lambda e: "phobostype" in e, context.selected_objects)
+        objs = context.selected_objects
         for obj in objs:
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
                 obj['geometry/type'] = self.geomType
             else:
-                log("The object '" + obj.name + "' is no collision or visual.", "INFO")
+                log("The object '" + obj.name + "' is no collision or visual.", 'WARNING')
+
+        log("Changed geometry type for {} object{}".format(len(objs), 's' if len(objs) > 1 else '')
+            + " to {}.".format(self.geomType), 'INFO')
+        log("    Objects: " + str([obj.name for obj in objs]), 'DEBUG')
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
+
+    def draw(self, context):
+        layout = self.layout
+
+        layout.prop(self, 'geomType')
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=200)
 
 
 class SmoothenSurfaceOperator(Operator):
