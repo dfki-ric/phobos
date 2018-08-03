@@ -89,7 +89,7 @@ class MoveToSceneOperator(Operator):
     """Moves all selected objects to (new) scene"""
     bl_idname = "phobos.move_to_scene"
     bl_label = "Move To Scene"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'UNDO'}
 
     def getSceneEnumProperty(self, context):
         return bUtils.compileEnumPropertyList(bpy.data.scenes.keys())
@@ -117,15 +117,19 @@ class MoveToSceneOperator(Operator):
     def check(self, context):
         if not self.new:
             self.scenename = self.scene
+            self.init = False
         return True
 
     def draw(self, context):
-        self.layout.prop(self, 'scene')
-        self.layout.prop(self, 'new')
+        layout = self.layout
+        layout.prop(self, 'new', text="New scene")
+        box = layout.box()
         if self.new:
-            self.layout.prop(self, 'scenename', text="Scene Name (if new)")
-            self.layout.prop(self, 'init')
-        self.layout.prop(self, 'move')
+            box.prop(self, 'scenename', text="Scene Name (if new)")
+            box.prop(self, 'init', text="Initialize scene")
+        else:
+            box.prop(self, 'scene')
+        layout.prop(self, 'move')
 
     def execute(self, context):
         moveobjs = context.selected_objects
