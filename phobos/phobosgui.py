@@ -743,13 +743,13 @@ class PhobosModelPanel(bpy.types.Panel):
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
         c2 = inlayout.column(align=True)
+        c1.label('General', icon='MESH_CUBE')
         c1.operator('phobos.set_phobostype')
         c1.operator('phobos.batch_rename')
-        c1.label(text="Configurations")
-        c1.operator('phobos.move_to_scene', text='Move to configuration')
-        c1.operator('phobos.safely_remove_objects_from_scene', text='Remove from configuration')
-        c2.label(text="Custom properties")
-        c2.operator('phobos.rename_custom_property', text="Rename", icon='SYNTAX_OFF')
+        c1.operator('phobos.set_model_root')
+
+        c2.label(text="Custom properties", icon='WORDWRAP_ON')
+        c2.operator('phobos.rename_custom_property', text="Rename", icon='OUTLINER_DATA_FONT')
         c2.operator('phobos.batch_property', text="Edit", icon='GREASEPENCIL')
         c2.operator('phobos.edityamldictionary', text="Edit Dictionary", icon='TEXT')
         c2.operator('phobos.copy_props', text="Copy", icon='GHOST')
@@ -765,20 +765,27 @@ class PhobosModelPanel(bpy.types.Panel):
         kc1.operator('phobos.define_joint_constraints')
         kc1.operator("phobos.create_mimic_joint")
         kc1.operator('phobos.add_kinematic_chain', icon='CONSTRAINT')
-        kc1.operator('phobos.assign_submechanism')
-        kc1.operator('phobos.select_submechanism')
-        kc1.operator('phobos.set_model_root')
+
+        # Visual/Collisions
         kc2.label(text='Visual/Collision', icon='GROUP')
         kc2.operator('phobos.define_geometry')
         kc2.operator('phobos.smoothen_surface')
         kc2.operator('phobos.create_collision_objects')
         kc2.operator('phobos.set_collision_group')
 
-        kc2.separator()
-        kc2.label(text='Poses', icon='POSE_HLT')
-        kc2.operator('phobos.store_pose')
-        kc2.operator('phobos.load_pose')
+        # Mechanics
+        layout.separator()
+        mechlayout = layout.split()
+        mc1 = mechlayout.column(align=True)
+        mc2 = mechlayout.column(align=True)
+        mc1.label(text='Mechanisms', icon='SCRIPTWIN')
+        mc1.operator('phobos.assign_submechanism')
+        mc1.operator('phobos.select_submechanism')
 
+        # Poses
+        mc2.label(text='Poses', icon='POSE_HLT')
+        mc2.operator('phobos.store_pose')
+        mc2.operator('phobos.load_pose')
 
         # Hardware
         layout.separator()
@@ -936,8 +943,16 @@ class PhobosExportPanel(bpy.types.Panel):
         #  self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
 
         layout.separator()
-        layout.operator("phobos.export_model", icon="EXPORT")
-        layout.operator("phobos.export_scene", icon="WORLD_DATA")
+        splitlayout = layout.split()
+        c1 = splitlayout.column()
+        c2 = splitlayout.column()
+        c1.label(text="Export Configuration")
+        c1.operator('phobos.move_to_scene', text='Move to configuration', icon='SCREEN_BACK')
+        c1.operator('phobos.safely_remove_objects_from_scene', text='Remove from configuration',
+                    icon='X')
+        c2.label(text="Export")
+        c2.operator("phobos.export_model", icon="EXPORT")
+        c2.operator("phobos.export_scene", icon="WORLD_DATA")
 
     def check(self, context):
         return True
