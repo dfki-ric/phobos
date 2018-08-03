@@ -92,7 +92,15 @@ class MoveToSceneOperator(Operator):
     bl_options = {'UNDO'}
 
     def getSceneEnumProperty(self, context):
-        return bUtils.compileEnumPropertyList(bpy.data.scenes.keys())
+        scenes = bpy.data.scenes.keys()
+
+        # remove current scene from enum
+        scenes.remove(context.scene.name)
+
+        # resources scene is not an export configuration
+        if 'resources' in scenes:
+            scenes.remove('resources')
+        return bUtils.compileEnumPropertyList(scenes)
 
     scenename = StringProperty(name='Scene Name',
                                default='new',
