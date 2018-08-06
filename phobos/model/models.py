@@ -222,6 +222,15 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
             'inertia': list(inertia),
             'pose': {'translation': list(com), 'rotation_euler': [0, 0, 0]}}
 
+    bitmask = 0
+    for collname in props['collision']:
+        try:
+            # bitwise OR to add all collision layers
+            bitmask = bitmask | props['collision'][collname]['bitmask']
+        except KeyError:
+            pass
+    props['collision_bitmask'] = bitmask
+
     return props
 
 
@@ -952,17 +961,6 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             # motor may be None if no motor is attached
             if motordict:
                 model['motors'][motordict['name']] = motordict
-    # combine collision information for links
-    for linkname in model['links']:
-        link = model['links'][linkname]
-        bitmask = 0
-        for collname in link['collision']:
-            try:
-                # bitwise OR to add all collision layers
-                bitmask = bitmask | link['collision'][collname]['bitmask']
-            except KeyError:
-                pass
-        link['collision_bitmask'] = bitmask
 
     # parse sensors and controllers
     log("Parsing sensors and controllers...", 'INFO')
