@@ -208,14 +208,7 @@ def sort_for_yaml_dump(dictionary, category):
     if category in ['materials', 'motors']:
         return {category: sort_dict_list(dictionary[category], 'name')}
     elif category == 'sensors':
-        dictionary = {'sensors': sort_dict_list(structure[category], 'name')}
-        for sensor in structure['sensors']:
-            if 'mars' in sensor['type']:
-                sensor['type'] = sensor['mars']['type']
-            else:
-                log('Sensor ' + sensor['name'] + ' is not compatible with MARS.', 'WARNING')
-                sensor['type'] = 'undefined'
-        return dictionary
+        return sort_dict_list(dictionary[category], 'name')
     elif category == 'simulation':
         return_dict = {}
         for viscol in ['collision', 'visual']:
@@ -293,6 +286,14 @@ def exportSmurf(model, path):
 
     # gather annotations and data from text files
     annotationdict = gatherAnnotations(model)
+
+    # $mars annotated properties overwrite custom properties of objects for smurf
+    if 'mars' in annotationdict:
+        for category in annotationdict['mars']:
+            for list_obj in annotationdict['mars'][category]:
+                model[category + 's'][list_obj['name']].update(list_obj)
+        del annotationdict['mars']
+
     for category in annotationdict:
         # TODO use os.path?
         filenames[category] = model['name'] + '_' + category + '.yml'
