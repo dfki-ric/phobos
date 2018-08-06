@@ -53,6 +53,9 @@ class SelectObjectsByPhobosType(Operator):
         sUtils.selectObjects(sUtils.getObjectsByPhobostypes([self.seltype]), True)
         return {'FINISHED'}
 
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=300)
+
     @classmethod
     def poll(cls, context):
         return context.mode == 'OBJECT'
