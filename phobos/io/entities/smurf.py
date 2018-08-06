@@ -191,21 +191,25 @@ def gatherLevelOfDetailSettings(model):
     return lods
 
 
-def sort_for_yaml_dump(structure, category):
-    """TODO Please add doc ASAP
+def sort_for_yaml_dump(dictionary, category):
+    """Sorts the objects of the specified category in the dictionary and returns them.
+
+    If the category sorting is unknown, return the dictionary instead.
+
+    Supported categories are: *materials*, *motors*, *sensors*, *simulation*.
 
     Args:
-      structure: param category:
-      category: 
+        structure (dict): dictionary to sort
+        category (str): category of the dictionary to sort
 
     Returns:
-
+        list -- the elements of the specified category of the original dictionary in sorted order
     """
     if category in ['materials', 'motors']:
-        return {category: sort_dict_list(structure[category], 'name')}
+        return {category: sort_dict_list(dictionary[category], 'name')}
     elif category == 'sensors':
         dictionary = {'sensors': sort_dict_list(structure[category], 'name')}
-        for sensor in dictionary['sensors']:
+        for sensor in structure['sensors']:
             if 'mars' in sensor['type']:
                 sensor['type'] = sensor['mars']['type']
             else:
@@ -215,10 +219,9 @@ def sort_for_yaml_dump(structure, category):
     elif category == 'simulation':
         return_dict = {}
         for viscol in ['collision', 'visual']:
-            return_dict[viscol] = sort_dict_list(structure[viscol], 'name')
+            return_dict[viscol] = sort_dict_list(dictionary[viscol], 'name')
         return return_dict
-    else:
-        return structure
+    return dictionary
 
 
 def sort_dict_list(dict_list, sort_key):
