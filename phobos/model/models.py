@@ -540,6 +540,8 @@ def deriveSensor(obj, names=False, objectlist=[]):
     Returns:
       dict
     """
+    log("Deriving sensor from object " + nUtils.getObjectName(obj, phobostype='sensor') + ".",
+        'DEBUG')
     try:
         props = initObjectProperties(obj, phobostype='sensor')
         if names:
@@ -660,8 +662,10 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
     # collect phobostype specific annotations from child objects
     if includeannotations:
         annotationobjs = sUtils.getImmediateChildren(obj, ('annotation',), selected_only=True)
-        for obj in annotationobjs:
-            props.update(initObjectProperties(obj, phobostype, ignoretypes, includeannotations,
+        for annot in annotationobjs:
+            log("  Adding annotations from {}.".format(nUtils.getObjectName(
+                annot, phobostype='annotation')), 'DEBUG')
+            props.update(initObjectProperties(annot, phobostype, ignoretypes, includeannotations,
                                               ignorename=True))
     return props
 
@@ -964,11 +968,11 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                 model['motors'][motordict['name']] = motordict
 
     # parse sensors and controllers
-    log("Parsing sensors and controllers...", 'INFO')
-    for obj in objectlist:
-        if obj.phobostype in ['sensor', 'controller']:
-            props = deriveDictEntry(obj, names=True, objectlist=objectlist)
-            model[obj.phobostype + 's'][nUtils.getObjectName(obj)] = props
+    sencons = [obj for obj in objectlist if obj.phobostype in ['sensor', 'controller']]
+    log("Parsing sensors and controllers... {} total.".format(len(sencons)), 'INFO')
+    for obj in sencons:
+        props = deriveDictEntry(obj, names=True, objectlist=objectlist)
+        model[obj.phobostype + 's'][nUtils.getObjectName(obj)] = props
 
     # parse materials
     log("Parsing materials...", 'INFO')
