@@ -38,12 +38,6 @@ def push_message(text, msgtype='none'):
     messages.appendleft({'text': text, 'type': msgtype})
 
 
-def start_draw_operator(self, context):
-    if self.draw_phobos_infos:
-        bpy.ops.phobos.draw_infos_operator('INVOKE_DEFAULT')
-    return None
-
-
 def getRegionData():
     # region = [area.region for area in bpy.context.screen.areas if area.type == 'VIEW_3D'][0]
     return bpy.context.region, bpy.context.space_data.region_3d
@@ -298,6 +292,18 @@ class DisplayInformationOperator(Operator):
     bl_idname = "phobos.display_information"
     bl_label = "Draw Model Information"
 
+    def get_drawing_status(self):
+        return bpy.context.window_manager['drawing_status']
+
+    def set_drawing_status(self, value):
+        bpy.context.window_manager.drawing_status = value
+
+    running = BoolProperty(
+        name="running",
+        description="Whether the drawing thread is running or not.",
+        get=get_drawing_status,
+        set=set_drawing_status)
+
     def modal(self, context, event):
         context.area.tag_redraw()
 
@@ -342,9 +348,16 @@ def setProgress(value, info=None):
 
 
 def register():
+    # add the drawing status boolean to the window manager
+    bpy.types.WindowManager.drawing_status = BoolProperty(
+        default=False, name='Hide Model Information',
+        description="Draw additional data visualization for Phobos items in 3D View.")
+
     bpy.utils.register_class(DisplayInformationOperator)
 
 
 def unregister():
+    # remove the drawing status boolean to the window manager
+    del bpy.types.WindowManager.drawing_status
 
     bpy.utils.unregister_class(DisplayInformationOperator)

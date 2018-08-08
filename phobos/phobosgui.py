@@ -1059,11 +1059,14 @@ class PhobosDisplayPanel(bpy.types.Panel):
 
     def draw(self, context):
         wm = context.window_manager
-        self.layout.prop(wm, "draw_phobos_infos")
-        if wm.draw_phobos_infos:
-            self.layout.separator()
-            self.layout.label('Draw...')
-            dlayout = self.layout.split()
+        layout = self.layout
+
+        if not wm.drawing_status:
+            layout.operator('phobos.display_information', icon='INFO')
+        else:
+            layout.prop(wm, 'drawing_status', icon='INFO')
+            layout.separator()
+            dlayout = layout.split()
             dc1 = dlayout.column(align=True)
             dc2 = dlayout.column(align=True)
             dc1.prop(wm, "draw_jointaxes")
@@ -1089,10 +1092,6 @@ def register():
     display.register()
 
     # add display properties to window manager
-    bpy.types.WindowManager.draw_phobos_infos = BoolProperty(
-        name='Draw Phobos Infos', default=False, update=display.start_draw_operator,
-        description="Draw additional data visualization for Phobos items in 3D View.")
-
     bpy.types.WindowManager.draw_jointaxes = BoolProperty(
         name='Joint Axes', default=True)
 
