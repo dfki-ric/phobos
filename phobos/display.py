@@ -4,6 +4,8 @@ import mathutils
 import bgl
 import blf
 from bpy_extras import view3d_utils
+from bpy.types import Operator
+from bpy.props import BoolProperty
 from mathutils import Vector
 from phobos.utils import naming as nUtils
 
@@ -291,10 +293,10 @@ def draw_callback_2d(self, context):
     bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
 
 
-class DrawInfosOperator(bpy.types.Operator):
+class DisplayInformationOperator(Operator):
     """Draw additional information about Phobos objects"""
-    bl_idname = "phobos.draw_infos_operator"
-    bl_label = "Draw Additional Phobos Information"
+    bl_idname = "phobos.display_information"
+    bl_label = "Draw Model Information"
 
     def modal(self, context, event):
         context.area.tag_redraw()
@@ -340,12 +342,9 @@ def setProgress(value, info=None):
 
 
 def register():
-    bpy.utils.register_class(DrawInfosOperator)
+    bpy.utils.register_class(DisplayInformationOperator)
 
 
 def unregister():
-    bpy.utils.unregister_class(DrawInfosOperator)
 
-
-if __name__ == "__main__":
-    register()
+    bpy.utils.unregister_class(DisplayInformationOperator)

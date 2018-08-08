@@ -46,8 +46,8 @@ import phobos.utils.validation as validation
 import phobos.utils.io as ioUtils
 import phobos.utils.naming as nUtils
 
-from . import defs
-from . import display
+from phobos import defs
+from phobos import display
 
 
 class ModelPoseProp(bpy.types.PropertyGroup):
@@ -1085,6 +1085,9 @@ def register():
         name="type",
         description="Phobos object type")
 
+    # register drawing functions
+    display.register()
+
     # add display properties to window manager
     bpy.types.WindowManager.draw_phobos_infos = BoolProperty(
         name='Draw Phobos Infos', default=False, update=display.start_draw_operator,
@@ -1255,6 +1258,8 @@ def register():
 def unregister():
     print("Unregistering phobosgui...")
     libraries.unregister()
+
+    display.unregister()
 
     # Unregister icons
     for pcoll in prev_collections.values():
