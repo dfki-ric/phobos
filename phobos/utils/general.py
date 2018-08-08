@@ -202,6 +202,26 @@ def calcBoundingBoxCenter(boundingbox):
     return c / 8
 
 
+def sortListsInDict(data, reverse=False):
+    """Recursively loops through a dictionary and sorts all lists.
+
+    Args:
+      data(dict): data dictionary
+
+    Returns:
+        dict -- sorted dictionary
+    """
+    if isinstance(data, list):
+        if not data:
+            return data
+
+        return sorted(data, reverse=reverse)
+    elif isinstance(data, dict):
+        return {key: sortListsInDict(value, reverse) for key, value in data.items()}
+    else:  # any other type, such as string
+        return data
+
+
 def roundFloatsInDict(data, decimals):
     """Recursively loops through a dictionary and sets all floating values
      < epsilon equal to zero.

@@ -48,7 +48,7 @@ import phobos.utils.editing as eUtils
 import phobos.utils.io as ioUtils
 from phobos.utils.validation import validate
 from phobos.phoboslog import log
-from phobos.utils.general import roundFloatsInDict
+from phobos.utils.general import roundFloatsInDict, sortListsInDict
 from phobos.model.poses import deriveObjectPose
 from phobos.model.geometries import deriveGeometry
 from phobos.defs import linkobjignoretypes
@@ -1066,8 +1066,12 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     model.update(deriveTextData(model['name']))
 
     # shorten numbers in dictionary to n decimalPlaces and return it
-    log("Rounding numbers...", "INFO")
-    return roundFloatsInDict(model, ioUtils.getExpSettings().decimalPlaces)
+    log("Rounding numbers to {} digits.".format(ioUtils.getExpSettings().decimalPlaces), 'INFO')
+    model = roundFloatsInDict(model, ioUtils.getExpSettings().decimalPlaces)
+    log("Sorting objects.", 'DEBUG')
+    model = sortListsInDict(model)
+
+    return model
 
 
 def buildModelFromDictionary(model):
