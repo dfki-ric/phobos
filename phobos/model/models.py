@@ -107,6 +107,9 @@ def deriveMaterial(mat, logging=False, errors=None):
     """
     # TODO: annotations to materials could be used to fuse annotation objects' materials for different
     #       graphics engines of simulations etc., currently works by adding custom properties
+    if "No material defined." in errors:
+        return {}
+
     material = initObjectProperties(mat, 'material', includeannotations=False)
 
     material['name'] = mat.name
@@ -405,7 +408,12 @@ def deriveVisual(obj):
             obj, phobostype='visual', ignoretypes='geometry')
         visual['geometry'] = deriveGeometry(obj)
         visual['pose'] = deriveObjectPose(obj)
-        visual['material'] = deriveMaterial(obj.active_material)['name']
+
+        # check for material of the visual
+        material = deriveMaterial(obj.active_material, logging=True)
+        if material:
+            visual['material'] = material['name']
+
         if obj.lod_levels:
             if 'lodmaxdistances' in obj:
                 maxdlist = obj['lodmaxdistances']

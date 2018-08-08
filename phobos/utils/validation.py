@@ -400,6 +400,13 @@ def validateMaterial(material):
     """
     errors = []
 
+    if not material:
+        errors.append(ValidateMessage(
+                      "No material defined.",
+                      'WARNING',
+                      material, None, {}))
+        return errors
+
     # there are always 18 slots, regardless of whether they are filled or not
     for tex in material.texture_slots:
         if tex is not None:
