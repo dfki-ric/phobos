@@ -206,7 +206,7 @@ def sortListsInDict(data, reverse=False):
     """Recursively loops through a dictionary and sorts all lists.
 
     Args:
-      data(dict): data dictionary
+        data(dict): data dictionary
 
     Returns:
         dict -- sorted dictionary
@@ -223,15 +223,16 @@ def sortListsInDict(data, reverse=False):
 
 
 def roundFloatsInDict(data, decimals):
-    """Recursively loops through a dictionary and sets all floating values
-     < epsilon equal to zero.
+    """Recursively rounds all floats in the dictionary to the specified decimal digits.
+
+    If a float value is smaller than 10e-decimals it is set to zero.
 
     Args:
-      data(dict): data dictionary
-      decimals(int): number of decimals floats should be rounded to
+        data(dict): data dictionary
+        decimals(int): number of decimals floats should be rounded to
 
     Returns:
-
+        dict -- dictionary with rounded floats
     """
     epsilon = 10**-decimals
     if is_float(data):
