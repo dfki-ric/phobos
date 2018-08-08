@@ -405,6 +405,7 @@ def deriveVisual(obj):
             obj, phobostype='visual', ignoretypes='geometry')
         visual['geometry'] = deriveGeometry(obj)
         visual['pose'] = deriveObjectPose(obj)
+        visual['material'] = deriveMaterial(obj.active_material)['name']
         if obj.lod_levels:
             if 'lodmaxdistances' in obj:
                 maxdlist = obj['lodmaxdistances']
