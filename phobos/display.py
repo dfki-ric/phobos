@@ -305,32 +305,40 @@ class DisplayInformationOperator(Operator):
         set=set_drawing_status)
 
     def modal(self, context, event):
+        wm = context.window_manager
         context.area.tag_redraw()
 
+        if not self.running:
+            from phobos.phoboslog import log
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle2d, 'WINDOW')
+            bpy.types.SpaceView3D.draw_handler_remove(self._handle3d, 'WINDOW')
+            log("Stop drawing Phobos information.", 'DEBUG')
+            return {'FINISHED'}
+
         if event.type == 'PAGE_UP' and event.value == 'PRESS':
-            context.window_manager.phobos_msg_offset += 1
+            wm.phobos_msg_offset += 1
         if event.type == 'PAGE_DOWN' and event.value == 'PRESS':
-            context.window_manager.phobos_msg_offset -= 1
+            wm.phobos_msg_offset -= 1
         if event.shift and event.type == 'LEFTMOUSE' and event.value == 'CLICK':
             pass
-        if not context.window_manager.draw_phobos_infos:
-            bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
-            return {'CANCELLED'}
 
         return {'PASS_THROUGH'}
-        # return {'RUNNING_MODAL'}
 
     def invoke(self, context, event):
-        if context.area.type == 'VIEW_3D':
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_3d, (self, context),
-                                                                  'WINDOW', 'POST_VIEW')
-            self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_callback_2d, (self, context),
-                                                                  'WINDOW', 'POST_PIXEL')
-            context.window_manager.modal_handler_add(self)
-            return {'RUNNING_MODAL'}
-        else:
-            self.report({'WARNING'}, "View3D not found, cannot run " + self.bl_idname)
+        from phobos.phoboslog import log
+        wm = context.window_manager
+
+        if context.area.type != 'VIEW_3D':
+            from phobos.phoboslog import log
+            log("View3D not found, cannot run " + self.bl_idname, 'WARNING')
             return {'CANCELLED'}
+
+        log("Start drawing Phobos information.", 'DEBUG')
+        self.running = True
+        self._handle2d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_2d, (self, context), 'WINDOW', 'POST_PIXEL')
+        self._handle3d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_3d, (self, context), 'WINDOW', 'POST_VIEW')
+        wm.modal_handler_add(self)
+        return {'RUNNING_MODAL'}
 
 
 def setProgress(value, info=None):
