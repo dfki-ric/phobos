@@ -215,6 +215,10 @@ def sortListsInDict(data, reverse=False):
         if not data:
             return data
 
+        if isinstance(data[0], dict):
+            if all('name' in elem for elem in data):
+                return sorted(data, key=lambda k: k['name'], reverse=reverse)
+
         return sorted(data, reverse=reverse)
     elif isinstance(data, dict):
         return {key: sortListsInDict(value, reverse) for key, value in data.items()}
