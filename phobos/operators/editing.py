@@ -1527,8 +1527,8 @@ class AddSensorOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def sensorlist(self, context):
-        items = [(sensor,) * 3 for sensor in sorted(defs.definitions['sensors'])
-                 if self.categ in defs.def_settings['sensors'][sensor]['categories']]
+        items = [(sen, sen.replace('_', ' '), '') for sen in sorted(defs.definitions['sensors'])
+                 if self.categ in defs.def_settings['sensors'][sen]['categories']]
         return items
 
     def categorylist(self, context):
