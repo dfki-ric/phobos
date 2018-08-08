@@ -1508,9 +1508,14 @@ def addSensorFromYaml(name, sensortype):
             # select the newly added objects
             if newlink:
                 sUtils.selectObjects([sensor_obj, newlink] + annotation_objs, clear=True, active=0)
+                bUtils.toggleLayer(defs.layerTypes['link'], value=True)
             else:
                 sUtils.selectObjects([sensor_obj] + annotation_objs, clear=True, active=0)
 
+            if annotation_objs:
+                bUtils.toggleLayer(defs.layerTypes['annotation'], value=True)
+
+            bUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
             return {'FINISHED'}
 
     # register the temporary operator and return its blender id
