@@ -101,16 +101,19 @@ def createGeometry(viscol, geomsrc, linkobj=None):
       bpy.types.Object or None
     """
     if 'geometry' not in viscol or viscol['geometry'] is {}:
+        log("Could not create {}. Geometry information not defined!".format(geomsrc), 'ERROR')
         return None
+
     bpy.ops.object.select_all(action='DESELECT')
     geom = viscol['geometry']
+
     # create the Blender object
     if geom['type'] == 'mesh':
         bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
         meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
         if not os.path.isfile(geom['filename']):
-            log(geom['filename'] + " is no file. Object " + viscol['name'] + " will have empty mesh!", "ERROR")
-            #bpy.data.meshes.new(meshname)
+            log("This path " + geom['filename'] + " is no file. Object " + viscol['name'] +
+                " will have empty mesh!", 'ERROR')
             bpy.ops.object.add(type='MESH')
             newgeom = bpy.context.active_object
             nUtils.safelyName(newgeom, viscol['name'], phobostype=geomsrc)
@@ -146,7 +149,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             obj.phobostype = geomsrc
             nUtils.safelyName(bpy.context.active_object, viscol['name'], phobostype=geomsrc)
             return None
-        log('Creating primtive for {0}: {1}'.format(geomsrc, viscol['name']), 'INFO')
+        log("Creating primtive for {0}: {1}".format(geomsrc, viscol['name']), 'INFO')
         newgeom = bUtils.createPrimitive(viscol['name'], geom['type'], dimensions, phobostype=geomsrc)
         newgeom.select = True
         bpy.ops.object.transform_apply(scale=True)
@@ -154,26 +157,29 @@ def createGeometry(viscol, geomsrc, linkobj=None):
     # from here it's the same for both meshes and primitives
     newgeom['geometry/type'] = geom['type']
     if geomsrc == 'visual':
-        try:
+        if 'material' in viscol:
             assignMaterial(newgeom, viscol['material'])
-        except KeyError:
-            log('No material for visual ' + viscol['name'], 'DEBUG')
+        else:
+            log('No material for visual {}.'.format(viscol['name']), 'WARNING')
+
+    # write generic custom properties
     for prop in viscol:
         if prop.startswith('$'):
             for tag in viscol[prop]:
                 newgeom[prop[1:]+'/'+tag] = viscol[prop][tag]
+
     nUtils.safelyName(newgeom, viscol['name'])
-    newgeom[geomsrc+"/name"] = viscol['name']
+    newgeom[geomsrc + '/name'] = viscol['name']
     newgeom.phobostype = geomsrc
 
     # place geometric object relative to its parent link
     if linkobj:
         if 'pose' in viscol:
-            log('Setting transformation of element: ' + viscol['name'], 'DEBUG')
+            log("Setting transformation of element: " + viscol['name'], 'DEBUG')
             location = mathutils.Matrix.Translation(viscol['pose']['translation'])
             rotation = mathutils.Euler(tuple(viscol['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
         else:
-            log('No pose in element: ' + viscol['name'], 'DEBUG')
+            log("No pose in element: " + viscol['name'], 'DEBUG')
             location = mathutils.Matrix.Identity(4)
             rotation = mathutils.Matrix.Identity(4)
         sUtils.selectObjects([newgeom, linkobj], True, 1)
