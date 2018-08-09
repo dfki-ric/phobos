@@ -635,56 +635,66 @@ def parseLink(link, urdffilepath):
     """
     newlink = {a: link.attrib[a] for a in link.attrib}
     newlink['children'] = []
-    log('Parsing link ' + newlink['name'] + '...', 'INFO')
     inertial = parseInertial(link)
     if inertial:
         newlink['inertial'] = inertial
-    # TODO delete me?
-    #no_visual_geo = parseVisual(newlink, link)
-    #no_collision_geo = parseCollision(newlink, link)
-    #handle_missing_geometry(no_visual_geo, no_collision_geo, newlink)
-    #parse visual and collision objects
+
     for objtype in ['visual', 'collision']:
-        log('Parsing ' + objtype + ' elements...', 'INFO')
+        log('   Parsing ' + objtype + ' elements...', 'DEBUG')
         newlink[objtype] = {}
         for xmlelement in link.iter(objtype):
-            try:
-                elementname = xmlelement.attrib['name']
-            except KeyError:
+            # generate name for visual/collision representation
+            if 'name' not in xmlelement.attrib['name']:
                 elementname = objtype + '_' + str(len(newlink[objtype])) + '_' + newlink['name']
-            newlink[objtype][elementname] = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
-            elementdict = newlink[objtype][elementname]
-            # TODO delete me?
-            #viscol_order[objtype].append(elementname)
+            else:
+                elementname = xmlelement.attrib['name']
+
+            # assign values to element dictionary
+            elementdict = {a: xmlelement.attrib[a] for a in xmlelement.attrib}
             elementdict['name'] = elementname
             elementdict['pose'] = parsePose(xmlelement.find('origin'))
-            geometry = xmlelement.find('geometry')
-            if geometry is not None:
-                elementdict['geometry'] = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
-                elementdict['geometry']['type'] = geometry[0].tag
-                if geometry[0].tag == 'mesh':
-                    # interpret filename
-                    filename = geometry[0].attrib['filename']
-                    filepath = path.normpath(path.join(path.dirname(urdffilepath), filename))
-                    log('filepath for element ' + elementname + ': ' + filepath, 'DEBUG')
-                    # Remove 'urdf/package://{package_name}' to workaround the lack of rospack here, assuming the
-                    # urdf file is in the 'urdf' folder and meshes are in the 'meshes' folder at the same level.
-                    if 'package://' in filepath:
-                        filepath = re.sub(r'(.*)urdf/package://([^/]+)/(.*)', '\\1\\3', filepath)
-                    elementdict['geometry']['filename'] = filepath
-                    # read scale
-                    try:
-                        elementdict['geometry']['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
-                    except KeyError:
-                        elementdict['geometry']['scale'] = [1.0, 1.0, 1.0]
 
+            # gather material
             material = xmlelement.find('material')
             if material is not None:
                 elementdict['material'] = material.attrib['name']
-    #element_order['viscol'][link_name] = viscol_order
+
+            # objects without geometry skip the last part
+            geometry = xmlelement.find('geometry')
+            if geometry is None:
+                newlink[objtype][elementname] = elementdict
+                continue
+
+            # gather geometry information for visual/collision
+            elementdict['geometry'] = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in
+                                       geometry[0].attrib}
+            elementdict['geometry']['type'] = geometry[0].tag
+
+            # gather mesh information
+            if geometry[0].tag == 'mesh':
+                # interpret filename
+                filename = geometry[0].attrib['filename']
+                filepath = path.normpath(path.join(path.dirname(urdffilepath), filename))
+                log("     Filepath for element " + elementname + ': '
+                    + path.relpath(filepath, start=urdffilepath), 'DEBUG')
+
+                # Remove 'urdf/package://{package_name}' to workaround the lack of rospack here,
+                # assuming the urdf file is in the 'urdf' folder and meshes are in the 'meshes'
+                # folder at the same level.
+                if 'package://' in filepath:
+                    filepath = re.sub(r'(.*)urdf/package://([^/]+)/(.*)', '\\1\\3', filepath)
+                elementdict['geometry']['filename'] = filepath
+
+                # read scale
+                if 'scale' in geometry[0].attrib['scale']:
+                    elementdict['geometry']['scale'] = gUtils.parse_text(
+                        geometry[0].attrib['scale'])
+                else:
+                    elementdict['geometry']['scale'] = [1.0, 1.0, 1.0]
+            newlink[objtype][elementname] = elementdict
+
     if newlink == {}:
-        # TODO convert to log?
-        print("\n### WARNING:", newlink['name'], "is empty.")
+        log("Link information for " + newlink['name'] + " is empty.", 'WARNING')
     return newlink
 
 
