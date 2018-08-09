@@ -65,16 +65,19 @@ def createJoint(joint, linkobj=None):
         joint (dict): dictionary containing the joint definition
         linkobj (bpy.types.Object): the link object to receive the joint
     """
-    # add joint information
+    # try deriving link object from joint['child']
     if not linkobj:
         linkobj = sUtils.getObjectByName(joint['child'])
         if isinstance(linkobj, list):
             log("Could not identify object to define joint '{0}'.".format(joint['name']), 'ERROR')
             return
+
+    # make sure the proper joint name is kept
     if joint['name'] != linkobj.name:
         linkobj['joint/name'] = joint['name']
-    # get hold of object
-    bUtils.toggleLayer(list(linkobj.layers).index(True), True)  # any layer containing the object
+
+    # select the link object
+    bUtils.toggleLayer(list(linkobj.layers).index(True), True)
     sUtils.selectObjects([linkobj], clear=True, active=0)
 
     # set axis
@@ -88,24 +91,29 @@ def createJoint(joint, linkobj=None):
             axis = mathutils.Vector(tuple(joint['axis']))
             editbone.tail = editbone.head + axis.normalized() * length
 
-    # add constraints
-    for param in ['effort', 'velocity']:
-        try:
-            if 'limits' in joint:
-                linkobj['joint/max'+param] = joint['limits'][param]
-        except KeyError:
-            log("Joint limits incomplete for joint {0}".format(joint['name']), 'ERROR')
-    try:
-        lower = joint['limits']['lower']
-        upper = joint['limits']['upper']
-    except KeyError:
+    # add constraints to the joint
+    if 'limits' in joint:
+        for param in ['effort', 'velocity']:
+            if param in joint['limits']:
+                linkobj['joint/max' + param] = joint['limits'][param]
+            else:
+                log("Joint limits incomplete for joint {0}. Missing {}.".format(joint['name'],
+                                                                                param), 'ERROR')
+
+        if all(elem in joint['limits'] for elem in ['lower', 'upper']):
+            lower = joint['limits']['lower']
+            upper = joint['limits']['upper']
+    else:
         lower = 0.0
         upper = 0.0
     setJointConstraints(linkobj, joint['type'], lower, upper)
+
+    # add generic properties
     for prop in joint:
         if prop.startswith('$'):
             for tag in joint[prop]:
                 linkobj['joint/'+prop[1:]+'/'+tag] = joint[prop][tag]
+    log("Assigned joint information to {}.".format(linkobj.name), 'DEBUG')
 
 
 def getJointConstraints(joint):
