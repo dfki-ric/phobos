@@ -623,15 +623,15 @@ def importUrdf(filepath):
     return model
 
 
-def parseLink(link, urdffilepath=None):
+def parseLink(link, urdffilepath):
     """Parses a URDF link xml definition.
 
     Args:
-      link: link to be parsed
-      urdffilepath: path of originating urdf file (for filename handling) (Default value = None)
+      link (xml.etree.ElementTree.ElementTree): xml representation of the link
+      urdffilepath (str): path of originating urdf file (for filename handling)
 
     Returns:
-
+        dict -- model representation of the link
     """
     newlink = {a: link.attrib[a] for a in link.attrib}
     newlink['children'] = []
