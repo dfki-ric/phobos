@@ -85,6 +85,7 @@ def createLink(link):
     Returns:
         bpy_types.Object -- the newly created blender link object.
     """
+    log("Creating link object '{}'...".format(link['name']), 'DEBUG', prefix='\n')
     # create armature/bone
     bUtils.toggleLayer(defs.layerTypes['link'], True)
     bpy.ops.object.select_all(action='DESELECT')
@@ -94,11 +95,12 @@ def createLink(link):
     # Move bone when adding at selected objects location
     if 'matrix' in link:
         newlink.matrix_world = link['matrix']
+
+    # give it a proper name
     newlink.phobostype = 'link'
     if link['name'] in bpy.data.objects.keys():
         log('Object with name of new link already exists: ' + link['name'], 'WARNING')
     nUtils.safelyName(newlink, link['name'])
-
 
     # set the size of the link
     visuals, collisions = getGeometricElements(link)
@@ -125,12 +127,12 @@ def createLink(link):
         inertia.createInertial(link['inertial'], newlink)
 
     # create geometric elements
-    log("Creating visual and collision objects for link '{0}': {1}".format(
-        link['name'], ', '.join([elem['name'] for elem in visuals + collisions])), 'DEBUG')
-    for v in visuals:
-            geometrymodel.createGeometry(v, 'visual', newlink)
-    for c in collisions:
-            geometrymodel.createGeometry(c, 'collision', newlink)
+    log("Creating visual and collision objects for link '{0}':\n{1}".format(
+        link['name'], '    \n'.join([elem['name'] for elem in visuals + collisions])), 'DEBUG')
+    for vis in visuals:
+        geometrymodel.createGeometry(vis, 'visual', newlink)
+    for col in collisions:
+        geometrymodel.createGeometry(col, 'collision', newlink)
     return newlink
 
 
