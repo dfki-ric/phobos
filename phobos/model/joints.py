@@ -218,25 +218,33 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
         maxeffort_approximation (dict): function and coefficients for maximum effort
         maxspeed_approximation (dict): function and coefficients for maximum speed
     """
-    log(joint.name, 'INFO', end=' ')
+    if joint.phobostype != 'link':
+        log("Cannot set joint constraints. Not a link: {}".format(joint), 'ERROR')
+        return
+
+    log("Setting joint constraints at link {}.".format(joint.name), 'DEBUG')
     bpy.ops.object.mode_set(mode='POSE')
-    for c in joint.pose.bones[0].constraints:
-        joint.pose.bones[0].constraints.remove(c)
-    if joint.phobostype == 'link':
-        # add spring & damping
-        if jointtype in ['revolute', 'prismatic'] and (spring or damping):
-            try:
-                bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
-                bpy.context.object.rigid_body_constraint.spring_stiffness_y = spring
-                bpy.context.object.rigid_body_constraint.spring_damping_y = damping
-            except RuntimeError:
-                log("No Blender Rigid Body World present, only adding custom properties.", "ERROR")
-            # we should make sure that the rigid body constraints gets changed
-            # if the values below are changed manually by the user
-            joint['joint/dynamics/springStiffness'] = spring
-            joint['joint/dynamics/springDamping'] = damping
-            joint['joint/dynamics/spring_const_constraint_axis1'] = spring  # FIXME: this is a hack
-            joint['joint/dynamics/damping_const_constraint_axis1'] = damping  # FIXME: this is a hack, too
+
+    # remove existing constraints from bone
+    for cons in joint.pose.bones[0].constraints:
+        joint.pose.bones[0].constraints.remove(cons)
+
+    # add spring & damping
+    if jointtype in ['revolute', 'prismatic'] and (spring or damping):
+        try:
+            bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
+            bpy.context.object.rigid_body_constraint.spring_stiffness_y = spring
+            bpy.context.object.rigid_body_constraint.spring_damping_y = damping
+        except RuntimeError:
+            log("No Blender Rigid Body World present, only adding custom properties.", 'ERROR')
+
+        # TODO we should make sure that the rigid body constraints gets changed
+        # if the values below are changed manually by the user
+        joint['joint/dynamics/springStiffness'] = spring
+        joint['joint/dynamics/springDamping'] = damping
+        joint['joint/dynamics/spring_const_constraint_axis1'] = spring  # FIXME: this is a hack
+        joint['joint/dynamics/damping_const_constraint_axis1'] = damping  # FIXME: this is a hack, too
+
     # set constraints accordingly
     if jointtype == 'revolute':
         set_revolute(joint, lower, upper)
@@ -256,21 +264,28 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
     joint['joint/type'] = jointtype
     bpy.ops.object.mode_set(mode='OBJECT')
 
-        # approximation functions for effort and speed
-        if jointtype in ['revolute', 'continuous', 'prismatic']:
-            try:
-                if maxeffort_approximation:
-                    joint["joint/maxeffort_approximation"] = maxeffort_approximation["function"]
-                    joint["joint/maxeffort_coefficients"] = maxeffort_approximation["coefficients"]
-                if maxspeed_approximation:
-                    joint["joint/maxspeed_approximation"] = maxspeed_approximation["function"]
-                    joint["joint/maxspeed_coefficients"] = maxspeed_approximation["coefficients"]
-            except KeyError:
-                log("Approximation for max effort and/or speed ill-defined in joint object " + joint.name,
-                    "ERROR")
+    # check for approximation functions of effort and speed
+    if jointtype in ['revolute', 'continuous', 'prismatic']:
+        if maxeffort_approximation:
+            if all(elem in ['function', 'coefficients'] for elem in maxeffort_approximation):
+                joint['joint/maxeffort_approximation'] = maxeffort_approximation['function']
+                joint['joint/maxeffort_coefficients'] = maxeffort_approximation['coefficients']
+            else:
+                log("Approximation for max effort ill-defined in joint object {}.".format(
+                    joint.name), 'ERROR')
+        if maxspeed_approximation:
+            if all(elem in ['function', 'coefficients'] for elem in maxspeed_approximation):
+                joint['joint/maxspeed_approximation'] = maxspeed_approximation['function']
+                joint['joint/maxspeed_coefficients'] = maxspeed_approximation['coefficients']
+            else:
+                log("Approximation for max speed ill-defined in joint object {}.".format(
+                    joint.name), 'ERROR')
 
-        # set link/joint visualization
-        joint.pose.bones[0].custom_shape = ioUtils.getResource(('joint', jointtype))
+    # set link/joint visualization
+    resource_obj = ioUtils.getResource(('joint', jointtype))
+    if resource_obj:
+        log("Assigned resource to {}.".format(joint.name), 'DEBUG')
+        joint.pose.bones[0].custom_shape = resource_obj
 
 
 def getJointType(joint):
