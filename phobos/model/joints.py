@@ -41,14 +41,29 @@ from phobos.utils.validation import validate
 
 
 def createJoint(joint, linkobj=None):
-    """Adds joint data to 'link' object.
+    """Adds joint data to a link object.
+
+    If the linkobj is not specified, it is derived from the *child* entry in the joint. This only
+    works if the *child* is a single item, not a list.
+
+    These entries are mandatory for the dictionary:
+        *name*: name of the joint
+
+    These entries are optional:
+        *axis*: tuple which specifies the axis of the editbone
+        *limits*: limits of the joint movement
+            *lower*: lower limit (defaults to 0.)
+            *upper*: upper limit (defaults to 0.)
+            *effort*: maximum effort for the joint
+            *velocity*: maximum velocity for the joint
+
+    Furthermore any generic properties, prepended by a `$` will be added as custom properties to the
+    joint. E.g. $test/etc would be put to joint/test/etc. However, these properties are extracted
+    only in the first layer of hierarchy.
 
     Args:
         joint (dict): dictionary containing the joint definition
-        linkobj (bpy.types.Object): the obj of phobostype 'link' that receives the joint
-
-    Returns:
-
+        linkobj (bpy.types.Object): the link object to receive the joint
     """
     # add joint information
     if not linkobj:
