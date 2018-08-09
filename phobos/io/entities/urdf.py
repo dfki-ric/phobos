@@ -34,7 +34,7 @@ import xml.etree.ElementTree as ET
 import bpy
 import mathutils
 from phobos.utils.io import l2str, xmlline, indent, xmlHeader
-import phobos.model.materials as materials
+import phobos.model.materials as matModel
 import phobos.utils.general as gUtils
 import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
@@ -556,38 +556,45 @@ def importUrdf(filepath):
         dict -- model representation of the URDF file
     """
     model = {}
-    # TODO delete me?
-    #element_order = {'links': [], 'joints': [], 'viscol': {}, 'materials': []}
-    log("Parsing URDF model from " + filepath, "INFO")
-    # TODO filepath consistency?
-    tree = ET.parse(filepath)
-    # TODO comment needed?
-    root = tree.getroot()#[0]
-    model["name"] = root.attrib["name"]
-    if 'version' in root.attrib:
-        model["version"] = root.attrib['version']
 
-    # parse links
+    log("Parsing URDF model from " + filepath, 'INFO')
+
+    if not path.exists(filepath):
+        log("Could not open URDF file. File not found: " + filepath, 'ERROR')
+        return {}
+
+    # load element tree from file
+    tree = ET.parse(filepath)
+    root = tree.getroot()
+    model['name'] = root.attrib['name']
+    if 'version' in root.attrib:
+        model['version'] = root.attrib['version']
+
     links = {}
-    log("Parsing links...", "INFO")
+    log("Parsing links...", 'INFO')
     for link in root.iter('link'):
+        log(" Adding link {}.".format(link.attrib['name']), 'DEBUG')
         links[link.attrib['name']] = parseLink(link, filepath)
-        # TODO delete me?
-        #element_order['links'].append(links.attrib['name'])
-        #viscol_order = {'visual': [], 'collision': []}
     model['links'] = links
 
-    # parse joints
     joints = {}
-    log("Parsing joints...", "INFO")
+    log("Parsing joints...", 'INFO')
     for joint in root.iter('joint'):
         # this is needed as there are "joint" tags e.g. in transmission
         if joint.find('parent') is not None:
+            # parse joint from elementtree
+            log(" Adding joint {} ...".format(joint.attrib['name']), 'DEBUG')
             newjoint, pose = parseJoint(joint)
-            # TODO delete me?
-            #element_order['joints'].append(joint.attrib['name'])
             model['links'][newjoint['child']]['pose'] = pose
             joints[newjoint['name']] = newjoint
+
+            # add parent-child hierarchy to link information
+            parentlink = model['links'][newjoint['parent']]
+            childlink = model['links'][newjoint['child']]
+            childlink['parent'] = newjoint['parent']
+            parentlink['children'].append(newjoint['child'])
+            log("   ... and connected parent link {} to {}.".format(
+                parentlink['name'], childlink['name']), 'DEBUG')
     model['joints'] = joints
 
     # find any links that still have no pose (most likely because they had no parent)
@@ -595,29 +602,24 @@ def importUrdf(filepath):
         if 'pose' not in links[link]:
             links[link]['pose'] = parsePose(None)
 
-    # write parent-child information to links
-    log("Writing parent-child information to links...", "INFO")
-    for j in model['joints']:
-        joint = model['joints'][j]
-        parentlink = model['links'][joint['parent']]
-        childlink = model['links'][joint['child']]
-        childlink['parent'] = joint['parent']
-        parentlink['children'].append(joint['child'])
-
-    # parse materials
-    log("Parsing materials..", 'INFO')
-    materiallist = []
+    log("Parsing materials...", 'INFO')
+    materials = {}
     for material in root.iter('material'):
-        newmaterial = {a: material.attrib[a] for a in material.attrib}
         color = material.find('color')
+
+        # add only materials with specified color
         if color is not None:
-            newmaterial['color'] = gUtils.parse_text(color.attrib['rgba'])
-            materiallist.append(newmaterial)  # simply overwrite duplicates
-    for m in materiallist:
-        materials.createMaterial(m['name'], tuple(m['color'][0:3]), (1, 1, 1), m['color'][-1])
-    model['materials'] = {m['name']: m for m in materiallist}
-        # TODO delete me?
-        #element_order['materials'].append(m['name'])
+            log(" Adding material {}.".format(material.attrib['name']), 'DEBUG')
+            newmat = {a: material.attrib[a] for a in material.attrib}
+            newmat['color'] = gUtils.parse_text(color.attrib['rgba'])
+            matModel.createMaterial(newmat['name'],
+                                    tuple(newmat['color'][0:3]), (1, 1, 1), newmat['color'][-1])
+
+            # duplicates are overwritten, but not silent
+            if newmat['name'] in materials:
+                log(" Overwriting duplicate material {}!".format(newmat['name']), 'WARNING')
+            materials[newmat['name']] = newmat
+
     return model
 
 
