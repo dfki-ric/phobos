@@ -559,6 +559,7 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
     addAnnotation(annot_obj, annotation, namespace=namespace)
     return annot_obj
 
+
 def addAnnotation(obj, annotation, namespace=None):
     """Adds the specified annotations to the object.
 
@@ -571,3 +572,28 @@ def addAnnotation(obj, annotation, namespace=None):
     """
     for key, value in annotation.items():
         obj[str(namespace + '/' if namespace else '') + key] = value
+
+
+def removeProperties(obj, props, recursive=False):
+    """Removes a list of custom properties from the specified object.
+
+    The specified property list can contain names with wildcards at the end (e.g. sensor*).
+
+    If recursive is set, the properties will be removed recursively from all children, too.
+
+    Args:
+        obj (bpy.types.Object): object to remove the properties from
+        props (list(str)): list of property names, which will be removed from the object
+        recursive (bool): if True, the properties will be removed recursively from the children, too
+    """
+    for prop in props:
+        if prop in obj:
+            del obj[prop]
+        elif prop[-1] == '*':
+            for objprop in obj.keys():
+                if objprop.startswith(prop[:-1]):
+                    del obj[objprop]
+
+    if recursive:
+        for child in obj.children:
+            removeProperties(child, props, recursive=recursive)

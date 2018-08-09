@@ -354,8 +354,7 @@ class BatchEditPropertyOperator(Operator):
         # delete property when value is empty
         if value == '':
             for obj in context.selected_objects:
-                if self.property_name in obj.keys():
-                    del(obj[self.property_name])
+                eUtils.removeProperties(obj, [self.property_name])
         # change property
         else:
             for obj in context.selected_objects:
