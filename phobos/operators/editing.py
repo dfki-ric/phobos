@@ -1288,6 +1288,10 @@ class CreateLinksOperator(Operator):
                                            nameformat=self.nameformat)
         return {'FINISHED'}
 
+    @classmethod
+    def poll(cls, context):
+        return bpy.ops.object.select_all.poll()
+
     def draw(self, context):
         layout = self.layout
         layout.prop(self, "location")
