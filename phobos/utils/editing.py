@@ -97,7 +97,7 @@ def restructureKinematicTree(link, root=None):
 
     # stop right now when the link is already root
     if not obj.parent:
-        log('No restructure necessary. Link is already root.', 'DEBUG')
+        log('No restructure necessary. Link is already root.', 'INFO')
         return
 
     # gather chain of links ascending the tree
@@ -107,15 +107,19 @@ def restructureKinematicTree(link, root=None):
             links.append(obj)
     links.append(root)
 
+    log("Unparenting objects for restructure: " + str([link.name for link in links]) + ".", 'DEBUG')
     # unparent all links
     sUtils.selectObjects(links, True)
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+
+    log("Restructuring objects for new hierarchy.", 'DEBUG')
     for i in range(len(links) - 1):
         parent = links[i]
         child = links[i + 1]
         sUtils.selectObjects((parent, child), True, active=0)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
+    log("Copying model information from old root.", 'DEBUG')
     # copy properties
     if 'modelname' in root:
         link['modelname'] = root['modelname']
@@ -123,6 +127,7 @@ def restructureKinematicTree(link, root=None):
     if 'version' in root:
         link['version'] = root['version']
         del root['version']
+    log("Restructured kinematic tree to new root: {}.".format(link.name), 'INFO')
 
 
 def getNearestCommonParent(objs):
