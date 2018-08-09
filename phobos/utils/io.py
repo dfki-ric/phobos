@@ -313,16 +313,16 @@ def getResource(specifiers):
     Returns:
         bpy.types.Object -- resource object (or None if it could not be imported)
     """
-    try:
-        log("Searching for resource " + '_'.join(specifiers) + ".", 'DEBUG')
-        resobjname = nUtils.addNamespaceToName('_'.join(specifiers), 'resource')
-        return bpy.data.scenes['resources'].objects[resobjname]
-    except KeyError:  # no resource scene or key not in scene
+    log("Searching for resource object " + '_'.join(specifiers) + ".", 'DEBUG')
+
+    resobjname = nUtils.addNamespaceToName('_'.join(specifiers), 'resource')
+
+    if 'resources' not in bpy.data.scenes or resobjname not in bpy.data.scenes['resources'].objects:
         newobjects = importResources((specifiers,))
-        if newobjects:
-            return newobjects[0]
-        else:
+        if not newobjects:
             return None
+        return newobjects[0]
+    return bpy.data.scenes['resources'].objects[resobjname]
 
 
 def exportModel(model, exportpath='.', entitytypes=None):
