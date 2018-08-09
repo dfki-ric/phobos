@@ -63,12 +63,27 @@ def getGeometricElements(link):
 def createLink(link):
     """Creates the blender representation of a given link and its parent joint.
 
+    The link is added to the link layer.
+
+    These entries in the dictionary are mandatory:
+        *name*: name for the link
+
+    The specified dictionary may contain these entries:
+        *matrix*: world matrix for the new link transformation
+        *scale*: scale for the new link (single float)
+        *visual*: list of visual dictionaries
+        *collision*: list of collision dictionaries
+        *inertial*: inertial dictionary (an inertial object will be created on the fly)
+
+    Furthermore any generic properties, prepended by a `$` will be added as custom properties to the
+    link. E.g. $test/etc would be put to link/test/etc. However, these properties are extracted
+    only in the first layer of hierarchy.
+
     Args:
-      link(dict): The link you want to create a representation of.
+        link (dict): The link you want to create a representation of.
 
     Returns:
-      bpy_types.Object -- the newly created blender link object.
-
+        bpy_types.Object -- the newly created blender link object.
     """
     # create armature/bone
     bUtils.toggleLayer(defs.layerTypes['link'], True)
