@@ -196,22 +196,27 @@ def getJointConstraint(joint, ctype):
     return con
 
 
+# TODO are spring and damping really required as defaults?
 def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damping=0.0,
                         maxeffort_approximation=None, maxspeed_approximation=None):
     """Sets the constraints for a given joint and jointtype.
 
+    If the joint type is not recognized, the constraints will match a floating joint.
+
+    The approximation for maximum effort/speed requires a dictionary with two entries (*function*
+    *coefficients*).
+
+    Based on the joint type, the respective resource object is applied to the link.
+
     Args:
-      joint(bpy_types.Object): the joint to be edited
-      jointtype(str): joint type
-      lower(float, optional): The constraints' lower limit. (Default value = 0.0)
-      upper(float, optional): The constraints' upper limit. (Default value = 0.0)
-      spring:  (Default value = 0.0)
-      damping:  (Default value = 0.0)
-      maxeffort_approximation:  (Default value = None)
-      maxspeed_approximation:  (Default value = None)
-
-    Returns:
-
+        joint (bpy_types.Object): link object containing the joint to be edited
+        jointtype (str): joint type (revolute, continuous, prismatic, fixed, floating, planar)
+        lower (float): lower limit of the constraint (defaults to 0.)
+        upper (float): upper limit of the constraint (defaults to 0.)
+        spring (float): spring stiffness for the joint
+        damping (float): spring damping for the joint
+        maxeffort_approximation (dict): function and coefficients for maximum effort
+        maxspeed_approximation (dict): function and coefficients for maximum speed
     """
     log(joint.name, 'INFO', end=' ')
     bpy.ops.object.mode_set(mode='POSE')
