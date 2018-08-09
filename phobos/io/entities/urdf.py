@@ -544,17 +544,16 @@ def parsePose(origin):
 
 
 def importUrdf(filepath):
-    """This function parses the whole URDF representation of the model and builds the model dictionary from it.
-    The created model is stored in the model value of the parser and the URDF file is specified by the filepath
-    given to the Parser.
+    """Parses the URDF representation of the model and builds a model dictionary from it.
 
-    :return: Nothing.
+    The URDF file is opened from the filepath. If it does not exist, an empty dictionary is
+    returned.
 
     Args:
-      filepath:
+        filepath (str): filepath of the URDF file
 
     Returns:
-
+        dict -- model representation of the URDF file
     """
     model = {}
     # TODO delete me?
