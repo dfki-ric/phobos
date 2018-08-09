@@ -305,13 +305,13 @@ def importResources(restuple, filepath=None):
 
 
 def getResource(specifiers):
-    """Imports one resource defined by an iterable of strings.
+    """Returns a resource object defined by an iterable of strings.
 
     Args:
-        specifiers(iterable): iterable of strings specifying the resource
+        specifiers (iterable): strings specifying the resource
 
-    Returns(bpy.types.Object): imported object
-
+    Returns:
+        bpy.types.Object -- resource object (or None if it could not be imported)
     """
     try:
         log("Searching for resource " + '_'.join(specifiers) + ".", 'DEBUG')
