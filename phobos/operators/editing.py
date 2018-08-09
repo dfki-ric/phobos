@@ -2285,6 +2285,48 @@ class SelectSubmechanism(Operator):
         return {'FINISHED'}
 
 
+class DeleteSubmechanism(Operator):
+    """Delete an existing submechanism"""
+    bl_idname = "phobos.delete_submechanism"
+    bl_label = "Delete Submechanism"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def get_submechanism_roots(self, context):
+        return bUtils.compileEnumPropertyList(
+            [r['submechanism/name'] for r in sUtils.getSubmechanismRoots()])
+
+    submechanism = EnumProperty(
+        name="Submechanism",
+        description="submechanism to remove",
+        items=get_submechanism_roots
+    )
+
+    @classmethod
+    def poll(cls, context):
+        # make sure we have a root object with mechanisms
+        if not sUtils.getSubmechanismRoots():
+            return False
+        return True
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=300)
+
+    def draw(self, context):
+        layout = self.layout
+
+        layout.prop(self, 'submechanism')
+
+    def execute(self, context):
+        root = sUtils.getObjectByProperty('submechanism/name', self.submechanism)
+        jointlist = root['submechanism/spanningtree']
+        objects = [root] + jointlist
+        sUtils.selectObjects(objects, clear=True, active=0)
+
+        for obj in objects:
+            eUtils.removeProperties(obj, ['submechanism*'])
+        return {'FINISHED'}
+
+
 class ToggleInterfaces(Operator):
     """Toggle interfaces of a submodel"""
     bl_idname = "phobos.toggle_interfaces"
