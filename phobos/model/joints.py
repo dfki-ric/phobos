@@ -232,133 +232,24 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
             joint['joint/dynamics/springDamping'] = damping
             joint['joint/dynamics/spring_const_constraint_axis1'] = spring  # FIXME: this is a hack
             joint['joint/dynamics/damping_const_constraint_axis1'] = damping  # FIXME: this is a hack, too
-        # add constraints
-        if jointtype == 'revolute':
-            # fix location
-            bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
-            cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
-            cloc.use_min_x = True
-            cloc.use_min_y = True
-            cloc.use_min_z = True
-            cloc.use_max_x = True
-            cloc.use_max_y = True
-            cloc.use_max_z = True
-            cloc.owner_space = 'LOCAL'
-            # fix rotation x, z and limit y
-            bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
-            crot = getJointConstraint(joint, 'LIMIT_ROTATION')
-            crot.use_limit_x = True
-            crot.min_x = 0
-            crot.max_x = 0
-            crot.use_limit_y = True
-            crot.min_y = lower
-            crot.max_y = upper
-            crot.use_limit_z = True
-            crot.min_z = 0
-            crot.max_z = 0
-            crot.owner_space = 'LOCAL'
-        elif jointtype == 'continuous':
-            # fix location
-            bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
-            cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
-            cloc.use_min_x = True
-            cloc.use_min_y = True
-            cloc.use_min_z = True
-            cloc.use_max_x = True
-            cloc.use_max_y = True
-            cloc.use_max_z = True
-            cloc.owner_space = 'LOCAL'
-            # fix rotation x, z
-            bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
-            crot = getJointConstraint(joint, 'LIMIT_ROTATION')
-            crot.use_limit_x = True
-            crot.min_x = 0
-            crot.max_x = 0
-            crot.use_limit_z = True
-            crot.min_z = 0
-            crot.max_z = 0
-            crot.owner_space = 'LOCAL'
-        elif jointtype == 'prismatic':
-            # fix location except for y axis
-            bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
-            cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
-            cloc.use_min_x = True
-            cloc.use_min_y = True
-            cloc.use_min_z = True
-            cloc.use_max_x = True
-            cloc.use_max_y = True
-            cloc.use_max_z = True
-            if lower == upper:
-                cloc.use_min_y = False
-                cloc.use_max_y = False
-            else:
-                cloc.min_y = lower
-                cloc.max_y = upper
-            cloc.owner_space = 'LOCAL'
-            # fix rotation
-            bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
-            crot = getJointConstraint(joint, 'LIMIT_ROTATION')
-            crot.use_limit_x = True
-            crot.min_x = 0
-            crot.max_x = 0
-            crot.use_limit_y = True
-            crot.min_y = 0
-            crot.max_y = 0
-            crot.use_limit_z = True
-            crot.min_z = 0
-            crot.max_z = 0
-            crot.owner_space = 'LOCAL'
-        elif jointtype == 'fixed':
-            # fix location
-            bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
-            cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
-            cloc.use_min_x = True
-            cloc.use_min_y = True
-            cloc.use_min_z = True
-            cloc.use_max_x = True
-            cloc.use_max_y = True
-            cloc.use_max_z = True
-            cloc.owner_space = 'LOCAL'
-            # fix rotation
-            bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
-            crot = getJointConstraint(joint, 'LIMIT_ROTATION')
-            crot.use_limit_x = True
-            crot.min_x = 0
-            crot.max_x = 0
-            crot.use_limit_y = True
-            crot.min_y = 0
-            crot.max_y = 0
-            crot.use_limit_z = True
-            crot.min_z = 0
-            crot.max_z = 0
-            crot.owner_space = 'LOCAL'
-        elif jointtype == 'floating':
-            # 6DOF
-            pass
-        elif jointtype == 'planar':
-            # fix location
-            bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
-            cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
-            cloc.use_min_y = True
-            cloc.use_max_y = True
-            cloc.owner_space = 'LOCAL'
-            # fix rotation
-            bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
-            crot = getJointConstraint(joint, 'LIMIT_ROTATION')
-            crot.use_limit_x = True
-            crot.min_x = 0
-            crot.max_x = 0
-            crot.use_limit_y = True
-            crot.min_y = 0
-            crot.max_y = 0
-            crot.use_limit_z = True
-            crot.min_z = 0
-            crot.max_z = 0
-            crot.owner_space = 'LOCAL'
-        else:
-            log("Unknown joint type for joint " + joint.name, "WARNING")
-        joint['joint/type'] = jointtype
-        bpy.ops.object.mode_set(mode='OBJECT')
+    # set constraints accordingly
+    if jointtype == 'revolute':
+        set_revolute(joint, lower, upper)
+    elif jointtype == 'continuous':
+        set_continuous(joint)
+    elif jointtype == 'prismatic':
+        set_prismatic(joint, lower, upper)
+    elif jointtype == 'fixed':
+        set_fixed(joint)
+    elif jointtype == 'floating':
+        # 6DOF
+        pass
+    elif jointtype == 'planar':
+        set_planar(joint)
+    else:
+        log("Unknown joint type for joint " + joint.name + ". Behaviour like floating.", 'WARNING')
+    joint['joint/type'] = jointtype
+    bpy.ops.object.mode_set(mode='OBJECT')
 
         # approximation functions for effort and speed
         if jointtype in ['revolute', 'continuous', 'prismatic']:
@@ -452,3 +343,127 @@ def deriveJointState(joint):
              'rotation_quaternion': list(joint.pose.bones[0].matrix_basis.to_quaternion())}
     # TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
     return state
+
+def set_revolute(joint, lower, upper):
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    cloc.owner_space = 'LOCAL'
+    # fix rotation x, z and limit y
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = 0
+    crot.max_x = 0
+    crot.use_limit_y = True
+    crot.min_y = lower
+    crot.max_y = upper
+    crot.use_limit_z = True
+    crot.min_z = 0
+    crot.max_z = 0
+    crot.owner_space = 'LOCAL'
+
+def set_continuous(joint):
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    cloc.owner_space = 'LOCAL'
+    # fix rotation x, z
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = 0
+    crot.max_x = 0
+    crot.use_limit_z = True
+    crot.min_z = 0
+    crot.max_z = 0
+    crot.owner_space = 'LOCAL'
+
+def set_prismatic(joint, lower, upper):
+    # fix location except for y axis
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    if lower == upper:
+        cloc.use_min_y = False
+        cloc.use_max_y = False
+    else:
+        cloc.min_y = lower
+        cloc.max_y = upper
+    cloc.owner_space = 'LOCAL'
+    # fix rotation
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = 0
+    crot.max_x = 0
+    crot.use_limit_y = True
+    crot.min_y = 0
+    crot.max_y = 0
+    crot.use_limit_z = True
+    crot.min_z = 0
+    crot.max_z = 0
+    crot.owner_space = 'LOCAL'
+
+def set_fixed(joint):
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    cloc.owner_space = 'LOCAL'
+    # fix rotation
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = 0
+    crot.max_x = 0
+    crot.use_limit_y = True
+    crot.min_y = 0
+    crot.max_y = 0
+    crot.use_limit_z = True
+    crot.min_z = 0
+    crot.max_z = 0
+    crot.owner_space = 'LOCAL'
+
+def set_planar(joint):
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_y = True
+    cloc.use_max_y = True
+    cloc.owner_space = 'LOCAL'
+    # fix rotation
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = 0
+    crot.max_x = 0
+    crot.use_limit_y = True
+    crot.min_y = 0
+    crot.max_y = 0
+    crot.use_limit_z = True
+    crot.min_z = 0
+    crot.max_z = 0
+    crot.owner_space = 'LOCAL'
