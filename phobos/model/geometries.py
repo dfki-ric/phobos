@@ -72,16 +72,33 @@ def deriveGeometry(obj, adjust=False, **kwargs):
 
 def createGeometry(viscol, geomsrc, linkobj=None):
     """Creates Blender object for visual or collision objects.
-    Returns reference to new object or None if creation failed.
+
+    If the creation fails, nothing is returned.
+
+    These entries in the dictionary are mandatory:
+        *geometry*:
+            *type*: type of geometry (mesh, box, cylinder, sphere)
+
+    Depending on the geometry type other values are required: *size*, *radius*, *length*
+
+    These entries are optional:
+        *scale* (in *geometry*): scale for the new geometry
+        *material*: material name to assign to the visual
+        *pose*: specifies the placement of the new object relative to the optional linkobj
+            *translation*: position vector for the new object
+            *rotation_euler*: rotation for the new object
+
+    Furthermore any generic properties, prepended by a `$` will be added as custom properties to the
+    visual/collision object. E.g. $test/etc would be put to visual/test/etc for a visual object.
+    However, these properties are extracted only in the first layer of hierarchy.
 
     Args:
-      viscol(dict): visual/collision dictionary element
-      geomsrc(str): new object's phobostype
-      linkobj(bpy.types.Object): link object
+        viscol (dict): visual/collision model dictionary representation
+        geomsrc (str): phobostype of the new object
+        linkobj (bpy.types.Object): link object to attach the visual/collision object to
 
     Returns:
       bpy.types.Object or None
-
     """
     if 'geometry' not in viscol or viscol['geometry'] is {}:
         return None
