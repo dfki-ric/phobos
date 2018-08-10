@@ -144,14 +144,21 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0,
     return obj
 
 
-def setObjectLayersActive(obj):
+def setObjectLayersActive(obj, extendlayers=False):
     """Sets all layers, the specified object is on to active.
+
+    If extendlayers is set, the layers of the object are added to the already active layers instead
+    of replacing them.
 
     Args:
         obj (bpy.types.Object): object of which the layers shall be activated
+        extendlayers (bool): activate the object layers in addition to the already active layers
     """
     for layer in range(len(obj.layers)):
-        bpy.context.scene.layers[layer] &= obj.layers[layer]
+        if extendlayers:
+            bpy.context.scene.layers[layer] += obj.layers[layer]
+        else:
+            bpy.context.scene.layers[layer] = obj.layers[layer]
 
 
 def toggleLayer(index, value=None):

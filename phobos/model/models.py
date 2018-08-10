@@ -1178,7 +1178,7 @@ def buildModelFromDictionary(model):
     sUtils.selectObjects(newobjects, clear=True, active=0)
     eUtils.sortObjectsToLayers(newobjects)
     for obj in newobjects:
-        bUtils.setObjectLayersActive(obj)
+        bUtils.setObjectLayersActive(obj, extendlayers=True)
     bpy.ops.object.mode_set(mode='OBJECT')
     bpy.ops.view3d.view_selected()
 
