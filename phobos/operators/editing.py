@@ -105,19 +105,25 @@ class MoveToSceneOperator(Operator):
     scenename = StringProperty(name='Scene Name',
                                default='new',
                                description='Name of the scene to which to add selection')
-
+    configname = StringProperty(name='Configuration Name',
+                                default='new',
+                                description='Name of the new configuration')
     scene = EnumProperty(name='Scene',
                          items=getSceneEnumProperty,
                          description='List of available scenes')
 
-    move = BoolProperty(name='Move', default=False,
-                        description="Remove selected objects from active scene")
+    new = BoolProperty(name='New', default=True,
+                       description="Create new scene for configuration")
+
+    unlink = BoolProperty(name='Unlink selected', default=False,
+                        description="Unlink selected objects from active scene")
+
+    remove = BoolProperty(name='Remove selected', default=False,
+                        description='Remove selected objects from active scene')
 
     init = BoolProperty(name='Init', default=True,
                         description="Init new scene with items from active scene")
 
-    new = BoolProperty(name='New', default=True,
-                       description="Create new scene to move items to")
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=500)
@@ -132,12 +138,14 @@ class MoveToSceneOperator(Operator):
         layout = self.layout
         layout.prop(self, 'new', text="New scene")
         box = layout.box()
+        box.prop(self, 'configname', text="Configuration name")
         if self.new:
             box.prop(self, 'scenename', text="Scene Name (if new)")
             box.prop(self, 'init', text="Initialize scene")
         else:
             box.prop(self, 'scene')
-        layout.prop(self, 'move')
+        layout.prop(self, 'unlink')
+        layout.prop(self, 'remove')
 
     def execute(self, context):
         moveobjs = context.selected_objects
@@ -148,29 +156,56 @@ class MoveToSceneOperator(Operator):
             # copy all objects from active scene if new scene is created
             if self.init:
                 for obj in oldscene.objects:
-                    # TODO what error could occur here?
-                    try:
-                        bpy.data.scenes[self.scenename].objects.link(obj)
-                    except RuntimeError as e:
-                        log(str(e), 'WARNING')
+                    if not (self.unlink and obj in moveobjs):
+                        # TODO what error could occur here?
+                        try:
+                            bpy.data.scenes[self.scenename].objects.link(obj)
+                        except RuntimeError as e:
+                            log(str(e), 'WARNING')
 
         # in any case, make sure to move selected objects objects to scene
+        # Create dict for mapping if needed
+        obj_map = {}
         for obj in moveobjs:
             if obj.name not in bpy.data.scenes[self.scenename].objects:
                 bpy.data.scenes[self.scenename].objects.link(obj)
+            # Unlink the objects and make an individual copy
+            if self.unlink:
+                bpy.context.screen.scene = bpy.data.scenes[self.scenename]
+                obj_copy = obj.copy()
+                obj_map.setdefault(obj, obj_copy)
+                obj_copy.name = '{}_'.format(self.configname) + obj.name
+                obj_copy.data = obj.data
+                bpy.data.scenes[self.scenename].objects.unlink(obj)
+                bpy.data.scenes[self.scenename].objects.link(obj_copy)
+
+        # Create the spanning tree
+        if self.unlink:
+            for obj, obj_copy in obj_map.items():
+                if obj.parent in obj_map.keys():
+                    sUtils.selectObjects((obj_map[obj.parent],obj_copy), True, active=0)
+                    bpy.ops.object.parent_set(type='BONE_RELATIVE')
+                for children in obj.children:
+                    if not children in obj_map.keys():
+                        sUtils.selectObjects((obj_map[obj],children), True, active=0)
+                        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+
 
         # remove objects from active scene
-        if self.move:
+        if self.remove:
             for obj in moveobjs:
                 # TODO what errors could occur here?
+                # Maybe object has been moved and is not in the scene any more
                 try:
                     oldscene.objects.unlink(obj)
                 except RuntimeError as e:
                     log(str(e), 'WARNING')
         bpy.context.screen.scene = bpy.data.scenes[self.scenename]
+        bpy.ops.object.select_all(action = 'SELECT')
+        bpy.ops.phobos.sort_objects_to_layers()
         bpy.data.scenes[self.scenename].update()
 
-        log("{} {} object{}".format('Moved' if self.move else 'Added', len(moveobjs),
+        log("{} {} object{}".format('Added', len(moveobjs),
                                     's' if len(moveobjs) > 1 else '')
             + " to {}{}export configuration '{}'.".format('new ' if self.new else '',
                                                           'initialized ' if self.init else '',
