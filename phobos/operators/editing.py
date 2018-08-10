@@ -105,7 +105,9 @@ class MoveToSceneOperator(Operator):
     scenename = StringProperty(name='Scene Name',
                                default='new',
                                description='Name of the scene to which to add selection')
-
+    configname = StringProperty(name='Configuration Name',
+                                default='new',
+                                description='Name of the new configuration')
     scene = EnumProperty(name='Scene',
                          items=getSceneEnumProperty,
                          description='List of available scenes')
@@ -136,6 +138,7 @@ class MoveToSceneOperator(Operator):
         layout = self.layout
         layout.prop(self, 'new', text="New scene")
         box = layout.box()
+        box.prop(self, 'configname', text="Configuration name")
         if self.new:
             box.prop(self, 'scenename', text="Scene Name (if new)")
             box.prop(self, 'init', text="Initialize scene")
@@ -168,20 +171,24 @@ class MoveToSceneOperator(Operator):
                 bpy.data.scenes[self.scenename].objects.link(obj)
             # Unlink the objects and make an individual copy
             if self.unlink:
+                bpy.context.screen.scene = bpy.data.scenes[self.scenename]
                 obj_copy = obj.copy()
                 obj_map.setdefault(obj, obj_copy)
+                obj_copy.name = '{}_'.format(self.configname) + obj.name
                 obj_copy.data = obj.data
                 bpy.data.scenes[self.scenename].objects.unlink(obj)
                 bpy.data.scenes[self.scenename].objects.link(obj_copy)
 
         # Create the spanning tree
         if self.unlink:
-            bpy.context.screen.scene = bpy.data.scenes[self.scenename]
             for obj, obj_copy in obj_map.items():
                 if obj.parent in obj_map.keys():
-                    print(obj, obj.parent)
                     sUtils.selectObjects((obj_map[obj.parent],obj_copy), True, active=0)
                     bpy.ops.object.parent_set(type='BONE_RELATIVE')
+                for children in obj.children:
+                    if not children in obj_map.keys():
+                        sUtils.selectObjects((obj_map[obj],children), True, active=0)
+                        bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
 
         # remove objects from active scene
@@ -194,6 +201,8 @@ class MoveToSceneOperator(Operator):
                 except RuntimeError as e:
                     log(str(e), 'WARNING')
         bpy.context.screen.scene = bpy.data.scenes[self.scenename]
+        bpy.ops.object.select_all(action = 'SELECT')
+        bpy.ops.phobos.sort_objects_to_layers()
         bpy.data.scenes[self.scenename].update()
 
         log("{} {} object{}".format('Added', len(moveobjs),
