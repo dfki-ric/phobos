@@ -156,7 +156,7 @@ def setObjectLayersActive(obj, extendlayers=False):
     """
     for layer in range(len(obj.layers)):
         if extendlayers:
-            bpy.context.scene.layers[layer] += obj.layers[layer]
+            bpy.context.scene.layers[layer] |= obj.layers[layer]
         else:
             bpy.context.scene.layers[layer] = obj.layers[layer]
 
