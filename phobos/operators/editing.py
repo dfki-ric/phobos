@@ -102,27 +102,32 @@ class MoveToSceneOperator(Operator):
             scenes.remove('resources')
         return bUtils.compileEnumPropertyList(scenes)
 
-    scenename = StringProperty(name='Scene Name',
-                               default='new',
+    scenename = StringProperty(name='Scene Name', default='new',
                                description='Name of the scene to which to add selection')
-    configname = StringProperty(name='Configuration Name',
-                                default='new',
-                                description='Name of the new configuration')
-    scene = EnumProperty(name='Scene',
-                         items=getSceneEnumProperty,
+
+    scene = EnumProperty(name='Scene', items=getSceneEnumProperty,
                          description='List of available scenes')
 
     new = BoolProperty(name='New', default=True,
                        description="Create new scene for configuration")
 
     unlink = BoolProperty(name='Unlink selected', default=False,
-                        description="Unlink selected objects from active scene")
+                          description="Unlink selected objects from active scene")
+
+    obdata = BoolProperty(name='Link mesh data', default=True,
+                          description="Link mesh data to new objects")
+
+    material = BoolProperty(name='Link material data', default=True,
+                          description="Link material data to new objects")
+
+    texture = BoolProperty(name='Link texture data', default=True,
+                          description="Link texture data to new objects")
 
     remove = BoolProperty(name='Remove selected', default=False,
-                        description='Remove selected objects from active scene')
+                          description='Remove selected objects from active scene')
 
-    init = BoolProperty(name='Init', default=True,
-                        description="Init new scene with items from active scene")
+    init = BoolProperty(name='Link current scene', default=True,
+                        description="Link all unselected objects from the current scene")
 
 
     def invoke(self, context, event):
@@ -138,14 +143,21 @@ class MoveToSceneOperator(Operator):
         layout = self.layout
         layout.prop(self, 'new', text="New scene")
         box = layout.box()
-        box.prop(self, 'configname', text="Configuration name")
         if self.new:
-            box.prop(self, 'scenename', text="Scene Name (if new)")
-            box.prop(self, 'init', text="Initialize scene")
+            box.prop(self, 'scenename', text="Scene Name")
+            box.prop(self, 'init')
         else:
             box.prop(self, 'scene')
-        layout.prop(self, 'unlink')
-        layout.prop(self, 'remove')
+
+        box = layout.box()
+        box.prop(self, 'unlink')
+        if self.unlink:
+            box.prop(self, 'obdata')
+            box.prop(self, 'material')
+            box.prop(self, 'texture')
+
+        box = layout.box()
+        box.prop(self, 'remove')
 
     def execute(self, context):
         moveobjs = context.selected_objects
