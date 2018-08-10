@@ -516,7 +516,7 @@ def validateInertiaData(obj, *args, adjust=False):
                  ' '.join(["'{0}'".format(miss) for miss in missing]) + " Set to default 1e-3."}))
 
             if 'inertia' in missing:
-                obj['inertia'] = (1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3)
+                obj['inertia'] = (1e-3, 0., 0., 1e-3, 0., 1e-3)
             if 'mass' in missing:
                 obj['mass'] = 1e-3
 
@@ -531,7 +531,7 @@ def validateInertiaData(obj, *args, adjust=False):
                 obj,
                 'phobos.generate_inertial_objects',
                 {'log_info': "Set to default 1e-3."}))
-            obj['inertial/inertia'] = (1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3)
+            obj['inertial/inertia'] = (1e-3, 0., 0., 1e-3, 0., 1e-3)
 
         if 'inertial/mass' not in obj:
             errors.append(ValidateMessage(

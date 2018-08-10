@@ -798,7 +798,7 @@ class GenerateInertialObjectsOperator(Operator):
                 inertia = inertialib.calculateInertia(obj, self.mass, adjust=True, logging=True)
                 pose = obj.matrix_local.to_translation()
             else:
-                inertia = [1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3]
+                inertia = [1e-3, 0., 0., 1e-3, 0., 1e-3]
                 pose = mathutils.Vector((0.0, 0.0, 0.0))
 
             # create object from dictionary
