@@ -208,7 +208,7 @@ def sort_for_yaml_dump(dictionary, category):
     if category in ['materials', 'motors']:
         return {category: sort_dict_list(dictionary[category], 'name')}
     elif category == 'sensors':
-        return sort_dict_list(dictionary[category], 'name')
+        return {category: sort_dict_list(dictionary[category], 'name')}
     elif category == 'simulation':
         return_dict = {}
         for viscol in ['collision', 'visual']:
@@ -359,12 +359,12 @@ def exportSmurf(model, path):
     # write materials, sensors, motors & controllers
     for data in ['materials', 'sensors', 'motors', 'controllers', 'lights']:
         if exportdata[data]:
+            log("Writing {} to smurf file.".format(data), 'DEBUG')
             with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)
+
                 op.write(yaml.dump(sort_for_yaml_dump({data: list(model[data].values())}, data),
                                    default_flow_style=False))
-                # TODO delete me?
-                #op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
 
     # write additional collision information
     if exportdata['collision']:
