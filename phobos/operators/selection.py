@@ -125,15 +125,19 @@ class SelectRootOperator(Operator):
         roots = set()
 
         # add root object of each selected object
-        for obj in bpy.context.selected_objects:
+        for obj in context.selected_objects:
             roots.add(sUtils.getRoot(obj))
 
         # select all found root objects
-        if len(roots) > 0:
+        if roots:
+            # toggle layer to make objects visible
+            bUtils.setObjectLayersActive(context.scene.objects[self.objectname], extendlayers=True)
+
+            # select objects
             sUtils.selectObjects(list(roots), True)
-            bpy.context.scene.objects.active = list(roots)[0]
+            context.scene.objects.active = list(roots)[0]
         else:
-            log("Couldn't find any root object.", "ERROR")
+            log("Couldn't find any root object.", 'ERROR')
         return {'FINISHED'}
 
     @classmethod
