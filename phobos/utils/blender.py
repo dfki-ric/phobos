@@ -175,7 +175,7 @@ def defLayers(layerlist):
     Returns:
 
     """
-    if type(layerlist) is not list:
+    if not isinstance(layerlist, list):
         layerlist = [layerlist]
     layers = 20 * [False]
     for layer in layerlist:
