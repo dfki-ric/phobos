@@ -129,33 +129,40 @@ def getRoot(obj=None):
         child = child.parent
     return child
 
-def getRoots():
-    """Returns a list of all of the current scene's root objects.
 
-    :return: list - all root links.
+def getRoots(scene=None):
+    """Returns a list of all of the current/specified scene's root objects.
 
     Args:
+        scene (bpy.types.Scene): the scene of which to find the root objects
 
     Returns:
-        list: bpy.types.Object
+        list(bpy.types.Object) -- root objects of the scene
 
     """
-    roots = [obj for obj in bpy.context.scene.objects if isRoot(obj)]
+    if not scene:
+        scene = bpy.context.scene
+
+    roots = [obj for obj in scene.objects if isRoot(obj, scene=scene)]
     if roots is None:
-        log("No root objects found.", "WARNING")
+        log("No root objects found in scene {}.".format(scene), 'WARNING')
     else:
         rootnames = ', '.join((root.name for root in roots))
-        log("Found {0} root object(s): {1}".format(len(roots), rootnames), "DEBUG")
+        log("Found {} root object{} in scene {}: {}".format(
+            len(roots), 's' if len(roots) > 1 else '', scene,  rootnames), 'DEBUG')
     return roots
 
 
-def isRoot(obj):
+def isRoot(obj, scene=None):
     """Returns whether or not the object passed to obj is a Phobos model root.
 
     Args:
       obj(bpy.types.Object): The object for which model root status is tested.
     """
-    return obj is not None and obj.phobostype in ['link', 'submodel'] and not obj.parent
+    rootdefinition = obj is not None and obj.phobostype in ['link', 'submodel']
+    parentless = not obj.parent or (scene is not None and obj.parent.name not in scene.objects)
+
+    return rootdefinition and parentless
 
 
 def getRootsOfSelection():
