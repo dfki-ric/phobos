@@ -34,6 +34,7 @@ from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty
 import phobos.defs as defs
 import phobos.utils.selection as sUtils
+import phobos.utils.blender as bUtils
 from phobos.phoboslog import log
 
 
@@ -94,6 +95,22 @@ class GotoObjectOperator(Operator):
 
     def execute(self, context):
         log("Jumping to object " + self.objectname + ".", 'DEBUG')
+
+        # switch the scene if the object is anywhere else
+        scene = None
+        if self.objectname not in context.scene:
+            for sce in bpy.data.scenes:
+                if self.objectname in sce.objects:
+                    scene = sce
+                    break
+            else:
+                log("Could not find scene of object {}. Aborted.".format(self.objectname), 'ERROR')
+                return {'CANCELLED'}
+            bUtils.switchToScene(scene.name)
+
+        # toggle layer to make object visible
+        bUtils.setObjectLayersActive(context.scene.objects[self.objectname], extendlayers=True)
+
         sUtils.selectObjects([context.scene.objects[self.objectname]], clear=True, active=0)
         return {'FINISHED'}
 
