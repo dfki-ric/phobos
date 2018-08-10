@@ -124,12 +124,10 @@ def getRoot(obj=None):
     if obj is None:
         log("No root object found! Check your object selection.", "ERROR")
         return None
-    else:
-        child = obj
-        while child.parent and not isRoot(child):
-            child = child.parent
-        return child
-
+    child = obj
+    while child.parent and not isRoot(child):
+        child = child.parent
+    return child
 
 def getRoots():
     """Returns a list of all of the current scene's root objects.
