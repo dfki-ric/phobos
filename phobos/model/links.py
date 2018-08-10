@@ -177,26 +177,29 @@ def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False,
     return link
 
 
-def placeChildLinks(model, parent):
-    """Creates parent-child-relationship for a given parent and all existing children in Blender.
+def setLinkTransformations(model, parent):
+    """Assigns the transformations recursively for a model parent link according to the model.
+
+    This needs access to the *object* key of a link entry in the specified model.
+    The transformations for each link object are extracted from the specified model and applied to
+    the Blender object.
 
     Args:
-      parent(dict): parent link you want to set the children for.
-      model(dict):
-
-    Returns:
+      parent (dict): parent link you want to set the children for.
+      model (dict): model dictionary containing the *object* key for each link
 
     """
     bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])
-    for c in parent['children']:
-        child = model['links'][c]
+    for chi in parent['children']:
+        child = model['links'][chi]
+
         # apply transform as saved in model
         location = mathutils.Matrix.Translation(child['pose']['translation'])
         rotation = mathutils.Euler(tuple(child['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
-        log('Placing link {0}'.format(child['name']), 'DEBUG')
+
+        log("Transforming link {0}.".format(child['name']), 'DEBUG')
         transform_matrix = location * rotation
-        log("Joint transform: {0}".format(transform_matrix), 'DEBUG')
         child['object'].matrix_local = transform_matrix
 
         # traverse the tree
-        placeChildLinks(model, child)
+        setLinkTransformations(model, child)

@@ -1122,7 +1122,7 @@ def buildModelFromDictionary(model):
         if 'parent' not in model['links'][l]:
             root = model['links'][l]
             break
-    linkmodel.placeChildLinks(model, root)
+    linkmodel.setLinkTransformations(model, root)
 
     log("Assigning model name...", 'INFO')
     try:
