@@ -91,7 +91,7 @@ class GotoObjectOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return context.scene.objects
+        return context.scene.objects and context.mode == 'OBJECT'
 
     def execute(self, context):
         log("Jumping to object " + self.objectname + ".", 'DEBUG')
@@ -142,7 +142,7 @@ class SelectRootOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return len(bpy.context.selected_objects) > 0
+        return bpy.context.selected_objects and context.mode == 'OBJECT'
 
 
 class SelectModelOperator(Operator):
