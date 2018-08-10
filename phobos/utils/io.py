@@ -3,7 +3,7 @@
 
 import shutil
 import sys
-import os.path
+import os
 import bpy
 
 from phobos import defs
@@ -340,6 +340,35 @@ def exportModel(model, exportpath='.', entitytypes=None):
         exportpath = getExportPath()
     if not entitytypes:
         entitytypes = getEntityTypesForExport()
+
+    # TODO: Move texture export to individual formats? This is practically SMURF
+    # TODO: Also, this does not properly take care of textures embedded in a .blend file
+    # export textures
+    if getExpSettings().exportTextures:
+        path = os.path
+        for materialname in model['materials']:
+            mat = model['materials'][materialname]
+            for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
+                # skip materials without texture
+                if texturetype not in mat:
+                    continue
+
+                sourcepath = path.join(path.expanduser(bpy.path.abspath('//')), mat[texturetype])
+                if path.isfile(sourcepath):
+                    texture_path = securepath(path.join(exportpath, 'textures'))
+                    log("Exporting texture {} of material {} to {}.".format(
+                        texturetype, mat[texturetype], texture_path), 'INFO')
+                    try:
+                        shutil.copy(sourcepath, path.join(texture_path,
+                                                          path.basename(mat[texturetype])))
+                    except shutil.SameFileError:
+                        log("{} of material {} already in place.".format(texturetype, materialname),
+                            'WARNING')
+
+                    # update the texture path in the model
+                    mat[texturetype] = 'textures/' + path.basename(mat[texturetype])
+
+
     # export model in selected formats
     for entitytype in entitytypes:
         typename = "export_entity_" + entitytype
@@ -372,27 +401,6 @@ def exportModel(model, exportpath='.', entitytypes=None):
         except KeyError as e:
             log("Error exporting mesh {0} as {1}: {2}".format(meshname, meshtype, str(e)), "ERROR")
     display.setProgress(0)
-
-    # TODO: Move texture export to individual formats? This is practically SMURF
-    # TODO: Also, this does not properly take care of textures embedded in a .blend file
-    # export textures
-    if getExpSettings().exportTextures:
-        for materialname in model['materials']:
-            mat = model['materials'][materialname]
-            for texturetype in ['diffuseTexture', 'normalTexture',
-                                'displacementTexture']:
-                if texturetype in mat:
-                    sourcepath = os.path.join(os.path.expanduser(
-                        bpy.path.abspath('//')), mat[texturetype])
-                    if os.path.isfile(sourcepath):
-                        texture_path = securepath(
-                            os.path.join(exportpath, 'textures'))
-                        log("Exporting textures to " + texture_path, "INFO")
-                        try:
-                            shutil.copy(sourcepath, os.path.join(
-                                texture_path, os.path.basename(mat[texturetype])))
-                        except shutil.SameFileError:
-                            log("{} already in place".format(texturetype), "INFO")
 
 
 def exportScene(scenedict, exportpath='.', scenetypes=None, export_entity_models=False,
