@@ -145,9 +145,13 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0,
 
 
 def setObjectLayersActive(obj):
-    # DOCU add some docstring
-    for l in range(len(obj.layers)):
-        bpy.context.scene.layers[l] &= obj.layers[l]
+    """Sets all layers, the specified object is on to active.
+
+    Args:
+        obj (bpy.types.Object): object of which the layers shall be activated
+    """
+    for layer in range(len(obj.layers)):
+        bpy.context.scene.layers[layer] &= obj.layers[layer]
 
 
 def toggleLayer(index, value=None):
