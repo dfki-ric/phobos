@@ -162,67 +162,62 @@ class MoveToSceneOperator(Operator):
     def execute(self, context):
         moveobjs = context.selected_objects
         oldscene = context.scene
-        if self.new and self.scenename not in bpy.data.scenes:
-            bpy.data.scenes.new(name=self.scenename)
 
-            # copy all objects from active scene if new scene is created
-            if self.init:
-                for obj in oldscene.objects:
-                    if not (self.unlink and obj in moveobjs):
-                        # TODO what error could occur here?
-                        try:
-                            bpy.data.scenes[self.scenename].objects.link(obj)
-                        except RuntimeError as e:
-                            log(str(e), 'WARNING')
+        newscene = bUtils.switchToScene((self.scenename if self.new else self.scene))
+        # link all objects from active scene to new scene (initialize it)
+        if self.new and self.init:
+            for obj in oldscene.objects:
+                if obj.name not in newscene.objects:
+                    newscene.objects.link(obj)
+                    newscene.update()
 
         # in any case, make sure to move selected objects objects to scene
-        # Create dict for mapping if needed
-        obj_map = {}
         for obj in moveobjs:
-            if obj.name not in bpy.data.scenes[self.scenename].objects:
-                bpy.data.scenes[self.scenename].objects.link(obj)
-            # Unlink the objects and make an individual copy
-            if self.unlink:
-                bpy.context.screen.scene = bpy.data.scenes[self.scenename]
-                obj_copy = obj.copy()
-                obj_map.setdefault(obj, obj_copy)
-                obj_copy.name = '{}_'.format(self.configname) + obj.name
-                obj_copy.data = obj.data
-                bpy.data.scenes[self.scenename].objects.unlink(obj)
-                bpy.data.scenes[self.scenename].objects.link(obj_copy)
+            if obj.name not in newscene.objects:
+                newscene.objects.link(obj)
+        roots = sUtils.getRoots(scene=newscene)
+        # if no root is found, we have not moved any objects to the new scene
+        if not roots:
+            return {'CANCELLED'}
 
-        # Create the spanning tree
+        # make the objects single user in the new scene
         if self.unlink:
-            for obj, obj_copy in obj_map.items():
-                if obj.parent in obj_map.keys():
-                    sUtils.selectObjects((obj_map[obj.parent],obj_copy), True, active=0)
-                    bpy.ops.object.parent_set(type='BONE_RELATIVE')
-                for children in obj.children:
-                    if not children in obj_map.keys():
-                        sUtils.selectObjects((obj_map[obj],children), True, active=0)
-                        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            for obj in moveobjs:
+                name = nUtils.getObjectName(obj)
 
+                # add phobostype/name to make sure the object keeps its name as single user
+                if obj.phobostype + '/name' not in obj:
+                    obj[obj.phobostype + '/name'] = name
 
-        # remove objects from active scene
+                # make object single user
+                sUtils.selectObjects([obj], clear=True)
+                bpy.ops.object.make_single_user(type='SELECTED_OBJECTS', object=True,
+                                                obdata=self.obdata, material=self.material,
+                                                texture=self.texture)
+                newobj = bpy.context.selected_objects[0]
+
+                # prepend Blender name with scenename (phobostype/names are kept anyway)
+                newobj.name = newscene.name + '_' + name
+
+        # remove objects from active scene and restructure the kinematic tree
         if self.remove:
             for obj in moveobjs:
-                # TODO what errors could occur here?
-                # Maybe object has been moved and is not in the scene any more
-                try:
-                    oldscene.objects.unlink(obj)
-                except RuntimeError as e:
-                    log(str(e), 'WARNING')
-        bpy.context.screen.scene = bpy.data.scenes[self.scenename]
-        bpy.ops.object.select_all(action = 'SELECT')
-        bpy.ops.phobos.sort_objects_to_layers()
-        bpy.data.scenes[self.scenename].update()
+                oldscene.objects.unlink(obj)
 
-        log("{} {} object{}".format('Added', len(moveobjs),
-                                    's' if len(moveobjs) > 1 else '')
-            + " to {}{}export configuration '{}'.".format('new ' if self.new else '',
-                                                          'initialized ' if self.init else '',
-                                                          self.scenename), 'INFO')
-        log("    Objects: " + str([obj.name for obj in moveobjs]), 'DEBUG')
+            for obj in roots:
+                sUtils.selectObjects([obj], clear=True, active=0)
+                bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+                log("Cleared parent for new object root {}".format(obj.name), 'INFO')
+
+        newscene.layers = bUtils.defLayers(list(range(20)))
+        sUtils.selectObjects(newscene.objects, clear=True)
+        bpy.ops.phobos.sort_objects_to_layers()
+        newscene.update()
+
+        log("{} {} object{} to {}{}export configuration '{}'.".format(
+            'Added', len(moveobjs), 's' if len(moveobjs) > 1 else '', 'new ' if self.new else '',
+            'initialized ' if self.init else '', self.scenename), 'INFO')
+        log("  Objects: " + str([obj.name for obj in moveobjs]), 'DEBUG')
         return {'FINISHED'}
 
     @classmethod
