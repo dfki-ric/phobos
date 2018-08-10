@@ -602,3 +602,19 @@ def removeProperties(obj, props, recursive=False):
     if recursive:
         for child in obj.children:
             removeProperties(child, props, recursive=recursive)
+
+def sortObjectsToLayers(objs):
+    """Sorts the specified objects to the layers which match their phobostype.
+
+    The layer for each phobostype is defined according to `phobos.defs.layerTypes`.
+
+    Args:
+        objs (list(bpy.types.Object)): objects to move to their respective layer
+    """
+    for obj in objs:
+        if obj.phobostype != 'undefined':
+            layers = 20 * [False]
+            layers[defs.layerTypes[obj.phobostype]] = True
+            obj.layers = layers
+        else:
+            log("The phobostype of object {} is undefined.".format(obj.name), 'ERROR')

@@ -232,13 +232,7 @@ class SortObjectsToLayersOperator(Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
-        for obj in context.selected_objects:
-            if obj.phobostype != 'undefined':
-                layers = 20 * [False]
-                layers[defs.layerTypes[obj.phobostype]] = True
-                obj.layers = layers
-            else:
-                log("The phobostype of object '" + obj.name + "' is" + "undefined", "ERROR")
+        eUtils.sortObjectsToLayers(context.selected_objects)
         return {'FINISHED'}
 
     @classmethod
