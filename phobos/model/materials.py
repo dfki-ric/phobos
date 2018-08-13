@@ -80,14 +80,14 @@ def createPhobosMaterials():
 
 
 def assignMaterial(obj, materialname):
-    """Assigns a material to an object, avoiding creating multiple copies.
+    """Assigns a material by name to an object.
+
+    This avoids creating multiple copies and also omits duplicate material slots in the specified
+    object.
 
     Args:
-      obj(bpy.types.Object): The object to assign the material to.
-      materialname(str): The materials name.
-
-    Returns:
-
+        obj (bpy.types.Object): The object to assign the material to.
+        materialname (str): name of the material
     """
     if materialname not in bpy.data.materials:
         if materialname in defs.definitions['materials']:
@@ -95,6 +95,10 @@ def assignMaterial(obj, materialname):
         else:
             log("Material '" + materialname + "' is not defined.", "ERROR")
             return None
-    obj.data.materials.append(bpy.data.materials[materialname])
-    if bpy.data.materials[materialname].use_transparency:
+
+    # add material slot never twice
+    if materialname not in obj.data.materials:
+        obj.data.materials.append(bpy.data.materials[materialname])
+
+    if obj.data.materials[materialname].use_transparency:
         obj.show_transparent = True
