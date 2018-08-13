@@ -183,7 +183,8 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
     if not objectlist:
         objectlist = list(bpy.context.scene.objects)
 
-    log("Deriving link from object " + linkobj.name + ".", 'DEBUG')
+    if logging:
+        log("Deriving link from object " + linkobj.name + ".", 'DEBUG')
     props = initObjectProperties(linkobj, phobostype='link',
                                  ignoretypes=linkobjignoretypes - {'link'})
     parent = sUtils.getEffectiveParent(linkobj, objectlist)
@@ -202,8 +203,9 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
                                                                    'approxsphere']]:
         effectiveparent = sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist))
         if effectiveparent == linkobj:
-            log("  Adding " + obj.phobostype + " '" + nUtils.getObjectName(obj) + "' to link.",
-                'DEBUG')
+            if logging:
+                log("  Adding " + obj.phobostype + " '" + nUtils.getObjectName(obj) + "' to link.",
+                    'DEBUG')
             if obj.phobostype == 'approxsphere':
                 props['approxcollision'].append(deriveDictEntry(obj))
             else:
@@ -216,7 +218,8 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
     mass, com, inertia = inertiamodel.fuse_inertia_data(inertials)
 
     if not any([mass, com, inertia]):
-        log("No inertia information for link object " + linkobj.name + ".", 'DEBUG')
+        if logging:
+            log("No inertia information for link object " + linkobj.name + ".", 'DEBUG')
     else:
         # add inertia to link
         inertia = inertiamodel.inertiaMatrixToList(inertia)
