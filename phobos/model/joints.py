@@ -97,12 +97,15 @@ def createJoint(joint, linkobj=None):
             if param in joint['limits']:
                 linkobj['joint/max' + param] = joint['limits'][param]
             else:
-                log("Joint limits incomplete for joint {0}. Missing {}.".format(joint['name'],
+                log("Joint limits incomplete for joint {}. Missing {}.".format(joint['name'],
                                                                                 param), 'ERROR')
 
         if all(elem in joint['limits'] for elem in ['lower', 'upper']):
             lower = joint['limits']['lower']
             upper = joint['limits']['upper']
+        else:
+            lower = 0.0
+            upper = 0.0
     else:
         lower = 0.0
         upper = 0.0
