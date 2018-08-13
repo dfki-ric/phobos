@@ -1124,7 +1124,7 @@ def buildModelFromDictionary(model):
     log("Creating joints... ({} total)".format(len(model['joints'])), 'INFO', prefix='\n')
     for j in model['joints']:
         joint = model['joints'][j]
-        jointmodel.createJoint(joint)
+        jointmodel.createJoint(joint, links=model['links'])
 
     log("Assigning model name: {}".format(model['name']), 'INFO')
     rootlink = sUtils.getRoot(bpy.data.objects[root['object'].name])

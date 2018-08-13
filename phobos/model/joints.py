@@ -40,11 +40,14 @@ import phobos.utils.io as ioUtils
 from phobos.utils.validation import validate
 
 
-def createJoint(joint, linkobj=None):
+def createJoint(joint, linkobj=None, links=None):
     """Adds joint data to a link object.
 
-    If the linkobj is not specified, it is derived from the *child* entry in the joint. This only
-    works if the *child* is a single item, not a list.
+    If the linkobj is not specified, it is derived from the *child* entry in the joint (object is
+    searched in the current scene). This only works if the search for the child yields a single
+    object. Alternatively, it is possible to provide the model dictionary of links. In this case,
+    the link object is searched in the dictionary (make sure the *object* keys of the dictionary are
+    set properly).
 
     These entries are mandatory for the dictionary:
         *name*: name of the joint
@@ -64,13 +67,20 @@ def createJoint(joint, linkobj=None):
     Args:
         joint (dict): dictionary containing the joint definition
         linkobj (bpy.types.Object): the link object to receive the joint
+        links (dict): dictionary containing the list objects with their *object* keys set
     """
     # try deriving link object from joint['child']
     if not linkobj:
-        linkobj = sUtils.getObjectByName(joint['child'])
-        if isinstance(linkobj, list):
-            log("Could not identify object to define joint '{0}'.".format(joint['name']), 'ERROR')
-            return
+        # link dictionary provided -> search for child link object
+        if (links and 'child' in joint and joint['child'] in links and
+                'object' in links[joint['child']]):
+            linkobj = links[joint['child']]['object']
+        # search for child link in scene
+        else:
+            linkobj = sUtils.getObjectByName(joint['child'])
+            if isinstance(linkobj, list):
+                log("Could not identify object to define joint '{0}'.".format(joint['name']), 'ERROR')
+                return
 
     # make sure the proper joint name is kept
     if joint['name'] != linkobj.name:
