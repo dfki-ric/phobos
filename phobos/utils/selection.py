@@ -149,7 +149,7 @@ def getRoots(scene=None):
     else:
         rootnames = ', '.join((root.name for root in roots))
         log("Found {} root object{} in scene {}: {}".format(
-            len(roots), 's' if len(roots) > 1 else '', scene,  rootnames), 'DEBUG')
+            len(roots), 's' if len(roots) > 1 else '', scene, rootnames), 'DEBUG')
     return roots
 
 
