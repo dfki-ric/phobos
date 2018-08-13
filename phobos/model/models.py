@@ -291,7 +291,8 @@ def get_link_information(linkobj):
     sensordict = {}
     for sensorobj in sensorobjects:
         sensordict[sensorobj.name] = sensorobj
-    props["sensor"] = sensordict
+    if sensordict:
+        props["sensor"] = sensordict
 
     props['approxcollision'] = []
     return props
