@@ -398,11 +398,17 @@ def deriveInertial(obj):
 def deriveVisual(obj, logging=True, **kwargs):
     """This function derives the visual information from an object.
 
+    Contains these keys:
+        *name*: name of the visual
+        *geometry*: derived according to `deriveGeometry`
+        *pose*: derived according to `deriveObjectPose`
+        *lod*: (opt.) level of detail levels
+
     Args:
-      obj(bpy_types.Object): The blender object to derive the visuals from.
+        obj(bpy.types.Object): object to derive the visual representation from
 
     Returns:
-      dict
+        dict -- model representation of the visual object
     """
     visual = initObjectProperties(
         obj, phobostype='visual', ignoretypes='geometry')
