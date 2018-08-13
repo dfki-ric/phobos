@@ -131,7 +131,8 @@ class SelectRootOperator(Operator):
         # select all found root objects
         if roots:
             # toggle layer to make objects visible
-            bUtils.setObjectLayersActive(context.scene.objects[self.objectname], extendlayers=True)
+            for root in roots:
+                bUtils.setObjectLayersActive(root, extendlayers=True)
 
             # select objects
             sUtils.selectObjects(list(roots), True)
