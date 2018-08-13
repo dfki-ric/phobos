@@ -165,11 +165,6 @@ def updateDefs(defsFolderPath):
                 categs = set(def_settings[definition][entry]['categories'])
                 def_subcategories[definition] = def_subcategories[definition].union(categs)
 
-    # TODO remove print
-    print(yaml.dump(definitions))
-    print(yaml.dump(def_settings))
-    print(yaml.dump(def_subcategories))
-
 
 def __evaluateString(s):
     """Evaluates a string by searching for mathematical expressions enclosed
