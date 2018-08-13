@@ -175,10 +175,6 @@ class MoveToSceneOperator(Operator):
         for obj in moveobjs:
             if obj.name not in newscene.objects:
                 newscene.objects.link(obj)
-        roots = sUtils.getRoots(scene=newscene)
-        # if no root is found, we have not moved any objects to the new scene
-        if not roots:
-            return {'CANCELLED'}
 
         # make the objects single user in the new scene
         if self.unlink:
@@ -203,6 +199,8 @@ class MoveToSceneOperator(Operator):
         if self.remove:
             for obj in moveobjs:
                 oldscene.objects.unlink(obj)
+
+            roots = sUtils.getRoots(scene=newscene)
 
             for obj in roots:
                 sUtils.selectObjects([obj], clear=True, active=0)
