@@ -63,12 +63,37 @@ def deriveGeometry(obj, adjust=False, **kwargs):
 
     elif gtype == 'mesh':
         geometry['filename'] = obj.data.name
-        geometry['scale'] = list(obj.scale)
+        geometry['scale'] = deriveScale(obj)
         # FIXME: is this needed to calculate an approximate inertia
         geometry['size'] = list(obj.dimensions)
 
     return geometry
 
+
+def deriveScale(obj):
+    """Gathers the product of the scale of all parent objects for the specified objects.
+
+    This is required to keep the objects correct scale even if the scale is not applied.
+
+    Scaling links or other parent objects also changes the scale of the specified object. By
+    combining the scales of the parents, this is taken into account.
+
+    Args:
+        obj (bpy.types.Object): object to derive the scale of
+
+    Returns:
+        list(float) -- three scale floats (x, y, z) combined from all parents and the object itself
+    """
+    scale = list(obj.scale)
+
+    parent = obj.parent
+    while parent:
+        scale[0] *= parent.scale.x
+        scale[1] *= parent.scale.y
+        scale[2] *= parent.scale.z
+        parent = parent.parent
+
+    return list(scale)
 
 def createGeometry(viscol, geomsrc, linkobj=None):
     """Creates Blender object for visual or collision objects.

@@ -686,7 +686,7 @@ def parseLink(link, urdffilepath):
                 elementdict['geometry']['filename'] = filepath
 
                 # read scale
-                if 'scale' in geometry[0].attrib['scale']:
+                if 'scale' in geometry[0].attrib:
                     elementdict['geometry']['scale'] = gUtils.parse_text(
                         geometry[0].attrib['scale'])
                 else:
