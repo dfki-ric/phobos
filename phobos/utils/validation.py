@@ -589,6 +589,12 @@ def validateInertiaData(obj, *args, adjust=False):
     return errors, obj
 
 
+def validateVisual(obj, *args, adjust=False, geometry_dict=None):
+    errors = []
+
+    return errors
+
+
 def validate(name):
     def validation(function):
         def validation_wrapper(obj, *args, logging=False, **kwargs):
@@ -606,6 +612,8 @@ def validate(name):
                 errors = validateGeometryType(obj, *args, **kwargs)
             elif name == 'inertia_data':
                 errors, obj = validateInertiaData(obj, *args, **kwargs)
+            elif name == 'visual':
+                errors = validateVisual(obj, *args, **kwargs)
             else:
                 log("This validation type is not defined! '{}'". format(name), 'ERROR')
                 errors = []

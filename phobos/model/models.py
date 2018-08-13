@@ -394,7 +394,8 @@ def deriveInertial(obj):
     return props
 
 
-def deriveVisual(obj):
+@validate('visual')
+def deriveVisual(obj, logging=True, **kwargs):
     """This function derives the visual information from an object.
 
     Args:
@@ -402,35 +403,29 @@ def deriveVisual(obj):
 
     Returns:
       dict
-
     """
-    try:
-        visual = initObjectProperties(
-            obj, phobostype='visual', ignoretypes='geometry')
-        visual['geometry'] = deriveGeometry(obj)
-        visual['pose'] = deriveObjectPose(obj)
+    visual = initObjectProperties(
+        obj, phobostype='visual', ignoretypes='geometry')
+    visual['geometry'] = deriveGeometry(obj, logging=logging)
+    visual['pose'] = deriveObjectPose(obj, logging=logging)
 
-        # check for material of the visual
-        material = deriveMaterial(obj.active_material, logging=True)
-        if material:
-            visual['material'] = material['name']
+    # check for material of the visual
+    material = deriveMaterial(obj.active_material, logging=logging)
+    if material:
+        visual['material'] = material['name']
 
-        if obj.lod_levels:
-            if 'lodmaxdistances' in obj:
-                maxdlist = obj['lodmaxdistances']
-            else:
-                maxdlist = [obj.lod_levels[
-                    i + 1].distance for i in range(len(obj.lod_levels) - 1)] + [100.0]
-            lodlist = []
-            for i in range(len(obj.lod_levels)):
-                filename = obj.lod_levels[
-                    i].object.data.name + ioUtils.getOutputMeshtype()
-                lodlist.append({'start': obj.lod_levels[i].distance, 'end': maxdlist[
-                               i], 'filename': os.path.join('meshes', filename)})
-            visual['lod'] = lodlist
-    except KeyError:
-        log("Missing data in visual object " + obj.name, "ERROR")
-        return None
+    if obj.lod_levels:
+        if 'lodmaxdistances' in obj:
+            maxdlist = obj['lodmaxdistances']
+        else:
+            maxdlist = [obj.lod_levels[
+                i + 1].distance for i in range(len(obj.lod_levels) - 1)] + [100.0]
+        lodlist = []
+        for i in range(len(obj.lod_levels)):
+            filename = obj.lod_levels[i].object.data.name + ioUtils.getOutputMeshtype()
+            lodlist.append({'start': obj.lod_levels[i].distance, 'end': maxdlist[i],
+                            'filename': os.path.join('meshes', filename)})
+        visual['lod'] = lodlist
     return visual
 
 
