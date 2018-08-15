@@ -227,7 +227,7 @@ def frame(framedata, indentation, relative):
     return "".join(tagger.get_output())
 
 
-def inertial(inertialobj, inertialdata, indentation):
+def inertial(inertialdata, indentation):
     """ Simple wrapper for link inertial data.
     The inertial object is required to determine the position (pose) of the
     object.
@@ -252,9 +252,6 @@ def inertial(inertialobj, inertialdata, indentation):
     tagger.descend('inertial')
     if 'mass' in inertialdata:
         tagger.attrib('mass', inertialdata['mass'])
-    else:
-        log("Object '{0}' without mass!".format(
-            inertialobj.name), "WARNING", "exportSdf")
     if 'inertia' in inertialdata:
         inertia = inertialdata['inertia']
         tagger.descend('inertia')
@@ -265,15 +262,8 @@ def inertial(inertialobj, inertialdata, indentation):
         tagger.attrib('iyz', inertia[4])
         tagger.attrib('izz', inertia[5])
         tagger.ascend()
-    else:
-        log("Object '{0}' without inertia!".format(inertialobj.name),
-            "WARNING", "exportSdf")
     if 'pose' in inertialdata:
-        # CHECK the inertialpose has to be relative to link
         tagger.write(pose(inertialdata['pose'], tagger.get_indent()))
-    else:
-        log("Object '{0}' has no inertial pose!".format(inertialobj.name),
-            "WARNING", "exportsdf")
     tagger.ascend()
     return "".join(tagger.get_output())
 
@@ -709,15 +699,10 @@ def exportSdf(model, filepath):
             # TODO Optional. Add if clause
             xml.write(pose(link['pose'], xml.get_indent(), poseobject=linkobj))
             # inertial data might be missing
-            if len(link['inertial']) > 0:
-                inertialname = link['inertial']['name']
-                inertialobj = bpy.context.scene.objects[inertialname]
-                xml.write(inertial(inertialobj, link['inertial'],
-                                   xml.get_indent()))
+            if link['inertial']:
+                xml.write(inertial(link['inertial'], xml.get_indent()))
             else:
-                log('No inertial data for "{0}"...'.format(link['name'],
-                                                           "WARNING",
-                                                           "exportSdf"))
+                log('No inertial data for "{0}"...'.format(link['name']), "WARNING", "exportSdf")
 
             # collision data might be missing
             if len(link['collision'].keys()) > 0:
