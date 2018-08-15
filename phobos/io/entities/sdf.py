@@ -995,6 +995,26 @@ def parseSDFGeometry(geometry, link, sdfpath):
     return geometrydict
 
 
+def parseSDFMaterial(visualname, material, link):
+    materialdict = {}
+
+    # sdf has no material names, so we initialize with visual name
+    materialdict['name'] = 'mat_' + visualname
+
+    # TODO add support
+    # materialdict['sdf/script']
+    # materialdict['sdf/shader']
+    # materialdict['sdf/lighting']
+
+    # gather material colors
+    for color in ['ambient', 'diffuse', 'specular', 'emissive']:
+        if color in material.attrib:
+            materialdict[color] = gUtils.parse_text(material.attrib[color])
+        else:
+            log("     Color not defined: {}.".format(color), 'DEBUG')
+    return materialdict
+
+
 
 # registering export functions of types with Phobos
 entity_type_dict = {'sdf': {
