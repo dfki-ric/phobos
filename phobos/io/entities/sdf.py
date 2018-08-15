@@ -171,7 +171,7 @@ def getIndentedETString(elementtree):
     """
     return minidom.parseString(ET.tostring(elementtree)).toprettyxml(indent=phobosindentation)
 
-def pose(relativepose, indentation, poseobject=None):
+def exportSDFPose(relativepose, indentation, poseobject=None):
     """ Simple wrapper for pose data.
     If relative poses are used the data found in posedata is used.
     Otherwise the pose of the poseobject will be combined with all collected
@@ -208,7 +208,7 @@ def pose(relativepose, indentation, poseobject=None):
     return "".join(tagger.get_output())
 
 
-def frame(framedata, indentation, relative):
+def exportSDFFrame(framedata, indentation, relative):
     """ Simple wrapper for frame data.
     The name of the frameobject (has to be a key in framedata) is used to
     define the object pose.
@@ -222,13 +222,13 @@ def frame(framedata, indentation, relative):
     tagger = xmlTagger(initial=indentation)
     tagger.descend('frame', {'name': framedata['name']})
     # relative frame pose is not supported yet
-    # tagger.write(pose(framedata['pose'], tagger.get_indent(),
+    # tagger.write(exportSDFPose(framedata['pose'], tagger.get_indent(),
     # relative))
     tagger.ascend()
     return "".join(tagger.get_output())
 
 
-def inertial(inertialdata, indentation):
+def exportSDFInertial(inertialdata, indentation):
     """ Simple wrapper for link inertial data.
     The inertial object is required to determine the position (pose) of the
     object.
@@ -264,12 +264,12 @@ def inertial(inertialdata, indentation):
         tagger.attrib('izz', inertia[5])
         tagger.ascend()
     if 'pose' in inertialdata:
-        tagger.write(pose(inertialdata['pose'], tagger.get_indent()))
+        tagger.write(exportSDFPose(inertialdata['pose'], tagger.get_indent()))
     tagger.ascend()
     return "".join(tagger.get_output())
 
 
-def collision(collisionobj, collisiondata, indentation, modelname):
+def exportSDFCollision(collisionobj, collisiondata, indentation, modelname):
     """ Simple wrapper for link collision data.
     The collision object is required to determine the position (pose) of the
     object.
@@ -296,9 +296,8 @@ def collision(collisionobj, collisiondata, indentation, modelname):
     # OPT: tagger.attrib('max_contacts', ...)
     # OPT: tagger.attrib('frame', ...)
     # Write collisionposition always relative to link!
-    tagger.write(pose(collisiondata['pose'], tagger.get_indent()))
-    tagger.write(geometry(collisiondata['geometry'], tagger.get_indent(),
-                          modelname))
+    tagger.write(exportSDFPose(collisiondata['pose'], tagger.get_indent()))
+    tagger.write(exportSDFGeometry(collisiondata['geometry'], tagger.get_indent(), modelname))
     # # SURFACE PARAMETERS
     if 'bitmask' in collisiondata:
         tagger.descend('surface')
@@ -372,7 +371,7 @@ def collision(collisionobj, collisiondata, indentation, modelname):
     return "".join(tagger.get_output())
 
 
-def geometry(geometrydata, indentation, modelname):
+def exportSDFGeometry(geometrydata, indentation, modelname):
     """ Simple wrapper for geometry data of link collisions.
 
     :param geometrydata: data as provided by dictionary
@@ -463,7 +462,7 @@ def geometry(geometrydata, indentation, modelname):
     return "".join(tagger.get_output())
 
 
-def visual(visualobj, linkobj, visualdata, indentation, modelname):
+def exportSDFVisual(visualobj, linkobj, visualdata, indentation, modelname):
     """ Simple wrapper for visual data of links.
     The visual object is required to determine the position (pose) of the
     object.
@@ -490,7 +489,7 @@ def visual(visualobj, linkobj, visualdata, indentation, modelname):
     # OPT: tagger.descend('meta')
     # OPT: tagger.attrib('layer', ...)
     # tagger.ascend()
-    # OPT: tagger.write(frame(..., tagger.get_indent()))
+    # OPT: tagger.write(exportSDFFrame(..., tagger.get_indent()))
 
     # Pose data of the visual is transformed by link --> use local matrix
     matrix = visualobj.matrix_local
@@ -500,19 +499,19 @@ def visual(visualobj, linkobj, visualdata, indentation, modelname):
                 'rotation_euler': list(matrix.to_euler()),
                 'rotation_quaternion': list(matrix.to_quaternion())}
     # overwrite absolute position of the visual object
-    tagger.write(pose(posedata, tagger.get_indent()))
+    tagger.write(exportSDFPose(posedata, tagger.get_indent()))
 
     # write material data if available
     if 'material' in visualdata:
-        tagger.write(material(visualdata['material'], tagger.get_indent()))
+        tagger.write(exportSDFMaterial(visualdata['material'], tagger.get_indent()))
 
-    tagger.write(geometry(visualdata['geometry'], tagger.get_indent(),
+    tagger.write(exportSDFGeometry(visualdata['geometry'], tagger.get_indent(),
                           modelname))
     tagger.ascend()
     return "".join(tagger.get_output())
 
 
-def material(materialdata, indentation):
+def exportSDFMaterial(materialdata, indentation):
     """ Simple wrapper for material data of visual objects.
     The materialdata is the model dictionary of the specific material.
 
@@ -556,7 +555,7 @@ def material(materialdata, indentation):
     return "".join(tagger.get_output())
 
 
-def modelConf(model):
+def exportGazeboModelConf(model):
     """Creates a model.config element from the specified information.
 
     :param model: the model dictionary of the phobos model
@@ -587,7 +586,7 @@ def modelConf(model):
     return modelconf
 
 
-def exportSdf(model, filepath):
+def exportSDF(model, filepath):
     """ Export function used for the entity.
     This exports a model SDF file as well as its model.conf to the specified filepath.
     """
@@ -596,7 +595,7 @@ def exportSdf(model, filepath):
     modelconffile = os.path.join(filepath, 'model.config')
     errors = False
 
-    modelconf = modelConf(model)
+    modelconf = exportGazeboModelConf(model)
 
     # TODO add version to model dictionary!
     # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains',
@@ -696,12 +695,12 @@ def exportSdf(model, filepath):
             # OPT: xml.attrib('linear', ...)
             # OPT: xml.attrib('angular', ...)
             # xml.ascend()
-            # OPT: xml.write(frame(model['frame']), xml.get_indent())
+            # OPT: xml.write(exportSDFFrame(model['frame']), xml.get_indent())
             # TODO Optional. Add if clause
-            xml.write(pose(link['pose'], xml.get_indent(), poseobject=linkobj))
+            xml.write(exportSDFPose(link['pose'], xml.get_indent(), poseobject=linkobj))
             # inertial data might be missing
             if link['inertial']:
-                xml.write(inertial(link['inertial'], xml.get_indent()))
+                xml.write(exportSDFInertial(link['inertial'], xml.get_indent()))
             else:
                 log('No inertial data for "{0}"...'.format(link['name']), "WARNING", "exportSdf")
 
@@ -710,7 +709,7 @@ def exportSdf(model, filepath):
                 for colkey in link['collision'].keys():
                     colliname = link['collision'][colkey]['name']
                     collisionobj = bpy.context.scene.objects[colliname]
-                    xml.write(collision(collisionobj,
+                    xml.write(exportSDFCollision(collisionobj,
                                         link['collision'][colkey],
                                         xml.get_indent(), modelname))
             else:
@@ -728,7 +727,7 @@ def exportSdf(model, filepath):
                     if 'material' in visualdata:
                         material = model['materials'][visualdata['material']]
                         visualdata['material'] = material
-                    xml.write(visual(visualobj, linkobj, visualdata,
+                    xml.write(exportSDFVisual(visualobj, linkobj, visualdata,
                                      xml.get_indent(), modelname))
             else:
                 log('No visual data for "{0}"...'.format(link['name'],
@@ -741,8 +740,8 @@ def exportSdf(model, filepath):
             # OPT: xml.attrib('fov', ...)
             # OPT: xml.attrib('near_clip', ...)
             # OPT: xml.attrib('far_clip', ...)
-            # OPT: xml.write(frame('...', xml.get_indent()))
-            # OPT: xml.write(pose('...', xml.get_indent()))
+            # OPT: xml.write(exportSDFFrame('...', xml.get_indent()))
+            # OPT: xml.write(exportSDFPose('...', xml.get_indent()))
             # OPT: xml.descend('plugin', {'name': ..., 'filename': ...})
             # TODO Add plugin element?
             # xml.ascend()
@@ -756,8 +755,8 @@ def exportSdf(model, filepath):
             # REQ: xml.attrib('collision', ...)
             # xml.ascend()
             # OPT: xml.attrib('loop', ...)
-            # OPT: xml.write(frame('...', xml.get_indent()))
-            # OPT: xml.write(pose('...', xml.get_indent()))
+            # OPT: xml.write(exportSDFFrame('...', xml.get_indent()))
+            # OPT: xml.write(exportSDFPose('...', xml.get_indent()))
             # xml.ascend()
             # OPT: xml.descend('battery', {'name': ...})
             # REQ: xml.attrib('voltage', ...)
@@ -874,9 +873,9 @@ def exportSdf(model, filepath):
                 # OPT: xml.attrib('provide_feedback', ...)
                 # xml.ascend()
             # if 'frame' in joint.keys():
-                # OPT: xml.write(frame(joint['frame']))
+                # OPT: xml.write(exportSDFFrame(joint['frame']))
             # if 'pose' in joint.keys():
-                # OPT: xml.write(pose(...))
+                # OPT: xml.write(exportSDFPose(...))
                 # xml.ascend()
             # if 'sensor' in joint.keys():
                 # OPT: xml.write(sensor('sensor'))
@@ -1018,6 +1017,6 @@ def parseSDFMaterial(visualname, material, link):
 
 # registering export functions of types with Phobos
 entity_type_dict = {'sdf': {
-    'export': exportSdf,
-    'import': importSdf,
+    'export': exportSDF,
+    'import': importSDF,
     'extensions': ('sdf', 'xml')}}
