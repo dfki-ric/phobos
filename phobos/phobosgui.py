@@ -84,6 +84,14 @@ class PhobosPrefs(AddonPreferences):
         default=''
     )
 
+    # gazebo model folder
+    gazebomodelfolder = StringProperty(
+        name="Gazebo Model Folder",
+        subtype="DIR_PATH",
+        description="Path to the Gazebo model folder.",
+        default=''
+    )
+
     exportpluginsfolder = StringProperty(
         name='exportpluginsfolder',
         subtype='DIR_PATH',
@@ -138,6 +146,7 @@ class PhobosPrefs(AddonPreferences):
         box.label(text="Folders")
         box.prop(self, "modelsfolder", text="models folder")
         box.prop(self, "configfolder", text="config folder")
+        box.prop(self, "gazebomodelfolder", text="Gazebo model folder")
         layout.separator()
 
         box = layout.box()
