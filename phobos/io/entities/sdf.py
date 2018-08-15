@@ -940,16 +940,22 @@ def parseSDFInertial(link):
     inertial_data = link.find('inertial')
     # Element.find() yields None, not []
     if inertial_data is not None:
-        log("   Parsing inertial for link {}".format(link.attrib['name']), 'DEBUG')
+        log("   Parsing inertial.", 'DEBUG')
         inertial_dict['pose'] = parseSDFPose(inertial_data.find('pose'))
         mass = inertial_data.find('mass')
         if mass is not None:
-            inertial_dict['mass'] = float(mass.attrib['value'])
+            inertial_dict['mass'] = float(mass.text)
         inertia = inertial_data.find('inertia')
+
+        # collect inertia matrix from sorted subelements (ixx, ixy, ixz, ...)
         if inertia is not None:
-            inertial_dict['inertia'] = [float(
-                inertia.attrib[a]) for a in sorted(inertia.attrib.keys())]
+            inertial_dict['inertia'] = [float(elem.text) for elem in sorted(
+                list(inertia), key=lambda el: el.tag)]
         inertial_dict['name'] = 'inertial_' + link.attrib['name']
+
+        # TODO delete me
+        import yaml
+        print(yaml.dump(inertial_dict))
         return inertial_dict
 
         # TODO add frame support
@@ -1046,6 +1052,7 @@ def parseSDFLink(link, filepath):
                 i += 1
             else:
                 name = elem.attrib['name']
+            log("     {} element {}:".format(objtype[0].upper() + objtype[1:], name), 'DEBUG')
 
             elemdict = {'name': name}
             if objtype == 'collision':
