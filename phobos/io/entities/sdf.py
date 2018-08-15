@@ -936,6 +936,29 @@ def parseSDFPose(pose):
     return pose
 
 
+def parseSDFInertial(link):
+    inertial_dict = {}
+    inertial_data = link.find('inertial')
+    # Element.find() yields None, not []
+    if inertial_data is not None:
+        log("   Parsing inertial for link {}".format(link.attrib['name']), 'DEBUG')
+        inertial_dict['pose'] = parseSDFPose(inertial_data.find('pose'))
+        mass = inertial_data.find('mass')
+        if mass is not None:
+            inertial_dict['mass'] = float(mass.attrib['value'])
+        inertia = inertial_data.find('inertia')
+        if inertia is not None:
+            inertial_dict['inertia'] = [float(
+                inertia.attrib[a]) for a in sorted(inertia.attrib.keys())]
+        inertial_dict['name'] = 'inertial_' + link.attrib['name']
+        return inertial_dict
+
+        # TODO add frame support
+    else:
+        log("   No inertial defined for link {}.".format(link.attrib['name']), 'DEBUG')
+        return None
+
+
 
 # registering export functions of types with Phobos
 entity_type_dict = {'sdf': {
