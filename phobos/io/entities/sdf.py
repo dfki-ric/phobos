@@ -1000,7 +1000,7 @@ def parseSDFGeometry(geometry, link, sdfpath):
     return geometrydict
 
 
-def parseSDFMaterial(visualname, material, link):
+def parseSDFMaterial(visualname, material):
     materialdict = {}
 
     # sdf has no material names, so we initialize with visual name
@@ -1013,10 +1013,14 @@ def parseSDFMaterial(visualname, material, link):
 
     # gather material colors
     for color in ['ambient', 'diffuse', 'specular', 'emissive']:
-        if color in material.attrib:
-            materialdict[color] = gUtils.parse_text(material.attrib[color])
+        if material.find(color) is not None:
+            materialdict[color] = gUtils.parse_text(material.find(color).text)
         else:
-            log("     Color not defined: {}.".format(color), 'DEBUG')
+            log("       Color not defined: {}.".format(color), 'DEBUG')
+
+    # TODO remove me
+    import yaml
+    print(yaml.dump(materialdict))
     return materialdict
 
 
@@ -1040,6 +1044,7 @@ def parseSDFLink(link, filepath):
     if inertial:
         newlink['inertial'] = inertial
 
+    materials = {}
     for objtype in ['visual', 'collision']:
         log("   Parsing {} elements...".format(objtype), 'DEBUG')
         objectsdict = {}
@@ -1073,12 +1078,17 @@ def parseSDFLink(link, filepath):
                 # elemdict['sdf/frame']
                 elemdict['pose'] = parseSDFPose(elem.find('pose'))
                 # geometry is parsed below
+
+                # undefined materials will be set to phobos_error
                 if elem.find('material') is None:
-                    log(("   No material defined for {} {} in link {}! Defaulting " +
+                    log(("       No material defined for {} {} in link {}! Defaulting " +
                          "to error material.").format(objtype, name, newlink['name']), 'ERROR')
-                    elemdict['material'] = {'name': 'phobos_error'}
+                    elemdict['material'] = 'phobos_error'
+                # defined materials are collected in dictionary and linked with name
                 else:
-                    elemdict['material'] = parseSDFMaterial(name, elem.find('material'))
+                    newmat = parseSDFMaterial(name, elem.find('material'))
+                    elemdict['material'] = newmat['name']
+                    materials[newmat['name']] = newmat
                 # TODO implement support for this
                 # elemdict['sdf/plugin']
 
@@ -1096,7 +1106,7 @@ def parseSDFLink(link, filepath):
 
     if newlink == {}:
         log("Link information for " + newlink['name'] + " is empty.", 'WARNING')
-    return newlink
+    return newlink, materials
 
 
 
