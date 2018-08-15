@@ -1014,6 +1014,84 @@ def parseSDFMaterial(visualname, material, link):
     return materialdict
 
 
+def parseSDFLink(link, filepath):
+    # collect all parameters which can be parsed as generic sdf annotations
+    genericparams = [attrib for attrib in link.attrib
+                     if attrib not in ['velocity_decay', 'frame', 'pose', 'inertial', 'collision',
+                                       'visual', 'sensor', 'projector', 'audio_source', 'battery']]
+    newlink = {'$sdf/' + a: link.attrib[a] for a in genericparams}
+
+    newlink['children'] = []
+
+    # TODO add support for other parameters
+    # velocity_decay
+    # frame
+
+    newlink['pose'] = parseSDFPose(link.find['pose'])
+
+    # parse inertial
+    inertial = parseSDFInertial(link)
+    if inertial:
+        newlink['inertial'] = inertial
+
+    for objtype in ['visual', 'collision']:
+        log("   Parsing {} elements...".format(objtype), 'DEBUG')
+        objectsdict = {}
+        i = 1
+        for elem in link.iter(objtype):
+            if 'name' not in elem.attrib:
+                name = '{0}_{1:01d}_{2}'.format(objtype, i, newlink['name'])
+                log("   No name for {} object! Assigning {} instead.".format(objtype, name),
+                    'WARNING')
+                i += 1
+            else:
+                name = elem.attrib['name']
+
+            elemdict = {'name': name}
+            if objtype == 'collision':
+                # TODO implement support for this
+                # elemdict['sdf/laser_retro']
+                # elemdict['sdf/max_contacts']
+                # elemdict['sdf/frame']
+                elemdict['pose'] = parseSDFPose(elem.find('pose'))
+                # geometry is parsed below
+                # TODO implement support
+                # elemdict['sdf/surface']
+            else:
+                # TODO implement support for this
+                # elemdict['sdf/cast_shadows']
+                # elemdict['sdf/laser_retro']
+                # elemdict['sdf/transparency']
+                # elemdict['sdf/meta']
+                # elemdict['sdf/frame']
+                elemdict['pose'] = parseSDFPose(elem.find('pose'))
+                # geometry is parsed below
+                if elem.find('material') is None:
+                    log(("   No material defined for {} {} in link {}! Defaulting " +
+                         "to error material.").format(objtype, name, newlink['name']), 'ERROR')
+                    elemdict['material'] = {'name': 'phobos_error'}
+                else:
+                    elemdict['material'] = parseSDFMaterial(name, elem.find('material'))
+                # TODO implement support for this
+                # elemdict['sdf/plugin']
+
+            if elem.find('geometry') is None:
+                log("   No geometry defined for {} {} in link {}! Skipped..".format(
+                    objtype, name, newlink['name']), 'ERROR')
+                continue
+            elemdict['geometry'] = parseSDFGeometry(elem.find('geometry'), link, filepath)
+            objectsdict[name] = elemdict
+        newlink[objtype] = objectsdict
+
+    # TODO parse sensors
+
+    # TODO add projector, audio sink, audio_source, battery support
+
+    if newlink == {}:
+        log("Link information for " + newlink['name'] + " is empty.", 'WARNING')
+    return newlink
+
+
 
 # registering export functions of types with Phobos
 entity_type_dict = {'sdf': {
