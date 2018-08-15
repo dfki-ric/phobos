@@ -924,15 +924,15 @@ def exportSDF(model, filepath):
 
 
 def parseSDFPose(pose):
-    pose = {}
+    posedict = {}
     if pose is not None:
-        xyzrpy = gUtils.parse_text(pose)
-        pose['translation'] = xyzrpy[:3]
-        pose['rotation_euler'] = xyzrpy[3:]
+        xyzrpy = gUtils.parse_text(pose.text)
+        posedict['translation'] = xyzrpy[:3]
+        posedict['rotation_euler'] = xyzrpy[3:]
     else:
-        pose['translation'] = [0.0, 0.0, 0.0]
-        pose['rotation_euler'] = [0.0, 0.0, 0.0]
-    return pose
+        posedict['translation'] = [0.0, 0.0, 0.0]
+        posedict['rotation_euler'] = [0.0, 0.0, 0.0]
+    return posedict
 
 
 def parseSDFInertial(link):
@@ -1027,7 +1027,7 @@ def parseSDFLink(link, filepath):
     # velocity_decay
     # frame
 
-    newlink['pose'] = parseSDFPose(link.find['pose'])
+    newlink['pose'] = parseSDFPose(link.find('pose'))
 
     # parse inertial
     inertial = parseSDFInertial(link)
