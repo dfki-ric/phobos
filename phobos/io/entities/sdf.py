@@ -959,6 +959,42 @@ def parseSDFInertial(link):
         return None
 
 
+def parseSDFGeometry(geometry, link, sdfpath):
+    import os.path as path
+    # gather generic properties from geometry definition
+    geometrydict = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+    geometrydict['type'] = geometry[0].tag
+
+    # gather mesh information
+    if geometrydict['type'] == 'mesh':
+        # interpret filename
+        filename = geometry[0].attrib['uri']
+        filepath = path.normpath(path.join(path.dirname(sdfpath), filename))
+        log("     Filepath for mesh: {}".format(path.relpath(filepath, start=sdfpath)), 'DEBUG')
+
+        # check filepath and include model folder of gazebo
+        if 'model://' in filepath:
+            phobosprefs = getPhobosPreferences()
+            filepath.replace('model://', '')
+            filepath = path.join(phobosprefs.gazebomodelfolder, filepath)
+
+        if not path.exists(filepath):
+            log("Mesh file does not exist: {} Replacing mesh with simple box.".format(filepath),
+                'WARNING')
+            geometrydict = {'type': 'box', 'size': [1, 1, 1]}
+        else:
+            geometry['filename'] = filepath
+
+        # TODO add submesh support
+
+        # read scale
+        if 'scale' in geometry[0].attrib:
+            geometry['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
+        else:
+            geometry['scale'] = [1.0, 1.0, 1.0]
+    return geometrydict
+
+
 
 # registering export functions of types with Phobos
 entity_type_dict = {'sdf': {
