@@ -36,6 +36,7 @@ import bpy
 from phobos.utils.io import xmlHeader
 from phobos.utils.io import indent as phobosindentation
 from phobos.utils.io import l2str as list_to_string
+import phobos.utils.general as gUtils
 from phobos.utils.blender import getPhobosPreferences
 from phobos.phoboslog import log
 
@@ -923,8 +924,18 @@ def exportSdf(model, filepath):
     log(finishmessage, "INFO", "exportModelToSDF")
 
 
-def importSdf():
-    pass
+def parseSDFPose(pose):
+    pose = {}
+    if pose is not None:
+        xyzrpy = gUtils.parse_text(pose)
+        pose['translation'] = xyzrpy[:3]
+        pose['rotation_euler'] = xyzrpy[3:]
+    else:
+        pose['translation'] = [0.0, 0.0, 0.0]
+        pose['rotation_euler'] = [0.0, 0.0, 0.0]
+    return pose
+
+
 
 # registering export functions of types with Phobos
 entity_type_dict = {'sdf': {
