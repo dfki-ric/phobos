@@ -967,36 +967,45 @@ def parseSDFInertial(link):
 def parseSDFGeometry(geometry, link, sdfpath):
     import os.path as path
     # gather generic properties from geometry definition
-    geometrydict = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib}
+    geometrydict = {elem.tag: gUtils.parse_text(elem.text) for elem in list(geometry[0])}
     geometrydict['type'] = geometry[0].tag
 
     # gather mesh information
     if geometrydict['type'] == 'mesh':
         # interpret filename
-        filename = geometry[0].attrib['uri']
-        filepath = path.normpath(path.join(path.dirname(sdfpath), filename))
-        log("     Filepath for mesh: {}".format(path.relpath(filepath, start=sdfpath)), 'DEBUG')
+        filepath = geometry[0].find('uri')
+        if filepath is None:
+            log("      URI for mesh not defined!", 'ERROR')
+            return
+        filepath = filepath.text
 
         # check filepath and include model folder of gazebo
         if 'model://' in filepath:
             phobosprefs = getPhobosPreferences()
-            filepath.replace('model://', '')
+            filepath = filepath.replace('model://', '')
             filepath = path.join(phobosprefs.gazebomodelfolder, filepath)
+        else:
+            filepath = path.normpath(path.join(path.dirname(sdfpath), filepath))
+        log("       Filepath for mesh: {}".format(filepath), 'DEBUG')
 
         if not path.exists(filepath):
-            log("Mesh file does not exist: {} Replacing mesh with simple box.".format(filepath),
+            log("     Mesh file does not exist: {} Replaced mesh with simple box.".format(filepath),
                 'WARNING')
             geometrydict = {'type': 'box', 'size': [1, 1, 1]}
         else:
             geometry['filename'] = filepath
 
-        # TODO add submesh support
+            # TODO add submesh support
 
-        # read scale
-        if 'scale' in geometry[0].attrib:
-            geometry['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
-        else:
-            geometry['scale'] = [1.0, 1.0, 1.0]
+            # read scale for meshes only
+            if 'scale' in geometry[0].attrib:
+                geometrydict['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
+            else:
+                geometrydict['scale'] = [1.0, 1.0, 1.0]
+
+    # TODO remove me
+    import yaml
+    print(yaml.dump(geometrydict))
     return geometrydict
 
 
