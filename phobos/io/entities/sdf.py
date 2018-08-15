@@ -170,7 +170,7 @@ def getIndentedETString(elementtree):
     """
     return minidom.parseString(ET.tostring(elementtree)).toprettyxml(indent=phobosindentation)
 
-def pose(poseobject, relativepose, indentation, world):
+def pose(relativepose, indentation, poseobject=None):
     """ Simple wrapper for pose data.
     If relative poses are used the data found in posedata is used.
     Otherwise the pose of the poseobject will be combined with all collected
@@ -185,7 +185,7 @@ def pose(poseobject, relativepose, indentation, world):
     tagger = xmlTagger(initial=indentation)
 
     # relative poses are written to file as they are
-    if not world:
+    if not poseobject:
         posedata = relativepose
     # world poses are created by combined transform of the pose
     else:
@@ -221,7 +221,7 @@ def frame(framedata, indentation, relative):
     tagger = xmlTagger(initial=indentation)
     tagger.descend('frame', {'name': framedata['name']})
     # relative frame pose is not supported yet
-    # tagger.write(pose(frameobj, framedata['pose'], tagger.get_indent(),
+    # tagger.write(pose(framedata['pose'], tagger.get_indent(),
     # relative))
     tagger.ascend()
     return "".join(tagger.get_output())
@@ -270,8 +270,7 @@ def inertial(inertialobj, inertialdata, indentation):
             "WARNING", "exportSdf")
     if 'pose' in inertialdata:
         # CHECK the inertialpose has to be relative to link
-        tagger.write(pose(inertialobj, inertialdata['pose'],
-                          tagger.get_indent(), False))
+        tagger.write(pose(inertialdata['pose'], tagger.get_indent()))
     else:
         log("Object '{0}' has no inertial pose!".format(inertialobj.name),
             "WARNING", "exportsdf")
@@ -306,8 +305,7 @@ def collision(collisionobj, collisiondata, indentation, modelname):
     # OPT: tagger.attrib('max_contacts', ...)
     # OPT: tagger.attrib('frame', ...)
     # Write collisionposition always relative to link!
-    tagger.write(pose(collisionobj, collisiondata['pose'],
-                      tagger.get_indent(), False))
+    tagger.write(pose(collisiondata['pose'], tagger.get_indent()))
     tagger.write(geometry(collisiondata['geometry'], tagger.get_indent(),
                           modelname))
     # # SURFACE PARAMETERS
@@ -511,7 +509,7 @@ def visual(visualobj, linkobj, visualdata, indentation, modelname):
                 'rotation_euler': list(matrix.to_euler()),
                 'rotation_quaternion': list(matrix.to_quaternion())}
     # overwrite absolute position of the visual object
-    tagger.write(pose(visualobj, posedata, tagger.get_indent(), False))
+    tagger.write(pose(posedata, tagger.get_indent()))
 
     # write material data if available
     if 'material' in visualdata:
@@ -709,7 +707,7 @@ def exportSdf(model, filepath):
             # xml.ascend()
             # OPT: xml.write(frame(model['frame']), xml.get_indent())
             # TODO Optional. Add if clause
-            xml.write(pose(linkobj, link['pose'], xml.get_indent(), True))
+            xml.write(pose(link['pose'], xml.get_indent(), poseobject=linkobj))
             # inertial data might be missing
             if len(link['inertial']) > 0:
                 inertialname = link['inertial']['name']
