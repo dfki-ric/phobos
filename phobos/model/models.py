@@ -626,6 +626,47 @@ def deriveLight(obj):
     return light
 
 
+def recursive_dictionary_cleanup(dictionary):
+    """Recursively enrich the dictionary and replace object links with names etc.
+
+    These patterns are replaced:
+        [phobostype, bpyobj] -> {'object': bpyobj, 'name': getObjectName(bpyobj, phobostype)}
+
+
+    Args:
+        dictionary (dict): dictionary to enrich
+
+    Returns:
+        dict -- dictionary with replace/enriched patterns
+    """
+    for key, value in dictionary.items():
+        # handle everything as list, so we can loop over it
+        unlist = False
+        if not isinstance(value, list):
+            value = [value]
+            unlist = True
+
+        itemlist = []
+        for item in value:
+            if isinstance(item, list) and item:
+                # (phobostype, bpyobj) -> {'object': bpyobj, 'name': getObjectName(bpyobj)}
+                if (len(item) == 2 and isinstance(item[0], str) and
+                        (item[0] in [enum[0] for enum in defs.phobostypes]) and
+                        isinstance(item[1], bpy.types.Object)):
+                    itemlist.append({'object': item[1],
+                                     'name': nUtils.getObjectName(item[1], phobostype=item[0])})
+
+            # recursion on subdictionaries
+            elif isinstance(item, dict):
+                itemlist.append(recursive_dictionary_cleanup(item))
+            else:
+                itemlist.append(item)
+
+        # extract single items back out of the list
+        dictionary[key] = (itemlist if not unlist else itemlist[0])
+    return dictionary
+
+
 def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotations=True,
                          ignorename=False):
     """Initializes phobos dictionary of *obj*, including information stored in custom properties.
