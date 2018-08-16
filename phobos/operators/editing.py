@@ -1510,9 +1510,9 @@ def addSensorFromYaml(name, sensortype):
                            'category': defs.def_settings['sensors'][self.sensorType]['categories'],
                            'material': 'phobos_sensor',
                            'type': self.sensorType,
-                           'props': {}
-            }
+                           'props': {}}
             original_obj = context.active_object
+            selected_objs = context.selected_objects
 
             newlink = None
             if self.addLink:
@@ -1572,9 +1572,13 @@ def addSensorFromYaml(name, sensortype):
             # add annotation objects for other categories
             for custom_anno in self.annotation_checks:
                 if custom_anno.boolProp:
+                    # parse object dictionaries if "$selected_objects:..." syntax is found
+                    annot = defs.definitions['sensors'][self.sensorType][custom_anno.name[2:]]
+
+                    annot = linkObjectLists(annot, selected_objs)
+
                     annotation_objs.append(eUtils.addAnnotationObject(
-                        sensor_obj,
-                        defs.definitions['sensors'][self.sensorType][custom_anno.name[2:]],
+                        sensor_obj, annot,
                         name=nUtils.getObjectName(sensor_obj) + '_' + custom_anno.name[2:],
                         namespace='sensor/' + custom_anno.name[2:]))
 
