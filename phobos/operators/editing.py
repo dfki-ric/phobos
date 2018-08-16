@@ -1399,6 +1399,42 @@ class DynamicProperty(bpy.types.PropertyGroup):
         elif self.name[0] == 'f':
             layout.prop(self, 'floatProp', text=name)
 
+
+def linkObjectLists(annotation, objectlist):
+    """Recursively adds the objects of the specified list to an annotation dictionary.
+
+    Wherever the keyword "$selected_objects:phobostype1:phobostype2" is found as a value in the
+    annotation dictionary, the value is replaced by a list of tuples:
+        (phobostype, object)
+    These tuples represent each an object from the specified objectlist.
+
+    An arbitrary number of phobostypes can be provided.
+    The rest of the annotation dictionary remains untouched.
+
+    Args:
+        annotation (dict): annotation dictionary
+        objectlist (list(bpy.types.Object)): objects to add to the annotation
+
+    Returns:
+        dict -- annotation dictionary with inserted object dictionaries
+    """
+    newanno = {}
+    for key, value in annotation.items():
+        if isinstance(value, dict):
+            newanno[key] = linkObjectLists(value, objectlist)
+        elif "$selected_objects" in value:
+            ptypes = value.split(':')[1:]
+
+            objlist = []
+            for ptype in ptypes:
+                objlist.extend([(ptype, obj) for obj in objectlist if obj.phobostype == ptype])
+            newanno[key] = objlist
+        else:
+            newanno[key] = value
+
+    return newanno
+
+
 def addSensorFromYaml(name, sensortype):
     """This registers a temporary sensor Operator.
     The data for the properties is provided by the parsed yaml files of the
