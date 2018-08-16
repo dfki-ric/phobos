@@ -212,8 +212,8 @@ def __parseAllYAML(path):
                     log(file + " does not contain any yaml information.", 'ERROR')
                     continue
                 dicts.append(tmpyaml)
-            except yaml.scanner.ScannerError:
-                log(os.path.relpath(file, path=path) + " could not be parsed!", 'ERROR')
+            except yaml.scanner.ScannerError as e:
+                log(os.path.relpath(file, path) + " could not be parsed:\n" + str(e), 'ERROR')
         except FileNotFoundError:
             log(os.path.relpath(file, path=path) + " was not found.", 'ERROR')
     return dicts
