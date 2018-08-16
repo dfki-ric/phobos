@@ -152,6 +152,8 @@ sensors:
                 - internal
         mars:
             type: JointPosition
+            id: $selected_objects:joint
+
     Joint_velocity:
         general:
             type: joint_velocity
@@ -161,6 +163,8 @@ sensors:
                 - internal
         mars:
             type: JointVelocity
+            id: $selected_objects:joint
+
     Joint_load:
         general:
             type: joint_load
@@ -170,6 +174,8 @@ sensors:
                 - internal
         mars:
             type: JointLoad
+            id: $selected_objects:joint
+
     Joint_torque:
         general:
             type: joint_torque
@@ -179,6 +185,8 @@ sensors:
                 - internal
         mars:
             type: JointTorque
+            id: $selected_objects:joint
+
     Joint_AVG_torque:
         general:
             type: joint_avg_torque
@@ -188,6 +196,8 @@ sensors:
                 - internal
         mars:
             type: JointAVGTorque
+            id: $selected_objects:joint
+
     Joint_6_DOF:
         general:
             type: joint_6_dof
@@ -197,6 +207,7 @@ sensors:
                 - internal
         mars:
             type: Joint6DOF
+
     Node_contact:
         general:
             type: node_contact
@@ -206,6 +217,7 @@ sensors:
                 - internal
         mars:
             type: NodeContact
+
     Node_position:
         general:
             type: node_position
@@ -215,6 +227,8 @@ sensors:
                 - internal
         mars:
             type: NodePosition
+            id: $selected_objects:link
+
     Node_rotation:
         general:
             type: node_rotation
@@ -224,6 +238,8 @@ sensors:
                 - internal
         mars:
             type: NodeRotation
+            id: $selected_objects:link
+
     Node_contact_force:
         general:
             type: node_contact_force
@@ -233,6 +249,8 @@ sensors:
                 - internal
         mars:
             type: NodeContactForce
+            id: $selected_objects:link
+
     Node_COM:
         general:
             type: node_com
@@ -242,6 +260,8 @@ sensors:
                 - internal
         mars:
             type: NodeCOM
+            id: $selected_objects:link
+
     Node_velocity:
         general:
             type: node_velocity
@@ -251,6 +271,8 @@ sensors:
                 - internal
         mars:
             type: NodeVelocity
+            id: $selected_objects:link
+
     Node_angular_velocity:
         general:
             type: node_angular_velocity
@@ -260,6 +282,8 @@ sensors:
                 - internal
         mars:
             type: NodeAngularVelocity
+            id: $selected_objects:link
+
     Motor_current:
         general:
             type: motor_current
@@ -269,6 +293,7 @@ sensors:
                 - internal
         mars:
             type: MotorCurrent
+
     Inertial_measurement_unit:
         general:
             type: inertial_measurement_unit
@@ -276,6 +301,9 @@ sensors:
             size: 0.2
             categories:
                 - internal
+        mars:
+          type: NodeIMU
+          id: $selected_objects:link
 
     # environmental sensors
     Altimeter:
