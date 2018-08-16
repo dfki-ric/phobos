@@ -679,7 +679,6 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
 
     Returns:
       dict
-
     """
     # allow duplicated names differentiated by types
     props = {} if ignorename else {'name': nUtils.getObjectName(obj, phobostype)}
@@ -693,19 +692,22 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
     else:
         for key, value in obj.items():
             # transform Blender id_arrays into lists
+            # TODO is this ever called?
             if hasattr(value, 'to_list'):
                 value = list(value)
+                raise TypeError("We are still in use!")
 
             # remove phobostype namespaces for the object
             if key.startswith(phobostype + '/'):
                 if key.count('/') == 1:
                     props[key.replace(phobostype + '/', '')] = value
-                # TODO why do we need the $?
+                # TODO make this work for all levels of hierarchy
                 elif key.count('/') == 2:
                     category, specifier = key.split('/')[1:]
                     if '$' + category not in props:
                         props['$' + category] = {}
                     props['$' + category][specifier] = value
+
             # ignore two-level specifiers if phobostype is not present
             elif key.count('/') == 1:
                 category, specifier = key.split('/')
