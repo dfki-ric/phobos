@@ -724,6 +724,10 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
                 annot, phobostype='annotation')), 'DEBUG')
             props.update(initObjectProperties(annot, phobostype, ignoretypes, includeannotations,
                                               ignorename=True))
+
+    # recursively enrich the property dictionary
+    props = recursive_dictionary_cleanup(props)
+
     return props
 
 
