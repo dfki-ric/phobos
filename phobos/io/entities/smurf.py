@@ -208,12 +208,33 @@ def sort_for_yaml_dump(dictionary, category):
     if category in ['materials', 'motors']:
         return {category: sort_dict_list(dictionary[category], 'name')}
     elif category == 'sensors':
+        dictionary[category] = replace_object_links(dictionary[category])
+
         return {category: sort_dict_list(dictionary[category], 'name')}
     elif category == 'simulation':
         return_dict = {}
         for viscol in ['collision', 'visual']:
             return_dict[viscol] = sort_dict_list(dictionary[viscol], 'name')
         return return_dict
+    return dictionary
+
+
+def replace_object_links(dictionary):
+    if isinstance(dictionary, list):
+        newlist = []
+        for item in dictionary:
+            newlist.append(replace_object_links(item))
+        return newlist
+
+    for key, value in dictionary.items():
+        if isinstance(value, list):
+            if (all([isinstance(item, dict) for item in value]) and
+                    all([('name' in item and 'object' in item) for item in value])):
+                dictionary[key] = sorted([item['name'] for item in value])
+
+        elif isinstance(value, dict):
+            replace_object_links(value)
+
     return dictionary
 
 
