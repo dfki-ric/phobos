@@ -1076,9 +1076,8 @@ def buildModelFromDictionary(model):
     log("Creating Blender model...", 'INFO', prefix='\n' + '-' * 25 + '\n')
 
     log("  Initializing materials... ({} total)".format(len(model['materials'])), 'INFO')
-    print(yaml.dump(model['materials']))
     for mat in model['materials']:
-        matmodel.createMaterial(model['materials'][mat])
+        matmodel.createMaterial(model['materials'][mat], logging=True, adjust=True)
         # ['name'], tuple(mat['color'][0:3]), (1, 1, 1), mat['color'][-1])
 
     newobjects = []

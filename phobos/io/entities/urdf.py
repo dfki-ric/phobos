@@ -611,14 +611,14 @@ def importUrdf(filepath):
         if color is not None:
             log(" Adding material {}.".format(material.attrib['name']), 'DEBUG')
             newmat = {a: material.attrib[a] for a in material.attrib}
-            newmat['color'] = gUtils.parse_text(color.attrib['rgba'])
-            matModel.createMaterial(newmat['name'],
-                                    tuple(newmat['color'][0:3]), (1, 1, 1), newmat['color'][-1])
+            newmat['diffuse'] = gUtils.parse_text(color.attrib['rgba'])
+            newmat['specular'] = (1., 1., 1.)
 
             # duplicates are overwritten, but not silent
             if newmat['name'] in materials:
                 log(" Overwriting duplicate material {}!".format(newmat['name']), 'WARNING')
             materials[newmat['name']] = newmat
+    model['materials'] = materials
 
     return model
 
