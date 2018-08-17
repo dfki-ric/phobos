@@ -651,7 +651,7 @@ def recursive_dictionary_cleanup(dictionary):
             if isinstance(item, list) and item:
                 # (phobostype, bpyobj) -> {'object': bpyobj, 'name': getObjectName(bpyobj)}
                 if (len(item) == 2 and isinstance(item[0], str) and
-                        (item[0] in [enum[0] for enum in defs.phobostypes]) and
+                        (item[0] in ['joint'] + [enum[0] for enum in defs.phobostypes]) and
                         isinstance(item[1], bpy.types.Object)):
                     itemlist.append({'object': item[1],
                                      'name': nUtils.getObjectName(item[1], phobostype=item[0])})
@@ -692,10 +692,8 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
     else:
         for key, value in obj.items():
             # transform Blender id_arrays into lists
-            # TODO is this ever called?
             if hasattr(value, 'to_list'):
                 value = list(value)
-                raise TypeError("We are still in use!")
 
             # remove phobostype namespaces for the object
             if key.startswith(phobostype + '/'):

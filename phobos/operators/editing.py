@@ -1406,7 +1406,8 @@ def linkObjectLists(annotation, objectlist):
     Wherever the keyword "$selected_objects:phobostype1:phobostype2" is found as a value in the
     annotation dictionary, the value is replaced by a list of tuples:
         (phobostype, object)
-    These tuples represent each an object from the specified objectlist.
+    These tuples represent each an object from the specified objectlist. 'joint' is in this case
+    considered a phobostype.
 
     An arbitrary number of phobostypes can be provided.
     The rest of the annotation dictionary remains untouched.
@@ -1427,7 +1428,9 @@ def linkObjectLists(annotation, objectlist):
 
             objlist = []
             for ptype in ptypes:
-                objlist.extend([(ptype, obj) for obj in objectlist if obj.phobostype == ptype])
+                objlist.extend([(ptype, obj) for obj in objectlist if (
+                    obj.phobostype == ptype or (obj.phobostype == 'link' and 'joint/type' in obj and
+                                                ptype == 'joint'))])
             newanno[key] = objlist
         else:
             newanno[key] = value
