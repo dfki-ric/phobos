@@ -111,16 +111,16 @@ class MoveToSceneOperator(Operator):
     new = BoolProperty(name='New', default=True,
                        description="Create new scene for configuration")
 
-    unlink = BoolProperty(name='Unlink selected', default=False,
-                          description="Unlink selected objects from active scene")
+    truecopy = BoolProperty(name='Copy selected', default=False,
+                            description="Copy selected objects from active scene")
 
-    obdata = BoolProperty(name='Link mesh data', default=True,
-                          description="Link mesh data to new objects")
+    link_obdata = BoolProperty(name='Link mesh data', default=True,
+                               description="Link mesh data to new objects")
 
-    material = BoolProperty(name='Link material data', default=True,
+    link_material = BoolProperty(name='Link material data', default=True,
                           description="Link material data to new objects")
 
-    texture = BoolProperty(name='Link texture data', default=True,
+    link_texture = BoolProperty(name='Link texture data', default=True,
                           description="Link texture data to new objects")
 
     remove = BoolProperty(name='Remove selected', default=False,
@@ -150,11 +150,11 @@ class MoveToSceneOperator(Operator):
             box.prop(self, 'scene')
 
         box = layout.box()
-        box.prop(self, 'unlink')
-        if self.unlink:
-            box.prop(self, 'obdata')
-            box.prop(self, 'material')
-            box.prop(self, 'texture')
+        box.prop(self, 'truecopy')
+        if self.truecopy:
+            box.prop(self, 'link_obdata')
+            box.prop(self, 'link_material')
+            box.prop(self, 'link_texture')
 
         box = layout.box()
         box.prop(self, 'remove')
@@ -177,7 +177,7 @@ class MoveToSceneOperator(Operator):
                 newscene.objects.link(obj)
 
         # make the objects single user in the new scene
-        if self.unlink:
+        if self.truecopy:
             # add phobostype/name to make sure the object keeps its name as single user
             for obj in moveobjs:
                 name = nUtils.getObjectName(obj)
@@ -188,8 +188,8 @@ class MoveToSceneOperator(Operator):
             # make object single user
             sUtils.selectObjects(moveobjs, clear=True)
             bpy.ops.object.make_single_user(type='SELECTED_OBJECTS', object=True,
-                                            obdata=self.obdata, material=self.material,
-                                            texture=self.texture)
+                                            obdata=not self.link_obdata, material=not self.link_material,
+                                            texture=not self.link_texture)
             newobjs = bpy.context.selected_objects
 
             # prepend Blender name with scenename (phobostype/names are kept anyway)
