@@ -1037,11 +1037,13 @@ def parseSDFMaterial(visualname, material):
 
 def parseSDFLink(link, filepath):
     # collect all parameters which can be parsed as generic sdf annotations
-    genericparams = [attrib for attrib in link.attrib
-                     if attrib not in ['velocity_decay', 'frame', 'pose', 'inertial', 'collision',
-                                       'visual', 'sensor', 'projector', 'audio_source', 'battery']]
-    newlink = {'$sdf/' + a: link.attrib[a] for a in genericparams}
+    genericparams = [elem.tag for elem in list(link)
+                     if elem.tag not in [
+                         'velocity_decay', 'frame', 'pose', 'inertial', 'collision', 'visual',
+                         'sensor', 'projector', 'audio_source', 'battery']]
+    newlink = {'$sdf/' + a: gUtils.parse_text(link.find(a).text) for a in genericparams}
 
+    newlink['name'] = link.attrib['name']
     newlink['children'] = []
 
     # TODO add support for other parameters
@@ -1115,6 +1117,8 @@ def parseSDFLink(link, filepath):
 
     # TODO add projector, audio sink, audio_source, battery support
 
+    import yaml
+    print(yaml.dump(newlink))
     if newlink == {}:
         log("Link information for " + newlink['name'] + " is empty.", 'WARNING')
     return newlink, materials
