@@ -220,6 +220,7 @@ def sort_for_yaml_dump(dictionary, category):
 
 
 def replace_object_links(dictionary):
+    newdict = {}
     if isinstance(dictionary, list):
         newlist = []
         for item in dictionary:
@@ -230,12 +231,14 @@ def replace_object_links(dictionary):
         if isinstance(value, list):
             if (all([isinstance(item, dict) for item in value]) and
                     all([('name' in item and 'object' in item) for item in value])):
-                dictionary[key] = sorted([item['name'] for item in value])
+                newdict[key] = sorted([item['name'] for item in value])
 
         elif isinstance(value, dict):
-            replace_object_links(value)
+            newdict[key] = replace_object_links(value)
+        else:
+            newdict[key] = value
 
-    return dictionary
+    return newdict
 
 
 def sort_dict_list(dict_list, sort_key):
