@@ -1578,7 +1578,10 @@ def addSensorFromYaml(name, sensortype):
                     # parse object dictionaries if "$selected_objects:..." syntax is found
                     annot = defs.definitions['sensors'][self.sensorType][custom_anno.name[2:]]
 
-                    annot = linkObjectLists(annot, selected_objs)
+                    if selected_objs:
+                        annot = linkObjectLists(annot, selected_objs)
+                    else:
+                        annot = linkObjectLists(annot, parent_obj)
 
                     annotation_objs.append(eUtils.addAnnotationObject(
                         sensor_obj, annot,
