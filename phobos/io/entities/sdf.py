@@ -1026,8 +1026,8 @@ def parseSDFMaterial(visualname, material):
     for color in ['ambient', 'diffuse', 'specular', 'emissive']:
         if material.find(color) is not None:
             materialdict[color] = gUtils.parse_text(material.find(color).text)
-        else:
-            log("       Color not defined: {}.".format(color), 'DEBUG')
+
+    materialdict['diffuse_intensity'] = 1.
 
     # TODO remove me
     import yaml
