@@ -109,9 +109,9 @@ class GotoObjectOperator(Operator):
             bUtils.switchToScene(scene.name)
 
         # toggle layer to make object visible
-        bUtils.setObjectLayersActive(context.scene.objects[self.objectname], extendlayers=True)
+        bUtils.setObjectLayersActive(scene.objects[self.objectname], extendlayers=True)
 
-        sUtils.selectObjects([context.scene.objects[self.objectname]], clear=True, active=0)
+        sUtils.selectObjects([scene.objects[self.objectname]], clear=True, active=0)
         return {'FINISHED'}
 
 
