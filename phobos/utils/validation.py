@@ -251,7 +251,8 @@ class ValidateMessage():
 
     def log(self):
         log(self.message +
-            str('' if not self.obj else " @" + nUtils.getObjectName(self.obj)) +
+            str('' if not isinstance(self.obj, bpy.types.Object)
+                else " @" + nUtils.getObjectName(self.obj)) +
             str(('\n' + 4 * ' ' + self.information['log_info']) if 'log_info' in self.information
                 else ''),
             self.level)
