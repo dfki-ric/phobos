@@ -207,6 +207,14 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
                                description="Up axis of the obj export.",
                                default='Y')
 
+    export_sdf_model_config = BoolProperty(
+        default=False, name='Export Gazebo model.config',
+        description='Export model.config file along with the SDF file.')
+
+    export_sdf_to_gazebo_models = BoolProperty(
+        default=False, name='Export to Gazebo models folder',
+        description='Export model to the Gazebo models folder.')
+
 
 class Mesh_Export_UIList(bpy.types.UIList):
     # DOCU missing class description
@@ -972,6 +980,12 @@ class PhobosExportPanel(bpy.types.Panel):
             box.label('OBJ axis')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_forward')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_up')
+        elif getattr(bpy.context.scene, 'export_entity_sdf', False):
+            layout.separator()
+            box = layout.box()
+            box.label('SDF export')
+            box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
+            box.prop(ioUtils.getExpSettings(), 'export_sdf_to_gazebo_models', icon='EXPORT')
 
         # TODO delete me?
         # c2.prop(expsets, "exportCustomData", text="Export custom data")
