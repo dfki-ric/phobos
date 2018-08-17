@@ -155,6 +155,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             dimensions = (geom['radius'], geom['length'])
         elif geom['type'] == 'sphere':
             dimensions = geom['radius']
+        # TODO add support for heightmap, image, plane and polyline geometries (see sdf!)
         else:
             log("Unknown geometry type of " + geomsrc + viscol['name']
                 + '. Placing empty coordinate system.', "ERROR")
