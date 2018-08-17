@@ -27,6 +27,8 @@ Created on 06 Feb 2017
 """
 
 import os
+import shutil
+import glob
 from xml.dom import minidom
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element, SubElement
@@ -36,6 +38,7 @@ import bpy
 from phobos.utils.io import xmlHeader
 from phobos.utils.io import indent as phobosindentation
 from phobos.utils.io import l2str as list_to_string
+from phobos.utils.io import getExpSettings
 import phobos.utils.general as gUtils
 from phobos.utils.blender import getPhobosPreferences
 from phobos.phoboslog import log
@@ -423,7 +426,7 @@ def exportSDFGeometry(geometrydata, indentation, modelname):
     #     tagger.ascend()
     elif geometrydata['type'] == 'mesh':
         tagger.descend('mesh')
-        meshtype = ioUtils.getExpSettings().outputMeshtype
+        meshtype = getExpSettings().export_sdf_mesh_type
         tagger.attrib('uri', 'model://' + modelname + '/meshes/' +
                       geometrydata['filename'] + '.{0}'.format(meshtype))
     #     OPT: tagger.descend('submesh')
@@ -592,7 +595,11 @@ def exportSDF(model, filepath):
     """
     log("Export SDF (version " + sdfversion + ") to " + filepath, "INFO", "exportSdf")
     filename = os.path.join(filepath, model['name'] + '.sdf')
-    modelconffile = os.path.join(filepath, 'model.config')
+
+    if getExpSettings().export_sdf_model_config:
+        modelconffile = os.path.join(filepath, 'model.config')
+    else:
+        modelconffile = None
     errors = False
 
     modelconf = exportGazeboModelConf(model)
@@ -915,10 +922,39 @@ def exportSDF(model, filepath):
         with open(filename, 'w') as outputfile:
             outputfile.writelines(outputtext)
 
-        log("Writing model.config file to " + modelconffile, "DEBUG")
-        with open(modelconffile, 'w') as outputfile:
-            outputfile.write(getIndentedETString(modelconf))
-        # modelconfTree.write(modelconffile, encoding="UTF-8", xml_declaration=True)
+        if modelconffile:
+            log("Writing model.config file to " + modelconffile, "DEBUG")
+            with open(modelconffile, 'w') as outputfile:
+                outputfile.write(getIndentedETString(modelconf))
+            # modelconfTree.write(modelconffile, encoding="UTF-8", xml_declaration=True)
+
+        if getExpSettings().export_sdf_to_gazebo_models:
+            phobosprefs = getPhobosPreferences()
+            modelpath = os.path.join(phobosprefs.gazebomodelfolder, modelname)
+            log("Copying model to Gazebo model folder: {}".format(os.path.relpath(modelpath)), 'INFO')
+            if not os.path.exists(modelpath):
+                os.makedirs(modelpath)
+            else:
+                log("Overwriting existing Gazebo model in model folder!", 'WARNING')
+            if not os.path.exists(os.path.join(modelpath, 'meshes')):
+                os.makedirs(os.path.join(modelpath, 'meshes'))
+
+            log(" Copying SDF file to Gazebo models...", 'DEBUG')
+            # copy sdf file
+            shutil.copy2(filename, modelpath)
+
+            log(" Copying model.config file to Gazebo models...", 'DEBUG')
+            # copy model config file
+            if modelconffile:
+                shutil.copy2(modelconffile, modelpath)
+
+            log(" Copying meshes to Gazebo models...", 'DEBUG')
+            sdfmeshtype = getExpSettings().export_sdf_mesh_type
+            meshfolder = os.path.join(os.path.dirname(filepath), 'meshes', sdfmeshtype)
+            for file in glob.glob(meshfolder + "/*." + sdfmeshtype):
+                meshfilename = os.path.basename(file)
+                log("   Copying {} mesh file.".format(meshfilename), 'DEBUG')
+                shutil.copy2(file, os.path.join(modelpath, 'meshes', meshfilename))
 
     finishmessage = "Export finished with " + \
         ("no " if not errors else "") + "errors."
@@ -1124,6 +1160,166 @@ def parseSDFLink(link, filepath):
     return newlink, materials
 
 
+def parseSDFJointPhysics(physics):
+    # TODO make this work
+    return {}
+
+
+def parseSDFSensors(sensors):
+    # TODO make this work
+    return {}
+
+
+def parseSDFAxis(axis):
+    axisdict = {}
+
+    if 'initial_position' in list(axis):
+        axisdict['$sdf/initial_position'] = gUtils.parse_text(axis.find('initial_position').text)
+
+    axisdict['xyz'] = gUtils.parse_text(axis.find('xyz').text)
+    axisdict['use_parent_model_frame'] = bool(axis.find('use_parent_model_frame').text)
+
+    if 'dynamics' in list(axis):
+        dynamics = axis.find('dynamics')
+        axisdict['dynamics']['spring_reference'] = gUtils.parse_number(
+            dynamics.find('spring_reference').text)
+        axisdict['dynamics']['spring_stiffness'] = gUtils.parse_number(
+            dynamics.find('spring_stiffness').text)
+
+        if 'damping' in list(dynamics):
+            axisdict['dynamics']['damping'] = gUtils.parse_number(dynamics.find('damping').text)
+        if 'friction' in list(dynamics):
+            axisdict['dynamics']['friction'] = gUtils.parse_number(dynamics.find('friction').text)
+
+    axisdict['limits'] = {}
+    limits = axis.find('limit')
+    axisdict['limits']['lower'] = gUtils.parse_text(limits.find('lower').text)
+    axisdict['limits']['upper'] = gUtils.parse_text(limits.find('upper').text)
+
+    for opt_limit in ['effort', 'velocity', 'stiffness', 'dissipation']:
+        if opt_limit in list(limits):
+            axisdict['limits'][opt_limit] = gUtils.parse_number(limits.find(opt_limit).text)
+
+    return axisdict
+
+
+def parseSDFJoint(joint):
+    jointdict = {'name': joint.attrib['name'], 'type': joint.attrib['type']}
+    jointdict['parent'] = joint.find('parent').text
+    jointdict['child'] = joint.find('child').text
+
+    # include all generic parameters not defined in this function
+    genericparams = [elem.tag for elem in list(joint)
+                     if elem.tag not in ['parent', 'child', 'axis', 'physics', 'pose', 'sensor']]
+    jointdict.update({'$sdf/' + a: gUtils.parse_text(joint.find(a).text) for a in genericparams})
+
+    axis = joint.find('axis')
+    if axis is not None:
+        sdfaxis = parseSDFAxis(axis)
+        # TODO safe axis values in a smarter way
+        jointdict['xyz'] = sdfaxis['xyz']
+        jointdict['$sdf/use_parent_model_frame'] = sdfaxis['use_parent_model_frame']
+        jointdict['limits'] = sdfaxis['limits']
+        if 'dynamics' in sdfaxis:
+            jointdict['dynamics'] = sdfaxis['dynamics']
+
+    # TODO how to handle the second joint axis?
+    axis2 = joint.find('axis2')
+    if axis2 is not None:
+        sdfaxis2 = parseSDFAxis(axis2)
+
+    # for category in ('dynamics', 'calibration', 'safety_controller', 'mimic'):
+    #     data = joint.find(category)
+    #     jointdict[category] = {a: gUtils.parse_text(data.attrib[a]) for a in data.attrib}
+
+    if 'physics' in list(joint):
+        jointdict['physics'] = parseSDFJointPhysics(joint.find('physics'))
+
+    # TODO add frame support
+
+    pose = parseSDFPose(joint.find('pose'))
+
+    sensors = parseSDFSensors(joint.findall('sensor'))
+
+    import yaml
+    print('JOINT:', yaml.dump(jointdict))
+    print('POSE:', yaml.dump(pose))
+    print('SENSORS:', yaml.dump(sensors))
+    return jointdict, pose, sensors
+
+
+def importSDF(filepath):
+    model = {}
+
+    log("Parsing SDF model from " + filepath, 'INFO')
+
+    if not os.path.exists(filepath):
+        log("Could not open SDF file. File not found: " + filepath, 'ERROR')
+        return {}
+
+    # load element tree from file
+    tree = ET.parse(filepath)
+    sdfroot = tree.getroot()
+    root = sdfroot.find('model')
+    model['name'] = root.attrib['name']
+    # TODO include these as model annotations
+    # model['$sdf/static']
+    # model['$sdf/self_collide']
+    # model['$sdf/allow_auto_disable']
+    # model['$sdf/include']
+    # model['$sdf/model']
+    # model['$sdf/enable_wind']
+    # model['$sdf/frame']
+    # model['$sdf/pose']
+
+    links = {}
+    materials = {}
+    log("Parsing links...", 'INFO')
+    for link in root.iter('link'):
+        log(" Adding link {}.".format(link.attrib['name']), 'DEBUG')
+        newlink, linkmats = parseSDFLink(link, filepath)
+        links[link.attrib['name']] = newlink
+        materials.update(linkmats)
+    model['links'] = links
+    # TODO cleanup duplicate materials
+    # TODO move to visuals
+    # if newmat['name'] in materials:
+    #     log(" Overwriting duplicate material {}!".format(newmat['name']), 'WARNING')
+    # materials[newmat['name']] = newmat
+
+    model['materials'] = materials
+    import yaml
+    print(yaml.dump(materials))
+
+    joints = {}
+    log("Parsing joints...", 'INFO')
+    for joint in root.iter('joint'):
+        # this is needed as there are "joint" tags e.g. in transmission
+        if joint.find('parent') is not None:
+            # parse joint from elementtree
+            log(" Adding joint {} ...".format(joint.attrib['name']), 'DEBUG')
+            newjoint, pose, sensors = parseSDFJoint(joint)
+            model['links'][newjoint['child']]['pose'] = pose
+            joints[newjoint['name']] = newjoint
+
+            # add parent-child hierarchy to link information
+            parentlink = model['links'][newjoint['parent']]
+            childlink = model['links'][newjoint['child']]
+            childlink['parent'] = newjoint['parent']
+            parentlink['children'].append(newjoint['child'])
+            log("   ... and connected parent link {} to {}.".format(
+                parentlink['name'], childlink['name']), 'DEBUG')
+    model['joints'] = joints
+
+    # find any links that still have no pose (most likely because they had no parent)
+    for link in links:
+        if 'pose' not in links[link]:
+            links[link]['pose'] = parseSDFPose(None)
+
+    # TODO include these as model annotations
+    # model['$sdf/plugin']
+    # model['$sdf/gripper']
+    return model
 
 # registering export functions of types with Phobos
 entity_type_dict = {'sdf': {

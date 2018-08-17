@@ -207,6 +207,11 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
                                description="Up axis of the obj export.",
                                default='Y')
 
+    export_sdf_mesh_type = EnumProperty(
+        items=getMeshTypeListForEnumProp,
+        name='SDF mesh type',
+        description="Mesh type to use in exported SDF files.")
+
     export_sdf_model_config = BoolProperty(
         default=False, name='Export Gazebo model.config',
         description='Export model.config file along with the SDF file.')
@@ -984,6 +989,7 @@ class PhobosExportPanel(bpy.types.Panel):
             layout.separator()
             box = layout.box()
             box.label('SDF export')
+            box.prop(ioUtils.getExpSettings(), 'export_sdf_mesh_type')
             box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
             box.prop(ioUtils.getExpSettings(), 'export_sdf_to_gazebo_models', icon='EXPORT')
 
