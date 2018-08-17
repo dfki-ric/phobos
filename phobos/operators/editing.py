@@ -183,6 +183,7 @@ class MoveToSceneOperator(Operator):
             for obj in moveobjs:
                 name = nUtils.getObjectName(obj)
 
+                # add phobostype/name to make sure the object keeps its name as single user
                 if obj.phobostype + '/name' not in obj:
                     obj[obj.phobostype + '/name'] = name
 
@@ -574,7 +575,14 @@ class SmoothenSurfaceOperator(Operator):
         objs = [obj for obj in context.selected_objects if obj.type == "MESH"]
         i = 1
         for obj in objs:
-            eUtils.smoothen_surface(obj)
+            context.scene.objects.active = obj
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.mesh.normals_make_consistent()
+            bpy.ops.mesh.mark_sharp(clear=True)
+            bpy.ops.object.mode_set(mode='OBJECT')
+            bpy.ops.object.shade_smooth()
+            bpy.ops.object.modifier_add(type='EDGE_SPLIT')
             display.setProgress(i/len(context.selected_objects))
             i += 1
         return {'FINISHED'}
@@ -1572,10 +1580,6 @@ def addSensorFromYaml(name, sensortype):
                 if custom_anno.boolProp:
                     # parse object dictionaries if "$selected_objects:..." syntax is found
                     annot = defs.definitions['sensors'][self.sensorType][custom_anno.name[2:]]
-
-                    # include newly added parent link if not already selected
-                    if parent_obj not in selected_objs:
-                        selected_objs.append(parent_obj)
 
                     annot = linkObjectLists(annot, selected_objs)
 
