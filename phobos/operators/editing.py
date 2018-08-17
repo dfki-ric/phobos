@@ -178,22 +178,23 @@ class MoveToSceneOperator(Operator):
 
         # make the objects single user in the new scene
         if self.unlink:
+            # add phobostype/name to make sure the object keeps its name as single user
             for obj in moveobjs:
                 name = nUtils.getObjectName(obj)
 
-                # add phobostype/name to make sure the object keeps its name as single user
                 if obj.phobostype + '/name' not in obj:
                     obj[obj.phobostype + '/name'] = name
 
-                # make object single user
-                sUtils.selectObjects([obj], clear=True)
-                bpy.ops.object.make_single_user(type='SELECTED_OBJECTS', object=True,
-                                                obdata=self.obdata, material=self.material,
-                                                texture=self.texture)
-                newobj = bpy.context.selected_objects[0]
+            # make object single user
+            sUtils.selectObjects(moveobjs, clear=True)
+            bpy.ops.object.make_single_user(type='SELECTED_OBJECTS', object=True,
+                                            obdata=self.obdata, material=self.material,
+                                            texture=self.texture)
+            newobjs = bpy.context.selected_objects
 
-                # prepend Blender name with scenename (phobostype/names are kept anyway)
-                newobj.name = newscene.name + '_' + name
+            # prepend Blender name with scenename (phobostype/names are kept anyway)
+            for newobj in newobjs:
+                newobj.name = newscene.name + '_' + nUtils.getObjectName(newobj)
 
         # remove objects from active scene and restructure the kinematic tree
         if self.remove:
