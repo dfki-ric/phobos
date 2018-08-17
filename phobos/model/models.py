@@ -201,7 +201,7 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
     # gather all visual/collision objects for the link from the objectlist
     for obj in [item for item in objectlist if item.phobostype in ['visual', 'collision',
                                                                    'approxsphere']]:
-        effectiveparent = sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist))
+        effectiveparent = sUtils.getEffectiveParent(obj)
         if effectiveparent == linkobj:
             if logging:
                 log("  Adding " + obj.phobostype + " '" + nUtils.getObjectName(obj) + "' to link.",
