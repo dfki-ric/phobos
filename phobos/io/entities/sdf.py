@@ -795,6 +795,8 @@ def exportSDF(model, filepath):
                 xml.descend('axis')
                 # axis is defined in local coord space of parent link
                 xml.attrib('xyz', list_to_string(joint['axis']))
+                # TODO make this consistent with annotation objects
+                xml.attrib('use_parent_model_frame', '1')
                 # OPT: xml.descend('dynamics')
                 # OPT: xml.attrib('damping', ...)
                 # OPT: xml.attrib('friction', ...)
