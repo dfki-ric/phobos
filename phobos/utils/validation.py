@@ -397,7 +397,7 @@ def validateObjectPose(obj):
     return errors
 
 
-def validateMaterial(material):
+def validateMaterial(material, adjust=False):
     """Validate the specified material.
 
     Args:
@@ -410,45 +410,81 @@ def validateMaterial(material):
 
     if not material:
         errors.append(ValidateMessage(
-                      "No material defined.",
-                      'WARNING',
-                      material, None, {}))
-        return errors
+            "No material defined.",
+            'WARNING',
+            material, None, {}))
+        return errors, material
 
-    # there are always 18 slots, regardless of whether they are filled or not
-    for tex in material.texture_slots:
-        if tex is not None:
-            try:
-                # regular diffuse color texture
-                if tex.use_map_color_diffuse:
-                    # grab the first texture
-                    material.texture_slots[0].texture.image.filepath.replace('//', '')
-            except (KeyError, AttributeError):
-                errors.append(ValidateMessage(
-                    "Diffuse texture incomplete/undefined.",
-                    'WARNING',
-                    material, None, {}))
-            try:
-                # normal map
-                if tex.use_map_normal:
-                    # grab the first texture
-                    material.texture_slots[0].texture.image.filepath.replace('//', '')
-            except (KeyError, AttributeError):
-                errors.append(ValidateMessage(
-                    "Normal texture incomplete/undefined.",
-                    'WARNING',
-                    material, None, {}))
-            try:
-                # displacement map
-                if tex.use_map_displacement:
-                    # grab the first texture
-                    material.texture_slots[0].texture.image.filepath.replace('//', '')
-            except (KeyError, AttributeError):
-                errors.append(ValidateMessage(
-                    "Displacement texture incomplete/undefined.",
-                    'WARNING',
-                    material, None, {}))
-    return errors
+    if isinstance(material, bpy.types.Object):
+        # there are always 18 slots, regardless of whether they are filled or not
+        for tex in material.texture_slots:
+            if tex is not None:
+                try:
+                    # regular diffuse color texture
+                    if tex.use_map_color_diffuse:
+                        # grab the first texture
+                        material.texture_slots[0].texture.image.filepath.replace('//', '')
+                except (KeyError, AttributeError):
+                    errors.append(ValidateMessage(
+                        "Diffuse texture incomplete/undefined.",
+                        'WARNING', material, None, {}))
+                try:
+                    # normal map
+                    if tex.use_map_normal:
+                        # grab the first texture
+                        material.texture_slots[0].texture.image.filepath.replace('//', '')
+                except (KeyError, AttributeError):
+                    errors.append(ValidateMessage(
+                        "Normal texture incomplete/undefined.",
+                        'WARNING', material, None, {}))
+                try:
+                    # displacement map
+                    if tex.use_map_displacement:
+                        # grab the first texture
+                        material.texture_slots[0].texture.image.filepath.replace('//', '')
+                except (KeyError, AttributeError):
+                    errors.append(ValidateMessage(
+                        "Displacement texture incomplete/undefined.",
+                        'WARNING', material, None, {}))
+    else:
+        if 'name' not in material:
+            if adjust:
+                material = {'name': 'phobos_error'}
+                loglevel = 'WARNING'
+            else:
+                loglevel = 'ERROR'
+            errors.append(ValidateMessage(
+                "Material name not defined.",
+                'ERROR', material, None, {}))
+            return errors, material
+
+        if 'diffuse' not in material:
+            if adjust:
+                material['diffuse'] = (1., 1., 1., 1.)
+                loglevel = 'WARNING'
+            else:
+                loglevel = 'ERROR'
+            errors.append(ValidateMessage(
+                "Material diffuse color not defined.",
+                'ERROR', material, None, {}))
+        elif len(material['diffuse']) != 4:
+            if adjust:
+                if len(material['diffuse']) == 3:
+                    material['diffuse'] = tuple(material['diffuse'] + [1.])
+                loglevel = 'WARNING'
+            else:
+                loglevel = 'ERROR'
+            errors.append(ValidateMessage(
+                "Material diffuse color definition insufficient.",
+                loglevel, material, None, {}))
+
+        if 'diffuse_intensity' not in material:
+            errors.append(ValidateMessage(
+                "Material diffuse intensity not defined.",
+                'WARNING', material, None, {}))
+            if adjust:
+                material['diffuse_intensity'] = 1.
+    return errors, material
 
 
 def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
@@ -618,7 +654,7 @@ def validate(name):
             elif name == 'joint_type':
                 errors = validateJointType(obj, *args, **kwargs)
             elif name == 'material':
-                errors = validateMaterial(obj, *args, **kwargs)
+                errors, obj = validateMaterial(obj, *args, **kwargs)
             elif name == 'link':
                 errors = validateLink(obj, *args, **kwargs)
             elif name == 'object_pose':
