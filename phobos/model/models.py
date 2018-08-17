@@ -42,6 +42,7 @@ import phobos.model.sensors as sensormodel
 import phobos.model.lights as lightmodel
 import phobos.model.motors as motormodel
 import phobos.model.controllers as controllermodel
+import phobos.model.materials as matmodel
 import phobos.model.poses as poses
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
@@ -1073,6 +1074,12 @@ def buildModelFromDictionary(model):
         model (dict): model representation of the imported model
     """
     log("Creating Blender model...", 'INFO', prefix='\n' + '-' * 25 + '\n')
+
+    log("  Initializing materials... ({} total)".format(len(model['materials'])), 'INFO')
+    print(yaml.dump(model['materials']))
+    for mat in model['materials']:
+        matmodel.createMaterial(model['materials'][mat])
+        # ['name'], tuple(mat['color'][0:3]), (1, 1, 1), mat['color'][-1])
 
     newobjects = []
     log("  Creating links... ({} total)".format(len(model['links'])), 'INFO')
