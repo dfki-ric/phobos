@@ -49,6 +49,9 @@ def getCombinedTransform(obj, effectiveparent):
     This combines all transformations in the parenting hierarchy up to the specified effective
     parent.
 
+    Note, that the scale transformation of the effective parent is used anyway, as it scales the
+    local matrix of the child object.
+
     Args:
         obj (bpy.types.Object): the child object
         effectiveparent (bpy.types.Object): the effective parent of the child object
@@ -58,9 +61,21 @@ def getCombinedTransform(obj, effectiveparent):
     """
     parent = obj.parent
     matrix = obj.matrix_local
-    while parent != effectiveparent and parent is not None:
+
+    while parent is not None:
+        # always use the parents scale
+        scale_mat = mathutils.Matrix.Identity(4)
+        scale_mat[0][0], scale_mat[1][1], scale_mat[2][2] = parent.matrix_basis.to_scale()
+        matrix = scale_mat * matrix
+
+        # don't use other transformations from effective parent
+        if parent == effectiveparent:
+            break
+
+        # use relative rotation
         matrix = parent.matrix_local * matrix
         parent = parent.parent
+
     return matrix
 
 
