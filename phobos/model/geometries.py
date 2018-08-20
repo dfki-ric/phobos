@@ -71,12 +71,10 @@ def deriveGeometry(obj, adjust=False, **kwargs):
 
 
 def deriveScale(obj):
-    """Gathers the product of the scale of all parent objects for the specified objects.
+    """Returns the scale of the specified object.
 
-    This is required to keep the objects correct scale even if the scale is not applied.
-
-    Scaling links or other parent objects also changes the scale of the specified object. By
-    combining the scales of the parents, this is taken into account.
+    Object scale is gathered from the matrix_world, as the link scales in Blender might change the
+    mesh scale, too.
 
     Args:
         obj (bpy.types.Object): object to derive the scale of
@@ -84,16 +82,8 @@ def deriveScale(obj):
     Returns:
         list(float) -- three scale floats (x, y, z) combined from all parents and the object itself
     """
-    scale = list(obj.scale)
+    return list(obj.matrix_world.to_scale())
 
-    parent = obj.parent
-    while parent:
-        scale[0] *= parent.scale.x
-        scale[1] *= parent.scale.y
-        scale[2] *= parent.scale.z
-        parent = parent.parent
-
-    return list(scale)
 
 def createGeometry(viscol, geomsrc, linkobj=None):
     """Creates Blender object for visual or collision objects.
