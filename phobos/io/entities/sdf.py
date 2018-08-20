@@ -1053,6 +1053,11 @@ def parseSDFMaterial(visualname, material):
     # sdf has no material names, so we initialize with visual name
     materialdict['name'] = 'mat_' + visualname
 
+    sdfannos = {}
+    genericparams = [elem.tag for elem in list(material)
+                     if elem.tag not in [
+                         'ambient', 'diffuse', 'specular', 'emissive', 'shader', 'script']]
+    sdfannos.update({a: gUtils.parse_text(material.find(a).text) for a in genericparams})
     # TODO add support
     # materialdict['sdf/script']
     # materialdict['sdf/shader']
@@ -1077,7 +1082,9 @@ def parseSDFLink(link, filepath):
                      if elem.tag not in [
                          'velocity_decay', 'frame', 'pose', 'inertial', 'collision', 'visual',
                          'sensor', 'projector', 'audio_source', 'battery']]
-    newlink = {'$sdf/' + a: gUtils.parse_text(link.find(a).text) for a in genericparams}
+    newlink = {}
+    sdfannos = {}
+    sdfannos.update({a: gUtils.parse_text(link.find(a).text) for a in genericparams})
 
     newlink['name'] = link.attrib['name']
     newlink['children'] = []
@@ -1109,20 +1116,23 @@ def parseSDFLink(link, filepath):
             log("     {} element {}:".format(objtype[0].upper() + objtype[1:], name), 'DEBUG')
 
             elemdict = {'name': name}
+            elemsdfannos = {}
             if objtype == 'collision':
+                genparams = [generic.tag for generic in list(elem)
+                                 if generic.tag not in ['pose', 'frame', 'surface']]
+                elemsdfannos.update({a: gUtils.parse_text(link.find(a).text) for a in genparams})
                 # TODO implement support for this
-                # elemdict['sdf/laser_retro']
-                # elemdict['sdf/max_contacts']
                 # elemdict['sdf/frame']
                 elemdict['pose'] = parseSDFPose(elem.find('pose'))
                 # geometry is parsed below
                 # TODO implement support
                 # elemdict['sdf/surface']
             else:
+                genparams = [generic.tag for generic in list(elem)
+                                 if generic.tag not in ['pose', 'frame', 'meta',
+                                                        'material', 'plugin']]
+                elemsdfannos.update({a: gUtils.parse_text(link.find(a).text) for a in genparams})
                 # TODO implement support for this
-                # elemdict['sdf/cast_shadows']
-                # elemdict['sdf/laser_retro']
-                # elemdict['sdf/transparency']
                 # elemdict['sdf/meta']
                 # elemdict['sdf/frame']
                 elemdict['pose'] = parseSDFPose(elem.find('pose'))
@@ -1146,6 +1156,7 @@ def parseSDFLink(link, filepath):
                     objtype, name, newlink['name']), 'ERROR')
                 continue
             elemdict['geometry'] = parseSDFGeometry(elem.find('geometry'), link, filepath)
+            elemdict['annotations'] = {'sdf': elemsdfannos}
             objectsdict[name] = elemdict
         newlink[objtype] = objectsdict
 
@@ -1153,6 +1164,7 @@ def parseSDFLink(link, filepath):
 
     # TODO add projector, audio sink, audio_source, battery support
 
+    newlink['annotations'] = {'sdf': sdfannos}
     import yaml
     print(yaml.dump(newlink))
     if newlink == {}:
@@ -1172,9 +1184,10 @@ def parseSDFSensors(sensors):
 
 def parseSDFAxis(axis):
     axisdict = {}
+    sdfannos = {}
 
     if 'initial_position' in list(axis):
-        axisdict['$sdf/initial_position'] = gUtils.parse_text(axis.find('initial_position').text)
+        sdfannos['initial_position'] = gUtils.parse_text(axis.find('initial_position').text)
 
     axisdict['xyz'] = gUtils.parse_text(axis.find('xyz').text)
     axisdict['use_parent_model_frame'] = bool(axis.find('use_parent_model_frame').text)
@@ -1200,6 +1213,8 @@ def parseSDFAxis(axis):
         if opt_limit in list(limits):
             axisdict['limits'][opt_limit] = gUtils.parse_number(limits.find(opt_limit).text)
 
+    axisdict['annotations'] = {'sdf': sdfannos}
+
     return axisdict
 
 
@@ -1209,16 +1224,18 @@ def parseSDFJoint(joint):
     jointdict['child'] = joint.find('child').text
 
     # include all generic parameters not defined in this function
-    genericparams = [elem.tag for elem in list(joint)
-                     if elem.tag not in ['parent', 'child', 'axis', 'physics', 'pose', 'sensor']]
-    jointdict.update({'$sdf/' + a: gUtils.parse_text(joint.find(a).text) for a in genericparams})
+    genparams = [elem.tag for elem in list(joint)
+                 if elem.tag not in ['parent', 'child', 'axis', 'axis2', 'physics', 'frame',
+                                     'pose', 'sensor']]
+    sdfannos = {}
+    sdfannos.update({a: gUtils.parse_text(joint.find(a).text) for a in genparams})
 
     axis = joint.find('axis')
     if axis is not None:
         sdfaxis = parseSDFAxis(axis)
         # TODO safe axis values in a smarter way
         jointdict['xyz'] = sdfaxis['xyz']
-        jointdict['$sdf/use_parent_model_frame'] = sdfaxis['use_parent_model_frame']
+        sdfannos['axis/use_parent_model_frame'] = sdfaxis['use_parent_model_frame']
         jointdict['limits'] = sdfaxis['limits']
         if 'dynamics' in sdfaxis:
             jointdict['dynamics'] = sdfaxis['dynamics']
@@ -1228,10 +1245,6 @@ def parseSDFJoint(joint):
     if axis2 is not None:
         sdfaxis2 = parseSDFAxis(axis2)
 
-    # for category in ('dynamics', 'calibration', 'safety_controller', 'mimic'):
-    #     data = joint.find(category)
-    #     jointdict[category] = {a: gUtils.parse_text(data.attrib[a]) for a in data.attrib}
-
     if 'physics' in list(joint):
         jointdict['physics'] = parseSDFJointPhysics(joint.find('physics'))
 
@@ -1240,6 +1253,7 @@ def parseSDFJoint(joint):
     pose = parseSDFPose(joint.find('pose'))
 
     sensors = parseSDFSensors(joint.findall('sensor'))
+    jointdict['annotations'] = {'sdf': sdfannos}
 
     import yaml
     print('JOINT:', yaml.dump(jointdict))
@@ -1262,15 +1276,18 @@ def importSDF(filepath):
     sdfroot = tree.getroot()
     root = sdfroot.find('model')
     model['name'] = root.attrib['name']
-    # TODO include these as model annotations
-    # model['$sdf/static']
-    # model['$sdf/self_collide']
-    # model['$sdf/allow_auto_disable']
-    # model['$sdf/include']
-    # model['$sdf/model']
-    # model['$sdf/enable_wind']
-    # model['$sdf/frame']
-    # model['$sdf/pose']
+
+    # include all generic parameters not defined in this function
+    genparams = [elem.tag for elem in list(sdfroot)
+                 if elem.tag not in ['include', 'model', 'frame', 'pose', 'link', 'joint',
+                                     'plugin', 'gripper']]
+    sdfannos = {}
+    sdfannos.update({a: gUtils.parse_text(sdfroot.find(a).text) for a in genparams})
+    # TODO add support
+    # sdfannos['include']
+    # sdfannos['model']
+    # sdfannos['frame']
+    # sdfannos['pose']
 
     links = {}
     materials = {}
@@ -1317,8 +1334,10 @@ def importSDF(filepath):
             links[link]['pose'] = parseSDFPose(None)
 
     # TODO include these as model annotations
-    # model['$sdf/plugin']
-    # model['$sdf/gripper']
+    # sdfannos['plugin']
+    # sdfannos['gripper']
+
+    model['annotations'] = {'sdf': sdfannos}
     return model
 
 # registering export functions of types with Phobos
