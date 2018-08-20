@@ -62,13 +62,14 @@ def getCombinedTransform(obj, effectiveparent):
     parent = obj.parent
     matrix = obj.matrix_local
 
-    while parent is not None:
-        # always use the parents scale
+    # use the parents absolute scale to scale the relative matrix
+    if parent:
         scale_mat = mathutils.Matrix.Identity(4)
-        scale_mat[0][0], scale_mat[1][1], scale_mat[2][2] = parent.matrix_basis.to_scale()
+        scale_mat[0][0], scale_mat[1][1], scale_mat[2][2] = parent.matrix_world.to_scale()
         matrix = scale_mat * matrix
 
-        # don't use other transformations from effective parent
+    # combine transformations up to effective parent
+    while parent is not None:
         if parent == effectiveparent:
             break
 
