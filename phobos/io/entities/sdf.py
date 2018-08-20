@@ -1031,7 +1031,7 @@ def parseSDFGeometry(geometry, link, sdfpath):
                 'WARNING')
             geometrydict = {'type': 'box', 'size': [1, 1, 1]}
         else:
-            geometry['filename'] = filepath
+            geometrydict['filename'] = filepath
 
             # TODO add submesh support
 
