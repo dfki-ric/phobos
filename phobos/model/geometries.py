@@ -97,7 +97,8 @@ def createGeometry(viscol, geomsrc, linkobj=None):
     Depending on the geometry type other values are required: *size*, *radius*, *length*
 
     These entries are optional:
-        *scale* (in *geometry*): scale for the new geometry
+        *geometry*:
+            *scale*: scale for the new geometry
         *material*: material name to assign to the visual
         *pose*: specifies the placement of the new object relative to the optional linkobj
             *translation*: position vector for the new object
@@ -146,9 +147,6 @@ def createGeometry(viscol, geomsrc, linkobj=None):
                 if not newgeom:
                     log('Failed to import mesh file ' + geom['filename'], 'ERROR')
                     return
-            # scale imported object
-            if 'scale' in geom:
-                newgeom.scale = geom['scale']
     else:
         if geom['type'] == 'box':
             dimensions = geom['size']
@@ -200,6 +198,8 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         sUtils.selectObjects([newgeom, linkobj], True, 1)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
         newgeom.matrix_local = location * rotation
-        if 'scale' in viscol['geometry']:
-            newgeom.scale = mathutils.Vector(viscol['geometry']['scale'])
+
+    # scale imported object
+    if 'scale' in geom:
+        newgeom.scale = geom['scale']
     return newgeom
