@@ -985,7 +985,7 @@ class PhobosExportPanel(bpy.types.Panel):
             box.label('OBJ axis')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_forward')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_up')
-        elif getattr(bpy.context.scene, 'export_entity_sdf', False):
+        if getattr(bpy.context.scene, 'export_entity_sdf', False):
             layout.separator()
             box = layout.box()
             box.label('SDF export')
