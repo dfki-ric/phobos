@@ -107,18 +107,20 @@ def createJoint(joint, linkobj=None, links=None):
             if param in joint['limits']:
                 linkobj['joint/max' + param] = joint['limits'][param]
             else:
-                log("Joint limits incomplete for joint {}. Missing {}.".format(joint['name'],
-                                                                                param), 'ERROR')
+                log("Joint limits incomplete for joint {}. Missing {}.".format(
+                    joint['name'], param), 'ERROR')
 
         if all(elem in joint['limits'] for elem in ['lower', 'upper']):
             lower = joint['limits']['lower']
             upper = joint['limits']['upper']
         else:
-            lower = 0.0
-            upper = 0.0
+            log("Joint limits upper/lower is missing! Defaulted to [-1e-5, 1e-5].", 'WARNING')
+            lower = -1e-5
+            upper = 1e-5
     else:
-        lower = 0.0
-        upper = 0.0
+        log("Joint limits upper/lower is missing! Defaulted both to [-1e-5, 1e-5].", 'WARNING')
+        lower = -1e-5
+        upper = 1e-5
     setJointConstraints(linkobj, joint['type'], lower, upper)
 
     # add generic properties
