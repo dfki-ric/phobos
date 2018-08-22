@@ -883,9 +883,7 @@ def exportSDF(model, filepath):
                 # xml.ascend()
             # if 'frame' in joint.keys():
                 # OPT: xml.write(exportSDFFrame(joint['frame']))
-            # if 'pose' in joint.keys():
-                # OPT: xml.write(exportSDFPose(...))
-                # xml.ascend()
+            xml.write(exportSDFPose(joint['pose'], xml.get_indent()))
             # if 'sensor' in joint.keys():
                 # OPT: xml.write(sensor('sensor'))
             xml.ascend()
@@ -968,6 +966,7 @@ def parseSDFPose(pose):
         posedict['translation'] = xyzrpy[:3]
         posedict['rotation_euler'] = xyzrpy[3:]
     else:
+        log("Pose undefined. Defaulting to [0., 0., 0.].", 'WARNING')
         posedict['translation'] = [0.0, 0.0, 0.0]
         posedict['rotation_euler'] = [0.0, 0.0, 0.0]
     return posedict
