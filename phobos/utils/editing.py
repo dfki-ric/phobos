@@ -503,15 +503,15 @@ def disconnectInterfaces(parentinterface, childinterface, transform=None):
     childinterface.show_name = True
 
 
-def setProperties(diction, obj, category=None):
+def setProperties(obj, diction, category=None):
     """Adds the specified dictionary as custom properties to the object.
 
     If a category is provided, the keys of the dictionary are prepended with the category:
         `category/key`
 
     Args:
-        diction (dict): information to add to the object
         obj (bpy.types.Object): object to add the information to
+        diction (dict): information to add to the object
         category (str): category for the dictionary entries
     """
     for key, value in diction.items():

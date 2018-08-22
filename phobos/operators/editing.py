@@ -2563,7 +2563,7 @@ class SetModelRoot(Operator):
 
         # write model information to new root
         newroot.pose.bones[0].custom_shape = ioUtils.getResource(('link', 'root'))
-        eUtils.setProperties(modelprops, newroot, category='model')
+        eUtils.setProperties(newroot, modelprops, category='model')
 
         # remove model information from old root
         eUtils.removeProperties(oldroot, ['model/*'])
