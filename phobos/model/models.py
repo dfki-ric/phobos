@@ -338,6 +338,7 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         del props['maxeffort']
     if limits != {}:
         props['limits'] = limits
+    props['pose'] = deriveObjectPose(obj)
     # TODO: what about these?
     # - calibration
     # - dynamics
