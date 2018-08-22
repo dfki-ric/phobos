@@ -1118,8 +1118,8 @@ def parseSDFLink(link, filepath):
             elemsdfannos = {}
             if objtype == 'collision':
                 genparams = [generic.tag for generic in list(elem)
-                                 if generic.tag not in ['pose', 'frame', 'surface']]
-                elemsdfannos.update({a: gUtils.parse_text(link.find(a).text) for a in genparams})
+                             if generic.tag not in ['pose', 'frame', 'surface', 'geometry']]
+                elemsdfannos.update({a: gUtils.parse_text(elem.find(a).text) for a in genparams})
                 # TODO implement support for this
                 # elemdict['sdf/frame']
                 elemdict['pose'] = parseSDFPose(elem.find('pose'))
@@ -1127,10 +1127,9 @@ def parseSDFLink(link, filepath):
                 # TODO implement support
                 # elemdict['sdf/surface']
             else:
-                genparams = [generic.tag for generic in list(elem)
-                                 if generic.tag not in ['pose', 'frame', 'meta',
-                                                        'material', 'plugin']]
-                elemsdfannos.update({a: gUtils.parse_text(link.find(a).text) for a in genparams})
+                genparams = [generic.tag for generic in list(elem) if generic.tag not in [
+                    'pose', 'frame', 'geometry', 'meta', 'material', 'plugin']]
+                elemsdfannos.update({a: gUtils.parse_text(elem.find(a).text) for a in genparams})
                 # TODO implement support for this
                 # elemdict['sdf/meta']
                 # elemdict['sdf/frame']
@@ -1203,14 +1202,13 @@ def parseSDFAxis(axis):
         if 'friction' in list(dynamics):
             axisdict['dynamics']['friction'] = gUtils.parse_number(dynamics.find('friction').text)
 
+    # parse optional limits
     axisdict['limits'] = {}
     limits = axis.find('limit')
-    axisdict['limits']['lower'] = gUtils.parse_text(limits.find('lower').text)
-    axisdict['limits']['upper'] = gUtils.parse_text(limits.find('upper').text)
-
-    for opt_limit in ['effort', 'velocity', 'stiffness', 'dissipation']:
-        if opt_limit in list(limits):
-            axisdict['limits'][opt_limit] = gUtils.parse_number(limits.find(opt_limit).text)
+    if limits is not None:
+        for opt_limit in ['lower', 'upper', 'effort', 'velocity', 'stiffness', 'dissipation']:
+            if opt_limit in list(limits):
+                axisdict['limits'][opt_limit] = gUtils.parse_number(limits.find(opt_limit).text)
 
     axisdict['annotations'] = {'sdf': sdfannos}
 
@@ -1328,8 +1326,8 @@ def importSDF(filepath):
     model['joints'] = joints
 
     # find any links that still have no pose (most likely because they had no parent)
-    for link in links:
-        if 'pose' not in links[link]:
+    for link in model['links']:
+        if 'pose' not in model['links'][link]:
             links[link]['pose'] = parseSDFPose(None)
 
     # TODO include these as model annotations
