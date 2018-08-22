@@ -37,10 +37,19 @@ from . import io as ioUtils
 from .. import defs
 
 
-def addDictionaryToObj(dict, obj, category=None):
-    # DOCU add some docstring
-    for key, value in dict:
-        obj[(category+'/'+key) if category else key] = value
+def setProperties(diction, obj, category=None):
+    """Adds the specified dictionary as custom properties to the object.
+
+    If a category is provided, the keys of the dictionary are prepended with the category:
+        `category/key`
+
+    Args:
+        diction (dict): information to add to the object
+        obj (bpy.types.Object): object to add the information to
+        category (str): category for the dictionary entries
+    """
+    for key, value in diction.items():
+        obj[(category + '/' + key) if category else key] = value
 
 
 def getCombinedTransform(obj, effectiveparent):

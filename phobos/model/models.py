@@ -1195,9 +1195,9 @@ def buildModelFromDictionary(model):
     log("Creating motors...", 'INFO')
     if 'motors' in model and model['motors']:
         for motor in model['motors']:
-            eUtils.addDictionaryToObj(model['motors'][motor],
-                                      model['joints'][model['motors'][motor]['joint']],
-                                      category='motor')
+            eUtils.setProperties(model['motors'][motor],
+                                 model['joints'][model['motors'][motor]['joint']],
+                                 category='motor')
     else:
         log("  No motors in model.", 'INFO')
 
