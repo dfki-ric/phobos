@@ -48,6 +48,7 @@ import phobos.display as display
 import phobos.model.inertia as inertialib
 import phobos.utils.selection as sUtils
 import phobos.utils.general as gUtils
+import phobos.utils.io as ioUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.editing as eUtils
@@ -2546,7 +2547,26 @@ class SetModelRoot(Operator):
         return context.active_object and context.active_object.phobostype == 'link'
 
     def execute(self, context):
-        eUtils.restructureKinematicTree(context.object)
+        newroot = context.active_object
+        oldroot = sUtils.getRoot(obj=context.active_object)
+
+        # gather model information from old root
+        modelprops = eUtils.getProperties(oldroot, category='model')
+        oldroot.pose.bones[0].custom_shape = None
+
+        # assign joint resource to oldroot if applicable
+        if 'joint/type' in oldroot:
+            oldroot.pose.bones[0].custom_shape = ioUtils.getResource(
+                ('joint', oldroot['joint/type']))
+
+        eUtils.restructureKinematicTree(newroot)
+
+        # write model information to new root
+        newroot.pose.bones[0].custom_shape = ioUtils.getResource(('link', 'root'))
+        eUtils.setProperties(modelprops, newroot, category='model')
+
+        # remove model information from old root
+        eUtils.removeProperties(oldroot, ['model/*'])
         return {'FINISHED'}
 
 
