@@ -201,6 +201,7 @@ def exportSDFPose(relativepose, indentation, poseobject=None):
                     'translation': list(matrix.to_translation()),
                     'rotation_euler': list(matrix.to_euler()),
                     'rotation_quaternion': list(matrix.to_quaternion())}
+        posedata = gUtils.roundFloatsInDict(posedata, getExpSettings().decimalPlaces)
 
     # only translation and euler rotation are required
     tra = posedata['translation']
