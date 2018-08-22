@@ -48,17 +48,15 @@ if __name__ == '__main__':
     # install addon
     if os.path.exists(addonpath):
         shutil.rmtree(addonpath)  # always clean install folder
-    copied_files = updateFolderContents(
-        os.path.join(phoboshome, 'phobos'),
-        addonpath)
+    copied_files = updateFolderContents(os.path.join(phoboshome, 'phobos'), addonpath)
     if not copied_files:
         print('Something went wrong with copying the addon files to your Blender installation.\n',
               'Aborting installation.')
         sys.exit(0)
 
     # install config files
-    copied_files = updateFolderContents(os.path.join(phoboshome, 'config'),
-                                        phobossystem.getConfigPath())
+    copied_files = updateFolderContents(
+        os.path.join(phoboshome, 'config'), phobossystem.getConfigPath())
     if not copied_files:
         print('Something went wrong with copying config files.')
 
