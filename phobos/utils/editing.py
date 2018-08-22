@@ -518,15 +518,30 @@ def setProperties(diction, obj, category=None):
         obj[(category + '/' + key) if category else key] = value
 
 
-def getPropertiesSubset(obj, category=None):
+def getProperties(obj, category=None):
+    """Returns a dictionary of custom property information of the object.
+
+    If a category is provided, only the custom properties of the specified category are returned.
+    Otherwise, the phobostype of the object will be used as category.
+
+    The dictionary contains the custom property keys with the category removed (e.g. 'name' for
+    'link/name').
+
+    Args:
+        obj (bpy.types.Object): object to get properties of
+        category (str): property category to look for
+
+    Returns:
+        dict -- custom property information of the phobostype/category for the object
+    """
     if not category:
         category = obj.phobostype
     try:
-        dict = {key.replace(category+'/', ''): value
-                for key, value in obj.items() if key.startswith(category+'/')}
+        diction = {key.replace(category + '/', ''): value
+                   for key, value in obj.items() if key.startswith(category + '/')}
     except KeyError:
         log("Failed filtering properties for category " + category, "ERROR")
-    return dict
+    return diction
 
 
 def removeProperties(obj, props, recursive=False):
