@@ -36,6 +36,7 @@ import re
 
 import yaml
 from phobos.phoboslog import log
+import phobos.phobossystem as phobossystem
 
 # Phobos information
 version = '0.7'
@@ -205,7 +206,6 @@ def __parseAllYAML(path):
                 tmpstring = f.read()
 
             try:
-                print('  ' + file)
                 tmpyaml = yaml.load(__evaluateString(tmpstring))
 
                 if not tmpyaml:
@@ -220,5 +220,6 @@ def __parseAllYAML(path):
 
 
 # Update definitions from files
-print("Parsing definitions from: " + os.path.dirname(__file__) + "/definitions")
-updateDefs(os.path.dirname(__file__) + "/definitions")
+definitionpath = os.path.join(phobossystem.getConfigPath() + '/definitions')
+print("Parsing definitions from:", definitionpath)
+updateDefs(definitionpath)
