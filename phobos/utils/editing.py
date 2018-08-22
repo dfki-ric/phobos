@@ -37,21 +37,6 @@ from . import io as ioUtils
 from .. import defs
 
 
-def setProperties(diction, obj, category=None):
-    """Adds the specified dictionary as custom properties to the object.
-
-    If a category is provided, the keys of the dictionary are prepended with the category:
-        `category/key`
-
-    Args:
-        diction (dict): information to add to the object
-        obj (bpy.types.Object): object to add the information to
-        category (str): category for the dictionary entries
-    """
-    for key, value in diction.items():
-        obj[(category + '/' + key) if category else key] = value
-
-
 def getCombinedTransform(obj, effectiveparent):
     """Get the combined transform of the object relative to the effective parent.
 
@@ -518,6 +503,21 @@ def disconnectInterfaces(parentinterface, childinterface, transform=None):
     childinterface.show_name = True
 
 
+def setProperties(diction, obj, category=None):
+    """Adds the specified dictionary as custom properties to the object.
+
+    If a category is provided, the keys of the dictionary are prepended with the category:
+        `category/key`
+
+    Args:
+        diction (dict): information to add to the object
+        obj (bpy.types.Object): object to add the information to
+        category (str): category for the dictionary entries
+    """
+    for key, value in diction.items():
+        obj[(category + '/' + key) if category else key] = value
+
+
 def getPropertiesSubset(obj, category=None):
     if not category:
         category = obj.phobostype
@@ -527,6 +527,31 @@ def getPropertiesSubset(obj, category=None):
     except KeyError:
         log("Failed filtering properties for category " + category, "ERROR")
     return dict
+
+
+def removeProperties(obj, props, recursive=False):
+    """Removes a list of custom properties from the specified object.
+
+    The specified property list can contain names with wildcards at the end (e.g. sensor*).
+
+    If recursive is set, the properties will be removed recursively from all children, too.
+
+    Args:
+        obj (bpy.types.Object): object to remove the properties from
+        props (list(str)): list of property names, which will be removed from the object
+        recursive (bool): if True, the properties will be removed recursively from the children, too
+    """
+    for prop in props:
+        if prop in obj:
+            del obj[prop]
+        elif prop[-1] == '*':
+            for objprop in obj.keys():
+                if objprop.startswith(prop[:-1]):
+                    del obj[objprop]
+
+    if recursive:
+        for child in obj.children:
+            removeProperties(child, props, recursive=recursive)
 
 
 def mergeLinks(links, targetlink, movetotarget=False):
@@ -603,30 +628,6 @@ def addAnnotation(obj, annotation, namespace=None):
     for key, value in annotation.items():
         obj[str(namespace + '/' if namespace else '') + key] = value
 
-
-def removeProperties(obj, props, recursive=False):
-    """Removes a list of custom properties from the specified object.
-
-    The specified property list can contain names with wildcards at the end (e.g. sensor*).
-
-    If recursive is set, the properties will be removed recursively from all children, too.
-
-    Args:
-        obj (bpy.types.Object): object to remove the properties from
-        props (list(str)): list of property names, which will be removed from the object
-        recursive (bool): if True, the properties will be removed recursively from the children, too
-    """
-    for prop in props:
-        if prop in obj:
-            del obj[prop]
-        elif prop[-1] == '*':
-            for objprop in obj.keys():
-                if objprop.startswith(prop[:-1]):
-                    del obj[objprop]
-
-    if recursive:
-        for child in obj.children:
-            removeProperties(child, props, recursive=recursive)
 
 def sortObjectsToLayers(objs):
     """Sorts the specified objects to the layers which match their phobostype.
