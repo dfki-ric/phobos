@@ -1,5 +1,49 @@
 # TODO this is not used? remove it or make an idea pool somewhere...
 
+
+# def round_float(float_as_str, decimal=6):
+#     """Casts 'float_as_str' to float and round to 'decimal' decimal places. The possible exception
+#     **ValueError** is not handled in the function itself!
+
+#     Args:
+#       float_as_str(str: str): The string you want to cast into a float.
+#       decimal(int, optional): The number of decimal places you want to round to. Its default is 6.
+
+#     Returns:
+#       float
+
+#     """
+#     return round(float(float_as_str), decimal)
+
+
+# def pos_rot_tree_to_lists(position, rotation):
+#     """Convert the xml representations of a position and a rotation to lists.
+#     If either is 'None', return a list of zeroes instead.
+
+#     Args:
+#       position(str): The xml representation of a position.
+#       rotation(str): The xml representation of a rotation.
+
+#     Returns:
+#       tuple of two lists
+
+#     """
+#     if position:
+#         px = round_float(position.find('x').text)
+#         py = round_float(position.find('y').text)
+#         pz = round_float(position.find('z').text)
+#     else:
+#         px, py, pz = (0, 0, 0)
+#     if rotation:
+#         rw = round_float(rotation.find('w').text)
+#         rx = round_float(rotation.find('x').text)
+#         ry = round_float(rotation.find('y').text)
+#         rz = round_float(rotation.find('z').text)
+#     else:
+#         rw, rx, ry, rz = (0, 0, 0, 0)
+
+#     return [px, py, pz], [rw, rx, ry, rz]
+
 # class MARSModelParser(RobotModelParser):
 #     """
 #     Class derived from RobotModelParser which parses a MARS scene.
