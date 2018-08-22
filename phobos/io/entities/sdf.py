@@ -1035,8 +1035,8 @@ def parseSDFGeometry(geometry, link, sdfpath):
             # TODO add submesh support
 
             # read scale for meshes only
-            if 'scale' in geometry[0].attrib:
-                geometrydict['scale'] = gUtils.parse_text(geometry[0].attrib['scale'])
+            if geometry[0].find('scale') is not None:
+                geometrydict['scale'] = gUtils.parse_text(geometry[0].find('scale').text)
             else:
                 geometrydict['scale'] = [1.0, 1.0, 1.0]
 
