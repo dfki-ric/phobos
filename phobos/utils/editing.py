@@ -659,3 +659,30 @@ def sortObjectsToLayers(objs):
             obj.layers = layers
         else:
             log("The phobostype of object {} is undefined.".format(obj.name), 'ERROR')
+
+
+def smoothen_surface(obj):
+    """Applies various steps to make the specified object look clean and smooth.
+
+    Args:
+        obj (bpy.types.Object): object to make look clean
+    """
+    bpy.context.scene.objects.active = obj
+
+    # recalculate surface normals
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.mesh.normals_make_consistent()
+    bpy.ops.mesh.mark_sharp(clear=True)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    # add smooth shading
+    bpy.ops.object.shade_smooth()
+
+    # use edge split modifier to improve the look of CAD-models
+    for mod in obj.modifiers:
+        if mod.type == 'EDGE_SPLIT':
+            log("Edge split modifier already added to object {}.".format(obj.name), 'DEBUG')
+            break
+    else:
+        bpy.ops.object.modifier_add(type='EDGE_SPLIT')
