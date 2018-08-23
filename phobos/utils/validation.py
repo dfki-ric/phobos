@@ -546,7 +546,7 @@ def validateInertiaData(obj, *args, adjust=False):
 
     # Check inertia vector for various properties
     inertia = numpy.array(inertiaListToMatrix(inertia))
-    if any(element < 0.0 for element in inertia.diagonal()):
+    if any(element <= 0.0 for element in inertia.diagonal()):
         errors.append(ValidateMessage(
             "Negative semidefinite main diagonal in inertia data!",
             'WARNING',
@@ -554,7 +554,7 @@ def validateInertiaData(obj, *args, adjust=False):
             None, {'log_info': "Diagonal: " + str(inertia.diagonal())}))
 
     # Calculate the determinant if consistent
-    if numpy.linalg.det(inertia) < 0.0:
+    if numpy.linalg.det(inertia) <= 0.0:
         errors.append(ValidateMessage(
             "Negative semidefinite determinant in inertia data!",
             'WARNING',
@@ -562,7 +562,7 @@ def validateInertiaData(obj, *args, adjust=False):
             None, {'log_info': "Determinant: " + str(numpy.linalg.det(inertia))}))
 
     # Calculate the eigenvalues if consistent
-    if any(element < 0.0 for element in numpy.linalg.eigvals(inertia)):
+    if any(element <= 0.0 for element in numpy.linalg.eigvals(inertia)):
         errors.append(ValidateMessage(
             "Negative semidefinite eigenvalues in inertia data!",
             'WARNING',

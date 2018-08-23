@@ -375,7 +375,8 @@ def deriveMotor(obj, joint):
         return None
 
 
-def deriveInertial(obj):
+@validate('inertia_data')
+def deriveInertial(obj, logging=True, **kwargs):
     """Returns a dictionary describing the inertial information represented by the provided object.
 
     Contains these keys:
@@ -387,13 +388,15 @@ def deriveInertial(obj):
 
     Args:
         obj(bpy.types.Object): object of phobostype 'inertial'
+        logging (bool): whether to log information or not
     """
     if obj.phobostype != 'inertial':
-        log("Object '{0}' is not of phobostype 'inertial'.".format(obj.name), 'ERROR')
+        if logging:
+            log("Object '{0}' is not of phobostype 'inertial'.".format(obj.name), 'ERROR')
         return None
 
     props = initObjectProperties(obj, phobostype='inertial')
-    props['pose'] = deriveObjectPose(obj)
+    props['pose'] = deriveObjectPose(obj, logging=logging, **kwargs)
     return props
 
 
@@ -744,7 +747,7 @@ def deriveDictEntry(obj, names=False, objectlist=[]):
     props = {}
     try:
         if obj.phobostype == 'inertial':
-            props = deriveInertial(obj)
+            props = deriveInertial(obj, adjust=True, logging=True)
         elif obj.phobostype == 'visual':
             props = deriveVisual(obj)
         elif obj.phobostype == 'collision':
