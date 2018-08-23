@@ -574,14 +574,7 @@ class SmoothenSurfaceOperator(Operator):
         objs = [obj for obj in context.selected_objects if obj.type == "MESH"]
         i = 1
         for obj in objs:
-            context.scene.objects.active = obj
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.mesh.select_all(action='SELECT')
-            bpy.ops.mesh.normals_make_consistent()
-            bpy.ops.mesh.mark_sharp(clear=True)
-            bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.ops.object.shade_smooth()
-            bpy.ops.object.modifier_add(type='EDGE_SPLIT')
+            eUtils.smoothen_surface(obj)
             display.setProgress(i/len(context.selected_objects))
             i += 1
         return {'FINISHED'}

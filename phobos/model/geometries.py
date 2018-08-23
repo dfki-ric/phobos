@@ -7,6 +7,7 @@ import phobos.defs as defs
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
+import phobos.utils.editing as eUtils
 import phobos.io.meshes.meshes as meshes
 from phobos.model.materials import assignMaterial
 from phobos.phoboslog import log
@@ -202,4 +203,8 @@ def createGeometry(viscol, geomsrc, linkobj=None):
     # scale imported object
     if 'scale' in geom:
         newgeom.scale = geom['scale']
+
+    # make object smooth
+    eUtils.smoothen_surface(newgeom)
+
     return newgeom
