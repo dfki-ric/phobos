@@ -119,10 +119,12 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0,
                                              rotation=protation)
     elif ptype == "cylinder":
         bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=psize[0], depth=psize[1],
-                                            layers=players, location=plocation, rotation=protation)
+                                            layers=players, location=plocation, rotation=protation,
+                                            end_fill_type='TRIFAN')
     elif ptype == "cone":
         bpy.ops.mesh.primitive_cone_add(vertices=32, radius=psize[0], depth=psize[1], cap_end=True,
-                                        layers=players, location=plocation, rotation=protation)
+                                        layers=players, location=plocation, rotation=protation,
+                                        end_fill_type='TRIFAN')
     elif ptype == 'disc':
         bpy.ops.mesh.primitive_circle_add(vertices=psize[1], radius=psize[0], fill_type='TRIFAN', location=plocation,
                                           rotation=protation, layers=players)
