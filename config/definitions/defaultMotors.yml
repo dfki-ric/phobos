@@ -1,38 +1,87 @@
+# If you want to evaluate numeric expressions in this yaml file, just enclose your expression with
+# '&'. In that simple expressions you can use the python math module.
+
+# IMPORTANT: if adding new categories to the internal phobos, also change the
+# visual representation of these in the add_motor Operator!
+
+# Currently, these motors are only supported by MARS:
+# generic_dc
+# generic_bldc
+# limes_typ1
+# limes_typ2
+# limes_typ3
+
 motors:
-  none:
-    name: none
-    type: none
-    controller: none
-  generic_dc:
-    name: generic_dc
-    type: dc
-    controller: generic_dc
-    maxSpeed: 3.141
-    maxEffort: 50.0
-  generic_bldc:
-    name: generic_bldc
-    type: bldc
-    controller: generic_pid
-    maxSpeed: 3.141
-    maxEffort: 50.0
-  limes_typ1:
-    name: limes_typ1
-    type: bldc
-    controller: limes_position
-    maxSpeed: 1.438
-    maxEffort: 238
-    protocol: ndlcom
-  limes_typ2:
-    name: limes_typ2
-    type: bldc
-    controller: limes_position
-    maxSpeed: 1.966
-    maxEffort: 92
-    protocol: ndlcom
-  limes_typ3:
-    name: limes_typ3
-    type: bldc
-    controller: limes_position
-    maxSpeed: 2.293
-    maxEffort: 54
-    protocol: ndlcom
+    # generic motors
+    generic_bldc:
+        general:
+            type: bldc
+            shape: resource://dc_motor
+            size:
+                - 0.2
+                - 36
+            categories:
+                - generic
+        type: bldc
+        controller: generic_pid
+        maxSpeed: 3.141
+        maxEffort: 50.0
+    generic_dc:
+        general:
+            type: dc
+            shape: resource://dc_motor
+            size:
+                - 0.2
+                - 36
+            categories:
+                - generic
+        type: dc
+        controller: generic_dc
+        maxSpeed: 3.141
+        maxEffort: 50.0
+    # limes motors
+    limes_typ1:
+        general:
+            type: bldc
+            shape: resource://dc_motor
+            size:
+                - 0.2
+                - 36
+            categories:
+                - bldc
+                - limes
+        type: bldc
+        controller: limes_position
+        maxSpeed: 1.438
+        maxEffort: 238
+        protocol: ndlcom
+    limes_typ2:
+        general:
+            type: bldc
+            shape: resource://dc_motor
+            size:
+                - 0.2
+                - 36
+            categories:
+                - bldc
+                - limes
+        type: bldc
+        controller: limes_position
+        maxSpeed: 1.966
+        maxEffort: 92
+        protocol: ndlcom
+    limes_typ3:
+        general:
+            type: bldc
+            shape: resource://dc_motor
+            size:
+                - 0.2
+                - 36
+            categories:
+                - bldc
+                - limes
+        type: bldc
+        controller: limes_position
+        maxSpeed: 2.293
+        maxEffort: 54
+        protocol: ndlcom
