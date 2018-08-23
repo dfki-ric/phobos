@@ -1332,10 +1332,15 @@ def addMotorFromYaml(name, motortype):
             return context.window_manager.invoke_props_dialog(self)
 
         def execute(self, context):
+            if 'material' in defs.def_settings['motors'][self.motorType]:
+                material = defs.def_settings['motors'][self.motorType]['material']
+            else:
+                material = None
+
             # create a dictionary holding the motor definition
             motor_dict = {'name': self.motorName,
                           'category': defs.def_settings['motors'][self.motorType]['categories'],
-                          'material': 'phobos_motor',
+                          'material': material,
                           'type': self.motorType,
                           'props': {}}
             selected_objs = context.selected_objects
@@ -1726,10 +1731,15 @@ def addSensorFromYaml(name, sensortype):
             return context.window_manager.invoke_props_dialog(self)
 
         def execute(self, context):
+            if 'material' in defs.def_settings['sensors'][self.sensorType]:
+                material = defs.def_settings['sensors'][self.sensorType]['material']
+            else:
+                material = None
+
             # create a dictionary holding the sensor definition
             sensor_dict = {'name': self.sensorName,
                            'category': defs.def_settings['sensors'][self.sensorType]['categories'],
-                           'material': 'phobos_sensor',
+                           'material': material,
                            'type': self.sensorType,
                            'props': {}}
             original_obj = context.active_object
