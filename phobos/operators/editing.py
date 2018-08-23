@@ -1605,7 +1605,7 @@ class AddSensorOperator(Operator):
     the next link in the hierarchy will be used to parent the sensor to."""
     bl_idname = "phobos.add_sensor"
     bl_label = "Add Sensor"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'UNDO'}
 
     def sensorlist(self, context):
         items = [(sen, sen.replace('_', ' '), '') for sen in sorted(defs.definitions['sensors'])
