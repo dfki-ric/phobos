@@ -1417,7 +1417,7 @@ def linkObjectLists(annotation, objectlist):
     for key, value in annotation.items():
         if isinstance(value, dict):
             newanno[key] = linkObjectLists(value, objectlist)
-        elif "$selected_objects" in value:
+        elif isinstance(value, str) and "$selected_objects" in value:
             ptypes = value.split(':')[1:]
 
             objlist = []
