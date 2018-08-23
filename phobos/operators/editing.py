@@ -53,7 +53,7 @@ import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.editing as eUtils
 import phobos.utils.validation as vUtils
-import phobos.model.joints as joints
+import phobos.model.joints as jUtils
 import phobos.model.links as modellinks
 import phobos.model.sensors as sensors
 from phobos.phoboslog import log
@@ -1150,7 +1150,7 @@ class DefineJointConstraintsOperator(Operator):
         # set properties for each joint
         for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
             context.scene.objects.active = joint
-            joints.setJointConstraints(joint, self.joint_type, lower, upper, self.spring, self.damping)
+            jUtils.setJointConstraints(joint, self.joint_type, lower, upper, self.spring, self.damping)
 
             # TODO is this still needed? Or better move it to the utility function
             if self.joint_type != 'fixed':
@@ -1517,7 +1517,7 @@ def addSensorFromYaml(name, sensortype):
                     'scale': 1.,
                     'name': 'link_' + self.sensorName,
                     'matrix': original_obj.matrix_world})
-                joints.setJointConstraints(newlink, 'fixed', 0., 0., 0., 0.)
+                jUtils.setJointConstraints(newlink, 'fixed', 0., 0., 0., 0.)
 
             # we don't need to check the parentlink, as the calling operator
             # does make sure it exists (or a new link is created instead)
