@@ -146,7 +146,8 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     selectedOnly = BoolProperty(name="Selected only", default=True,
                                 description="Export only selected objects")
     decimalPlaces = IntProperty(name="decimals", description="Number of " +
-                                "decimal places to export", default=5)
+                                "decimal places to export", default=5,
+                                min=3)
     exportTextures = BoolProperty(name='Export textures', default=True)
     outputMeshtype = EnumProperty(items=getMeshTypeListForEnumProp,
                                   name='link',
