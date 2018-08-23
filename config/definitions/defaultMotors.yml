@@ -16,26 +16,24 @@ motors:
     generic_bldc:
         general:
             type: bldc
-            shape: resource://dc_motor
+            shape: resource://dc
             size:
                 - 0.2
                 - 36
             categories:
                 - generic
-        type: bldc
         controller: generic_pid
         maxSpeed: 3.141
         maxEffort: 50.0
     generic_dc:
         general:
             type: dc
-            shape: resource://dc_motor
+            shape: resource://dc
             size:
                 - 0.2
                 - 36
             categories:
                 - generic
-        type: dc
         controller: generic_dc
         maxSpeed: 3.141
         maxEffort: 50.0
@@ -43,14 +41,13 @@ motors:
     limes_typ1:
         general:
             type: bldc
-            shape: resource://dc_motor
+            shape: resource://dc
             size:
                 - 0.2
                 - 36
             categories:
                 - bldc
                 - limes
-        type: bldc
         controller: limes_position
         maxSpeed: 1.438
         maxEffort: 238
@@ -58,14 +55,13 @@ motors:
     limes_typ2:
         general:
             type: bldc
-            shape: resource://dc_motor
+            shape: resource://dc
             size:
                 - 0.2
                 - 36
             categories:
                 - bldc
                 - limes
-        type: bldc
         controller: limes_position
         maxSpeed: 1.966
         maxEffort: 92
@@ -73,14 +69,13 @@ motors:
     limes_typ3:
         general:
             type: bldc
-            shape: resource://dc_motor
+            shape: resource://dc
             size:
                 - 0.2
                 - 36
             categories:
                 - bldc
                 - limes
-        type: bldc
         controller: limes_position
         maxSpeed: 2.293
         maxEffort: 54
