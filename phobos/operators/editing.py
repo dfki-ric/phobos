@@ -57,6 +57,7 @@ import phobos.model.joints as jUtils
 import phobos.model.links as modellinks
 import phobos.model.motors as modelmotors
 import phobos.model.sensors as sensors
+from phobos.operators.generic import addObjectFromYaml
 from phobos.phoboslog import log
 
 
@@ -1562,104 +1563,6 @@ class CreateLinksOperator(Operator):
 
 # TODO write more info in documentation once method works (where to add sensor
 # etc.)
-
-# TODO where can we put this...?
-class DynamicProperty(bpy.types.PropertyGroup):
-    """A support class to handle dynamic properties in a temporary operator."""
-    name = bpy.props.StringProperty()
-    intProp = bpy.props.IntProperty()
-    boolProp = bpy.props.BoolProperty()
-    stringProp = bpy.props.StringProperty()
-    floatProp = bpy.props.FloatProperty()
-
-    def assignValue(self, name, value):
-        prefix = ''
-        if isinstance(value, int):
-            self.intProp = value
-            prefix = 'i'
-        elif isinstance(value, str):
-            import re
-
-            # make sure eval is called only with true or false
-            if re.match('true|false', value[1:], re.IGNORECASE):
-                booleanString = value[1:]
-                booleanString = booleanString[0].upper() + booleanString[1:].lower()
-                self.boolProp = eval(booleanString)
-                prefix = 'b'
-            else:
-                self.stringProp = value
-                prefix = 's'
-        elif isinstance(value, float):
-            self.floatProp = value
-            prefix = 'f'
-        # TODO what about lists?
-
-        self.name = prefix + '_' + name
-
-    def assignDict(addfunc, dictionary, ignore=[]):
-        unsupported = {}
-        for propname in dictionary:
-            if propname in ignore:
-                continue
-
-            # skip subcategories
-            if isinstance(dictionary[propname], dict):
-                unsupported[propname] = dictionary[propname]
-                continue
-
-            subprop = addfunc()
-            subprop.assignValue(propname, dictionary[propname])
-
-        return unsupported
-
-    def draw(self, layout, name):
-        if self.name[0] == 'i':
-            layout.prop(self, 'intProp', text=name)
-        elif self.name[0] == 'b':
-            layout.prop(self, 'boolProp', text=name)
-        elif self.name[0] == 's':
-            layout.prop(self, 'stringProp', text=name)
-        elif self.name[0] == 'f':
-            layout.prop(self, 'floatProp', text=name)
-
-
-def linkObjectLists(annotation, objectlist):
-    """Recursively adds the objects of the specified list to an annotation dictionary.
-
-    Wherever the keyword "$selected_objects:phobostype1:phobostype2" is found as a value in the
-    annotation dictionary, the value is replaced by a list of tuples:
-        (phobostype, object)
-    These tuples represent each an object from the specified objectlist. 'joint' is in this case
-    considered a phobostype.
-
-    An arbitrary number of phobostypes can be provided.
-    The rest of the annotation dictionary remains untouched.
-
-    Args:
-        annotation (dict): annotation dictionary
-        objectlist (list(bpy.types.Object)): objects to add to the annotation
-
-    Returns:
-        dict -- annotation dictionary with inserted object dictionaries
-    """
-    newanno = {}
-    for key, value in annotation.items():
-        if isinstance(value, dict):
-            newanno[key] = linkObjectLists(value, objectlist)
-        elif isinstance(value, str) and "$selected_objects" in value:
-            ptypes = value.split(':')[1:]
-
-            objlist = []
-            for ptype in ptypes:
-                objlist.extend([(ptype, obj) for obj in objectlist if (
-                    obj.phobostype == ptype or (obj.phobostype == 'link' and 'joint/type' in obj and
-                                                ptype == 'joint'))])
-            newanno[key] = objlist
-        else:
-            newanno[key] = value
-
-    return newanno
-
 
 def addSensorFromYaml(name, sensortype):
     """This registers a temporary sensor Operator.
