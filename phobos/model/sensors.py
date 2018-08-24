@@ -163,7 +163,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
         newsensor = bUtils.createPrimitive(
             sensor['name'], 'box', [1, 1, 1], layers,
             plocation=origin.to_translation(), protation=origin.to_euler(),
-            pmaterial=sensor['material'])
+            pmaterial=sensor['material'], phobostype='sensor')
         # use resource name provided as: "resource:whatever_name"
         resource_obj = ioUtils.getResource(['sensor'] + sensor['shape'].split('://')[1].split('_'))
         if resource_obj:
@@ -176,7 +176,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
         newsensor = bUtils.createPrimitive(
             sensor['name'], sensor['shape'], sensor['size'], layers,
             plocation=origin.to_translation(), protation=origin.to_euler(),
-            pmaterial=sensor['material'])
+            pmaterial=sensor['material'], phobostype='sensor')
 
     # assign the parent if available
     if reference is not None:

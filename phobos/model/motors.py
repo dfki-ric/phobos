@@ -57,7 +57,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix()):
         newmotor = bUtils.createPrimitive(
             motor['name'], 'box', [1, 1, 1], layers,
             plocation=origin.to_translation(), protation=origin.to_euler(),
-            pmaterial=motor['material'])
+            pmaterial=motor['material'], phobostype='motor')
         # use resource name provided as: "resource:whatever_name"
         resource_obj = ioUtils.getResource(['motor'] + motor['shape'].split('://')[1].split('_'))
         if resource_obj:
@@ -70,7 +70,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix()):
         newmotor = bUtils.createPrimitive(
             motor['name'], motor['shape'], motor['size'], layers,
             plocation=origin.to_translation(), protation=origin.to_euler(),
-            pmaterial=motor['material'])
+            pmaterial=motor['material'], phobostype='motor')
 
     # assign the parent if available
     if parentobj is not None:
