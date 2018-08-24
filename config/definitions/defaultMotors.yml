@@ -17,9 +17,7 @@ motors:
         general:
             type: bldc
             shape: resource://dc
-            size:
-                - 0.2
-                - 36
+            size: 0.2
             categories:
                 - generic
         controller: pid
@@ -29,9 +27,7 @@ motors:
         general:
             type: dc
             shape: resource://dc
-            size:
-                - 0.2
-                - 36
+            size: 0.2
             categories:
                 - generic
         controller: dc
@@ -42,9 +38,7 @@ motors:
         general:
             type: bldc
             shape: resource://dc
-            size:
-                - 0.2
-                - 36
+            size: 0.2
             categories:
                 - bldc
                 - limes
@@ -56,9 +50,7 @@ motors:
         general:
             type: bldc
             shape: resource://dc
-            size:
-                - 0.2
-                - 36
+            size: 0.2
             categories:
                 - bldc
                 - limes
@@ -70,9 +62,7 @@ motors:
         general:
             type: bldc
             shape: resource://dc
-            size:
-                - 0.2
-                - 36
+            size: 0.2
             categories:
                 - bldc
                 - limes
