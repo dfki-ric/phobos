@@ -1,0 +1,62 @@
+# If you want to evaluate numeric expressions in this yaml file, just enclose your expression with
+# '&'. In that simple expressions you can use the python math module.
+
+# IMPORTANT: if adding new categories to the internal phobos, also change the
+# visual representation of these in the add_controller Operator!
+
+# Currently, these controllers are only supported by MARS:
+# pid
+# dc
+# limes_position
+#
+# For completeness we added:
+# bldc
+
+controllers:
+    # generic controllers
+    pid:
+        general:
+            type: PID
+            shape: resource://pid
+            size:
+                - 0.2
+                - 36
+            categories:
+                - generic
+                - motor
+        p: 1.
+        i: 1.
+        d: 1.
+    dc:
+        general:
+            type: DC
+            shape: resource://dc
+            size:
+                - 0.2
+                - 36
+            categories:
+                - generic
+                - motor
+    bldc:
+      general:
+          type: BLDC
+          shape: resource://bldc
+          size:
+              - 0.2
+              - 36
+          categories:
+              - generic
+              - motor
+      torque_constant: 1.
+      speed_constant: 1.
+
+    # MARS controllers
+    limes_position:
+          type: limes_position
+          shape: resource://generic
+          size:
+              - 0.2
+              - 36
+          categories:
+              - generic
+              - motor
