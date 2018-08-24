@@ -1466,176 +1466,69 @@ class CreateLinksOperator(Operator):
 # TODO write more info in documentation once method works (where to add sensor
 # etc.)
 
-def addSensorFromYaml(name, sensortype):
-    """This registers a temporary sensor Operator.
-    The data for the properties is provided by the parsed yaml files of the
-    sensors. The operator then adds a sensor object and writes the information
-    to custom properties.
-    The name is changed to fit the blender format of name1_name2_name3.
+def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args):
+    """Execution function for the temporary operator to add sensors from yaml files.
+
+    The specified parameters match the interface of the `addObjectFromYaml` generic function.
+
+    As additional argument, a boolean value is required. It controls whether the specified sensor
+    will be added to a new link (True) or not (False).
+
+    Args:
+        sensor_dict (dict): phobos representation of a sensor
+        annotations (dict): annotation dictionary containing annotation categories as keys
+        selected_objs (list(bpy.types.Object)): selected objects in the current context
+        active_obj (bpy.types.Object): active object in the current context
+        *args (list): list containing a single bool value
+
+    Returns:
+        tuple(list, list) -- list of new sensor objects and list of new annotation objects
     """
-    # unregister other temporary operators first
-    # TODO use a proper if instead of try except
-    try:
-        bpy.utils.unregister_class(TempSensorOperator)
-    except UnboundLocalError:
-        pass
+    addlink = args[0]
 
-    blender_name = name.replace(' ', '_').lower()
-    operatorBlenderId = 'phobos.add_sensor_' + blender_name
+    newlink = None
+    if addlink:
+        newlink = modellinks.createLink({
+            'scale': 1.,
+            'name': 'link_' + sensor_dict['name'],
+            'matrix': active_obj.matrix_world})
+        jUtils.setJointConstraints(newlink, 'fixed', 0., 0., 0., 0.)
 
-    # create the temporary operator class
-    class TempSensorOperator(bpy.types.Operator):
-        """Temporary operator to add a {0} sensor.""".format(name)
-        bl_idname = operatorBlenderId
-        bl_label = 'Add ' + name
-        bl_description = 'Add a {0} sensor.'.format(name)
-        bl_options = {'INTERNAL'}
+    # we don't need to check the parentlink, as the calling operator
+    # does make sure it exists (or a new link is created instead)
+    if 'phobostype' in active_obj and active_obj.phobostype != 'link':
+        parentlink = sUtils.getEffectiveParent(
+            active_obj, ignore_selection=True)
+    else:
+        parentlink = active_obj
 
-        # this contains all the single entries of the dictionary after invoking
-        sensor_data = bpy.props.CollectionProperty(type=DynamicProperty)
-        annotation_checks = bpy.props.CollectionProperty(type=DynamicProperty)
-        sensorName = name
-        sensorType = sensortype
-        addLink = BoolProperty(default=False)
+    # the parent object will be either a new or an existing link
+    if newlink:
+        parent_obj = newlink
+    else:
+        parent_obj = parentlink
 
-        def draw(self, context):
-            layout = self.layout
+    pos_matrix = active_obj.matrix_world
+    sensor_obj = sensors.createSensor(sensor_dict, parent_obj, pos_matrix)
 
-            # expose the parameters as the right Property
-            for i in range(len(self.sensor_data)):
-                name = self.sensor_data[i].name[2:].replace('_', ' ')
+    # parent to the added link
+    if newlink:
+        # parent newlink to parent link if there is any
+        if parentlink:
+            eUtils.parentObjectsTo(newlink, parentlink)
 
-                # use the dynamic props name in the GUI, but without the type id
-                self.sensor_data[i].draw(layout, name)
+    # parent sensor to its superior link
+    eUtils.parentObjectsTo(sensor_obj, parent_obj)
 
-            if self.annotation_checks:
-                box = layout.box()
-                box.label('Include annotations:')
-                for i in range(len(self.annotation_checks)):
-                    name = self.annotation_checks[i].name[2:].replace('_', ' ')
-                    self.annotation_checks[i].draw(box, name)
+    annotation_objs = []
+    # add optional annotation objects
+    for annot in annotations:
+        annotation_objs.append(eUtils.addAnnotationObject(
+            sensor_obj, annotations[annot],
+            name=nUtils.getObjectName(sensor_obj) + '_' + annot,
+            namespace='sensor/' + annot))
 
-        def invoke(self, context, event):
-            # load the sensor definitions of the current sensor
-            data = defs.definitions['sensors'][self.sensorType]
-
-            # ignore properties which should not show up in the GUI
-            hidden_props = ['general']
-
-            # identify the property type for all the stuff in the definition
-            unsupported = DynamicProperty.assignDict(self.sensor_data.add, data,
-                                                     ignore=hidden_props)
-
-            if unsupported:
-                for key in unsupported:
-                    boolprop = self.annotation_checks.add()
-                    boolprop.name = 'b_' + key
-                    boolprop.boolProp = False
-
-            # open up the operator GUI
-            return context.window_manager.invoke_props_dialog(self)
-
-        def execute(self, context):
-            if 'material' in defs.def_settings['sensors'][self.sensorType]:
-                material = defs.def_settings['sensors'][self.sensorType]['material']
-            else:
-                material = None
-
-            # create a dictionary holding the sensor definition
-            sensor_dict = {'name': self.sensorName,
-                           'category': defs.def_settings['sensors'][self.sensorType]['categories'],
-                           'material': material,
-                           'type': self.sensorType,
-                           'props': {}}
-            original_obj = context.active_object
-            selected_objs = context.selected_objects
-
-            newlink = None
-            if self.addLink:
-                newlink = modellinks.createLink({
-                    'scale': 1.,
-                    'name': 'link_' + self.sensorName,
-                    'matrix': original_obj.matrix_world})
-                jUtils.setJointConstraints(newlink, 'fixed', 0., 0., 0., 0.)
-
-            # we don't need to check the parentlink, as the calling operator
-            # does make sure it exists (or a new link is created instead)
-            if 'phobostype' in original_obj and original_obj.phobostype != 'link':
-                parentlink = sUtils.getEffectiveParent(
-                    original_obj, ignore_selection=True)
-            else:
-                parentlink = original_obj
-
-            # add the general settings for this sensor
-            general_settings = defs.def_settings['sensors'][self.sensorType]
-            for gensetting in general_settings.keys():
-                sensor_dict[gensetting] = general_settings[gensetting]
-
-            # store collected sensor data properties in the props dictionary
-            for i in range(len(self.sensor_data)):
-                if self.sensor_data[i].name[0] == 'b':
-                    store = '$' + str(bool(self.sensor_data[i]['boolProp'])).lower()
-                elif self.sensor_data[i].name[0] == 'i':
-                    store = self.sensor_data[i]['intProp']
-                elif self.sensor_data[i].name[0] == 's':
-                    store = self.sensor_data[i]['stringProp']
-                elif self.sensor_data[i].name[0] == 'f':
-                    store = self.sensor_data[i]['floatProp']
-
-                sensor_dict['props'][self.sensor_data[i].name[2:]] = store
-
-            # the parent object will be either a new or an existing link
-            if newlink:
-                parent_obj = newlink
-            else:
-                parent_obj = parentlink
-
-            pos_matrix = original_obj.matrix_world
-            sensor_obj = sensors.createSensor(sensor_dict, parent_obj, pos_matrix)
-
-            # parent to the added link
-            if newlink:
-                # parent newlink to parent link if there is any
-                if parentlink:
-                    eUtils.parentObjectsTo(newlink, parentlink)
-
-            # parent sensor to its superior link
-            eUtils.parentObjectsTo(sensor_obj, parent_obj)
-
-            annotation_objs = []
-            # add annotation objects for other categories
-            for custom_anno in self.annotation_checks:
-                if custom_anno.boolProp:
-                    # parse object dictionaries if "$selected_objects:..." syntax is found
-                    annot = defs.definitions['sensors'][self.sensorType][custom_anno.name[2:]]
-
-                    # include newly added parent link if not already selected
-                    if parent_obj not in selected_objs:
-                        selected_objs.append(parent_obj)
-
-                    annot = linkObjectLists(annot, selected_objs)
-
-                    annotation_objs.append(eUtils.addAnnotationObject(
-                        sensor_obj, annot,
-                        name=nUtils.getObjectName(sensor_obj) + '_' + custom_anno.name[2:],
-                        namespace='sensor/' + custom_anno.name[2:]))
-
-            # select the newly added objects
-            if newlink:
-                sUtils.selectObjects([sensor_obj, newlink] + annotation_objs, clear=True, active=0)
-                bUtils.toggleLayer(defs.layerTypes['link'], value=True)
-            else:
-                sUtils.selectObjects([sensor_obj] + annotation_objs, clear=True, active=0)
-
-            if annotation_objs:
-                bUtils.toggleLayer(defs.layerTypes['annotation'], value=True)
-
-            bUtils.toggleLayer(defs.layerTypes['sensor'], value=True)
-            return {'FINISHED'}
-
-    # register the temporary operator and return its blender id
-    bpy.utils.register_class(TempSensorOperator)
-    return operatorBlenderId
+    return [sensor_obj], annotation_objs
 
 
 class AddSensorOperator(Operator):
@@ -1729,12 +1622,13 @@ class AddSensorOperator(Operator):
 
         # match the operator to avoid dangers of eval
         import re
-        opName = addSensorFromYaml(self.sensorName, self.sensorType)
+        opName = addObjectFromYaml(self.sensorName, 'sensor', self.sensorType, addSensorFromYaml,
+                                   self.addLink)
         operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
 
         # run the operator and pass on add link (to allow undo both new link and sensor)
         if operatorPattern.match(opName):
-            eval('bpy.ops.' + opName + "('INVOKE_DEFAULT', addLink=" + str(self.addLink) + ")")
+            eval('bpy.ops.' + opName + "('INVOKE_DEFAULT')")
         else:
             log('This sensor name is not following the naming convention: ' + opName +
                 '. It can not be converted into an operator.', 'ERROR')
