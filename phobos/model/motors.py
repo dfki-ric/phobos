@@ -63,6 +63,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix()):
         if resource_obj:
             log("Assigned resource mesh and materials to new motor object.", 'DEBUG')
             newmotor.data = resource_obj.data
+            newmotor.scale = (motor['size'],) * 3
         else:
             log("Could not use resource mesh for motor. Default cube used instead.", 'WARNING')
     else:

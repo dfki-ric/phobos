@@ -169,6 +169,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
         if resource_obj:
             log("Assigned resource mesh and materials to new sensor object.", 'DEBUG')
             newsensor.data = resource_obj.data
+            newsensor.scale = (sensor['size'],) * 3
         else:
             log("Could not use resource mesh for sensor. Default cube used instead.", 'WARNING')
     else:
