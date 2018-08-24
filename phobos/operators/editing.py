@@ -57,7 +57,7 @@ import phobos.model.joints as jUtils
 import phobos.model.links as modellinks
 import phobos.model.motors as modelmotors
 import phobos.model.sensors as sensors
-from phobos.operators.generic import addObjectFromYaml
+from phobos.operators.generic import addObjectFromYaml, DynamicProperty
 from phobos.phoboslog import log
 
 
@@ -1250,162 +1250,64 @@ class AddMotorOperator(Operator):
     def execute(self, context):
         # match the operator to avoid dangers of eval
         import re
-        opName = addMotorFromYaml(self.motorName, self.motorType)
+        opName = addObjectFromYaml(self.motorName, 'motor', self.motorType, addMotorFromYaml,
+                                   self.addToAllJoints)
         operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
 
         # run the operator and pass on add link (to allow undo both new link and sensor)
         if operatorPattern.match(opName):
-            eval('bpy.ops.' + opName + "('INVOKE_DEFAULT', addToAllJoints=" +
-                 str(self.addToAllJoints) + ")")
+            eval('bpy.ops.' + opName + "('INVOKE_DEFAULT')")
         else:
             log('This motor name is not following the naming convention: ' + opName +
                 '. It can not be converted into an operator.', 'ERROR')
         return {'FINISHED'}
 
 
-def addMotorFromYaml(name, motortype):
-    """This registers a temporary motor Operator.
-    The data for the properties is provided by the parsed yaml files of the
-    motors. The operator then adds a motor object and writes the information
-    to custom properties.
-    The name is changed to fit the blender format of name1_name2_name3.
+def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
+    """Execution function for the temporary operator to add motors from yaml files.
+
+    The specified parameters match the interface of the `addObjectFromYaml` generic function.
+
+    As additional argument, a boolean value is required. It controls whether the specified motor
+    will be added to all selected joints (True) or to the active object only (False).
+
+    Args:
+        motor_dict (dict): phobos representation of a motor
+        annotations (dict): annotation dictionary containing annotation categories as keys
+        selected_objs (list(bpy.types.Object)): selected objects in the current context
+        active_obj (bpy.types.Object): active object in the current context
+        *args (list): list containing a single bool value
+
+    Returns:
+        tuple(list, list) -- list of new motor objects and list of new annotation objects
     """
-    # unregister other temporary operators first
-    # TODO use a proper if instead of try except
-    try:
-        bpy.utils.unregister_class(TempMotorOperator)
-    except UnboundLocalError:
-        pass
+    addtoall = args[0]
 
-    blender_name = name.replace(' ', '_').lower()
-    operatorBlenderId = 'phobos.add_motor_' + blender_name
+    if addtoall:
+        joints = [lnk for lnk in selected_objs if lnk.phobostype == 'link' and
+                  'joint/type' in lnk]
+    else:
+        joints = [active_obj]
 
-    # create the temporary operator class
-    class TempMotorOperator(bpy.types.Operator):
-        """Temporary operator to add a {0} motor.""".format(name)
-        bl_idname = operatorBlenderId
-        bl_label = 'Add ' + name
-        bl_description = 'Add a {0} motor.'.format(name)
-        bl_options = {'INTERNAL'}
+    newmotors = []
+    annotation_objs = []
+    for joint in joints:
+        pos_matrix = joint.matrix_world
+        motor_obj = modelmotors.createMotor(motor_dict, joint, pos_matrix)
 
-        # this contains all the single entries of the dictionary after invoking
-        motor_data = bpy.props.CollectionProperty(type=DynamicProperty)
-        annotation_checks = bpy.props.CollectionProperty(type=DynamicProperty)
-        motorName = name
-        motorType = motortype
-        addToAllJoints = BoolProperty(default=False)
+        # parent motor to its joint
+        sUtils.selectObjects([motor_obj, joint], clear=True, active=1)
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
-        def draw(self, context):
-            layout = self.layout
+        newmotors.append(motor_obj)
 
-            # expose the parameters as the right Property
-            for i in range(len(self.motor_data)):
-                name = self.motor_data[i].name[2:].replace('_', ' ')
-
-                # use the dynamic props name in the GUI, but without the type id
-                self.motor_data[i].draw(layout, name)
-
-            if self.annotation_checks:
-                box = layout.box()
-                box.label('Include annotations:')
-                for i in range(len(self.annotation_checks)):
-                    name = self.annotation_checks[i].name[2:].replace('_', ' ')
-                    self.annotation_checks[i].draw(box, name)
-
-        def invoke(self, context, event):
-            # load the motor definitions of the current motor
-            data = defs.definitions['motors'][self.motorType]
-
-            # ignore properties which should not show up in the GUI
-            hidden_props = ['general']
-
-            # identify the property type for all the stuff in the definition
-            unsupported = DynamicProperty.assignDict(self.motor_data.add, data,
-                                                     ignore=hidden_props)
-
-            if unsupported:
-                for key in unsupported:
-                    boolprop = self.annotation_checks.add()
-                    boolprop.name = 'b_' + key
-                    boolprop.boolProp = False
-
-            # open up the operator GUI
-            return context.window_manager.invoke_props_dialog(self)
-
-        def execute(self, context):
-            if 'material' in defs.def_settings['motors'][self.motorType]:
-                material = defs.def_settings['motors'][self.motorType]['material']
-            else:
-                material = None
-
-            # create a dictionary holding the motor definition
-            motor_dict = {'name': self.motorName,
-                          'category': defs.def_settings['motors'][self.motorType]['categories'],
-                          'material': material,
-                          'type': self.motorType,
-                          'props': {}}
-            selected_objs = context.selected_objects
-
-            if self.addToAllJoints:
-                joints = [lnk for lnk in selected_objs if lnk.phobostype == 'link' and
-                          'joint/type' in lnk]
-            else:
-                joints = [context.active_object]
-
-            # add the general settings for this motor
-            general_settings = defs.def_settings['motors'][self.motorType]
-            for gensetting in general_settings.keys():
-                motor_dict[gensetting] = general_settings[gensetting]
-
-            # store collected motor data properties in the props dictionary
-            for i in range(len(self.motor_data)):
-                if self.motor_data[i].name[0] == 'b':
-                    store = '$' + str(bool(self.motor_data[i]['boolProp'])).lower()
-                elif self.motor_data[i].name[0] == 'i':
-                    store = self.motor_data[i]['intProp']
-                elif self.motor_data[i].name[0] == 's':
-                    store = self.motor_data[i]['stringProp']
-                elif self.motor_data[i].name[0] == 'f':
-                    store = self.motor_data[i]['floatProp']
-
-                motor_dict['props'][self.motor_data[i].name[2:]] = store
-
-            newmotors = []
-            annotation_objs = []
-            for joint in joints:
-                pos_matrix = joint.matrix_world
-                motor_obj = modelmotors.createMotor(motor_dict, joint, pos_matrix)
-
-                # parent motor to its joint
-                sUtils.selectObjects([motor_obj, joint], clear=True, active=1)
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
-
-                # add annotation objects for other categories
-                for custom_anno in self.annotation_checks:
-                    if custom_anno.boolProp:
-                        # parse object dictionaries if "$selected_objects:..." syntax is found
-                        annot = defs.definitions['motors'][self.motorType][custom_anno.name[2:]]
-
-                        annot = linkObjectLists(annot, selected_objs)
-
-                        annotation_objs.append(eUtils.addAnnotationObject(
-                            motor_obj, annot,
-                            name=nUtils.getObjectName(motor_obj) + '_' + custom_anno.name[2:],
-                            namespace='motor/' + custom_anno.name[2:]))
-                newmotors.append(motor_obj)
-
-            # select the newly added objects
-            sUtils.selectObjects(newmotors + annotation_objs, clear=True, active=0)
-            bUtils.toggleLayer(defs.layerTypes['motor'], value=True)
-
-            if annotation_objs:
-                bUtils.toggleLayer(defs.layerTypes['annotation'], value=True)
-
-            return {'FINISHED'}
-
-    # register the temporary operator and return its blender id
-    bpy.utils.register_class(TempMotorOperator)
-    return operatorBlenderId
+        # add optional annotation objects
+        for annot in annotations:
+            annotation_objs.append(eUtils.addAnnotationObject(
+                motor_obj, annotations[annot],
+                name=nUtils.getObjectName(motor_obj) + '_' + annot,
+                namespace='motor/' + annot))
+    return newmotors, annotation_objs
 
 
 # class AddMotorOperator(Operator):
