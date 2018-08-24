@@ -22,7 +22,7 @@ motors:
                 - 36
             categories:
                 - generic
-        controller: generic_pid
+        controller: pid
         maxSpeed: 3.141
         maxEffort: 50.0
     generic_dc:
@@ -34,7 +34,7 @@ motors:
                 - 36
             categories:
                 - generic
-        controller: generic_dc
+        controller: dc
         maxSpeed: 3.141
         maxEffort: 50.0
     # limes motors
