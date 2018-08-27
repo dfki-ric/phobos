@@ -38,3 +38,23 @@ def getConfigPath():
     else:
         configpath = 'ERROR: {0} not supported,'.format(sys.platform)
     return configpath
+
+
+def getBlenderConfigPath():
+    """Returns the configuration path for user-specific blender data.
+
+    Returns:
+        str -- scripts path
+    """
+    if sys.platform == 'linux':
+        scriptspath = path.normpath(path.expanduser(
+            '~/.config/blender/{0}/config'.format(blenderversion)))
+    elif sys.platform == 'darwin':
+        scriptspath = path.normpath(path.expanduser(
+            '~/Library/Application Support/Blender/{0}/config'.format(blenderversion)))
+    elif sys.platform == 'win32':
+        scriptspath = path.normpath(path.expanduser(
+            '~/AppData/Roaming/Blender Foundation/Blender/{0}/config'.format(blenderversion)))
+    else:
+        scriptspath = 'ERROR: {0} not supported,'.format(sys.platform)
+    return scriptspath

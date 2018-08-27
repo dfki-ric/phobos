@@ -15,6 +15,21 @@ import shutil
 from distutils.dir_util import copy_tree
 import importlib.util
 
+scriptinformation = """
+This is the setup script for Phobos.
+
+By default, it installs the Blender AddOn Phobos to the Blender configuration folder.
+At the same time, the default configurations are copied to the user Phobos configuration
+folder.
+
+Parameters:
+
+    --help: Show this message and exit.
+
+    --startup-preset: Copies the default Phobos Blender startup file to the Blender
+        configuration folder (replacing the existing startup file).
+"""
+
 # make installation originate from the path of this setup file
 phoboshome = os.path.dirname(os.path.abspath(__file__))
 
@@ -24,6 +39,7 @@ module_spec = importlib.util.spec_from_file_location(
 phobossystem = importlib.util.module_from_spec(module_spec)
 module_spec.loader.exec_module(phobossystem)
 addonpath = path.join(phobossystem.getScriptsPath(), 'addons', 'phobos')
+blenderconfigpath = phobossystem.getBlenderConfigPath()
 
 
 def updateFolderContents(src, dst):
@@ -45,6 +61,10 @@ if __name__ == '__main__':
         print('Installation aborted.')
         sys.exit(0)
 
+    if '--help' in sys.argv:
+        print(scriptinformation)
+        sys.exit(0)
+
     # install addon
     if os.path.exists(addonpath):
         shutil.rmtree(addonpath)  # always clean install folder
@@ -54,11 +74,16 @@ if __name__ == '__main__':
               'Aborting installation.')
         sys.exit(0)
 
+    # install startup blend
+    if '--startup-preset' in sys.argv:
+        shutil.copy(os.path.join(phoboshome, 'config', 'startup.blend'), blenderconfigpath)
+
     # install config files
     copied_files = updateFolderContents(
         os.path.join(phoboshome, 'config'), phobossystem.getConfigPath())
     if not copied_files:
         print('Something went wrong with copying config files.')
+    os.remove(os.path.join(phobossystem.getConfigPath(), 'startup.blend'))
 
     # install templates
     templatespath = path.join(phobossystem.getScriptsPath(), 'templates_py')
