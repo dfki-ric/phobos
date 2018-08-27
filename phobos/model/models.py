@@ -40,6 +40,7 @@ import phobos.model.inertia as inertiamodel
 import phobos.model.joints as jointmodel
 import phobos.model.sensors as sensormodel
 import phobos.model.lights as lightmodel
+import phobos.model.controllers as controllermodel
 import phobos.model.poses as poses
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
@@ -546,24 +547,6 @@ def deriveApproxsphere(obj):
     return sphere
 
 
-def deriveController(obj):
-    """This function derives a controller from a given blender object
-
-    Args:
-      obj(bpy_types.Object): The blender object to derive the controller from.
-
-    Returns:
-      dict
-
-    """
-    try:
-        props = initObjectProperties(obj, phobostype='controller')
-    except KeyError:
-        log("Missing data in controller  " + obj.name, "ERROR",)
-        return None
-    return props
-
-
 def deriveLight(obj):
     """This function derives a light from a given blender object
 
@@ -731,7 +714,7 @@ def deriveDictEntry(obj, names=False, objectlist=[], logging=True):
             from phobos.model.sensors import deriveSensor
             props = deriveSensor(obj, names=names, objectlist=objectlist, logging=logging)
         elif obj.phobostype == 'controller':
-            props = deriveController(obj)
+            props = controllermodel.deriveController(obj)
         elif obj.phobostype == 'light':
             props = deriveLight(obj)
     except KeyError:

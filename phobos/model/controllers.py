@@ -53,7 +53,7 @@ def deriveController(obj):
 
     props['target'] = nUtils.getObjectName(obj.parent)
 
-    return {}
+    return props
 
 
 def createController(controller, reference, origin=mathutils.Matrix()):
