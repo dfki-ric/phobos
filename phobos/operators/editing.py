@@ -1256,8 +1256,11 @@ class AddMotorOperator(Operator):
     def execute(self, context):
         # match the operator to avoid dangers of eval
         import re
+        # hide controller property when creating controllers on the fly
+        hideproperties = [] if not self.addControllers else ['controller']
         opName = addObjectFromYaml(self.motorName, 'motor', self.motorType, addMotorFromYaml,
-                                   self.addToAllJoints, self.addControllers)
+                                   self.addToAllJoints, self.addControllers,
+                                   hideprops=hideproperties)
         operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
 
         # run the operator and pass on add link (to allow undo both new link and sensor)
