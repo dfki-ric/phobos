@@ -342,6 +342,7 @@ def validateJointType(link, adjust=False):
         list(ValidateMessage) -- validation errors
     """
     import phobos.model.joints as jointmodel
+    import phobos.utils.io as ioUtils
     errors = []
     if 'joint/type' not in link:
         errors.append(ValidateMessage(
@@ -366,7 +367,13 @@ def validateJointType(link, adjust=False):
                 {'log_info': str("'" + link['joint/type'] + "' should be set to '" +
                                  joint_type + "' instead.")}))
         else:
+            # fix joint type and assign new resource object
             link['joint/type'] = joint_type
+            resource_obj = ioUtils.getResource(('joint', joint_type))
+            if resource_obj:
+                log("Assigned resource to {}.".format(link.name), 'DEBUG')
+                link.pose.bones[0].custom_shape = resource_obj
+
             errors.append(ValidateMessage(
                 "Adjusted joint type to '" + joint_type + "'.",
                 'INFO', link, None, {}))
