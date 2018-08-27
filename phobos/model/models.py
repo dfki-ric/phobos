@@ -948,12 +948,14 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         if sUtils.getEffectiveParent(link):
             # joint may be None if link is a root
             jointdict = deriveJoint(link, logging=True, adjust=True)
+            log("  Setting joint type '{}' for link.".format(jointdict['type']), 'DEBUG')
             model['joints'][jointdict['name']] = jointdict
 
             for mot in [child for child in link.children if child.phobostype == 'motor']:
                 motordict = motormodel.deriveMotor(mot, jointdict)
                 # motor may be None if no motor is attached
                 if motordict:
+                    log("  Added motor {} to link.".format(motordict['name']), 'DEBUG')
                     model['motors'][motordict['name']] = motordict
 
     # parse sensors and controllers
@@ -972,9 +974,10 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             if mat:
                 if mat.name not in model['materials']:
                     model['materials'][mat.name] = deriveMaterial(mat)
-                    linkname = nUtils.getObjectName(sUtils.getEffectiveParent(obj,
-                        ignore_selection=bool(objectlist)))
-                    model['links'][linkname]['visual'][nUtils.getObjectName(obj)]['material'] = mat.name
+                    linkname = nUtils.getObjectName(
+                        sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
+                    model['links'][linkname]['visual'][
+                        nUtils.getObjectName(obj)]['material'] = mat.name
 
     # identify unique meshes
     log("Parsing meshes...", "INFO")
