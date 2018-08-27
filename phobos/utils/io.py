@@ -114,6 +114,38 @@ def getModelListForEnumProp(self, context):
     return sorted([(r,) * 3 for r in rootnames])
 
 
+def getDictFromYamlDefs(phobostype, defname, name):
+    """Returns a phobos representation of the object specified by the definition parameters.
+
+    Args:
+        phobostype (str): phobostype of the definition
+        defname (str): name of the individual definition
+        name (str): name for the new object
+
+    Returns:
+        dict -- phobos representation from the definition
+    """
+    if 'material' in defs.def_settings[phobostype + 's'][defname]:
+        material = defs.def_settings[phobostype + 's'][defname]['material']
+    else:
+        material = None
+
+    # create a dictionary holding the properties
+    phobos_dict = {'name': name,
+                   'defname': defname,
+                   'category': defs.def_settings[phobostype + 's'][defname]['categories'],
+                   'material': material,
+                   'type': defs.def_settings[phobostype + 's'][defname]['type'],
+                   'props': {}}
+
+    # add the general settings for this object
+    general_settings = defs.def_settings[phobostype + 's'][defname]
+    for gensetting in general_settings.keys():
+        phobos_dict[gensetting] = general_settings[gensetting]
+
+    return phobos_dict
+
+
 def getOutputMeshtype():
     """Returns the mesh type to be used in exported files as specified in the GUI"""
     return str(getExpSettings().outputMeshtype)

@@ -39,6 +39,7 @@ from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
 import phobos.defs as defs
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
+import phobos.utils.io as ioUtils
 
 
 def linkObjectLists(annotation, objectlist):
@@ -207,25 +208,9 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args):
             return context.window_manager.invoke_props_dialog(self)
 
         def execute(self, context):
-            if 'material' in defs.def_settings[self.phobostype + 's'][self.preset_name]:
-                material = defs.def_settings[self.phobostype + 's'][self.preset_name]['material']
-            else:
-                material = None
-
-            # create a dictionary holding the properties
-            phobos_dict = {'name': self.obj_name,
-                           'category': defs.def_settings[self.phobostype + 's'][
-                               self.preset_name]['categories'],
-                           'material': material,
-                           'type': defs.def_settings[self.phobostype + 's'][
-                               self.preset_name]['type'],
-                           'props': {}}
+            phobos_dict = ioUtils.getDictFromYamlDefs(self.phobostype, self.preset_name,
+                                                      self.obj_name)
             selected_objs = context.selected_objects
-
-            # add the general settings for this object
-            general_settings = defs.def_settings[self.phobostype + 's'][self.preset_name]
-            for gensetting in general_settings.keys():
-                phobos_dict[gensetting] = general_settings[gensetting]
 
             # store collected object data properties in the props dictionary
             for i in range(len(self.phobos_data)):
