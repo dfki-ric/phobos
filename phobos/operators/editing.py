@@ -1651,18 +1651,28 @@ def addControllerFromYaml(controller_dict, annotations, selected_objs, active_ob
     Returns:
         tuple(list, list) -- list of new controller objects and list of new annotation objects
     """
-    pos_matrix = active_obj.matrix_world
-    controller_obj = controllermodel.createController(controller_dict, active_obj, pos_matrix)
+    addtoall = args[0]
 
+    if addtoall:
+        objects = [obj for obj in selected_objs if obj.phobostype in defs.controllabletypes]
+    else:
+        objects = [active_obj]
+
+    controller_objs = []
     annotation_objs = []
-    # add optional annotation objects
-    for annot in annotations:
-        annotation_objs.append(eUtils.addAnnotationObject(
-            controller_obj, annotations[annot],
-            name=nUtils.getObjectName(controller_obj) + '_' + annot,
-            namespace='controller/' + annot))
+    for obj in objects:
+        pos_matrix = obj.matrix_world
+        controller_obj = controllermodel.createController(controller_dict, obj, pos_matrix)
 
-    return [controller_obj], annotation_objs
+        # add optional annotation objects
+        for annot in annotations:
+            annotation_objs.append(eUtils.addAnnotationObject(
+                controller_obj, annotations[annot],
+                name=nUtils.getObjectName(controller_obj) + '_' + annot,
+                namespace='controller/' + annot))
+        controller_objs.append(controller_obj)
+
+    return controller_objs, annotation_objs
 
 
 class AddControllerOperator(Operator):
@@ -1713,12 +1723,18 @@ class AddControllerOperator(Operator):
         default='new_controller',
         description="Name of the controller")
 
+    addToAll = BoolProperty(
+        name="Add to all",
+        default=True,
+        description="Add a controller to all controllable selected objects")
+
     def draw(self, context):
         layout = self.layout
         layout.prop(self, 'controllerName')
         layout.separator()
         layout.prop(self, 'categ', text='Sensor category')
         layout.prop(self, 'controllerType', text='Controller type')
+        layout.prop(self, 'addToAll', icon='PARTICLES')
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
@@ -1734,7 +1750,7 @@ class AddControllerOperator(Operator):
         # match the operator to avoid dangers of eval
         import re
         opName = addObjectFromYaml(self.controllerName, 'controller', self.controllerType,
-                                   addControllerFromYaml)
+                                   addControllerFromYaml, self.addToAll)
         operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
 
         # run the operator and pass on add link (to allow undo both new link and sensor)
