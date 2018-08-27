@@ -39,6 +39,21 @@ import phobos.utils.io as ioUtils
 
 
 def deriveController(obj):
+    import phobos.model.models as models
+    props = models.initObjectProperties(obj, phobostype='controller')
+
+    # return None if no controller is found (there will always be at least a name in the props)
+    if len(props) < 2:
+        return None
+
+    # TODO what else can be controlled by a controller?
+    if not obj.parent or obj.parent.phobostype not in defs.controllabletypes:
+        log(("Can not derive controller from {}. " +
+            "Insufficient requirements from parent object!").format(obj.name), 'ERROR')
+        return None
+
+    props['target'] = nUtils.getObjectName(obj.parent)
+
     return {}
 
 
