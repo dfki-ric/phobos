@@ -52,6 +52,7 @@ layerTypes = {
     "decoration": 5,
     "light": 6,
     "motor": 7,
+    "controller": 8,
     "approxsphere": 13,
     'interface': 10,
     'submodel': 10,
