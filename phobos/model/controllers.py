@@ -71,3 +71,33 @@ def createController(controller, reference, origin=mathutils.Matrix()):
     layers = defs.layerTypes['controller']
     bUtils.toggleLayer(layers, value=True)
 
+    # create controller object
+    if controller['shape'].startswith('resource'):
+        newcontroller = bUtils.createPrimitive(
+            controller['name'], 'box', [1, 1, 1], layers,
+            plocation=origin.to_translation(), protation=origin.to_euler(),
+            pmaterial=controller['material'], phobostype='controller')
+        # use resource name provided as: "resource:whatever_name"
+        resource_obj = ioUtils.getResource(['controller'] + controller['shape'].split('://')[1].split('_'))
+        if resource_obj:
+            log("Assigned resource mesh and materials to new controller object.", 'DEBUG')
+            newcontroller.data = resource_obj.data
+            newcontroller.scale = (controller['size'],) * 3
+        else:
+            log("Could not use resource mesh for controller. Default cube used instead.", 'WARNING')
+    else:
+        newcontroller = bUtils.createPrimitive(
+            controller['name'], controller['shape'], controller['size'], layers,
+            plocation=origin.to_translation(), protation=origin.to_euler(),
+            pmaterial=controller['material'], phobostype='controller')
+
+    # assign the parent if available
+    if reference is not None:
+        sUtils.selectObjects([newcontroller, reference], clear=True, active=1)
+
+        if reference.phobostype == 'link':
+            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        else:
+            bpy.ops.object.parent_set(type='OBJECT')
+
+    return newcontroller
