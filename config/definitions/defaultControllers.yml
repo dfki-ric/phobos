@@ -18,9 +18,7 @@ controllers:
         general:
             type: PID
             shape: resource://pid
-            size:
-                - 0.2
-                - 36
+            size: 0.2
             categories:
                 - generic
                 - motor
@@ -31,9 +29,7 @@ controllers:
         general:
             type: DC
             shape: resource://dc
-            size:
-                - 0.2
-                - 36
+            size: 0.2
             categories:
                 - generic
                 - motor
@@ -41,9 +37,7 @@ controllers:
       general:
           type: BLDC
           shape: resource://bldc
-          size:
-              - 0.2
-              - 36
+          size: 0.2
           categories:
               - generic
               - motor
@@ -54,9 +48,7 @@ controllers:
     limes_position:
           type: limes_position
           shape: resource://generic
-          size:
-              - 0.2
-              - 36
+          size: 0.2
           categories:
               - generic
               - motor
