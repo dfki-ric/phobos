@@ -32,7 +32,6 @@ import bpy
 import phobos.defs as defs
 import phobos.utils.naming as nUtils
 from phobos.phoboslog import log
-from phobos.utils.io import getExpSettings
 
 
 checkMessages = {"NoObject": []}
@@ -540,6 +539,7 @@ def validateInertiaData(obj, *args, adjust=False):
             or object
     """
     from phobos.model.inertia import inertiaListToMatrix, inertiaMatrixToList
+    from phobos.utils.io import getExpSettings
     import numpy
     errors = []
 
@@ -590,15 +590,14 @@ def validateInertiaData(obj, *args, adjust=False):
         mass = obj['inertial/mass']
 
     # Check inertia vector for various properties, round to export precision
-    inertia = numpy.around(numpy.array(inertiaListToMatrix(inertia)), decimals = getExpSettings().decimalPlaces)
+    inertia = numpy.around(numpy.array(inertiaListToMatrix(inertia)),
+                           decimals=getExpSettings().decimalPlaces)
     if any(element <= 0.0 for element in inertia.diagonal()):
-        element = 1e-3
         errors.append(ValidateMessage(
             "Negative semidefinite main diagonal in inertia data!",
             'WARNING',
             None if isinstance(obj, dict) else obj,
             None, {'log_info': "Diagonal: " + str(inertia.diagonal())}))
-
 
     # Calculate the determinant if consistent, quick check
     if numpy.linalg.det(inertia) <= 0.0:
@@ -611,15 +610,14 @@ def validateInertiaData(obj, *args, adjust=False):
         # Calculate the eigenvalues if not consistent
         if any(element <= 0.0 for element in numpy.linalg.eigvals(inertia)):
             # Apply singular value decomposition and correct the values
-            U,S,V = numpy.linalg.svd(inertia)
-            S[S<=0.0] = 1e-3
-            inertia = U*S*V
+            U, S, V = numpy.linalg.svd(inertia)
+            S[S <= 0.0] = 1e-3
+            inertia = U * S * V
             errors.append(ValidateMessage(
                 "Negative semidefinite eigenvalues in inertia data!",
                 'WARNING',
                 None if isinstance(obj, dict) else obj,
                 None, {'log_info': "Eigenvalues: " + str(numpy.linalg.eigvals(inertia))}))
-
 
     if mass <= 0.:
         errors.append(ValidateMessage(
