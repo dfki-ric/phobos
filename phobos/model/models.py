@@ -40,6 +40,7 @@ import phobos.model.inertia as inertiamodel
 import phobos.model.joints as jointmodel
 import phobos.model.sensors as sensormodel
 import phobos.model.lights as lightmodel
+import phobos.model.motors as motormodel
 import phobos.model.controllers as controllermodel
 import phobos.model.poses as poses
 import phobos.utils.naming as nUtils
@@ -342,38 +343,6 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
     # - mimic
     # - safety_controller
     return props
-
-
-def deriveMotor(obj, joint):
-    """This function derives a motor from an object and joint.
-
-    Args:
-      obj(bpy_types.Object): The blender object to derive the motor from.
-      joint(dict): The phobos joint to derive the constraints from.
-
-    Returns:
-      dict
-
-    """
-    props = initObjectProperties(obj, phobostype='motor', ignoretypes=linkobjignoretypes-{'motor'})
-    # if there are any 'motor' tags and not only a name
-    if len(props) > 1:
-        props['joint'] = obj['joint/name'] if 'joint/name' in obj else obj.name
-        try:
-            if props['type'] == 'PID':
-                if 'limits' in joint:
-                    props['minValue'] = joint['limits']['lower']
-                    props['maxValue'] = joint['limits']['upper']
-            elif props['type'] == 'DC':
-                props['minValue'] = 0
-                props['maxValue'] = props["maxSpeed"]
-        except KeyError:
-            log("Missing data in motor " + obj.name + '. No motor created.', "WARNING")
-            return None
-        return props
-    else:
-        # return None if no motor is attached
-        return None
 
 
 @validate('inertia_data')
@@ -981,11 +950,11 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             jointdict = deriveJoint(link, logging=True, adjust=True)
             model['joints'][jointdict['name']] = jointdict
 
-            # TODO check this
-            motordict = deriveMotor(link, jointdict)
-            # motor may be None if no motor is attached
-            if motordict:
-                model['motors'][motordict['name']] = motordict
+            for mot in [child for child in link.children if child.phobostype == 'motor']:
+                motordict = motormodel.deriveMotor(mot, jointdict)
+                # motor may be None if no motor is attached
+                if motordict:
+                    model['motors'][motordict['name']] = motordict
 
     # parse sensors and controllers
     sencons = [obj for obj in objectlist if obj.phobostype in ['sensor', 'controller']]

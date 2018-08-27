@@ -94,3 +94,57 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix()):
     # select the new motor
     sUtils.selectObjects([newmotor], clear=True, active=0)
     return newmotor
+
+
+def deriveMotor(obj, jointdict=None):
+    """Derives motor information from an object.
+
+    Args:
+        obj (bpy_types.Object): Blender object to derive the motor from
+        jointdict (dict): phobos representation of the respective joint
+
+    Returns:
+        dict -- phobos representation of a motor
+    """
+    import phobos.model.models as models
+    import phobos.model.controllers as controllermodel
+    props = models.initObjectProperties(obj, phobostype='motor')
+
+    # return None if no motor is attached (there will always be at least a name in the props)
+    if len(props) < 2:
+        return None
+
+    # make sure the parent is a joint
+    if not obj.parent or obj.parent.phobostype != 'link' or 'joint/type' not in obj.parent:
+        log("Can not derive motor from {}. Insufficient requirements from parent object!".format(
+            obj.name), 'ERROR')
+        return None
+
+    props['joint'] = nUtils.getObjectName(obj.parent, phobostype='joint')
+
+    # try to derive the motor controller
+    controllerobjs = [control for control in obj.children if control.phobostype == 'controller']
+    if controllerobjs:
+        controller = controllermodel.deriveController(controllerobjs[0])
+    else:
+        controller = None
+
+    # assign the derived controller
+    if controller:
+        props['controller'] = controller['name']
+    else:
+        del props['controller']
+
+    # TODO this will go to smurf
+    # try:
+    #     if props['type'] == 'PID':
+    #         if 'limits' in joint:
+    #             props['minValue'] = joint['limits']['lower']
+    #             props['maxValue'] = joint['limits']['upper']
+    #     elif props['type'] == 'DC':
+    #         props['minValue'] = 0
+    #         props['maxValue'] = props["maxSpeed"]
+    # except KeyError:
+    #     log("Missing data in motor " + obj.name + '. No motor created.', "WARNING")
+    #     return None
+    return props
