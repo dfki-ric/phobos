@@ -1224,6 +1224,10 @@ class AddMotorOperator(Operator):
         name="Add to all",
         default=True,
         description="Add a motor to all selected joints")
+    addControllers = BoolProperty(
+        name="Add controller",
+        default=False,
+        description="Add the controller object specified in the motor definitions")
     motorName = StringProperty(
         name="Motor name",
         default='new_motor',
@@ -1236,6 +1240,7 @@ class AddMotorOperator(Operator):
         layout.prop(self, 'categ', text='Motor category')
         layout.prop(self, 'motorType', text='Motor type')
         layout.prop(self, 'addToAllJoints', icon='PARTICLES')
+        layout.prop(self, 'addControllers', icon='GAME')
 
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self)
@@ -1252,7 +1257,7 @@ class AddMotorOperator(Operator):
         # match the operator to avoid dangers of eval
         import re
         opName = addObjectFromYaml(self.motorName, 'motor', self.motorType, addMotorFromYaml,
-                                   self.addToAllJoints)
+                                   self.addToAllJoints, self.addControllers)
         operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
 
         # run the operator and pass on add link (to allow undo both new link and sensor)
@@ -1280,9 +1285,11 @@ def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
         *args (list): list containing a single bool value
 
     Returns:
-        tuple(list, list) -- list of new motor objects and list of new annotation objects
+        tuple(list, list, list) -- list of new motor objects, list of new annotation objects, list
+            of new controller objects
     """
     addtoall = args[0]
+    addcontrollers = args[1]
 
     if addtoall:
         joints = [lnk for lnk in selected_objs if lnk.phobostype == 'link' and
@@ -1292,9 +1299,15 @@ def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
 
     newmotors = []
     annotation_objs = []
+    controller_objs = []
     for joint in joints:
         pos_matrix = joint.matrix_world
-        motor_obj = modelmotors.createMotor(motor_dict, joint, pos_matrix)
+        motor_obj = modelmotors.createMotor(motor_dict, joint, pos_matrix,
+                                            addcontrollers=addcontrollers)
+
+        if isinstance(motor_obj, list):
+            controller_objs.append(motor_obj[1])
+            motor_obj = motor_obj[0]
 
         # parent motor to its joint
         sUtils.selectObjects([motor_obj, joint], clear=True, active=1)
@@ -1308,7 +1321,7 @@ def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
                 motor_obj, annotations[annot],
                 name=nUtils.getObjectName(motor_obj) + '_' + annot,
                 namespace='motor/' + annot))
-    return newmotors, annotation_objs
+    return newmotors, annotation_objs, controller_objs
 
 
 # class AddMotorOperator(Operator):

@@ -38,16 +38,21 @@ import phobos.utils.editing as eUtils
 import phobos.utils.io as ioUtils
 
 
-def createMotor(motor, parentobj, origin=mathutils.Matrix()):
+def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=False):
     """This function creates a new motor specified by its parameters.
+
+    If *addcontrollers* is set, a controller object will be created from the controller definition
+    which is specified in the motor dictionary (key *controller*).
 
     Args:
         motor(dict): phobos representation of the new motor.
         parentobj (bpy_types.Object): object to parent new motor to
         origin (mathutils.Matrix): new motors origin
+        addcontrollers (bool): whether to add the defined controller as object
 
     Returns:
-        bpy.types.Object -- new motor object
+        bpy.types.Object or list(bpy.types.Object)-- new motor object or a list of the new motor_obj
+            and the new controller object
     """
     layers = defs.layerTypes['motor']
     bUtils.toggleLayer(layers, value=True)
@@ -80,14 +85,26 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix()):
     # set motor properties
     newmotor.phobostype = 'motor'
     newmotor.name = motor['name']
-    newmotor['motor/type'] = motor['type']
+    defname = motor['defname']
+    del motor['defname']
 
     # write the custom properties to the motor
     eUtils.addAnnotation(newmotor, motor['props'], namespace='motor')
 
+    if 'controller' in defs.definitions['motors'][defname] and addcontrollers:
+        import phobos.model.controllers as controllermodel
+        motorcontroller = defs.definitions['motors'][defname]['controller']
+        controllerdefs = ioUtils.getDictFromYamlDefs('controller', motorcontroller,
+                                                     newmotor.name + '_controller')
+        newcontroller = controllermodel.createController(controllerdefs, newmotor,
+                                                         origin=newmotor.matrix_world)
+    else:
+        newcontroller = None
+
     # select the new motor
-    sUtils.selectObjects([newmotor], clear=True, active=0)
-    return newmotor
+    sUtils.selectObjects([newmotor] if not newcontroller else [newmotor, newcontroller],
+                         clear=True, active=0)
+    return newmotor if not newcontroller else [newmotor, newcontroller]
 
 
 def deriveMotor(obj, jointdict=None):
