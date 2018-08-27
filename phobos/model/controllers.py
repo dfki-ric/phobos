@@ -46,10 +46,9 @@ def deriveController(obj):
     if len(props) < 2:
         return None
 
-    # TODO what else can be controlled by a controller?
     if not obj.parent or obj.parent.phobostype not in defs.controllabletypes:
         log(("Can not derive controller from {}. " +
-            "Insufficient requirements from parent object!").format(obj.name), 'ERROR')
+             "Insufficient requirements from parent object!").format(obj.name), 'ERROR')
         return None
 
     props['target'] = nUtils.getObjectName(obj.parent)
@@ -78,7 +77,8 @@ def createController(controller, reference, origin=mathutils.Matrix()):
             plocation=origin.to_translation(), protation=origin.to_euler(),
             pmaterial=controller['material'], phobostype='controller')
         # use resource name provided as: "resource:whatever_name"
-        resource_obj = ioUtils.getResource(['controller'] + controller['shape'].split('://')[1].split('_'))
+        resource_obj = ioUtils.getResource(['controller'] +
+                                           controller['shape'].split('://')[1].split('_'))
         if resource_obj:
             log("Assigned resource mesh and materials to new controller object.", 'DEBUG')
             newcontroller.data = resource_obj.data
@@ -90,6 +90,12 @@ def createController(controller, reference, origin=mathutils.Matrix()):
             controller['name'], controller['shape'], controller['size'], layers,
             plocation=origin.to_translation(), protation=origin.to_euler(),
             pmaterial=controller['material'], phobostype='controller')
+
+    newcontroller.name = controller['name']
+    newcontroller['controller/type'] = controller['type']
+
+    # write the custom properties to the controller
+    eUtils.addAnnotation(newcontroller, controller['props'], namespace='controller')
 
     # assign the parent if available
     if reference is not None:
