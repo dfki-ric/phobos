@@ -22,9 +22,9 @@ controllers:
             categories:
                 - generic
                 - motor
-        p: 1.
-        i: 1.
-        d: 1.
+        p: 20.0
+        i: 1.0
+        d: 0.1
     dc:
         general:
             type: DC
@@ -34,21 +34,25 @@ controllers:
                 - generic
                 - motor
     bldc:
-      general:
-          type: BLDC
-          shape: resource://bldc
-          size: 0.2
-          categories:
-              - generic
-              - motor
-      torque_constant: 1.
-      speed_constant: 1.
+        general:
+            type: BLDC
+            shape: resource://bldc
+            size: 0.2
+            categories:
+                - generic
+                - motor
+        torque_constant: 1.
+        speed_constant: 1.
 
     # MARS controllers
     limes_position:
-          type: limes_position
-          shape: resource://generic
-          size: 0.2
-          categories:
-              - generic
-              - motor
+        general:
+            type: limes_position
+            shape: resource://generic
+            size: 0.2
+            categories:
+                - generic
+                - motor
+        p: 20.0
+        i: 0.1
+        d: 0.0
