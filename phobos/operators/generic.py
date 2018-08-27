@@ -139,7 +139,7 @@ class DynamicProperty(PropertyGroup):
             layout.prop(self, 'floatProp', text=name)
 
 
-def addObjectFromYaml(name, phobtype, presetname, execute_func, *args):
+def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops=[]):
     """This registers a temporary Operator.
     The data for the properties is provided by the parsed yaml files of the
     specified phobostype. The operator then adds an object and writes the information
@@ -192,7 +192,7 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args):
             data = defs.definitions[self.phobostype + 's'][self.preset_name]
 
             # ignore properties which should not show up in the GUI
-            hidden_props = ['general']
+            hidden_props = ['general'] + hideprops
 
             # identify the property type for all the stuff in the definition
             unsupported = DynamicProperty.assignDict(self.phobos_data.add, data,
