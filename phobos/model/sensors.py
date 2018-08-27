@@ -23,7 +23,7 @@ File sensors.py
 
 Created on 6 Jan 2014
 
-@author: Kai von Szadkowski
+@author: Kai von Szadkowski, Simon Reichel
 """
 
 
@@ -69,37 +69,6 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
     return props
 
 
-def attachSensor(self, sensor):
-    """This function attaches a given sensor to its parent link.
-
-    Args:
-      sensor(dict): The sensor you want to attach to its parent link.
-
-    Returns:
-
-    """
-    bpy.context.scene.layers = bUtils.defLayers([defs.layerTypes[t] for t in defs.layerTypes])
-    # TODO delete me?
-    #try:
-    if 'pose' in sensor:
-        urdf_geom_loc = mathutils.Matrix.Translation(sensor['pose']['translation'])
-        urdf_geom_rot = mathutils.Euler(tuple(sensor['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
-    else:
-        urdf_geom_loc = mathutils.Matrix.Identity(4)
-        urdf_geom_rot = mathutils.Matrix.Identity(4)
-    sensorobj = bpy.data.objects[sensor['name']]
-    if 'link' in sensor:
-        parentLink = sUtils.getObjectByNameAndType(sensor['link'], 'link')
-        eUtils.parentObjectsTo(sensorobj, parentLink)
-    else:
-        #TODO: what? handle it...
-        pass
-    sensorobj.matrix_local = urdf_geom_loc * urdf_geom_rot
-    # TODO delete me?
-    #except KeyError:
-    #    log("inconsistent data on sensor: "+ sensor['name'], "ERROR")
-
-
 def cameraRotLock(object):
     """DOCU: PLEASE ADD PYDOC. What should this do exactly?
 
@@ -123,37 +92,17 @@ def cameraRotLock(object):
     object.constraints["Limit Rotation"].min_z = object.rotation_euler[2]
     object.constraints["Limit Rotation"].max_z = object.rotation_euler[2]
 
-# FIXME there are two functions for creating sensors!
-# def createSensor(self, sensor):
-#     if 'link' in sensor:
-#         reference = [sensor['link']]
-#     elif 'joint' in sensor:
-#         reference = [sensor['joint']]
-#         pass
-#     elif 'links' in sensor:
-#         reference = sensor['links']
-#     elif 'joints' in sensor:
-#         reference = sensor['joints']
-#     elif 'motors' in sensor:
-#         reference = sensor['motors']
-#     else:
-#         reference = None
-
-#     # FIXME: This needs to be resolved in a generic way!
-#     createSensor(sensor, reference)
-#     attachSensor(sensor)
 
 def createSensor(sensor, reference, origin=mathutils.Matrix()):
     """This function creates a new sensor specified by its parameters.
 
     Args:
-      sensor(dict): The phobos representation of the new sensor.
-      reference(bpy_types.Object): This is an object to add a parent relationship to.
-      origin(mathutils.Matrix, optional): The new sensors origin. (Default value = mathutils.Matrix()
+        sensor (dict): phobos representation of the new sensor
+        reference (bpy_types.Object): object to add a parent relationship to
+        origin (mathutils.Matrix): new sensors origin
 
     Returns:
-      The newly created sensor object
-
+        The newly created sensor object
     """
     layers = defs.layerTypes['sensor']
     bUtils.toggleLayer(layers, value=True)
