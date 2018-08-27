@@ -795,6 +795,7 @@ class PhobosModelPanel(bpy.types.Panel):
         hw1 = minlayout.column(align=True)
         hw1.label(text="Hardware", icon='MOD_SCREW')
         hw1.operator('phobos.add_motor')
+        hw1.operator('phobos.add_controller')
         hw1.operator('phobos.add_sensor')
         hw1.operator("phobos.add_annotations")
         hw1.operator('phobos.create_interface')

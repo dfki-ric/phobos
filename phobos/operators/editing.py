@@ -56,6 +56,7 @@ import phobos.utils.validation as vUtils
 import phobos.model.joints as jUtils
 import phobos.model.links as modellinks
 import phobos.model.motors as modelmotors
+import phobos.model.controllers as controllermodel
 import phobos.model.sensors as sensors
 from phobos.operators.generic import addObjectFromYaml, DynamicProperty
 from phobos.phoboslog import log
@@ -1631,6 +1632,116 @@ class AddSensorOperator(Operator):
             eval('bpy.ops.' + opName + "('INVOKE_DEFAULT')")
         else:
             log('This sensor name is not following the naming convention: ' + opName +
+                '. It can not be converted into an operator.', 'ERROR')
+        return {'FINISHED'}
+
+
+def addControllerFromYaml(controller_dict, annotations, selected_objs, active_obj, *args):
+    """Execution function for the temporary operator to add controllers from yaml files.
+
+    The specified parameters match the interface of the `addObjectFromYaml` generic function.
+
+    Args:
+        controller_dict (dict): phobos representation of a controller
+        annotations (dict): annotation dictionary containing annotation categories as keys
+        selected_objs (list(bpy.types.Object)): selected objects in the current context
+        active_obj (bpy.types.Object): active object in the current context
+        *args (list): empty list
+
+    Returns:
+        tuple(list, list) -- list of new controller objects and list of new annotation objects
+    """
+    pos_matrix = active_obj.matrix_world
+    controller_obj = controllermodel.createController(controller_dict, active_obj, pos_matrix)
+
+    annotation_objs = []
+    # add optional annotation objects
+    for annot in annotations:
+        annotation_objs.append(eUtils.addAnnotationObject(
+            controller_obj, annotations[annot],
+            name=nUtils.getObjectName(controller_obj) + '_' + annot,
+            namespace='controller/' + annot))
+
+    return [controller_obj], annotation_objs
+
+
+class AddControllerOperator(Operator):
+    """Add a controller at the position of the selected object. """
+    bl_idname = "phobos.add_controller"
+    bl_label = "Add Controller"
+    bl_options = {'UNDO'}
+
+    def controllerlist(self, context):
+        items = [(con, con.replace('_', ' '), '') for con in sorted(defs.definitions['controllers'])
+                 if self.categ in defs.def_settings['controllers'][con]['categories']]
+        return items
+
+    def categorylist(self, context):
+        '''Create an enum for the controller categories. For phobos preset categories,
+        the phobosIcon is added to the enum.
+        '''
+        from phobos.phobosgui import prev_collections
+
+        phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
+        categories = [t for t in defs.def_subcategories['controllers']]
+
+        icon = ''
+        items = []
+        i = 0
+        for categ in categories:
+            # assign an icon to the phobos preset categories
+            if categ == 'motor':
+                icon = 'AUTO'
+            else:
+                icon = 'GAME'
+
+            items.append((categ, categ, categ, icon, i))
+            i += 1
+
+        return items
+
+    categ = EnumProperty(
+        items=categorylist,
+        description='The controller category')
+
+    controllerType = EnumProperty(
+        items=controllerlist,
+        description='The controller type')
+
+    controllerName = StringProperty(
+        name="Controller name",
+        default='new_controller',
+        description="Name of the controller")
+
+    def draw(self, context):
+        layout = self.layout
+        layout.prop(self, 'controllerName')
+        layout.separator()
+        layout.prop(self, 'categ', text='Sensor category')
+        layout.prop(self, 'controllerType', text='Controller type')
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
+    def check(self, context):
+        return True
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and context.active_object.phobostype in defs.controllabletypes
+
+    def execute(self, context):
+        # match the operator to avoid dangers of eval
+        import re
+        opName = addObjectFromYaml(self.controllerName, 'controller', self.controllerType,
+                                   addControllerFromYaml)
+        operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
+
+        # run the operator and pass on add link (to allow undo both new link and sensor)
+        if operatorPattern.match(opName):
+            eval('bpy.ops.' + opName + "('INVOKE_DEFAULT')")
+        else:
+            log('This controller name is not following the naming convention: ' + opName +
                 '. It can not be converted into an operator.', 'ERROR')
         return {'FINISHED'}
 
