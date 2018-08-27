@@ -85,12 +85,6 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix()):
     # write the custom properties to the motor
     eUtils.addAnnotation(newmotor, motor['props'], namespace='motor')
 
-    # throw warning if type is not known
-    # TODO we need to link this error to the motor type specifications
-    if motor['type'] not in [key.lower() for key in defs.def_settings['motors']]:
-        log("motor " + motor['name'] + " is of unknown/custom type: " + motor['type'] + ".",
-            'WARNING')
-
     # select the new motor
     sUtils.selectObjects([newmotor], clear=True, active=0)
     return newmotor
