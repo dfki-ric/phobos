@@ -235,15 +235,21 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args):
 
                     annotations[custom_anno.name[2:]] = linkObjectLists(annot, selected_objs)
 
-            new_objs, annot_objs = execute_func(phobos_dict, annotations, selected_objs,
-                                                context.active_object, *args)
+            # let the exectute function handle the object creation
+            new_objs, annot_objs, otherobjs = execute_func(phobos_dict, annotations, selected_objs,
+                                                           context.active_object, *args)
 
             # select the newly added objects
-            sUtils.selectObjects(new_objs + annot_objs, clear=True, active=0)
+            sUtils.selectObjects(new_objs + annot_objs + otherobjs, clear=True, active=0)
             bUtils.toggleLayer(defs.layerTypes[self.phobostype], value=True)
 
             if annot_objs:
                 bUtils.toggleLayer(defs.layerTypes['annotation'], value=True)
+
+            # toggle layers for generic objects
+            if otherobjs:
+                for obj in otherobjs:
+                    bUtils.toggleLayer(defs.layerTypes[obj.phobostype], value=True)
 
             return {'FINISHED'}
 

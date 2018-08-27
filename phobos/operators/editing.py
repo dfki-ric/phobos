@@ -1483,7 +1483,8 @@ def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args
         *args (list): list containing a single bool value
 
     Returns:
-        tuple(list, list) -- list of new sensor objects and list of new annotation objects
+        tuple(list, list, []) -- list of new sensor objects, list of new annotation objects, empty
+            list
     """
     addlink = args[0]
 
@@ -1529,7 +1530,7 @@ def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args
             name=nUtils.getObjectName(sensor_obj) + '_' + annot,
             namespace='sensor/' + annot))
 
-    return [sensor_obj], annotation_objs
+    return [sensor_obj], annotation_objs, []
 
 
 class AddSensorOperator(Operator):
@@ -1649,7 +1650,8 @@ def addControllerFromYaml(controller_dict, annotations, selected_objs, active_ob
         *args (list): empty list
 
     Returns:
-        tuple(list, list) -- list of new controller objects and list of new annotation objects
+        tuple(list, list, []) -- list of new controller objects, list of new annotation objects,
+            empty list
     """
     addtoall = args[0]
 
@@ -1672,7 +1674,7 @@ def addControllerFromYaml(controller_dict, annotations, selected_objs, active_ob
                 namespace='controller/' + annot))
         controller_objs.append(controller_obj)
 
-    return controller_objs, annotation_objs
+    return controller_objs, annotation_objs, []
 
 
 class AddControllerOperator(Operator):
