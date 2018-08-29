@@ -546,33 +546,6 @@ def deriveApproxsphere(obj):
     return sphere
 
 
-def deriveSensor(obj, names=False, objectlist=[]):
-    """This function derives a sensor from a given blender object
-
-    Args:
-        obj(bpy_types.Object): The blender object to derive the sensor from.
-        names(bool): return the link object name instead of an object link.
-        objectlist (list(bpy.types.Object)): objectlist to which possible parents are restricted
-
-    Returns:
-      dict
-    """
-    log("Deriving sensor from object " + nUtils.getObjectName(obj, phobostype='sensor') + ".",
-        'DEBUG')
-    try:
-        props = initObjectProperties(obj, phobostype='sensor')
-        if names:
-            props['link'] = nUtils.getObjectName(
-                sUtils.getEffectiveParent(obj, objectlist=objectlist), phobostype='link')
-        else:
-            props['link'] = nUtils.getObjectName(
-                sUtils.getEffectiveParent(obj, objectlist=objectlist), phobostype='link')
-    except KeyError:
-        log("Missing data in sensor " + obj.name, "ERROR")
-        return None
-    return props
-
-
 def deriveController(obj):
     """This function derives a controller from a given blender object
 
@@ -755,6 +728,7 @@ def deriveDictEntry(obj, names=False, objectlist=[]):
         elif obj.phobostype == 'approxsphere':
             props = deriveApproxsphere(obj)
         elif obj.phobostype == 'sensor':
+            from phobos.model.sensors import deriveSensor
             props = deriveSensor(obj, names=names, objectlist=objectlist)
         elif obj.phobostype == 'controller':
             props = deriveController(obj)
