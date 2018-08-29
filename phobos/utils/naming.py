@@ -127,8 +127,15 @@ def isValidModelname(name):
 def getModelName(obj):
     """Returns the name of the model encoded by obj, provided that obj is a valid model root.
 
-    If obj does not contained a defined 'modelname', the object name is returned with a '*' added
-    ad the start, ensuring that the return value will not be treated as a valid model name."""
+    If obj does not contain a defined 'modelname', the object name is returned with a '*' added
+    ad the start, ensuring that the return value will not be treated as a valid model name.
+
+    Args:
+        obj (bpy.types.Object): root object of the model
+
+    Returns:
+        str -- modelname of the object or object name with '*' prepended if undefined
+    """
     return obj['modelname'] if 'modelname' in obj else '*' + obj.name
 
 
