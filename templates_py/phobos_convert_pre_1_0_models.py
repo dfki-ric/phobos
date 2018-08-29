@@ -2,6 +2,12 @@ import bpy
 import phobos.utils.selection as sUtils
 import phobos.utils.io as ioUtils
 
+# Things this script does not cover:
+#    - updating old sensors to new sensors (delete sensor/* properties and replace them with the
+#    right sensor object)
+#    - updating old motors to new motors (delete motor/* properties from links and insert motor
+#    objects instead)
+
 # -----------------------------------------------------------------
 # configuration
 # -----------------------------------------------------------------
