@@ -30,7 +30,6 @@ import bpy
 import mathutils
 import math
 from phobos.phoboslog import log
-import phobos.utils.editing as eUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
