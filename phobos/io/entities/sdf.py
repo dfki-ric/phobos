@@ -804,7 +804,7 @@ def exportSDF(model, filepath):
                 # axis is defined in local coord space of parent link
                 xml.attrib('xyz', list_to_string(joint['axis']))
                 # TODO make this consistent with annotation objects
-                xml.attrib('use_parent_model_frame', '1')
+                # xml.attrib('use_parent_model_frame', '1')
                 # OPT: xml.descend('dynamics')
                 # OPT: xml.attrib('damping', ...)
                 # OPT: xml.attrib('friction', ...)
@@ -884,7 +884,9 @@ def exportSDF(model, filepath):
                 # xml.ascend()
             # if 'frame' in joint.keys():
                 # OPT: xml.write(exportSDFFrame(joint['frame']))
-            xml.write(exportSDFPose(joint['pose'], xml.get_indent()))
+            # We cannot write a different joint pose, as the link is already transformed for the
+            # z axis to be rotated properly
+            # xml.write(exportSDFPose(joint['pose'], xml.get_indent()))
             # if 'sensor' in joint.keys():
                 # OPT: xml.write(sensor('sensor'))
             xml.ascend()
