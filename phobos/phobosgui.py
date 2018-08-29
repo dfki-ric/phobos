@@ -456,8 +456,8 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
         rootname = ''
 
         root = sUtils.getRoot(obj)
-        if 'modelname' in root:
-            modelname = root['modelname']
+        if 'model/name' in root:
+            modelname = root['model/name']
         rootname = root.name
 
         row = layout.row()

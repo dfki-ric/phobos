@@ -84,10 +84,14 @@ class NameModelOperator(Operator):
         default="",
         description="Name of the robot model to be assigned")
 
+    def invoke(self, context, event):
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
     def execute(self, context):
         root = sUtils.getRoot(context.active_object)
         if root:
-            root["modelname"] = self.modelname
+            root["model/name"] = self.modelname
         else:
             log("Could not set modelname due to missing root link. No name was set.", "ERROR")
         return {'FINISHED'}

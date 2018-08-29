@@ -83,10 +83,10 @@ class ExportSceneOperator(Operator):
                 # try:
                 if (self.exportModels and
                         'export' in entity_types[root['entity/type']] and
-                        root['modelname'] not in models):
-                    modelpath = os.path.join(ioUtils.getExportPath(), self.sceneName, root['modelname'])
+                        root['model/name'] not in models):
+                    modelpath = os.path.join(ioUtils.getExportPath(), self.sceneName, root['model/name'])
                     exportModel(models.deriveModelDictionary(root), modelpath)
-                    models.add(root['modelname'])
+                    models.add(root['model/name'])
                 # known entity export
                 entity = entity_types[root["entity/type"]]['derive'](root,
                                                                      os.path.join(ioUtils.getExportPath(), self.sceneName))
@@ -384,7 +384,7 @@ class ImportSelectedLibRobot(Operator):
                     bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys() and
                     modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file != '' and
                     len(bpy.context.selected_objects) == 0 or
-                    modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name != root["modelname"]
+                    modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name != root["model/name"]
                     ):
                 result = True
         except KeyError:
@@ -440,7 +440,7 @@ class ImportSelectedLibRobot(Operator):
             robot_obj = bpy.context.selected_objects[0]
             bpy.context.scene.objects.active = robot_obj
             robot_obj.name = self.obj_name
-            robot_obj["modelname"] = selected_robot.robot_name
+            robot_obj["model/name"] = selected_robot.robot_name
             robot_obj["entity/name"] = self.obj_name
             robot_obj["entity/type"] = "smurf"
             robot_obj["entity/pose"] = selected_robot.label
@@ -472,7 +472,7 @@ class CreateRobotInstance(Operator):
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
             robot_lib = yaml.load(f.read())
         root = links.createLink(1.0, name=self.robName + "::" + self.bakeObj)
-        root["modelname"] = self.bakeObj
+        root["model/name"] = self.bakeObj
         root["entity/name"] = self.robName
         root["isInstance"] = True
         bpy.ops.import_mesh.stl(filepath=os.path.join(
@@ -506,7 +506,7 @@ class ExportCurrentPoseOperator(Operator):
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         return (context.selected_objects and context.active_object and sUtils.isRoot(context.active_object) and
                 bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys() and
-                modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == context.active_object['modelname'] and
+                modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == context.active_object['model/name'] and
                 modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose')
 
     def invoke(self, context, event):
@@ -558,7 +558,7 @@ class ExportCurrentPoseOperator(Operator):
             parameter = self.decimate_iteration
         elif self.decimate_type == 'DISSOLVE':
             parameter = self.decimate_angle_limit
-        exporter.bakeModel(objectlist, root['modelname'], selected_robot.label, decimate_type=self.decimate_type,
+        exporter.bakeModel(objectlist, root['model/name'], selected_robot.label, decimate_type=self.decimate_type,
                            decimate_parameter=parameter)
         sUtils.selectObjects([root] + objectlist, clear=True, active=0)
         bpy.ops.scene.reload_models_and_poses_operator()
@@ -619,18 +619,18 @@ class ExportAllPosesOperator(Operator):
         objectlist = sUtils.getChildren(
             root, selected_only=True, include_hidden=False)
         sUtils.selectObjects(objectlist)
-        poses = models.getPoses(root['modelname'])
+        poses = models.getPoses(root['model/name'])
         i = 1
         for pose in poses:
             sUtils.selectObjects([root] + objectlist, clear=True, active=0)
-            models.loadPose(root['modelname'], pose)
+            models.loadPose(root['model/name'], pose)
             parameter = self.decimate_ratio
             if self.decimate_type == 'UNSUBDIV':
                 parameter = self.decimate_iteration
             elif self.decimate_type == 'DISSOLVE':
                 parameter = self.decimate_angle_limit
             exporter.bakeModel(objectlist, root[
-                               'modelname'], pose, decimate_type=self.decimate_type, decimate_parameter=parameter)
+                               'model/name'], pose, decimate_type=self.decimate_type, decimate_parameter=parameter)
             display.setProgress(i/len(poses))
             i += 1
         sUtils.selectObjects([root] + objectlist, clear=True, active=0)

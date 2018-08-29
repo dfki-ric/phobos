@@ -883,9 +883,9 @@ def deriveTextData(modelname):
 
 #     # namespace links, joints, motors etc for each submodel
 #     for subm in submodels:
-#         print('-----------------------', subm.name, subm['submodelname'], '\n')
+#         print('-----------------------', subm.name, subm['submodel/name'], '\n')
 #         rootlink = [r for r in bpy.data.objects if sUtils.isRoot(r)
-#                     and r['modelname'] == subm['submodelname']][0]
+#                     and r['model/name'] == subm['submodel/name']][0]
 #         adict = deriveModelDictionary(rootlink)
 #         for l in adict['links']:
 #             model['links'][namespaced(l, subm.name)] = namespaceLink(
@@ -905,13 +905,13 @@ def deriveTextData(modelname):
 
 #     for subm in submodels:
 #         rootlink = [r for r in bpy.data.objects if sUtils.isRoot(r)
-#                     and r['modelname'] == subm['submodelname']][0]
+#                     and r['model/name'] == subm['submodel/name']][0]
 #         if subm.parent:
 #             # get interfaces and parents
-#             parentsubmodelname = subm.parent.parent.parent['submodelname']
+#             parentsubmodelname = subm.parent.parent.parent['submodel/name']
 #             parentinterfacename = subm.parent.parent['interface/name']
 #             parentsubmodel = [r for r in bpy.data.objects if sUtils.isRoot(r)
-#                               and r['modelname'] == parentsubmodelname][0]
+#                               and r['model/name'] == parentsubmodelname][0]
 #             parentinterface = [i for i in sUtils.getChildren(parentsubmodel,
 #                                                              ('interface',))
 #                                if i['interface/name'] == parentinterfacename][0]
@@ -981,8 +981,8 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     # define model name
     if name:
         modelname = name
-    elif 'modelname' in root:
-        modelname = root['modelname']
+    elif 'model/name' in root:
+        modelname = root['model/name']
     else:
         modelname = 'unnamed'
 
@@ -1182,7 +1182,7 @@ def buildModelFromDictionary(model):
     if 'name' not in model:
         log("Model name not specified in URDF. Make sure to define it thereafter.", 'WARNING')
     else:
-        rootlink['modelname'] = model['name']
+        rootlink['model/name'] = model['name']
     rootlink.location = (0, 0, 0)
 
     # TODO make sure this works

@@ -35,6 +35,7 @@ from bpy.props import EnumProperty, StringProperty
 import phobos.defs as defs
 import phobos.utils.selection as sUtils
 import phobos.utils.blender as bUtils
+import phobos.utils.naming as nUtils
 from phobos.phoboslog import log
 
 
@@ -163,7 +164,7 @@ class SelectModelOperator(Operator):
             log("phobos: Selecting model" + self.modelname, "INFO")
             roots = sUtils.getRoots()
             for root in roots:
-                if root["modelname"] == self.modelname:
+                if nUtils.getModelName(root) == self.modelname:
                     selection = sUtils.getChildren(root)
         else:
             log("No model name provided, deriving from selection...", "INFO")

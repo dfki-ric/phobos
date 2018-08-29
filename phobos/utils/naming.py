@@ -127,7 +127,7 @@ def isValidModelname(name):
 def getModelName(obj):
     """Returns the name of the model encoded by obj, provided that obj is a valid model root.
 
-    If obj does not contain a defined 'modelname', the object name is returned with a '*' added
+    If obj does not contain a defined 'model/name', the object name is returned with a '*' added
     ad the start, ensuring that the return value will not be treated as a valid model name.
 
     Args:
@@ -136,7 +136,7 @@ def getModelName(obj):
     Returns:
         str -- modelname of the object or object name with '*' prepended if undefined
     """
-    return obj['modelname'] if 'modelname' in obj else '*' + obj.name
+    return obj['model/name'] if 'model/name' in obj else '*' + obj.name
 
 
 def replaceNameElement(prop, old, new):

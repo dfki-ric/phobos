@@ -130,9 +130,9 @@ def restructureKinematicTree(link, root=None):
 
     log("Copying model information from old root.", 'DEBUG')
     # copy properties
-    if 'modelname' in root:
-        link['modelname'] = root['modelname']
-        del root['modelname']
+    if 'model/name' in root:
+        link['model/name'] = root['model/name']
+        del root['model/name']
     if 'version' in root:
         link['version'] = root['version']
         del root['version']
@@ -237,7 +237,7 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
     submodelobj['submodeltype'] = submodel.name.split(':')[0]
     # TODO currently this works only by name binding, we should add links to
     # the group here
-    submodelobj['submodelname'] = submodelname
+    submodelobj['submodel/name'] = submodelname
     # copy custom props from group to instance
     for key in submodel.keys():
         submodelobj[key] = submodel[key]

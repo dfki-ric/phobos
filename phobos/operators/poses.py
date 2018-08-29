@@ -126,7 +126,7 @@ def get_pose_names(scene, context):
 #         root = sUtils.isRoot(context.scene.objects.active)
 #         if root and \
 #            (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()) and \
-#            (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["modelname"]) and \
+#            (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["model/name"]) and \
 #            (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose'):
 #             result = True
 #         return result
@@ -160,7 +160,7 @@ class StorePoseOperator(Operator):
     )
 
     def execute(self, context):
-        root = sUtils.getObjectByProperty('modelname', self.robot_name)
+        root = sUtils.getObjectByProperty('model/name', self.robot_name)
         poses.storePose(root, self.pose_name)
         return {'FINISHED'}
 
@@ -288,7 +288,8 @@ class ChangePreviewOperator(bpy.types.Operator):
                     root = sUtils.getRoot(context.scene.objects.active)
                 if not bpy.context.scene.preview_visible and \
                         (bpy.data.images[activeModelPoseIndex].type == 'IMAGE') and \
-                        (root is None or not sUtils.isRoot(root) or not (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name] != root["modelname"]) or len(bpy.context.selected_objects) == 0):
+                        (root is None or not sUtils.isRoot(root) or not
+                         (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name] != root["model/name"]) or len(bpy.context.selected_objects) == 0):
                     bpy.ops.view3d.draw_preview_operator()
                     bpy.context.scene.preview_visible = True
 

@@ -69,13 +69,13 @@ def deriveEntity(root, outpath):
         bpy.ops.scene.reload_models_and_poses_operator()
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         for robot_model in modelsPosesColl:
-            if (root["modelname"] == robot_model.robot_name) and (root["entity/pose"] == robot_model.label):
+            if (root["model/name"] == robot_model.robot_name) and (root["entity/pose"] == robot_model.label):
                 pass
         entity['file'] = os.path.join(os.path.relpath(robot_model.path, outpath), root["name"] + ".smurf")
         """
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
             robots = yaml.load(f.read())
-            sourcepath = robots[smurf["modelname"]]
+            sourcepath = robots[smurf["model/name"]]
             for filename in os.listdir(sourcepath):
                 fullpath = os.path.join(sourcepath, filename)
                 if os.path.isfile(fullpath):
@@ -86,10 +86,10 @@ def deriveEntity(root, outpath):
                     shutil.copytree(fullpath, os.path.join(smurf_outpath, filename))
         """
     else:
-        modelpath = os.path.join(outpath, root['modelname'], 'smurf')
+        modelpath = os.path.join(outpath, root['model/name'], 'smurf')
         # TODO why the spacing between the paths?
         log("Scene paths: " + outpath + ' ' + modelpath, "DEBUG")
-        entity['file'] = os.path.join(os.path.relpath(modelpath, os.path.dirname(outpath)), root['modelname']+".smurf")
+        entity['file'] = os.path.join(os.path.relpath(modelpath, os.path.dirname(outpath)), root['model/name']+".smurf")
     return entity
 
 
