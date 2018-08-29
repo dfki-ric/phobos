@@ -32,3 +32,9 @@ for obj in objectlist:
         del obj['motor/limit']
     elif 'motor/limits' in obj:
         del obj['motor/limits']
+
+# move modelname to model/name
+for obj in objectlist:
+    if 'modelname' in obj:
+        obj['model/name'] = obj['modelname']
+        del obj['modelname']
