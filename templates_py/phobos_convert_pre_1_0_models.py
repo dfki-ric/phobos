@@ -25,3 +25,10 @@ for obj in objectlist:
 # delete objects designated for deletion
 selectObjects(objects_to_be_deleted)
 bpy.ops.object.delete(use_global=True)
+
+# remove motor limits custom properties
+for obj in objectlist:
+    if 'motor/limit' in obj:
+        del obj['motor/limit']
+    elif 'motor/limits' in obj:
+        del obj['motor/limits']
