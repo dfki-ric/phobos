@@ -30,11 +30,12 @@ import bpy
 import mathutils
 import math
 from phobos.phoboslog import log
-from . import selection as sUtils
-from . import naming as nUtils
-from . import blender as bUtils
-from . import io as ioUtils
-from .. import defs
+import phobos.utils.editing as eUtils
+import phobos.utils.selection as sUtils
+import phobos.utils.naming as nUtils
+import phobos.utils.blender as bUtils
+import phobos.utils.io as ioUtils
+import phobos.defs as defs
 
 
 def getCombinedTransform(obj, effectiveparent):
@@ -126,8 +127,7 @@ def restructureKinematicTree(link, root=None):
     for i in range(len(links) - 1):
         parent = links[i]
         child = links[i + 1]
-        sUtils.selectObjects((parent, child), True, active=0)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        eUtils.parentObjectsTo(child, parent)
 
     log("Copying model information from old root.", 'DEBUG')
     # copy properties
@@ -138,6 +138,36 @@ def restructureKinematicTree(link, root=None):
         link['version'] = root['version']
         del root['version']
     log("Restructured kinematic tree to new root: {}.".format(link.name), 'INFO')
+
+
+def parentObjectsTo(objects, parent, clear=False):
+    """Parents the specified objects to the parent object.
+
+    Depending on their phobostype the objects are parented either *bone relative* or *object*.
+
+    If *clear* is set, the parenting of the objects will be cleared (keeping the transform), before
+    parenting.
+
+    Args:
+        objects (list(bpy.types.Object)): objects to set parent of
+        parent (bpy.types.Object): parent object
+        clear (bool): if True, the parenting of the objects will be cleared
+
+    Returns:
+    """
+    if not isinstance(objects, list):
+        objects = [objects]
+
+    if clear:
+        sUtils.selectObjects(objects, active=0, clear=True)
+        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+
+    sUtils.selectObjects([parent] + objects, active=0, clear=True)
+
+    if parent.phobostype == 'link':
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    else:
+        bpy.ops.object.parent_set(type='OBJECT')
 
 
 def getNearestCommonParent(objs):
@@ -229,10 +259,7 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
             bUtils.toggleTransformLock(obj, True)
 
         # parent interfaces to submodel empty
-        sUtils.selectObjects(
-            objects=[submodelobj] + bpy.context.selected_objects,
-            clear=True, active=0)
-        bpy.ops.object.parent_set(type='OBJECT')
+        eUtils.parentObjectsTo(bpy.context.selected_objects, submodelobj)
 
         # delete empty parent object of interfaces
         sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
@@ -438,11 +465,11 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
     sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
     bpy.ops.object.make_single_user(object=True, obdata=True)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+
+    # parent interfaces
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-    sUtils.selectObjects(objects=[childinterface, childsubmodel], clear=True, active=0)
-    bpy.ops.object.parent_set(type='OBJECT')
-    sUtils.selectObjects(objects=[parentinterface, childinterface], clear=True, active=0)
-    bpy.ops.object.parent_set(type='OBJECT')
+    eUtils.parentObjectsTo(childsubmodel, childinterface, clear=True)
+    eUtils.parentObjectsTo(childinterface, parentinterface)
 
     loc, rot, sca = parentinterface.matrix_world.decompose()
     # apply additional transform (ignoring the scale of the parent interface)
@@ -464,7 +491,7 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
     #     sUtils.selectObjects(children, True, 0)
     #     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
     #     print()
-    #     sUtils.selectObjects([sUtils.getEffectiveParent(parent, ignore_selection=True)] + children, True, 0)
+    #     eUtils.parentObjectsTo(children, sUtils.getEffectiveParent(parent, ignore_selection=True))
     #     bpy.ops.object.parent_set(type='BONE_RELATIVE')
     # except (IndexError, AttributeError):
     #     pass  # no objects to re-parent
@@ -491,8 +518,7 @@ def disconnectInterfaces(parentinterface, childinterface, transform=None):
     # restructure the kinematic tree to make the interface child of the submodel again
     sUtils.selectObjects(objects=[root], clear=True, active=0)
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-    sUtils.selectObjects(objects=[root, childinterface], clear=True, active=0)
-    bpy.ops.object.parent_set(type='OBJECT')
+    eUtils.parentObjectsTo(childinterface, root)
 
     # apply additional transform
     if transform:
@@ -576,9 +602,8 @@ def mergeLinks(links, targetlink, movetotarget=False):
         sUtils.selectObjects([link], clear=True, active=0)
         bpy.ops.object.select_grouped(type='CHILDREN')
         bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-        sUtils.selectObjects([targetlink] + bpy.context.selected_objects, clear=True, active=0)
         try:
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            eUtils.parentObjectsTo(bpy.context.selected_objects, targetlink)
         except RuntimeError as e:
             log("Cannot resolve new parent hierarchy: " + str(e), 'ERROR')
         del link
@@ -617,8 +642,7 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
     bpy.context.scene.layers = [True for i in range(20)]
 
     # parent annotation object
-    sUtils.selectObjects([obj, annot_obj], clear=True, active=0)
-    bpy.ops.object.parent_set(type='OBJECT')
+    eUtils.parentObjectsTo(annot_obj, obj,)
 
     bpy.context.scene.layers = originallayers
     if not name:

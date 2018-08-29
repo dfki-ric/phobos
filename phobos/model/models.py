@@ -1162,8 +1162,7 @@ def buildModelFromDictionary(model):
         for chi in parent['children']:
             child = model['links'][chi]
             child['object'].matrix_world = parent['object'].matrix_world
-            sUtils.selectObjects([child['object'], parent['object']], True, 1)
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            eUtils.parentObjectsTo(child['object'], parent['object'])
 
     # set transformations
     log("Transforming links...  ({} total)".format(len(model['links'])), 'INFO', prefix='\n')

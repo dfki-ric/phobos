@@ -1,5 +1,6 @@
 import bpy
 from phobos.utils.selection import selectObjects as select
+import phobos.utils.editing as eUtils
 
 root = bpy.context.active_object
 links = [link for link in bpy.context.selected_objects if link.phobostype == 'link']
@@ -12,7 +13,7 @@ for link in links:
     bpy.ops.object.mode_set(mode='EDIT')
     print(link.name, len(link.data.bones), len(link.data.edit_bones))
     link.data.edit_bones[0].name = link.name
-    
+
     bpy.ops.object.mode_set(mode='OBJECT')
 
 
@@ -44,6 +45,4 @@ for v in visuals:
     bpy.ops.object.mode_set(mode='EDIT')
     root.data.edit_bones.active = root.data.edit_bones[vparents[v.name]]
     bpy.ops.object.mode_set(mode='OBJECT')
-    select([v, root], 1)
-    bpy.ops.object.parent_set(type='BONE')
-    #bpy.ops.object.parent_set(type='BONE_RELATIVE')
+    eUtils.parentObjectsTo(v, root, 1)

@@ -60,10 +60,7 @@ def attachSensor(self, sensor):
     sensorobj = bpy.data.objects[sensor['name']]
     if 'link' in sensor:
         parentLink = sUtils.getObjectByNameAndType(sensor['link'], 'link')
-        # TODO delete me?
-        #parentLink = bpy.data.objects['link_' + sensor['link']]
-        sUtils.selectObjects([sensorobj, parentLink], True, 1)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        eUtils.parentObjectsTo(sensorobj, parentLink)
     else:
         #TODO: what? handle it...
         pass
@@ -152,8 +149,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
 
     # assign the parent if available
     if reference is not None:
-        sUtils.selectObjects([newsensor, reference], clear=True, active=1)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        eUtils.parentObjectsTo(newsensor, reference)
 
     # TODO we need to deal with other types of parameters for sensors
 

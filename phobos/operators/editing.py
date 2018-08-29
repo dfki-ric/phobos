@@ -984,8 +984,7 @@ class CreateCollisionObjects(Operator):
                 #         " is shared between several objects.", "WARNING",
                 #         "CreateCollisionObjects")
                 vis.parent.select = True
-                context.scene.objects.active = vis.parent
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
+                eUtils.parentObjectsTo(context.selected_objects, vis.parent)
                 # TODO delete these lines?
                 # ob.parent_type = vis.parent_type
                 # ob.parent_bone = vis.parent_bone
@@ -1559,12 +1558,10 @@ def addSensorFromYaml(name, sensortype):
             if newlink:
                 # parent newlink to parent link if there is any
                 if parentlink:
-                    sUtils.selectObjects([newlink, parentlink], clear=True, active=1)
-                    bpy.ops.object.parent_set(type='BONE_RELATIVE')
+                    eUtils.parentObjectsTo(newlink, parentlink)
 
             # parent sensor to its superior link
-            sUtils.selectObjects([sensor_obj, parent_obj], clear=True, active=1)
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+            eUtils.parentObjectsTo(sensor_obj, parent_obj)
 
             annotation_objs = []
             # add annotation objects for other categories

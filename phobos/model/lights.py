@@ -28,6 +28,7 @@ Created on 9 Apr 2015
 
 import bpy
 import phobos.utils.selection as sUtils
+import phobos.utils.editing as eUtils
 
 
 def addLight(light_dict):
@@ -46,8 +47,7 @@ def addLight(light_dict):
                             rotation=rotation)
     light = bpy.context.active_object
     if 'parent' in light_dict:
-        sUtils.selectObjects([light, bpy.data.objects[light_dict['parent']]], clear=True, active=1)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        eUtils.parentObjectsTo(light, bpy.data.objects[light_dict['parent']])
 
     light_data = light.data
     light.name = light_dict['name']

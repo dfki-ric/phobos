@@ -37,6 +37,7 @@ import phobos.defs as defs
 from phobos.phoboslog import log
 import phobos.utils.general as gUtils
 import phobos.utils.selection as sUtils
+import phobos.utils.editing as eUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
 from phobos.model.geometries import deriveGeometry
@@ -74,10 +75,9 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
     parent = obj
     if parent.phobostype != 'link':
         parent = sUtils.getEffectiveParent(obj, ignore_selection=True)
-    sUtils.selectObjects((inertialobject, parent), clear=True, active=1)
+    eUtils.parentObjectsTo(inertialobject, parent)
 
     # position and parent the inertial object relative to the link
-    bpy.ops.object.parent_set(type='BONE_RELATIVE')
     inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(scale=True)

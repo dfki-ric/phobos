@@ -37,6 +37,7 @@ import phobos.defs as defs
 import phobos.utils.naming as nUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
+import phobos.utils.editing as eUtils
 import phobos.model.inertia as inertia
 import phobos.model.geometries as geometrymodel
 from phobos.phoboslog import log
@@ -162,18 +163,11 @@ def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False,
     # parent link to object's parent
     if parent_link:
         if obj.parent:
-            sUtils.selectObjects([link, obj.parent], True, 1)
-            if obj.parent.phobostype == 'link':
-                bpy.ops.object.parent_set(type='BONE_RELATIVE')
-            else:
-                bpy.ops.object.parent_set(type='OBJECT')
+            eUtils.parentObjectsTo(link, obj.parent)
     # parent children of object to link
     if parent_objects:
         children = [obj] + sUtils.getImmediateChildren(obj)
-        sUtils.selectObjects(children, True, 0)
-        bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-        sUtils.selectObjects([link] + children, True, 0)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        eUtils.parentObjectsTo(children, link, clear=True)
     return link
 
 

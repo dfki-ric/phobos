@@ -196,8 +196,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             log("No pose in element: " + viscol['name'], 'DEBUG')
             location = mathutils.Matrix.Identity(4)
             rotation = mathutils.Matrix.Identity(4)
-        sUtils.selectObjects([newgeom, linkobj], True, 1)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        eUtils.parentObjectsTo(newgeom, linkobj)
         newgeom.matrix_local = location * rotation
 
     # scale imported object

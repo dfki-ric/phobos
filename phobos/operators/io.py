@@ -44,6 +44,7 @@ from phobos.phoboslog import log
 import phobos.model.models as models
 import phobos.model.links as links
 import phobos.utils.selection as sUtils
+import phobos.utils.editing as eUtils
 import phobos.utils.io as ioUtils
 import phobos.utils.blender as bUtils
 import phobos.utils.naming as nUtils
@@ -480,8 +481,7 @@ class CreateRobotInstance(Operator):
         obj = context.active_object
         obj.name = self.robName + "::visual"
         obj.phobostype = "visual"
-        sUtils.selectObjects([root, obj], clear=True, active=0)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        eUtils.parentObjectsTo(obj, root)
         return {"FINISHED"}
 
     @classmethod
