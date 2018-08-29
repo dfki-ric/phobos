@@ -1,5 +1,5 @@
 import bpy
-from phobos.utils.selection import selectObjects
+import phobos.utils.selection as sUtils
 import phobos.utils.io as ioUtils
 
 # -----------------------------------------------------------------
@@ -24,7 +24,7 @@ for obj in objectlist:
         objects_to_be_deleted.append(obj)
 
 # delete objects designated for deletion
-selectObjects(objects_to_be_deleted)
+sUtils.selectObjects(objects_to_be_deleted)
 bpy.ops.object.delete(use_global=True)
 
 # remove motor limits custom properties
@@ -34,11 +34,15 @@ for obj in objectlist:
     elif 'motor/limits' in obj:
         del obj['motor/limits']
 
-# move modelname to model/name
+# move modelname to model/name and reassign root
 for obj in objectlist:
     if 'modelname' in obj:
         obj['model/name'] = obj['modelname']
         del obj['modelname']
+
+        if sUtils.isRoot(obj):
+            bpy.context.scene.objects.active = obj
+            bpy.ops.phobos.set_model_root()
 
 # update joint shapes for whole model
 joints = [obj for obj in objectlist if 'joint/type' in obj]
