@@ -96,6 +96,12 @@ def cameraRotLock(object):
 def createSensor(sensor, reference, origin=mathutils.Matrix()):
     """This function creates a new sensor specified by its parameters.
 
+    The sensor dictionary has to contain these keys:
+        *name*: name of the new sensor
+        *type*: type specifier of the sensor
+        *shape*: a shape specifier for the sensor
+        *props*: custom properties to be written to the sensor object
+
     Args:
         sensor (dict): phobos representation of the new sensor
         reference (bpy_types.Object): object to add a parent relationship to
