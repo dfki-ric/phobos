@@ -1,5 +1,6 @@
 import bpy
 from phobos.utils.selection import selectObjects
+import phobos.utils.io as ioUtils
 
 # -----------------------------------------------------------------
 # configuration
@@ -38,3 +39,9 @@ for obj in objectlist:
     if 'modelname' in obj:
         obj['model/name'] = obj['modelname']
         del obj['modelname']
+
+# update joint shapes for whole model
+joints = [obj for obj in objectlist if 'joint/type' in obj]
+for joint in joints:
+    resource_obj = ioUtils.getResource(['joint', joint['joint/type']])
+    joint.pose.bones[0].custom_shape = resource_obj
