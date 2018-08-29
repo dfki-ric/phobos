@@ -38,20 +38,22 @@ import phobos.utils.editing as eUtils
 import phobos.utils.io as ioUtils
 
 
-def deriveSensor(obj, names=False, objectlist=[]):
+def deriveSensor(obj, names=False, objectlist=[], logging=False):
     """This function derives a sensor from a given blender object
 
     Args:
         obj(bpy_types.Object): The blender object to derive the sensor from.
         names(bool): return the link object name instead of an object link.
         objectlist (list(bpy.types.Object)): objectlist to which possible parents are restricted
+        logging (bool): whether to write log messages or not
 
     Returns:
-      dict
+        dict -- phobos representation of the sensor
     """
     from phobos.model.models import initObjectProperties
-    log("Deriving sensor from object " + nUtils.getObjectName(obj, phobostype='sensor') + ".",
-        'DEBUG')
+    if logging:
+        log("Deriving sensor from object " + nUtils.getObjectName(obj, phobostype='sensor') + ".",
+            'DEBUG')
     try:
         props = initObjectProperties(obj, phobostype='sensor')
         if names:
@@ -61,7 +63,8 @@ def deriveSensor(obj, names=False, objectlist=[]):
             props['link'] = nUtils.getObjectName(
                 sUtils.getEffectiveParent(obj, objectlist=objectlist), phobostype='link')
     except KeyError:
-        log("Missing data in sensor " + obj.name, "ERROR")
+        if logging:
+            log("Missing data in sensor " + obj.name, "ERROR")
         return None
     return props
 

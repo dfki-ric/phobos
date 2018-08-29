@@ -706,21 +706,21 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
     return props
 
 
-def deriveDictEntry(obj, names=False, objectlist=[]):
+def deriveDictEntry(obj, names=False, objectlist=[], logging=True):
     """Derives a phobos dictionary entry from the provided object.
 
     Args:
-      obj(bpy_types.Object): The object to derive the dict entry (phobos data structure) from.
-      names(bool): use object names as dict entries instead of object links.
+        obj(bpy_types.Object): The object to derive the dict entry (phobos data structure) from.
+        names(bool): use object names as dict entries instead of object links.
+        logging (bool): whether to log messages or not
 
     Returns:
-      tuple
-
+        dict -- phobos representation of the object
     """
     props = {}
     try:
         if obj.phobostype == 'inertial':
-            props = deriveInertial(obj, adjust=True, logging=True)
+            props = deriveInertial(obj, adjust=True, logging=logging)
         elif obj.phobostype == 'visual':
             props = deriveVisual(obj)
         elif obj.phobostype == 'collision':
@@ -729,7 +729,7 @@ def deriveDictEntry(obj, names=False, objectlist=[]):
             props = deriveApproxsphere(obj)
         elif obj.phobostype == 'sensor':
             from phobos.model.sensors import deriveSensor
-            props = deriveSensor(obj, names=names, objectlist=objectlist)
+            props = deriveSensor(obj, names=names, objectlist=objectlist, logging=logging)
         elif obj.phobostype == 'controller':
             props = deriveController(obj)
         elif obj.phobostype == 'light':

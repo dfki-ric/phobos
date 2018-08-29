@@ -632,7 +632,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         if obj.phobostype == 'link':
             dictprops = get_link_information(obj)
         else:
-            dictprops = deriveDictEntry(obj)
+            dictprops = deriveDictEntry(obj, logging=False)
 
         # nothing to show
         if not dictprops:
