@@ -25,10 +25,10 @@ controllers:
         p: 20.0
         i: 1.0
         d: 0.1
-    dc:
+    direct:
         general:
-            type: DC
-            shape: resource://dc
+            type: direct
+            shape: resource://direct
             size: 0.2
             categories:
                 - generic

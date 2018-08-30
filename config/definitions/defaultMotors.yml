@@ -30,7 +30,7 @@ motors:
             size: 0.2
             categories:
                 - generic
-        controller: dc
+        controller: direct
         maxSpeed: 3.141
         maxEffort: 50.0
     # limes motors

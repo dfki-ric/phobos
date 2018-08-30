@@ -383,7 +383,9 @@ def exportSmurf(model, path):
             except KeyError:
                 log("Missing data in motor {}! Motor might be incomplete.".format(
                     motordict['name']), "WARNING")
-        elif motordict['type'] == 'DC':
+        # direct controllers are called generic_dc in mars
+        elif motordict['type'] == 'direct':
+            motordict['type'] = 'generic_dc'
             try:
                 motordict['minValue'] = 0
                 motordict['maxValue'] = motordict["maxSpeed"]
