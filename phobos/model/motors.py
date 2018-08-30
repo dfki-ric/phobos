@@ -86,10 +86,9 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
     newmotor.phobostype = 'motor'
     newmotor.name = motor['name']
     defname = motor['defname']
-    del motor['defname']
 
     # write the custom properties to the motor
-    eUtils.addAnnotation(newmotor, motor['props'], namespace='motor')
+    eUtils.addAnnotation(newmotor, motor['props'], namespace='motor', ignore=['defname'])
 
     if 'controller' in defs.definitions['motors'][defname] and addcontrollers:
         import phobos.model.controllers as controllermodel
