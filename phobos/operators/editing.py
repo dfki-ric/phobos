@@ -1250,8 +1250,17 @@ class AddMotorOperator(Operator):
 
     @classmethod
     def poll(cls, context):
-        return (context.active_object and context.active_object.phobostype == 'link' and
-                'joint/type' in context.active_object)
+        active_obj = (context.active_object and context.active_object.phobostype == 'link' and
+                      context.active_object.mode == 'OBJECT')
+
+        if not active_obj:
+            return False
+
+        active_obj = context.active_obj
+
+        joint_obj = 'joint/type' in active_obj and active_obj['joint/type'] != 'fixed'
+
+        return joint_obj
 
     def execute(self, context):
         # match the operator to avoid dangers of eval
