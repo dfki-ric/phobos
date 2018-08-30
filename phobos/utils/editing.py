@@ -653,7 +653,7 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
     return annot_obj
 
 
-def addAnnotation(obj, annotation, namespace=None):
+def addAnnotation(obj, annotation, namespace=None, ignore=[]):
     """Adds the specified annotations to the object.
 
     If provided, the namespace will be prepended to the annotation keys and separated with a /.
@@ -662,9 +662,10 @@ def addAnnotation(obj, annotation, namespace=None):
         obj (bpy.types.Object): object to add the annotations to
         annotation (dict): annotations to add to the object
         namespace (str, optional): namespace which will be prepended to the annotations
+        ignore (list(str)): skip these keys when adding annotations
     """
     for key, value in annotation.items():
-        obj[str(namespace + '/' if namespace else '') + key] = value
+        obj[str(namespace + '/' if namespace and key not in ignore else '') + key] = value
 
 
 def sortObjectsToLayers(objs):
