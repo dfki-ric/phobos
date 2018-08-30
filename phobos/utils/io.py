@@ -136,7 +136,7 @@ def getDictFromYamlDefs(phobostype, defname, name):
                    'category': defs.def_settings[phobostype + 's'][defname]['categories'],
                    'material': material,
                    'type': defs.def_settings[phobostype + 's'][defname]['type'],
-                   'props': {}}
+                   'props': defs.definitions[phobostype + 's'][defname]}
 
     # add the general settings for this object
     general_settings = defs.def_settings[phobostype + 's'][defname]
