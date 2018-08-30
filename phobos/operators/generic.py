@@ -256,3 +256,11 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
     # register the temporary operator and return its blender id
     bpy.utils.register_class(TempObjAddOperator)
     return operatorBlenderId
+
+
+def register():
+    bpy.utils.register_class(DynamicProperty)
+
+
+def unregister():
+    bpy.utils.unregister_class(DynamicProperty)
