@@ -373,6 +373,24 @@ def exportSmurf(model, path):
         else:
             log("No controller assigned to motor {}!".format(motordict['name']), 'WARNING')
 
+        # PID controlled motors get their min and max values from the joint limits
+        if motordict['type'] == 'PID':
+            try:
+                joint = model['joints'][motordict['joint']]
+                if 'limits' in joint:
+                    motordict['minValue'] = joint['limits']['lower']
+                    motordict['maxValue'] = joint['limits']['upper']
+            except KeyError:
+                log("Missing data in motor {}! Motor might be incomplete.".format(
+                    motordict['name']), "WARNING")
+        elif motordict['type'] == 'DC':
+            try:
+                motordict['minValue'] = 0
+                motordict['maxValue'] = motordict["maxSpeed"]
+            except KeyError:
+                log("Missing data in motor {}! Motor might be incomplete.".format(
+                    motordict['name']), "WARNING")
+
     # TODO: implement everything but joints
     # write state (state information of all joints, sensor & motor activity etc.)
     if exportdata['state']:

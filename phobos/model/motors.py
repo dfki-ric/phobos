@@ -145,16 +145,4 @@ def deriveMotor(obj, jointdict=None):
     else:
         del props['controller']
 
-    # TODO this will go to smurf
-    # try:
-    #     if props['type'] == 'PID':
-    #         if 'limits' in joint:
-    #             props['minValue'] = joint['limits']['lower']
-    #             props['maxValue'] = joint['limits']['upper']
-    #     elif props['type'] == 'DC':
-    #         props['minValue'] = 0
-    #         props['maxValue'] = props["maxSpeed"]
-    # except KeyError:
-    #     log("Missing data in motor " + obj.name + '. No motor created.', "WARNING")
-    #     return None
     return props
