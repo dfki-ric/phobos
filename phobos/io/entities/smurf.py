@@ -359,6 +359,20 @@ def exportSmurf(model, path):
     #             semantics['chains'] = model['chains']
     #         op.write(yaml.dump(semantics, default_flow_style=False))
 
+    # for smurf, we parse the controller parameters into the motors
+    for motor in model['motors']:
+        motordict = model['motors'][motor]
+
+        controllerparams = {}
+        if motordict['controller'] in model['controllers']:
+            controllerparams = {key: value for key, value in
+                                model['controllers'][motordict['controller']].items() if (
+                                    key not in ['name', 'target'])}
+            motordict.update(controllerparams)
+            del motordict['controller']
+        else:
+            log("No controller assigned to motor {}!".format(motordict['name']), 'WARNING')
+
     # TODO: implement everything but joints
     # write state (state information of all joints, sensor & motor activity etc.)
     if exportdata['state']:

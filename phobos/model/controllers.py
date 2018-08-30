@@ -52,7 +52,8 @@ def deriveController(obj):
         return None
 
     props['target'] = nUtils.getObjectName(obj.parent)
-    log("  Derived controller '{}' for target '{}'.".format(props['name'], props['target']), 'DEBUG')
+    log("  Derived controller '{}' for target '{}'.".format(props['name'], props['target']),
+        'DEBUG')
 
     return props
 
