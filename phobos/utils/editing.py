@@ -126,7 +126,7 @@ def restructureKinematicTree(link, root=None):
     for i in range(len(links) - 1):
         parent = links[i]
         child = links[i + 1]
-        eUtils.parentObjectsTo(child, parent)
+        parentObjectsTo(child, parent)
 
     log("Copying model information from old root.", 'DEBUG')
     # copy properties
@@ -258,7 +258,7 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
             bUtils.toggleTransformLock(obj, True)
 
         # parent interfaces to submodel empty
-        eUtils.parentObjectsTo(bpy.context.selected_objects, submodelobj)
+        parentObjectsTo(bpy.context.selected_objects, submodelobj)
 
         # delete empty parent object of interfaces
         sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
@@ -467,8 +467,8 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
 
     # parent interfaces
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-    eUtils.parentObjectsTo(childsubmodel, childinterface, clear=True)
-    eUtils.parentObjectsTo(childinterface, parentinterface)
+    parentObjectsTo(childsubmodel, childinterface, clear=True)
+    parentObjectsTo(childinterface, parentinterface)
 
     loc, rot, sca = parentinterface.matrix_world.decompose()
     # apply additional transform (ignoring the scale of the parent interface)
@@ -490,7 +490,7 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
     #     sUtils.selectObjects(children, True, 0)
     #     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
     #     print()
-    #     eUtils.parentObjectsTo(children, sUtils.getEffectiveParent(parent, ignore_selection=True))
+    #     parentObjectsTo(children, sUtils.getEffectiveParent(parent, ignore_selection=True))
     #     bpy.ops.object.parent_set(type='BONE_RELATIVE')
     # except (IndexError, AttributeError):
     #     pass  # no objects to re-parent
@@ -517,7 +517,7 @@ def disconnectInterfaces(parentinterface, childinterface, transform=None):
     # restructure the kinematic tree to make the interface child of the submodel again
     sUtils.selectObjects(objects=[root], clear=True, active=0)
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-    eUtils.parentObjectsTo(childinterface, root)
+    parentObjectsTo(childinterface, root)
 
     # apply additional transform
     if transform:
@@ -602,7 +602,7 @@ def mergeLinks(links, targetlink, movetotarget=False):
         bpy.ops.object.select_grouped(type='CHILDREN')
         bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
         try:
-            eUtils.parentObjectsTo(bpy.context.selected_objects, targetlink)
+            parentObjectsTo(bpy.context.selected_objects, targetlink)
         except RuntimeError as e:
             log("Cannot resolve new parent hierarchy: " + str(e), 'ERROR')
         del link
@@ -641,7 +641,7 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
     bpy.context.scene.layers = [True for i in range(20)]
 
     # parent annotation object
-    eUtils.parentObjectsTo(annot_obj, obj,)
+    parentObjectsTo(annot_obj, obj,)
 
     bpy.context.scene.layers = originallayers
     if not name:
