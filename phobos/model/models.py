@@ -414,35 +414,28 @@ def deriveVisual(obj, logging=True, **kwargs):
 
 
 def deriveCollision(obj):
-    """This function derives the collision information from an object.
+    """Returns the collision information from the specified object.
 
     Args:
-      obj(bpy_types.Object): The blender object to derive the collision information from.
+        obj(bpy.types.Object): object to derive the collision information from
 
     Returns:
-      dict
-
+        dict -- phobos representation of the collision object
     """
-    try:
-        collision = initObjectProperties(
-            obj, phobostype='collision', ignoretypes='geometry')
-        collision['geometry'] = deriveGeometry(obj)
-        collision['pose'] = deriveObjectPose(obj)
-        # the bitmask is cut to length = 16 and reverted for int parsing
-        try:
-            collision['bitmask'] = int(''.join(
-                ['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[::-1], 2)
-            for group in obj.rigid_body.collision_groups[16:]:
-                if group:
-                    log(('Object {0} is on a collision layer higher than ' +
-                        '16. These layers are ignored when exporting.').format(
-                        obj.name), "WARNING")
-                    break
-        except AttributeError:
-            pass
-    except KeyError:
-        log("Missing data in collision object " + obj.name, "ERROR")
-        return None
+    collision = initObjectProperties(
+        obj, phobostype='collision', ignoretypes='geometry')
+    collision['geometry'] = deriveGeometry(obj)
+    collision['pose'] = deriveObjectPose(obj)
+
+    # the bitmask is cut to length = 16 and reverted for int parsing
+    if 'collision_groups' in dir(obj.rigid_body):
+        collision['bitmask'] = int(''.join(
+            ['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[::-1], 2)
+        for group in obj.rigid_body.collision_groups[16:]:
+            if group:
+                log(("Object {0} is on a collision layer higher than 16. These layers are " +
+                     "ignored when exporting.").format(obj.name), 'WARNING')
+                break
     return collision
 
 
