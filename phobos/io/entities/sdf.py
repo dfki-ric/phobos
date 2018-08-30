@@ -35,6 +35,7 @@ from xml.etree.ElementTree import Element, SubElement
 
 import bpy
 
+import phobos.defs as defs
 from phobos.utils.io import xmlHeader
 from phobos.utils.io import indent as phobosindentation
 from phobos.utils.io import l2str as list_to_string
@@ -1080,8 +1081,7 @@ def parseSDFMaterial(visualname, material):
 
 def parseSDFLink(link, filepath):
     # collect all parameters which can be parsed as generic sdf annotations
-    genericparams = [elem.tag for elem in list(link)
-                     if elem.tag not in [
+    genericparams = [elem.tag for elem in list(link) if elem.tag not in [
                          'velocity_decay', 'frame', 'pose', 'inertial', 'collision', 'visual',
                          'sensor', 'projector', 'audio_source', 'battery']]
     newlink = {}
@@ -1161,7 +1161,7 @@ def parseSDFLink(link, filepath):
             objectsdict[name] = elemdict
         newlink[objtype] = objectsdict
 
-    # TODO parse sensors
+    sensors = parseSDFSensors(link.findall('sensor'))
 
     # TODO add projector, audio sink, audio_source, battery support
 
@@ -1170,7 +1170,7 @@ def parseSDFLink(link, filepath):
     print(yaml.dump(newlink))
     if newlink == {}:
         log("Link information for " + newlink['name'] + " is empty.", 'WARNING')
-    return newlink, materials
+    return newlink, materials, sensors
 
 
 def parseSDFJointPhysics(physics):
@@ -1179,8 +1179,43 @@ def parseSDFJointPhysics(physics):
 
 
 def parseSDFSensors(sensors):
-    # TODO make this work
-    return {}
+    sensorsdict = {}
+
+    for sensor in sensors:
+        newsensor = {}
+        newsensor['name'] = sensor.attrib['name']
+        newsensor['type'] = sensor.attrib['type']
+
+        # other params
+        # always_on
+        # update_rate
+        # visualize
+        # topic
+        # frame
+        sensorsdict['pose'] = parseSDFPose(sensor.find('pose'))
+        # plugin
+
+        # parse the content of the sensor type to properties for the sensor
+        genparams = [elem.tag for elem in list(sensor.find(newsensor['type']))]
+        props = {}
+        props.update({'sdf/' + a: gUtils.parse_text(sensor.find(newsensor['type']).find(a).text)
+                      for a in genparams})
+        newsensor['props'] = props
+
+        sensorsettings = defs.def_settings['sensors']
+        # find def settings for this sensor type
+        for sendef in sensorsettings:
+            if sensorsettings[sendef]['type'] == newsensor['type']:
+                newsensor['shape'] = sensorsettings[sendef]['shape']
+                newsensor['size'] = sensorsettings[sendef]['size']
+                break
+        else:
+            log("Could not find definition settings for {} sensor {}! Defaulting to box.",
+                'WARNING')
+            newsensor['shape'] = 'box'
+            newsensor['size'] = [1., 1., 1.]
+        sensorsdict[newsensor['name']] = newsensor
+    return sensorsdict
 
 
 def parseSDFAxis(axis):
@@ -1291,12 +1326,14 @@ def importSDF(filepath):
 
     links = {}
     materials = {}
+    sensors = {}
     log("Parsing links...", 'INFO')
     for link in root.iter('link'):
         log(" Adding link {}.".format(link.attrib['name']), 'DEBUG')
-        newlink, linkmats = parseSDFLink(link, filepath)
+        newlink, linkmats, newsensors = parseSDFLink(link, filepath)
         links[link.attrib['name']] = newlink
         materials.update(linkmats)
+        sensors.update(newsensors)
     model['links'] = links
     # TODO cleanup duplicate materials
     # TODO move to visuals
@@ -1315,7 +1352,7 @@ def importSDF(filepath):
         if joint.find('parent') is not None:
             # parse joint from elementtree
             log(" Adding joint {} ...".format(joint.attrib['name']), 'DEBUG')
-            newjoint, pose, sensors = parseSDFJoint(joint)
+            newjoint, pose, newsensors = parseSDFJoint(joint)
             model['links'][newjoint['child']]['pose'] = pose
             joints[newjoint['name']] = newjoint
 
@@ -1327,6 +1364,8 @@ def importSDF(filepath):
             log("   ... and connected parent link {} to {}.".format(
                 parentlink['name'], childlink['name']), 'DEBUG')
     model['joints'] = joints
+    sensors.update(newsensors)
+    model['sensors'] = sensors
 
     # find any links that still have no pose (most likely because they had no parent)
     for link in model['links']:
