@@ -630,11 +630,19 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
         bpy.types.Object - the new annotation object
     """
     loc = obj.matrix_world.to_translation()
-    bpy.ops.object.empty_add(type='SPHERE', location=loc,
-                             layers=bUtils.defLayers(defs.layerTypes['annotation']))
-    annot_obj = bpy.context.scene.objects.active
+    if not name:
+        name = obj.name + '_annotation_object'
+
+    annot_obj = bUtils.createPrimitive(
+        name, 'box', [1, 1, 1], defs.layerTypes['annotation'], plocation=loc)
     annot_obj.phobostype = 'annotation'
-    annot_obj.empty_draw_size = size
+    annot_obj.scale = (size,) * 3
+
+    resource = ioUtils.getResource(['annotation', namespace.split('/')[-1]])
+    if resource:
+        annot_obj.data = resource.data
+    else:
+        annot_obj.data = ioUtils.getResource(['annotation', 'default']).data
 
     # make sure all layers are enabled for parenting
     originallayers = list(bpy.context.scene.layers)
@@ -644,10 +652,6 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
     parentObjectsTo(annot_obj, obj,)
 
     bpy.context.scene.layers = originallayers
-    if not name:
-        nUtils.safelyName(annot_obj, 'annotation_object')
-    else:
-        nUtils.safelyName(annot_obj, name)
 
     addAnnotation(annot_obj, annotation, namespace=namespace)
     return annot_obj
