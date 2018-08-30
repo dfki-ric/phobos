@@ -2637,21 +2637,6 @@ class SetModelRoot(Operator):
         eUtils.removeProperties(oldroot, ['model/*'])
         return {'FINISHED'}
 
-
-def register():
-    print("Registering operators.editing...")
-    # TODO this seems not to be very convenient...
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
-        bpy.utils.register_class(classdef)
-
-
-def unregister():
-    print("Unregistering operators.editing...")
-    # TODO this seems not to be very convenient...
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
-        bpy.utils.unregister_class(classdef)
-
-
 # TODO remove or use? Give it a dev branch
 # class SelectErrorOperator(Operator):
 #     """Select an object with check errors"""
@@ -2745,3 +2730,21 @@ class MeasureDistanceOperator(Operator):
     @classmethod
     def poll(self, context):
         return len(context.selected_objects) == 2
+
+
+def register():
+    print("Registering operators.editing...")
+    bpy.utils.register_class(DynamicProperty)
+    # TODO this seems not to be very convenient...
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.register_class(classdef)
+
+
+def unregister():
+    print("Unregistering operators.editing...")
+    # TODO this seems not to be very convenient...
+    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+        bpy.utils.unregister_class(classdef)
+
+
+
