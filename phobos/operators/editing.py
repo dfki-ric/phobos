@@ -1256,7 +1256,7 @@ class AddMotorOperator(Operator):
         if not active_obj:
             return False
 
-        active_obj = context.active_obj
+        active_obj = context.active_object
 
         joint_obj = 'joint/type' in active_obj and active_obj['joint/type'] != 'fixed'
 
