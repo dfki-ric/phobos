@@ -40,6 +40,7 @@ import phobos.defs as defs
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
 import phobos.utils.io as ioUtils
+from phobos.phoboslog import log
 
 
 def linkObjectLists(annotation, objectlist):
@@ -258,9 +259,139 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
     return operatorBlenderId
 
 
+class AddAnnotationsOperator(bpy.types.Operator):
+    """Add annotations defined by the Phobos definitions """
+    bl_idname = "phobos.add_annotations"
+    bl_label = "Add Annotations"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'FILE'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def getAnnotationTypes(self, context):
+        return [(category,) * 3 for category in sorted(defs.definitions.keys())]
+
+    def getAnnotationCategories(self, context):
+        subcategories = [(category,) * 3 for category in
+                         sorted(defs.def_subcategories[self.annotationtype])]
+
+        # do not use single categories
+        if not subcategories:
+            subcategories = [('None',) * 3]
+        return subcategories
+
+    def getDeviceTypes(self, context):
+        devicetypes = [(device,) * 3 for device in sorted(
+            defs.definitions[self.annotationtype].keys()) if self.annotationcategories in
+            defs.def_settings[self.annotationtype][device]['categories']]
+
+        if not devicetypes:
+            devicetypes = [('None',) * 3]
+        return devicetypes
+
+    asObject = BoolProperty(
+        name="Add as objects",
+        description="Add annotation as object(s)",
+        default=True
+    )
+
+    annotationtype = EnumProperty(
+        items=getAnnotationTypes,
+        name="Annotation Type",
+        description="Annotation Types")
+
+    annotationcategories = EnumProperty(
+        items=getAnnotationCategories,
+        name="Categories",
+        description="Categories of this annotation type.")
+
+    devicetype = EnumProperty(
+        items=getDeviceTypes,
+        name="Device Type",
+        description="Device Types")
+
+    annotation_data = bpy.props.CollectionProperty(type=DynamicProperty)
+
+    @classmethod
+    def poll(cls, context):
+        return context is not None
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=500)
+
+    def check(self, context):
+        return True
+
+    def draw(self, context):
+        layout = self.layout
+        if self.asObject:
+            layout.prop(self, 'asObject', text='add annotations as object(s)', icon='FORCE_LENNARDJONES')
+        else:
+            layout.prop(self, 'asObject', text='add annotations to object', icon='REC')
+        layout.separator()
+
+        layout.prop(self, 'annotationtype')
+
+        if self.annotationcategories == 'None':
+            layout.label('No categories available.')
+        else:
+            layout.prop(self, 'annotationcategories')
+
+        # hide devicetype property when empty
+        if self.devicetype == 'None':
+            layout.label('No devices defined.')
+            return
+
+        layout.prop(self, 'devicetype')
+        data = defs.definitions[self.annotationtype][self.devicetype]
+
+        hidden_props = ['general']
+        # identify the property type for all the stuff in the definition
+        self.annotation_data.clear()
+        unsupported = DynamicProperty.assignDict(self.annotation_data.add, data,
+                                                 ignore=hidden_props)
+
+        # expose the parameters as the right Property
+        if self.annotation_data:
+            box = layout.box()
+            for i in range(len(self.annotation_data)):
+                name = self.annotation_data[i].name[2:].replace('_', ' ')
+
+                # use the dynamic props name in the GUI, but without the type id
+                self.annotation_data[i].draw(box, name)
+
+            # add unsupported stuff as labels
+            for item in unsupported:
+                box.label(item, icon='ERROR')
+
+        if unsupported:
+            log("These properties are not supported for generic editing: " + str(list(unsupported)),
+                'DEBUG')
+
+    def execute(self, context):
+        objects = context.selected_objects
+        annotation = defs.definitions[self.annotationtype][self.devicetype]
+
+        # add annotation (objects) to the selected objects
+        annot_objects = []
+        for obj in objects:
+            if self.asObject:
+                annot_objects.append(eUtils.addAnnotationObject(
+                    obj, annotation, name=obj.name + '_annotation',
+                    namespace=self.annotationtype.rstrip('s')))
+            else:
+                eUtils.addAnnotation(obj, annotation, namespace=self.annotationtype.rstrip('s'))
+
+        # reselect the original objects and additional annotation objects
+        sUtils.selectObjects(objects + annot_objects, clear=True)
+        bUtils.toggleLayer(defs.layerTypes['annotation'], value=True)
+        return {'FINISHED'}
+
+
 def register():
     bpy.utils.register_class(DynamicProperty)
+    bpy.utils.register_class(AddAnnotationsOperator)
 
 
 def unregister():
     bpy.utils.unregister_class(DynamicProperty)
+    bpy.utils.unregister_class(AddAnnotationsOperator)
