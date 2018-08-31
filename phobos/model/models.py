@@ -913,6 +913,8 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     else:
         modelversion = 'undefined'
 
+    modeldescription = bUtils.readTextFile('README.md')
+
     model = {
         'links': {},
         'joints': {},
@@ -926,7 +928,8 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         'chains': {},
         'date': datetime.now().strftime("%Y%m%d_%H:%M"),
         'name': modelname,
-        'version': modelversion
+        'version': modelversion,
+        'description': modeldescription
     }
 
     log("Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.", 'INFO',
