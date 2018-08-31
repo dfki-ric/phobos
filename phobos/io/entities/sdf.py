@@ -50,6 +50,17 @@ from phobos.phoboslog import log
 # https://bitbucket.org/osrf/sdformat/src/ --> sdf/*.sdf files
 sdfversion = "1.5"
 
+# Joint mapping from URDF to SDF
+jointmapping = {
+    'revolute': 'revolute',
+    'continuous': 'revolute',
+    'prismatic': 'prismatic',
+    'fixed': 'fixed',
+    'floating': 'TODO',
+    'planar': 'TODO'
+}
+
+
 class xmlTagger(object):
     """ A simple class to create a syntax conform xml file. The line
     indentation space can be customized using the indent parameter.
@@ -766,17 +777,6 @@ def exportSDF(model, filepath):
             linkobj = link['object']
             xml.write(exportSDFLink(link, linkobj, modelname, model['materials'], xml.get_indent()))
         log('Links exported.', 'DEBUG', 'exportSdf')
-
-        # FINAL move somewhere else
-        # Joint mapping from URDF to SDF
-        jointmapping = {
-            'revolute': 'revolute',
-            'continuous': 'revolute',
-            'prismatic': 'prismatic',
-            'fixed': 'fixed',
-            'floating': 'TODO',
-            'planar': 'TODO'
-        }
 
         # joint
         for jointkey in model['joints'].keys():
