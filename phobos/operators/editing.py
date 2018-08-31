@@ -2415,6 +2415,10 @@ class SetModelRoot(Operator):
         newroot = context.active_object
         oldroot = sUtils.getRoot(obj=context.active_object)
 
+        if newroot == oldroot:
+            log("Object is already root.", 'INFO')
+            return {'CANCELLED'}
+
         # gather model information from old root
         modelprops = eUtils.getProperties(oldroot, category='model')
         oldroot.pose.bones[0].custom_shape = None
