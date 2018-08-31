@@ -263,9 +263,6 @@ def exportSDFInertial(inertialdata, indentation):
     :type indentation: int.
     :return: str -- writable xml line
     """
-
-    # 'mass', 'pose', 'name', 'inertia'
-
     tagger = xmlTagger(initial=indentation)
     tagger.descend('inertial')
     if 'mass' in inertialdata:
@@ -303,10 +300,6 @@ def exportSDFCollision(collisionobj, collisiondata, indentation, modelname):
     :param modelname: the name of the model (required for geometry)
     :return: str -- writable xml line
     """
-    # {'collision_leg2_lower': {'pose': {...}, 'name': '...',
-    #                           'bitmask': 2, 'geometry': {...}},
-    #  'collision_leg2_foot': {'pose': {...}, 'name': '...',
-    #                          'bitmask': 4, 'geometry': {...}}}
     tagger = xmlTagger(initial=indentation)
     tagger.descend('collision', {'name': collisiondata['name']})
     # OPT: tagger.attrib('laser_retro', ...)
@@ -395,10 +388,6 @@ def exportSDFGeometry(geometrydata, indentation, modelname):
     :param modelname: name used for gazebo model pathing
     :return: str -- writable xml line
     """
-    # {'size': [0.23617, 0.06, 0.06], 'type': 'box'}
-    # {'radius': 0.06, 'type': 'sphere'}
-    import phobos.utils.io as ioUtils
-
     tagger = xmlTagger(initial=indentation)
     tagger.descend('geometry')
     # available geometries in geometries.py: box,cylinder,capsule,sphere,mesh
@@ -494,8 +483,6 @@ def exportSDFVisual(visualobj, linkobj, visualdata, indentation, modelname):
     :param modelname: the name of the model (required for geometry)
     :return: str -- writable xml line
     """
-
-    # geometry': 'pose': 'material': 'upper_leg', 'name': 'visual_leg2_upper'
     tagger = xmlTagger(initial=indentation)
     tagger.descend('visual', params={'name': visualdata['name']})
     # OPT: tagger.attrib('cast_shadows', ...)
@@ -540,11 +527,6 @@ def exportSDFMaterial(materialdata, indentation):
     tagger.descend('material')
     alpha = materialdata[
         'transparency'] if 'transparency' in materialdata else '1.0'
-    # {'mat_wheel': {'ambientColor': {'r': 0.02562, 'g': 0.20235, 'b': 0.0156},
-    # 'users': 2, 'specularColor': {'r': 0.5, 'g': 0.5, 'b': 0.5},
-    # 'name': 'mat_wheel', 'shininess': 25.0,
-    # 'diffuseColor': {'r': 0.02562, 'g': 0.20235, 'b': 0.0156},
-    # 'emissionColor': {'r': 1.0, 'g': 0, 'b': 0.62306}
 
     # OPT: tagger.descend('plugin', ...)
     # OPT: tagger.descend('shader', ...)
@@ -571,8 +553,6 @@ def exportSDFMaterial(materialdata, indentation):
 
 
 def exportSDFLink(linkdict, linkobj, modelname, materials, indentation):
-    # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision',
-    # 'approxcollision', 'collision_bitmask'
     tagger = xmlTagger(initial=indentation)
     tagger.descend('link', {'name': linkdict['name']})
     # OPT: tagger.attrib('gravity', ...)
@@ -590,7 +570,7 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, indentation):
     if linkdict['inertial']:
         tagger.write(exportSDFInertial(linkdict['inertial'], tagger.get_indent()))
     else:
-        log('No inertial data for "{0}"...'.format(linkdict['name']), "WARNING", "exportSdf")
+        log("No inertial data for '{0}'...".format(linkdict['name']), 'WARNING')
 
     # collision data might be missing
     if linkdict['collision']:
@@ -600,7 +580,7 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, indentation):
             tagger.write(exportSDFCollision(collisionobj, linkdict['collision'][colkey],
                                             tagger.get_indent(), modelname))
     else:
-        log('No collision data for "{0}"...'.format(linkdict['name']), 'WARNING')
+        log("No collision data for '{0}'...".format(linkdict['name']), 'WARNING')
 
     # there might be no visual objects
     if linkdict['visual']:
@@ -615,7 +595,7 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, indentation):
             tagger.write(exportSDFVisual(visualobj, linkobj, visualdata,
                                          tagger.get_indent(), modelname))
     else:
-        log('No visual data for "{0}"...'.format(linkdict['name']), "WARNING")
+        log("No visual data for '{0}'...".format(linkdict['name']), 'WARNING')
 
     # OPT: tagger.write(sensor(linkdict['sensor'], tagger.get_indent()))
     # OPT: tagger.descend('projector', {'name': ...})
@@ -655,7 +635,7 @@ def exportSDFJoint(jointdict, indentation):
     tagger.descend('joint', {'name': jointdict['name'], 'type': sdftype})
     # FINAL remove when all joints are finished
     if sdftype == 'TODO':
-        log("joint type '{}' at joint '{}' not supported yet.".format(
+        log("Joint type '{}' at joint '{}' not supported yet.".format(
             jointdict['type'], jointdict['name']), 'ERROR')
     tagger.attrib('parent', jointdict['parent'])
     tagger.attrib('child', jointdict['child'])
@@ -788,7 +768,7 @@ def exportSDF(model, filepath):
     """ Export function used for the entity.
     This exports a model SDF file as well as its model.conf to the specified filepath.
     """
-    log("Export SDF (version " + sdfversion + ") to " + filepath, "INFO", "exportSdf")
+    log("Export SDF (version {}) to {}.".format(sdfversion, filepath), 'INFO')
     filename = os.path.join(filepath, model['name'] + '.sdf')
 
     if getExpSettings().export_sdf_model_config:
@@ -799,7 +779,7 @@ def exportSDF(model, filepath):
 
     modelconf = exportGazeboModelConf(model)
 
-    log('Exporting "{0}"...'.format(model['name']), "DEBUG", "exportSdf")
+    log("Exporting '{0}'...".format(model['name']), "DEBUG")
     # FINAL remove debugging information
     # print('sensors\n')
     # print(model['sensors'])
@@ -882,14 +862,14 @@ def exportSDF(model, filepath):
             link = model['links'][linkkey]
             linkobj = link['object']
             xml.write(exportSDFLink(link, linkobj, modelname, model['materials'], xml.get_indent()))
-        log('Links exported.', 'DEBUG', 'exportSdf')
+        log("Links exported.", 'DEBUG')
 
         # joints
         for jointkey in model['joints'].keys():
             joint = model['joints'][jointkey]
 
             xml.write(exportSDFJoint(joint, xml.get_indent()))
-        log("Joints exported.", "DEBUG", "exportSdf")
+        log("Joints exported.", 'DEBUG')
 
         # plugin
         # OPT: xml.descend('plugin', params={'name': ..., 'filename': ...)
@@ -913,16 +893,16 @@ def exportSDF(model, filepath):
         sys.exc_info()[0]
         print(traceback.format_exc())
         errors = True
-        log("Error in export!", "ERROR", "exportsdf")
+        log("Error in export!", 'ERROR')
     finally:
         outputtext = xml.get_output()
 
-        log("Writing model sdf file to " + filename, "DEBUG")
+        log("Writing model sdf file to {}.".format(filename), 'DEBUG')
         with open(filename, 'w') as outputfile:
             outputfile.writelines(outputtext)
 
         if modelconffile:
-            log("Writing model.config file to " + modelconffile, "DEBUG")
+            log("Writing model.config file to {}.".format(modelconffile), 'DEBUG')
             with open(modelconffile, 'w') as outputfile:
                 outputfile.write(getIndentedETString(modelconf))
             # modelconfTree.write(modelconffile, encoding="UTF-8", xml_declaration=True)
@@ -930,7 +910,8 @@ def exportSDF(model, filepath):
         if getExpSettings().export_sdf_to_gazebo_models:
             phobosprefs = getPhobosPreferences()
             modelpath = os.path.join(phobosprefs.gazebomodelfolder, modelname)
-            log("Copying model to Gazebo model folder: {}".format(os.path.relpath(modelpath)), 'INFO')
+            log("Copying model to Gazebo model folder: {}".format(os.path.relpath(modelpath)),
+                'INFO')
             if not os.path.exists(modelpath):
                 os.makedirs(modelpath)
             else:
@@ -957,7 +938,7 @@ def exportSDF(model, filepath):
 
     finishmessage = "Export finished with " + \
         ("no " if not errors else "") + "errors."
-    log(finishmessage, "INFO", "exportModelToSDF")
+    log(finishmessage, 'INFO')
 
 
 def parseSDFPose(pose):
@@ -1163,6 +1144,7 @@ def parseSDFLink(link, filepath):
     # TODO add projector, audio sink, audio_source, battery support
 
     newlink['annotations'] = {'sdf': sdfannos}
+    # TODO delete me
     import yaml
     print(yaml.dump(newlink))
     if newlink == {}:
