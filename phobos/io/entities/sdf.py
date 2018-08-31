@@ -175,6 +175,7 @@ def getIndentedETString(elementtree):
     """
     return minidom.parseString(ET.tostring(elementtree)).toprettyxml(indent=phobosindentation)
 
+
 def exportSDFPose(relativepose, indentation, poseobject=None):
     """ Simple wrapper for pose data.
     If relative poses are used the data found in posedata is used.
@@ -337,13 +338,12 @@ def exportSDFCollision(collisionobj, collisiondata, indentation, modelname):
         # tagger.ascend()
         # tagger.ascend()
         # # CONTACT PART
-        # TODO: Optional. Add if clause
         tagger.descend('contact')
         # OPT: tagger.attrib('collide_without_contact', ...)
         # OPT: tagger.attrib('collide_without_contact_bitmask', ...)
-        # TODO: Optional. Add if clause
-        bitstring = '0x{0:02d}'.format(collisiondata['bitmask'])
-        tagger.attrib('collide_bitmask', bitstring)
+        if 'bitmask' in collisiondata:
+            bitstring = '0x{0:02d}'.format(collisiondata['bitmask'])
+            tagger.attrib('collide_bitmask', bitstring)
         # OPT: tagger.attrib('poissons_ratio', ...)
         # OPT: tagger.attrib('elastic_modulus', ...)
         # OPT: tagger.descend('ode')
@@ -435,7 +435,6 @@ def exportSDFGeometry(geometrydata, indentation, modelname):
     #     REQ: tagger.attrib('name', ...)
     #     OPT: tagger.attrib('center', ...)
     #     tagger.ascend()
-    #     TODO: Optional. Add if clause
         tagger.attrib('scale', '{0} {1} {2}'.format(*geometrydata['scale']))
         tagger.ascend()
     # elif geometrydata['type'] == 'plane':
@@ -585,8 +584,7 @@ def exportGazeboModelConf(model):
     authorEL = SubElement(modelconf, 'author')
     SubElement(authorEL, 'name').text = username
     SubElement(authorEL, 'email').text = useremail
-    # TODO allow user to edit a txt file in blender which contains the description OR take README?
-    # SubElement(modelconf, 'description').text = PARSEFROMTXTEDITOR
+    SubElement(modelconf, 'description').text = model['description']
 
     return modelconf
 
@@ -606,9 +604,6 @@ def exportSDF(model, filepath):
 
     modelconf = exportGazeboModelConf(model)
 
-    # TODO add version to model dictionary!
-    # 'sensors', 'materials', 'controllers', 'date', 'links', 'chains',
-    # 'meshes', 'lights', 'motors', 'groups', 'joints', 'name'
     log('Exporting "{0}"...'.format(model['name']), "DEBUG", "exportSdf")
     # FINAL remove debugging information
     # print('sensors\n')
@@ -705,7 +700,6 @@ def exportSDF(model, filepath):
             # OPT: xml.attrib('angular', ...)
             # xml.ascend()
             # OPT: xml.write(exportSDFFrame(model['frame']), xml.get_indent())
-            # TODO Optional. Add if clause
             xml.write(exportSDFPose(link['pose'], xml.get_indent(), poseobject=linkobj))
             # inertial data might be missing
             if link['inertial']:
@@ -714,7 +708,7 @@ def exportSDF(model, filepath):
                 log('No inertial data for "{0}"...'.format(link['name']), "WARNING", "exportSdf")
 
             # collision data might be missing
-            if len(link['collision'].keys()) > 0:
+            if link['collision']:
                 for colkey in link['collision'].keys():
                     colliname = link['collision'][colkey]['name']
                     collisionobj = bpy.context.scene.objects[colliname]
@@ -727,7 +721,7 @@ def exportSDF(model, filepath):
                                                             "exportSdf"))
 
             # there might be no visual objects
-            if len(link['visual'].keys()) > 0:
+            if link['visual']:
                 for visualkey in link['visual'].keys():
                     visualobj = bpy.context.scene.objects[visualkey]
                     visualdata = link['visual'][visualkey]
@@ -793,8 +787,8 @@ def exportSDF(model, filepath):
             xml.descend('joint', {'name': joint['name'], 'type': sdftype})
             # FINAL remove when all joints are finished
             if sdftype == 'TODO':
-                log("joint type '" + joint['type'] + "' at joint '" +
-                    joint['name'] + "' not supported yet.", 'ERROR')
+                log("joint type '{}' at joint '{}' not supported yet.".format(
+                    joint['type'], joint['name']), 'ERROR')
             xml.attrib('parent', joint['parent'])
             xml.attrib('child', joint['child'])
             # OPT: xml.attrib('gearbox_ratio', ...)
@@ -804,7 +798,7 @@ def exportSDF(model, filepath):
                 xml.descend('axis')
                 # axis is defined in local coord space of parent link
                 xml.attrib('xyz', list_to_string(joint['axis']))
-                # TODO make this consistent with annotation objects
+                # TODO derive pose from model frame optionally
                 # xml.attrib('use_parent_model_frame', '1')
                 # OPT: xml.descend('dynamics')
                 # OPT: xml.attrib('damping', ...)
@@ -1174,7 +1168,7 @@ def parseSDFLink(link, filepath):
 
 
 def parseSDFJointPhysics(physics):
-    # TODO make this work
+    # TODO add support for this
     return {}
 
 
@@ -1226,7 +1220,9 @@ def parseSDFAxis(axis):
         sdfannos['initial_position'] = gUtils.parse_text(axis.find('initial_position').text)
 
     axisdict['xyz'] = gUtils.parse_text(axis.find('xyz').text)
-    axisdict['use_parent_model_frame'] = bool(axis.find('use_parent_model_frame').text)
+
+    if axis.find('use_parent_model_frame') is not None:
+        axisdict['use_parent_model_frame'] = bool(axis.find('use_parent_model_frame').text)
 
     if 'dynamics' in list(axis):
         dynamics = axis.find('dynamics')
@@ -1268,7 +1264,6 @@ def parseSDFJoint(joint):
     axis = joint.find('axis')
     if axis is not None:
         sdfaxis = parseSDFAxis(axis)
-        # TODO safe axis values in a smarter way
         jointdict['xyz'] = sdfaxis['xyz']
         sdfannos['axis/use_parent_model_frame'] = sdfaxis['use_parent_model_frame']
         jointdict['limits'] = sdfaxis['limits']
@@ -1290,6 +1285,7 @@ def parseSDFJoint(joint):
     sensors = parseSDFSensors(joint.findall('sensor'))
     jointdict['annotations'] = {'sdf': sdfannos}
 
+    # TODO delete me
     import yaml
     print('JOINT:', yaml.dump(jointdict))
     print('POSE:', yaml.dump(pose))
@@ -1336,12 +1332,10 @@ def importSDF(filepath):
         sensors.update(newsensors)
     model['links'] = links
     # TODO cleanup duplicate materials
-    # TODO move to visuals
-    # if newmat['name'] in materials:
-    #     log(" Overwriting duplicate material {}!".format(newmat['name']), 'WARNING')
-    # materials[newmat['name']] = newmat
 
     model['materials'] = materials
+
+    # TODO delete me
     import yaml
     print(yaml.dump(materials))
 
