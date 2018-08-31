@@ -559,6 +559,84 @@ def exportSDFMaterial(materialdata, indentation):
     return "".join(tagger.get_output())
 
 
+def exportSDFLink(linkdict, linkobj, modelname, materials, indentation):
+    # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision',
+    # 'approxcollision', 'collision_bitmask'
+    tagger = xmlTagger(initial=indentation)
+    tagger.descend('link', {'name': linkdict['name']})
+    # OPT: tagger.attrib('gravity', ...)
+    # OPT: tagger.attrib('enable_wind', ...)
+    # OPT: tagger.attrib('self_collide', ...)
+    # OPT: tagger.attrib('kinematic', ...)
+    # OPT: tagger.attrib('must_be_base_link', ...)
+    # OPT: tagger.descend('velocity_decay')
+    # OPT: tagger.attrib('linear', ...)
+    # OPT: tagger.attrib('angular', ...)
+    # tagger.ascend()
+    # OPT: tagger.write(exportSDFFrame(model['frame']), tagger.get_indent())
+    tagger.write(exportSDFPose(linkdict['pose'], tagger.get_indent(), poseobject=linkobj))
+    # inertial data might be missing
+    if linkdict['inertial']:
+        tagger.write(exportSDFInertial(linkdict['inertial'], tagger.get_indent()))
+    else:
+        log('No inertial data for "{0}"...'.format(linkdict['name']), "WARNING", "exportSdf")
+
+    # collision data might be missing
+    if linkdict['collision']:
+        for colkey in linkdict['collision']:
+            colliname = linkdict['collision'][colkey]['name']
+            collisionobj = bpy.context.scene.objects[colliname]
+            tagger.write(exportSDFCollision(collisionobj, linkdict['collision'][colkey],
+                                            tagger.get_indent(), modelname))
+    else:
+        log('No collision data for "{0}"...'.format(linkdict['name']), 'WARNING')
+
+    # there might be no visual objects
+    if linkdict['visual']:
+        for visualkey in linkdict['visual']:
+            visualobj = bpy.context.scene.objects[visualkey]
+            visualdata = linkdict['visual'][visualkey]
+
+            # add material information to the visualdata if available
+            if 'material' in visualdata:
+                material = materials[visualdata['material']]
+                visualdata['material'] = material
+            tagger.write(exportSDFVisual(visualobj, linkobj, visualdata,
+                                         tagger.get_indent(), modelname))
+    else:
+        log('No visual data for "{0}"...'.format(linkdict['name']), "WARNING")
+
+    # OPT: tagger.write(sensor(linkdict['sensor'], tagger.get_indent()))
+    # OPT: tagger.descend('projector', {'name': ...})
+    # REQ: tagger.attrib('texture', ...)
+    # OPT: tagger.attrib('fov', ...)
+    # OPT: tagger.attrib('near_clip', ...)
+    # OPT: tagger.attrib('far_clip', ...)
+    # OPT: tagger.write(exportSDFFrame('...', tagger.get_indent()))
+    # OPT: tagger.write(exportSDFPose('...', tagger.get_indent()))
+    # OPT: tagger.descend('plugin', {'name': ..., 'filename': ...})
+    # TODO Add plugin element?
+    # tagger.ascend()
+    # tagger.ascend()
+    # OPT: tagger.attrib('audio_sink', ...)
+    # OPT: tagger.descend('audio_source')
+    # REQ: tagger.attrib('uri', ...)
+    # OPT: tagger.attrib('pitch', ...)
+    # OPT: tagger.attrib('gain', ...)
+    # OPT: tagger.descend('contact')
+    # REQ: tagger.attrib('collision', ...)
+    # tagger.ascend()
+    # OPT: tagger.attrib('loop', ...)
+    # OPT: tagger.write(exportSDFFrame('...', tagger.get_indent()))
+    # OPT: tagger.write(exportSDFPose('...', tagger.get_indent()))
+    # tagger.ascend()
+    # OPT: tagger.descend('battery', {'name': ...})
+    # REQ: tagger.attrib('voltage', ...)
+    # tagger.ascend()
+    tagger.ascend()
+    return "".join(tagger.get_output())
+
+
 def exportGazeboModelConf(model):
     """Creates a model.config element from the specified information.
 
@@ -627,8 +705,6 @@ def exportSDF(model, filepath):
     # print('groups\n')
     # print(model['groups'])
     print('Model joints implemented.')
-    # print(model['joints'])
-    # print('name\n')
 
     # create tagger and add headers
     xml = xmlTagger(indent=phobosindentation)
@@ -657,7 +733,7 @@ def exportSDF(model, filepath):
         # models)
         # xml.attrib('allow_auto_disable', ...)
 
-        # include stuff from uri
+        # include element
         # OPT: xml.descend('include')
         # REQ: xml.attrib('uri', ...)
         # OPT: xml.attrib('pose', ...)
@@ -666,8 +742,8 @@ def exportSDF(model, filepath):
         # xml.ascend()
 
         # nested model element
+        # TODO add wrapper for xml model?
         # OPT: xml.descend('model', params={'name': ...})
-        # add wrapper for xml model?
         # xml.ascend()
 
         # enables wind influence on all links in the model (overriden by link
@@ -680,92 +756,15 @@ def exportSDF(model, filepath):
         # xml.attrib('frame', otherFrame) \\ xml.ascend()
         # xml.ascend()
 
-        # pose
+        # pose can be ommitted as we can move the rootlink around
         # OPT: xml.attrib('pose', poseVal) OR xml.descend('pose') \\
         # xml.attrib('frame', otherFrame) \\ xml.ascend()
-        # link
-        for linkkey in model['links'].keys():
+
+        # links
+        for linkkey in model['links']:
             link = model['links'][linkkey]
-            # 'parent', 'inertial', 'name', 'visual', 'pose', 'collision',
-            # 'approxcollision', 'collision_bitmask'
-            linkobj = bpy.context.scene.objects[link['name']]
-            xml.descend('link', {'name': link['name']})
-            # OPT: xml.attrib('gravity', ...)
-            # OPT: xml.attrib('enable_wind', ...)
-            # OPT: xml.attrib('self_collide', ...)
-            # OPT: xml.attrib('kinematic', ...)
-            # OPT: xml.attrib('must_be_base_link', ...)
-            # OPT: xml.descend('velocity_decay')
-            # OPT: xml.attrib('linear', ...)
-            # OPT: xml.attrib('angular', ...)
-            # xml.ascend()
-            # OPT: xml.write(exportSDFFrame(model['frame']), xml.get_indent())
-            xml.write(exportSDFPose(link['pose'], xml.get_indent(), poseobject=linkobj))
-            # inertial data might be missing
-            if link['inertial']:
-                xml.write(exportSDFInertial(link['inertial'], xml.get_indent()))
-            else:
-                log('No inertial data for "{0}"...'.format(link['name']), "WARNING", "exportSdf")
-
-            # collision data might be missing
-            if link['collision']:
-                for colkey in link['collision'].keys():
-                    colliname = link['collision'][colkey]['name']
-                    collisionobj = bpy.context.scene.objects[colliname]
-                    xml.write(exportSDFCollision(collisionobj,
-                                        link['collision'][colkey],
-                                        xml.get_indent(), modelname))
-            else:
-                log('No collision data for "{0}"...'.format(link['name'],
-                                                            "WARNING",
-                                                            "exportSdf"))
-
-            # there might be no visual objects
-            if link['visual']:
-                for visualkey in link['visual'].keys():
-                    visualobj = bpy.context.scene.objects[visualkey]
-                    visualdata = link['visual'][visualkey]
-
-                    # add material information to the visualdata if available
-                    if 'material' in visualdata:
-                        material = model['materials'][visualdata['material']]
-                        visualdata['material'] = material
-                    xml.write(exportSDFVisual(visualobj, linkobj, visualdata,
-                                     xml.get_indent(), modelname))
-            else:
-                log('No visual data for "{0}"...'.format(link['name'],
-                                                         "WARNING",
-                                                         "exportSdf"))
-
-            # OPT: xml.write(sensor(link['sensor'], xml.get_indent()))
-            # OPT: xml.descend('projector', {'name': ...})
-            # REQ: xml.attrib('texture', ...)
-            # OPT: xml.attrib('fov', ...)
-            # OPT: xml.attrib('near_clip', ...)
-            # OPT: xml.attrib('far_clip', ...)
-            # OPT: xml.write(exportSDFFrame('...', xml.get_indent()))
-            # OPT: xml.write(exportSDFPose('...', xml.get_indent()))
-            # OPT: xml.descend('plugin', {'name': ..., 'filename': ...})
-            # TODO Add plugin element?
-            # xml.ascend()
-            # xml.ascend()
-            # OPT: xml.attrib('audio_sink', ...)
-            # OPT: xml.descend('audio_source')
-            # REQ: xml.attrib('uri', ...)
-            # OPT: xml.attrib('pitch', ...)
-            # OPT: xml.attrib('gain', ...)
-            # OPT: xml.descend('contact')
-            # REQ: xml.attrib('collision', ...)
-            # xml.ascend()
-            # OPT: xml.attrib('loop', ...)
-            # OPT: xml.write(exportSDFFrame('...', xml.get_indent()))
-            # OPT: xml.write(exportSDFPose('...', xml.get_indent()))
-            # xml.ascend()
-            # OPT: xml.descend('battery', {'name': ...})
-            # REQ: xml.attrib('voltage', ...)
-            # xml.ascend()
-            xml.ascend()
-
+            linkobj = link['object']
+            xml.write(exportSDFLink(link, linkobj, modelname, model['materials'], xml.get_indent()))
         log('Links exported.', 'DEBUG', 'exportSdf')
 
         # FINAL move somewhere else
