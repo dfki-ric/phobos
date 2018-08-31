@@ -907,6 +907,12 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     else:
         modelname = 'unnamed'
 
+    # define model version
+    if 'model/version' in root:
+        modelversion = root['model/version']
+    else:
+        modelversion = 'undefined'
+
     model = {
         'links': {},
         'joints': {},
@@ -919,7 +925,8 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         'groups': {},
         'chains': {},
         'date': datetime.now().strftime("%Y%m%d_%H:%M"),
-        'name': modelname
+        'name': modelname,
+        'version': modelversion
     }
 
     log("Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.", 'INFO',
