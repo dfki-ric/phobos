@@ -648,6 +648,112 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, indentation):
     return "".join(tagger.get_output())
 
 
+def exportSDFJoint(jointdict, indentation):
+    tagger = xmlTagger(initial=indentation)
+    # use sdf joint names instead URDF
+    sdftype = jointmapping[jointdict['type']]
+    tagger.descend('joint', {'name': jointdict['name'], 'type': sdftype})
+    # FINAL remove when all joints are finished
+    if sdftype == 'TODO':
+        log("joint type '{}' at joint '{}' not supported yet.".format(
+            jointdict['type'], jointdict['name']), 'ERROR')
+    tagger.attrib('parent', jointdict['parent'])
+    tagger.attrib('child', jointdict['child'])
+    # OPT: tagger.attrib('gearbox_ratio', ...)
+    # OPT: tagger.attrib('gearbox_reference_body', ...)'
+    # OPT: tagger.attrib('thread_pitch', ...)'
+    if 'axis' in jointdict:
+        tagger.descend('axis')
+        # axis is defined in local coord space of parent link
+        tagger.attrib('xyz', list_to_string(jointdict['axis']))
+        # TODO derive pose from model frame optionally
+        # tagger.attrib('use_parent_model_frame', '1')
+        # OPT: tagger.descend('dynamics')
+        # OPT: tagger.attrib('damping', ...)
+        # OPT: tagger.attrib('friction', ...)
+        # REQ: tagger.attrib('spring_reference', ...)
+        # REQ: tagger.attrib('spring_stiffness', ...)
+        # tagger.ascend()
+        if 'limits' in jointdict:
+            tagger.descend('limit')
+            # can be omitted for continuous joint
+            if 'lower' in jointdict['limits']:
+                tagger.attrib('lower', jointdict['limits']['lower'])
+            else:
+                log("Lower limit is missing for joint '{}'.".format(jointdict['name']), 'WARNING')
+                tagger.attrib('lower', '')
+            if 'upper' in jointdict['limits'].keys():
+                log("Upper limit is missing for joint '{}'.".format(jointdict['name']), 'WARNING')
+                tagger.attrib('upper', jointdict['limits']['upper'])
+            else:
+                tagger.attrib('upper', '')
+            if 'effort' in jointdict['limits'].keys():
+                tagger.attrib('effort', jointdict['limits']['effort'])
+            if 'velocity' in jointdict['limits'].keys():
+                tagger.attrib('velocity', jointdict['limits']['velocity'])
+            # OPT: tagger.attrib('stiffness', ...)
+            # OPT: tagger.attrib('dissipation', ...)
+            tagger.ascend()
+        tagger.ascend()
+    # if 'axis2' in jointdict:
+        # OPT: tagger.descend('axis2')
+        # REQ: tagger.attrib('xyz', list_to_string(jointdict['axis']))
+        # REQ: tagger.attrib('use_parent_model_frame', ...)
+        # OPT: tagger.descend('dynamics')
+        # OPT: tagger.attrib('damping', ...)
+        # OPT: tagger.attrib('friction', ...)
+        # REQ: tagger.attrib('spring_reference', ...)
+        # REQ: tagger.attrib('spring_stiffness', ...)
+        # tagger.ascend()
+        # OPT: tagger.descend('limit')
+        # OPT: tagger.attrib('lower', jointdict['limits']['lower'])
+        # OPT: tagger.attrib('upper', jointdict['limits']['upper'])
+        # OPT: tagger.attrib('effort', jointdict['limits']['effort'])
+        # OPT: tagger.attrib('velocity', jointdict['limits']['velocity'])
+        # OPT: tagger.attrib('stiffness', ...)
+        # OPT: tagger.attrib('dissipation', ...)
+        # tagger.ascend()
+        # tagger.ascend()
+    # if 'physics' in jointdict:
+        # OPT: tagger.descend('physics')
+        # OPT: tagger.descend('simbody')
+        # OPT: tagger.attrib('must_be_loop_joint', ...)
+        # tagger.ascend()
+        #
+        # OPT: tagger.descend('ode')
+        # OPT: tagger.attrib('cfm_damping', ...)
+        # OPT: tagger.attrib('implicit_spring_damper', ...)
+        # OPT: tagger.attrib('fudge_factor', ...)
+        # OPT: tagger.attrib('cfm', ...)
+        # OPT: tagger.attrib('erp', ...)
+        # OPT: tagger.attrib('bounce', ...)
+        # OPT: tagger.attrib('max_force', ...)
+        # OPT: tagger.attrib('velocity', ...)
+        #
+        # OPT: tagger.descend('limit', ...)
+        # REQ: tagger.attrib('cfm', ...)
+        # REQ: tagger.attrib('erp', ...)
+        # tagger.ascend()
+        #
+        # OPT: tagger.descend('suspension')
+        # REQ: tagger.attrib('cfm', ...)
+        # REQ: tagger.attrib('erp', ...)
+        # tagger.ascend()
+        # tagger.ascend()
+        #
+        # OPT: tagger.attrib('provide_feedback', ...)
+        # tagger.ascend()
+    # if 'frame' in jointdict:
+        # OPT: tagger.write(exportSDFFrame(jointdict['frame']))
+    # We cannot write a different joint pose, as the link is already transformed for the
+    # z axis to be rotated properly
+    # tagger.write(exportSDFPose(jointdict['pose'], tagger.get_indent()))
+    # if 'sensor' in jointdict:
+        # OPT: tagger.write(sensor('sensor'))
+    tagger.ascend()
+    return "".join(tagger.get_output())
+
+
 def exportGazeboModelConf(model):
     """Creates a model.config element from the specified information.
 
@@ -778,113 +884,11 @@ def exportSDF(model, filepath):
             xml.write(exportSDFLink(link, linkobj, modelname, model['materials'], xml.get_indent()))
         log('Links exported.', 'DEBUG', 'exportSdf')
 
-        # joint
+        # joints
         for jointkey in model['joints'].keys():
             joint = model['joints'][jointkey]
-            # use sdf joint names instead URDF
-            sdftype = jointmapping[joint['type']]
-            xml.descend('joint', {'name': joint['name'], 'type': sdftype})
-            # FINAL remove when all joints are finished
-            if sdftype == 'TODO':
-                log("joint type '{}' at joint '{}' not supported yet.".format(
-                    joint['type'], joint['name']), 'ERROR')
-            xml.attrib('parent', joint['parent'])
-            xml.attrib('child', joint['child'])
-            # OPT: xml.attrib('gearbox_ratio', ...)
-            # OPT: xml.attrib('gearbox_reference_body', ...)'
-            # OPT: xml.attrib('thread_pitch', ...)'
-            if 'axis' in joint.keys():
-                xml.descend('axis')
-                # axis is defined in local coord space of parent link
-                xml.attrib('xyz', list_to_string(joint['axis']))
-                # TODO derive pose from model frame optionally
-                # xml.attrib('use_parent_model_frame', '1')
-                # OPT: xml.descend('dynamics')
-                # OPT: xml.attrib('damping', ...)
-                # OPT: xml.attrib('friction', ...)
-                # REQ: xml.attrib('spring_reference', ...)
-                # REQ: xml.attrib('spring_stiffness', ...)
-                # xml.ascend()
-                if 'limits' in joint.keys():
-                    xml.descend('limit')
-                    # can be omitted for continuous joint
-                    if 'lower' in joint['limits'].keys():
-                        xml.attrib('lower', joint['limits']['lower'])
-                    else:
-                        log("The lower limit is missing for joint '" +
-                            joint['name'] + ".", "WARNING")
-                        xml.attrib('lower', '')
-                    if 'upper' in joint['limits'].keys():
-                        log("The upper limit is missing for joint '" +
-                            joint['name'] + "'.", "WARNING")
-                        xml.attrib('upper', joint['limits']['upper'])
-                    else:
-                        xml.attrib('upper', '')
-                    if 'effort' in joint['limits'].keys():
-                        xml.attrib('effort', joint['limits']['effort'])
-                    if 'velocity' in joint['limits'].keys():
-                        xml.attrib('velocity', joint['limits']['velocity'])
-                    # OPT: xml.attrib('stiffness', ...)
-                    # OPT: xml.attrib('dissipation', ...)
-                    xml.ascend()
-                xml.ascend()
-            # if 'axis2' in joint.keys():
-                # OPT: xml.descend('axis2')
-                # REQ: xml.attrib('xyz', list_to_string(joint['axis']))
-                # REQ: xml.attrib('use_parent_model_frame', ...)
-                # OPT: xml.descend('dynamics')
-                # OPT: xml.attrib('damping', ...)
-                # OPT: xml.attrib('friction', ...)
-                # REQ: xml.attrib('spring_reference', ...)
-                # REQ: xml.attrib('spring_stiffness', ...)
-                # xml.ascend()
-                # OPT: xml.descend('limit')
-                # OPT: xml.attrib('lower', joint['limits']['lower'])
-                # OPT: xml.attrib('upper', joint['limits']['upper'])
-                # OPT: xml.attrib('effort', joint['limits']['effort'])
-                # OPT: xml.attrib('velocity', joint['limits']['velocity'])
-                # OPT: xml.attrib('stiffness', ...)
-                # OPT: xml.attrib('dissipation', ...)
-                # xml.ascend()
-                # xml.ascend()
-            # if 'physics' in joint.keys():
-                # OPT: xml.descend('physics')
-                # OPT: xml.descend('simbody')
-                # OPT: xml.attrib('must_be_loop_joint', ...)
-                # xml.ascend()
-                #
-                # OPT: xml.descend('ode')
-                # OPT: xml.attrib('cfm_damping', ...)
-                # OPT: xml.attrib('implicit_spring_damper', ...)
-                # OPT: xml.attrib('fudge_factor', ...)
-                # OPT: xml.attrib('cfm', ...)
-                # OPT: xml.attrib('erp', ...)
-                # OPT: xml.attrib('bounce', ...)
-                # OPT: xml.attrib('max_force', ...)
-                # OPT: xml.attrib('velocity', ...)
-                #
-                # OPT: xml.descend('limit', ...)
-                # REQ: xml.attrib('cfm', ...)
-                # REQ: xml.attrib('erp', ...)
-                # xml.ascend()
-                #
-                # OPT: xml.descend('suspension')
-                # REQ: xml.attrib('cfm', ...)
-                # REQ: xml.attrib('erp', ...)
-                # xml.ascend()
-                # xml.ascend()
-                #
-                # OPT: xml.attrib('provide_feedback', ...)
-                # xml.ascend()
-            # if 'frame' in joint.keys():
-                # OPT: xml.write(exportSDFFrame(joint['frame']))
-            # We cannot write a different joint pose, as the link is already transformed for the
-            # z axis to be rotated properly
-            # xml.write(exportSDFPose(joint['pose'], xml.get_indent()))
-            # if 'sensor' in joint.keys():
-                # OPT: xml.write(sensor('sensor'))
-            xml.ascend()
 
+            xml.write(exportSDFJoint(joint, xml.get_indent()))
         log("Joints exported.", "DEBUG", "exportSdf")
 
         # plugin
