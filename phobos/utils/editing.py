@@ -133,9 +133,9 @@ def restructureKinematicTree(link, root=None):
     if 'model/name' in root:
         link['model/name'] = root['model/name']
         del root['model/name']
-    if 'version' in root:
-        link['version'] = root['version']
-        del root['version']
+    if 'model/version' in root:
+        link['model/version'] = root['model/version']
+        del root['model/version']
     log("Restructured kinematic tree to new root: {}.".format(link.name), 'INFO')
 
 
