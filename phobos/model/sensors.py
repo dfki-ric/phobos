@@ -51,6 +51,7 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
         dict -- phobos representation of the sensor
     """
     from phobos.model.models import initObjectProperties
+    from phobos.model.poses import deriveObjectPose
     if logging:
         log("Deriving sensor from object " + nUtils.getObjectName(obj, phobostype='sensor') + ".",
             'DEBUG')
@@ -65,6 +66,8 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
         if logging:
             log("Missing data in sensor " + obj.name, "ERROR")
         return None
+
+    props['pose'] = deriveObjectPose(obj)
     return props
 
 
