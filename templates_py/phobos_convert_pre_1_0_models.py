@@ -46,6 +46,10 @@ for obj in objectlist:
         obj['model/name'] = obj['modelname']
         del obj['modelname']
 
+        if 'version' in obj:
+            obj['model/version'] = obj['version']
+            del obj['version']
+
         if sUtils.isRoot(obj):
             bpy.context.scene.objects.active = obj
             bpy.ops.phobos.set_model_root()

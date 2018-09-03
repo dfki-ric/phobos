@@ -51,6 +51,7 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
         dict -- phobos representation of the sensor
     """
     from phobos.model.models import initObjectProperties
+    from phobos.model.poses import deriveObjectPose
     if logging:
         log("Deriving sensor from object " + nUtils.getObjectName(obj, phobostype='sensor') + ".",
             'DEBUG')
@@ -60,12 +61,13 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
             props['link'] = nUtils.getObjectName(
                 sUtils.getEffectiveParent(obj, objectlist=objectlist), phobostype='link')
         else:
-            props['link'] = nUtils.getObjectName(
-                sUtils.getEffectiveParent(obj, objectlist=objectlist), phobostype='link')
+            props['link'] = sUtils.getEffectiveParent(obj, objectlist=objectlist)
     except KeyError:
         if logging:
             log("Missing data in sensor " + obj.name, "ERROR")
         return None
+
+    props['pose'] = deriveObjectPose(obj)
     return props
 
 
@@ -95,6 +97,12 @@ def cameraRotLock(object):
 
 def createSensor(sensor, reference, origin=mathutils.Matrix()):
     """This function creates a new sensor specified by its parameters.
+
+    The sensor dictionary has to contain these keys:
+        *name*: name of the new sensor
+        *type*: type specifier of the sensor
+        *shape*: a shape specifier for the sensor
+        *props*: custom properties to be written to the sensor object
 
     Args:
         sensor (dict): phobos representation of the new sensor

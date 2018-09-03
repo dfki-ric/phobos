@@ -46,18 +46,32 @@ sensors:
         general:
             type: ray_sensor
             shape: resource://ray
-            size:
-                - 0.2
-                - 36
+            size: 0.2
             categories:
                 - scanning
+                - SDF
         width: 144
         height: 1
         opening_width: &0.5*math.pi&
         opening_height: &0.5*math.pi&
         max_distance: 100
+        min_distance: 0
         mars:
             type: RaySensor
+        sdf:
+            type: ray
+            scan:
+                horizontal:
+                    samples: 1
+                    resolution: 1
+                    min_angle: 0.
+                    max_angle: 0.
+                vertical:
+                    samples: 1
+                    resolution: 1
+                    min_angle: 0.
+                    max_angle: 0.
+
     Rotating_ray_sensor:
         general:
             type: rotating_ray_sensor
@@ -86,9 +100,11 @@ sensors:
                 - 36
             categories:
                 - scanning
+                - SDF
         width: 64
         height: 512
         resolution: 0.1
+        min_dist: 0
         max_dist: 100.0
         hud_pos: 0
         update_rate: 10
@@ -104,6 +120,9 @@ sensors:
         ping_pong_mode: false
         mars:
             type: ScanningSonar
+        sdf:
+            type: sonar
+            radius: 0.5
     Multi_level_laser_range_finder:
         general:
             type: multi_level_laser_range_finder
@@ -131,6 +150,7 @@ sensors:
             size: 0.2
             categories:
                 - camera
+                - SDF
         width: 640
         height: 480
         show_cam: true
@@ -142,6 +162,24 @@ sensors:
         depth_image: false
         mars:
             type: CameraSensor
+        sdf:
+            horizontal_fov: 1.047
+            clip:
+                near: 0.1
+                far: 0.1
+    Logical_camera:
+        general:
+            type: logical_camera
+            shape: resource://camera
+            size: 0.2
+            categories:
+                - camera
+                - SDF
+        sdf:
+            near: 0.
+            far: 1.
+            aspect_ratio: 1.
+            horizontal_fov: 1.
 
     # internal sensors
     Joint_position:
@@ -184,9 +222,13 @@ sensors:
             size: 0.2
             categories:
                 - internal
+                - SDF
         mars:
             type: JointTorque
             id: $selected_objects:joint
+        sdf:
+            type: force_torque
+            frame: parent
 
     Joint_AVG_torque:
         general:
@@ -209,15 +251,19 @@ sensors:
         mars:
             type: Joint6DOF
 
-    Node_contact:
+    Contact:
         general:
-            type: node_contact
+            type: contact
             shape: ico
             size: 0.2
             categories:
                 - internal
+                - SDF
         mars:
             type: NodeContact
+        sdf:
+            collision: $selected_objects:collision
+            topic: __default_topic__
 
     Node_position:
         general:
@@ -302,9 +348,12 @@ sensors:
             size: 0.2
             categories:
                 - internal
+                - SDF
         mars:
-          type: NodeIMU
-          id: $selected_objects:link
+            type: NodeIMU
+            id: $selected_objects:link
+        sdf:
+            type: imu
 
     # environmental sensors
     Altimeter:
@@ -314,6 +363,14 @@ sensors:
             size: 0.2
             categories:
                 - environmental
+                - SDF
+            sdf:
+                vertical_position:
+                    noise:
+                        type: none
+                vertical_velocity:
+                    noise:
+                        type: none
     Magnetometer:
         general:
             type: magnetometer
@@ -321,6 +378,7 @@ sensors:
             size: 0.2
             categories:
                 - environmental
+                - SDF
     GPS:
         general:
             type: gps
@@ -328,6 +386,7 @@ sensors:
             size: 0.2
             categories:
                 - environmental
+                - SDF
 
     # communication sensors
     Wireless_transceiver:
@@ -337,6 +396,11 @@ sensors:
             size: 0.2
             categories:
                 - communication
+                - SDF
+        sdf:
+            type: transceiver
+            gain: 2.5
+            power: 14.5
     RFID_sensor:
         general:
             type: rfid_sensor
@@ -344,6 +408,9 @@ sensors:
             size: 0.2
             categories:
                 - communication
+                - SDF
+        sdf:
+            type: rfid
     RFID_tag:
         general:
             type: rfid_tag
@@ -351,3 +418,6 @@ sensors:
             size: 0.2
             categories:
                 - communication
+                - SDF
+        sdf:
+            type: rfidtag

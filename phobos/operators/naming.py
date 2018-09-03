@@ -119,9 +119,9 @@ class SetModelVersionOperator(Operator):
             if self.usegitbranch:
                 gitbranch = iUtils.getgitbranch()
                 if gitbranch:
-                    root["version"] = self.version.replace('*', gitbranch)
+                    root["model/version"] = self.version.replace('*', gitbranch)
             else:
-                root["version"] = self.version
+                root["model/version"] = self.version
         else:
             log("Could not set version due to missing root link. No version was set.", "ERROR")
         return {'FINISHED'}

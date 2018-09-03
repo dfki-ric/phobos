@@ -130,13 +130,20 @@ def getDictFromYamlDefs(phobostype, defname, name):
     else:
         material = None
 
+    # separate properties and annotations from each other
+    props = {key: value for key, value in defs.definitions[phobostype + 's'][defname].items()
+             if not isinstance(value, dict)}
+    annots = {key: value for key, value in defs.definitions[phobostype + 's'][defname].items()
+              if isinstance(value, dict)}
+
     # create a dictionary holding the properties
     phobos_dict = {'name': name,
                    'defname': defname,
                    'category': defs.def_settings[phobostype + 's'][defname]['categories'],
                    'material': material,
                    'type': defs.def_settings[phobostype + 's'][defname]['type'],
-                   'props': defs.definitions[phobostype + 's'][defname]}
+                   'props': props,
+                   'annotations': annots}
 
     # add the general settings for this object
     general_settings = defs.def_settings[phobostype + 's'][defname]
@@ -357,6 +364,43 @@ def getResource(specifiers):
     return bpy.data.scenes['resources'].objects[resobjname]
 
 
+def copy_model(model):
+    """Returns a recursive deep copy of a model dictionary.
+
+    The deep copy recreates dictionaries and lists, while keeping Blender objects and everything
+    else untouched.
+
+    This function is required, as we can not use copy.deepcopy() due to the Blender objects in our
+    Phobos representation.
+
+    Args:
+        model (dict): model dictionary to copy
+
+    Returns:
+        dict -- deep copy of the model dictionary
+    """
+    if isinstance(model, dict):
+        newmodel = {}
+        for key, value in model.items():
+            if isinstance(value, dict) or isinstance(value, list):
+                newmodel[key] = copy_model(value)
+            else:
+                newmodel[key] = value
+        return newmodel
+    elif isinstance(model, list):
+        newlist = []
+        for value in model:
+            if isinstance(value, bpy.types.Object):
+                newlist.append(value)
+            elif isinstance(value, dict) or isinstance(value, list):
+                newlist.append(copy_model(value))
+            else:
+                newlist.append(value)
+        return newlist
+    raise TypeError("Deep copy failed. Unsuspected element in the dictionary: {}".format(
+        type(model)))
+
+
 def exportModel(model, exportpath='.', entitytypes=None):
     """Exports model to a given path in the provided formats.
 
@@ -411,10 +455,12 @@ def exportModel(model, exportpath='.', entitytypes=None):
         model_path = os.path.join(exportpath, entitytype)
         securepath(model_path)
 
-        # the following is not surrounded by try..catch as that may mask exceptions occurring
-        # inside the export function; also, only existing functionars register to display anyway
-        entity_types[entitytype]['export'](model, model_path)
+        # export model using entity export function
         log("Export model '" + model['name'] + "' as " + entitytype + " to " + model_path, "DEBUG")
+
+        # pass a model copy to the entity export, as these might alter the dictionary
+        newmodel = copy_model(model)
+        entity_types[entitytype]['export'](newmodel, model_path)
 
     # export meshes in selected formats
     i = 1

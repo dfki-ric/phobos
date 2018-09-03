@@ -310,50 +310,6 @@ def store_element_order(element_order, path):
     stream.close()
 
 
-def round_float(float_as_str, decimal=6):
-    """Casts 'float_as_str' to float and round to 'decimal' decimal places. The possible exception
-    **ValueError** is not handled in the function itself!
-
-    Args:
-      float_as_str(str: str): The string you want to cast into a float.
-      decimal(int, optional): The number of decimal places you want to round to. Its default is 6.
-
-    Returns:
-      float
-
-    """
-    return round(float(float_as_str), decimal)
-
-
-def pos_rot_tree_to_lists(position, rotation):
-    """Convert the xml representations of a position and a rotation to lists.
-    If either is 'None', return a list of zeroes instead.
-
-    Args:
-      position(str): The xml representation of a position.
-      rotation(str): The xml representation of a rotation.
-
-    Returns:
-      tuple of two lists
-
-    """
-    if position:
-        px = round_float(position.find('x').text)
-        py = round_float(position.find('y').text)
-        pz = round_float(position.find('z').text)
-    else:
-        px, py, pz = (0, 0, 0)
-    if rotation:
-        rw = round_float(rotation.find('w').text)
-        rx = round_float(rotation.find('x').text)
-        ry = round_float(rotation.find('y').text)
-        rz = round_float(rotation.find('z').text)
-    else:
-        rw, rx, ry, rz = (0, 0, 0, 0)
-
-    return [px, py, pz], [rw, rx, ry, rz]
-
-
 def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
     """Create a dictionary containing various representations of the pose
     represented by 'position' and 'rotation':
@@ -611,14 +567,14 @@ def importUrdf(filepath):
         if color is not None:
             log(" Adding material {}.".format(material.attrib['name']), 'DEBUG')
             newmat = {a: material.attrib[a] for a in material.attrib}
-            newmat['color'] = gUtils.parse_text(color.attrib['rgba'])
-            matModel.createMaterial(newmat['name'],
-                                    tuple(newmat['color'][0:3]), (1, 1, 1), newmat['color'][-1])
+            newmat['diffuse'] = gUtils.parse_text(color.attrib['rgba'])
+            newmat['specular'] = (1., 1., 1.)
 
             # duplicates are overwritten, but not silent
             if newmat['name'] in materials:
                 log(" Overwriting duplicate material {}!".format(newmat['name']), 'WARNING')
             materials[newmat['name']] = newmat
+    model['materials'] = materials
 
     return model
 

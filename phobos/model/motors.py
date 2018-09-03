@@ -95,8 +95,8 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
         motorcontroller = defs.definitions['motors'][defname]['controller']
         controllerdefs = ioUtils.getDictFromYamlDefs('controller', motorcontroller,
                                                      newmotor.name + '_controller')
-        newcontroller = controllermodel.createController(controllerdefs, newmotor,
-                                                         origin=newmotor.matrix_world)
+        newcontroller = controllermodel.createController(
+            controllerdefs, newmotor, origin=newmotor.matrix_world, annotations='all')
     else:
         newcontroller = None
 

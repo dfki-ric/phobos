@@ -133,9 +133,9 @@ def restructureKinematicTree(link, root=None):
     if 'model/name' in root:
         link['model/name'] = root['model/name']
         del root['model/name']
-    if 'version' in root:
-        link['version'] = root['version']
-        del root['version']
+    if 'model/version' in root:
+        link['model/version'] = root['model/version']
+        del root['model/version']
     log("Restructured kinematic tree to new root: {}.".format(link.name), 'INFO')
 
 
@@ -634,8 +634,8 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
         name = obj.name + '_annotation_object'
 
     annot_obj = bUtils.createPrimitive(
-        name, 'box', [1, 1, 1], defs.layerTypes['annotation'], plocation=loc)
-    annot_obj.phobostype = 'annotation'
+        name, 'box', [1, 1, 1], defs.layerTypes['annotation'], plocation=loc,
+        phobostype='annotation')
     annot_obj.scale = (size,) * 3
 
     resource = ioUtils.getResource(['annotation', namespace.split('/')[-1]])

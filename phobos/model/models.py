@@ -42,6 +42,7 @@ import phobos.model.sensors as sensormodel
 import phobos.model.lights as lightmodel
 import phobos.model.motors as motormodel
 import phobos.model.controllers as controllermodel
+import phobos.model.materials as matmodel
 import phobos.model.poses as poses
 import phobos.utils.naming as nUtils
 import phobos.utils.selection as sUtils
@@ -337,6 +338,7 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         del props['maxeffort']
     if limits != {}:
         props['limits'] = limits
+    props['pose'] = deriveObjectPose(obj)
     # TODO: what about these?
     # - calibration
     # - dynamics
@@ -412,35 +414,28 @@ def deriveVisual(obj, logging=True, **kwargs):
 
 
 def deriveCollision(obj):
-    """This function derives the collision information from an object.
+    """Returns the collision information from the specified object.
 
     Args:
-      obj(bpy_types.Object): The blender object to derive the collision information from.
+        obj(bpy.types.Object): object to derive the collision information from
 
     Returns:
-      dict
-
+        dict -- phobos representation of the collision object
     """
-    try:
-        collision = initObjectProperties(
-            obj, phobostype='collision', ignoretypes='geometry')
-        collision['geometry'] = deriveGeometry(obj)
-        collision['pose'] = deriveObjectPose(obj)
-        # the bitmask is cut to length = 16 and reverted for int parsing
-        try:
-            collision['bitmask'] = int(''.join(
-                ['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[::-1], 2)
-            for group in obj.rigid_body.collision_groups[16:]:
-                if group:
-                    log(('Object {0} is on a collision layer higher than ' +
-                        '16. These layers are ignored when exporting.').format(
-                        obj.name), "WARNING")
-                    break
-        except AttributeError:
-            pass
-    except KeyError:
-        log("Missing data in collision object " + obj.name, "ERROR")
-        return None
+    collision = initObjectProperties(
+        obj, phobostype='collision', ignoretypes='geometry')
+    collision['geometry'] = deriveGeometry(obj)
+    collision['pose'] = deriveObjectPose(obj)
+
+    # the bitmask is cut to length = 16 and reverted for int parsing
+    if 'collision_groups' in dir(obj.rigid_body):
+        collision['bitmask'] = int(''.join(
+            ['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[::-1], 2)
+        for group in obj.rigid_body.collision_groups[16:]:
+            if group:
+                log(("Object {0} is on a collision layer higher than 16. These layers are " +
+                     "ignored when exporting.").format(obj.name), 'WARNING')
+                break
     return collision
 
 
@@ -601,13 +596,13 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
     """Initializes phobos dictionary of *obj*, including information stored in custom properties.
 
     Args:
-      obj(bpy_types.Object): object to derive initial properties from.
-      phobostype(str, optional): limit parsing of data fields to this phobostype
-      ignoretypes(list, optional): list of properties ignored while initializing the objects properties.
-      ignorename(bool, optional): whether or not to add the object's name
+        obj (bpy_types.Object): object to derive initial properties from.
+        phobostype (str): limit parsing of data fields to this phobostype
+        ignoretypes (list): list of properties ignored while initializing the objects properties.
+        ignorename (bool): whether or not to add the object's name
 
     Returns:
-      dict
+        dict -- phobos properties of the object
     """
     # allow duplicated names differentiated by types
     props = {} if ignorename else {'name': nUtils.getObjectName(obj, phobostype)}
@@ -912,6 +907,14 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     else:
         modelname = 'unnamed'
 
+    # define model version
+    if 'model/version' in root:
+        modelversion = root['model/version']
+    else:
+        modelversion = 'undefined'
+
+    modeldescription = bUtils.readTextFile('README.md')
+
     model = {
         'links': {},
         'joints': {},
@@ -924,7 +927,9 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         'groups': {},
         'chains': {},
         'date': datetime.now().strftime("%Y%m%d_%H:%M"),
-        'name': modelname
+        'name': modelname,
+        'version': modelversion,
+        'description': modeldescription
     }
 
     log("Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.", 'INFO',
@@ -1074,6 +1079,11 @@ def buildModelFromDictionary(model):
     """
     log("Creating Blender model...", 'INFO', prefix='\n' + '-' * 25 + '\n')
 
+    log("  Initializing materials... ({} total)".format(len(model['materials'])), 'INFO')
+    for mat in model['materials']:
+        matmodel.createMaterial(model['materials'][mat], logging=True, adjust=True)
+        # ['name'], tuple(mat['color'][0:3]), (1, 1, 1), mat['color'][-1])
+
     newobjects = []
     log("  Creating links... ({} total)".format(len(model['links'])), 'INFO')
     for lnk in model['links']:
@@ -1166,6 +1176,99 @@ def buildModelFromDictionary(model):
 
     # update the scene
     bUtils.update()
+
+
+def gatherAnnotations(model):
+    """Gathers custom properties annotating elements of the robot
+    across the model. These annotations were created in the model.py
+    module and are marked with a leading '$'.
+
+    Args:
+      model(dict): The robot model dictionary.
+
+    Returns:
+      dict -- A dictionary of the gathered annotations.
+
+    """
+    # TODO check this stuff
+    annotations = {}
+    elementlist = []
+    types = ('links', 'joints', 'sensors', 'motors', 'controllers', 'materials')
+    # gather information from directly accessible types
+    for objtype in types:
+        for elementname in model[objtype]:
+            tmpdict = model[objtype][elementname]
+            tmpdict['temp_type'] = objtype[:-1]
+            elementlist.append(tmpdict)
+
+    # add information from types hidden in links
+    for linkname in model['links']:
+        for objtype in ('collision', 'visual'):
+            if objtype in model['links'][linkname]:
+                for elementname in model['links'][linkname][objtype]:
+                    tmpdict = model['links'][linkname][objtype][elementname]
+                    tmpdict['temp_type'] = objtype
+                    elementlist.append(tmpdict)
+        if 'inertial' in model['links'][linkname]:
+            tmpdict = model['links'][linkname]['inertial']
+            tmpdict['temp_type'] = 'inertial'
+            elementlist.append(tmpdict)
+
+    # loop through the list of annotated elements and categorize the data
+    for element in elementlist:
+        delkeys = []
+        for key in element.keys():
+            if key.startswith('$'):
+                category = key[1:]
+                if category not in annotations:
+                    annotations[category] = {}
+                if element['temp_type'] not in annotations[category]:
+                    annotations[category][element['temp_type']] = []
+                tmpdict = {k: element[key][k] for k in element[key]}
+                tmpdict['name'] = element['name']
+                annotations[category][element['temp_type']].append(tmpdict)
+                delkeys.append(key)
+        delkeys.append('temp_type')
+        for key in delkeys:
+            if key in element:
+                del element[key]
+    return annotations
+
+
+def replace_object_links(dictionary):
+    """Replaces object links in a dictionary with object names.
+
+    This is required for generic parsed object definitions, as object links are represented by a
+    simple dictionary with *name* and *object*.
+
+    For most exports, this can be run prior export parsing, to create the respective name linking
+    within the model.
+
+    Args:
+        dictionary (dict): model dictionary (or similar) to replace object links in
+
+    Returns:
+        dict -- model dictionary with name linking instead of object links
+    """
+    newdict = {}
+    if isinstance(dictionary, list):
+        newlist = []
+        for item in dictionary:
+            newlist.append(replace_object_links(item))
+        return newlist
+
+    for key, value in dictionary.items():
+        if isinstance(value, list):
+            if (all([isinstance(item, dict) for item in value]) and
+                    all([('name' in item and 'object' in item) for item in value])):
+                newdict[key] = sorted([item['name'] for item in value])
+
+        elif isinstance(value, dict):
+            newdict[key] = replace_object_links(value)
+        else:
+            newdict[key] = value
+
+    return newdict
 
 
 def createGroup(group):

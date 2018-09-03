@@ -58,13 +58,18 @@ def deriveController(obj):
     return props
 
 
-def createController(controller, reference, origin=mathutils.Matrix()):
+def createController(controller, reference, origin=mathutils.Matrix(), annotations=None):
     """This function creates a new controller specified by its parameters.
+
+    If an annotation category or the keyword 'all' is specified, the respective annotations for the
+    controller will be added as objects.
 
     Args:
         controller (dict): phobos representation of the new controller
         reference (bpy_types.Object): object to add a parent relationship to
-        origin (mathutils.Matrix, optional): new controllers origin
+        origin (mathutils.Matrix): new controllers origin
+        annotations (list(str)/str): list of annotation keys or 'all' to add to as annotation
+            objects
 
     Returns:
         bpy.types.Object -- new created controller object
@@ -98,6 +103,17 @@ def createController(controller, reference, origin=mathutils.Matrix()):
 
     # write the custom properties to the controller
     eUtils.addAnnotation(newcontroller, controller['props'], namespace='controller')
+
+    if controller['annotations'] and annotations:
+        if annotations == 'all':
+            keys = controller['annotations'].keys()
+        elif isinstance(annotations, list):
+            keys = [key for key in annotations if key in controller['annotations']]
+        else:
+            keys = []
+        for key in keys:
+            eUtils.addAnnotationObject(newcontroller, controller['annotations'][key],
+                                       namespace='controller/' + key)
 
     # assign the parent if available
     if reference is not None:

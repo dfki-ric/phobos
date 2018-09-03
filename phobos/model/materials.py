@@ -33,50 +33,73 @@ Created on 7 Jan 2014
 
 import bpy
 import phobos.defs as defs
+from phobos.utils.validation import validate
 from phobos.phoboslog import log
 
 
-def createMaterial(name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
-    """Returns a Blender material specified by the input parameters
+@validate('material')
+def createMaterial(material, logging=False, adjust=False, errors=[]):
+    # name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
+    """Returns a Blender material specified by the material dictionary.
+
+    This creates the appropriate Blender material based on the different dictionary parameters.
+
+    A material needs to contain these keys:
+        *name*: unique name of the material
+        *diffuse*: [r, g, b, a] color values as floats in range of [0, 1]
+
+    Optional are these keys:
+        *specular*: [r, g, b, a] specular color
+        *diffuse_intensity*: amount of diffuse reflection (float in range [0, 1])
+
+    Furthermore any generic properties, prepended by a `$` will be added as custom properties to the
+    Blender material. E.g. $test/etc would be put to test/etc in the Blender material.
+    However, these properties are extracted only in the first layer of hierarchy.
 
     Args:
-      name(str): The name of the new material.
-      diffuse(float array with 3 elements.): The color of the new material.
-      specular(float array with 3 elements.): The specular color of the new material.
-      alpha(float in [0,1.0].): The transparency of the material.
-      diffuse_intensity(float in [0,1.0], optional): The amount of diffuse reflection. The default is 1.0.
-      texture(NOT IMPLEMENTED YET, optional): NOT IMPEMENTED YET. (Default value = None)
+        material (dict): representation of a material
 
     Returns:
-      bpy.types.Material
-
+        bpy.types.Material
     """
-    mat = bpy.data.materials.new(name)
-    mat.diffuse_color = diffuse
+    log("  Creating material {}.".format(material), 'DEBUG')
+
+    mat = bpy.data.materials.new(material['name'])
+    mat.diffuse_color = tuple(material['diffuse'][:3])
     mat.diffuse_shader = 'LAMBERT'
-    mat.diffuse_intensity = diffuse_intensity
-    mat.specular_color = specular
-    mat.specular_shader = 'COOKTORR'
-    mat.specular_intensity = 0.5
-    mat.alpha = alpha
-    if alpha < 1.0:
+
+    if 'diffuse_intensity' in material:
+        mat.diffuse_intensity = material['diffuse_intensity']
+    if 'specular' in material:
+        mat.specular_color = tuple(material['specular'][:3])
+        mat.specular_shader = 'COOKTORR'
+        mat.specular_intensity = 0.5
+    mat.alpha = material['diffuse'][-1]
+    if mat.alpha < 1.0:
         mat.use_transparency = True
     mat.ambient = 1
-    if texture is not None:
-        # TODO: implement textures properly
-        pass
+    # TODO: implement textures properly
+    # if texture is not None:
+    #     pass
     mat.use_fake_user = True
+
+    # write generic custom properties
+    for prop in material:
+        if prop.startswith('$'):
+            for tag in material[prop]:
+                mat[prop[1:] + '/' + tag] = material[prop][tag]
+
     return mat
 
 
 def createPhobosMaterials():
     """Creates a list of standard materials used in Phobos."""
     materials = bpy.data.materials.keys()
-    for material in defs.definitions['materials']:
-        mat = defs.definitions['materials'][material]
-        if material not in materials:
-            createMaterial(material, mat['diffuse'], mat['specular'],
-                           mat['alpha'], mat['diffuse_intensity'])
+    for materialname in defs.definitions['materials']:
+        mat = defs.definitions['materials'][materialname]
+        mat['name'] = materialname
+        if materialname not in materials:
+            createMaterial(mat, logging=False, adjust=False)
 
 
 def assignMaterial(obj, materialname):

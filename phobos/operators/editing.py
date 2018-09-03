@@ -1405,8 +1405,6 @@ class CreateLinksOperator(Operator):
             layout.prop(self, "parent_link")
             layout.prop(self, "parent_objects")
 
-# TODO write more info in documentation once method works (where to add sensor
-# etc.)
 
 def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add sensors from yaml files.
@@ -2414,6 +2412,10 @@ class SetModelRoot(Operator):
     def execute(self, context):
         newroot = context.active_object
         oldroot = sUtils.getRoot(obj=context.active_object)
+
+        if newroot == oldroot:
+            log("Object is already root.", 'INFO')
+            return {'CANCELLED'}
 
         # gather model information from old root
         modelprops = eUtils.getProperties(oldroot, category='model')

@@ -69,6 +69,53 @@ class PhobosPrefs(AddonPreferences):
     """
     bl_idname = __package__
 
+    # folder for robot/scene models (used for previews and imports)
+    modelsfolder = StringProperty(
+        name="modelsfolder",
+        subtype="DIR_PATH",
+        default=''
+    )
+
+    # user config folder for Phobos
+    configfolder = StringProperty(
+        name="configfolder",
+        subtype="DIR_PATH",
+        description="Path to the system-dependent config folder of Phobos.",
+        default=''
+    )
+
+    # gazebo model folder
+    gazebomodelfolder = StringProperty(
+        name="Gazebo Model Folder",
+        subtype="DIR_PATH",
+        description="Path to the Gazebo model folder.",
+        default=''
+    )
+
+    exportpluginsfolder = StringProperty(
+        name='exportpluginsfolder',
+        subtype='DIR_PATH',
+        default='.'
+    )
+
+    username = StringProperty(
+        name='username',
+        default='Anonymous',
+        description="Name of the user/company (used for export information etc.)"
+    )
+
+    useremail = StringProperty(
+        name='useremail',
+        default='None',
+        description="E-mail adress of the user/company (used for export information etc.)"
+    )
+
+    logactive = BoolProperty(
+        default=False,
+        name='logactive',
+        description="Activate logging"
+    )
+
     logfile = StringProperty(
         name="logfile",
         subtype="FILE_PATH",
@@ -91,38 +138,30 @@ class PhobosPrefs(AddonPreferences):
         default=True
     )
 
-    modelsfolder = StringProperty(
-        name="modelsfolder",
-        subtype="DIR_PATH",
-        default=''
-    )
-
-    configfolder = StringProperty(
-        name="configfolder",
-        subtype="DIR_PATH",
-        description="Path to the system-dependent config folder of Phobos.",
-        default=''
-    )
-
-    exportpluginsfolder = StringProperty(
-        name='exportpluginsfolder',
-        subtype='DIR_PATH',
-        default='.'
-    )
-
     models_poses = CollectionProperty(type=ModelPoseProp)
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text="Log Settings")
-        layout.prop(self, "logfile", text="log file path")
-        layout.prop(self, "logtofile", text="write to logfile")
-        layout.prop(self, "logtoterminal", text="write to terminal")
-        layout.prop(self, "loglevel", text="log level")
+        box = layout.box()
+        box.label(text="Folders")
+        box.prop(self, "modelsfolder", text="models folder")
+        box.prop(self, "configfolder", text="config folder")
+        box.prop(self, "gazebomodelfolder", text="Gazebo model folder")
         layout.separator()
-        layout.label(text="Folders")
-        layout.prop(self, "modelsfolder", text="models folder")
-        layout.prop(self, "configfolder", text="config folder")
+
+        box = layout.box()
+        box.label(text="User information")
+        box.prop(self, "username", text="user name")
+        box.prop(self, "useremail", text="user email")
+        layout.separator()
+
+        box = layout.box()
+        row = box.row()
+        row.label(text="Logging")
+        box.prop(self, "logfile", text="log file path")
+        box.prop(self, "logtofile", text="write to logfile")
+        box.prop(self, "logtoterminal", text="write to terminal")
+        box.prop(self, "loglevel", text="log level")
 
 prev_collections = {}
 phobosIcon = 0
@@ -167,6 +206,19 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
                                name='Up',
                                description="Up axis of the obj export.",
                                default='Y')
+
+    export_sdf_mesh_type = EnumProperty(
+        items=getMeshTypeListForEnumProp,
+        name='SDF mesh type',
+        description="Mesh type to use in exported SDF files.")
+
+    export_sdf_model_config = BoolProperty(
+        default=False, name='Export Gazebo model.config',
+        description='Export model.config file along with the SDF file.')
+
+    export_sdf_to_gazebo_models = BoolProperty(
+        default=False, name='Export to Gazebo models folder',
+        description='Export model to the Gazebo models folder.')
 
 
 class Mesh_Export_UIList(bpy.types.UIList):
@@ -933,6 +985,13 @@ class PhobosExportPanel(bpy.types.Panel):
             box.label('OBJ axis')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_forward')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_up')
+        if getattr(bpy.context.scene, 'export_entity_sdf', False):
+            layout.separator()
+            box = layout.box()
+            box.label('SDF export')
+            box.prop(ioUtils.getExpSettings(), 'export_sdf_mesh_type')
+            box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
+            box.prop(ioUtils.getExpSettings(), 'export_sdf_to_gazebo_models', icon='EXPORT')
 
         # TODO delete me?
         # c2.prop(expsets, "exportCustomData", text="Export custom data")
@@ -943,7 +1002,7 @@ class PhobosExportPanel(bpy.types.Panel):
         # layout.operator("phobos.export_bake", text="Bake Robot Model", icon="OUTLINER_OB_ARMATURE")
         # layout.operator("phobos.create_robot_instance", text="Create Robot Lib Instance", icon="RENDERLAYERS")
 
-        #  self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
+        # self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
 
         layout.separator()
         splitlayout = layout.split()

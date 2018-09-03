@@ -216,20 +216,20 @@ def updateTextFile(textfilename, newContent):
 
 
 def readTextFile(textfilename):
-    """This function returns the content of a specified text file.
+    """Returns the content of a specified text file in Blender's data.
+
+    If the file is not found, an empty string is returned.
 
     Args:
-      textfilename(str): The blender textfiles name.
+        textfilename (str): The blender textfiles name.
 
     Returns:
-      str - the textfiles content.
-
+        str -- textfile content or empty string
     """
-    try:
-        return "\n".join([l.body for l in bpy.data.texts[textfilename].lines])
-    except KeyError:
+    if textfilename not in bpy.data.texts:
         log("No text file " + textfilename + " found.", "WARNING")
         return ""
+    return "\n".join([l.body for l in bpy.data.texts[textfilename].lines])
 
 
 def createNewTextfile(textfilename, contents):
