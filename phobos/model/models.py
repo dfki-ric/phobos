@@ -596,13 +596,13 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
     """Initializes phobos dictionary of *obj*, including information stored in custom properties.
 
     Args:
-      obj(bpy_types.Object): object to derive initial properties from.
-      phobostype(str, optional): limit parsing of data fields to this phobostype
-      ignoretypes(list, optional): list of properties ignored while initializing the objects properties.
-      ignorename(bool, optional): whether or not to add the object's name
+        obj (bpy_types.Object): object to derive initial properties from.
+        phobostype (str): limit parsing of data fields to this phobostype
+        ignoretypes (list): list of properties ignored while initializing the objects properties.
+        ignorename (bool): whether or not to add the object's name
 
     Returns:
-      dict
+        dict -- phobos properties of the object
     """
     # allow duplicated names differentiated by types
     props = {} if ignorename else {'name': nUtils.getObjectName(obj, phobostype)}
