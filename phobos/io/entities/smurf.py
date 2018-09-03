@@ -93,63 +93,6 @@ def deriveEntity(root, outpath):
     return entity
 
 
-def gatherAnnotations(model):
-    """Gathers custom properties annotating elements of the robot
-    across the model. These annotations were created in the model.py
-    module and are marked with a leading '$'.
-
-    Args:
-      model(dict): The robot model dictionary.
-
-    Returns:
-      dict -- A dictionary of the gathered annotations.
-
-    """
-    # TODO check this stuff
-    annotations = {}
-    elementlist = []
-    types = ('links', 'joints', 'sensors', 'motors', 'controllers', 'materials')
-    # gather information from directly accessible types
-    for objtype in types:
-        for elementname in model[objtype]:
-            tmpdict = model[objtype][elementname]
-            tmpdict['temp_type'] = objtype[:-1]
-            elementlist.append(tmpdict)
-
-    # add information from types hidden in links
-    for linkname in model['links']:
-        for objtype in ('collision', 'visual'):
-            if objtype in model['links'][linkname]:
-                for elementname in model['links'][linkname][objtype]:
-                    tmpdict = model['links'][linkname][objtype][elementname]
-                    tmpdict['temp_type'] = objtype
-                    elementlist.append(tmpdict)
-        if 'inertial' in model['links'][linkname]:
-            tmpdict = model['links'][linkname]['inertial']
-            tmpdict['temp_type'] = 'inertial'
-            elementlist.append(tmpdict)
-
-    # loop through the list of annotated elements and categorize the data
-    for element in elementlist:
-        delkeys = []
-        for key in element.keys():
-            if key.startswith('$'):
-                category = key[1:]
-                if category not in annotations:
-                    annotations[category] = {}
-                if element['temp_type'] not in annotations[category]:
-                    annotations[category][element['temp_type']] = []
-                tmpdict = {k: element[key][k] for k in element[key]}
-                tmpdict['name'] = element['name']
-                annotations[category][element['temp_type']].append(tmpdict)
-                delkeys.append(key)
-        delkeys.append('temp_type')
-        for key in delkeys:
-            if key in element:
-                del element[key]
-    return annotations
-
-
 def deriveRefinedCollisionData(model):
     """This function collects all collision bitmasks in a given model.
 
@@ -208,7 +151,7 @@ def sort_for_yaml_dump(dictionary, category):
     if category in ['materials', 'motors']:
         return {category: sort_dict_list(dictionary[category], 'name')}
     elif category == 'sensors':
-        dictionary[category] = replace_object_links(dictionary[category])
+        dictionary[category] = models.replace_object_links(dictionary[category])
 
         return {category: sort_dict_list(dictionary[category], 'name')}
     elif category == 'simulation':
@@ -217,28 +160,6 @@ def sort_for_yaml_dump(dictionary, category):
             return_dict[viscol] = sort_dict_list(dictionary[viscol], 'name')
         return return_dict
     return dictionary
-
-
-def replace_object_links(dictionary):
-    newdict = {}
-    if isinstance(dictionary, list):
-        newlist = []
-        for item in dictionary:
-            newlist.append(replace_object_links(item))
-        return newlist
-
-    for key, value in dictionary.items():
-        if isinstance(value, list):
-            if (all([isinstance(item, dict) for item in value]) and
-                    all([('name' in item and 'object' in item) for item in value])):
-                newdict[key] = sorted([item['name'] for item in value])
-
-        elif isinstance(value, dict):
-            newdict[key] = replace_object_links(value)
-        else:
-            newdict[key] = value
-
-    return newdict
 
 
 def sort_dict_list(dict_list, sort_key):
@@ -309,7 +230,7 @@ def exportSmurf(model, path):
     urdf_filename = model['name'] + '.urdf'
 
     # gather annotations and data from text files
-    annotationdict = gatherAnnotations(model)
+    annotationdict = models.gatherAnnotations(model)
 
     # $mars annotated properties overwrite custom properties of objects for smurf
     if 'mars' in annotationdict:
