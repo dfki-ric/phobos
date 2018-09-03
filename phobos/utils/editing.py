@@ -634,8 +634,8 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
         name = obj.name + '_annotation_object'
 
     annot_obj = bUtils.createPrimitive(
-        name, 'box', [1, 1, 1], defs.layerTypes['annotation'], plocation=loc)
-    annot_obj.phobostype = 'annotation'
+        name, 'box', [1, 1, 1], defs.layerTypes['annotation'], plocation=loc,
+        phobostype='annotation')
     annot_obj.scale = (size,) * 3
 
     resource = ioUtils.getResource(['annotation', namespace.split('/')[-1]])
