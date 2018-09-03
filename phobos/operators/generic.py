@@ -39,6 +39,7 @@ from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
 import phobos.defs as defs
 import phobos.utils.blender as bUtils
 import phobos.utils.selection as sUtils
+import phobos.utils.editing as eUtils
 import phobos.utils.io as ioUtils
 from phobos.phoboslog import log
 
