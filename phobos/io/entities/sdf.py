@@ -42,6 +42,7 @@ from phobos.utils.io import l2str as list_to_string
 from phobos.utils.io import getExpSettings
 import phobos.utils.general as gUtils
 from phobos.utils.blender import getPhobosPreferences
+import phobos.model.models as models
 from phobos.phoboslog import log
 
 # For future updates of the SDF spec version look at:
@@ -552,7 +553,7 @@ def exportSDFMaterial(materialdata, indentation):
     return "".join(tagger.get_output())
 
 
-def exportSDFLink(linkdict, linkobj, modelname, materials, indentation):
+def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation):
     tagger = xmlTagger(initial=indentation)
     tagger.descend('link', {'name': linkdict['name']})
     # OPT: tagger.attrib('gravity', ...)
@@ -597,7 +598,9 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, indentation):
     else:
         log("No visual data for '{0}'...".format(linkdict['name']), 'WARNING')
 
-    # OPT: tagger.write(sensor(linkdict['sensor'], tagger.get_indent()))
+    if sensors:
+        for sensor in sensors:
+            tagger.write(exportSDFSensor(sensor, tagger.get_indent()))
     # OPT: tagger.descend('projector', {'name': ...})
     # REQ: tagger.attrib('texture', ...)
     # OPT: tagger.attrib('fov', ...)
@@ -739,11 +742,6 @@ def exportSDFSensor(sensordict, indentation):
 
     tagger.descend('sensor', {'name': sensordict['name'], 'type': sensordict['type']})
 
-    # skip impossible sensor types
-    if sensordict['type'] not in sensordict:
-        log("Sensor type information not specified! Skipping sensor {}...".format(
-            sensordict['name']), 'WARNING')
-        return ''
     if sensordict['type'] not in ['altimeter', 'camera', 'contact', 'gps', 'imu', 'logical_camera',
                                   'magnetometer', 'ray', 'rfidtag', 'rfid', 'sonar', 'transceiver',
                                   'force_torque']:
@@ -761,7 +759,7 @@ def exportSDFSensor(sensordict, indentation):
     # TODO add plugin and frame support
 
     if sensordict['type'] == 'altimeter':
-        altimeter = sensordict['altimeter']
+        altimeter = sensordict
         tagger.descend('altimeter')
         if 'vertical_position' in altimeter and 'noise' in altimeter['vertical_position']:
             tagger.descend('vertical_position')
@@ -781,14 +779,14 @@ def exportSDFSensor(sensordict, indentation):
         tagger.ascend()
 
     elif sensordict['type'] == 'camera':
-        cam = sensordict['camera']
+        cam = sensordict
         tagger.descend('camera', {'name': cam['name']} if 'name' in cam else {})
         tagger.attrib('horizontal_fov', cam['horizontal_fov'])
 
         tagger.descend('image')
-        tagger.attrib('width', cam['image']['width'])
-        tagger.attrib('height', cam['image']['height'])
-        if 'format' in cam['image']:
+        tagger.attrib('width', cam['width'])
+        tagger.attrib('height', cam['height'])
+        if 'image' in cam and 'format' in cam['image']:
             tagger.attrib('format', cam['image']['format'])
         tagger.ascend()
 
@@ -846,12 +844,14 @@ def exportSDFSensor(sensordict, indentation):
 
     elif sensordict['type'] == 'contact':
         tagger.descend('contact')
-        tagger.attrib('collision', sensordict['contact']['collision'])
-        tagger.attrib('topic', sensordict['contact']['topic'])
+        # sdf contact supports only a single element, not a list
+        sensordict = models.replace_object_links(sensordict)
+        tagger.attrib('collision', sensordict['collision'][0])
+        tagger.attrib('topic', sensordict['topic'])
         tagger.ascend()
 
     elif sensordict['type'] == 'gps':
-        gps = sensordict['gps']
+        gps = sensordict
         tagger.descend('gps')
         for sensmode in ['position_sensing', 'velocity_sensing']:
             if sensmode in gps:
@@ -869,7 +869,7 @@ def exportSDFSensor(sensordict, indentation):
         tagger.ascend()
 
     elif sensordict['type'] == 'imu':
-        imu = sensordict['imu']
+        imu = sensordict
         tagger.descend('imu')
         if 'orientation_reference_frame' in imu:
             tagger.descend('orientation_reference_frame')
@@ -902,7 +902,7 @@ def exportSDFSensor(sensordict, indentation):
         tagger.ascend()
 
     elif sensordict['type'] == 'logical_camera':
-        logcam = sensordict['logical_camera']
+        logcam = sensordict
         tagger.descend('logical_camera')
         tagger.attrib('near', logcam['near'])
         tagger.attrib('far', logcam['far'])
@@ -910,7 +910,7 @@ def exportSDFSensor(sensordict, indentation):
         tagger.attrib('horizontal_fov', logcam['horizontal_fov'])
 
     elif sensordict['type'] == 'magnetometer':
-        magn = sensordict['magnetometer']
+        magn = sensordict
         tagger.descend('magnetometer')
         for direction in ['x', 'y', 'z']:
             if direction in magn:
@@ -924,23 +924,23 @@ def exportSDFSensor(sensordict, indentation):
         tagger.ascend()
 
     elif sensordict['type'] == 'ray':
-        ray = sensordict['ray']
+        ray = sensordict
         tagger.descend('ray')
 
         tagger.descend('scan')
         for direction in ['horizontal', 'vertical']:
             tagger.descend(direction)
-            tagger.attrib('samples', ray['scan']['direction']['samples'])
-            tagger.attrib('resolution', ray['scan']['direction']['resolution'])
-            tagger.attrib('min_angle', ray['scan']['direction']['min_angle'])
-            tagger.attrib('max_angle', ray['scan']['direction']['max_angle'])
+            tagger.attrib('samples', ray['scan'][direction]['samples'])
+            tagger.attrib('resolution', ray['scan'][direction]['resolution'])
+            tagger.attrib('min_angle', ray['scan'][direction]['min_angle'])
+            tagger.attrib('max_angle', ray['scan'][direction]['max_angle'])
             tagger.ascend()
         tagger.ascend()
 
         tagger.descend('range')
-        tagger.attrib('min', ray['range']['min'])
-        tagger.attrib('max', ray['range']['max'])
-        if 'resolution' in imu['range']:
+        tagger.attrib('min', ray['min_distance'])
+        tagger.attrib('max', ray['max_distance'])
+        if 'range' in ray and 'resolution' in ray['range']:
             tagger.attrib('resolution', ray['range']['resolution'])
         tagger.ascend()
 
@@ -961,15 +961,15 @@ def exportSDFSensor(sensordict, indentation):
         tagger.attrib('rfid', '')
 
     elif sensordict['type'] == 'sonar':
-        sonar = sensordict['sonar']
+        sonar = sensordict
         tagger.descend('sonar')
-        tagger.attrib('min', sonar['min'])
-        tagger.attrib('max', sonar['max'])
+        tagger.attrib('min', sonar['min_dist'])
+        tagger.attrib('max', sonar['max_dist'])
         tagger.attrib('radius', sonar['radius'])
         tagger.ascend()
 
     elif sensordict['type'] == 'transceiver':
-        transc = sensordict['transceiver']
+        transc = sensordict
         tagger.descend('transceiver')
         # required first
         tagger.attrib('gain', transc['gain'])
@@ -981,7 +981,7 @@ def exportSDFSensor(sensordict, indentation):
         tagger.ascend()
 
     elif sensordict['type'] == 'force_torque':
-        fortor = sensordict['force_torque']
+        fortor = sensordict
         tagger.descend('force_torque')
         # TODO add frame support
         if 'measure_direction' in fortor:
@@ -1034,12 +1034,17 @@ def exportSDF(model, filepath):
         modelconffile = None
     errors = False
 
+    annotationdict = models.gatherAnnotations(model)
+    if 'sdf' in annotationdict:
+        for category in annotationdict['sdf']:
+            for list_obj in annotationdict['sdf'][category]:
+                model[category + 's'][list_obj['name']].update(list_obj)
+        del annotationdict['sdf']
+
     modelconf = exportGazeboModelConf(model)
 
     log("Exporting '{0}'...".format(model['name']), "DEBUG")
     # FINAL remove debugging information
-    # print('sensors\n')
-    # print(model['sensors'])
     print('Model materials implemented.')
     # print(model['materials'])
     # print('controllers\n')
@@ -1118,7 +1123,12 @@ def exportSDF(model, filepath):
         for linkkey in model['links']:
             link = model['links'][linkkey]
             linkobj = link['object']
-            xml.write(exportSDFLink(link, linkobj, modelname, model['materials'], xml.get_indent()))
+            sensors = []
+            for sens in model['sensors']:
+                if model['sensors'][sens]['link'] == linkkey:
+                    sensors.append(model['sensors'][sens])
+            xml.write(exportSDFLink(link, linkobj, modelname, model['materials'], sensors,
+                                    xml.get_indent()))
         log("Links exported.", 'DEBUG')
 
         # joints
