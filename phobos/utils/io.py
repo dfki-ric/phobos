@@ -130,13 +130,20 @@ def getDictFromYamlDefs(phobostype, defname, name):
     else:
         material = None
 
+    # separate properties and annotations from each other
+    props = {key: value for key, value in defs.definitions[phobostype + 's'][defname].items()
+             if not isinstance(value, dict)}
+    annots = {key: value for key, value in defs.definitions[phobostype + 's'][defname].items()
+              if isinstance(value, dict)}
+
     # create a dictionary holding the properties
     phobos_dict = {'name': name,
                    'defname': defname,
                    'category': defs.def_settings[phobostype + 's'][defname]['categories'],
                    'material': material,
                    'type': defs.def_settings[phobostype + 's'][defname]['type'],
-                   'props': defs.definitions[phobostype + 's'][defname]}
+                   'props': props,
+                   'annotations': annots}
 
     # add the general settings for this object
     general_settings = defs.def_settings[phobostype + 's'][defname]
