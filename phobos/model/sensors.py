@@ -60,8 +60,7 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
             props['link'] = nUtils.getObjectName(
                 sUtils.getEffectiveParent(obj, objectlist=objectlist), phobostype='link')
         else:
-            props['link'] = nUtils.getObjectName(
-                sUtils.getEffectiveParent(obj, objectlist=objectlist), phobostype='link')
+            props['link'] = sUtils.getEffectiveParent(obj, objectlist=objectlist)
     except KeyError:
         if logging:
             log("Missing data in sensor " + obj.name, "ERROR")
