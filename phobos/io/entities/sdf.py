@@ -734,6 +734,263 @@ def exportSDFJoint(jointdict, indentation):
     return "".join(tagger.get_output())
 
 
+def exportSDFSensor(sensordict, indentation):
+    tagger = xmlTagger(initial=indentation)
+
+    tagger.descend('sensor', {'name': sensordict['name'], 'type': sensordict['type']})
+
+    # skip impossible sensor types
+    if sensordict['type'] not in sensordict:
+        log("Sensor type information not specified! Skipping sensor {}...".format(
+            sensordict['name']), 'WARNING')
+        return ''
+    if sensordict['type'] not in ['altimeter', 'camera', 'contact', 'gps', 'imu', 'logical_camera',
+                                  'magnetometer', 'ray', 'rfidtag', 'rfid', 'sonar', 'transceiver',
+                                  'force_torque']:
+        log("Sensor type not supported by SDF '{}'! Skipping sensor {}...".format(
+            sensordict['type'], sensordict['name']))
+        return ''
+
+    # write generic params
+    for generic in ['always_on', 'update_rate', 'visualize', 'topic']:
+        if generic in sensordict:
+            tagger.attrib(generic, sensordict[generic])
+
+    tagger.write(exportSDFPose(sensordict['pose'], tagger.get_indent()))
+
+    # TODO add plugin and frame support
+
+    if sensordict['type'] == 'altimeter':
+        altimeter = sensordict['altimeter']
+        tagger.descend('altimeter')
+        if 'vertical_position' in altimeter and 'noise' in altimeter['vertical_position']:
+            tagger.descend('vertical_position')
+            tagger.descend('noise', {'type': altimeter['vertical_position']['noise']['type']})
+            for elem in [key for key in altimeter['vertical_position']['noise'] if key != 'type']:
+                tagger.attrib(elem, altimeter['vertical_position']['noise'][elem])
+            tagger.ascend()
+            tagger.ascend()
+
+        if 'vertical_velocity' in altimeter and 'noise' in altimeter['vertical_velocity']:
+            tagger.descend('vertical_velocity')
+            tagger.descend('noise', {'type': altimeter['vertical_velocity']['noise']['type']})
+            for elem in [key for key in altimeter['vertical_velocity']['noise'] if key != 'type']:
+                tagger.attrib(elem, altimeter['vertical_velocity']['noise'][elem])
+            tagger.ascend()
+            tagger.ascend()
+        tagger.ascend()
+
+    elif sensordict['type'] == 'camera':
+        cam = sensordict['camera']
+        tagger.descend('camera', {'name': cam['name']} if 'name' in cam else {})
+        tagger.attrib('horizontal_fov', cam['horizontal_fov'])
+
+        tagger.descend('image')
+        tagger.attrib('width', cam['image']['width'])
+        tagger.attrib('height', cam['image']['height'])
+        if 'format' in cam['image']:
+            tagger.attrib('format', cam['image']['format'])
+        tagger.ascend()
+
+        tagger.descend('clip')
+        tagger.attrib('near', cam['clip']['near'])
+        tagger.attrib('far', cam['clip']['far'])
+        tagger.ascend()
+
+        if 'save' in cam:
+            tagger.descend('save', {'enabled': cam['save']['enabled']})
+            tagger.attrib('path', cam['save']['path'])
+            tagger.ascend()
+
+        if 'depth_cam' in cam:
+            tagger.descend('depth_cam')
+            tagger.attrib('output', cam['output'])
+            tagger.ascend()
+
+        if 'noise' in cam:
+            tagger.descend('noise')
+            tagger.attrib('type', cam['noise']['type'])
+            if 'mean' in cam['noise']:
+                tagger.attrib('mean', cam['noise']['mean'])
+            if 'stddev' in cam['noise']:
+                tagger.attrib('stddev', cam['noise']['stddev'])
+            tagger.ascend()
+
+        if 'distortion' in cam:
+            tagger.descend('distortion')
+            params = ['k1', 'k2', 'k3', 'p1', 'p2', 'center']
+            for distortparam in params:
+                if distortparam in cam['distortion']:
+                    tagger.attrib(distortparam, cam['distortion'][distortparam])
+            tagger.ascend()
+
+        if 'lens' in cam:
+            tagger.descend('lens')
+            tagger.attrib('type', cam['lens']['type'])
+            tagger.attrib('scale_to_hfov', cam['lens']['scale_to_hfov'])
+
+            if 'custom_function' in cam['lens']:
+                tagger.descend('custom_function')
+                tagger.attrib('fun', cam['lens']['custom_function']['fun'])
+                for par in ['c1', 'c2', 'c3', 'f']:
+                    if par in cam['lens']['custom_function']:
+                        tagger.attrib(par, cam['lens']['custom_function'][par])
+                tagger.ascend()
+            if 'cutoff_angle' in cam['lens']:
+                tagger.attrib('cutoff_angle', cam['lens']['cutoff_angle'])
+            if 'env_texture_size' in cam['lens']:
+                tagger.attrib('env_texture_size', cam['lens']['env_texture_size'])
+        # TODO why do the camera settings override pose and frame again?
+        # sensor pose and frame should be enough for that... -> otherwise add pose and frame here
+        tagger.ascend()
+
+    elif sensordict['type'] == 'contact':
+        tagger.descend('contact')
+        tagger.attrib('collision', sensordict['contact']['collision'])
+        tagger.attrib('topic', sensordict['contact']['topic'])
+        tagger.ascend()
+
+    elif sensordict['type'] == 'gps':
+        gps = sensordict['gps']
+        tagger.descend('gps')
+        for sensmode in ['position_sensing', 'velocity_sensing']:
+            if sensmode in gps:
+                tagger.descend(sensmode)
+                for direction in ['horizontal', 'vertical']:
+                    if direction in gps[sensmode]:
+                        tagger.descend(direction)
+                        tagger.descend('noise', {'type': gps[sensmode][direction]['noise']['type']})
+                        for val in ['mean', 'stddev', 'bias_mean', 'bias_stddev', 'precision']:
+                            if val in gps[sensmode][direction]['noise']:
+                                tagger.attrib(val, gps[sensmode][direction]['noise'][val])
+                        tagger.ascend()
+                        tagger.ascend()
+                tagger.ascend()
+        tagger.ascend()
+
+    elif sensordict['type'] == 'imu':
+        imu = sensordict['imu']
+        tagger.descend('imu')
+        if 'orientation_reference_frame' in imu:
+            tagger.descend('orientation_reference_frame')
+            tagger.attrib('localization', imu['orientation_reference_frame']['localization'])
+            if 'custom_rpy' in imu['orientation_reference_frame']:
+                tagger.attrib('custom_rpy', '{} {} {}'.format(
+                    *[i for i in imu['orientation_reference_frame']['custom_rpy']]))
+                # TODO add support for parent_frame
+            if 'grav_dir_x' in imu['orientation_reference_frame']:
+                tagger.attrib('grav_dir_x', '{} {} {}'.format(
+                    *[i for i in imu['orientation_reference_frame']['grav_dir_x']]))
+                # TODO add support for parent_frame
+            tagger.ascend()
+        if 'topic' in imu:
+            tagger.attrib('topic', imu['topic'])
+
+        for mode in ['angular_velocity', 'linear_acceleration']:
+            if mode in imu:
+                tagger.descend(mode)
+                for direction in ['x', 'y', 'z']:
+                    if direction in imu[mode]:
+                        tagger.descend(direction)
+                        tagger.descend('noise', {'type': imu[mode][direction]['noise']['type']})
+                        for val in ['mean', 'sttdev', 'bias_mean', 'bias_sttdev', 'precision']:
+                            if val in imu[mode][direction]['noise']:
+                                tagger.attrib(val, imu[mode][direction]['noise'][val])
+                        tagger.ascend()
+                        tagger.ascend()
+                tagger.ascend()
+        tagger.ascend()
+
+    elif sensordict['type'] == 'logical_camera':
+        logcam = sensordict['logical_camera']
+        tagger.descend('logical_camera')
+        tagger.attrib('near', logcam['near'])
+        tagger.attrib('far', logcam['far'])
+        tagger.attrib('aspect_ratio', logcam['aspect_ratio'])
+        tagger.attrib('horizontal_fov', logcam['horizontal_fov'])
+
+    elif sensordict['type'] == 'magnetometer':
+        magn = sensordict['magnetometer']
+        tagger.descend('magnetometer')
+        for direction in ['x', 'y', 'z']:
+            if direction in magn:
+                tagger.descend(direction)
+                tagger.descend('noise', {'type': magn[direction]['noise']['type']})
+                for val in ['mean', 'sttdev', 'bias_mean', 'bias_sttdev', 'precision']:
+                    if val in magn[direction]['noise']:
+                        tagger.attrib(val, magn[direction]['noise'][val])
+                tagger.ascend()
+                tagger.ascend()
+        tagger.ascend()
+
+    elif sensordict['type'] == 'ray':
+        ray = sensordict['ray']
+        tagger.descend('ray')
+
+        tagger.descend('scan')
+        for direction in ['horizontal', 'vertical']:
+            tagger.descend(direction)
+            tagger.attrib('samples', ray['scan']['direction']['samples'])
+            tagger.attrib('resolution', ray['scan']['direction']['resolution'])
+            tagger.attrib('min_angle', ray['scan']['direction']['min_angle'])
+            tagger.attrib('max_angle', ray['scan']['direction']['max_angle'])
+            tagger.ascend()
+        tagger.ascend()
+
+        tagger.descend('range')
+        tagger.attrib('min', ray['range']['min'])
+        tagger.attrib('max', ray['range']['max'])
+        if 'resolution' in imu['range']:
+            tagger.attrib('resolution', ray['range']['resolution'])
+        tagger.ascend()
+
+        if 'noise' in ray:
+            tagger.descend('noise')
+            tagger.attrib('type', ray['noise']['type'])
+            if 'mean' in ray['noise']:
+                tagger.attrib('mean', ray['noise']['mean'])
+            if 'stddev' in ray['noise']:
+                tagger.attrib('stddev', ray['noise']['stddev'])
+            tagger.ascend()
+        tagger.ascend()
+
+    elif sensordict['type'] == 'rfidtag':
+        tagger.attrib('rfidtag', '')
+
+    elif sensordict['type'] == 'rfid':
+        tagger.attrib('rfid', '')
+
+    elif sensordict['type'] == 'sonar':
+        sonar = sensordict['sonar']
+        tagger.descend('sonar')
+        tagger.attrib('min', sonar['min'])
+        tagger.attrib('max', sonar['max'])
+        tagger.attrib('radius', sonar['radius'])
+        tagger.ascend()
+
+    elif sensordict['type'] == 'transceiver':
+        transc = sensordict['transceiver']
+        tagger.descend('transceiver')
+        # required first
+        tagger.attrib('gain', transc['gain'])
+        tagger.attrib('power', transc['power'])
+
+        for opt in ['essid', 'frequency', 'min_frequency', 'max_frequency', 'sensitivity']:
+            if opt in transc:
+                tagger.attrib(opt, transc[opt])
+        tagger.ascend()
+
+    elif sensordict['type'] == 'force_torque':
+        fortor = sensordict['force_torque']
+        tagger.descend('force_torque')
+        # TODO add frame support
+        if 'measure_direction' in fortor:
+            tagger.attrib('measure_direction', fortor['measure_direction'])
+        tagger.ascend()
+    tagger.ascend()
+    return "".join(tagger.get_output())
+
+
 def exportGazeboModelConf(model):
     """Creates a model.config element from the specified information.
 
