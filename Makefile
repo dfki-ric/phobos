@@ -16,6 +16,17 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------------
 
+help:
+		@echo	'Targets of Phobos:'
+		@echo 	'  help      - Print this help information.'
+		@echo 	'  init      - Install the Phobos requirements using pip.'
+		@echo	'  install   - Install the Phobos code to your Blender installation.'
+		@echo	'              This also sets up the configuration folder for Phobos.'
+		@echo	'  clean     - Removes the installation configuration file for Phobos.'
+		@echo	'              This does not remove the Phobos installation and configurations!'
+		@echo 	'  format    - Formats the python code in the folder using the black code'
+		@echo 	'              formatter (github.com/ambv/black).'
+
 init:
 		pip install -r requirements.txt
 
@@ -28,4 +39,4 @@ clean:
 format:
 		black -l 100 -S .
 
-.PHONY: init test install format
+.PHONY: init test install format help
