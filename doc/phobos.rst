@@ -22,10 +22,10 @@ phobos.defs module
     :undoc-members:
     :show-inheritance:
 
-phobos.old_code module
-----------------------
+phobos.display module
+---------------------
 
-.. automodule:: phobos.old_code
+.. automodule:: phobos.display
     :members:
     :undoc-members:
     :show-inheritance:
@@ -42,6 +42,14 @@ phobos.phoboslog module
 -----------------------
 
 .. automodule:: phobos.phoboslog
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+phobos.phobossystem module
+--------------------------
+
+.. automodule:: phobos.phobossystem
     :members:
     :undoc-members:
     :show-inheritance:
