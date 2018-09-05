@@ -36,8 +36,7 @@ import bpy
 import bgl
 import glob
 from bpy.types import Operator
-from bpy.props import (EnumProperty, StringProperty, FloatProperty,
-                       IntProperty, BoolProperty)
+from bpy.props import EnumProperty, StringProperty, FloatProperty, IntProperty, BoolProperty
 
 import phobos.defs as defs
 import phobos.display as display
@@ -57,6 +56,7 @@ from phobos.io.entities.entities import deriveGenericEntity
 
 class ExportSceneOperator(Operator):
     """Export the selected model(s) in a scene"""
+
     bl_idname = "phobos.export_scene"
     bl_label = "Export Scene"
     bl_options = {'REGISTER', 'UNDO'}
@@ -65,8 +65,7 @@ class ExportSceneOperator(Operator):
     sceneName = StringProperty(name='Scene name')
 
     def invoke(self, context, event):
-        self.sceneName = bpy.path.basename(
-            bpy.context.blend_data.filepath)[:-6]
+        self.sceneName = bpy.path.basename(bpy.context.blend_data.filepath)[:-6]
         return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
@@ -78,20 +77,24 @@ class ExportSceneOperator(Operator):
         # derive entities and export if necessary
         models = set()
         for root in entities:
-            log("Adding entity '" +
-                str(root["entity/name"]) + "' to scene.", "INFO")
+            log("Adding entity '" + str(root["entity/name"]) + "' to scene.", "INFO")
             if root["entity/type"] in entity_types:
                 # TODO delete me?
                 # try:
-                if (self.exportModels and
-                        'export' in entity_types[root['entity/type']] and
-                        root['model/name'] not in models):
-                    modelpath = os.path.join(ioUtils.getExportPath(), self.sceneName, root['model/name'])
+                if (
+                    self.exportModels
+                    and 'export' in entity_types[root['entity/type']]
+                    and root['model/name'] not in models
+                ):
+                    modelpath = os.path.join(
+                        ioUtils.getExportPath(), self.sceneName, root['model/name']
+                    )
                     exportModel(models.deriveModelDictionary(root), modelpath)
                     models.add(root['model/name'])
                 # known entity export
-                entity = entity_types[root["entity/type"]]['derive'](root,
-                                                                     os.path.join(ioUtils.getExportPath(), self.sceneName))
+                entity = entity_types[root["entity/type"]]['derive'](
+                    root, os.path.join(ioUtils.getExportPath(), self.sceneName)
+                )
                 # TODO delete me?
                 # except KeyError:
                 #    log("Required method ""deriveEntity"" not implemented for type " + entity["entity/type"], "ERROR")
@@ -104,26 +107,25 @@ class ExportSceneOperator(Operator):
             typename = "export_scene_" + scenetype
             # check if format exists and should be exported
             if getattr(bpy.context.scene, typename):
-                scene_types[scenetype]['export'](exportlist, os.path.join(
-                    ioUtils.getExportPath(), self.sceneName))
+                scene_types[scenetype]['export'](
+                    exportlist, os.path.join(ioUtils.getExportPath(), self.sceneName)
+                )
         return {'FINISHED'}
 
 
 class ExportModelOperator(Operator):
     """Export the selected model"""
+
     bl_idname = "phobos.export_model"
     bl_label = "Export Model"
     bl_options = {'REGISTER'}
 
     modelname = EnumProperty(
-        items=ioUtils.getModelListForEnumProp,
-        name="Model",
-        description="Model to export")
+        items=ioUtils.getModelListForEnumProp, name="Model", description="Model to export"
+    )
 
     exportall = BoolProperty(
-        default=False,
-        name="Export all",
-        description="Export all (selected) models in the scene."
+        default=False, name="Export all", description="Export all (selected) models in the scene."
     )
 
     def invoke(self, context, event):
@@ -146,8 +148,14 @@ class ExportModelOperator(Operator):
         elif not self.exportall:
             roots = [root for root in roots if nUtils.getModelName(root) == self.modelname]
             if len(roots) > 1:
-                log("Ambiguous model definitions: " + self.modelname + " exists "
-                    + str(len(roots)) + " times.", "ERROR")
+                log(
+                    "Ambiguous model definitions: "
+                    + self.modelname
+                    + " exists "
+                    + str(len(roots))
+                    + " times.",
+                    "ERROR",
+                )
                 return {'CANCELLED'}
 
         for root in roots:
@@ -162,8 +170,7 @@ class ExportModelOperator(Operator):
         # select all exported models after export is done
         if ioUtils.getExpSettings().selectedOnly:
             for root in roots:
-                objectlist = sUtils.getChildren(
-                    root, selected_only=True, include_hidden=False)
+                objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
                 sUtils.selectObjects(objectlist, clear=False)
         else:
             bpy.ops.object.select_all(action='DESELECT')
@@ -210,6 +217,7 @@ class ExportModelOperator(Operator):
 
 class ImportModelOperator(bpy.types.Operator):
     """Import robot model file from various formats"""
+
     bl_idname = "phobos.import_robot_model"
     bl_label = "Import Robot Model"
     bl_space_type = 'VIEW_3D'
@@ -220,9 +228,13 @@ class ImportModelOperator(bpy.types.Operator):
 
     entitytype = EnumProperty(
         name="Entity type",
-        items=tuple((e, e, 'file extensions: ' + str(entity_io.entity_types[e]['extensions']))
-                    for e in entity_io.entity_types if 'import' in entity_io.entity_types[e]),
-        description="Type of entity to import from file")
+        items=tuple(
+            (e, e, 'file extensions: ' + str(entity_io.entity_types[e]['extensions']))
+            for e in entity_io.entity_types
+            if 'import' in entity_io.entity_types[e]
+        ),
+        description="Type of entity to import from file",
+    )
 
     @classmethod
     def poll(cls, context):
@@ -288,10 +300,8 @@ def loadModelsAndPoses():
                     with open(os.path.join(os.path.dirname(robot), file)) as poses:
                         poses_yml = yaml.load(poses)
                         for pose in poses_yml['poses']:
-                            robots_dict[model_name].append(
-                                {"posename": pose['name']})
-                            robots_dict[
-                                model_name][-1]["robotpath"] = os.path.dirname(robot)
+                            robots_dict[model_name].append({"posename": pose['name']})
+                            robots_dict[model_name][-1]["robotpath"] = os.path.dirname(robot)
 
     modelsPosesColl.clear()
     for model_name in robots_dict.keys():
@@ -317,18 +327,21 @@ def loadModelsAndPoses():
             search_path = pose["robotpath"]
             if os.path.split(search_path)[-1] == "smurf":
                 search_path = os.path.dirname(search_path)
-            for file in (glob.glob(search_path + "/**/" + model_name + "_" + pose['posename'] + ".*") +
-                         glob.glob(search_path + "/" + model_name + "_" + pose['posename'] + ".*")):
-                if (os.path.splitext(file)[-1].lower() == ".stl") or \
-                   (os.path.splitext(file)[-1].lower() == ".obj"):
+            for file in glob.glob(
+                search_path + "/**/" + model_name + "_" + pose['posename'] + ".*"
+            ) + glob.glob(search_path + "/" + model_name + "_" + pose['posename'] + ".*"):
+                if (os.path.splitext(file)[-1].lower() == ".stl") or (
+                    os.path.splitext(file)[-1].lower() == ".obj"
+                ):
                     item.model_file = os.path.join(search_path, file)
-                if (os.path.splitext(file)[-1].lower() == ".png"):
+                if os.path.splitext(file)[-1].lower() == ".png":
                     item.preview = os.path.join(search_path, file)
                     item.name = os.path.split(file)[-1]
 
 
 class ReloadModelsAndPosesOperator(bpy.types.Operator):
     """Tooltip"""
+
     bl_idname = "scene.reload_models_and_poses_operator"
     bl_label = "Reload Models and Poses"
 
@@ -342,8 +355,7 @@ class ReloadModelsAndPosesOperator(bpy.types.Operator):
                 elif 'robot_pose':
                     if model_pose.preview != '':
                         if os.path.split(model_pose.preview)[-1] in bpy.data.images.keys():
-                            bpy.data.images[os.path.split(
-                                model_pose.preview)[-1]].reload()
+                            bpy.data.images[os.path.split(model_pose.preview)[-1]].reload()
                         im = bpy.data.images.load(model_pose.preview)
                         model_pose.name = im.name
                         # im.name = model_pose.name
@@ -352,13 +364,13 @@ class ReloadModelsAndPosesOperator(bpy.types.Operator):
                         bpy.data.images.new(model_pose.name, 0, 0)
             else:
                 bpy.data.images[model_pose.name].reload()
-                bpy.data.images[model_pose.name].gl_load(
-                    0, bgl.GL_LINEAR, bgl.GL_LINEAR)
+                bpy.data.images[model_pose.name].gl_load(0, bgl.GL_LINEAR, bgl.GL_LINEAR)
         return {'FINISHED'}
 
 
 class ImportLibRobot(Operator):
     """Import a baked robot into the robot library"""
+
     bl_idname = "phobos.import_lib_robot"
     bl_label = "Import Baked Robot"
     bl_options = {'REGISTER', 'UNDO'}
@@ -393,13 +405,12 @@ class ImportLibRobot(Operator):
 
 class ImportSelectedLibRobot(Operator):
     """Import a baked robot into the robot library"""
+
     bl_idname = "scene.phobos_import_selected_lib_robot"
     bl_label = "Import Baked Robot"
 
     obj_name = StringProperty(
-        name="New Smurf Entity Name",
-        default="New Robot",
-        description="Name of new Smurf Entity"
+        name="New Smurf Entity Name", default="New Robot", description="Name of new Smurf Entity"
     )
 
     @classmethod
@@ -409,17 +420,19 @@ class ImportSelectedLibRobot(Operator):
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         root = None
         # TODO delete me?
-        #print("modelfile: ("+modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file+")")
+        # print("modelfile: ("+modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file+")")
         if context.scene.objects.active != None:
             root = sUtils.getRoot(context.scene.objects.active)
         try:
-            if (not root or
-                    not sUtils.isRoot(root) or
-                    bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys() and
-                    modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file != '' and
-                    len(bpy.context.selected_objects) == 0 or
-                    modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name != root["model/name"]
-                    ):
+            if (
+                not root
+                or not sUtils.isRoot(root)
+                or bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()
+                and modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file != ''
+                and len(bpy.context.selected_objects) == 0
+                or modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name
+                != root["model/name"]
+            ):
                 result = True
         except KeyError:
             result = False
@@ -430,8 +443,7 @@ class ImportSelectedLibRobot(Operator):
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
 
-        selected_robot = modelsPosesColl[
-            bpy.data.images[activeModelPoseIndex].name]
+        selected_robot = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
         if selected_robot.model_file != '':
             return wm.invoke_props_dialog(self, width=300, height=100)
         else:
@@ -445,32 +457,35 @@ class ImportSelectedLibRobot(Operator):
         log("Import robot bake", "INFO")
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-        selected_robot = modelsPosesColl[
-            bpy.data.images[activeModelPoseIndex].name]
-        if (selected_robot.type != "robot_name"):
+        selected_robot = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
+        if selected_robot.type != "robot_name":
             if os.path.splitext(selected_robot.model_file)[-1] == ".obj":
-                bpy.ops.import_scene.obj(filepath=selected_robot.model_file,
-                                         axis_forward='-Z',
-                                         axis_up='Y',
-                                         filter_glob="*.obj;*.mtl",
-                                         use_edges=True,
-                                         use_smooth_groups=True,
-                                         use_split_objects=True,
-                                         use_split_groups=True,
-                                         use_groups_as_vgroups=False,
-                                         use_image_search=True,
-                                         split_mode='ON',
-                                         global_clamp_size=0)
+                bpy.ops.import_scene.obj(
+                    filepath=selected_robot.model_file,
+                    axis_forward='-Z',
+                    axis_up='Y',
+                    filter_glob="*.obj;*.mtl",
+                    use_edges=True,
+                    use_smooth_groups=True,
+                    use_split_objects=True,
+                    use_split_groups=True,
+                    use_groups_as_vgroups=False,
+                    use_image_search=True,
+                    split_mode='ON',
+                    global_clamp_size=0,
+                )
             elif os.path.splitext(selected_robot.model_file)[-1] == ".stl":
-                bpy.ops.import_mesh.stl(filepath=selected_robot.model_file,
-                                        axis_forward='Y',
-                                        axis_up='Z',
-                                        filter_glob="*.stl",
-                                        files=[],
-                                        directory="",
-                                        global_scale=1,
-                                        use_scene_unit=True,
-                                        use_facet_normal=False)
+                bpy.ops.import_mesh.stl(
+                    filepath=selected_robot.model_file,
+                    axis_forward='Y',
+                    axis_up='Z',
+                    filter_glob="*.stl",
+                    files=[],
+                    directory="",
+                    global_scale=1,
+                    use_scene_unit=True,
+                    use_facet_normal=False,
+                )
             robot_obj = bpy.context.selected_objects[0]
             bpy.context.scene.objects.active = robot_obj
             robot_obj.name = self.obj_name
@@ -485,19 +500,17 @@ class ImportSelectedLibRobot(Operator):
 
 class CreateRobotInstance(Operator):
     """Create a new instance of the selected robot lib entry"""
+
     bl_idname = "phobos.create_robot_instance"
     bl_label = "Create Robot Instance"
     bl_options = {'REGISTER', 'UNDO'}
 
     bakeObj = EnumProperty(
-        name="Robot Lib Entries",
-        items=generateLibEntries,
-        description="The robot lib entries")
+        name="Robot Lib Entries", items=generateLibEntries, description="The robot lib entries"
+    )
 
     robName = StringProperty(
-        name="Instance Name",
-        default="instance",
-        description="The instance's name"
+        name="Instance Name", default="instance", description="The instance's name"
     )
 
     def execute(self, context):
@@ -509,8 +522,7 @@ class CreateRobotInstance(Operator):
         root["model/name"] = self.bakeObj
         root["entity/name"] = self.robName
         root["isInstance"] = True
-        bpy.ops.import_mesh.stl(filepath=os.path.join(
-            robot_lib[self.bakeObj], "bake.stl"))
+        bpy.ops.import_mesh.stl(filepath=os.path.join(robot_lib[self.bakeObj], "bake.stl"))
         bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
         obj = context.active_object
         obj.name = self.robName + "::visual"
@@ -525,11 +537,18 @@ class CreateRobotInstance(Operator):
 
 class ExportCurrentPoseOperator(Operator):
     """Bake the selected model"""
+
     bl_idname = "phobos.export_current_poses"
     bl_label = "Export Selected Pose"
 
-    decimate_type = EnumProperty(name="Decimate Type",
-                                 items=[('COLLAPSE', 'Collapse', 'COLLAPSE'), ('UNSUBDIV', 'Un-Subdivide', 'UNSUBDIV'), ('DISSOLVE', 'Planar', 'DISSOLVE')])
+    decimate_type = EnumProperty(
+        name="Decimate Type",
+        items=[
+            ('COLLAPSE', 'Collapse', 'COLLAPSE'),
+            ('UNSUBDIV', 'Un-Subdivide', 'UNSUBDIV'),
+            ('DISSOLVE', 'Planar', 'DISSOLVE'),
+        ],
+    )
     decimate_ratio = FloatProperty(name="Ratio", default=0.15)
     decimate_iteration = IntProperty(name="Iterations", default=1)
     decimate_angle_limit = FloatProperty(name="Angle Limit", default=5)
@@ -538,10 +557,15 @@ class ExportCurrentPoseOperator(Operator):
     def poll(self, context):
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-        return (context.selected_objects and context.active_object and sUtils.isRoot(context.active_object) and
-                bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys() and
-                modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == context.active_object['model/name'] and
-                modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose')
+        return (
+            context.selected_objects
+            and context.active_object
+            and sUtils.isRoot(context.active_object)
+            and bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()
+            and modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name
+            == context.active_object['model/name']
+            and modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose'
+        )
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -562,15 +586,15 @@ class ExportCurrentPoseOperator(Operator):
             row.prop(self, "decimate_angle_limit")
         rd = bpy.context.scene.render
         # TODO delete me?
-        #image_settings = rd.image_settings
+        # image_settings = rd.image_settings
         row.label(text="Preview Properties:")
         row.label(text="Resolution:")
         row.prop(rd, "resolution_x", text="X")
         row.prop(rd, "resolution_y", text="Y")
         row.prop(rd, "resolution_percentage", text="")
         # TODO delete me?
-        #row.label(text="File Format:")
-        #row.template_image_settings(image_settings, color_management=False)
+        # row.label(text="File Format:")
+        # row.template_image_settings(image_settings, color_management=False)
 
     def check(self, context):
         return True
@@ -580,11 +604,9 @@ class ExportCurrentPoseOperator(Operator):
 
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-        selected_robot = modelsPosesColl[
-            bpy.data.images[activeModelPoseIndex].name]
+        selected_robot = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
 
-        objectlist = sUtils.getChildren(
-            root, selected_only=True, include_hidden=False)
+        objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
         sUtils.selectObjects([root] + objectlist, clear=True, active=0)
         models.loadPose(selected_robot.robot_name, selected_robot.label)
         parameter = self.decimate_ratio
@@ -592,8 +614,13 @@ class ExportCurrentPoseOperator(Operator):
             parameter = self.decimate_iteration
         elif self.decimate_type == 'DISSOLVE':
             parameter = self.decimate_angle_limit
-        exporter.bakeModel(objectlist, root['model/name'], selected_robot.label, decimate_type=self.decimate_type,
-                           decimate_parameter=parameter)
+        exporter.bakeModel(
+            objectlist,
+            root['model/name'],
+            selected_robot.label,
+            decimate_type=self.decimate_type,
+            decimate_parameter=parameter,
+        )
         sUtils.selectObjects([root] + objectlist, clear=True, active=0)
         bpy.ops.scene.reload_models_and_poses_operator()
         return {'FINISHED'}
@@ -601,19 +628,30 @@ class ExportCurrentPoseOperator(Operator):
 
 class ExportAllPosesOperator(Operator):
     """Bake the selected model"""
+
     bl_idname = "phobos.export_all_poses"
     bl_label = "Export All Poses"
     # TODO update bl options
     # bl_options = {'REGISTER', 'UNDO'}
-    decimate_type = EnumProperty(name="Decimate Type",
-                                 items=[('COLLAPSE', 'Collapse', 'COLLAPSE'), ('UNSUBDIV', 'Un-Subdivide', 'UNSUBDIV'), ('DISSOLVE', 'Planar', 'DISSOLVE')])
+    decimate_type = EnumProperty(
+        name="Decimate Type",
+        items=[
+            ('COLLAPSE', 'Collapse', 'COLLAPSE'),
+            ('UNSUBDIV', 'Un-Subdivide', 'UNSUBDIV'),
+            ('DISSOLVE', 'Planar', 'DISSOLVE'),
+        ],
+    )
     decimate_ratio = FloatProperty(name="Ratio", default=0.15)
     decimate_iteration = IntProperty(name="Iterations", default=1)
     decimate_angle_limit = FloatProperty(name="Angle Limit", default=5)
 
     @classmethod
     def poll(self, context):
-        return bpy.context.selected_objects and context.active_object and sUtils.isRoot(context.active_object)
+        return (
+            bpy.context.selected_objects
+            and context.active_object
+            and sUtils.isRoot(context.active_object)
+        )
 
     def invoke(self, context, event):
         wm = context.window_manager
@@ -634,23 +672,22 @@ class ExportAllPosesOperator(Operator):
             row.prop(self, "decimate_angle_limit")
         rd = bpy.context.scene.render
         # TODO delete me?
-        #image_settings = rd.image_settings
+        # image_settings = rd.image_settings
         row.label(text="Preview Properties:")
         row.label(text="Resolution:")
         row.prop(rd, "resolution_x", text="X")
         row.prop(rd, "resolution_y", text="Y")
         row.prop(rd, "resolution_percentage", text="")
         # TODO delete me?
-        #row.label(text="File Format:")
-        #row.template_image_settings(image_settings, color_management=False)
+        # row.label(text="File Format:")
+        # row.template_image_settings(image_settings, color_management=False)
 
     def check(self, context):
         return True
 
     def execute(self, context):
         root = sUtils.getRoot(context.selected_objects[0])
-        objectlist = sUtils.getChildren(
-            root, selected_only=True, include_hidden=False)
+        objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
         sUtils.selectObjects(objectlist)
         poses = models.getPoses(root['model/name'])
         i = 1
@@ -662,9 +699,14 @@ class ExportAllPosesOperator(Operator):
                 parameter = self.decimate_iteration
             elif self.decimate_type == 'DISSOLVE':
                 parameter = self.decimate_angle_limit
-            exporter.bakeModel(objectlist, root[
-                               'model/name'], pose, decimate_type=self.decimate_type, decimate_parameter=parameter)
-            display.setProgress(i/len(poses))
+            exporter.bakeModel(
+                objectlist,
+                root['model/name'],
+                pose,
+                decimate_type=self.decimate_type,
+                decimate_parameter=parameter,
+            )
+            display.setProgress(i / len(poses))
             i += 1
         sUtils.selectObjects([root] + objectlist, clear=True, active=0)
         bpy.ops.scene.reload_models_and_poses_operator()

@@ -58,9 +58,13 @@ def deriveEntity(root, outpath):
         bpy.ops.scene.reload_models_and_poses_operator()
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         for robot_model in modelsPosesColl:
-            if (root["model/name"] == robot_model.robot_name) and (root["entity/pose"] == robot_model.label):
+            if (root["model/name"] == robot_model.robot_name) and (
+                root["entity/pose"] == robot_model.label
+            ):
                 pass
-        entity['file'] = os.path.join(os.path.relpath(robot_model.path, outpath), root["name"] + ".smurf")
+        entity['file'] = os.path.join(
+            os.path.relpath(robot_model.path, outpath), root["name"] + ".smurf"
+        )
         """
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
             robots = yaml.load(f.read())
@@ -78,7 +82,9 @@ def deriveEntity(root, outpath):
         modelpath = os.path.join(outpath, root['model/name'], 'smurf')
         # TODO why the spacing between the paths?
         log("Scene paths: " + outpath + ' ' + modelpath, "DEBUG")
-        entity['file'] = os.path.join(os.path.relpath(modelpath, os.path.dirname(outpath)), root['model/name']+".smurf")
+        entity['file'] = os.path.join(
+            os.path.relpath(modelpath, os.path.dirname(outpath)), root['model/name'] + ".smurf"
+        )
     return entity
 
 
@@ -96,7 +102,10 @@ def deriveRefinedCollisionData(model):
     for linkname in model['links']:
         for elementname in model['links'][linkname]['collision']:
             element = model['links'][linkname]['collision'][elementname]
-            data = {key: element[key] for key in (a for a in element.keys() if a not in ['geometry', 'name', 'pose'])}
+            data = {
+                key: element[key]
+                for key in (a for a in element.keys() if a not in ['geometry', 'name', 'pose'])
+            }
             if data:
                 data['name'] = model['links'][linkname]['collision'][elementname]['name']
                 data['link'] = linkname
@@ -165,7 +174,7 @@ def sort_dict_list(dict_list, sort_key):
     sort_key_values = []
     for dictionary in dict_list:
         sort_key_values.append(dictionary[sort_key])
-    #FIXME: This is really complicated! Either there is an in-built function or dictionary['name'] would suffice
+    # FIXME: This is really complicated! Either there is an in-built function or dictionary['name'] would suffice
     for value in sort_urdf_elements(sort_key_values):
         for dictionary in dict_list:
             if dictionary[sort_key] == value:
@@ -190,31 +199,42 @@ def exportSmurf(model, path):
     # capsules = gatherCollisionCapsules(model)
     lodsettings = gatherLevelOfDetailSettings(model)
 
-    exportdata = {'state': False,  # model['state'] != {}, # TODO: handle state
-                  'materials': model['materials'] != {},
-                  'sensors': model['sensors'] != {},
-                  'motors': model['motors'] != {},
-                  'controllers': model['controllers'] != {},
-                  'collision': collisiondata != {},
-                  'visuals': lodsettings != {},
-                  'lights': model['lights'] != {},
-                  'submechanisms': model['submechanisms'] != []
-                  }
+    exportdata = {
+        'state': False,  # model['state'] != {}, # TODO: handle state
+        'materials': model['materials'] != {},
+        'sensors': model['sensors'] != {},
+        'motors': model['motors'] != {},
+        'controllers': model['controllers'] != {},
+        'collision': collisiondata != {},
+        'visuals': lodsettings != {},
+        'lights': model['lights'] != {},
+        'submechanisms': model['submechanisms'] != [],
+    }
 
     # create all filenames
     smurf_filename = model['name'] + ".smurf"
-    filenames = {'state': model['name'] + "_state.yml",
-                 'materials': model['name'] + "_materials.yml",
-                 'sensors': model['name'] + "_sensors.yml",
-                 'motors': model['name'] + "_motors.yml",
-                 'controllers': model['name'] + "_controllers.yml",
-                 'collision': model['name'] + "_collision.yml",
-                 'visuals': model['name'] + "_visuals.yml",
-                 'lights': model['name'] + "_lights.yml",
-                 'submechanisms': model['name'] + "_submechanisms.yml"
-                 }
-    fileorder = ['collision', 'visuals', 'materials', 'motors', 'sensors',
-                 'controllers', 'state', 'lights', 'submechanisms']
+    filenames = {
+        'state': model['name'] + "_state.yml",
+        'materials': model['name'] + "_materials.yml",
+        'sensors': model['name'] + "_sensors.yml",
+        'motors': model['name'] + "_motors.yml",
+        'controllers': model['name'] + "_controllers.yml",
+        'collision': model['name'] + "_collision.yml",
+        'visuals': model['name'] + "_visuals.yml",
+        'lights': model['name'] + "_lights.yml",
+        'submechanisms': model['name'] + "_submechanisms.yml",
+    }
+    fileorder = [
+        'collision',
+        'visuals',
+        'materials',
+        'motors',
+        'sensors',
+        'controllers',
+        'state',
+        'lights',
+        'submechanisms',
+    ]
     urdf_path = '../urdf/'
     urdf_filename = model['name'] + '.urdf'
 
@@ -236,7 +256,7 @@ def exportSmurf(model, path):
 
     customdatalist = []
     for text in bpy.data.texts:
-        if text.name.startswith(model['name']+'::'):
+        if text.name.startswith(model['name'] + '::'):
             dataname = text.name.split('::')[-1]
             customdatalist.append(dataname)
             # TODO use os.path?
@@ -249,8 +269,10 @@ def exportSmurf(model, path):
     # write model information
     log("Writing SMURF model to " + smurf_filename, "INFO")
     # CHECK are these filepaths failsafe in Windows?
-    modeldata = {"date": model["date"],
-                 "files": [urdf_path + urdf_filename] + [filenames[f] for f in fileorder if exportdata[f]]}
+    modeldata = {
+        "date": model["date"],
+        "files": [urdf_path + urdf_filename] + [filenames[f] for f in fileorder if exportdata[f]],
+    }
     # append custom data
     with open(os.path.join(path, smurf_filename), 'w') as op:
         op.write('# main SMURF file of model "' + model['name'] + '"\n')
@@ -278,9 +300,11 @@ def exportSmurf(model, path):
 
         controllerparams = {}
         if motordict['controller'] in model['controllers']:
-            controllerparams = {key: value for key, value in
-                                model['controllers'][motordict['controller']].items() if (
-                                    key not in ['name', 'target'])}
+            controllerparams = {
+                key: value
+                for key, value in model['controllers'][motordict['controller']].items()
+                if (key not in ['name', 'target'])
+            }
             motordict.update(controllerparams)
             del motordict['controller']
         else:
@@ -294,8 +318,12 @@ def exportSmurf(model, path):
                     motordict['minValue'] = joint['limits']['lower']
                     motordict['maxValue'] = joint['limits']['upper']
             except KeyError:
-                log("Missing data in motor {}! Motor might be incomplete.".format(
-                    motordict['name']), "WARNING")
+                log(
+                    "Missing data in motor {}! Motor might be incomplete.".format(
+                        motordict['name']
+                    ),
+                    "WARNING",
+                )
         # direct controllers are called generic_dc in mars
         elif motordict['type'] == 'direct':
             motordict['type'] = 'generic_dc'
@@ -303,8 +331,12 @@ def exportSmurf(model, path):
                 motordict['minValue'] = 0
                 motordict['maxValue'] = motordict["maxSpeed"]
             except KeyError:
-                log("Missing data in motor {}! Motor might be incomplete.".format(
-                    motordict['name']), "WARNING")
+                log(
+                    "Missing data in motor {}! Motor might be incomplete.".format(
+                        motordict['name']
+                    ),
+                    "WARNING",
+                )
 
     # TODO: implement everything but joints
     # write state (state information of all joints, sensor & motor activity etc.)
@@ -331,17 +363,25 @@ def exportSmurf(model, path):
             with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)
 
-                op.write(yaml.dump(sort_for_yaml_dump({data: list(model[data].values())}, data),
-                                   default_flow_style=False))
+                op.write(
+                    yaml.dump(
+                        sort_for_yaml_dump({data: list(model[data].values())}, data),
+                        default_flow_style=False,
+                    )
+                )
 
     # write additional collision information
     if exportdata['collision']:
         with open(os.path.join(path, filenames['collision']), 'w') as op:
             op.write('#collision data' + infostring)
             # TODO delete me?
-            #op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
-            op.write(yaml.dump({'collision': [collisiondata[key] for key in sorted(collisiondata.keys())]},
-                               default_flow_style=False))
+            # op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
+            op.write(
+                yaml.dump(
+                    {'collision': [collisiondata[key] for key in sorted(collisiondata.keys())]},
+                    default_flow_style=False,
+                )
+            )
 
     # write visual information (level of detail, ...)
     if exportdata['visuals']:
@@ -355,8 +395,10 @@ def exportSmurf(model, path):
             outstring = '#' + category + infostring
             for elementtype in annotationdict[category]:
                 outstring += elementtype + ':\n'
-                outstring += yaml.dump(annotationdict[category][elementtype],
-                                       default_flow_style=False) + "\n"
+                outstring += (
+                    yaml.dump(annotationdict[category][elementtype], default_flow_style=False)
+                    + "\n"
+                )
             with open(os.path.join(path, filenames[category]), 'w') as op:
                 op.write(outstring)
 
@@ -371,11 +413,13 @@ def exportSmurf(model, path):
     if model['submechanisms']:
         with open(os.path.join(path, filenames['submechanisms']), 'w') as op:
             op.write('#submechanisms' + infostring)
-            op.write(yaml.dump({'submechanisms': model['submechanisms']}))#, default_flow_style=False))
+            op.write(
+                yaml.dump({'submechanisms': model['submechanisms']})
+            )  # , default_flow_style=False))
 
     # TODO delete me?
     ## write custom yml files
-    #if bpy.data.window_managers[0].exportCustomData:
+    # if bpy.data.window_managers[0].exportCustomData:
     #    log("Exporting custom files to to " + path + "...", "INFO")
     #    for text in customtexts:
     #        with open(os.path.join(path, text.name), 'w') as op:
@@ -481,7 +525,6 @@ def exportSmurf(model, path):
 
 
 # registering import/export functions of types with Phobos
-entity_type_dict = {'smurf': {'export': exportSmurf,
-                              'derive': deriveEntity,
-                              'extensions': ('smurf',)}
-                    }
+entity_type_dict = {
+    'smurf': {'export': exportSmurf, 'derive': deriveEntity, 'extensions': ('smurf',)}
+}

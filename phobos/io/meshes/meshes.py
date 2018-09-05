@@ -36,6 +36,7 @@ from phobos.phoboslog import log
 
 def exportMesh(obj, path, meshtype):
     import phobos.utils.io as ioUtils
+
     # DOCU add some docstring
     objname = nUtils.getObjectName(obj)
     tmpobjname = obj.name
@@ -48,10 +49,15 @@ def exportMesh(obj, path, meshtype):
     if meshtype == 'obj':
         axis_forward = bpy.context.scene.phobosexportsettings.obj_axis_forward
         axis_up = bpy.context.scene.phobosexportsettings.obj_axis_up
-        bpy.ops.export_scene.obj(filepath=outpath, use_selection=True,
-                                 use_normals=True, use_materials=False,
-                                 use_mesh_modifiers=True,
-                                 axis_forward=axis_forward, axis_up=axis_up)
+        bpy.ops.export_scene.obj(
+            filepath=outpath,
+            use_selection=True,
+            use_normals=True,
+            use_materials=False,
+            use_mesh_modifiers=True,
+            axis_forward=axis_forward,
+            axis_up=axis_up,
+        )
     elif meshtype == 'stl':
         bpy.ops.export_mesh.stl(filepath=outpath, use_selection=True, use_mesh_modifiers=True)
     elif meshtype == 'dae':
@@ -150,13 +156,8 @@ def exportDae(obj, path):
 
 
 # registering mesh types with Phobos
-mesh_type_dict = {'obj': {'export': exportObj,
-                          'import': importObj,
-                          'extensions': ('obj',)},
-                  'stl': {'export': exportStl,
-                          'import': importStl,
-                          'extensions': ('stl',)},
-                  'dae': {'export': exportDae,
-                          'import': importDae,
-                          'extensions': ('dae',)}
-                  }
+mesh_type_dict = {
+    'obj': {'export': exportObj, 'import': importObj, 'extensions': ('obj',)},
+    'stl': {'export': exportStl, 'import': importStl, 'extensions': ('stl',)},
+    'dae': {'export': exportDae, 'import': importDae, 'extensions': ('dae',)},
+}

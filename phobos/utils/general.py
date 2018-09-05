@@ -201,7 +201,7 @@ def roundFloatsInDict(data, decimals):
     Returns:
         dict -- dictionary with rounded floats
     """
-    epsilon = 10**-decimals
+    epsilon = 10 ** -decimals
     if is_float(data):
         if isinstance(data, str):
             log("Skipping rounding of " + data + " due to its type 'str'", "WARNING")
@@ -230,12 +230,22 @@ def calculateSum(objects, numeric_prop):
         try:
             numsum += obj[numeric_prop]
         except KeyError:
-            log("{0} object {1} does not contain '{2}'".format(obj.phobostype, obj.name,
-                                                               numeric_prop), "WARNING")
+            log(
+                "{0} object {1} does not contain '{2}'".format(
+                    obj.phobostype, obj.name, numeric_prop
+                ),
+                "WARNING",
+            )
         except TypeError:
             import phobos.utils.naming as nUtils
-            log("Could not add this type to the sum: " + str(type(obj[numeric_prop])) + " @" +
-                nUtils.getObjectName(obj), 'WARNING')
+
+            log(
+                "Could not add this type to the sum: "
+                + str(type(obj[numeric_prop]))
+                + " @"
+                + nUtils.getObjectName(obj),
+                'WARNING',
+            )
     return numsum
 
 

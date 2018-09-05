@@ -37,6 +37,7 @@ def isGit(folder):
     """
     return os.path.exists(os.path.join(folder, '.git'))
 
+
 def cloneGit(name, url, destination):
     """Clones the git repository which is specified by its url into the folder
     with the specified name in the destination folder. If the url provides the
@@ -76,13 +77,18 @@ def cloneGit(name, url, destination):
 
     # clone git if not existing already
     try:
-        subprocess.check_output(['git', 'clone', url, name], cwd=destination, universal_newlines=True)
+        subprocess.check_output(
+            ['git', 'clone', url, name], cwd=destination, universal_newlines=True
+        )
         log("Cloned git into " + destination + ".", "INFO")
         return True
     except subprocess.CalledProcessError:
-        log("Problem cloning git repository. Destination is either not empty or remote is incorrect.",
-            "ERROR")
+        log(
+            "Problem cloning git repository. Destination is either not empty or remote is incorrect.",
+            "ERROR",
+        )
     return False
+
 
 def initGit(destination, filename=None, initialsave=False, url=None, readmetxt=''):
     """Creates a new Phobos git in the specified destination folder.
@@ -117,36 +123,32 @@ def initGit(destination, filename=None, initialsave=False, url=None, readmetxt='
     log('Initialising the new git...', 'INFO')
     # TODO add fully featured checks for the requirements and exceptions
     try:
-        subprocess.check_output(
-            ['git', 'init'],
-            cwd=destination, universal_newlines=True)
+        subprocess.check_output(['git', 'init'], cwd=destination, universal_newlines=True)
         if readmetxt != '':
             readmetxt = '# Initial commit'
-        with open(os.path.join(destination,
-                               'Readme.md'), 'w') as readme:
+        with open(os.path.join(destination, 'Readme.md'), 'w') as readme:
             readme.write(readmetxt)
-        with open(os.path.join(destination,
-                               '.gitignore'), 'w') as gitignore:
+        with open(os.path.join(destination, '.gitignore'), 'w') as gitignore:
             gitignore.write('*.blend1\n')
 
         # Add readme and gitignore
         subprocess.check_output(
-            ['git', 'add', 'Readme.md'],
-            cwd=destination, universal_newlines=True)
+            ['git', 'add', 'Readme.md'], cwd=destination, universal_newlines=True
+        )
         subprocess.check_output(
-            ['git', 'add', '.gitignore'],
-            cwd=destination, universal_newlines=True)
+            ['git', 'add', '.gitignore'], cwd=destination, universal_newlines=True
+        )
         subprocess.check_output(
-            ['git', 'commit', '-m', '"Initial commit"'],
-            cwd=destination, universal_newlines=True)
+            ['git', 'commit', '-m', '"Initial commit"'], cwd=destination, universal_newlines=True
+        )
 
         # TODO what if the origin repository is not empty?
         subprocess.check_output(
-            ['git', 'remote', 'add', 'origin', url],
-            cwd=destination, universal_newlines=True)
+            ['git', 'remote', 'add', 'origin', url], cwd=destination, universal_newlines=True
+        )
         subprocess.check_output(
-            ['git', 'push', '-u', 'origin', 'master'],
-            cwd=destination, universal_newlines=True)
+            ['git', 'push', '-u', 'origin', 'master'], cwd=destination, universal_newlines=True
+        )
     except subprocess.CalledProcessError as error:
         log('Could not initialise git folder: ' + str(error), 'ERROR')
         return False
@@ -155,8 +157,9 @@ def initGit(destination, filename=None, initialsave=False, url=None, readmetxt='
 
     # saving the initial folder state
     if initialsave and filename:
-        bpy.ops.wm.save_as_mainfile(filepath=os.path.join(destination,
-                                                          'blender', filename + '.blend'))
+        bpy.ops.wm.save_as_mainfile(
+            filepath=os.path.join(destination, 'blender', filename + '.blend')
+        )
         if not commit(destination):
             return False
     log('Git initialised successfully.', 'DEBUG')
@@ -184,8 +187,8 @@ def commit(destination, message='Automated commit', ignore=[]):
         if direc not in ignore:
             try:
                 subprocess.check_output(
-                    ['git', 'add', direc],
-                    cwd=destination, universal_newlines=True)
+                    ['git', 'add', direc], cwd=destination, universal_newlines=True
+                )
             except subprocess.CalledProcessError:
                 log('Could not add to git: ' + direc, 'ERROR')
                 return False
@@ -193,12 +196,11 @@ def commit(destination, message='Automated commit', ignore=[]):
     # Commit the changes
     try:
         subprocess.check_output(
-            ['git', 'commit', '-m',
-                '"{0}"'.format(message)],
-            cwd=destination, universal_newlines=True)
-        subprocess.check_output(
-            ['git', 'push', 'origin'],
-            cwd=destination, universal_newlines=True)
+            ['git', 'commit', '-m', '"{0}"'.format(message)],
+            cwd=destination,
+            universal_newlines=True,
+        )
+        subprocess.check_output(['git', 'push', 'origin'], cwd=destination, universal_newlines=True)
         log('Commit to ' + destination + ' successful.', 'DEBUG')
         return True
     except subprocess.CalledProcessError as error:
@@ -217,6 +219,7 @@ def makeGitFolders(destination):
 
     """
     from os.path import exists, join
+
     if not exists(join(destination, 'blender')):
         os.makedirs(join(destination, 'blender'))
 
@@ -235,10 +238,10 @@ def checkoutBranch(branch, workingdir, create=False, pushorigin=False):
         log("No branch specified.", "ERROR")
         return False
     try:
-        subprocess.check_output(['git', 'fetch'], cwd=workingdir,
-                                universal_newlines=True)
-        subprocess.check_output(['git', 'checkout', branch], cwd=workingdir,
-                                universal_newlines=True)
+        subprocess.check_output(['git', 'fetch'], cwd=workingdir, universal_newlines=True)
+        subprocess.check_output(
+            ['git', 'checkout', branch], cwd=workingdir, universal_newlines=True
+        )
         log("Checkout branch " + branch + " successful.", "INFO")
         return True
     except subprocess.CalledProcessError:
@@ -253,12 +256,14 @@ def createNewBranch(branch, workingdir, pushorigin=False):
         log("No branch specified.", "ERROR")
         return False
     try:
-        subprocess.check_output(['git', 'checkout', '-b', branch], cwd=workingdir, universal_newlines=True)
+        subprocess.check_output(
+            ['git', 'checkout', '-b', branch], cwd=workingdir, universal_newlines=True
+        )
         log("Created branch " + branch + ".", "INFO")
         if pushorigin:
             subprocess.check_output(
-                ['git', 'push', '-u', 'origin', branch],
-                cwd=workingdir, universal_newlines=True)
+                ['git', 'push', '-u', 'origin', branch], cwd=workingdir, universal_newlines=True
+            )
         return True
     except subprocess.CalledProcessError as e:
         log("Could not create branch " + branch + ": " + str(e), "ERROR")
@@ -271,7 +276,9 @@ def checkoutCommit(commit, workingdir):
         log("No commit specified.", "ERROR")
         return False
     try:
-        subprocess.check_output(['git', 'checkout', commit], cwd=workingdir, universal_newlines=True)
+        subprocess.check_output(
+            ['git', 'checkout', commit], cwd=workingdir, universal_newlines=True
+        )
         log("Checked out commit " + commit + ".", "INFO")
         return True
     except subprocess.CalledProcessError:
@@ -289,10 +296,13 @@ def getGitBranch():
 
     """
     try:
-        output = str(subprocess.check_output(['git', 'branch'], cwd=bpy.path.abspath('//'),
-                                             universal_newlines=True))
+        output = str(
+            subprocess.check_output(
+                ['git', 'branch'], cwd=bpy.path.abspath('//'), universal_newlines=True
+            )
+        )
         branch = [a for a in output.split('\n') if a.find('*') >= 0][0]
-        return branch[branch.find('*')+2:]
+        return branch[branch.find('*') + 2 :]
     except subprocess.CalledProcessError:
         return None
     except FileNotFoundError:
@@ -315,8 +325,9 @@ def getGitRemotes(category='', folder=None):
         if not folder:
             folder = bpy.path.abspath('//')
         print('Checking git folder: ', folder)
-        output = str(subprocess.check_output(['git', 'remote', '-v'], cwd=folder,
-                                             universal_newlines=True))
+        output = str(
+            subprocess.check_output(['git', 'remote', '-v'], cwd=folder, universal_newlines=True)
+        )
         remotes = {'fetch': {}, 'push': {}}
         for line in [a for a in output.split('\n') if a != '']:
             try:
@@ -345,11 +356,11 @@ def getPushRemotesList(self, context, folder=None):
     remotes = getGitRemotes('push', folder=folder)
     remoteslist = [remotes[a] for a in remotes]
     print(remoteslist)
-    return [(url,)*3 for url in remoteslist]
+    return [(url,) * 3 for url in remoteslist]
 
 
 def getFetchRemotesList(self, context):
     remotes = getGitRemotes('fetch')
     remoteslist = [remotes[a] for a in remotes]
     print(remoteslist)
-    return [(url,)*3 for url in remoteslist]
+    return [(url,) * 3 for url in remoteslist]

@@ -65,21 +65,36 @@ def writeURDFGeometry(output, element, filepath):
         if geometry['type'] == 'box':
             output.append(xmlline(5, 'box', ['size'], [l2str(geometry['size'])]))
         elif geometry['type'] == "cylinder":
-            output.append(xmlline(5, 'cylinder', ['radius', 'length'],
-                                  [geometry['radius'], geometry['length']]))
+            output.append(
+                xmlline(
+                    5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]
+                )
+            )
         elif geometry['type'] == "sphere":
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
             meshpath = ioUtils.getOutputMeshpath(path.dirname(filepath))
-            output.append(xmlline(5, 'mesh', ['filename', 'scale'],
-                                  [path.join(path.relpath(meshpath, filepath),
-                                             geometry['filename'] + '.'
-                                             + ioUtils.getOutputMeshtype()),
-                                   l2str(geometry['scale'])]))
+            output.append(
+                xmlline(
+                    5,
+                    'mesh',
+                    ['filename', 'scale'],
+                    [
+                        path.join(
+                            path.relpath(meshpath, filepath),
+                            geometry['filename'] + '.' + ioUtils.getOutputMeshtype(),
+                        ),
+                        l2str(geometry['scale']),
+                    ],
+                )
+            )
         elif geometry['type'] == 'capsule':
             # FIXME: real capsules here!
-            output.append(xmlline(5, 'cylinder', ['radius', 'length'],
-                                  [geometry['radius'], geometry['length']]))
+            output.append(
+                xmlline(
+                    5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]
+                )
+            )
         else:
             raise TypeError("Unknown geometry type")
         output.append(indent * 4 + '</geometry>\n')
@@ -99,7 +114,7 @@ def exportUrdf(model, outpath):
 
     """
     log("Export URDF to " + outpath, "INFO")
-    filename = path.join(outpath, model['name']+'.urdf')
+    filename = path.join(outpath, model['name'] + '.urdf')
 
     stored_element_order = None
     # CHECK test Windows path consistency
@@ -125,12 +140,26 @@ def exportUrdf(model, outpath):
             if 'mass' in link['inertial'] and 'inertia' in link['inertial']:
                 output.append(indent * 3 + '<inertial>\n')
                 if 'pose' in link['inertial']:
-                    output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
-                                          [l2str(link['inertial']['pose']['translation']),
-                                           l2str(link['inertial']['pose']['rotation_euler'])]))
+                    output.append(
+                        xmlline(
+                            4,
+                            'origin',
+                            ['xyz', 'rpy'],
+                            [
+                                l2str(link['inertial']['pose']['translation']),
+                                l2str(link['inertial']['pose']['rotation_euler']),
+                            ],
+                        )
+                    )
                 output.append(xmlline(4, 'mass', ['value'], [str(link['inertial']['mass'])]))
-                output.append(xmlline(4, 'inertia', ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'],
-                                      [str(i) for i in link['inertial']['inertia']]))
+                output.append(
+                    xmlline(
+                        4,
+                        'inertia',
+                        ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz'],
+                        [str(i) for i in link['inertial']['inertia']],
+                    )
+                )
                 output.append(indent * 3 + '</inertial>\n')
             # visual object
             if link['visual']:
@@ -147,34 +176,55 @@ def exportUrdf(model, outpath):
                     if v in link['visual']:
                         vis = link['visual'][v]
                         output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
-                        output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
-                                              [l2str(vis['pose']['translation']),
-                                               l2str(vis['pose']['rotation_euler'])]))
+                        output.append(
+                            xmlline(
+                                4,
+                                'origin',
+                                ['xyz', 'rpy'],
+                                [
+                                    l2str(vis['pose']['translation']),
+                                    l2str(vis['pose']['rotation_euler']),
+                                ],
+                            )
+                        )
                         writeURDFGeometry(output, vis, outpath)
                         if 'material' in vis:
                             # FIXME: change back to 1 when implemented in urdfloader
                             if model['materials'][vis['material']]['users'] == 0:
                                 mat = model['materials'][vis['material']]
-                                output.append(indent * 4 + '<material name="'
-                                              + mat['name'] + '">\n')
+                                output.append(
+                                    indent * 4 + '<material name="' + mat['name'] + '">\n'
+                                )
                                 color = mat['diffuseColor']
-                                output.append(indent * 5 + '<color rgba="'
-                                              + l2str([color[num] for num in ['r', 'g', 'b']])
-                                              + ' ' + str(mat["transparency"]) + '"/>\n')
+                                output.append(
+                                    indent * 5
+                                    + '<color rgba="'
+                                    + l2str([color[num] for num in ['r', 'g', 'b']])
+                                    + ' '
+                                    + str(mat["transparency"])
+                                    + '"/>\n'
+                                )
                                 if 'diffuseTexture' in mat:
-                                    output.append(indent * 5 + '<texture filename="'
-                                                  + mat['diffuseTexture'] + '"/>\n')
+                                    output.append(
+                                        indent * 5
+                                        + '<texture filename="'
+                                        + mat['diffuseTexture']
+                                        + '"/>\n'
+                                    )
                                 output.append(indent * 4 + '</material>\n')
                             else:
-                                output.append(indent * 4 + '<material name="'
-                                              + vis["material"] + '"/>\n')
+                                output.append(
+                                    indent * 4 + '<material name="' + vis["material"] + '"/>\n'
+                                )
                         output.append(indent * 3 + '</visual>\n')
             # collision object
             if link['collision']:
                 if stored_element_order is None:
                     sorted_collision_keys = sorted(link['collision'])
                 else:
-                    sorted_collision_keys = stored_element_order['viscol'][link['name']]['collision']
+                    sorted_collision_keys = stored_element_order['viscol'][link['name']][
+                        'collision'
+                    ]
                     new_keys = []
                     for col_key in link['collision']:
                         if col_key not in sorted_collision_keys:
@@ -184,9 +234,17 @@ def exportUrdf(model, outpath):
                     if c in link['collision']:
                         col = link['collision'][c]
                         output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
-                        output.append(xmlline(4, 'origin', ['xyz', 'rpy'],
-                                              [l2str(col['pose']['translation']),
-                                               l2str(col['pose']['rotation_euler'])]))
+                        output.append(
+                            xmlline(
+                                4,
+                                'origin',
+                                ['xyz', 'rpy'],
+                                [
+                                    l2str(col['pose']['translation']),
+                                    l2str(col['pose']['rotation_euler']),
+                                ],
+                            )
+                        )
                         writeURDFGeometry(output, col, outpath)
                         output.append(indent * 3 + '</collision>\n')
             output.append(indent * 2 + '</link>\n\n')
@@ -204,12 +262,18 @@ def exportUrdf(model, outpath):
     for j in sorted_joint_keys:
         if j in model['joints']:
             joint = model['joints'][j]
-            output.append(indent * 2 + '<joint name="' + joint['name']
-                          + '" type="' + joint["type"] + '">\n')
+            output.append(
+                indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n'
+            )
             child = model['links'][joint["child"]]
-            output.append(xmlline(3, 'origin', ['xyz', 'rpy'],
-                                  [l2str(child['pose']['translation']),
-                                   l2str(child['pose']['rotation_euler'])]))
+            output.append(
+                xmlline(
+                    3,
+                    'origin',
+                    ['xyz', 'rpy'],
+                    [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])],
+                )
+            )
             output.append(indent * 3 + '<parent link="' + joint["parent"] + '"/>\n')
             output.append(indent * 3 + '<child link="' + joint["child"] + '"/>\n')
             if 'axis' in joint:
@@ -217,18 +281,31 @@ def exportUrdf(model, outpath):
             if 'limits' in joint:
                 for limit_value in ['effort', 'velocity']:
                     if limit_value not in joint['limits']:
-                        log("joint '" + joint['name'] + "' does not specify a maximum "
-                            + limit_value + "!", "WARNING")
+                        log(
+                            "joint '"
+                            + joint['name']
+                            + "' does not specify a maximum "
+                            + limit_value
+                            + "!",
+                            "WARNING",
+                        )
                         missing_values = True
                 used_limits = []
                 for limit in ['lower', 'upper', 'effort', 'velocity']:
                     if limit in joint['limits']:
                         used_limits.append(limit)
                 output.append(
-                    xmlline(3, 'limit', used_limits, [joint['limits'][p] for p in used_limits]))
+                    xmlline(3, 'limit', used_limits, [joint['limits'][p] for p in used_limits])
+                )
             elif joint['type'] in ['revolute', 'prismatic']:
-                log("joint '" + joint['name'] + "' does not specify limits, though its type is "
-                    + joint['type'] + "!", "WARNING")
+                log(
+                    "joint '"
+                    + joint['name']
+                    + "' does not specify limits, though its type is "
+                    + joint['type']
+                    + "!",
+                    "WARNING",
+                )
                 missing_values = True
             output.append(indent * 2 + '</joint>\n\n')
     # export material information
@@ -249,11 +326,26 @@ def exportUrdf(model, outpath):
             if model['materials'][m]['users'] > 0:
                 output.append(indent * 2 + '<material name="' + m + '">\n')
                 color = model['materials'][m]['diffuseColor']
-                transparency = model['materials'][m]['transparency'] if 'transparency' in model['materials'][m] else 0.0
-                output.append(indent * 3 + '<color rgba="' + l2str([color[num]
-                            for num in ['r', 'g', 'b']]) + ' ' + str(1.0 - transparency) + '"/>\n')
+                transparency = (
+                    model['materials'][m]['transparency']
+                    if 'transparency' in model['materials'][m]
+                    else 0.0
+                )
+                output.append(
+                    indent * 3
+                    + '<color rgba="'
+                    + l2str([color[num] for num in ['r', 'g', 'b']])
+                    + ' '
+                    + str(1.0 - transparency)
+                    + '"/>\n'
+                )
                 if 'diffuseTexture' in model['materials'][m]:
-                    output.append(indent * 3 + '<texture filename="' + model['materials'][m]['diffuseTexture'] + '"/>\n')
+                    output.append(
+                        indent * 3
+                        + '<texture filename="'
+                        + model['materials'][m]['diffuseTexture']
+                        + '"/>\n'
+                    )
                 output.append(indent * 2 + '</material>\n\n')
     # finish the export
     output.append(indent + '</robot>\n')
@@ -275,10 +367,10 @@ def store_element_order(element_order, path):
 
     """
     # TODO delete me?
-    #element_order = {}
-    #link_order = []
-    #viscol_order = {}
-    #for link_key in model['links']:
+    # element_order = {}
+    # link_order = []
+    # viscol_order = {}
+    # for link_key in model['links']:
     #    link = model['links'][link_key]
     #    link_element_order = {}
     #    link_order.append(link['name'])
@@ -291,12 +383,12 @@ def store_element_order(element_order, path):
     #        collision_order.append(link['collision'][collision_key]['name'])
     #    link_element_order['collision'] = collision_order
     #    viscol_order[link['name']] = link_element_order
-    #element_order['viscol'] = viscol_order
-    #element_order['links'] = link_order
-    #joint_order = []
-    #for joint_key in model['joints']:
+    # element_order['viscol'] = viscol_order
+    # element_order['links'] = link_order
+    # joint_order = []
+    # for joint_key in model['joints']:
     #    joint_order.append(model['joints'][joint_key]['name'])
-    #element_order['joints'] = joint_order
+    # element_order['joints'] = joint_order
 
     stream = open(path + '_element_order_debug.yml', 'w')
     stream.write(yaml.dump(element_order))
@@ -325,12 +417,12 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
     if len(rotation) == 3:
         rot = mathutils.Euler(rotation).to_quaternion()
         # TODO delete me?
-        #print(rotation)
+        # print(rotation)
     else:
         rot = mathutils.Quaternion(rotation)
 
     # TODO delete me?
-    #if angle_offset is not 0.0:
+    # if angle_offset is not 0.0:
     #    axis_vec = mathutils.Vector(axis)
 
     #    offset_matrix = mathutils.Matrix.Rotation(angle_offset, 4, axis_vec) #get_axis_rotation_matrix(axis, angle_offset)
@@ -346,21 +438,23 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
     rotation_matrix = mathutils.Quaternion(rot).to_matrix().to_4x4()
     translation = mathutils.Matrix.Translation(position)
     # TODO delete me?
-    #print()
-    #print("translation:", translation)
-    #print("neg_pivot_translation:", neg_pivot_translation)
-    #print("rotation_matrix:", rotation_matrix)
-    #print("pivot_translation", pivot_translation)
-    #print()
-    #transformation_matrix = translation * neg_pivot_translation * rotation_matrix * pivot_translation
+    # print()
+    # print("translation:", translation)
+    # print("neg_pivot_translation:", neg_pivot_translation)
+    # print("rotation_matrix:", rotation_matrix)
+    # print("pivot_translation", pivot_translation)
+    # print()
+    # transformation_matrix = translation * neg_pivot_translation * rotation_matrix * pivot_translation
     transformation_matrix = translation * rotation_matrix * neg_pivot_translation
 
     rm = transformation_matrix
-    #TODO: this is not good
-    matrix = [[rm[0][0], rm[0][1], rm[0][2], rm[0][3]],
-              [rm[1][0], rm[1][1], rm[1][2], rm[1][3]],
-              [rm[2][0], rm[2][1], rm[2][2], rm[2][3]],
-              [rm[3][0], rm[3][1], rm[3][2], rm[3][3]]]
+    # TODO: this is not good
+    matrix = [
+        [rm[0][0], rm[0][1], rm[0][2], rm[0][3]],
+        [rm[1][0], rm[1][1], rm[1][2], rm[1][3]],
+        [rm[2][0], rm[2][1], rm[2][2], rm[2][3]],
+        [rm[3][0], rm[3][1], rm[3][2], rm[3][3]],
+    ]
     pose_dict['matrix'] = matrix
     loc, rot, sca = transformation_matrix.decompose()
     pose_dict['translation'] = [loc.x, loc.y, loc.z]
@@ -369,24 +463,24 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
     pose_dict['rotation_euler'] = [euler.x, euler.y, euler.z]
 
     # TODO delete me?
-    #translation = [px, py, pz]
-    #quaternion = mathutils.Quaternion([rw, rx, ry, rz])
-    #euler = quaternion.to_euler()
+    # translation = [px, py, pz]
+    # quaternion = mathutils.Quaternion([rw, rx, ry, rz])
+    # euler = quaternion.to_euler()
     ##print(euler)
-    #pose_dict['translation'] = translation
+    # pose_dict['translation'] = translation
     ##pose_dict['rotation_quaternion'] = [rw, rx, ry, rz]
-    #pose_dict['rotation_euler'] = [euler.x, euler.y, euler.z]
-    #rm = quaternion.to_matrix()
-    #matrix = [[rm[0][0], rm[0][1], rm[0][2], px],
+    # pose_dict['rotation_euler'] = [euler.x, euler.y, euler.z]
+    # rm = quaternion.to_matrix()
+    # matrix = [[rm[0][0], rm[0][1], rm[0][2], px],
     #          [rm[1][0], rm[1][1], rm[1][2], py],
     #          [rm[2][0], rm[2][1], rm[2][2], pz],
     #          [0.0,      0.0,      0.0,      1.0]]
-   #
-   # pose_dict['matrix'] = matrix
+    #
+    # pose_dict['matrix'] = matrix
 
-    #print()
-    #print('pose_dict:', pose_dict)
-    #print()
+    # print()
+    # print('pose_dict:', pose_dict)
+    # print()
 
     return pose_dict
 
@@ -426,21 +520,33 @@ def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
         print("\n### WARNING: Missing geometry information in", link_dict['name'], ".")
     if no_visual_geo:
         # TODO change to log?
-        print('Affected visual elements are:', no_visual_geo, '.\n\
-                Trying to get missing information from collision elements.')
+        print(
+            'Affected visual elements are:',
+            no_visual_geo,
+            '.\n\
+                Trying to get missing information from collision elements.',
+        )
         for visual in no_visual_geo:
             try:
-                link_dict['visual'][visual]['geometry'] = link_dict['collision']['collision' + no_visual_geo[len('visual'):]]['geometry']
+                link_dict['visual'][visual]['geometry'] = link_dict['collision'][
+                    'collision' + no_visual_geo[len('visual') :]
+                ]['geometry']
             except:
                 # TODO: print something or handle it?
                 pass
     elif no_collision_geo:
         # TODO change to log?
-        print('Affected collision elements are:', no_visual_geo, '.\n\
-                Trying to get missing information from visual elements.')
+        print(
+            'Affected collision elements are:',
+            no_visual_geo,
+            '.\n\
+                Trying to get missing information from visual elements.',
+        )
         for collision in no_collision_geo:
             try:
-                link_dict['collision'][collision]['geometry'] = link_dict['visual']['visual' + no_collision_geo[len('collision'):]]['geometry']
+                link_dict['collision'][collision]['geometry'] = link_dict['visual'][
+                    'visual' + no_collision_geo[len('collision') :]
+                ]['geometry']
             except:
                 # TODO: print something or handle it?
                 pass
@@ -542,8 +648,12 @@ def importUrdf(filepath):
             childlink = model['links'][newjoint['child']]
             childlink['parent'] = newjoint['parent']
             parentlink['children'].append(newjoint['child'])
-            log("   ... and connected parent link {} to {}.".format(
-                parentlink['name'], childlink['name']), 'DEBUG')
+            log(
+                "   ... and connected parent link {} to {}.".format(
+                    parentlink['name'], childlink['name']
+                ),
+                'DEBUG',
+            )
     model['joints'] = joints
 
     # find any links that still have no pose (most likely because they had no parent)
@@ -615,8 +725,9 @@ def parseLink(link, urdffilepath):
                 continue
 
             # gather geometry information for visual/collision
-            elementdict['geometry'] = {a: gUtils.parse_text(geometry[0].attrib[a]) for a in
-                                       geometry[0].attrib}
+            elementdict['geometry'] = {
+                a: gUtils.parse_text(geometry[0].attrib[a]) for a in geometry[0].attrib
+            }
             elementdict['geometry']['type'] = geometry[0].tag
 
             # gather mesh information
@@ -624,8 +735,13 @@ def parseLink(link, urdffilepath):
                 # interpret filename
                 filename = geometry[0].attrib['filename']
                 filepath = path.normpath(path.join(path.dirname(urdffilepath), filename))
-                log("     Filepath for element " + elementname + ': '
-                    + path.relpath(filepath, start=urdffilepath), 'DEBUG')
+                log(
+                    "     Filepath for element "
+                    + elementname
+                    + ': '
+                    + path.relpath(filepath, start=urdffilepath),
+                    'DEBUG',
+                )
 
                 # Remove 'urdf/package://{package_name}' to workaround the lack of rospack here,
                 # assuming the urdf file is in the 'urdf' folder and meshes are in the 'meshes'
@@ -637,7 +753,8 @@ def parseLink(link, urdffilepath):
                 # read scale
                 if 'scale' in geometry[0].attrib:
                     elementdict['geometry']['scale'] = gUtils.parse_text(
-                        geometry[0].attrib['scale'])
+                        geometry[0].attrib['scale']
+                    )
                 else:
                     elementdict['geometry']['scale'] = [1.0, 1.0, 1.0]
             newlink[objtype][elementname] = elementdict
@@ -666,7 +783,9 @@ def parseInertial(link_xml):
             inertial_dict['mass'] = float(mass.attrib['value'])
         inertia = inertial_data.find('inertia')
         if inertia is not None:
-            inertial_dict['inertia'] = [float(inertia.attrib[a]) for a in sorted(inertia.attrib.keys())]
+            inertial_dict['inertia'] = [
+                float(inertia.attrib[a]) for a in sorted(inertia.attrib.keys())
+            ]
         inertial_dict['name'] = 'inertial_' + link_xml.attrib['name']
         return inertial_dict
     else:
@@ -694,7 +813,6 @@ def parseJoint(joint):
 
 
 # registering export functions of types with Phobos
-entity_type_dict = {'urdf': {'export': exportUrdf,
-                             'import': importUrdf,
-                             'extensions': ('urdf', 'xml')}
-                    }
+entity_type_dict = {
+    'urdf': {'export': exportUrdf, 'import': importUrdf, 'extensions': ('urdf', 'xml')}
+}

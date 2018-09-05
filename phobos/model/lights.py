@@ -35,9 +35,7 @@ def addLight(light_dict):
     position = light_dict['pose']['translation']
     rotation = light_dict['pose']['rotation_euler']
 
-    bpy.ops.object.lamp_add(type=light_type,
-                            location=position,
-                            rotation=rotation)
+    bpy.ops.object.lamp_add(type=light_type, location=position, rotation=rotation)
     light = bpy.context.active_object
     if 'parent' in light_dict:
         eUtils.parentObjectsTo(light, bpy.data.objects[light_dict['parent']])
@@ -57,7 +55,7 @@ def addLight(light_dict):
         light_data.spot_size = light_dict['angle']
 
     # TODO delete me?
-    #if light_dict['attenuation']['constant'] > 0:
+    # if light_dict['attenuation']['constant'] > 0:
     light_data.energy = light_dict['attenuation']['constant']
     falloff = 'CONSTANT'
     if light_dict['attenuation']['linear'] > 0:
@@ -79,7 +77,7 @@ def addLight(light_dict):
 
 
 # TODO move operator to other operators and give it a dev branch
-#class AddLightOperator(bpy.types.Operator):
+# class AddLightOperator(bpy.types.Operator):
 #    bl_idname = "phobos.add_light"
 #    bl_label = "Add a light"
 #    bl_options = {'REGISTER', 'UNDO'}

@@ -57,6 +57,7 @@ def getMechanismListForEnumProperty(self, context):
 def compileMechanismList():
     from bpy.types import WindowManager
     from bpy.props import EnumProperty
+
     # DOCU missing some docstring
 
     global mechanismpreviewcollection
@@ -80,26 +81,31 @@ def compileMechanismList():
         imagepath = os.path.join(imagefolderpath, mechanism + '.png')
         if not (os.path.exists(imagepath) and os.path.isfile(imagepath)):
             log("No preview found, using default.", 'DEBUG')
-            enum_items.append((mechanism, mechanism + ' [{0}] '.format(size),
-                               "", defaultpreview.icon_id, i))
+            enum_items.append(
+                (mechanism, mechanism + ' [{0}] '.format(size), "", defaultpreview.icon_id, i)
+            )
         else:
             log("Adding mechanism preview: " + imagepath, 'DEBUG')
             preview = mechanismpreviewcollection.load(mechanism, imagepath, 'IMAGE')
-            enum_items.append((mechanism, mechanism + '[ {0}]'.format(size),
-                               "", preview.icon_id, i))
+            enum_items.append(
+                (mechanism, mechanism + '[ {0}]'.format(size), "", preview.icon_id, i)
+            )
         i += 1
     mechanismpreviewcollection.enum_items = enum_items
 
     # reregister the enumproperty to ensure new items are displayed
-    WindowManager.mechanismpreview = EnumProperty(items=getMechanismListForEnumProperty,
-                                                  name='Mechanism')
+    WindowManager.mechanismpreview = EnumProperty(
+        items=getMechanismListForEnumProperty, name='Mechanism'
+    )
 
 
 def register():
     from bpy.types import WindowManager
     from bpy.props import EnumProperty
-    WindowManager.mechanismpreview = EnumProperty(items=getMechanismListForEnumProperty,
-                                                  name='Mechanism')
+
+    WindowManager.mechanismpreview = EnumProperty(
+        items=getMechanismListForEnumProperty, name='Mechanism'
+    )
     compileMechanismList()
 
 

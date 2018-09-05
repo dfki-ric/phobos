@@ -47,7 +47,7 @@ def getUniqueName(newname, names):
     i = 0
     while newname in names:
         numberstr = '.{0:03d}'.format(i)
-        newname = newname[:63 - len(numberstr)] + numberstr
+        newname = newname[: 63 - len(numberstr)] + numberstr
         i += 1
     return newname
 

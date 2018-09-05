@@ -43,8 +43,12 @@ def exportSubmechanisms(model, path):
         if 'submechanism/freeloader' in root:
             linkobjs += root['submechanism/freeloader']
 
-        objects = [o for link in linkobjs for o in link.children if o.phobostype in
-                   ['visual', 'collision', 'inertial']] + linkobjs
+        objects = [
+            o
+            for link in linkobjs
+            for o in link.children
+            if o.phobostype in ['visual', 'collision', 'inertial']
+        ] + linkobjs
         model = deriveModelDictionary(root, root['submechanism/name'], objects)
         jointname = nUtils.getObjectName(root, 'joint')
         if jointname in model['joints']:
@@ -54,7 +58,4 @@ def exportSubmechanisms(model, path):
 
 
 # registering export functions of types with Phobos
-entity_type_dict = {'submechanisms': {'export': exportSubmechanisms,
-                                      'extensions': ('urdf',)
-                                      }
-                    }
+entity_type_dict = {'submechanisms': {'export': exportSubmechanisms, 'extensions': ('urdf',)}}

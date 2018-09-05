@@ -32,4 +32,3 @@ for b in bonedict:
     if bonedict[b]:
         select(bonedict[b], clear=True, active=0)
         bpy.ops.object.join()
-

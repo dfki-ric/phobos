@@ -42,15 +42,14 @@ from phobos.phoboslog import log
 
 class SelectObjectsByPhobosType(Operator):
     """Select objects in the scene by phobostype"""
+
     bl_idname = "phobos.select_objects_by_phobostype"
     bl_label = "Select by Phobostype"
     bl_options = {'REGISTER', 'UNDO'}
 
     seltype = EnumProperty(
-        items=defs.phobostypes,
-        name="Phobostype",
-        default="link",
-        description="Phobos object type")
+        items=defs.phobostypes, name="Phobostype", default="link", description="Phobos object type"
+    )
 
     def execute(self, context):
         sUtils.selectObjects(sUtils.getObjectsByPhobostypes([self.seltype]), True)
@@ -66,14 +65,14 @@ class SelectObjectsByPhobosType(Operator):
 
 class SelectObjectsByName(Operator):
     """Select objects in the scene by their name"""
+
     bl_idname = "phobos.select_objects_by_name"
     bl_label = "Select by Name"
     bl_options = {'REGISTER', 'UNDO'}
 
     namefragment = StringProperty(
-        name="Name Contains",
-        default='',
-        description="Part of a Phobos object name")
+        name="Name Contains", default='', description="Part of a Phobos object name"
+    )
 
     def execute(self, context):
         sUtils.selectByName(self.namefragment)
@@ -82,14 +81,14 @@ class SelectObjectsByName(Operator):
 
 class GotoObjectOperator(Operator):
     """Selection operator for buttons to jump to the specified object"""
+
     bl_idname = "phobos.goto_object"
     bl_label = "Goto Object"
     bl_options = {'UNDO', 'INTERNAL'}
 
     objectname = StringProperty(
-        name="Object Name",
-        default='',
-        description="The name of the object to jump to")
+        name="Object Name", default='', description="The name of the object to jump to"
+    )
 
     @classmethod
     def poll(cls, context):
@@ -119,6 +118,7 @@ class GotoObjectOperator(Operator):
 
 class SelectRootOperator(Operator):
     """Select root object(s) of currently selected object(s)"""
+
     bl_idname = "phobos.select_root"
     bl_label = "Select Roots"
     bl_options = {'REGISTER', 'UNDO'}
@@ -150,14 +150,14 @@ class SelectRootOperator(Operator):
 
 class SelectModelOperator(Operator):
     """Select all objects of model(s) containing the currently selected object(s)"""
+
     bl_idname = "phobos.select_model"
     bl_label = "Select Model"
     bl_options = {'REGISTER', 'UNDO'}
 
     modelname = StringProperty(
-        name="Model Name",
-        default="",
-        description="Name of the model to be selected")
+        name="Model Name", default="", description="Name of the model to be selected"
+    )
 
     def execute(self, context):
         selection = []

@@ -54,7 +54,8 @@ phoboshome = os.path.dirname(os.path.abspath(__file__))
 
 # load the phobossystem as module from file
 module_spec = importlib.util.spec_from_file_location(
-    'phobossystem', path.join(phoboshome, 'phobos/phobossystem.py'))
+    'phobossystem', path.join(phoboshome, 'phobos/phobossystem.py')
+)
 phobossystem = importlib.util.module_from_spec(module_spec)
 module_spec.loader.exec_module(phobossystem)
 addonpath = path.join(phobossystem.getScriptsPath(), 'addons', 'phobos')
@@ -89,8 +90,10 @@ if __name__ == '__main__':
         shutil.rmtree(addonpath)  # always clean install folder
     copied_files = updateFolderContents(os.path.join(phoboshome, 'phobos'), addonpath)
     if not copied_files:
-        print('Something went wrong with copying the addon files to your Blender installation.\n',
-              'Aborting installation.')
+        print(
+            'Something went wrong with copying the addon files to your Blender installation.\n',
+            'Aborting installation.',
+        )
         sys.exit(0)
 
     # install startup blend
@@ -99,7 +102,8 @@ if __name__ == '__main__':
 
     # install config files
     copied_files = updateFolderContents(
-        os.path.join(phoboshome, 'config'), phobossystem.getConfigPath())
+        os.path.join(phoboshome, 'config'), phobossystem.getConfigPath()
+    )
     if not copied_files:
         print('Something went wrong with copying config files.')
     os.remove(os.path.join(phobossystem.getConfigPath(), 'startup.blend'))
@@ -124,11 +128,15 @@ if __name__ == '__main__':
         try:
             import yaml
         except ImportError:
-            print('YAML installation not found. Please install it first:' +
-                  '\n\n' +
-                  '  pip3 install PyYaml\n\n')
-            print('Please make sure you followed the instructions on ' +
-                  'https://github.com/dfki-ric/phobos/wiki/Installation')
+            print(
+                'YAML installation not found. Please install it first:'
+                + '\n\n'
+                + '  pip3 install PyYaml\n\n'
+            )
+            print(
+                'Please make sure you followed the instructions on '
+                + 'https://github.com/dfki-ric/phobos/wiki/Installation'
+            )
             print('YAML configuration aborted. Installation incomplete.')
             sys.exit(0)
         # OPT here we could add additional requirement checks
@@ -141,8 +149,10 @@ if __name__ == '__main__':
             distpath = site.getsitepackages()[0]
             distconffile.write(path.normpath(distpath))
 
-    shutil.copy2(path.join(phoboshome, 'python_dist_packages.conf'),
-                 os.path.join(addonpath, 'python_dist_packages.conf'))
+    shutil.copy2(
+        path.join(phoboshome, 'python_dist_packages.conf'),
+        os.path.join(addonpath, 'python_dist_packages.conf'),
+    )
 
 
 """

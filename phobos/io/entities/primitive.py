@@ -34,6 +34,7 @@ from phobos.phoboslog import log
 from phobos.model.geometries import deriveGeometry
 from phobos.model.poses import deriveObjectPose
 
+
 def deriveEntity(primitive, outpath):
     """This function handles a primitive entity in a scene to export it
     
@@ -52,27 +53,33 @@ def deriveEntity(primitive, outpath):
     entity = models.initObjectProperties(primitive, 'entity', ['geometry'])
     pose = deriveObjectPose(primitive)
     entity['geometry'] = deriveGeometry(primitive)
-    entity['position'] = {'x': pose['translation'][0],
-                          'y': pose['translation'][1],
-                          'z': pose['translation'][2]}
-    entity['rotation'] = {'w': pose['rotation_quaternion'][0],
-                          'x': pose['rotation_quaternion'][1],
-                          'y': pose['rotation_quaternion'][2],
-                          'z': pose['rotation_quaternion'][3]}
+    entity['position'] = {
+        'x': pose['translation'][0],
+        'y': pose['translation'][1],
+        'z': pose['translation'][2],
+    }
+    entity['rotation'] = {
+        'w': pose['rotation_quaternion'][0],
+        'x': pose['rotation_quaternion'][1],
+        'y': pose['rotation_quaternion'][2],
+        'z': pose['rotation_quaternion'][3],
+    }
     if 'radius' in entity['geometry']:
         entity['radius'] = entity['geometry']['radius']
-    #entity['extend'] = {'x': entity['geometry']['size'][0],
+    # entity['extend'] = {'x': entity['geometry']['size'][0],
     #                    'y': entity['geometry']['size'][1],
     #                    'z': entity['geometry']['size'][2]}
-    entity['extend'] = {'x': primitive.dimensions[0],
-                        'y': primitive.dimensions[1],
-                        'z': primitive.dimensions[2]}
+    entity['extend'] = {
+        'x': primitive.dimensions[0],
+        'y': primitive.dimensions[1],
+        'z': primitive.dimensions[2],
+    }
     return entity
 
 
 def exportPrimitive():
     pass
 
+
 # registering export functions of types with Phobos
-entity_type_dict = {'primitive': {'derive': deriveEntity}
-                    }
+entity_type_dict = {'primitive': {'derive': deriveEntity}}

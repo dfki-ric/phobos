@@ -53,82 +53,84 @@ layerTypes = {
     "approxsphere": 13,
     'interface': 10,
     'submodel': 10,
-    'annotation': 14
-    }
+    'annotation': 14,
+}
 
 # types of blender objects phobos differentiates
-phobostypes = (('undefined',) * 3,
-               ('link',) * 3,
-               ('inertial',) * 3,
-               ('visual',) * 3,
-               ('collision',) * 3,
-               ('sensor',) * 3,
-               ('motor',) * 3,
-               ('controller',) * 3,
-               ('approxsphere',) * 3,
-               ('light',) * 3,
-               ('entity',) * 3,
-               ('frame',) * 3,
-               ('interface',) * 3,
-               ('submodel',) * 3,
-               ('annotation',) * 3
-               )
+phobostypes = (
+    ('undefined',) * 3,
+    ('link',) * 3,
+    ('inertial',) * 3,
+    ('visual',) * 3,
+    ('collision',) * 3,
+    ('sensor',) * 3,
+    ('motor',) * 3,
+    ('controller',) * 3,
+    ('approxsphere',) * 3,
+    ('light',) * 3,
+    ('entity',) * 3,
+    ('frame',) * 3,
+    ('interface',) * 3,
+    ('submodel',) * 3,
+    ('annotation',) * 3,
+)
 
-jointtypes = (('revolute',) * 3,
-              ('continuous',) * 3,
-              ('prismatic',) * 3,
-              ('fixed',) * 3,
-              ('floating',) * 3,
-              ('planar',) * 3)
+jointtypes = (
+    ('revolute',) * 3,
+    ('continuous',) * 3,
+    ('prismatic',) * 3,
+    ('fixed',) * 3,
+    ('floating',) * 3,
+    ('planar',) * 3,
+)
 
-geometrytypes = (('box',) * 3,
-                 ('cylinder',) * 3,
-                 ('sphere',) * 3,
-                 ('capsule',) * 3,
-                 ('mesh',) * 3)
+geometrytypes = (('box',) * 3, ('cylinder',) * 3, ('sphere',) * 3, ('capsule',) * 3, ('mesh',) * 3)
 
 linkobjignoretypes = {'link', 'joint', 'submechanism', 'entity'}
 controllabletypes = ['motor']
 
-type_properties = {"undefined": (),
-                   "undefined_default": (),
-                   "link": ('name',),
-                   "link_default": ('new_node',),
-                   "inertial": ('name',),
-                   "inertial_default": ('new_node',),
-                   "visual": ('name', 'visual/type'),
-                   "visual_default": ('new_node', 'box'),
-                   "collision": ('name', 'collision/type', 'bitmask'),
-                   "collision_default": ('new_node', 'box', '65536'),
-                   "approxsphere": (),
-                   "approxsphere_default": (),
-                   "sensor": ('name', 'sensor/type'),
-                   "sensor_default": ("new_sensor", "RaySensor"),
-                   "controller": ('name',),
-                   "controller_default": ("controller",),
-                   "light": ('name', 'light/directional', 'light/exponent'),
-                   "light_default": ('new_light', 'true', '1.0'),
-# TODO we should handle these someway different when actually using submodels
-                   "interface": (),
-                   "interface_default": (),
-                   "submodel": (),
-                   "submodel_default": ()
-                   }
+type_properties = {
+    "undefined": (),
+    "undefined_default": (),
+    "link": ('name',),
+    "link_default": ('new_node',),
+    "inertial": ('name',),
+    "inertial_default": ('new_node',),
+    "visual": ('name', 'visual/type'),
+    "visual_default": ('new_node', 'box'),
+    "collision": ('name', 'collision/type', 'bitmask'),
+    "collision_default": ('new_node', 'box', '65536'),
+    "approxsphere": (),
+    "approxsphere_default": (),
+    "sensor": ('name', 'sensor/type'),
+    "sensor_default": ("new_sensor", "RaySensor"),
+    "controller": ('name',),
+    "controller_default": ("controller",),
+    "light": ('name', 'light/directional', 'light/exponent'),
+    "light_default": ('new_light', 'true', '1.0'),
+    # TODO we should handle these someway different when actually using submodels
+    "interface": (),
+    "interface_default": (),
+    "submodel": (),
+    "submodel_default": (),
+}
 
 # definitions of model elements to be read in
-definitions = {'motors': {},
-               'sensors': {},
-               'controllers': {},
-               'algorithms': {},
-               'materials': {},
-               'model': {},
-               'submechanisms': {},
-               'submodeltypes': {}
-               }
+definitions = {
+    'motors': {},
+    'sensors': {},
+    'controllers': {},
+    'algorithms': {},
+    'materials': {},
+    'model': {},
+    'submechanisms': {},
+    'submodeltypes': {},
+}
 
 def_settings = {key: {} for key in definitions.keys()}
 
 def_subcategories = {key: set([]) for key in definitions.keys()}
+
 
 def updateDefs(defsFolderPath):
     """Updates the definitions with all yml files in the given folder.
@@ -148,8 +150,14 @@ def updateDefs(defsFolderPath):
 
                 # TODO we need to insert user data, instead overwriting existing
                 if key in definitions[category]:
-                    log("Entry for " + category + '/' + key +
-                        " will be overwritten while parsing definitions.", "WARNING")
+                    log(
+                        "Entry for "
+                        + category
+                        + '/'
+                        + key
+                        + " will be overwritten while parsing definitions.",
+                        "WARNING",
+                    )
 
                 # parse def_settings to other dictionary
                 if isinstance(value, dict) and 'general' in value and value['general']:
@@ -179,11 +187,12 @@ def __evaluateString(s):
     # TODO math is not needed anymore...
     # needed for evaluation of strings (see below)
     import math
+
     p = re.compile('&.*&')
     for ma in p.findall(s):
         try:
             s = s.replace(ma, str(eval(ma[1:-1])))
-        except():
+        except ():
             log("The expression " + ma + " could not be evaluated. Ignoring file", "ERROR")
             return ""
     return s

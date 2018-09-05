@@ -31,27 +31,28 @@ from phobos.utils import naming as nUtils
 
 
 progressinfo = None
-colors = {'debug': (1.0, 0.0, 1.0),
-          'info': (0.0, 1.0, 0.0),
-          'warning': (0.5, 0.25, 0.25),
-          'error': (1.0, 0.0, 0.0),
-          'none': (1.0, 1.0, 1.0),
-          'submechanism': (0.9, 0.8, 0.3, 1.0),
-          'background': (0.1, 0.1, 0.1, 0.8),
-          'bright_background': (1.0, 1.0, 1.0, 0.7),
-          'white': (1.0, 1.0, 1.0, 1.0),
-          'black': (0.0, 0.0, 0.0, 1.0),
-          'light_grey': (0.8, 0.8, 0.8, 1.0),
-          'grey': (0.5, 0.5, 0.5, 1.0),
-          'dark_grey': (0.2, 0.2, 0.2, 1.0),
-          'red': (1.0, 0.0, 0.0, 1.0),
-          'green': (0.0, 1.0, 0.0, 1.0),
-          'blue': (0.0, 0.0, 0.1, 1.0),
-          'transparent': (1.0, 1.0, 1.0, 0.0),
-          }
+colors = {
+    'debug': (1.0, 0.0, 1.0),
+    'info': (0.0, 1.0, 0.0),
+    'warning': (0.5, 0.25, 0.25),
+    'error': (1.0, 0.0, 0.0),
+    'none': (1.0, 1.0, 1.0),
+    'submechanism': (0.9, 0.8, 0.3, 1.0),
+    'background': (0.1, 0.1, 0.1, 0.8),
+    'bright_background': (1.0, 1.0, 1.0, 0.7),
+    'white': (1.0, 1.0, 1.0, 1.0),
+    'black': (0.0, 0.0, 0.0, 1.0),
+    'light_grey': (0.8, 0.8, 0.8, 1.0),
+    'grey': (0.5, 0.5, 0.5, 1.0),
+    'dark_grey': (0.2, 0.2, 0.2, 1.0),
+    'red': (1.0, 0.0, 0.0, 1.0),
+    'green': (0.0, 1.0, 0.0, 1.0),
+    'blue': (0.0, 0.0, 0.1, 1.0),
+    'transparent': (1.0, 1.0, 1.0, 0.0),
+}
 messages = collections.deque([], 50)
 slotheight = 22
-slotlower = [4 + slotheight*slot for slot in range(50)]
+slotlower = [4 + slotheight * slot for slot in range(50)]
 
 
 def push_message(text, msgtype='none'):
@@ -101,58 +102,76 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
     blf.draw(font_id, text)
 
 
-def draw_textbox(text, origin, textsize=6, textcolor=colors['white'],
-                 backgroundcolor=colors['background'], offset=Vector((0.0, 0.0)),
-                 linewidth=2, hborder=3, vborder=4, rightalign=False,
-                 indicator_line=True):
+def draw_textbox(
+    text,
+    origin,
+    textsize=6,
+    textcolor=colors['white'],
+    backgroundcolor=colors['background'],
+    offset=Vector((0.0, 0.0)),
+    linewidth=2,
+    hborder=3,
+    vborder=4,
+    rightalign=False,
+    indicator_line=True,
+):
     blf.size(0, textsize, 150)
     width = blf.dimensions(0, text)[0]
     height = blf.dimensions(0, text)[1]
     if rightalign:
-        origin = origin + Vector((-width-2*hborder, 0)) + offset
+        origin = origin + Vector((-width - 2 * hborder, 0)) + offset
     else:
         origin = origin + offset
-    points = ((origin + Vector((-hborder, -vborder * 1.5)),
-               origin + Vector((width + hborder, -vborder * 1.5)),
-               origin + Vector((width + hborder, height + vborder)),
-               origin + Vector((-hborder, height + vborder))))
-    draw_2dpolygon(points, fillcolor=backgroundcolor,
-                   linecolor=textcolor, linewidth=linewidth)
+    points = (
+        origin + Vector((-hborder, -vborder * 1.5)),
+        origin + Vector((width + hborder, -vborder * 1.5)),
+        origin + Vector((width + hborder, height + vborder)),
+        origin + Vector((-hborder, height + vborder)),
+    )
+    draw_2dpolygon(points, fillcolor=backgroundcolor, linecolor=textcolor, linewidth=linewidth)
     draw_text(text, position=origin, size=textsize, color=textcolor)
 
 
 def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
     blf.size(0, 6, 150)
     width = bpy.context.region.width
-    start = width - blf.dimensions(0, text)[0]-6
-    points = ((start, slotlower[slot]), (width-2, slotlower[slot]),
-              (width-2, slotlower[slot]+slotheight-4), (start, slotlower[slot]+slotheight-4))
-    draw_2dpolygon(points, fillcolor=(*colors[msgtype], 0.2*opacity))
-    draw_text(text, (start+2, slotlower[slot]+4), size=6, color=(1, 1, 1, opacity))
+    start = width - blf.dimensions(0, text)[0] - 6
+    points = (
+        (start, slotlower[slot]),
+        (width - 2, slotlower[slot]),
+        (width - 2, slotlower[slot] + slotheight - 4),
+        (start, slotlower[slot] + slotheight - 4),
+    )
+    draw_2dpolygon(points, fillcolor=(*colors[msgtype], 0.2 * opacity))
+    draw_text(text, (start + 2, slotlower[slot] + 4), size=6, color=(1, 1, 1, opacity))
     if slot == 0 and offset > 0:
-        #draw_text(str(offset) + ' \u25bc', (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, opacity))
-        draw_text('+'+str(offset), (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, 1))
+        # draw_text(str(offset) + ' \u25bc', (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, opacity))
+        draw_text('+' + str(offset), (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, 1))
 
 
 def draw_progressbar(value):
     region = bpy.context.region
-    text = str(round(value*100))+'%'
+    text = str(round(value * 100)) + '%'
     lc = (0.0, 1.0, 0.0, 1.0)
     fc = (0.0, 1.0, 0.0, 0.3)
-    xstart = region.width*0.2
-    xend = region.width*0.8
-    span = xend-xstart
-    points = ((xstart, region.height-10),
-              (xend, region.height-10),
-              (xend, region.height-25),
-              (xstart, region.height-25))
-    progresspoints = ((xstart, region.height-10),
-                      (xstart+value*span, region.height-10),
-                      (xstart+value*span, region.height-25),
-                      (xstart, region.height-25))
+    xstart = region.width * 0.2
+    xend = region.width * 0.8
+    span = xend - xstart
+    points = (
+        (xstart, region.height - 10),
+        (xend, region.height - 10),
+        (xend, region.height - 25),
+        (xstart, region.height - 25),
+    )
+    progresspoints = (
+        (xstart, region.height - 10),
+        (xstart + value * span, region.height - 10),
+        (xstart + value * span, region.height - 25),
+        (xstart, region.height - 25),
+    )
     draw_2dpolygon(points, linecolor=lc, fillcolor=fc)
     draw_2dpolygon(progresspoints, fillcolor=lc, distance=0.2)
-    draw_text(text, position=(xend+20, region.height-25), size=9)
+    draw_text(text, position=(xend + 20, region.height - 25), size=9)
     if progressinfo:
         draw_text(progressinfo, position=(xstart + 10, region.height - 42), size=6)
 
@@ -238,50 +257,67 @@ def draw_callback_2d(self, context):
         for root in submechanism_roots:
             if 'submechanism/spanningtree' in root:
                 if set(root['submechanism/spanningtree']).intersection(
-                        set(bpy.context.selected_objects)):
+                    set(bpy.context.selected_objects)
+                ):
                     linecolor = colors['submechanism']
                     linewidth = 5
                 else:
                     linecolor = (*colors['submechanism'][:3], 0.4)
                     linewidth = 3
                 draw_path(root['submechanism/spanningtree'], color=linecolor, width=linewidth)
-                                  #joint['submechanism/independent'],
-                                  #joint['submechanism/active'])
+                # joint['submechanism/independent'],
+                # joint['submechanism/active'])
                 avgpos = Vector()
                 for obj in root['submechanism/spanningtree']:
                     avgpos += obj.matrix_world.translation
-                origin = to2d(avgpos/len(root['submechanism/spanningtree']))
-                draw_textbox(root['submechanism/name'], origin, textsize=8,
-                             textcolor=linecolor,
-                             backgroundcolor=colors['background'],
-                             offset=Vector((-30, 0))
-                             )
+                origin = to2d(avgpos / len(root['submechanism/spanningtree']))
+                draw_textbox(
+                    root['submechanism/name'],
+                    origin,
+                    textsize=8,
+                    textcolor=linecolor,
+                    backgroundcolor=colors['background'],
+                    offset=Vector((-30, 0)),
+                )
 
     # joints
     if objects and wm.draw_jointnames:
         for obj in [obj for obj in objects if obj.phobostype == 'link']:
             origin = to2d(obj.matrix_world.translation)
-            draw_textbox(nUtils.getObjectName(obj, 'joint'), origin, textsize=6,
-                         textcolor=colors['dark_grey'], backgroundcolor=colors['bright_background'],
-                         rightalign=True, offset=Vector((-16, 0)))
+            draw_textbox(
+                nUtils.getObjectName(obj, 'joint'),
+                origin,
+                textsize=6,
+                textcolor=colors['dark_grey'],
+                backgroundcolor=colors['bright_background'],
+                rightalign=True,
+                offset=Vector((-16, 0)),
+            )
             if wm.draw_submechanisms and 'submechanism/jointname' in obj:
-                draw_textbox(obj['submechanism/jointname'], origin, textsize=6,
-                             textcolor=colors['dark_grey'],
-                             backgroundcolor=(*colors['submechanism'][:3], 0.7),
-                             offset=Vector((16, 0))
-                             )
+                draw_textbox(
+                    obj['submechanism/jointname'],
+                    origin,
+                    textsize=6,
+                    textcolor=colors['dark_grey'],
+                    backgroundcolor=(*colors['submechanism'][:3], 0.7),
+                    offset=Vector((16, 0)),
+                )
 
     # interfaces
     if selected:
         for interface in [obj for obj in selected if obj.phobostype == 'interface']:
             color = interface.active_material.diffuse_color
             maxc = max(color)
-            color = [0.6 + c/maxc * 0.4 for c in color]
+            color = [0.6 + c / maxc * 0.4 for c in color]
             bgcolor = [c * 0.4 for c in interface.active_material.diffuse_color]
-            draw_textbox(nUtils.getObjectName(interface), to2d(interface.matrix_world.translation),
-                         textsize=6, textcolor=(*color, 1.0 if interface.show_name else 0.4),
-                         backgroundcolor=(*bgcolor, 1.0) if interface.show_name else colors['background'],
-                         linewidth=3 if interface.show_name else 2)
+            draw_textbox(
+                nUtils.getObjectName(interface),
+                to2d(interface.matrix_world.translation),
+                textsize=6,
+                textcolor=(*color, 1.0 if interface.show_name else 0.4),
+                backgroundcolor=(*bgcolor, 1.0) if interface.show_name else colors['background'],
+                linewidth=3 if interface.show_name else 2,
+            )
 
     # progress bar
     if wm.draw_progress and context.window_manager.progress not in [0, 1]:
@@ -291,12 +327,12 @@ def draw_callback_2d(self, context):
     if wm.draw_messages:
         for m in range(wm.phobos_msg_count):
             opacity = 1.0
-            if 1 >= m <= wm.phobos_msg_offset-1 or m >= wm.phobos_msg_count-2:
+            if 1 >= m <= wm.phobos_msg_offset - 1 or m >= wm.phobos_msg_count - 2:
                 opacity = 0.5
-            if wm.phobos_msg_offset > 1 > m or m >= wm.phobos_msg_count-1:
+            if wm.phobos_msg_offset > 1 > m or m >= wm.phobos_msg_count - 1:
                 opacity = 0.1
             try:
-                msg = messages[m+wm.phobos_msg_offset]
+                msg = messages[m + wm.phobos_msg_offset]
                 draw_message(msg['text'], msg['type'], m, opacity, offset=wm.phobos_msg_offset)
             except IndexError:
                 pass
@@ -309,6 +345,7 @@ def draw_callback_2d(self, context):
 
 class DisplayInformationOperator(Operator):
     """Draw additional information about Phobos objects"""
+
     bl_idname = "phobos.display_information"
     bl_label = "Draw Model Information"
 
@@ -322,7 +359,8 @@ class DisplayInformationOperator(Operator):
         name="running",
         description="Whether the drawing thread is running or not.",
         get=get_drawing_status,
-        set=set_drawing_status)
+        set=set_drawing_status,
+    )
 
     def modal(self, context, event):
         wm = context.window_manager
@@ -330,6 +368,7 @@ class DisplayInformationOperator(Operator):
 
         if not self.running:
             from phobos.phoboslog import log
+
             bpy.types.SpaceView3D.draw_handler_remove(self._handle2d, 'WINDOW')
             bpy.types.SpaceView3D.draw_handler_remove(self._handle3d, 'WINDOW')
             log("Stop drawing Phobos information.", 'DEBUG')
@@ -346,17 +385,23 @@ class DisplayInformationOperator(Operator):
 
     def invoke(self, context, event):
         from phobos.phoboslog import log
+
         wm = context.window_manager
 
         if context.area.type != 'VIEW_3D':
             from phobos.phoboslog import log
+
             log("View3D not found, cannot run " + self.bl_idname, 'WARNING')
             return {'CANCELLED'}
 
         log("Start drawing Phobos information.", 'DEBUG')
         self.running = True
-        self._handle2d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_2d, (self, context), 'WINDOW', 'POST_PIXEL')
-        self._handle3d = bpy.types.SpaceView3D.draw_handler_add(draw_callback_3d, (self, context), 'WINDOW', 'POST_VIEW')
+        self._handle2d = bpy.types.SpaceView3D.draw_handler_add(
+            draw_callback_2d, (self, context), 'WINDOW', 'POST_PIXEL'
+        )
+        self._handle3d = bpy.types.SpaceView3D.draw_handler_add(
+            draw_callback_3d, (self, context), 'WINDOW', 'POST_VIEW'
+        )
         wm.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
@@ -378,8 +423,10 @@ def setProgress(value, info=None):
 def register():
     # add the drawing status boolean to the window manager
     bpy.types.WindowManager.drawing_status = BoolProperty(
-        default=False, name='Hide Model Information',
-        description="Draw additional data visualization for Phobos items in 3D View.")
+        default=False,
+        name='Hide Model Information',
+        description="Draw additional data visualization for Phobos items in 3D View.",
+    )
 
     bpy.utils.register_class(DisplayInformationOperator)
 

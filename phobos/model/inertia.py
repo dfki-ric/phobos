@@ -63,8 +63,14 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
 
     # create new inertial object
     name = nUtils.getUniqueName('inertial_' + nUtils.getObjectName(obj), bpy.data.objects)
-    inertialobject = bUtils.createPrimitive(name, 'box', (size,) * 3, defs.layerTypes["inertial"],
-                                            pmaterial='phobos_inertial', phobostype='inertial')
+    inertialobject = bUtils.createPrimitive(
+        name,
+        'box',
+        (size,) * 3,
+        defs.layerTypes["inertial"],
+        pmaterial='phobos_inertial',
+        phobostype='inertial',
+    )
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(scale=True)
 
@@ -134,12 +140,12 @@ def calculateBoxInertia(mass, size):
 
     """
     i = mass / 12
-    ixx = i*(size[1]**2 + size[2]**2)
+    ixx = i * (size[1] ** 2 + size[2] ** 2)
     ixy = 0
     ixz = 0
-    iyy = i*(size[0]**2 + size[2]**2)
+    iyy = i * (size[0] ** 2 + size[2] ** 2)
     iyz = 0
-    izz = i*(size[0]**2 + size[1]**2)
+    izz = i * (size[0] ** 2 + size[1] ** 2)
     return ixx, ixy, ixz, iyy, iyz, izz
 
 
@@ -155,13 +161,13 @@ def calculateCylinderInertia(mass, r, h):
       tuple(6)
 
     """
-    i = mass / 12 * (3 * r**2 + h**2)
+    i = mass / 12 * (3 * r ** 2 + h ** 2)
     ixx = i
     ixy = 0
     ixz = 0
     iyy = i
     iyz = 0
-    izz = 0.5 * mass * r**2
+    izz = 0.5 * mass * r ** 2
     return ixx, ixy, ixz, iyy, iyz, izz
 
 
@@ -176,7 +182,7 @@ def calculateSphereInertia(mass, r):
       tuple(6)
 
     """
-    i = 0.4 * mass * r**2
+    i = 0.4 * mass * r ** 2
     ixx = i
     ixy = 0
     ixz = 0
@@ -202,24 +208,28 @@ def calculateCapsuleInertia(mass, r, h):
 
     """
 
-    cylinder_volume = math.pi * r**2 * h
-    hemisphere_volume = ((4/3) * math.pi * r**3) / 2
-    volume = cylinder_volume + 2*hemisphere_volume
+    cylinder_volume = math.pi * r ** 2 * h
+    hemisphere_volume = ((4 / 3) * math.pi * r ** 3) / 2
+    volume = cylinder_volume + 2 * hemisphere_volume
 
     cylinder_mass = mass / (volume / cylinder_volume)
     hemisphere_mass = mass / (volume / hemisphere_volume)
-    cylinder_height = h - 2*r
+    cylinder_height = h - 2 * r
 
-    temp0 = hemisphere_mass * 2.0 * r**2 / 5.0
+    temp0 = hemisphere_mass * 2.0 * r ** 2 / 5.0
     temp1 = cylinder_height * 0.5
-    temp2 = temp0 + hemisphere_mass * (temp1**2 + 0.375 * cylinder_height * r)
+    temp2 = temp0 + hemisphere_mass * (temp1 ** 2 + 0.375 * cylinder_height * r)
 
-    ixx = (r**2 * cylinder_mass / 2.0) / 2.0 + cylinder_mass * cylinder_height**2 / 12.0 + temp2 * 2.0
+    ixx = (
+        (r ** 2 * cylinder_mass / 2.0) / 2.0
+        + cylinder_mass * cylinder_height ** 2 / 12.0
+        + temp2 * 2.0
+    )
     ixy = 0
     ixz = 0
     iyy = ixx
     iyz = 0
-    izz = r**2 * cylinder_mass / 2.0 + temp0 * 2.0
+    izz = r ** 2 * cylinder_mass / 2.0 + temp0 * 2.0
 
     return ixx, ixy, ixz, iyy, iyz, izz
 
@@ -236,12 +246,12 @@ def calculateEllipsoidInertia(mass, size):
 
     """
     i = mass / 5
-    ixx = i*(size[1]**2 + size[2]**2)
+    ixx = i * (size[1] ** 2 + size[2] ** 2)
     ixy = 0
     ixz = 0
-    iyy = i*(size[0]**2 + size[2]**2)
+    iyy = i * (size[0] ** 2 + size[2] ** 2)
     iyz = 0
-    izz = i*(size[0]**2 + size[1]**2)
+    izz = i * (size[0] ** 2 + size[1] ** 2)
     return ixx, ixy, ixz, iyy, iyz, izz
 
 
@@ -282,22 +292,30 @@ def calculateMeshInertia(mass, data):
         tri_centre = triangle.center
         ref_tri_vector = tri_centre - origin
         # angle returns the angle in radians
-        normal_angle = ref_tri_vector.angle(tri_normal, math.pi/2.0)
+        normal_angle = ref_tri_vector.angle(tri_normal, math.pi / 2.0)
 
-        sign = -1 if normal_angle > math.pi/2.0 else 1
+        sign = -1 if normal_angle > math.pi / 2.0 else 1
 
-        J = mathutils.Matrix(((verts[0][0], verts[0][1], verts[0][2], 1),
-                              (verts[1][0], verts[1][1], verts[1][2], 1),
-                              (verts[2][0], verts[2][1], verts[2][2], 1),
-                              (origin[0], origin[1], origin[2], 1)))
+        J = mathutils.Matrix(
+            (
+                (verts[0][0], verts[0][1], verts[0][2], 1),
+                (verts[1][0], verts[1][1], verts[1][2], 1),
+                (verts[2][0], verts[2][1], verts[2][2], 1),
+                (origin[0], origin[1], origin[2], 1),
+            )
+        )
 
         abs_det_J = J.determinant()
 
         volume = sign * abs_det_J / 6
 
-        com = mathutils.Vector(((verts[0][0] + verts[1][0] + verts[2][0] + origin[0]) / 4,
-                                (verts[0][1] + verts[1][1] + verts[2][1] + origin[1]) / 4,
-                                (verts[0][2] + verts[1][2] + verts[2][2] + origin[2]) / 4))
+        com = mathutils.Vector(
+            (
+                (verts[0][0] + verts[1][0] + verts[2][0] + origin[0]) / 4,
+                (verts[0][1] + verts[1][1] + verts[2][1] + origin[1]) / 4,
+                (verts[0][2] + verts[1][2] + verts[2][2] + origin[2]) / 4,
+            )
+        )
 
         tetrahedra.append({'sign': sign, 'abs(det(J))': abs_det_J, 'J': J, 'centre_of_mass': com})
         mesh_volume += volume
@@ -325,35 +343,167 @@ def calculateMeshInertia(mass, data):
         sign = tetrahedron['sign']
 
         # TODO this might be easier with numpy (and more beautiful)
-        a = sign * density * abs_det_J * (
-            y1**2 + y1*y2 + y2**2 + y1*y3 + y2*y3 + y3**2 +
-            y1*y4 + y2*y4 + y3*y4 + y4**2 + z1**2 + z1*z2 + z2**2 + z1*z3 +
-            z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
+        a = (
+            sign
+            * density
+            * abs_det_J
+            * (
+                y1 ** 2
+                + y1 * y2
+                + y2 ** 2
+                + y1 * y3
+                + y2 * y3
+                + y3 ** 2
+                + y1 * y4
+                + y2 * y4
+                + y3 * y4
+                + y4 ** 2
+                + z1 ** 2
+                + z1 * z2
+                + z2 ** 2
+                + z1 * z3
+                + z2 * z3
+                + z3 ** 2
+                + z1 * z4
+                + z2 * z4
+                + z3 * z4
+                + z4 ** 2
+            )
+            / 60
+        )
 
-        b = sign * density * abs_det_J * (
-            x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2 +
-            x1*x4 + x2*x4 + x3*x4 + x4**2 + z1**2 + z1*z2 + z2**2 + z1*z3 +
-            z2*z3 + z3**2 + z1*z4 + z2*z4 + z3*z4 + z4**2) / 60
+        b = (
+            sign
+            * density
+            * abs_det_J
+            * (
+                x1 ** 2
+                + x1 * x2
+                + x2 ** 2
+                + x1 * x3
+                + x2 * x3
+                + x3 ** 2
+                + x1 * x4
+                + x2 * x4
+                + x3 * x4
+                + x4 ** 2
+                + z1 ** 2
+                + z1 * z2
+                + z2 ** 2
+                + z1 * z3
+                + z2 * z3
+                + z3 ** 2
+                + z1 * z4
+                + z2 * z4
+                + z3 * z4
+                + z4 ** 2
+            )
+            / 60
+        )
 
-        c = sign * density * abs_det_J * (
-            x1**2 + x1*x2 + x2**2 + x1*x3 + x2*x3 + x3**2 +
-            x1*x4 + x2*x4 + x3*x4 + x4**2 + y1**2 + y1*y2 + y2**2 + y1*y3 +
-            y2*y3 + y3**2 + y1*y4 + y2*y4 + y3*y4 + y4**2) / 60
+        c = (
+            sign
+            * density
+            * abs_det_J
+            * (
+                x1 ** 2
+                + x1 * x2
+                + x2 ** 2
+                + x1 * x3
+                + x2 * x3
+                + x3 ** 2
+                + x1 * x4
+                + x2 * x4
+                + x3 * x4
+                + x4 ** 2
+                + y1 ** 2
+                + y1 * y2
+                + y2 ** 2
+                + y1 * y3
+                + y2 * y3
+                + y3 ** 2
+                + y1 * y4
+                + y2 * y4
+                + y3 * y4
+                + y4 ** 2
+            )
+            / 60
+        )
 
-        a_bar = sign * density * abs_det_J * (
-            2*y1*z1 + y2*z1 + y3*z1 + y4*z1 + y1*z2 +
-            2*y2*z2 + y3*z2 + y4*z2 + y1*z3 + y2*z3 + 2*y3*z3 +
-            y4*z3 + y1*z4 + y2*z4 + y3*z4 + 2*y4*z4) / 120
+        a_bar = (
+            sign
+            * density
+            * abs_det_J
+            * (
+                2 * y1 * z1
+                + y2 * z1
+                + y3 * z1
+                + y4 * z1
+                + y1 * z2
+                + 2 * y2 * z2
+                + y3 * z2
+                + y4 * z2
+                + y1 * z3
+                + y2 * z3
+                + 2 * y3 * z3
+                + y4 * z3
+                + y1 * z4
+                + y2 * z4
+                + y3 * z4
+                + 2 * y4 * z4
+            )
+            / 120
+        )
 
-        b_bar = sign * density * abs_det_J * (
-            2*x1*z1 + x2*z1 + x3*z1 + x4*z1 + x1*z2 +
-            2*x2*z2 + x3*z2 + x4*z2 + x1*z3 + x2*z3 + 2*x3*z3 +
-            x4*z3 + x1*z4 + x2*z4 + x3*z4 + 2*x4*z4) / 120
+        b_bar = (
+            sign
+            * density
+            * abs_det_J
+            * (
+                2 * x1 * z1
+                + x2 * z1
+                + x3 * z1
+                + x4 * z1
+                + x1 * z2
+                + 2 * x2 * z2
+                + x3 * z2
+                + x4 * z2
+                + x1 * z3
+                + x2 * z3
+                + 2 * x3 * z3
+                + x4 * z3
+                + x1 * z4
+                + x2 * z4
+                + x3 * z4
+                + 2 * x4 * z4
+            )
+            / 120
+        )
 
-        c_bar = sign * density * abs_det_J * (
-            2*x1*y1 + x2*y1 + x3*y1 + x4*y1 + x1*y2 +
-            2*x2*y2 + x3*y2 + x4*y2 + x1*y3 + x2*y3 + 2*x3*y3 +
-            x4*y3 + x1*y4 + x2*y4 + x3*y4 + 2*x4*y4) / 120
+        c_bar = (
+            sign
+            * density
+            * abs_det_J
+            * (
+                2 * x1 * y1
+                + x2 * y1
+                + x3 * y1
+                + x4 * y1
+                + x1 * y2
+                + 2 * x2 * y2
+                + x3 * y2
+                + x4 * y2
+                + x1 * y3
+                + x2 * y3
+                + 2 * x3 * y3
+                + x4 * y3
+                + x1 * y4
+                + x2 * y4
+                + x3 * y4
+                + 2 * x4 * y4
+            )
+            / 120
+        )
 
         i += inertiaListToMatrix([a, -b_bar, -c_bar, b, -a_bar, c])
 
@@ -370,9 +520,7 @@ def inertiaListToMatrix(inertialist):
     mathutils.Matrix -- full tensor matrix generated from the list
     """
     il = inertialist
-    inertia = [[il[0], il[1], il[2]],
-               [il[1], il[3], il[4]],
-               [il[2], il[4], il[5]]]
+    inertia = [[il[0], il[1], il[2]], [il[1], il[3], il[4]], [il[2], il[4], il[5]]]
     return mathutils.Matrix(inertia)
 
 
@@ -411,12 +559,14 @@ def fuse_inertia_data(inertials):
         objdict = None
         try:
             pose = deriveObjectPose(inertia_object)
-            objdict = {'name': inertia_object.name,
-                       'mass': inertia_object['inertial/mass'],
-                       # FIXME: this is not nice, as we invert what is one when deriving the pose
-                       'com': mathutils.Vector(pose['translation']),
-                       'rot': pose['rawmatrix'].to_3x3(),
-                       'inertia': list(inertia_object['inertial/inertia'])}
+            objdict = {
+                'name': inertia_object.name,
+                'mass': inertia_object['inertial/mass'],
+                # FIXME: this is not nice, as we invert what is one when deriving the pose
+                'com': mathutils.Vector(pose['translation']),
+                'rot': pose['rawmatrix'].to_3x3(),
+                'inertia': list(inertia_object['inertial/inertia']),
+            }
         except KeyError as e:
             log('Inertial object ' + inertia_object.name + ' is missing data: ' + str(e), 'WARNING')
             continue
@@ -446,8 +596,8 @@ def combine_com_3x3(objects):
     """
     if not objects:
         log("No proper object list...", 'DEBUG')
-        return 0.0, mathutils.Vector((0.0,)*3)
-    combined_com = mathutils.Vector((0.0,)*3)
+        return 0.0, mathutils.Vector((0.0,) * 3)
+    combined_com = mathutils.Vector((0.0,) * 3)
     combined_mass = 0
     for obj in objects:
         combined_com = combined_com + obj['com'] * obj['mass']
@@ -457,7 +607,7 @@ def combine_com_3x3(objects):
     return combined_mass, combined_com
 
 
-def shift_com_inertia_3x3(mass, com, inertia_com, ref_point=mathutils.Vector((0.0,)*3)):
+def shift_com_inertia_3x3(mass, com, inertia_com, ref_point=mathutils.Vector((0.0,) * 3)):
     """Shifts the center
     This code was adapted from an implementation generously provided by Bertold Bongardt.
 
@@ -544,11 +694,17 @@ def compound_inertia_analysis_3x3(objects):
 
     shifted_inertias = list()
     for obj in objects:
-        if 'rot' in obj and not obj['rot'] == mathutils.Matrix.Identity(3):  # if object is rotated in local space
-            objinertia = spin_inertia_3x3(inertiaListToMatrix(obj['inertia']), obj['rot'])  # transform inertia to link space
+        if 'rot' in obj and not obj['rot'] == mathutils.Matrix.Identity(
+            3
+        ):  # if object is rotated in local space
+            objinertia = spin_inertia_3x3(
+                inertiaListToMatrix(obj['inertia']), obj['rot']
+            )  # transform inertia to link space
         else:
             objinertia = inertiaListToMatrix(obj['inertia'])  # keep inertia
-        inert_i_at_common_com = shift_com_inertia_3x3(obj['mass'], obj['com'], objinertia, common_com)
+        inert_i_at_common_com = shift_com_inertia_3x3(
+            obj['mass'], obj['com'], objinertia, common_com
+        )
         shifted_inertias.append(inert_i_at_common_com)
 
     total_inertia_at_common_com = mathutils.Matrix.Identity(3)
@@ -576,11 +732,13 @@ def gatherInertialChilds(obj, objectlist):
     from phobos.utils.validation import validateInertiaData
 
     # only gather the links that are not in the list
-    childlinks = [link for link in obj.children if link.phobostype == 'link' and
-                  link not in objectlist]
+    childlinks = [
+        link for link in obj.children if link.phobostype == 'link' and link not in objectlist
+    ]
     # only gathe the inertials that are in the list
-    inertialobjs = [inert for inert in obj.children if inert.phobostype == 'inertial' and
-                    inert in objectlist]
+    inertialobjs = [
+        inert for inert in obj.children if inert.phobostype == 'inertial' and inert in objectlist
+    ]
 
     inertials = []
     for inertial in inertialobjs:

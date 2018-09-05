@@ -49,22 +49,22 @@ def deriveEntity(light, outpath):
     entitypose = models.deriveObjectPose(light)
     lightobj = sUtils.getImmediateChildren(light)[0]
     color = lightobj.data.color
-    entity = {"name": light["entity/name"],
-             "type": "light",
-             "light_type": "spotlight" if lightobj.data.type == "SPOT" else "omnilight",
-             "anchor": light["anchor"] if "anchor" in light else "none",
-             "color": {"diffuse": [color.r, color.g, color.b],
-                       "use_specular": lightobj.data.use_specular  # only specular information currently available
-                       },
-             "position": entitypose["translation"],
-             "rotation": entitypose["rotation_quaternion"]
-             }
+    entity = {
+        "name": light["entity/name"],
+        "type": "light",
+        "light_type": "spotlight" if lightobj.data.type == "SPOT" else "omnilight",
+        "anchor": light["anchor"] if "anchor" in light else "none",
+        "color": {
+            "diffuse": [color.r, color.g, color.b],
+            "use_specular": lightobj.data.use_specular,  # only specular information currently available
+        },
+        "position": entitypose["translation"],
+        "rotation": entitypose["rotation_quaternion"],
+    }
     if entity["light_type"] == "spotlight":
         entity["angle"] = lightobj.data.spot_size
     return entity
 
 
-
 #  registering import/export functions of types with Phobos
-entity_type_dict = {'light': {'derive': deriveEntity}
-                    }
+entity_type_dict = {'light': {'derive': deriveEntity}}

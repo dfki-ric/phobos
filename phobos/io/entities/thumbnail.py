@@ -43,6 +43,4 @@ def exportPreview(model, path):
 
 
 # registering export functions of types with Phobos
-entity_type_dict = {'thumbnails': {'export': exportPreview,
-                                   'extensions': ('png', 'jpg')}
-                    }
+entity_type_dict = {'thumbnails': {'export': exportPreview, 'extensions': ('png', 'jpg')}}

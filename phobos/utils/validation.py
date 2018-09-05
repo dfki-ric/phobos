@@ -34,7 +34,7 @@ def generateCheckMessages(param1, param2):
     # DOCU Parameter?
     """This function is just for generating a blender friendly list for an operator.
     """
-    return [(x,)*3 for x in list(checkMessages.keys())]
+    return [(x,) * 3 for x in list(checkMessages.keys())]
 
 
 def check_dict(dic, validator, messages):
@@ -72,13 +72,17 @@ def check_dict_alg(dic, validator, entry_list, messages, whole_validator, curren
         if node != 'isReference':
             if not ('isReference' in node_value and len(entry_list) == 0):
                 if is_operator(node):
-                    handle_operator(node, dic, validator, new_list, messages, whole_validator, current_elem)
+                    handle_operator(
+                        node, dic, validator, new_list, messages, whole_validator, current_elem
+                    )
                 elif is_leaf(node_value):
                     new_list.append(node)
                     check_leaf(node_value, dic, new_list, messages, current_elem)
                 else:
                     new_list.append(node)
-                    check_dict_alg(dic, node_value, new_list, messages, whole_validator, current_elem)
+                    check_dict_alg(
+                        dic, node_value, new_list, messages, whole_validator, current_elem
+                    )
 
 
 def is_leaf(node_value):
@@ -127,9 +131,18 @@ def check_leaf(leaf_value, dic, entry_list, messages, current_elem):
     required = leaf_value['required']
     # messages.append("Checking leaf " + str(entry_list))
     if required and value is None:
-        add_message(messages, current_elem, "The required value in " + str(entry_list) + " cannot be found!")
+        add_message(
+            messages, current_elem, "The required value in " + str(entry_list) + " cannot be found!"
+        )
     if value is not None and not isinstance(value, required_type):
-        add_message(messages, current_elem, "The required value in " + str(entry_list) + " doesn't match expected type " + str(required_type))
+        add_message(
+            messages,
+            current_elem,
+            "The required value in "
+            + str(entry_list)
+            + " doesn't match expected type "
+            + str(required_type),
+        )
 
 
 def handle_operator(node, dic, validator, entry_list, messages, whole_validator, current_elem):
@@ -150,14 +163,18 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator,
     if node == '$reference':
         new_list = dc(entry_list)
         new_list.append(validator[node])
-        check_dict_alg(dic, whole_validator[validator[node]], new_list, messages, whole_validator, current_elem)
+        check_dict_alg(
+            dic, whole_validator[validator[node]], new_list, messages, whole_validator, current_elem
+        )
     elif node == '$forElem':
         traversed_dic = traverse_dict(dic, entry_list)
         if traversed_dic is not None:
             for elem in traversed_dic:
                 new_list = dc(entry_list)
                 new_list.append(elem)
-                check_dict_alg(dic, validator['$forElem'], new_list, messages, whole_validator, elem)
+                check_dict_alg(
+                    dic, validator['$forElem'], new_list, messages, whole_validator, elem
+                )
         else:
             add_message(messages, current_elem, "Error in traversing dict!")
     elif node.startswith('$selection__'):
@@ -168,7 +185,9 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator,
             rest_validator = validator[node][select]
             check_dict_alg(dic, rest_validator, entry_list, messages, whole_validator, current_elem)
         else:
-            add_message(messages, current_elem, "Could not find " + select_type + " in " + str(entry_list))
+            add_message(
+                messages, current_elem, "Could not find " + select_type + " in " + str(entry_list)
+            )
     elif node.startswith('$exists__'):
         # TODO handle it somehow...
         pass
@@ -214,7 +233,7 @@ def add_message(messages, key, message):
         messages[key] = [message]
 
 
-class ValidateMessage():
+class ValidateMessage:
     """Resembles a message from a validation describing an issue in the model/object etc."""
 
     def __init__(self, message, level, obj=None, operator=None, information=None):
@@ -242,12 +261,20 @@ class ValidateMessage():
         return self.message.__lt__(other.message)
 
     def log(self):
-        log(self.message +
-            str('' if not isinstance(self.obj, bpy.types.Object)
-                else " @" + nUtils.getObjectName(self.obj)) +
-            str(('\n' + 4 * ' ' + self.information['log_info']) if 'log_info' in self.information
-                else ''),
-            self.level)
+        log(
+            self.message
+            + str(
+                ''
+                if not isinstance(self.obj, bpy.types.Object)
+                else " @" + nUtils.getObjectName(self.obj)
+            )
+            + str(
+                ('\n' + 4 * ' ' + self.information['log_info'])
+                if 'log_info' in self.information
+                else ''
+            ),
+            self.level,
+        )
 
     def __eq__(self, other):
         if isinstance(other, str):
@@ -283,13 +310,15 @@ def validateObjectNames(obj):
         nameset = nameset.difference(set([phobtype]))
 
         for key in nameset:
-            errors.append(ValidateMessage(
-                "Redundant name: '" + key + "/name'!",
-                "WARNING",
-                obj,
-                "phobos.fix_object_names",
-                key + '/name'
-            ))
+            errors.append(
+                ValidateMessage(
+                    "Redundant name: '" + key + "/name'!",
+                    "WARNING",
+                    obj,
+                    "phobos.fix_object_names",
+                    key + '/name',
+                )
+            )
 
     # TODO add unique name checks etc
     return errors
@@ -311,10 +340,7 @@ def validateJoint(link, adjust=False):
 
     # a link without parent can not be a joint
     if not link.parent:
-        errors.append(ValidateMessage(
-            "No joint parent!",
-            'WARNING',
-            None, {}))
+        errors.append(ValidateMessage("No joint parent!", 'WARNING', None, {}))
 
     # make sure the joint type is validated
     errors.extend(validateJointType(link, adjust=adjust))
@@ -336,14 +362,14 @@ def validateJointType(link, adjust=False):
     """
     import phobos.model.joints as jointmodel
     import phobos.utils.io as ioUtils
+
     errors = []
     if 'joint/type' not in link:
-        errors.append(ValidateMessage(
-            "No joint type specified!",
-            'WARNING',
-            link,
-            "phobos.define_joint_constraints",
-            {}))
+        errors.append(
+            ValidateMessage(
+                "No joint type specified!", 'WARNING', link, "phobos.define_joint_constraints", {}
+            )
+        )
         # make sure we get no KeyErrors from this
         if adjust:
             link['joint/type'] = 'undefined'
@@ -353,12 +379,23 @@ def validateJointType(link, adjust=False):
     # warn user if the constraints do not match the specified joint type
     if 'joint/type' in link and joint_type != link['joint/type']:
         if not adjust:
-            errors.append(ValidateMessage(
-                "The specified joint type does not match the constraints:",
-                'WARNING',
-                link, None,
-                {'log_info': str("'" + link['joint/type'] + "' should be set to '" +
-                                 joint_type + "' instead.")}))
+            errors.append(
+                ValidateMessage(
+                    "The specified joint type does not match the constraints:",
+                    'WARNING',
+                    link,
+                    None,
+                    {
+                        'log_info': str(
+                            "'"
+                            + link['joint/type']
+                            + "' should be set to '"
+                            + joint_type
+                            + "' instead."
+                        )
+                    },
+                )
+            )
         else:
             # fix joint type and assign new resource object
             link['joint/type'] = joint_type
@@ -367,9 +404,11 @@ def validateJointType(link, adjust=False):
                 log("Assigned resource to {}.".format(link.name), 'DEBUG')
                 link.pose.bones[0].custom_shape = resource_obj
 
-            errors.append(ValidateMessage(
-                "Adjusted joint type to '" + joint_type + "'.",
-                'INFO', link, None, {}))
+            errors.append(
+                ValidateMessage(
+                    "Adjusted joint type to '" + joint_type + "'.", 'INFO', link, None, {}
+                )
+            )
 
     return errors
 
@@ -402,10 +441,7 @@ def validateMaterial(material, adjust=False):
     errors = []
 
     if not material:
-        errors.append(ValidateMessage(
-            "No material defined.",
-            'WARNING',
-            material, None, {}))
+        errors.append(ValidateMessage("No material defined.", 'WARNING', material, None, {}))
         return errors, material
 
     if isinstance(material, bpy.types.Object):
@@ -418,27 +454,37 @@ def validateMaterial(material, adjust=False):
                         # grab the first texture
                         material.texture_slots[0].texture.image.filepath.replace('//', '')
                 except (KeyError, AttributeError):
-                    errors.append(ValidateMessage(
-                        "Diffuse texture incomplete/undefined.",
-                        'WARNING', material, None, {}))
+                    errors.append(
+                        ValidateMessage(
+                            "Diffuse texture incomplete/undefined.", 'WARNING', material, None, {}
+                        )
+                    )
                 try:
                     # normal map
                     if tex.use_map_normal:
                         # grab the first texture
                         material.texture_slots[0].texture.image.filepath.replace('//', '')
                 except (KeyError, AttributeError):
-                    errors.append(ValidateMessage(
-                        "Normal texture incomplete/undefined.",
-                        'WARNING', material, None, {}))
+                    errors.append(
+                        ValidateMessage(
+                            "Normal texture incomplete/undefined.", 'WARNING', material, None, {}
+                        )
+                    )
                 try:
                     # displacement map
                     if tex.use_map_displacement:
                         # grab the first texture
                         material.texture_slots[0].texture.image.filepath.replace('//', '')
                 except (KeyError, AttributeError):
-                    errors.append(ValidateMessage(
-                        "Displacement texture incomplete/undefined.",
-                        'WARNING', material, None, {}))
+                    errors.append(
+                        ValidateMessage(
+                            "Displacement texture incomplete/undefined.",
+                            'WARNING',
+                            material,
+                            None,
+                            {},
+                        )
+                    )
     else:
         if 'name' not in material:
             if adjust:
@@ -446,9 +492,9 @@ def validateMaterial(material, adjust=False):
                 loglevel = 'WARNING'
             else:
                 loglevel = 'ERROR'
-            errors.append(ValidateMessage(
-                "Material name not defined.",
-                'ERROR', material, None, {}))
+            errors.append(
+                ValidateMessage("Material name not defined.", 'ERROR', material, None, {})
+            )
             return errors, material
 
         if 'diffuse' not in material:
@@ -457,9 +503,9 @@ def validateMaterial(material, adjust=False):
                 loglevel = 'WARNING'
             else:
                 loglevel = 'ERROR'
-            errors.append(ValidateMessage(
-                "Material diffuse color not defined.",
-                'ERROR', material, None, {}))
+            errors.append(
+                ValidateMessage("Material diffuse color not defined.", 'ERROR', material, None, {})
+            )
         elif len(material['diffuse']) != 4:
             if adjust:
                 if len(material['diffuse']) == 3:
@@ -467,14 +513,18 @@ def validateMaterial(material, adjust=False):
                 loglevel = 'WARNING'
             else:
                 loglevel = 'ERROR'
-            errors.append(ValidateMessage(
-                "Material diffuse color definition insufficient.",
-                loglevel, material, None, {}))
+            errors.append(
+                ValidateMessage(
+                    "Material diffuse color definition insufficient.", loglevel, material, None, {}
+                )
+            )
 
         if 'diffuse_intensity' not in material:
-            errors.append(ValidateMessage(
-                "Material diffuse intensity not defined.",
-                'WARNING', material, None, {}))
+            errors.append(
+                ValidateMessage(
+                    "Material diffuse intensity not defined.", 'WARNING', material, None, {}
+                )
+            )
             if adjust:
                 material['diffuse_intensity'] = 1.
     return errors, material
@@ -484,10 +534,9 @@ def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
     errors = []
     # make sure the geometry is defined
     if 'geometry/type' not in obj and (not geometry_dict or 'type' not in geometry_dict):
-        errors.append(ValidateMessage(
-            "Geometry type undefined!",
-            'ERROR',
-            obj, 'phobos.define_geometry', {}))
+        errors.append(
+            ValidateMessage("Geometry type undefined!", 'ERROR', obj, 'phobos.define_geometry', {})
+        )
         return errors
 
     if not geometry_dict:
@@ -496,11 +545,15 @@ def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
     # check for valid geometry type
     geometry_types = [entry[0] for entry in defs.geometrytypes]
     if geometry_dict['type'] not in geometry_types:
-        errors.append(ValidateMessage(
-            "Geometry type not supported!",
-            'ERROR',
-            obj, 'phobos.define_geometry',
-            {'log_info': geometry_dict['type']}))
+        errors.append(
+            ValidateMessage(
+                "Geometry type not supported!",
+                'ERROR',
+                obj,
+                'phobos.define_geometry',
+                {'log_info': geometry_dict['type']},
+            )
+        )
         return errors
 
     if adjust:
@@ -534,6 +587,7 @@ def validateInertiaData(obj, *args, adjust=False):
     from phobos.model.inertia import inertiaListToMatrix, inertiaMatrixToList
     from phobos.utils.io import getExpSettings
     import numpy
+
     errors = []
 
     # check dictionary parameters (most of the time pre object creation)
@@ -546,12 +600,19 @@ def validateInertiaData(obj, *args, adjust=False):
             missing.append('mass')
 
         if missing:
-            errors.append(ValidateMessage(
-                "Inertia dictionary not fully defined!",
-                'WARNING',
-                None, None,
-                {'log_info': "Missing: " +
-                 ' '.join(["'{0}'".format(miss) for miss in missing]) + " Set to default 1e-3."}))
+            errors.append(
+                ValidateMessage(
+                    "Inertia dictionary not fully defined!",
+                    'WARNING',
+                    None,
+                    None,
+                    {
+                        'log_info': "Missing: "
+                        + ' '.join(["'{0}'".format(miss) for miss in missing])
+                        + " Set to default 1e-3."
+                    },
+                )
+            )
 
             if 'inertia' in missing:
                 obj['inertia'] = (1e-3, 0., 0., 1e-3, 0., 1e-3)
@@ -563,42 +624,57 @@ def validateInertiaData(obj, *args, adjust=False):
     # check existing object properties
     elif isinstance(obj, bpy.types.Object):
         if 'inertial/inertia' not in obj:
-            errors.append(ValidateMessage(
-                "Inertia not defined!",
-                'WARNING',
-                obj,
-                'phobos.generate_inertial_objects',
-                {'log_info': "Set to default 1e-3."}))
+            errors.append(
+                ValidateMessage(
+                    "Inertia not defined!",
+                    'WARNING',
+                    obj,
+                    'phobos.generate_inertial_objects',
+                    {'log_info': "Set to default 1e-3."},
+                )
+            )
             obj['inertial/inertia'] = (1e-3, 0., 0., 1e-3, 0., 1e-3)
 
         if 'inertial/mass' not in obj:
-            errors.append(ValidateMessage(
-                "Mass is not defined!",
-                'WARNING',
-                obj,
-                'phobos.generate_inertial_objects',
-                {'log_info': "Set to default 1e-3."}))
+            errors.append(
+                ValidateMessage(
+                    "Mass is not defined!",
+                    'WARNING',
+                    obj,
+                    'phobos.generate_inertial_objects',
+                    {'log_info': "Set to default 1e-3."},
+                )
+            )
             obj['inertial/mass'] = 1e-3
         inertia = obj['inertial/inertia']
         mass = obj['inertial/mass']
 
     # Check inertia vector for various properties, round to export precision
-    inertia = numpy.around(numpy.array(inertiaListToMatrix(inertia)),
-                           decimals=getExpSettings().decimalPlaces)
+    inertia = numpy.around(
+        numpy.array(inertiaListToMatrix(inertia)), decimals=getExpSettings().decimalPlaces
+    )
     if any(element <= 0.0 for element in inertia.diagonal()):
-        errors.append(ValidateMessage(
-            "Negative semidefinite main diagonal in inertia data!",
-            'WARNING',
-            None if isinstance(obj, dict) else obj,
-            None, {'log_info': "Diagonal: " + str(inertia.diagonal())}))
+        errors.append(
+            ValidateMessage(
+                "Negative semidefinite main diagonal in inertia data!",
+                'WARNING',
+                None if isinstance(obj, dict) else obj,
+                None,
+                {'log_info': "Diagonal: " + str(inertia.diagonal())},
+            )
+        )
 
     # Calculate the determinant if consistent, quick check
     if numpy.linalg.det(inertia) <= 0.0:
-        errors.append(ValidateMessage(
-            "Negative semidefinite determinant in inertia data! Checking singular values.",
-            'WARNING',
-            None if isinstance(obj, dict) else obj,
-            None, {'log_info': "Determinant: " + str(numpy.linalg.det(inertia))}))
+        errors.append(
+            ValidateMessage(
+                "Negative semidefinite determinant in inertia data! Checking singular values.",
+                'WARNING',
+                None if isinstance(obj, dict) else obj,
+                None,
+                {'log_info': "Determinant: " + str(numpy.linalg.det(inertia))},
+            )
+        )
 
         # Calculate the eigenvalues if not consistent
         if any(element <= 0.0 for element in numpy.linalg.eigvals(inertia)):
@@ -606,18 +682,26 @@ def validateInertiaData(obj, *args, adjust=False):
             U, S, V = numpy.linalg.svd(inertia)
             S[S <= 0.0] = 1e-3
             inertia = U * S * V
-            errors.append(ValidateMessage(
-                "Negative semidefinite eigenvalues in inertia data!",
-                'WARNING',
-                None if isinstance(obj, dict) else obj,
-                None, {'log_info': "Eigenvalues: " + str(numpy.linalg.eigvals(inertia))}))
+            errors.append(
+                ValidateMessage(
+                    "Negative semidefinite eigenvalues in inertia data!",
+                    'WARNING',
+                    None if isinstance(obj, dict) else obj,
+                    None,
+                    {'log_info': "Eigenvalues: " + str(numpy.linalg.eigvals(inertia))},
+                )
+            )
 
     if mass <= 0.:
-        errors.append(ValidateMessage(
-            "Mass is {}!".format('zero' if mass == 0. else 'negative'),
-            'WARNING',
-            None if isinstance(obj, dict) else obj,
-            None, {} if not adjust else {'log_info': "Adjusted to 1e-3."}))
+        errors.append(
+            ValidateMessage(
+                "Mass is {}!".format('zero' if mass == 0. else 'negative'),
+                'WARNING',
+                None if isinstance(obj, dict) else obj,
+                None,
+                {} if not adjust else {'log_info': "Adjusted to 1e-3."},
+            )
+        )
         mass = 1e-3
 
     inertia = inertiaMatrixToList(inertia)
@@ -658,7 +742,7 @@ def validate(name):
             elif name == 'visual':
                 errors = validateVisual(obj, *args, **kwargs)
             else:
-                log("This validation type is not defined! '{}'". format(name), 'ERROR')
+                log("This validation type is not defined! '{}'".format(name), 'ERROR')
                 errors = []
 
             kwargs['errors'] = errors
@@ -670,4 +754,5 @@ def validate(name):
             return function(obj, *args, logging=logging, **kwargs)
 
         return validation_wrapper
+
     return validation

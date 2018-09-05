@@ -47,14 +47,14 @@ current_robot_name = ''
 
 # this is partly redundant, but currently only needed here
 def get_robot_names(scene, context):
-    robot_names = [(nUtils.getModelName(root),)*3 for root in sUtils.getRootsOfSelection()]
+    robot_names = [(nUtils.getModelName(root),) * 3 for root in sUtils.getRootsOfSelection()]
     return robot_names
 
 
 # currently only needed here, no point in putting in in poses.py
 def get_pose_names(scene, context):
     poselist = poses.getPoses(current_robot_name)
-    pose_items = [(pose,)*3 for pose in poselist]
+    pose_items = [(pose,) * 3 for pose in poselist]
     return pose_items
 
 
@@ -144,21 +144,16 @@ def get_pose_names(scene, context):
 
 class StorePoseOperator(Operator):
     """Store the current pose of selected links in one of the scene's robots"""
+
     bl_idname = 'phobos.store_pose'
     bl_label = "Store Current Pose"
     bl_options = {'REGISTER', 'UNDO'}
 
     robot_name = EnumProperty(
-        items=get_robot_names,
-        name="Robot",
-        description="Robot to store pose for"
+        items=get_robot_names, name="Robot", description="Robot to store pose for"
     )
 
-    pose_name = StringProperty(
-        name="Pose Name",
-        default="New Pose",
-        description="Name of new pose"
-    )
+    pose_name = StringProperty(name="Pose Name", default="New Pose", description="Name of new pose")
 
     def execute(self, context):
         root = sUtils.getObjectByProperty('model/name', self.robot_name)
@@ -168,20 +163,17 @@ class StorePoseOperator(Operator):
 
 class LoadPoseOperator(Operator):
     """Load a previously stored pose for one of the scene's robots"""
+
     bl_idname = 'phobos.load_pose'
     bl_label = "Load Pose"
     bl_options = {'REGISTER', 'UNDO'}
 
     robot_name = EnumProperty(
-        items=get_robot_names,
-        name="Robot Name",
-        description="Robot to load a pose for"
+        items=get_robot_names, name="Robot Name", description="Robot to load a pose for"
     )
 
     pose_name = EnumProperty(
-        items=get_pose_names,
-        name="Pose Name",
-        description="Name of pose to load"
+        items=get_pose_names, name="Pose Name", description="Name of pose to load"
     )
 
     def execute(self, context):
@@ -211,8 +203,12 @@ def draw_preview_callback(self):
     if (len(modelsPosesColl) > 0) and area:
 
         # Draw a textured quad
-        area_widths = [region.width for region in bpy.context.area.regions if region.type=='WINDOW']
-        area_heights = [region.height for region in bpy.context.area.regions if region.type=='WINDOW']
+        area_widths = [
+            region.width for region in bpy.context.area.regions if region.type == 'WINDOW'
+        ]
+        area_heights = [
+            region.height for region in bpy.context.area.regions if region.type == 'WINDOW'
+        ]
         if (len(area_widths) > 0) and (len(area_heights) > 0):
 
             active_preview = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
@@ -221,17 +217,17 @@ def draw_preview_callback(self):
             view_width = area_widths[0]
             view_height = area_heights[0]
             tex_start_x = 50
-            tex_end_x = view_width-50
+            tex_end_x = view_width - 50
             tex_start_y = 50
-            tex_end_y = view_height-50
+            tex_end_y = view_height - 50
             if im.size[0] < view_width:
-                diff = int((view_width-im.size[0])/2)
+                diff = int((view_width - im.size[0]) / 2)
                 tex_start_x = diff
-                tex_end_x = diff+im.size[0]
+                tex_end_x = diff + im.size[0]
             if im.size[1] < view_height:
-                diff = int((view_height-im.size[1])/2)
+                diff = int((view_height - im.size[1]) / 2)
                 tex_start_y = diff
-                tex_end_y = diff+im.size[1]
+                tex_end_y = diff + im.size[1]
 
             # Draw information
             font_id = 0  # XXX, need to find out how best to get this.
@@ -287,10 +283,19 @@ class ChangePreviewOperator(bpy.types.Operator):
                 root = None
                 if context.scene.objects.active != None:
                     root = sUtils.getRoot(context.scene.objects.active)
-                if not bpy.context.scene.preview_visible and \
-                        (bpy.data.images[activeModelPoseIndex].type == 'IMAGE') and \
-                        (root is None or not sUtils.isRoot(root) or not
-                         (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name] != root["model/name"]) or len(bpy.context.selected_objects) == 0):
+                if (
+                    not bpy.context.scene.preview_visible
+                    and (bpy.data.images[activeModelPoseIndex].type == 'IMAGE')
+                    and (
+                        root is None
+                        or not sUtils.isRoot(root)
+                        or not (
+                            modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
+                            != root["model/name"]
+                        )
+                        or len(bpy.context.selected_objects) == 0
+                    )
+                ):
                     bpy.ops.view3d.draw_preview_operator()
                     bpy.context.scene.preview_visible = True
 
@@ -301,7 +306,9 @@ class ChangePreviewOperator(bpy.types.Operator):
                 else:
                     activeModelPose.icon = "DOWNARROW_HLT"
                 for modelPose in modelsPosesColl:
-                    if (modelPose.type != "robot_name") and (modelPose.parent == activeModelPose.name):
+                    if (modelPose.type != "robot_name") and (
+                        modelPose.parent == activeModelPose.name
+                    ):
                         modelPose.hide = activeModelPose.hide
 
         return {'FINISHED'}
@@ -314,10 +321,10 @@ class DrawPreviewOperator(bpy.types.Operator):
     def modal(self, context, event):
         if event.type in {'LEFTMOUSE', 'RIGHTMOUSE', 'ESC'}:
             # TODO delete me?
-#            if bpy.context.scene.preview_visible:
+            #            if bpy.context.scene.preview_visible:
             bpy.context.scene.preview_visible = False
             # TODO delete me?
- #           else:
+            #           else:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
             return {'CANCELLED'}
 
@@ -331,7 +338,9 @@ class DrawPreviewOperator(bpy.types.Operator):
         if hasattr(self, "_handle") and self._handle:
             bpy.types.SpaceView3D.draw_handler_remove(self._handle, 'WINDOW')
 
-        self._handle = bpy.types.SpaceView3D.draw_handler_add(draw_preview_callback, args, 'WINDOW', 'POST_PIXEL')
+        self._handle = bpy.types.SpaceView3D.draw_handler_add(
+            draw_preview_callback, args, 'WINDOW', 'POST_PIXEL'
+        )
 
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}

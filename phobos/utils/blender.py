@@ -53,7 +53,7 @@ def update():
 
 
 def compileEnumPropertyList(iterable):
-    return ((a,)*3 for a in iterable)
+    return ((a,) * 3 for a in iterable)
 
 
 def getBlenderVersion():
@@ -77,15 +77,31 @@ def printMatrices(obj, info=None):
     """
     if not info:
         info = obj.name
-    print("\n----------------", info, "---------------------\n",
-          "local:\n", obj.matrix_local,
-          "\n\nworld:\n", obj.matrix_world,
-          "\n\nparent_inverse:\n", obj.matrix_parent_inverse,
-          "\n\nbasis:\n", obj.matrix_basis)
+    print(
+        "\n----------------",
+        info,
+        "---------------------\n",
+        "local:\n",
+        obj.matrix_local,
+        "\n\nworld:\n",
+        obj.matrix_world,
+        "\n\nparent_inverse:\n",
+        obj.matrix_parent_inverse,
+        "\n\nbasis:\n",
+        obj.matrix_basis,
+    )
 
 
-def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0, 0, 0),
-                    protation=(0, 0, 0), phobostype=None):
+def createPrimitive(
+    pname,
+    ptype,
+    psize,
+    player=0,
+    pmaterial=None,
+    plocation=(0, 0, 0),
+    protation=(0, 0, 0),
+    phobostype=None,
+):
     """Generates the primitive specified by the input parameters
 
     Args:
@@ -116,21 +132,43 @@ def createPrimitive(pname, ptype, psize, player=0, pmaterial=None, plocation=(0,
         obj = bpy.context.object
         obj.dimensions = psize
     elif ptype == "sphere":
-        bpy.ops.mesh.primitive_uv_sphere_add(size=psize, layers=players, location=plocation,
-                                             rotation=protation)
+        bpy.ops.mesh.primitive_uv_sphere_add(
+            size=psize, layers=players, location=plocation, rotation=protation
+        )
     elif ptype == "cylinder":
-        bpy.ops.mesh.primitive_cylinder_add(vertices=32, radius=psize[0], depth=psize[1],
-                                            layers=players, location=plocation, rotation=protation,
-                                            end_fill_type='TRIFAN')
+        bpy.ops.mesh.primitive_cylinder_add(
+            vertices=32,
+            radius=psize[0],
+            depth=psize[1],
+            layers=players,
+            location=plocation,
+            rotation=protation,
+            end_fill_type='TRIFAN',
+        )
     elif ptype == "cone":
-        bpy.ops.mesh.primitive_cone_add(vertices=32, radius=psize[0], depth=psize[1], cap_end=True,
-                                        layers=players, location=plocation, rotation=protation,
-                                        end_fill_type='TRIFAN')
+        bpy.ops.mesh.primitive_cone_add(
+            vertices=32,
+            radius=psize[0],
+            depth=psize[1],
+            cap_end=True,
+            layers=players,
+            location=plocation,
+            rotation=protation,
+            end_fill_type='TRIFAN',
+        )
     elif ptype == 'disc':
-        bpy.ops.mesh.primitive_circle_add(vertices=psize[1], radius=psize[0], fill_type='TRIFAN', location=plocation,
-                                          rotation=protation, layers=players)
+        bpy.ops.mesh.primitive_circle_add(
+            vertices=psize[1],
+            radius=psize[0],
+            fill_type='TRIFAN',
+            location=plocation,
+            rotation=protation,
+            layers=players,
+        )
     elif ptype == 'ico':
-        bpy.ops.mesh.primitive_ico_sphere_add(size=psize, layers=players, location=plocation, rotation=protation)
+        bpy.ops.mesh.primitive_ico_sphere_add(
+            size=psize, layers=players, location=plocation, rotation=protation
+        )
     else:
         log("Primitive type not found: " + ptype + ". Adding default cube instead.", 'WARNING')
         bpy.ops.mesh.primitive_cube_add(layers=players, location=plocation, rotation=protation)
@@ -283,7 +321,14 @@ def cleanObjectProperties(props):
     Returns:
 
     """
-    getridof = ['phobostype', '_RNA_UI', 'cycles_visibility', 'startChain', 'endChain', 'masschanged']
+    getridof = [
+        'phobostype',
+        '_RNA_UI',
+        'cycles_visibility',
+        'startChain',
+        'endChain',
+        'masschanged',
+    ]
     if props:
         for key in getridof:
             if key in props:
@@ -326,7 +371,7 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
     Returns:
 
     """
-    log("Creating thumbnail of model: "+modelname, "INFO")
+    log("Creating thumbnail of model: " + modelname, "INFO")
 
     # render presets
     bpy.context.scene.render.image_settings.file_format = 'PNG'
@@ -415,7 +460,7 @@ def getCombinedDimensions(objects):
             bbpoints.append(o.matrix_world * mathutils.Vector(p))
     mindims = [min([bbpoint[i] for bbpoint in bbpoints]) for i in (0, 1, 2)]
     maxdims = [max([bbpoint[i] for bbpoint in bbpoints]) for i in (0, 1, 2)]
-    return [abs(maxdims[i]-mindims[i]) for i in (0, 1, 2)]
+    return [abs(maxdims[i] - mindims[i]) for i in (0, 1, 2)]
 
 
 def getPhobosConfigPath():

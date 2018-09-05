@@ -187,10 +187,14 @@ def getNearestCommonParent(objs):
         inter_objects.add(parent)
         for obj in rest:  # start at base of each rest branch
             o = obj
-            while o.parent and o.parent != parent:  # as long as there is a parent that is not the candidate parent
+            while (
+                o.parent and o.parent != parent
+            ):  # as long as there is a parent that is not the candidate parent
                 o = o.parent
                 inter_objects.add(o)
-            if o.parent != parent:  # check which break condition happened, break if not arrived at parent
+            if (
+                o.parent != parent
+            ):  # check which break condition happened, break if not arrived at parent
                 in_all = False
                 break
     if not in_all:  # this is only true if none of the branches set it to False and broke afterwards
@@ -222,8 +226,7 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
         # search for namespaced groups with the exact name
         if ':' in group.name and submodelname == group.name:
             submodel = group
-        if (group.name.startswith('interfaces:') and
-                submodelname.split(':')[1] in group.name):
+        if group.name.startswith('interfaces:') and submodelname.split(':')[1] in group.name:
             interfaces = group
 
     if not submodel:
@@ -262,11 +265,15 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
         parentObjectsTo(bpy.context.selected_objects, submodelobj)
 
         # delete empty parent object of interfaces
-        sUtils.selectObjects(objects=[a for a in bpy.context.selected_objects
-                                      if a.type == 'EMPTY' and
-                                      'submodeltype' in a and
-                                      a['submodeltype'] == 'interface'],
-                             clear=True, active=0)
+        sUtils.selectObjects(
+            objects=[
+                a
+                for a in bpy.context.selected_objects
+                if a.type == 'EMPTY' and 'submodeltype' in a and a['submodeltype'] == 'interface'
+            ],
+            clear=True,
+            active=0,
+        )
         bpy.ops.object.delete(use_global=False)
     return submodelobj
 
@@ -327,8 +334,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
     # move objects to submodel layer
     for obj in physical_objects:
         obj.layers = bUtils.defLayers(defs.layerTypes['submodel'])
-    log('Created submodel group ' + submodelname + ' of type "' + submodeltype
-        + '".', 'DEBUG')
+    log('Created submodel group ' + submodelname + ' of type "' + submodeltype + '".', 'DEBUG')
 
     interfacegroup = None
     # make the interface group
@@ -349,8 +355,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
         # move objects to interface layer
         for obj in interfaces:
             obj.layers = bUtils.defLayers(defs.layerTypes['interface'])
-        log('Created interface group for submodel ' + submodelname + '.',
-            'DEBUG')
+        log('Created interface group for submodel ' + submodelname + '.', 'DEBUG')
     else:
         log('No interfaces for this submodel.', 'DEBUG')
 
@@ -426,11 +431,18 @@ def createInterface(ifdict, parent=None):
     model = ifdict['model'] if 'model' in ifdict else 'default'
     templateobj = ioUtils.getResource(('interface', model, ifdict['direction']))
     scale = ifdict['scale'] if 'scale' in ifdict else 1.0
-    ifobj = bUtils.createPrimitive(ifdict['name'], 'box', (1.0, 1.0, 1.0), defs.layerTypes['interface'],
-                                   plocation=location, protation=rotation, phobostype='interface')
+    ifobj = bUtils.createPrimitive(
+        ifdict['name'],
+        'box',
+        (1.0, 1.0, 1.0),
+        defs.layerTypes['interface'],
+        plocation=location,
+        protation=rotation,
+        phobostype='interface',
+    )
     nUtils.safelyName(ifobj, ifdict['name'], 'interface')
     ifobj.data = templateobj.data
-    ifobj.scale = (scale,)*3
+    ifobj.scale = (scale,) * 3
     ifobj['interface/type'] = ifdict['type']
     ifobj['interface/direction'] = ifdict['direction']
     bpy.ops.object.make_single_user(object=True, obdata=True)
@@ -474,16 +486,22 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
     loc, rot, sca = parentinterface.matrix_world.decompose()
     # apply additional transform (ignoring the scale of the parent interface)
     if not transform:
-        transform = mathutils.Euler((math.radians(180.0), 0.0, math.radians(180.0)), 'XYZ').to_matrix().to_4x4()
+        transform = (
+            mathutils.Euler((math.radians(180.0), 0.0, math.radians(180.0)), 'XYZ')
+            .to_matrix()
+            .to_4x4()
+        )
 
-    childinterface.matrix_world = mathutils.Matrix.Translation(loc) * rot.to_matrix().to_4x4() * transform
+    childinterface.matrix_world = (
+        mathutils.Matrix.Translation(loc) * rot.to_matrix().to_4x4() * transform
+    )
 
     # TODO clean this up
     # try:
     #    del childsubmodel['modelname']
     # except KeyError:
     #    pass
-    #TODO: re-implement this for MECHANICS models
+    # TODO: re-implement this for MECHANICS models
     # try:
     #     # parent visual and collision objects to new parent
     #     children = sUtils.getImmediateChildren(parent, ['visual', 'collision', 'interface'])
@@ -563,8 +581,11 @@ def getProperties(obj, category=None):
     if not category:
         category = obj.phobostype
     try:
-        diction = {key.replace(category + '/', ''): value
-                   for key, value in obj.items() if key.startswith(category + '/')}
+        diction = {
+            key.replace(category + '/', ''): value
+            for key, value in obj.items()
+            if key.startswith(category + '/')
+        }
     except KeyError:
         log("Failed filtering properties for category " + category, "ERROR")
     return diction
@@ -635,8 +656,13 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
         name = obj.name + '_annotation_object'
 
     annot_obj = bUtils.createPrimitive(
-        name, 'box', [1, 1, 1], defs.layerTypes['annotation'], plocation=loc,
-        phobostype='annotation')
+        name,
+        'box',
+        [1, 1, 1],
+        defs.layerTypes['annotation'],
+        plocation=loc,
+        phobostype='annotation',
+    )
     annot_obj.scale = (size,) * 3
 
     resource = ioUtils.getResource(['annotation', namespace.split('/')[-1]])
@@ -650,7 +676,7 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
     bpy.context.scene.layers = [True for i in range(20)]
 
     # parent annotation object
-    parentObjectsTo(annot_obj, obj,)
+    parentObjectsTo(annot_obj, obj)
 
     bpy.context.scene.layers = originallayers
 

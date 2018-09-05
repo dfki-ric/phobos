@@ -69,14 +69,21 @@ def createJoint(joint, linkobj=None, links=None):
     # try deriving link object from joint['child']
     if not linkobj:
         # link dictionary provided -> search for child link object
-        if (links and 'child' in joint and joint['child'] in links and
-                'object' in links[joint['child']]):
+        if (
+            links
+            and 'child' in joint
+            and joint['child'] in links
+            and 'object' in links[joint['child']]
+        ):
             linkobj = links[joint['child']]['object']
         # search for child link in scene
         else:
             linkobj = sUtils.getObjectByName(joint['child'])
             if isinstance(linkobj, list):
-                log("Could not identify object to define joint '{0}'.".format(joint['name']), 'ERROR')
+                log(
+                    "Could not identify object to define joint '{0}'.".format(joint['name']),
+                    'ERROR',
+                )
                 return
 
     # make sure the proper joint name is kept
@@ -104,8 +111,12 @@ def createJoint(joint, linkobj=None, links=None):
             if param in joint['limits']:
                 linkobj['joint/max' + param] = joint['limits'][param]
             else:
-                log("Joint limits incomplete for joint {}. Missing {}.".format(
-                    joint['name'], param), 'ERROR')
+                log(
+                    "Joint limits incomplete for joint {}. Missing {}.".format(
+                        joint['name'], param
+                    ),
+                    'ERROR',
+                )
 
         if all(elem in joint['limits'] for elem in ['lower', 'upper']):
             lower = joint['limits']['lower']
@@ -124,7 +135,7 @@ def createJoint(joint, linkobj=None, links=None):
     for prop in joint:
         if prop.startswith('$'):
             for tag in joint[prop]:
-                linkobj['joint/'+prop[1:]+'/'+tag] = joint[prop][tag]
+                linkobj['joint/' + prop[1:] + '/' + tag] = joint[prop][tag]
     log("Assigned joint information to {}.".format(linkobj.name), 'DEBUG')
 
 
@@ -145,11 +156,13 @@ def getJointConstraints(joint):
         if jt in ['revolute', 'continuous'] and crot:
             c = getJointConstraint(joint, 'LIMIT_ROTATION')
             # TODO delete me?
-            #we cannot use joint for both as the first is a Blender 'Object', the second an 'Armature'
-            #axis = (joint.matrix_local * -bpy.data.armatures[joint.name].bones[0].vector).normalized()
-            #joint.data accesses the armature, thus the armature's name is not important anymore
-            #axis = (joint.matrix_local * -joint.data.bones[0].vector).normalized()
-            axis = joint.data.bones[0].vector.normalized() #vector along axis of bone (Y axis of pose bone) in object space
+            # we cannot use joint for both as the first is a Blender 'Object', the second an 'Armature'
+            # axis = (joint.matrix_local * -bpy.data.armatures[joint.name].bones[0].vector).normalized()
+            # joint.data accesses the armature, thus the armature's name is not important anymore
+            # axis = (joint.matrix_local * -joint.data.bones[0].vector).normalized()
+            axis = joint.data.bones[
+                0
+            ].vector.normalized()  # vector along axis of bone (Y axis of pose bone) in object space
             if crot[0]:
                 limits = (c.min_x, c.max_x)
             elif crot[1]:
@@ -159,15 +172,19 @@ def getJointConstraints(joint):
         else:
             c = getJointConstraint(joint, 'LIMIT_LOCATION')
             if not c:
-                raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
-            freeloc = [c.use_min_x and c.use_max_x and c.min_x == c.max_x,
-                       c.use_min_y and c.use_max_y and c.min_y == c.max_y,
-                       c.use_min_z and c.use_max_z and c.min_z == c.max_z]
+                raise Exception(
+                    "JointTypeError: under-defined constraints in joint (" + joint.name + ")."
+                )
+            freeloc = [
+                c.use_min_x and c.use_max_x and c.min_x == c.max_x,
+                c.use_min_y and c.use_max_y and c.min_y == c.max_y,
+                c.use_min_z and c.use_max_z and c.min_z == c.max_z,
+            ]
             if jt == 'prismatic':
                 if sum(freeloc) == 2:
                     # TODO delete me?
-                    #axis = mathutils.Vector([int(not i) for i in freeloc])
-                    #vector along axis of bone (Y axis of pose bone) in obect space
+                    # axis = mathutils.Vector([int(not i) for i in freeloc])
+                    # vector along axis of bone (Y axis of pose bone) in obect space
                     axis = joint.data.bones[0].vector.normalized()
                     if not freeloc[0]:
                         limits = (c.min_x, c.max_x)
@@ -176,7 +193,9 @@ def getJointConstraints(joint):
                     elif not freeloc[2]:
                         limits = (c.min_z, c.max_z)
                 else:
-                    raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
+                    raise Exception(
+                        "JointTypeError: under-defined constraints in joint (" + joint.name + ")."
+                    )
             elif jt == 'planar':
                 if sum(freeloc) == 1:
                     axis = mathutils.Vector([int(i) for i in freeloc])
@@ -187,7 +206,9 @@ def getJointConstraints(joint):
                     elif axis[2]:
                         limits = (c.min_x, c.max_x, c.min_y, c.max_y)
                 else:
-                    raise Exception("JointTypeError: under-defined constraints in joint ("+joint.name+").")
+                    raise Exception(
+                        "JointTypeError: under-defined constraints in joint (" + joint.name + ")."
+                    )
     return axis, limits
 
 
@@ -209,8 +230,16 @@ def getJointConstraint(joint, ctype):
 
 
 # TODO are spring and damping really required as defaults?
-def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damping=0.0,
-                        maxeffort_approximation=None, maxspeed_approximation=None):
+def setJointConstraints(
+    joint,
+    jointtype,
+    lower=0.0,
+    upper=0.0,
+    spring=0.0,
+    damping=0.0,
+    maxeffort_approximation=None,
+    maxspeed_approximation=None,
+):
     """Sets the constraints for a given joint and jointtype.
 
     If the joint type is not recognized, the constraints will match a floating joint.
@@ -255,7 +284,9 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
         joint['joint/dynamics/springStiffness'] = spring
         joint['joint/dynamics/springDamping'] = damping
         joint['joint/dynamics/spring_const_constraint_axis1'] = spring  # FIXME: this is a hack
-        joint['joint/dynamics/damping_const_constraint_axis1'] = damping  # FIXME: this is a hack, too
+        joint[
+            'joint/dynamics/damping_const_constraint_axis1'
+        ] = damping  # FIXME: this is a hack, too
 
     # set constraints accordingly
     if jointtype == 'revolute':
@@ -283,15 +314,23 @@ def setJointConstraints(joint, jointtype, lower=0.0, upper=0.0, spring=0.0, damp
                 joint['joint/maxeffort_approximation'] = maxeffort_approximation['function']
                 joint['joint/maxeffort_coefficients'] = maxeffort_approximation['coefficients']
             else:
-                log("Approximation for max effort ill-defined in joint object {}.".format(
-                    joint.name), 'ERROR')
+                log(
+                    "Approximation for max effort ill-defined in joint object {}.".format(
+                        joint.name
+                    ),
+                    'ERROR',
+                )
         if maxspeed_approximation:
             if all(elem in ['function', 'coefficients'] for elem in maxspeed_approximation):
                 joint['joint/maxspeed_approximation'] = maxspeed_approximation['function']
                 joint['joint/maxspeed_coefficients'] = maxspeed_approximation['coefficients']
             else:
-                log("Approximation for max speed ill-defined in joint object {}.".format(
-                    joint.name), 'ERROR')
+                log(
+                    "Approximation for max speed ill-defined in joint object {}.".format(
+                        joint.name
+                    ),
+                    'ERROR',
+                )
 
     # set link/joint visualization
     resource_obj = ioUtils.getResource(('joint', jointtype))
@@ -308,17 +347,20 @@ def getJointType(joint):
     # we pick the first bone in the armature as there is only one
     for c in joint.pose.bones[0].constraints:
         if c.type == 'LIMIT_LOCATION':
-            cloc = [c.use_min_x and c.min_x == c.max_x,
-                    c.use_min_y and c.min_y == c.max_y,
-                    c.use_min_z and c.min_z == c.max_z]
+            cloc = [
+                c.use_min_x and c.min_x == c.max_x,
+                c.use_min_y and c.min_y == c.max_y,
+                c.use_min_z and c.min_z == c.max_z,
+            ]
         elif c.type == 'LIMIT_ROTATION':
             limrot = c
-            crot = [c.use_limit_x and (c.min_x != 0 or c.max_x != 0),
-                    c.use_limit_y and (c.min_y != 0 or c.max_y != 0),
-                    c.use_limit_z and (c.min_z != 0 or c.max_z != 0)]
+            crot = [
+                c.use_limit_x and (c.min_x != 0 or c.max_x != 0),
+                c.use_limit_y and (c.min_y != 0 or c.max_y != 0),
+                c.use_limit_z and (c.min_z != 0 or c.max_z != 0),
+            ]
     ncloc = sum(cloc) if cloc else None
-    ncrot = sum((limrot.use_limit_x, limrot.use_limit_y,
-                 limrot.use_limit_z,)) if limrot else None
+    ncrot = sum((limrot.use_limit_x, limrot.use_limit_y, limrot.use_limit_z)) if limrot else None
     # all but floating joints have translational limits
     if cloc:
         # fixed, revolute or continuous
@@ -369,12 +411,15 @@ def deriveJointState(joint):
       dict
 
     """
-    state = {'matrix': [list(vector) for vector in list(joint.pose.bones[0].matrix_basis)],
-             'translation': list(joint.pose.bones[0].matrix_basis.to_translation()),
-             'rotation_euler': list(joint.pose.bones[0].matrix_basis.to_euler()),
-             'rotation_quaternion': list(joint.pose.bones[0].matrix_basis.to_quaternion())}
+    state = {
+        'matrix': [list(vector) for vector in list(joint.pose.bones[0].matrix_basis)],
+        'translation': list(joint.pose.bones[0].matrix_basis.to_translation()),
+        'rotation_euler': list(joint.pose.bones[0].matrix_basis.to_euler()),
+        'rotation_quaternion': list(joint.pose.bones[0].matrix_basis.to_quaternion()),
+    }
     # TODO: hard-coding this could prove problematic if we at some point build armatures from multiple bones
     return state
+
 
 def set_revolute(joint, lower, upper):
     # fix location
@@ -401,6 +446,7 @@ def set_revolute(joint, lower, upper):
     crot.max_z = 0
     crot.owner_space = 'LOCAL'
 
+
 def set_continuous(joint):
     # fix location
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
@@ -422,6 +468,7 @@ def set_continuous(joint):
     crot.min_z = 0
     crot.max_z = 0
     crot.owner_space = 'LOCAL'
+
 
 def set_prismatic(joint, lower, upper):
     # fix location except for y axis
@@ -454,6 +501,7 @@ def set_prismatic(joint, lower, upper):
     crot.max_z = 0
     crot.owner_space = 'LOCAL'
 
+
 def set_fixed(joint):
     # fix location
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
@@ -478,6 +526,7 @@ def set_fixed(joint):
     crot.min_z = 0
     crot.max_z = 0
     crot.owner_space = 'LOCAL'
+
 
 def set_planar(joint):
     # fix location

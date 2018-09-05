@@ -52,9 +52,15 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
     # create motor object
     if motor['shape'].startswith('resource'):
         newmotor = bUtils.createPrimitive(
-            motor['name'], 'box', [1, 1, 1], layers,
-            plocation=origin.to_translation(), protation=origin.to_euler(),
-            pmaterial=motor['material'], phobostype='motor')
+            motor['name'],
+            'box',
+            [1, 1, 1],
+            layers,
+            plocation=origin.to_translation(),
+            protation=origin.to_euler(),
+            pmaterial=motor['material'],
+            phobostype='motor',
+        )
         # use resource name provided as: "resource:whatever_name"
         resource_obj = ioUtils.getResource(['motor'] + motor['shape'].split('://')[1].split('_'))
         if resource_obj:
@@ -65,9 +71,15 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
             log("Could not use resource mesh for motor. Default cube used instead.", 'WARNING')
     else:
         newmotor = bUtils.createPrimitive(
-            motor['name'], motor['shape'], motor['size'], layers,
-            plocation=origin.to_translation(), protation=origin.to_euler(),
-            pmaterial=motor['material'], phobostype='motor')
+            motor['name'],
+            motor['shape'],
+            motor['size'],
+            layers,
+            plocation=origin.to_translation(),
+            protation=origin.to_euler(),
+            pmaterial=motor['material'],
+            phobostype='motor',
+        )
 
     # assign the parent if available
     if parentobj is not None:
@@ -84,17 +96,21 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
 
     if 'controller' in defs.definitions['motors'][defname] and addcontrollers:
         import phobos.model.controllers as controllermodel
+
         motorcontroller = defs.definitions['motors'][defname]['controller']
-        controllerdefs = ioUtils.getDictFromYamlDefs('controller', motorcontroller,
-                                                     newmotor.name + '_controller')
+        controllerdefs = ioUtils.getDictFromYamlDefs(
+            'controller', motorcontroller, newmotor.name + '_controller'
+        )
         newcontroller = controllermodel.createController(
-            controllerdefs, newmotor, origin=newmotor.matrix_world, annotations='all')
+            controllerdefs, newmotor, origin=newmotor.matrix_world, annotations='all'
+        )
     else:
         newcontroller = None
 
     # select the new motor
-    sUtils.selectObjects([newmotor] if not newcontroller else [newmotor, newcontroller],
-                         clear=True, active=0)
+    sUtils.selectObjects(
+        [newmotor] if not newcontroller else [newmotor, newcontroller], clear=True, active=0
+    )
     return newmotor if not newcontroller else [newmotor, newcontroller]
 
 
@@ -110,6 +126,7 @@ def deriveMotor(obj, jointdict=None):
     """
     import phobos.model.models as models
     import phobos.model.controllers as controllermodel
+
     props = models.initObjectProperties(obj, phobostype='motor')
 
     # return None if no motor is attached (there will always be at least a name in the props)
@@ -118,8 +135,12 @@ def deriveMotor(obj, jointdict=None):
 
     # make sure the parent is a joint
     if not obj.parent or obj.parent.phobostype != 'link' or 'joint/type' not in obj.parent:
-        log("Can not derive motor from {}. Insufficient requirements from parent object!".format(
-            obj.name), 'ERROR')
+        log(
+            "Can not derive motor from {}. Insufficient requirements from parent object!".format(
+                obj.name
+            ),
+            'ERROR',
+        )
         return None
 
     props['joint'] = nUtils.getObjectName(obj.parent, phobostype='joint')

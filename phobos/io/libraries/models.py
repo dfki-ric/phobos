@@ -80,6 +80,7 @@ def getCategoriesForEnumProperty(self, context):
 def compileModelList():
     from bpy.props import EnumProperty
     from bpy.types import WindowManager
+
     # DOCU missing some docstring
     log("Compiling model list from local library...", "INFO")
 
@@ -112,12 +113,12 @@ def compileModelList():
             modelpath = os.path.join(categorypath, modelname)
 
             # check for valid blender savefile in the model folder
-            if os.path.exists(os.path.join(modelpath, 'blender', modelname+'.blend')):
+            if os.path.exists(os.path.join(modelpath, 'blender', modelname + '.blend')):
                 model_data[category][modelname] = {'path': modelpath}
 
                 # use existing thumbnail if available
                 if os.path.exists(os.path.join(modelpath, 'thumbnails')):
-                    previewpath = os.path.join(modelpath,'thumbnails', modelname+'.png')
+                    previewpath = os.path.join(modelpath, 'thumbnails', modelname + '.png')
                     preview = newpreviewcollection.load(modelname, previewpath, 'IMAGE')
                 # otherwise create one from the blend file
                 else:
@@ -133,12 +134,13 @@ def compileModelList():
         log("Finished parsing model folder. Imported {0} models.".format(i), 'INFO')
 
     ## reregister the enumproperty to ensure new items are displayed
-    #WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
-    #WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
+    # WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
+    # WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
 
 
 class UpdateModelLibraryOperator(bpy.types.Operator):
     """Update Model Library"""
+
     bl_idname = "phobos.update_model_library"
     bl_label = "Update Library"
 
@@ -156,17 +158,16 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     namespace = StringProperty(
-        name="Namespace",
-        default="",
-        description="Namespace with which to wrap the imported model."
+        name="Namespace", default="", description="Namespace with which to wrap the imported model."
     )
 
     use_prefix = BoolProperty(
-       name='Use Prefix',
-       default=False,
-       description="Import model with fixed prefixed instead of removable namespace.")
+        name='Use Prefix',
+        default=False,
+        description="Import model with fixed prefixed instead of removable namespace.",
+    )
 
-    #as_reference = BoolProperty(
+    # as_reference = BoolProperty(
     #    name='Import reference'
     #    default=False,
     #    description="Import model as reference to original model instead of importing all elements.")
@@ -184,32 +185,33 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
                 self.namespace = modelname + '_' + str(i)
         return context.window_manager.invoke_props_dialog(self, width=500)
 
-
     def execute(self, context):
         wm = context.window_manager
         # FIXME: the following is a hack to fix the problem mentioned at the top
         if not model_data:
             compileModelList()
-        filepath = os.path.join(model_data[wm.category][wm.modelpreview]['path'],
-                                'blender', wm.modelpreview+'.blend')
+        filepath = os.path.join(
+            model_data[wm.category][wm.modelpreview]['path'], 'blender', wm.modelpreview + '.blend'
+        )
         if ioUtils.importBlenderModel(filepath, self.namespace, self.use_prefix):
             return {'FINISHED'}
         else:
-            log("Model " + wm.modelpreview + " could not be loaded from library:"
-                "No valid .blend file.", "ERROR")
+            log(
+                "Model " + wm.modelpreview + " could not be loaded from library:"
+                "No valid .blend file.",
+                "ERROR",
+            )
             return {'CANCELLED'}
 
 
 def register():
     from bpy.types import WindowManager
-    from bpy.props import (
-            StringProperty,
-            EnumProperty,
-            BoolProperty
-            )
+    from bpy.props import StringProperty, EnumProperty, BoolProperty
+
     WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
     WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
     compileModelList()
+
 
 def unregister():
     for previews in model_previews.values():

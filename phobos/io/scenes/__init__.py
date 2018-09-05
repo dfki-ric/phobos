@@ -51,5 +51,6 @@ for filename in os.listdir(os.path.dirname(__file__)):
             scene_types.update(py_mod.scene_type_dict.copy())
             print('Registered scene plugin:', list(py_mod.scene_type_dict.keys()))
         else:
-            print('ERROR in scenes/__init__: "' +
-                  filename + '" has no valid scene plugin interface.')
+            print(
+                'ERROR in scenes/__init__: "' + filename + '" has no valid scene plugin interface.'
+            )

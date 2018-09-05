@@ -30,8 +30,16 @@
 import bpy
 import mathutils
 from bpy.types import Operator, PropertyGroup
-from bpy.props import (BoolProperty, IntProperty, StringProperty, EnumProperty,
-                       FloatProperty, FloatVectorProperty, BoolVectorProperty, CollectionProperty)
+from bpy.props import (
+    BoolProperty,
+    IntProperty,
+    StringProperty,
+    EnumProperty,
+    FloatProperty,
+    FloatVectorProperty,
+    BoolVectorProperty,
+    CollectionProperty,
+)
 
 import phobos.defs as defs
 import phobos.utils.blender as bUtils
@@ -69,9 +77,20 @@ def linkObjectLists(annotation, objectlist):
 
             objlist = []
             for ptype in ptypes:
-                objlist.extend([(ptype, obj) for obj in objectlist if (
-                    obj.phobostype == ptype or (obj.phobostype == 'link' and 'joint/type' in obj and
-                                                ptype == 'joint'))])
+                objlist.extend(
+                    [
+                        (ptype, obj)
+                        for obj in objectlist
+                        if (
+                            obj.phobostype == ptype
+                            or (
+                                obj.phobostype == 'link'
+                                and 'joint/type' in obj
+                                and ptype == 'joint'
+                            )
+                        )
+                    ]
+                )
             newanno[key] = objlist
         else:
             newanno[key] = value
@@ -81,6 +100,7 @@ def linkObjectLists(annotation, objectlist):
 
 class DynamicProperty(PropertyGroup):
     """A support class to handle dynamic properties in a temporary operator."""
+
     name = bpy.props.StringProperty()
     intProp = bpy.props.IntProperty()
     boolProp = bpy.props.BoolProperty()
@@ -157,6 +177,7 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
     # create the temporary operator class
     class TempObjAddOperator(Operator):
         """Temporary operator to add a {} {} object.""".format(name, phobtype)
+
         bl_idname = operatorBlenderId
         bl_label = 'Add {} {}'.format(name, phobtype)
         bl_description = 'Add a {} {}.'.format(name, phobtype)
@@ -194,8 +215,9 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
             hidden_props = ['general'] + hideprops
 
             # identify the property type for all the stuff in the definition
-            unsupported = DynamicProperty.assignDict(self.phobos_data.add, data,
-                                                     ignore=hidden_props)
+            unsupported = DynamicProperty.assignDict(
+                self.phobos_data.add, data, ignore=hidden_props
+            )
 
             if unsupported:
                 for key in unsupported:
@@ -207,8 +229,9 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
             return context.window_manager.invoke_props_dialog(self)
 
         def execute(self, context):
-            phobos_dict = ioUtils.getDictFromYamlDefs(self.phobostype, self.preset_name,
-                                                      self.obj_name)
+            phobos_dict = ioUtils.getDictFromYamlDefs(
+                self.phobostype, self.preset_name, self.obj_name
+            )
             selected_objs = context.selected_objects
 
             # store collected object data properties in the props dictionary
@@ -229,14 +252,16 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
             for custom_anno in self.annotation_checks:
                 if custom_anno.boolProp:
                     # parse object dictionaries if "$selected_objects:..." syntax is found
-                    annot = defs.definitions[self.phobostype + 's'][
-                        self.preset_name][custom_anno.name[2:]]
+                    annot = defs.definitions[self.phobostype + 's'][self.preset_name][
+                        custom_anno.name[2:]
+                    ]
 
                     annotations[custom_anno.name[2:]] = linkObjectLists(annot, selected_objs)
 
             # let the exectute function handle the object creation
-            new_objs, annot_objs, otherobjs = execute_func(phobos_dict, annotations, selected_objs,
-                                                           context.active_object, *args)
+            new_objs, annot_objs, otherobjs = execute_func(
+                phobos_dict, annotations, selected_objs, context.active_object, *args
+            )
 
             # select the newly added objects
             sUtils.selectObjects(new_objs + annot_objs + otherobjs, clear=True, active=0)
@@ -259,6 +284,7 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
 
 class AddAnnotationsOperator(bpy.types.Operator):
     """Add annotations defined by the Phobos definitions """
+
     bl_idname = "phobos.add_annotations"
     bl_label = "Add Annotations"
     bl_space_type = 'VIEW_3D'
@@ -269,8 +295,9 @@ class AddAnnotationsOperator(bpy.types.Operator):
         return [(category,) * 3 for category in sorted(defs.definitions.keys())]
 
     def getAnnotationCategories(self, context):
-        subcategories = [(category,) * 3 for category in
-                         sorted(defs.def_subcategories[self.annotationtype])]
+        subcategories = [
+            (category,) * 3 for category in sorted(defs.def_subcategories[self.annotationtype])
+        ]
 
         # do not use single categories
         if not subcategories:
@@ -278,34 +305,32 @@ class AddAnnotationsOperator(bpy.types.Operator):
         return subcategories
 
     def getDeviceTypes(self, context):
-        devicetypes = [(device,) * 3 for device in sorted(
-            defs.definitions[self.annotationtype].keys()) if self.annotationcategories in
-            defs.def_settings[self.annotationtype][device]['categories']]
+        devicetypes = [
+            (device,) * 3
+            for device in sorted(defs.definitions[self.annotationtype].keys())
+            if self.annotationcategories
+            in defs.def_settings[self.annotationtype][device]['categories']
+        ]
 
         if not devicetypes:
             devicetypes = [('None',) * 3]
         return devicetypes
 
     asObject = BoolProperty(
-        name="Add as objects",
-        description="Add annotation as object(s)",
-        default=True
+        name="Add as objects", description="Add annotation as object(s)", default=True
     )
 
     annotationtype = EnumProperty(
-        items=getAnnotationTypes,
-        name="Annotation Type",
-        description="Annotation Types")
+        items=getAnnotationTypes, name="Annotation Type", description="Annotation Types"
+    )
 
     annotationcategories = EnumProperty(
         items=getAnnotationCategories,
         name="Categories",
-        description="Categories of this annotation type.")
+        description="Categories of this annotation type.",
+    )
 
-    devicetype = EnumProperty(
-        items=getDeviceTypes,
-        name="Device Type",
-        description="Device Types")
+    devicetype = EnumProperty(items=getDeviceTypes, name="Device Type", description="Device Types")
 
     annotation_data = bpy.props.CollectionProperty(type=DynamicProperty)
 
@@ -322,7 +347,9 @@ class AddAnnotationsOperator(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         if self.asObject:
-            layout.prop(self, 'asObject', text='add annotations as object(s)', icon='FORCE_LENNARDJONES')
+            layout.prop(
+                self, 'asObject', text='add annotations as object(s)', icon='FORCE_LENNARDJONES'
+            )
         else:
             layout.prop(self, 'asObject', text='add annotations to object', icon='REC')
         layout.separator()
@@ -345,8 +372,9 @@ class AddAnnotationsOperator(bpy.types.Operator):
         hidden_props = ['general']
         # identify the property type for all the stuff in the definition
         self.annotation_data.clear()
-        unsupported = DynamicProperty.assignDict(self.annotation_data.add, data,
-                                                 ignore=hidden_props)
+        unsupported = DynamicProperty.assignDict(
+            self.annotation_data.add, data, ignore=hidden_props
+        )
 
         # expose the parameters as the right Property
         if self.annotation_data:
@@ -362,8 +390,10 @@ class AddAnnotationsOperator(bpy.types.Operator):
                 box.label(item, icon='ERROR')
 
         if unsupported:
-            log("These properties are not supported for generic editing: " + str(list(unsupported)),
-                'DEBUG')
+            log(
+                "These properties are not supported for generic editing: " + str(list(unsupported)),
+                'DEBUG',
+            )
 
     def execute(self, context):
         objects = context.selected_objects
@@ -373,9 +403,14 @@ class AddAnnotationsOperator(bpy.types.Operator):
         annot_objects = []
         for obj in objects:
             if self.asObject:
-                annot_objects.append(eUtils.addAnnotationObject(
-                    obj, annotation, name=obj.name + '_annotation',
-                    namespace=self.annotationtype.rstrip('s')))
+                annot_objects.append(
+                    eUtils.addAnnotationObject(
+                        obj,
+                        annotation,
+                        name=obj.name + '_annotation',
+                        namespace=self.annotationtype.rstrip('s'),
+                    )
+                )
             else:
                 eUtils.addAnnotation(obj, annotation, namespace=self.annotationtype.rstrip('s'))
 

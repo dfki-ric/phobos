@@ -86,28 +86,33 @@ def deriveEntity(entity, outpath):
         heightmapMesh.modifiers["displace_heightmap"].show_viewport = True
         heightmapMesh.data = oldMesh
         bpy.data.meshes.remove(exMesh)
-        entry = {"name": heightmap["entity/name"],
-                 "type": "mesh",
-                 "file": filename,
-                 "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
-                 "position": entitypose["translation"],
-                 "rotation": entitypose["rotation_quaternion"]
-                 }
+        entry = {
+            "name": heightmap["entity/name"],
+            "type": "mesh",
+            "file": filename,
+            "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
+            "position": entitypose["translation"],
+            "rotation": entitypose["rotation_quaternion"],
+        }
 
     else:
-        imagepath = os.path.abspath(os.path.join(os.path.split(bpy.data.filepath)[0], heightmap["image"]))
+        imagepath = os.path.abspath(
+            os.path.join(os.path.split(bpy.data.filepath)[0], heightmap["image"])
+        )
         shutil.copy2(imagepath, heightmap_outpath)
-        entry = {"name": heightmap["entity/name"],
-                 "type": "heightmap",
-                 "file": os.path.join("heightmaps", os.path.basename(imagepath)),
-                 "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
-                 "width": heightmapMesh.dimensions[1],
-                 "length": heightmapMesh.dimensions[0],
-                 "height": heightmapMesh.modifiers["displace_heightmap"].strength,
-                 "position": entitypose["translation"],
-                 "rotation": entitypose["rotation_quaternion"]
-                 }
+        entry = {
+            "name": heightmap["entity/name"],
+            "type": "heightmap",
+            "file": os.path.join("heightmaps", os.path.basename(imagepath)),
+            "anchor": heightmap["anchor"] if "anchor" in heightmap else "none",
+            "width": heightmapMesh.dimensions[1],
+            "length": heightmapMesh.dimensions[0],
+            "height": heightmapMesh.modifiers["displace_heightmap"].strength,
+            "position": entitypose["translation"],
+            "rotation": entitypose["rotation_quaternion"],
+        }
     return entry
+
 
 # information for the registration in the exporter
 entity_type_name = 'heightmap'

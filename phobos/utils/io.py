@@ -121,8 +121,11 @@ def getEntityRoots():
         list: roots of well-defined entities in the scene
 
     """
-    roots = [obj for obj in bpy.context.scene.objects if sUtils.isEntity(obj)
-             and (not getExpSettings().selectedOnly or obj.select)]
+    roots = [
+        obj
+        for obj in bpy.context.scene.objects
+        if sUtils.isEntity(obj) and (not getExpSettings().selectedOnly or obj.select)
+    ]
     return roots
 
 
@@ -149,19 +152,27 @@ def getDictFromYamlDefs(phobostype, defname, name):
         material = None
 
     # separate properties and annotations from each other
-    props = {key: value for key, value in defs.definitions[phobostype + 's'][defname].items()
-             if not isinstance(value, dict)}
-    annots = {key: value for key, value in defs.definitions[phobostype + 's'][defname].items()
-              if isinstance(value, dict)}
+    props = {
+        key: value
+        for key, value in defs.definitions[phobostype + 's'][defname].items()
+        if not isinstance(value, dict)
+    }
+    annots = {
+        key: value
+        for key, value in defs.definitions[phobostype + 's'][defname].items()
+        if isinstance(value, dict)
+    }
 
     # create a dictionary holding the properties
-    phobos_dict = {'name': name,
-                   'defname': defname,
-                   'category': defs.def_settings[phobostype + 's'][defname]['categories'],
-                   'material': material,
-                   'type': defs.def_settings[phobostype + 's'][defname]['type'],
-                   'props': props,
-                   'annotations': annots}
+    phobos_dict = {
+        'name': name,
+        'defname': defname,
+        'category': defs.def_settings[phobostype + 's'][defname]['categories'],
+        'material': material,
+        'type': defs.def_settings[phobostype + 's'][defname]['type'],
+        'props': props,
+        'annotations': annots,
+    }
 
     # add the general settings for this object
     general_settings = defs.def_settings[phobostype + 's'][defname]
@@ -196,44 +207,56 @@ def getOutputMeshpath(path, meshtype=None):
 
 def getEntityTypesForExport():
     """Returns list of entity types available for export"""
-    return [typename for typename in sorted(entity_types)
-            if 'export' in entity_types[typename] and
-            'extensions' in entity_types[typename]]
+    return [
+        typename
+        for typename in sorted(entity_types)
+        if 'export' in entity_types[typename] and 'extensions' in entity_types[typename]
+    ]
 
 
 def getEntityTypesForImport():
     """Returns list of entity types available for import"""
-    return [typename for typename in sorted(entity_types)
-            if 'import' in entity_types[typename] and
-            'extensions' in entity_types[typename]]
+    return [
+        typename
+        for typename in sorted(entity_types)
+        if 'import' in entity_types[typename] and 'extensions' in entity_types[typename]
+    ]
 
 
 def getSceneTypesForExport():
     """Returns list of scene types available for export"""
-    return [typename for typename in sorted(scene_types)
-            if 'export' in scene_types[typename] and
-            'extensions' in scene_types[typename]]
+    return [
+        typename
+        for typename in sorted(scene_types)
+        if 'export' in scene_types[typename] and 'extensions' in scene_types[typename]
+    ]
 
 
 def getSceneTypesForImport():
     """Returns list of scene types available for import"""
-    return [typename for typename in sorted(scene_types)
-            if 'import' in scene_types[typename] and
-            'extensions' in scene_types[typename]]
+    return [
+        typename
+        for typename in sorted(scene_types)
+        if 'import' in scene_types[typename] and 'extensions' in scene_types[typename]
+    ]
 
 
 def getMeshTypesForExport():
     """Returns list of mesh types available for export"""
-    return [typename for typename in sorted(mesh_types)
-            if 'export' in mesh_types[typename] and
-            'extensions' in mesh_types[typename]]
+    return [
+        typename
+        for typename in sorted(mesh_types)
+        if 'export' in mesh_types[typename] and 'extensions' in mesh_types[typename]
+    ]
 
 
 def getMeshTypesForImport():
     """Returns list of mesh types available for import"""
-    return [typename for typename in sorted(mesh_types)
-            if 'import' in mesh_types[typename] and
-            'extensions' in mesh_types[typename]]
+    return [
+        typename
+        for typename in sorted(mesh_types)
+        if 'import' in mesh_types[typename] and 'extensions' in mesh_types[typename]
+    ]
 
 
 def getExportPath():
@@ -305,8 +328,11 @@ def importBlenderModel(filepath, namespace='', prefix=False):
             else:
                 for obj in bpy.context.selected_objects:
                     nUtils.addNamespace(obj, namespace)
-        submechanism_roots = [obj for obj in bpy.data.objects if obj.phobostype == 'link'
-                              and 'submechanism/spanningtree' in obj]
+        submechanism_roots = [
+            obj
+            for obj in bpy.data.objects
+            if obj.phobostype == 'link' and 'submechanism/spanningtree' in obj
+        ]
         for root in submechanism_roots:
             partlist = [root] + root['submechanism/spanningtree']
             if 'submechanism/freeloader' in root:
@@ -334,8 +360,9 @@ def importResources(restuple, filepath=None):
     currentscene = bpy.context.scene.name
     bUtils.switchToScene('resources')
     # avoid importing the same objects multiple times
-    imported_objects = [nUtils.stripNamespaceFromName(obj.name)
-                        for obj in bpy.data.scenes['resources'].objects]
+    imported_objects = [
+        nUtils.stripNamespaceFromName(obj.name) for obj in bpy.data.scenes['resources'].objects
+    ]
     requested_objects = ['_'.join(resource) for resource in restuple]
     new_objects = [obj for obj in requested_objects if obj not in imported_objects]
 
@@ -415,8 +442,9 @@ def copy_model(model):
             else:
                 newlist.append(value)
         return newlist
-    raise TypeError("Deep copy failed. Unsuspected element in the dictionary: {}".format(
-        type(model)))
+    raise TypeError(
+        "Deep copy failed. Unsuspected element in the dictionary: {}".format(type(model))
+    )
 
 
 def exportModel(model, exportpath='.', entitytypes=None):
@@ -450,18 +478,24 @@ def exportModel(model, exportpath='.', entitytypes=None):
                 sourcepath = path.join(path.expanduser(bpy.path.abspath('//')), mat[texturetype])
                 if path.isfile(sourcepath):
                     texture_path = securepath(path.join(exportpath, 'textures'))
-                    log("Exporting texture {} of material {} to {}.".format(
-                        texturetype, mat[texturetype], texture_path), 'INFO')
+                    log(
+                        "Exporting texture {} of material {} to {}.".format(
+                            texturetype, mat[texturetype], texture_path
+                        ),
+                        'INFO',
+                    )
                     try:
-                        shutil.copy(sourcepath, path.join(texture_path,
-                                                          path.basename(mat[texturetype])))
+                        shutil.copy(
+                            sourcepath, path.join(texture_path, path.basename(mat[texturetype]))
+                        )
                     except shutil.SameFileError:
-                        log("{} of material {} already in place.".format(texturetype, materialname),
-                            'WARNING')
+                        log(
+                            "{} of material {} already in place.".format(texturetype, materialname),
+                            'WARNING',
+                        )
 
                     # update the texture path in the model
                     mat[texturetype] = 'textures/' + path.basename(mat[texturetype])
-
 
     # export model in selected formats
     for entitytype in entitytypes:
@@ -499,8 +533,9 @@ def exportModel(model, exportpath='.', entitytypes=None):
     display.setProgress(0)
 
 
-def exportScene(scenedict, exportpath='.', scenetypes=None, export_entity_models=False,
-                entitytypes=None):
+def exportScene(
+    scenedict, exportpath='.', scenetypes=None, export_entity_models=False, entitytypes=None
+):
     """Exports provided scene to provided path
 
     Args:
@@ -524,4 +559,6 @@ def exportScene(scenedict, exportpath='.', scenetypes=None, export_entity_models
         gui_typename = "export_scene_" + scenetype
         # check if format exists and should be exported
         if getattr(bpy.context.scene, gui_typename):
-            scene_types[scenetype]['export'](scenedict['entities'], os.path.join(exportpath, scenedict['name']))
+            scene_types[scenetype]['export'](
+                scenedict['entities'], os.path.join(exportpath, scenedict['name'])
+            )

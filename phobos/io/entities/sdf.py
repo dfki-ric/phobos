@@ -51,7 +51,7 @@ jointmapping = {
     'prismatic': 'prismatic',
     'fixed': 'fixed',
     'floating': 'TODO',
-    'planar': 'TODO'
+    'planar': 'TODO',
 }
 
 
@@ -116,8 +116,7 @@ class xmlTagger(object):
 
         # create parameter strings by unpacking dictionary
         if params:
-            parameters = [key + '="' +
-                          str(params[key]) + '" ' for key in params.keys()]
+            parameters = [key + '="' + str(params[key]) + '" ' for key in params.keys()]
             # remove trailing whitespace
             parameters[-1] = parameters[-1][:-1]
         else:
@@ -151,8 +150,7 @@ class xmlTagger(object):
         :param value: The value of the attribute
         :type value: str (will be casted anyway)
         """
-        self.output.append(self.ind() + '<' + str(tag) +
-                           '>' + str(value) + '</' + tag + '>\n')
+        self.output.append(self.ind() + '<' + str(tag) + '>' + str(value) + '</' + tag + '>\n')
 
     def get_indent(self):
         return self.indentation
@@ -203,18 +201,19 @@ def exportSDFPose(relativepose, indentation, poseobject=None):
         matrix = poseobject.matrix_world
         # FINAL remove when done
         # matrix = getCombinedTransform(poseobject, getRoot(poseobject))
-        posedata = {'rawmatrix': matrix,
-                    'matrix': [list(vector) for vector in list(matrix)],
-                    'translation': list(matrix.to_translation()),
-                    'rotation_euler': list(matrix.to_euler()),
-                    'rotation_quaternion': list(matrix.to_quaternion())}
+        posedata = {
+            'rawmatrix': matrix,
+            'matrix': [list(vector) for vector in list(matrix)],
+            'translation': list(matrix.to_translation()),
+            'rotation_euler': list(matrix.to_euler()),
+            'rotation_quaternion': list(matrix.to_quaternion()),
+        }
         posedata = gUtils.roundFloatsInDict(posedata, getExpSettings().decimalPlaces)
 
     # only translation and euler rotation are required
     tra = posedata['translation']
     rot = posedata['rotation_euler']
-    result = '{0} {1} {2} {3} {4} {5}'.format(
-        tra[0], tra[1], tra[2], rot[0], rot[1], rot[2])
+    result = '{0} {1} {2} {3} {4} {5}'.format(tra[0], tra[1], tra[2], rot[0], rot[1], rot[2])
     tagger.attrib('pose', result)
     return "".join(tagger.get_output())
 
@@ -423,12 +422,18 @@ def exportSDFGeometry(geometrydata, indentation, modelname):
     elif geometrydata['type'] == 'mesh':
         tagger.descend('mesh')
         meshtype = getExpSettings().export_sdf_mesh_type
-        tagger.attrib('uri', 'model://' + modelname + '/meshes/' +
-                      geometrydata['filename'] + '.{0}'.format(meshtype))
-    #     OPT: tagger.descend('submesh')
-    #     REQ: tagger.attrib('name', ...)
-    #     OPT: tagger.attrib('center', ...)
-    #     tagger.ascend()
+        tagger.attrib(
+            'uri',
+            'model://'
+            + modelname
+            + '/meshes/'
+            + geometrydata['filename']
+            + '.{0}'.format(meshtype),
+        )
+        #     OPT: tagger.descend('submesh')
+        #     REQ: tagger.attrib('name', ...)
+        #     OPT: tagger.attrib('center', ...)
+        #     tagger.ascend()
         tagger.attrib('scale', '{0} {1} {2}'.format(*geometrydata['scale']))
         tagger.ascend()
     # elif geometrydata['type'] == 'plane':
@@ -489,11 +494,13 @@ def exportSDFVisual(visualobj, linkobj, visualdata, indentation, modelname):
 
     # Pose data of the visual is transformed by link --> use local matrix
     matrix = visualobj.matrix_local
-    posedata = {'rawmatrix': matrix,
-                'matrix': [list(vector) for vector in list(matrix)],
-                'translation': list(matrix.to_translation()),
-                'rotation_euler': list(matrix.to_euler()),
-                'rotation_quaternion': list(matrix.to_quaternion())}
+    posedata = {
+        'rawmatrix': matrix,
+        'matrix': [list(vector) for vector in list(matrix)],
+        'translation': list(matrix.to_translation()),
+        'rotation_euler': list(matrix.to_euler()),
+        'rotation_quaternion': list(matrix.to_quaternion()),
+    }
     # overwrite absolute position of the visual object
     tagger.write(exportSDFPose(posedata, tagger.get_indent()))
 
@@ -501,8 +508,7 @@ def exportSDFVisual(visualobj, linkobj, visualdata, indentation, modelname):
     if 'material' in visualdata:
         tagger.write(exportSDFMaterial(visualdata['material'], tagger.get_indent()))
 
-    tagger.write(exportSDFGeometry(visualdata['geometry'], tagger.get_indent(),
-                          modelname))
+    tagger.write(exportSDFGeometry(visualdata['geometry'], tagger.get_indent(), modelname))
     tagger.ascend()
     return "".join(tagger.get_output())
 
@@ -519,29 +525,32 @@ def exportSDFMaterial(materialdata, indentation):
     """
     tagger = xmlTagger(initial=indentation)
     tagger.descend('material')
-    alpha = materialdata[
-        'transparency'] if 'transparency' in materialdata else '1.0'
+    alpha = materialdata['transparency'] if 'transparency' in materialdata else '1.0'
 
     # OPT: tagger.descend('plugin', ...)
     # OPT: tagger.descend('shader', ...)
     # OPT: tagger.attrib('lighting', ...)
 
     ambient = materialdata['ambientColor']
-    tagger.attrib('ambient', '{0} {1} {2} {3}'.format(
-                  ambient['r'], ambient['g'], ambient['g'], alpha))
+    tagger.attrib(
+        'ambient', '{0} {1} {2} {3}'.format(ambient['r'], ambient['g'], ambient['g'], alpha)
+    )
 
     diffuse = materialdata['diffuseColor']
-    tagger.attrib('diffuse', '{0} {1} {2} {3}'.format(
-        diffuse['r'], diffuse['g'], diffuse['b'], alpha))
+    tagger.attrib(
+        'diffuse', '{0} {1} {2} {3}'.format(diffuse['r'], diffuse['g'], diffuse['b'], alpha)
+    )
 
     specular = materialdata['specularColor']
-    tagger.attrib('specular', '{0} {1} {2} {3}'.format(
-        specular['r'], specular['g'], specular['b'], 1.0))
+    tagger.attrib(
+        'specular', '{0} {1} {2} {3}'.format(specular['r'], specular['g'], specular['b'], 1.0)
+    )
 
     if 'emissionColor' in materialdata:
         emission = materialdata['emissionColor']
-        tagger.attrib('emissive', '{0} {1} {2} {3}'.format(
-            emission['r'], emission['g'], emission['b'], 1.0))
+        tagger.attrib(
+            'emissive', '{0} {1} {2} {3}'.format(emission['r'], emission['g'], emission['b'], 1.0)
+        )
     tagger.ascend()
     return "".join(tagger.get_output())
 
@@ -571,8 +580,11 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation)
         for colkey in linkdict['collision']:
             colliname = linkdict['collision'][colkey]['name']
             collisionobj = bpy.context.scene.objects[colliname]
-            tagger.write(exportSDFCollision(collisionobj, linkdict['collision'][colkey],
-                                            tagger.get_indent(), modelname))
+            tagger.write(
+                exportSDFCollision(
+                    collisionobj, linkdict['collision'][colkey], tagger.get_indent(), modelname
+                )
+            )
     else:
         log("No collision data for '{0}'...".format(linkdict['name']), 'WARNING')
 
@@ -586,8 +598,9 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation)
             if 'material' in visualdata:
                 material = materials[visualdata['material']]
                 visualdata['material'] = material
-            tagger.write(exportSDFVisual(visualobj, linkobj, visualdata,
-                                         tagger.get_indent(), modelname))
+            tagger.write(
+                exportSDFVisual(visualobj, linkobj, visualdata, tagger.get_indent(), modelname)
+            )
     else:
         log("No visual data for '{0}'...".format(linkdict['name']), 'WARNING')
 
@@ -631,8 +644,12 @@ def exportSDFJoint(jointdict, indentation):
     tagger.descend('joint', {'name': jointdict['name'], 'type': sdftype})
     # FINAL remove when all joints are finished
     if sdftype == 'TODO':
-        log("Joint type '{}' at joint '{}' not supported yet.".format(
-            jointdict['type'], jointdict['name']), 'ERROR')
+        log(
+            "Joint type '{}' at joint '{}' not supported yet.".format(
+                jointdict['type'], jointdict['name']
+            ),
+            'ERROR',
+        )
     tagger.attrib('parent', jointdict['parent'])
     tagger.attrib('child', jointdict['child'])
     # OPT: tagger.attrib('gearbox_ratio', ...)
@@ -672,60 +689,60 @@ def exportSDFJoint(jointdict, indentation):
             tagger.ascend()
         tagger.ascend()
     # if 'axis2' in jointdict:
-        # OPT: tagger.descend('axis2')
-        # REQ: tagger.attrib('xyz', list_to_string(jointdict['axis']))
-        # REQ: tagger.attrib('use_parent_model_frame', ...)
-        # OPT: tagger.descend('dynamics')
-        # OPT: tagger.attrib('damping', ...)
-        # OPT: tagger.attrib('friction', ...)
-        # REQ: tagger.attrib('spring_reference', ...)
-        # REQ: tagger.attrib('spring_stiffness', ...)
-        # tagger.ascend()
-        # OPT: tagger.descend('limit')
-        # OPT: tagger.attrib('lower', jointdict['limits']['lower'])
-        # OPT: tagger.attrib('upper', jointdict['limits']['upper'])
-        # OPT: tagger.attrib('effort', jointdict['limits']['effort'])
-        # OPT: tagger.attrib('velocity', jointdict['limits']['velocity'])
-        # OPT: tagger.attrib('stiffness', ...)
-        # OPT: tagger.attrib('dissipation', ...)
-        # tagger.ascend()
-        # tagger.ascend()
+    # OPT: tagger.descend('axis2')
+    # REQ: tagger.attrib('xyz', list_to_string(jointdict['axis']))
+    # REQ: tagger.attrib('use_parent_model_frame', ...)
+    # OPT: tagger.descend('dynamics')
+    # OPT: tagger.attrib('damping', ...)
+    # OPT: tagger.attrib('friction', ...)
+    # REQ: tagger.attrib('spring_reference', ...)
+    # REQ: tagger.attrib('spring_stiffness', ...)
+    # tagger.ascend()
+    # OPT: tagger.descend('limit')
+    # OPT: tagger.attrib('lower', jointdict['limits']['lower'])
+    # OPT: tagger.attrib('upper', jointdict['limits']['upper'])
+    # OPT: tagger.attrib('effort', jointdict['limits']['effort'])
+    # OPT: tagger.attrib('velocity', jointdict['limits']['velocity'])
+    # OPT: tagger.attrib('stiffness', ...)
+    # OPT: tagger.attrib('dissipation', ...)
+    # tagger.ascend()
+    # tagger.ascend()
     # if 'physics' in jointdict:
-        # OPT: tagger.descend('physics')
-        # OPT: tagger.descend('simbody')
-        # OPT: tagger.attrib('must_be_loop_joint', ...)
-        # tagger.ascend()
-        #
-        # OPT: tagger.descend('ode')
-        # OPT: tagger.attrib('cfm_damping', ...)
-        # OPT: tagger.attrib('implicit_spring_damper', ...)
-        # OPT: tagger.attrib('fudge_factor', ...)
-        # OPT: tagger.attrib('cfm', ...)
-        # OPT: tagger.attrib('erp', ...)
-        # OPT: tagger.attrib('bounce', ...)
-        # OPT: tagger.attrib('max_force', ...)
-        # OPT: tagger.attrib('velocity', ...)
-        #
-        # OPT: tagger.descend('limit', ...)
-        # REQ: tagger.attrib('cfm', ...)
-        # REQ: tagger.attrib('erp', ...)
-        # tagger.ascend()
-        #
-        # OPT: tagger.descend('suspension')
-        # REQ: tagger.attrib('cfm', ...)
-        # REQ: tagger.attrib('erp', ...)
-        # tagger.ascend()
-        # tagger.ascend()
-        #
-        # OPT: tagger.attrib('provide_feedback', ...)
-        # tagger.ascend()
+    # OPT: tagger.descend('physics')
+    # OPT: tagger.descend('simbody')
+    # OPT: tagger.attrib('must_be_loop_joint', ...)
+    # tagger.ascend()
+    #
+    # OPT: tagger.descend('ode')
+    # OPT: tagger.attrib('cfm_damping', ...)
+    # OPT: tagger.attrib('implicit_spring_damper', ...)
+    # OPT: tagger.attrib('fudge_factor', ...)
+    # OPT: tagger.attrib('cfm', ...)
+    # OPT: tagger.attrib('erp', ...)
+    # OPT: tagger.attrib('bounce', ...)
+    # OPT: tagger.attrib('max_force', ...)
+    # OPT: tagger.attrib('velocity', ...)
+    #
+    # OPT: tagger.descend('limit', ...)
+    # REQ: tagger.attrib('cfm', ...)
+    # REQ: tagger.attrib('erp', ...)
+    # tagger.ascend()
+    #
+    # OPT: tagger.descend('suspension')
+    # REQ: tagger.attrib('cfm', ...)
+    # REQ: tagger.attrib('erp', ...)
+    # tagger.ascend()
+    # tagger.ascend()
+    #
+    # OPT: tagger.attrib('provide_feedback', ...)
+    # tagger.ascend()
     # if 'frame' in jointdict:
-        # OPT: tagger.write(exportSDFFrame(jointdict['frame']))
+    # OPT: tagger.write(exportSDFFrame(jointdict['frame']))
     # We cannot write a different joint pose, as the link is already transformed for the
     # z axis to be rotated properly
     # tagger.write(exportSDFPose(jointdict['pose'], tagger.get_indent()))
     # if 'sensor' in jointdict:
-        # OPT: tagger.write(sensor('sensor'))
+    # OPT: tagger.write(sensor('sensor'))
     tagger.ascend()
     return "".join(tagger.get_output())
 
@@ -735,11 +752,26 @@ def exportSDFSensor(sensordict, indentation):
 
     tagger.descend('sensor', {'name': sensordict['name'], 'type': sensordict['type']})
 
-    if sensordict['type'] not in ['altimeter', 'camera', 'contact', 'gps', 'imu', 'logical_camera',
-                                  'magnetometer', 'ray', 'rfidtag', 'rfid', 'sonar', 'transceiver',
-                                  'force_torque']:
-        log("Sensor type not supported by SDF '{}'! Skipping sensor {}...".format(
-            sensordict['type'], sensordict['name']))
+    if sensordict['type'] not in [
+        'altimeter',
+        'camera',
+        'contact',
+        'gps',
+        'imu',
+        'logical_camera',
+        'magnetometer',
+        'ray',
+        'rfidtag',
+        'rfid',
+        'sonar',
+        'transceiver',
+        'force_torque',
+    ]:
+        log(
+            "Sensor type not supported by SDF '{}'! Skipping sensor {}...".format(
+                sensordict['type'], sensordict['name']
+            )
+        )
         return ''
 
     # write generic params
@@ -868,12 +900,20 @@ def exportSDFSensor(sensordict, indentation):
             tagger.descend('orientation_reference_frame')
             tagger.attrib('localization', imu['orientation_reference_frame']['localization'])
             if 'custom_rpy' in imu['orientation_reference_frame']:
-                tagger.attrib('custom_rpy', '{} {} {}'.format(
-                    *[i for i in imu['orientation_reference_frame']['custom_rpy']]))
+                tagger.attrib(
+                    'custom_rpy',
+                    '{} {} {}'.format(
+                        *[i for i in imu['orientation_reference_frame']['custom_rpy']]
+                    ),
+                )
                 # TODO add support for parent_frame
             if 'grav_dir_x' in imu['orientation_reference_frame']:
-                tagger.attrib('grav_dir_x', '{} {} {}'.format(
-                    *[i for i in imu['orientation_reference_frame']['grav_dir_x']]))
+                tagger.attrib(
+                    'grav_dir_x',
+                    '{} {} {}'.format(
+                        *[i for i in imu['orientation_reference_frame']['grav_dir_x']]
+                    ),
+                )
                 # TODO add support for parent_frame
             tagger.ascend()
         if 'topic' in imu:
@@ -1120,8 +1160,11 @@ def exportSDF(model, filepath):
             for sens in model['sensors']:
                 if model['sensors'][sens]['link'] == linkkey:
                     sensors.append(model['sensors'][sens])
-            xml.write(exportSDFLink(link, linkobj, modelname, model['materials'], sensors,
-                                    xml.get_indent()))
+            xml.write(
+                exportSDFLink(
+                    link, linkobj, modelname, model['materials'], sensors, xml.get_indent()
+                )
+            )
         log("Links exported.", 'DEBUG')
 
         # joints
@@ -1150,6 +1193,7 @@ def exportSDF(model, filepath):
     except Exception:
         import sys
         import traceback
+
         sys.exc_info()[0]
         print(traceback.format_exc())
         errors = True
@@ -1170,8 +1214,10 @@ def exportSDF(model, filepath):
         if getExpSettings().export_sdf_to_gazebo_models:
             phobosprefs = getPhobosPreferences()
             modelpath = os.path.join(phobosprefs.gazebomodelfolder, modelname)
-            log("Copying model to Gazebo model folder: {}".format(os.path.relpath(modelpath)),
-                'INFO')
+            log(
+                "Copying model to Gazebo model folder: {}".format(os.path.relpath(modelpath)),
+                'INFO',
+            )
             if not os.path.exists(modelpath):
                 os.makedirs(modelpath)
             else:
@@ -1196,8 +1242,7 @@ def exportSDF(model, filepath):
                 log("   Copying {} mesh file.".format(meshfilename), 'DEBUG')
                 shutil.copy2(file, os.path.join(modelpath, 'meshes', meshfilename))
 
-    finishmessage = "Export finished with " + \
-        ("no " if not errors else "") + "errors."
+    finishmessage = "Export finished with " + ("no " if not errors else "") + "errors."
     log(finishmessage, 'INFO')
 
 
@@ -1228,12 +1273,14 @@ def parseSDFInertial(link):
 
         # collect inertia matrix from sorted subelements (ixx, ixy, ixz, ...)
         if inertia is not None:
-            inertial_dict['inertia'] = [float(elem.text) for elem in sorted(
-                list(inertia), key=lambda el: el.tag)]
+            inertial_dict['inertia'] = [
+                float(elem.text) for elem in sorted(list(inertia), key=lambda el: el.tag)
+            ]
         inertial_dict['name'] = 'inertial_' + link.attrib['name']
 
         # TODO delete me
         import yaml
+
         print(yaml.dump(inertial_dict))
         return inertial_dict
 
@@ -1245,6 +1292,7 @@ def parseSDFInertial(link):
 
 def parseSDFGeometry(geometry, link, sdfpath):
     import os.path as path
+
     # gather generic properties from geometry definition
     geometrydict = {elem.tag: gUtils.parse_text(elem.text) for elem in list(geometry[0])}
     geometrydict['type'] = geometry[0].tag
@@ -1268,8 +1316,10 @@ def parseSDFGeometry(geometry, link, sdfpath):
         log("       Filepath for mesh: {}".format(filepath), 'DEBUG')
 
         if not path.exists(filepath):
-            log("     Mesh file does not exist: {} Replaced mesh with simple box.".format(filepath),
-                'WARNING')
+            log(
+                "     Mesh file does not exist: {} Replaced mesh with simple box.".format(filepath),
+                'WARNING',
+            )
             geometrydict = {'type': 'box', 'size': [1, 1, 1]}
         else:
             geometrydict['filename'] = filepath
@@ -1284,6 +1334,7 @@ def parseSDFGeometry(geometry, link, sdfpath):
 
     # TODO remove me
     import yaml
+
     print(yaml.dump(geometrydict))
     return geometrydict
 
@@ -1295,9 +1346,11 @@ def parseSDFMaterial(visualname, material):
     materialdict['name'] = 'mat_' + visualname
 
     sdfannos = {}
-    genericparams = [elem.tag for elem in list(material)
-                     if elem.tag not in [
-                         'ambient', 'diffuse', 'specular', 'emissive', 'shader', 'script']]
+    genericparams = [
+        elem.tag
+        for elem in list(material)
+        if elem.tag not in ['ambient', 'diffuse', 'specular', 'emissive', 'shader', 'script']
+    ]
     sdfannos.update({a: gUtils.parse_text(material.find(a).text) for a in genericparams})
     # TODO add support
     # materialdict['sdf/script']
@@ -1313,15 +1366,30 @@ def parseSDFMaterial(visualname, material):
 
     # TODO remove me
     import yaml
+
     print(yaml.dump(materialdict))
     return materialdict
 
 
 def parseSDFLink(link, filepath):
     # collect all parameters which can be parsed as generic sdf annotations
-    genericparams = [elem.tag for elem in list(link) if elem.tag not in [
-                         'velocity_decay', 'frame', 'pose', 'inertial', 'collision', 'visual',
-                         'sensor', 'projector', 'audio_source', 'battery']]
+    genericparams = [
+        elem.tag
+        for elem in list(link)
+        if elem.tag
+        not in [
+            'velocity_decay',
+            'frame',
+            'pose',
+            'inertial',
+            'collision',
+            'visual',
+            'sensor',
+            'projector',
+            'audio_source',
+            'battery',
+        ]
+    ]
     newlink = {}
     sdfannos = {}
     sdfannos.update({a: gUtils.parse_text(link.find(a).text) for a in genericparams})
@@ -1348,8 +1416,10 @@ def parseSDFLink(link, filepath):
         for elem in link.iter(objtype):
             if 'name' not in elem.attrib:
                 name = '{0}_{1:01d}_{2}'.format(objtype, i, newlink['name'])
-                log("   No name for {} object! Assigning {} instead.".format(objtype, name),
-                    'WARNING')
+                log(
+                    "   No name for {} object! Assigning {} instead.".format(objtype, name),
+                    'WARNING',
+                )
                 i += 1
             else:
                 name = elem.attrib['name']
@@ -1358,8 +1428,11 @@ def parseSDFLink(link, filepath):
             elemdict = {'name': name}
             elemsdfannos = {}
             if objtype == 'collision':
-                genparams = [generic.tag for generic in list(elem)
-                             if generic.tag not in ['pose', 'frame', 'surface', 'geometry']]
+                genparams = [
+                    generic.tag
+                    for generic in list(elem)
+                    if generic.tag not in ['pose', 'frame', 'surface', 'geometry']
+                ]
                 elemsdfannos.update({a: gUtils.parse_text(elem.find(a).text) for a in genparams})
                 # TODO implement support for this
                 # elemdict['sdf/frame']
@@ -1368,8 +1441,12 @@ def parseSDFLink(link, filepath):
                 # TODO implement support
                 # elemdict['sdf/surface']
             else:
-                genparams = [generic.tag for generic in list(elem) if generic.tag not in [
-                    'pose', 'frame', 'geometry', 'meta', 'material', 'plugin']]
+                genparams = [
+                    generic.tag
+                    for generic in list(elem)
+                    if generic.tag
+                    not in ['pose', 'frame', 'geometry', 'meta', 'material', 'plugin']
+                ]
                 elemsdfannos.update({a: gUtils.parse_text(elem.find(a).text) for a in genparams})
                 # TODO implement support for this
                 # elemdict['sdf/meta']
@@ -1379,8 +1456,13 @@ def parseSDFLink(link, filepath):
 
                 # undefined materials will be set to phobos_error
                 if elem.find('material') is None:
-                    log(("       No material defined for {} {} in link {}! Defaulting " +
-                         "to error material.").format(objtype, name, newlink['name']), 'ERROR')
+                    log(
+                        (
+                            "       No material defined for {} {} in link {}! Defaulting "
+                            + "to error material."
+                        ).format(objtype, name, newlink['name']),
+                        'ERROR',
+                    )
                     elemdict['material'] = 'phobos_error'
                 # defined materials are collected in dictionary and linked with name
                 else:
@@ -1391,8 +1473,12 @@ def parseSDFLink(link, filepath):
                 # elemdict['sdf/plugin']
 
             if elem.find('geometry') is None:
-                log("   No geometry defined for {} {} in link {}! Skipped..".format(
-                    objtype, name, newlink['name']), 'ERROR')
+                log(
+                    "   No geometry defined for {} {} in link {}! Skipped..".format(
+                        objtype, name, newlink['name']
+                    ),
+                    'ERROR',
+                )
                 continue
             elemdict['geometry'] = parseSDFGeometry(elem.find('geometry'), link, filepath)
             elemdict['annotations'] = {'sdf': elemsdfannos}
@@ -1406,6 +1492,7 @@ def parseSDFLink(link, filepath):
     newlink['annotations'] = {'sdf': sdfannos}
     # TODO delete me
     import yaml
+
     print(yaml.dump(newlink))
     if newlink == {}:
         log("Link information for " + newlink['name'] + " is empty.", 'WARNING')
@@ -1437,8 +1524,12 @@ def parseSDFSensors(sensors):
         # parse the content of the sensor type to properties for the sensor
         genparams = [elem.tag for elem in list(sensor.find(newsensor['type']))]
         props = {}
-        props.update({'sdf/' + a: gUtils.parse_text(sensor.find(newsensor['type']).find(a).text)
-                      for a in genparams})
+        props.update(
+            {
+                'sdf/' + a: gUtils.parse_text(sensor.find(newsensor['type']).find(a).text)
+                for a in genparams
+            }
+        )
         newsensor['props'] = props
 
         sensorsettings = defs.def_settings['sensors']
@@ -1449,8 +1540,9 @@ def parseSDFSensors(sensors):
                 newsensor['size'] = sensorsettings[sendef]['size']
                 break
         else:
-            log("Could not find definition settings for {} sensor {}! Defaulting to box.",
-                'WARNING')
+            log(
+                "Could not find definition settings for {} sensor {}! Defaulting to box.", 'WARNING'
+            )
             newsensor['shape'] = 'box'
             newsensor['size'] = [1., 1., 1.]
         sensorsdict[newsensor['name']] = newsensor
@@ -1472,9 +1564,11 @@ def parseSDFAxis(axis):
     if 'dynamics' in list(axis):
         dynamics = axis.find('dynamics')
         axisdict['dynamics']['spring_reference'] = gUtils.parse_number(
-            dynamics.find('spring_reference').text)
+            dynamics.find('spring_reference').text
+        )
         axisdict['dynamics']['spring_stiffness'] = gUtils.parse_number(
-            dynamics.find('spring_stiffness').text)
+            dynamics.find('spring_stiffness').text
+        )
 
         if 'damping' in list(dynamics):
             axisdict['dynamics']['damping'] = gUtils.parse_number(dynamics.find('damping').text)
@@ -1500,9 +1594,12 @@ def parseSDFJoint(joint):
     jointdict['child'] = joint.find('child').text
 
     # include all generic parameters not defined in this function
-    genparams = [elem.tag for elem in list(joint)
-                 if elem.tag not in ['parent', 'child', 'axis', 'axis2', 'physics', 'frame',
-                                     'pose', 'sensor']]
+    genparams = [
+        elem.tag
+        for elem in list(joint)
+        if elem.tag
+        not in ['parent', 'child', 'axis', 'axis2', 'physics', 'frame', 'pose', 'sensor']
+    ]
     sdfannos = {}
     sdfannos.update({a: gUtils.parse_text(joint.find(a).text) for a in genparams})
 
@@ -1532,6 +1629,7 @@ def parseSDFJoint(joint):
 
     # TODO delete me
     import yaml
+
     print('JOINT:', yaml.dump(jointdict))
     print('POSE:', yaml.dump(pose))
     print('SENSORS:', yaml.dump(sensors))
@@ -1554,9 +1652,12 @@ def importSDF(filepath):
     model['name'] = root.attrib['name']
 
     # include all generic parameters not defined in this function
-    genparams = [elem.tag for elem in list(sdfroot)
-                 if elem.tag not in ['include', 'model', 'frame', 'pose', 'link', 'joint',
-                                     'plugin', 'gripper']]
+    genparams = [
+        elem.tag
+        for elem in list(sdfroot)
+        if elem.tag
+        not in ['include', 'model', 'frame', 'pose', 'link', 'joint', 'plugin', 'gripper']
+    ]
     sdfannos = {}
     sdfannos.update({a: gUtils.parse_text(sdfroot.find(a).text) for a in genparams})
     # TODO add support
@@ -1582,6 +1683,7 @@ def importSDF(filepath):
 
     # TODO delete me
     import yaml
+
     print(yaml.dump(materials))
 
     joints = {}
@@ -1600,8 +1702,12 @@ def importSDF(filepath):
             childlink = model['links'][newjoint['child']]
             childlink['parent'] = newjoint['parent']
             parentlink['children'].append(newjoint['child'])
-            log("   ... and connected parent link {} to {}.".format(
-                parentlink['name'], childlink['name']), 'DEBUG')
+            log(
+                "   ... and connected parent link {} to {}.".format(
+                    parentlink['name'], childlink['name']
+                ),
+                'DEBUG',
+            )
     model['joints'] = joints
     sensors.update(newsensors)
     model['sensors'] = sensors
@@ -1618,8 +1724,6 @@ def importSDF(filepath):
     model['annotations'] = {'sdf': sdfannos}
     return model
 
+
 # registering export functions of types with Phobos
-entity_type_dict = {'sdf': {
-    'export': exportSDF,
-    'import': importSDF,
-    'extensions': ('sdf', 'xml')}}
+entity_type_dict = {'sdf': {'export': exportSDF, 'import': importSDF, 'extensions': ('sdf', 'xml')}}

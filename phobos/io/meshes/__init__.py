@@ -49,5 +49,6 @@ for filename in os.listdir(os.path.dirname(__file__)):
             mesh_types.update(py_mod.mesh_type_dict.copy())
             print('Registered mesh plugin:', list(py_mod.mesh_type_dict.keys()))
         else:
-            print('ERROR in meshes/__init__: "' +
-                  filename + '" has no valid mesh plugin interface.')
+            print(
+                'ERROR in meshes/__init__: "' + filename + '" has no valid mesh plugin interface.'
+            )

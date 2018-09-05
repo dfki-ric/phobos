@@ -66,15 +66,19 @@ def deriveObjectPose(obj, logging=False, errors=None):
     effectiveparent = sUtils.getEffectiveParent(obj)
     matrix = eUtils.getCombinedTransform(obj, effectiveparent)
 
-    pose = {'rawmatrix': matrix,
-            'matrix': [list(vector) for vector in list(matrix)],
-            'translation': list(matrix.to_translation()),
-            'rotation_euler': list(matrix.to_euler()),
-            'rotation_quaternion': list(matrix.to_quaternion())}
+    pose = {
+        'rawmatrix': matrix,
+        'matrix': [list(vector) for vector in list(matrix)],
+        'translation': list(matrix.to_translation()),
+        'rotation_euler': list(matrix.to_euler()),
+        'rotation_quaternion': list(matrix.to_quaternion()),
+    }
 
     if logging:
-        log("Location: " + str(pose['translation']) + " Rotation: " + str(pose['rotation_euler']),
-            'DEBUG')
+        log(
+            "Location: " + str(pose['translation']) + " Rotation: " + str(pose['rotation_euler']),
+            'DEBUG',
+        )
     return pose
 
 
@@ -93,13 +97,17 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
     """
     if bpy.context.scene.phobosexportsettings.relativePath:
         # CHECK careful with path consistency (Windows)
-        outpath = securepath(os.path.expanduser(os.path.join(bpy.path.abspath("//"), bpy.context.scene.phobosexportsettings.path)))
+        outpath = securepath(
+            os.path.expanduser(
+                os.path.join(bpy.path.abspath("//"), bpy.context.scene.phobosexportsettings.path)
+            )
+        )
     else:
         # CHECK careful with path consistency (Windows)
         outpath = securepath(os.path.expanduser(bpy.context.scene.phobosexportsettings.path))
 
     # TODO delete me?
-    #bake_outpath = securepath(os.path.join(outpath, modelname) if savetosubfolder else outpath)
+    # bake_outpath = securepath(os.path.join(outpath, modelname) if savetosubfolder else outpath)
     bake_outpath = outpath
 
     if bpy.context.scene.phobosexportsettings.structureExport:
@@ -144,7 +152,9 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
 
         obj.hide_render = True
         previewfile = export_name
-        bUtils.createPreview(visuals, export_path=bake_outpath, modelname=modelname, previewfile=previewfile)
+        bUtils.createPreview(
+            visuals, export_path=bake_outpath, modelname=modelname, previewfile=previewfile
+        )
 
         obj.select = True
 
@@ -176,13 +186,17 @@ def storePose(root, posename):
         else:
             posedict[posename] = {'name': posename, 'joints': {}}
         links = sUtils.getChildren(root, ('link',), True, False)
-        sUtils.selectObjects([root]+links, clear=True, active=0)
+        sUtils.selectObjects([root] + links, clear=True, active=0)
         bpy.ops.object.mode_set(mode='POSE')
-        for link in (link for link in links if 'joint/type' in link and
-                     link['joint/type'] not in ['fixed', 'floating']):
+        for link in (
+            link
+            for link in links
+            if 'joint/type' in link and link['joint/type'] not in ['fixed', 'floating']
+        ):
             link.pose.bones['Bone'].rotation_mode = 'XYZ'
             posedict[posename]['joints'][nUtils.getObjectName(link, 'joint')] = link.pose.bones[
-                'Bone'].rotation_euler.y
+                'Bone'
+            ].rotation_euler.y
         bpy.ops.object.mode_set(mode='OBJECT')
         posedict = gUtils.roundFloatsInDict(posedict, ioUtils.getExpSettings().decimalPlaces)
         bUtils.updateTextFile(filename, yaml.dump(posedict, default_flow_style=False))
@@ -218,7 +232,8 @@ def loadPose(modelname, posename):
             if nUtils.getObjectName(obj, 'joint') in pose['joints']:
                 obj.pose.bones['Bone'].rotation_mode = 'XYZ'
                 obj.pose.bones['Bone'].rotation_euler.y = float(
-                    pose['joints'][nUtils.getObjectName(obj, 'joint')])
+                    pose['joints'][nUtils.getObjectName(obj, 'joint')]
+                )
     except KeyError as error:
         log("Could not apply the pose: " + str(error), 'ERROR')
     finally:

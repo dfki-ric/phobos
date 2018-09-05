@@ -112,16 +112,24 @@ def deriveMaterial(mat, logging=False, errors=None):
 
     # create color dictionaries
     material['diffuseColor'] = dict(
-        zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)]))
+        zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)])
+    )
     material['ambientColor'] = dict(
-        zip(['r', 'g', 'b'], [mat.ambient * mat.diffuse_intensity * num for num in list(
-            mat.diffuse_color)]))
+        zip(
+            ['r', 'g', 'b'],
+            [mat.ambient * mat.diffuse_intensity * num for num in list(mat.diffuse_color)],
+        )
+    )
     material['specularColor'] = dict(
-        zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)]))
+        zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)])
+    )
     if mat.emit > 0:
         material['emissionColor'] = dict(
-            zip(['r', 'g', 'b'], [mat.emit * mat.specular_intensity * num for num in list(
-                mat.specular_color)]))
+            zip(
+                ['r', 'g', 'b'],
+                [mat.emit * mat.specular_intensity * num for num in list(mat.specular_color)],
+            )
+        )
     material['shininess'] = mat.specular_hardness / 2
     if mat.use_transparency:
         material['transparency'] = 1.0 - mat.alpha
@@ -133,21 +141,24 @@ def deriveMaterial(mat, logging=False, errors=None):
     # there are always 18 slots, regardless of whether they are filled or not
     for tex in mat.texture_slots:
         if tex is not None:
-                # regular diffuse color texture
-                if tex.use_map_color_diffuse:
-                    # grab the first texture
-                    material['diffuseTexture'] = mat.texture_slots[
-                        0].texture.image.filepath.replace('//', '')
-                # normal map
-                if tex.use_map_normal:
-                    # grab the first texture
-                    material['normalTexture'] = mat.texture_slots[
-                        0].texture.image.filepath.replace('//', '')
-                # displacement map
-                if tex.use_map_displacement:
-                    # grab the first texture
-                    material['displacementTexture'] = mat.texture_slots[
-                        0].texture.image.filepath.replace('//', '')
+            # regular diffuse color texture
+            if tex.use_map_color_diffuse:
+                # grab the first texture
+                material['diffuseTexture'] = mat.texture_slots[0].texture.image.filepath.replace(
+                    '//', ''
+                )
+            # normal map
+            if tex.use_map_normal:
+                # grab the first texture
+                material['normalTexture'] = mat.texture_slots[0].texture.image.filepath.replace(
+                    '//', ''
+                )
+            # displacement map
+            if tex.use_map_displacement:
+                # grab the first texture
+                material['displacementTexture'] = mat.texture_slots[
+                    0
+                ].texture.image.filepath.replace('//', '')
     return material
 
 
@@ -181,8 +192,9 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
 
     if logging:
         log("Deriving link from object " + linkobj.name + ".", 'DEBUG')
-    props = initObjectProperties(linkobj, phobostype='link',
-                                 ignoretypes=linkobjignoretypes - {'link'})
+    props = initObjectProperties(
+        linkobj, phobostype='link', ignoretypes=linkobjignoretypes - {'link'}
+    )
     parent = sUtils.getEffectiveParent(linkobj, objectlist)
     props['parent'] = nUtils.getObjectName(parent) if parent else None
     props['parentobj'] = parent
@@ -195,13 +207,16 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
     props['approxcollision'] = []
 
     # gather all visual/collision objects for the link from the objectlist
-    for obj in [item for item in objectlist if item.phobostype in ['visual', 'collision',
-                                                                   'approxsphere']]:
+    for obj in [
+        item for item in objectlist if item.phobostype in ['visual', 'collision', 'approxsphere']
+    ]:
         effectiveparent = sUtils.getEffectiveParent(obj)
         if effectiveparent == linkobj:
             if logging:
-                log("  Adding " + obj.phobostype + " '" + nUtils.getObjectName(obj) + "' to link.",
-                    'DEBUG')
+                log(
+                    "  Adding " + obj.phobostype + " '" + nUtils.getObjectName(obj) + "' to link.",
+                    'DEBUG',
+                )
             if obj.phobostype == 'approxsphere':
                 props['approxcollision'].append(deriveDictEntry(obj))
             else:
@@ -222,7 +237,8 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
         props['inertial'] = {
             'mass': mass,
             'inertia': list(inertia),
-            'pose': {'translation': list(com), 'rotation_euler': [0, 0, 0]}}
+            'pose': {'translation': list(com), 'rotation_euler': [0, 0, 0]},
+        }
 
     bitmask = 0
     for collname in props['collision']:
@@ -247,11 +263,13 @@ def get_link_information(linkobj):
 
     .. seealso:: derive_link
     """
-    assert linkobj.phobostype == 'link', ("Wrong phobostype: " + linkobj.phobostype +
-                                          " instead of link.")
+    assert linkobj.phobostype == 'link', (
+        "Wrong phobostype: " + linkobj.phobostype + " instead of link."
+    )
 
-    props = initObjectProperties(linkobj, phobostype='link',
-                                 ignoretypes=['joint', 'motor', 'entity'])
+    props = initObjectProperties(
+        linkobj, phobostype='link', ignoretypes=['joint', 'motor', 'entity']
+    )
 
     parent = sUtils.getEffectiveParent(linkobj)
     props['parent'] = parent.name if parent else None
@@ -265,7 +283,8 @@ def get_link_information(linkobj):
 
     # collect collision objs for link
     collisionobjs = sUtils.getImmediateChildren(
-        linkobj, phobostypes=('collision'), include_hidden=True)
+        linkobj, phobostypes=('collision'), include_hidden=True
+    )
     collisiondict = {}
     for colobj in collisionobjs:
         collisiondict[colobj.name] = colobj
@@ -273,20 +292,23 @@ def get_link_information(linkobj):
 
     # collect visual objs for link
     visualobjects = sUtils.getImmediateChildren(
-        linkobj, phobostypes=('visual'), include_hidden=True)
+        linkobj, phobostypes=('visual'), include_hidden=True
+    )
     visualdict = {}
     for visualobj in visualobjects:
         visualdict[visualobj.name] = visualobj
     props["visual"] = visualdict
 
     # collect inertial objects
-    inertialdict = {nUtils.getObjectName(obj): obj for obj in linkobj.children
-                    if obj.phobostype == 'inertial'}
+    inertialdict = {
+        nUtils.getObjectName(obj): obj for obj in linkobj.children if obj.phobostype == 'inertial'
+    }
     props["inertial"] = inertialdict
 
     # collect sensor objects
     sensorobjects = sUtils.getImmediateChildren(
-        linkobj, phobostypes=('sensor'), include_hidden=True)
+        linkobj, phobostypes=('sensor'), include_hidden=True
+    )
     sensordict = {}
     for sensorobj in sensorobjects:
         sensordict[sensorobj.name] = sensorobj
@@ -309,7 +331,9 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
       dict
     """
     joint_type, crot = jointmodel.deriveJointType(obj, adjust=adjust, logging=logging)
-    props = initObjectProperties(obj, phobostype='joint', ignoretypes=linkobjignoretypes-{'joint'})
+    props = initObjectProperties(
+        obj, phobostype='joint', ignoretypes=linkobjignoretypes - {'joint'}
+    )
 
     parent = sUtils.getEffectiveParent(obj)
     props['parent'] = nUtils.getObjectName(parent)
@@ -381,8 +405,7 @@ def deriveVisual(obj, logging=True, **kwargs):
     Returns:
         dict -- model representation of the visual object
     """
-    visual = initObjectProperties(
-        obj, phobostype='visual', ignoretypes='geometry')
+    visual = initObjectProperties(obj, phobostype='visual', ignoretypes='geometry')
     visual['geometry'] = deriveGeometry(obj, logging=logging)
     visual['pose'] = deriveObjectPose(obj, logging=logging)
 
@@ -395,13 +418,19 @@ def deriveVisual(obj, logging=True, **kwargs):
         if 'lodmaxdistances' in obj:
             maxdlist = obj['lodmaxdistances']
         else:
-            maxdlist = [obj.lod_levels[
-                i + 1].distance for i in range(len(obj.lod_levels) - 1)] + [100.0]
+            maxdlist = [obj.lod_levels[i + 1].distance for i in range(len(obj.lod_levels) - 1)] + [
+                100.0
+            ]
         lodlist = []
         for i in range(len(obj.lod_levels)):
             filename = obj.lod_levels[i].object.data.name + ioUtils.getOutputMeshtype()
-            lodlist.append({'start': obj.lod_levels[i].distance, 'end': maxdlist[i],
-                            'filename': os.path.join('meshes', filename)})
+            lodlist.append(
+                {
+                    'start': obj.lod_levels[i].distance,
+                    'end': maxdlist[i],
+                    'filename': os.path.join('meshes', filename),
+                }
+            )
         visual['lod'] = lodlist
     return visual
 
@@ -415,19 +444,27 @@ def deriveCollision(obj):
     Returns:
         dict -- phobos representation of the collision object
     """
-    collision = initObjectProperties(
-        obj, phobostype='collision', ignoretypes='geometry')
+    collision = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
     collision['geometry'] = deriveGeometry(obj)
     collision['pose'] = deriveObjectPose(obj)
 
     # the bitmask is cut to length = 16 and reverted for int parsing
     if 'collision_groups' in dir(obj.rigid_body):
-        collision['bitmask'] = int(''.join(
-            ['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[::-1], 2)
+        collision['bitmask'] = int(
+            ''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[
+                ::-1
+            ],
+            2,
+        )
         for group in obj.rigid_body.collision_groups[16:]:
             if group:
-                log(("Object {0} is on a collision layer higher than 16. These layers are " +
-                     "ignored when exporting.").format(obj.name), 'WARNING')
+                log(
+                    (
+                        "Object {0} is on a collision layer higher than 16. These layers are "
+                        + "ignored when exporting."
+                    ).format(obj.name),
+                    'WARNING',
+                )
                 break
     return collision
 
@@ -447,8 +484,7 @@ def deriveCapsule(obj):
     rotation = capsule_pose['rotation_euler']
     capsule_radius = obj['geometry']['radius']
     for part in ['sphere1', 'cylinder', 'sphere2']:
-        viscol = initObjectProperties(
-            obj, phobostype='collision', ignoretypes='geometry')
+        viscol = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
         viscol['name'] = nUtils.getObjectName(obj).split(':')[-1] + '_' + part
         geometry = {}
         pose = {}
@@ -475,8 +511,9 @@ def deriveCapsule(obj):
         viscol['geometry'] = geometry
         viscol['pose'] = pose
         try:
-            viscol['bitmask'] = int(''.join(
-                ['1' if group else '0' for group in obj.rigid_body.collision_groups]), 2)
+            viscol['bitmask'] = int(
+                ''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups]), 2
+            )
         except AttributeError:
             pass
         viscol_dict[part] = viscol
@@ -532,8 +569,7 @@ def deriveLight(obj):
         # TODO handle this somehow
         pass
     try:
-        light['attenuation_quadratic'] = float(
-            light_data.quadratic_attenuation)
+        light['attenuation_quadratic'] = float(light_data.quadratic_attenuation)
     except AttributeError:
         pass
     if light_data.energy:
@@ -567,11 +603,18 @@ def recursive_dictionary_cleanup(dictionary):
         for item in value:
             if isinstance(item, list) and item:
                 # (phobostype, bpyobj) -> {'object': bpyobj, 'name': getObjectName(bpyobj)}
-                if (len(item) == 2 and isinstance(item[0], str) and
-                        (item[0] in ['joint'] + [enum[0] for enum in defs.phobostypes]) and
-                        isinstance(item[1], bpy.types.Object)):
-                    itemlist.append({'object': item[1],
-                                     'name': nUtils.getObjectName(item[1], phobostype=item[0])})
+                if (
+                    len(item) == 2
+                    and isinstance(item[0], str)
+                    and (item[0] in ['joint'] + [enum[0] for enum in defs.phobostypes])
+                    and isinstance(item[1], bpy.types.Object)
+                ):
+                    itemlist.append(
+                        {
+                            'object': item[1],
+                            'name': nUtils.getObjectName(item[1], phobostype=item[0]),
+                        }
+                    )
 
             # recursion on subdictionaries
             elif isinstance(item, dict):
@@ -580,12 +623,13 @@ def recursive_dictionary_cleanup(dictionary):
                 itemlist.append(item)
 
         # extract single items back out of the list
-        dictionary[key] = (itemlist if not unlist else itemlist[0])
+        dictionary[key] = itemlist if not unlist else itemlist[0]
     return dictionary
 
 
-def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotations=True,
-                         ignorename=False):
+def initObjectProperties(
+    obj, phobostype=None, ignoretypes=(), includeannotations=True, ignorename=False
+):
     """Initializes phobos dictionary of *obj*, including information stored in custom properties.
 
     Args:
@@ -635,10 +679,17 @@ def initObjectProperties(obj, phobostype=None, ignoretypes=(), includeannotation
     if includeannotations:
         annotationobjs = sUtils.getImmediateChildren(obj, ('annotation',), selected_only=True)
         for annot in annotationobjs:
-            log("  Adding annotations from {}.".format(nUtils.getObjectName(
-                annot, phobostype='annotation')), 'DEBUG')
-            props.update(initObjectProperties(annot, phobostype, ignoretypes, includeannotations,
-                                              ignorename=True))
+            log(
+                "  Adding annotations from {}.".format(
+                    nUtils.getObjectName(annot, phobostype='annotation')
+                ),
+                'DEBUG',
+            )
+            props.update(
+                initObjectProperties(
+                    annot, phobostype, ignoretypes, includeannotations, ignorename=True
+                )
+            )
 
     # recursively enrich the property dictionary
     props = recursive_dictionary_cleanup(props)
@@ -669,6 +720,7 @@ def deriveDictEntry(obj, names=False, objectlist=[], logging=True):
             props = deriveApproxsphere(obj)
         elif obj.phobostype == 'sensor':
             from phobos.model.sensors import deriveSensor
+
             props = deriveSensor(obj, names=names, objectlist=objectlist, logging=logging)
         elif obj.phobostype == 'controller':
             props = controllermodel.deriveController(obj)
@@ -695,8 +747,15 @@ def deriveGroupEntry(group):
         if obj.phobostype == 'link':
             links.append({'type': 'link', 'name': nUtils.getObjectName(obj)})
         else:
-            log("Group " + group.name + " contains " + obj.phobostype +
-                ': ' + nUtils.getObjectName(obj), "ERROR")
+            log(
+                "Group "
+                + group.name
+                + " contains "
+                + obj.phobostype
+                + ': '
+                + nUtils.getObjectName(obj),
+                "ERROR",
+            )
     return links
 
 
@@ -715,8 +774,7 @@ def deriveChainEntry(obj):
     for chainName in chainlist:
         chainclosed = False
         parent = obj
-        chain = {'name': chainName, 'start': '',
-                 'end': nUtils.getObjectName(obj), 'elements': []}
+        chain = {'name': chainName, 'start': '', 'end': nUtils.getObjectName(obj), 'elements': []}
         while not chainclosed:
             # FIXME: use effectiveParent
             if parent.parent is None:
@@ -748,8 +806,7 @@ def deriveTextData(modelname):
 
     """
     datadict = {}
-    datatextfiles = [
-        text for text in bpy.data.texts if text.name.startswith(modelname + '::')]
+    datatextfiles = [text for text in bpy.data.texts if text.name.startswith(modelname + '::')]
     for text in datatextfiles:
         try:
             dataname = text.name.split('::')[-1]
@@ -860,7 +917,9 @@ def namespaceMotor(motor, namespace):
 def namespaceLink(link, namespace):
     link['name'] = namespaced(link['name'], namespace)
     for element in link['collision']:
-        link['collision'][element]['name'] = namespaced(link['collision'][element]['name'], namespace)
+        link['collision'][element]['name'] = namespaced(
+            link['collision'][element]['name'], namespace
+        )
     for element in link['visual']:
         link['visual'][element]['name'] = namespaced(link['visual'][element]['name'], namespace)
     return link
@@ -874,7 +933,7 @@ def namespaceJoint(joint, namespace):
 
 
 def namespaced(name, namespace):
-    return namespace+'_'+name
+    return namespace + '_' + name
 
 
 def deriveModelDictionary(root, name='', objectlist=[]):
@@ -922,25 +981,29 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         'date': datetime.now().strftime("%Y%m%d_%H:%M"),
         'name': modelname,
         'version': modelversion,
-        'description': modeldescription
+        'description': modeldescription,
     }
 
-    log("Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.", 'INFO',
-        prefix="\n")
+    log(
+        "Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.",
+        'INFO',
+        prefix="\n",
+    )
 
     # create tuples of objects belonging to model
     if not objectlist:
-        objectlist = sUtils.getChildren(root,
-                                        selected_only=ioUtils.getExpSettings().selectedOnly,
-                                        include_hidden=False)
+        objectlist = sUtils.getChildren(
+            root, selected_only=ioUtils.getExpSettings().selectedOnly, include_hidden=False
+        )
     linklist = [link for link in objectlist if link.phobostype == 'link']
 
     # digest all the links to derive link and joint information
     log("Parsing links, joints and motors... " + (str(len(linklist))) + " total.", "INFO")
     for link in linklist:
         # parse link information (including inertia)
-        model['links'][nUtils.getObjectName(link, 'link')] = deriveLink(link, logging=True,
-                                                                        objectlist=objectlist)
+        model['links'][nUtils.getObjectName(link, 'link')] = deriveLink(
+            link, logging=True, objectlist=objectlist
+        )
 
         # parse joint and motor information
         if sUtils.getEffectiveParent(link):
@@ -973,18 +1036,21 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                 if mat.name not in model['materials']:
                     model['materials'][mat.name] = deriveMaterial(mat)
                     linkname = nUtils.getObjectName(
-                        sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist)))
-                    model['links'][linkname]['visual'][
-                        nUtils.getObjectName(obj)]['material'] = mat.name
+                        sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist))
+                    )
+                    model['links'][linkname]['visual'][nUtils.getObjectName(obj)][
+                        'material'
+                    ] = mat.name
 
     # identify unique meshes
     log("Parsing meshes...", "INFO")
     for obj in objectlist:
         try:
-            if ((obj.phobostype == 'visual' or
-                 obj.phobostype == 'collision') and
-                    (obj['geometry/type'] == 'mesh') and
-                    (obj.data.name not in model['meshes'])):
+            if (
+                (obj.phobostype == 'visual' or obj.phobostype == 'collision')
+                and (obj['geometry/type'] == 'mesh')
+                and (obj.data.name not in model['meshes'])
+            ):
                 model['meshes'][obj.data.name] = obj
                 for lod in obj.lod_levels:
                     if lod.object.data.name not in model['meshes']:
@@ -1006,8 +1072,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             # TODO create code to derive Submodels
             # model['submodels'] = deriveSubmodel(group)
         elif nUtils.getObjectName(group, 'group') != "RigidBodyWorld":
-            model['groups'][nUtils.getObjectName(
-                group, 'group')] = deriveGroupEntry(group)
+            model['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
 
     # gather information on chains of objects
     log("Parsing chains...", "INFO")
@@ -1029,18 +1094,24 @@ def deriveModelDictionary(root, name='', objectlist=[]):
 
     def getSubmechanisms(link):
         if 'submechanism/name' in link.keys():
-            submech = {'type': link['submechanism/type'],
-                       'contextual_name': link['submechanism/name'],
-                       'name': link['submechanism/subtype'] if 'submechanism/subtype' in link else link['submechanism/type'],
-                       'jointnames_independent': [nUtils.getObjectName(j, 'joint') for j in
-                                                  link['submechanism/independent']],
-                       'jointnames_spanningtree': [nUtils.getObjectName(j, 'joint') for j in
-                                                   link['submechanism/spanningtree']],
-                       'jointnames_active': [nUtils.getObjectName(j, 'joint') for j in
-                                             link['submechanism/active']],
-                       # TODO: this should work in almost all cases, still a bit of a hack:
-                       'file_path': '../submechanisms/urdf/' + link['submechanism/name'] + '.urdf'
-                       }
+            submech = {
+                'type': link['submechanism/type'],
+                'contextual_name': link['submechanism/name'],
+                'name': link['submechanism/subtype']
+                if 'submechanism/subtype' in link
+                else link['submechanism/type'],
+                'jointnames_independent': [
+                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/independent']
+                ],
+                'jointnames_spanningtree': [
+                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/spanningtree']
+                ],
+                'jointnames_active': [
+                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/active']
+                ],
+                # TODO: this should work in almost all cases, still a bit of a hack:
+                'file_path': '../submechanisms/urdf/' + link['submechanism/name'] + '.urdf',
+            }
             log('    ' + submech['contextual_name'], 'DEBUG')
         else:
             submech = None
@@ -1129,9 +1200,11 @@ def buildModelFromDictionary(model):
     log("Creating motors...", 'INFO')
     if 'motors' in model and model['motors']:
         for motor in model['motors']:
-            eUtils.setProperties(model['joints'][model['motors'][motor]['joint']],
-                                 model['motors'][motor],
-                                 category='motor')
+            eUtils.setProperties(
+                model['joints'][model['motors'][motor]['joint']],
+                model['motors'][motor],
+                category='motor',
+            )
     else:
         log("  No motors in model.", 'INFO')
 
@@ -1252,8 +1325,9 @@ def replace_object_links(dictionary):
 
     for key, value in dictionary.items():
         if isinstance(value, list):
-            if (all([isinstance(item, dict) for item in value]) and
-                    all([('name' in item and 'object' in item) for item in value])):
+            if all([isinstance(item, dict) for item in value]) and all(
+                [('name' in item and 'object' in item) for item in value]
+            ):
                 newdict[key] = sorted([item['name'] for item in value])
 
         elif isinstance(value, dict):

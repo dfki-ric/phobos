@@ -36,21 +36,24 @@ def deriveGenericEntity(entityobj, outpath=None):
       dict - An entry for the scenes entitiesList
 
     """
-    log("Exporting " + nUtils.getObjectName(entityobj, 'entity') + " as entity of type 'generic", "INFO")
+    log(
+        "Exporting " + nUtils.getObjectName(entityobj, 'entity') + " as entity of type 'generic",
+        "INFO",
+    )
     entity = models.initObjectProperties(entityobj, 'entity', ['geometry'])
     return entity
 
     # write urdf
     urdf_path = "../urdf/" if structured else ''
     urdf_filename = model['name'] + ".urdf"
-    exportModelToURDF(model, os.path.join(path, urdf_path, urdf_filename),
-                      '../meshes/' if structured else '')
+    exportModelToURDF(
+        model, os.path.join(path, urdf_path, urdf_filename), '../meshes/' if structured else ''
+    )
 
 
 def exportGenericEntity(entity, outpath):
     pass
 
+
 # registering import/export functions of types with Phobos
-entity_type_dict = {'generic': {'export': exportGenericEntity,
-                              'extensions': ('yaml',)}
-                    }
+entity_type_dict = {'generic': {'export': exportGenericEntity, 'extensions': ('yaml',)}}

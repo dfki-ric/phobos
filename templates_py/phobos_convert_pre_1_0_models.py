@@ -45,8 +45,12 @@ for obj in objectlist:
         del obj['mass']
         obj['inertial/inertia'] = obj['inertia']
         del obj['inertia']
-    elif (obj.phobostype == 'inertial' and 'inertial/mass' in obj and 'inertial/inertia' in obj
-          and delete_link_inertials):
+    elif (
+        obj.phobostype == 'inertial'
+        and 'inertial/mass' in obj
+        and 'inertial/inertia' in obj
+        and delete_link_inertials
+    ):
         objects_to_be_deleted.append(obj)
 
 # delete objects designated for deletion

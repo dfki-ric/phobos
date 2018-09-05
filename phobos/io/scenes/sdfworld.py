@@ -41,17 +41,24 @@ def exportSMURFScene(entities, path):
     Returns:
 
     """
-    log("Exporting scene to " + path+'.smurfs', "INFO")
+    log("Exporting scene to " + path + '.smurfs', "INFO")
     with open(path + '.smurfs', 'w') as outputfile:
-        sceneinfo = "# SMURF scene created at " + path + " " + datetime.now().strftime("%Y%m%d_%H:%M") + "\n"
+        sceneinfo = (
+            "# SMURF scene created at "
+            + path
+            + " "
+            + datetime.now().strftime("%Y%m%d_%H:%M")
+            + "\n"
+        )
         log(sceneinfo, "INFO")
         sceneinfo += "# created with Phobos " + version + " - " + repository + "\n\n"
         ioUtils.securepath(path)
         outputfile.write(sceneinfo)
-        entitiesdict = roundFloatsInDict({'entities': entities}, ioUtils.getExpSettings().decimalPlaces)
+        entitiesdict = roundFloatsInDict(
+            {'entities': entities}, ioUtils.getExpSettings().decimalPlaces
+        )
         outputfile.write(yaml.dump(entitiesdict))
 
+
 # registering import/export functions of types with Phobos
-scene_type_dict = {'sdf world': {'export': exportSMURFScene,
-                                 'extensions': ('smurfs',)}
-                   }
+scene_type_dict = {'sdf world': {'export': exportSMURFScene, 'extensions': ('smurfs',)}}

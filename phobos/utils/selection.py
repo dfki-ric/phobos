@@ -59,10 +59,14 @@ def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
       list - Blender objects which are children of root.
 
     """
-    return [child for child in bpy.context.scene.objects if getRoot(child) == root and
-            (child.phobostype in phobostypes if phobostypes else True) and
-            (not child.hide or include_hidden) and
-            (child.select or not selected_only)]
+    return [
+        child
+        for child in bpy.context.scene.objects
+        if getRoot(child) == root
+        and (child.phobostype in phobostypes if phobostypes else True)
+        and (not child.hide or include_hidden)
+        and (child.select or not selected_only)
+    ]
 
 
 def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidden=False):
@@ -79,10 +83,13 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
       list - Blender objects which are immediate children of obj.
 
     """
-    return [child for child in obj.children if
-            (child.phobostype in phobostypes if phobostypes else True) and
-            (not child.hide or include_hidden) and
-            (child.select or not selected_only)]
+    return [
+        child
+        for child in obj.children
+        if (child.phobostype in phobostypes if phobostypes else True)
+        and (not child.hide or include_hidden)
+        and (child.select or not selected_only)
+    ]
 
 
 def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, objectlist=[]):
@@ -100,11 +107,19 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, object
         objectlist = list(bpy.data.objects)
 
     parent = obj.parent
-    while (parent and parent in objectlist
-           and ((parent.hide and not include_hidden)
-                or (not parent.select and bpy.context.scene.phobosexportsettings.selectedOnly
-                and not ignore_selection)
-                or parent.phobostype != 'link')):
+    while (
+        parent
+        and parent in objectlist
+        and (
+            (parent.hide and not include_hidden)
+            or (
+                not parent.select
+                and bpy.context.scene.phobosexportsettings.selectedOnly
+                and not ignore_selection
+            )
+            or parent.phobostype != 'link'
+        )
+    ):
         parent = parent.parent
     return parent
 
@@ -149,8 +164,12 @@ def getRoots(scene=None):
         log("No root objects found in scene {}.".format(scene), 'WARNING')
     else:
         rootnames = ', '.join((root.name for root in roots))
-        log("Found {} root object{} in scene {}: {}".format(
-            len(roots), 's' if len(roots) > 1 else '', scene, rootnames), 'DEBUG')
+        log(
+            "Found {} root object{} in scene {}: {}".format(
+                len(roots), 's' if len(roots) > 1 else '', scene, rootnames
+            ),
+            'DEBUG',
+        )
     return roots
 
 
@@ -249,11 +268,13 @@ def getObjectsByPattern(pattern, match_case=False):
         for key in obj.keys():
             if key.endswith('/name'):
                 objname = obj[key]
-                if ((match_case and pattern in objname) or
-                        (not match_case and pattern.lower() in objname.lower())):
+                if (match_case and pattern in objname) or (
+                    not match_case and pattern.lower() in objname.lower()
+                ):
                     objlist.append(obj)
-        if (match_case and pattern in obj.name) \
-                or (not match_case and pattern.lower() in obj.name.lower()):
+        if (match_case and pattern in obj.name) or (
+            not match_case and pattern.lower() in obj.name.lower()
+        ):
             objlist.append(obj)
     return objlist
 

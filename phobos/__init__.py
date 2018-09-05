@@ -31,6 +31,7 @@ import sys
 import os.path
 import importlib
 import pkgutil
+
 # TODO double import of basemodule?
 import bpy
 import phobos
@@ -77,6 +78,7 @@ def import_submodules(package, recursive=True, verbose=False):
             results.update(import_submodules(full_name))
     return results
 
+
 bl_info = {
     "name": "Phobos",
     "description": "A toolbox to enable editing of robot models in Blender.",
@@ -88,7 +90,7 @@ bl_info = {
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
     "support": "COMMUNITY",
     "tracker_url": "https://github.com/dfki-ric/phobos/issues",
-    "category": "Development"
+    "category": "Development",
 }
 
 # TODO rework yaml import: loading module twice if yaml is not found...
@@ -99,6 +101,7 @@ if os.path.isfile(yamlconfpath):
     f.close()
     sys.path.insert(0, os.path.normpath(distpath))
     import yaml
+
     # OPT here we could add additional required imports
 # stop execution, when yaml cannot be imported
 else:

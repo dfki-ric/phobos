@@ -103,8 +103,9 @@ def createLink(link):
     # set the size of the link
     visuals, collisions = getGeometricElements(link)
     if visuals or collisions:
-        scale = max((geometrymodel.getLargestDimension(e['geometry'])
-                     for e in visuals + collisions))
+        scale = max(
+            (geometrymodel.getLargestDimension(e['geometry']) for e in visuals + collisions)
+        )
     else:
         scale = 0.2
 
@@ -125,8 +126,12 @@ def createLink(link):
         inertia.createInertial(link['inertial'], newlink)
 
     # create geometric elements
-    log("Creating visual and collision objects for link '{0}':\n{1}".format(
-        link['name'], '    \n'.join([elem['name'] for elem in visuals + collisions])), 'DEBUG')
+    log(
+        "Creating visual and collision objects for link '{0}':\n{1}".format(
+            link['name'], '    \n'.join([elem['name'] for elem in visuals + collisions])
+        ),
+        'DEBUG',
+    )
     for vis in visuals:
         geometrymodel.createGeometry(vis, 'visual', newlink)
     for col in collisions:
@@ -186,7 +191,9 @@ def setLinkTransformations(model, parent):
 
         # apply transform as saved in model
         location = mathutils.Matrix.Translation(child['pose']['translation'])
-        rotation = mathutils.Euler(tuple(child['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+        rotation = (
+            mathutils.Euler(tuple(child['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+        )
 
         log("Transforming link {0}.".format(child['name']), 'DEBUG')
         transform_matrix = location * rotation

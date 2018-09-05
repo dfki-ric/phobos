@@ -32,6 +32,7 @@ import phobos.utils.io as ioUtils
 
 def deriveController(obj):
     import phobos.model.models as models
+
     props = models.initObjectProperties(obj, phobostype='controller')
 
     # return None if no controller is found (there will always be at least a name in the props)
@@ -39,13 +40,19 @@ def deriveController(obj):
         return None
 
     if not obj.parent or obj.parent.phobostype not in defs.controllabletypes:
-        log(("Can not derive controller from {}. " +
-             "Insufficient requirements from parent object!").format(obj.name), 'ERROR')
+        log(
+            (
+                "Can not derive controller from {}. "
+                + "Insufficient requirements from parent object!"
+            ).format(obj.name),
+            'ERROR',
+        )
         return None
 
     props['target'] = nUtils.getObjectName(obj.parent)
-    log("  Derived controller '{}' for target '{}'.".format(props['name'], props['target']),
-        'DEBUG')
+    log(
+        "  Derived controller '{}' for target '{}'.".format(props['name'], props['target']), 'DEBUG'
+    )
 
     return props
 
@@ -72,12 +79,19 @@ def createController(controller, reference, origin=mathutils.Matrix(), annotatio
     # create controller object
     if controller['shape'].startswith('resource'):
         newcontroller = bUtils.createPrimitive(
-            controller['name'], 'box', [1, 1, 1], layers,
-            plocation=origin.to_translation(), protation=origin.to_euler(),
-            pmaterial=controller['material'], phobostype='controller')
+            controller['name'],
+            'box',
+            [1, 1, 1],
+            layers,
+            plocation=origin.to_translation(),
+            protation=origin.to_euler(),
+            pmaterial=controller['material'],
+            phobostype='controller',
+        )
         # use resource name provided as: "resource:whatever_name"
-        resource_obj = ioUtils.getResource(['controller'] +
-                                           controller['shape'].split('://')[1].split('_'))
+        resource_obj = ioUtils.getResource(
+            ['controller'] + controller['shape'].split('://')[1].split('_')
+        )
         if resource_obj:
             log("Assigned resource mesh and materials to new controller object.", 'DEBUG')
             newcontroller.data = resource_obj.data
@@ -86,9 +100,15 @@ def createController(controller, reference, origin=mathutils.Matrix(), annotatio
             log("Could not use resource mesh for controller. Default cube used instead.", 'WARNING')
     else:
         newcontroller = bUtils.createPrimitive(
-            controller['name'], controller['shape'], controller['size'], layers,
-            plocation=origin.to_translation(), protation=origin.to_euler(),
-            pmaterial=controller['material'], phobostype='controller')
+            controller['name'],
+            controller['shape'],
+            controller['size'],
+            layers,
+            plocation=origin.to_translation(),
+            protation=origin.to_euler(),
+            pmaterial=controller['material'],
+            phobostype='controller',
+        )
 
     newcontroller.name = controller['name']
     newcontroller['controller/type'] = controller['type']
@@ -104,8 +124,9 @@ def createController(controller, reference, origin=mathutils.Matrix(), annotatio
         else:
             keys = []
         for key in keys:
-            eUtils.addAnnotationObject(newcontroller, controller['annotations'][key],
-                                       namespace='controller/' + key)
+            eUtils.addAnnotationObject(
+                newcontroller, controller['annotations'][key], namespace='controller/' + key
+            )
 
     # assign the parent if available
     if reference is not None:

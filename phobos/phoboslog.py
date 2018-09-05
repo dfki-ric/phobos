@@ -41,11 +41,12 @@ import phobos.display as display
 LOGLEVELS = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
 
 #: Calling functions that will never be logged to the GUI of Blender.
-FUNCTION_BLACKLIST = ('register')
+FUNCTION_BLACKLIST = 'register'
 
 
 class Col(Enum):
     """Provides the color ids for different terminal messages."""
+
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
     OKGREEN = '\033[92m'
@@ -100,8 +101,9 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
     """
     frame = inspect.stack()[1][0]
     info = inspect.getframeinfo(frame)
-    originname = '{0} - {1} (l{2})'.format(info.filename.split('addons/')[-1], info.function,
-                                           info.lineno)
+    originname = '{0} - {1} (l{2})'.format(
+        info.filename.split('addons/')[-1], info.function, info.lineno
+    )
 
     # display only messages up to preferred log level
     prefs = bpy.context.user_preferences.addons["phobos"].preferences
@@ -121,7 +123,8 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
     if end == '\n' or end == '\n\n':
         msg = date + " - " + level + " " + message + " (" + originname + ")"
         terminalmsg = '{0}[{1}] {2} {3}{4} ({5}){6}'.format(
-            prefix, date, decorate(level), message, Col.DIM.value, originname, Col.ENDC.value)
+            prefix, date, decorate(level), message, Col.DIM.value, originname, Col.ENDC.value
+        )
     else:
         msg = message
         terminalmsg = Col.OKBLUE.value + message + Col.ENDC.value

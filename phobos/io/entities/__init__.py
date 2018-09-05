@@ -50,5 +50,8 @@ for filename in os.listdir(os.path.dirname(__file__)):
             entity_types.update(py_mod.entity_type_dict.copy())
             print('Registered entity plugin:', list(py_mod.entity_type_dict.keys()))
         else:
-            print('ERROR in entities/__init__: "' +
-                  filename + '" has no valid entity plugin interface.')
+            print(
+                'ERROR in entities/__init__: "'
+                + filename
+                + '" has no valid entity plugin interface.'
+            )

@@ -44,14 +44,18 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
     """
     from phobos.model.models import initObjectProperties
     from phobos.model.poses import deriveObjectPose
+
     if logging:
-        log("Deriving sensor from object " + nUtils.getObjectName(obj, phobostype='sensor') + ".",
-            'DEBUG')
+        log(
+            "Deriving sensor from object " + nUtils.getObjectName(obj, phobostype='sensor') + ".",
+            'DEBUG',
+        )
     try:
         props = initObjectProperties(obj, phobostype='sensor')
         if names:
             props['link'] = nUtils.getObjectName(
-                sUtils.getEffectiveParent(obj, objectlist=objectlist), phobostype='link')
+                sUtils.getEffectiveParent(obj, objectlist=objectlist), phobostype='link'
+            )
         else:
             props['link'] = sUtils.getEffectiveParent(obj, objectlist=objectlist)
     except KeyError:
@@ -73,8 +77,26 @@ def cameraRotLock(object):
 
     """
     sUtils.selectObjects([object], active=0)
-    bpy.ops.transform.rotate(value=-1.5708, axis=(-1, 0, 0), constraint_axis=(False, False, True), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
-    bpy.ops.transform.rotate(value=1.5708, axis=(0, -1, 0), constraint_axis=(True, False, False), constraint_orientation='LOCAL', mirror=False, proportional='DISABLED', proportional_edit_falloff='SMOOTH', proportional_size=1)
+    bpy.ops.transform.rotate(
+        value=-1.5708,
+        axis=(-1, 0, 0),
+        constraint_axis=(False, False, True),
+        constraint_orientation='LOCAL',
+        mirror=False,
+        proportional='DISABLED',
+        proportional_edit_falloff='SMOOTH',
+        proportional_size=1,
+    )
+    bpy.ops.transform.rotate(
+        value=1.5708,
+        axis=(0, -1, 0),
+        constraint_axis=(True, False, False),
+        constraint_orientation='LOCAL',
+        mirror=False,
+        proportional='DISABLED',
+        proportional_edit_falloff='SMOOTH',
+        proportional_size=1,
+    )
     bpy.ops.object.constraint_add(type='LIMIT_ROTATION')
     object.constraints["Limit Rotation"].use_limit_x = True
     object.constraints["Limit Rotation"].use_limit_y = True
@@ -110,9 +132,15 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     # create sensor object
     if sensor['shape'].startswith('resource'):
         newsensor = bUtils.createPrimitive(
-            sensor['name'], 'box', [1, 1, 1], layers,
-            plocation=origin.to_translation(), protation=origin.to_euler(),
-            pmaterial=sensor['material'], phobostype='sensor')
+            sensor['name'],
+            'box',
+            [1, 1, 1],
+            layers,
+            plocation=origin.to_translation(),
+            protation=origin.to_euler(),
+            pmaterial=sensor['material'],
+            phobostype='sensor',
+        )
         # use resource name provided as: "resource:whatever_name"
         resource_obj = ioUtils.getResource(['sensor'] + sensor['shape'].split('://')[1].split('_'))
         if resource_obj:
@@ -123,9 +151,15 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
             log("Could not use resource mesh for sensor. Default cube used instead.", 'WARNING')
     else:
         newsensor = bUtils.createPrimitive(
-            sensor['name'], sensor['shape'], sensor['size'], layers,
-            plocation=origin.to_translation(), protation=origin.to_euler(),
-            pmaterial=sensor['material'], phobostype='sensor')
+            sensor['name'],
+            sensor['shape'],
+            sensor['size'],
+            layers,
+            plocation=origin.to_translation(),
+            protation=origin.to_euler(),
+            pmaterial=sensor['material'],
+            phobostype='sensor',
+        )
 
     # assign the parent if available
     if reference is not None:
@@ -135,7 +169,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
 
     # TODO cameraRotLock() use or dispose?
     # contact, force and torque sensors (or unknown sensors)
-    #else:
+    # else:
     #    newsensor = bUtils.createPrimitive(
     #        sensor['name'], 'ico', 0.05, layers, 'phobos_sensor',
     #        origin.to_translation(), protation=origin.to_euler())
@@ -147,17 +181,17 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     #        newsensor['sensor/nodes'] = sorted([nUtils.getObjectName(ref) for ref in reference])
     #    elif 'Joint' in sensor['type'] or 'Motor' in sensor['type']:
     #        newsensor['sensor/joints'] = sorted([nUtils.getObjectName(ref) for ref in reference])
-#         elif sensor['type'] in ['Joint6DOF']:
-#             for obj in context.selected_objects:
-#                 if obj.phobostype == 'link':
-#                     sensor['name'] = "sensor_joint6dof_" + nUtils.getObjectName(obj, phobostype="joint")
-#                     sensors.createSensor(sensor, obj, obj.matrix_world)
-#         elif 'Node' in sensor['type']:
-#             sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
-#                          mathutils.Matrix.Translation(context.scene.cursor_location))
-#         elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
-#             sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
-#                          mathutils.Matrix.Translation(context.scene.cursor_location))
+    #         elif sensor['type'] in ['Joint6DOF']:
+    #             for obj in context.selected_objects:
+    #                 if obj.phobostype == 'link':
+    #                     sensor['name'] = "sensor_joint6dof_" + nUtils.getObjectName(obj, phobostype="joint")
+    #                     sensors.createSensor(sensor, obj, obj.matrix_world)
+    #         elif 'Node' in sensor['type']:
+    #             sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'collision'],
+    #                          mathutils.Matrix.Translation(context.scene.cursor_location))
+    #         elif 'Motor' in sensor['type'] or 'Joint' in sensor['type']:
+    #             sensors.createSensor(sensor, [obj for obj in context.selected_objects if obj.phobostype == 'link'],
+    #                          mathutils.Matrix.Translation(context.scene.cursor_location))
 
     # set sensor properties
     newsensor.phobostype = 'sensor'
@@ -170,12 +204,15 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     # throw warning if type is not known
     # TODO we need to link this error to the sensor type specifications
     if sensor['type'] not in [key.lower() for key in defs.def_settings['sensors']]:
-        log("Sensor " + sensor['name'] + " is of unknown/custom type: " + sensor['type'] + ".",
-            'WARNING')
+        log(
+            "Sensor " + sensor['name'] + " is of unknown/custom type: " + sensor['type'] + ".",
+            'WARNING',
+        )
 
     # select the new sensor
     sUtils.selectObjects([newsensor], clear=True, active=0)
     return newsensor
+
 
 # TODO this class should reside at operators... give it a dev branch
 # class AddLegacySensorOperator(Operator):

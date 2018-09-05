@@ -87,29 +87,55 @@ def exportSRDF(model, path, mesh_format=''):
     for chainname in sorted_chain_keys:
         output.append(indent * 2 + '<group name="' + chainname + '">\n')
         chain = model['chains'][chainname]
-        output.append(indent * 3 + '<chain base_link="' + chain['start'] + '" tip_link="' + chain['end'] + '" />\n')
+        output.append(
+            indent * 3
+            + '<chain base_link="'
+            + chain['start']
+            + '" tip_link="'
+            + chain['end']
+            + '" />\n'
+        )
         output.append(indent * 2 + '</group>\n\n')
     # TODO delete me?
-    #for joint in model['state']['joints']:
+    # for joint in model['state']['joints']:
     #    pass
     # passive joints
     sorted_joint_keys = sorted(model['joints'].keys())
     for joint in sorted_joint_keys:
         try:
             if model['joints'][joint]['passive']:
-                output.append(indent * 2 + '<passive_joint name="' + model['links'][joint]['name'] + '"/>\n\n')
+                output.append(
+                    indent * 2 + '<passive_joint name="' + model['links'][joint]['name'] + '"/>\n\n'
+                )
         except KeyError:
             pass
     sorted_link_keys = sorted(model['links'].keys())
     for link in sorted_link_keys:
         if len(model['links'][link]['approxcollision']) > 0:
-            output.append(indent * 2 + '<link_sphere_approximation link="' + model['links'][link]['name'] + '">\n')
+            output.append(
+                indent * 2
+                + '<link_sphere_approximation link="'
+                + model['links'][link]['name']
+                + '">\n'
+            )
             # TODO: there does not seem to be a way to sort the spheres if there are multiple
             for sphere in model['links'][link]['approxcollision']:
-                output.append(xmlline(3, 'sphere', ('center', 'radius'), (l2str(sphere['center']), sphere['radius'])))
+                output.append(
+                    xmlline(
+                        3,
+                        'sphere',
+                        ('center', 'radius'),
+                        (l2str(sphere['center']), sphere['radius']),
+                    )
+                )
             output.append(indent * 2 + '</link_sphere_approximation>\n\n')
         else:
-            output.append(indent * 2 + '<link_sphere_approximation link="' + model['links'][link]['name'] + '">\n')
+            output.append(
+                indent * 2
+                + '<link_sphere_approximation link="'
+                + model['links'][link]['name']
+                + '">\n'
+            )
             output.append(xmlline(3, 'sphere', ('center', 'radius'), ('0.0 0.0 0.0', '0')))
             output.append(indent * 2 + '</link_sphere_approximation>\n\n')
     # calculate collision-exclusive links
@@ -121,7 +147,7 @@ def exportSRDF(model, path, mesh_format=''):
         try:
             if link1['collision_bitmask'] & link2['collision_bitmask'] == 0:
                 # TODO delete me?
-                #output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (link1['name'], link2['name'])))
+                # output.append(xmlline(2, 'disable_collisions', ('link1', 'link2'), (link1['name'], link2['name'])))
                 collisionExclusives.append((link1['name'], link2['name']))
         except KeyError:
             pass
@@ -148,9 +174,9 @@ def buildBitmasks(self, collision_Groups, robot):
             if link in collision_Groups[i]:
                 for coll in robot['links'][link]['collision']:
                     try:
-                        robot['links'][link]['collision'][coll]['bitmask'] += 2**i
+                        robot['links'][link]['collision'][coll]['bitmask'] += 2 ** i
                     except KeyError:
-                        robot['links'][link]['collision'][coll]['bitmask'] = 2**i
+                        robot['links'][link]['collision'][coll]['bitmask'] = 2 ** i
     return robot
 
 
@@ -164,22 +190,25 @@ def buildCollisionExclusives(self):
         pair = (disabled_coll.attrib['link1'], disabled_coll.attrib['link2'])
         collision_Exclusives.append(pair)
         # TODO delete me?
-        #print("Append ", pair, " to collision Exclusives")
+        # print("Append ", pair, " to collision Exclusives")
     return collision_Exclusives
 
 
 def buildCollisionDictionary(self, collision_exclusives, robot):
     dic = {}
     for pair in collision_exclusives:
-        if 'root' in pair or (pair[0] != robot['joints'][pair[1]]['parent'] and pair[1] != robot['joints'][pair[0]]['parent']):
+        if 'root' in pair or (
+            pair[0] != robot['joints'][pair[1]]['parent']
+            and pair[1] != robot['joints'][pair[0]]['parent']
+        ):
             if pair[0] not in dic:
-                dic[pair[0]]=[]
+                dic[pair[0]] = []
                 dic[pair[0]].append(pair[1])
             else:
                 if pair[1] not in dic[pair[0]]:
                     dic[pair[0]].append(pair[1])
             if pair[1] not in dic:
-                dic[pair[1]]=[]
+                dic[pair[1]] = []
                 dic[pair[1]].append(pair[0])
             else:
                 if pair[0] not in dic[pair[1]]:
@@ -187,7 +216,7 @@ def buildCollisionDictionary(self, collision_exclusives, robot):
         else:
             pass
             # TODO handle this somehow...
-            #print("Pair: ", pair, " not included")
+            # print("Pair: ", pair, " not included")
     print("Collision Dictionary:\n", dic)
     return dic
 
@@ -217,27 +246,25 @@ def processGroup(self, group, link, colls):
 
 
 def buildCollisionGroups(self, dic):
-    groups=[]
+    groups = []
     for link in dic:
         # TODO remove me?
-        #print("Current link: ", link)
+        # print("Current link: ", link)
         colls = dic[link]
         # TODO remove me?
-        #print("Current colls: ", colls)
+        # print("Current colls: ", colls)
         for group in groups:
             # TODO remove me?
-            #print("Current group: ", group)
+            # print("Current group: ", group)
             self.processGroup(group, link, colls)
         while len(colls) > 0:
             newgroup = [link, colls.pop()]
             groups.append(newgroup)
             self.processGroup(newgroup, link, colls)
     print("Number of collision Groups: ", len(groups))
-    #print ("Collision Groups:\n", groups)
+    # print ("Collision Groups:\n", groups)
     return groups
 
 
 # registering export functions of types with Phobos
-entity_type_dict = {'srdf': {'export': exportSRDF,
-                             'extensions': ('srdf', 'xml')}
-                    }
+entity_type_dict = {'srdf': {'export': exportSRDF, 'extensions': ('srdf', 'xml')}}

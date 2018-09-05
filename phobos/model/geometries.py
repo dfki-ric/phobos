@@ -70,15 +70,15 @@ def deriveGeometry(obj, adjust=False, **kwargs):
         geometry['size'] = list(obj.dimensions)
 
     elif gtype == 'cylinder':
-        geometry['radius'] = obj.dimensions[0]/2
+        geometry['radius'] = obj.dimensions[0] / 2
         geometry['length'] = obj.dimensions[2]
 
     elif gtype == 'capsule':
-        geometry['radius'] = obj.dimensions[0]/2
+        geometry['radius'] = obj.dimensions[0] / 2
         geometry['length'] = obj.dimensions[2] - obj.dimensions[0]
 
     elif gtype == 'sphere':
-        geometry['radius'] = obj.dimensions[0]/2
+        geometry['radius'] = obj.dimensions[0] / 2
 
     elif gtype == 'mesh':
         geometry['filename'] = obj.data.name
@@ -147,8 +147,14 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
         meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
         if not os.path.isfile(geom['filename']):
-            log("This path " + geom['filename'] + " is no file. Object " + viscol['name'] +
-                " will have empty mesh!", 'ERROR')
+            log(
+                "This path "
+                + geom['filename']
+                + " is no file. Object "
+                + viscol['name']
+                + " will have empty mesh!",
+                'ERROR',
+            )
             bpy.ops.object.add(type='MESH')
             newgeom = bpy.context.active_object
             nUtils.safelyName(newgeom, viscol['name'], phobostype=geomsrc)
@@ -175,15 +181,22 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             dimensions = geom['radius']
         # TODO add support for heightmap, image, plane and polyline geometries (see sdf!)
         else:
-            log("Unknown geometry type of " + geomsrc + viscol['name']
-                + '. Placing empty coordinate system.', "ERROR")
+            log(
+                "Unknown geometry type of "
+                + geomsrc
+                + viscol['name']
+                + '. Placing empty coordinate system.',
+                "ERROR",
+            )
             bpy.ops.object.empty_add(type='PLAIN_AXES', radius=0.2)
             obj = bpy.context.object
             obj.phobostype = geomsrc
             nUtils.safelyName(bpy.context.active_object, viscol['name'], phobostype=geomsrc)
             return None
         log("Creating primtive for {0}: {1}".format(geomsrc, viscol['name']), 'INFO')
-        newgeom = bUtils.createPrimitive(viscol['name'], geom['type'], dimensions, phobostype=geomsrc)
+        newgeom = bUtils.createPrimitive(
+            viscol['name'], geom['type'], dimensions, phobostype=geomsrc
+        )
         newgeom.select = True
         bpy.ops.object.transform_apply(scale=True)
 
@@ -199,7 +212,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
     for prop in viscol:
         if prop.startswith('$'):
             for tag in viscol[prop]:
-                newgeom[prop[1:]+'/'+tag] = viscol[prop][tag]
+                newgeom[prop[1:] + '/' + tag] = viscol[prop][tag]
 
     nUtils.safelyName(newgeom, viscol['name'])
     newgeom[geomsrc + '/name'] = viscol['name']
@@ -210,7 +223,9 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         if 'pose' in viscol:
             log("Setting transformation of element: " + viscol['name'], 'DEBUG')
             location = mathutils.Matrix.Translation(viscol['pose']['translation'])
-            rotation = mathutils.Euler(tuple(viscol['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+            rotation = (
+                mathutils.Euler(tuple(viscol['pose']['rotation_euler']), 'XYZ').to_matrix().to_4x4()
+            )
         else:
             log("No pose in element: " + viscol['name'], 'DEBUG')
             location = mathutils.Matrix.Identity(4)

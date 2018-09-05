@@ -36,7 +36,7 @@ resources = ioUtils.importResources((('joint', jointtype) for jointtype in joint
 for joint in joints:
     try:
         joint.pose.bones[0].custom_shape = bpy.data.scenes['resources'].objects[
-            nUtils.addNamespaceToName('joint' + '_' + joint['joint/type'], 'resource')]
+            nUtils.addNamespaceToName('joint' + '_' + joint['joint/type'], 'resource')
+        ]
     except KeyError:
         log("No joint type defined for link object: " + joint.name, 'INFO')
-
