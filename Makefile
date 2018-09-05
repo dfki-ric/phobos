@@ -26,6 +26,8 @@ help:
 		@echo	'              This does not remove the Phobos installation and configurations!'
 		@echo 	'  format    - Formats the python code in the folder using the black code'
 		@echo 	'              formatter (github.com/ambv/black).'
+		@echo 	'  apidoc    - Generates the Sphinx API documentation and moves it to the gh-pages'
+		@echo 	'              branch.'
 
 init:
 		pip install -r requirements.txt
@@ -39,4 +41,14 @@ clean:
 format:
 		black -l 100 -S .
 
-.PHONY: init test install format help
+apidoc:
+		@echo 'Start sphinx doc generation...'
+		rm phobos/__init__.py
+		cd doc && make html
+		git checkout -- phobos/__init__.py
+		git checkout gh-pages
+		rm -rf *.html *.js *.inv _sources _static
+		mv doc/_build/html/* .
+		@echo 'Please commit and push the changes to publish the new doc on https://dfki-ric.github.io/phobos'
+
+.PHONY: init test install format apidoc help
