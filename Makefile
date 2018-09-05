@@ -39,6 +39,9 @@ clean:
 		rm python_dist_packages.conf
 
 format:
+		# add docstrings and format to google style
+		pyment -o google -w .
+		# apply hard formatting rules
 		black -l 100 -S .
 
 apidoc:
