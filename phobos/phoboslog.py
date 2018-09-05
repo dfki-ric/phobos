@@ -106,7 +106,10 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
     )
 
     # display only messages up to preferred log level
-    prefs = bpy.context.user_preferences.addons["phobos"].preferences
+    if 'phobos' in bpy.context.user_preferences.addons:
+        prefs = bpy.context.user_preferences.addons["phobos"].preferences
+    else:
+        prefs = None
 
     # Phobos preferences might not be initialised yet! Use a dummy namespace instead.
     if not prefs:
