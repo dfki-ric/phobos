@@ -36,6 +36,14 @@ phobos.io.entities.primitive module
     :undoc-members:
     :show-inheritance:
 
+phobos.io.entities.sdf module
+-----------------------------
+
+.. automodule:: phobos.io.entities.sdf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 phobos.io.entities.smurf module
 -------------------------------
 
@@ -48,6 +56,14 @@ phobos.io.entities.srdf module
 ------------------------------
 
 .. automodule:: phobos.io.entities.srdf
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+phobos.io.entities.submechanisms module
+---------------------------------------
+
+.. automodule:: phobos.io.entities.submechanisms
     :members:
     :undoc-members:
     :show-inheritance:
