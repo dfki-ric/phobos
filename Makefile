@@ -25,4 +25,7 @@ install:
 clean:
 		rm python_dist_packages.conf
 
-.PHONY: init test install
+format:
+		black -l 100 -S .
+
+.PHONY: init test install format
