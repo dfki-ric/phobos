@@ -1,3 +1,5 @@
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
+
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
 Phobos is an add-on for the open-source 3D modeling software [Blender](http://www.blender.org) that enables the creation of WYSIWYG robot models for use in robot frameworks like ROS and ROCK or in real-time simulations such as MARS or Gazebo. Phobos exports formats such as URDF or SMURF and common mesh formats(STereoLithography (.stl), Wavefront (.obj) or Collada (.dae)).
