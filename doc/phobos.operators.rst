@@ -12,6 +12,14 @@ phobos.operators.editing module
     :undoc-members:
     :show-inheritance:
 
+phobos.operators.generic module
+-------------------------------
+
+.. automodule:: phobos.operators.generic
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 phobos.operators.io module
 --------------------------
 
@@ -20,18 +28,18 @@ phobos.operators.io module
     :undoc-members:
     :show-inheritance:
 
-phobos.operators.misc module
-----------------------------
-
-.. automodule:: phobos.operators.misc
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 phobos.operators.naming module
 ------------------------------
 
 .. automodule:: phobos.operators.naming
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+phobos.operators.poses module
+-----------------------------
+
+.. automodule:: phobos.operators.poses
     :members:
     :undoc-members:
     :show-inheritance:
