@@ -51,13 +51,15 @@ from phobos.phoboslog import log
 
 def linkObjectLists(annotation, objectlist):
     """Recursively adds the objects of the specified list to an annotation dictionary.
-    
+
     Wherever the keyword "$selected_objects:phobostype1:phobostype2" is found as a value in the
     annotation dictionary, the value is replaced by a list of tuples:
+
         (phobostype, object)
+
     These tuples represent each an object from the specified objectlist. 'joint' is in this case
     considered a phobostype.
-    
+
     An arbitrary number of phobostypes can be provided.
     The rest of the annotation dictionary remains untouched.
 
@@ -112,8 +114,8 @@ class DynamicProperty(PropertyGroup):
         """
 
         Args:
-          name: 
-          value: 
+          name:
+          value:
 
         Returns:
 
@@ -145,8 +147,8 @@ class DynamicProperty(PropertyGroup):
         """
 
         Args:
-          addfunc: 
-          dictionary: 
+          addfunc:
+          dictionary:
           ignore: (Default value = [])
 
         Returns:
@@ -171,8 +173,8 @@ class DynamicProperty(PropertyGroup):
         """
 
         Args:
-          layout: 
-          name: 
+          layout:
+          name:
 
         Returns:
 
@@ -195,11 +197,11 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
     The name is changed to fit the blender format of name1_name2_name3.
 
     Args:
-      name: 
-      phobtype: 
-      presetname: 
-      execute_func: 
-      *args: 
+      name:
+      phobtype:
+      presetname:
+      execute_func:
+      *args:
       hideprops: (Default value = [])
 
     Returns:
@@ -234,7 +236,7 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
             """
 
             Args:
-              context: 
+              context:
 
             Returns:
 
@@ -259,8 +261,8 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
             """
 
             Args:
-              context: 
-              event: 
+              context:
+              event:
 
             Returns:
 
@@ -289,7 +291,7 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
             """
 
             Args:
-              context: 
+              context:
 
             Returns:
 
@@ -360,7 +362,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -371,7 +373,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -389,7 +391,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -428,7 +430,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -439,8 +441,8 @@ class AddAnnotationsOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -451,7 +453,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -462,7 +464,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -521,7 +523,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
