@@ -19,15 +19,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------------
 
-"""
-.. module:: phobos.phoboslog
-    :platform: Unix, Windows, Mac
-    :synopsis: Offers a simple way to log messages from Phobos and uses Blender integrated tools \
-            to display them.
-
-.. moduleauthor:: Ole Schwiegert, Kai von Szadkowski, Simon Reichel
-"""
-
 import inspect
 from datetime import datetime
 from enum import Enum
@@ -62,7 +53,7 @@ class Col(Enum):
 
 def decorate(level):
     """Simple wrapper to color the log level according to the colors from :class:`.Col`.
-    
+
     If there is no decorator for this level, an undecorated string will be returned.
 
     Args:
@@ -85,7 +76,7 @@ def decorate(level):
 
 def log(message, level="INFO", prefix="", guionly=False, end='\n'):
     """Logs a given message to the blender console/logging file and if log level is low enough.
-    
+
     The origin can be defined as string or an object. The message is logged by the operator
     depending on the loglevel settings.
 
@@ -94,7 +85,7 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
       level(str, optional): valid log level for the message as defined by :data:`.LOGLEVELS` (Default value = "INFO")
       prefix(str, optional): any string that should be printed before the message (Default value = "")
       guionly(bool, optional): if True, only prints to GUI (Default value = False)
-      end(str, optional): string to be used at the end of the resulting print statement (Default value = '\n')
+      end(str, optional): string to be used at the end of the resulting print statement (Default value = '\\n')
 
     Returns:
 
@@ -161,15 +152,15 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
 
 def find_calling_operator(frame):
     """Finds the calling operator of a log call from the specified frame.
-    
+
     If one intermediary function name is in the :data:`FUNCTION_BLACKLIST`, the search is
     interrupted.
-    
+
     If nothing is found or the search is interrupted, None will be returned.
 
     Args:
       frame(frame: frame): call frame to begin search from
-      frame: 
+      frame:
 
     Returns:
       function: execute function of the calling operator or None
