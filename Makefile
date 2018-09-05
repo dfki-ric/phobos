@@ -41,6 +41,8 @@ clean:
 format:
 		# add docstrings and format to google style
 		pyment -o google -w .
+		# add TODO tag for empty docstrings
+		grep -rl --include=\*.py '""" """' | xargs -r sed -i 's/""" """/"""TODO Missing documentation"""/g'
 		# apply hard formatting rules
 		black -l 100 -S .
 
