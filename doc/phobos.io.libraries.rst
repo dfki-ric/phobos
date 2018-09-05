@@ -4,6 +4,14 @@ phobos.io.libraries package
 Submodules
 ----------
 
+phobos.io.libraries.mechanisms module
+-------------------------------------
+
+.. automodule:: phobos.io.libraries.mechanisms
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 phobos.io.libraries.models module
 ---------------------------------
 
