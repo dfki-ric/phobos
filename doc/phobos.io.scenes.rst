@@ -12,6 +12,14 @@ phobos.io.scenes.mars module
     :undoc-members:
     :show-inheritance:
 
+phobos.io.scenes.sdfworld module
+--------------------------------
+
+.. automodule:: phobos.io.scenes.sdfworld
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 phobos.io.scenes.smurfs module
 ------------------------------
 
