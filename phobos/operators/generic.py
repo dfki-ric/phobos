@@ -176,7 +176,7 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
 
     # create the temporary operator class
     class TempObjAddOperator(Operator):
-        """Temporary operator to add a {} {} object.""".format(name, phobtype)
+        '''Temporary operator to add a {} {} object.'''.format(name, phobtype)
 
         bl_idname = operatorBlenderId
         bl_label = 'Add {} {}'.format(name, phobtype)
