@@ -40,28 +40,43 @@ from . import naming as nUtils
 
 def update():
     """Forces Blender to update scene contents (i.e. transformations).
-
+    
     Sometimes when e.g. manipulating internal matrices of Blender objects such as
     matrix_world or matrix_local, Blender will not recalculate all related transforms,
     especially not the visual transform. The bpy.context.scene.update() function often
     named as the solution to this will lead to the matrices being updated, but not the
     visual transforms. This Function runs code (may be updated with new Blender verions)
     that forces Blender to update the visual transforms.
+
+    Args:
+
+    Returns:
+
     """
     bpy.context.scene.frame_set(1)
     bpy.context.scene.frame_set(0)
 
 
 def compileEnumPropertyList(iterable):
+    """
+
+    Args:
+      iterable: 
+
+    Returns:
+
+    """
     return ((a,) * 3 for a in iterable)
 
 
 def getBlenderVersion():
+    """TODO Missing documentation"""
     # DOCU add some docstring
     return bpy.app.version[0] * 100 + bpy.app.version[1]
 
 
 def getPhobosPreferences():
+    """TODO Missing documentation"""
     return bpy.context.user_preferences.addons["phobos"].preferences
 
 
@@ -111,12 +126,13 @@ def createPrimitive(
       player: The layer bitmask for the new blender object. (Default value = 0)
       pmaterial: The new primitives material. (Default value = None)
       plocation(tuple, optional): The new primitives location. (Default value = (0)
-      protation(tuple): The new primitives rotation.
-      phobostype(str): phobostype of object to be created
-      0:
+      protation(tuple, optional): The new primitives rotation. (Default value = (0)
+      phobostype(str, optional): phobostype of object to be created (Default value = None)
+      0: 
+      0): 
 
     Returns:
-      bpy.types.Object - the new blender object.
+      : bpy.types.Object - the new blender object.
 
     """
     # TODO: allow placing on currently active layer?
@@ -187,13 +203,16 @@ def createPrimitive(
 
 def setObjectLayersActive(obj, extendlayers=False):
     """Sets all layers, the specified object is on to active.
-
+    
     If extendlayers is set, the layers of the object are added to the already active layers instead
     of replacing them.
 
     Args:
-        obj (bpy.types.Object): object of which the layers shall be activated
-        extendlayers (bool): activate the object layers in addition to the already active layers
+      obj(bpy.types.Object): object of which the layers shall be activated
+      extendlayers(bool, optional): activate the object layers in addition to the already active layers (Default value = False)
+
+    Returns:
+
     """
     for layer in range(len(obj.layers)):
         if extendlayers:
@@ -222,7 +241,7 @@ def defLayers(layerlist):
     """Returns a list of 20 elements encoding the visible layers according to layerlist
 
     Args:
-      layerlist:
+      layerlist: 
 
     Returns:
 
@@ -256,14 +275,15 @@ def updateTextFile(textfilename, newContent):
 
 def readTextFile(textfilename):
     """Returns the content of a specified text file in Blender's data.
-
+    
     If the file is not found, an empty string is returned.
 
     Args:
-        textfilename (str): The blender textfiles name.
+      textfilename(str): The blender textfiles name.
 
     Returns:
-        str -- textfile content or empty string
+      : str -- textfile content or empty string
+
     """
     if textfilename not in bpy.data.texts:
         log("No text file " + textfilename + " found.", "WARNING")
@@ -316,7 +336,7 @@ def cleanObjectProperties(props):
     """Cleans a predefined list of Blender-specific or other properties from the dictionary.
 
     Args:
-      props:
+      props: 
 
     Returns:
 
@@ -365,8 +385,8 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
       objects(list of bpy.types.Object): list of objects for the thumbnail
       export_path(str): folder to export image to
       modelname(str): name of model (used as file name)
-      render_resolution(int): side length of resulting image in pixels (Default value = 256)
-      opengl(bool): whether to use opengl rendering or not (Default value = False)
+      render_resolution(int, optional): side length of resulting image in pixels (Default value = 256)
+      opengl(bool, optional): whether to use opengl rendering or not (Default value = False)
 
     Returns:
 
@@ -421,7 +441,15 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
 
 
 def toggleTransformLock(obj, setting=None):
-    """Toogle transform lock for the referred object"""
+    """Toogle transform lock for the referred object
+
+    Args:
+      obj: 
+      setting: (Default value = None)
+
+    Returns:
+
+    """
     obj.lock_location[0] = setting if setting is not None else not obj.lock_location[0]
     obj.lock_location[1] = setting if setting is not None else not obj.lock_location[1]
     obj.lock_location[2] = setting if setting is not None else not obj.lock_location[2]
@@ -434,7 +462,14 @@ def toggleTransformLock(obj, setting=None):
 
 
 def switchToScene(scenename):
-    """Switch to Blender scene of the given name"""
+    """Switch to Blender scene of the given name
+
+    Args:
+      scenename: 
+
+    Returns:
+
+    """
     if scenename not in bpy.data.scenes.keys():
         bpy.data.scenes.new(scenename)
     bpy.context.screen.scene = bpy.data.scenes[scenename]
@@ -445,13 +480,13 @@ def getCombinedDimensions(objects):
     """Returns the dimension of the space the objects passed occupy.
 
     Args:
-        objects(list): list of
+      objects(list): list of
 
     Returns:
-        list of floats (x, y, z) of dimensions
+      : list of floats (x, y, z) of dimensions
 
     Raises:
-        ValueError: If empty object list is passed.
+      ValueError: If empty object list is passed.
 
     """
     bbpoints = []
@@ -465,8 +500,13 @@ def getCombinedDimensions(objects):
 
 def getPhobosConfigPath():
     """Returns the user-defined config path if set or the default-path
-
+    
     Returns(str): (user-defined) config path
+
+    Args:
+
+    Returns:
+
     """
     if bpy.context.user_preferences.addons["phobos"].preferences.configfolder != '':
         return bpy.context.user_preferences.addons["phobos"].preferences.configfolder

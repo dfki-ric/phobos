@@ -50,7 +50,7 @@ def deriveEntity(entity, outpath):
       entity: 
 
     Returns:
-      dict - An entry for the scenes entitiesList
+      : dict - An entry for the scenes entitiesList
 
     """
 

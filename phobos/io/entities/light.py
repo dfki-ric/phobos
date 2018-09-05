@@ -42,7 +42,7 @@ def deriveEntity(light, outpath):
       light: 
 
     Returns:
-      dict - An entry for the scenes entitiesList
+      : dict - An entry for the scenes entitiesList
 
     """
     log("Exporting " + light["entity/name"] + " as a light entity", "INFO")

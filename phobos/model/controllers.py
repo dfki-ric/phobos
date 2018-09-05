@@ -31,6 +31,14 @@ import phobos.utils.io as ioUtils
 
 
 def deriveController(obj):
+    """
+
+    Args:
+      obj: 
+
+    Returns:
+
+    """
     import phobos.model.models as models
 
     props = models.initObjectProperties(obj, phobostype='controller')
@@ -59,19 +67,20 @@ def deriveController(obj):
 
 def createController(controller, reference, origin=mathutils.Matrix(), annotations=None):
     """This function creates a new controller specified by its parameters.
-
+    
     If an annotation category or the keyword 'all' is specified, the respective annotations for the
     controller will be added as objects.
 
     Args:
-        controller (dict): phobos representation of the new controller
-        reference (bpy_types.Object): object to add a parent relationship to
-        origin (mathutils.Matrix): new controllers origin
-        annotations (list(str)/str): list of annotation keys or 'all' to add to as annotation
-            objects
+      controller(dict): phobos representation of the new controller
+      reference(bpy_types.Object): object to add a parent relationship to
+      origin(mathutils.Matrix, optional): new controllers origin (Default value = mathutils.Matrix())
+      annotations(list(str, optional): list of annotation keys or 'all' to add to as annotation
+    objects (Default value = None)
 
     Returns:
-        bpy.types.Object -- new created controller object
+      : bpy.types.Object -- new created controller object
+
     """
     layers = defs.layerTypes['controller']
     bUtils.toggleLayer(layers, value=True)

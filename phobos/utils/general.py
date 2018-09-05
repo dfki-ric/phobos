@@ -39,10 +39,11 @@ def is_float(text):
     """Tests if the specified string represents a float number.
 
     Args:
-        text (str): text to check
+      text(str): text to check
 
     Returns:
-        bool -- True if the text can be parsed to a float, False if not.
+      : bool -- True if the text can be parsed to a float, False if not.
+
     """
     try:
         float(text)
@@ -55,10 +56,11 @@ def is_int(text):
     """Tests if the specified string represents an integer number.
 
     Args:
-        text (str): text to check
+      text(str): text to check
 
     Returns:
-        bool -- True if the text can be parsed to an int, False if not.
+      : bool -- True if the text can be parsed to an int, False if not.
+
     """
     try:
         int(text)
@@ -69,17 +71,18 @@ def is_int(text):
 
 def parse_number(text):
     """Returns the specified string parsed to an int or float.
-
+    
     If no number can be parsed, the original string is returned.
-
+    
     To determine whether the number is an int or float, the functions `is_int` and `is_float` are
     used.
 
     Args:
-      text (string): text to parse to a number
+      text(string): text to parse to a number
 
     Returns:
-        int/float/str -- depending on successful parsing, a number or a string is returned
+      : int/float/str -- depending on successful parsing, a number or a string is returned
+
     """
     if is_int(text):
         return int(text)
@@ -90,14 +93,15 @@ def parse_number(text):
 
 def only_contains_int(stringlist):
     """Checks if a list of strings contains int numbers exclusively.
-
+    
     To determine whether the number is an int, the function `is_int` is used.
 
     Args:
-        stringlist (list(str)): list to check
+      stringlist(list(str): list to check
 
     Returns:
-        bool -- True if every string in the list can be represented as int, False if not
+      : bool -- True if every string in the list can be represented as int, False if not
+
     """
     for num in stringlist:
         if not is_int(num):
@@ -107,14 +111,15 @@ def only_contains_int(stringlist):
 
 def only_contains_float(stringlist):
     """Checks if a list of strings contains float numbers exclusively.
-
+    
     To determine whether the number is a float, the function `is_float` is used.
 
     Args:
-        stringlist (list(str)): list to check
+      stringlist(list(str): list to check
 
     Returns:
-        bool -- True if every string in the list can be represented as float, False if not
+      : bool -- True if every string in the list can be represented as float, False if not
+
     """
     for num in stringlist:
         if not is_float(num):
@@ -124,14 +129,15 @@ def only_contains_float(stringlist):
 
 def parse_text(text):
     """Parses a text by splitting up elements separated by whitespace.
-
+    
     The elements are then parsed to int/float-only lists.
 
     Args:
-        text (str): text with elements seperated by whitespace
+      text(str): text with elements seperated by whitespace
 
     Returns:
-        list(str/float/int) -- list with elements parsed to the same type
+      : list(str/float/int) -- list with elements parsed to the same type
+
     """
     numstrings = text.split()
     if not numstrings:
@@ -155,10 +161,11 @@ def calcBoundingBoxCenter(boxcorners):
     """Calculates the center of a bounding box.
 
     Args:
-        boxcorners (list(list(float))): coordinates of the eight cornerpoints of the box
+      boxcorners(list(list(float): coordinates of the eight cornerpoints of the box
 
     Returns:
-        mathutils.Vector -- centerpoint of the bounding box
+      : mathutils.Vector -- centerpoint of the bounding box
+
     """
     center = sum((mathutils.Vector(point) for point in boxcorners), mathutils.Vector())
     return center / 8
@@ -168,10 +175,12 @@ def sortListsInDict(data, reverse=False):
     """Recursively loops through a dictionary and sorts all lists.
 
     Args:
-        data(dict): data dictionary
+      data(dict): data dictionary
+      reverse: (Default value = False)
 
     Returns:
-        dict -- sorted dictionary
+      : dict -- sorted dictionary
+
     """
     if isinstance(data, list):
         if not data:
@@ -191,15 +200,16 @@ def sortListsInDict(data, reverse=False):
 
 def roundFloatsInDict(data, decimals):
     """Recursively rounds all floats in the dictionary to the specified decimal digits.
-
+    
     If a float value is smaller than 10e-decimals it is set to zero.
 
     Args:
-        data(dict): data dictionary
-        decimals(int): number of decimals floats should be rounded to
+      data(dict): data dictionary
+      decimals(int): number of decimals floats should be rounded to
 
     Returns:
-        dict -- dictionary with rounded floats
+      : dict -- dictionary with rounded floats
+
     """
     epsilon = 10 ** -decimals
     if is_float(data):
@@ -219,11 +229,12 @@ def calculateSum(objects, numeric_prop):
     """Returns sum of *numeric_prop* in *objects*.
 
     Args:
-        objects (list(bpy.types.Object)): objects to sum up the property for
-        numeric_prop (str): name of the custom property to sum
+      objects(list(bpy.types.Object): objects to sum up the property for
+      numeric_prop(str): name of the custom property to sum
 
     Returns:
-        float/int -- sum of the values in the property of the objects
+      : float/int -- sum of the values in the property of the objects
+
     """
     numsum = 0
     for obj in objects:
@@ -254,10 +265,11 @@ def datetimeFromIso(iso):
     """Accepts a date-time string in ISO format and returns a datetime object.
 
     Args:
-        iso (str): ISO format string for a date and time
+      iso(str): ISO format string for a date and time
 
     Returns:
-        datetime.datetime -- datetime object from the specified string
+      : datetime.datetime -- datetime object from the specified string
+
     """
     try:
         dtime = datetime(*[int(a) for a in re.split(":|-|T| |\.", iso)])
@@ -271,10 +283,11 @@ def distance(objects):
     """Returns the distance between two Blender objects.
 
     Args:
-      objects (list(bpy.types.Object)): exactly two Blender objects
+      objects(list(bpy.types.Object): exactly two Blender objects
 
     Returns:
-        tuple(float, mathutils.Vector) -- distance and distance vector between the Blender objects
+      : tuple(float, mathutils.Vector) -- distance and distance vector between the Blender objects
+
     """
     vector = objects[0].matrix_world.to_translation() - objects[1].matrix_world.to_translation()
     return vector.length, vector
@@ -284,11 +297,12 @@ def outerProduct(v, u):
     """Returns a mathutils.Matrix representing the outer product of vectors v and u.
 
     Args:
-        v (mathutils.Vector): first vector
-        u (mathutils.Vector): second vector
+      v(mathutils.Vector): first vector
+      u(mathutils.Vector): second vector
 
     Returns:
-        mathutils.Matrix -- outer product of v and u
+      : mathutils.Matrix -- outer product of v and u
+
     """
     lines = []
     for vi in v:
@@ -299,15 +313,18 @@ def outerProduct(v, u):
 # TODO is this still needed?
 def copyTree(src, dst, symlinks=False, ignore=None):
     """Copies the folder tree from src to dst.
-
+    
     Symlinks and ignore can be specified according to the usage of `shutil.copytree` and
     `shutil.copy2`.
 
     Args:
-      src (str): path to the source folder/item
-      dst (str): path to the destination folder/item
-      symlinks (bool): whether to copy symlinks to the destination
-      ignore (callable): callable function (see `shutil.copytree`)
+      src(str): path to the source folder/item
+      dst(str): path to the destination folder/item
+      symlinks(bool, optional): whether to copy symlinks to the destination (Default value = False)
+      ignore(callable, optional): callable function (see `shutil.copytree`) (Default value = None)
+
+    Returns:
+
     """
     if not os.path.exists(dst):
         os.makedirs(dst)

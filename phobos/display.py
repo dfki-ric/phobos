@@ -56,24 +56,63 @@ slotlower = [4 + slotheight * slot for slot in range(50)]
 
 
 def push_message(text, msgtype='none'):
+    """
+
+    Args:
+      text: 
+      msgtype: (Default value = 'none')
+
+    Returns:
+
+    """
     messages.appendleft({'text': text, 'type': msgtype})
 
 
 def getRegionData():
+    """TODO Missing documentation"""
     # region = [area.region for area in bpy.context.screen.areas if area.type == 'VIEW_3D'][0]
     return bpy.context.region, bpy.context.space_data.region_3d
 
 
 def to3d(coords, distance=1.0):
+    """
+
+    Args:
+      coords: 
+      distance: (Default value = 1.0)
+
+    Returns:
+
+    """
     # bgl.glUnProject()
     return view3d_utils.region_2d_to_origin_3d(*getRegionData(), (coords), distance)
 
 
 def to2d(coords):
+    """
+
+    Args:
+      coords: 
+
+    Returns:
+
+    """
     return view3d_utils.location_3d_to_region_2d(*getRegionData(), coords)
 
 
 def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2, linewidth=1):
+    """
+
+    Args:
+      points: 
+      linecolor: (Default value = None)
+      fillcolor: (Default value = None)
+      distance: (Default value = 0.2)
+      linewidth: (Default value = 1)
+
+    Returns:
+
+    """
     # background
     bgl.glEnable(bgl.GL_BLEND)
     bgl.glLineWidth(linewidth)
@@ -96,6 +135,21 @@ def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2, linewid
 
 
 def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font_id=0):
+    """
+
+    Args:
+      text: 
+      position: 
+      color: (Default value = (1.0)
+      1.0: 
+      1.0): 
+      size: (Default value = 14)
+      dpi: (Default value = 150)
+      font_id: (Default value = 0)
+
+    Returns:
+
+    """
     bgl.glColor4f(*color)
     blf.position(font_id, *position, 0.25)
     blf.size(font_id, size, dpi)
@@ -115,6 +169,25 @@ def draw_textbox(
     rightalign=False,
     indicator_line=True,
 ):
+    """
+
+    Args:
+      text: 
+      origin: 
+      textsize: (Default value = 6)
+      textcolor: (Default value = colors['white'])
+      backgroundcolor: (Default value = colors['background'])
+      offset: (Default value = Vector((0.0)
+      0.0)): 
+      linewidth: (Default value = 2)
+      hborder: (Default value = 3)
+      vborder: (Default value = 4)
+      rightalign: (Default value = False)
+      indicator_line: (Default value = True)
+
+    Returns:
+
+    """
     blf.size(0, textsize, 150)
     width = blf.dimensions(0, text)[0]
     height = blf.dimensions(0, text)[1]
@@ -133,6 +206,18 @@ def draw_textbox(
 
 
 def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
+    """
+
+    Args:
+      text: 
+      msgtype: 
+      slot: 
+      opacity: (Default value = 1.0)
+      offset: (Default value = 0)
+
+    Returns:
+
+    """
     blf.size(0, 6, 150)
     width = bpy.context.region.width
     start = width - blf.dimensions(0, text)[0] - 6
@@ -150,6 +235,14 @@ def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
 
 
 def draw_progressbar(value):
+    """
+
+    Args:
+      value: 
+
+    Returns:
+
+    """
     region = bpy.context.region
     text = str(round(value * 100)) + '%'
     lc = (0.0, 1.0, 0.0, 1.0)
@@ -177,6 +270,15 @@ def draw_progressbar(value):
 
 
 def draw_joint(joint, length):
+    """
+
+    Args:
+      joint: 
+      length: 
+
+    Returns:
+
+    """
     origin = Vector(joint.matrix_world.to_translation())
     axis = joint.matrix_world * (length * joint.data.bones[0].vector.normalized())
     endpoint = axis
@@ -190,6 +292,17 @@ def draw_joint(joint, length):
 
 
 def draw_path(path, color=colors['white'], dim3=False, width=4):
+    """
+
+    Args:
+      path: 
+      color: (Default value = colors['white'])
+      dim3: (Default value = False)
+      width: (Default value = 4)
+
+    Returns:
+
+    """
     origins = []
     for e in range(len(path)):
         origins.append(path[e].matrix_world.to_translation())
@@ -210,6 +323,12 @@ def draw_path(path, color=colors['white'], dim3=False, width=4):
 
 def draw_callback_3d(self, context):
     """Callback function for 3d drawing.
+
+    Args:
+      context: 
+
+    Returns:
+
     """
     active = context.object
     selected = context.selected_objects
@@ -231,6 +350,12 @@ def draw_callback_3d(self, context):
 
 def draw_callback_2d(self, context):
     """Callback function for 2d drawing.
+
+    Args:
+      context: 
+
+    Returns:
+
     """
     active = context.object
     selected = context.selected_objects
@@ -350,9 +475,18 @@ class DisplayInformationOperator(Operator):
     bl_label = "Draw Model Information"
 
     def get_drawing_status(self):
+        """TODO Missing documentation"""
         return bpy.context.window_manager['drawing_status']
 
     def set_drawing_status(self, value):
+        """
+
+        Args:
+          value: 
+
+        Returns:
+
+        """
         bpy.context.window_manager.drawing_status = value
 
     running = BoolProperty(
@@ -363,6 +497,15 @@ class DisplayInformationOperator(Operator):
     )
 
     def modal(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         wm = context.window_manager
         context.area.tag_redraw()
 
@@ -384,6 +527,15 @@ class DisplayInformationOperator(Operator):
         return {'PASS_THROUGH'}
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         from phobos.phoboslog import log
 
         wm = context.window_manager
@@ -407,6 +559,15 @@ class DisplayInformationOperator(Operator):
 
 
 def setProgress(value, info=None):
+    """
+
+    Args:
+      value: 
+      info: (Default value = None)
+
+    Returns:
+
+    """
     global progressinfo
     c = bpy.context
     c.window_manager.progress = value
@@ -421,6 +582,7 @@ def setProgress(value, info=None):
 
 
 def register():
+    """TODO Missing documentation"""
     # add the drawing status boolean to the window manager
     bpy.types.WindowManager.drawing_status = BoolProperty(
         default=False,
@@ -432,6 +594,7 @@ def register():
 
 
 def unregister():
+    """TODO Missing documentation"""
     # remove the drawing status boolean to the window manager
     del bpy.types.WindowManager.drawing_status
 

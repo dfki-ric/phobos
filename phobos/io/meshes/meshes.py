@@ -35,6 +35,16 @@ from phobos.phoboslog import log
 
 
 def exportMesh(obj, path, meshtype):
+    """
+
+    Args:
+      obj: 
+      path: 
+      meshtype: 
+
+    Returns:
+
+    """
     import phobos.utils.io as ioUtils
 
     # DOCU add some docstring
@@ -69,6 +79,15 @@ def exportMesh(obj, path, meshtype):
 
 
 def importMesh(filepath, meshtype):
+    """
+
+    Args:
+      filepath: 
+      meshtype: 
+
+    Returns:
+
+    """
     # DOCU add some docstring
     # tag all objects
     for obj in bpy.data.objects:
@@ -102,16 +121,40 @@ def importMesh(filepath, meshtype):
 
 
 def importObj(filepath):
+    """
+
+    Args:
+      filepath: 
+
+    Returns:
+
+    """
     # DOCU add some docstring
     bpy.ops.import_scene.obj(filepath=filepath)
 
 
 def importStl(filepath):
+    """
+
+    Args:
+      filepath: 
+
+    Returns:
+
+    """
     # DOCU add some docstring
     bpy.ops.import_mesh.stl(filepath=filepath)
 
 
 def importDae(filepath):
+    """
+
+    Args:
+      filepath: 
+
+    Returns:
+
+    """
     # DOCU add some docstring
     bpy.ops.wm.collada_import(filepath=filepath)
 

@@ -52,14 +52,39 @@ class SelectObjectsByPhobosType(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         sUtils.selectObjects(sUtils.getObjectsByPhobostypes([self.seltype]), True)
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         return context.window_manager.invoke_props_dialog(self, width=300)
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.mode == 'OBJECT'
 
 
@@ -75,6 +100,14 @@ class SelectObjectsByName(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         sUtils.selectByName(self.namefragment)
         return {'FINISHED'}
 
@@ -92,9 +125,25 @@ class GotoObjectOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.scene.objects and context.mode == 'OBJECT'
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         log("Jumping to object " + self.objectname + ".", 'DEBUG')
 
         # switch the scene if the object is anywhere else
@@ -124,6 +173,14 @@ class SelectRootOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         roots = set()
 
         # add root object of each selected object
@@ -145,6 +202,14 @@ class SelectRootOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return bpy.context.selected_objects and context.mode == 'OBJECT'
 
 
@@ -160,6 +225,14 @@ class SelectModelOperator(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         selection = []
         if self.modelname:
             log("phobos: Selecting model" + self.modelname, "INFO")
@@ -179,12 +252,14 @@ class SelectModelOperator(Operator):
 
 
 def register():
+    """TODO Missing documentation"""
     print("Registering operators.selection...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.register_class(classdef)
 
 
 def unregister():
+    """TODO Missing documentation"""
     print("Unregistering operators.selection...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.unregister_class(classdef)

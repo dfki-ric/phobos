@@ -63,10 +63,14 @@ blenderconfigpath = phobossystem.getBlenderConfigPath()
 
 
 def updateFolderContents(src, dst):
-    """ Updates the directory tree at dst with everything from src.
+    """Updates the directory tree at dst with everything from src.
 
-    :param src: source path
-    :param dst: destination path
+    Args:
+      src: source path
+      dst: destination path
+
+    Returns:
+
     """
     return copy_tree(src, dst, update=True, verbose=True, dry_run=False)
 

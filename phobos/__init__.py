@@ -110,6 +110,15 @@ else:
 
 # Add custom YAML (de-)serializer
 def bool_representer(dumper, data):
+    """
+
+    Args:
+      dumper: 
+      data: 
+
+    Returns:
+
+    """
     if data == '$true':
         return dumper.represent_bool(True)
     elif data == '$false':
@@ -122,6 +131,14 @@ yaml.add_representer(str, bool_representer)
 
 
 def bool_constructor(self, node):
+    """
+
+    Args:
+      node: 
+
+    Returns:
+
+    """
     value = self.construct_yaml_bool(node)
     return '$true' if value else '$false'
 

@@ -39,7 +39,7 @@ def getObjectsByPhobostypes(phobostypes):
       phobostypes(list): the phobostypes to match objects with.
 
     Returns:
-      list - Blender objects.
+      : list - Blender objects.
 
     """
     return [obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes]
@@ -52,11 +52,11 @@ def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
     Args:
       root(bpy.types.Object): object to start search from.
       phobostypes(list of strings, optional): phobostypes to limit search to. (Default value = ()
-      selected_only(bool.): True to find only selected children, else False.
-      include_hidden(bool.): True to include hidden objects, else False.
+      selected_only(bool., optional): True to find only selected children, else False. (Default value = False)
+      include_hidden(bool., optional): True to include hidden objects, else False. (Default value = True)
 
     Returns:
-      list - Blender objects which are children of root.
+      : list - Blender objects which are children of root.
 
     """
     return [
@@ -76,11 +76,11 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
     Args:
       obj(bpy.types.Object): object to start search from.
       phobostypes(list of strings, optional): phobostypes to limit search to. (Default value = ()
-      selected_only(bool.): True to find only selected children, else False.
-      include_hidden(bool.): True to include hidden objects, else False.
+      selected_only(bool., optional): True to find only selected children, else False. (Default value = False)
+      include_hidden(bool., optional): True to include hidden objects, else False. (Default value = False)
 
     Returns:
-      list - Blender objects which are immediate children of obj.
+      : list - Blender objects which are immediate children of obj.
 
     """
     return [
@@ -98,10 +98,13 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, object
     hidden objects.
 
     Args:
-      obj (bpy.types.Object): object of which to find the parent.
-      include_hidden (bool, optional): True to include hidden objects, else False. (Default value = False)
-      ignore_selection (bool, optional): whether or not to use the current selection as limitation
-      objectlist: list of bpy.types.Object to which possible parents are restricted
+      obj(bpy.types.Object): object of which to find the parent.
+      include_hidden(bool, optional): True to include hidden objects, else False. (Default value = False)
+      ignore_selection(bool, optional): whether or not to use the current selection as limitation (Default value = False)
+      objectlist: list of bpy.types.Object to which possible parents are restricted (Default value = [])
+
+    Returns:
+
     """
     if not objectlist:
         objectlist = list(bpy.data.objects)
@@ -133,7 +136,7 @@ def getRoot(obj=None):
       obj(bpy.types.Object, optional): The object to find the root for. (Default value = None)
 
     Returns:
-      bpy.types.Object - The root object.
+      : bpy.types.Object - The root object.
 
     """
     obj = bpy.context.active_object if obj is None else obj
@@ -150,10 +153,10 @@ def getRoots(scene=None):
     """Returns a list of all of the current/specified scene's root objects.
 
     Args:
-        scene (bpy.types.Scene): the scene of which to find the root objects
+      scene(bpy.types.Scene, optional): the scene of which to find the root objects (Default value = None)
 
     Returns:
-        list(bpy.types.Object) -- root objects of the scene
+      : list(bpy.types.Object) -- root objects of the scene
 
     """
     if not scene:
@@ -178,6 +181,10 @@ def isRoot(obj, scene=None):
 
     Args:
       obj(bpy.types.Object): The object for which model root status is tested.
+      scene: (Default value = None)
+
+    Returns:
+
     """
     rootdefinition = obj is not None and obj.phobostype in ['link', 'submodel']
     parentless = not obj.parent or (scene is not None and obj.parent.name not in scene.objects)
@@ -186,6 +193,7 @@ def isRoot(obj, scene=None):
 
 
 def getRootsOfSelection():
+    """TODO Missing documentation"""
     return list(set([getRoot(obj) for obj in bpy.context.selected_objects]))
 
 
@@ -194,6 +202,9 @@ def isEntity(obj):
 
     Args:
       obj(bpy.types.Object): The object for which entity status is tested.
+
+    Returns:
+
     """
     return obj is not None and 'entity/type' in obj and 'entity/name' in obj
 
@@ -208,7 +219,7 @@ def selectObjects(objects, clear=True, active=-1):
       active(int, optional): index of the object to set active. (Default value = -1)
 
     Returns:
-      None.
+      : None.
 
     """
     # if no object is active, object mode can't be toggled
@@ -225,7 +236,7 @@ def selectObjects(objects, clear=True, active=-1):
 def getObjectByName(name):
     """Returns list of objects that either have a specific *name* or contain a custom
     name property with that name.
-
+    
     As the function returns either an empty list, a unique object or a list of objects,
     it is possible to test for uniqueness of the result by calling `isinstance(result, list)`.
 
@@ -233,7 +244,7 @@ def getObjectByName(name):
       name(str): The exact object name to find.
 
     Returns:
-      bpy.types.Object or list - one or list of objects matching name
+      : bpy.types.Object or list - one or list of objects matching name
 
     """
     objlist = []
@@ -256,8 +267,8 @@ def getObjectsByPattern(pattern, match_case=False):
     property.
 
     Args:
-      pattern(str): The pattern to search for.
-      match_case(bool, optional): Indicate whether to match the object names' case to the pattern. (Default value = False)
+      pattern: str
+      match_case: bool (Default value = False)
 
     Returns:
       list - all matching objects.
@@ -288,7 +299,7 @@ def getObjectByNameAndType(name, phobostype):
       phobostype(str): The phobostype to search for.
 
     Returns:
-      bpy.types.Object - the matching object.
+      : bpy.types.Object - the matching object.
 
     """
     # FIXME: make this API-compatible with geObjectByName
@@ -309,7 +320,7 @@ def selectByName(name, match_case=False, exact=False):
       exact(bool, optional): whether to search for exact string or not (Default value = False)
 
     Returns:
-      None.
+      : None.
 
     """
     if exact:
@@ -320,7 +331,15 @@ def selectByName(name, match_case=False, exact=False):
 
 
 def getObjectByProperty(property, value):
-    """Returns the first object found in the .blend file data with matching property and value"""
+    """Returns the first object found in the .blend file data with matching property and value
+
+    Args:
+      property: 
+      value: 
+
+    Returns:
+
+    """
     candidate = None
     for obj in bpy.data.objects:
         if property in obj and obj[property] == value:
@@ -330,6 +349,14 @@ def getObjectByProperty(property, value):
 
 
 def getSubmechanismRoots(selection_only=False):
+    """
+
+    Args:
+      selection_only: (Default value = False)
+
+    Returns:
+
+    """
     if selection_only:
         objs = bpy.context.selected_objects
     else:
@@ -339,6 +366,14 @@ def getSubmechanismRoots(selection_only=False):
 
 
 def getSubmechanismRootForJoint(jointobj):
+    """
+
+    Args:
+      jointobj: 
+
+    Returns:
+
+    """
     for root in getSubmechanismRoots():
         if jointobj in root['submechanism/spanningtree']:
             return root

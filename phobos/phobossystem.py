@@ -27,8 +27,13 @@ blenderversion = '2.79'
 
 def getScriptsPath():
     """Returns the path for user-specific blender scripts for all major platforms
-
+    
     Returns(str): scripts path
+
+    Args:
+
+    Returns:
+
     """
     if sys.platform == 'linux':
         scriptspath = path.normpath(
@@ -53,8 +58,13 @@ def getScriptsPath():
 
 def getConfigPath():
     """Returns the path for configuration data for all major platforms
-
+    
     Returns(str): config path
+
+    Args:
+
+    Returns:
+
     """
     if sys.platform == 'linux':
         configpath = path.normpath(path.expanduser('~/.config/phobos'))
@@ -70,8 +80,11 @@ def getConfigPath():
 def getBlenderConfigPath():
     """Returns the configuration path for user-specific blender data.
 
+    Args:
+
     Returns:
-        str -- scripts path
+      : str -- scripts path
+
     """
     if sys.platform == 'linux':
         scriptspath = path.normpath(

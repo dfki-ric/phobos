@@ -74,6 +74,14 @@ class SafelyRemoveObjectsFromSceneOperator(Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         objs_to_delete = [o for o in context.selected_objects if len(o.users_scene) > 1]
         objs_to_keep = [o for o in context.selected_objects if len(o.users_scene) == 1]
         sUtils.selectObjects(objs_to_delete, clear=True)
@@ -95,6 +103,14 @@ class SafelyRemoveObjectsFromSceneOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.selected_objects
 
 
@@ -106,6 +122,14 @@ class MoveToSceneOperator(Operator):
     bl_options = {'UNDO'}
 
     def getSceneEnumProperty(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         scenes = bpy.data.scenes.keys()
 
         # remove current scene from enum
@@ -155,15 +179,40 @@ class MoveToSceneOperator(Operator):
     )
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         return context.window_manager.invoke_props_dialog(self, width=500)
 
     def check(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         if not self.new:
             self.scenename = self.scene
             self.init = False
         return True
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         layout.prop(self, 'new', text="New scene")
         box = layout.box()
@@ -184,6 +233,14 @@ class MoveToSceneOperator(Operator):
         box.prop(self, 'remove')
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         moveobjs = context.selected_objects
         oldscene = context.scene
 
@@ -257,6 +314,14 @@ class MoveToSceneOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return len(context.selected_objects) > 0
 
 
@@ -268,11 +333,27 @@ class SortObjectsToLayersOperator(Operator):
     bl_options = {'UNDO'}
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         eUtils.sortObjectsToLayers(context.selected_objects)
         return {'FINISHED'}
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return len(context.selected_objects) > 0
 
 
@@ -288,6 +369,14 @@ class AddKinematicChainOperator(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         endobj = context.active_object
         # pick first nonactive object as start
         for obj in context.selected_objects:
@@ -316,6 +405,14 @@ class AddKinematicChainOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return len(context.selected_objects) == 2
 
 
@@ -343,9 +440,25 @@ class SetXRayOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.mode == 'OBJECT' or context.mode == 'POSE'
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         layout.label(text="Select items for X-ray view")
 
@@ -357,6 +470,14 @@ class SetXRayOperator(Operator):
             layout.prop(self, "namepart")
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # pick objects to change
         if self.objects == 'all':
             objlist = bpy.data.objects
@@ -386,6 +507,12 @@ class SetPhobosType(Operator):
 
     def execute(self, context):
         """Change phobostype of all selected objects.
+
+        Args:
+          context: 
+
+        Returns:
+
         """
         if self.phobostype == 'undefined':
             log("Setting phobostype 'undefined' for selected objects.", 'WARNING')
@@ -396,9 +523,26 @@ class SetPhobosType(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.selected_objects
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         if context.object:
             self.phobostype = context.object.phobostype
         return self.execute(context)
@@ -416,6 +560,14 @@ class BatchEditPropertyOperator(Operator):
     property_value = StringProperty(name="Value", default="", description="Custom property value")
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         value = gUtils.parse_number(self.property_value)
         # delete property when value is empty
         if value == '':
@@ -429,6 +581,14 @@ class BatchEditPropertyOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         ob = context.active_object
         return ob is not None and len(context.selected_objects) > 0 and ob.mode == 'OBJECT'
 
@@ -455,6 +615,14 @@ class CreateInterfaceOperator(Operator):
     scale = FloatProperty(name='scale', default=1.0)
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         ifdict = {
             'type': self.interface_type,
             'direction': self.interface_direction,
@@ -472,6 +640,14 @@ class CreateInterfaceOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         if context.object:
             return context.object.mode == 'OBJECT'
         else:
@@ -488,6 +664,14 @@ class CopyCustomProperties(Operator):
     empty_properties = BoolProperty(name='empty', default=False, description="empty properties?")
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         slaves = context.selected_objects
         master = context.active_object
         slaves.remove(master)
@@ -502,6 +686,14 @@ class CopyCustomProperties(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         obs = context.selected_objects
         ob = context.active_object
         return len(obs) > 0 and ob is not None and ob.mode == 'OBJECT'
@@ -529,6 +721,14 @@ class RenameCustomProperty(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         objs = filter(lambda e: self.find in e, context.selected_objects)
         if self.replace != "":
             for obj in objs:
@@ -549,6 +749,14 @@ class RenameCustomProperty(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
@@ -565,6 +773,14 @@ class SetGeometryType(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         objs = context.selected_objects
         for obj in objs:
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
@@ -582,15 +798,40 @@ class SetGeometryType(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
 
         layout.prop(self, 'geomType')
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         return context.window_manager.invoke_props_dialog(self, width=200)
 
 
@@ -602,6 +843,14 @@ class SmoothenSurfaceOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         objs = [obj for obj in context.selected_objects if obj.type == "MESH"]
         i = 1
         for obj in objs:
@@ -612,6 +861,14 @@ class SmoothenSurfaceOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
@@ -646,6 +903,15 @@ class EditInertialData(Operator):
     )
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         # read initial parameter values from active object
         if context.active_object and context.active_object.phobostype == 'inertial':
             errors, *_ = vUtils.validateInertiaData(context.active_object, adjust=True)
@@ -658,6 +924,14 @@ class EditInertialData(Operator):
         return context.window_manager.invoke_props_dialog(self, width=200)
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         if not self.changeMass and not self.changeInertia:
             log("Cancelled inertia/mass editing: nothing to change.", 'INFO')
             return {'CANCELLED'}
@@ -689,6 +963,14 @@ class EditInertialData(Operator):
         return {'FINISHED'}
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
 
         layout.prop(self, 'changeMass', toggle=True)
@@ -702,10 +984,26 @@ class EditInertialData(Operator):
             col.prop(self, 'inertiavector')
 
     def check(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return True
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return bool([obj for obj in context.selected_objects if obj.phobostype == 'inertial'])
 
 
@@ -743,6 +1041,15 @@ class GenerateInertialObjectsOperator(Operator):
     )
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         geometric_objects = [
             obj for obj in context.selected_objects if obj.phobostype in ['visual', 'collision']
         ]
@@ -756,6 +1063,14 @@ class GenerateInertialObjectsOperator(Operator):
         return context.window_manager.invoke_props_dialog(self, width=300)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         layout.prop(self, 'clear')
         geometric_objects = [
@@ -781,6 +1096,14 @@ class GenerateInertialObjectsOperator(Operator):
         layout.prop(self, 'mass')
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # store previously selected objects
         selection = context.selected_objects
         viscols = [obj for obj in selection if obj.phobostype in ['visual', 'collision']]
@@ -846,6 +1169,14 @@ class GenerateInertialObjectsOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.selected_objects is not None and bool(
             {'visual', 'collision', 'inertial', 'link'}
             & set([o.phobostype for o in context.selected_objects])
@@ -860,6 +1191,14 @@ class EditYAMLDictionary(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         ob = context.active_object
         textfilename = ob.name + datetime.now().strftime("%Y%m%d_%H:%M")
         variablename = (
@@ -893,6 +1232,14 @@ class EditYAMLDictionary(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         ob = context.active_object
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
@@ -909,6 +1256,14 @@ class CreateCollisionObjects(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         visuals = []
         collisions = []
 
@@ -1064,6 +1419,14 @@ class CreateCollisionObjects(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return len(context.selected_objects) > 0
 
 
@@ -1083,6 +1446,15 @@ class SetCollisionGroupOperator(Operator):
     )
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         try:
             self.groups = context.active_object.rigid_body.collision_groups
         # create rigid body settings if not existent in active object
@@ -1094,6 +1466,14 @@ class SetCollisionGroupOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         objs = filter(
             lambda e: "phobostype" in e and e.phobostype == "collision", context.selected_objects
         )
@@ -1114,6 +1494,14 @@ class SetCollisionGroupOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         ob = context.active_object
         return ob is not None and ob.phobostype == 'collision' and ob.mode == 'OBJECT'
 
@@ -1163,6 +1551,14 @@ class DefineJointConstraintsOperator(Operator):
     )
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         layout.prop(self, "joint_type", text="joint_type")
 
@@ -1192,6 +1588,15 @@ class DefineJointConstraintsOperator(Operator):
                 layout.prop(self, "damping", text="damping constant")
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         aObject = context.active_object
         if 'joint/type' not in aObject and 'motor/type' in aObject:
             self.maxvelocity = aObject['motor/maxSpeed']
@@ -1199,6 +1604,14 @@ class DefineJointConstraintsOperator(Operator):
         return self.execute(context)
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         log('Defining joint constraints for joint: ', 'INFO')
         lower = 0
         upper = 0
@@ -1243,6 +1656,14 @@ class DefineJointConstraintsOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         ob = context.active_object
         # due to invoke the active object needs to be a link
         return ob is not None and ob.phobostype == 'link' and ob.mode == 'OBJECT'
@@ -1250,13 +1671,27 @@ class DefineJointConstraintsOperator(Operator):
 
 class AddMotorOperator(Operator):
     """Add a motor to the selected joint.
-    It is possible to add motors to multiple joints at the same time."""
+    It is possible to add motors to multiple joints at the same time.
+
+    Args:
+
+    Returns:
+
+    """
 
     bl_idname = "phobos.add_motor"
     bl_label = "Add Motor"
     bl_options = {'UNDO'}
 
     def motorlist(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         items = [
             (mot, mot.replace('_', ' '), '')
             for mot in sorted(defs.definitions['motors'])
@@ -1265,9 +1700,15 @@ class AddMotorOperator(Operator):
         return items
 
     def categorylist(self, context):
-        '''Create an enum for the motor categories. For phobos preset categories,
+        """Create an enum for the motor categories. For phobos preset categories,
         the phobosIcon is added to the enum.
-        '''
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         from phobos.phobosgui import prev_collections
 
         phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
@@ -1305,6 +1746,14 @@ class AddMotorOperator(Operator):
     )
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         layout.prop(self, 'motorName')
         layout.separator()
@@ -1314,13 +1763,38 @@ class AddMotorOperator(Operator):
         layout.prop(self, 'addControllers', icon='GAME')
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         return context.window_manager.invoke_props_dialog(self)
 
     def check(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return True
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         active_obj = (
             context.active_object
             and context.active_object.phobostype == 'link'
@@ -1337,6 +1811,14 @@ class AddMotorOperator(Operator):
         return joint_obj
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # match the operator to avoid dangers of eval
         import re
 
@@ -1368,22 +1850,24 @@ class AddMotorOperator(Operator):
 
 def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add motors from yaml files.
-
+    
     The specified parameters match the interface of the `addObjectFromYaml` generic function.
-
+    
     As additional argument, a boolean value is required. It controls whether the specified motor
     will be added to all selected joints (True) or to the active object only (False).
 
     Args:
-        motor_dict (dict): phobos representation of a motor
-        annotations (dict): annotation dictionary containing annotation categories as keys
-        selected_objs (list(bpy.types.Object)): selected objects in the current context
-        active_obj (bpy.types.Object): active object in the current context
-        *args (list): list containing a single bool value
+      motor_dict(dict): phobos representation of a motor
+      annotations(dict): annotation dictionary containing annotation categories as keys
+      selected_objs(list(bpy.types.Object): selected objects in the current context
+      active_obj(bpy.types.Object): active object in the current context
+      *args(list): list containing a single bool value
 
     Returns:
-        tuple(list, list, list) -- list of new motor objects, list of new annotation objects, list
-            of new controller objects
+      : tuple(list, list, list) -- list of new motor objects, list of new annotation objects, list
+      : tuple(list, list, list) -- list of new motor objects, list of new annotation objects, list
+      of new controller objects
+
     """
     addtoall = args[0]
     addcontrollers = args[1]
@@ -1460,6 +1944,14 @@ class CreateLinksOperator(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         if self.location == '3D cursor':
             modellinks.createLink({'name': self.linkname, 'scale': self.size})
         else:
@@ -1475,9 +1967,25 @@ class CreateLinksOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return bpy.ops.object.select_all.poll()
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         layout.prop(self, "location")
         layout.prop(self, "size")
@@ -1491,22 +1999,24 @@ class CreateLinksOperator(Operator):
 
 def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add sensors from yaml files.
-
+    
     The specified parameters match the interface of the `addObjectFromYaml` generic function.
-
+    
     As additional argument, a boolean value is required. It controls whether the specified sensor
     will be added to a new link (True) or not (False).
 
     Args:
-        sensor_dict (dict): phobos representation of a sensor
-        annotations (dict): annotation dictionary containing annotation categories as keys
-        selected_objs (list(bpy.types.Object)): selected objects in the current context
-        active_obj (bpy.types.Object): active object in the current context
-        *args (list): list containing a single bool value
+      sensor_dict(dict): phobos representation of a sensor
+      annotations(dict): annotation dictionary containing annotation categories as keys
+      selected_objs(list(bpy.types.Object): selected objects in the current context
+      active_obj(bpy.types.Object): active object in the current context
+      *args(list): list containing a single bool value
 
     Returns:
-        tuple(list, list, []) -- list of new sensor objects, list of new annotation objects, empty
-            list
+      : tuple(list, list, []) -- list of new sensor objects, list of new annotation objects, empty
+      : tuple(list, list, []) -- list of new sensor objects, list of new annotation objects, empty
+      list
+
     """
     addlink = args[0]
 
@@ -1560,13 +2070,27 @@ def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args
 class AddSensorOperator(Operator):
     """Add a sensor at the position of the selected object.
     It is possible to create a new link for the sensor on the fly. Otherwise,
-    the next link in the hierarchy will be used to parent the sensor to."""
+    the next link in the hierarchy will be used to parent the sensor to.
+
+    Args:
+
+    Returns:
+
+    """
 
     bl_idname = "phobos.add_sensor"
     bl_label = "Add Sensor"
     bl_options = {'UNDO'}
 
     def sensorlist(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         items = [
             (sen, sen.replace('_', ' '), '')
             for sen in sorted(defs.definitions['sensors'])
@@ -1575,9 +2099,15 @@ class AddSensorOperator(Operator):
         return items
 
     def categorylist(self, context):
-        '''Create an enum for the sensor categories. For phobos preset categories,
+        """Create an enum for the sensor categories. For phobos preset categories,
         the phobosIcon is added to the enum.
-        '''
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         from phobos.phobosgui import prev_collections
 
         phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
@@ -1616,6 +2146,14 @@ class AddSensorOperator(Operator):
     )
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         layout.prop(self, 'sensorName')
         layout.separator()
@@ -1624,16 +2162,49 @@ class AddSensorOperator(Operator):
         layout.prop(self, 'addLink')
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         return context.window_manager.invoke_props_dialog(self)
 
     def check(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return True
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.active_object
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # make sure a link is selected or created
         if not self.addLink and not context.active_object.phobostype == 'link':
             log(
@@ -1666,19 +2237,21 @@ class AddSensorOperator(Operator):
 
 def addControllerFromYaml(controller_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add controllers from yaml files.
-
+    
     The specified parameters match the interface of the `addObjectFromYaml` generic function.
 
     Args:
-        controller_dict (dict): phobos representation of a controller
-        annotations (dict): annotation dictionary containing annotation categories as keys
-        selected_objs (list(bpy.types.Object)): selected objects in the current context
-        active_obj (bpy.types.Object): active object in the current context
-        *args (list): empty list
+      controller_dict(dict): phobos representation of a controller
+      annotations(dict): annotation dictionary containing annotation categories as keys
+      selected_objs(list(bpy.types.Object): selected objects in the current context
+      active_obj(bpy.types.Object): active object in the current context
+      *args(list): empty list
 
     Returns:
-        tuple(list, list, []) -- list of new controller objects, list of new annotation objects,
-            empty list
+      : tuple(list, list, []) -- list of new controller objects, list of new annotation objects,
+      : tuple(list, list, []) -- list of new controller objects, list of new annotation objects,
+      empty list
+
     """
     addtoall = args[0]
 
@@ -1709,13 +2282,21 @@ def addControllerFromYaml(controller_dict, annotations, selected_objs, active_ob
 
 
 class AddControllerOperator(Operator):
-    """Add a controller at the position of the selected object. """
+    """Add a controller at the position of the selected object."""
 
     bl_idname = "phobos.add_controller"
     bl_label = "Add Controller"
     bl_options = {'UNDO'}
 
     def controllerlist(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         items = [
             (con, con.replace('_', ' '), '')
             for con in sorted(defs.definitions['controllers'])
@@ -1724,9 +2305,15 @@ class AddControllerOperator(Operator):
         return items
 
     def categorylist(self, context):
-        '''Create an enum for the controller categories. For phobos preset categories,
+        """Create an enum for the controller categories. For phobos preset categories,
         the phobosIcon is added to the enum.
-        '''
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         from phobos.phobosgui import prev_collections
 
         phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
@@ -1762,6 +2349,14 @@ class AddControllerOperator(Operator):
     )
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         layout.prop(self, 'controllerName')
         layout.separator()
@@ -1770,16 +2365,49 @@ class AddControllerOperator(Operator):
         layout.prop(self, 'addToAll', icon='PARTICLES')
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         return context.window_manager.invoke_props_dialog(self)
 
     def check(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return True
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.active_object and context.active_object.phobostype in defs.controllabletypes
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # match the operator to avoid dangers of eval
         import re
 
@@ -1826,8 +2454,8 @@ def getDefaultControllerParameters(scene, context):
     object.
 
     Args:
-      scene:
-      context:
+      scene: 
+      context: 
 
     Returns:
 
@@ -1857,6 +2485,14 @@ class CreateMimicJointOperator(Operator):
     mimicmotor = BoolProperty(name="Mimic Motor", default=False, description="Create motor mimicry")
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         masterjoint = context.active_object
         objs = filter(
             lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects
@@ -1877,6 +2513,14 @@ class CreateMimicJointOperator(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         ob = context.active_object
         objs = list(
             filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
@@ -1916,6 +2560,14 @@ class AddHeightmapOperator(Operator):
     filepath = StringProperty(subtype="FILE_PATH")
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         layout.prop(self, 'name')
         layout.prop(self, 'cutNo')
@@ -1925,6 +2577,14 @@ class AddHeightmapOperator(Operator):
             layout.prop(self, 'subsurflvl')
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         if os.path.basename(self.filepath) not in bpy.data.images:
             try:
                 img = bpy.data.images.load(self.filepath)
@@ -1989,6 +2649,15 @@ class AddHeightmapOperator(Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         # create the open file dialog
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
@@ -2005,7 +2674,7 @@ class AddSubmodel(Operator):
         """Returns a list of submodels of the chosen type for use as enum
 
         Args:
-          context:
+          context: 
 
         Returns:
 
@@ -2031,7 +2700,7 @@ class AddSubmodel(Operator):
         """Returns a list of submodel types in the scene for use as enum
 
         Args:
-          context:
+          context: 
 
         Returns:
 
@@ -2051,9 +2720,25 @@ class AddSubmodel(Operator):
     instancename = StringProperty(name="Instance name", default='')
 
     def check(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return True
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         layout.prop(self, 'submodeltype')
         layout.prop(self, 'submodelname')
@@ -2064,8 +2749,8 @@ class AddSubmodel(Operator):
         a property dialog
 
         Args:
-          context:
-          event:
+          context: 
+          event: 
 
         Returns:
 
@@ -2079,7 +2764,7 @@ class AddSubmodel(Operator):
         """Hide the operator when no submodels are defined
 
         Args:
-          context:
+          context: 
 
         Returns:
 
@@ -2093,7 +2778,7 @@ class AddSubmodel(Operator):
         """create an instance of the submodel
 
         Args:
-          context:
+          context: 
 
         Returns:
 
@@ -2132,8 +2817,8 @@ class DefineSubmodel(Operator):
         """Show a property dialog
 
         Args:
-          context:
-          event:
+          context: 
+          event: 
 
         Returns:
 
@@ -2144,7 +2829,7 @@ class DefineSubmodel(Operator):
         """Create a submodel based on selected objects
 
         Args:
-          context:
+          context: 
 
         Returns:
 
@@ -2178,6 +2863,14 @@ class AssignSubmechanism(Operator):
     joints = []
 
     def compileSubmechanismTreeEnum(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return bUtils.compileEnumPropertyList(
             defs.definitions['submechanisms'][context.window_manager.mechanismpreview]['joints'][
                 'spanningtree'
@@ -2185,6 +2878,14 @@ class AssignSubmechanism(Operator):
         )
 
     def isLinearChain(self, jointlist):
+        """
+
+        Args:
+          jointlist: 
+
+        Returns:
+
+        """
         leafs = [joint for joint in jointlist if all([c not in jointlist for c in joint.children])]
         chain = []
         if len(leafs) == 1:
@@ -2218,11 +2919,27 @@ class AssignSubmechanism(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return len(bpy.context.selected_objects) > 0 and any(
             (a.phobostype == 'link' for a in bpy.context.selected_objects)
         )
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         wm = context.window_manager
         layout = self.layout
         layout.label('Selection contains {0} joints.'.format(len(self.joints)))
@@ -2245,6 +2962,14 @@ class AssignSubmechanism(Operator):
                 layout.label('Please choose a valid type for selected joints.')
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         self.joints = self.isLinearChain(
             [obj for obj in bpy.context.selected_objects if obj.phobostype == 'link']
         )
@@ -2316,6 +3041,14 @@ class SelectSubmechanism(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def get_submechanism_roots(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return bUtils.compileEnumPropertyList(
             [r['submechanism/name'] for r in sUtils.getSubmechanismRoots()]
         )
@@ -2328,20 +3061,53 @@ class SelectSubmechanism(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # make sure we have a root object with mechanisms
         if not sUtils.getSubmechanismRoots():
             return False
         return True
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         return context.window_manager.invoke_props_dialog(self, width=300)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
 
         layout.prop(self, 'submechanism')
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         root = sUtils.getObjectByProperty('submechanism/name', self.submechanism)
         jointlist = root['submechanism/spanningtree']
         sUtils.selectObjects([root] + jointlist, clear=True, active=0)
@@ -2356,6 +3122,14 @@ class DeleteSubmechanism(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def get_submechanism_roots(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return bUtils.compileEnumPropertyList(
             [r['submechanism/name'] for r in sUtils.getSubmechanismRoots()]
         )
@@ -2366,20 +3140,53 @@ class DeleteSubmechanism(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # make sure we have a root object with mechanisms
         if not sUtils.getSubmechanismRoots():
             return False
         return True
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         return context.window_manager.invoke_props_dialog(self, width=300)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
 
         layout.prop(self, 'submechanism')
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         root = sUtils.getObjectByProperty('submechanism/name', self.submechanism)
         jointlist = root['submechanism/spanningtree']
         objects = [root] + jointlist
@@ -2404,6 +3211,14 @@ class ToggleInterfaces(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         eUtils.toggleInterfaces(None, self.mode)
         return {'FINISHED'}
 
@@ -2418,7 +3233,14 @@ class ConnectInterfacesOperator(Operator):
     @classmethod
     def poll(cls, context):
         """Hide operator if there are more than two objects are selected and the interfaces do not
-        match."""
+        match.
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         try:
             # no interface selected
             if (
@@ -2448,6 +3270,14 @@ class ConnectInterfacesOperator(Operator):
             return False
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         pi = 0 if context.selected_objects[0] == context.active_object else 1
         ci = int(not pi)  # 0 if pi == 1 else 1
         parentinterface = context.selected_objects[pi]
@@ -2467,6 +3297,12 @@ class DisconnectInterfaceOperator(Operator):
     def poll(cls, context):
         """Hide operator if there is more than one object selected.
         Also, the selected object has to be a connected interface.
+
+        Args:
+          context: 
+
+        Returns:
+
         """
         # no interface selected
         if (
@@ -2485,7 +3321,14 @@ class DisconnectInterfaceOperator(Operator):
         return False
 
     def execute(self, context):
-        """Execute disconnection"""
+        """Execute disconnection
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         interface = context.active_object
         if interface.parent and interface.parent.phobostype == 'interface':
             log('Selected interface is child.', 'DEBUG')
@@ -2515,6 +3358,14 @@ class MergeLinks(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return (
             context.active_object is not None
             and context.active_object.phobostype == 'link'
@@ -2529,6 +3380,14 @@ class MergeLinks(Operator):
         )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         mergelinks = [
             obj
             for obj in context.selected_objects
@@ -2549,9 +3408,25 @@ class SetModelRoot(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.active_object and context.active_object.phobostype == 'link'
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         newroot = context.active_object
         oldroot = sUtils.getRoot(obj=context.active_object)
 
@@ -2608,6 +3483,14 @@ class ValidateOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         messages = {}
         root = sUtils.getRoot(context.selected_objects[0])
         model, objectlist = models.deriveModelDictionary(root)
@@ -2629,15 +3512,40 @@ class CalculateMassOperator(Operator):
     mass = FloatProperty(name='Mass', default=0.0, description="Calculated sum of masses")
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         inertials = [obj for obj in context.selected_objects if obj.phobostype == 'inertial']
         self.mass = gUtils.calculateSum(inertials, 'inertial/mass')
         log("The calculated mass is: " + str(self.mass), 'INFO')
         return context.window_manager.invoke_popup(self)
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return {'FINISHED'}
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         self.layout.label("Sum of masses: " + str(self.mass))
 
 
@@ -2668,16 +3576,33 @@ class MeasureDistanceOperator(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         self.distance, self.distVector = gUtils.distance(context.selected_objects)
         log("distance: " + str(self.distance) + ", " + str(self.distVector), "INFO")
         return {'FINISHED'}
 
     @classmethod
     def poll(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return len(context.selected_objects) == 2
 
 
 def register():
+    """TODO Missing documentation"""
     print("Registering operators.editing...")
     # TODO this seems not to be very convenient...
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
@@ -2685,6 +3610,7 @@ def register():
 
 
 def unregister():
+    """TODO Missing documentation"""
     print("Unregistering operators.editing...")
     # TODO this seems not to be very convenient...
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):

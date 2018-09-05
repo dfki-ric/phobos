@@ -33,7 +33,7 @@ def deriveGenericEntity(entityobj, outpath=None):
       outpath(str, optional): If True data will be exported into subfolders. (Default value = None)
 
     Returns:
-      dict - An entry for the scenes entitiesList
+      : dict - An entry for the scenes entitiesList
 
     """
     log(
@@ -52,6 +52,15 @@ def deriveGenericEntity(entityobj, outpath=None):
 
 
 def exportGenericEntity(entity, outpath):
+    """
+
+    Args:
+      entity: 
+      outpath: 
+
+    Returns:
+
+    """
     pass
 
 

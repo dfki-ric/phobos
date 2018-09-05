@@ -33,16 +33,17 @@ import re
 
 def getUniqueName(newname, names):
     """Generates a new name similar to the Blender internal convention.
-
+    
     This ensures, that the Blender internal limit to object name lengths (63 characters) is matched
     without omitting the number. That way, unwanted naming behaviour is avoided.
 
     Args:
-        newname: desired object name
-        names: list of existing names (e.g. bpy.data.objects)
+      newname: desired object name
+      names: list of existing names (e.g. bpy.data.objects)
 
     Returns:
-        str -- new name that is unique in the Blender namespace
+      : str -- new name that is unique in the Blender namespace
+
     """
     i = 0
     while newname in names:
@@ -55,25 +56,26 @@ def getUniqueName(newname, names):
 def safelyName(obj, name, phobostype=None):
     """Assigns a name to an object in a safe way with regard to the internal
      name handling in Blender.
-
+    
      If no phobostype is provided or the phobostype is the same as the object
      itself, the actual object is renamed, generating a name that no other
      object in Blender has, using Blender's own naming scheme. This prevents
      Blender to assign the name and change another object's name that
      previously held that name.
-
+    
      If the *name* provided cannot be assigned to the object, it is stored in a
      custom variable '*phobostype*/name' Note that other '*/name' variables in
      the object are not updated.
 
     Args:
-        obj (bpy.types.Object): object to rename
-        name (str): new name for the object
-        phobostype (str, optional): only rename if the specified phobostype is
-            matched
+      obj(bpy.types.Object): object to rename
+      name(str): new name for the object
+      phobostype(str, optional): only rename if the specified phobostype is
+    matched (Default value = None)
 
     Returns:
-        str: new name of the Blender object
+      str: new name of the Blender object
+
     """
     from phobos.phoboslog import log
 
@@ -108,7 +110,7 @@ def getObjectName(obj, phobostype=None):
       phobostype: phobostype if relevant (e.g. 'motor') (Default value = None)
 
     Returns:
-      str -- The object's name
+      : str -- The object's name
 
     """
     if obj is None:
@@ -121,21 +123,29 @@ def getObjectName(obj, phobostype=None):
 
 
 def isValidModelname(name):
-    """Returns if a name contains characters other than alphanumeric, '_' and '-'"""
+    """Returns if a name contains characters other than alphanumeric, '_' and '-'
+
+    Args:
+      name: 
+
+    Returns:
+
+    """
     return not re.search(r'[^A-Za-z0-9_\-\\]', name)
 
 
 def getModelName(obj):
     """Returns the name of the model encoded by obj, provided that obj is a valid model root.
-
+    
     If obj does not contain a defined 'model/name', the object name is returned with a '*' added
     ad the start, ensuring that the return value will not be treated as a valid model name.
 
     Args:
-        obj (bpy.types.Object): root object of the model
+      obj(bpy.types.Object): root object of the model
 
     Returns:
-        str -- modelname of the object or object name with '*' prepended if undefined
+      : str -- modelname of the object or object name with '*' prepended if undefined
+
     """
     return obj['model/name'] if 'model/name' in obj else '*' + obj.name
 
@@ -144,9 +154,9 @@ def replaceNameElement(prop, old, new):
     """For all selected elements in Blender, replace an *old* part of a string *prop*erty with *new*.
 
     Args:
-      prop:
-      old:
-      new:
+      prop: 
+      old: 
+      new: 
 
     Returns:
 
@@ -157,6 +167,15 @@ def replaceNameElement(prop, old, new):
 
 
 def addNamespaceToName(name, namespace):
+    """
+
+    Args:
+      name: 
+      namespace: 
+
+    Returns:
+
+    """
     return namespace + "::" + name
 
 
@@ -165,7 +184,7 @@ def addNamespace(obj, namespace=None):
 
     Args:
       obj(bpy.types.Object): The object to namespace.
-      namespace:  (Default value = None)
+      namespace: (Default value = None)
 
     Returns:
 
@@ -174,6 +193,14 @@ def addNamespace(obj, namespace=None):
 
 
 def stripNamespaceFromName(name):
+    """
+
+    Args:
+      name: 
+
+    Returns:
+
+    """
     return name.split('::')[-1]
 
 
@@ -190,6 +217,15 @@ def removeNamespace(obj):
 
 
 def toggleNamespace(obj, namespace=''):
+    """
+
+    Args:
+      obj: 
+      namespace: (Default value = '')
+
+    Returns:
+
+    """
     if not namespace or namespace + '::' in obj.name:
         removeNamespace(obj)
     else:
@@ -200,7 +236,7 @@ def gatherNamespaces(separator='::'):
     """Gathers all existing namespaces.
 
     Args:
-      separator:  (Default value = '::')
+      separator: (Default value = '::')
 
     Returns:
 

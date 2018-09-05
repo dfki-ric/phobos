@@ -41,7 +41,7 @@ def sort_urdf_elements(elems):
       elems: a collection
 
     Returns:
-      sorted colletion
+      : sorted colletion
 
     """
     return sorted(elems)
@@ -53,10 +53,10 @@ def writeURDFGeometry(output, element, filepath):
     Args:
       output(str): The String to append the URDF output string on.
       element(dict): A certain element to parse into URDF.
-      filepath:
+      filepath: 
 
     Returns:
-      str -- The extended String
+      : str -- The extended String
 
     """
     geometry = element['geometry']
@@ -407,10 +407,11 @@ def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
       position(list): The position to include in the dictionary.
       rotation(list): The rotation to include into the dictionary, either euler angle or quaternion.
       pivot(list, optional): The pivot point. (Default value = (0)
-      0:
+      0: 
+      0): 
 
     Returns:
-      dict
+      : dict
 
     """
     px, py, pz = position
@@ -493,7 +494,7 @@ def add_quaternion(rot1, rot2):
       rot2(list): The second summand.
 
     Returns:
-      tuple
+      : tuple
 
     """
     quat1 = mathutils.Quaternion(rot1)
@@ -508,9 +509,9 @@ def handle_missing_geometry(no_visual_geo, no_collision_geo, link_dict):
     # DOCU this documentation needs update
 
     Args:
-      no_visual_geo:
-      no_collision_geo:
-      link_dict:
+      no_visual_geo: 
+      no_collision_geo: 
+      link_dict: 
 
     Returns:
 
@@ -560,7 +561,7 @@ def get_phobos_joint_name(mars_name, has_limits):
       has_limits(bool): Additional information to determine correct urdf joint name if mars_name is *hinge*.
 
     Returns:
-      str
+      : str
 
     """
     if mars_name == 'hinge':
@@ -579,7 +580,7 @@ def parsePose(origin):
       origin: The origin blender object to parse the pose from.
 
     Returns:
-      dict -- The origins pose.
+      : dict -- The origins pose.
 
     """
     pose = {}
@@ -600,15 +601,16 @@ def parsePose(origin):
 
 def importUrdf(filepath):
     """Parses the URDF representation of the model and builds a model dictionary from it.
-
+    
     The URDF file is opened from the filepath. If it does not exist, an empty dictionary is
     returned.
 
     Args:
-        filepath (str): filepath of the URDF file
+      filepath: str
 
     Returns:
-        dict -- model representation of the URDF file
+      dict -- model representation of the URDF file
+
     """
     model = {}
 
@@ -686,11 +688,12 @@ def parseLink(link, urdffilepath):
     """Parses a URDF link xml definition.
 
     Args:
-      link (xml.etree.ElementTree.ElementTree): xml representation of the link
-      urdffilepath (str): path of originating urdf file (for filename handling)
+      link(xml.etree.ElementTree.ElementTree): xml representation of the link
+      urdffilepath(str): path of originating urdf file (for filename handling)
 
     Returns:
-        dict -- model representation of the link
+      : dict -- model representation of the link
+
     """
     newlink = {a: link.attrib[a] for a in link.attrib}
     newlink['children'] = []
@@ -771,7 +774,7 @@ def parseInertial(link_xml):
       link_xml(ElementTree.Element): xml representation of 'inertial' field of URDF link
 
     Returns:
-      dict -- of inertial data
+      : dict -- of inertial data
 
     """
     inertial_dict = {}
@@ -793,6 +796,14 @@ def parseInertial(link_xml):
 
 
 def parseJoint(joint):
+    """
+
+    Args:
+      joint: 
+
+    Returns:
+
+    """
     jointdict = {a: joint.attrib[a] for a in joint.attrib}
     pose = parsePose(joint.find('origin'))
     jointdict['parent'] = joint.find('parent').attrib['link']

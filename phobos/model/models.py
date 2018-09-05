@@ -52,16 +52,17 @@ from phobos.defs import linkobjignoretypes
 
 def collectMaterials(objectlist):
     """Returns a dictionary of materials contained in a list of objects.
-
+    
     Only visual objects are considered and the dict keys represent the material names.
-
+    
     If a material is used by multiple objects, the *user* count is increased by one.
 
     Args:
-        objectlist(list): list of objects to derive dictionary from
+      objectlist(list): list of objects to derive dictionary from
 
     Returns:
-        dict -- dictionary of materials
+      : dict -- dictionary of materials
+
     """
     materials = {}
     for obj in objectlist:
@@ -79,15 +80,15 @@ def collectMaterials(objectlist):
 @validate('material')
 def deriveMaterial(mat, logging=False, errors=None):
     """Returns a Phobos representation of a Blender material.
-
+    
     Colors are returned as a dictionary with three keys ('r', 'g', 'b').
-
+    
     It contains always:
         *name*: name of the material
         *diffuseColor*: the diffuse color of the material
         *ambientColor*: the ambient color of the material
         *specularColor*: the specular color of the material
-
+    
     Depending on the material and texture configuration it might also contain:
         *emissionColor*: the emission color of the material
         *transparency*: the transparency of the material
@@ -96,10 +97,13 @@ def deriveMaterial(mat, logging=False, errors=None):
         *displacementTexture*: the displacement texture file path of the material
 
     Args:
-      mat (bpy.types.Material): Blender material to derive a Phobos description from
+      mat(bpy.types.Material): Blender material to derive a Phobos description from
+      logging: (Default value = False)
+      errors: (Default value = None)
 
     Returns:
-        dict -- Phobos representation of the material
+      : dict -- Phobos representation of the material
+
     """
     # TODO: annotations to materials could be used to fuse annotation objects' materials for different
     #       graphics engines of simulations etc., currently works by adding custom properties
@@ -165,10 +169,10 @@ def deriveMaterial(mat, logging=False, errors=None):
 @validate('link')
 def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
     """Derives a dictionary for the link represented by the provided obj.
-
+    
     If objectlist is provided, only objects contained in the list are taken into account
     for creating the resulting dictionary.
-
+    
     The dictionary contains (besides any generic object properties) this information:
         *parent*: name of parent object or None
         *children*: list of names of the links child links
@@ -180,11 +184,15 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
         *approxcollision*: empty dictionary
 
     Args:
-        linkobj(bpy.types.Object): blender object to derive the link from
-        objectlist: list of bpy.types.Object
-
+      linkobj(bpy.types.Object): blender object to derive the link from
+      objectlist: list of bpy.types.Object
     .. seealso deriveObjectPose
-    .. seealso deriveInertial
+    .. seealso deriveInertial (Default value = [])
+      logging: (Default value = False)
+      errors: (Default value = None)
+
+    Returns:
+
     """
     # use scene objects if no objects are defined
     if not objectlist:
@@ -255,13 +263,13 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
 def get_link_information(linkobj):
     """Returns the full link information including joint and motor data from a blender object.
 
-    :param linkobj: blender object to derive the link from
-    :type linkobj: bpy.types.Object
+    Args:
+      linkobj(bpy.types.Object): blender object to derive the link from
 
-    :return: representation of the link including motor and joint data
-    :rtype: dict
+    Returns:
+      : dict
+      .. seealso:: derive_link: representation of the link including motor and joint data
 
-    .. seealso:: derive_link
     """
     assert linkobj.phobostype == 'link', (
         "Wrong phobostype: " + linkobj.phobostype + " instead of link."
@@ -324,11 +332,14 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
     """Derives a joint from a blender object and creates its initial phobos data structure.
 
     Args:
-      obj (bpy.types.Object): object to derive the joint from
-      adjust (bool): TODO
+      obj(bpy.types.Object): object to derive the joint from
+      adjust(bool, optional): TODO (Default value = False)
+      logging: (Default value = False)
+      errors: (Default value = None)
 
     Returns:
-      dict
+      : dict
+
     """
     joint_type, crot = jointmodel.deriveJointType(obj, adjust=adjust, logging=logging)
     props = initObjectProperties(
@@ -367,7 +378,7 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
 @validate('inertia_data')
 def deriveInertial(obj, logging=True, **kwargs):
     """Returns a dictionary describing the inertial information represented by the provided object.
-
+    
     Contains these keys:
         *mass*: float
         *inertia*: list
@@ -376,8 +387,12 @@ def deriveInertial(obj, logging=True, **kwargs):
             *rotation*: [0., 0., 0.]
 
     Args:
-        obj(bpy.types.Object): object of phobostype 'inertial'
-        logging (bool): whether to log information or not
+      obj(bpy.types.Object): object of phobostype 'inertial'
+      logging(bool, optional): whether to log information or not (Default value = True)
+      **kwargs: 
+
+    Returns:
+
     """
     if obj.phobostype != 'inertial':
         if logging:
@@ -392,7 +407,7 @@ def deriveInertial(obj, logging=True, **kwargs):
 @validate('visual')
 def deriveVisual(obj, logging=True, **kwargs):
     """This function derives the visual information from an object.
-
+    
     Contains these keys:
         *name*: name of the visual
         *geometry*: derived according to `deriveGeometry`
@@ -400,10 +415,13 @@ def deriveVisual(obj, logging=True, **kwargs):
         *lod*: (opt.) level of detail levels
 
     Args:
-        obj(bpy.types.Object): object to derive the visual representation from
+      obj(bpy.types.Object): object to derive the visual representation from
+      logging: (Default value = True)
+      **kwargs: 
 
     Returns:
-        dict -- model representation of the visual object
+      : dict -- model representation of the visual object
+
     """
     visual = initObjectProperties(obj, phobostype='visual', ignoretypes='geometry')
     visual['geometry'] = deriveGeometry(obj, logging=logging)
@@ -439,10 +457,11 @@ def deriveCollision(obj):
     """Returns the collision information from the specified object.
 
     Args:
-        obj(bpy.types.Object): object to derive the collision information from
+      obj(bpy.types.Object): object to derive the collision information from
 
     Returns:
-        dict -- phobos representation of the collision object
+      : dict -- phobos representation of the collision object
+
     """
     collision = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
     collision['geometry'] = deriveGeometry(obj)
@@ -476,7 +495,7 @@ def deriveCapsule(obj):
       obj(bpy_types.Object): The blender object to derive the capsule from.
 
     Returns:
-      tuple
+      : tuple
 
     """
     viscol_dict = {}
@@ -527,7 +546,7 @@ def deriveApproxsphere(obj):
       obj(bpy_types.Object): The blender object to derive the approxsphere from.
 
     Returns:
-      tuple
+      : tuple
 
     """
     try:
@@ -548,7 +567,7 @@ def deriveLight(obj):
       obj(bpy_types.Object): The blender object to derive the light from.
 
     Returns:
-      tuple
+      : tuple
 
     """
     light = initObjectProperties(obj, phobostype='light')
@@ -581,16 +600,16 @@ def deriveLight(obj):
 
 def recursive_dictionary_cleanup(dictionary):
     """Recursively enrich the dictionary and replace object links with names etc.
-
+    
     These patterns are replaced:
         [phobostype, bpyobj] -> {'object': bpyobj, 'name': getObjectName(bpyobj, phobostype)}
 
-
     Args:
-        dictionary (dict): dictionary to enrich
+      dictionary(dict): dictionary to enrich
 
     Returns:
-        dict -- dictionary with replace/enriched patterns
+      : dict -- dictionary with replace/enriched patterns
+
     """
     for key, value in dictionary.items():
         # handle everything as list, so we can loop over it
@@ -633,13 +652,15 @@ def initObjectProperties(
     """Initializes phobos dictionary of *obj*, including information stored in custom properties.
 
     Args:
-        obj (bpy_types.Object): object to derive initial properties from.
-        phobostype (str): limit parsing of data fields to this phobostype
-        ignoretypes (list): list of properties ignored while initializing the objects properties.
-        ignorename (bool): whether or not to add the object's name
+      obj(bpy_types.Object): object to derive initial properties from.
+      phobostype(str, optional): limit parsing of data fields to this phobostype (Default value = None)
+      ignoretypes(list, optional): list of properties ignored while initializing the objects properties. (Default value = ())
+      ignorename(bool, optional): whether or not to add the object's name (Default value = False)
+      includeannotations: (Default value = True)
 
     Returns:
-        dict -- phobos properties of the object
+      : dict -- phobos properties of the object
+
     """
     # allow duplicated names differentiated by types
     props = {} if ignorename else {'name': nUtils.getObjectName(obj, phobostype)}
@@ -701,12 +722,14 @@ def deriveDictEntry(obj, names=False, objectlist=[], logging=True):
     """Derives a phobos dictionary entry from the provided object.
 
     Args:
-        obj(bpy_types.Object): The object to derive the dict entry (phobos data structure) from.
-        names(bool): use object names as dict entries instead of object links.
-        logging (bool): whether to log messages or not
+      obj(bpy_types.Object): The object to derive the dict entry (phobos data structure) from.
+      names(bool, optional): use object names as dict entries instead of object links. (Default value = False)
+      logging(bool, optional): whether to log messages or not (Default value = True)
+      objectlist: (Default value = [])
 
     Returns:
-        dict -- phobos representation of the object
+      : dict -- phobos representation of the object
+
     """
     props = {}
     try:
@@ -739,7 +762,7 @@ def deriveGroupEntry(group):
       group(bpy_types.Group): The blender group to extract the links from.
 
     Returns:
-      list
+      : list
 
     """
     links = []
@@ -802,7 +825,7 @@ def deriveTextData(modelname):
       modelname: Name of the model for which data should be derived.
 
     Returns:
-      A dictionary containing additional data.
+      : A dictionary containing additional data.
 
     """
     datadict = {}
@@ -909,12 +932,30 @@ def deriveTextData(modelname):
 
 
 def namespaceMotor(motor, namespace):
+    """
+
+    Args:
+      motor: 
+      namespace: 
+
+    Returns:
+
+    """
     motor['name'] = namespaced(motor['name'], namespace)
     motor['joint'] = namespaced(motor['joint'], namespace)
     return motor
 
 
 def namespaceLink(link, namespace):
+    """
+
+    Args:
+      link: 
+      namespace: 
+
+    Returns:
+
+    """
     link['name'] = namespaced(link['name'], namespace)
     for element in link['collision']:
         link['collision'][element]['name'] = namespaced(
@@ -926,6 +967,15 @@ def namespaceLink(link, namespace):
 
 
 def namespaceJoint(joint, namespace):
+    """
+
+    Args:
+      joint: 
+      namespace: 
+
+    Returns:
+
+    """
     joint['name'] = namespaced(joint['name'], namespace)
     joint['child'] = namespaced(joint['child'], namespace)
     joint['parent'] = namespaced(joint['parent'], namespace)
@@ -933,19 +983,32 @@ def namespaceJoint(joint, namespace):
 
 
 def namespaced(name, namespace):
+    """
+
+    Args:
+      name: 
+      namespace: 
+
+    Returns:
+
+    """
     return namespace + '_' + name
 
 
 def deriveModelDictionary(root, name='', objectlist=[]):
     """Returns a dictionary representation of a Phobos model.
-
+    
     If name is not specified, it overrides the modelname in the root. If the modelname is not
     defined at all, 'unnamed' will be used instead.
 
     Args:
-        root(bpy_types.Object): root object of the model
-        name(str): name for the derived model
-        objectlist(list: bpy_types.Object): objects to derive the model from
+      root(bpy_types.Object): root object of the model
+      name(str, optional): name for the derived model (Default value = '')
+      objectlist(list: bpy_types.Object): objects to derive the model from
+      objectlist: (Default value = [])
+
+    Returns:
+
     """
     if root.phobostype not in ['link', 'submodel']:
         log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
@@ -1093,6 +1156,14 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     log("Parsing submechanisms...", "INFO")
 
     def getSubmechanisms(link):
+        """
+
+        Args:
+          link: 
+
+        Returns:
+
+        """
         if 'submechanism/name' in link.keys():
             submech = {
                 'type': link['submechanism/type'],
@@ -1139,7 +1210,10 @@ def buildModelFromDictionary(model):
     """Creates the Blender representation of the imported model, using a model dictionary.
 
     Args:
-        model (dict): model representation of the imported model
+      model(dict): model representation of the imported model
+
+    Returns:
+
     """
     log("Creating Blender model...", 'INFO', prefix='\n' + '-' * 25 + '\n')
 
@@ -1253,7 +1327,7 @@ def gatherAnnotations(model):
       model(dict): The robot model dictionary.
 
     Returns:
-      dict -- A dictionary of the gathered annotations.
+      : dict -- A dictionary of the gathered annotations.
 
     """
     # TODO check this stuff
@@ -1303,18 +1377,19 @@ def gatherAnnotations(model):
 
 def replace_object_links(dictionary):
     """Replaces object links in a dictionary with object names.
-
+    
     This is required for generic parsed object definitions, as object links are represented by a
     simple dictionary with *name* and *object*.
-
+    
     For most exports, this can be run prior export parsing, to create the respective name linking
     within the model.
 
     Args:
-        dictionary (dict): model dictionary (or similar) to replace object links in
+      dictionary(dict): model dictionary (or similar) to replace object links in
 
     Returns:
-        dict -- model dictionary with name linking instead of object links
+      : dict -- model dictionary with name linking instead of object links
+
     """
     newdict = {}
     if isinstance(dictionary, list):
@@ -1339,10 +1414,26 @@ def replace_object_links(dictionary):
 
 
 def createGroup(group):
+    """
+
+    Args:
+      group: 
+
+    Returns:
+
+    """
     # TODO lots of code missing here... make it a dev branch
     pass
 
 
 def createChain(group):
+    """
+
+    Args:
+      group: 
+
+    Returns:
+
+    """
     # TODO lots of code missing here... make it a dev branch
     pass

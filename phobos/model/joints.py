@@ -39,16 +39,16 @@ from phobos.utils.validation import validate
 
 def createJoint(joint, linkobj=None, links=None):
     """Adds joint data to a link object.
-
+    
     If the linkobj is not specified, it is derived from the *child* entry in the joint (object is
     searched in the current scene). This only works if the search for the child yields a single
     object. Alternatively, it is possible to provide the model dictionary of links. In this case,
     the link object is searched in the dictionary (make sure the *object* keys of the dictionary are
     set properly).
-
+    
     These entries are mandatory for the dictionary:
         *name*: name of the joint
-
+    
     These entries are optional:
         *axis*: tuple which specifies the axis of the editbone
         *limits*: limits of the joint movement
@@ -56,15 +56,18 @@ def createJoint(joint, linkobj=None, links=None):
             *upper*: upper limit (defaults to 0.)
             *effort*: maximum effort for the joint
             *velocity*: maximum velocity for the joint
-
+    
     Furthermore any generic properties, prepended by a `$` will be added as custom properties to the
     joint. E.g. $test/etc would be put to joint/test/etc. However, these properties are extracted
     only in the first layer of hierarchy.
 
     Args:
-        joint (dict): dictionary containing the joint definition
-        linkobj (bpy.types.Object): the link object to receive the joint
-        links (dict): dictionary containing the list objects with their *object* keys set
+      joint(dict): dictionary containing the joint definition
+      linkobj(bpy.types.Object, optional): the link object to receive the joint (Default value = None)
+      links(dict, optional): dictionary containing the list objects with their *object* keys set (Default value = None)
+
+    Returns:
+
     """
     # try deriving link object from joint['child']
     if not linkobj:
@@ -146,7 +149,7 @@ def getJointConstraints(joint):
       joint(bpy_types.Object): The joint you want to get the constraints from
 
     Returns:
-      tuple -- lists containing axis and limit data
+      : tuple -- lists containing axis and limit data
 
     """
     jt, crot = deriveJointType(joint, adjust=False)
@@ -241,23 +244,26 @@ def setJointConstraints(
     maxspeed_approximation=None,
 ):
     """Sets the constraints for a given joint and jointtype.
-
+    
     If the joint type is not recognized, the constraints will match a floating joint.
-
+    
     The approximation for maximum effort/speed requires a dictionary with two entries (*function*
     *coefficients*).
-
+    
     Based on the joint type, the respective resource object is applied to the link.
 
     Args:
-        joint (bpy_types.Object): link object containing the joint to be edited
-        jointtype (str): joint type (revolute, continuous, prismatic, fixed, floating, planar)
-        lower (float): lower limit of the constraint (defaults to 0.)
-        upper (float): upper limit of the constraint (defaults to 0.)
-        spring (float): spring stiffness for the joint
-        damping (float): spring damping for the joint
-        maxeffort_approximation (dict): function and coefficients for maximum effort
-        maxspeed_approximation (dict): function and coefficients for maximum speed
+      joint(bpy_types.Object): link object containing the joint to be edited
+      jointtype(str): joint type (revolute, continuous, prismatic, fixed, floating, planar)
+      lower(float, optional): lower limit of the constraint (defaults to 0.)
+      upper(float, optional): upper limit of the constraint (defaults to 0.)
+      spring(float, optional): spring stiffness for the joint (Default value = 0.0)
+      damping(float, optional): spring damping for the joint (Default value = 0.0)
+      maxeffort_approximation(dict, optional): function and coefficients for maximum effort (Default value = None)
+      maxspeed_approximation(dict, optional): function and coefficients for maximum speed (Default value = None)
+
+    Returns:
+
     """
     if joint.phobostype != 'link':
         log("Cannot set joint constraints. Not a link: {}".format(joint), 'ERROR')
@@ -340,6 +346,14 @@ def setJointConstraints(
 
 
 def getJointType(joint):
+    """
+
+    Args:
+      joint: 
+
+    Returns:
+
+    """
     jtype = 'floating'
     cloc = None
     crot = None
@@ -382,18 +396,21 @@ def getJointType(joint):
 @validate('joint_type')
 def deriveJointType(joint, logging=False, adjust=False, errors=None):
     """Derives the type of the joint defined by the armature object.
-
+    
     If the constraints do not match the specified joint type, a warning is logged. By using the
     adjust parameter it is possible to overwrite the joint type according to the specified joint
     constraints.
 
     Args:
-        joint (bpy_types.Object): link object to derive the joint type from
-        adjust (bool, optional): whether or not the type of the joint is corrected for the object
-            according to the constraints (overwriting the existing joint type)
+      joint(bpy_types.Object): link object to derive the joint type from
+      adjust(bool, optional): whether or not the type of the joint is corrected for the object
+    according to the constraints (overwriting the existing joint type) (Default value = False)
+      logging: (Default value = False)
+      errors: (Default value = None)
 
     Returns:
-        tuple(2) -- jtype, crot
+      : tuple(2) -- jtype, crot
+
     """
     joint_type, crot = getJointType(joint)
 
@@ -408,7 +425,7 @@ def deriveJointState(joint):
       joint(bpy_types.Object): The joint(armature) to derive its state from.
 
     Returns:
-      dict
+      : dict
 
     """
     state = {
@@ -422,6 +439,16 @@ def deriveJointState(joint):
 
 
 def set_revolute(joint, lower, upper):
+    """
+
+    Args:
+      joint: 
+      lower: 
+      upper: 
+
+    Returns:
+
+    """
     # fix location
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
     cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
@@ -448,6 +475,14 @@ def set_revolute(joint, lower, upper):
 
 
 def set_continuous(joint):
+    """
+
+    Args:
+      joint: 
+
+    Returns:
+
+    """
     # fix location
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
     cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
@@ -471,6 +506,16 @@ def set_continuous(joint):
 
 
 def set_prismatic(joint, lower, upper):
+    """
+
+    Args:
+      joint: 
+      lower: 
+      upper: 
+
+    Returns:
+
+    """
     # fix location except for y axis
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
     cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
@@ -503,6 +548,14 @@ def set_prismatic(joint, lower, upper):
 
 
 def set_fixed(joint):
+    """
+
+    Args:
+      joint: 
+
+    Returns:
+
+    """
     # fix location
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
     cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
@@ -529,6 +582,14 @@ def set_fixed(joint):
 
 
 def set_planar(joint):
+    """
+
+    Args:
+      joint: 
+
+    Returns:
+
+    """
     # fix location
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
     cloc = getJointConstraint(joint, 'LIMIT_LOCATION')

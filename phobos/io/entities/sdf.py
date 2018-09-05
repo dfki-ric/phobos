@@ -56,11 +56,16 @@ jointmapping = {
 
 
 class xmlTagger(object):
-    """ A simple class to create a syntax conform xml file. The line
+    """A simple class to create a syntax conform xml file. The line
     indentation space can be customized using the indent parameter.
     To nest xml files an initial indentation layer can be provided.
     The xmlTagger writes an output string using the provided functions and
     takes care of the indentations.
+
+    Args:
+
+    Returns:
+
     """
 
     def __init__(self, indent='  ', initial=0):
@@ -80,19 +85,29 @@ class xmlTagger(object):
         self.output = []
 
     def ind(self):
-        """ Helper function to return the current indentation depending on the
+        """Helper function to return the current indentation depending on the
         hierarchy.
-
+        
         :return: str -- the current indentation (e.g. "  ").
-            """
+
+        Args:
+
+        Returns:
+
+        """
         return "" + self.indentation * self.indent
 
     def ascend(self):
-        """ Move up one hierarchical layer by finishing the current tag and
+        """Move up one hierarchical layer by finishing the current tag and
         removing one indentation.
-
+        
         :exception IndentationError -- trying to move above root hierarchical
         layer
+
+        Args:
+
+        Returns:
+
         """
         if self.indentation > self.initial:
             lasttag = self.workingTags.pop(-1)
@@ -102,14 +117,20 @@ class xmlTagger(object):
             IndentationError()
 
     def descend(self, tag, params=None):
-        """ Move down one hierarchical layer using the new tag.
+        """Move down one hierarchical layer using the new tag.
         Optional in-line attributes can be provided in the
         dictionary params (e.g. {'name': 'foo'}.
+        
+        Args:
+          tag(str): The tag used to create the new element.
 
-        :param tag: The tag used to create the new element.
-        :type tag: str
-        :param params: Optional: in-line attributes to put into the tag syntax
-        :type params: dict
+        Args:
+          tag: 
+          params:  (Default value = None)
+
+        Returns:
+          
+
         """
         self.workingTags.append(str(tag))
         line = ""
@@ -134,32 +155,43 @@ class xmlTagger(object):
         self.indentation += 1
 
     def write(self, text):
-        """ Write a custom line to the output. Use to create the header or comments.
+        """Write a custom line to the output. Use to create the header or comments.
 
-        :param text: The line to write (line break has to be included)
-        :type text: str
+        Args:
+          text(str): The line to write (line break has to be included)
+
+        Returns:
+
         """
         self.output.append(text)
 
     def attrib(self, tag, value):
-        """ Adds an attribute to the current element. The tag of the attribute
+        """Adds an attribute to the current element. The tag of the attribute
         is wrapped around its value.
 
-        :param tag: The tag of the attribute.
-        :type tag: str
-        :param value: The value of the attribute
-        :type value: str (will be casted anyway)
+        Args:
+          tag(str): The tag of the attribute.
+          value(str (will be casted anyway): The value of the attribute
+
+        Returns:
+
         """
         self.output.append(self.ind() + '<' + str(tag) + '>' + str(value) + '</' + tag + '>\n')
 
     def get_indent(self):
+        """TODO Missing documentation"""
         return self.indentation
 
     def get_output(self):
-        """ Completes all trailing tags until at initial indentation and
+        """Completes all trailing tags until at initial indentation and
         returns the output as string.
-
+        
         :return: str -- the finished xml string.
+
+        Args:
+
+        Returns:
+
         """
         # ascend to base layer
         while self.indentation > self.initial:
@@ -170,26 +202,35 @@ class xmlTagger(object):
 
 def getIndentedETString(elementtree):
     """Return the specified elementtree as an indented string which can be saved to a file.
-
+    
     The indentation is based on the phobos.utils.io.indent variable.
 
-    :param elementtree: the elementtree to be converted to string
-    :return: string representation of the elementtree
+    Args:
+      elementtree: the elementtree to be converted to string
+
+    Returns:
+      string representation of the elementtree
+
     """
     return minidom.parseString(ET.tostring(elementtree)).toprettyxml(indent=phobosindentation)
 
 
 def exportSDFPose(relativepose, indentation, poseobject=None):
-    """ Simple wrapper for pose data.
+    """Simple wrapper for pose data.
     If relative poses are used the data found in posedata is used.
     Otherwise the pose of the poseobject will be combined with all collected
     links up to the rootobject (see phobos.utils.editing.getCombinedTransform).
 
-    :param poseobject: object to be used for absolute pose
-    :param posedata: the original (relative) posedata
-    :param indentation: indentation at current level
-    :param relative: True for usage of sdf relative pathing
-    :return: str -- writable xml line
+    Args:
+      poseobject: object to be used for absolute pose (Default value = None)
+      posedata: the original (relative) posedata
+      indentation: indentation at current level
+      relative: True for usage of sdf relative pathing
+      relativepose: 
+
+    Returns:
+      : str -- writable xml line
+
     """
     tagger = xmlTagger(initial=indentation)
 
@@ -219,15 +260,19 @@ def exportSDFPose(relativepose, indentation, poseobject=None):
 
 
 def exportSDFFrame(framedata, indentation, relative):
-    """ Simple wrapper for frame data.
+    """Simple wrapper for frame data.
     The name of the frameobject (has to be a key in framedata) is used to
     define the object pose.
 
-    :param framedata: data as provided by dictionary
-    :param indentation: indentation at current level
-    :param relative: True to apply a pose to the frame object itself (NOT
+    Args:
+      framedata: data as provided by dictionary
+      indentation: indentation at current level
+      relative: True to apply a pose to the frame object itself (NOT
     SUPPORTED YET)
-    :return: str -- writable xml line
+
+    Returns:
+      : str -- writable xml line
+
     """
     tagger = xmlTagger(initial=indentation)
     tagger.descend('frame', {'name': framedata['name']})
@@ -239,7 +284,7 @@ def exportSDFFrame(framedata, indentation, relative):
 
 
 def exportSDFInertial(inertialdata, indentation):
-    """ Simple wrapper for link inertial data.
+    """Simple wrapper for link inertial data.
     The inertial object is required to determine the position (pose) of the
     object.
     If relative poses are used the data found in inertialdata is used.
@@ -247,14 +292,15 @@ def exportSDFInertial(inertialdata, indentation):
     collected links up to the rootobject (see
     phobos.utils.editing.getCombinedTransform).
 
-    :param inertialobj: object to be used for absolute pose
-    :type inertialobj: Blender object.
-    :param inertialdata: data as provided by dictionary (should contain mass
+    Args:
+      inertialobj(Blender object.): object to be used for absolute pose
+      inertialdata(dict.): data as provided by dictionary (should contain mass
     and inertia)
-    :type inertialdata: dict.
-    :param indentation: indentation at current level
-    :type indentation: int.
-    :return: str -- writable xml line
+      indentation(int.): indentation at current level
+
+    Returns:
+      : str -- writable xml line
+
     """
     tagger = xmlTagger(initial=indentation)
     tagger.descend('inertial')
@@ -277,7 +323,7 @@ def exportSDFInertial(inertialdata, indentation):
 
 
 def exportSDFCollision(collisionobj, collisiondata, indentation, modelname):
-    """ Simple wrapper for link collision data.
+    """Simple wrapper for link collision data.
     The collision object is required to determine the position (pose) of the
     object.
     If relative poses are used the data found in collisiondata is used.
@@ -285,13 +331,17 @@ def exportSDFCollision(collisionobj, collisiondata, indentation, modelname):
     collected links up to the rootobject (see
     phobos.utils.editing.getCombinedTransform).
 
-    :param collisionobj: object to be used for absolute pose
-    :param collisiondata: data as provided by dictionary (should contain name,
+    Args:
+      collisionobj: object to be used for absolute pose
+      collisiondata: data as provided by dictionary (should contain name,
     geometry, [bitmask])
-    :param indentation: indentation at current level
-    :param relative: True for usage of sdf relative pathing
-    :param modelname: the name of the model (required for geometry)
-    :return: str -- writable xml line
+      indentation: indentation at current level
+      relative: True for usage of sdf relative pathing
+      modelname: the name of the model (required for geometry)
+
+    Returns:
+      : str -- writable xml line
+
     """
     tagger = xmlTagger(initial=indentation)
     tagger.descend('collision', {'name': collisiondata['name']})
@@ -374,12 +424,16 @@ def exportSDFCollision(collisionobj, collisiondata, indentation, modelname):
 
 
 def exportSDFGeometry(geometrydata, indentation, modelname):
-    """ Simple wrapper for geometry data of link collisions.
+    """Simple wrapper for geometry data of link collisions.
 
-    :param geometrydata: data as provided by dictionary
-    :param indentation: indentation at current level
-    :param modelname: name used for gazebo model pathing
-    :return: str -- writable xml line
+    Args:
+      geometrydata: data as provided by dictionary
+      indentation: indentation at current level
+      modelname: name used for gazebo model pathing
+
+    Returns:
+      : str -- writable xml line
+
     """
     tagger = xmlTagger(initial=indentation)
     tagger.descend('geometry')
@@ -466,7 +520,7 @@ def exportSDFGeometry(geometrydata, indentation, modelname):
 
 
 def exportSDFVisual(visualobj, linkobj, visualdata, indentation, modelname):
-    """ Simple wrapper for visual data of links.
+    """Simple wrapper for visual data of links.
     The visual object is required to determine the position (pose) of the
     object.
     If relative poses are used the data found in visualdata (key pose) is used.
@@ -474,13 +528,18 @@ def exportSDFVisual(visualobj, linkobj, visualdata, indentation, modelname):
     collected links up to the rootobject (see
     phobos.utils.editing.getCombinedTransform).
 
-    :param visualobj: object to be used for pose
-    :param visualdata: data as provided by dictionary (should contain name,
+    Args:
+      visualobj: object to be used for pose
+      visualdata: data as provided by dictionary (should contain name,
     geometry)
-    :param indentation: indentation at current level
-    :param relative: True for usage of sdf relative pathing
-    :param modelname: the name of the model (required for geometry)
-    :return: str -- writable xml line
+      indentation: indentation at current level
+      relative: True for usage of sdf relative pathing
+      modelname: the name of the model (required for geometry)
+      linkobj: 
+
+    Returns:
+      : str -- writable xml line
+
     """
     tagger = xmlTagger(initial=indentation)
     tagger.descend('visual', params={'name': visualdata['name']})
@@ -514,14 +573,18 @@ def exportSDFVisual(visualobj, linkobj, visualdata, indentation, modelname):
 
 
 def exportSDFMaterial(materialdata, indentation):
-    """ Simple wrapper for material data of visual objects.
+    """Simple wrapper for material data of visual objects.
     The materialdata is the model dictionary of the specific material.
 
-    :param materialdata: the material information
-    :param visualdata: data as provided by dictionary (should contain
+    Args:
+      materialdata: the material information
+      visualdata: data as provided by dictionary (should contain
     diffuseColor, specularColor etc)
-    :param indentation: indentation at current level
-    :return: str -- writable xml line
+      indentation: indentation at current level
+
+    Returns:
+      : str -- writable xml line
+
     """
     tagger = xmlTagger(initial=indentation)
     tagger.descend('material')
@@ -556,6 +619,19 @@ def exportSDFMaterial(materialdata, indentation):
 
 
 def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation):
+    """
+
+    Args:
+      linkdict: 
+      linkobj: 
+      modelname: 
+      materials: 
+      sensors: 
+      indentation: 
+
+    Returns:
+
+    """
     tagger = xmlTagger(initial=indentation)
     tagger.descend('link', {'name': linkdict['name']})
     # OPT: tagger.attrib('gravity', ...)
@@ -638,6 +714,15 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation)
 
 
 def exportSDFJoint(jointdict, indentation):
+    """
+
+    Args:
+      jointdict: 
+      indentation: 
+
+    Returns:
+
+    """
     tagger = xmlTagger(initial=indentation)
     # use sdf joint names instead URDF
     sdftype = jointmapping[jointdict['type']]
@@ -748,6 +833,15 @@ def exportSDFJoint(jointdict, indentation):
 
 
 def exportSDFSensor(sensordict, indentation):
+    """
+
+    Args:
+      sensordict: 
+      indentation: 
+
+    Returns:
+
+    """
     tagger = xmlTagger(initial=indentation)
 
     tagger.descend('sensor', {'name': sensordict['name'], 'type': sensordict['type']})
@@ -1027,8 +1121,12 @@ def exportSDFSensor(sensordict, indentation):
 def exportGazeboModelConf(model):
     """Creates a model.config element from the specified information.
 
-    :param model: the model dictionary of the phobos model
-    :returns: xml.etree.ElementTree.Element of the model
+    Args:
+      model: the model dictionary of the phobos model
+
+    Returns:
+      : xml.etree.ElementTree.Element of the model
+
     """
     modelconf = Element('model')
     SubElement(modelconf, 'name').text = model['name']
@@ -1055,8 +1153,15 @@ def exportGazeboModelConf(model):
 
 
 def exportSDF(model, filepath):
-    """ Export function used for the entity.
+    """Export function used for the entity.
     This exports a model SDF file as well as its model.conf to the specified filepath.
+
+    Args:
+      model: 
+      filepath: 
+
+    Returns:
+
     """
     log("Export SDF (version {}) to {}.".format(sdfversion, filepath), 'INFO')
     filename = os.path.join(filepath, model['name'] + '.sdf')
@@ -1247,6 +1352,14 @@ def exportSDF(model, filepath):
 
 
 def parseSDFPose(pose):
+    """
+
+    Args:
+      pose: 
+
+    Returns:
+
+    """
     posedict = {}
     if pose is not None:
         xyzrpy = gUtils.parse_text(pose.text)
@@ -1260,6 +1373,14 @@ def parseSDFPose(pose):
 
 
 def parseSDFInertial(link):
+    """
+
+    Args:
+      link: 
+
+    Returns:
+
+    """
     inertial_dict = {}
     inertial_data = link.find('inertial')
     # Element.find() yields None, not []
@@ -1291,6 +1412,16 @@ def parseSDFInertial(link):
 
 
 def parseSDFGeometry(geometry, link, sdfpath):
+    """
+
+    Args:
+      geometry: 
+      link: 
+      sdfpath: 
+
+    Returns:
+
+    """
     import os.path as path
 
     # gather generic properties from geometry definition
@@ -1340,6 +1471,15 @@ def parseSDFGeometry(geometry, link, sdfpath):
 
 
 def parseSDFMaterial(visualname, material):
+    """
+
+    Args:
+      visualname: 
+      material: 
+
+    Returns:
+
+    """
     materialdict = {}
 
     # sdf has no material names, so we initialize with visual name
@@ -1372,6 +1512,15 @@ def parseSDFMaterial(visualname, material):
 
 
 def parseSDFLink(link, filepath):
+    """
+
+    Args:
+      link: 
+      filepath: 
+
+    Returns:
+
+    """
     # collect all parameters which can be parsed as generic sdf annotations
     genericparams = [
         elem.tag
@@ -1500,11 +1649,27 @@ def parseSDFLink(link, filepath):
 
 
 def parseSDFJointPhysics(physics):
+    """
+
+    Args:
+      physics: 
+
+    Returns:
+
+    """
     # TODO add support for this
     return {}
 
 
 def parseSDFSensors(sensors):
+    """
+
+    Args:
+      sensors: 
+
+    Returns:
+
+    """
     sensorsdict = {}
 
     for sensor in sensors:
@@ -1550,6 +1715,14 @@ def parseSDFSensors(sensors):
 
 
 def parseSDFAxis(axis):
+    """
+
+    Args:
+      axis: 
+
+    Returns:
+
+    """
     axisdict = {}
     sdfannos = {}
 
@@ -1589,6 +1762,14 @@ def parseSDFAxis(axis):
 
 
 def parseSDFJoint(joint):
+    """
+
+    Args:
+      joint: 
+
+    Returns:
+
+    """
     jointdict = {'name': joint.attrib['name'], 'type': joint.attrib['type']}
     jointdict['parent'] = joint.find('parent').text
     jointdict['child'] = joint.find('child').text
@@ -1637,6 +1818,14 @@ def parseSDFJoint(joint):
 
 
 def importSDF(filepath):
+    """
+
+    Args:
+      filepath: 
+
+    Returns:
+
+    """
     model = {}
 
     log("Parsing SDF model from " + filepath, 'INFO')

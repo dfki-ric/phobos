@@ -68,7 +68,8 @@ def getCategoriesForEnumProperty(self, context):
       context: 
 
     Returns:
-      available category in the model library.
+      : available category in the model library.
+      : available category in the model library.
       If there are no categories return ('-', '-', '-').
 
     """
@@ -78,6 +79,7 @@ def getCategoriesForEnumProperty(self, context):
 
 
 def compileModelList():
+    """TODO Missing documentation"""
     from bpy.props import EnumProperty
     from bpy.types import WindowManager
 
@@ -145,11 +147,21 @@ class UpdateModelLibraryOperator(bpy.types.Operator):
     bl_label = "Update Library"
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         compileModelList()
         return {'FINISHED'}
 
 
 class ImportModelFromLibraryOperator(bpy.types.Operator):
+    """TODO Missing documentation"""
+
     # DOCU add some docstring
     bl_idname = "phobos.import_model_from_library"
     bl_label = "Import Model"
@@ -173,6 +185,15 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
     #    description="Import model as reference to original model instead of importing all elements.")
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         modelname = context.window_manager.modelpreview
         self.namespace = modelname
         # prevent duplicate names
@@ -186,6 +207,14 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self, width=500)
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         wm = context.window_manager
         # FIXME: the following is a hack to fix the problem mentioned at the top
         if not model_data:
@@ -205,6 +234,7 @@ class ImportModelFromLibraryOperator(bpy.types.Operator):
 
 
 def register():
+    """TODO Missing documentation"""
     from bpy.types import WindowManager
     from bpy.props import StringProperty, EnumProperty, BoolProperty
 
@@ -214,6 +244,7 @@ def register():
 
 
 def unregister():
+    """TODO Missing documentation"""
     for previews in model_previews.values():
         bpy.utils.previews.remove(previews)
     model_previews.clear()

@@ -34,13 +34,14 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
     """This function derives a sensor from a given blender object
 
     Args:
-        obj(bpy_types.Object): The blender object to derive the sensor from.
-        names(bool): return the link object name instead of an object link.
-        objectlist (list(bpy.types.Object)): objectlist to which possible parents are restricted
-        logging (bool): whether to write log messages or not
+      obj(bpy_types.Object): The blender object to derive the sensor from.
+      names(bool, optional): return the link object name instead of an object link. (Default value = False)
+      objectlist(list(bpy.types.Object, optional): objectlist to which possible parents are restricted (Default value = [])
+      logging(bool, optional): whether to write log messages or not (Default value = False)
 
     Returns:
-        dict -- phobos representation of the sensor
+      : dict -- phobos representation of the sensor
+
     """
     from phobos.model.models import initObjectProperties
     from phobos.model.poses import deriveObjectPose
@@ -111,7 +112,7 @@ def cameraRotLock(object):
 
 def createSensor(sensor, reference, origin=mathutils.Matrix()):
     """This function creates a new sensor specified by its parameters.
-
+    
     The sensor dictionary has to contain these keys:
         *name*: name of the new sensor
         *type*: type specifier of the sensor
@@ -119,12 +120,13 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
         *props*: custom properties to be written to the sensor object
 
     Args:
-        sensor (dict): phobos representation of the new sensor
-        reference (bpy_types.Object): object to add a parent relationship to
-        origin (mathutils.Matrix): new sensors origin
+      sensor(dict): phobos representation of the new sensor
+      reference(bpy_types.Object): object to add a parent relationship to
+      origin(mathutils.Matrix, optional): new sensors origin (Default value = mathutils.Matrix())
 
     Returns:
-        The newly created sensor object
+      : The newly created sensor object
+
     """
     layers = defs.layerTypes['sensor']
     bUtils.toggleLayer(layers, value=True)

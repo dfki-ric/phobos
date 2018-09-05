@@ -25,6 +25,14 @@ import phobos.utils.editing as eUtils
 
 
 def addLight(light_dict):
+    """
+
+    Args:
+      light_dict: 
+
+    Returns:
+
+    """
     # DOCU add some docstring
 
     if light_dict['type'] == 'spotlight':

@@ -55,6 +55,7 @@ def getMechanismListForEnumProperty(self, context):
 
 
 def compileMechanismList():
+    """TODO Missing documentation"""
     from bpy.types import WindowManager
     from bpy.props import EnumProperty
 
@@ -100,6 +101,7 @@ def compileMechanismList():
 
 
 def register():
+    """TODO Missing documentation"""
     from bpy.types import WindowManager
     from bpy.props import EnumProperty
 
@@ -110,4 +112,5 @@ def register():
 
 
 def unregister():
+    """TODO Missing documentation"""
     bpy.utils.previews.remove(mechanismpreviewcollection)

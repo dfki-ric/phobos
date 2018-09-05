@@ -135,8 +135,11 @@ def_subcategories = {key: set([]) for key in definitions.keys()}
 def updateDefs(defsFolderPath):
     """Updates the definitions with all yml files in the given folder.
 
-    :param defsFolderPath: path to the folder with yaml files for definitions
-    :type defsFolderPath: str
+    Args:
+      defsFolderPath(str): path to the folder with yaml files for definitions
+
+    Returns:
+
     """
     dicts = __parseAllYAML(defsFolderPath)
     for diction in dicts:

@@ -31,10 +31,12 @@ from . import models, mechanisms
 
 
 def register():
+    """TODO Missing documentation"""
     models.register()
     mechanisms.register()
 
 
 def unregister():
+    """TODO Missing documentation"""
     models.unregister()
     mechanisms.unregister()

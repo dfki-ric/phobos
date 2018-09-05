@@ -31,6 +31,15 @@ checkMessages = {"NoObject": []}
 
 
 def generateCheckMessages(param1, param2):
+    """
+
+    Args:
+      param1: 
+      param2: 
+
+    Returns:
+
+    """
     # DOCU Parameter?
     """This function is just for generating a blender friendly list for an operator.
     """
@@ -62,6 +71,7 @@ def check_dict_alg(dic, validator, entry_list, messages, whole_validator, curren
       messages(dict): The message list you want to append the error messages to.
       whole_validator(dict): This is a copy of the whole validation needed when referencing to a top level key.
       current_elem(str): The current element the alg is checking.
+      entry_list: 
 
     Returns:
 
@@ -92,7 +102,7 @@ def is_leaf(node_value):
       node_value(dict): The value of the node you want to check.
 
     Returns:
-      bool.
+      : bool.
 
     """
     return isinstance(node_value, dict) and 'required' in node_value
@@ -105,7 +115,7 @@ def is_operator(node):
       node(str): The node key you want to check.
 
     Returns:
-      bool.
+      : bool.
 
     """
     return node.startswith('$')
@@ -120,7 +130,8 @@ def check_leaf(leaf_value, dic, entry_list, messages, current_elem):
       dic(dict): The dictionary you want to validate.
       entry_list(list: list): The keys navigating you to the dictionary value to validate against the validation leaf.
       messages(dict): The list you want to append the messages to.
-      current_elem:
+      current_elem: 
+      entry_list: 
 
     Returns:
 
@@ -155,7 +166,8 @@ def handle_operator(node, dic, validator, entry_list, messages, whole_validator,
       entry_list(list: list): The list of keys to navigate to the value in the dictionary.
       messages(dict): The list to append the messages to.
       whole_validator(dict): The whole validation to reach top level keys in case of a reference operator.
-      current_elem:
+      current_elem: 
+      entry_list: 
 
     Returns:
 
@@ -200,9 +212,10 @@ def traverse_dict(dic, entry_list):
     Args:
       dic(dict): The dictionary to traverse.
       entry_list(list: list): The list of keys you want to traverse with.
+      entry_list: 
 
     Returns:
-      dict.
+      : dict.
 
     """
     length = len(entry_list)
@@ -224,7 +237,7 @@ def add_message(messages, key, message):
       message(str): The message to append to a specific key.
 
     Returns:
-      None.
+      : None.
 
     """
     if key in messages:
@@ -261,6 +274,7 @@ class ValidateMessage:
         return self.message.__lt__(other.message)
 
     def log(self):
+        """TODO Missing documentation"""
         log(
             self.message
             + str(
@@ -287,15 +301,16 @@ class ValidateMessage:
 
 def validateObjectNames(obj):
     """Check for naming errors of the specified object.
-
+    
     This checks:
         - the *phobostype*/names
 
     Args:
-        obj (bpy.types.Object): object to be checked
+      obj(bpy.types.Object): object to be checked
 
     Returns:
-        list: :class:ValidateMessage list
+      list: :class:ValidateMessage list
+
     """
     phobtype = obj.phobostype
     objname = obj.name
@@ -326,15 +341,17 @@ def validateObjectNames(obj):
 
 def validateJoint(link, adjust=False):
     """Checks for errors in the joint definitions of the specified link.
-
+    
         If autocomplete is set, the missing dictionary entries are complemented.
 
     Args:
-        link (bpy.types.Object): link object which forms the joint
-        autocomplete (bool): add missing keys to the link object
+      link(bpy.types.Object): link object which forms the joint
+      autocomplete(bool): add missing keys to the link object
+      adjust: (Default value = False)
 
     Returns:
-        list(ValidateMessage) -- error messages of the validation
+      : list(ValidateMessage) -- error messages of the validation
+
     """
     errors = []
 
@@ -350,15 +367,16 @@ def validateJoint(link, adjust=False):
 
 def validateJointType(link, adjust=False):
     """Validate the joint type of the specified link.
-
+    
     If adjust is `True`, the validation errors are fixed on the fly.
 
     Args:
-        link (bpy.types.Object): link representing the joint to validate
-        adjust (bool): if True, the validation errors are fixed on the fly.
+      link(bpy.types.Object): link representing the joint to validate
+      adjust(bool, optional): if True, the validation errors are fixed on the fly. (Default value = False)
 
     Returns:
-        list(ValidateMessage) -- validation errors
+      : list(ValidateMessage) -- validation errors
+
     """
     import phobos.model.joints as jointmodel
     import phobos.utils.io as ioUtils
@@ -414,6 +432,15 @@ def validateJointType(link, adjust=False):
 
 
 def validateLink(link, objectlist=None):
+    """
+
+    Args:
+      link: 
+      objectlist: (Default value = None)
+
+    Returns:
+
+    """
     errors = []
 
     # TODO add validation tests
@@ -422,6 +449,14 @@ def validateLink(link, objectlist=None):
 
 
 def validateObjectPose(obj):
+    """
+
+    Args:
+      obj: 
+
+    Returns:
+
+    """
     errors = []
 
     # TODO add validation tests
@@ -433,10 +468,12 @@ def validateMaterial(material, adjust=False):
     """Validate the specified material.
 
     Args:
-        material (bpy.types.Material): material to validate
+      material(bpy.types.Material): material to validate
+      adjust: (Default value = False)
 
     Returns:
-        list(ValidateMessage) -- validation errors for the material
+      : list(ValidateMessage) -- validation errors for the material
+
     """
     errors = []
 
@@ -531,6 +568,17 @@ def validateMaterial(material, adjust=False):
 
 
 def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
+    """
+
+    Args:
+      obj: 
+      *args: 
+      adjust: (Default value = False)
+      geometry_dict: (Default value = None)
+
+    Returns:
+
+    """
     errors = []
     # make sure the geometry is defined
     if 'geometry/type' not in obj and (not geometry_dict or 'type' not in geometry_dict):
@@ -565,24 +613,26 @@ def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
 
 def validateInertiaData(obj, *args, adjust=False):
     """Validates an inertia dictionary or object.
-
+    
     This checks for the *inertia* and *mass* values in the dictionary (*inertial/inertia* and
     *inertial/mass* for an object respectively).
-
+    
     Also, the inertia values are checked to be positive definite (for diagonal, determinant and
     eigenvalues).
-
+    
     If adjust is set, values are adjusted/fixed for the returned dict/object. E.g. this sets a
     negative mass to 1e-3.
 
     Args:
-        obj (dict/bpy.types.Object): inertia dictionary or object to validate
-        *args: other arguments
-        adjust: if True, bad values will be fixed/complemented
+      obj(dict/bpy.types.Object): inertia dictionary or object to validate
+      *args: other arguments
+      adjust: if True, bad values will be fixed/complemented (Default value = False)
 
     Returns:
-        (list(ValidateMessage), dict/bpy.types.Object) -- error messages and the fixed dictionary
-            or object
+      : (list(ValidateMessage), dict/bpy.types.Object) -- error messages and the fixed dictionary
+      : (list(ValidateMessage), dict/bpy.types.Object) -- error messages and the fixed dictionary
+      or object
+
     """
     from phobos.model.inertia import inertiaListToMatrix, inertiaMatrixToList
     from phobos.utils.io import getExpSettings
@@ -717,14 +767,54 @@ def validateInertiaData(obj, *args, adjust=False):
 
 
 def validateVisual(obj, *args, adjust=False, geometry_dict=None):
+    """
+
+    Args:
+      obj: 
+      *args: 
+      adjust: (Default value = False)
+      geometry_dict: (Default value = None)
+
+    Returns:
+
+    """
     errors = []
 
     return errors
 
 
 def validate(name):
+    """
+
+    Args:
+      name: 
+
+    Returns:
+
+    """
+
     def validation(function):
+        """
+
+        Args:
+          function: 
+
+        Returns:
+
+        """
+
         def validation_wrapper(obj, *args, logging=False, **kwargs):
+            """
+
+            Args:
+              obj: 
+              *args: 
+              logging: (Default value = False)
+              **kwargs: 
+
+            Returns:
+
+            """
             if name == 'joint':
                 errors = validateJoint(obj, *args, **kwargs)
             elif name == 'joint_type':

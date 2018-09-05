@@ -52,6 +52,8 @@ from phobos import display
 
 
 class ModelPoseProp(bpy.types.PropertyGroup):
+    """TODO Missing documentation"""
+
     # DOCU missing class description
     robot_name = StringProperty()
     label = StringProperty()
@@ -67,6 +69,11 @@ class ModelPoseProp(bpy.types.PropertyGroup):
 class PhobosPrefs(AddonPreferences):
     """The general Phobos addon settings are stored in this class.
     They can be edited in the User Preferences of Blender under the Addon tab.
+
+    Args:
+
+    Returns:
+
     """
 
     bl_idname = __package__
@@ -121,6 +128,14 @@ class PhobosPrefs(AddonPreferences):
     models_poses = CollectionProperty(type=ModelPoseProp)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         box = layout.box()
         box.label(text="Folders")
@@ -149,14 +164,32 @@ phobosIcon = 0
 
 
 class PhobosExportSettings(bpy.types.PropertyGroup):
+    """TODO Missing documentation"""
+
     # DOCU missing class description
 
     def updateExportPath(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # DOCU missing description
         if not bpy.context.scene.phobosexportsettings.path.endswith('/'):
             bpy.context.scene.phobosexportsettings.path += '/'
 
     def getMeshTypeListForEnumProp(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # DOCU missing description
         return sorted([(mt,) * 3 for mt in meshes.mesh_types])
 
@@ -210,10 +243,27 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
 
 class Mesh_Export_UIList(bpy.types.UIList):
+    """TODO Missing documentation"""
+
     # DOCU missing class description
     # CHECK is this class in use
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        """
+
+        Args:
+          context: 
+          layout: 
+          data: 
+          item: 
+          icon: 
+          active_data: 
+          active_propname: 
+          index: 
+
+        Returns:
+
+        """
         # TODO remove this code?
         # assert(isinstance(item, bpy.types.MaterialTextureSlot)
         ma = data
@@ -232,10 +282,27 @@ class Mesh_Export_UIList(bpy.types.UIList):
 
 
 class Models_Poses_UIList(bpy.types.UIList):
+    """TODO Missing documentation"""
+
     # DOCU missing class description
     # CHECK is this class in use?
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        """
+
+        Args:
+          context: 
+          layout: 
+          data: 
+          item: 
+          icon: 
+          active_data: 
+          active_propname: 
+          index: 
+
+        Returns:
+
+        """
         self.use_filter_show = False
         im = item
         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
@@ -252,6 +319,16 @@ class Models_Poses_UIList(bpy.types.UIList):
                     sLayout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
 
     def filter_items(self, context, data, propname):
+        """
+
+        Args:
+          context: 
+          data: 
+          propname: 
+
+        Returns:
+
+        """
         images = getattr(data, propname)
         flt_flags = [self.bitflag_filter_item] * len(images)
 
@@ -284,6 +361,14 @@ class Models_Poses_UIList(bpy.types.UIList):
 
 
 def showPreview(self, value):
+    """
+
+    Args:
+      value: 
+
+    Returns:
+
+    """
     # CHECK this should be a class function
     bpy.ops.scene.change_preview()
 
@@ -298,9 +383,25 @@ class PhobosToolsPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
 
         # Tools & Selection Menu
@@ -322,6 +423,15 @@ class PhobosToolsPanel(bpy.types.Panel):
 
 # TODO move this to a better place (utils)
 def getMatrixData(coord, space):
+    """
+
+    Args:
+      coord: 
+      space: 
+
+    Returns:
+
+    """
     if space == 'local':
         matrix = bpy.context.active_object.matrix_local
     elif space == 'world':
@@ -342,6 +452,8 @@ def getMatrixData(coord, space):
 
 # CHECK will this stay here? Give it its own file?
 class MatrixPropGroup(bpy.types.PropertyGroup):
+    """TODO Missing documentation"""
+
     from bpy.props import FloatProperty
 
     loc_x_local = FloatProperty(
@@ -433,7 +545,13 @@ class MatrixPropGroup(bpy.types.PropertyGroup):
 # CHECK will this stay here? Give it its own file?
 class PhobosMatrixPanel(bpy.types.Panel):
     """Contains summary information and editing possibilities in the Buttons
-    Window"""
+    Window
+
+    Args:
+
+    Returns:
+
+    """
 
     bl_idname = "INFOBAR_PT_PHOBOS_TOOLS"
     bl_label = "Phobos Matrix Information"
@@ -442,9 +560,25 @@ class PhobosMatrixPanel(bpy.types.Panel):
     bl_context = "object"
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
 
         obj = context.active_object
@@ -480,8 +614,7 @@ class PhobosMatrixPanel(bpy.types.Panel):
 
 
 class PhobosObjectInformationPanel(bpy.types.Panel):
-    """Contains information like parent, immediate children etc. in the Buttons Window.
-    """
+    """Contains information like parent, immediate children etc. in the Buttons Window."""
 
     bl_idname = "OBJINFO_PT_PHOBOS_TOOLS"
     bl_label = "Phobos Object Information"
@@ -490,9 +623,25 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
     bl_context = "object"
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         import phobos.utils.selection as sUtils
 
         layout = self.layout
@@ -540,6 +689,8 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
 
 
 class PhobosModelWarningsPanel(bpy.types.Panel):
+    """TODO Missing documentation"""
+
     bl_idname = "MODELWARNINGS_PT_PHOBOS_TOOLS"
     bl_label = "Phobos Model Warnings"
     bl_space_type = "PROPERTIES"
@@ -547,9 +698,25 @@ class PhobosModelWarningsPanel(bpy.types.Panel):
     bl_context = "object"
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         import phobos.utils.selection as sUtils
 
         layout = self.layout
@@ -605,13 +772,27 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
     def addProp(self, props, values, layout, params):
         """Add a property/list of properties to the specified layout category.
-
+        
         Args:
             props (list/str): property or list of property names to add
             values: list of or single float, str etc which corresponds to the property name
             layout (list): sublayout description as defined in :func:draw
-            params (list/dict): list of or single dictionary containing additional call parameters
-                for the label/prop/operator calls
+        
+        Args:
+          for: the label
+          props:
+          values:
+          layout:
+
+        Args:
+          props: 
+          values: 
+          layout: 
+          params: 
+
+        Returns:
+          
+
         """
         # get the existing layout columns
         left = layout[1]
@@ -651,6 +832,21 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                 content.label(text=str(value), **param['infoparams'])
 
     def addObjLink(self, prop, value, column, params):
+        """Args:
+          prop:
+          value:
+          column:
+
+        Args:
+          prop: 
+          value: 
+          column: 
+          params: 
+
+        Returns:
+          
+
+        """
         # this list is used to force labelling of special keywords
         labels = ['joint', 'child']
 
@@ -667,24 +863,41 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
     def checkParams(self, item):
         """Looks for a property name in the .. data:supportedProps.
-
+        
         If the property is not defined in .. data:supportedProps, the returned dictionary contains
         empty information required for drawing.
 
         Args:
-            item (str): property name to look for
+          item(str): property name to look for
 
         Returns:
-            dict: entry in .. data:supportedProps
+          dict: entry in .. data:supportedProps
+
         """
         if item in supportedProps:
             return supportedProps[item]
         return {'infoparams': {}}
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         obj = context.active_object
 
@@ -790,11 +1003,27 @@ class PhobosModelPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # TODO decide on icon
         # self.layout.label(icon='OUTLINER_DATA_ARMATURE')
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
 
         # Robot Model Menu
@@ -946,11 +1175,27 @@ class PhobosExportPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # TODO decide on icon
         # self.layout.label(icon='EXPORT')
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         expsets = bpy.context.scene.phobosexportsettings
         layout = self.layout
 
@@ -1030,6 +1275,14 @@ class PhobosExportPanel(bpy.types.Panel):
         c2.operator("phobos.export_scene", icon="WORLD_DATA")
 
     def check(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return True
 
 
@@ -1043,15 +1296,33 @@ class PhobosImportPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # TODO decide on icon
         # self.layout.label(icon='IMPORT')
         self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         self.layout.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
 
 
 class PhobosSubmodelsPanel(bpy.types.Panel):
+    """TODO Missing documentation"""
+
     bl_idname = "TOOLS_SUBMODELS_PT_PHOBOS"
     bl_label = "Submodels"
     bl_space_type = 'VIEW_3D'
@@ -1059,10 +1330,26 @@ class PhobosSubmodelsPanel(bpy.types.Panel):
     bl_category = 'Phobos Models'
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # self.layout.label(icon='IMPORT')
         pass
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         self.layout.operator("phobos.define_submodel")
         self.layout.operator("phobos.add_submodel")
         self.layout.operator("phobos.toggle_interfaces")
@@ -1070,6 +1357,8 @@ class PhobosSubmodelsPanel(bpy.types.Panel):
 
 
 class PhobosModelLibraryPanel(bpy.types.Panel):
+    """TODO Missing documentation"""
+
     # DOCU add some docstring and update bl_idname
     bl_idname = "TOOLS_PT_PHOBOS_LOCALMODELS"
     bl_space_type = 'VIEW_3D'
@@ -1078,11 +1367,27 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
     bl_label = "Local Model Library"
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         pcoll = prev_collections["phobos"]
         phobosIcon = pcoll["phobosIcon"]
         # self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         wm = context.window_manager
         modelsfolder = bpy.context.user_preferences.addons["phobos"].preferences.modelsfolder
@@ -1126,6 +1431,8 @@ def get_operator_manuals():
 
 
 class PhobosDisplayPanel(bpy.types.Panel):
+    """TODO Missing documentation"""
+
     bl_idname = "TOOLS_DISPLAY_PT_PHOBOS"
     bl_label = "Display"
     bl_space_type = 'VIEW_3D'
@@ -1133,10 +1440,26 @@ class PhobosDisplayPanel(bpy.types.Panel):
     bl_category = 'Phobos'
 
     def draw_header(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # self.layout.label(icon='IMPORT')
         pass
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         wm = context.window_manager
         layout = self.layout
 
@@ -1159,6 +1482,7 @@ class PhobosDisplayPanel(bpy.types.Panel):
 
 
 def register():
+    """TODO Missing documentation"""
     print("\nRegistering phobosgui...")
 
     # add phobostype to Blender objects
@@ -1312,6 +1636,7 @@ def register():
 
 
 def unregister():
+    """TODO Missing documentation"""
     print("Unregistering phobosgui...")
     libraries.unregister()
 

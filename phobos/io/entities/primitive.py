@@ -47,7 +47,7 @@ def deriveEntity(primitive, outpath):
       primitive: 
 
     Returns:
-      dict - An entry for the scenes entitiesList
+      : dict - An entry for the scenes entitiesList
 
     """
     entity = models.initObjectProperties(primitive, 'entity', ['geometry'])
@@ -78,6 +78,7 @@ def deriveEntity(primitive, outpath):
 
 
 def exportPrimitive():
+    """TODO Missing documentation"""
     pass
 
 

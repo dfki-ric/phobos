@@ -22,6 +22,15 @@ import bpy
 
 
 def compareOrientation(obj, step):
+    """
+
+    Args:
+      obj: 
+      step: 
+
+    Returns:
+
+    """
     before = sum(obj.dimensions)
     bpy.ops.transform.rotate(value=step, axis=(0, 0, 1))
     bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
@@ -30,6 +39,17 @@ def compareOrientation(obj, step):
 
 
 def minimizeMeshDimensions(obj, direction, step, epsilon):
+    """
+
+    Args:
+      obj: 
+      direction: 
+      step: 
+      epsilon: 
+
+    Returns:
+
+    """
     stepsum = 0
     while True:
         before, after = compareOrientation(obj, direction * step)

@@ -62,14 +62,15 @@ class Col(Enum):
 
 def decorate(level):
     """Simple wrapper to color the log level according to the colors from :class:`.Col`.
-
+    
     If there is no decorator for this level, an undecorated string will be returned.
 
-    :param level:: the loging level as described by :data:`LOGLEVELS`.
-    :type level: str
+    Args:
+      level(str): the loging level as described by :data:`LOGLEVELS`.
 
-    :return: decorated string of the specific level
-    :rtype: str
+    Returns:
+      str: decorated string of the specific level
+
     """
     if level == "INFO":
         return Col.BOLD.value + Col.OKGREEN.value + level + Col.ENDC.value
@@ -84,20 +85,19 @@ def decorate(level):
 
 def log(message, level="INFO", prefix="", guionly=False, end='\n'):
     """Logs a given message to the blender console/logging file and if log level is low enough.
-
+    
     The origin can be defined as string or an object. The message is logged by the operator
     depending on the loglevel settings.
 
-    :param message: message to log
-    :type message: str
-    :param level: valid log level for the message as defined by :data:`.LOGLEVELS`
-    :type level: str
-    :param prefix: any string that should be printed before the message
-    :type prefix: str
-    :param guionly: if True, only prints to GUI
-    :type guionly: bool
-    :param end: string to be used at the end of the resulting print statement
-    :type end: str
+    Args:
+      message(str): message to log
+      level(str, optional): valid log level for the message as defined by :data:`.LOGLEVELS` (Default value = "INFO")
+      prefix(str, optional): any string that should be printed before the message (Default value = "")
+      guionly(bool, optional): if True, only prints to GUI (Default value = False)
+      end(str, optional): string to be used at the end of the resulting print statement (Default value = '\n')
+
+    Returns:
+
     """
     frame = inspect.stack()[1][0]
     info = inspect.getframeinfo(frame)
@@ -158,17 +158,19 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
 
 def find_calling_operator(frame):
     """Finds the calling operator of a log call from the specified frame.
-
+    
     If one intermediary function name is in the :data:`FUNCTION_BLACKLIST`, the search is
     interrupted.
-
+    
     If nothing is found or the search is interrupted, None will be returned.
 
-    :param frame: call frame to begin search from
-    :type frame: frame
+    Args:
+      frame(frame: frame): call frame to begin search from
+      frame: 
 
-    :return: execute function of the calling operator or None
-    :rtype: function
+    Returns:
+      function: execute function of the calling operator or None
+
     """
     # check for next frame up the stack
     while frame.f_back:

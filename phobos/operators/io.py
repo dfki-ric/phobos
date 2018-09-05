@@ -65,10 +65,27 @@ class ExportSceneOperator(Operator):
     sceneName = StringProperty(name='Scene name')
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         self.sceneName = bpy.path.basename(bpy.context.blend_data.filepath)[:-6]
         return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # identify all entities' roots in the scene
         rootobjects = ioUtils.getEntityRoots()
         if not rootobjects:
@@ -129,6 +146,15 @@ class ExportModelOperator(Operator):
     )
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         modellist = ioUtils.getModelListForEnumProp(self, context)
         # show selection dialog for models
         if len(modellist) > 1:
@@ -141,6 +167,14 @@ class ExportModelOperator(Operator):
         return {'CANCELLED'}
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         roots = ioUtils.getExportModels()
         if not roots:
             log("No properly defined models selected or present in scene.", 'ERROR')
@@ -238,9 +272,25 @@ class ImportModelOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context is not None
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         log("Importing " + self.filepath + ' as ' + self.entitytype, "INFO")
         model = entity_io.entity_types[self.entitytype]['import'](self.filepath)
         # bUtils.cleanScene()
@@ -250,6 +300,15 @@ class ImportModelOperator(bpy.types.Operator):
         return {'FINISHED'}
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         self.filepath = bUtils.getPhobosPreferences().modelsfolder
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
@@ -269,12 +328,22 @@ class ImportModelOperator(bpy.types.Operator):
 
 # FIXME: parameter?
 def generateLibEntries(param1, param2):
+    """
+
+    Args:
+      param1: 
+      param2: 
+
+    Returns:
+
+    """
     # DOCU add some docstring
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
         return [("None",) * 3] + [(entry,) * 3 for entry in yaml.load(f.read())]
 
 
 def loadModelsAndPoses():
+    """TODO Missing documentation"""
     # DOCU add some docstring
     if bUtils.getPhobosPreferences().modelsfolder:
         modelsfolder = os.path.abspath(bUtils.getPhobosPreferences().modelsfolder)
@@ -346,6 +415,14 @@ class ReloadModelsAndPosesOperator(bpy.types.Operator):
     bl_label = "Reload Models and Poses"
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         loadModelsAndPoses()
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         for model_pose in modelsPosesColl:
@@ -378,6 +455,14 @@ class ImportLibRobot(Operator):
     filepath = bpy.props.StringProperty(subtype="FILE_PATH")
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         libPath = os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml")
         path, file = os.path.split(self.filepath)
         if file.endswith(".bake"):
@@ -397,6 +482,15 @@ class ImportLibRobot(Operator):
         return {"FINISHED"}
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         # create the open file dialog
         context.window_manager.fileselect_add(self)
 
@@ -415,6 +509,14 @@ class ImportSelectedLibRobot(Operator):
 
     @classmethod
     def poll(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         result = False
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
@@ -439,6 +541,15 @@ class ImportSelectedLibRobot(Operator):
         return result
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         wm = context.window_manager
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
@@ -450,10 +561,26 @@ class ImportSelectedLibRobot(Operator):
             return {"CANCELLED"}
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         row = self.layout
         row.prop(self, "obj_name")
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         log("Import robot bake", "INFO")
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
@@ -514,6 +641,14 @@ class CreateRobotInstance(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         if self.bakeObj == "None":
             return {"FINISHED"}
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
@@ -532,6 +667,14 @@ class CreateRobotInstance(Operator):
 
     @classmethod
     def poll(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return os.path.isfile(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"))
 
 
@@ -555,6 +698,14 @@ class ExportCurrentPoseOperator(Operator):
 
     @classmethod
     def poll(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         return (
@@ -568,6 +719,15 @@ class ExportCurrentPoseOperator(Operator):
         )
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         wm = context.window_manager
         bpy.context.scene.render.resolution_x = 256
         bpy.context.scene.render.resolution_y = 256
@@ -575,6 +735,14 @@ class ExportCurrentPoseOperator(Operator):
         return wm.invoke_props_dialog(self, width=300, height=100)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         row = self.layout
         row.label(text="Model Export Properties:")
         row.prop(self, "decimate_type")
@@ -597,9 +765,25 @@ class ExportCurrentPoseOperator(Operator):
         # row.template_image_settings(image_settings, color_management=False)
 
     def check(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return True
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         root = sUtils.getRoot(context.selected_objects[0])
 
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
@@ -647,6 +831,14 @@ class ExportAllPosesOperator(Operator):
 
     @classmethod
     def poll(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return (
             bpy.context.selected_objects
             and context.active_object
@@ -654,6 +846,15 @@ class ExportAllPosesOperator(Operator):
         )
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         wm = context.window_manager
         bpy.context.scene.render.resolution_x = 256
         bpy.context.scene.render.resolution_y = 256
@@ -661,6 +862,14 @@ class ExportAllPosesOperator(Operator):
         return wm.invoke_props_dialog(self, width=300, height=100)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         row = self.layout
         row.label(text="Model Export Properties:")
         row.prop(self, "decimate_type")
@@ -683,9 +892,25 @@ class ExportAllPosesOperator(Operator):
         # row.template_image_settings(image_settings, color_management=False)
 
     def check(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return True
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         root = sUtils.getRoot(context.selected_objects[0])
         objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
         sUtils.selectObjects(objectlist)
@@ -714,12 +939,14 @@ class ExportAllPosesOperator(Operator):
 
 
 def register():
+    """TODO Missing documentation"""
     print("Registering operators.io...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.register_class(classdef)
 
 
 def unregister():
+    """TODO Missing documentation"""
     print("Unregistering operators.io...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.unregister_class(classdef)

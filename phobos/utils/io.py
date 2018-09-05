@@ -49,11 +49,11 @@ def xmlline(ind, tag, names, values):
     Args:
       ind(int >= 0): Indentation level
       tag(String): xml element tag
-      names(list (same order as for values)): Names of xml element's attributes
-      values(list (same order as for names)): Values of xml element's attributes
+      names(list (same order as for values): Names of xml element's attributes
+      values(list (same order as for names): Values of xml element's attributes
 
     Returns:
-      String -- Generated xml line.
+      : String -- Generated xml line.
 
     """
     line = [indent * max(0, ind) + '<' + tag]
@@ -72,7 +72,7 @@ def l2str(items, start=0, end=-1):
       end(int, optional): Exclusive end index for iteration (Default value = -1)
 
     Returns:
-      str - Generated string.
+      : str - Generated string.
 
     """
     start = max(start, 0)
@@ -87,7 +87,7 @@ def securepath(path):
       path(str): The path to be secured (directories only)
 
     Returns:
-      String -- secured path as absolute path, None on error
+      : String -- secured path as absolute path, None on error
 
     """
     path = os.path.abspath(path)
@@ -117,8 +117,10 @@ def getExportModels():
 def getEntityRoots():
     """Returns all objects for which entity properties are specified.
 
+    Args:
+
     Returns:
-        list: roots of well-defined entities in the scene
+      list: roots of well-defined entities in the scene
 
     """
     roots = [
@@ -130,7 +132,14 @@ def getEntityRoots():
 
 
 def getModelListForEnumProp(self, context):
-    """Returns list of all exportable models in the scene formatted for an EnumProperty"""
+    """Returns list of all exportable models in the scene formatted for an EnumProperty
+
+    Args:
+      context: 
+
+    Returns:
+
+    """
     rootnames = set([nUtils.getModelName(r) for r in getExportModels()])
     return sorted([(r,) * 3 for r in rootnames])
 
@@ -139,12 +148,13 @@ def getDictFromYamlDefs(phobostype, defname, name):
     """Returns a phobos representation of the object specified by the definition parameters.
 
     Args:
-        phobostype (str): phobostype of the definition
-        defname (str): name of the individual definition
-        name (str): name for the new object
+      phobostype(str): phobostype of the definition
+      defname(str): name of the individual definition
+      name(str): name for the new object
 
     Returns:
-        dict -- phobos representation from the definition
+      : dict -- phobos representation from the definition
+
     """
     if 'material' in defs.def_settings[phobostype + 's'][defname]:
         material = defs.def_settings[phobostype + 's'][defname]['material']
@@ -189,17 +199,17 @@ def getOutputMeshtype():
 
 def getOutputMeshpath(path, meshtype=None):
     """Returns the folder path for mesh file export as specified in the GUI.
-
+    
     Phobos by default creates a directory 'meshes' in the export path and subsequently creates
     sub-directories of "export/path/meshes" for every format, e.g. resulting in "export/path/mesh/obj"
     for .obj file export.
 
     Args:
-        path(str): export path root (set in the GUI)
-        meshtype(str): a valid mesh type, otherwise the type set in the GUI is used
+      path(str): export path root (set in the GUI)
+      meshtype(str, optional): a valid mesh type, otherwise the type set in the GUI is used (Default value = None)
 
     Returns:
-        string: output path for meshes
+      string: output path for meshes
 
     """
     return os.path.join(path, 'meshes', meshtype if meshtype else getOutputMeshtype())
@@ -261,9 +271,11 @@ def getMeshTypesForImport():
 
 def getExportPath():
     """Returns the root path of the export.
-
+    
     Phobos by default creates directories in this path for every format that is used for export,
     i.e. a folder "export/path/urdf" will be created for URDF files.
+
+    Args:
 
     Returns:
 
@@ -275,7 +287,14 @@ def getExportPath():
 
 
 def getAbsolutePath(path):
-    """Returns an absolute path derived from the .blend file"""
+    """Returns an absolute path derived from the .blend file
+
+    Args:
+      path: 
+
+    Returns:
+
+    """
     if os.path.isabs(path):
         return path
     else:
@@ -286,9 +305,9 @@ def importBlenderModel(filepath, namespace='', prefix=False):
     """Imports an existing Blender model into the current .blend scene
 
     Args:
-        filepath(str): Path of the .blend file
-        namespace:
-        prefix:
+      filepath(str): Path of the .blend file
+      namespace: (Default value = '')
+      prefix: (Default value = False)
 
     Returns:
 
@@ -353,8 +372,9 @@ def importResources(restuple, filepath=None):
     Args:
       restuple: iterable of iterables containing import objects
       filepath: path to file from which to load resource (Default value = None)
-
     Returns(tuple of bpy.types.Object): imported objects
+
+    Returns:
 
     """
     currentscene = bpy.context.scene.name
@@ -392,10 +412,11 @@ def getResource(specifiers):
     """Returns a resource object defined by an iterable of strings.
 
     Args:
-        specifiers (iterable): strings specifying the resource
+      specifiers(iterable): strings specifying the resource
 
     Returns:
-        bpy.types.Object -- resource object (or None if it could not be imported)
+      : bpy.types.Object -- resource object (or None if it could not be imported)
+
     """
     log("Searching for resource object " + '_'.join(specifiers) + ".", 'DEBUG')
 
@@ -411,18 +432,19 @@ def getResource(specifiers):
 
 def copy_model(model):
     """Returns a recursive deep copy of a model dictionary.
-
+    
     The deep copy recreates dictionaries and lists, while keeping Blender objects and everything
     else untouched.
-
+    
     This function is required, as we can not use copy.deepcopy() due to the Blender objects in our
     Phobos representation.
 
     Args:
-        model (dict): model dictionary to copy
+      model(dict): model dictionary to copy
 
     Returns:
-        dict -- deep copy of the model dictionary
+      : dict -- deep copy of the model dictionary
+
     """
     if isinstance(model, dict):
         newmodel = {}
@@ -451,9 +473,9 @@ def exportModel(model, exportpath='.', entitytypes=None):
     """Exports model to a given path in the provided formats.
 
     Args:
-        model(dict): dictionary of model to export
-        exportpath(str): path to export root
-        entitytypes(list of str): export types - model will be exported to all
+      model(dict): dictionary of model to export
+      exportpath(str, optional): path to export root (Default value = '.')
+      entitytypes(list of str, optional): export types - model will be exported to all (Default value = None)
 
     Returns:
 
@@ -539,11 +561,11 @@ def exportScene(
     """Exports provided scene to provided path
 
     Args:
-        scenedict(dict): dictionary of scene
-        exportpath(str): path to scene export folder
-        scenetypes(list of str): export types for scene - scene will be exported to all
-        export_entity_models(bool): whether to export entities additionally
-        entitytypes(list of str): types to export entities in in case they are exported
+      scenedict(dict): dictionary of scene
+      exportpath(str, optional): path to scene export folder (Default value = '.')
+      scenetypes(list of str, optional): export types for scene - scene will be exported to all (Default value = None)
+      export_entity_models(bool, optional): whether to export entities additionally (Default value = False)
+      entitytypes(list of str, optional): types to export entities in in case they are exported (Default value = None)
 
     Returns:
 

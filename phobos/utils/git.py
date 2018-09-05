@@ -107,7 +107,7 @@ def initGit(destination, filename=None, initialsave=False, url=None, readmetxt='
       readmetxt: a string which will be written to the Readme.md (Default value = '')
 
     Returns:
-      True if the initialisation was successful, False if not
+      : True if the initialisation was successful, False if not
 
     """
     if isGit(destination):
@@ -174,11 +174,11 @@ def commit(destination, message='Automated commit', ignore=[]):
 
     Args:
       destination: 
-      message:  (Default value = 'Automated commit')
-      ignore:  (Default value = [])
+      message: (Default value = 'Automated commit')
+      ignore: (Default value = [])
 
     Returns:
-      TODO
+      : TODO
 
     """
     # Add the subfolders and files to git
@@ -215,7 +215,7 @@ def makeGitFolders(destination):
       destination: TODO
 
     Returns:
-      TODO
+      : TODO
 
     """
     from os.path import exists, join
@@ -234,6 +234,17 @@ def makeGitFolders(destination):
 
 
 def checkoutBranch(branch, workingdir, create=False, pushorigin=False):
+    """
+
+    Args:
+      branch: 
+      workingdir: 
+      create: (Default value = False)
+      pushorigin: (Default value = False)
+
+    Returns:
+
+    """
     if not branch or not workingdir:
         log("No branch specified.", "ERROR")
         return False
@@ -252,6 +263,16 @@ def checkoutBranch(branch, workingdir, create=False, pushorigin=False):
 
 
 def createNewBranch(branch, workingdir, pushorigin=False):
+    """
+
+    Args:
+      branch: 
+      workingdir: 
+      pushorigin: (Default value = False)
+
+    Returns:
+
+    """
     if not branch or not workingdir:
         log("No branch specified.", "ERROR")
         return False
@@ -271,6 +292,15 @@ def createNewBranch(branch, workingdir, pushorigin=False):
 
 
 def checkoutCommit(commit, workingdir):
+    """
+
+    Args:
+      commit: 
+      workingdir: 
+
+    Returns:
+
+    """
     # DOCU add some docstring
     if not commit or not workingdir:
         log("No commit specified.", "ERROR")
@@ -315,8 +345,8 @@ def getGitRemotes(category='', folder=None):
     category is provided, else {'fetch': {name: url, ...}, 'push': {name: url, ...}}.
 
     Args:
-      category:  (Default value = '')
-      folder:  (Default value = None)
+      category: (Default value = '')
+      folder: (Default value = None)
 
     Returns:
 
@@ -353,6 +383,15 @@ def getGitRemotes(category='', folder=None):
 
 
 def getPushRemotesList(self, context, folder=None):
+    """
+
+    Args:
+      context: 
+      folder: (Default value = None)
+
+    Returns:
+
+    """
     remotes = getGitRemotes('push', folder=folder)
     remoteslist = [remotes[a] for a in remotes]
     print(remoteslist)
@@ -360,6 +399,14 @@ def getPushRemotesList(self, context, folder=None):
 
 
 def getFetchRemotesList(self, context):
+    """
+
+    Args:
+      context: 
+
+    Returns:
+
+    """
     remotes = getGitRemotes('fetch')
     remoteslist = [remotes[a] for a in remotes]
     print(remoteslist)

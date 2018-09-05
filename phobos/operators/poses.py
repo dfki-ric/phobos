@@ -47,12 +47,30 @@ current_robot_name = ''
 
 # this is partly redundant, but currently only needed here
 def get_robot_names(scene, context):
+    """
+
+    Args:
+      scene: 
+      context: 
+
+    Returns:
+
+    """
     robot_names = [(nUtils.getModelName(root),) * 3 for root in sUtils.getRootsOfSelection()]
     return robot_names
 
 
 # currently only needed here, no point in putting in in poses.py
 def get_pose_names(scene, context):
+    """
+
+    Args:
+      scene: 
+      context: 
+
+    Returns:
+
+    """
     poselist = poses.getPoses(current_robot_name)
     pose_items = [(pose,) * 3 for pose in poselist]
     return pose_items
@@ -156,6 +174,14 @@ class StorePoseOperator(Operator):
     pose_name = StringProperty(name="Pose Name", default="New Pose", description="Name of new pose")
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         root = sUtils.getObjectByProperty('model/name', self.robot_name)
         poses.storePose(root, self.pose_name)
         return {'FINISHED'}
@@ -177,6 +203,14 @@ class LoadPoseOperator(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         global current_robot_name
         current_robot_name = self.robot_name
         poses.loadPose(self.robot_name, self.pose_name)
@@ -185,6 +219,7 @@ class LoadPoseOperator(Operator):
 
 # show robot model on 3dview
 def draw_preview_callback(self):
+    """TODO Missing documentation"""
 
     # Search for View_3d window
     area = None
@@ -270,10 +305,20 @@ def draw_preview_callback(self):
 
 
 class ChangePreviewOperator(bpy.types.Operator):
+    """TODO Missing documentation"""
+
     bl_idname = "scene.change_preview"
     bl_label = "Change the preview texture"
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
         activeModelPoseIndex = bpy.context.scene.active_ModelPose
         if bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys():
@@ -315,10 +360,21 @@ class ChangePreviewOperator(bpy.types.Operator):
 
 
 class DrawPreviewOperator(bpy.types.Operator):
+    """TODO Missing documentation"""
+
     bl_idname = "view3d.draw_preview_operator"
     bl_label = "Draw preview to the View3D"
 
     def modal(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         if event.type in {'LEFTMOUSE', 'RIGHTMOUSE', 'ESC'}:
             # TODO delete me?
             #            if bpy.context.scene.preview_visible:
@@ -331,6 +387,14 @@ class DrawPreviewOperator(bpy.types.Operator):
         return {'PASS_THROUGH'}
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         # the arguments we pass the the callback
         args = (self,)
         # Add the region OpenGL drawing callback
@@ -347,12 +411,14 @@ class DrawPreviewOperator(bpy.types.Operator):
 
 
 def register():
+    """TODO Missing documentation"""
     print("Registering operators.misc...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.register_class(classdef)
 
 
 def unregister():
+    """TODO Missing documentation"""
     print("Unregistering operators.misc...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.unregister_class(classdef)

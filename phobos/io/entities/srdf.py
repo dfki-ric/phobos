@@ -70,7 +70,7 @@ def exportSRDF(model, path, mesh_format=''):
     Args:
       model(dict): a robot model dictionary.
       path(str): the outpath for the file.
-      mesh_format:  (Default value = '')
+      mesh_format: (Default value = '')
 
     Returns:
 
@@ -156,6 +156,14 @@ def exportSRDF(model, path, mesh_format=''):
 
 
 def parseSRDFModel(self, robot):
+    """
+
+    Args:
+      robot: 
+
+    Returns:
+
+    """
     collision_Exclusives = self.buildCollisionExclusives()
     collision_Dic = self.buildCollisionDictionary(collision_Exclusives, robot)
     collision_Groups = self.buildCollisionGroups(collision_Dic)
@@ -164,6 +172,15 @@ def parseSRDFModel(self, robot):
 
 
 def buildBitmasks(self, collision_Groups, robot):
+    """
+
+    Args:
+      collision_Groups: 
+      robot: 
+
+    Returns:
+
+    """
     bits = len(collision_Groups)
     if bits > 20:
         # CHECK this was moved to logging. Is it printed twice?
@@ -181,6 +198,7 @@ def buildBitmasks(self, collision_Groups, robot):
 
 
 def buildCollisionExclusives(self):
+    """TODO Missing documentation"""
     print("\nParsing SRDF extensions from", self.filepath)
     self.tree = ET.parse(self.filepath)
     self.root = self.tree.getroot()
@@ -195,6 +213,15 @@ def buildCollisionExclusives(self):
 
 
 def buildCollisionDictionary(self, collision_exclusives, robot):
+    """
+
+    Args:
+      collision_exclusives: 
+      robot: 
+
+    Returns:
+
+    """
     dic = {}
     for pair in collision_exclusives:
         if 'root' in pair or (
@@ -222,6 +249,15 @@ def buildCollisionDictionary(self, collision_exclusives, robot):
 
 
 def checkGroup(self, group, colls):
+    """
+
+    Args:
+      group: 
+      colls: 
+
+    Returns:
+
+    """
     cut = []
     for elem in group:
         if elem in colls:
@@ -233,6 +269,16 @@ def checkGroup(self, group, colls):
 
 
 def processGroup(self, group, link, colls):
+    """
+
+    Args:
+      group: 
+      link: 
+      colls: 
+
+    Returns:
+
+    """
     if link in group:
         for coll in colls:
             if coll in group:
@@ -246,6 +292,14 @@ def processGroup(self, group, link, colls):
 
 
 def buildCollisionGroups(self, dic):
+    """
+
+    Args:
+      dic: 
+
+    Returns:
+
+    """
     groups = []
     for link in dic:
         # TODO remove me?

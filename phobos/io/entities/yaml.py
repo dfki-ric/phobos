@@ -29,8 +29,11 @@ def exportYAML(model, path):
     """This function exports a given robot model to a specified filepath as YAML.
 
     Args:
-        model (dict):  Phobos robot model dictionary
-        path (str): filepath to export the robot to (*WITH* filename)
+      model(dict): Phobos robot model dictionary
+      path(str): filepath to export the robot to (*WITH* filename)
+
+    Returns:
+
     """
     log("phobos YAML export: Writing model data to " + path, "INFO")
     with open(os.path.join(path, model['name'] + '.yaml'), 'w') as outputfile:

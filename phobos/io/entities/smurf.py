@@ -41,7 +41,7 @@ def deriveEntity(root, outpath):
       savetosubfolder(bool): If True the export path has a subfolder for this smurf entity.
 
     Returns:
-      dict - An entry for the scenes entitiesList
+      : dict - An entry for the scenes entitiesList
 
     """
     entitypose = models.deriveObjectPose(root)
@@ -95,7 +95,7 @@ def deriveRefinedCollisionData(model):
       model(dict): The robot model to search in.
 
     Returns:
-      dict -- a dictionary containing all bitmasks with corresponding element name (key).
+      : dict -- a dictionary containing all bitmasks with corresponding element name (key).
 
     """
     collisiondata = {}
@@ -120,7 +120,7 @@ def gatherLevelOfDetailSettings(model):
       model: The robot model to search in.
 
     Returns:
-      dict -- a dictionary containing all bitmasks with corresponding element name (key).
+      : dict -- a dictionary containing all bitmasks with corresponding element name (key).
 
     """
     lods = {}
@@ -134,17 +134,19 @@ def gatherLevelOfDetailSettings(model):
 
 def sort_for_yaml_dump(dictionary, category):
     """Sorts the objects of the specified category in the dictionary and returns them.
-
+    
     If the category sorting is unknown, return the dictionary instead.
-
+    
     Supported categories are: *materials*, *motors*, *sensors*, *simulation*.
 
     Args:
-        structure (dict): dictionary to sort
-        category (str): category of the dictionary to sort
+      structure(dict): dictionary to sort
+      category(str): category of the dictionary to sort
+      dictionary: 
 
     Returns:
-        list -- the elements of the specified category of the original dictionary in sorted order
+      : list -- the elements of the specified category of the original dictionary in sorted order
+
     """
     if category in ['materials', 'motors']:
         return {category: sort_dict_list(dictionary[category], 'name')}
@@ -187,10 +189,11 @@ def sort_dict_list(dict_list, sort_key):
 def exportSmurf(model, path):
     """This function exports a given model to a specific path as a smurf representation.
 
-    :param model: The model you want to export.
-    :type model: dict
-    :param path: The path you want to save the smurf file *without file name!*
-    :type param: str
+    Args:
+      model(dict): The model you want to export.
+      path: The path you want to save the smurf file *without file name!*
+
+    Returns:
 
     """
     collisiondata = deriveRefinedCollisionData(model)

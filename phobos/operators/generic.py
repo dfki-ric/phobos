@@ -51,22 +51,23 @@ from phobos.phoboslog import log
 
 def linkObjectLists(annotation, objectlist):
     """Recursively adds the objects of the specified list to an annotation dictionary.
-
+    
     Wherever the keyword "$selected_objects:phobostype1:phobostype2" is found as a value in the
     annotation dictionary, the value is replaced by a list of tuples:
         (phobostype, object)
     These tuples represent each an object from the specified objectlist. 'joint' is in this case
     considered a phobostype.
-
+    
     An arbitrary number of phobostypes can be provided.
     The rest of the annotation dictionary remains untouched.
 
     Args:
-        annotation (dict): annotation dictionary
-        objectlist (list(bpy.types.Object)): objects to add to the annotation
+      annotation(dict): annotation dictionary
+      objectlist(list(bpy.types.Object): objects to add to the annotation
 
     Returns:
-        dict -- annotation dictionary with inserted object dictionaries
+      : dict -- annotation dictionary with inserted object dictionaries
+
     """
     newanno = {}
     for key, value in annotation.items():
@@ -108,6 +109,15 @@ class DynamicProperty(PropertyGroup):
     floatProp = bpy.props.FloatProperty()
 
     def assignValue(self, name, value):
+        """
+
+        Args:
+          name: 
+          value: 
+
+        Returns:
+
+        """
         prefix = ''
         if isinstance(value, int):
             self.intProp = value
@@ -132,6 +142,16 @@ class DynamicProperty(PropertyGroup):
         self.name = prefix + '_' + name
 
     def assignDict(addfunc, dictionary, ignore=[]):
+        """
+
+        Args:
+          addfunc: 
+          dictionary: 
+          ignore: (Default value = [])
+
+        Returns:
+
+        """
         unsupported = {}
         for propname in dictionary:
             if propname in ignore:
@@ -148,6 +168,15 @@ class DynamicProperty(PropertyGroup):
         return unsupported
 
     def draw(self, layout, name):
+        """
+
+        Args:
+          layout: 
+          name: 
+
+        Returns:
+
+        """
         if self.name[0] == 'i':
             layout.prop(self, 'intProp', text=name)
         elif self.name[0] == 'b':
@@ -164,6 +193,17 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
     specified phobostype. The operator then adds an object and writes the information
     to custom properties.
     The name is changed to fit the blender format of name1_name2_name3.
+
+    Args:
+      name: 
+      phobtype: 
+      presetname: 
+      execute_func: 
+      *args: 
+      hideprops: (Default value = [])
+
+    Returns:
+
     """
     # unregister other temporary operators first
     try:
@@ -176,7 +216,7 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
 
     # create the temporary operator class
     class TempObjAddOperator(Operator):
-        '''Temporary operator to add a generic object.'''
+        """Temporary operator to add a generic object."""
 
         bl_idname = operatorBlenderId
         bl_label = 'Add {} {}'.format(name, phobtype)
@@ -191,6 +231,14 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
         preset_name = presetname
 
         def draw(self, context):
+            """
+
+            Args:
+              context: 
+
+            Returns:
+
+            """
             layout = self.layout
 
             # expose the parameters as the right Property
@@ -208,6 +256,15 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
                     self.annotation_checks[i].draw(box, name)
 
         def invoke(self, context, event):
+            """
+
+            Args:
+              context: 
+              event: 
+
+            Returns:
+
+            """
             # load the motor definitions of the current motor
             data = defs.definitions[self.phobostype + 's'][self.preset_name]
 
@@ -229,6 +286,14 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
             return context.window_manager.invoke_props_dialog(self)
 
         def execute(self, context):
+            """
+
+            Args:
+              context: 
+
+            Returns:
+
+            """
             phobos_dict = ioUtils.getDictFromYamlDefs(
                 self.phobostype, self.preset_name, self.obj_name
             )
@@ -283,7 +348,7 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
 
 
 class AddAnnotationsOperator(bpy.types.Operator):
-    """Add annotations defined by the Phobos definitions """
+    """Add annotations defined by the Phobos definitions"""
 
     bl_idname = "phobos.add_annotations"
     bl_label = "Add Annotations"
@@ -292,9 +357,25 @@ class AddAnnotationsOperator(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def getAnnotationTypes(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return [(category,) * 3 for category in sorted(defs.definitions.keys())]
 
     def getAnnotationCategories(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         subcategories = [
             (category,) * 3 for category in sorted(defs.def_subcategories[self.annotationtype])
         ]
@@ -305,6 +386,14 @@ class AddAnnotationsOperator(bpy.types.Operator):
         return subcategories
 
     def getDeviceTypes(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         devicetypes = [
             (device,) * 3
             for device in sorted(defs.definitions[self.annotationtype].keys())
@@ -336,15 +425,48 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context is not None
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         return context.window_manager.invoke_props_dialog(self, width=500)
 
     def check(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return True
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         layout = self.layout
         if self.asObject:
             layout.prop(
@@ -396,6 +518,14 @@ class AddAnnotationsOperator(bpy.types.Operator):
             )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         objects = context.selected_objects
         annotation = defs.definitions[self.annotationtype][self.devicetype]
 
@@ -421,10 +551,12 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
 
 def register():
+    """TODO Missing documentation"""
     bpy.utils.register_class(DynamicProperty)
     bpy.utils.register_class(AddAnnotationsOperator)
 
 
 def unregister():
+    """TODO Missing documentation"""
     bpy.utils.unregister_class(DynamicProperty)
     bpy.utils.unregister_class(AddAnnotationsOperator)

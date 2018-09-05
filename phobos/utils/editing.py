@@ -40,19 +40,20 @@ import phobos.defs as defs
 
 def getCombinedTransform(obj, effectiveparent):
     """Get the combined transform of the object relative to the effective parent.
-
+    
     This combines all transformations in the parenting hierarchy up to the specified effective
     parent.
-
+    
     Note, that the scale transformation of the effective parent is used anyway, as it scales the
     local matrix of the child object.
 
     Args:
-        obj (bpy.types.Object): the child object
-        effectiveparent (bpy.types.Object): the effective parent of the child object
+      obj(bpy.types.Object): the child object
+      effectiveparent(bpy.types.Object): the effective parent of the child object
 
     Returns:
-        bpy.types.Matrix -- the combined transformations of the child object
+      : bpy.types.Matrix -- the combined transformations of the child object
+
     """
     parent = obj.parent
     matrix = obj.matrix_local
@@ -142,18 +143,19 @@ def restructureKinematicTree(link, root=None):
 
 def parentObjectsTo(objects, parent, clear=False):
     """Parents the specified objects to the parent object.
-
+    
     Depending on their phobostype the objects are parented either *bone relative* or *object*.
-
+    
     If *clear* is set, the parenting of the objects will be cleared (keeping the transform), before
     parenting.
 
     Args:
-        objects (list(bpy.types.Object)): objects to set parent of
-        parent (bpy.types.Object): parent object
-        clear (bool): if True, the parenting of the objects will be cleared
+      objects(list(bpy.types.Object): objects to set parent of
+      parent(bpy.types.Object): parent object
+      clear(bool, optional): if True, the parenting of the objects will be cleared (Default value = False)
 
     Returns:
+
     """
     if not isinstance(objects, list):
         objects = [objects]
@@ -174,7 +176,10 @@ def getNearestCommonParent(objs):
     """Returns hierarchically lowest common parent of the provided objects
 
     Args:
-        objs: list of objects (bpy_types.Object)
+      objs: list of objects (bpy_types.Object)
+
+    Returns:
+
     """
     anchor = objs[0]  # pick one link as the anchor link
     rest = objs[1:]  # get other links to iterate over
@@ -206,14 +211,14 @@ def getNearestCommonParent(objs):
 
 def instantiateSubmodel(submodelname, instancename, size=1.0):
     """Creates an instance of the submodel specified by the submodelname.
-
+    
     The instance receives the definitions of the group as it is generated.
 
     Args:
       submodelname: name of the submodel (Blender group) to create an
     instance of
       instancename: name the instance object will receive
-      size:  (Default value = 1.0)
+      size: (Default value = 1.0)
 
     Returns:
 
@@ -280,18 +285,18 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
 
 def defineSubmodel(submodelname, submodeltype, version='', objects=None):
     """Defines a new submodule group with the specified name and type.
-
+    
     The group will be named like so:
         'submodeltype:submodelname/version'
-
+    
     Objects with the phobostype 'interface' (if present) are handled separately
     and put into a respective submodel group (which features the 'interface'
     submodeltype).
-
+    
     If the version is omitted, the respective part of the name is dropped, too.
     If no object list is provided the objects are derived from selection.
     The submodeltype is also added as dict entry to the group in Blender.
-
+    
     The selected objects are moved to the respective layer for submodels or
     interfaces.
 
@@ -303,7 +308,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
     objects from the selection) (Default value = None)
 
     Returns:
-      a tuple of the submodelgroup and interfacegroup/None
+      : a tuple of the submodelgroup and interfacegroup/None
 
     """
     if not objects:
@@ -375,7 +380,7 @@ def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
       interfaces: True if interface should also be deleted, else False. (Default value = True)
 
     Returns:
-      True if groups have been removed, else False.
+      : True if groups have been removed, else False.
 
     """
     # build the group name to look for
@@ -402,7 +407,7 @@ def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
 
 def createInterface(ifdict, parent=None):
     """Create an interface object and optionally parent to existing object.
-
+    
     ifdict is expected as:
     ifdict = {'type': str,
               'direction': str,
@@ -413,10 +418,11 @@ def createInterface(ifdict, parent=None):
               }
 
     Args:
-        ifdict(dict): interface data
-        parent(bpy.types.Object): designated parent object
+      ifdict(dict): interface data
+      parent(bpy.types.Object, optional): designated parent object
+    Returns(bpy.data.Object): newly created interface object (Default value = None)
 
-    Returns(bpy.data.Object): newly created interface object
+    Returns:
 
     """
     if not parent:
@@ -449,6 +455,15 @@ def createInterface(ifdict, parent=None):
 
 
 def toggleInterfaces(interfaces=None, modename='toggle'):
+    """
+
+    Args:
+      interfaces: (Default value = None)
+      modename: (Default value = 'toggle')
+
+    Returns:
+
+    """
     modedict = {'toggle': 0, 'activate': 1, 'deactivate': 2}
     mode = modedict[modename]
     if not interfaces:
@@ -463,6 +478,16 @@ def toggleInterfaces(interfaces=None, modename='toggle'):
 
 
 def connectInterfaces(parentinterface, childinterface, transform=None):
+    """
+
+    Args:
+      parentinterface: 
+      childinterface: 
+      transform: (Default value = None)
+
+    Returns:
+
+    """
     # first check if the interface is child of the root object and if not, restructure the tree
     root = sUtils.getRoot(childinterface)
     parent = childinterface.parent
@@ -518,6 +543,16 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
 
 
 def disconnectInterfaces(parentinterface, childinterface, transform=None):
+    """
+
+    Args:
+      parentinterface: 
+      childinterface: 
+      transform: (Default value = None)
+
+    Returns:
+
+    """
     # unparent the child
     sUtils.selectObjects(objects=[childinterface], clear=True, active=0)
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
@@ -549,14 +584,17 @@ def disconnectInterfaces(parentinterface, childinterface, transform=None):
 
 def setProperties(obj, diction, category=None):
     """Adds the specified dictionary as custom properties to the object.
-
+    
     If a category is provided, the keys of the dictionary are prepended with the category:
         `category/key`
 
     Args:
-        obj (bpy.types.Object): object to add the information to
-        diction (dict): information to add to the object
-        category (str): category for the dictionary entries
+      obj(bpy.types.Object): object to add the information to
+      diction(dict): information to add to the object
+      category(str, optional): category for the dictionary entries (Default value = None)
+
+    Returns:
+
     """
     for key, value in diction.items():
         obj[(category + '/' + key) if category else key] = value
@@ -564,19 +602,20 @@ def setProperties(obj, diction, category=None):
 
 def getProperties(obj, category=None):
     """Returns a dictionary of custom property information of the object.
-
+    
     If a category is provided, only the custom properties of the specified category are returned.
     Otherwise, the phobostype of the object will be used as category.
-
+    
     The dictionary contains the custom property keys with the category removed (e.g. 'name' for
     'link/name').
 
     Args:
-        obj (bpy.types.Object): object to get properties of
-        category (str): property category to look for
+      obj(bpy.types.Object): object to get properties of
+      category(str, optional): property category to look for (Default value = None)
 
     Returns:
-        dict -- custom property information of the phobostype/category for the object
+      : dict -- custom property information of the phobostype/category for the object
+
     """
     if not category:
         category = obj.phobostype
@@ -593,15 +632,18 @@ def getProperties(obj, category=None):
 
 def removeProperties(obj, props, recursive=False):
     """Removes a list of custom properties from the specified object.
-
+    
     The specified property list can contain names with wildcards at the end (e.g. sensor*).
-
+    
     If recursive is set, the properties will be removed recursively from all children, too.
 
     Args:
-        obj (bpy.types.Object): object to remove the properties from
-        props (list(str)): list of property names, which will be removed from the object
-        recursive (bool): if True, the properties will be removed recursively from the children, too
+      obj(bpy.types.Object): object to remove the properties from
+      props(list(str): list of property names, which will be removed from the object
+      recursive(bool, optional): if True, the properties will be removed recursively from the children, too (Default value = False)
+
+    Returns:
+
     """
     for prop in props:
         if prop in obj:
@@ -617,6 +659,16 @@ def removeProperties(obj, props, recursive=False):
 
 
 def mergeLinks(links, targetlink, movetotarget=False):
+    """
+
+    Args:
+      links: 
+      targetlink: 
+      movetotarget: (Default value = False)
+
+    Returns:
+
+    """
     for link in links:
         if movetotarget:
             link.matrix_world = targetlink.matrix_world
@@ -632,24 +684,25 @@ def mergeLinks(links, targetlink, movetotarget=False):
 
 def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
     """Add a new annotation object with the specified annotations to the object.
-
+    
     The annotation object will receive 'annotation_object' as its default name, unless a name is
     provided. Naming is done using :function:`phobos.utils.naming.safelyName`.
-
+    
     The annotation object will be scaled according to the `size` parameter.
-
+    
     If `namespace` is provided, the annotations will be saved with this string prepended.
     This is done using :function:`addAnnotation`.
 
     Args:
-        obj (bpy.types.Object): object to add annotation object to
-        annotation (dict): annotations that will be added
-        name (str, optional): name for the new annotation object
-        size (int/float, optional): size of the new annotation object
-        namespace (str, optional): namespace that will be prepended to the annotations
+      obj(bpy.types.Object): object to add annotation object to
+      annotation(dict): annotations that will be added
+      name(str, optional): name for the new annotation object (Default value = None)
+      size(int/float, optional): size of the new annotation object (Default value = 0.1)
+      namespace(str, optional): namespace that will be prepended to the annotations (Default value = None)
 
     Returns:
-        bpy.types.Object - the new annotation object
+      : bpy.types.Object - the new annotation object
+
     """
     loc = obj.matrix_world.to_translation()
     if not name:
@@ -686,14 +739,17 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
 
 def addAnnotation(obj, annotation, namespace=None, ignore=[]):
     """Adds the specified annotations to the object.
-
+    
     If provided, the namespace will be prepended to the annotation keys and separated with a /.
 
     Args:
-        obj (bpy.types.Object): object to add the annotations to
-        annotation (dict): annotations to add to the object
-        namespace (str, optional): namespace which will be prepended to the annotations
-        ignore (list(str)): skip these keys when adding annotations
+      obj(bpy.types.Object): object to add the annotations to
+      annotation(dict): annotations to add to the object
+      namespace(str, optional): namespace which will be prepended to the annotations (Default value = None)
+      ignore(list(str, optional): skip these keys when adding annotations (Default value = [])
+
+    Returns:
+
     """
     for key, value in annotation.items():
         obj[str(namespace + '/' if namespace and key not in ignore else '') + key] = value
@@ -701,11 +757,14 @@ def addAnnotation(obj, annotation, namespace=None, ignore=[]):
 
 def sortObjectsToLayers(objs):
     """Sorts the specified objects to the layers which match their phobostype.
-
+    
     The layer for each phobostype is defined according to `phobos.defs.layerTypes`.
 
     Args:
-        objs (list(bpy.types.Object)): objects to move to their respective layer
+      objs(list(bpy.types.Object): objects to move to their respective layer
+
+    Returns:
+
     """
     for obj in objs:
         if obj.phobostype != 'undefined':
@@ -720,7 +779,10 @@ def smoothen_surface(obj):
     """Applies various steps to make the specified object look clean and smooth.
 
     Args:
-        obj (bpy.types.Object): object to make look clean
+      obj(bpy.types.Object): object to make look clean
+
+    Returns:
+
     """
     bpy.context.scene.objects.active = obj
 

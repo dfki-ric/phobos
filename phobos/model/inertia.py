@@ -48,10 +48,16 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
     """Creates the Blender representation of a given inertial provided a dictionary.
 
     Args:
-        inertialdict (dict): intertial data
-        obj (bpy.types.Object): link or visual/collision reference object
+      inertialdict(dict): intertial data
+      obj: 
+      size: (Default value = 0.03)
+      errors: (Default value = None)
+      adjust: (Default value = False)
+      logging: (Default value = False)
+
     Returns:
-        bpy_types.Object -- newly created blender inertial object
+      : bpy_types.Object -- newly created blender inertial object
+
     """
     if errors and not adjust:
         log('Can not create inertial object.', 'ERROR')
@@ -98,12 +104,19 @@ def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, l
        optionally geometry.
 
     Args:
-        obj (bpy.types.Object): object to calculate inertia from
-        mass (float): mass of object
-        geometry_dict (dict, optional): geometry part of the object dictionary
-
+      obj(bpy.types.Object): object to calculate inertia from
+      mass(float): mass of object
+      geometry_dict(dict, optional): geometry part of the object dictionary
+    Returns(tuple): (Default value = None)
+      geometry_dict(dict, optional): geometry part of the object dictionary
     Returns(tuple):
-        tuple(6) of upper diagonal of the inertia 3x3 tensor
+    tuple(6) of upper diagonal of the inertia 3x3 tensor (Default value = None)
+      errors: (Default value = None)
+      adjust: (Default value = False)
+      logging: (Default value = False)
+
+    Returns:
+
     """
     if errors and not adjust:
         if logging:
@@ -136,7 +149,7 @@ def calculateBoxInertia(mass, size):
       size(iterable): The box' size.
 
     Returns:
-      tuple(6)
+      : tuple(6)
 
     """
     i = mass / 12
@@ -158,7 +171,7 @@ def calculateCylinderInertia(mass, r, h):
       h(float): The cylinders height.
 
     Returns:
-      tuple(6)
+      : tuple(6)
 
     """
     i = mass / 12 * (3 * r ** 2 + h ** 2)
@@ -179,7 +192,7 @@ def calculateSphereInertia(mass, r):
       r(float): The spheres radius.
 
     Returns:
-      tuple(6)
+      : tuple(6)
 
     """
     i = 0.4 * mass * r ** 2
@@ -194,7 +207,7 @@ def calculateSphereInertia(mass, r):
 
 def calculateCapsuleInertia(mass, r, h):
     """Returns upper diagonal of inertia tensor of a capsule as tuple.
-
+    
     Code adapted from:
     http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856
 
@@ -204,7 +217,7 @@ def calculateCapsuleInertia(mass, r, h):
       h(float): The capsule's height.
 
     Returns:
-      tuple(6).
+      : tuple(6).
 
     """
 
@@ -242,7 +255,7 @@ def calculateEllipsoidInertia(mass, size):
       size: The ellipsoids size.
 
     Returns:
-      tuple(6)
+      : tuple(6)
 
     """
     i = mass / 5
@@ -257,22 +270,22 @@ def calculateEllipsoidInertia(mass, size):
 
 def calculateMeshInertia(mass, data):
     """Calculates and returns the inertia tensor of arbitrary mesh objects.
-
+    
     Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
     Simply and Quickly' (2004) by Jonathan Blow (1) with formulas for tetrahedron inertia
     from 'Explicit Exact Formulas for the 3-D Tetrahedron Inertia Tensor in Terms of its
     Vertex Coordinates' (2004) by F. Tonon. (2)
-
+    
     Links: (1) http://number-none.com/blow/inertia/body_i.html
            (2) http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf
 
-    :param data: mesh data of the object
-    :type data: bpy.types.BlendData
-    :param mass: mass of the object
-    :type mass: float
+    Args:
+      data(bpy.types.BlendData): mesh data of the object
+      mass(float): mass of the object
 
-    :return: inertia tensor
-    :rtype: tuple(6)
+    Returns:
+      6: inertia tensor
+
     """
     tetrahedra = []
     mesh_volume = 0
@@ -514,10 +527,11 @@ def inertiaListToMatrix(inertialist):
     """Transforms a list (upper diagonal of a 3x3 tensor) and returns a full tensor matrix.
 
     Args:
-        inertialist (tuple(6)/list[6]): the upper diagonal of a 3x3 inertia tensor
+      inertialist(tuple(6): the upper diagonal of a 3x3 inertia tensor
 
     Returns:
-    mathutils.Matrix -- full tensor matrix generated from the list
+      : mathutils.Matrix -- full tensor matrix generated from the list
+
     """
     il = inertialist
     inertia = [[il[0], il[1], il[2]], [il[1], il[3], il[4]], [il[2], il[4], il[5]]]
@@ -532,26 +546,28 @@ def inertiaMatrixToList(im):
       im(mathutil.Matrix): The inertia tensor matrix.
 
     Returns:
-      tuple(6)
+      : tuple(6)
+
     """
     return im[0][0], im[0][1], im[0][2], im[1][1], im[1][2], im[2][2]
 
 
 def fuse_inertia_data(inertials):
     """Computes combined mass, center of mass and inertia given a list of inertial objects.
-
+    
     If no inertials are found (None, None, None) is returned.
-
+    
     If successful, the tuple contains this information:
         *mass*: float
         *com*: mathutils.Vector(3)
         *inertia*: mathutils.Matrix(3)
 
-    :param inertials: the alist of objects relevant for the inertia of a link
-    :type inertials: list
+    Args:
+      inertials(list): the alist of objects relevant for the inertia of a link
 
-    :return: tuple of mass, COM and inertia or None(3) if no inertials are found
-    :rtype: tuple(3)
+    Returns:
+      3: tuple of mass, COM and inertia or None(3) if no inertials are found
+
     """
     # collect objects which contain inertia
     objects = []
@@ -610,26 +626,27 @@ def combine_com_3x3(objects):
 def shift_com_inertia_3x3(mass, com, inertia_com, ref_point=mathutils.Vector((0.0,) * 3)):
     """Shifts the center
     This code was adapted from an implementation generously provided by Bertold Bongardt.
-
+    
     shift inertia matrix, steiner theorem / parallel axis theorem, private method
-
+    
     - without changing the orientation  -
-
+    
     see SCISIC B.12 or featherstone 2.63, but not Selig (sign swap, not COG)
-
+    
         c   = COG - O
         I_O = I_COG + m · c× (c× )T
-
+    
         changed the formula to (Wikipedia):
         \mathbf{J} = \mathbf{I} + m \left[\left(\mathbf{R} \cdot \mathbf{R}\right) \mathbf{E}_{3} - \mathbf{R} \otimes \mathbf{R} \right],
-
+    
         This was necessary as previous calculations founded on math libraries of cad2sim.
 
     Args:
-      mass:
-      com:
-      inertia_com:
-      ref_point:  (Default value = mathutils.Vector((0.0)
+      mass: 
+      com: 
+      inertia_com: 
+      ref_point: (Default value = mathutils.Vector((0.0)
+      ) * 3): 
 
     Returns:
 
@@ -643,23 +660,23 @@ def shift_com_inertia_3x3(mass, com, inertia_com, ref_point=mathutils.Vector((0.
 
 def spin_inertia_3x3(inertia_3x3, rotmat, passive=True):
     """Rotates an inertia matrix.
-
+    
     active and passive interpretation
-
+    
         "passive"   -- the object stands still but the inertia is expressed with respect to a rotated reference frame
         "active"    -- the object moves and therefore its inertia
-
+    
     consistent with 6x6 method :
-
+    
          active     -- consistent with   N'  =  (H^T)^{-1}  *  N  *  H^{-1}
          passive    -- consistent with   N'  =  (H^T)       *  N  *  H
-
+    
     WHERE IS a COMBINED METHOD of shifted and rotated inertia ? does it exist ?
 
     Args:
-      inertia_3x3:
-      rotmat:
-      passive:  (Default value = True)
+      inertia_3x3: 
+      rotmat: 
+      passive: (Default value = True)
 
     Returns:
 
@@ -685,7 +702,7 @@ def compound_inertia_analysis_3x3(objects):
     """Computes total mass, common center of mass and inertia matrix at CCOM
 
     Args:
-      objects:
+      objects: 
 
     Returns:
 
@@ -717,17 +734,18 @@ def compound_inertia_analysis_3x3(objects):
 
 def gatherInertialChilds(obj, objectlist):
     """Gathers recursively all inertial object children from the specified object.
-
+    
     The inertia objects need to be in the specified objectlist to be encluded. Also, links which
     are not in the objectlist, will be considered, too. This will gather inertial objects which are
     child of a link *not* in the list.
 
     Args:
-        obj (bpy.types.Object): object to start the recursion (preferably a link)
-        objectlist (list(bpy.types.Object)): objects to consider for the recursion
+      obj(bpy.types.Object): object to start the recursion (preferably a link)
+      objectlist(list(bpy.types.Object): objects to consider for the recursion
 
     Returns:
-        list(bpy.types.Object) -- inertial objects which belong to the specified obj
+      : list(bpy.types.Object) -- inertial objects which belong to the specified obj
+
     """
     from phobos.utils.validation import validateInertiaData
 

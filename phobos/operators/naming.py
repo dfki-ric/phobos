@@ -54,6 +54,14 @@ class ToggleNamespaces(Operator):
     namespace = StringProperty()
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         if self.complete:
             roots = set([sUtils.getRoot(obj) for obj in context.selected_objects]) - {None}
             objects = set()
@@ -85,10 +93,27 @@ class NameModelOperator(Operator):
     )
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         root = sUtils.getRoot(context.active_object)
         if root:
             root["model/name"] = self.modelname
@@ -115,6 +140,14 @@ class SetModelVersionOperator(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         root = sUtils.getRoot(context.active_object)
         if root:
             if self.usegitbranch:
@@ -154,6 +187,14 @@ class BatchRename(Operator):
     )
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         for obj in context.selected_objects:
             obj.name = self.add.replace('*', obj.name.replace(self.find, self.replace))
             if self.include_properties:
@@ -164,6 +205,14 @@ class BatchRename(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return len(context.selected_objects) > 0
 
 
@@ -175,6 +224,14 @@ class FixObjectNames(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         obj = context.active_object
         errors = validation.validateObjectNames(obj)
 
@@ -187,6 +244,14 @@ class FixObjectNames(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.active_object
 
 
@@ -202,6 +267,14 @@ class ChangeObjectName(Operator):
     jointname = StringProperty(name="Joint name", description="Name of the joint", default="")
 
     def execute(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         obj = context.active_object
 
         # rename only if necessary
@@ -253,9 +326,26 @@ class ChangeObjectName(Operator):
 
     @classmethod
     def poll(cls, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         return context.active_object
 
     def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
         wm = context.window_manager
         obj = context.active_object
 
@@ -265,6 +355,14 @@ class ChangeObjectName(Operator):
         return wm.invoke_props_dialog(self)
 
     def draw(self, context):
+        """
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
         obj = context.active_object
         layout = self.layout
 
@@ -278,12 +376,14 @@ class ChangeObjectName(Operator):
 
 
 def register():
+    """TODO Missing documentation"""
     print("Registering operators.naming...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.register_class(classdef)
 
 
 def unregister():
+    """TODO Missing documentation"""
     print("Unregistering operators.naming...")
     for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
         bpy.utils.unregister_class(classdef)

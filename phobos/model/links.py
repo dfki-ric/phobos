@@ -42,10 +42,12 @@ from phobos.phoboslog import log
 
 def getGeometricElements(link):
     """Returns all geometric elements of a link, i.e. 'visual' and 'collision' objects.
-    Args:
-        link(dict): definition of link
 
+    Args:
+      link(dict): definition of link
     Returns(list): lists of visual and collision object definitions
+
+    Returns:
 
     """
     visuals = []
@@ -60,28 +62,29 @@ def getGeometricElements(link):
 # DOCU we should add the parameters, that can be inserted in the dictionary
 def createLink(link):
     """Creates the blender representation of a given link and its parent joint.
-
+    
     The link is added to the link layer.
-
+    
     These entries in the dictionary are mandatory:
         *name*: name for the link
-
+    
     The specified dictionary may contain these entries:
         *matrix*: world matrix for the new link transformation
         *scale*: scale for the new link (single float)
         *visual*: list of visual dictionaries
         *collision*: list of collision dictionaries
         *inertial*: inertial dictionary (an inertial object will be created on the fly)
-
+    
     Furthermore any generic properties, prepended by a `$` will be added as custom properties to the
     link. E.g. $test/etc would be put to link/test/etc. However, these properties are extracted
     only in the first layer of hierarchy.
 
     Args:
-        link (dict): The link you want to create a representation of.
+      link(dict): The link you want to create a representation of.
 
     Returns:
-        bpy_types.Object -- the newly created blender link object.
+      : bpy_types.Object -- the newly created blender link object.
+
     """
     log("Creating link object '{}'...".format(link['name']), 'DEBUG', prefix='\n')
     # create armature/bone
@@ -150,7 +153,7 @@ def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False,
       nameformat(str, optional): re-formatting template for obj names (Default value = '')
 
     Returns:
-      newly created link
+      : newly created link
 
     """
     log('Deriving link from ' + nUtils.getObjectName(obj), level="INFO")
@@ -175,14 +178,16 @@ def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False,
 
 def setLinkTransformations(model, parent):
     """Assigns the transformations recursively for a model parent link according to the model.
-
+    
     This needs access to the *object* key of a link entry in the specified model.
     The transformations for each link object are extracted from the specified model and applied to
     the Blender object.
 
     Args:
-      parent (dict): parent link you want to set the children for.
-      model (dict): model dictionary containing the *object* key for each link
+      parent(dict): parent link you want to set the children for.
+      model(dict): model dictionary containing the *object* key for each link
+
+    Returns:
 
     """
     bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])

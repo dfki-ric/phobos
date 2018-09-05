@@ -35,6 +35,17 @@ from phobos.phoboslog import log
 
 @validate('material')
 def createMaterial(material, logging=False, adjust=False, errors=[]):
+    """
+
+    Args:
+      material: 
+      logging: (Default value = False)
+      adjust: (Default value = False)
+      errors: (Default value = [])
+
+    Returns:
+
+    """
     # name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
     """Returns a Blender material specified by the material dictionary.
 
@@ -100,13 +111,16 @@ def createPhobosMaterials():
 
 def assignMaterial(obj, materialname):
     """Assigns a material by name to an object.
-
+    
     This avoids creating multiple copies and also omits duplicate material slots in the specified
     object.
 
     Args:
-        obj (bpy.types.Object): The object to assign the material to.
-        materialname (str): name of the material
+      obj(bpy.types.Object): The object to assign the material to.
+      materialname(str): name of the material
+
+    Returns:
+
     """
     if materialname not in bpy.data.materials:
         if materialname in defs.definitions['materials']:

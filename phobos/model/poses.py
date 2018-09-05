@@ -44,10 +44,10 @@ from phobos.utils.io import securepath
 @validate('object_pose')
 def deriveObjectPose(obj, logging=False, errors=None):
     """Derives a pose of link, visual or collision object.
-
+    
     The transformations of the object are calculated according to
     phobos.utils.edititing.getCombinedTransform.
-
+    
     The returned dictionary contains this information:
         *rawmatrix*: mathutils.Matrix
         *matrix*: list representation (list of lists) of mathutils.Matrix
@@ -55,13 +55,15 @@ def deriveObjectPose(obj, logging=False, errors=None):
         *rotation_euler*: list (according to mathutils.Matrix.to_euler)
         *rotation_quaternion*: list (according to mathutils.Matrix.to_quaternion)
 
-    :param obj: blender object to derive the pose from
-    :type obj: bpy.types.Object
+    Args:
+      obj(bpy.types.Object): blender object to derive the pose from
+      logging: (Default value = False)
+      errors: (Default value = None)
 
-    :return: pose information of the object
-    :rtype: dict
+    Returns:
+      : dict
+      .. seealso phobos.utils.editing.getCombinedTransform: pose information of the object
 
-    .. seealso phobos.utils.editing.getCombinedTransform
     """
     effectiveparent = sUtils.getEffectiveParent(obj)
     matrix = eUtils.getCombinedTransform(obj, effectiveparent)
@@ -88,9 +90,10 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
     Args:
       objlist(list: list): The list of blender objects to join and export as simplified stl file.
       modelname(str): The new models name and filename.
-      posename:  (Default value = "")
-      decimate_type:  (Default value = 'COLLAPSE')
-      decimate_parameter:  (Default value = 0.1)
+      posename: (Default value = "")
+      decimate_type: (Default value = 'COLLAPSE')
+      decimate_parameter: (Default value = 0.1)
+      objlist: 
 
     Returns:
 
@@ -167,7 +170,7 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
 
 def storePose(root, posename):
     """Stores the current pose of all of a model's selected joints.
-
+    
     Existing poses of the same name will be overwritten.
 
     Args:
@@ -175,7 +178,7 @@ def storePose(root, posename):
       posename(str): name the pose will be stored under
 
     Returns:
-      Nothing.
+      : Nothing.
 
     """
     if root:
@@ -207,10 +210,12 @@ def storePose(root, posename):
 def loadPose(modelname, posename):
     """Load and apply a robot's stored pose.
 
-    :param modelname: the model's name
-    :type modelname: str
-    :param posename: the name the pose is stored under
-    :type posename: str
+    Args:
+      modelname(str): the model's name
+      posename(str): the name the pose is stored under
+
+    Returns:
+
     """
 
     load_file = bUtils.readTextFile(modelname + '::poses')
@@ -248,7 +253,7 @@ def getPoses(modelname):
       modelname: The model's name.
 
     Returns:
-      A list containing the poses' names.
+      : A list containing the poses' names.
 
     """
     load_file = bUtils.readTextFile(modelname + '::poses')
