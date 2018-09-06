@@ -57,7 +57,7 @@
 <p>Add a controller at the position of the selected object.</p>
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddControllerOperator.addToAll">
-<code class="descname">addToAll</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Add to all', 'description': 'Add a controller to all controllable selected objects', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.AddControllerOperator.addToAll" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addToAll</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Add a controller to all controllable selected objects', 'name': 'Add to all'})</em><a class="headerlink" href="#phobos.operators.editing.AddControllerOperator.addToAll" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -77,7 +77,7 @@
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddControllerOperator.categ">
-<code class="descname">categ</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'items': &lt;function AddControllerOperator.categorylist&gt;, 'description': 'The controller category'})</em><a class="headerlink" href="#phobos.operators.editing.AddControllerOperator.categ" title="Permalink to this definition">¶</a></dt>
+<code class="descname">categ</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'The controller category', 'items': &lt;function AddControllerOperator.categorylist&gt;})</em><a class="headerlink" href="#phobos.operators.editing.AddControllerOperator.categ" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -112,12 +112,12 @@ the phobosIcon is added to the enum.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddControllerOperator.controllerName">
-<code class="descname">controllerName</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Controller name', 'description': 'Name of the controller', 'default': 'new_controller'})</em><a class="headerlink" href="#phobos.operators.editing.AddControllerOperator.controllerName" title="Permalink to this definition">¶</a></dt>
+<code class="descname">controllerName</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'new_controller', 'description': 'Name of the controller', 'name': 'Controller name'})</em><a class="headerlink" href="#phobos.operators.editing.AddControllerOperator.controllerName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddControllerOperator.controllerType">
-<code class="descname">controllerType</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'items': &lt;function AddControllerOperator.controllerlist&gt;, 'description': 'The controller type'})</em><a class="headerlink" href="#phobos.operators.editing.AddControllerOperator.controllerType" title="Permalink to this definition">¶</a></dt>
+<code class="descname">controllerType</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'The controller type', 'items': &lt;function AddControllerOperator.controllerlist&gt;})</em><a class="headerlink" href="#phobos.operators.editing.AddControllerOperator.controllerType" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -218,12 +218,12 @@ the phobosIcon is added to the enum.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddHeightmapOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddHeightmapOperator.cutNo">
-<code class="descname">cutNo</code><em class="property"> = (&lt;built-in function IntProperty&gt;, {'description': 'Number of cuts for subdivision', 'name': 'Number of cuts', 'default': 100})</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.cutNo" title="Permalink to this definition">¶</a></dt>
+<code class="descname">cutNo</code><em class="property"> = (&lt;built-in function IntProperty&gt;, {'default': 100, 'description': 'Number of cuts for subdivision', 'name': 'Number of cuts'})</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.cutNo" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -279,7 +279,7 @@ the phobosIcon is added to the enum.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddHeightmapOperator.name">
-<code class="descname">name</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'description': 'The name of the new heightmap object', 'name': 'Name', 'default': 'heightmap'})</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.name" title="Permalink to this definition">¶</a></dt>
+<code class="descname">name</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'heightmap', 'description': 'The name of the new heightmap object', 'name': 'Name'})</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -289,17 +289,17 @@ the phobosIcon is added to the enum.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddHeightmapOperator.strength">
-<code class="descname">strength</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'description': 'Strength of the displacement effect', 'name': 'Displacement strength', 'default': 0.1})</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.strength" title="Permalink to this definition">¶</a></dt>
+<code class="descname">strength</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.1, 'description': 'Strength of the displacement effect', 'name': 'Displacement strength'})</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.strength" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddHeightmapOperator.subsurf">
-<code class="descname">subsurf</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'description': 'Use subsurf modifier to smoothen surface', 'name': 'Use subsurf', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.subsurf" title="Permalink to this definition">¶</a></dt>
+<code class="descname">subsurf</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Use subsurf modifier to smoothen surface', 'name': 'Use subsurf'})</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.subsurf" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddHeightmapOperator.subsurflvl">
-<code class="descname">subsurflvl</code><em class="property"> = (&lt;built-in function IntProperty&gt;, {'description': 'Number of divisions for subsurf smoothing', 'name': 'Subsurf subdivisions', 'default': 2})</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.subsurflvl" title="Permalink to this definition">¶</a></dt>
+<code class="descname">subsurflvl</code><em class="property"> = (&lt;built-in function IntProperty&gt;, {'default': 2, 'description': 'Number of divisions for subsurf smoothing', 'name': 'Subsurf subdivisions'})</em><a class="headerlink" href="#phobos.operators.editing.AddHeightmapOperator.subsurflvl" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -321,12 +321,12 @@ the phobosIcon is added to the enum.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddKinematicChainOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.AddKinematicChainOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.AddKinematicChainOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddKinematicChainOperator.chainname">
-<code class="descname">chainname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Chain Name', 'description': 'Name of the chain to be created', 'default': 'new_chain'})</em><a class="headerlink" href="#phobos.operators.editing.AddKinematicChainOperator.chainname" title="Permalink to this definition">¶</a></dt>
+<code class="descname">chainname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'new_chain', 'description': 'Name of the chain to be created', 'name': 'Chain Name'})</em><a class="headerlink" href="#phobos.operators.editing.AddKinematicChainOperator.chainname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -374,12 +374,12 @@ It is possible to add motors to multiple joints at the same time.</p>
 <p>Returns:</p>
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddMotorOperator.addControllers">
-<code class="descname">addControllers</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Add controller', 'description': 'Add the controller object specified in the motor definitions', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.AddMotorOperator.addControllers" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addControllers</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Add the controller object specified in the motor definitions', 'name': 'Add controller'})</em><a class="headerlink" href="#phobos.operators.editing.AddMotorOperator.addControllers" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddMotorOperator.addToAllJoints">
-<code class="descname">addToAllJoints</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Add to all', 'description': 'Add a motor to all selected joints', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.AddMotorOperator.addToAllJoints" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addToAllJoints</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Add a motor to all selected joints', 'name': 'Add to all'})</em><a class="headerlink" href="#phobos.operators.editing.AddMotorOperator.addToAllJoints" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -399,7 +399,7 @@ It is possible to add motors to multiple joints at the same time.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddMotorOperator.categ">
-<code class="descname">categ</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'items': &lt;function AddMotorOperator.categorylist&gt;, 'description': 'The motor category'})</em><a class="headerlink" href="#phobos.operators.editing.AddMotorOperator.categ" title="Permalink to this definition">¶</a></dt>
+<code class="descname">categ</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'The motor category', 'items': &lt;function AddMotorOperator.categorylist&gt;})</em><a class="headerlink" href="#phobos.operators.editing.AddMotorOperator.categ" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -480,12 +480,12 @@ the phobosIcon is added to the enum.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddMotorOperator.motorName">
-<code class="descname">motorName</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Motor name', 'description': 'Name of the motor', 'default': 'new_motor'})</em><a class="headerlink" href="#phobos.operators.editing.AddMotorOperator.motorName" title="Permalink to this definition">¶</a></dt>
+<code class="descname">motorName</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'new_motor', 'description': 'Name of the motor', 'name': 'Motor name'})</em><a class="headerlink" href="#phobos.operators.editing.AddMotorOperator.motorName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddMotorOperator.motorType">
-<code class="descname">motorType</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'items': &lt;function AddMotorOperator.motorlist&gt;, 'description': 'The motor type'})</em><a class="headerlink" href="#phobos.operators.editing.AddMotorOperator.motorType" title="Permalink to this definition">¶</a></dt>
+<code class="descname">motorType</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'The motor type', 'items': &lt;function AddMotorOperator.motorlist&gt;})</em><a class="headerlink" href="#phobos.operators.editing.AddMotorOperator.motorType" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -534,7 +534,7 @@ the next link in the hierarchy will be used to parent the sensor to.</p>
 <p>Returns:</p>
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddSensorOperator.addLink">
-<code class="descname">addLink</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Add link', 'description': 'Add additional link as sensor mounting', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.AddSensorOperator.addLink" title="Permalink to this definition">¶</a></dt>
+<code class="descname">addLink</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Add additional link as sensor mounting', 'name': 'Add link'})</em><a class="headerlink" href="#phobos.operators.editing.AddSensorOperator.addLink" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -554,7 +554,7 @@ the next link in the hierarchy will be used to parent the sensor to.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddSensorOperator.categ">
-<code class="descname">categ</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'items': &lt;function AddSensorOperator.categorylist&gt;, 'description': 'The sensor category'})</em><a class="headerlink" href="#phobos.operators.editing.AddSensorOperator.categ" title="Permalink to this definition">¶</a></dt>
+<code class="descname">categ</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'The sensor category', 'items': &lt;function AddSensorOperator.categorylist&gt;})</em><a class="headerlink" href="#phobos.operators.editing.AddSensorOperator.categ" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -654,12 +654,12 @@ the phobosIcon is added to the enum.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddSensorOperator.sensorName">
-<code class="descname">sensorName</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Sensor name', 'description': 'Name of the sensor', 'default': 'new_sensor'})</em><a class="headerlink" href="#phobos.operators.editing.AddSensorOperator.sensorName" title="Permalink to this definition">¶</a></dt>
+<code class="descname">sensorName</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'new_sensor', 'description': 'Name of the sensor', 'name': 'Sensor name'})</em><a class="headerlink" href="#phobos.operators.editing.AddSensorOperator.sensorName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddSensorOperator.sensorType">
-<code class="descname">sensorType</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'items': &lt;function AddSensorOperator.sensorlist&gt;, 'description': 'The sensor type'})</em><a class="headerlink" href="#phobos.operators.editing.AddSensorOperator.sensorType" title="Permalink to this definition">¶</a></dt>
+<code class="descname">sensorType</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'The sensor type', 'items': &lt;function AddSensorOperator.sensorlist&gt;})</em><a class="headerlink" href="#phobos.operators.editing.AddSensorOperator.sensorType" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -695,7 +695,7 @@ the phobosIcon is added to the enum.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddSubmodel.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.AddSubmodel.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.AddSubmodel.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -743,7 +743,7 @@ the phobosIcon is added to the enum.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AddSubmodel.instancename">
-<code class="descname">instancename</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Instance name', 'default': ''})</em><a class="headerlink" href="#phobos.operators.editing.AddSubmodel.instancename" title="Permalink to this definition">¶</a></dt>
+<code class="descname">instancename</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'name': 'Instance name'})</em><a class="headerlink" href="#phobos.operators.editing.AddSubmodel.instancename" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -845,7 +845,7 @@ a property dialog</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AssignSubmechanism.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.AssignSubmechanism.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.AssignSubmechanism.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -991,7 +991,7 @@ a property dialog</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.AssignSubmechanism.linear_chain">
-<code class="descname">linear_chain</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Serial Chain', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.AssignSubmechanism.linear_chain" title="Permalink to this definition">¶</a></dt>
+<code class="descname">linear_chain</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'name': 'Serial Chain'})</em><a class="headerlink" href="#phobos.operators.editing.AssignSubmechanism.linear_chain" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1037,7 +1037,7 @@ a property dialog</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.BatchEditPropertyOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.BatchEditPropertyOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.BatchEditPropertyOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1075,12 +1075,12 @@ a property dialog</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.BatchEditPropertyOperator.property_name">
-<code class="descname">property_name</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Name', 'description': 'Custom property name', 'default': ''})</em><a class="headerlink" href="#phobos.operators.editing.BatchEditPropertyOperator.property_name" title="Permalink to this definition">¶</a></dt>
+<code class="descname">property_name</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'Custom property name', 'name': 'Name'})</em><a class="headerlink" href="#phobos.operators.editing.BatchEditPropertyOperator.property_name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.BatchEditPropertyOperator.property_value">
-<code class="descname">property_value</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Value', 'description': 'Custom property value', 'default': ''})</em><a class="headerlink" href="#phobos.operators.editing.BatchEditPropertyOperator.property_value" title="Permalink to this definition">¶</a></dt>
+<code class="descname">property_value</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'Custom property value', 'name': 'Value'})</em><a class="headerlink" href="#phobos.operators.editing.BatchEditPropertyOperator.property_value" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1148,7 +1148,7 @@ a property dialog</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CalculateMassOperator.mass">
-<code class="descname">mass</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Mass', 'description': 'Calculated sum of masses', 'default': 0.0})</em><a class="headerlink" href="#phobos.operators.editing.CalculateMassOperator.mass" title="Permalink to this definition">¶</a></dt>
+<code class="descname">mass</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.0, 'description': 'Calculated sum of masses', 'name': 'Mass'})</em><a class="headerlink" href="#phobos.operators.editing.CalculateMassOperator.mass" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1175,7 +1175,7 @@ a property dialog</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.ConnectInterfacesOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.ConnectInterfacesOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.ConnectInterfacesOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1232,12 +1232,12 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CopyCustomProperties.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.CopyCustomProperties.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.CopyCustomProperties.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CopyCustomProperties.empty_properties">
-<code class="descname">empty_properties</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'empty', 'description': 'empty properties?', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.CopyCustomProperties.empty_properties" title="Permalink to this definition">¶</a></dt>
+<code class="descname">empty_properties</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'empty properties?', 'name': 'empty'})</em><a class="headerlink" href="#phobos.operators.editing.CopyCustomProperties.empty_properties" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1292,7 +1292,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateCollisionObjects.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.CreateCollisionObjects.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.CreateCollisionObjects.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1330,7 +1330,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateCollisionObjects.property_colltype">
-<code class="descname">property_colltype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'Collision type', 'name': 'Collision Type', 'items': (('box', 'box', 'box'), ('cylinder', 'cylinder', 'cylinder'), ('sphere', 'sphere', 'sphere'), ('capsule', 'capsule', 'capsule'), ('mesh', 'mesh', 'mesh')), 'default': 'box'})</em><a class="headerlink" href="#phobos.operators.editing.CreateCollisionObjects.property_colltype" title="Permalink to this definition">¶</a></dt>
+<code class="descname">property_colltype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'default': 'box', 'description': 'Collision type', 'name': 'Collision Type', 'items': (('box', 'box', 'box'), ('cylinder', 'cylinder', 'cylinder'), ('sphere', 'sphere', 'sphere'), ('capsule', 'capsule', 'capsule'), ('mesh', 'mesh', 'mesh'))})</em><a class="headerlink" href="#phobos.operators.editing.CreateCollisionObjects.property_colltype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1342,7 +1342,7 @@ match.</p>
 <p>Create interface and optionally attach to parent</p>
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateInterfaceOperator.all_selected">
-<code class="descname">all_selected</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'all selected', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.all_selected" title="Permalink to this definition">¶</a></dt>
+<code class="descname">all_selected</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'name': 'all selected'})</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.all_selected" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1357,7 +1357,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateInterfaceOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1376,17 +1376,17 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateInterfaceOperator.interface_direction">
-<code class="descname">interface_direction</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'direction', 'items': &lt;generator object compileEnumPropertyList.&lt;locals&gt;.&lt;genexpr&gt;&gt;, 'default': 'outgoing'})</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.interface_direction" title="Permalink to this definition">¶</a></dt>
+<code class="descname">interface_direction</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'default': 'outgoing', 'name': 'direction', 'items': &lt;generator object compileEnumPropertyList.&lt;locals&gt;.&lt;genexpr&gt;&gt;})</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.interface_direction" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateInterfaceOperator.interface_name">
-<code class="descname">interface_name</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'name', 'default': 'interface'})</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.interface_name" title="Permalink to this definition">¶</a></dt>
+<code class="descname">interface_name</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'interface', 'name': 'name'})</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.interface_name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateInterfaceOperator.interface_type">
-<code class="descname">interface_type</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'type', 'default': 'default'})</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.interface_type" title="Permalink to this definition">¶</a></dt>
+<code class="descname">interface_type</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'default', 'name': 'type'})</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.interface_type" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1410,7 +1410,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateInterfaceOperator.scale">
-<code class="descname">scale</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'scale', 'default': 1.0})</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.scale" title="Permalink to this definition">¶</a></dt>
+<code class="descname">scale</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 1.0, 'name': 'scale'})</em><a class="headerlink" href="#phobos.operators.editing.CreateInterfaceOperator.scale" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1432,7 +1432,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateLinksOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1465,17 +1465,17 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateLinksOperator.linkname">
-<code class="descname">linkname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'description': 'A name for a single newly created link.', 'name': 'Link Name', 'default': 'new_link'})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.linkname" title="Permalink to this definition">¶</a></dt>
+<code class="descname">linkname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'new_link', 'description': 'A name for a single newly created link.', 'name': 'Link Name'})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.linkname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateLinksOperator.location">
-<code class="descname">location</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Location', 'items': (('3D cursor', '3D cursor', '3D cursor'), ('selected objects', 'selected objects', 'selected objects')), 'description': 'Where to create new link(s)?', 'default': '3D cursor'})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.location" title="Permalink to this definition">¶</a></dt>
+<code class="descname">location</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'default': '3D cursor', 'description': 'Where to create new link(s)?', 'name': 'Location', 'items': (('3D cursor', '3D cursor', '3D cursor'), ('selected objects', 'selected objects', 'selected objects'))})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.location" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateLinksOperator.nameformat">
-<code class="descname">nameformat</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'description': &quot;Provide a string containing {0} {1} etc. to reuse parts of objects' names.&quot;, 'name': 'Name Format', 'default': ''})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.nameformat" title="Permalink to this definition">¶</a></dt>
+<code class="descname">nameformat</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': &quot;Provide a string containing {0} {1} etc. to reuse parts of objects' names.&quot;, 'name': 'Name Format'})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.nameformat" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1485,12 +1485,12 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateLinksOperator.parent_link">
-<code class="descname">parent_link</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Parent Link', 'description': &quot;Parent link to object's parents&quot;, 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.parent_link" title="Permalink to this definition">¶</a></dt>
+<code class="descname">parent_link</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': &quot;Parent link to object's parents&quot;, 'name': 'Parent Link'})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.parent_link" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateLinksOperator.parent_objects">
-<code class="descname">parent_objects</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Parent Objects', 'description': 'Parent children of object to new link', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.parent_objects" title="Permalink to this definition">¶</a></dt>
+<code class="descname">parent_objects</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Parent children of object to new link', 'name': 'Parent Objects'})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.parent_objects" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="classmethod">
@@ -1509,7 +1509,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateLinksOperator.size">
-<code class="descname">size</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Visual Size', 'description': 'Size of the created link', 'default': 1.0})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.size" title="Permalink to this definition">¶</a></dt>
+<code class="descname">size</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 1.0, 'description': 'Size of the created link', 'name': 'Visual Size'})</em><a class="headerlink" href="#phobos.operators.editing.CreateLinksOperator.size" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1531,7 +1531,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateMimicJointOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.CreateMimicJointOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.CreateMimicJointOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1550,22 +1550,22 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateMimicJointOperator.mimicjoint">
-<code class="descname">mimicjoint</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Mimic Joint', 'description': 'Create joint mimicry', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.CreateMimicJointOperator.mimicjoint" title="Permalink to this definition">¶</a></dt>
+<code class="descname">mimicjoint</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Create joint mimicry', 'name': 'Mimic Joint'})</em><a class="headerlink" href="#phobos.operators.editing.CreateMimicJointOperator.mimicjoint" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateMimicJointOperator.mimicmotor">
-<code class="descname">mimicmotor</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Mimic Motor', 'description': 'Create motor mimicry', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.CreateMimicJointOperator.mimicmotor" title="Permalink to this definition">¶</a></dt>
+<code class="descname">mimicmotor</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Create motor mimicry', 'name': 'Mimic Motor'})</em><a class="headerlink" href="#phobos.operators.editing.CreateMimicJointOperator.mimicmotor" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateMimicJointOperator.multiplier">
-<code class="descname">multiplier</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Multiplier', 'description': 'Multiplier for joint mimicry', 'default': 1.0})</em><a class="headerlink" href="#phobos.operators.editing.CreateMimicJointOperator.multiplier" title="Permalink to this definition">¶</a></dt>
+<code class="descname">multiplier</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 1.0, 'description': 'Multiplier for joint mimicry', 'name': 'Multiplier'})</em><a class="headerlink" href="#phobos.operators.editing.CreateMimicJointOperator.multiplier" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.CreateMimicJointOperator.offset">
-<code class="descname">offset</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Offset', 'description': 'Offset for joint mimicry', 'default': 0.0})</em><a class="headerlink" href="#phobos.operators.editing.CreateMimicJointOperator.offset" title="Permalink to this definition">¶</a></dt>
+<code class="descname">offset</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.0, 'description': 'Offset for joint mimicry', 'name': 'Offset'})</em><a class="headerlink" href="#phobos.operators.editing.CreateMimicJointOperator.offset" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1606,12 +1606,12 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineJointConstraintsOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineJointConstraintsOperator.damping">
-<code class="descname">damping</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Damping Constant', 'description': 'Damping constant of the joint', 'default': 0.0})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.damping" title="Permalink to this definition">¶</a></dt>
+<code class="descname">damping</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.0, 'description': 'Damping constant of the joint', 'name': 'Damping Constant'})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.damping" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1662,22 +1662,22 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineJointConstraintsOperator.joint_type">
-<code class="descname">joint_type</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'Type of the joint', 'name': 'Joint Type', 'items': (('revolute', 'revolute', 'revolute'), ('continuous', 'continuous', 'continuous'), ('prismatic', 'prismatic', 'prismatic'), ('fixed', 'fixed', 'fixed'), ('floating', 'floating', 'floating'), ('planar', 'planar', 'planar')), 'default': 'revolute'})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.joint_type" title="Permalink to this definition">¶</a></dt>
+<code class="descname">joint_type</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'default': 'revolute', 'description': 'Type of the joint', 'name': 'Joint Type', 'items': (('revolute', 'revolute', 'revolute'), ('continuous', 'continuous', 'continuous'), ('prismatic', 'prismatic', 'prismatic'), ('fixed', 'fixed', 'fixed'), ('floating', 'floating', 'floating'), ('planar', 'planar', 'planar'))})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.joint_type" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineJointConstraintsOperator.lower">
-<code class="descname">lower</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Lower', 'description': 'Lower constraint of the joint', 'default': 0.0})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.lower" title="Permalink to this definition">¶</a></dt>
+<code class="descname">lower</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.0, 'description': 'Lower constraint of the joint', 'name': 'Lower'})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.lower" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineJointConstraintsOperator.maxeffort">
-<code class="descname">maxeffort</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Max Effort (N or Nm)', 'description': 'Maximum effort of the joint', 'default': 0.0})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.maxeffort" title="Permalink to this definition">¶</a></dt>
+<code class="descname">maxeffort</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.0, 'description': 'Maximum effort of the joint', 'name': 'Max Effort (N or Nm)'})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.maxeffort" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineJointConstraintsOperator.maxvelocity">
-<code class="descname">maxvelocity</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Max Velocity (m/s or rad/s)', 'description': 'Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here', 'default': 0.0})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.maxvelocity" title="Permalink to this definition">¶</a></dt>
+<code class="descname">maxvelocity</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.0, 'description': 'Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here', 'name': 'Max Velocity (m/s or rad/s)'})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.maxvelocity" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1687,7 +1687,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineJointConstraintsOperator.passive">
-<code class="descname">passive</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Passive', 'description': 'Make the joint passive (no actuation)', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.passive" title="Permalink to this definition">¶</a></dt>
+<code class="descname">passive</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Make the joint passive (no actuation)', 'name': 'Passive'})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.passive" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="classmethod">
@@ -1706,17 +1706,17 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineJointConstraintsOperator.spring">
-<code class="descname">spring</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Spring Constant', 'description': 'Spring constant of the joint', 'default': 0.0})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.spring" title="Permalink to this definition">¶</a></dt>
+<code class="descname">spring</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.0, 'description': 'Spring constant of the joint', 'name': 'Spring Constant'})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.spring" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineJointConstraintsOperator.upper">
-<code class="descname">upper</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Upper', 'description': 'Upper constraint of the joint', 'default': 0.0})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.upper" title="Permalink to this definition">¶</a></dt>
+<code class="descname">upper</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.0, 'description': 'Upper constraint of the joint', 'name': 'Upper'})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.upper" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineJointConstraintsOperator.useRadian">
-<code class="descname">useRadian</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Use Radian', 'description': 'Use degrees or rad for joints', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.useRadian" title="Permalink to this definition">¶</a></dt>
+<code class="descname">useRadian</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Use degrees or rad for joints', 'name': 'Use Radian'})</em><a class="headerlink" href="#phobos.operators.editing.DefineJointConstraintsOperator.useRadian" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1738,7 +1738,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineSubmodel.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.DefineSubmodel.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.DefineSubmodel.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1782,17 +1782,17 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineSubmodel.submodelname">
-<code class="descname">submodelname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'description': 'Name of the submodel', 'name': 'Submodel name', 'default': 'newsubmodel'})</em><a class="headerlink" href="#phobos.operators.editing.DefineSubmodel.submodelname" title="Permalink to this definition">¶</a></dt>
+<code class="descname">submodelname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'newsubmodel', 'description': 'Name of the submodel', 'name': 'Submodel name'})</em><a class="headerlink" href="#phobos.operators.editing.DefineSubmodel.submodelname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineSubmodel.submodeltype">
-<code class="descname">submodeltype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Submodel type', 'items': (('mechanism', 'mechanism', 'mechanism'),), 'description': 'The type for the new submodel', 'default': 'mechanism'})</em><a class="headerlink" href="#phobos.operators.editing.DefineSubmodel.submodeltype" title="Permalink to this definition">¶</a></dt>
+<code class="descname">submodeltype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'default': 'mechanism', 'description': 'The type for the new submodel', 'name': 'Submodel type', 'items': (('mechanism', 'mechanism', 'mechanism'),)})</em><a class="headerlink" href="#phobos.operators.editing.DefineSubmodel.submodeltype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DefineSubmodel.version">
-<code class="descname">version</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'description': 'Name of the submodel version', 'name': 'Version name', 'default': '1.0'})</em><a class="headerlink" href="#phobos.operators.editing.DefineSubmodel.version" title="Permalink to this definition">¶</a></dt>
+<code class="descname">version</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '1.0', 'description': 'Name of the submodel version', 'name': 'Version name'})</em><a class="headerlink" href="#phobos.operators.editing.DefineSubmodel.version" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1814,7 +1814,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DeleteSubmechanism.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.DeleteSubmechanism.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.DeleteSubmechanism.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1920,7 +1920,7 @@ match.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.DisconnectInterfaceOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.DisconnectInterfaceOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.DisconnectInterfaceOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1983,12 +1983,12 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.EditInertialData.changeInertia">
-<code class="descname">changeInertia</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Change inertia', 'description': 'Change inertia values', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.EditInertialData.changeInertia" title="Permalink to this definition">¶</a></dt>
+<code class="descname">changeInertia</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Change inertia values', 'name': 'Change inertia'})</em><a class="headerlink" href="#phobos.operators.editing.EditInertialData.changeInertia" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.EditInertialData.changeMass">
-<code class="descname">changeMass</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Change mass', 'description': 'Change mass values', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.EditInertialData.changeMass" title="Permalink to this definition">¶</a></dt>
+<code class="descname">changeMass</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Change mass values', 'name': 'Change mass'})</em><a class="headerlink" href="#phobos.operators.editing.EditInertialData.changeMass" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2035,7 +2035,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.EditInertialData.inertiavector">
-<code class="descname">inertiavector</code><em class="property"> = (&lt;built-in function FloatVectorProperty&gt;, {'default': [0.001, 0.001, 0.001, 0.001, 0.001, 0.001], 'name': 'Inertia Vector', 'size': 6, 'description': 'New inertia values for the inertial objects', 'precision': 10, 'subtype': 'NONE'})</em><a class="headerlink" href="#phobos.operators.editing.EditInertialData.inertiavector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">inertiavector</code><em class="property"> = (&lt;built-in function FloatVectorProperty&gt;, {'precision': 10, 'description': 'New inertia values for the inertial objects', 'subtype': 'NONE', 'size': 6, 'name': 'Inertia Vector', 'default': [0.001, 0.001, 0.001, 0.001, 0.001, 0.001]})</em><a class="headerlink" href="#phobos.operators.editing.EditInertialData.inertiavector" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2058,7 +2058,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.EditInertialData.mass">
-<code class="descname">mass</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Mass', 'description': 'New mass for the inertial objects (in kg)', 'precision': 10, 'default': 0.001})</em><a class="headerlink" href="#phobos.operators.editing.EditInertialData.mass" title="Permalink to this definition">¶</a></dt>
+<code class="descname">mass</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'precision': 10, 'description': 'New mass for the inertial objects (in kg)', 'name': 'Mass', 'default': 0.001})</em><a class="headerlink" href="#phobos.operators.editing.EditInertialData.mass" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -2099,7 +2099,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.EditYAMLDictionary.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.EditYAMLDictionary.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.EditYAMLDictionary.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2154,22 +2154,22 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.GenerateInertialObjectsOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.GenerateInertialObjectsOperator.clear">
-<code class="descname">clear</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Clear existing inertial objects', 'description': 'Clear existing inertial objects of selected links.', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.clear" title="Permalink to this definition">¶</a></dt>
+<code class="descname">clear</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Clear existing inertial objects of selected links.', 'name': 'Clear existing inertial objects'})</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.clear" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.GenerateInertialObjectsOperator.collisions">
-<code class="descname">collisions</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'collision', 'description': 'Use the selected visual objects for inertial creation.', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.collisions" title="Permalink to this definition">¶</a></dt>
+<code class="descname">collisions</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Use the selected visual objects for inertial creation.', 'name': 'collision'})</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.collisions" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.GenerateInertialObjectsOperator.derive_inertia_from_geometry">
-<code class="descname">derive_inertia_from_geometry</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Calculate inertia from geometry ', 'description': 'Derive inertia value(s) from geometry of visual or collision objects.', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.derive_inertia_from_geometry" title="Permalink to this definition">¶</a></dt>
+<code class="descname">derive_inertia_from_geometry</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Derive inertia value(s) from geometry of visual or collision objects.', 'name': 'Calculate inertia from geometry '})</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.derive_inertia_from_geometry" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2220,7 +2220,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.GenerateInertialObjectsOperator.mass">
-<code class="descname">mass</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Mass', 'description': 'Mass (of active object) in kg', 'default': 0.001})</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.mass" title="Permalink to this definition">¶</a></dt>
+<code class="descname">mass</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.001, 'description': 'Mass (of active object) in kg', 'name': 'Mass'})</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.mass" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -2244,7 +2244,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.GenerateInertialObjectsOperator.visuals">
-<code class="descname">visuals</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'visual', 'description': 'Use the selected visual objects for inertial creation.', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.visuals" title="Permalink to this definition">¶</a></dt>
+<code class="descname">visuals</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Use the selected visual objects for inertial creation.', 'name': 'visual'})</em><a class="headerlink" href="#phobos.operators.editing.GenerateInertialObjectsOperator.visuals" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -2271,12 +2271,12 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MeasureDistanceOperator.distVector">
-<code class="descname">distVector</code><em class="property"> = (&lt;built-in function FloatVectorProperty&gt;, {'default': (0.0, 0.0, 0.0), 'unit': 'LENGTH', 'precision': 6, 'description': 'Distance vector between objects', 'size': 3, 'name': 'Distance Vector', 'subtype': 'TRANSLATION'})</em><a class="headerlink" href="#phobos.operators.editing.MeasureDistanceOperator.distVector" title="Permalink to this definition">¶</a></dt>
+<code class="descname">distVector</code><em class="property"> = (&lt;built-in function FloatVectorProperty&gt;, {'precision': 6, 'description': 'Distance vector between objects', 'subtype': 'TRANSLATION', 'size': 3, 'unit': 'LENGTH', 'name': 'Distance Vector', 'default': (0.0, 0.0, 0.0)})</em><a class="headerlink" href="#phobos.operators.editing.MeasureDistanceOperator.distVector" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MeasureDistanceOperator.distance">
-<code class="descname">distance</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.0, 'unit': 'LENGTH', 'name': 'Distance', 'description': 'Distance between objects', 'precision': 6, 'subtype': 'DISTANCE'})</em><a class="headerlink" href="#phobos.operators.editing.MeasureDistanceOperator.distance" title="Permalink to this definition">¶</a></dt>
+<code class="descname">distance</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'precision': 6, 'description': 'Distance between objects', 'subtype': 'DISTANCE', 'unit': 'LENGTH', 'name': 'Distance', 'default': 0.0})</em><a class="headerlink" href="#phobos.operators.editing.MeasureDistanceOperator.distance" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2331,7 +2331,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MergeLinks.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.MergeLinks.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.MergeLinks.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2350,7 +2350,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MergeLinks.movetotarget">
-<code class="descname">movetotarget</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'move to target', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.MergeLinks.movetotarget" title="Permalink to this definition">¶</a></dt>
+<code class="descname">movetotarget</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'name': 'move to target'})</em><a class="headerlink" href="#phobos.operators.editing.MergeLinks.movetotarget" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -2452,7 +2452,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MoveToSceneOperator.init">
-<code class="descname">init</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Link current scene', 'description': 'Link all unselected objects from the current scene', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.init" title="Permalink to this definition">¶</a></dt>
+<code class="descname">init</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Link all unselected objects from the current scene', 'name': 'Link current scene'})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.init" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2475,22 +2475,22 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MoveToSceneOperator.link_material">
-<code class="descname">link_material</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Link material data', 'description': 'Link material data to new objects', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.link_material" title="Permalink to this definition">¶</a></dt>
+<code class="descname">link_material</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Link material data to new objects', 'name': 'Link material data'})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.link_material" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MoveToSceneOperator.link_obdata">
-<code class="descname">link_obdata</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Link mesh data', 'description': 'Link mesh data to new objects', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.link_obdata" title="Permalink to this definition">¶</a></dt>
+<code class="descname">link_obdata</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Link mesh data to new objects', 'name': 'Link mesh data'})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.link_obdata" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MoveToSceneOperator.link_texture">
-<code class="descname">link_texture</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Link texture data', 'description': 'Link texture data to new objects', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.link_texture" title="Permalink to this definition">¶</a></dt>
+<code class="descname">link_texture</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Link texture data to new objects', 'name': 'Link texture data'})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.link_texture" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MoveToSceneOperator.new">
-<code class="descname">new</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'New', 'description': 'Create new scene for configuration', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.new" title="Permalink to this definition">¶</a></dt>
+<code class="descname">new</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Create new scene for configuration', 'name': 'New'})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.new" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -2514,22 +2514,22 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MoveToSceneOperator.remove">
-<code class="descname">remove</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Remove selected', 'description': 'Remove selected objects from active scene', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.remove" title="Permalink to this definition">¶</a></dt>
+<code class="descname">remove</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Remove selected objects from active scene', 'name': 'Remove selected'})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.remove" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MoveToSceneOperator.scene">
-<code class="descname">scene</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Scene', 'items': &lt;function MoveToSceneOperator.getSceneEnumProperty&gt;, 'description': 'List of available scenes'})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.scene" title="Permalink to this definition">¶</a></dt>
+<code class="descname">scene</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'List of available scenes', 'name': 'Scene', 'items': &lt;function MoveToSceneOperator.getSceneEnumProperty&gt;})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.scene" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MoveToSceneOperator.scenename">
-<code class="descname">scenename</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Scene Name', 'description': 'Name of the scene to which to add selection', 'default': 'new'})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.scenename" title="Permalink to this definition">¶</a></dt>
+<code class="descname">scenename</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'new', 'description': 'Name of the scene to which to add selection', 'name': 'Scene Name'})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.scenename" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.MoveToSceneOperator.truecopy">
-<code class="descname">truecopy</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Copy selected', 'description': 'Copy selected objects from active scene', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.truecopy" title="Permalink to this definition">¶</a></dt>
+<code class="descname">truecopy</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Copy selected objects from active scene', 'name': 'Copy selected'})</em><a class="headerlink" href="#phobos.operators.editing.MoveToSceneOperator.truecopy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -2551,7 +2551,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.RenameCustomProperty.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.RenameCustomProperty.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.RenameCustomProperty.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2570,7 +2570,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.RenameCustomProperty.find">
-<code class="descname">find</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Find Property Name', 'description': 'Name to be searched for', 'default': ''})</em><a class="headerlink" href="#phobos.operators.editing.RenameCustomProperty.find" title="Permalink to this definition">¶</a></dt>
+<code class="descname">find</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'Name to be searched for', 'name': 'Find Property Name'})</em><a class="headerlink" href="#phobos.operators.editing.RenameCustomProperty.find" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -2580,7 +2580,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.RenameCustomProperty.overwrite">
-<code class="descname">overwrite</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Overwrite Existing Properties', 'description': 'If a property of the specified replacement name exists, overwrite it?', 'default': False})</em><a class="headerlink" href="#phobos.operators.editing.RenameCustomProperty.overwrite" title="Permalink to this definition">¶</a></dt>
+<code class="descname">overwrite</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'If a property of the specified replacement name exists, overwrite it?', 'name': 'Overwrite Existing Properties'})</em><a class="headerlink" href="#phobos.operators.editing.RenameCustomProperty.overwrite" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="classmethod">
@@ -2599,7 +2599,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.RenameCustomProperty.replace">
-<code class="descname">replace</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Replacement Name', 'description': 'New name to be replaced with', 'default': ''})</em><a class="headerlink" href="#phobos.operators.editing.RenameCustomProperty.replace" title="Permalink to this definition">¶</a></dt>
+<code class="descname">replace</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'New name to be replaced with', 'name': 'Replacement Name'})</em><a class="headerlink" href="#phobos.operators.editing.RenameCustomProperty.replace" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -2676,7 +2676,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SelectSubmechanism.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.SelectSubmechanism.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.SelectSubmechanism.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2782,7 +2782,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SetCollisionGroupOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.SetCollisionGroupOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.SetCollisionGroupOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2801,7 +2801,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SetCollisionGroupOperator.groups">
-<code class="descname">groups</code><em class="property"> = (&lt;built-in function BoolVectorProperty&gt;, {'name': 'Collision Groups', 'description': 'Collision groups', 'size': 20, 'default': (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False), 'subtype': 'LAYER'})</em><a class="headerlink" href="#phobos.operators.editing.SetCollisionGroupOperator.groups" title="Permalink to this definition">¶</a></dt>
+<code class="descname">groups</code><em class="property"> = (&lt;built-in function BoolVectorProperty&gt;, {'default': (False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False), 'description': 'Collision groups', 'name': 'Collision Groups', 'subtype': 'LAYER', 'size': 20})</em><a class="headerlink" href="#phobos.operators.editing.SetCollisionGroupOperator.groups" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2893,7 +2893,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SetGeometryType.geomType">
-<code class="descname">geomType</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Type', 'items': (('box', 'box', 'box'), ('cylinder', 'cylinder', 'cylinder'), ('sphere', 'sphere', 'sphere'), ('capsule', 'capsule', 'capsule'), ('mesh', 'mesh', 'mesh')), 'description': 'Phobos geometry type', 'default': 'box'})</em><a class="headerlink" href="#phobos.operators.editing.SetGeometryType.geomType" title="Permalink to this definition">¶</a></dt>
+<code class="descname">geomType</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'default': 'box', 'description': 'Phobos geometry type', 'name': 'Type', 'items': (('box', 'box', 'box'), ('cylinder', 'cylinder', 'cylinder'), ('sphere', 'sphere', 'sphere'), ('capsule', 'capsule', 'capsule'), ('mesh', 'mesh', 'mesh'))})</em><a class="headerlink" href="#phobos.operators.editing.SetGeometryType.geomType" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -2952,7 +2952,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SetModelRoot.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.SetModelRoot.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.SetModelRoot.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3007,7 +3007,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SetPhobosType.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.SetPhobosType.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.SetPhobosType.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3050,7 +3050,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SetPhobosType.phobostype">
-<code class="descname">phobostype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Phobostype', 'items': (('undefined', 'undefined', 'undefined'), ('link', 'link', 'link'), ('inertial', 'inertial', 'inertial'), ('visual', 'visual', 'visual'), ('collision', 'collision', 'collision'), ('sensor', 'sensor', 'sensor'), ('motor', 'motor', 'motor'), ('controller', 'controller', 'controller'), ('approxsphere', 'approxsphere', 'approxsphere'), ('light', 'light', 'light'), ('entity', 'entity', 'entity'), ('frame', 'frame', 'frame'), ('interface', 'interface', 'interface'), ('submodel', 'submodel', 'submodel'), ('annotation', 'annotation', 'annotation')), 'description': 'Phobostype', 'default': 'undefined'})</em><a class="headerlink" href="#phobos.operators.editing.SetPhobosType.phobostype" title="Permalink to this definition">¶</a></dt>
+<code class="descname">phobostype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'default': 'undefined', 'description': 'Phobostype', 'name': 'Phobostype', 'items': (('undefined', 'undefined', 'undefined'), ('link', 'link', 'link'), ('inertial', 'inertial', 'inertial'), ('visual', 'visual', 'visual'), ('collision', 'collision', 'collision'), ('sensor', 'sensor', 'sensor'), ('motor', 'motor', 'motor'), ('controller', 'controller', 'controller'), ('approxsphere', 'approxsphere', 'approxsphere'), ('light', 'light', 'light'), ('entity', 'entity', 'entity'), ('frame', 'frame', 'frame'), ('interface', 'interface', 'interface'), ('submodel', 'submodel', 'submodel'), ('annotation', 'annotation', 'annotation'))})</em><a class="headerlink" href="#phobos.operators.editing.SetPhobosType.phobostype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="classmethod">
@@ -3086,7 +3086,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SetXRayOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.SetXRayOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.SetXRayOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3119,12 +3119,12 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SetXRayOperator.namepart">
-<code class="descname">namepart</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Name Contains', 'description': &quot;Part of a name for objects to be selected in 'by name' mode&quot;, 'default': ''})</em><a class="headerlink" href="#phobos.operators.editing.SetXRayOperator.namepart" title="Permalink to this definition">¶</a></dt>
+<code class="descname">namepart</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': &quot;Part of a name for objects to be selected in 'by name' mode&quot;, 'name': 'Name Contains'})</em><a class="headerlink" href="#phobos.operators.editing.SetXRayOperator.namepart" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SetXRayOperator.objects">
-<code class="descname">objects</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Objects', 'items': (('all', 'all', 'all'), ('selected', 'selected', 'selected'), ('by name', 'by name', 'by name'), ('undefined', 'undefined', 'undefined'), ('link', 'link', 'link'), ('inertial', 'inertial', 'inertial'), ('visual', 'visual', 'visual'), ('collision', 'collision', 'collision'), ('sensor', 'sensor', 'sensor'), ('motor', 'motor', 'motor'), ('controller', 'controller', 'controller'), ('approxsphere', 'approxsphere', 'approxsphere'), ('light', 'light', 'light'), ('entity', 'entity', 'entity'), ('frame', 'frame', 'frame'), ('interface', 'interface', 'interface'), ('submodel', 'submodel', 'submodel'), ('annotation', 'annotation', 'annotation')), 'description': 'Show objects via x-ray', 'default': 'selected'})</em><a class="headerlink" href="#phobos.operators.editing.SetXRayOperator.objects" title="Permalink to this definition">¶</a></dt>
+<code class="descname">objects</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'default': 'selected', 'description': 'Show objects via x-ray', 'name': 'Objects', 'items': (('all', 'all', 'all'), ('selected', 'selected', 'selected'), ('by name', 'by name', 'by name'), ('undefined', 'undefined', 'undefined'), ('link', 'link', 'link'), ('inertial', 'inertial', 'inertial'), ('visual', 'visual', 'visual'), ('collision', 'collision', 'collision'), ('sensor', 'sensor', 'sensor'), ('motor', 'motor', 'motor'), ('controller', 'controller', 'controller'), ('approxsphere', 'approxsphere', 'approxsphere'), ('light', 'light', 'light'), ('entity', 'entity', 'entity'), ('frame', 'frame', 'frame'), ('interface', 'interface', 'interface'), ('submodel', 'submodel', 'submodel'), ('annotation', 'annotation', 'annotation'))})</em><a class="headerlink" href="#phobos.operators.editing.SetXRayOperator.objects" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -3148,7 +3148,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SetXRayOperator.show">
-<code class="descname">show</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Enable X-Ray', 'description': 'Enable or disable X-Ray', 'default': True})</em><a class="headerlink" href="#phobos.operators.editing.SetXRayOperator.show" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Enable or disable X-Ray', 'name': 'Enable X-Ray'})</em><a class="headerlink" href="#phobos.operators.editing.SetXRayOperator.show" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -3170,7 +3170,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.SmoothenSurfaceOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.SmoothenSurfaceOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.SmoothenSurfaceOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3280,7 +3280,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.ToggleInterfaces.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.ToggleInterfaces.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.ToggleInterfaces.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3326,7 +3326,7 @@ Also, the selected object has to be a connected interface.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.editing.ValidateOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.editing.ValidateOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.editing.ValidateOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3502,17 +3502,17 @@ object.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.generic.AddAnnotationsOperator.annotationcategories">
-<code class="descname">annotationcategories</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Categories', 'items': &lt;function AddAnnotationsOperator.getAnnotationCategories&gt;, 'description': 'Categories of this annotation type.'})</em><a class="headerlink" href="#phobos.operators.generic.AddAnnotationsOperator.annotationcategories" title="Permalink to this definition">¶</a></dt>
+<code class="descname">annotationcategories</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'Categories of this annotation type.', 'name': 'Categories', 'items': &lt;function AddAnnotationsOperator.getAnnotationCategories&gt;})</em><a class="headerlink" href="#phobos.operators.generic.AddAnnotationsOperator.annotationcategories" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.generic.AddAnnotationsOperator.annotationtype">
-<code class="descname">annotationtype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Annotation Type', 'items': &lt;function AddAnnotationsOperator.getAnnotationTypes&gt;, 'description': 'Annotation Types'})</em><a class="headerlink" href="#phobos.operators.generic.AddAnnotationsOperator.annotationtype" title="Permalink to this definition">¶</a></dt>
+<code class="descname">annotationtype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'Annotation Types', 'name': 'Annotation Type', 'items': &lt;function AddAnnotationsOperator.getAnnotationTypes&gt;})</em><a class="headerlink" href="#phobos.operators.generic.AddAnnotationsOperator.annotationtype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.generic.AddAnnotationsOperator.asObject">
-<code class="descname">asObject</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'description': 'Add annotation as object(s)', 'name': 'Add as objects', 'default': True})</em><a class="headerlink" href="#phobos.operators.generic.AddAnnotationsOperator.asObject" title="Permalink to this definition">¶</a></dt>
+<code class="descname">asObject</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': True, 'description': 'Add annotation as object(s)', 'name': 'Add as objects'})</em><a class="headerlink" href="#phobos.operators.generic.AddAnnotationsOperator.asObject" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -3527,7 +3527,7 @@ object.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.generic.AddAnnotationsOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.generic.AddAnnotationsOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.generic.AddAnnotationsOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -3556,7 +3556,7 @@ object.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.generic.AddAnnotationsOperator.devicetype">
-<code class="descname">devicetype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Device Type', 'items': &lt;function AddAnnotationsOperator.getDeviceTypes&gt;, 'description': 'Device Types'})</em><a class="headerlink" href="#phobos.operators.generic.AddAnnotationsOperator.devicetype" title="Permalink to this definition">¶</a></dt>
+<code class="descname">devicetype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'Device Types', 'name': 'Device Type', 'items': &lt;function AddAnnotationsOperator.getDeviceTypes&gt;})</em><a class="headerlink" href="#phobos.operators.generic.AddAnnotationsOperator.devicetype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3834,7 +3834,7 @@ The rest of the annotation dictionary remains untouched.</p>
 <p>Create a new instance of the selected robot lib entry</p>
 <dl class="attribute">
 <dt id="phobos.operators.io.CreateRobotInstance.bakeObj">
-<code class="descname">bakeObj</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Robot Lib Entries', 'items': &lt;function generateLibEntries&gt;, 'description': 'The robot lib entries'})</em><a class="headerlink" href="#phobos.operators.io.CreateRobotInstance.bakeObj" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bakeObj</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'The robot lib entries', 'name': 'Robot Lib Entries', 'items': &lt;function generateLibEntries&gt;})</em><a class="headerlink" href="#phobos.operators.io.CreateRobotInstance.bakeObj" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -3849,7 +3849,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.CreateRobotInstance.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.io.CreateRobotInstance.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.io.CreateRobotInstance.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -3887,7 +3887,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.CreateRobotInstance.robName">
-<code class="descname">robName</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Instance Name', 'description': &quot;The instance's name&quot;, 'default': 'instance'})</em><a class="headerlink" href="#phobos.operators.io.CreateRobotInstance.robName" title="Permalink to this definition">¶</a></dt>
+<code class="descname">robName</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'instance', 'description': &quot;The instance's name&quot;, 'name': 'Instance Name'})</em><a class="headerlink" href="#phobos.operators.io.CreateRobotInstance.robName" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -3923,17 +3923,17 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ExportAllPosesOperator.decimate_angle_limit">
-<code class="descname">decimate_angle_limit</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Angle Limit', 'default': 5})</em><a class="headerlink" href="#phobos.operators.io.ExportAllPosesOperator.decimate_angle_limit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">decimate_angle_limit</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 5, 'name': 'Angle Limit'})</em><a class="headerlink" href="#phobos.operators.io.ExportAllPosesOperator.decimate_angle_limit" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ExportAllPosesOperator.decimate_iteration">
-<code class="descname">decimate_iteration</code><em class="property"> = (&lt;built-in function IntProperty&gt;, {'name': 'Iterations', 'default': 1})</em><a class="headerlink" href="#phobos.operators.io.ExportAllPosesOperator.decimate_iteration" title="Permalink to this definition">¶</a></dt>
+<code class="descname">decimate_iteration</code><em class="property"> = (&lt;built-in function IntProperty&gt;, {'default': 1, 'name': 'Iterations'})</em><a class="headerlink" href="#phobos.operators.io.ExportAllPosesOperator.decimate_iteration" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ExportAllPosesOperator.decimate_ratio">
-<code class="descname">decimate_ratio</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Ratio', 'default': 0.15})</em><a class="headerlink" href="#phobos.operators.io.ExportAllPosesOperator.decimate_ratio" title="Permalink to this definition">¶</a></dt>
+<code class="descname">decimate_ratio</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.15, 'name': 'Ratio'})</em><a class="headerlink" href="#phobos.operators.io.ExportAllPosesOperator.decimate_ratio" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -4039,17 +4039,17 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ExportCurrentPoseOperator.decimate_angle_limit">
-<code class="descname">decimate_angle_limit</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Angle Limit', 'default': 5})</em><a class="headerlink" href="#phobos.operators.io.ExportCurrentPoseOperator.decimate_angle_limit" title="Permalink to this definition">¶</a></dt>
+<code class="descname">decimate_angle_limit</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 5, 'name': 'Angle Limit'})</em><a class="headerlink" href="#phobos.operators.io.ExportCurrentPoseOperator.decimate_angle_limit" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ExportCurrentPoseOperator.decimate_iteration">
-<code class="descname">decimate_iteration</code><em class="property"> = (&lt;built-in function IntProperty&gt;, {'name': 'Iterations', 'default': 1})</em><a class="headerlink" href="#phobos.operators.io.ExportCurrentPoseOperator.decimate_iteration" title="Permalink to this definition">¶</a></dt>
+<code class="descname">decimate_iteration</code><em class="property"> = (&lt;built-in function IntProperty&gt;, {'default': 1, 'name': 'Iterations'})</em><a class="headerlink" href="#phobos.operators.io.ExportCurrentPoseOperator.decimate_iteration" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ExportCurrentPoseOperator.decimate_ratio">
-<code class="descname">decimate_ratio</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'Ratio', 'default': 0.15})</em><a class="headerlink" href="#phobos.operators.io.ExportCurrentPoseOperator.decimate_ratio" title="Permalink to this definition">¶</a></dt>
+<code class="descname">decimate_ratio</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'default': 0.15, 'name': 'Ratio'})</em><a class="headerlink" href="#phobos.operators.io.ExportCurrentPoseOperator.decimate_ratio" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -4160,7 +4160,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ExportModelOperator.exportall">
-<code class="descname">exportall</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Export all', 'description': 'Export all (selected) models in the scene.', 'default': False})</em><a class="headerlink" href="#phobos.operators.io.ExportModelOperator.exportall" title="Permalink to this definition">¶</a></dt>
+<code class="descname">exportall</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Export all (selected) models in the scene.', 'name': 'Export all'})</em><a class="headerlink" href="#phobos.operators.io.ExportModelOperator.exportall" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4183,7 +4183,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ExportModelOperator.modelname">
-<code class="descname">modelname</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Model', 'items': &lt;function getModelListForEnumProp&gt;, 'description': 'Model to export'})</em><a class="headerlink" href="#phobos.operators.io.ExportModelOperator.modelname" title="Permalink to this definition">¶</a></dt>
+<code class="descname">modelname</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'Model to export', 'name': 'Model', 'items': &lt;function getModelListForEnumProp&gt;})</em><a class="headerlink" href="#phobos.operators.io.ExportModelOperator.modelname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -4210,7 +4210,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ExportSceneOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.io.ExportSceneOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.io.ExportSceneOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4279,7 +4279,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ImportLibRobot.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.io.ImportLibRobot.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.io.ImportLibRobot.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4353,7 +4353,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ImportModelOperator.entitytype">
-<code class="descname">entitytype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Entity type', 'items': (('sdf', 'sdf', &quot;file extensions: ('sdf', 'xml')&quot;), ('urdf', 'urdf', &quot;file extensions: ('urdf', 'xml')&quot;)), 'description': 'Type of entity to import from file'})</em><a class="headerlink" href="#phobos.operators.io.ImportModelOperator.entitytype" title="Permalink to this definition">¶</a></dt>
+<code class="descname">entitytype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'Type of entity to import from file', 'name': 'Entity type', 'items': (('urdf', 'urdf', &quot;file extensions: ('urdf', 'xml')&quot;), ('sdf', 'sdf', &quot;file extensions: ('sdf', 'xml')&quot;))})</em><a class="headerlink" href="#phobos.operators.io.ImportModelOperator.entitytype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4477,7 +4477,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.io.ImportSelectedLibRobot.obj_name">
-<code class="descname">obj_name</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'New Smurf Entity Name', 'description': 'Name of new Smurf Entity', 'default': 'New Robot'})</em><a class="headerlink" href="#phobos.operators.io.ImportSelectedLibRobot.obj_name" title="Permalink to this definition">¶</a></dt>
+<code class="descname">obj_name</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'New Robot', 'description': 'Name of new Smurf Entity', 'name': 'New Smurf Entity Name'})</em><a class="headerlink" href="#phobos.operators.io.ImportSelectedLibRobot.obj_name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -4584,7 +4584,7 @@ The rest of the annotation dictionary remains untouched.</p>
 <p>Replace part of the name of selected object(s)</p>
 <dl class="attribute">
 <dt id="phobos.operators.naming.BatchRename.add">
-<code class="descname">add</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Add/Embed:', 'description': &quot;Add any string by representing the old name with '*'.&quot;, 'default': '*'})</em><a class="headerlink" href="#phobos.operators.naming.BatchRename.add" title="Permalink to this definition">¶</a></dt>
+<code class="descname">add</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '*', 'description': &quot;Add any string by representing the old name with '*'.&quot;, 'name': 'Add/Embed:'})</em><a class="headerlink" href="#phobos.operators.naming.BatchRename.add" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -4599,7 +4599,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.BatchRename.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.naming.BatchRename.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.naming.BatchRename.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4618,12 +4618,12 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.BatchRename.find">
-<code class="descname">find</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Find:', 'description': 'A string to be replaced.', 'default': ''})</em><a class="headerlink" href="#phobos.operators.naming.BatchRename.find" title="Permalink to this definition">¶</a></dt>
+<code class="descname">find</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'A string to be replaced.', 'name': 'Find:'})</em><a class="headerlink" href="#phobos.operators.naming.BatchRename.find" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.BatchRename.include_properties">
-<code class="descname">include_properties</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Include Properties', 'description': &quot;Replace names stored in '*/name' properties?&quot;, 'default': False})</em><a class="headerlink" href="#phobos.operators.naming.BatchRename.include_properties" title="Permalink to this definition">¶</a></dt>
+<code class="descname">include_properties</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': &quot;Replace names stored in '*/name' properties?&quot;, 'name': 'Include Properties'})</em><a class="headerlink" href="#phobos.operators.naming.BatchRename.include_properties" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -4647,7 +4647,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.BatchRename.replace">
-<code class="descname">replace</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Replace:', 'description': &quot;A string to replace the 'Find' string.&quot;, 'default': ''})</em><a class="headerlink" href="#phobos.operators.naming.BatchRename.replace" title="Permalink to this definition">¶</a></dt>
+<code class="descname">replace</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': &quot;A string to replace the 'Find' string.&quot;, 'name': 'Replace:'})</em><a class="headerlink" href="#phobos.operators.naming.BatchRename.replace" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -4669,7 +4669,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.ChangeObjectName.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.naming.ChangeObjectName.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.naming.ChangeObjectName.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4720,12 +4720,12 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.ChangeObjectName.jointname">
-<code class="descname">jointname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'description': 'Name of the joint', 'name': 'Joint name', 'default': ''})</em><a class="headerlink" href="#phobos.operators.naming.ChangeObjectName.jointname" title="Permalink to this definition">¶</a></dt>
+<code class="descname">jointname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'Name of the joint', 'name': 'Joint name'})</em><a class="headerlink" href="#phobos.operators.naming.ChangeObjectName.jointname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.ChangeObjectName.newname">
-<code class="descname">newname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'description': 'New name of the object', 'name': 'New name', 'default': ''})</em><a class="headerlink" href="#phobos.operators.naming.ChangeObjectName.newname" title="Permalink to this definition">¶</a></dt>
+<code class="descname">newname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'New name of the object', 'name': 'New name'})</em><a class="headerlink" href="#phobos.operators.naming.ChangeObjectName.newname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -4766,7 +4766,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.FixObjectNames.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.naming.FixObjectNames.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.naming.FixObjectNames.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4821,7 +4821,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.NameModelOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.naming.NameModelOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.naming.NameModelOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4858,7 +4858,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.NameModelOperator.modelname">
-<code class="descname">modelname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Model Name', 'description': 'Name of the robot model to be assigned', 'default': ''})</em><a class="headerlink" href="#phobos.operators.naming.NameModelOperator.modelname" title="Permalink to this definition">¶</a></dt>
+<code class="descname">modelname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'Name of the robot model to be assigned', 'name': 'Model Name'})</em><a class="headerlink" href="#phobos.operators.naming.NameModelOperator.modelname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -4885,7 +4885,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.SetModelVersionOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.naming.SetModelVersionOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.naming.SetModelVersionOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -4909,12 +4909,12 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.SetModelVersionOperator.usegitbranch">
-<code class="descname">usegitbranch</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Use Git branch name', 'description': 'Insert Git branch name in place of *?', 'default': False})</em><a class="headerlink" href="#phobos.operators.naming.SetModelVersionOperator.usegitbranch" title="Permalink to this definition">¶</a></dt>
+<code class="descname">usegitbranch</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Insert Git branch name in place of *?', 'name': 'Use Git branch name'})</em><a class="headerlink" href="#phobos.operators.naming.SetModelVersionOperator.usegitbranch" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.SetModelVersionOperator.version">
-<code class="descname">version</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Version', 'description': 'Version of the model to be assigned', 'default': ''})</em><a class="headerlink" href="#phobos.operators.naming.SetModelVersionOperator.version" title="Permalink to this definition">¶</a></dt>
+<code class="descname">version</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'Version of the model to be assigned', 'name': 'Version'})</em><a class="headerlink" href="#phobos.operators.naming.SetModelVersionOperator.version" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -4936,12 +4936,12 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.ToggleNamespaces.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.naming.ToggleNamespaces.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.naming.ToggleNamespaces.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.naming.ToggleNamespaces.complete">
-<code class="descname">complete</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Convert Complete Robot', 'description': 'Convert the complete robot', 'default': False})</em><a class="headerlink" href="#phobos.operators.naming.ToggleNamespaces.complete" title="Permalink to this definition">¶</a></dt>
+<code class="descname">complete</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Convert the complete robot', 'name': 'Convert Complete Robot'})</em><a class="headerlink" href="#phobos.operators.naming.ToggleNamespaces.complete" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5093,7 +5093,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.poses.LoadPoseOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.poses.LoadPoseOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.poses.LoadPoseOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5117,12 +5117,12 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.poses.LoadPoseOperator.pose_name">
-<code class="descname">pose_name</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Pose Name', 'items': &lt;function get_pose_names&gt;, 'description': 'Name of pose to load'})</em><a class="headerlink" href="#phobos.operators.poses.LoadPoseOperator.pose_name" title="Permalink to this definition">¶</a></dt>
+<code class="descname">pose_name</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'Name of pose to load', 'name': 'Pose Name', 'items': &lt;function get_pose_names&gt;})</em><a class="headerlink" href="#phobos.operators.poses.LoadPoseOperator.pose_name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.poses.LoadPoseOperator.robot_name">
-<code class="descname">robot_name</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Robot Name', 'items': &lt;function get_robot_names&gt;, 'description': 'Robot to load a pose for'})</em><a class="headerlink" href="#phobos.operators.poses.LoadPoseOperator.robot_name" title="Permalink to this definition">¶</a></dt>
+<code class="descname">robot_name</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'Robot to load a pose for', 'name': 'Robot Name', 'items': &lt;function get_robot_names&gt;})</em><a class="headerlink" href="#phobos.operators.poses.LoadPoseOperator.robot_name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -5144,7 +5144,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.poses.StorePoseOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.poses.StorePoseOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.poses.StorePoseOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5168,12 +5168,12 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.poses.StorePoseOperator.pose_name">
-<code class="descname">pose_name</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Pose Name', 'description': 'Name of new pose', 'default': 'New Pose'})</em><a class="headerlink" href="#phobos.operators.poses.StorePoseOperator.pose_name" title="Permalink to this definition">¶</a></dt>
+<code class="descname">pose_name</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': 'New Pose', 'description': 'Name of new pose', 'name': 'Pose Name'})</em><a class="headerlink" href="#phobos.operators.poses.StorePoseOperator.pose_name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.operators.poses.StorePoseOperator.robot_name">
-<code class="descname">robot_name</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Robot', 'items': &lt;function get_robot_names&gt;, 'description': 'Robot to store pose for'})</em><a class="headerlink" href="#phobos.operators.poses.StorePoseOperator.robot_name" title="Permalink to this definition">¶</a></dt>
+<code class="descname">robot_name</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'description': 'Robot to store pose for', 'name': 'Robot', 'items': &lt;function get_robot_names&gt;})</em><a class="headerlink" href="#phobos.operators.poses.StorePoseOperator.robot_name" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -5253,7 +5253,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.selection.GotoObjectOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'INTERNAL'}</em><a class="headerlink" href="#phobos.operators.selection.GotoObjectOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'INTERNAL', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.selection.GotoObjectOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5272,7 +5272,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.selection.GotoObjectOperator.objectname">
-<code class="descname">objectname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Object Name', 'description': 'The name of the object to jump to', 'default': ''})</em><a class="headerlink" href="#phobos.operators.selection.GotoObjectOperator.objectname" title="Permalink to this definition">¶</a></dt>
+<code class="descname">objectname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'The name of the object to jump to', 'name': 'Object Name'})</em><a class="headerlink" href="#phobos.operators.selection.GotoObjectOperator.objectname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -5313,7 +5313,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.selection.SelectModelOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.selection.SelectModelOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.selection.SelectModelOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5332,7 +5332,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.selection.SelectModelOperator.modelname">
-<code class="descname">modelname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Model Name', 'description': 'Name of the model to be selected', 'default': ''})</em><a class="headerlink" href="#phobos.operators.selection.SelectModelOperator.modelname" title="Permalink to this definition">¶</a></dt>
+<code class="descname">modelname</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'Name of the model to be selected', 'name': 'Model Name'})</em><a class="headerlink" href="#phobos.operators.selection.SelectModelOperator.modelname" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -5359,7 +5359,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.selection.SelectObjectsByName.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.selection.SelectObjectsByName.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.selection.SelectObjectsByName.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5378,7 +5378,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.selection.SelectObjectsByName.namefragment">
-<code class="descname">namefragment</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Name Contains', 'description': 'Part of a Phobos object name', 'default': ''})</em><a class="headerlink" href="#phobos.operators.selection.SelectObjectsByName.namefragment" title="Permalink to this definition">¶</a></dt>
+<code class="descname">namefragment</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'Part of a Phobos object name', 'name': 'Name Contains'})</em><a class="headerlink" href="#phobos.operators.selection.SelectObjectsByName.namefragment" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -5405,7 +5405,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.selection.SelectObjectsByPhobosType.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.selection.SelectObjectsByPhobosType.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.selection.SelectObjectsByPhobosType.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -5461,7 +5461,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.selection.SelectObjectsByPhobosType.seltype">
-<code class="descname">seltype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Phobostype', 'items': (('undefined', 'undefined', 'undefined'), ('link', 'link', 'link'), ('inertial', 'inertial', 'inertial'), ('visual', 'visual', 'visual'), ('collision', 'collision', 'collision'), ('sensor', 'sensor', 'sensor'), ('motor', 'motor', 'motor'), ('controller', 'controller', 'controller'), ('approxsphere', 'approxsphere', 'approxsphere'), ('light', 'light', 'light'), ('entity', 'entity', 'entity'), ('frame', 'frame', 'frame'), ('interface', 'interface', 'interface'), ('submodel', 'submodel', 'submodel'), ('annotation', 'annotation', 'annotation')), 'description': 'Phobos object type', 'default': 'link'})</em><a class="headerlink" href="#phobos.operators.selection.SelectObjectsByPhobosType.seltype" title="Permalink to this definition">¶</a></dt>
+<code class="descname">seltype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'default': 'link', 'description': 'Phobos object type', 'name': 'Phobostype', 'items': (('undefined', 'undefined', 'undefined'), ('link', 'link', 'link'), ('inertial', 'inertial', 'inertial'), ('visual', 'visual', 'visual'), ('collision', 'collision', 'collision'), ('sensor', 'sensor', 'sensor'), ('motor', 'motor', 'motor'), ('controller', 'controller', 'controller'), ('approxsphere', 'approxsphere', 'approxsphere'), ('light', 'light', 'light'), ('entity', 'entity', 'entity'), ('frame', 'frame', 'frame'), ('interface', 'interface', 'interface'), ('submodel', 'submodel', 'submodel'), ('annotation', 'annotation', 'annotation'))})</em><a class="headerlink" href="#phobos.operators.selection.SelectObjectsByPhobosType.seltype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -5483,7 +5483,7 @@ The rest of the annotation dictionary remains untouched.</p>
 
 <dl class="attribute">
 <dt id="phobos.operators.selection.SelectRootOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.operators.selection.SelectRootOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.operators.selection.SelectRootOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">

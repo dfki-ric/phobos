@@ -105,7 +105,7 @@ currently loaded. If there are none, returns (‘-‘, ‘-‘, ‘-‘).</p>
 
 <dl class="attribute">
 <dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_options">
-<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<code class="descname">bl_options</code><em class="property"> = {'UNDO', 'REGISTER'}</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_options" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -152,7 +152,7 @@ currently loaded. If there are none, returns (‘-‘, ‘-‘, ‘-‘).</p>
 
 <dl class="attribute">
 <dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.namespace">
-<code class="descname">namespace</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Namespace', 'description': 'Namespace with which to wrap the imported model.', 'default': ''})</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.namespace" title="Permalink to this definition">¶</a></dt>
+<code class="descname">namespace</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'default': '', 'description': 'Namespace with which to wrap the imported model.', 'name': 'Namespace'})</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.namespace" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -162,7 +162,7 @@ currently loaded. If there are none, returns (‘-‘, ‘-‘, ‘-‘).</p>
 
 <dl class="attribute">
 <dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.use_prefix">
-<code class="descname">use_prefix</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Use Prefix', 'description': 'Import model with fixed prefixed instead of removable namespace.', 'default': False})</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.use_prefix" title="Permalink to this definition">¶</a></dt>
+<code class="descname">use_prefix</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'description': 'Import model with fixed prefixed instead of removable namespace.', 'name': 'Use Prefix'})</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.use_prefix" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -262,21 +262,7 @@ If there are no model categories (i.e. ‘-‘) return (‘-‘, ‘-‘, ‘-�
 </div>
 <div class="section" id="module-phobos.io.libraries">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phobos.io.libraries" title="Permalink to this headline">¶</a></h2>
-<dl class="docutils">
-<dt>..module:: phobos.io.libraries</dt>
-<dd><table class="first last docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">platform:</th><td class="field-body">Unix, Windows, Mac</td>
-</tr>
-<tr class="field-even field"><th class="field-name">synopsis:</th><td class="field-body">TODO: INSERT TEXT HERE</td>
-</tr>
-</tbody>
-</table>
-</dd>
-</dl>
-<p>..moduleauthor:: Kai von Szadowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Sebastian Klemp, Simon Reichel</p>
+<p>Registers the <code class="xref py py-mod docutils literal notranslate"><span class="pre">models</span></code> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">mechanisms</span></code> submodules to Blender.</p>
 <dl class="function">
 <dt id="phobos.io.libraries.register">
 <code class="descclassname">phobos.io.libraries.</code><code class="descname">register</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.register" title="Permalink to this definition">¶</a></dt>
