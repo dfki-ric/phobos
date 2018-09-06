@@ -19,14 +19,6 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 # -------------------------------------------------------------------------------
 
-"""
-.. module:: phobos.io.libraries.models.py
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains operators import/export
-
-.. moduleauthor:: Kai von Szadowski, Simon Reichel
-"""
-
 import os
 import bpy
 import bpy.utils.previews
