@@ -770,38 +770,17 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
     bl_region_type = "WINDOW"
     bl_context = "object"
 
-    def addProp(self, props, values, layout, params):
+    def addProp(self, props, values, layout, guiparams):
         """Add a property/list of properties to the specified layout category.
-        
-        Args:
-            props (list/str): property or list of property names to add
-            values: list of or single float, str etc which corresponds to the property name
-            layout (list): sublayout description as defined in :func:draw
-        
-        Args:
-          for: the label
-          props:
-          values:
-          layout:
-        
-        Args:
-          props:
-          values:
-          layout:
-        
-        Args:
-          props:
-          values:
-          layout:
 
         Args:
-          props: 
-          values: 
-          layout: 
-          params: 
+          props(list/str): property or list of property names to add
+          values(list): list of or single float, str etc which corresponds to the property name
+          layout(list): sublayout description as defined in :func:draw
+          guiparams: 
 
         Returns:
-          
+          None: None
 
         """
         # get the existing layout columns
@@ -817,7 +796,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
             column = right
 
         # add all properties in sequence
-        for _, (prop, value, param) in enumerate(zip(props, values, params)):
+        for _, (prop, value, param) in enumerate(zip(props, values, guiparams)):
 
             # objects are shown as goto operator
             if isinstance(value, bpy.types.Object):
@@ -841,30 +820,17 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
             else:
                 content.label(text=str(value), **param['infoparams'])
 
-    def addObjLink(self, prop, value, column, params):
-        """Args:
-          prop:
-          value:
-          column:
-        
-        Args:
-          prop:
-          value:
-          column:
-        
-        Args:
-          prop:
-          value:
-          column:
+    def addObjLink(self, prop, value, column, guiparams):
+        """Add an object link, which is a clickable goto button in the GUI.
 
         Args:
           prop: 
           value: 
           column: 
-          params: 
+          guiparams(dict): parameters for the GUI of Blender
 
         Returns:
-          
+          None: None
 
         """
         # this list is used to force labelling of special keywords
@@ -876,7 +842,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         goto_op = column.operator(
             'phobos.goto_object',
             text=(label + [': ' if label else ''][0] + '{0}'.format(value.name)),
-            **params['infoparams'],
+            **guiparams['infoparams'],
             icon='FILE_PARENT'
         )
         goto_op.objectname = value.name
@@ -948,18 +914,18 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         # remove the unimportant properties and iterate over the rest
         proplist = set(proplist) - ignoredProps
         for prop in sorted(proplist):
-            params = self.checkParams(prop)
+            guiparams = self.checkParams(prop)
             value = dictprops[prop]
 
             # just a value for the general category
             if not isinstance(value, dict):
                 # show properties as customproperties
-                params['object'] = obj
+                guiparams['object'] = obj
                 if prop in obj:
-                    params['customprop'] = prop
+                    guiparams['customprop'] = prop
                 elif obj.phobostype + '/' + prop in obj:
-                    params['customprop'] = obj.phobostype + '/' + prop
-                self.addProp([prop], [value], categories['general'], [params])
+                    guiparams['customprop'] = obj.phobostype + '/' + prop
+                self.addProp([prop], [value], categories['general'], [guiparams])
                 continue
 
             # check for categories
@@ -989,7 +955,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
             # add each subproperty to the layout
             for prop_t2 in sorted(dictprops[category]):
-                params = self.checkParams(category + '/' + prop_t2)
+                guiparams = self.checkParams(category + '/' + prop_t2)
 
                 value = dictprops[category][prop_t2]
 
@@ -999,7 +965,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
                 # is it another dictionary with values?
                 elif isinstance(value, dict):
-                    # gather keys, parameters etc as lists
+                    # gather keys, guiparams etc as lists
                     props = value.keys()
                     values = [value[key] for key in props]
                     paramkeys = [category + '/' + prop_t2 + '/' + propkey for propkey in props]
@@ -1010,7 +976,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                     self.addProp(props, values, categories[category], paramlist)
                 # just another value
                 else:
-                    self.addProp([prop_t2], [value], categories[category], [params])
+                    self.addProp([prop_t2], [value], categories[category], [guiparams])
 
 
 class PhobosModelPanel(bpy.types.Panel):
@@ -1255,7 +1221,7 @@ class PhobosExportPanel(bpy.types.Panel):
             typename = "export_scene_" + scenetype
             cscene.prop(bpy.context.scene, typename)
 
-        # additional obj parameters
+        # additional obj guiparams
         if getattr(bpy.context.scene, 'export_mesh_obj', False):
             layout.separator()
             box = layout.box()

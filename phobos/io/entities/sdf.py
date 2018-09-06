@@ -116,23 +116,14 @@ class xmlTagger(object):
         else:
             IndentationError()
 
-    def descend(self, tag, params=None):
+    def descend(self, tag, attribs=None):
         """Move down one hierarchical layer using the new tag.
         Optional in-line attributes can be provided in the
-        dictionary params (e.g. {'name': 'foo'}.
-        
-        Args:
-          tag(str): The tag used to create the new element.
-        
-        Args:
-          tag:
-        
-        Args:
-          tag:
+        dictionary attribs (e.g. {'name': 'foo'}.
 
         Args:
-          tag: 
-          params:  (Default value = None)
+          tag(str): tag to descend with
+          attribs: (Default value = None)
 
         Returns:
           None: None
@@ -142,8 +133,8 @@ class xmlTagger(object):
         line = ""
 
         # create parameter strings by unpacking dictionary
-        if params:
-            parameters = [key + '="' + str(params[key]) + '" ' for key in params.keys()]
+        if attribs:
+            parameters = [key + '="' + str(attribs[key]) + '" ' for key in attribs.keys()]
             # remove trailing whitespace
             parameters[-1] = parameters[-1][:-1]
         else:
@@ -548,7 +539,7 @@ def exportSDFVisual(visualobj, linkobj, visualdata, indentation, modelname):
 
     """
     tagger = xmlTagger(initial=indentation)
-    tagger.descend('visual', params={'name': visualdata['name']})
+    tagger.descend('visual', attribs={'name': visualdata['name']})
     # OPT: tagger.attrib('cast_shadows', ...)
     # OPT: tagger.attrib('laser_retro', ...)
     # OPT: tagger.attrib('transparency', ...)
@@ -1215,7 +1206,7 @@ def exportSDF(model, filepath):
         xml.write(xmlHeader)
         xml.descend('sdf', {"version": sdfversion})
 
-        # xml.descend('world', params={'name': 'default'})
+        # xml.descend('world', attribs={'name': 'default'})
         # xml.descend('include')
         # xml.attrib('uri', 'model://ground_plane')
         # xml.ascend()
@@ -1224,7 +1215,7 @@ def exportSDF(model, filepath):
         # xml.ascend()
         # model layer
         modelname = model['name']
-        xml.descend('model', params={"name": modelname})
+        xml.descend('model', attribs={"name": modelname})
 
         # OPT: static model
         # xml.attrib('static', ...)
@@ -1246,7 +1237,7 @@ def exportSDF(model, filepath):
 
         # nested model element
         # TODO add wrapper for xml model?
-        # OPT: xml.descend('model', params={'name': ...})
+        # OPT: xml.descend('model', attribs={'name': ...})
         # xml.ascend()
 
         # enables wind influence on all links in the model (overriden by link
@@ -1286,7 +1277,7 @@ def exportSDF(model, filepath):
         log("Joints exported.", 'DEBUG')
 
         # plugin
-        # OPT: xml.descend('plugin', params={'name': ..., 'filename': ...)
+        # OPT: xml.descend('plugin', attribs={'name': ..., 'filename': ...)
         # xml.ascend()
 
         # gripper
