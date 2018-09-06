@@ -5,7 +5,7 @@ Submodules
 ----------
 
 phobos.operators.editing module
--------------------------------
+```````````````````````````````
 
 .. automodule:: phobos.operators.editing
     :members:
@@ -13,7 +13,7 @@ phobos.operators.editing module
     :show-inheritance:
 
 phobos.operators.generic module
--------------------------------
+```````````````````````````````
 
 .. automodule:: phobos.operators.generic
     :members:
@@ -21,7 +21,7 @@ phobos.operators.generic module
     :show-inheritance:
 
 phobos.operators.io module
---------------------------
+``````````````````````````
 
 .. automodule:: phobos.operators.io
     :members:
@@ -29,7 +29,7 @@ phobos.operators.io module
     :show-inheritance:
 
 phobos.operators.naming module
-------------------------------
+``````````````````````````````
 
 .. automodule:: phobos.operators.naming
     :members:
@@ -37,7 +37,7 @@ phobos.operators.naming module
     :show-inheritance:
 
 phobos.operators.poses module
------------------------------
+`````````````````````````````
 
 .. automodule:: phobos.operators.poses
     :members:
@@ -45,7 +45,7 @@ phobos.operators.poses module
     :show-inheritance:
 
 phobos.operators.selection module
----------------------------------
+`````````````````````````````````
 
 .. automodule:: phobos.operators.selection
     :members:

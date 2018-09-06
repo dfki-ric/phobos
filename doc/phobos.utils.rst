@@ -5,7 +5,7 @@ Submodules
 ----------
 
 phobos.utils.blender module
----------------------------
+```````````````````````````
 
 .. automodule:: phobos.utils.blender
     :members:
@@ -13,7 +13,7 @@ phobos.utils.blender module
     :show-inheritance:
 
 phobos.utils.editing module
----------------------------
+```````````````````````````
 
 .. automodule:: phobos.utils.editing
     :members:
@@ -21,7 +21,7 @@ phobos.utils.editing module
     :show-inheritance:
 
 phobos.utils.general module
----------------------------
+```````````````````````````
 
 .. automodule:: phobos.utils.general
     :members:
@@ -29,7 +29,7 @@ phobos.utils.general module
     :show-inheritance:
 
 phobos.utils.git module
------------------------
+```````````````````````
 
 .. automodule:: phobos.utils.git
     :members:
@@ -37,7 +37,7 @@ phobos.utils.git module
     :show-inheritance:
 
 phobos.utils.io module
-----------------------
+``````````````````````
 
 .. automodule:: phobos.utils.io
     :members:
@@ -45,7 +45,7 @@ phobos.utils.io module
     :show-inheritance:
 
 phobos.utils.naming module
---------------------------
+``````````````````````````
 
 .. automodule:: phobos.utils.naming
     :members:
@@ -53,7 +53,7 @@ phobos.utils.naming module
     :show-inheritance:
 
 phobos.utils.selection module
------------------------------
+`````````````````````````````
 
 .. automodule:: phobos.utils.selection
     :members:
@@ -61,7 +61,7 @@ phobos.utils.selection module
     :show-inheritance:
 
 phobos.utils.validation module
-------------------------------
+``````````````````````````````
 
 .. automodule:: phobos.utils.validation
     :members:
