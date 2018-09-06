@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-..module:: phobos.io.meshes
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-..moduleauthor:: Kai von Szadowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Sebastian Klemp, Simon Reichel
+Parses the mesh entities when imported and provides them as :data:`mesh_types`.
 """
 
 import os

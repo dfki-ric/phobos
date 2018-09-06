@@ -20,11 +20,9 @@
 # -------------------------------------------------------------------------------
 
 """
-..module:: phobos
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
+Handles different import attempts to cope with Blender's *Reload script* functionality.
 
-..moduleauthor:: Kai von Szadowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Sebastian Klemp, Simon Reichel
+Contains also some adjustments to make YAML imports deal with booleans appropriately.
 """
 
 import sys

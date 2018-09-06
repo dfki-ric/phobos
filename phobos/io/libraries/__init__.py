@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-..module:: phobos.io.libraries
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-..moduleauthor:: Kai von Szadowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Sebastian Klemp, Simon Reichel
+Registers the :mod:`models` and :mod:`mechanisms` submodules to Blender.
 """
 
 from . import models, mechanisms

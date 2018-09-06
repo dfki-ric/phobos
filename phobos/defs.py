@@ -20,11 +20,8 @@
 # -------------------------------------------------------------------------------
 
 """
-..module:: phobos.defs
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-..moduleauthor:: Kai von Szadowski
+Contains different definitions for Phobos. Additional defintions are parsed from YAML files and
+added to this module at runtime.
 """
 
 import os

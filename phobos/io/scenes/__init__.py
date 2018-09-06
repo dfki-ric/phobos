@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-..module:: phobos.io.scenes
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-..moduleauthor:: Kai von Szadowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Sebastian Klemp, Simon Reichel
+Parses the scene entities at import and provides them as :data:`scene_types`.
 """
 
 import os

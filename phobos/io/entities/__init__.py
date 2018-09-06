@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-..module:: phobos.io.entities
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-..moduleauthor:: Kai von Szadowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Sebastian Klemp, Simon Reichel
+Parses the model entities on import and provides them as :data:`entity_types`.
 """
 
 import os
