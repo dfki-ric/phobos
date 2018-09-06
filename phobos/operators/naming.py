@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.operators.naming
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains operators for naming objects
-
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert
+Contains all Blender operators for naming of models/objects/properties.
 """
 
 import sys

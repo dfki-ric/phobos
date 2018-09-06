@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.io.libraries.models.py
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains operators import/export
-
-.. moduleauthor:: Kai von Szadowski, Simon Reichel
+Contains the functions for the mechanism entity.
 """
 
 import os

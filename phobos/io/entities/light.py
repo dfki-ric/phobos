@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.export.light
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-.. moduleauthor:: Kai von Szadkowski
+Contains the functions for the light entity.
 """
 
 import phobos.model.models as models

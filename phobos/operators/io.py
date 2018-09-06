@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.operators.io
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains operators import/export
-
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert
+Contains all Blender operators for import and export of models/files.
 """
 
 import os

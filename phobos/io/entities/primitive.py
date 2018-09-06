@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.export.primitive
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-.. moduleauthor:: Kai von Szadkowski
+Contains the functions of the primitive entity.
 """
 
 import phobos.model.models as models

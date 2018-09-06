@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.exporter
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-.. moduleauthor:: Kai von Szadowski
+Contains all functions to model links within Blender.
 """
 
 import bpy
@@ -179,13 +175,13 @@ def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False,
 def setLinkTransformations(model, parent):
     """Assigns the transformations recursively for a model parent link according to the model.
     
-    This needs access to the *object* key of a link entry in the specified model.
+    This needs access to the **object** key of a link entry in the specified model.
     The transformations for each link object are extracted from the specified model and applied to
     the Blender object.
 
     Args:
       parent(dict): parent link you want to set the children for.
-      model(dict): model dictionary containing the *object* key for each link
+      model(dict): model dictionary containing the **object** key for each link
 
     Returns:
 

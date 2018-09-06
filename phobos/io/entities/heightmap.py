@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.export.heightmap
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-.. moduleauthor:: Ole Schwiegert
+Contains the functions of the heightmap entity.
 """
 
 import os

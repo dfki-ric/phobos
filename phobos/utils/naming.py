@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.utils.naming
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains functions to name objects
-
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert
+Contains the utility functions to rename objects, add/remove namespaces etc.
 """
 
 import bpy
@@ -57,25 +53,23 @@ def safelyName(obj, name, phobostype=None):
     """Assigns a name to an object in a safe way with regard to the internal
      name handling in Blender.
     
-     If no phobostype is provided or the phobostype is the same as the object
-     itself, the actual object is renamed, generating a name that no other
-     object in Blender has, using Blender's own naming scheme. This prevents
-     Blender to assign the name and change another object's name that
+     If no ``phobostype`` is provided or the phobostype is the same as the object itself, the actual
+     object is renamed, generating a name that no other object in Blender has, using Blender's own
+     naming scheme. This prevents Blender to assign the name and change another object's name that
      previously held that name.
     
-     If the *name* provided cannot be assigned to the object, it is stored in a
-     custom variable '*phobostype*/name' Note that other '*/name' variables in
+     If the ``name`` provided cannot be assigned to the object, it is stored in a
+     custom variable ``phobostype/name``. Note that other ``*/name`` variables in
      the object are not updated.
 
     Args:
       obj(bpy.types.Object): object to rename
       name(str): new name for the object
-      phobostype(str, optional): only rename if the specified phobostype is
-    matched (Default value = None)
+      phobostype(str, optional): only rename if the specified phobostype is matched (Default value =
+        None)
 
     Returns:
       str: new name of the Blender object
-
     """
     from phobos.phoboslog import log
 

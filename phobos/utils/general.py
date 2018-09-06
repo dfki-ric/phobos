@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.utils.general
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains general functions to use in operators and custom scripts
-
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert
+Contains the basic utility functions to round numbers, convert types etc.
 """
 
 import re

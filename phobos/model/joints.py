@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.exporter
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-.. moduleauthor:: Kai von Szadowski, Simon Reichel
+Contains the functions required to model a joint within Blender.
 """
 
 import bpy
@@ -39,35 +35,39 @@ from phobos.utils.validation import validate
 
 def createJoint(joint, linkobj=None, links=None):
     """Adds joint data to a link object.
-    
-    If the linkobj is not specified, it is derived from the *child* entry in the joint (object is
+
+    If the linkobj is not specified, it is derived from the **child** entry in the joint (object is
     searched in the current scene). This only works if the search for the child yields a single
     object. Alternatively, it is possible to provide the model dictionary of links. In this case,
-    the link object is searched in the dictionary (make sure the *object* keys of the dictionary are
-    set properly).
-    
+    the link object is searched in the dictionary (make sure the **object** keys of the dictionary
+    are set properly).
+
     These entries are mandatory for the dictionary:
-        *name*: name of the joint
-    
+
+    |   **name**: name of the joint
+
     These entries are optional:
-        *axis*: tuple which specifies the axis of the editbone
-        *limits*: limits of the joint movement
-            *lower*: lower limit (defaults to 0.)
-            *upper*: upper limit (defaults to 0.)
-            *effort*: maximum effort for the joint
-            *velocity*: maximum velocity for the joint
-    
-    Furthermore any generic properties, prepended by a `$` will be added as custom properties to the
-    joint. E.g. $test/etc would be put to joint/test/etc. However, these properties are extracted
-    only in the first layer of hierarchy.
+
+    |   **axis**: tuple which specifies the axis of the editbone
+    |   **limits**: limits of the joint movement
+    |       **lower**: lower limit (defaults to 0.)
+    |       **upper**: upper limit (defaults to 0.)
+    |       **effort**: maximum effort for the joint
+    |       **velocity**: maximum velocity for the joint
+
+    Furthermore any generic properties, prepended by a ``$`` will be added as custom properties to
+    the joint. E.g. ``$test/etc`` would be put to joint/test/etc. However, these properties are
+    extracted only in the first layer of hierarchy.
 
     Args:
       joint(dict): dictionary containing the joint definition
-      linkobj(bpy.types.Object, optional): the link object to receive the joint (Default value = None)
-      links(dict, optional): dictionary containing the list objects with their *object* keys set (Default value = None)
+      linkobj(bpy.types.Object, optional): the link object to receive the joint (Default value =
+        None)
+      links(dict, optional): dictionary containing the list objects with their *object* keys set
+        (Default value = None)
 
     Returns:
-
+        None
     """
     # try deriving link object from joint['child']
     if not linkobj:

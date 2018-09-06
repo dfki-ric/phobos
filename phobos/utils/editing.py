@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.utils.general
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains general functions to use in operators and custom scripts
-
-.. moduleauthor:: Kai von Szadowski
+Contains the utility functions for editing objects and Phobos models.
 """
 
 import bpy
@@ -77,30 +73,34 @@ def getCombinedTransform(obj, effectiveparent):
 
 
 def restructureKinematicTree(link, root=None):
-    """Restructures a tree such that the *link* provided becomes the root of the tree. For
-    instance, the following tree:
-             A
-           /  \
-          B    C
-         / \    \
-        D   E    F
-    would, using the call restructureKinematicsTree(C), become:
+    """Restructures a tree such that the ``link`` provided becomes the root of the tree. For
+    instance, the following tree::
+
+           A
+          / \\
+         B   C
+        / \   \\
+       D   E   F
+
+    would, using the call restructureKinematicsTree(C), become::
+
             C
-          /  \
-         A    F
-        /
-       B
-      / \
-     D   E
-     Currently, this function ignores all options such as unselected or hidden objects.
+           / \\
+          A   F
+         /
+        B
+       / \\
+      D   E
+
+    Currently, this function ignores all options such as unselected or hidden objects.
 
     Args:
-      link: the link which will become the new root object
-      root: the current root object
-    (otherwise, phobos.utils.selection.getRoot will be used) (Default value = None)
+      link(bpy.types.Object): the link which will become the new root object
+      root(bpy.types.Object): the current root object (otherwise,
+        :func:`phobos.utils.selection.getRoot` will be used) (Default value = None)
 
     Returns:
-
+      None
     """
     if not root:
         root = sUtils.getRoot(link)
@@ -407,23 +407,22 @@ def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
 
 def createInterface(ifdict, parent=None):
     """Create an interface object and optionally parent to existing object.
-    
+
     ifdict is expected as:
-    ifdict = {'type': str,
-              'direction': str,
-              'model': str,
-              'name': str,
-              'parent': bpy.types.Object (optional),
-              'scale': float (optional)
-              }
+
+    | **type**: str
+    | **direction**: str
+    | **model**: str
+    | **name**: str
+    | **parent**: bpy.types.Object (optional)
+    | **scale**: float (optional)
 
     Args:
       ifdict(dict): interface data
       parent(bpy.types.Object, optional): designated parent object
-    Returns(bpy.data.Object): newly created interface object (Default value = None)
 
     Returns:
-
+      bpy.data.Object : newly created interface object
     """
     if not parent:
         try:
@@ -686,12 +685,12 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
     """Add a new annotation object with the specified annotations to the object.
     
     The annotation object will receive 'annotation_object' as its default name, unless a name is
-    provided. Naming is done using :function:`phobos.utils.naming.safelyName`.
+    provided. Naming is done using :func:`phobos.utils.naming.safelyName`.
     
-    The annotation object will be scaled according to the `size` parameter.
+    The annotation object will be scaled according to the **size** parameter.
     
-    If `namespace` is provided, the annotations will be saved with this string prepended.
-    This is done using :function:`addAnnotation`.
+    If ``namespace`` is provided, the annotations will be saved with this string prepended.
+    This is done using :func:`addAnnotation`.
 
     Args:
       obj(bpy.types.Object): object to add annotation object to

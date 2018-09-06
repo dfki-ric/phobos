@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.utils.export
-    :platform: Unix, Windows, Mac
-    :synopsis: TODO: INSERT TEXT HERE
-
-.. moduleauthor:: Kai von Szadkowski, Malte Langosz
+Contains the functions for the mesh entity.
 """
 
 import os

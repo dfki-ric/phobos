@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.operators.editing
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains operators to manipulate blender objects
-
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert, Simon Reichel
+Contains all Blender operators for editing of Phobos models.
 """
 
 import math

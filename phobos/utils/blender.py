@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.utils.blender
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains functions o manipulate blender objects and interact with blender functionalities
-
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert
+Contains all utility functions that are connected to Blender functionality first.
 """
 
 import os

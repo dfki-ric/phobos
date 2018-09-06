@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.utils.selection
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains functions to find and select objects
-
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert, Simon Reichel
+Contains the utility functions for selecting objects in Blender based on different criteria.
 """
 
 import bpy

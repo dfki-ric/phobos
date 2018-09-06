@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.operators.selection
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains operators for selecting and finding objects.
-
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert, Simon Reichel
+Contains all Blender operators used to select objects by different criteria.
 """
 
 import sys

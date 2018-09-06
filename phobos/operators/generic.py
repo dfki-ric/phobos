@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.operators.editing
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains operators to manipulate blender objects
-
-.. moduleauthor:: Simon V. Reichel
+Contains the generic Blender operators for adding yaml parsed objects and similar.
 """
 
 import bpy

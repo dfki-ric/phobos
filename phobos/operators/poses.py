@@ -20,11 +20,7 @@
 # -------------------------------------------------------------------------------
 
 """
-.. module:: phobos.operators.misc
-    :platform: Unix, Windows, Mac
-    :synopsis: This module contains operators general purposes.
-
-.. moduleauthor:: Kai von Szadowski, Ole Schwiegert
+Contains the Blender operators used to edit/add poses for Phobos models.
 """
 
 import sys
