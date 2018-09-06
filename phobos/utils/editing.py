@@ -47,69 +47,23 @@ def dissolveLink(obj):
     bpy.context.scene.layers = [True for i in range(20)]
 
     if not obj.phobostype == 'link':
+        log('Selected object {} is not a link!'.format(obj.name), 'ERROR')
         return
 
     else:
-        print('Starting \n')
         # Get all children
         children = sUtils.getImmediateChildren(obj , include_hidden=True)
         # Get the parent
         parent = obj.parent
-        print(parent)
-        print(children)
-        # Reparent
-        parentObjectsTo(children, parent, clear=True)
-        # Delete the objects
-        sUtils.selectObjects([obj], clear=True, active=-1)
-        bpy.ops.object.delete()
-
+        # If parent is not None ( Root )
+        if obj.parent:
+            # Reparent
+            parentObjectsTo(children, parent, clear=True)
+            # Delete the objects
+            sUtils.selectObjects([obj], clear=True, active=-1)
+            bpy.ops.object.delete()
     # Restore original layers
     bpy.context.scene.layers = originallayers
-
-
-def getLeaves(roots, objects = []):
-    """Returns the links representating the leaves of the spanning tree starting with an object
-    inside the model spanning tree.
-
-    Args:
-     root(list of bpy.types.Object) : Root objects from where to start the search from
-     objects(list) : List of objects to which the search is restricted.
-
-    Returns:
-     list : List of the leaves of the kinematic spanning tree.
-    """
-    leaves = []
-
-    if isinstance(roots, list):
-        for root in roots:
-            leaves += getLeaves(root, objects = objects)
-
-    else:
-        if roots.phobostype != 'link':
-            roots = sUtils.getEffectiveParent(roots, objectlist = objects)
-        print('Root : {0} \n'.format(roots))
-        candidates = sUtils.getImmediateChildren(roots, phobostypes=('link'))
-        print('Candidates : {0} \n'.format(candidates))
-        if objects and candidates:
-            candidates = [candidate for candidate in candidates if candidate in objects]
-        print('Candidates : {0} \n\n'.format(candidates))
-
-        if candidates:
-            leaves += getLeaves(candidates, objects = objects)
-        else:
-            leaves.append(roots)
-
-    if objects:
-        leaves = [leave for leave in leaves if leave in objects]
-
-    # Remove possible doubles
-    outputs = []
-
-    for leave in leaves:
-        if leave not in outputs:
-            outputs.append(leave)
-
-    return outputs
 
 
 def getCombinedTransform(obj, effectiveparent):
