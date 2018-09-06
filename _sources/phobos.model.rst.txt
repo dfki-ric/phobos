@@ -5,7 +5,7 @@ Submodules
 ----------
 
 phobos.model.controllers module
--------------------------------
+```````````````````````````````
 
 .. automodule:: phobos.model.controllers
     :members:
@@ -13,7 +13,7 @@ phobos.model.controllers module
     :show-inheritance:
 
 phobos.model.geometries module
-------------------------------
+``````````````````````````````
 
 .. automodule:: phobos.model.geometries
     :members:
@@ -21,7 +21,7 @@ phobos.model.geometries module
     :show-inheritance:
 
 phobos.model.inertia module
----------------------------
+```````````````````````````
 
 .. automodule:: phobos.model.inertia
     :members:
@@ -29,7 +29,7 @@ phobos.model.inertia module
     :show-inheritance:
 
 phobos.model.joints module
---------------------------
+``````````````````````````
 
 .. automodule:: phobos.model.joints
     :members:
@@ -37,7 +37,7 @@ phobos.model.joints module
     :show-inheritance:
 
 phobos.model.lights module
---------------------------
+``````````````````````````
 
 .. automodule:: phobos.model.lights
     :members:
@@ -45,7 +45,7 @@ phobos.model.lights module
     :show-inheritance:
 
 phobos.model.links module
--------------------------
+`````````````````````````
 
 .. automodule:: phobos.model.links
     :members:
@@ -53,7 +53,7 @@ phobos.model.links module
     :show-inheritance:
 
 phobos.model.materials module
------------------------------
+`````````````````````````````
 
 .. automodule:: phobos.model.materials
     :members:
@@ -61,15 +61,23 @@ phobos.model.materials module
     :show-inheritance:
 
 phobos.model.models module
---------------------------
+``````````````````````````
 
 .. automodule:: phobos.model.models
     :members:
     :undoc-members:
     :show-inheritance:
 
+phobos.model.motors module
+``````````````````````````
+
+.. automodule:: phobos.model.motors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 phobos.model.poses module
--------------------------
+`````````````````````````
 
 .. automodule:: phobos.model.poses
     :members:
@@ -77,7 +85,7 @@ phobos.model.poses module
     :show-inheritance:
 
 phobos.model.sensors module
----------------------------
+```````````````````````````
 
 .. automodule:: phobos.model.sensors
     :members:

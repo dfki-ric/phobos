@@ -5,7 +5,7 @@ Submodules
 ----------
 
 phobos.io.meshes.meshes module
-------------------------------
+``````````````````````````````
 
 .. automodule:: phobos.io.meshes.meshes
     :members:

@@ -6,15 +6,17 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>phobos.io.libraries package &#8212; Phobos 0.7 documentation</title>
+    <title>phobos.io.libraries package &#8212; Phobos 1.0 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="phobos.io.meshes package" href="phobos.io.meshes.html" />
+    <link rel="prev" title="phobos.io.entities package" href="phobos.io.entities.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -25,7 +27,15 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 0.7 documentation</a> &#187;</li> 
+        <li class="right" >
+          <a href="phobos.io.meshes.html" title="phobos.io.meshes package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="phobos.io.entities.html" title="phobos.io.entities package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="phobos.html" >phobos package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="phobos.io.html" accesskey="U">phobos.io package</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -38,32 +48,185 @@
 <h1>phobos.io.libraries package<a class="headerlink" href="#phobos-io-libraries-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-phobos.io.libraries.mechanisms">
+<span id="phobos-io-libraries-mechanisms-module"></span><h3>phobos.io.libraries.mechanisms module<a class="headerlink" href="#module-phobos.io.libraries.mechanisms" title="Permalink to this headline">¶</a></h3>
+<p>Contains the functions for the mechanism entity.</p>
+<dl class="function">
+<dt id="phobos.io.libraries.mechanisms.compileMechanismList">
+<code class="descclassname">phobos.io.libraries.mechanisms.</code><code class="descname">compileMechanismList</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.mechanisms.compileMechanismList" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.libraries.mechanisms.getMechanismListForEnumProperty">
+<code class="descclassname">phobos.io.libraries.mechanisms.</code><code class="descname">getMechanismListForEnumProperty</code><span class="sig-paren">(</span><em>self</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.mechanisms.getMechanismListForEnumProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of (str, str, str) elements which contains the mechanisms
+currently loaded. If there are none, returns (‘-‘, ‘-‘, ‘-‘).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.libraries.mechanisms.register">
+<code class="descclassname">phobos.io.libraries.mechanisms.</code><code class="descname">register</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.mechanisms.register" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.libraries.mechanisms.unregister">
+<code class="descclassname">phobos.io.libraries.mechanisms.</code><code class="descname">unregister</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.mechanisms.unregister" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
+
 </div>
 <div class="section" id="module-phobos.io.libraries.models">
-<span id="phobos-io-libraries-models-module"></span><h2>phobos.io.libraries.models module<a class="headerlink" href="#module-phobos.io.libraries.models" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-phobos.io.libraries.models.py"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
-<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
-<p>Phobos is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation, either version 3
-of the License, or (at your option) any later version.</p>
-<p>Phobos is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.</p>
-<p>You should have received a copy of the GNU Lesser General Public License
-along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<span id="phobos-io-libraries-models-module"></span><h3>phobos.io.libraries.models module<a class="headerlink" href="#module-phobos.io.libraries.models" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator">
+<em class="property">class </em><code class="descclassname">phobos.io.libraries.models.</code><code class="descname">ImportModelFromLibraryOperator</code><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">bpy_types.Operator</span></code></p>
+<p>TODO Missing documentation</p>
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_idname">
+<code class="descname">bl_idname</code><em class="property"> = 'phobos.import_model_from_library'</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_idname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_label">
+<code class="descname">bl_label</code><em class="property"> = 'Import Model'</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_options">
+<code class="descname">bl_options</code><em class="property"> = {'REGISTER', 'UNDO'}</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_options" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_region_type">
+<code class="descname">bl_region_type</code><em class="property"> = 'FILE'</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_region_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_space_type">
+<code class="descname">bl_space_type</code><em class="property"> = 'VIEW_3D'</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.bl_space_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.execute" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.invoke">
+<code class="descname">invoke</code><span class="sig-paren">(</span><em>context</em>, <em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.invoke" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>context</strong> – </li>
+<li><strong>event</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.namespace">
+<code class="descname">namespace</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Namespace', 'description': 'Namespace with which to wrap the imported model.', 'default': ''})</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.namespace" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.order">
+<code class="descname">order</code><em class="property"> = ['__module__', '__qualname__', '__doc__', 'bl_idname', 'bl_label', 'bl_space_type', 'bl_region_type', 'bl_options', 'namespace', 'use_prefix', 'invoke', 'execute']</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.order" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.ImportModelFromLibraryOperator.use_prefix">
+<code class="descname">use_prefix</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Use Prefix', 'description': 'Import model with fixed prefixed instead of removable namespace.', 'default': False})</em><a class="headerlink" href="#phobos.io.libraries.models.ImportModelFromLibraryOperator.use_prefix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="phobos.io.libraries.models.UpdateModelLibraryOperator">
+<em class="property">class </em><code class="descclassname">phobos.io.libraries.models.</code><code class="descname">UpdateModelLibraryOperator</code><a class="headerlink" href="#phobos.io.libraries.models.UpdateModelLibraryOperator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">bpy_types.Operator</span></code></p>
+<p>Update Model Library</p>
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.UpdateModelLibraryOperator.bl_idname">
+<code class="descname">bl_idname</code><em class="property"> = 'phobos.update_model_library'</em><a class="headerlink" href="#phobos.io.libraries.models.UpdateModelLibraryOperator.bl_idname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.UpdateModelLibraryOperator.bl_label">
+<code class="descname">bl_label</code><em class="property"> = 'Update Library'</em><a class="headerlink" href="#phobos.io.libraries.models.UpdateModelLibraryOperator.bl_label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="phobos.io.libraries.models.UpdateModelLibraryOperator.execute">
+<code class="descname">execute</code><span class="sig-paren">(</span><em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.models.UpdateModelLibraryOperator.execute" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="phobos.io.libraries.models.UpdateModelLibraryOperator.order">
+<code class="descname">order</code><em class="property"> = ['__module__', '__qualname__', '__doc__', 'bl_idname', 'bl_label', 'execute']</em><a class="headerlink" href="#phobos.io.libraries.models.UpdateModelLibraryOperator.order" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="phobos.io.libraries.models.compileModelList">
 <code class="descclassname">phobos.io.libraries.models.</code><code class="descname">compileModelList</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.models.compileModelList" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.io.libraries.models.getCategoriesForEnumProperty">
 <code class="descclassname">phobos.io.libraries.models.</code><code class="descname">getCategoriesForEnumProperty</code><span class="sig-paren">(</span><em>self</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.models.getCategoriesForEnumProperty" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return a list of (str, str, str) elements, each referring to an
-available category in the model library.
-If there are no categories return (‘-‘, ‘-‘, ‘-‘).</p>
+<dd><p>Returns a list of categories for an EnumProperty.</p>
+<p>The categories are based on the <code class="docutils literal notranslate"><span class="pre">categories</span></code> variable in the current namespace.</p>
+<p>If there are no categories return (‘-‘, ‘-‘, ‘-‘).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">available category in the model library.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -72,25 +235,59 @@ If there are no categories return (‘-‘, ‘-‘, ‘-‘).</p>
 <dd><p>Returns a list of (str, str, str) elements which contains the models
 contained in the currently selected model category.
 If there are no model categories (i.e. ‘-‘) return (‘-‘, ‘-‘, ‘-‘).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.io.libraries.models.register">
 <code class="descclassname">phobos.io.libraries.models.</code><code class="descname">register</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.models.register" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.io.libraries.models.unregister">
 <code class="descclassname">phobos.io.libraries.models.</code><code class="descname">unregister</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.models.unregister" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
 
+</div>
 </div>
 <div class="section" id="module-phobos.io.libraries">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phobos.io.libraries" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>..module:: phobos.io.libraries</dt>
+<dd><table class="first last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">platform:</th><td class="field-body">Unix, Windows, Mac</td>
+</tr>
+<tr class="field-even field"><th class="field-name">synopsis:</th><td class="field-body">TODO: INSERT TEXT HERE</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
+<p>..moduleauthor:: Kai von Szadowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Sebastian Klemp, Simon Reichel</p>
 <dl class="function">
 <dt id="phobos.io.libraries.register">
 <code class="descclassname">phobos.io.libraries.</code><code class="descname">register</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.register" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.io.libraries.unregister">
+<code class="descclassname">phobos.io.libraries.</code><code class="descname">unregister</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.io.libraries.unregister" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
 
 </div>
 </div>
@@ -107,13 +304,22 @@ If there are no model categories (i.e. ‘-‘) return (‘-‘, ‘-‘, ‘-�
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">phobos.io.libraries package</a><ul>
-<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li><a class="reference internal" href="#module-phobos.io.libraries.mechanisms">phobos.io.libraries.mechanisms module</a></li>
 <li><a class="reference internal" href="#module-phobos.io.libraries.models">phobos.io.libraries.models module</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-phobos.io.libraries">Module contents</a></li>
 </ul>
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="phobos.io.entities.html"
+                        title="previous chapter">phobos.io.entities package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="phobos.io.meshes.html"
+                        title="next chapter">phobos.io.meshes package</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -146,13 +352,20 @@ If there are no model categories (i.e. ‘-‘) return (‘-‘, ‘-‘, ‘-�
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 0.7 documentation</a> &#187;</li> 
+        <li class="right" >
+          <a href="phobos.io.meshes.html" title="phobos.io.meshes package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="phobos.io.entities.html" title="phobos.io.entities package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="phobos.html" >phobos package</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="phobos.io.html" >phobos.io package</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014-2018, DFKI GmbH.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
-&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
     </div>
   </body>
 </html>

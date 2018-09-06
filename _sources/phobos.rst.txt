@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+    :maxdepth: 3
 
     phobos.io
     phobos.model
@@ -15,23 +16,23 @@ Submodules
 ----------
 
 phobos.defs module
-------------------
+``````````````````
 
 .. automodule:: phobos.defs
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.old_code module
-----------------------
+phobos.display module
+`````````````````````
 
-.. automodule:: phobos.old_code
+.. automodule:: phobos.display
     :members:
     :undoc-members:
     :show-inheritance:
 
 phobos.phobosgui module
------------------------
+```````````````````````
 
 .. automodule:: phobos.phobosgui
     :members:
@@ -39,21 +40,20 @@ phobos.phobosgui module
     :show-inheritance:
 
 phobos.phoboslog module
------------------------
+```````````````````````
 
 .. automodule:: phobos.phoboslog
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.testing module
----------------------
+phobos.phobossystem module
+``````````````````````````
 
-.. automodule:: phobos.testing
+.. automodule:: phobos.phobossystem
     :members:
     :undoc-members:
     :show-inheritance:
-
 
 Module contents
 ---------------

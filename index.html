@@ -6,15 +6,16 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Welcome to Phobos’s documentation! &#8212; Phobos 0.7 documentation</title>
+    <title>Phobos API documentation &#8212; Phobos 1.0 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="phobos package" href="phobos.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -25,30 +26,49 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">Phobos 0.7 documentation</a> &#187;</li>
+        <li class="right" >
+          <a href="phobos.html" title="phobos package"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Phobos 1.0 documentation</a> &#187;</li> 
       </ul>
-    </div>
+    </div>  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
-
-  <div class="section" id="welcome-to-phobos-s-documentation">
-<h1>Welcome to Phobos’s documentation!<a class="headerlink" href="#welcome-to-phobos-s-documentation" title="Permalink to this headline">¶</a></h1>
-<p>Phobos is an add-on for the open-source 3D modeling software Blender that enables the creation and modification of WYSIWYG robot models for use in robot frameworks like ROS and ROCK or in real-time simulations such as MARS or Gazebo. Phobos allows to export completed models in formats such as URDF or SMURF and meshes as STereoLithography (.stl), Wavefront (.obj) or Collada (.dae).</p>
+            
+  <div class="section" id="phobos-api-documentation">
+<h1>Phobos API documentation<a class="headerlink" href="#phobos-api-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Phobos is an add-on for the open-source 3D modeling software Blender that enables the creation and modification of WYSIWYG robot models for use in robot frameworks like ROS and ROCK or in real-time simulations such as MARS or Gazebo. Phobos allows to export completed models in formats such as URDF, SMURF or SDF and meshes as STereoLithography (.stl), Wavefront (.obj) or Collada (.dae).</p>
 <p>Phobos was initiated and is currently developed at the Robotics Innovation Center of the German Research Center for Artificial Intelligence (DFKI) in Bremen, together with the Robotics Group of the University of Bremen.</p>
-<p>User documentation can be found in the Phobos Wiki at <a class="reference external" href="https://github.com/rock-simulation/phobos/wiki">https://github.com/rock-simulation/phobos/wiki</a> .</p>
-<p>Please contact Kai von Szadkowski for any inquiries, or any questions and feedback not suited for the issues page.</p>
-<p>This page provides the code documentation of phobos.</p>
+<p>User documentation can be found in the Phobos Wiki at <a class="reference external" href="https://github.com/dfki-ric/phobos/wiki">https://github.com/dfki-ric/phobos/wiki</a> .</p>
+<p>Please contact <a class="reference external" href="https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/sire01.html">Simon V. Reichel</a> for any inquiries, or any questions and feedback not suited for the <a class="reference external" href="https://github.com/dfki-ric/phobos/issues">issues</a> page.</p>
+<p>This page provides the code documentation of Phobos.</p>
+</div>
+<div class="section" id="module-overview">
+<h2>Module overview<a class="headerlink" href="#module-overview" title="Permalink to this headline">¶</a></h2>
+<p>Phobos is structured into some submodules which contain different functionality:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="phobos.html">phobos</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phobos.io.html">phobos.io</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phobos.model.html">phobos.model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phobos.operators.html">phobos.operators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="phobos.utils.html">phobos.utils</a></li>
+</ul>
+</div>
 </div>
 <div class="section" id="indices-and-tables">
-<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
 <li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
 <li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
+</div>
 </div>
 
 
@@ -62,10 +82,17 @@
             </a></p>
   <h3><a href="#">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">Welcome to Phobos’s documentation!</a></li>
+<li><a class="reference internal" href="#">Phobos API documentation</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#module-overview">Module overview</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
+</li>
+</ul>
 
+  <h4>Next topic</h4>
+  <p class="topless"><a href="phobos.html"
+                        title="next chapter">phobos package</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -98,12 +125,15 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">Phobos 0.7 documentation</a> &#187;</li>
+        <li class="right" >
+          <a href="phobos.html" title="phobos package"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">Phobos 1.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014-2018, DFKI GmbH.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
-      &nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
+    </div>
   </body>
 </html>

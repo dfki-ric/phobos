@@ -6,15 +6,16 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>phobos.utils package &#8212; Phobos 0.7 documentation</title>
+    <title>phobos.utils package &#8212; Phobos 1.0 documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="phobos.operators package" href="phobos.operators.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -25,7 +26,11 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 0.7 documentation</a> &#187;</li> 
+        <li class="right" >
+          <a href="phobos.operators.html" title="phobos.operators package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="phobos.html" accesskey="U">phobos package</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -38,37 +43,43 @@
 <h1>phobos.utils package<a class="headerlink" href="#phobos-utils-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
-</div>
 <div class="section" id="module-phobos.utils.blender">
-<span id="phobos-utils-blender-module"></span><h2>phobos.utils.blender module<a class="headerlink" href="#module-phobos.utils.blender" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-phobos.utils.blender"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
-<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
-<p>Phobos is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation, either version 3
-of the License, or (at your option) any later version.</p>
-<p>Phobos is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.</p>
-<p>You should have received a copy of the GNU Lesser General Public License
-along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<span id="phobos-utils-blender-module"></span><h3>phobos.utils.blender module<a class="headerlink" href="#module-phobos.utils.blender" title="Permalink to this headline">¶</a></h3>
+<p>Contains all utility functions that are connected to Blender functionality first.</p>
 <dl class="function">
 <dt id="phobos.utils.blender.cleanObjectProperties">
 <code class="descclassname">phobos.utils.blender.</code><code class="descname">cleanObjectProperties</code><span class="sig-paren">(</span><em>props</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.cleanObjectProperties" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cleans a predefined list of Blender-specific or other properties from the dictionary.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>props</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.blender.cleanScene">
 <code class="descclassname">phobos.utils.blender.</code><code class="descname">cleanScene</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.cleanScene" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function cleans up the scene and removes all blender objects, meshes, materials and lights.</p>
+<dd><p>Clean up blend file (remove all objects, meshes, materials and lights)</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.blender.compileEnumPropertyList">
 <code class="descclassname">phobos.utils.blender.</code><code class="descname">compileEnumPropertyList</code><span class="sig-paren">(</span><em>iterable</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.compileEnumPropertyList" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>iterable</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.blender.createNewTextfile">
@@ -86,6 +97,7 @@ along with Phobos.  If not, see &lt;<a class="reference external" href="http://w
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
@@ -96,17 +108,23 @@ along with Phobos.  If not, see &lt;<a class="reference external" href="http://w
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>list</em>) – List of objects for the thumbnail.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>objects</strong> (<em>list of bpy.types.Object</em>) – list of objects for the thumbnail</li>
+<li><strong>export_path</strong> (<em>str</em>) – folder to export image to</li>
+<li><strong>modelname</strong> (<em>str</em>) – name of model (used as file name)</li>
+<li><strong>render_resolution</strong> (<em>int</em><em>, </em><em>optional</em>) – side length of resulting image in pixels (Default value = 256)</li>
+<li><strong>opengl</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to use opengl rendering or not (Default value = False)</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
-<p>:param Resolution used for the render.
-:type int</p>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.blender.createPrimitive">
-<code class="descclassname">phobos.utils.blender.</code><code class="descname">createPrimitive</code><span class="sig-paren">(</span><em>pname</em>, <em>ptype</em>, <em>psize</em>, <em>player=0</em>, <em>pmaterial='None'</em>, <em>plocation=(0</em>, <em>0</em>, <em>0)</em>, <em>protation=(0</em>, <em>0</em>, <em>0)</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.createPrimitive" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">phobos.utils.blender.</code><code class="descname">createPrimitive</code><span class="sig-paren">(</span><em>pname</em>, <em>ptype</em>, <em>psize</em>, <em>player=0</em>, <em>pmaterial=None</em>, <em>plocation=(0</em>, <em>0</em>, <em>0)</em>, <em>protation=(0</em>, <em>0</em>, <em>0)</em>, <em>phobostype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.createPrimitive" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates the primitive specified by the input parameters</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -116,10 +134,13 @@ along with Phobos.  If not, see &lt;<a class="reference external" href="http://w
 <li><strong>pname</strong> (<em>str</em>) – The primitives new name.</li>
 <li><strong>ptype</strong> (<em>str</em>) – The new primitives type. Can be one of <em>box, sphere, cylinder, cone, disc</em></li>
 <li><strong>psize</strong> (<em>float</em><em> or </em><em>list</em>) – The new primitives size. Depending on the ptype it can be either a single float or a tuple.</li>
-<li><strong>player</strong> – The layer bitmask for the new blender object.</li>
-<li><strong>pmaterial</strong> – The new primitives material.</li>
-<li><strong>plocation</strong> (<em>tuple</em>) – The new primitives location.</li>
-<li><strong>protation</strong> (<em>tuple</em>) – The new primitives rotation.</li>
+<li><strong>player</strong> – The layer bitmask for the new blender object. (Default value = 0)</li>
+<li><strong>pmaterial</strong> – The new primitives material. (Default value = None)</li>
+<li><strong>plocation</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The new primitives location. (Default value = (0)</li>
+<li><strong>protation</strong> (<em>tuple</em><em>, </em><em>optional</em>) – The new primitives rotation. (Default value = (0)</li>
+<li><strong>phobostype</strong> (<em>str</em><em>, </em><em>optional</em>) – phobostype of object to be created (Default value = None)</li>
+<li><strong>0</strong> – </li>
+<li><strong>0</strong><strong>)</strong> – </li>
 </ul>
 </td>
 </tr>
@@ -134,12 +155,55 @@ along with Phobos.  If not, see &lt;<a class="reference external" href="http://w
 <dt id="phobos.utils.blender.defLayers">
 <code class="descclassname">phobos.utils.blender.</code><code class="descname">defLayers</code><span class="sig-paren">(</span><em>layerlist</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.defLayers" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list of 20 elements encoding the visible layers according to layerlist</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>layerlist</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.blender.getBlenderVersion">
 <code class="descclassname">phobos.utils.blender.</code><code class="descname">getBlenderVersion</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.getBlenderVersion" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.blender.getCombinedDimensions">
+<code class="descclassname">phobos.utils.blender.</code><code class="descname">getCombinedDimensions</code><span class="sig-paren">(</span><em>objects</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.getCombinedDimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the dimension of the space the objects passed occupy.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>objects</strong> (<em>list</em>) – list of</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list of floats (x, y, z) of dimensions</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code> – If empty object list is passed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.blender.getPhobosConfigPath">
+<code class="descclassname">phobos.utils.blender.</code><code class="descname">getPhobosConfigPath</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.getPhobosConfigPath" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the user-defined config path if set or the default-path</p>
+<p>Returns(str): (user-defined) config path</p>
+<p>Args:</p>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.blender.getPhobosPreferences">
+<code class="descclassname">phobos.utils.blender.</code><code class="descname">getPhobosPreferences</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.getPhobosPreferences" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.blender.openScriptInEditor">
@@ -154,6 +218,7 @@ available text window.</p>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
@@ -166,25 +231,27 @@ available text window.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>obj</strong> (<em>bpy.types.Object</em>) – The object to print the matrices from.</li>
-<li><strong>info</strong> (<em>bool</em>) – If True the objects name will be included into the printed info.</li>
+<li><strong>info</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True the objects name will be included into the printed info. (Default value = None)</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.blender.readTextFile">
 <code class="descclassname">phobos.utils.blender.</code><code class="descname">readTextFile</code><span class="sig-paren">(</span><em>textfilename</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.readTextFile" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns the content of a specified text file.</p>
+<dd><p>Returns the content of a specified text file in Blender’s data.</p>
+<p>If the file is not found, an empty string is returned.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>textfilename</strong> (<em>str</em>) – The blender textfiles name.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">str - the textfiles content.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">str – textfile content or empty string</td>
 </tr>
 </tbody>
 </table>
@@ -192,8 +259,39 @@ available text window.</p>
 
 <dl class="function">
 <dt id="phobos.utils.blender.setObjectLayersActive">
-<code class="descclassname">phobos.utils.blender.</code><code class="descname">setObjectLayersActive</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.setObjectLayersActive" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">phobos.utils.blender.</code><code class="descname">setObjectLayersActive</code><span class="sig-paren">(</span><em>obj</em>, <em>extendlayers=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.setObjectLayersActive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets all layers, the specified object is on to active.</p>
+<p>If extendlayers is set, the layers of the object are added to the already active layers instead
+of replacing them.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object of which the layers shall be activated</li>
+<li><strong>extendlayers</strong> (<em>bool</em><em>, </em><em>optional</em>) – activate the object layers in addition to the already active layers (Default value = False)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.blender.switchToScene">
+<code class="descclassname">phobos.utils.blender.</code><code class="descname">switchToScene</code><span class="sig-paren">(</span><em>scenename</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.switchToScene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switch to Blender scene of the given name</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>scenename</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.blender.toggleLayer">
@@ -205,12 +303,46 @@ available text window.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>index</strong> (<em>int</em>) – The layer index you want to change.</li>
-<li><strong>value</strong> (<em>bool</em>) – True if visible, None for toggle.</li>
+<li><strong>value</strong> (<em>bool</em><em>, </em><em>optional</em>) – True if visible, None for toggle. (Default value = None)</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.blender.toggleTransformLock">
+<code class="descclassname">phobos.utils.blender.</code><code class="descname">toggleTransformLock</code><span class="sig-paren">(</span><em>obj</em>, <em>setting=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.toggleTransformLock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Toogle transform lock for the referred object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> – </li>
+<li><strong>setting</strong> – (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.blender.update">
+<code class="descclassname">phobos.utils.blender.</code><code class="descname">update</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.blender.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Forces Blender to update scene contents (i.e. transformations).</p>
+<p>Sometimes when e.g. manipulating internal matrices of Blender objects such as
+matrix_world or matrix_local, Blender will not recalculate all related transforms,
+especially not the visual transform. The bpy.context.scene.update() function often
+named as the solution to this will lead to the matrices being updated, but not the
+visual transforms. This Function runs code (may be updated with new Blender verions)
+that forces Blender to update the visual transforms.</p>
+<p>Args:</p>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
@@ -229,247 +361,769 @@ available text window.</p>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 </div>
 <div class="section" id="module-phobos.utils.editing">
-<span id="phobos-utils-editing-module"></span><h2>phobos.utils.editing module<a class="headerlink" href="#module-phobos.utils.editing" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-phobos.utils.general"></span><p>Copyright 2017, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
-<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
-<p>Phobos is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation, either version 3
-of the License, or (at your option) any later version.</p>
-<p>Phobos is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.</p>
-<p>You should have received a copy of the GNU Lesser General Public License
-along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<span id="phobos-utils-editing-module"></span><h3>phobos.utils.editing module<a class="headerlink" href="#module-phobos.utils.editing" title="Permalink to this headline">¶</a></h3>
+<p>Contains the utility functions for editing objects and Phobos models.</p>
 <dl class="function">
-<dt id="phobos.utils.editing.addDictionaryToObj">
-<code class="descclassname">phobos.utils.editing.</code><code class="descname">addDictionaryToObj</code><span class="sig-paren">(</span><em>dict</em>, <em>obj</em>, <em>category=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.addDictionaryToObj" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.editing.connectInterfaces">
-<code class="descclassname">phobos.utils.editing.</code><code class="descname">connectInterfaces</code><span class="sig-paren">(</span><em>parentinterface</em>, <em>childinterface</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.connectInterfaces" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.editing.defineAssembly">
-<code class="descclassname">phobos.utils.editing.</code><code class="descname">defineAssembly</code><span class="sig-paren">(</span><em>assemblyname</em>, <em>version=''</em>, <em>objects=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.defineAssembly" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.editing.getCombinedTransform">
-<code class="descclassname">phobos.utils.editing.</code><code class="descname">getCombinedTransform</code><span class="sig-paren">(</span><em>obj</em>, <em>effectiveparent</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.getCombinedTransform" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.editing.getPropertiesSubset">
-<code class="descclassname">phobos.utils.editing.</code><code class="descname">getPropertiesSubset</code><span class="sig-paren">(</span><em>obj</em>, <em>category=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.getPropertiesSubset" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.editing.instantiateAssembly">
-<code class="descclassname">phobos.utils.editing.</code><code class="descname">instantiateAssembly</code><span class="sig-paren">(</span><em>assemblyname</em>, <em>instancename</em>, <em>version='1.0'</em>, <em>size=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.instantiateAssembly" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.editing.restructureKinematicTree">
-<code class="descclassname">phobos.utils.editing.</code><code class="descname">restructureKinematicTree</code><span class="sig-paren">(</span><em>link</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.restructureKinematicTree" title="Permalink to this definition">¶</a></dt>
-<dd><p>Restructures a tree such that the <em>link</em> provided becomes the root of the tree. For
-instance, the following tree:</p>
-<blockquote>
-<div><blockquote>
-<div><blockquote>
-<div>A</div></blockquote>
-<p>/            B    C</p>
-</div></blockquote>
-<p>/            D   E    F</p>
-</div></blockquote>
-<dl class="docutils">
-<dt>would, using the call restructureKinematicsTree(C), become:</dt>
-<dd><blockquote class="first">
-<div><blockquote>
-<div><blockquote>
-<div><blockquote>
-<div><blockquote>
-<div>C</div></blockquote>
-<p>/           A    F</p>
-</div></blockquote>
-<p>/</p>
-</div></blockquote>
-<p>B</p>
-</div></blockquote>
-<p>/      D   E</p>
-</div></blockquote>
-<p class="last">Currently, this function ignores all options such as unselected or hidden objects.</p>
-</dd>
-</dl>
+<dt id="phobos.utils.editing.addAnnotation">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">addAnnotation</code><span class="sig-paren">(</span><em>obj</em>, <em>annotation</em>, <em>namespace=None</em>, <em>ignore=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.addAnnotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the specified annotations to the object.</p>
+<p>If provided, the namespace will be prepended to the annotation keys and separated with a /.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>link</strong> – </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object to add the annotations to</li>
+<li><strong>annotation</strong> (<em>dict</em>) – annotations to add to the object</li>
+<li><strong>namespace</strong> (<em>str</em><em>, </em><em>optional</em>) – namespace which will be prepended to the annotations (Default value = None)</li>
+<li><strong>ignore</strong> (<em>list</em><em>(</em><em>str</em><em>, </em><em>optional</em>) – skip these keys when adding annotations (Default value = [])</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.addAnnotationObject">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">addAnnotationObject</code><span class="sig-paren">(</span><em>obj</em>, <em>annotation</em>, <em>name=None</em>, <em>size=0.1</em>, <em>namespace=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.addAnnotationObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new annotation object with the specified annotations to the object.</p>
+<p>The annotation object will receive ‘annotation_object’ as its default name, unless a name is
+provided. Naming is done using <a class="reference internal" href="#phobos.utils.naming.safelyName" title="phobos.utils.naming.safelyName"><code class="xref py py-func docutils literal notranslate"><span class="pre">phobos.utils.naming.safelyName()</span></code></a>.</p>
+<p>The annotation object will be scaled according to the <strong>size</strong> parameter.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">namespace</span></code> is provided, the annotations will be saved with this string prepended.
+This is done using <a class="reference internal" href="#phobos.utils.editing.addAnnotation" title="phobos.utils.editing.addAnnotation"><code class="xref py py-func docutils literal notranslate"><span class="pre">addAnnotation()</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object to add annotation object to</li>
+<li><strong>annotation</strong> (<em>dict</em>) – annotations that will be added</li>
+<li><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – name for the new annotation object (Default value = None)</li>
+<li><strong>size</strong> (<em>int/float</em><em>, </em><em>optional</em>) – size of the new annotation object (Default value = 0.1)</li>
+<li><strong>namespace</strong> (<em>str</em><em>, </em><em>optional</em>) – namespace that will be prepended to the annotations (Default value = None)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bpy.types.Object - the new annotation object</p>
+</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="function">
+<dt id="phobos.utils.editing.connectInterfaces">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">connectInterfaces</code><span class="sig-paren">(</span><em>parentinterface</em>, <em>childinterface</em>, <em>transform=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.connectInterfaces" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>parentinterface</strong> – </li>
+<li><strong>childinterface</strong> – </li>
+<li><strong>transform</strong> – (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.createInterface">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">createInterface</code><span class="sig-paren">(</span><em>ifdict</em>, <em>parent=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.createInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an interface object and optionally parent to existing object.</p>
+<p>ifdict is expected as:</p>
+<div class="line-block">
+<div class="line"><strong>type</strong>: str</div>
+<div class="line"><strong>direction</strong>: str</div>
+<div class="line"><strong>model</strong>: str</div>
+<div class="line"><strong>name</strong>: str</div>
+<div class="line"><strong>parent</strong>: bpy.types.Object (optional)</div>
+<div class="line"><strong>scale</strong>: float (optional)</div>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ifdict</strong> (<em>dict</em>) – interface data</li>
+<li><strong>parent</strong> (<em>bpy.types.Object</em><em>, </em><em>optional</em>) – designated parent object (Default value = None)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">newly created interface object</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">bpy.data.Object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.defineSubmodel">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">defineSubmodel</code><span class="sig-paren">(</span><em>submodelname</em>, <em>submodeltype</em>, <em>version=''</em>, <em>objects=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.defineSubmodel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a new submodule group with the specified name and type.</p>
+<dl class="docutils">
+<dt>The group will be named like so:</dt>
+<dd>‘submodeltype:submodelname/version’</dd>
+</dl>
+<p>Objects with the phobostype ‘interface’ (if present) are handled separately
+and put into a respective submodel group (which features the ‘interface’
+submodeltype).</p>
+<p>If the version is omitted, the respective part of the name is dropped, too.
+If no object list is provided the objects are derived from selection.
+The submodeltype is also added as dict entry to the group in Blender.</p>
+<p>The selected objects are moved to the respective layer for submodels or
+interfaces.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>submodelname</strong> – descriptive name of the submodel</li>
+<li><strong>submodeltype</strong> – type of the submodel (e.g. ‘fmu’, ‘mechanics’)</li>
+<li><strong>version</strong> – a version string (e.g. ‘1.0’, ‘dangerous’) (Default value = ‘’)</li>
+<li><strong>objects</strong> – the objects which belong to the submodel (None will derive</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>objects from the selection) (Default value = None)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a tuple of the submodelgroup and interfacegroup/None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.disconnectInterfaces">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">disconnectInterfaces</code><span class="sig-paren">(</span><em>parentinterface</em>, <em>childinterface</em>, <em>transform=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.disconnectInterfaces" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>parentinterface</strong> – </li>
+<li><strong>childinterface</strong> – </li>
+<li><strong>transform</strong> – (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.getCombinedTransform">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">getCombinedTransform</code><span class="sig-paren">(</span><em>obj</em>, <em>effectiveparent</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.getCombinedTransform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the combined transform of the object relative to the effective parent.</p>
+<p>This combines all transformations in the parenting hierarchy up to the specified effective
+parent.</p>
+<p>Note, that the scale transformation of the effective parent is used anyway, as it scales the
+local matrix of the child object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – the child object</li>
+<li><strong>effectiveparent</strong> (<em>bpy.types.Object</em>) – the effective parent of the child object</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bpy.types.Matrix – the combined transformations of the child object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.getNearestCommonParent">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">getNearestCommonParent</code><span class="sig-paren">(</span><em>objs</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.getNearestCommonParent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns hierarchically lowest common parent of the provided objects</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>objs</strong> – list of objects (bpy_types.Object)</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.getProperties">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">getProperties</code><span class="sig-paren">(</span><em>obj</em>, <em>category=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.getProperties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dictionary of custom property information of the object.</p>
+<p>If a category is provided, only the custom properties of the specified category are returned.
+Otherwise, the phobostype of the object will be used as category.</p>
+<p>The dictionary contains the custom property keys with the category removed (e.g. ‘name’ for
+‘link/name’).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object to get properties of</li>
+<li><strong>category</strong> (<em>str</em><em>, </em><em>optional</em>) – property category to look for (Default value = None)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict – custom property information of the phobostype/category for the object</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.instantiateSubmodel">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">instantiateSubmodel</code><span class="sig-paren">(</span><em>submodelname</em>, <em>instancename</em>, <em>size=1.0</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.instantiateSubmodel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an instance of the submodel specified by the submodelname.</p>
+<p>The instance receives the definitions of the group as it is generated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submodelname</strong> – name of the submodel (Blender group) to create an</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>instance of</dt>
+<dd>instancename: name the instance object will receive
+size: (Default value = 1.0)</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.mergeLinks">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">mergeLinks</code><span class="sig-paren">(</span><em>links</em>, <em>targetlink</em>, <em>movetotarget=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.mergeLinks" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>links</strong> – </li>
+<li><strong>targetlink</strong> – </li>
+<li><strong>movetotarget</strong> – (Default value = False)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.parentObjectsTo">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">parentObjectsTo</code><span class="sig-paren">(</span><em>objects</em>, <em>parent</em>, <em>clear=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.parentObjectsTo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parents the specified objects to the parent object.</p>
+<p>Depending on their phobostype the objects are parented either <em>bone relative</em> or <em>object</em>.</p>
+<p>If <em>clear</em> is set, the parenting of the objects will be cleared (keeping the transform), before
+parenting.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>objects</strong> (<em>list</em><em>(</em><em>bpy.types.Object</em>) – objects to set parent of</li>
+<li><strong>parent</strong> (<em>bpy.types.Object</em>) – parent object</li>
+<li><strong>clear</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, the parenting of the objects will be cleared (Default value = False)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.removeProperties">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">removeProperties</code><span class="sig-paren">(</span><em>obj</em>, <em>props</em>, <em>recursive=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.removeProperties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a list of custom properties from the specified object.</p>
+<p>The specified property list can contain names with wildcards at the end (e.g. sensor*).</p>
+<p>If recursive is set, the properties will be removed recursively from all children, too.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object to remove the properties from</li>
+<li><strong>props</strong> (<em>list</em><em>(</em><em>str</em>) – list of property names, which will be removed from the object</li>
+<li><strong>recursive</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, the properties will be removed recursively from the children, too (Default value = False)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.removeSubmodel">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">removeSubmodel</code><span class="sig-paren">(</span><em>submodelname</em>, <em>submodeltype</em>, <em>version=''</em>, <em>interfaces=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.removeSubmodel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes a submodel definition from the Blender project.
+Returns True or False depending on whether groups have been removed or not.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>submodelname</strong> – the name of the submodel</li>
+<li><strong>submodeltype</strong> – the submodeltype of the submodel</li>
+<li><strong>version</strong> – optional version of the submodel (Default value = ‘’)</li>
+<li><strong>interfaces</strong> – True if interface should also be deleted, else False. (Default value = True)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">True if groups have been removed, else False.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.restructureKinematicTree">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">restructureKinematicTree</code><span class="sig-paren">(</span><em>link</em>, <em>root=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.restructureKinematicTree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restructures a tree such that the <code class="docutils literal notranslate"><span class="pre">link</span></code> provided becomes the root of the tree.</p>
+<p>If no root object is provided, <a class="reference internal" href="#phobos.utils.selection.getRoot" title="phobos.utils.selection.getRoot"><code class="xref py py-func docutils literal notranslate"><span class="pre">phobos.utils.selection.getRoot()</span></code></a> will be used.</p>
+<p>For instance, the following tree:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="n">A</span>
+   <span class="o">/</span> \
+  <span class="n">B</span>   <span class="n">C</span>
+ <span class="o">/</span> \   \
+<span class="n">D</span>   <span class="n">E</span>   <span class="n">F</span>
+</pre></div>
+</div>
+<p>would, using the call restructureKinematicsTree(C), become:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>      <span class="n">C</span>
+     <span class="o">/</span> \
+    <span class="n">A</span>   <span class="n">F</span>
+   <span class="o">/</span>
+  <span class="n">B</span>
+ <span class="o">/</span> \
+<span class="n">D</span>   <span class="n">E</span>
+</pre></div>
+</div>
+<p>Currently, this function ignores all options such as unselected or hidden objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>link</strong> (<em>bpy.types.Object</em>) – the link which will become the new root object</li>
+<li><strong>root</strong> (<em>bpy.types.Object</em><em>, </em><em>optional</em>) – the current root object (Default value = None)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">None</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.setProperties">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">setProperties</code><span class="sig-paren">(</span><em>obj</em>, <em>diction</em>, <em>category=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.setProperties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds the specified dictionary as custom properties to the object.</p>
+<dl class="docutils">
+<dt>If a category is provided, the keys of the dictionary are prepended with the category:</dt>
+<dd><cite>category/key</cite></dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object to add the information to</li>
+<li><strong>diction</strong> (<em>dict</em>) – information to add to the object</li>
+<li><strong>category</strong> (<em>str</em><em>, </em><em>optional</em>) – category for the dictionary entries (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.smoothen_surface">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">smoothen_surface</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.smoothen_surface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Applies various steps to make the specified object look clean and smooth.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy.types.Object</em>) – object to make look clean</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.sortObjectsToLayers">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">sortObjectsToLayers</code><span class="sig-paren">(</span><em>objs</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.sortObjectsToLayers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sorts the specified objects to the layers which match their phobostype.</p>
+<p>The layer for each phobostype is defined according to <cite>phobos.defs.layerTypes</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>objs</strong> (<em>list</em><em>(</em><em>bpy.types.Object</em>) – objects to move to their respective layer</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="phobos.utils.editing.toggleInterfaces">
 <code class="descclassname">phobos.utils.editing.</code><code class="descname">toggleInterfaces</code><span class="sig-paren">(</span><em>interfaces=None</em>, <em>modename='toggle'</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.toggleInterfaces" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>interfaces</strong> – (Default value = None)</li>
+<li><strong>modename</strong> – (Default value = ‘toggle’)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
 
 </div>
 <div class="section" id="module-phobos.utils.general">
-<span id="phobos-utils-general-module"></span><h2>phobos.utils.general module<a class="headerlink" href="#module-phobos.utils.general" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-phobos.utils.general"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
-<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
-<p>Phobos is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation, either version 3
-of the License, or (at your option) any later version.</p>
-<p>Phobos is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.</p>
-<p>You should have received a copy of the GNU Lesser General Public License
-along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<span id="phobos-utils-general-module"></span><h3>phobos.utils.general module<a class="headerlink" href="#module-phobos.utils.general" title="Permalink to this headline">¶</a></h3>
+<p>Contains the basic utility functions to round numbers, convert types etc.</p>
 <dl class="function">
 <dt id="phobos.utils.general.calcBoundingBoxCenter">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">calcBoundingBoxCenter</code><span class="sig-paren">(</span><em>boundingbox</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.calcBoundingBoxCenter" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates the center of a bounding box</p>
+<code class="descclassname">phobos.utils.general.</code><code class="descname">calcBoundingBoxCenter</code><span class="sig-paren">(</span><em>boxcorners</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.calcBoundingBoxCenter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the center of a bounding box.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>boxcorners</strong> (<em>list</em><em>(</em><em>list</em><em>(</em><em>float</em>) – coordinates of the eight cornerpoints of the box</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">mathutils.Vector – centerpoint of the bounding box</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.general.calculateSum">
 <code class="descclassname">phobos.utils.general.</code><code class="descname">calculateSum</code><span class="sig-paren">(</span><em>objects</em>, <em>numeric_prop</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.calculateSum" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns sum of <em>numeric_prop</em> in <em>objects</em>.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.general.copyTree">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">copyTree</code><span class="sig-paren">(</span><em>src</em>, <em>dst</em>, <em>symlinks=False</em>, <em>ignore=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.copyTree" title="Permalink to this definition">¶</a></dt>
-<dd><p>Copies the folder tree from src to dst.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.general.datetimeFromIso">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">datetimeFromIso</code><span class="sig-paren">(</span><em>iso</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.datetimeFromIso" title="Permalink to this definition">¶</a></dt>
-<dd><p>Accepts a date-time string in iso format and returns a datetime object.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.general.distance">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">distance</code><span class="sig-paren">(</span><em>objects</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.distance" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the distance between two blender objects.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>objects</strong> (<em>list -- with exactly two elements</em>) – The two objects to calculate the distance for.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>objects</strong> (<em>list</em><em>(</em><em>bpy.types.Object</em>) – objects to sum up the property for</li>
+<li><strong>numeric_prop</strong> (<em>str</em>) – name of the custom property to sum</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">float/int – sum of the values in the property of the objects</p>
+</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="function">
-<dt id="phobos.utils.general.epsilonToZero">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">epsilonToZero</code><span class="sig-paren">(</span><em>data</em>, <em>epsilon</em>, <em>decimals</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.epsilonToZero" title="Permalink to this definition">¶</a></dt>
-<dd><p>Recursively loops through a dictionary and sets all floating values
-&lt; epsilon equal to zero.</p>
+<dt id="phobos.utils.general.copyTree">
+<code class="descclassname">phobos.utils.general.</code><code class="descname">copyTree</code><span class="sig-paren">(</span><em>src</em>, <em>dst</em>, <em>symlinks=False</em>, <em>ignore=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.copyTree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copies the folder tree from src to dst.</p>
+<p>Symlinks and ignore can be specified according to the usage of <cite>shutil.copytree</cite> and
+<cite>shutil.copy2</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>src</strong> (<em>str</em>) – path to the source folder/item</li>
+<li><strong>dst</strong> (<em>str</em>) – path to the destination folder/item</li>
+<li><strong>symlinks</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to copy symlinks to the destination (Default value = False)</li>
+<li><strong>ignore</strong> (<em>callable</em><em>, </em><em>optional</em>) – callable function (see <cite>shutil.copytree</cite>) (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="phobos.utils.general.find_in_list">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">find_in_list</code><span class="sig-paren">(</span><em>alist</em>, <em>prop</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.find_in_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the index of the first object in a list which has a field
-named <em>prop</em> with value <em>value</em>. If no such object is found, returns -1.</p>
+<dt id="phobos.utils.general.datetimeFromIso">
+<code class="descclassname">phobos.utils.general.</code><code class="descname">datetimeFromIso</code><span class="sig-paren">(</span><em>iso</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.datetimeFromIso" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accepts a date-time string in ISO format and returns a datetime object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>iso</strong> (<em>str</em>) – ISO format string for a date and time</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">datetime.datetime – datetime object from the specified string</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.general.distance">
+<code class="descclassname">phobos.utils.general.</code><code class="descname">distance</code><span class="sig-paren">(</span><em>objects</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.distance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the distance between two Blender objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>objects</strong> (<em>list</em><em>(</em><em>bpy.types.Object</em>) – exactly two Blender objects</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple(float, mathutils.Vector) – distance and distance vector between the Blender objects</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.general.is_float">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">is_float</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.is_float" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests if an input variable (string) is a float number.</p>
+<code class="descclassname">phobos.utils.general.</code><code class="descname">is_float</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.is_float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if the specified string represents a float number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong> (<em>str</em>) – text to check</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool – True if the text can be parsed to a float, False if not.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.general.is_int">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">is_int</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.is_int" title="Permalink to this definition">¶</a></dt>
-<dd><p>Tests if an input variable (string) is an int number.</p>
+<code class="descclassname">phobos.utils.general.</code><code class="descname">is_int</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.is_int" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests if the specified string represents an integer number.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong> (<em>str</em>) – text to check</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool – True if the text can be parsed to an int, False if not.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.general.only_contains_float">
 <code class="descclassname">phobos.utils.general.</code><code class="descname">only_contains_float</code><span class="sig-paren">(</span><em>stringlist</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.only_contains_float" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks if a list of strings contains float numbers exclusively.</p>
+<p>To determine whether the number is a float, the function <cite>is_float</cite> is used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stringlist</strong> (<em>list</em><em>(</em><em>str</em>) – list to check</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool – True if every string in the list can be represented as float, False if not</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.general.only_contains_int">
 <code class="descclassname">phobos.utils.general.</code><code class="descname">only_contains_int</code><span class="sig-paren">(</span><em>stringlist</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.only_contains_int" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks if a list of strings contains int numbers exclusively.</p>
+<p>To determine whether the number is an int, the function <cite>is_int</cite> is used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>stringlist</strong> (<em>list</em><em>(</em><em>str</em>) – list to check</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool – True if every string in the list can be represented as int, False if not</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.general.outerProduct">
 <code class="descclassname">phobos.utils.general.</code><code class="descname">outerProduct</code><span class="sig-paren">(</span><em>v</em>, <em>u</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.outerProduct" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a mathutils.Matrix representing the outer product of vectors v and u.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>v</strong> (<em>mathutils.Vector</em>) – first vector</li>
+<li><strong>u</strong> (<em>mathutils.Vector</em>) – second vector</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">mathutils.Matrix – outer product of v and u</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.general.parse_number">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">parse_number</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.parse_number" title="Permalink to this definition">¶</a></dt>
-<dd><p>Takes an input variable (string) and determines whether it represents
-a float number, int or string</p>
+<code class="descclassname">phobos.utils.general.</code><code class="descname">parse_number</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.parse_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the specified string parsed to an int or float.</p>
+<p>If no number can be parsed, the original string is returned.</p>
+<p>To determine whether the number is an int or float, the functions <cite>is_int</cite> and <cite>is_float</cite> are
+used.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong> (<em>string</em>) – text to parse to a number</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">int/float/str – depending on successful parsing, a number or a string is returned</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.general.parse_text">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">parse_text</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.parse_text" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parses a text by splitting up elements separated by whitespace and tries
-to determine whether it is a list of floats, ints or strings.</p>
+<code class="descclassname">phobos.utils.general.</code><code class="descname">parse_text</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.parse_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses a text by splitting up elements separated by whitespace.</p>
+<p>The elements are then parsed to int/float-only lists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>text</strong> (<em>str</em>) – text with elements seperated by whitespace</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list(str/float/int) – list with elements parsed to the same type</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
-<dt id="phobos.utils.general.retrieve_from_list">
-<code class="descclassname">phobos.utils.general.</code><code class="descname">retrieve_from_list</code><span class="sig-paren">(</span><em>alist</em>, <em>prop</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.retrieve_from_list" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the first object in a list which has a field named
-<em>prop</em> with value <em>value</em>. If no such object is found, returns ‘None’.</p>
+<dt id="phobos.utils.general.roundFloatsInDict">
+<code class="descclassname">phobos.utils.general.</code><code class="descname">roundFloatsInDict</code><span class="sig-paren">(</span><em>data</em>, <em>decimals</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.roundFloatsInDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively rounds all floats in the dictionary to the specified decimal digits.</p>
+<p>If a float value is smaller than 10e-decimals it is set to zero.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>dict</em>) – data dictionary</li>
+<li><strong>decimals</strong> (<em>int</em>) – number of decimals floats should be rounded to</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict – dictionary with rounded floats</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.general.sortListsInDict">
+<code class="descclassname">phobos.utils.general.</code><code class="descname">sortListsInDict</code><span class="sig-paren">(</span><em>data</em>, <em>reverse=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.general.sortListsInDict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursively loops through a dictionary and sorts all lists.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>dict</em>) – data dictionary</li>
+<li><strong>reverse</strong> – (Default value = False)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict – sorted dictionary</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="module-phobos.utils.git">
-<span id="phobos-utils-git-module"></span><h2>phobos.utils.git module<a class="headerlink" href="#module-phobos.utils.git" title="Permalink to this headline">¶</a></h2>
-<p>Copyright 2014-2017, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
-<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
-<p>Phobos is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation, either version 3
-of the License, or (at your option) any later version.</p>
-<p>Phobos is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.</p>
-<p>You should have received a copy of the GNU Lesser General Public License
-along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
-<p>File model.py</p>
-<p>Created on 2 Jun 2017</p>
-<p>&#64;author: Kai von Szadkowski, Stefan Rahms, Simon Reichel</p>
+<span id="phobos-utils-git-module"></span><h3>phobos.utils.git module<a class="headerlink" href="#module-phobos.utils.git" title="Permalink to this headline">¶</a></h3>
 <dl class="function">
 <dt id="phobos.utils.git.checkoutBranch">
-<code class="descclassname">phobos.utils.git.</code><code class="descname">checkoutBranch</code><span class="sig-paren">(</span><em>branch</em>, <em>workingdir</em>, <em>create=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.checkoutBranch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">phobos.utils.git.</code><code class="descname">checkoutBranch</code><span class="sig-paren">(</span><em>branch</em>, <em>workingdir</em>, <em>create=False</em>, <em>pushorigin=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.checkoutBranch" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>branch</strong> – </li>
+<li><strong>workingdir</strong> – </li>
+<li><strong>create</strong> – (Default value = False)</li>
+<li><strong>pushorigin</strong> – (Default value = False)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.git.checkoutCommit">
 <code class="descclassname">phobos.utils.git.</code><code class="descname">checkoutCommit</code><span class="sig-paren">(</span><em>commit</em>, <em>workingdir</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.checkoutCommit" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>commit</strong> – </li>
+<li><strong>workingdir</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.git.cloneGit">
@@ -481,23 +1135,86 @@ commandline, so better use the <a class="reference external" href="mailto:git&#3
 If the destination folder is a git already, it will not be cloned, but True
 will be returned.
 If the destination folder does not exist, it is created on the fly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> – </li>
+<li><strong>url</strong> – </li>
+<li><strong>destination</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.git.commit">
+<code class="descclassname">phobos.utils.git.</code><code class="descname">commit</code><span class="sig-paren">(</span><em>destination</em>, <em>message='Automated commit'</em>, <em>ignore=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commits the current status in the git folder at destination.
+This can ignore the first level subfolders and files specified in the
+optional parameter.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>destination</strong> – </li>
+<li><strong>message</strong> – (Default value = ‘Automated commit’)</li>
+<li><strong>ignore</strong> – (Default value = [])</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">TODO</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.git.createNewBranch">
-<code class="descclassname">phobos.utils.git.</code><code class="descname">createNewBranch</code><span class="sig-paren">(</span><em>branch</em>, <em>workingdir</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.createNewBranch" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">phobos.utils.git.</code><code class="descname">createNewBranch</code><span class="sig-paren">(</span><em>branch</em>, <em>workingdir</em>, <em>pushorigin=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.createNewBranch" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>branch</strong> – </li>
+<li><strong>workingdir</strong> – </li>
+<li><strong>pushorigin</strong> – (Default value = False)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.git.getFetchRemotesList">
 <code class="descclassname">phobos.utils.git.</code><code class="descname">getFetchRemotesList</code><span class="sig-paren">(</span><em>self</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.getFetchRemotesList" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.git.getGitBranch">
 <code class="descclassname">phobos.utils.git.</code><code class="descname">getGitBranch</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.getGitBranch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks whether working directory (of .blend file) contains a git repository.
 Returns branch if repository is found.</p>
+<p>Args:</p>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
@@ -505,66 +1222,387 @@ Returns branch if repository is found.</p>
 <code class="descclassname">phobos.utils.git.</code><code class="descname">getGitRemotes</code><span class="sig-paren">(</span><em>category=''</em>, <em>folder=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.getGitRemotes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a dictionary with git remotes of the shape {name: url, …} if valid
 category is provided, else {‘fetch’: {name: url, …}, ‘push’: {name: url, …}}.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>category</strong> – (Default value = ‘’)</li>
+<li><strong>folder</strong> – (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.git.getPushRemotesList">
 <code class="descclassname">phobos.utils.git.</code><code class="descname">getPushRemotesList</code><span class="sig-paren">(</span><em>self</em>, <em>context</em>, <em>folder=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.getPushRemotesList" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>context</strong> – </li>
+<li><strong>folder</strong> – (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.git.initGit">
+<code class="descclassname">phobos.utils.git.</code><code class="descname">initGit</code><span class="sig-paren">(</span><em>destination</em>, <em>filename=None</em>, <em>initialsave=False</em>, <em>url=None</em>, <em>readmetxt=''</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.initGit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new Phobos git in the specified destination folder.
+This also creates the required folder structure.
+Optionally, the git can be pushed to the specified url (as origin) and an
+initial commit can be created.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>destination</strong> – the destination folder on the filesystem where to</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>initialise the git repository</dt>
+<dd>filename: the filename of the blender file to save</dd>
+<dt>(only useful in combination with initialsave) (Default value = None)</dt>
+<dd>initialsave: True if the blendfile shall be saved for the first</dd>
+<dt>commit already, False if not (Default value = False)</dt>
+<dd>url: the url of the origin repository (it needs to be empty!) (Default value = None)
+readmetxt: a string which will be written to the Readme.md (Default value = ‘’)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True if the initialisation was successful, False if not</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.git.isGit">
 <code class="descclassname">phobos.utils.git.</code><code class="descname">isGit</code><span class="sig-paren">(</span><em>folder</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.isGit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks whether the folder contains a git directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>folder</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.git.makeGitFolders">
+<code class="descclassname">phobos.utils.git.</code><code class="descname">makeGitFolders</code><span class="sig-paren">(</span><em>destination</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.makeGitFolders" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the Phobos folder structure for a git at the destination.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>destination</strong> – TODO</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">TODO</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
 <div class="section" id="module-phobos.utils.io">
-<span id="phobos-utils-io-module"></span><h2>phobos.utils.io module<a class="headerlink" href="#module-phobos.utils.io" title="Permalink to this headline">¶</a></h2>
+<span id="phobos-utils-io-module"></span><h3>phobos.utils.io module<a class="headerlink" href="#module-phobos.utils.io" title="Permalink to this headline">¶</a></h3>
+<dl class="function">
+<dt id="phobos.utils.io.copy_model">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">copy_model</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.copy_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a recursive deep copy of a model dictionary.</p>
+<p>The deep copy recreates dictionaries and lists, while keeping Blender objects and everything
+else untouched.</p>
+<p>This function is required, as we can not use copy.deepcopy() due to the Blender objects in our
+Phobos representation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>dict</em>) – model dictionary to copy</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict – deep copy of the model dictionary</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.exportModel">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">exportModel</code><span class="sig-paren">(</span><em>model</em>, <em>exportpath='.'</em>, <em>entitytypes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.exportModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports model to a given path in the provided formats.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>model</strong> (<em>dict</em>) – dictionary of model to export</li>
+<li><strong>exportpath</strong> (<em>str</em><em>, </em><em>optional</em>) – path to export root (Default value = ‘.’)</li>
+<li><strong>entitytypes</strong> (<em>list of str</em><em>, </em><em>optional</em>) – export types - model will be exported to all (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.exportScene">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">exportScene</code><span class="sig-paren">(</span><em>scenedict</em>, <em>exportpath='.'</em>, <em>scenetypes=None</em>, <em>export_entity_models=False</em>, <em>entitytypes=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.exportScene" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports provided scene to provided path</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>scenedict</strong> (<em>dict</em>) – dictionary of scene</li>
+<li><strong>exportpath</strong> (<em>str</em><em>, </em><em>optional</em>) – path to scene export folder (Default value = ‘.’)</li>
+<li><strong>scenetypes</strong> (<em>list of str</em><em>, </em><em>optional</em>) – export types for scene - scene will be exported to all (Default value = None)</li>
+<li><strong>export_entity_models</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to export entities additionally (Default value = False)</li>
+<li><strong>entitytypes</strong> (<em>list of str</em><em>, </em><em>optional</em>) – types to export entities in in case they are exported (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
 <dl class="function">
 <dt id="phobos.utils.io.getAbsolutePath">
 <code class="descclassname">phobos.utils.io.</code><code class="descname">getAbsolutePath</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getAbsolutePath" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns an absolute path derived from the .blend file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.getDictFromYamlDefs">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">getDictFromYamlDefs</code><span class="sig-paren">(</span><em>phobostype</em>, <em>defname</em>, <em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getDictFromYamlDefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a phobos representation of the object specified by the definition parameters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>phobostype</strong> (<em>str</em>) – phobostype of the definition</li>
+<li><strong>defname</strong> (<em>str</em>) – name of the individual definition</li>
+<li><strong>name</strong> (<em>str</em>) – name for the new object</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict – phobos representation from the definition</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.getEntityRoots">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">getEntityRoots</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getEntityRoots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all objects for which entity properties are specified.</p>
+<p>Args:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">roots of well-defined entities in the scene</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.getEntityTypesForExport">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">getEntityTypesForExport</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getEntityTypesForExport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of entity types available for export</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.getEntityTypesForImport">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">getEntityTypesForImport</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getEntityTypesForImport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of entity types available for import</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.io.getExpSettings">
 <code class="descclassname">phobos.utils.io.</code><code class="descname">getExpSettings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getExpSettings" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.io.getExportEntities">
-<code class="descclassname">phobos.utils.io.</code><code class="descname">getExportEntities</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getExportEntities" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns Phobos’ export settings as displayed in the GUI</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.io.getExportModels">
 <code class="descclassname">phobos.utils.io.</code><code class="descname">getExportModels</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getExportModels" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns a list of objects representing a model (root) in the Blender scene</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.io.getExportPath">
 <code class="descclassname">phobos.utils.io.</code><code class="descname">getExportPath</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getExportPath" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns the root path of the export.</p>
+<p>Phobos by default creates directories in this path for every format that is used for export,
+i.e. a folder “export/path/urdf” will be created for URDF files.</p>
+<p>Args:</p>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.getMeshTypesForExport">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">getMeshTypesForExport</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getMeshTypesForExport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of mesh types available for export</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.getMeshTypesForImport">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">getMeshTypesForImport</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getMeshTypesForImport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of mesh types available for import</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.io.getModelListForEnumProp">
 <code class="descclassname">phobos.utils.io.</code><code class="descname">getModelListForEnumProp</code><span class="sig-paren">(</span><em>self</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getModelListForEnumProp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns list of all exportable models in the scene formatted for an EnumProperty</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.io.getOutputMeshpath">
 <code class="descclassname">phobos.utils.io.</code><code class="descname">getOutputMeshpath</code><span class="sig-paren">(</span><em>path</em>, <em>meshtype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getOutputMeshpath" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns the folder path for mesh file export as specified in the GUI.</p>
+<p>Phobos by default creates a directory ‘meshes’ in the export path and subsequently creates
+sub-directories of “export/path/meshes” for every format, e.g. resulting in “export/path/mesh/obj”
+for .obj file export.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path</strong> (<em>str</em>) – export path root (set in the GUI)</li>
+<li><strong>meshtype</strong> (<em>str</em><em>, </em><em>optional</em>) – a valid mesh type, otherwise the type set in the GUI is used (Default value = None)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">output path for meshes</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">string</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.io.getOutputMeshtype">
 <code class="descclassname">phobos.utils.io.</code><code class="descname">getOutputMeshtype</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getOutputMeshtype" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Returns the mesh type to be used in exported files as specified in the GUI</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.getResource">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">getResource</code><span class="sig-paren">(</span><em>specifiers</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getResource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a resource object defined by an iterable of strings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>specifiers</strong> (<em>iterable</em>) – strings specifying the resource</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bpy.types.Object – resource object (or None if it could not be imported)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.getSceneTypesForExport">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">getSceneTypesForExport</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getSceneTypesForExport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of scene types available for export</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.getSceneTypesForImport">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">getSceneTypesForImport</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.getSceneTypesForImport" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns list of scene types available for import</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.io.importBlenderModel">
-<code class="descclassname">phobos.utils.io.</code><code class="descname">importBlenderModel</code><span class="sig-paren">(</span><em>filepath</em>, <em>namespace=''</em>, <em>prefix=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.importBlenderModel" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">phobos.utils.io.</code><code class="descname">importBlenderModel</code><span class="sig-paren">(</span><em>filepath</em>, <em>namespace=''</em>, <em>prefix=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.importBlenderModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports an existing Blender model into the current .blend scene</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filepath</strong> (<em>str</em>) – Path of the .blend file</li>
+<li><strong>namespace</strong> – (Default value = ‘’)</li>
+<li><strong>prefix</strong> – (Default value = False)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.io.importResources">
+<code class="descclassname">phobos.utils.io.</code><code class="descname">importResources</code><span class="sig-paren">(</span><em>restuple</em>, <em>filepath=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.io.importResources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accepts an iterable of iterables describing resource objects to import. For instance,
+reslist=((‘joint’, ‘continuous’), (‘interface’, ‘default’, ‘bidirectional’))
+would import the resource objects named ‘joint_continuous’ and
+‘interface_default_bidirectional’.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>restuple</strong> – iterable of iterables containing import objects</li>
+<li><strong>filepath</strong> – path to file from which to load resource (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns(tuple of bpy.types.Object): imported objects</p>
+<p>Returns:</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.io.l2str">
@@ -576,8 +1614,8 @@ category is provided, else {‘fetch’: {name: url, …}, ‘push’: {name: ur
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>items</strong> (<em>list</em>) – List from which the string is derived (elements need to implement str())</li>
-<li><strong>start</strong> (<em>int</em>) – Inclusive start index for iteration</li>
-<li><strong>end</strong> (<em>int</em>) – Exclusive end index for iteration</li>
+<li><strong>start</strong> (<em>int</em><em>, </em><em>optional</em>) – Inclusive start index for iteration (Default value = 0)</li>
+<li><strong>end</strong> (<em>int</em><em>, </em><em>optional</em>) – Exclusive end index for iteration (Default value = -1)</li>
 </ul>
 </td>
 </tr>
@@ -617,8 +1655,8 @@ Make sure the names and values list have the correct order.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>ind</strong> (<em>int &gt;= 0</em>) – Indentation level</li>
 <li><strong>tag</strong> (<em>String</em>) – xml element tag</li>
-<li><strong>names</strong> (<em>list</em><em> (</em><em>same order as for values</em><em>)</em>) – Names of xml element’s attributes</li>
-<li><strong>values</strong> (<em>list</em><em> (</em><em>same order as for names</em><em>)</em>) – Values of xml element’s attributes</li>
+<li><strong>names</strong> (<em>list</em><em> (</em><em>same order as for values</em>) – Names of xml element’s attributes</li>
+<li><strong>values</strong> (<em>list</em><em> (</em><em>same order as for names</em>) – Values of xml element’s attributes</li>
 </ul>
 </td>
 </tr>
@@ -631,19 +1669,8 @@ Make sure the names and values list have the correct order.</p>
 
 </div>
 <div class="section" id="module-phobos.utils.naming">
-<span id="phobos-utils-naming-module"></span><h2>phobos.utils.naming module<a class="headerlink" href="#module-phobos.utils.naming" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-phobos.utils.naming"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
-<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
-<p>Phobos is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation, either version 3
-of the License, or (at your option) any later version.</p>
-<p>Phobos is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.</p>
-<p>You should have received a copy of the GNU Lesser General Public License
-along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<span id="phobos-utils-naming-module"></span><h3>phobos.utils.naming module<a class="headerlink" href="#module-phobos.utils.naming" title="Permalink to this headline">¶</a></h3>
+<p>Contains the utility functions to rename objects, add/remove namespaces etc.</p>
 <dl class="function">
 <dt id="phobos.utils.naming.addNamespace">
 <code class="descclassname">phobos.utils.naming.</code><code class="descname">addNamespace</code><span class="sig-paren">(</span><em>obj</em>, <em>namespace=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.addNamespace" title="Permalink to this definition">¶</a></dt>
@@ -652,35 +1679,88 @@ along with Phobos.  If not, see &lt;<a class="reference external" href="http://w
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy.types.Object</em>) – The object to namespace.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – The object to namespace.</li>
+<li><strong>namespace</strong> – (Default value = None)</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.naming.addNamespaceToName">
+<code class="descclassname">phobos.utils.naming.</code><code class="descname">addNamespaceToName</code><span class="sig-paren">(</span><em>name</em>, <em>namespace</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.addNamespaceToName" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> – </li>
+<li><strong>namespace</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.naming.gatherNamespaces">
 <code class="descclassname">phobos.utils.naming.</code><code class="descname">gatherNamespaces</code><span class="sig-paren">(</span><em>separator='::'</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.gatherNamespaces" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gathers all existing namespaces.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>separator</strong> – (Default value = ‘::’)</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.naming.getModelName">
+<code class="descclassname">phobos.utils.naming.</code><code class="descname">getModelName</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.getModelName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the model encoded by obj, provided that obj is a valid model root.</p>
+<p>If obj does not contain a defined ‘model/name’, the object name is returned with a ‘*’ added
+ad the start, ensuring that the return value will not be treated as a valid model name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy.types.Object</em>) – root object of the model</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">str – modelname of the object or object name with ‘*’ prepended if undefined</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.naming.getObjectName">
 <code class="descclassname">phobos.utils.naming.</code><code class="descname">getObjectName</code><span class="sig-paren">(</span><em>obj</em>, <em>phobostype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.getObjectName" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the name for an object depending on its phobostype.
-For links and objects lacking a ‘<em>phobostype</em>/name’ property, the object’s
-name is used instead, cleaned of namespaces.</p>
+<dd><p>Returns the name of an object relevant to Phobos.
+An optional <em>phobostype</em> parameter can be provided for objects with multiple
+uses, such as link objects (which also contain joint and motor information).
+If no <em>phobostype</em> is provided, the phobostype of the object is used.
+The contents of the custom property <em>phobostype</em>/name are returned, if present,
+else the object name itself is returned, stripped of namespaces.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obj</strong> (<em>bpy.types.Object</em>) – The object you want the name for.</li>
-<li><strong>phobostype</strong> – The phobostype you want this objects name for.</li>
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object for which the name is requested</li>
+<li><strong>phobostype</strong> – phobostype if relevant (e.g. ‘motor’) (Default value = None)</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">str – The objects name.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">str – The object’s name</p>
 </td>
 </tr>
 </tbody>
@@ -688,9 +1768,41 @@ name is used instead, cleaned of namespaces.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="phobos.utils.naming.namesAreExplicit">
-<code class="descclassname">phobos.utils.naming.</code><code class="descname">namesAreExplicit</code><span class="sig-paren">(</span><em>nameset</em>, <em>objnames</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.namesAreExplicit" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks whether two sets of names have equal names.</p>
+<dt id="phobos.utils.naming.getUniqueName">
+<code class="descclassname">phobos.utils.naming.</code><code class="descname">getUniqueName</code><span class="sig-paren">(</span><em>newname</em>, <em>names</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.getUniqueName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a new name similar to the Blender internal convention.</p>
+<p>This ensures, that the Blender internal limit to object name lengths (63 characters) is matched
+without omitting the number. That way, unwanted naming behaviour is avoided.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>newname</strong> – desired object name</li>
+<li><strong>names</strong> – list of existing names (e.g. bpy.data.objects)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">str – new name that is unique in the Blender namespace</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.naming.isValidModelname">
+<code class="descclassname">phobos.utils.naming.</code><code class="descname">isValidModelname</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.isValidModelname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns if a name contains characters other than alphanumeric, ‘_’ and ‘-‘</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
@@ -705,29 +1817,106 @@ name is used instead, cleaned of namespaces.</p>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.naming.replaceNameElement">
 <code class="descclassname">phobos.utils.naming.</code><code class="descname">replaceNameElement</code><span class="sig-paren">(</span><em>prop</em>, <em>old</em>, <em>new</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.replaceNameElement" title="Permalink to this definition">¶</a></dt>
 <dd><p>For all selected elements in Blender, replace an <em>old</em> part of a string <em>prop*erty with *new</em>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>prop</strong> – </li>
+<li><strong>old</strong> – </li>
+<li><strong>new</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.naming.safelyName">
+<code class="descclassname">phobos.utils.naming.</code><code class="descname">safelyName</code><span class="sig-paren">(</span><em>obj</em>, <em>name</em>, <em>phobostype=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.safelyName" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Assigns a name to an object in a safe way with regard to the internal</dt>
+<dd><p class="first">name handling in Blender.</p>
+<p>If no <code class="docutils literal notranslate"><span class="pre">phobostype</span></code> is provided or the phobostype is the same as the object itself, the actual
+object is renamed, generating a name that no other object in Blender has, using Blender’s own
+naming scheme. This prevents Blender to assign the name and change another object’s name that
+previously held that name.</p>
+<p class="last">If the <code class="docutils literal notranslate"><span class="pre">name</span></code> provided cannot be assigned to the object, it is stored in a
+custom variable <code class="docutils literal notranslate"><span class="pre">phobostype/name</span></code>. Note that other <code class="docutils literal notranslate"><span class="pre">*/name</span></code> variables in
+the object are not updated.</p>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object to rename</li>
+<li><strong>name</strong> (<em>str</em>) – new name for the object</li>
+<li><strong>phobostype</strong> (<em>str</em><em>, </em><em>optional</em>) – only rename if the specified phobostype is matched (Default value =</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>None)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">new name of the Blender object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.naming.stripNamespaceFromName">
+<code class="descclassname">phobos.utils.naming.</code><code class="descname">stripNamespaceFromName</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.stripNamespaceFromName" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.naming.toggleNamespace">
+<code class="descclassname">phobos.utils.naming.</code><code class="descname">toggleNamespace</code><span class="sig-paren">(</span><em>obj</em>, <em>namespace=''</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.naming.toggleNamespace" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> – </li>
+<li><strong>namespace</strong> – (Default value = ‘’)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
 </dd></dl>
 
 </div>
 <div class="section" id="module-phobos.utils.selection">
-<span id="phobos-utils-selection-module"></span><h2>phobos.utils.selection module<a class="headerlink" href="#module-phobos.utils.selection" title="Permalink to this headline">¶</a></h2>
-<span class="target" id="module-phobos.utils.selection"></span><p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
-<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
-<p>Phobos is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation, either version 3
-of the License, or (at your option) any later version.</p>
-<p>Phobos is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.</p>
-<p>You should have received a copy of the GNU Lesser General Public License
-along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
+<span id="phobos-utils-selection-module"></span><h3>phobos.utils.selection module<a class="headerlink" href="#module-phobos.utils.selection" title="Permalink to this headline">¶</a></h3>
+<p>Contains the utility functions for selecting objects in Blender based on different criteria.</p>
 <dl class="function">
 <dt id="phobos.utils.selection.getChildren">
 <code class="descclassname">phobos.utils.selection.</code><code class="descname">getChildren</code><span class="sig-paren">(</span><em>root</em>, <em>phobostypes=()</em>, <em>selected_only=False</em>, <em>include_hidden=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getChildren" title="Permalink to this definition">¶</a></dt>
@@ -738,17 +1927,11 @@ given root object and phobostypes. If phobostypes is not provided, it is ignored
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>root</strong> (<em>bpy.types.Object.</em>) – object to start search from.</li>
-<li><strong>phobostypes</strong> (<em>list of strings.</em>) – phobostypes to limit search to.</li>
-<li><strong>selected_only</strong> – True to find only selected children, else False.</li>
-<li><strong>include_hidden</strong> – True to include hidden objects, else False.</li>
+<li><strong>root</strong> (<em>bpy.types.Object</em>) – object to start search from.</li>
+<li><strong>phobostypes</strong> (<em>list of strings</em><em>, </em><em>optional</em>) – phobostypes to limit search to. (Default value = ()</li>
+<li><strong>selected_only</strong> (<em>bool.</em><em>, </em><em>optional</em>) – True to find only selected children, else False. (Default value = False)</li>
+<li><strong>include_hidden</strong> (<em>bool.</em><em>, </em><em>optional</em>) – True to include hidden objects, else False. (Default value = True)</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><p class="first">selected_only: bool.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><p class="first">include_hidden: bool.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list - Blender objects which are children of root.</p>
@@ -760,7 +1943,7 @@ given root object and phobostypes. If phobostypes is not provided, it is ignored
 
 <dl class="function">
 <dt id="phobos.utils.selection.getEffectiveParent">
-<code class="descclassname">phobos.utils.selection.</code><code class="descname">getEffectiveParent</code><span class="sig-paren">(</span><em>obj</em>, <em>ignore_selection=False</em>, <em>include_hidden=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getEffectiveParent" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">getEffectiveParent</code><span class="sig-paren">(</span><em>obj</em>, <em>ignore_selection=False</em>, <em>include_hidden=False</em>, <em>objectlist=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getEffectiveParent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns the parent of an object, i.e. the first <em>link</em> ascending the
 object tree that is selected, starting from the obj, optionally also excluding
 hidden objects.</p>
@@ -768,44 +1951,34 @@ hidden objects.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obj</strong> (<em>bpy.types.Object.</em>) – object of which to find the parent.</li>
-<li><strong>include_hidden</strong> – True to include hidden objects, else False.</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object of which to find the parent.</li>
+<li><strong>include_hidden</strong> (<em>bool</em><em>, </em><em>optional</em>) – True to include hidden objects, else False. (Default value = False)</li>
+<li><strong>ignore_selection</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether or not to use the current selection as limitation (Default value = False)</li>
+<li><strong>objectlist</strong> – list of bpy.types.Object to which possible parents are restricted (Default value = [])</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><p class="first">include_hidden: bool.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bpy.types.Object - the effective parent of the obj.</p>
 </td>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.selection.getImmediateChildren">
 <code class="descclassname">phobos.utils.selection.</code><code class="descname">getImmediateChildren</code><span class="sig-paren">(</span><em>obj</em>, <em>phobostypes=()</em>, <em>selected_only=False</em>, <em>include_hidden=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getImmediateChildren" title="Permalink to this definition">¶</a></dt>
-<dd><p>Finds all immediate children for a given object and phoboytypes.
-If phobostypes is not provided, it is ignored. Search can be limited to
-selected objects and restricted to hidden objects.</p>
+<dd><p>Returns all immediate children for a given object and phobostypes (if provided).
+Search can be limited to selected objects and non-hidden objects.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>obj</strong> (<em>bpy.types.Object.</em>) – object to start search from.</li>
-<li><strong>phobostypes</strong> (<em>list of strings.</em>) – phobostypes to limit search to.</li>
-<li><strong>selected_only</strong> – True to find only selected children, else False.</li>
-<li><strong>include_hidden</strong> – True to include hidden objects, else False.</li>
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object to start search from.</li>
+<li><strong>phobostypes</strong> (<em>list of strings</em><em>, </em><em>optional</em>) – phobostypes to limit search to. (Default value = ()</li>
+<li><strong>selected_only</strong> (<em>bool.</em><em>, </em><em>optional</em>) – True to find only selected children, else False. (Default value = False)</li>
+<li><strong>include_hidden</strong> (<em>bool.</em><em>, </em><em>optional</em>) – True to include hidden objects, else False. (Default value = False)</li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><p class="first">selected_only: bool.</p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><p class="first">include_hidden: bool.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list - Blender objects which are immediate children of obj.</p>
@@ -818,14 +1991,17 @@ selected objects and restricted to hidden objects.</p>
 <dl class="function">
 <dt id="phobos.utils.selection.getObjectByName">
 <code class="descclassname">phobos.utils.selection.</code><code class="descname">getObjectByName</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getObjectByName" title="Permalink to this definition">¶</a></dt>
-<dd><p>Gets blender object by its name (blender objects name or subtypes name).</p>
+<dd><p>Returns list of objects that either have a specific <em>name</em> or contain a custom
+name property with that name.</p>
+<p>As the function returns either an empty list, a unique object or a list of objects,
+it is possible to test for uniqueness of the result by calling <cite>isinstance(result, list)</cite>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str.</em>) – The exact object name to find.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) – The exact object name to find.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list - all found objects.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bpy.types.Object or list - one or list of objects matching name</td>
 </tr>
 </tbody>
 </table>
@@ -841,8 +2017,8 @@ selected objects and restricted to hidden objects.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>name</strong> (<em>str.</em>) – The name to search for.</li>
-<li><strong>phobostype</strong> (<em>str.</em>) – The phobostype to search for.</li>
+<li><strong>name</strong> (<em>str</em>) – The name to search for.</li>
+<li><strong>phobostype</strong> (<em>str</em>) – The phobostype to search for.</li>
 </ul>
 </td>
 </tr>
@@ -854,18 +2030,37 @@ selected objects and restricted to hidden objects.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="phobos.utils.selection.getObjectByProperty">
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">getObjectByProperty</code><span class="sig-paren">(</span><em>property</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getObjectByProperty" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the first object found in the .blend file data with matching property and value</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>property</strong> – </li>
+<li><strong>value</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="phobos.utils.selection.getObjectsByPattern">
 <code class="descclassname">phobos.utils.selection.</code><code class="descname">getObjectsByPattern</code><span class="sig-paren">(</span><em>pattern</em>, <em>match_case=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getObjectsByPattern" title="Permalink to this definition">¶</a></dt>
-<dd><p>Find objects in the scene that match a name pattern. The pattern may match
-either the object’s actual name or the value of the ‘phobostype/name’
+<dd><p>Return a list of objects in the scene that match a name pattern. The pattern
+may match either the object’s actual name or the value of the ‘phobostype/name’
 property.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pattern</strong> (<em>str.</em>) – The pattern to search for.</li>
-<li><strong>match_case</strong> (<em>bool.</em>) – Indicate whether to match the object names’ case to the pattern.</li>
+<li><strong>pattern</strong> – str</li>
+<li><strong>match_case</strong> – bool (Default value = False)</li>
 </ul>
 </td>
 </tr>
@@ -884,18 +2079,13 @@ property.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>phobostypes</strong> (<em>list.</em>) – the phobostypes to match objects with.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>phobostypes</strong> (<em>list</em>) – the phobostypes to match objects with.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list - Blender objects.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
-
-<dl class="function">
-<dt id="phobos.utils.selection.getObjectsByProperty">
-<code class="descclassname">phobos.utils.selection.</code><code class="descname">getObjectsByProperty</code><span class="sig-paren">(</span><em>property</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getObjectsByProperty" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.selection.getRoot">
@@ -907,7 +2097,7 @@ If no such object is found, returns None.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy.types.Object.</em>) – The object to find the root for.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy.types.Object</em><em>, </em><em>optional</em>) – The object to find the root for. (Default value = None)</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bpy.types.Object - The root object.</td>
 </tr>
@@ -917,25 +2107,52 @@ If no such object is found, returns None.</p>
 
 <dl class="function">
 <dt id="phobos.utils.selection.getRoots">
-<code class="descclassname">phobos.utils.selection.</code><code class="descname">getRoots</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getRoots" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of all of the current scene’s root links, i.e. links containing a model
-name or entity name.</p>
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">getRoots</code><span class="sig-paren">(</span><em>scene=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getRoots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all of the current/specified scene’s root objects.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">list - all root links.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>scene</strong> (<em>bpy.types.Scene</em><em>, </em><em>optional</em>) – the scene of which to find the root objects (Default value = None)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list(bpy.types.Object) – root objects of the scene</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
 <dl class="function">
-<dt id="phobos.utils.selection.getSelectedObjects">
-<code class="descclassname">phobos.utils.selection.</code><code class="descname">getSelectedObjects</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getSelectedObjects" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a generator of all selected objects independent of bpy.context.</p>
-<p># DOCU fill this in
-:return:</p>
+<dt id="phobos.utils.selection.getRootsOfSelection">
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">getRootsOfSelection</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getRootsOfSelection" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.selection.getSubmechanismRootForJoint">
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">getSubmechanismRootForJoint</code><span class="sig-paren">(</span><em>jointobj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getSubmechanismRootForJoint" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>jointobj</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.selection.getSubmechanismRoots">
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">getSubmechanismRoots</code><span class="sig-paren">(</span><em>selection_only=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getSubmechanismRoots" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>selection_only</strong> – (Default value = False)</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
@@ -946,41 +2163,44 @@ name or entity name.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy.types.Object.</em>) – The object for which entity status is tested.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool - True if obj is an entity, else False.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy.types.Object</em>) – The object for which entity status is tested.</td>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.selection.isRoot">
-<code class="descclassname">phobos.utils.selection.</code><code class="descname">isRoot</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.isRoot" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">isRoot</code><span class="sig-paren">(</span><em>obj</em>, <em>scene=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.isRoot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns whether or not the object passed to obj is a Phobos model root.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy.types.Object.</em>) – The object for which model root status is tested.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool - True if obj is Phobos model root, else False.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – The object for which model root status is tested.</li>
+<li><strong>scene</strong> – (Default value = None)</li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.selection.selectByName">
-<code class="descclassname">phobos.utils.selection.</code><code class="descname">selectByName</code><span class="sig-paren">(</span><em>name</em>, <em>match_case=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.selectByName" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">selectByName</code><span class="sig-paren">(</span><em>name</em>, <em>match_case=False</em>, <em>exact=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.selectByName" title="Permalink to this definition">¶</a></dt>
 <dd><p>Uses getObjectsByPattern to select the found objects.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>pattern</strong> (<em>str.</em>) – The pattern to search for.</li>
-<li><strong>match_case</strong> (<em>bool.</em>) – Indicate whether to match the object names’ case to the pattern.</li>
+<li><strong>name</strong> (<em>str</em>) – The name (pattern) to search for.</li>
+<li><strong>match_case</strong> (<em>bool</em><em>, </em><em>optional</em>) – Indicate whether to match the object names’ case to the pattern. (Default value = False)</li>
+<li><strong>exact</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to search for exact string or not (Default value = False)</li>
 </ul>
 </td>
 </tr>
@@ -1001,9 +2221,9 @@ and sets one of the objects the active objects if a valid index is provided.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>objects</strong> (<em>list of bpy.types.Object.</em>) – the objects to be selected.</li>
-<li><strong>clear</strong> (<em>bool.</em>) – True to clear current selected objects before selection, else False.</li>
-<li><strong>active</strong> (<em>int.</em>) – index of the object to set active.</li>
+<li><strong>objects</strong> (<em>iterable of bpy.types.Object</em>) – the objects to be selected.</li>
+<li><strong>clear</strong> (<em>bool</em><em>, </em><em>optional</em>) – clear current selection? (Default value = True)</li>
+<li><strong>active</strong> (<em>int</em><em>, </em><em>optional</em>) – index of the object to set active. (Default value = -1)</li>
 </ul>
 </td>
 </tr>
@@ -1016,22 +2236,20 @@ and sets one of the objects the active objects if a valid index is provided.</p>
 
 </div>
 <div class="section" id="module-phobos.utils.validation">
-<span id="phobos-utils-validation-module"></span><h2>phobos.utils.validation module<a class="headerlink" href="#module-phobos.utils.validation" title="Permalink to this headline">¶</a></h2>
-<p>Copyright 2014, University of Bremen &amp; DFKI GmbH Robotics Innovation Center</p>
-<p>This file is part of Phobos, a Blender Add-On to edit robot models.</p>
-<p>Phobos is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License
-as published by the Free Software Foundation, either version 3
-of the License, or (at your option) any later version.</p>
-<p>Phobos is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Lesser General Public License for more details.</p>
-<p>You should have received a copy of the GNU Lesser General Public License
-along with Phobos.  If not, see &lt;<a class="reference external" href="http://www.gnu.org/licenses/">http://www.gnu.org/licenses/</a>&gt;.</p>
-<p>File validation.py</p>
-<p>Created on 26 March 2015</p>
-<p>&#64;author: Ole Schwiegert</p>
+<span id="phobos-utils-validation-module"></span><h3>phobos.utils.validation module<a class="headerlink" href="#module-phobos.utils.validation" title="Permalink to this headline">¶</a></h3>
+<dl class="class">
+<dt id="phobos.utils.validation.ValidateMessage">
+<em class="property">class </em><code class="descclassname">phobos.utils.validation.</code><code class="descname">ValidateMessage</code><span class="sig-paren">(</span><em>message</em>, <em>level</em>, <em>obj=None</em>, <em>operator=None</em>, <em>information=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.ValidateMessage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Resembles a message from a validation describing an issue in the model/object etc.</p>
+<dl class="method">
+<dt id="phobos.utils.validation.ValidateMessage.log">
+<code class="descname">log</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.ValidateMessage.log" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO Missing documentation</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="phobos.utils.validation.add_message">
 <code class="descclassname">phobos.utils.validation.</code><code class="descname">add_message</code><span class="sig-paren">(</span><em>messages</em>, <em>key</em>, <em>message</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.add_message" title="Permalink to this definition">¶</a></dt>
@@ -1041,9 +2259,9 @@ along with Phobos.  If not, see &lt;<a class="reference external" href="http://w
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>messages</strong> (<em>dict.</em>) – The dictionary containing the messages.</li>
-<li><strong>key</strong> (<em>str.</em>) – The messages corresponding key (node name).</li>
-<li><strong>message</strong> (<em>str.</em>) – The message to append to a specific key.</li>
+<li><strong>messages</strong> (<em>dict</em>) – The dictionary containing the messages.</li>
+<li><strong>key</strong> (<em>str</em>) – The messages corresponding key (node name).</li>
+<li><strong>message</strong> (<em>str</em>) – The message to append to a specific key.</li>
 </ul>
 </td>
 </tr>
@@ -1064,14 +2282,15 @@ It writes all messages to the given messages list</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dic</strong> (<em>dict.</em>) – The dictionary you want to validate.</li>
-<li><strong>validator</strong> (<em>dict.</em>) – The validation you want to validate against.</li>
-<li><strong>messages</strong> (<em>dict.</em>) – The message list you want to append the error messages to.</li>
+<li><strong>dic</strong> (<em>dict</em>) – The dictionary you want to validate.</li>
+<li><strong>validator</strong> (<em>dict</em>) – The validation you want to validate against.</li>
+<li><strong>messages</strong> (<em>dict</em>) – The message list you want to append the error messages to.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
@@ -1083,17 +2302,19 @@ It writes all messages to the given messages list</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dic</strong> (<em>dict.</em>) – The dictionary you want to validate.</li>
-<li><strong>validator</strong> (<em>dict.</em>) – The validation you want to validate against.</li>
-<li><strong>entry_list</strong> (<em>list.</em>) – This list contains all keys you have to traverse to get the correct value in the dictionary.</li>
-<li><strong>messages</strong> (<em>dict.</em>) – The message list you want to append the error messages to.</li>
-<li><strong>whole_validator</strong> (<em>dict.</em>) – This is a copy of the whole validation needed when referencing to a top level key.</li>
-<li><strong>current_elem</strong> (<em>str.</em>) – The current element the alg is checking.</li>
+<li><strong>dic</strong> (<em>dict</em>) – The dictionary you want to validate.</li>
+<li><strong>validator</strong> (<em>dict</em>) – The validation you want to validate against.</li>
+<li><strong>entry_list</strong><strong>(</strong><strong>list</strong> – list): This list contains all keys you have to traverse to get the correct value in the dictionary.</li>
+<li><strong>messages</strong> (<em>dict</em>) – The message list you want to append the error messages to.</li>
+<li><strong>whole_validator</strong> (<em>dict</em>) – This is a copy of the whole validation needed when referencing to a top level key.</li>
+<li><strong>current_elem</strong> (<em>str</em>) – The current element the alg is checking.</li>
+<li><strong>entry_list</strong> – </li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
@@ -1106,21 +2327,36 @@ messages into the given list.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>leaf_value</strong> (<em>dict.</em>) – The leaf value used for validation.</li>
-<li><strong>dic</strong> (<em>dict.</em>) – The dictionary you want to validate.</li>
-<li><strong>entry_list</strong> (<em>list.</em>) – The keys navigating you to the dictionary value to validate against the validation leaf.</li>
-<li><strong>messages</strong> (<em>dict.</em>) – The list you want to append the messages to.</li>
+<li><strong>leaf_value</strong> (<em>dict</em>) – The leaf value used for validation.</li>
+<li><strong>dic</strong> (<em>dict</em>) – The dictionary you want to validate.</li>
+<li><strong>entry_list</strong><strong>(</strong><strong>list</strong> – list): The keys navigating you to the dictionary value to validate against the validation leaf.</li>
+<li><strong>messages</strong> (<em>dict</em>) – The list you want to append the messages to.</li>
+<li><strong>current_elem</strong> – </li>
+<li><strong>entry_list</strong> – </li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="phobos.utils.validation.generateCheckMessages">
 <code class="descclassname">phobos.utils.validation.</code><code class="descname">generateCheckMessages</code><span class="sig-paren">(</span><em>param1</em>, <em>param2</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.generateCheckMessages" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function is just for generating a blender friendly list for an operator.</p>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>param1</strong> – </li>
+<li><strong>param2</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
@@ -1132,17 +2368,20 @@ messages into the given list.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>node</strong> (<em>str.</em>) – The operator to handle.</li>
-<li><strong>dic</strong> (<em>dict.</em>) – The dict you want to validate.</li>
-<li><strong>validator</strong> (<em>dict.</em>) – The validation you want to validate the dic with.</li>
-<li><strong>entry_list</strong> (<em>list.</em>) – The list of keys to navigate to the value in the dictionary.</li>
-<li><strong>messages</strong> (<em>dict.</em>) – The list to append the messages to.</li>
-<li><strong>whole_validator</strong> (<em>dict.</em>) – The whole validation to reach top level keys in case of a reference operator.</li>
+<li><strong>node</strong> (<em>str</em>) – The operator to handle.</li>
+<li><strong>dic</strong> (<em>dict</em>) – The dict you want to validate.</li>
+<li><strong>validator</strong> (<em>dict</em>) – The validation you want to validate the dic with.</li>
+<li><strong>entry_list</strong><strong>(</strong><strong>list</strong> – list): The list of keys to navigate to the value in the dictionary.</li>
+<li><strong>messages</strong> (<em>dict</em>) – The list to append the messages to.</li>
+<li><strong>whole_validator</strong> (<em>dict</em>) – The whole validation to reach top level keys in case of a reference operator.</li>
+<li><strong>current_elem</strong> – </li>
+<li><strong>entry_list</strong> – </li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
+<p>Returns:</p>
 </dd></dl>
 
 <dl class="function">
@@ -1153,7 +2392,7 @@ messages into the given list.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node_value</strong> (<em>dict.</em>) – The value of the node you want to check.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node_value</strong> (<em>dict</em>) – The value of the node you want to check.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool.</td>
 </tr>
@@ -1169,7 +2408,7 @@ messages into the given list.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> (<em>str.</em>) – The node key you want to check.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> (<em>str</em>) – The node key you want to check.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bool.</td>
 </tr>
@@ -1187,8 +2426,9 @@ keys are not found.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>dic</strong> (<em>dict.</em>) – The dictionary to traverse.</li>
-<li><strong>entry_list</strong> (<em>list.</em>) – The list of keys you want to traverse with.</li>
+<li><strong>dic</strong> (<em>dict</em>) – The dictionary to traverse.</li>
+<li><strong>entry_list</strong><strong>(</strong><strong>list</strong> – list): The list of keys you want to traverse with.</li>
+<li><strong>entry_list</strong> – </li>
 </ul>
 </td>
 </tr>
@@ -1199,6 +2439,216 @@ keys are not found.</p>
 </table>
 </dd></dl>
 
+<dl class="function">
+<dt id="phobos.utils.validation.validate">
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validate</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validate" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.validation.validateGeometryType">
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateGeometryType</code><span class="sig-paren">(</span><em>obj</em>, <em>*args</em>, <em>adjust=False</em>, <em>geometry_dict=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateGeometryType" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> – </li>
+<li><strong>*args</strong> – </li>
+<li><strong>adjust</strong> – (Default value = False)</li>
+<li><strong>geometry_dict</strong> – (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.validation.validateInertiaData">
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateInertiaData</code><span class="sig-paren">(</span><em>obj</em>, <em>*args</em>, <em>adjust=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateInertiaData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates an inertia dictionary or object.</p>
+<p>This checks for the <em>inertia</em> and <em>mass</em> values in the dictionary (<em>inertial/inertia</em> and
+<em>inertial/mass</em> for an object respectively).</p>
+<p>Also, the inertia values are checked to be positive definite (for diagonal, determinant and
+eigenvalues).</p>
+<p>If adjust is set, values are adjusted/fixed for the returned dict/object. E.g. this sets a
+negative mass to 1e-3.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>dict/bpy.types.Object</em>) – inertia dictionary or object to validate</li>
+<li><strong>*args</strong> – other arguments</li>
+<li><strong>adjust</strong> – if True, bad values will be fixed/complemented (Default value = False)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of <a class="reference internal" href="#phobos.utils.validation.ValidateMessage" title="phobos.utils.validation.ValidateMessage"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValidateMessage</span></code></a>s and the fixed dictionary/object</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">tuple</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.validation.validateJoint">
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateJoint</code><span class="sig-paren">(</span><em>link</em>, <em>adjust=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateJoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks for errors in the joint definitions of the specified link.</p>
+<blockquote>
+<div>If autocomplete is set, the missing dictionary entries are complemented.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>link</strong> (<em>bpy.types.Object</em>) – link object which forms the joint</li>
+<li><strong>autocomplete</strong> (<em>bool</em>) – add missing keys to the link object</li>
+<li><strong>adjust</strong> – (Default value = False)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list(ValidateMessage) – error messages of the validation</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.validation.validateJointType">
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateJointType</code><span class="sig-paren">(</span><em>link</em>, <em>adjust=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateJointType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the joint type of the specified link.</p>
+<p>If adjust is <cite>True</cite>, the validation errors are fixed on the fly.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>link</strong> (<em>bpy.types.Object</em>) – link representing the joint to validate</li>
+<li><strong>adjust</strong> (<em>bool</em><em>, </em><em>optional</em>) – if True, the validation errors are fixed on the fly. (Default value = False)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list(ValidateMessage) – validation errors</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.validation.validateLink">
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateLink</code><span class="sig-paren">(</span><em>link</em>, <em>objectlist=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateLink" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>link</strong> – </li>
+<li><strong>objectlist</strong> – (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.validation.validateMaterial">
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateMaterial</code><span class="sig-paren">(</span><em>material</em>, <em>adjust=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateMaterial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the specified material.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>material</strong> (<em>bpy.types.Material</em>) – material to validate</li>
+<li><strong>adjust</strong> – (Default value = False)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list(ValidateMessage) – validation errors for the material</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.validation.validateObjectNames">
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateObjectNames</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateObjectNames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check for naming errors of the specified object.</p>
+<dl class="docutils">
+<dt>This checks:</dt>
+<dd><ul class="first last simple">
+<li>the <em>phobostype</em>/names</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy.types.Object</em>) – object to be checked</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">:class:ValidateMessage list</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.validation.validateObjectPose">
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateObjectPose</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateObjectPose" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.validation.validateVisual">
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateVisual</code><span class="sig-paren">(</span><em>obj</em>, <em>*args</em>, <em>adjust=False</em>, <em>geometry_dict=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateVisual" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> – </li>
+<li><strong>*args</strong> – </li>
+<li><strong>adjust</strong> – (Default value = False)</li>
+<li><strong>geometry_dict</strong> – (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+</div>
 </div>
 <div class="section" id="module-phobos.utils">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phobos.utils" title="Permalink to this headline">¶</a></h2>
@@ -1217,7 +2667,7 @@ keys are not found.</p>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">phobos.utils package</a><ul>
-<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a><ul>
 <li><a class="reference internal" href="#module-phobos.utils.blender">phobos.utils.blender module</a></li>
 <li><a class="reference internal" href="#module-phobos.utils.editing">phobos.utils.editing module</a></li>
 <li><a class="reference internal" href="#module-phobos.utils.general">phobos.utils.general module</a></li>
@@ -1226,11 +2676,16 @@ keys are not found.</p>
 <li><a class="reference internal" href="#module-phobos.utils.naming">phobos.utils.naming module</a></li>
 <li><a class="reference internal" href="#module-phobos.utils.selection">phobos.utils.selection module</a></li>
 <li><a class="reference internal" href="#module-phobos.utils.validation">phobos.utils.validation module</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-phobos.utils">Module contents</a></li>
 </ul>
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="phobos.operators.html"
+                        title="previous chapter">phobos.operators package</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -1263,13 +2718,16 @@ keys are not found.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 0.7 documentation</a> &#187;</li> 
+        <li class="right" >
+          <a href="phobos.operators.html" title="phobos.operators package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="phobos.html" >phobos package</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014-2018, DFKI GmbH.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.1.
-&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
     </div>
   </body>
 </html>
