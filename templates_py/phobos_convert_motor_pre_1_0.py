@@ -1,0 +1,72 @@
+import bpy
+
+from phobos.utils.selection import selectObjects, getImmediateChildren
+from phobos.model.motors import createMotor
+from phobos.utils.io import getDictFromYamlDefs
+
+def derive_oldMotor(obj):
+    key_map = {
+        'motor/type' : 'motor/type',
+        'motor/name' : 'motor/name',
+    }
+
+    new_motor = {}
+
+    for oldProps, newProps in key_map.items():
+        if oldProps in obj.keys():
+            if oldProps == 'motor/type' and obj[oldProps] == 'PID':
+                    new_motor.update({newProps : 'generic_bldc'})
+            else:
+                new_motor.update({newProps : obj[oldProps]})
+    if not 'motor/name' in new_motor.keys():
+        new_motor.update({'motor/name' : obj.name + '_Motor'})
+
+    return new_motor
+
+
+
+def update_child(child, obj):
+    motor_keys = ['motor/maxEffort', 'motor/maxSpeed']
+    controller_map = {
+        'controller/p' : 'motor/p',
+        'controller/i' : 'motor/i',
+        'controller/d' : 'motor/d'
+        }
+
+    if isinstance(child, list):
+        for children in child:
+            update_child(children, obj)
+    else:
+        if child.phobostype == 'motor':
+            child.name = obj.name + '_Motor'
+            child['motor/name'] = obj.name
+            for prop in motor_keys:
+                try:
+                    child[prop] = obj[prop]
+                    del obj[prop]
+                except:
+                    pass
+            if 'motor/type' in obj.keys():
+                del obj['motor/type']
+                
+        elif child.phobostype == 'controller':
+            child.name = obj.name + '_Controller'
+            child['controller/name'] = obj.name
+            for new, old in controller_map.items():
+                try:
+                    child[new] = obj[old]
+                    del obj[old]
+                except:
+                    pass
+
+selected_only = True
+
+objectlist = bpy.context.selected_objects if selected_only else bpy.data.objects
+for obj in objectlist:
+    if obj.phobostype == 'link':
+        motor_found = any('motor' in key for key in obj.keys())
+        if motor_found:
+            new_motor_dict = derive_oldMotor(obj)
+            motor_dict = getDictFromYamlDefs('motor', new_motor_dict['motor/type'], new_motor_dict['motor/name'])
+            new_objects = createMotor(motor_dict, obj,origin = obj.matrix_world, addcontrollers=True)
+            update_child(new_objects, obj)
