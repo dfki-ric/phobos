@@ -49,7 +49,7 @@ format:
 apidoc:
 		@echo 'Start sphinx doc generation...'
 		rm phobos/__init__.py
-		cd doc && make html
+		cd doc && make clean && make html
 		cd doc/_build/html && grep -rl --include=\*.html 'Created using' | xargs -r sed -i '/Created using/ s/$$/\&nbsp\&nbsp\&nbsp<a\ href=\"https:\/\/help\.github.com\/articles\/github-privacy-statement\/\">Privacy<\/a>/'
 		git checkout -- phobos/__init__.py
 		git checkout gh-pages
