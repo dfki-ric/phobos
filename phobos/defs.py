@@ -32,7 +32,6 @@ import glob
 import re
 
 import yaml
-from phobos.phoboslog import log
 import phobos.phobossystem as phobossystem
 
 # Phobos information
@@ -146,21 +145,14 @@ def updateDefs(defsFolderPath):
         for category in diction:
             for key, value in diction[category].items():
                 if category not in definitions:
-                    log("Creating new definition type: " + category, 'INFO')
+                    print("Creating new definition type: " + category)
                     definitions[category] = {}
                     def_settings[category] = {}
                     def_subcategories[category] = set([])
 
                 # TODO we need to insert user data, instead overwriting existing
                 if key in definitions[category]:
-                    log(
-                        "Entry for "
-                        + category
-                        + '/'
-                        + key
-                        + " will be overwritten while parsing definitions.",
-                        "WARNING",
-                    )
+                    print("Entry for " + category + '/' + key)
 
                 # parse def_settings to other dictionary
                 if isinstance(value, dict) and 'general' in value and value['general']:
@@ -196,7 +188,7 @@ def __evaluateString(s):
         try:
             s = s.replace(ma, str(eval(ma[1:-1])))
         except ():
-            log("The expression " + ma + " could not be evaluated. Ignoring file", "ERROR")
+            print("The expression " + ma + " could not be evaluated. Ignoring file")
             return ""
     return s
 
@@ -222,13 +214,13 @@ def __parseAllYAML(path):
                 tmpyaml = yaml.load(__evaluateString(tmpstring))
 
                 if not tmpyaml:
-                    log(file + " does not contain any yaml information.", 'ERROR')
+                    print(file + " does not contain any yaml information.")
                     continue
                 dicts.append(tmpyaml)
             except yaml.scanner.ScannerError as e:
-                log(os.path.relpath(file, path) + " could not be parsed:\n" + str(e), 'ERROR')
+                print(os.path.relpath(file, path) + " could not be parsed:\n" + str(e))
         except FileNotFoundError:
-            log(os.path.relpath(file, path=path) + " was not found.", 'ERROR')
+            print(os.path.relpath(file, path=path) + " was not found.")
     return dicts
 
 
