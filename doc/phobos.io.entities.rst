@@ -5,7 +5,7 @@ Submodules
 ----------
 
 phobos.io.entities.entities module
-----------------------------------
+``````````````````````````````````
 
 .. automodule:: phobos.io.entities.entities
     :members:
@@ -13,7 +13,7 @@ phobos.io.entities.entities module
     :show-inheritance:
 
 phobos.io.entities.heightmap module
------------------------------------
+```````````````````````````````````
 
 .. automodule:: phobos.io.entities.heightmap
     :members:
@@ -21,7 +21,7 @@ phobos.io.entities.heightmap module
     :show-inheritance:
 
 phobos.io.entities.light module
--------------------------------
+```````````````````````````````
 
 .. automodule:: phobos.io.entities.light
     :members:
@@ -29,7 +29,7 @@ phobos.io.entities.light module
     :show-inheritance:
 
 phobos.io.entities.primitive module
------------------------------------
+```````````````````````````````````
 
 .. automodule:: phobos.io.entities.primitive
     :members:
@@ -37,7 +37,7 @@ phobos.io.entities.primitive module
     :show-inheritance:
 
 phobos.io.entities.sdf module
------------------------------
+`````````````````````````````
 
 .. automodule:: phobos.io.entities.sdf
     :members:
@@ -45,7 +45,7 @@ phobos.io.entities.sdf module
     :show-inheritance:
 
 phobos.io.entities.smurf module
--------------------------------
+```````````````````````````````
 
 .. automodule:: phobos.io.entities.smurf
     :members:
@@ -53,7 +53,7 @@ phobos.io.entities.smurf module
     :show-inheritance:
 
 phobos.io.entities.srdf module
-------------------------------
+``````````````````````````````
 
 .. automodule:: phobos.io.entities.srdf
     :members:
@@ -61,7 +61,7 @@ phobos.io.entities.srdf module
     :show-inheritance:
 
 phobos.io.entities.submechanisms module
----------------------------------------
+```````````````````````````````````````
 
 .. automodule:: phobos.io.entities.submechanisms
     :members:
@@ -69,7 +69,7 @@ phobos.io.entities.submechanisms module
     :show-inheritance:
 
 phobos.io.entities.thumbnail module
------------------------------------
+```````````````````````````````````
 
 .. automodule:: phobos.io.entities.thumbnail
     :members:
@@ -77,7 +77,7 @@ phobos.io.entities.thumbnail module
     :show-inheritance:
 
 phobos.io.entities.urdf module
-------------------------------
+``````````````````````````````
 
 .. automodule:: phobos.io.entities.urdf
     :members:
@@ -85,7 +85,7 @@ phobos.io.entities.urdf module
     :show-inheritance:
 
 phobos.io.entities.yaml module
-------------------------------
+``````````````````````````````
 
 .. automodule:: phobos.io.entities.yaml
     :members:

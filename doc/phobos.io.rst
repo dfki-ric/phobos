@@ -5,6 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
+    :maxdepth: 3
 
     phobos.io.entities
     phobos.io.libraries

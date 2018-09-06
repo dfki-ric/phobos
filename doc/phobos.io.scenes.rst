@@ -5,7 +5,7 @@ Submodules
 ----------
 
 phobos.io.scenes.mars module
-----------------------------
+````````````````````````````
 
 .. automodule:: phobos.io.scenes.mars
     :members:
@@ -13,7 +13,7 @@ phobos.io.scenes.mars module
     :show-inheritance:
 
 phobos.io.scenes.sdfworld module
---------------------------------
+````````````````````````````````
 
 .. automodule:: phobos.io.scenes.sdfworld
     :members:
@@ -21,7 +21,7 @@ phobos.io.scenes.sdfworld module
     :show-inheritance:
 
 phobos.io.scenes.smurfs module
-------------------------------
+``````````````````````````````
 
 .. automodule:: phobos.io.scenes.smurfs
     :members:

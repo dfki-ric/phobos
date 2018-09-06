@@ -5,7 +5,7 @@ Submodules
 ----------
 
 phobos.io.libraries.mechanisms module
--------------------------------------
+`````````````````````````````````````
 
 .. automodule:: phobos.io.libraries.mechanisms
     :members:
@@ -13,7 +13,7 @@ phobos.io.libraries.mechanisms module
     :show-inheritance:
 
 phobos.io.libraries.models module
----------------------------------
+`````````````````````````````````
 
 .. automodule:: phobos.io.libraries.models
     :members:
