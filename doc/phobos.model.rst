@@ -68,6 +68,14 @@ phobos.model.models module
     :undoc-members:
     :show-inheritance:
 
+phobos.model.motors module
+``````````````````````````
+
+.. automodule:: phobos.model.motors
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 phobos.model.poses module
 `````````````````````````
 
