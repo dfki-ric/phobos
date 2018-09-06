@@ -48,12 +48,11 @@ def getLeaves(roots, objects = []):
     else:
         if roots.phobostype != 'link':
             roots = getEffectiveParent(roots, objectlist = objects)
-        print('Root : {0} \n'.format(roots))
+
         candidates = getImmediateChildren(roots, phobostypes=('link'))
-        print('Candidates : {0} \n'.format(candidates))
+
         if objects and candidates:
             candidates = [candidate for candidate in candidates if candidate in objects]
-        print('Candidates : {0} \n\n'.format(candidates))
 
         if candidates:
             leaves += getLeaves(candidates, objects = objects)
@@ -132,6 +131,37 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
         and (child.select or not selected_only)
     ]
 
+
+def getRecursiveChildren(obj, recursion_depth = None ,phobostypes=(), selected_only=False, include_hidden=False):
+    """Returns all children for a given object and phobostypes (if provided) within the given recursion depth.
+    Search can be limited to selected objects and non-hidden objects.
+
+    Args:
+      obj(bpy.types.Object): object to start search from.
+      recursion_depth(int): Depth of the recursion, default is all levels (Default value = None)
+      phobostypes(list of strings, optional): phobostypes to limit search to. (Default value = ()
+      selected_only(bool., optional): True to find only selected children, else False. (Default value = False)
+      include_hidden(bool., optional): True to include hidden objects, else False. (Default value = False)
+
+    Returns:
+      : list - Blender objects which are immediate children of obj.
+
+    """
+
+    children = getImmediateChildren(obj, phobostypes, selected_only, include_hidden)
+    current_children = children
+    recursion_level = 0
+    while current_children:
+        if recursion_depth and recursion_level > recursion_depth:
+            return children
+        else:
+            next_children = []
+            for child in current_children:
+                next_children += getImmediateChildren(child, phobostypes, selected_only, include_hidden)
+            children += next_children
+            current_children = next_children
+            recursion_level += 1
+    return children
 
 def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, objectlist=[]):
     """Returns the parent of an object, i.e. the first *link* ascending the
