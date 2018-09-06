@@ -629,7 +629,7 @@ def validateInertiaData(obj, *args, adjust=False):
       adjust: if True, bad values will be fixed/complemented (Default value = False)
 
     Returns:
-      tuple: list of :class:`ValidateMessage`s and the fixed dictionary/object
+      tuple: list of :class:`ValidateMessage`\ s and the fixed dictionary/object
 
     """
     from phobos.model.inertia import inertiaListToMatrix, inertiaMatrixToList

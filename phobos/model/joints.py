@@ -61,10 +61,8 @@ def createJoint(joint, linkobj=None, links=None):
 
     Args:
       joint(dict): dictionary containing the joint definition
-      linkobj(bpy.types.Object, optional): the link object to receive the joint (Default value =
-    None)
-      links(dict, optional): dictionary containing the list objects with their *object* keys set
-    (Default value = None)
+      linkobj(bpy.types.Object, optional): link object receiving joint (Default value = None)
+      links(dict, optional): model dictionary of links (Default value = None)
 
     Returns:
       None: None
