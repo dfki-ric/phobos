@@ -132,13 +132,13 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
     ]
 
 
-def getRecursiveChildren(obj, recursion_depth = None ,phobostypes=(), selected_only=False, include_hidden=False):
+def getRecursiveChildren(obj, recursion_depth = 0 ,phobostypes=(), selected_only=False, include_hidden=False):
     """Returns all children for a given object and phobostypes (if provided) within the given recursion depth.
     Search can be limited to selected objects and non-hidden objects.
 
     Args:
       obj(bpy.types.Object): object to start search from.
-      recursion_depth(int): Depth of the recursion, default is all levels (Default value = None)
+      recursion_depth(int): Depth of the recursion, default is all levels (Default value = 0)
       phobostypes(list of strings, optional): phobostypes to limit search to. (Default value = ()
       selected_only(bool., optional): True to find only selected children, else False. (Default value = False)
       include_hidden(bool., optional): True to include hidden objects, else False. (Default value = False)
@@ -151,16 +151,13 @@ def getRecursiveChildren(obj, recursion_depth = None ,phobostypes=(), selected_o
     children = getImmediateChildren(obj, phobostypes, selected_only, include_hidden)
     current_children = children
     recursion_level = 0
-    while current_children:
-        if recursion_depth and recursion_level > recursion_depth:
-            return children
-        else:
-            next_children = []
-            for child in current_children:
-                next_children += getImmediateChildren(child, phobostypes, selected_only, include_hidden)
-            children += next_children
-            current_children = next_children
-            recursion_level += 1
+    while current_children and recursion_level < recursion_depth:
+        next_children = []
+        for child in current_children:
+            next_children += getImmediateChildren(child, phobostypes, selected_only, include_hidden)
+        current_children = next_children
+        children += next_children
+        recursion_level += 1
     return children
 
 def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, objectlist=[]):
