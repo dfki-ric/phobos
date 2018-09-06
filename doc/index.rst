@@ -15,7 +15,7 @@ Phobos was initiated and is currently developed at the Robotics Innovation Cente
 
 User documentation can be found in the Phobos Wiki at https://github.com/dfki-ric/phobos/wiki .
 
-Please contact `Simon V. Reichel <https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/sire01.html>`_) for any inquiries, or any questions and feedback not suited for the `issues <https://github.com/dfki-ric/phobos/issues>`_ page.
+Please contact `Simon V. Reichel <https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/sire01.html>`_ for any inquiries, or any questions and feedback not suited for the `issues <https://github.com/dfki-ric/phobos/issues>`_ page.
 
 This page provides the code documentation of Phobos.
 
