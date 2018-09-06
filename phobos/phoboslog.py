@@ -53,7 +53,7 @@ class Col(Enum):
 
 def decorate(level):
     """Simple wrapper to color the log level according to the colors from :class:`.Col`.
-
+    
     If there is no decorator for this level, an undecorated string will be returned.
 
     Args:
@@ -76,7 +76,7 @@ def decorate(level):
 
 def log(message, level="INFO", prefix="", guionly=False, end='\n'):
     """Logs a given message to the blender console/logging file and if log level is low enough.
-
+    
     The origin can be defined as string or an object. The message is logged by the operator
     depending on the loglevel settings.
 
@@ -152,15 +152,15 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
 
 def find_calling_operator(frame):
     """Finds the calling operator of a log call from the specified frame.
-
+    
     If one intermediary function name is in the :data:`FUNCTION_BLACKLIST`, the search is
     interrupted.
-
+    
     If nothing is found or the search is interrupted, None will be returned.
 
     Args:
       frame(frame: frame): call frame to begin search from
-      frame:
+      frame: 
 
     Returns:
       function: execute function of the calling operator or None

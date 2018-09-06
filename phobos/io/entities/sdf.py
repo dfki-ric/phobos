@@ -123,6 +123,9 @@ class xmlTagger(object):
         
         Args:
           tag(str): The tag used to create the new element.
+        
+        Args:
+          tag:
 
         Args:
           tag: 

@@ -398,7 +398,7 @@ def store_element_order(element_order, path):
 def calc_pose_formats(position, rotation, pivot=(0, 0, 0)):
     """Create a dictionary containing various representations of the pose
     represented by 'position' and 'rotation':
-
+    
         - translation == position
         - rotation_quaternion == rotation
         - rotation_euler: euler angles

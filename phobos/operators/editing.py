@@ -1861,6 +1861,7 @@ def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
 
     Returns:
       tuple: lists of new motor, new annotation and controller objects
+
     """
     addtoall = args[0]
     addcontrollers = args[1]
@@ -2007,6 +2008,7 @@ def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args
 
     Returns:
       tuple: lists of new sensor, new annotation objects and empty list
+
     """
     addlink = args[0]
 
@@ -2239,6 +2241,7 @@ def addControllerFromYaml(controller_dict, annotations, selected_objs, active_ob
 
     Returns:
       tuple: tuple of lists of new motor, new controller and new annotation objects
+
     """
     addtoall = args[0]
 

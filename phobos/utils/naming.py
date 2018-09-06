@@ -66,7 +66,7 @@ def safelyName(obj, name, phobostype=None):
       obj(bpy.types.Object): object to rename
       name(str): new name for the object
       phobostype(str, optional): only rename if the specified phobostype is matched (Default value =
-          None)
+    None)
 
     Returns:
       str: new name of the Blender object

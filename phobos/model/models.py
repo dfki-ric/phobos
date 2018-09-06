@@ -262,7 +262,7 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
 
 def get_link_information(linkobj):
     """Returns the full link information including joint and motor data from a blender object.
-
+    
     The link information is derived according to :func:`derive_link`.
 
     Args:
@@ -270,6 +270,7 @@ def get_link_information(linkobj):
 
     Returns:
       dict: link representation of the object
+
     """
     props = initObjectProperties(
         linkobj, phobostype='link', ignoretypes=['joint', 'motor', 'entity']

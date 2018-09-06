@@ -102,7 +102,7 @@ def restructureKinematicTree(link, root=None):
       root(bpy.types.Object, optional): the current root object (Default value = None)
 
     Returns:
-      None : None
+      None: None
 
     """
     if not root:
