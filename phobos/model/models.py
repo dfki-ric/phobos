@@ -263,18 +263,14 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
 def get_link_information(linkobj):
     """Returns the full link information including joint and motor data from a blender object.
 
+    The link information is derived according to :func:`derive_link`.
+
     Args:
       linkobj(bpy.types.Object): blender object to derive the link from
 
     Returns:
-      : dict
-      .. seealso:: derive_link: representation of the link including motor and joint data
-
+      dict: link representation of the object
     """
-    assert linkobj.phobostype == 'link', (
-        "Wrong phobostype: " + linkobj.phobostype + " instead of link."
-    )
-
     props = initObjectProperties(
         linkobj, phobostype='link', ignoretypes=['joint', 'motor', 'entity']
     )
@@ -284,10 +280,6 @@ def get_link_information(linkobj):
     props['pose'] = deriveObjectPose(linkobj)
     props['joint'] = deriveJoint(linkobj, logging=False, adjust=False)
     del props['joint']['parent']
-
-    # derive Motor
-    if any(item.startswith('motor') for item in props):
-        props['motor'] = deriveMotor(linkobj, props['joint'])
 
     # collect collision objs for link
     collisionobjs = sUtils.getImmediateChildren(

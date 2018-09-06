@@ -43,9 +43,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
       addcontrollers(bool, optional): whether to add the defined controller as object (Default value = False)
 
     Returns:
-      : bpy.types.Object or list(bpy.types.Object)-- new motor object or a list of the new motor_obj
-      : bpy.types.Object or list(bpy.types.Object)-- new motor object or a list of the new motor_obj
-      and the new controller object
+      bpy.types.Object: new motor object or a list of the new motor_object and the new controller object
 
     """
     layers = defs.layerTypes['motor']

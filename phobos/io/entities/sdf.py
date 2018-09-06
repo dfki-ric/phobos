@@ -129,7 +129,7 @@ class xmlTagger(object):
           params:  (Default value = None)
 
         Returns:
-          
+          None: None
 
         """
         self.workingTags.append(str(tag))

@@ -54,18 +54,19 @@ def getModelListForEnumProperty(self, context):
 
 
 def getCategoriesForEnumProperty(self, context):
-    """
+    """Returns a list of categories for an EnumProperty.
+
+    The categories are based on the ``categories`` variable in the current namespace.
+
+    If there are no categories return ('-', '-', '-').
 
     Args:
       context: 
 
     Returns:
-      : available category in the model library.
-      : available category in the model library.
-      If there are no categories return ('-', '-', '-').
-
+      list : available category in the model library.
     """
-    if len(categories) == 0:
+    if categories:
         return [('-',) * 3]
     return sorted([(item,) * 3 for item in categories])
 

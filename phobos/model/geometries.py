@@ -36,7 +36,7 @@ def getLargestDimension(geometry):
     """
 
     Args:
-      geometry:
+      geometry: 
 
     Returns:
 
@@ -56,7 +56,7 @@ def getLargestDimension(geometry):
 @validate('geometry_type')
 def deriveGeometry(obj, adjust=False, **kwargs):
     """This function derives the geometry from an object.
-
+    
     The returned dictionary contains this information (depending on the geometry type):
         *type*: geometry type of the object
         *size*: dimensions of the object (only for box and mesh)
@@ -67,7 +67,7 @@ def deriveGeometry(obj, adjust=False, **kwargs):
     Args:
       obj(bpy_types.Object): object to derive the geometry from
       adjust: (Default value = False)
-      **kwargs:
+      **kwargs: 
 
     Returns:
       : dict -- dictionary representation of the geometry
@@ -102,7 +102,7 @@ def deriveGeometry(obj, adjust=False, **kwargs):
 
 def deriveScale(obj):
     """Returns the scale of the specified object.
-
+    
     Object scale is gathered from the matrix_world, as the link scales in Blender might change the
     mesh scale, too.
 
@@ -110,7 +110,7 @@ def deriveScale(obj):
       obj(bpy.types.Object): object to derive the scale of
 
     Returns:
-      list(float) : three scale floats (x, y, z) combined from all parents and the object itself
+      list: three scale floats (x, y, z) combined from all parents and the object itself
 
     """
     return list(obj.matrix_world.to_scale())
@@ -118,25 +118,25 @@ def deriveScale(obj):
 
 def createGeometry(viscol, geomsrc, linkobj=None):
     """Creates Blender object for visual or collision objects.
-
+    
     If the creation fails, nothing is returned.
-
+    
     These entries in the dictionary are mandatory:
-
+    
     |   **geometry**:
     |       **type**: type of geometry (mesh, box, cylinder, sphere)
-
+    
     Depending on the geometry type other values are required: `size`, `radius`, `length`
-
+    
     These entries are optional:
-
+    
     |   **geometry**:
     |       **scale**: scale for the new geometry
     |   **material**: material name to assign to the visual
     |   **pose**: specifies the placement of the new object relative to the optional linkobj
     |       **translation**: position vector for the new object
     |       **rotation_euler**: rotation for the new object
-
+    
     Furthermore any generic properties, prepended by a ``$`` will be added as custom properties to
     the visual/collision object. E.g. ``$test/etc`` would be put to visual/test/etc for a visual
     object. However, these properties are extracted only in the first layer of hierarchy.
@@ -145,10 +145,10 @@ def createGeometry(viscol, geomsrc, linkobj=None):
       viscol(dict): visual/collision model dictionary representation
       geomsrc(str): phobostype of the new object
       linkobj(bpy.types.Object, optional): link object to attach the visual/collision object to
-          (Default value = None)
+    (Default value = None)
 
     Returns:
-      bpy.types.Object or None : the new geometry object or nothing
+      bpy.types.Object or None: the new geometry object or nothing
 
     """
     if 'geometry' not in viscol or viscol['geometry'] is {}:

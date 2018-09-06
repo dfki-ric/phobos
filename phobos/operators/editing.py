@@ -1860,10 +1860,7 @@ def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
       *args(list): list containing a single bool value
 
     Returns:
-      : tuple(list, list, list) -- list of new motor objects, list of new annotation objects, list
-      : tuple(list, list, list) -- list of new motor objects, list of new annotation objects, list
-      of new controller objects
-
+      tuple: lists of new motor, new annotation and controller objects
     """
     addtoall = args[0]
     addcontrollers = args[1]
@@ -2009,10 +2006,7 @@ def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args
       *args(list): list containing a single bool value
 
     Returns:
-      : tuple(list, list, []) -- list of new sensor objects, list of new annotation objects, empty
-      : tuple(list, list, []) -- list of new sensor objects, list of new annotation objects, empty
-      list
-
+      tuple: lists of new sensor, new annotation objects and empty list
     """
     addlink = args[0]
 
@@ -2244,10 +2238,7 @@ def addControllerFromYaml(controller_dict, annotations, selected_objs, active_ob
       *args(list): empty list
 
     Returns:
-      : tuple(list, list, []) -- list of new controller objects, list of new annotation objects,
-      : tuple(list, list, []) -- list of new controller objects, list of new annotation objects,
-      empty list
-
+      tuple: tuple of lists of new motor, new controller and new annotation objects
     """
     addtoall = args[0]
 

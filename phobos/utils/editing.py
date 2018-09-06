@@ -73,17 +73,20 @@ def getCombinedTransform(obj, effectiveparent):
 
 
 def restructureKinematicTree(link, root=None):
-    """Restructures a tree such that the ``link`` provided becomes the root of the tree. For
-    instance, the following tree::
-
+    """Restructures a tree such that the ``link`` provided becomes the root of the tree.
+    
+    If no root object is provided, :func:`phobos.utils.selection.getRoot` will be used.
+    
+    For instance, the following tree::
+    
            A
           / \\
          B   C
         / \   \\
        D   E   F
-
+    
     would, using the call restructureKinematicsTree(C), become::
-
+    
             C
            / \\
           A   F
@@ -91,16 +94,16 @@ def restructureKinematicTree(link, root=None):
         B
        / \\
       D   E
-
+    
     Currently, this function ignores all options such as unselected or hidden objects.
 
     Args:
       link(bpy.types.Object): the link which will become the new root object
-      root(bpy.types.Object): the current root object (otherwise,
-        :func:`phobos.utils.selection.getRoot` will be used) (Default value = None)
+      root(bpy.types.Object, optional): the current root object (Default value = None)
 
     Returns:
-      None
+      None : None
+
     """
     if not root:
         root = sUtils.getRoot(link)
@@ -407,9 +410,9 @@ def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
 
 def createInterface(ifdict, parent=None):
     """Create an interface object and optionally parent to existing object.
-
+    
     ifdict is expected as:
-
+    
     | **type**: str
     | **direction**: str
     | **model**: str
@@ -419,10 +422,11 @@ def createInterface(ifdict, parent=None):
 
     Args:
       ifdict(dict): interface data
-      parent(bpy.types.Object, optional): designated parent object
+      parent(bpy.types.Object, optional): designated parent object (Default value = None)
 
     Returns:
-      bpy.data.Object : newly created interface object
+      bpy.data.Object: newly created interface object
+
     """
     if not parent:
         try:
