@@ -788,6 +788,11 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
           props:
           values:
           layout:
+        
+        Args:
+          props:
+          values:
+          layout:
 
         Args:
           props: 
@@ -838,6 +843,11 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
     def addObjLink(self, prop, value, column, params):
         """Args:
+          prop:
+          value:
+          column:
+        
+        Args:
           prop:
           value:
           column:
