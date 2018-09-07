@@ -34,8 +34,8 @@ import phobos.utils.io as ioUtils
 import phobos.defs as defs
 
 
-def dissolveLink(obj):
-    """ Remove the selected link and reparent all children to its effective Parent.
+def dissolveLink(obj, delete_other = False):
+    """ Remove the selected link and reparent all links, inertia, visual and collisions to its effective Parent.
 
     Args:
      obj(bpy.types.Object): the link to dissolve
@@ -43,7 +43,7 @@ def dissolveLink(obj):
 
     # Store original layers
     originallayers = list(bpy.context.scene.layers)
-    # Select all layers
+    # Select all layers which contain
     bpy.context.scene.layers = [True for i in range(20)]
 
     if not obj.phobostype == 'link':
@@ -51,8 +51,17 @@ def dissolveLink(obj):
         return
 
     else:
+        delete = [obj]
         # Get all children
-        children = sUtils.getImmediateChildren(obj , include_hidden=True)
+        children = sUtils.getRecursiveChildren(obj , phobostypes=('link', 'inertial', 'visual', 'collision'), include_hidden=True)
+
+        if delete_other:
+            other_children = sUtils.getRecursiveChildren(obj,recursion_depth = 2,phobostypes=('motor', 'controller', 'sensor', 'submodel') ,include_hidden = True)
+            delete += [child for child in other_children if child not in children]
+
+        print(children)
+        print(delete)
+
         # Get the parent
         parent = obj.parent
         # If parent is not None ( Root )
@@ -60,7 +69,7 @@ def dissolveLink(obj):
             # Reparent
             parentObjectsTo(children, parent, clear=True)
             # Delete the objects
-            sUtils.selectObjects([obj], clear=True, active=-1)
+            sUtils.selectObjects(delete, clear=True, active=-1)
             bpy.ops.object.delete()
     # Restore original layers
     bpy.context.scene.layers = originallayers
