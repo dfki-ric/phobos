@@ -73,7 +73,7 @@ class SafelyRemoveObjectsFromSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -102,7 +102,7 @@ class SafelyRemoveObjectsFromSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -121,7 +121,7 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -178,8 +178,8 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -190,7 +190,7 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -204,7 +204,7 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -232,7 +232,7 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -273,9 +273,14 @@ class MoveToSceneOperator(Operator):
             )
             newobjs = bpy.context.selected_objects
 
+            # Find the
+
+
+
             # prepend Blender name with scenename (phobostype/names are kept anyway)
             for newobj in newobjs:
                 newobj.name = newscene.name + '_' + nUtils.getObjectName(newobj)
+
 
         # remove objects from active scene and restructure the kinematic tree
         if self.remove:
@@ -313,7 +318,7 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -332,7 +337,7 @@ class SortObjectsToLayersOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -345,7 +350,7 @@ class SortObjectsToLayersOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -368,7 +373,7 @@ class AddKinematicChainOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -404,7 +409,7 @@ class AddKinematicChainOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -439,7 +444,7 @@ class SetXRayOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -450,7 +455,7 @@ class SetXRayOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -469,7 +474,7 @@ class SetXRayOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -505,7 +510,7 @@ class SetPhobosType(Operator):
         """Change phobostype of all selected objects.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -522,7 +527,7 @@ class SetPhobosType(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -533,8 +538,8 @@ class SetPhobosType(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -559,7 +564,7 @@ class BatchEditPropertyOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -580,7 +585,7 @@ class BatchEditPropertyOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -614,7 +619,7 @@ class CreateInterfaceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -639,7 +644,7 @@ class CreateInterfaceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -663,7 +668,7 @@ class CopyCustomProperties(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -685,7 +690,7 @@ class CopyCustomProperties(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -720,7 +725,7 @@ class RenameCustomProperty(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -748,7 +753,7 @@ class RenameCustomProperty(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -772,7 +777,7 @@ class SetGeometryType(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -797,7 +802,7 @@ class SetGeometryType(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -809,7 +814,7 @@ class SetGeometryType(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -822,8 +827,8 @@ class SetGeometryType(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -842,7 +847,7 @@ class SmoothenSurfaceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -860,7 +865,7 @@ class SmoothenSurfaceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -902,8 +907,8 @@ class EditInertialData(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -923,7 +928,7 @@ class EditInertialData(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -962,7 +967,7 @@ class EditInertialData(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -983,7 +988,7 @@ class EditInertialData(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -995,7 +1000,7 @@ class EditInertialData(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1040,8 +1045,8 @@ class GenerateInertialObjectsOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -1062,7 +1067,7 @@ class GenerateInertialObjectsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1095,7 +1100,7 @@ class GenerateInertialObjectsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1168,7 +1173,7 @@ class GenerateInertialObjectsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1190,7 +1195,7 @@ class EditYAMLDictionary(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1231,7 +1236,7 @@ class EditYAMLDictionary(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1255,7 +1260,7 @@ class CreateCollisionObjects(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1418,7 +1423,7 @@ class CreateCollisionObjects(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1445,8 +1450,8 @@ class SetCollisionGroupOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -1465,7 +1470,7 @@ class SetCollisionGroupOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1493,7 +1498,7 @@ class SetCollisionGroupOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1550,7 +1555,7 @@ class DefineJointConstraintsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1587,8 +1592,8 @@ class DefineJointConstraintsOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -1603,7 +1608,7 @@ class DefineJointConstraintsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1655,7 +1660,7 @@ class DefineJointConstraintsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1664,6 +1669,92 @@ class DefineJointConstraintsOperator(Operator):
         # due to invoke the active object needs to be a link
         return ob is not None and ob.phobostype == 'link' and ob.mode == 'OBJECT'
 
+
+class DissolveLink(Operator):
+    """ Dissolve a link and parent all children of type link, inertia, visual and collision to its effective parent"""
+
+    bl_idname = "phobos.dissolve_link"
+    bl_label = "Dissolve Link(s)"
+    bl_options = {"UNDO"}
+
+    delete = BoolProperty(
+        name='Delete Other', default=False, description='Delete all non reparented children'
+    )
+
+
+    def execute(self, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        objects = context.selected_objects
+
+        while objects:
+            # Get the roots
+            current_roots = sUtils.getLeaves(objects, objects=objects)
+            for root in current_roots:
+                eUtils.dissolveLink(root, delete_other = self.delete)
+                objects.remove(root)
+        return {'FINISHED'}
+
+
+    def draw(self, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        layout = self.layout
+        layout.prop(self, 'delete')
+
+
+    def invoke(self, context, event):
+        """
+
+        Args:
+          context:
+          event:
+
+        Returns:
+
+        """
+        return context.window_manager.invoke_props_dialog(self)
+
+
+    def check(self, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        return True
+
+
+    @classmethod
+    def poll(cls, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        ob = context.active_object
+        objs = list(
+            filter(lambda e: "phobostype" in e and e.phobostype == "link", context.selected_objects)
+        )
+        return ob is not None and ob.phobostype == 'link' and context.mode == "OBJECT"
 
 class AddMotorOperator(Operator):
     """Add a motor to the selected joint.
@@ -1683,7 +1774,7 @@ class AddMotorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1700,7 +1791,7 @@ class AddMotorOperator(Operator):
         the phobosIcon is added to the enum.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1745,7 +1836,7 @@ class AddMotorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1762,8 +1853,8 @@ class AddMotorOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -1774,7 +1865,7 @@ class AddMotorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1786,7 +1877,7 @@ class AddMotorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1810,7 +1901,7 @@ class AddMotorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1846,9 +1937,9 @@ class AddMotorOperator(Operator):
 
 def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add motors from yaml files.
-    
+
     The specified parameters match the interface of the `addObjectFromYaml` generic function.
-    
+
     As additional argument, a boolean value is required. It controls whether the specified motor
     will be added to all selected joints (True) or to the active object only (False).
 
@@ -1941,7 +2032,7 @@ class CreateLinksOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1964,7 +2055,7 @@ class CreateLinksOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1975,7 +2066,7 @@ class CreateLinksOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1993,9 +2084,9 @@ class CreateLinksOperator(Operator):
 
 def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add sensors from yaml files.
-    
+
     The specified parameters match the interface of the `addObjectFromYaml` generic function.
-    
+
     As additional argument, a boolean value is required. It controls whether the specified sensor
     will be added to a new link (True) or not (False).
 
@@ -2078,7 +2169,7 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2095,7 +2186,7 @@ class AddSensorOperator(Operator):
         the phobosIcon is added to the enum.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2141,7 +2232,7 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2157,8 +2248,8 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -2169,7 +2260,7 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2181,7 +2272,7 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2192,7 +2283,7 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2229,7 +2320,7 @@ class AddSensorOperator(Operator):
 
 def addControllerFromYaml(controller_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add controllers from yaml files.
-    
+
     The specified parameters match the interface of the `addObjectFromYaml` generic function.
 
     Args:
@@ -2282,7 +2373,7 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2299,7 +2390,7 @@ class AddControllerOperator(Operator):
         the phobosIcon is added to the enum.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2342,7 +2433,7 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2358,8 +2449,8 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -2370,7 +2461,7 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2382,7 +2473,7 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2393,7 +2484,7 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2444,8 +2535,8 @@ def getDefaultControllerParameters(scene, context):
     object.
 
     Args:
-      scene: 
-      context: 
+      scene:
+      context:
 
     Returns:
 
@@ -2478,7 +2569,7 @@ class CreateMimicJointOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2506,7 +2597,7 @@ class CreateMimicJointOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2553,7 +2644,7 @@ class AddHeightmapOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2570,7 +2661,7 @@ class AddHeightmapOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2642,8 +2733,8 @@ class AddHeightmapOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -2664,7 +2755,7 @@ class AddSubmodel(Operator):
         """Returns a list of submodels of the chosen type for use as enum
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2690,7 +2781,7 @@ class AddSubmodel(Operator):
         """Returns a list of submodel types in the scene for use as enum
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2713,7 +2804,7 @@ class AddSubmodel(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2724,7 +2815,7 @@ class AddSubmodel(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2739,8 +2830,8 @@ class AddSubmodel(Operator):
         a property dialog
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -2754,7 +2845,7 @@ class AddSubmodel(Operator):
         """Hide the operator when no submodels are defined
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2768,7 +2859,7 @@ class AddSubmodel(Operator):
         """create an instance of the submodel
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2807,8 +2898,8 @@ class DefineSubmodel(Operator):
         """Show a property dialog
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -2819,7 +2910,7 @@ class DefineSubmodel(Operator):
         """Create a submodel based on selected objects
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2856,7 +2947,7 @@ class AssignSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2871,7 +2962,7 @@ class AssignSubmechanism(Operator):
         """
 
         Args:
-          jointlist: 
+          jointlist:
 
         Returns:
 
@@ -2912,7 +3003,7 @@ class AssignSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2925,7 +3016,7 @@ class AssignSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2955,7 +3046,7 @@ class AssignSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3034,7 +3125,7 @@ class SelectSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3054,7 +3145,7 @@ class SelectSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3068,8 +3159,8 @@ class SelectSubmechanism(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -3080,7 +3171,7 @@ class SelectSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3093,7 +3184,7 @@ class SelectSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3115,7 +3206,7 @@ class DeleteSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3133,7 +3224,7 @@ class DeleteSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3147,8 +3238,8 @@ class DeleteSubmechanism(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -3159,7 +3250,7 @@ class DeleteSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3172,7 +3263,7 @@ class DeleteSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3204,7 +3295,7 @@ class ToggleInterfaces(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3226,7 +3317,7 @@ class ConnectInterfacesOperator(Operator):
         match.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3263,7 +3354,7 @@ class ConnectInterfacesOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3289,7 +3380,7 @@ class DisconnectInterfaceOperator(Operator):
         Also, the selected object has to be a connected interface.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3314,7 +3405,7 @@ class DisconnectInterfaceOperator(Operator):
         """Execute disconnection
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3351,7 +3442,7 @@ class MergeLinks(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3373,7 +3464,7 @@ class MergeLinks(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3401,7 +3492,7 @@ class SetModelRoot(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3412,7 +3503,7 @@ class SetModelRoot(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3476,7 +3567,7 @@ class ValidateOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3505,8 +3596,8 @@ class CalculateMassOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -3520,7 +3611,7 @@ class CalculateMassOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3531,7 +3622,7 @@ class CalculateMassOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3569,7 +3660,7 @@ class MeasureDistanceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3583,7 +3674,7 @@ class MeasureDistanceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 

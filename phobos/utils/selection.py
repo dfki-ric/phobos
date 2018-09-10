@@ -96,7 +96,7 @@ def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
       include_hidden(bool., optional): True to include hidden objects, else False. (Default value = True)
 
     Returns:
-      : list - Blender objects which are children of root.
+      list : Blender objects which are children of root.
 
     """
     return [
@@ -144,7 +144,7 @@ def getRecursiveChildren(obj, recursion_depth = 0 ,phobostypes=(), selected_only
       include_hidden(bool., optional): True to include hidden objects, else False. (Default value = False)
 
     Returns:
-      : list - Blender objects which are immediate children of obj.
+      list: Blender objects which are children of obj within recursion depth.
 
     """
     if recursion_depth > -1:
