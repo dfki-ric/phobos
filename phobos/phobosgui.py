@@ -1041,6 +1041,7 @@ class PhobosModelPanel(bpy.types.Panel):
         kc1.label(text='Kinematics', icon='ARMATURE_DATA')
         kc1.operator("phobos.create_links")
         kc1.operator('phobos.merge_links')
+        kc1.operator('phobos.dissolve_link')
         kc1.operator('phobos.define_joint_constraints')
         kc1.operator("phobos.create_mimic_joint")
         kc1.operator('phobos.add_kinematic_chain', icon='CONSTRAINT')

@@ -28,26 +28,28 @@ import phobos.defs as defs
 from phobos.phoboslog import log
 
 
-def getLeaves(roots, objects = []):
+def getLeaves(roots, objects=[]):
     """Returns the links representating the leaves of the spanning tree starting with an object
     inside the model spanning tree.
 
     Args:
-     root(list of bpy.types.Object) : Root objects from where to start the search from
-     objects(list) : List of objects to which the search is restricted.
+      root(list of bpy.types.Object): Root objects from where to start the search from
+      objects(list, optional): List of objects to which the search is restricted. (Default value = [])
+      roots: 
 
     Returns:
-     list : List of the leaves of the kinematic spanning tree.
+      list: List of the leaves of the kinematic spanning tree.
+
     """
     leaves = []
 
     if isinstance(roots, list):
         for root in roots:
-            leaves += getLeaves(root, objects = objects)
+            leaves += getLeaves(root, objects=objects)
 
     else:
         if roots.phobostype != 'link':
-            roots = getEffectiveParent(roots, objectlist = objects)
+            roots = getEffectiveParent(roots, objectlist=objects)
 
         candidates = getImmediateChildren(roots, phobostypes=('link'))
 
@@ -55,7 +57,7 @@ def getLeaves(roots, objects = []):
             candidates = [candidate for candidate in candidates if candidate in objects]
 
         if candidates:
-            leaves += getLeaves(candidates, objects = objects)
+            leaves += getLeaves(candidates, objects=objects)
         else:
             leaves.append(roots)
 
@@ -96,7 +98,7 @@ def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
       include_hidden(bool., optional): True to include hidden objects, else False. (Default value = True)
 
     Returns:
-      list : Blender objects which are children of root.
+      list: Blender objects which are children of root.
 
     """
     return [
@@ -132,13 +134,15 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
     ]
 
 
-def getRecursiveChildren(obj, recursion_depth = 0 ,phobostypes=(), selected_only=False, include_hidden=False):
+def getRecursiveChildren(
+    obj, recursion_depth=0, phobostypes=(), selected_only=False, include_hidden=False
+):
     """Returns all children for a given object and phobostypes (if provided) within the given recursion depth.
     Search can be limited to selected objects and non-hidden objects.
 
     Args:
       obj(bpy.types.Object): object to start search from.
-      recursion_depth(int): Depth of the recursion, default is all levels (Default value = 0)
+      recursion_depth(int, optional): Depth of the recursion, default is all levels (Default value = 0)
       phobostypes(list of strings, optional): phobostypes to limit search to. (Default value = ()
       selected_only(bool., optional): True to find only selected children, else False. (Default value = False)
       include_hidden(bool., optional): True to include hidden objects, else False. (Default value = False)
@@ -156,11 +160,12 @@ def getRecursiveChildren(obj, recursion_depth = 0 ,phobostypes=(), selected_only
     if recursion_depth > 0 and children:
         new_children = []
         for child in children:
-            new_children += getRecursiveChildren(child, recursion_depth-1, phobostypes, selected_only, include_hidden)
+            new_children += getRecursiveChildren(
+                child, recursion_depth - 1, phobostypes, selected_only, include_hidden
+            )
         children += new_children
 
     return children
-
 
 
 def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, objectlist=[]):
@@ -307,7 +312,7 @@ def selectObjects(objects, clear=True, active=-1):
 def getObjectByName(name):
     """Returns list of objects that either have a specific *name* or contain a custom
     name property with that name.
-
+    
     As the function returns either an empty list, a unique object or a list of objects,
     it is possible to test for uniqueness of the result by calling `isinstance(result, list)`.
 
@@ -405,8 +410,8 @@ def getObjectByProperty(property, value):
     """Returns the first object found in the .blend file data with matching property and value
 
     Args:
-      property:
-      value:
+      property: 
+      value: 
 
     Returns:
 
@@ -440,7 +445,7 @@ def getSubmechanismRootForJoint(jointobj):
     """
 
     Args:
-      jointobj:
+      jointobj: 
 
     Returns:
 
