@@ -1459,7 +1459,7 @@ class SetCollisionGroupOperator(Operator):
             bpy.ops.rigidbody.object_add(type='ACTIVE')
             obj.rigid_body.kinematic = True
             obj.rigid_body.collision_groups = self.groups
-        return self.execute(context)
+        return context.window_manager.invoke_props_dialog(self, width=300)
 
     def execute(self, context):
         """
