@@ -481,57 +481,6 @@ def deriveCollision(obj):
     return collision
 
 
-def deriveCapsule(obj):
-    """This function derives a capsule from a given blender object
-
-    Args:
-      obj(bpy_types.Object): The blender object to derive the capsule from.
-
-    Returns:
-      : tuple
-
-    """
-    viscol_dict = {}
-    capsule_pose = poses.deriveObjectPose(obj)
-    rotation = capsule_pose['rotation_euler']
-    capsule_radius = obj['geometry']['radius']
-    for part in ['sphere1', 'cylinder', 'sphere2']:
-        viscol = initObjectProperties(obj, phobostype='collision', ignoretypes='geometry')
-        viscol['name'] = nUtils.getObjectName(obj).split(':')[-1] + '_' + part
-        geometry = {}
-        pose = {}
-        geometry['radius'] = capsule_radius
-        if part == 'cylinder':
-            geometry['length'] = obj['geometry']['length']
-            geometry['type'] = 'cylinder'
-            pose = capsule_pose
-        else:
-            geometry['type'] = 'sphere'
-            if part == 'sphere1':
-                location = obj['sph1_location']
-            else:
-                location = obj['sph2_location']
-            pose['translation'] = location
-            pose['rotation_euler'] = rotation
-            loc_mu = mathutils.Matrix.Translation(location)
-            rot_mu = mathutils.Euler(rotation).to_quaternion()
-            pose['rotation_quaternion'] = list(rot_mu)
-            matrix = loc_mu * rot_mu.to_matrix().to_4x4()
-            # TODO delete me?
-            # print(list(matrix))
-            pose['matrix'] = [list(vector) for vector in list(matrix)]
-        viscol['geometry'] = geometry
-        viscol['pose'] = pose
-        try:
-            viscol['bitmask'] = int(
-                ''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups]), 2
-            )
-        except AttributeError:
-            pass
-        viscol_dict[part] = viscol
-    return viscol_dict, obj.parent
-
-
 def deriveApproxsphere(obj):
     """This function derives an SRDF approximation sphere from a given blender object
 

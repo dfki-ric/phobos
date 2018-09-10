@@ -129,8 +129,6 @@ def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, l
         inertia = calculateCylinderInertia(mass, geometry['radius'], geometry['length'])
     elif geometry['type'] == 'sphere':
         inertia = calculateSphereInertia(mass, geometry['radius'])
-    elif geometry['type'] == 'capsule':
-        inertia = calculateCapsuleInertia(mass, geometry['radius'], geometry['length'])
     elif geometry['type'] == 'mesh':
         sUtils.selectObjects((obj,), clear=True, active=0)
         inertia = calculateMeshInertia(mass, obj.data)
@@ -198,48 +196,6 @@ def calculateSphereInertia(mass, r):
     iyy = i
     iyz = 0
     izz = i
-    return ixx, ixy, ixz, iyy, iyz, izz
-
-
-def calculateCapsuleInertia(mass, r, h):
-    """Returns upper diagonal of inertia tensor of a capsule as tuple.
-    
-    Code adapted from:
-    http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856
-
-    Args:
-      mass(float): The capsule's mass.
-      r(float): The capsule's radius.
-      h(float): The capsule's height.
-
-    Returns:
-      : tuple(6).
-
-    """
-
-    cylinder_volume = math.pi * r ** 2 * h
-    hemisphere_volume = ((4 / 3) * math.pi * r ** 3) / 2
-    volume = cylinder_volume + 2 * hemisphere_volume
-
-    cylinder_mass = mass / (volume / cylinder_volume)
-    hemisphere_mass = mass / (volume / hemisphere_volume)
-    cylinder_height = h - 2 * r
-
-    temp0 = hemisphere_mass * 2.0 * r ** 2 / 5.0
-    temp1 = cylinder_height * 0.5
-    temp2 = temp0 + hemisphere_mass * (temp1 ** 2 + 0.375 * cylinder_height * r)
-
-    ixx = (
-        (r ** 2 * cylinder_mass / 2.0) / 2.0
-        + cylinder_mass * cylinder_height ** 2 / 12.0
-        + temp2 * 2.0
-    )
-    ixy = 0
-    ixz = 0
-    iyy = ixx
-    iyz = 0
-    izz = r ** 2 * cylinder_mass / 2.0 + temp0 * 2.0
-
     return ixx, ixy, ixz, iyy, iyz, izz
 
 

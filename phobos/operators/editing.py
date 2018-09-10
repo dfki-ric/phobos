@@ -1288,8 +1288,8 @@ class CreateCollisionObjects(Operator):
             rotation = mathutils.Matrix.Identity(4)
             size = list(vis.dimensions)
 
-            # calculate size for cylinder, capsule or sphere
-            if self.property_colltype in ['cylinder', 'capsule']:
+            # calculate size for cylinder or sphere
+            if self.property_colltype in ['cylinder']:
                 axes = ('X', 'Y', 'Z')
                 long_side = axes[size.index(max(size))]
                 length = max(size)
@@ -1297,7 +1297,7 @@ class CreateCollisionObjects(Operator):
                 radius = max(radii) / 2 if radii != [] else length / 2
                 size = (radius, length)
 
-                # rotate cylinder/capsule to match longest side
+                # rotate cylinder to match longest side
                 if long_side == 'X':
                     rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'Y')
                 elif long_side == 'Y':
@@ -1309,13 +1309,13 @@ class CreateCollisionObjects(Operator):
 
             # combine bbox center with the object transformation
             center = (vis.matrix_world * mathutils.Matrix.Translation(center)).to_translation()
-            # combine center with optional rotation (cylinder and capsule) and object transformation
+            # combine center with optional rotation (cylinder) and object transformation
             rotation_euler = (
                 vis.matrix_world * rotation * mathutils.Matrix.Translation(center)
             ).to_euler()
 
             # create Mesh
-            if self.property_colltype != 'capsule' and self.property_colltype != 'mesh':
+            if self.property_colltype != 'mesh':
                 ob = bUtils.createPrimitive(
                     collname,
                     self.property_colltype,
@@ -1325,55 +1325,6 @@ class CreateCollisionObjects(Operator):
                     center,
                     rotation_euler,
                 )
-            elif self.property_colltype == 'capsule':
-                # TODO reimplement capsules
-                # prevent length from turning negative
-                length = max(length - 2 * radius, 0.001)
-                size = (radius, length)
-                zshift = length / 2
-                tmpsph1_location = center + rotation_euler.to_matrix().to_4x4() * mathutils.Vector(
-                    (0, 0, zshift)
-                )
-                tmpsph2_location = center - rotation_euler.to_matrix().to_4x4() * mathutils.Vector(
-                    (0, 0, zshift)
-                )
-
-                # create cylinder and spheres and join them
-                ob = bUtils.createPrimitive(
-                    collname,
-                    'cylinder',
-                    size,
-                    defs.layerTypes['collision'],
-                    materialname,
-                    center,
-                    rotation_euler,
-                )
-                sph1 = bUtils.createPrimitive(
-                    'tmpsph1',
-                    'sphere',
-                    radius,
-                    defs.layerTypes['collision'],
-                    materialname,
-                    tmpsph1_location,
-                    rotation_euler,
-                )
-                sph2 = bUtils.createPrimitive(
-                    'tmpsph2',
-                    'sphere',
-                    radius,
-                    defs.layerTypes['collision'],
-                    materialname,
-                    tmpsph2_location,
-                    rotation_euler,
-                )
-                sUtils.selectObjects([ob, sph1, sph2], True, 0)
-                bpy.ops.object.join()
-
-                # assign capsule properties
-                ob['geometry/length'] = length
-                ob['geometry/radius'] = radius
-                ob['sph1_location'] = tmpsph1_location
-                ob['sph2_location'] = tmpsph2_location
             elif self.property_colltype == 'mesh':
                 # FIXME: simply turn this into object.duplicate?
                 bpy.ops.object.duplicate_move(

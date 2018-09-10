@@ -88,13 +88,6 @@ def writeURDFGeometry(output, element, filepath):
                     ],
                 )
             )
-        elif geometry['type'] == 'capsule':
-            # FIXME: real capsules here!
-            output.append(
-                xmlline(
-                    5, 'cylinder', ['radius', 'length'], [geometry['radius'], geometry['length']]
-                )
-            )
         else:
             raise TypeError("Unknown geometry type")
         output.append(indent * 4 + '</geometry>\n')

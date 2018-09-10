@@ -197,9 +197,6 @@ def exportSmurf(model, path):
 
     """
     collisiondata = deriveRefinedCollisionData(model)
-    # TODO delete me?
-    # capsules = []
-    # capsules = gatherCollisionCapsules(model)
     lodsettings = gatherLevelOfDetailSettings(model)
 
     exportdata = {

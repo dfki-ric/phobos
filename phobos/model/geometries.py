@@ -44,7 +44,7 @@ def getLargestDimension(geometry):
     # DOCU add some docstring
     if geometry['type'] == 'box':
         return max(geometry['size'])
-    if geometry['type'] == 'cylinder' or geometry['type'] == 'capsule':
+    if geometry['type'] == 'cylinder':
         return max((geometry['radius'], geometry['length']))
     if geometry['type'] == 'sphere':
         return geometry['radius']
@@ -60,8 +60,8 @@ def deriveGeometry(obj, adjust=False, **kwargs):
     The returned dictionary contains this information (depending on the geometry type):
         *type*: geometry type of the object
         *size*: dimensions of the object (only for box and mesh)
-        *radius*: radius of the object (only for cylinder, capsule and sphere)
-        *lenght*: length of the object (only for cylinder and capsule)
+        *radius*: radius of the object (only for cylinder and sphere)
+        *length*: length of the object (only for cylinder)
         *scale*: scale of the object (only for mesh)
 
     Args:
@@ -83,10 +83,6 @@ def deriveGeometry(obj, adjust=False, **kwargs):
     elif gtype == 'cylinder':
         geometry['radius'] = obj.dimensions[0] / 2
         geometry['length'] = obj.dimensions[2]
-
-    elif gtype == 'capsule':
-        geometry['radius'] = obj.dimensions[0] / 2
-        geometry['length'] = obj.dimensions[2] - obj.dimensions[0]
 
     elif gtype == 'sphere':
         geometry['radius'] = obj.dimensions[0] / 2
