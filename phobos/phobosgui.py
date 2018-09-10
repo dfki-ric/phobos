@@ -1325,8 +1325,7 @@ class PhobosSubmodelsPanel(bpy.types.Panel):
         Returns:
 
         """
-        # self.layout.label(icon='IMPORT')
-        pass
+        self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
         """
@@ -1362,9 +1361,7 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
         Returns:
 
         """
-        pcoll = prev_collections["phobos"]
-        phobosIcon = pcoll["phobosIcon"]
-        # self.layout.label(icon_value=phobosIcon)
+        self.layout.label(icon_value=phobosIcon)
 
     def draw(self, context):
         """

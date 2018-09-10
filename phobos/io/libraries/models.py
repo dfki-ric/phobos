@@ -67,7 +67,7 @@ def getCategoriesForEnumProperty(self, context):
       list: available category in the model library.
 
     """
-    if categories:
+    if not categories:
         return [('-',) * 3]
     return sorted([(item,) * 3 for item in categories])
 
@@ -128,10 +128,6 @@ def compileModelList():
         newpreviewcollection.enum_items = enum_items
         model_previews[category] = newpreviewcollection
         log("Finished parsing model folder. Imported {0} models.".format(i), 'INFO')
-
-    ## reregister the enumproperty to ensure new items are displayed
-    # WindowManager.modelpreview = EnumProperty(items=getModelListForEnumProperty, name='Model')
-    # WindowManager.category = EnumProperty(items=getCategoriesForEnumProperty, name='Category')
 
 
 class UpdateModelLibraryOperator(bpy.types.Operator):
