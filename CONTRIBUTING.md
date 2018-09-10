@@ -1,5 +1,4 @@
-# Contributing to Phobos
-
+# Contributing to Phobos 
 Thanks for taking the time to consider contributing to Phobos! We know time is a scarce resource and we greatly appreciate your support.
 
 Most likely you've found your way to this page because you're a robotics specialist, and you're missing a feature or found a problem in Phobos corresponding to your field of expertise. That's great, because we've been developing Phobos for years with our own requirements in mind, and you're surely thinking of something we haven't considered, yet. That makes your input very valuable.
@@ -24,7 +23,15 @@ It also probably helps to have a basic understanding of [URDF](http://wiki.ros.o
 
 
 ## Issues
-Congratulations! You found a bug which slipped through our fingers or you came up with a useful feature we haven't thought of, yet. Check out the existing [issues](https://github.com/dfki-ric/phobos/issues) to see if the subject has already been covered. If that is the case, consider joining the discussion! If not, create a new issue and make use of the provided template as far as it is helpful. The more information you provide, the more likely it is that we can address it quickly.
+Congratulations! You found a bug which slipped through our fingers or you came
+up with a useful feature we haven't thought of, yet. Check out the existing
+[issues](https://github.com/dfki-ric/phobos/issues) to see if the subject has
+already been covered. If that is the case, consider joining the discussion!
+
+Otherwise just add a new issue with the green button in the top right of the
+screen. Make use of the provided template as far as it is helpful for you. The
+more information you provide, the more likely it is that we can address it
+quickly.
 
 
 ## Submitting changes
