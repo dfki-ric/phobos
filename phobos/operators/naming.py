@@ -31,7 +31,7 @@ from bpy.types import Operator
 from bpy.props import BoolProperty, StringProperty, EnumProperty
 import phobos.utils.selection as sUtils
 import phobos.utils.naming as nUtils
-import phobos.utils.io as iUtils
+import phobos.utils.io as ioUtils
 import phobos.utils.validation as validation
 from phobos.phoboslog import log
 
@@ -113,6 +113,8 @@ class NameModelOperator(Operator):
         root = sUtils.getRoot(context.active_object)
         if root:
             root["model/name"] = self.modelname
+            # write model information to new root
+            root.pose.bones[0].custom_shape = ioUtils.getResource(('link', 'root'))
         else:
             log("Could not set modelname due to missing root link. No name was set.", "ERROR")
         return {'FINISHED'}
@@ -147,7 +149,7 @@ class SetModelVersionOperator(Operator):
         root = sUtils.getRoot(context.active_object)
         if root:
             if self.usegitbranch:
-                gitbranch = iUtils.getgitbranch()
+                gitbranch = ioUtils.getgitbranch()
                 if gitbranch:
                     root["model/version"] = self.version.replace('*', gitbranch)
             else:
