@@ -70,11 +70,13 @@ We use the [Black Code Formatter](https://github.com/ambv/black) to clean up our
 before commiting.
 
 
-## Git commit messages
+## Git conventions
 
 We'd really appreciate if you adhere to the [standard convention for Git commit messages](https://chris.beams.io/posts/git-commit/). It's like chopping veggies in the kitchen: You're gonna be doing this your entire life, might as well do it right. That being said, for small changes, we're completely fine with one-liners.
 
 Also, have a look at this [blogpost](https://www.spreedly.com/2014/06/24/merge-pull-request-considered-harmful/) how we handle pull-requests. It might help you to understand our workflow...
+
+The Phobos repository is based on the git structure you can find in the [wiki](https://github.com/dfki-ric/phobos/wiki/Installation#versions-and-branching). We decided to drop the GitFlow method as it was too cumbersome for us, and instead introduced our own Git method which relies on rebasing of code. Every maintainer should use his/her own fork to keep the feature branches, which allows for easier rebasing before a merge into the master branch.
 
 ---
 
