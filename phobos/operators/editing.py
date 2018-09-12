@@ -1290,17 +1290,24 @@ class CreateCollisionObjects(Operator):
 
             # calculate size for cylinder or sphere
             if self.property_colltype in ['cylinder']:
-                axes = ('X', 'Y', 'Z')
-                long_side = axes[size.index(max(size))]
-                length = max(size)
+                if size[0] == size[1]:
+                    mainaxis = 'Z'
+                    length = size[2]
+                elif size[1] == size[2]:
+                    mainaxis = 'X'
+                    length = size[0]
+                else:
+                    mainaxis = 'Y'
+                    length = size[1]
+
                 radii = [s for s in size if s != length]
                 radius = max(radii) / 2 if radii != [] else length / 2
                 size = (radius, length)
 
                 # rotate cylinder to match longest side
-                if long_side == 'X':
+                if mainaxis == 'X':
                     rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'Y')
-                elif long_side == 'Y':
+                elif mainaxis == 'Y':
                     rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'X')
                     # FIXME: apply rotation for moved cylinder object?
 
