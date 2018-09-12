@@ -684,13 +684,14 @@ def deriveDictEntry(obj, names=False, objectlist=[], logging=True, adjust=True):
         elif obj.phobostype == 'approxsphere':
             props = deriveApproxsphere(obj)
         elif obj.phobostype == 'sensor':
-            from phobos.model.sensors import deriveSensor
-
-            props = deriveSensor(obj, names=names, objectlist=objectlist, logging=logging)
+            props = sensormodel.deriveSensor(obj, names=names, objectlist=objectlist,
+                                             logging=logging)
         elif obj.phobostype == 'controller':
             props = controllermodel.deriveController(obj)
         elif obj.phobostype == 'light':
             props = deriveLight(obj)
+        elif obj.phobostype == 'motor':
+            props = motormodel.deriveMotor(obj)
     except KeyError:
         log("A KeyError occurred due to missing data in object" + obj.name, "DEBUG")
         return None, None
