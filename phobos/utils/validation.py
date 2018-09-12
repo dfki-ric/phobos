@@ -448,7 +448,7 @@ def validateLink(link, objectlist=None):
     return errors
 
 
-def validateObjectPose(obj):
+def validateObjectPose(obj, adjust=False, **kwargs):
     """
 
     Args:

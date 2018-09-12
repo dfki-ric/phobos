@@ -38,7 +38,7 @@ from phobos.utils.io import securepath
 
 
 @validate('object_pose')
-def deriveObjectPose(obj, logging=False, errors=None):
+def deriveObjectPose(obj, logging=False, adjust=False, errors=None):
     """Derives a pose of link, visual or collision object.
     
     The transformations of the object are calculated according to

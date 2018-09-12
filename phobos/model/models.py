@@ -660,7 +660,7 @@ def initObjectProperties(
     return props
 
 
-def deriveDictEntry(obj, names=False, objectlist=[], logging=True):
+def deriveDictEntry(obj, names=False, objectlist=[], logging=True, adjust=True):
     """Derives a phobos dictionary entry from the provided object.
 
     Args:
@@ -676,7 +676,7 @@ def deriveDictEntry(obj, names=False, objectlist=[], logging=True):
     props = {}
     try:
         if obj.phobostype == 'inertial':
-            props = deriveInertial(obj, adjust=True, logging=logging)
+            props = deriveInertial(obj, adjust=adjust, logging=logging)
         elif obj.phobostype == 'visual':
             props = deriveVisual(obj)
         elif obj.phobostype == 'collision':
