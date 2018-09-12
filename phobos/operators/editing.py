@@ -1327,10 +1327,11 @@ class CreateCollisionObjects(Operator):
                     collname,
                     self.property_colltype,
                     size,
-                    defs.layerTypes['collision'],
-                    materialname,
-                    center,
-                    rotation_euler,
+                    player=defs.layerTypes['collision'],
+                    pmaterial=materialname,
+                    plocation=center,
+                    protation=rotation_euler,
+                    phobostype='collision',
                 )
             elif self.property_colltype == 'mesh':
                 # FIXME: simply turn this into object.duplicate?
@@ -1343,6 +1344,7 @@ class CreateCollisionObjects(Operator):
                 #                                   defs.layerTypes['collision'], materialname, center,
                 #                                   rotation_euler)
                 # ob.data = vis.data
+
 
             # set properties of new collision object
             ob.phobostype = 'collision'
