@@ -541,7 +541,7 @@ class SetPhobosType(Operator):
         """
         if context.object:
             self.phobostype = context.object.phobostype
-        return self.execute(context)
+        return context.window_manager.invoke_props_dialog(self)
 
 
 class BatchEditPropertyOperator(Operator):
