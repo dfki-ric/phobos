@@ -332,7 +332,7 @@ class ChangeObjectName(Operator):
         Returns:
 
         """
-        return context.active_object
+        return context.active_object and context.active_object.phobostype != 'undefined'
 
     def invoke(self, context, event):
         """
