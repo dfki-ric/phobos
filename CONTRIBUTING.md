@@ -63,13 +63,21 @@ We mostly adhere to [PEP8](http://pep8.org/), with the exceptions that we allow 
 
 We use [Google-style docstrings](http://www.sphinx-doc.org/en/master/ext/example_google.html). We like to keep them brief, as they otherwise tend to clutter the code. If you find yourself writing a really long docstring: a) Great for taking the time to write proper documentation! b) You sure this function shouldn't be [split into two or more](https://iwanttocode.wordpress.com/tag/god-function/)?
 
+We use the [Black Code Formatter](https://github.com/ambv/black) to clean up our code. To have your code properly formatted and also your Docstrings updated and fixed:
+
+    $ make format
+    
+before commiting.
+
 
 ## Git commit messages
 
 We'd really appreciate if you adhere to the [standard convention for Git commit messages](https://chris.beams.io/posts/git-commit/). It's like chopping veggies in the kitchen: You're gonna be doing this your entire life, might as well do it right. That being said, for small changes, we're completely fine with one-liners.
 
+Also, have a look at this [blogpost](https://www.spreedly.com/2014/06/24/merge-pull-request-considered-harmful/) how we handle pull-requests. It might help you to understand our workflow...
+
 ---
 
 Thanks for considering this lengthy advice,
 
-*Kai von Szadkowski, Maintainer*
+*Kai von Szadkowski, Simon V. Reichel, your trustworthy maintainers*
