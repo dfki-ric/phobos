@@ -652,7 +652,12 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation)
     if linkdict['collision']:
         for colkey in linkdict['collision']:
             colliname = linkdict['collision'][colkey]['name']
-            collisionobj = bpy.context.scene.objects[colliname]
+
+            # TODO absolute pose export is not working yet
+            if colliname in bpy.context.scene.objects:
+                collisionobj = bpy.context.scene.objects[colliname]
+            else:
+                collisionobj = None
             tagger.write(
                 exportSDFCollision(
                     collisionobj, linkdict['collision'][colkey], tagger.get_indent(), modelname
@@ -664,7 +669,12 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation)
     # there might be no visual objects
     if linkdict['visual']:
         for visualkey in linkdict['visual']:
-            visualobj = bpy.context.scene.objects[visualkey]
+
+            # TODO absolute pose export is not working
+            if visualkey in bpy.context.scene.objects:
+                visualobj = bpy.context.scene.objects[visualkey]
+            else:
+                visualobj = None
             visualdata = linkdict['visual'][visualkey]
 
             # add material information to the visualdata if available
