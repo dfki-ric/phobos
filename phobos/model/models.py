@@ -692,9 +692,25 @@ def deriveDictEntry(obj, names=False, objectlist=[], logging=True, adjust=True):
             props = deriveLight(obj)
         elif obj.phobostype == 'motor':
             props = motormodel.deriveMotor(obj)
+        elif obj.phobostype == 'annotation':
+            props = deriveAnnotation(obj)
     except KeyError:
         log("A KeyError occurred due to missing data in object" + obj.name, "DEBUG")
         return None, None
+    return props
+
+
+def deriveAnnotation(obj):
+    """Derives the annotation info of an object.
+
+    Args:
+        obj: TODO
+
+    Returns:
+    """
+    props = {}
+
+    props = initObjectProperties(obj, includeannotations=False)
     return props
 
 
