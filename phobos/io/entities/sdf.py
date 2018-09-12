@@ -35,6 +35,7 @@ from phobos.utils.io import l2str as list_to_string
 from phobos.utils.io import getExpSettings
 import phobos.utils.general as gUtils
 from phobos.utils.blender import getPhobosPreferences
+import phobos.utils.selection as sUtils
 import phobos.model.models as models
 from phobos.phoboslog import log
 
@@ -651,13 +652,7 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation)
     # collision data might be missing
     if linkdict['collision']:
         for colkey in linkdict['collision']:
-            colliname = linkdict['collision'][colkey]['name']
-
-            # TODO absolute pose export is not working yet
-            if colliname in bpy.context.scene.objects:
-                collisionobj = bpy.context.scene.objects[colliname]
-            else:
-                collisionobj = None
+            collisionobj = sUtils.getObjectByName(colkey, phobostypes=('collision'))
             tagger.write(
                 exportSDFCollision(
                     collisionobj, linkdict['collision'][colkey], tagger.get_indent(), modelname
@@ -675,6 +670,7 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation)
                 visualobj = bpy.context.scene.objects[visualkey]
             else:
                 visualobj = None
+            visualobj = sUtils.getObjectByName(visualkey, phobostypes=('visual'))
             visualdata = linkdict['visual'][visualkey]
 
             # add material information to the visualdata if available

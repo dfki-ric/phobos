@@ -309,7 +309,7 @@ def selectObjects(objects, clear=True, active=-1):
         bpy.context.scene.objects.active = objects[active]
 
 
-def getObjectByName(name):
+def getObjectByName(name, phobostypes=()):
     """Returns list of objects that either have a specific *name* or contain a custom
     name property with that name.
     
@@ -324,7 +324,9 @@ def getObjectByName(name):
 
     """
     objlist = []
-    for obj in bpy.context.scene.objects:
+    searchobjs = [obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes or
+                  not phobostypes]
+    for obj in searchobjs:
         if name == obj.name:
             objlist.append(obj)
         else:
