@@ -82,7 +82,7 @@ jointtypes = (
 
 geometrytypes = (('box',) * 3, ('cylinder',) * 3, ('sphere',) * 3, ('mesh',) * 3)
 
-linkobjignoretypes = {'link', 'joint', 'submechanism', 'entity'}
+linkobjignoretypes = {'link', 'joint', 'submechanism', 'entity', 'model'}
 controllabletypes = ['motor']
 
 type_properties = {
