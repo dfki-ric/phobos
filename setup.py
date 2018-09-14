@@ -78,12 +78,12 @@ def updateFolderContents(src, dst):
 if __name__ == '__main__':
     # check whether the right python version is used
     pyver = sys.version_info
-    if pyver.major != 3 or pyver.minor != 5:
-        print('You started this script with the wrong python version: ')
-        print('Current: ' + str(pyver.major) + '.' + str(pyver.minor))
-        print('Blender python uses: 3.5')
-        print('Installation aborted.')
-        sys.exit(0)
+    print(
+        'You started this script with python version: {}.{}'.format(
+            str(pyver.major), str(pyver.minor)
+        )
+    )
+    print('Make sure Blender uses the same version!')
 
     if '--help' in sys.argv:
         print(scriptinformation)
