@@ -84,9 +84,9 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
     eUtils.parentObjectsTo(inertialobject, parent)
 
     # position and parent the inertial object relative to the link
-    inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
+    #inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
-    bpy.ops.object.transform_apply(scale=True)
+    #bpy.ops.object.transform_apply(scale=True)
 
     # add properties to the object
     for prop in ('mass', 'inertia'):
@@ -125,7 +125,6 @@ def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, l
 
     # Get the rotation of the object
     object_rotation = obj.rotation_euler.to_matrix()
-
 
     if geometry['type'] == 'box':
         inertia = calculateBoxInertia(mass, geometry['size'])
@@ -529,35 +528,53 @@ def fuse_inertia_data(inertials):
       3: tuple of mass, COM and inertia or None(3) if no inertials are found
 
     """
+    # OLD CODE
     # collect objects which contain inertia
-    objects = []
-    for inertia_object in inertials:
-        objdict = None
-        try:
-            pose = deriveObjectPose(inertia_object)
-            objdict = {
-                'name': inertia_object.name,
-                'mass': inertia_object['inertial/mass'],
-                # FIXME: this is not nice, as we invert what is one when deriving the pose
-                'com': mathutils.Vector(pose['translation']),
-                'rot': pose['rawmatrix'].to_3x3(),
-                'inertia': list(inertia_object['inertial/inertia']),
-            }
-        except KeyError as e:
-            log('Inertial object ' + inertia_object.name + ' is missing data: ' + str(e), 'WARNING')
-            continue
-        if objdict:
-            objects.append(objdict)
+    #objects = []
+    #for inertia_object in inertials:
+    #    objdict = None
+    #    try:
+    #        pose = deriveObjectPose(inertia_object)
+    #        objdict = {
+    #            'name': inertia_object.name,
+    #            'mass': inertia_object['inertial/mass'],
+    #            # FIXME: this is not nice, as we invert what is one when deriving the pose
+    #            'com': mathutils.Vector(pose['translation']),
+    #            'rot': pose['rawmatrix'].to_3x3(),
+    #            'inertia': list(inertia_object['inertial/inertia']),
+    #        }
+    #    except KeyError as e:
+    #        log('Inertial object ' + inertia_object.name + ' is missing data: ' + str(e), 'WARNING')
+    #        continue
+    #    if objdict:
+    #        objects.append(objdict)
 
-    # fuse inertias of objects
-    if objects:
-        log("  Fusing inertials: " + str([i.name for i in inertials]), 'DEBUG')
-        mass, com, inertia = compound_inertia_analysis_3x3(objects)
-        log("  Fused mass: " + str(mass), 'DEBUG')
-        return mass, com, inertia
+    ## fuse inertias of objects
+    #if objects:
+    #    log("  Fusing inertials: " + str([i.name for i in inertials]), 'DEBUG')
+    #    mass, com, inertia = compound_inertia_analysis_3x3(objects)
+    #    log("  Fused mass: " + str(mass), 'DEBUG')
+    #    return mass, com, inertia
 
-    log("No inertial found to fuse.", 'DEBUG')
-    return None, None, None
+    #log("No inertial found to fuse.", 'DEBUG')
+    #return None, None, None
+
+    fused_inertia = numpy.zeros((3,3))
+    fused_com = numpy.zeros((1,3))
+    fused_mass = 0.0
+
+    # Calculate the fused inertias
+    for obj in inertials:
+        # Get the rotation of the inertia
+        current_Rotation = numpy.array(obj.matrix_local.to_3x3())
+        current_Inertia = numpy.array(inertiaListToMatrix(obj['inertial/inertia']))
+        fused_inertia += numpy.dot(numpy.dot(current_Rotation.T, current_Inertia ), current_Rotation)
+
+    fused_mass, fused_com = combine_com_3x3(inertials)
+
+    return fused_mass, fused_com, fused_inertia
+
+
 
 
 def combine_com_3x3(objects):
@@ -576,8 +593,8 @@ def combine_com_3x3(objects):
     combined_com = mathutils.Vector((0.0,) * 3)
     combined_mass = 0
     for obj in objects:
-        combined_com = combined_com + obj['com'] * obj['mass']
-        combined_mass += obj['mass']
+        combined_com = combined_com + obj.matrix_local.translation * obj['inertial/mass']
+        combined_mass += obj['inertial/mass']
     combined_com = combined_com / combined_mass
     log("  Combined center of mass: " + str(combined_com), 'DEBUG')
     return combined_mass, combined_com
