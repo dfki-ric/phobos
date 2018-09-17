@@ -88,7 +88,7 @@ class xmlTagger(object):
     def ind(self):
         """Helper function to return the current indentation depending on the
         hierarchy.
-        
+
         :return: str -- the current indentation (e.g. "  ").
 
         Args:
@@ -101,7 +101,7 @@ class xmlTagger(object):
     def ascend(self):
         """Move up one hierarchical layer by finishing the current tag and
         removing one indentation.
-        
+
         :exception IndentationError -- trying to move above root hierarchical
         layer
 
@@ -183,7 +183,7 @@ class xmlTagger(object):
     def get_output(self):
         """Completes all trailing tags until at initial indentation and
         returns the output as string.
-        
+
         :return: str -- the finished xml string.
 
         Args:
@@ -200,7 +200,7 @@ class xmlTagger(object):
 
 def getIndentedETString(elementtree):
     """Return the specified elementtree as an indented string which can be saved to a file.
-    
+
     The indentation is based on the phobos.utils.io.indent variable.
 
     Args:
@@ -224,7 +224,7 @@ def exportSDFPose(relativepose, indentation, poseobject=None):
       posedata: the original (relative) posedata
       indentation: indentation at current level
       relative: True for usage of sdf relative pathing
-      relativepose: 
+      relativepose:
 
     Returns:
       : str -- writable xml line
@@ -533,7 +533,7 @@ def exportSDFVisual(visualobj, linkobj, visualdata, indentation, modelname):
       indentation: indentation at current level
       relative: True for usage of sdf relative pathing
       modelname: the name of the model (required for geometry)
-      linkobj: 
+      linkobj:
 
     Returns:
       : str -- writable xml line
@@ -620,12 +620,12 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation)
     """
 
     Args:
-      linkdict: 
-      linkobj: 
-      modelname: 
-      materials: 
-      sensors: 
-      indentation: 
+      linkdict:
+      linkobj:
+      modelname:
+      materials:
+      sensors:
+      indentation:
 
     Returns:
 
@@ -720,8 +720,8 @@ def exportSDFJoint(jointdict, indentation):
     """
 
     Args:
-      jointdict: 
-      indentation: 
+      jointdict:
+      indentation:
 
     Returns:
 
@@ -839,8 +839,8 @@ def exportSDFSensor(sensordict, indentation):
     """
 
     Args:
-      sensordict: 
-      indentation: 
+      sensordict:
+      indentation:
 
     Returns:
 
@@ -1160,8 +1160,8 @@ def exportSDF(model, filepath):
     This exports a model SDF file as well as its model.conf to the specified filepath.
 
     Args:
-      model: 
-      filepath: 
+      model:
+      filepath:
 
     Returns:
 
@@ -1358,7 +1358,7 @@ def parseSDFPose(pose):
     """
 
     Args:
-      pose: 
+      pose:
 
     Returns:
 
@@ -1379,7 +1379,7 @@ def parseSDFInertial(link):
     """
 
     Args:
-      link: 
+      link:
 
     Returns:
 
@@ -1418,9 +1418,9 @@ def parseSDFGeometry(geometry, link, sdfpath):
     """
 
     Args:
-      geometry: 
-      link: 
-      sdfpath: 
+      geometry:
+      link:
+      sdfpath:
 
     Returns:
 
@@ -1477,8 +1477,8 @@ def parseSDFMaterial(visualname, material):
     """
 
     Args:
-      visualname: 
-      material: 
+      visualname:
+      material:
 
     Returns:
 
@@ -1518,8 +1518,8 @@ def parseSDFLink(link, filepath):
     """
 
     Args:
-      link: 
-      filepath: 
+      link:
+      filepath:
 
     Returns:
 
@@ -1655,7 +1655,7 @@ def parseSDFJointPhysics(physics):
     """
 
     Args:
-      physics: 
+      physics:
 
     Returns:
 
@@ -1668,7 +1668,7 @@ def parseSDFSensors(sensors):
     """
 
     Args:
-      sensors: 
+      sensors:
 
     Returns:
 
@@ -1721,7 +1721,7 @@ def parseSDFAxis(axis):
     """
 
     Args:
-      axis: 
+      axis:
 
     Returns:
 
@@ -1736,6 +1736,8 @@ def parseSDFAxis(axis):
 
     if axis.find('use_parent_model_frame') is not None:
         axisdict['use_parent_model_frame'] = bool(axis.find('use_parent_model_frame').text)
+    else:
+        axisdict['use_parent_model_frame'] = True
 
     if 'dynamics' in list(axis):
         dynamics = axis.find('dynamics')
@@ -1768,7 +1770,7 @@ def parseSDFJoint(joint):
     """
 
     Args:
-      joint: 
+      joint:
 
     Returns:
 
@@ -1824,7 +1826,7 @@ def importSDF(filepath):
     """
 
     Args:
-      filepath: 
+      filepath:
 
     Returns:
 
@@ -1886,7 +1888,7 @@ def importSDF(filepath):
             # parse joint from elementtree
             log(" Adding joint {} ...".format(joint.attrib['name']), 'DEBUG')
             newjoint, pose, newsensors = parseSDFJoint(joint)
-            model['links'][newjoint['child']]['pose'] = pose
+
             joints[newjoint['name']] = newjoint
 
             # add parent-child hierarchy to link information
