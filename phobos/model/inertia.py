@@ -513,6 +513,7 @@ def inertiaMatrixToList(im):
 
 def fuse_inertia_data(inertials):
     """Computes combined mass, center of mass and inertia given a list of inertial objects.
+    Computation based on Modern Robotics, Lynch & Park, p. 287 .
 
     If no inertials are found (None, None, None) is returned.
 
@@ -563,14 +564,23 @@ def fuse_inertia_data(inertials):
     fused_com = numpy.zeros((1,3))
     fused_mass = 0.0
 
+    # Calculate the fused mass and center of mass
+    fused_mass, fused_com = combine_com_3x3(inertials)
+
     # Calculate the fused inertias
     for obj in inertials:
         # Get the rotation of the inertia
         current_Rotation = numpy.array(obj.matrix_local.to_3x3())
         current_Inertia = numpy.array(inertiaListToMatrix(obj['inertial/inertia']))
+        # Rotate the inertia into the current frame
+        current_Inertia = numpy.dot(numpy.dot(current_Rotation.T, current_Inertia ), current_Rotation)
+        # Move the inertia to the center of mass
+        # Get the current relative position of the center of mass
+        relative_position = numpy.array(obj.matrix_local.translation) - fused_com
+        # Calculate the translational influence
+        current_Inertia += obj['inertial/mass']*(relative_position.T* relative_position *numpy.eye(3) - numpy.outer(relative_position,relative_position))
         fused_inertia += numpy.dot(numpy.dot(current_Rotation.T, current_Inertia ), current_Rotation)
 
-    fused_mass, fused_com = combine_com_3x3(inertials)
 
     return fused_mass, fused_com, fused_inertia
 
