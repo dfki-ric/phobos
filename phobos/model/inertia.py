@@ -567,6 +567,11 @@ def fuse_inertia_data(inertials):
     # Calculate the fused mass and center of mass
     fused_mass, fused_com = combine_com_3x3(inertials)
 
+    # Check for conformity
+    if fused_mass <= 0.0:
+        log(" Correcting fused mass : negative semidefinite value.", 'WARNING')
+        fused_mass = 1e-3 if fused_mass < 1e-3 else fused_mass
+
     # Calculate the fused inertias
     for obj in inertials:
         # Get the rotation of the inertia
@@ -580,6 +585,18 @@ def fuse_inertia_data(inertials):
         # Calculate the translational influence
         current_Inertia += obj['inertial/mass']*(relative_position.T* relative_position *numpy.eye(3) - numpy.outer(relative_position,relative_position))
         fused_inertia += numpy.dot(numpy.dot(current_Rotation.T, current_Inertia ), current_Rotation)
+
+    # Check the inertia
+    if any(element <= 0.0 for element in fused_inertia.diagonal()):
+        log(" Correting fused inertia : negative semidefinite diagonal entries.", 'WARNING')
+        for i in range(3):
+            fused_inertia[i,i] = 1e-3 if fused_inertia[i,i] <= 1e-3 else fused_inertia[i,i]
+
+    if any(element <= 0.0 for element in numpy.linalg.eigvals(fused_inertia)):
+        log(" Correcting fused inertia : negative semidefinite eigenvalues", 'WARNING')
+        U, S, V = numpy.linalg.svd(fused_inertia)
+        S[S <= 0.0] = 1e-3
+        fused_inertia = U * S * V
 
 
     return fused_mass, fused_com, fused_inertia
