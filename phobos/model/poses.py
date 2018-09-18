@@ -55,6 +55,7 @@ def deriveObjectPose(obj, logging=False, adjust=False, errors=None):
       obj(bpy.types.Object): blender object to derive the pose from
       logging: (Default value = False)
       errors: (Default value = None)
+      adjust:  (Default value = False)
 
     Returns:
       : dict

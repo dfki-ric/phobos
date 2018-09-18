@@ -318,14 +318,16 @@ def getObjectByName(name, phobostypes=()):
 
     Args:
       name(str): The exact object name to find.
+      phobostypes:  (Default value = ())
 
     Returns:
       : bpy.types.Object or list - one or list of objects matching name
 
     """
     objlist = []
-    searchobjs = [obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes or
-                  not phobostypes]
+    searchobjs = [
+        obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes or not phobostypes
+    ]
     for obj in searchobjs:
         if name == obj.name:
             objlist.append(obj)

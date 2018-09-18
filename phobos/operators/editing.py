@@ -1345,7 +1345,6 @@ class CreateCollisionObjects(Operator):
                 #                                   rotation_euler)
                 # ob.data = vis.data
 
-
             # set properties of new collision object
             ob.phobostype = 'collision'
             ob['geometry/type'] = self.property_colltype

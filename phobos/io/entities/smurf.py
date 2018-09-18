@@ -32,7 +32,7 @@ from phobos.phoboslog import log
 
 def deriveEntity(root, outpath):
     """Derives the dictionary for a SMURF entity from the phobos model dictionary.
-
+    
     # TODO savetosubfolder is not a parameter
 
     Args:
@@ -134,15 +134,15 @@ def gatherLevelOfDetailSettings(model):
 
 def sort_for_yaml_dump(dictionary, category):
     """Sorts the objects of the specified category in the dictionary and returns them.
-
+    
     If the category sorting is unknown, return the dictionary instead.
-
+    
     Supported categories are: *materials*, *motors*, *sensors*, *simulation*.
 
     Args:
       structure(dict): dictionary to sort
       category(str): category of the dictionary to sort
-      dictionary:
+      dictionary: 
 
     Returns:
       : list -- the elements of the specified category of the original dictionary in sorted order
@@ -167,7 +167,7 @@ def sort_dict_list(dict_list, sort_key):
 
     Args:
       dict_list: param sort_key:
-      sort_key:
+      sort_key: 
 
     Returns:
 
@@ -239,7 +239,7 @@ def exportSmurf(model, path):
     urdf_filename = model['name'] + '.urdf'
 
     # gather annotations and data from text files
-    annotationdict = models.gatherAnnotations(model, ignore_keys = ['sdf'])
+    annotationdict = models.gatherAnnotations(model, ignore_keys=['sdf'])
 
     # $mars annotated properties overwrite custom properties of objects for smurf
     if 'mars' in annotationdict:
@@ -248,13 +248,12 @@ def exportSmurf(model, path):
                 model[category + 's'][list_obj['name']].update(list_obj)
         del annotationdict['mars']
 
-
-
     for category in annotationdict:
         # TODO use os.path?
-        filenames[category] = model['name'] + '_' + category + '.yml'
-        fileorder.append(category)
-        exportdata[category] = True
+        if category != 'sdf':
+            filenames[category] = model['name'] + '_' + category + '.yml'
+            fileorder.append(category)
+            exportdata[category] = True
 
     customdatalist = []
     for text in bpy.data.texts:
@@ -393,16 +392,17 @@ def exportSmurf(model, path):
 
     # write additional information
     for category in annotationdict.keys():
-        if exportdata[category]:
-            outstring = '#' + category + infostring
-            for elementtype in annotationdict[category]:
-                outstring += elementtype + ':\n'
-                outstring += (
-                    yaml.dump(annotationdict[category][elementtype], default_flow_style=False)
-                    + "\n"
-                )
-            with open(os.path.join(path, filenames[category]), 'w') as op:
-                op.write(outstring)
+        if category != 'sdf':
+            if exportdata[category]:
+                outstring = '#' + category + infostring
+                for elementtype in annotationdict[category]:
+                    outstring += elementtype + ':\n'
+                    outstring += (
+                        yaml.dump(annotationdict[category][elementtype], default_flow_style=False)
+                        + "\n"
+                    )
+                with open(os.path.join(path, filenames[category]), 'w') as op:
+                    op.write(outstring)
 
     # write custom data from textfiles
     for data in customdatalist:

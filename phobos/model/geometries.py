@@ -180,7 +180,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
                 log("Importing mesh for {0} element: '{1}".format(geomsrc, viscol['name']), 'INFO')
                 filetype = geom['filename'].split('.')[-1].lower()
                 newgeom = meshes.importMesh(geom['filename'], filetype)
-                newgeom.data.name = meshname
+                # bpy.data.meshes[newgeom].name = meshname
                 if not newgeom:
                     log('Failed to import mesh file ' + geom['filename'], 'ERROR')
                     return

@@ -88,7 +88,7 @@ class xmlTagger(object):
     def ind(self):
         """Helper function to return the current indentation depending on the
         hierarchy.
-
+        
         :return: str -- the current indentation (e.g. "  ").
 
         Args:
@@ -101,7 +101,7 @@ class xmlTagger(object):
     def ascend(self):
         """Move up one hierarchical layer by finishing the current tag and
         removing one indentation.
-
+        
         :exception IndentationError -- trying to move above root hierarchical
         layer
 
@@ -183,7 +183,7 @@ class xmlTagger(object):
     def get_output(self):
         """Completes all trailing tags until at initial indentation and
         returns the output as string.
-
+        
         :return: str -- the finished xml string.
 
         Args:
@@ -200,7 +200,7 @@ class xmlTagger(object):
 
 def getIndentedETString(elementtree):
     """Return the specified elementtree as an indented string which can be saved to a file.
-
+    
     The indentation is based on the phobos.utils.io.indent variable.
 
     Args:
@@ -213,18 +213,17 @@ def getIndentedETString(elementtree):
     return minidom.parseString(ET.tostring(elementtree)).toprettyxml(indent=phobosindentation)
 
 
-def exportSDFPose(relativepose, indentation, poseobject=None):
+def exportSDFPose(relativepose, indentation, poseobject=None, relative=False):
     """Simple wrapper for pose data.
     If relative poses are used the data found in posedata is used.
     Otherwise the pose of the poseobject will be combined with all collected
     links up to the rootobject (see phobos.utils.editing.getCombinedTransform).
 
     Args:
-      poseobject: object to be used for absolute pose (Default value = None)
-      posedata: the original (relative) posedata
-      indentation: indentation at current level
-      relative: True for usage of sdf relative pathing
-      relativepose:
+      relativepose(dict): posedata of the object
+      poseobject(bpy.obj, optional): object to be used for absolute pose (Default value = None)
+      indentation(int): indentation at current level
+      relative(bool, optional): True for usage of sdf relative pathing (Default value = False)
 
     Returns:
       : str -- writable xml line
@@ -234,10 +233,16 @@ def exportSDFPose(relativepose, indentation, poseobject=None):
 
     # relative poses are written to file as they are
     if not poseobject:
-        posedata = relativepose
+        if relativepose:
+            posedata = relativepose
+        else:
+            posedata = {'translation': [0., 0., 0.], 'rotation_euler': [0., 0., 0.]}
     # world poses are created by combined transform of the pose
     else:
-        matrix = poseobject.matrix_world
+        if relative:
+            matrix = poseobject.matrix_local
+        else:
+            matrix = poseobject.matrix_world
         # FINAL remove when done
         # matrix = getCombinedTransform(poseobject, getRoot(poseobject))
         posedata = {
@@ -533,7 +538,7 @@ def exportSDFVisual(visualobj, linkobj, visualdata, indentation, modelname):
       indentation: indentation at current level
       relative: True for usage of sdf relative pathing
       modelname: the name of the model (required for geometry)
-      linkobj:
+      linkobj: 
 
     Returns:
       : str -- writable xml line
@@ -620,12 +625,12 @@ def exportSDFLink(linkdict, linkobj, modelname, materials, sensors, indentation)
     """
 
     Args:
-      linkdict:
-      linkobj:
-      modelname:
-      materials:
-      sensors:
-      indentation:
+      linkdict: 
+      linkobj: 
+      modelname: 
+      materials: 
+      sensors: 
+      indentation: 
 
     Returns:
 
@@ -720,8 +725,8 @@ def exportSDFJoint(jointdict, indentation):
     """
 
     Args:
-      jointdict:
-      indentation:
+      jointdict: 
+      indentation: 
 
     Returns:
 
@@ -740,6 +745,9 @@ def exportSDFJoint(jointdict, indentation):
         )
     tagger.attrib('parent', jointdict['parent'])
     tagger.attrib('child', jointdict['child'])
+    # We know that the joints in phobos are equal to links -> use zeros
+    tagger.write(exportSDFPose(None, indentation + 1))
+
     # OPT: tagger.attrib('gearbox_ratio', ...)
     # OPT: tagger.attrib('gearbox_reference_body', ...)'
     # OPT: tagger.attrib('thread_pitch', ...)'
@@ -839,8 +847,8 @@ def exportSDFSensor(sensordict, indentation):
     """
 
     Args:
-      sensordict:
-      indentation:
+      sensordict: 
+      indentation: 
 
     Returns:
 
@@ -1160,8 +1168,8 @@ def exportSDF(model, filepath):
     This exports a model SDF file as well as its model.conf to the specified filepath.
 
     Args:
-      model:
-      filepath:
+      model: 
+      filepath: 
 
     Returns:
 
@@ -1358,13 +1366,16 @@ def parseSDFPose(pose):
     """
 
     Args:
-      pose:
+      pose: 
 
     Returns:
 
     """
+
     posedict = {}
     if pose is not None:
+        if 'frame' in pose.attrib:
+            posedict['parentframe'] = pose.attrib['frame']
         xyzrpy = gUtils.parse_text(pose.text)
         posedict['translation'] = xyzrpy[:3]
         posedict['rotation_euler'] = xyzrpy[3:]
@@ -1379,7 +1390,7 @@ def parseSDFInertial(link):
     """
 
     Args:
-      link:
+      link: 
 
     Returns:
 
@@ -1418,9 +1429,9 @@ def parseSDFGeometry(geometry, link, sdfpath):
     """
 
     Args:
-      geometry:
-      link:
-      sdfpath:
+      geometry: 
+      link: 
+      sdfpath: 
 
     Returns:
 
@@ -1477,8 +1488,8 @@ def parseSDFMaterial(visualname, material):
     """
 
     Args:
-      visualname:
-      material:
+      visualname: 
+      material: 
 
     Returns:
 
@@ -1518,8 +1529,8 @@ def parseSDFLink(link, filepath):
     """
 
     Args:
-      link:
-      filepath:
+      link: 
+      filepath: 
 
     Returns:
 
@@ -1553,6 +1564,8 @@ def parseSDFLink(link, filepath):
     # velocity_decay
     # frame
 
+    # We need to reuse this, since the pose in sdf is relative
+    # The pose of all children of the link has to be corrected if they are links
     newlink['pose'] = parseSDFPose(link.find('pose'))
 
     # parse inertial
@@ -1655,7 +1668,7 @@ def parseSDFJointPhysics(physics):
     """
 
     Args:
-      physics:
+      physics: 
 
     Returns:
 
@@ -1668,7 +1681,7 @@ def parseSDFSensors(sensors):
     """
 
     Args:
-      sensors:
+      sensors: 
 
     Returns:
 
@@ -1721,7 +1734,7 @@ def parseSDFAxis(axis):
     """
 
     Args:
-      axis:
+      axis: 
 
     Returns:
 
@@ -1737,7 +1750,7 @@ def parseSDFAxis(axis):
     if axis.find('use_parent_model_frame') is not None:
         axisdict['use_parent_model_frame'] = bool(axis.find('use_parent_model_frame').text)
     else:
-        axisdict['use_parent_model_frame'] = True
+        axisdict['use_parent_model_frame'] = False
 
     if 'dynamics' in list(axis):
         dynamics = axis.find('dynamics')
@@ -1770,7 +1783,7 @@ def parseSDFJoint(joint):
     """
 
     Args:
-      joint:
+      joint: 
 
     Returns:
 
@@ -1826,11 +1839,13 @@ def importSDF(filepath):
     """
 
     Args:
-      filepath:
+      filepath: 
 
     Returns:
 
     """
+    from numpy import pi, sign
+
     model = {}
 
     log("Parsing SDF model from " + filepath, 'INFO')
@@ -1842,8 +1857,16 @@ def importSDF(filepath):
     # load element tree from file
     tree = ET.parse(filepath)
     sdfroot = tree.getroot()
-    root = sdfroot.find('model')
-    model['name'] = root.attrib['name']
+
+    # Check for nested sdf
+    if sdfroot.find('world'):
+        root = sdfroot.find('world')
+    else:
+        root = sdfroot.find('model')
+    if root.attrib['name']:
+        model['name'] = root.attrib['name']
+    else:
+        model['name'] = 'SDFImport'
 
     # include all generic parameters not defined in this function
     genparams = [
@@ -1894,17 +1917,41 @@ def importSDF(filepath):
             # add parent-child hierarchy to link information
             parentlink = model['links'][newjoint['parent']]
             childlink = model['links'][newjoint['child']]
+
             childlink['parent'] = newjoint['parent']
             parentlink['children'].append(newjoint['child'])
+
             log(
                 "   ... and connected parent link {} to {}.".format(
                     parentlink['name'], childlink['name']
                 ),
                 'DEBUG',
             )
+
+            # Correct the pose
+            childlink['pose']['translation'] = [
+                y - x
+                for x, y in zip(parentlink['pose']['translation'], childlink['pose']['translation'])
+            ]
+            # Correct the angle
+            if 'xyz' in newjoint and abs(newjoint['xyz'][-1]) != 1:
+                print(newjoint['xyz'])
+                if abs(newjoint['xyz'][0]) == 1:
+                    childlink['pose']['rotation_euler'] = [0., sign(newjoint['xyz'][0]) * pi, 0.]
+                elif abs(newjoint['xyz'][1]) == 1:
+                    childlink['pose']['rotation_euler'] = [sign(newjoint['xyz'][1]) * pi, 0., 0.]
+                else:
+                    log(
+                        "   Parsing of connection from link {} to {} not properly supported right now.".format(
+                            parentlink['name'], childlink['name']
+                        ),
+                        'WARNING',
+                    )
     model['joints'] = joints
-    sensors.update(newsensors)
-    model['sensors'] = sensors
+
+    # TODO FIXME This does not work, since the parent is not given
+    # sensors.update(newsensors)
+    # model['sensors'] = sensors
 
     # find any links that still have no pose (most likely because they had no parent)
     for link in model['links']:

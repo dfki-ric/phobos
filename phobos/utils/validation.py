@@ -453,6 +453,8 @@ def validateObjectPose(obj, adjust=False, **kwargs):
 
     Args:
       obj: 
+      adjust:  (Default value = False)
+      **kwargs: 
 
     Returns:
 

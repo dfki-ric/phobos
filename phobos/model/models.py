@@ -52,9 +52,9 @@ from phobos.defs import linkobjignoretypes
 
 def collectMaterials(objectlist):
     """Returns a dictionary of materials contained in a list of objects.
-
+    
     Only visual objects are considered and the dict keys represent the material names.
-
+    
     If a material is used by multiple objects, the *user* count is increased by one.
 
     Args:
@@ -80,15 +80,15 @@ def collectMaterials(objectlist):
 @validate('material')
 def deriveMaterial(mat, logging=False, errors=None):
     """Returns a Phobos representation of a Blender material.
-
+    
     Colors are returned as a dictionary with three keys ('r', 'g', 'b').
-
+    
     It contains always:
         *name*: name of the material
         *diffuseColor*: the diffuse color of the material
         *ambientColor*: the ambient color of the material
         *specularColor*: the specular color of the material
-
+    
     Depending on the material and texture configuration it might also contain:
         *emissionColor*: the emission color of the material
         *transparency*: the transparency of the material
@@ -169,10 +169,10 @@ def deriveMaterial(mat, logging=False, errors=None):
 @validate('link')
 def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
     """Derives a dictionary for the link represented by the provided obj.
-
+    
     If objectlist is provided, only objects contained in the list are taken into account
     for creating the resulting dictionary.
-
+    
     The dictionary contains (besides any generic object properties) this information:
         *parent*: name of parent object or None
         *children*: list of names of the links child links
@@ -262,7 +262,7 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
 
 def get_link_information(linkobj):
     """Returns the full link information including joint and motor data from a blender object.
-
+    
     The link information is derived according to :func:`derive_link`.
 
     Args:
@@ -371,7 +371,7 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
 @validate('inertia_data')
 def deriveInertial(obj, logging=True, **kwargs):
     """Returns a dictionary describing the inertial information represented by the provided object.
-
+    
     Contains these keys:
         *mass*: float
         *inertia*: list
@@ -382,7 +382,7 @@ def deriveInertial(obj, logging=True, **kwargs):
     Args:
       obj(bpy.types.Object): object of phobostype 'inertial'
       logging(bool, optional): whether to log information or not (Default value = True)
-      **kwargs:
+      **kwargs: 
 
     Returns:
 
@@ -400,7 +400,7 @@ def deriveInertial(obj, logging=True, **kwargs):
 @validate('visual')
 def deriveVisual(obj, logging=True, **kwargs):
     """This function derives the visual information from an object.
-
+    
     Contains these keys:
         *name*: name of the visual
         *geometry*: derived according to `deriveGeometry`
@@ -410,7 +410,7 @@ def deriveVisual(obj, logging=True, **kwargs):
     Args:
       obj(bpy.types.Object): object to derive the visual representation from
       logging: (Default value = True)
-      **kwargs:
+      **kwargs: 
 
     Returns:
       : dict -- model representation of the visual object
@@ -542,7 +542,7 @@ def deriveLight(obj):
 
 def recursive_dictionary_cleanup(dictionary):
     """Recursively enrich the dictionary and replace object links with names etc.
-
+    
     These patterns are replaced:
         [phobostype, bpyobj] -> {'object': bpyobj, 'name': getObjectName(bpyobj, phobostype)}
 
@@ -668,6 +668,7 @@ def deriveDictEntry(obj, names=False, objectlist=[], logging=True, adjust=True):
       names(bool, optional): use object names as dict entries instead of object links. (Default value = False)
       logging(bool, optional): whether to log messages or not (Default value = True)
       objectlist: (Default value = [])
+      adjust:  (Default value = True)
 
     Returns:
       : dict -- phobos representation of the object
@@ -684,8 +685,9 @@ def deriveDictEntry(obj, names=False, objectlist=[], logging=True, adjust=True):
         elif obj.phobostype == 'approxsphere':
             props = deriveApproxsphere(obj)
         elif obj.phobostype == 'sensor':
-            props = sensormodel.deriveSensor(obj, names=names, objectlist=objectlist,
-                                             logging=logging)
+            props = sensormodel.deriveSensor(
+                obj, names=names, objectlist=objectlist, logging=logging
+            )
         elif obj.phobostype == 'controller':
             props = controllermodel.deriveController(obj)
         elif obj.phobostype == 'light':
@@ -704,9 +706,10 @@ def deriveAnnotation(obj):
     """Derives the annotation info of an object.
 
     Args:
-        obj: TODO
+      obj: TODO
 
     Returns:
+
     """
     props = {}
 
@@ -894,8 +897,8 @@ def namespaceMotor(motor, namespace):
     """
 
     Args:
-      motor:
-      namespace:
+      motor: 
+      namespace: 
 
     Returns:
 
@@ -909,8 +912,8 @@ def namespaceLink(link, namespace):
     """
 
     Args:
-      link:
-      namespace:
+      link: 
+      namespace: 
 
     Returns:
 
@@ -929,8 +932,8 @@ def namespaceJoint(joint, namespace):
     """
 
     Args:
-      joint:
-      namespace:
+      joint: 
+      namespace: 
 
     Returns:
 
@@ -945,8 +948,8 @@ def namespaced(name, namespace):
     """
 
     Args:
-      name:
-      namespace:
+      name: 
+      namespace: 
 
     Returns:
 
@@ -956,7 +959,7 @@ def namespaced(name, namespace):
 
 def deriveModelDictionary(root, name='', objectlist=[]):
     """Returns a dictionary representation of a Phobos model.
-
+    
     If name is not specified, it overrides the modelname in the root. If the modelname is not
     defined at all, 'unnamed' will be used instead.
 
@@ -1118,7 +1121,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         """
 
         Args:
-          link:
+          link: 
 
         Returns:
 
@@ -1277,14 +1280,14 @@ def buildModelFromDictionary(model):
     bUtils.update()
 
 
-def gatherAnnotations(model, ignore_keys = []):
+def gatherAnnotations(model, ignore_keys=[]):
     """Gathers custom properties annotating elements of the robot
     across the model. These annotations were created in the model.py
     module and are marked with a leading '$'.
 
     Args:
       model(dict): The robot model dictionary.
-      ignore_keys(list): Ignored annotation categories
+      ignore_keys(list, optional): Ignored annotation categories (Default value = [])
 
     Returns:
       : dict -- A dictionary of the gathered annotations.
@@ -1342,10 +1345,10 @@ def gatherAnnotations(model, ignore_keys = []):
 
 def replace_object_links(dictionary):
     """Replaces object links in a dictionary with object names.
-
+    
     This is required for generic parsed object definitions, as object links are represented by a
     simple dictionary with *name* and *object*.
-
+    
     For most exports, this can be run prior export parsing, to create the respective name linking
     within the model.
 
@@ -1382,7 +1385,7 @@ def createGroup(group):
     """
 
     Args:
-      group:
+      group: 
 
     Returns:
 
@@ -1395,7 +1398,7 @@ def createChain(group):
     """
 
     Args:
-      group:
+      group: 
 
     Returns:
 
