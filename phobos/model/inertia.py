@@ -45,7 +45,7 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
 
     Args:
       inertialdict(dict): intertial data
-      obj:
+      obj: 
       size: (Default value = 0.03)
       errors: (Default value = None)
       adjust: (Default value = False)
@@ -84,9 +84,9 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
     eUtils.parentObjectsTo(inertialobject, parent)
 
     # position and parent the inertial object relative to the link
-    #inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
+    # inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
-    #bpy.ops.object.transform_apply(scale=True)
+    # bpy.ops.object.transform_apply(scale=True)
 
     # add properties to the object
     for prop in ('mass', 'inertia'):
@@ -137,7 +137,7 @@ def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, l
         inertia = calculateMeshInertia(mass, obj.data)
 
     # Correct the inertia orientation to account for Cylinder / mesh orientation issues
-    inertia = object_rotation *inertiaListToMatrix(inertia) *object_rotation.transposed()
+    inertia = object_rotation * inertiaListToMatrix(inertia) * object_rotation.transposed()
 
     return inertiaMatrixToList(inertia)
 
@@ -229,12 +229,12 @@ def calculateEllipsoidInertia(mass, size):
 
 def calculateMeshInertia(mass, data):
     """Calculates and returns the inertia tensor of arbitrary mesh objects.
-
+    
     Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
     Simply and Quickly' (2004) by Jonathan Blow (1) with formulas for tetrahedron inertia
     from 'Explicit Exact Formulas for the 3-D Tetrahedron Inertia Tensor in Terms of its
     Vertex Coordinates' (2004) by F. Tonon. (2)
-
+    
     Links: (1) http://number-none.com/blow/inertia/body_i.html
            (2) http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf
 
@@ -513,9 +513,10 @@ def inertiaMatrixToList(im):
 
 def fuse_inertia_data(inertials):
     """Computes combined mass, center of mass and inertia given a list of inertial objects.
-
+    Computation based on Modern Robotics, Lynch & Park, p. 287 .
+    
     If no inertials are found (None, None, None) is returned.
-
+    
     If successful, the tuple contains this information:
         *mass*: float
         *com*: mathutils.Vector(3)
@@ -528,53 +529,61 @@ def fuse_inertia_data(inertials):
       3: tuple of mass, COM and inertia or None(3) if no inertials are found
 
     """
-    # OLD CODE
-    # collect objects which contain inertia
-    #objects = []
-    #for inertia_object in inertials:
-    #    objdict = None
-    #    try:
-    #        pose = deriveObjectPose(inertia_object)
-    #        objdict = {
-    #            'name': inertia_object.name,
-    #            'mass': inertia_object['inertial/mass'],
-    #            # FIXME: this is not nice, as we invert what is one when deriving the pose
-    #            'com': mathutils.Vector(pose['translation']),
-    #            'rot': pose['rawmatrix'].to_3x3(),
-    #            'inertia': list(inertia_object['inertial/inertia']),
-    #        }
-    #    except KeyError as e:
-    #        log('Inertial object ' + inertia_object.name + ' is missing data: ' + str(e), 'WARNING')
-    #        continue
-    #    if objdict:
-    #        objects.append(objdict)
 
-    ## fuse inertias of objects
-    #if objects:
-    #    log("  Fusing inertials: " + str([i.name for i in inertials]), 'DEBUG')
-    #    mass, com, inertia = compound_inertia_analysis_3x3(objects)
-    #    log("  Fused mass: " + str(mass), 'DEBUG')
-    #    return mass, com, inertia
+    # Find objects who have some inertial data
+    for obj in inertials:
+        if not any([True for key in obj.keys() if key.startswith('inertial/')]):
+            inertials.remove(obj)
 
-    #log("No inertial found to fuse.", 'DEBUG')
-    #return None, None, None
+    # Check for an empty list -> No inertials to fuse
+    if not inertials:
+        return None, None, None
 
-    fused_inertia = numpy.zeros((3,3))
-    fused_com = numpy.zeros((1,3))
+    fused_inertia = numpy.zeros((3, 3))
+    fused_com = numpy.zeros((1, 3))
     fused_mass = 0.0
 
+    # Calculate the fused mass and center of mass
+    fused_mass, fused_com = combine_com_3x3(inertials)
+
+    # Check for conformity
+    if fused_mass <= 0.0:
+        log(" Correcting fused mass : negative semidefinite value.", 'WARNING')
+        fused_mass = 1e-3 if fused_mass < 1e-3 else fused_mass
+
+    # TODO Maybe we can reuse the functions defined here.
     # Calculate the fused inertias
     for obj in inertials:
         # Get the rotation of the inertia
         current_Rotation = numpy.array(obj.matrix_local.to_3x3())
         current_Inertia = numpy.array(inertiaListToMatrix(obj['inertial/inertia']))
-        fused_inertia += numpy.dot(numpy.dot(current_Rotation.T, current_Inertia ), current_Rotation)
+        # Rotate the inertia into the current frame
+        current_Inertia = numpy.dot(
+            numpy.dot(current_Rotation.T, current_Inertia), current_Rotation
+        )
+        # Move the inertia to the center of mass
+        # Get the current relative position of the center of mass
+        relative_position = numpy.array(obj.matrix_local.translation) - fused_com
+        # Calculate the translational influence
+        current_Inertia += obj['inertial/mass'] * (
+            relative_position.T * relative_position * numpy.eye(3)
+            - numpy.outer(relative_position, relative_position)
+        )
+        fused_inertia += numpy.dot(numpy.dot(current_Rotation.T, current_Inertia), current_Rotation)
 
-    fused_mass, fused_com = combine_com_3x3(inertials)
+    # Check the inertia
+    if any(element <= 0.0 for element in fused_inertia.diagonal()):
+        log(" Correting fused inertia : negative semidefinite diagonal entries.", 'WARNING')
+        for i in range(3):
+            fused_inertia[i, i] = 1e-3 if fused_inertia[i, i] <= 1e-3 else fused_inertia[i, i]
+
+    if any(element <= 0.0 for element in numpy.linalg.eigvals(fused_inertia)):
+        log(" Correcting fused inertia : negative semidefinite eigenvalues", 'WARNING')
+        U, S, V = numpy.linalg.svd(fused_inertia)
+        S[S <= 0.0] = 1e-3
+        fused_inertia = U * S * V
 
     return fused_mass, fused_com, fused_inertia
-
-
 
 
 def combine_com_3x3(objects):
@@ -602,32 +611,32 @@ def combine_com_3x3(objects):
 
 def shift_com_inertia_3x3(mass, com, inertia_com, ref_point=mathutils.Vector((0.0,) * 3)):
     """Shifts the center of mass of a 3x3 inertia.
-
+    
     This code was adapted from an implementation generously provided by Bertold Bongardt.
-
+    
     TODO cleanup docstring
-
+    
     shift inertia matrix, steiner theorem / parallel axis theorem, private method
-
+    
     - without changing the orientation  -
-
+    
     see SCISIC B.12 or featherstone 2.63, but not Selig (sign swap, not COG)
-
+    
     | c   = COG - O
     | I_O = I_COG + m · c× (c× )T
     |
     | changed the formula to (Wikipedia):
     | \\mathbf{J} = \\mathbf{I} + m \\left[\\left(\\mathbf{R} \\cdot \\mathbf{R}\\right)
     | \\mathbf{E}_{3} - \\mathbf{R} \\otimes \\mathbf{R} \\right],
-
+    
     This was necessary as previous calculations founded on math libraries of cad2sim.
 
     Args:
-      mass:
-      com:
-      inertia_com:
+      mass: 
+      com: 
+      inertia_com: 
       ref_point: (Default value = mathutils.Vector((0.0)
-      ) * 3):
+      ) * 3): 
 
     Returns:
 
@@ -641,29 +650,29 @@ def shift_com_inertia_3x3(mass, com, inertia_com, ref_point=mathutils.Vector((0.
 
 def spin_inertia_3x3(inertia_3x3, rotmat, passive=True):
     """Rotates an inertia matrix.
-
+    
     active and passive interpretation
-
+    
     passive
         the object stands still but the inertia is expressed with respect to a rotated reference
         frame
-
+    
     active
         object moves and therefore its inertia
-
+    
     consistent with 6x6 method :
-
+    
     active
         consistent with   N'  =  (H^T)^{-1}  *  N  *  H^{-1}
-
+    
     passive
         consistent with   N'  =  (H^T)       *  N  *  H
-
+    
     WHERE IS a COMBINED METHOD of shifted and rotated inertia ? does it exist ?
 
     Args:
-      inertia_3x3:
-      rotmat:
+      inertia_3x3: 
+      rotmat: 
       passive: (Default value = True)
 
     Returns:
@@ -690,7 +699,7 @@ def compound_inertia_analysis_3x3(objects):
     """Computes total mass, common center of mass and inertia matrix at CCOM
 
     Args:
-      objects:
+      objects: 
 
     Returns:
 
@@ -722,7 +731,7 @@ def compound_inertia_analysis_3x3(objects):
 
 def gatherInertialChilds(obj, objectlist):
     """Gathers recursively all inertial object children from the specified object.
-
+    
     The inertia objects need to be in the specified objectlist to be encluded. Also, links which
     are not in the objectlist, will be considered, too. This will gather inertial objects which are
     child of a link *not* in the list.
