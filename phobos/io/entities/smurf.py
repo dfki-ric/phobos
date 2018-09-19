@@ -239,7 +239,7 @@ def exportSmurf(model, path):
     urdf_filename = model['name'] + '.urdf'
 
     # gather annotations and data from text files
-    annotationdict = models.gatherAnnotations(model, ignore_keys=['sdf'])
+    annotationdict = models.gatherAnnotations(model)
 
     # $mars annotated properties overwrite custom properties of objects for smurf
     if 'mars' in annotationdict:

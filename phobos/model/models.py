@@ -1280,7 +1280,7 @@ def buildModelFromDictionary(model):
     bUtils.update()
 
 
-def gatherAnnotations(model, ignore_keys=[]):
+def gatherAnnotations(model):
     """Gathers custom properties annotating elements of the robot
     across the model. These annotations were created in the model.py
     module and are marked with a leading '$'.
@@ -1335,10 +1335,6 @@ def gatherAnnotations(model, ignore_keys=[]):
         for key in delkeys:
             if key in element:
                 del element[key]
-
-    if ignore_keys:
-        for ignore in ignore_keys:
-            del annotations[ignore]
 
     return annotations
 
