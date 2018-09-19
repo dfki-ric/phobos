@@ -529,36 +529,15 @@ def fuse_inertia_data(inertials):
       3: tuple of mass, COM and inertia or None(3) if no inertials are found
 
     """
-    # OLD CODE
-    # collect objects which contain inertia
-    #objects = []
-    #for inertia_object in inertials:
-    #    objdict = None
-    #    try:
-    #        pose = deriveObjectPose(inertia_object)
-    #        objdict = {
-    #            'name': inertia_object.name,
-    #            'mass': inertia_object['inertial/mass'],
-    #            # FIXME: this is not nice, as we invert what is one when deriving the pose
-    #            'com': mathutils.Vector(pose['translation']),
-    #            'rot': pose['rawmatrix'].to_3x3(),
-    #            'inertia': list(inertia_object['inertial/inertia']),
-    #        }
-    #    except KeyError as e:
-    #        log('Inertial object ' + inertia_object.name + ' is missing data: ' + str(e), 'WARNING')
-    #        continue
-    #    if objdict:
-    #        objects.append(objdict)
 
-    ## fuse inertias of objects
-    #if objects:
-    #    log("  Fusing inertials: " + str([i.name for i in inertials]), 'DEBUG')
-    #    mass, com, inertia = compound_inertia_analysis_3x3(objects)
-    #    log("  Fused mass: " + str(mass), 'DEBUG')
-    #    return mass, com, inertia
+    # Find objects who have some inertial data
+    for obj in inertials:
+        if not any([True for key in obj.keys() if key.startswith('inertial/')]):
+            inertials.remove(obj)
 
-    #log("No inertial found to fuse.", 'DEBUG')
-    #return None, None, None
+    # Check for an empty list -> No inertials to fuse
+    if not inertials:
+        return None, None, None
 
     fused_inertia = numpy.zeros((3,3))
     fused_com = numpy.zeros((1,3))
@@ -572,6 +551,7 @@ def fuse_inertia_data(inertials):
         log(" Correcting fused mass : negative semidefinite value.", 'WARNING')
         fused_mass = 1e-3 if fused_mass < 1e-3 else fused_mass
 
+    # TODO Maybe we can reuse the functions defined here.
     # Calculate the fused inertias
     for obj in inertials:
         # Get the rotation of the inertia
