@@ -296,9 +296,9 @@ def exportSmurf(model, path):
     #         op.write(yaml.dump(semantics, default_flow_style=False))
 
     # for smurf, we parse the controller parameters into the motors
+    
     for motor in model['motors']:
         motordict = model['motors'][motor]
-
         controllerparams = {}
         if motordict['controller'] in model['controllers']:
             controllerparams = {
@@ -329,7 +329,7 @@ def exportSmurf(model, path):
         elif motordict['type'] == 'direct':
             motordict['type'] = 'generic_dc'
             try:
-                motordict['minValue'] = 0
+                motordict['minValue'] = -1. * motordict["maxSpeed"]
                 motordict['maxValue'] = motordict["maxSpeed"]
             except KeyError:
                 log(
@@ -357,8 +357,25 @@ def exportSmurf(model, path):
             # TODO am I still needed?
             op.write(yaml.dump(states))  # , default_flow_style=False))
 
+    if 'sensors' in exportdata:
+        export_sensors = {}
+        for sensorname, sensordata in model['sensors'].items():
+            export_sensors[sensorname] = parseSmurfSensor(sensordata)
+        log("Writing {} to smurf file.".format('sensors'), 'DEBUG')
+        with open(os.path.join(path, filenames['sensors']), 'w') as op:
+            op.write('#' + 'sensors' + infostring)
+            op.write(
+                yaml.dump(
+                sort_for_yaml_dump({'sensors': list(export_sensors.values())}, 'sensors'),
+                default_flow_style=False,
+                )
+            )
+
+    # TODO WRITE EXPORT FOR MOTOR and stuff
+        
+
     # write materials, sensors, motors & controllers
-    for data in ['materials', 'sensors', 'motors', 'controllers', 'lights']:
+    for data in ['materials', 'motors', 'controllers', 'lights']:
         if exportdata[data]:
             log("Writing {} to smurf file.".format(data), 'DEBUG')
             with open(os.path.join(path, filenames[data]), 'w') as op:
@@ -524,6 +541,14 @@ def exportSmurf(model, path):
 #         #now some debug output
 #         with open(self.filepath+'_SMURF_debug.yml', 'w') as outputfile:
 #             outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
+
+
+
+def parseSmurfSensor(sensordict):
+    """
+    """
+    return_dict = models.filterExportData(sensordict, 'sensors', 'mars')
+    return return_dict
 
 
 # registering import/export functions of types with Phobos

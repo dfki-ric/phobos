@@ -35,7 +35,7 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
 
     Args:
       obj(bpy_types.Object): The blender object to derive the sensor from.
-      names(bool, optional): return the link object name instead of an object link. (Default value = False)
+      names(bool, optional): return the l object name instead of an object link. (Default value = False)
       objectlist(list(bpy.types.Object, optional): objectlist to which possible parents are restricted (Default value = [])
       logging(bool, optional): whether to write log messages or not (Default value = False)
 
@@ -52,7 +52,7 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
             'DEBUG',
         )
     try:
-        props = initObjectProperties(obj, phobostype='sensor')
+        props = initObjectProperties(obj, phobostype='sensor', ignoretypes=('pose'))
         if names:
             props['link'] = nUtils.getObjectName(
                 sUtils.getEffectiveParent(obj, objectlist=objectlist), phobostype='link'
@@ -198,6 +198,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     # set sensor properties
     newsensor.phobostype = 'sensor'
     newsensor.name = sensor['name']
+    newsensor['sensor/name'] = sensor['name']
     newsensor['sensor/type'] = sensor['type']
 
     # write the custom properties to the sensor
