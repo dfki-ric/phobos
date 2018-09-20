@@ -358,6 +358,7 @@ sensors:
                 - internal
         mars:
             type: MotorCurrent
+            id: $selected_objects:joint
 
     Inertial_measurement_unit:
         general:
