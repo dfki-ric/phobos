@@ -40,9 +40,9 @@ controllers:
             categories:
                 - generic
                 - motor
-        p: 20.0
-        i: 1.0
-        d: 0.1
+        p: 70.0
+        i: 10.0
+        d: 0.005
     direct:
         general:
             type: direct
