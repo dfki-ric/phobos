@@ -581,7 +581,7 @@ def fuse_inertia_data(inertials):
         log(" Correcting fused inertia : negative semidefinite eigenvalues", 'WARNING')
         U, S, V = numpy.linalg.svd(fused_inertia)
         S[S <= 0.0] = 1e-3
-        fused_inertia = U * S * V
+        fused_inertia = U * S * V + 1e-3 *numpy.eye(3)
 
     return fused_mass, fused_com, fused_inertia
 
