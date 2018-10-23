@@ -572,12 +572,12 @@ def fuse_inertia_data(inertials):
         fused_inertia += numpy.dot(numpy.dot(current_Rotation.T, current_Inertia), current_Rotation)
 
     # Check the inertia
-    if any(element <= 0.0 for element in fused_inertia.diagonal()):
+    if any(element <= 1e-3 for element in fused_inertia.diagonal()):
         log(" Correting fused inertia : negative semidefinite diagonal entries.", 'WARNING')
         for i in range(3):
             fused_inertia[i, i] = 1e-3 if fused_inertia[i, i] <= 1e-3 else fused_inertia[i, i]
 
-    if any(element <= 0.0 for element in numpy.linalg.eigvals(fused_inertia)):
+    if any(element <= 1e-3 for element in numpy.linalg.eigvals(fused_inertia)):
         log(" Correcting fused inertia : negative semidefinite eigenvalues", 'WARNING')
         U, S, V = numpy.linalg.svd(fused_inertia)
         S[S <= 0.0] = 1e-3
