@@ -700,7 +700,7 @@ def parseLink(link, urdffilepath):
         newlink[objtype] = {}
         for xmlelement in link.iter(objtype):
             # generate name for visual/collision representation
-            if 'name' not in xmlelement.attrib['name']:
+            if 'name' not in xmlelement.attrib:
                 elementname = objtype + '_' + str(len(newlink[objtype])) + '_' + newlink['name']
             else:
                 elementname = xmlelement.attrib['name']
