@@ -306,6 +306,7 @@ def instantiateSubmodel(submodelname, instancename, size=1.0):
     # TODO currently this works only by name binding, we should add links to
     # the group here
     submodelobj['submodel/name'] = submodelname
+    submodelobj['submodelname'] = submodelname
     # copy custom props from group to instance
     for key in submodel.keys():
         submodelobj[key] = submodel[key]
