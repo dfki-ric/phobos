@@ -1263,6 +1263,7 @@ class CreateCollisionObjects(Operator):
         visuals = []
         collisions = []
 
+
         # find all selected visual objects
         for obj in context.selected_objects:
             if obj.phobostype == "visual":
@@ -1334,16 +1335,35 @@ class CreateCollisionObjects(Operator):
                     phobostype='collision',
                 )
             elif self.property_colltype == 'mesh':
+                # FIXME Found error and made a quick 
+                # Copy object and data
+                #ob = bUtils.createPrimitive(
+                #    collname,
+                #    'box',
+                #    size,
+                #    player=defs.layerTypes['collision'],
+                #    pmaterial=materialname,
+                #    plocation=center,
+                #    protation=rotation_euler,
+                #    phobostype='collision',
+                #)
+                #ob.data.meshes = vis.data.meshes
+                
+
+                #current_scene.objects.link(ob)
+
                 # FIXME: simply turn this into object.duplicate?
-                bpy.ops.object.duplicate_move(
-                    OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
-                    TRANSFORM_OT_translate={"value": (0, 0, 0)},
-                )
+                #ob = bpy.ops.object.duplicate_move(
+                #    OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
+                #    TRANSFORM_OT_translate={"value": (0, 0, 0)},
+                #)
+                
                 # TODO: copy mesh? This was taken from pull request #102
-                # ob = blenderUtils.createPrimitive(collname, 'cylinder', (1,1,1),
-                #                                   defs.layerTypes['collision'], materialname, center,
-                #                                   rotation_euler)
-                # ob.data = vis.data
+                ob = bUtils.createPrimitive(collname, 'cylinder', (1,1,1),
+                                                 defs.layerTypes['collision'], materialname, center,
+                                                 rotation_euler)
+                ob.data = vis.data
+                
 
             # set properties of new collision object
             ob.phobostype = 'collision'
