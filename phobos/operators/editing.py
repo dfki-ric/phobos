@@ -1373,7 +1373,12 @@ class CreateCollisionObjects(Operator):
             # make collision object relative if visual object has a parent
             if vis.parent:
                 ob.select = True
-                bpy.ops.object.transform_apply(scale=True)
+                
+                # TODO This line created an error. Try to check all meshes
+                # which are related to each other and check for scale 1.0 or
+                # create new mesh object
+                #bpy.ops.object.transform_apply(scale=True)
+
                 # CHECK test whether mesh option does work
                 # this was taken from pull request #102
                 # try:
