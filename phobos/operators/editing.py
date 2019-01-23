@@ -1263,7 +1263,6 @@ class CreateCollisionObjects(Operator):
         visuals = []
         collisions = []
 
-
         # find all selected visual objects
         for obj in context.selected_objects:
             if obj.phobostype == "visual":
@@ -1335,35 +1334,15 @@ class CreateCollisionObjects(Operator):
                     phobostype='collision',
                 )
             elif self.property_colltype == 'mesh':
-                # FIXME Found error and made a quick 
-                # Copy object and data
-                #ob = bUtils.createPrimitive(
-                #    collname,
-                #    'box',
-                #    size,
-                #    player=defs.layerTypes['collision'],
-                #    pmaterial=materialname,
-                #    plocation=center,
-                #    protation=rotation_euler,
-                #    phobostype='collision',
-                #)
-                #ob.data.meshes = vis.data.meshes
-                
-
-                #current_scene.objects.link(ob)
-
-                # FIXME: simply turn this into object.duplicate?
-                #ob = bpy.ops.object.duplicate_move(
-                #    OBJECT_OT_duplicate={"linked": False, "mode": 'TRANSLATION'},
-                #    TRANSFORM_OT_translate={"value": (0, 0, 0)},
-                #)
-                
-                # TODO: copy mesh? This was taken from pull request #102
-                ob = bUtils.createPrimitive(collname, 'cylinder', (1,1,1),
-                                                 defs.layerTypes['collision'], materialname, center,
-                                                 rotation_euler)
-                ob.data = vis.data
-                
+                # FIXME: currently we just take a copy of the original mesh, because collision
+                # scale can not be used with URDF. However, the mesh should be checked for scaling
+                # issues on export and then applied properly, so we should solve this in the URDF
+                # export functions.
+                ob = bUtils.createPrimitive(collname, 'cylinder', (1., 1., 1.),
+                                            defs.layerTypes['collision'], materialname, center,
+                                            rotation_euler)
+                ob.scale = vis.scale
+                ob.data = vis.data.copy()
 
             # set properties of new collision object
             ob.phobostype = 'collision'
@@ -1373,25 +1352,10 @@ class CreateCollisionObjects(Operator):
             # make collision object relative if visual object has a parent
             if vis.parent:
                 ob.select = True
-                
-                # TODO This line created an error. Try to check all meshes
-                # which are related to each other and check for scale 1.0 or
-                # create new mesh object
-                #bpy.ops.object.transform_apply(scale=True)
 
-                # CHECK test whether mesh option does work
-                # this was taken from pull request #102
-                # try:
-                #     bpy.ops.object.transform_apply(scale=True)
-                # except RuntimeError:
-                #     log("Cannot apply scale. Mesh " + ob.data.name +
-                #         " is shared between several objects.", "WARNING",
-                #         "CreateCollisionObjects")
+                bpy.ops.object.transform_apply(scale=True)
                 vis.parent.select = True
                 eUtils.parentObjectsTo(context.selected_objects, vis.parent)
-                # TODO delete these lines?
-                # ob.parent_type = vis.parent_type
-                # ob.parent_bone = vis.parent_bone
 
             # select created collision objects
             sUtils.selectObjects(collisions)
