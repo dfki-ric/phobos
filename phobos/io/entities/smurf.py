@@ -296,7 +296,7 @@ def exportSmurf(model, path):
     #         op.write(yaml.dump(semantics, default_flow_style=False))
 
     # for smurf, we parse the controller parameters into the motors
-    
+
     for motor in model['motors']:
         motordict = model['motors'][motor]
         controllerparams = {}
@@ -366,13 +366,12 @@ def exportSmurf(model, path):
             op.write('#' + 'sensors' + infostring)
             op.write(
                 yaml.dump(
-                sort_for_yaml_dump({'sensors': list(export_sensors.values())}, 'sensors'),
-                default_flow_style=False,
+                    sort_for_yaml_dump({'sensors': list(export_sensors.values())}, 'sensors'),
+                    default_flow_style=False,
                 )
             )
 
     # TODO WRITE EXPORT FOR MOTOR and stuff
-        
 
     # write materials, sensors, motors & controllers
     for data in ['materials', 'motors', 'controllers', 'lights']:
@@ -543,9 +542,15 @@ def exportSmurf(model, path):
 #             outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
 
 
-
 def parseSmurfSensor(sensordict):
-    """
+    """Parses a sensor from the sensor dictionary
+
+    Args:
+      sensordict: 
+
+    Returns:
+      : TODO
+
     """
     return_dict = models.filterExportData(sensordict, 'sensors', 'mars')
     return return_dict

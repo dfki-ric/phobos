@@ -1338,9 +1338,15 @@ class CreateCollisionObjects(Operator):
                 # scale can not be used with URDF. However, the mesh should be checked for scaling
                 # issues on export and then applied properly, so we should solve this in the URDF
                 # export functions.
-                ob = bUtils.createPrimitive(collname, 'cylinder', (1., 1., 1.),
-                                            defs.layerTypes['collision'], materialname, center,
-                                            rotation_euler)
+                ob = bUtils.createPrimitive(
+                    collname,
+                    'cylinder',
+                    (1., 1., 1.),
+                    defs.layerTypes['collision'],
+                    materialname,
+                    center,
+                    rotation_euler,
+                )
                 ob.scale = vis.scale
                 ob.data = vis.data.copy()
 

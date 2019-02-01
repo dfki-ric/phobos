@@ -668,7 +668,7 @@ def deriveDictEntry(obj, names=False, objectlist=[], logging=True, adjust=True):
       names(bool, optional): use object names as dict entries instead of object links. (Default value = False)
       logging(bool, optional): whether to log messages or not (Default value = True)
       objectlist: (Default value = [])
-      adjust:  (Default value = True)
+      adjust: (Default value = True)
 
     Returns:
       : dict -- phobos representation of the object
@@ -1287,7 +1287,7 @@ def gatherAnnotations(model):
 
     Args:
       model(dict): The robot model dictionary.
-      ignore_keys(list, optional): Ignored annotation categories (Default value = [])
+      ignore_keys(list): Ignored annotation categories (Default value = [])
 
     Returns:
       : dict -- A dictionary of the gathered annotations.
@@ -1376,48 +1376,44 @@ def replace_object_links(dictionary):
 
     return newdict
 
-def filterExportData(data, phobostype = None, exportformart = None):
+
+def filterExportData(data, phobostype=None, exportformart=None):
     """Collect the information to be exported from a general subdictionary
     of the model.
 
     Args:
-     data(dict): Subdictionary containing unfiltered information
-     phobostype(str): Contains the phobostype of the data, should be motors, sensors or controllers
-     exportformat(str): Format to filter information for, e.g. sdf or mars
+      data(dict): Subdictionary containing unfiltered information
+      phobostype(str, optional): Contains the phobostype of the data, should be motors, sensors or controllers (Default value = None)
+      exportformat(str): Format to filter information for, e.g. sdf or mars
+      exportformart: (Default value = None)
 
     Returns:
-     dict : Filtered dictionary
+      dict: Filtered dictionary
+
     """
 
-    #TODO We certainly can derive the export lists beforhand and store in defs
+    # TODO We certainly can derive the export lists beforhand and store in defs
 
     # Implemented list
-    implemented = [
-        'motors',
-        'sensors',
-        'controllers'
-    ]
+    implemented = ['motors', 'sensors', 'controllers']
 
-    exportformarts = [
-        'mars',
-        'sdf'
-    ]
+    exportformarts = ['mars', 'sdf']
 
     import phobos.defs as defs
 
     if not exportformart or not phobostype:
         return data
-    
+
     # Gather the definition
     if not phobostype in defs.definitions or phobostype not in implemented:
         return data
-    
+
     if exportformart not in exportformarts:
         return data
 
     # Remove the non choosen exportformat
     ignore_formarts = [formats for formats in exportformarts if formats != exportformart]
-    
+
     def_settings = defs.def_settings[phobostype]
     current_definitions = defs.definitions[phobostype]
 
@@ -1429,37 +1425,28 @@ def filterExportData(data, phobostype = None, exportformart = None):
             # Check for type
             found_sensor = False
             if 'type' in definition[exportformart]:
-               found_sensor = (definition[exportformart]['type'] == data['type']) or (def_settings[name]['type'] == data['type'])
-            
+                found_sensor = (definition[exportformart]['type'] == data['type']) or (
+                    def_settings[name]['type'] == data['type']
+                )
+
             if found_sensor:
                 # Update other data -> we want to keep everything except other defs
                 return_data.update(
                     {
-                        prop : data[prop] for prop in definition if prop in data
-                        and prop not in ignore_formarts 
+                        prop: data[prop]
+                        for prop in definition
+                        if prop in data and prop not in ignore_formarts
                     }
                 )
                 return_data.update(
-                    {
-                        prop : data[prop] for prop in definition[exportformart]
-                        if prop in data 
-                    }
+                    {prop: data[prop] for prop in definition[exportformart] if prop in data}
                 )
                 # Overwrite generic type
                 if 'type' in definition[exportformart]:
-                    return_data.update(
-                        {
-                            'type' : definition[exportformart]['type'] 
-                        }
-                    )
+                    return_data.update({'type': definition[exportformart]['type']})
 
                 # Additionally, we want to keep link information
-                return_data.update(
-                    {
-                        'link' : data['link'],
-                        'name' : data['name']
-                    }
-                )
+                return_data.update({'link': data['link'], 'name': data['name']})
 
     if return_data:
         return return_data

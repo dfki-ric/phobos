@@ -318,7 +318,7 @@ def getObjectByName(name, phobostypes=()):
 
     Args:
       name(str): The exact object name to find.
-      phobostypes:  (Default value = ())
+      phobostypes: (Default value = ())
 
     Returns:
       : bpy.types.Object or list - one or list of objects matching name
