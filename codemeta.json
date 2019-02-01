@@ -1,0 +1,19 @@
+{
+  "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+      Kai von Szadkowski,
+      Simon Reichel,
+      Julius Martensen
+  ],
+  "identifier": "",
+  "codeRepository": "https://github.com/dfki-ric/phobos",
+  "datePublished": "2019-02-01",
+  "dateModified": "2019-02-01",
+  "dateCreated": "2019-02-01",
+  "description": "A Blender addon to create and edit robot models in a WYSIWYG environment.",
+  "keywords": "robotics, Blender, Python, URDF, SDF, model",
+  "license": "GNU LGPL v3.0",
+  "title": "Phobos",
+  "version": "v1.0.0 (Capricious Choutengan)"
+}
