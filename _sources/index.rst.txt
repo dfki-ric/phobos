@@ -20,6 +20,16 @@ Please contact `Simon V. Reichel <https://robotik.dfki-bremen.de/de/ueber-uns/mi
 This page provides the code documentation of Phobos.
 
 
+Release "Capricious Choutengan"
+-------------------------------
+
+Phobos version 1.0 is named after the `celestial eye goldfish
+<https://en.wikipedia.org/wiki/Celestial_Eye>`_.
+
+.. image:: img/celestial_eye.jpg
+    :alt: celestial eye goldfish
+
+
 Module overview
 ---------------
 

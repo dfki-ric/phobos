@@ -6,13 +6,16 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>phobos package &#8212; Phobos 1.0 documentation</title>
+    <title>phobos package &#8212; Phobos 1.0.0  &#34;Capricious Choutengan&#34; documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="phobos.io package" href="phobos.io.html" />
@@ -33,7 +36,7 @@
         <li class="right" >
           <a href="index.html" title="Phobos API documentation"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0.0  &#34;Capricious Choutengan&#34; documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -190,13 +193,8 @@ added to this module at runtime.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="phobos.display.DisplayInformationOperator.order">
-<code class="descname">order</code><em class="property"> = ['__module__', '__qualname__', '__doc__', 'bl_idname', 'bl_label', 'get_drawing_status', 'set_drawing_status', 'running', 'modal', 'invoke']</em><a class="headerlink" href="#phobos.display.DisplayInformationOperator.order" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
 <dt id="phobos.display.DisplayInformationOperator.running">
-<code class="descname">running</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'get': &lt;function DisplayInformationOperator.get_drawing_status&gt;, 'name': 'running', 'description': 'Whether the drawing thread is running or not.', 'set': &lt;function DisplayInformationOperator.set_drawing_status&gt;})</em><a class="headerlink" href="#phobos.display.DisplayInformationOperator.running" title="Permalink to this definition">¶</a></dt>
+<code class="descname">running</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'running', 'description': 'Whether the drawing thread is running or not.', 'get': &lt;function DisplayInformationOperator.get_drawing_status&gt;, 'set': &lt;function DisplayInformationOperator.set_drawing_status&gt;})</em><a class="headerlink" href="#phobos.display.DisplayInformationOperator.running" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -490,7 +488,7 @@ added to this module at runtime.</p>
 <code class="descname">FloatProperty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.FloatProperty" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="function">
 <dt>
-<code class="descname">FloatProperty</code><span class="sig-paren">(</span><em>name=&quot;&quot;</em>, <em>description=&quot;&quot;</em>, <em>default=0.0</em>, <em>min=sys.float_info.min</em>, <em>max=sys.float_info.max</em>, <em>soft_min=sys.float_info.min</em>, <em>soft_max=sys.float_info.max</em>, <em>step=3</em>, <em>precision=2</em>, <em>options={'ANIMATABLE'}</em>, <em>subtype='NONE'</em>, <em>unit='NONE'</em>, <em>update=None</em>, <em>get=None</em>, <em>set=None</em><span class="sig-paren">)</span></dt>
+<code class="descname">FloatProperty</code><span class="sig-paren">(</span><em>name=&quot;&quot;</em>, <em>description=&quot;&quot;</em>, <em>default=0.0</em>, <em>min=sys.float_info.min</em>, <em>max=sys.float_info.max</em>, <em>soft_min=sys.float_info.min</em>, <em>soft_max=sys.float_info.max</em>, <em>step=3</em>, <em>precision=2</em>, <em>options={'ANIMATABLE'}</em>, <em>tags={}</em>, <em>subtype='NONE'</em>, <em>unit='NONE'</em>, <em>update=None</em>, <em>get=None</em>, <em>set=None</em><span class="sig-paren">)</span></dt>
 <dd></dd></dl>
 
 <p>Returns a new float property definition.</p>
@@ -508,8 +506,9 @@ added to this module at runtime.</p>
 <li><strong>step</strong> (<em>int</em>) – Step of increment/decrement in UI, in [1, 100], defaults to 3 (WARNING: actual value is /100).</li>
 <li><strong>precision</strong> (<em>int</em>) – Maximum number of decimal digits to display, in [0, 6].</li>
 <li><strong>options</strong> (<em>set</em>) – Enumerator in [‘HIDDEN’, ‘SKIP_SAVE’, ‘ANIMATABLE’, ‘LIBRARY_EDITABLE’, ‘PROPORTIONAL’,’TEXTEDIT_UPDATE’].</li>
+<li><strong>tags</strong> (<em>set</em>) – Enumerator of tags that are defined by parent class.</li>
 <li><strong>subtype</strong> (<em>string</em>) – Enumerator in [‘PIXEL’, ‘UNSIGNED’, ‘PERCENTAGE’, ‘FACTOR’, ‘ANGLE’, ‘TIME’, ‘DISTANCE’, ‘NONE’].</li>
-<li><strong>unit</strong> (<em>string</em>) – Enumerator in [‘NONE’, ‘LENGTH’, ‘AREA’, ‘VOLUME’, ‘ROTATION’, ‘TIME’, ‘VELOCITY’, ‘ACCELERATION’].</li>
+<li><strong>unit</strong> (<em>string</em>) – Enumerator in [‘NONE’, ‘LENGTH’, ‘AREA’, ‘VOLUME’, ‘ROTATION’, ‘TIME’, ‘VELOCITY’, ‘ACCELERATION’, ‘MASS’, ‘CAMERA’].</li>
 <li><strong>update</strong> (<em>function</em>) – Function to be called when this value is modified,
 This function must take 2 values (self, context) and return None.
 <em>Warning</em> there are no safety checks to avoid infinite recursion.</li>
@@ -526,62 +525,62 @@ This function must take 2 values (self, value) and return None.</li>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.loc_x_local">
-<code class="descname">loc_x_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'LENGTH', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'X coordinate in the local space', 'subtype': 'DISTANCE', 'name': 'location x'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_x_local" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loc_x_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'location x', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'LENGTH', 'subtype': 'DISTANCE', 'description': 'X coordinate in the local space'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_x_local" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.loc_x_world">
-<code class="descname">loc_x_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'LENGTH', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'X coordinate in the world space', 'subtype': 'DISTANCE', 'name': 'location x'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_x_world" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loc_x_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'location x', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'LENGTH', 'subtype': 'DISTANCE', 'description': 'X coordinate in the world space'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_x_world" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.loc_y_local">
-<code class="descname">loc_y_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'LENGTH', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'Y coordinate in the local space', 'subtype': 'DISTANCE', 'name': 'location y'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_y_local" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loc_y_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'location y', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'LENGTH', 'subtype': 'DISTANCE', 'description': 'Y coordinate in the local space'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_y_local" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.loc_y_world">
-<code class="descname">loc_y_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'LENGTH', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'Y coordinate in the world space', 'subtype': 'DISTANCE', 'name': 'location y'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_y_world" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loc_y_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'location y', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'LENGTH', 'subtype': 'DISTANCE', 'description': 'Y coordinate in the world space'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_y_world" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.loc_z_local">
-<code class="descname">loc_z_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'LENGTH', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'Z coordinate in the local space', 'subtype': 'DISTANCE', 'name': 'location z'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_z_local" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loc_z_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'location z', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'LENGTH', 'subtype': 'DISTANCE', 'description': 'Z coordinate in the local space'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_z_local" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.loc_z_world">
-<code class="descname">loc_z_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'LENGTH', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'Z coordinate in the world space', 'subtype': 'DISTANCE', 'name': 'location z'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_z_world" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loc_z_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'location z', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'LENGTH', 'subtype': 'DISTANCE', 'description': 'Z coordinate in the world space'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.loc_z_world" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.rot_x_local">
-<code class="descname">rot_x_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'ROTATION', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'Rotation around local x axis', 'subtype': 'ANGLE', 'name': 'rotation x'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_x_local" title="Permalink to this definition">¶</a></dt>
+<code class="descname">rot_x_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'rotation x', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'ROTATION', 'subtype': 'ANGLE', 'description': 'Rotation around local x axis'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_x_local" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.rot_x_world">
-<code class="descname">rot_x_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'ROTATION', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'Rotation around world x axis', 'subtype': 'ANGLE', 'name': 'rotation x'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_x_world" title="Permalink to this definition">¶</a></dt>
+<code class="descname">rot_x_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'rotation x', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'ROTATION', 'subtype': 'ANGLE', 'description': 'Rotation around world x axis'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_x_world" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.rot_y_local">
-<code class="descname">rot_y_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'ROTATION', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'Rotation around local y axis', 'subtype': 'ANGLE', 'name': 'rotation y'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_y_local" title="Permalink to this definition">¶</a></dt>
+<code class="descname">rot_y_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'rotation y', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'ROTATION', 'subtype': 'ANGLE', 'description': 'Rotation around local y axis'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_y_local" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.rot_y_world">
-<code class="descname">rot_y_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'ROTATION', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'Rotation around world y axis', 'subtype': 'ANGLE', 'name': 'rotation y'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_y_world" title="Permalink to this definition">¶</a></dt>
+<code class="descname">rot_y_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'rotation y', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'ROTATION', 'subtype': 'ANGLE', 'description': 'Rotation around world y axis'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_y_world" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.rot_z_local">
-<code class="descname">rot_z_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'ROTATION', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'Rotation around local z axis', 'subtype': 'ANGLE', 'name': 'rotation z'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_z_local" title="Permalink to this definition">¶</a></dt>
+<code class="descname">rot_z_local</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'rotation z', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'ROTATION', 'subtype': 'ANGLE', 'description': 'Rotation around local z axis'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_z_local" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.MatrixPropGroup.rot_z_world">
-<code class="descname">rot_z_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'unit': 'ROTATION', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'description': 'Rotation around world z axis', 'subtype': 'ANGLE', 'name': 'rotation z'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_z_world" title="Permalink to this definition">¶</a></dt>
+<code class="descname">rot_z_world</code><em class="property"> = (&lt;built-in function FloatProperty&gt;, {'name': 'rotation z', 'get': &lt;function MatrixPropGroup.&lt;lambda&gt;&gt;, 'unit': 'ROTATION', 'subtype': 'ANGLE', 'description': 'Rotation around world z axis'})</em><a class="headerlink" href="#phobos.phobosgui.MatrixPropGroup.rot_z_world" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -870,7 +869,7 @@ This function must take 2 values (self, value) and return None.</li>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosExportSettings.decimalPlaces">
-<code class="descname">decimalPlaces</code><em class="property"> = (&lt;built-in function IntProperty&gt;, {'name': 'decimals', 'default': 5, 'description': 'Number of decimal places to export', 'min': 3})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.decimalPlaces" title="Permalink to this definition">¶</a></dt>
+<code class="descname">decimalPlaces</code><em class="property"> = (&lt;built-in function IntProperty&gt;, {'name': 'decimals', 'description': 'Number of decimal places to export', 'default': 5, 'min': 3})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.decimalPlaces" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -880,17 +879,17 @@ This function must take 2 values (self, value) and return None.</li>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosExportSettings.export_sdf_mesh_type">
-<code class="descname">export_sdf_mesh_type</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'SDF mesh type', 'items': &lt;function PhobosExportSettings.getMeshTypeListForEnumProp&gt;, 'description': 'Mesh type to use in exported SDF files.'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.export_sdf_mesh_type" title="Permalink to this definition">¶</a></dt>
+<code class="descname">export_sdf_mesh_type</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'items': &lt;function PhobosExportSettings.getMeshTypeListForEnumProp&gt;, 'name': 'SDF mesh type', 'description': 'Mesh type to use in exported SDF files.'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.export_sdf_mesh_type" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosExportSettings.export_sdf_model_config">
-<code class="descname">export_sdf_model_config</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Export Gazebo model.config', 'default': False, 'description': 'Export model.config file along with the SDF file.'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.export_sdf_model_config" title="Permalink to this definition">¶</a></dt>
+<code class="descname">export_sdf_model_config</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'name': 'Export Gazebo model.config', 'description': 'Export model.config file along with the SDF file.'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.export_sdf_model_config" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosExportSettings.export_sdf_to_gazebo_models">
-<code class="descname">export_sdf_to_gazebo_models</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'Export to Gazebo models folder', 'default': False, 'description': 'Export model to the Gazebo models folder.'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.export_sdf_to_gazebo_models" title="Permalink to this definition">¶</a></dt>
+<code class="descname">export_sdf_to_gazebo_models</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'name': 'Export to Gazebo models folder', 'description': 'Export model to the Gazebo models folder.'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.export_sdf_to_gazebo_models" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -909,22 +908,22 @@ This function must take 2 values (self, value) and return None.</li>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosExportSettings.obj_axis_forward">
-<code class="descname">obj_axis_forward</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Forward', 'default': '-Z', 'description': 'Forward axis of the obj export.', 'items': &lt;generator object PhobosExportSettings.&lt;genexpr&gt;&gt;})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.obj_axis_forward" title="Permalink to this definition">¶</a></dt>
+<code class="descname">obj_axis_forward</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'items': &lt;generator object PhobosExportSettings.&lt;genexpr&gt;&gt;, 'name': 'Forward', 'description': 'Forward axis of the obj export.', 'default': '-Z'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.obj_axis_forward" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosExportSettings.obj_axis_up">
-<code class="descname">obj_axis_up</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'Up', 'default': 'Y', 'description': 'Up axis of the obj export.', 'items': &lt;generator object PhobosExportSettings.&lt;genexpr&gt;&gt;})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.obj_axis_up" title="Permalink to this definition">¶</a></dt>
+<code class="descname">obj_axis_up</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'items': &lt;generator object PhobosExportSettings.&lt;genexpr&gt;&gt;, 'name': 'Up', 'description': 'Up axis of the obj export.', 'default': 'Y'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.obj_axis_up" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosExportSettings.outputMeshtype">
-<code class="descname">outputMeshtype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'link', 'items': &lt;function PhobosExportSettings.getMeshTypeListForEnumProp&gt;, 'description': 'Mesh type to use in exported entity/scene files.'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.outputMeshtype" title="Permalink to this definition">¶</a></dt>
+<code class="descname">outputMeshtype</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'items': &lt;function PhobosExportSettings.getMeshTypeListForEnumProp&gt;, 'name': 'link', 'description': 'Mesh type to use in exported entity/scene files.'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.outputMeshtype" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosExportSettings.path">
-<code class="descname">path</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'path', 'default': '../', 'subtype': 'DIR_PATH', 'update': &lt;function PhobosExportSettings.updateExportPath&gt;})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.path" title="Permalink to this definition">¶</a></dt>
+<code class="descname">path</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'path', 'subtype': 'DIR_PATH', 'default': '../', 'update': &lt;function PhobosExportSettings.updateExportPath&gt;})</em><a class="headerlink" href="#phobos.phobosgui.PhobosExportSettings.path" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1326,7 +1325,7 @@ They can be edited in the User Preferences of Blender under the Addon tab.</p>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosPrefs.configfolder">
-<code class="descname">configfolder</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'configfolder', 'default': '', 'description': 'Path to the system-dependent config folder of Phobos.', 'subtype': 'DIR_PATH'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.configfolder" title="Permalink to this definition">¶</a></dt>
+<code class="descname">configfolder</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'configfolder', 'subtype': 'DIR_PATH', 'description': 'Path to the system-dependent config folder of Phobos.', 'default': ''})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.configfolder" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1345,27 +1344,27 @@ They can be edited in the User Preferences of Blender under the Addon tab.</p>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosPrefs.exportpluginsfolder">
-<code class="descname">exportpluginsfolder</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'exportpluginsfolder', 'default': '.', 'subtype': 'DIR_PATH'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.exportpluginsfolder" title="Permalink to this definition">¶</a></dt>
+<code class="descname">exportpluginsfolder</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'exportpluginsfolder', 'subtype': 'DIR_PATH', 'default': '.'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.exportpluginsfolder" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosPrefs.gazebomodelfolder">
-<code class="descname">gazebomodelfolder</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Gazebo Model Folder', 'default': '', 'description': 'Path to the Gazebo model folder.', 'subtype': 'DIR_PATH'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.gazebomodelfolder" title="Permalink to this definition">¶</a></dt>
+<code class="descname">gazebomodelfolder</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'Gazebo Model Folder', 'subtype': 'DIR_PATH', 'description': 'Path to the Gazebo model folder.', 'default': ''})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.gazebomodelfolder" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosPrefs.logactive">
-<code class="descname">logactive</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'name': 'logactive', 'default': False, 'description': 'Activate logging'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.logactive" title="Permalink to this definition">¶</a></dt>
+<code class="descname">logactive</code><em class="property"> = (&lt;built-in function BoolProperty&gt;, {'default': False, 'name': 'logactive', 'description': 'Activate logging'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.logactive" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosPrefs.logfile">
-<code class="descname">logfile</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'logfile', 'default': '.', 'subtype': 'FILE_PATH'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.logfile" title="Permalink to this definition">¶</a></dt>
+<code class="descname">logfile</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'logfile', 'subtype': 'FILE_PATH', 'default': '.'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.logfile" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosPrefs.loglevel">
-<code class="descname">loglevel</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'loglevel', 'default': 'ERROR', 'items': (('NONE', 'NONE', 'NONE'), ('ERROR', 'ERROR', 'ERROR'), ('WARNING', 'WARNING', 'WARNING'), ('INFO', 'INFO', 'INFO'), ('DEBUG', 'DEBUG', 'DEBUG'))})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.loglevel" title="Permalink to this definition">¶</a></dt>
+<code class="descname">loglevel</code><em class="property"> = (&lt;built-in function EnumProperty&gt;, {'name': 'loglevel', 'items': (('NONE', 'NONE', 'NONE'), ('ERROR', 'ERROR', 'ERROR'), ('WARNING', 'WARNING', 'WARNING'), ('INFO', 'INFO', 'INFO'), ('DEBUG', 'DEBUG', 'DEBUG')), 'default': 'ERROR'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.loglevel" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1385,7 +1384,7 @@ They can be edited in the User Preferences of Blender under the Addon tab.</p>
 
 <dl class="attribute">
 <dt id="phobos.phobosgui.PhobosPrefs.modelsfolder">
-<code class="descname">modelsfolder</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'modelsfolder', 'default': '', 'subtype': 'DIR_PATH'})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.modelsfolder" title="Permalink to this definition">¶</a></dt>
+<code class="descname">modelsfolder</code><em class="property"> = (&lt;built-in function StringProperty&gt;, {'name': 'modelsfolder', 'subtype': 'DIR_PATH', 'default': ''})</em><a class="headerlink" href="#phobos.phobosgui.PhobosPrefs.modelsfolder" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1893,87 +1892,6 @@ depending on the loglevel settings.</p>
 </div>
 <div class="section" id="module-phobos">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phobos" title="Permalink to this headline">¶</a></h2>
-<p>Handles different import attempts to cope with Blender’s <em>Reload script</em> functionality.</p>
-<p>Contains also some adjustments to make YAML imports deal with booleans appropriately.</p>
-<dl class="function">
-<dt id="phobos.bool_constructor">
-<code class="descclassname">phobos.</code><code class="descname">bool_constructor</code><span class="sig-paren">(</span><em>self</em>, <em>node</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.bool_constructor" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>node</strong> – </td>
-</tr>
-</tbody>
-</table>
-<p>Returns:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="phobos.bool_representer">
-<code class="descclassname">phobos.</code><code class="descname">bool_representer</code><span class="sig-paren">(</span><em>dumper</em>, <em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.bool_representer" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>dumper</strong> – </li>
-<li><strong>data</strong> – </li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Returns:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="phobos.import_submodules">
-<code class="descclassname">phobos.</code><code class="descname">import_submodules</code><span class="sig-paren">(</span><em>package</em>, <em>recursive=True</em>, <em>verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.import_submodules" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Import all submodules of a module, recursively, including subpackages.</dt>
-<dd>If a module is already imported it is reloaded instead.
-Recursion can be turned off.
-The imported modules are returned as dictionary.</dd>
-</dl>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>package</strong> (<em>str | module</em>) – package (name or actual module)</li>
-<li><strong>recursive</strong> (<em>bool</em><em>, </em><em>optional</em>) – recursion active (Default value = True)</li>
-<li><strong>verbose</strong> (<em>bool</em><em>, </em><em>optional</em>) – import feedback active (Default value = False)</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-<p>Returns:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="phobos.register">
-<code class="descclassname">phobos.</code><code class="descname">register</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.register" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function registers all modules to blender.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Nothing</td>
-</tr>
-</tbody>
-</table>
-<p>Args:</p>
-<p>Returns:</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="phobos.unregister">
-<code class="descclassname">phobos.</code><code class="descname">unregister</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.unregister" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function unregisters all modules in Blender.</p>
-</dd></dl>
-
 </div>
 </div>
 
@@ -1986,7 +1904,7 @@ The imported modules are returned as dictionary.</dd>
             <p class="logo"><a href="index.html">
               <img class="logo" src="_static/phobos_logo_small.png" alt="Logo"/>
             </a></p>
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">phobos package</a><ul>
 <li><a class="reference internal" href="#subpackages">Subpackages</a></li>
@@ -2047,12 +1965,12 @@ The imported modules are returned as dictionary.</dd>
         <li class="right" >
           <a href="index.html" title="Phobos API documentation"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0 documentation</a> &#187;</li> 
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0.0  &#34;Capricious Choutengan&#34; documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014-2018, DFKI GmbH.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
     </div>
   </body>
 </html>

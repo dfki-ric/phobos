@@ -6,13 +6,16 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>phobos.utils package &#8212; Phobos 1.0 documentation</title>
+    <title>phobos.utils package &#8212; Phobos 1.0.0  &#34;Capricious Choutengan&#34; documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="phobos.operators package" href="phobos.operators.html" /> 
@@ -29,7 +32,7 @@
         <li class="right" >
           <a href="phobos.operators.html" title="phobos.operators package"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0.0  &#34;Capricious Choutengan&#34; documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="phobos.html" accesskey="U">phobos package</a> &#187;</li> 
       </ul>
     </div>  
@@ -523,6 +526,25 @@ interfaces.</p>
 <li><strong>parentinterface</strong> – </li>
 <li><strong>childinterface</strong> – </li>
 <li><strong>transform</strong> – (Default value = None)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.editing.dissolveLink">
+<code class="descclassname">phobos.utils.editing.</code><code class="descname">dissolveLink</code><span class="sig-paren">(</span><em>obj</em>, <em>delete_other=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.editing.dissolveLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the selected link and reparent all links, inertia, visual and collisions to its effective Parent.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – the link to dissolve</li>
+<li><strong>delete_other</strong> – (Default value = False)</li>
 </ul>
 </td>
 </tr>
@@ -1934,7 +1956,10 @@ given root object and phobostypes. If phobostypes is not provided, it is ignored
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list - Blender objects which are children of root.</p>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Blender objects which are children of root.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
 </td>
 </tr>
 </tbody>
@@ -1989,8 +2014,34 @@ Search can be limited to selected objects and non-hidden objects.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="phobos.utils.selection.getLeaves">
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">getLeaves</code><span class="sig-paren">(</span><em>roots</em>, <em>objects=[]</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getLeaves" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the links representating the leaves of the spanning tree starting with an object
+inside the model spanning tree.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>root</strong> (<em>list of bpy.types.Object</em>) – Root objects from where to start the search from</li>
+<li><strong>objects</strong> (<em>list</em><em>, </em><em>optional</em>) – List of objects to which the search is restricted. (Default value = [])</li>
+<li><strong>roots</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of the leaves of the kinematic spanning tree.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="phobos.utils.selection.getObjectByName">
-<code class="descclassname">phobos.utils.selection.</code><code class="descname">getObjectByName</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getObjectByName" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">getObjectByName</code><span class="sig-paren">(</span><em>name</em>, <em>phobostypes=()</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getObjectByName" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns list of objects that either have a specific <em>name</em> or contain a custom
 name property with that name.</p>
 <p>As the function returns either an empty list, a unique object or a list of objects,
@@ -1999,9 +2050,14 @@ it is possible to test for uniqueness of the result by calling <cite>isinstance(
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) – The exact object name to find.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em>) – The exact object name to find.</li>
+<li><strong>phobostypes</strong> – (Default value = ())</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">bpy.types.Object or list - one or list of objects matching name</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">bpy.types.Object or list - one or list of objects matching name</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -2082,6 +2138,34 @@ property.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>phobostypes</strong> (<em>list</em>) – the phobostypes to match objects with.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">list - Blender objects.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="phobos.utils.selection.getRecursiveChildren">
+<code class="descclassname">phobos.utils.selection.</code><code class="descname">getRecursiveChildren</code><span class="sig-paren">(</span><em>obj</em>, <em>recursion_depth=0</em>, <em>phobostypes=()</em>, <em>selected_only=False</em>, <em>include_hidden=False</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.selection.getRecursiveChildren" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns all children for a given object and phobostypes (if provided) within the given recursion depth.
+Search can be limited to selected objects and non-hidden objects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>obj</strong> (<em>bpy.types.Object</em>) – object to start search from.</li>
+<li><strong>recursion_depth</strong> (<em>int</em><em>, </em><em>optional</em>) – Depth of the recursion, default is all levels (Default value = 0)</li>
+<li><strong>phobostypes</strong> (<em>list of strings</em><em>, </em><em>optional</em>) – phobostypes to limit search to. (Default value = ()</li>
+<li><strong>selected_only</strong> (<em>bool.</em><em>, </em><em>optional</em>) – True to find only selected children, else False. (Default value = False)</li>
+<li><strong>include_hidden</strong> (<em>bool.</em><em>, </em><em>optional</em>) – True to include hidden objects, else False. (Default value = False)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Blender objects which are children of obj within recursion depth.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">list</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -2616,12 +2700,17 @@ negative mass to 1e-3.</p>
 
 <dl class="function">
 <dt id="phobos.utils.validation.validateObjectPose">
-<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateObjectPose</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateObjectPose" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">phobos.utils.validation.</code><code class="descname">validateObjectPose</code><span class="sig-paren">(</span><em>obj</em>, <em>adjust=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.validation.validateObjectPose" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – </td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>obj</strong> – </li>
+<li><strong>adjust</strong> – (Default value = False)</li>
+<li><strong>**kwargs</strong> – </li>
+</ul>
+</td>
 </tr>
 </tbody>
 </table>
@@ -2664,7 +2753,7 @@ negative mass to 1e-3.</p>
             <p class="logo"><a href="index.html">
               <img class="logo" src="_static/phobos_logo_small.png" alt="Logo"/>
             </a></p>
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">phobos.utils package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a><ul>
@@ -2721,13 +2810,13 @@ negative mass to 1e-3.</p>
         <li class="right" >
           <a href="phobos.operators.html" title="phobos.operators package"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0.0  &#34;Capricious Choutengan&#34; documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="phobos.html" >phobos package</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014-2018, DFKI GmbH.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
     </div>
   </body>
 </html>

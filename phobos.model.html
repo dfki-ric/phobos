@@ -6,13 +6,16 @@
   <head>
     <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>phobos.model package &#8212; Phobos 1.0 documentation</title>
+    <title>phobos.model package &#8212; Phobos 1.0.0  &#34;Capricious Choutengan&#34; documentation</title>
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="phobos.operators package" href="phobos.operators.html" />
@@ -33,7 +36,7 @@
         <li class="right" >
           <a href="phobos.io.scenes.html" title="phobos.io.scenes package"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0.0  &#34;Capricious Choutengan&#34; documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="phobos.html" accesskey="U">phobos package</a> &#187;</li> 
       </ul>
     </div>  
@@ -212,30 +215,6 @@ mesh scale, too.</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="phobos.model.inertia.calculateCapsuleInertia">
-<code class="descclassname">phobos.model.inertia.</code><code class="descname">calculateCapsuleInertia</code><span class="sig-paren">(</span><em>mass</em>, <em>r</em>, <em>h</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.calculateCapsuleInertia" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns upper diagonal of inertia tensor of a capsule as tuple.</p>
-<p>Code adapted from:
-<a class="reference external" href="http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856">http://www.gamedev.net/page/resources/_/technical/math-and-physics/capsule-inertia-tensor-r3856</a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>mass</strong> (<em>float</em>) – The capsule’s mass.</li>
-<li><strong>r</strong> (<em>float</em>) – The capsule’s radius.</li>
-<li><strong>h</strong> (<em>float</em>) – The capsule’s height.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">tuple(6).</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
 <dt id="phobos.model.inertia.calculateCylinderInertia">
 <code class="descclassname">phobos.model.inertia.</code><code class="descname">calculateCylinderInertia</code><span class="sig-paren">(</span><em>mass</em>, <em>r</em>, <em>h</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.calculateCylinderInertia" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns upper diagonal of inertia tensor of a cylinder as tuple.</p>
@@ -368,7 +347,8 @@ This code was adapted from an implementation generously provided by Bertold Bong
 <dl class="function">
 <dt id="phobos.model.inertia.fuse_inertia_data">
 <code class="descclassname">phobos.model.inertia.</code><code class="descname">fuse_inertia_data</code><span class="sig-paren">(</span><em>inertials</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.inertia.fuse_inertia_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Computes combined mass, center of mass and inertia given a list of inertial objects.</p>
+<dd><p>Computes combined mass, center of mass and inertia given a list of inertial objects.
+Computation based on Modern Robotics, Lynch &amp; Park, p. 287 .</p>
 <p>If no inertials are found (None, None, None) is returned.</p>
 <dl class="docutils">
 <dt>If successful, the tuple contains this information:</dt>
@@ -957,6 +937,21 @@ object.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="phobos.model.models.deriveAnnotation">
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveAnnotation</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveAnnotation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Derives the annotation info of an object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> – TODO</td>
+</tr>
+</tbody>
+</table>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="phobos.model.models.deriveApproxsphere">
 <code class="descclassname">phobos.model.models.</code><code class="descname">deriveApproxsphere</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveApproxsphere" title="Permalink to this definition">¶</a></dt>
 <dd><p>This function derives an SRDF approximation sphere from a given blender object</p>
@@ -965,22 +960,6 @@ object.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the approxsphere from.</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="phobos.model.models.deriveCapsule">
-<code class="descclassname">phobos.model.models.</code><code class="descname">deriveCapsule</code><span class="sig-paren">(</span><em>obj</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveCapsule" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function derives a capsule from a given blender object</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the capsule from.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple</td>
 </tr>
@@ -1021,7 +1000,7 @@ object.</p>
 
 <dl class="function">
 <dt id="phobos.model.models.deriveDictEntry">
-<code class="descclassname">phobos.model.models.</code><code class="descname">deriveDictEntry</code><span class="sig-paren">(</span><em>obj</em>, <em>names=False</em>, <em>objectlist=[]</em>, <em>logging=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveDictEntry" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">phobos.model.models.</code><code class="descname">deriveDictEntry</code><span class="sig-paren">(</span><em>obj</em>, <em>names=False</em>, <em>objectlist=[]</em>, <em>logging=True</em>, <em>adjust=True</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.deriveDictEntry" title="Permalink to this definition">¶</a></dt>
 <dd><p>Derives a phobos dictionary entry from the provided object.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -1032,6 +1011,7 @@ object.</p>
 <li><strong>names</strong> (<em>bool</em><em>, </em><em>optional</em>) – use object names as dict entries instead of object links. (Default value = False)</li>
 <li><strong>logging</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to log messages or not (Default value = True)</li>
 <li><strong>objectlist</strong> – (Default value = [])</li>
+<li><strong>adjust</strong> – (Default value = True)</li>
 </ul>
 </td>
 </tr>
@@ -1114,6 +1094,33 @@ defined at all, ‘unnamed’ will be used instead.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="phobos.model.models.filterExportData">
+<code class="descclassname">phobos.model.models.</code><code class="descname">filterExportData</code><span class="sig-paren">(</span><em>data</em>, <em>phobostype=None</em>, <em>exportformart=None</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.filterExportData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collect the information to be exported from a general subdictionary
+of the model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<em>dict</em>) – Subdictionary containing unfiltered information</li>
+<li><strong>phobostype</strong> (<em>str</em><em>, </em><em>optional</em>) – Contains the phobostype of the data, should be motors, sensors or controllers (Default value = None)</li>
+<li><strong>exportformat</strong> (<em>str</em>) – Format to filter information for, e.g. sdf or mars</li>
+<li><strong>exportformart</strong> – (Default value = None)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">Filtered dictionary</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="phobos.model.models.gatherAnnotations">
 <code class="descclassname">phobos.model.models.</code><code class="descname">gatherAnnotations</code><span class="sig-paren">(</span><em>model</em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.model.models.gatherAnnotations" title="Permalink to this definition">¶</a></dt>
 <dd><p>Gathers custom properties annotating elements of the robot
@@ -1123,9 +1130,14 @@ module and are marked with a leading ‘$’.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>model</strong> (<em>dict</em>) – The robot model dictionary.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>model</strong> (<em>dict</em>) – The robot model dictionary.</li>
+<li><strong>ignore_keys</strong> (<em>list</em>) – Ignored annotation categories (Default value = [])</li>
+</ul>
+</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">dict – A dictionary of the gathered annotations.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">dict – A dictionary of the gathered annotations.</p>
+</td>
 </tr>
 </tbody>
 </table>
@@ -1479,7 +1491,7 @@ which is specified in the motor dictionary (key <em>controller</em>).</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>obj</strong> (<em>bpy_types.Object</em>) – The blender object to derive the sensor from.</li>
-<li><strong>names</strong> (<em>bool</em><em>, </em><em>optional</em>) – return the link object name instead of an object link. (Default value = False)</li>
+<li><strong>names</strong> (<em>bool</em><em>, </em><em>optional</em>) – return the l object name instead of an object link. (Default value = False)</li>
 <li><strong>objectlist</strong> (<em>list</em><em>(</em><em>bpy.types.Object</em><em>, </em><em>optional</em>) – objectlist to which possible parents are restricted (Default value = [])</li>
 <li><strong>logging</strong> (<em>bool</em><em>, </em><em>optional</em>) – whether to write log messages or not (Default value = False)</li>
 </ul>
@@ -1508,7 +1520,7 @@ which is specified in the motor dictionary (key <em>controller</em>).</p>
             <p class="logo"><a href="index.html">
               <img class="logo" src="_static/phobos_logo_small.png" alt="Logo"/>
             </a></p>
-  <h3><a href="index.html">Table Of Contents</a></h3>
+  <h3><a href="index.html">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">phobos.model package</a><ul>
 <li><a class="reference internal" href="#submodules">Submodules</a><ul>
@@ -1574,13 +1586,13 @@ which is specified in the motor dictionary (key <em>controller</em>).</p>
         <li class="right" >
           <a href="phobos.io.scenes.html" title="phobos.io.scenes package"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 1.0.0  &#34;Capricious Choutengan&#34; documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="phobos.html" >phobos package</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2014-2018, DFKI GmbH.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.7.5.&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.8.3.&nbsp&nbsp&nbsp<a href="https://help.github.com/articles/github-privacy-statement/">Privacy</a>
     </div>
   </body>
 </html>
