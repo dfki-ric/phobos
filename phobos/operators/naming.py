@@ -88,6 +88,19 @@ class NameModelOperator(Operator):
         name="Model Name", default="", description="Name of the robot model to be assigned"
     )
 
+    @classmethod
+    def poll(cls, context):
+        """Hide operator if there is no link present.
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
+        root = sUtils.getRoot(context.active_object)
+        return root and root.phobostype == 'link'
+
     def invoke(self, context, event):
         """
 
