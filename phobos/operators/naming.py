@@ -150,6 +150,32 @@ class SetModelVersionOperator(Operator):
         description="Insert Git branch name in place of *?",
     )
 
+    @classmethod
+    def poll(cls, context):
+        """Hide operator if there is no link present.
+
+        Args:
+          context: 
+
+        Returns:
+
+        """
+        root = sUtils.getRoot(context.active_object)
+        return root and root.phobostype == 'link'
+
+    def invoke(self, context, event):
+        """
+
+        Args:
+          context: 
+          event: 
+
+        Returns:
+
+        """
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
     def execute(self, context):
         """
 
@@ -160,15 +186,12 @@ class SetModelVersionOperator(Operator):
 
         """
         root = sUtils.getRoot(context.active_object)
-        if root:
-            if self.usegitbranch:
-                gitbranch = ioUtils.getgitbranch()
-                if gitbranch:
-                    root["model/version"] = self.version.replace('*', gitbranch)
-            else:
-                root["model/version"] = self.version
+        if self.usegitbranch:
+            gitbranch = ioUtils.getgitbranch()
+            if gitbranch:
+                root["model/version"] = self.version.replace('*', gitbranch)
         else:
-            log("Could not set version due to missing root link. No version was set.", "ERROR")
+            root["model/version"] = self.version
         return {'FINISHED'}
 
 
