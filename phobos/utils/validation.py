@@ -729,9 +729,9 @@ def validateInertiaData(obj, *args, adjust=False):
         # Calculate the eigenvalues if not consistent
         if any(element <= 0.0 for element in numpy.linalg.eigvals(inertia)):
             # Apply singular value decomposition and correct the values
-            U, S, V = numpy.linalg.svd(inertia)
+            S, V = numpy.linalg.eig(fused_inertia)
             S[S <= 0.0] = 1e-3
-            inertia = U * S * V
+            inertia = V.dot(numpy.diag(S).dot(V.T))
             errors.append(
                 ValidateMessage(
                     "Negative semidefinite eigenvalues in inertia data!",
