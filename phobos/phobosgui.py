@@ -1617,6 +1617,8 @@ def register():
     # loadModelsAndPoses()
     libraries.register()
 
+    print('  ... successful.')
+
 
 def unregister():
     """TODO Missing documentation"""
@@ -1636,3 +1638,5 @@ def unregister():
 
     # Remove manuals from buttons
     bpy.utils.unregister_manual_map(get_operator_manuals)
+
+    print('  ... successful.')
