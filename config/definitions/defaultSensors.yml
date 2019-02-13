@@ -279,6 +279,7 @@ sensors:
                 - SDF
         mars:
             type: NodeContact
+            id: $selected_objects:collision
         sdf:
             collision: $selected_objects:collision
             topic: __default_topic__
