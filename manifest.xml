@@ -26,7 +26,7 @@
     as STereoLithography (.stl), Wavefront (.obj) or Collada (.dae).
   </description>
   <author>Kai/kai_alexander.von_szadkowski@dfki.de, Simon/simon.reichel@dfki.de</author>
-  <maintainer>Kai/kai_alexander.von_szadkowski@dfki.de</maintainer>
+  <maintainer>Simon/simon.reichel@dfki.de</maintainer>
   <license>LPGL 3</license>
   <url>https://robotik.dfki-bremen.de/en/research/softwaretools/phobos.html</url>
   <logo>https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png</logo>
