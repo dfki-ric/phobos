@@ -8,6 +8,8 @@ black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://gith
 
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
+# Phobos 1.0 "Capricious Choutengan"
+
 Phobos is an add-on for the open-source 3D modeling software
 [Blender](http://www.blender.org) that enables the creation of WYSIWYG robot
 models for use in robot frameworks like [ROS](http://wiki.ros.org/) and
