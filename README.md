@@ -2,8 +2,7 @@
 black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)
-<!-- ![release-tag](https://img.shields.io/github/tag/dfki-ric/phobos.svg?style=flat) -->
-![release](https://img.shields.io/github/release/dfki-ric/phobos.svg?style=flat)
+[![latest-release](https://img.shields.io/github/tag/dfki-ric/phobos.svg?label=version&style=flat)](https://github.com/dfki-ric/phobos/releases)
 <!-- TODO link DOI here [![DOI:10.1007/978-3-319-76207-4_15](https://zenodo.org/badge/DOI/10.1007/978-3-319-76207-4_15.svg)](https://doi.org/10.1007/978-3-319-76207-4_15) -->
 
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
