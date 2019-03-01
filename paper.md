@@ -39,7 +39,7 @@ consuming, challenging task for the modeler. Also, tiny mistakes in the model
 description can lead to huge differences in the modeled system. With increasing
 model complexity the model files become even more difficult to debug.
 
-![[Universal Robots UR5](https://www.universal-robots.com/products/ur5-robot/) within ``Phobos``](PhobosUR5.png)
+![Universal Robots UR5 (https://www.universal-robots.com/products/ur5-robot/) within ``Phobos``](PhobosUR5.png)
 
 ``Phobos`` is an add-on for the open-source 3D modeling software
 [Blender](https://www.blender.org/) that allows users to edit models of robots
