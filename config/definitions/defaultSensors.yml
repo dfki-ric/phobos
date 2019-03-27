@@ -326,6 +326,7 @@ sensors:
                 - internal
         mars:
             type: NodeCOM
+            inertianame: $selected_objects:inertial
             id: $selected_objects:link
 
     Node_velocity:
