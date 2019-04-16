@@ -74,7 +74,7 @@ def decorate(level):
     return level
 
 
-def log(message, level="INFO", prefix="", guionly=False, end='\n'):
+def log(message, level="INFO", prefix="", guionly=False, logfile=True, end='\n'):
     """Logs a given message to the blender console/logging file and if log level is low enough.
     
     The origin can be defined as string or an object. The message is logged by the operator
@@ -85,6 +85,7 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
       level(str, optional): valid log level for the message as defined by :data:`.LOGLEVELS` (Default value = "INFO")
       prefix(str, optional): any string that should be printed before the message (Default value = "")
       guionly(bool, optional): if True, only prints to GUI (Default value = False)
+      logfile(bool, optional): if False, suppress message in logfile (Default value = True)
       end(str, optional): string to be used at the end of the resulting print statement (Default value = '\\n')
 
     Returns:
@@ -124,14 +125,14 @@ def log(message, level="INFO", prefix="", guionly=False, end='\n'):
         terminalmsg = Col.OKBLUE.value + message + Col.ENDC.value
 
     # log to file if activated
-    if prefs.logtofile and not guionly:
+    if prefs.logtofile and logfile and not guionly:
         try:
             with open(prefs.logfile, "a") as logfile:
                 logfile.write(msg + end)
         except (FileNotFoundError, IsADirectoryError):
-            log("Invalid log file path, cannot write to log file!", 'ERROR', guionly=True)
+            log("Invalid log file path, cannot write to log file!", 'ERROR', logfile=False)
         except (IOError, OSError):
-            log("Cannot write to log file!", 'ERROR', guionly=True)
+            log("Cannot write to log file!", 'ERROR', logfile=False)
 
     # log to terminal or Blender
     if prefs.logtoterminal and not guionly:

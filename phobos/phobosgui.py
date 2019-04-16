@@ -153,7 +153,7 @@ class PhobosPrefs(AddonPreferences):
         box = layout.box()
         row = box.row()
         row.label(text="Logging")
-        box.prop(self, "logfile", text="log file path")
+        box.prop(self, "logfile", text="log file")
         box.prop(self, "logtofile", text="write to logfile")
         box.prop(self, "logtoterminal", text="write to terminal")
         box.prop(self, "loglevel", text="log level")
