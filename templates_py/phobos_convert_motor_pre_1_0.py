@@ -22,8 +22,11 @@ def derive_oldMotor(obj):
         if oldProps in obj.keys():
             if oldProps == 'motor/type' and obj[oldProps] == 'PID':
                 new_motor.update({newProps: 'generic_bldc'})
+            elif oldProps == 'motor/type' and obj[oldProps] == 'DC':
+                new_motor.update({newProps: 'generic_dc'})
             else:
                 new_motor.update({newProps: obj[oldProps]})
+            
     if not 'motor/name' in new_motor.keys():
         new_motor.update({'motor/name': obj.name + '_Motor'})
 
