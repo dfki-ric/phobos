@@ -45,6 +45,8 @@ Parameters:
 
     --help: Show this message and exit.
 
+    --installto DIR: install to a different folder
+
     --startup-preset: Copies the default Phobos Blender startup file to the Blender
         configuration folder (replacing the existing startup file).
 """
@@ -88,6 +90,11 @@ if __name__ == '__main__':
     if '--help' in sys.argv:
         print(scriptinformation)
         sys.exit(0)
+
+    if '--installto' in sys.argv:
+        index = sys.argv.index('--installto')
+
+        addonpath = sys.argv[index + 1]
 
     # install addon
     if os.path.exists(addonpath):
