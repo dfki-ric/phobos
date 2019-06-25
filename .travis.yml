@@ -1,6 +1,8 @@
 # this is essential to make python work out of the box
 language: python
 
+dist: xenial
+
 # safelist
 branches:
   only:
@@ -19,6 +21,12 @@ before_install:
   # This will most propably install an outdated blender version,
   # but it will resolve all system dependencies blender has to be able to run.
   - sudo apt-get install blender
+
+  - sudo apt-get install python-pip
+
+  - sudo pip install PyYaml
+
+  - sudo pip install numpy
 
 install:
   # create temp directory where we store a recent blender version
@@ -41,7 +49,7 @@ install:
 
   # now create a symlink to the addon within blenders addons directory
   # this is important, because otherwhise blender would not be able to load the addon
-  - sudo python3.5 ${PWD}/setup.py --installto ${PWD}/tmp/blender/2.79/scripts/addons/phobos
+  - sudo python ${PWD}/setup.py --installto ${PWD}/tmp/blender/2.79/scripts/addons/phobos
 
 # Finally start our test runner passing it the blender executable from the downloaded blender release
 script: python testrunner.py ./tmp/blender/blender
