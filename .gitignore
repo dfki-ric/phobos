@@ -1,6 +1,6 @@
 python_dist_packages.conf
 *~
-.*
+.^(travis).*
 *.orig
 *.blend1
 *.pyc
