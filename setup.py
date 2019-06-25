@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/python
 
 # -------------------------------------------------------------------------------
 # This file is part of Phobos, a Blender Add-On to edit robot models.
@@ -32,7 +32,7 @@ import os.path as path
 import sys
 import shutil
 from distutils.dir_util import copy_tree
-import importlib.util
+import importlib
 
 scriptinformation = """
 This is the setup script for Phobos.
