@@ -152,12 +152,12 @@ if __name__ == '__main__':
             sys.exit(0)
         # OPT here we could add additional requirement checks
 
-        import site
-
         # write python dist packages path into config file
         with open(path.join(phoboshome, 'python_dist_packages.conf'), 'w') as distconffile:
             distconffile.truncate()
-            distpath = site.getsitepackages()[0]
+            # instead of using the site package (which has some broken functionality in virtualenvs)
+            import yaml
+            distpath = path.split(yaml.__path__[0])[0]
             distconffile.write(path.normpath(distpath))
 
     shutil.copy2(
