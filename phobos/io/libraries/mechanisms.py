@@ -61,7 +61,13 @@ def compileMechanismList():
 
     log("Compiling mechanism list from local library...", "INFO")
 
-    imagefolderpath = os.path.join(bUtils.getPhobosConfigPath(), 'images', 'mechanisms')
+    try:
+        phobosconfig = bUtils.getPhobosConfigPath()
+    except KeyError:
+        log('Can not create mechanism preview. Phobos not registered.', 'DEBUG')
+        return
+
+    imagefolderpath = os.path.join(phobosconfig, 'images', 'mechanisms')
     if imagefolderpath == '' or not os.path.exists(imagefolderpath):
         log('Visual mechanism representations could not be found.')
         return

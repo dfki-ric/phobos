@@ -86,7 +86,12 @@ def compileModelList():
     model_previews.clear()
     model_data.clear()
 
-    rootpath = bUtils.getPhobosPreferences().modelsfolder
+    try:
+        rootpath = bUtils.getPhobosConfigPath().modelsfolder
+    except KeyError:
+        log('Can not create mechanism preview. Phobos not registered.', 'DEBUG')
+        return
+
     if rootpath == '' or not os.path.exists(rootpath):
         log('Model library folder does not exist.')
         return
