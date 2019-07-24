@@ -640,6 +640,8 @@ def validateInertiaData(obj, *args, adjust=False):
 
     errors = []
 
+    expsetting = 10**(-getExpSettings().decimalPlaces)
+
     # check dictionary parameters (most of the time pre object creation)
     if isinstance(obj, dict):
         missing = []
@@ -703,7 +705,7 @@ def validateInertiaData(obj, *args, adjust=False):
     inertia = numpy.around(
         numpy.array(inertiaListToMatrix(inertia)), decimals=getExpSettings().decimalPlaces
     )
-    if any(element <= 0.0 for element in inertia.diagonal()):
+    if any(element <= expsetting for element in inertia.diagonal()):
         errors.append(
             ValidateMessage(
                 "Negative semidefinite main diagonal in inertia data!",
@@ -715,7 +717,7 @@ def validateInertiaData(obj, *args, adjust=False):
         )
 
     # Calculate the determinant if consistent, quick check
-    if numpy.linalg.det(inertia) <= 0.0:
+    if numpy.linalg.det(inertia) <= expsetting:
         errors.append(
             ValidateMessage(
                 "Negative semidefinite determinant in inertia data! Checking singular values.",
@@ -727,10 +729,10 @@ def validateInertiaData(obj, *args, adjust=False):
         )
 
         # Calculate the eigenvalues if not consistent
-        if any(element <= 0.0 for element in numpy.linalg.eigvals(inertia)):
+        if any(element <= expsetting for element in numpy.linalg.eigvals(inertia)):
             # Apply singular value decomposition and correct the values
             S, V = numpy.linalg.eig(inertia)
-            S[S <= 0.0] = 1e-3
+            S[S <= expsetting] = expsetting
             inertia = V.dot(numpy.diag(S).dot(V.T))
             errors.append(
                 ValidateMessage(
@@ -752,7 +754,7 @@ def validateInertiaData(obj, *args, adjust=False):
                 {} if not adjust else {'log_info': "Adjusted to 1e-3."},
             )
         )
-        mass = 1e-3
+        mass = expsetting
 
     inertia = inertiaMatrixToList(inertia)
 

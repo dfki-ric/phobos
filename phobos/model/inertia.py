@@ -530,6 +530,10 @@ def fuse_inertia_data(inertials):
 
     """
 
+    from phobos.utils.io import getExpSettings
+
+    expsetting = 10**(-getExpSettings().decimalPlaces)
+
     # Find objects who have some inertial data
     for obj in inertials:
         if not any([True for key in obj.keys() if key.startswith('inertial/')]):
@@ -537,7 +541,7 @@ def fuse_inertia_data(inertials):
 
     # Check for an empty list -> No inertials to fuse
     if not inertials:
-        return None, None, None
+        return 1e-3, [0.0, 0.0, 0.0], numpy.diag([1e-3, 1e-3, 1e-3])
 
     fused_inertia = numpy.zeros((3, 3))
     fused_com = numpy.zeros((1, 3))
@@ -547,9 +551,9 @@ def fuse_inertia_data(inertials):
     fused_mass, fused_com = combine_com_3x3(inertials)
 
     # Check for conformity
-    if fused_mass <= 0.0:
+    if fused_mass <= expsetting:
         log(" Correcting fused mass : negative semidefinite value.", 'WARNING')
-        fused_mass = 1e-3 if fused_mass < 1e-3 else fused_mass
+        fused_mass = expsetting if fused_mass < expsetting else fused_mass
 
     # TODO Maybe we can reuse the functions defined here.
     # Calculate the fused inertias
@@ -572,19 +576,19 @@ def fuse_inertia_data(inertials):
         fused_inertia += numpy.dot(numpy.dot(current_Rotation.T, current_Inertia), current_Rotation)
 
     # Check the inertia
-    if any(element <= 1e-3 for element in fused_inertia.diagonal()):
+    if any(element <= expsetting for element in fused_inertia.diagonal()):
         log(" Correting fused inertia : negative semidefinite diagonal entries.", 'WARNING')
         for i in range(3):
-            fused_inertia[i, i] = 1e-3 if fused_inertia[i, i] <= 1e-3 else fused_inertia[i, i]
+            fused_inertia[i, i] = expsetting if fused_inertia[i, i] <= expsetting else fused_inertia[i, i]
 
-    if any(element <= 1e-3 for element in numpy.linalg.eigvals(fused_inertia)):
+    if any(element <= expsetting for element in numpy.linalg.eigvals(fused_inertia)):
         log(" Correcting fused inertia : negative semidefinite eigenvalues", 'WARNING')
         S, V = numpy.linalg.eig(fused_inertia)
-        S[S <= 0.0] = 1e-3
+        S[S <= expsetting] = expsetting
         fused_inertia = V.dot(numpy.diag(S).dot(V.T))
         # Add minimum value for the inertia
         for i in range(3):
-            fused_inertia[i, i] = 1e-3 if fused_inertia[i, i] <= 1e-3 else fused_inertia[i, i]
+            fused_inertia[i, i] += expsetting if fused_inertia[i, i] <= expsetting else fused_inertia[i, i]
 
     return fused_mass, fused_com, fused_inertia
 
