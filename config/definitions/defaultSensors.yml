@@ -174,7 +174,7 @@ sensors:
         show_cam: true
         opening_width: 90
         opening_height: 90
-        hud_pos: 0
+        hud_idx: 0
         hud_width: 320
         hud_height: 240
         depth_image: false
