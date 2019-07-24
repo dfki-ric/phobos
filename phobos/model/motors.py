@@ -146,6 +146,18 @@ def deriveMotor(obj, jointdict=None):
 
     props['joint'] = nUtils.getObjectName(obj.parent, phobostype='joint')
 
+    # check for a mimic motor
+    for k in (obj.parent).keys():
+        # Check for mimic motor
+        if "mimic" in k:
+            # Find the name
+            mimic_driver = sUtils.getObjectByName((obj.parent)['joint/mimic_joint'], phobostypes = ['link'])
+            c_motor = sUtils.getImmediateChildren(mimic_driver, phobostypes = ['motor'])
+            props['mimic_motor'] = nUtils.getObjectName(c_motor[0], phobostype = 'motor')
+            props['mimic_multiplier'] = (obj.parent)['joint/mimic_multiplier']
+            props['mimic_offset'] = (obj.parent)['joint/mimic_offset']
+            break
+
     # try to derive the motor controller
     controllerobjs = [control for control in obj.children if control.phobostype == 'controller']
     if controllerobjs:
