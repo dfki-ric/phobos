@@ -63,20 +63,20 @@ def xmlline(ind, tag, names, values):
     return ''.join(line)
 
 
-def l2str(items, start=0, end=-1):
+def l2str(items, start=0, end=None):
     """Generates string from (part of) a list.
 
     Args:
       items(list): List from which the string is derived (elements need to implement str())
       start(int, optional): Inclusive start index for iteration (Default value = 0)
-      end(int, optional): Exclusive end index for iteration (Default value = -1)
+      end(int, optional): Exclusive end index for iteration (Default value = None)
 
     Returns:
       : str - Generated string.
 
     """
     start = max(start, 0)
-    end = end if end >= 0 else len(items)
+    end = end if end else len(items)
     return ' '.join([str(i) for i in items[start:end]])
 
 
