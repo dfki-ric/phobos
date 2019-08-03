@@ -118,15 +118,16 @@ def getObjectName(obj, phobostype=None):
 
 
 def isValidModelname(name):
-    """Returns if a name contains characters other than alphanumeric, '_' and '-'
+    """Returns if a name contains characters other than alphanumeric, '_' and '-'.
+    Also, empyt strings are not valid model names.
 
     Args:
-      name: 
+        name (str): potential name for a model
 
     Returns:
-
+        bool -- True if the name is a valid model name according to convention, False if not.
     """
-    return not re.search(r'[^A-Za-z0-9_\-\\]', name)
+    return not re.search(r'[^A-Za-z0-9_\-\\]', name) and len(name) > 0
 
 
 def getModelName(obj):
