@@ -25,8 +25,7 @@ Bremen, together with the [Robotics
 Group](http://www.informatik.uni-bremen.de/robotik/index_en.php) of the
 [University of Bremen](http://www.uni-bremen.de/en.html).
 
-Please contact [Simon V.
-Reichel](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/sire01.html)
+Please contact [Kai von Szadkowski](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/kavo01.html)
 for any inquiries, or any questions and feedback not suited for the issues
 page.
 
