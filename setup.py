@@ -19,36 +19,21 @@ Make sure you run it with the appropriate python version (3.5).
 
 import os
 import os.path as path
+import glob
 import sys
 import shutil
+import argparse
 from distutils.dir_util import copy_tree
-import importlib
-
-scriptinformation = """
-This is the setup script for Phobos.
-
-By default, it installs the Blender AddOn Phobos to the Blender configuration folder.
-At the same time, the default configurations are copied to the user Phobos configuration
-folder.
-
-Parameters:
-
-    --help: Show this message and exit.
-
-    --installto DIR: install to a different folder
-
-    --startup-preset: Copies the default Phobos Blender startup file to the Blender
-        configuration folder (replacing the existing startup file).
-"""
+from importlib import util
 
 # make installation originate from the path of this setup file
-phoboshome = os.path.dirname(os.path.abspath(__file__))
+phoboshome = path.dirname(path.abspath(__file__))
 
 # load the phobossystem as module from file
-module_spec = importlib.util.spec_from_file_location(
+module_spec = util.spec_from_file_location(
     'phobossystem', path.join(phoboshome, 'phobos/phobossystem.py')
 )
-phobossystem = importlib.util.module_from_spec(module_spec)
+phobossystem = util.module_from_spec(module_spec)
 module_spec.loader.exec_module(phobossystem)
 addonpath = path.join(phobossystem.getScriptsPath(), 'addons', 'phobos')
 blenderconfigpath = phobossystem.getBlenderConfigPath()
@@ -68,52 +53,117 @@ def updateFolderContents(src, dst):
 
 
 if __name__ == '__main__':
-    # check whether the right python version is used
-    pyver = sys.version_info
-    print(
-        'You started this script with python version: {}.{}'.format(
-            str(pyver.major), str(pyver.minor)
-        )
-    )
-    print('Make sure Blender uses the same version!')
 
-    if '--help' in sys.argv:
-        print(scriptinformation)
-        sys.exit(0)
+    parser = argparse.ArgumentParser(description='''
+        This is the setup script for Phobos.
 
-    if '--installto' in sys.argv:
-        index = sys.argv.index('--installto')
+        By default, it installs the Blender AddOn Phobos to the Blender configuration folder.
+        At the same time, the default configurations are copied to the user Phobos configuration
+        folder.''')
+    parser.add_argument('-p', '--startup-preset', dest='startup_preset',
+                        action='store_true', default=False,
+                        help='''Copies the default Phobos Blender startup file to the Blender
+                            'configuration folder (replacing the existing startup file).''')
+    parser.add_argument('-t', '--install-to', dest='install_to', metavar='DIR', default=None,
+                        help='install addon to the specified directory')
+    parser.add_argument('-b', '--blender', metavar='DIR', dest='blender_path',
+                        default=None, help='use the specified Blender folder (instead of asking)')
 
-        addonpath = sys.argv[index + 1]
+    globals().update(vars(parser.parse_args()))
+
+    # look for existing installation configuration
+    if path.isfile(path.join(phoboshome, 'installation.conf')):
+        print('installation.conf found! Configuration done.')
+        with open(path.join(phoboshome, 'installation.conf'), 'r') as conffile:
+            python_package_path = conffile.readline().split(' #')[0]
+            if not blender_path:
+                blender_path = conffile.readline().split(' #')[0]
+            else:
+                conffile.readline()
+            python_executable = conffile.readline().split(' #')[0]
+            blender_executable = conffile.readline().split(' #')[0]
+            python_version = conffile.readline().split(' #')[0]
+            blender_version = conffile.readline().split(' #')[0]
+    # check for existing YAML installation
+    else:
+        if not blender_path:
+            blender_path = path.expanduser(input('Where is Blender installed to? '))
+        blender_version = glob.glob(path.join(blender_path, '[0-9].[0-9][0-9]'))
+        if not blender_version or not path.isdir(blender_version[0]):
+            print("Could not identify the blender subfolder.")
+            print("Installation aborted!")
+            sys.exit(1)
+        blender_version = path.basename(blender_version[0])
+        blender_executable = path.join(blender_path, 'blender')
+        if not path.isfile(blender_executable):
+            print("Could not find Blender executable.\nInstallation aborted.")
+            sys.exit(1)
+
+        bpython_files = glob.glob(path.join(
+            blender_path, blender_version, 'python', 'bin', 'py*'))
+        if not bpython_files:
+            print("Could not find python executable in blender installation.")
+            print("Installation aborted!")
+            sys.exit(1)
+        python_executable = bpython_files[0]
+        python_version = path.basename(python_executable).strip('m').strip('python')
+        python_package_path = path.normpath((path.join(
+            blender_path, blender_version, 'python', 'lib', 'python' + python_version,
+            'site-packages')))
+
+        print('Installing PIP...')
+        os.system(python_executable + ' -m ensurepip')
+        os.system(python_executable + ' -m pip install --upgrade pip')
+        print("... successful.\n")
+
+        print('Installing YAML...')
+        os.system(python_executable + ' -m pip install PyYaml')
+        os.system(python_executable + ' -m pip install --upgrade PyYaml')
+        print("... successful.\n")
+
+        # write python dist packages path into config file
+        with open(path.join(phoboshome, 'installation.conf'), 'w') as distconffile:
+            distconffile.truncate()
+            distconffile.write(python_package_path + ' # Python package installation path\n')
+            distconffile.write(blender_path + ' # Blender installation path\n')
+            distconffile.write(python_executable + ' # python executable\n')
+            distconffile.write(blender_executable + ' # Blender executable\n')
+            distconffile.write(python_version + ' # Python version\n')
+            distconffile.write(blender_version + ' # Blender version\n')
+
 
     # install addon
-    if os.path.exists(addonpath):
+    if path.exists(addonpath):
         shutil.rmtree(addonpath)  # always clean install folder
-    copied_files = updateFolderContents(os.path.join(phoboshome, 'phobos'), addonpath)
-    if not copied_files:
-        print(
-            'Something went wrong with copying the addon files to your Blender installation.\n',
-            'Aborting installation.',
-        )
-        sys.exit(0)
+        print('Removed older installation.')
 
-    # install startup blend
-    if '--startup-preset' in sys.argv:
-        shutil.copy(os.path.join(phoboshome, 'config', 'startup.blend'), blenderconfigpath)
+    copied_files = updateFolderContents(path.join(phoboshome, 'phobos'), addonpath)
+    if not copied_files:
+        print('Something went wrong with copying the addon files to your Blender installation.\n',
+              'Aborting installation.')
+        sys.exit(1)
+    else:
+        print('Copied addon files to ' + addonpath + '.')
+
+    # install optional startup blend
+    if startup_preset:
+        shutil.copy(path.join(phoboshome, 'config', 'startup.blend'), blenderconfigpath)
 
     # install config files
     copied_files = updateFolderContents(
-        os.path.join(phoboshome, 'config'), phobossystem.getConfigPath()
-    )
+        path.join(phoboshome, 'config'), phobossystem.getConfigPath())
     if not copied_files:
         print('Something went wrong with copying config files.')
-    os.remove(os.path.join(phobossystem.getConfigPath(), 'startup.blend'))
+    os.remove(path.join(phobossystem.getConfigPath(), 'startup.blend'))
 
     # install templates
     templatespath = path.join(phobossystem.getScriptsPath(), 'templates_py')
     copied_files = updateFolderContents(path.join(phoboshome, 'templates_py'), templatespath)
     if not copied_files:
-        print('Something went wrong with copying operator presets.')
+        print('Something went wrong with copying operator presets.\nInstallation aborted.')
+        sys.exit(1)
+
+    print('Installation successful!')
 
     # # install presets
     # presetspath = path.join(phobossystem.getScriptsPath(), 'presets', 'operator')
@@ -121,77 +171,18 @@ if __name__ == '__main__':
     # if not copied_files:
     #    print('Something went wrong with copying operator presets.')
 
-    # look for existing yamlpath configuration
-    if path.isfile(path.join(phoboshome, 'python_dist_packages.conf')):
-        print('python_dist_packages.conf found! Configuration done.')
-    # check for existing YAML installation
-    else:
-        try:
-            import yaml
-        except ImportError:
-            print(
-                'YAML installation not found. Please install it first:'
-                + '\n\n'
-                + '  pip3 install PyYaml\n\n'
-            )
-            print(
-                'Please make sure you followed the instructions on '
-                + 'https://github.com/dfki-ric/phobos/wiki/Installation'
-            )
-            print('YAML configuration aborted. Installation incomplete.')
-            sys.exit(0)
-        # OPT here we could add additional requirement checks
-
-        # write python dist packages path into config file
-        with open(path.join(phoboshome, 'python_dist_packages.conf'), 'w') as distconffile:
-            distconffile.truncate()
-            # instead of using the site package (which has some broken functionality in virtualenvs)
-            import yaml
-            distpath = path.split(yaml.__path__[0])[0]
-            distconffile.write(path.normpath(distpath))
-
-    shutil.copy2(
-        path.join(phoboshome, 'python_dist_packages.conf'),
-        os.path.join(addonpath, 'python_dist_packages.conf'),
-    )
-
-
 """
 Thoughts on importing external packages:
 - Blender brings its own python
 - The system python version cannot be assumed to be the same as the internal in blender
 - thus linking to the systems site package version only works for the coincidence of equal versions
 
-Possible solutions:
-  a) install packages of same python version as blender's internal to internal site packages
-  b) setup virtual environment somewhere in the system and add to blender python's path environment
+Possible other solutions:
+  a) setup virtual environment somewhere in the system and add to blender python's path environment
 
 Solutions in detail:
 
-a) Install into blender python
-
-   This is generally possible by executing:
-   python3.5 -m pip install --target /path/to/blender packagename
-   example:
-   python3.5 -m pip install --target =/home/dfki.uni-bremen.de/kavonszadkowski/tools/blender-2.79/2.79/python/lib/python3.5/site-packages packagename
-
-   The /path/to/blender can be retrieved from within blender by executing:
-        import site
-        sitepackagepath = site.getsitepackages()[0]
-
-    This could be retrieved to this script by calling blender as follows:
-    blender -b -P script.py
-
-    with script.py writing out the sitepackagepath and closing blender.
-    For this, however, the appropriate binary for blender is required, which would already suffice
-    to derive the path.
-
-    Another alternative would thus be to try importing external packages upon phobos startup, and
-    run a shell command to install missing packages of the correct version to blender's
-    then-known-location by using
-    --target.
-
-b) This script could set up a virtual environment with the correct python version and install all
+a) This script could set up a virtual environment with the correct python version and install all
    packages, then place a file containing the path of that environment to phobos, which would expand
    the path upon startup.  In fact, the install file itself could set up the environment, asking the
    user where to put it. Alternatively and more simply, the environment could be created where the

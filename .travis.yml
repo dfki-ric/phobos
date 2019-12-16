@@ -22,12 +22,6 @@ before_install:
   # but it will resolve all system dependencies blender has to be able to run.
   - sudo apt-get install blender
 
-  - sudo apt-get install python-pip
-
-  - pip install PyYaml
-
-  - pip install numpy
-
 install:
   # create temp directory where we store a recent blender version
   - mkdir tmp && cd tmp
@@ -52,7 +46,7 @@ install:
   # - sudo ln -s ${PWD}/phobos ${PWD}/tmp/blender/2.79/scripts/addons/phobos
 
   # instead we use the setup.py to install the addon to the folder
-  - python ${PWD}/setup.py --installto ${PWD}/tmp/blender/2.79/scripts/addons/phobos
+  - python ${PWD}/setup.py --installto ${PWD}/tmp/blender/2.79/scripts/addons/phobos -b blender
   - ls ${PWD}/tmp/blender/2.79/scripts/addons/phobos
 
 # Finally start our test runner passing it the blender executable from the downloaded blender release

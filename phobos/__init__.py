@@ -23,7 +23,7 @@ import pkgutil
 # TODO double import of basemodule?
 import bpy
 import phobos
-
+import yaml
 
 def import_submodules(package, recursive=True, verbose=False):
     """Import all submodules of a module, recursively, including subpackages.
@@ -82,18 +82,16 @@ bl_info = {
 }
 
 # TODO rework yaml import: loading module twice if yaml is not found...
-yamlconfpath = os.path.dirname(__file__) + "/python_dist_packages.conf"
-if os.path.isfile(yamlconfpath):
-    f = open(yamlconfpath)
-    distpath = f.read().replace('\n', '')
-    f.close()
-    sys.path.insert(0, os.path.normpath(distpath))
-    import yaml
-
-    # OPT here we could add additional required imports
-# stop execution, when yaml cannot be imported
+installconfpath = os.path.dirname(__file__) + "/installation.conf"
+if os.path.isfile(installconfpath):
+    with open(installconfpath, 'r') as conffile:
+        python_package_path = conffile.readline().split(' #')[0]
+        python_executable = conffile.readline().split(' #')[0]
+        blender_executable = conffile.readline().split(' #')[0]
+        python_version = conffile.readline().split(' #')[0]
+        blender_version = conffile.readline().split(' #')[0]
 else:
-    raise FileNotFoundError('No python_dist_packages.conf file found. Please reinstall phobos.')
+    raise FileNotFoundError('No .conf file found. Please reinstall phobos.')
 
 
 # Add custom YAML (de-)serializer

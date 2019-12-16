@@ -1,4 +1,4 @@
-python_dist_packages.conf
+installation.conf
 *~
 .^(travis).*
 *.orig
