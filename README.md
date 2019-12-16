@@ -97,5 +97,4 @@ avoiding confusion or obstruction of view when editing very complex models.*
 
 ## License
 
-Phobos is distributed under the [GNU Lesser General Public
-License](https://www.gnu.org/licenses/lgpl.html).
+Phobos is distributed under the [3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause).
