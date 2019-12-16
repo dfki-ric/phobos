@@ -68,6 +68,8 @@ if __name__ == '__main__':
                         help='install addon to the specified directory')
     parser.add_argument('-b', '--blender', metavar='DIR', dest='blender_path',
                         default=None, help='use the specified Blender folder (instead of asking)')
+    parser.add_argument('-i', '--info', dest='print_info', action='store_true',
+                        default=False, help='print debugging info (such as blender version etc.)')
 
     globals().update(vars(parser.parse_args()))
 
@@ -131,6 +133,23 @@ if __name__ == '__main__':
             distconffile.write(python_version + ' # Python version\n')
             distconffile.write(blender_version + ' # Blender version\n')
 
+    if print_info:
+        print('''
+Debug information for Phobos:
+  - Blender version {} (installed in {})
+  - Python version {} (located in {})
+  - Python site packages are in {}:
+    - {}
+              '''.format(blender_version, blender_path, python_version,
+                         python_executable, python_package_path,
+                         '\n    - '.join(package for package in os.listdir(python_package_path))))
+        sys.exit(0)
+
+    shutil.copy2(path.join(phoboshome, 'installation.conf'),
+                 path.join(addonpath, 'installation.conf'))
+
+    if install_to:
+        addonpath = install_to
 
     # install addon
     if path.exists(addonpath):
