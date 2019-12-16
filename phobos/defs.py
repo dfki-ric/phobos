@@ -22,7 +22,7 @@ import yaml
 import phobos.phobossystem as phobossystem
 
 # Phobos information
-version = '0.7'
+version = '1.0.1 "Capricious Choutengan"'
 repository = 'https://github.com/dfki-ric/phobos'
 
 # definitions of which elements are assigned to which default layers
