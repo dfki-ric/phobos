@@ -145,11 +145,11 @@ Debug information for Phobos:
                          '\n    - '.join(package for package in os.listdir(python_package_path))))
         sys.exit(0)
 
-    shutil.copy2(path.join(phoboshome, 'installation.conf'),
-                 path.join(addonpath, 'installation.conf'))
-
     if install_to:
         addonpath = install_to
+
+    shutil.copy2(path.join(phoboshome, 'installation.conf'),
+                 path.join(addonpath, 'installation.conf'))
 
     # install addon
     if path.exists(addonpath):
