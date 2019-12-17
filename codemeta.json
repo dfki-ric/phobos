@@ -9,11 +9,11 @@
   "identifier": "",
   "codeRepository": "https://github.com/dfki-ric/phobos",
   "datePublished": "2019-02-01",
-  "dateModified": "2019-02-01",
+  "dateModified": "2020-12-16",
   "dateCreated": "2019-02-01",
   "description": "A Blender addon to create and edit robot models in a WYSIWYG environment.",
   "keywords": "robotics, Blender, Python, URDF, SDF, model",
-  "license": "GNU LGPL v3.0",
+  "license": "BSD-3-Clause",
   "title": "Phobos",
-  "version": "v1.0.0 (Capricious Choutengan)"
+  "version": "1.0.1"
 }

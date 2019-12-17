@@ -4,6 +4,7 @@ black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://gith
 [![license](https://img.shields.io/github/license/dfki-ric/phobos.svg?style=flat)](https://github.com/dfki-ric/phobos/blob/master/COPYING)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)
+[![Build Status](https://travis-ci.org/dfki-ric/phobos.svg?branch=master)](https://travis-ci.org/dfki-ric/phobos)
 <!-- TODO link DOI here [![DOI:10.1007/978-3-319-76207-4_15](https://zenodo.org/badge/DOI/10.1007/978-3-319-76207-4_15.svg)](https://doi.org/10.1007/978-3-319-76207-4_15) -->
 
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
@@ -26,8 +27,7 @@ Bremen, together with the [Robotics
 Group](http://www.informatik.uni-bremen.de/robotik/index_en.php) of the
 [University of Bremen](http://www.uni-bremen.de/en.html).
 
-Please contact [Simon V.
-Reichel](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/sire01.html)
+Please contact [Kai von Szadkowski](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/kavo01.html)
 for any inquiries, or any questions and feedback not suited for the issues
 page.
 
@@ -99,5 +99,4 @@ avoiding confusion or obstruction of view when editing very complex models.*
 
 ## License
 
-Phobos is distributed under the [GNU Lesser General Public
-License](https://www.gnu.org/licenses/lgpl.html).
+Phobos is distributed under the [3-Clause BSD License](https://opensource.org/licenses/BSD-3-Clause).

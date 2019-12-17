@@ -23,8 +23,7 @@ If applicable, add screenshots to help explain your problem.
 **Desktop (please complete the following information):**
  - OS: [e.g. Ubuntu]
  - Version [e.g. 16.04]
- - Blender version (see the splash screen on startup of Blender)
- - Blender Python version (Open the Python Console Editor screen and check the output)
+ - debugging output (run `setup.py --info`)
 
 **Additional context**
 Add any other context about the problem here.

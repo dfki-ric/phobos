@@ -1,3 +1,14 @@
+#!/usr/bin/python3
+# coding=utf-8
+
+# -------------------------------------------------------------------------------
+# This file is part of Phobos, a Blender Add-On to edit robot models.
+# Copyright (C) 2020 University of Bremen & DFKI GmbH Robotics Innovation Center
+#
+# You should have received a copy of the 3-Clause BSD License in the LICENSE file.
+# If not, see <https://opensource.org/licenses/BSD-3-Clause>.
+# -------------------------------------------------------------------------------
+
 import bpy
 
 from phobos.utils.selection import selectObjects, getImmediateChildren
@@ -22,8 +33,11 @@ def derive_oldMotor(obj):
         if oldProps in obj.keys():
             if oldProps == 'motor/type' and obj[oldProps] == 'PID':
                 new_motor.update({newProps: 'generic_bldc'})
+            elif oldProps == 'motor/type' and obj[oldProps] == 'DC':
+                new_motor.update({newProps: 'generic_dc'})
             else:
                 new_motor.update({newProps: obj[oldProps]})
+            
     if not 'motor/name' in new_motor.keys():
         new_motor.update({'motor/name': obj.name + '_Motor'})
 

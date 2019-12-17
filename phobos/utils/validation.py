@@ -1,22 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # coding=utf-8
 
 # -------------------------------------------------------------------------------
 # This file is part of Phobos, a Blender Add-On to edit robot models.
-# Copyright (C) 2018 University of Bremen & DFKI GmbH Robotics Innovation Center
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# Copyright (C) 2020 University of Bremen & DFKI GmbH Robotics Innovation Center
+#
+# You should have received a copy of the 3-Clause BSD License in the LICENSE file.
+# If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
 from copy import deepcopy as dc
@@ -640,6 +630,8 @@ def validateInertiaData(obj, *args, adjust=False):
 
     errors = []
 
+    expsetting = 10**(-getExpSettings().decimalPlaces)
+
     # check dictionary parameters (most of the time pre object creation)
     if isinstance(obj, dict):
         missing = []
@@ -703,7 +695,7 @@ def validateInertiaData(obj, *args, adjust=False):
     inertia = numpy.around(
         numpy.array(inertiaListToMatrix(inertia)), decimals=getExpSettings().decimalPlaces
     )
-    if any(element <= 0.0 for element in inertia.diagonal()):
+    if any(element <= expsetting for element in inertia.diagonal()):
         errors.append(
             ValidateMessage(
                 "Negative semidefinite main diagonal in inertia data!",
@@ -715,7 +707,7 @@ def validateInertiaData(obj, *args, adjust=False):
         )
 
     # Calculate the determinant if consistent, quick check
-    if numpy.linalg.det(inertia) <= 0.0:
+    if numpy.linalg.det(inertia) <= expsetting:
         errors.append(
             ValidateMessage(
                 "Negative semidefinite determinant in inertia data! Checking singular values.",
@@ -727,10 +719,10 @@ def validateInertiaData(obj, *args, adjust=False):
         )
 
         # Calculate the eigenvalues if not consistent
-        if any(element <= 0.0 for element in numpy.linalg.eigvals(inertia)):
+        if any(element <= expsetting for element in numpy.linalg.eigvals(inertia)):
             # Apply singular value decomposition and correct the values
             S, V = numpy.linalg.eig(inertia)
-            S[S <= 0.0] = 1e-3
+            S[S <= expsetting] = expsetting
             inertia = V.dot(numpy.diag(S).dot(V.T))
             errors.append(
                 ValidateMessage(
@@ -752,7 +744,7 @@ def validateInertiaData(obj, *args, adjust=False):
                 {} if not adjust else {'log_info': "Adjusted to 1e-3."},
             )
         )
-        mass = 1e-3
+        mass = expsetting
 
     inertia = inertiaMatrixToList(inertia)
 
