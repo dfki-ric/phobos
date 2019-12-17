@@ -148,9 +148,6 @@ Debug information for Phobos:
     if install_to:
         addonpath = install_to
 
-    shutil.copy2(path.join(phoboshome, 'installation.conf'),
-                 path.join(addonpath, 'installation.conf'))
-
     # install addon
     if path.exists(addonpath):
         shutil.rmtree(addonpath)  # always clean install folder
@@ -163,6 +160,9 @@ Debug information for Phobos:
         sys.exit(1)
     else:
         print('Copied addon files to ' + addonpath + '.')
+
+    shutil.copy2(path.join(phoboshome, 'installation.conf'),
+                 path.join(addonpath, 'installation.conf'))
 
     # install optional startup blend
     if startup_preset:
