@@ -9,17 +9,14 @@ tags:
   - model
 authors:
   - name: Kai von Szadkowski
+    orcid: 0000-0002-1814-8463
     affiliation: 1
   - name: Simon Reichel
     orcid: 0000-0002-0190-9780
     affiliation: 1
-  - name: Julius Martensen
-    affiliation: 2
 affiliations:
  - name: German Research Center for Artificial Intelligence GmbH - Robotics Innovation Center, Bremen
    index: 1
- - name: Robotics Group, University of Bremen
-   index: 2
 date: 01 February 2019
 bibliography: paper.bib
 ---
