@@ -46,7 +46,7 @@ install:
   # - sudo ln -s ${PWD}/phobos ${PWD}/tmp/blender/2.79/scripts/addons/phobos
 
   # instead we use the setup.py to install the addon to the folder
-  - python ${PWD}/setup.py --installto ${PWD}/tmp/blender/2.79/scripts/addons/phobos -b blender
+  - python ${PWD}/setup.py -t ${PWD}/tmp/blender/2.79/scripts/addons/phobos -b blender
   - ls ${PWD}/tmp/blender/2.79/scripts/addons/phobos
 
 # Finally start our test runner passing it the blender executable from the downloaded blender release
