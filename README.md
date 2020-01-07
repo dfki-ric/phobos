@@ -1,11 +1,11 @@
 [![latest-release](https://img.shields.io/github/tag/dfki-ric/phobos.svg?label=version&style=flat)](https://github.com/dfki-ric/phobos/releases)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.01326/status.svg)](https://doi.org/10.21105/joss.01326)
 [![Code style:
 black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![license](https://img.shields.io/github/license/dfki-ric/phobos.svg?style=flat)](https://github.com/dfki-ric/phobos/blob/master/COPYING)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)
 [![Build Status](https://travis-ci.org/dfki-ric/phobos.svg?branch=master)](https://travis-ci.org/dfki-ric/phobos)
-<!-- TODO link DOI here [![DOI:10.1007/978-3-319-76207-4_15](https://zenodo.org/badge/DOI/10.1007/978-3-319-76207-4_15.svg)](https://doi.org/10.1007/978-3-319-76207-4_15) -->
 
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
