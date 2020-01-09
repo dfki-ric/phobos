@@ -86,8 +86,8 @@ def safelyName(obj, name, phobostype=None):
     # use custom property if the object.name can not be set properly
     if objectname != name:
         obj[phobostype + '/name'] = name
-    elif phobostype + '/name' in obj:
-        del obj[phobostype + '/name']
+    #elif phobostype + '/name' in obj:
+    #    del obj[phobostype + '/name']
 
     return obj.name
 
