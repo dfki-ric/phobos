@@ -36,6 +36,19 @@ page.
 - User documentation: [Phobos Wiki](https://github.com/dfki-ric/phobos/wiki)
 - Source documentation: [Phobos' Github Page](http://dfki-ric.github.io/phobos).
 
+## Citing
+
+Phobos has been published in the [Journal of Open Source Software](https://doi.org/10.21105/joss.01326).
+We ask users to cite the use of Phobos, as it allows us to keep the project alive.
+
+When citing, please provide this information:
+
+  - Phobos version you were using (see the [wiki](https://github.com/dfki-ric/phobos/wiki/Installation#versions-and-branching) for information about versions)
+  - If you were using additional Phobos plugins or configurations.
+  - The general [Phobos paper](https://doi.org/10.21105/joss.01326).
+
+If you are on the hunt for a BiBTeX entry, check out the [FAQ section](https://github.com/dfki-ric/phobos/wiki/FAQ#how-do-i-cite-phobos).
+
 ## Installation
 
 Please refer to the Wiki's [installation
