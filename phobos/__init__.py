@@ -1,22 +1,12 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3
 # coding=utf-8
 
 # -------------------------------------------------------------------------------
 # This file is part of Phobos, a Blender Add-On to edit robot models.
-# Copyright (C) 2018 University of Bremen & DFKI GmbH Robotics Innovation Center
-
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# Copyright (C) 2020 University of Bremen & DFKI GmbH Robotics Innovation Center
+#
+# You should have received a copy of the 3-Clause BSD License in the LICENSE file.
+# If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
 """
@@ -33,7 +23,7 @@ import pkgutil
 # TODO double import of basemodule?
 import bpy
 import phobos
-
+import yaml
 
 def import_submodules(package, recursive=True, verbose=False):
     """Import all submodules of a module, recursively, including subpackages.
@@ -81,8 +71,8 @@ bl_info = {
     "name": "Phobos",
     "description": "A toolbox to enable editing of robot models in Blender.",
     "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Simon Reichel",
-    "version": (0, 7, 1),
-    "blender": (2, 69, 0),
+    "version": (1, 0, 1),
+    "blender": (2, 79, 0),
     "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
@@ -92,18 +82,16 @@ bl_info = {
 }
 
 # TODO rework yaml import: loading module twice if yaml is not found...
-yamlconfpath = os.path.dirname(__file__) + "/python_dist_packages.conf"
-if os.path.isfile(yamlconfpath):
-    f = open(yamlconfpath)
-    distpath = f.read().replace('\n', '')
-    f.close()
-    sys.path.insert(0, os.path.normpath(distpath))
-    import yaml
-
-    # OPT here we could add additional required imports
-# stop execution, when yaml cannot be imported
+installconfpath = os.path.dirname(__file__) + "/installation.conf"
+if os.path.isfile(installconfpath):
+    with open(installconfpath, 'r') as conffile:
+        python_package_path = conffile.readline().split(' #')[0]
+        python_executable = conffile.readline().split(' #')[0]
+        blender_executable = conffile.readline().split(' #')[0]
+        python_version = conffile.readline().split(' #')[0]
+        blender_version = conffile.readline().split(' #')[0]
 else:
-    raise FileNotFoundError('No python_dist_packages.conf file found. Please reinstall phobos.')
+    raise FileNotFoundError('No .conf file found. Please reinstall phobos.')
 
 
 # Add custom YAML (de-)serializer
