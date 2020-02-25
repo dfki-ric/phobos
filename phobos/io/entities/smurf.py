@@ -290,7 +290,7 @@ def exportSmurf(model, path):
     for motor in model['motors']:
         motordict = model['motors'][motor]
         controllerparams = {}
-        if motordict['controller'] in model['controllers']:
+        if 'controller' in  motordict and motordict['controller'] in model['controllers']:
             controllerparams = {
                 key: value
                 for key, value in model['controllers'][motordict['controller']].items()
@@ -310,7 +310,7 @@ def exportSmurf(model, path):
                     motordict['maxValue'] = joint['limits']['upper']
             except KeyError:
                 log(
-                    "Missing data in motor {}! Motor might be incomplete.".format(
+                    "Missing data in motor {}! No limits given for type PID. Motor might be incomplete.".format(
                         motordict['name']
                     ),
                     "WARNING",
@@ -323,7 +323,7 @@ def exportSmurf(model, path):
                 motordict['maxValue'] = motordict["maxSpeed"]
             except KeyError:
                 log(
-                    "Missing data in motor {}! Motor might be incomplete.".format(
+                    "Missing data in motor {}! No maxSpeed given for motor type direct. Motor might be incomplete.".format(
                         motordict['name']
                     ),
                     "WARNING",
