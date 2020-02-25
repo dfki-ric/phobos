@@ -1763,9 +1763,9 @@ class AddMotorOperator(Operator):
         default=False,
         description="Add the controller object specified in the motor definitions",
     )
-    motorName = StringProperty(
-        name="Motor name", default='new_motor', description="Name of the motor"
-    )
+    #motorName = StringProperty(
+    #    name="Motor name", default='new_motor', description="Name of the motor"
+    #)
 
     def draw(self, context):
         """
@@ -1777,8 +1777,8 @@ class AddMotorOperator(Operator):
 
         """
         layout = self.layout
-        layout.prop(self, 'motorName')
-        layout.separator()
+        #layout.prop(self, 'motorName')
+        #layout.separator()
         layout.prop(self, 'categ', text='Motor category')
         layout.prop(self, 'motorType', text='Motor type')
         layout.prop(self, 'addToAllJoints', icon='PARTICLES')
@@ -1847,7 +1847,7 @@ class AddMotorOperator(Operator):
         # hide controller property when creating controllers on the fly
         hideproperties = [] if not self.addControllers else ['controller']
         opName = addObjectFromYaml(
-            self.motorName,
+            '',
             'motor',
             self.motorType,
             addMotorFromYaml,
@@ -1902,6 +1902,7 @@ def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
     controller_objs = []
     for joint in joints:
         pos_matrix = joint.matrix_world
+        motor_dict['name'] = ''
         motor_obj = modelmotors.createMotor(
             motor_dict, joint, pos_matrix, addcontrollers=addcontrollers
         )

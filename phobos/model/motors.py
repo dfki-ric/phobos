@@ -22,7 +22,7 @@ import phobos.utils.io as ioUtils
 
 def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=False):
     """This function creates a new motor specified by its parameters.
-    
+
     If *addcontrollers* is set, a controller object will be created from the controller definition
     which is specified in the motor dictionary (key *controller*).
 
@@ -39,10 +39,19 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
     layers = defs.layerTypes['motor']
     bUtils.toggleLayer(layers, value=True)
 
+    primitive_name = ''
+
+    # create name if not given by motor dict
+    if not 'name' in motor or len(motor['name']) == 0:
+        motor['name'] = parentobj.name
+        primitive_name = "motor_" + motor['name']
+    else:
+        primitive_name = motor['name']
+
     # create motor object
     if motor['shape'].startswith('resource'):
         newmotor = bUtils.createPrimitive(
-            motor['name'],
+            primitive_name,
             'box',
             [1, 1, 1],
             layers,
@@ -61,7 +70,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
             log("Could not use resource mesh for motor. Default cube used instead.", 'WARNING')
     else:
         newmotor = bUtils.createPrimitive(
-            motor['name'],
+            primitive_name,
             motor['shape'],
             motor['size'],
             layers,
@@ -78,11 +87,13 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
 
     # set motor properties
     newmotor.phobostype = 'motor'
-    newmotor.name = motor['name']
+    # should not be nessaccary: newmotor.name = motor['name']
     defname = motor['defname']
 
     # write the custom properties to the motor
     eUtils.addAnnotation(newmotor, motor['props'], namespace='motor', ignore=['defname'])
+    # fix motor name since it can differe from object name
+    newmotor['motor/name'] = motor['name']
 
     if 'controller' in defs.definitions['motors'][defname] and addcontrollers:
         import phobos.model.controllers as controllermodel
