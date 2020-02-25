@@ -542,6 +542,13 @@ def parseSmurfSensor(sensordict):
       : TODO
 
     """
+    # The idea of the smurf format is to allow any kind of annotations
+    # without strong restrictions. Thus we do not filter the data.
+    # *Note:* If one adds a pose to the custom properties it is overwritten
+    # by a function of phobos. The pose should be aligned with the link
+    # representing the sensor frame. So we filter the pose entry for SMURF (MARS)
+    del sensordict['pose']
+    return sensordict
     return_dict = models.filterExportData(sensordict, 'sensors', 'mars')
     return return_dict
 
