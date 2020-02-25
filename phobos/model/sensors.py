@@ -25,7 +25,7 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
 
     Args:
       obj(bpy_types.Object): The blender object to derive the sensor from.
-      names(bool, optional): return the l object name instead of an object link. (Default value = False)
+      names(bool, optional): return the link object name instead of an object link. (Default value = False)
       objectlist(list(bpy.types.Object, optional): objectlist to which possible parents are restricted (Default value = [])
       logging(bool, optional): whether to write log messages or not (Default value = False)
 
@@ -34,7 +34,6 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
 
     """
     from phobos.model.models import initObjectProperties
-    from phobos.model.poses import deriveObjectPose
 
     if logging:
         log(
@@ -53,8 +52,6 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
         if logging:
             log("Missing data in sensor " + obj.name, "ERROR")
         return None
-
-    props['pose'] = deriveObjectPose(obj)
     return props
 
 
