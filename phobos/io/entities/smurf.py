@@ -290,7 +290,7 @@ def exportSmurf(model, path):
     for motor in model['motors']:
         motordict = model['motors'][motor]
         controllerparams = {}
-        if motordict['controller'] in model['controllers']:
+        if 'controller' in  motordict and motordict['controller'] in model['controllers']:
             controllerparams = {
                 key: value
                 for key, value in model['controllers'][motordict['controller']].items()
