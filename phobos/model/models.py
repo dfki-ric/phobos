@@ -1023,8 +1023,23 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         # parse joint and motor information
         if sUtils.getEffectiveParent(link):
             # joint may be None if link is a root
+            # to prevent confusion links are always defining also joints
             jointdict = deriveJoint(link, logging=True, adjust=True)
             log("  Setting joint type '{}' for link.".format(jointdict['type']), 'DEBUG')
+            # first check if we have motor information in the joint properties
+            # if so they can be extended/overwritten by motor objects later on
+            if '$motor' in jointdict:
+                motordict = jointdict['$motor']
+                # at least we need a type property
+                if 'type' in motordict:
+                    # if no name is given derive it from the joint
+                    if not 'name' in motordict:
+                        motordict["name"] = jointdict['name']
+                    model['motors'][motordict['name']] = motordict
+                    # link the joint by name:
+                    motordict['joint'] = jointdict['name']
+                del jointdict['$motor']
+
             model['joints'][jointdict['name']] = jointdict
 
             for mot in [child for child in link.children if child.phobostype == 'motor']:
@@ -1032,7 +1047,10 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                 # motor may be None if no motor is attached
                 if motordict:
                     log("  Added motor {} to link.".format(motordict['name']), 'DEBUG')
-                    model['motors'][motordict['name']] = motordict
+                    if motordict['name'] in model["motors"]:
+                        model['motors'][motordict['name']].update(motordict)
+                    else:
+                        model['motors'][motordict['name']] = motordict
 
     # parse sensors and controllers
     sencons = [obj for obj in objectlist if obj.phobostype in ['sensor', 'controller']]
@@ -1313,6 +1331,10 @@ def gatherAnnotations(model):
         for key in element.keys():
             if key.startswith('$'):
                 category = key[1:]
+                # ignore motor properties for link and joint types
+                if category == "motor":
+                    if element['temp_type'] == "link" or element['temp_type'] == "joint":
+                        continue
                 if category not in annotations:
                     annotations[category] = {}
                 if element['temp_type'] not in annotations[category]:
@@ -1403,7 +1425,6 @@ def filterExportData(data, phobostype=None, exportformart=None):
 
     # Remove the non choosen exportformat
     ignore_formarts = [formats for formats in exportformarts if formats != exportformart]
-
     def_settings = defs.def_settings[phobostype]
     current_definitions = defs.definitions[phobostype]
 
