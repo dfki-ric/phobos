@@ -117,13 +117,13 @@ if __name__ == '__main__':
             'site-packages')))
 
         print('Installing PIP...')
-        os.system(python_executable + ' -m ensurepip')
-        os.system(python_executable + ' -m pip install --upgrade pip')
+        os.system("'" + python_executable + "'" + ' -m ensurepip')
+        os.system("'" + python_executable + "'" + ' -m pip install --upgrade pip')
         print("... successful.\n")
 
         print('Installing YAML...')
-        os.system(python_executable + ' -m pip install PyYaml')
-        os.system(python_executable + ' -m pip install --upgrade PyYaml')
+        os.system("'" + python_executable + "'" + ' -m pip install PyYaml')
+        os.system("'" + python_executable + "'" + ' -m pip install --upgrade PyYaml')
         print("... successful.\n")
 
         # write python dist packages path into config file
