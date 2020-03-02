@@ -98,13 +98,16 @@ if __name__ == '__main__':
         blender_version = path.basename(blender_version[0])
         blender_executable = path.join(blender_path, 'blender')
         if not path.isfile(blender_executable):
-            print("Could not find Blender executable.\nInstallation aborted.")
-            sys.exit(1)
+            # try alternate MacOS installation path first
+            blender_executable = path.abspath(path.join(blender_path, '..', 'MacOS', 'blender'))
+            if not path.isfile(blender_executable):
+                print("WARNING: Could not find Blender executable.")
+                blender_executable = "not found"
 
         bpython_files = glob.glob(path.join(
             blender_path, blender_version, 'python', 'bin', 'py*'))
         if not bpython_files:
-            print("Could not find python executable in blender installation.")
+            print("Could not find python executable in Blender installation.")
             print("Installation aborted!")
             sys.exit(1)
         python_executable = bpython_files[0]
