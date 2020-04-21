@@ -241,6 +241,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         newgeom.scale = geom['scale']
 
     # make object smooth
-    eUtils.smoothen_surface(newgeom)
+    if newgeom.type != 'EMPTY':
+        eUtils.smoothen_surface(newgeom)
 
     return newgeom

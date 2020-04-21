@@ -108,6 +108,10 @@ def assignMaterial(obj, materialname):
     Returns:
 
     """
+    if obj.type == 'EMPTY':
+        log("Skipped material assignment for empty: {}".format(obj.name), "DEBUG")
+        return
+
     if materialname not in bpy.data.materials:
         if materialname in defs.definitions['materials']:
             createPhobosMaterials()
