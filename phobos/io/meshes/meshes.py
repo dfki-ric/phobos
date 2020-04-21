@@ -36,14 +36,39 @@ def exportMesh(obj, path, meshtype):
     import phobos.utils.io as ioUtils
 
     objname = nUtils.getObjectName(obj)
-    tmpobjname = obj.name
-    # OPT: surely no one will ever name an object like so, better solution?
-    obj.name = 'tmp_export_666'
-    tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
-    # copy the mesh here
-    tmpobject.data = obj.data
-    outpath = os.path.join(path, obj.data.name + "." + meshtype)
+
+    # TODO add a mesh flatten option, to merge meshgroups/link visuals into a single mesh
+    if obj.type == 'EMPTY':
+        meshname = objname
+        meshgroup = True
+    else:
+        meshgroup = False
+        meshname = obj.data.name
+
+    # TODO: why did the old code copy the mesh data into a temporary object?
+    # I guess, because we want the mesh scale to be 1, but let's keep this as a reminder:
+    # tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+    # tmpobject.data = obj.data
+
+    # save scale of object temporarily
+    tmpscale = obj.scale
+    obj.scale = (1, 1, 1)
+    obj.select = True
+
+    # for obj and stl we need to flatten the meshgroup
+    if meshgroup and meshtype in ['obj', 'stl']:
+        newobj = bUtils.joinMeshes(
+            [ob for ob in obj.children if ob.phobostype in ['visual', 'collision']], copy=True)
+        obj.select = False
+        tmpname = obj.name
+        obj.name = nUtils.getUniqueName('tmp', bpy.data.objects)
+        newobj.name = tmpname
+        newobj.select = True
+
+    outpath = os.path.join(path, meshname + "." + meshtype)
     if meshtype == 'obj':
+
+        # TODO flatten meshgroup objects into single mesh
         axis_forward = bpy.context.scene.phobosexportsettings.obj_axis_forward
         axis_up = bpy.context.scene.phobosexportsettings.obj_axis_up
         bpy.ops.export_scene.obj(
@@ -56,13 +81,28 @@ def exportMesh(obj, path, meshtype):
             axis_up=axis_up,
         )
     elif meshtype == 'stl':
-        bpy.ops.export_mesh.stl(filepath=outpath, use_selection=True, use_mesh_modifiers=True)
+        bpy.ops.export_mesh.stl(
+            filepath=outpath,
+            use_selection=True,
+            use_mesh_modifiers=True
+        )
+        # TODO flatten meshgroup objects into single mesh
     elif meshtype == 'dae':
-        bpy.ops.wm.collada_export(filepath=outpath, selected=True)
-    bpy.ops.object.select_all(action='DESELECT')
-    tmpobject.select = True
-    bpy.ops.object.delete()
-    obj.name = tmpobjname
+        bpy.ops.wm.collada_export(
+            filepath=outpath,
+            selected=True,
+            include_children=meshgroup
+        )
+
+    # clean up temporary objects from mesh flattening
+    if meshgroup and meshtype in ['obj', 'stl']:
+        bpy.ops.object.select_all(action='DESELECT')
+        newobj.select = True
+        bpy.ops.object.delete()
+        obj.name = tmpname
+
+    # reapply object scale
+    obj.scale = tmpscale
 
 
 def importMesh(filepath, meshtype):
