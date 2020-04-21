@@ -187,6 +187,38 @@ def createPrimitive(
     return obj
 
 
+def joinMeshes(objects, copy=False):
+    """Joins the meshes of the specified objects.
+    Optionally, the objects are copied before joining.
+
+    Args:
+        objects(list of bpy.types.Object): list of objects to join
+        copy(bool, optional): True to create an object copy, False to join meshes in place
+
+    Returns:
+        bpy.types.Object -- the joint object
+    """
+    if len(objects) < 2:
+        log("Could not join meshes: not enough objects: {}".format(objects), 'WARNING')
+        return
+
+    objectlist = []
+    if copy:
+        for obj in objects:
+            objectlist.append(obj.copy())
+    else:
+        objectlist = objects
+
+    bpy.ops.object.select_all(action='DESELECT')
+    for obj in objectlist:
+        bpy.context.scene.objects.link(obj)
+        obj.select = True
+    bpy.context.scene.objects.active = objectlist[0]
+    bpy.ops.object.join()
+
+    return objectlist[0]
+
+
 def setObjectLayersActive(obj, extendlayers=False):
     """Sets all layers, the specified object is on to active.
     
