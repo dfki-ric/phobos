@@ -209,7 +209,8 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
         item for item in objectlist if item.phobostype in ['visual', 'collision', 'approxsphere']
     ]:
         effectiveparent = sUtils.getEffectiveParent(obj)
-        if effectiveparent == linkobj:
+        # visual, collision & approxsphere objects can be grouped by empties...
+        if effectiveparent == linkobj and not obj.parent.type == 'EMPTY':
             if logging:
                 log(
                     "  Adding " + obj.phobostype + " '" + nUtils.getObjectName(obj) + "' to link.",
@@ -1060,18 +1061,33 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     # identify unique meshes
     log("Parsing meshes...", "INFO")
     for obj in objectlist:
-        try:
-            if (
-                (obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and (obj['geometry/type'] == 'mesh')
-                and (obj.data.name not in model['meshes'])
-            ):
-                model['meshes'][obj.data.name] = obj
-                for lod in obj.lod_levels:
-                    if lod.object.data.name not in model['meshes']:
-                        model['meshes'][lod.object.data.name] = lod.object
-        except KeyError:
+        if (obj.phobostype not in ['visual', 'collision']):
+            continue
+
+        if 'geometry/type' not in obj:
             log("Undefined geometry type in object " + obj.name, "ERROR")
+            continue
+
+        if obj['geometry/type'] != 'mesh':
+            continue
+
+        # meshgroups (parent is an empty) use the name of the empty
+        if obj.type == 'EMPTY':
+            meshname = obj.name
+        else:
+            # do not include child of meshgroup empties
+            if obj.parent and obj.parent.type == 'EMPTY':
+                continue
+            meshname = obj.data.name
+
+        # skip duplicates
+        if meshname in model['meshes']:
+            continue
+
+        model['meshes'][meshname] = obj
+        for lod in obj.lod_levels:
+            if lod.object.data.name not in model['meshes']:
+                model['meshes'][lod.object.data.name] = lod.object
 
     # gather information on groups of objects
     log("Parsing groups...", 'INFO')
