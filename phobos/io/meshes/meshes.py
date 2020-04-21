@@ -22,18 +22,19 @@ from phobos.phoboslog import log
 
 def exportMesh(obj, path, meshtype):
     """
+    Exports the specified objects' mesh into the specified path.
+    The meshtype specifies the file format for the exported mesh.
 
     Args:
-      obj: 
-      path: 
-      meshtype: 
+      obj: bpy.types.object
+      path: path
+      meshtype: 'obj', 'stl' or 'dae'
 
     Returns:
-
+        None
     """
     import phobos.utils.io as ioUtils
 
-    # DOCU add some docstring
     objname = nUtils.getObjectName(obj)
     tmpobjname = obj.name
     # OPT: surely no one will ever name an object like so, better solution?
