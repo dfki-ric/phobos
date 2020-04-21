@@ -79,12 +79,25 @@ def deriveGeometry(obj, adjust=False, **kwargs):
         geometry['radius'] = obj.dimensions[0] / 2
 
     elif gtype == 'mesh':
-        geometry['filename'] = obj.data.name
+        if obj.type == 'EMPTY':
+            geometry['filename'] = obj.name
+        else:
+            geometry['filename'] = obj.data.name
+
         geometry['scale'] = deriveScale(obj)
-        # FIXME: is this needed to calculate an approximate inertia
-        geometry['size'] = list(obj.dimensions)
+        geometry['size'] = deriveDimensions(obj)
 
     return geometry
+
+
+def deriveDimensions(obj):
+    if obj.type == 'EMPTY':
+        # TODO: test this is done properly
+        return bUtils.getCombinedDimensions(
+            [ob for ob in obj.children if ob.phobostype in ['visual', 'collision']])
+    else:
+        # FIXME: is this needed to calculate an approximate inertia
+        return list(obj.dimensions)
 
 
 def deriveScale(obj):
