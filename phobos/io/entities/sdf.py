@@ -1853,10 +1853,7 @@ def importSDF(filepath):
         root = sdfroot.find('world')
     else:
         root = sdfroot.find('model')
-    if root.attrib['name']:
-        model['name'] = root.attrib['name']
-    else:
-        model['name'] = 'SDFImport'
+    model['name'] = root.attrib.get('name', 'SDFImport')
 
     # include all generic parameters not defined in this function
     genparams = [
