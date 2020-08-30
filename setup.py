@@ -169,6 +169,7 @@ Debug information for Phobos:
 
     # install optional startup blend
     if startup_preset:
+        os.makedirs(blenderconfigpath, exist_ok=True)
         shutil.copy(path.join(phoboshome, 'config', 'startup.blend'), blenderconfigpath)
 
     # install config files
