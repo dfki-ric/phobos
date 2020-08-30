@@ -607,7 +607,7 @@ def importUrdf(filepath):
     # load element tree from file
     tree = ET.parse(filepath)
     root = tree.getroot()
-    model['name'] = root.attrib['name']
+    model['name'] = root.attrib.get('name', 'URDFImport')
     if 'version' in root.attrib:
         model['version'] = root.attrib['version']
 
