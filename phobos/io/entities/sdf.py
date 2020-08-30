@@ -1693,7 +1693,7 @@ def parseSDFSensors(sensors):
         # plugin
 
         # parse the content of the sensor type to properties for the sensor
-        genparams = [elem.tag for elem in list(sensor.find(newsensor['type']))]
+        genparams = [elem.tag for elem in list(sensor.find(newsensor['type']) or []) if elem is not None]
         props = {}
         props.update(
             {
