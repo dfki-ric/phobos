@@ -1693,7 +1693,7 @@ def parseSDFSensors(sensors):
         # plugin
 
         # parse the content of the sensor type to properties for the sensor
-        genparams = [elem.tag for elem in list(sensor.find(newsensor['type']))]
+        genparams = [elem.tag for elem in list(sensor.find(newsensor['type']) or []) if elem is not None]
         props = {}
         props.update(
             {
@@ -1853,10 +1853,7 @@ def importSDF(filepath):
         root = sdfroot.find('world')
     else:
         root = sdfroot.find('model')
-    if root.attrib['name']:
-        model['name'] = root.attrib['name']
-    else:
-        model['name'] = 'SDFImport'
+    model['name'] = root.attrib.get('name', 'SDFImport')
 
     # include all generic parameters not defined in this function
     genparams = [
