@@ -234,7 +234,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             location = mathutils.Matrix.Identity(4)
             rotation = mathutils.Matrix.Identity(4)
         eUtils.parentObjectsTo(newgeom, linkobj)
-        newgeom.matrix_local = location * rotation
+        newgeom.matrix_local = location @ rotation
 
     # scale imported object
     if 'scale' in geom:

@@ -483,7 +483,7 @@ def add_quaternion(rot1, rot2):
     """
     quat1 = mathutils.Quaternion(rot1)
     quat2 = mathutils.Quaternion(rot2)
-    quat_sum = quat1 * quat2
+    quat_sum = quat1 @ quat2
     return (quat_sum.w, quat_sum.x, quat_sum.y, quat_sum.z)
 
 
@@ -607,7 +607,7 @@ def importUrdf(filepath):
     # load element tree from file
     tree = ET.parse(filepath)
     root = tree.getroot()
-    model['name'] = root.attrib.get('name', 'URDFImport')
+    model['name'] = root.attrib['name']
     if 'version' in root.attrib:
         model['version'] = root.attrib['version']
 

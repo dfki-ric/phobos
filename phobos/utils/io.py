@@ -98,7 +98,7 @@ def getExpSettings():
 def getExportModels():
     """Returns a list of objects representing a model (root) in the Blender scene"""
     if getExpSettings().selectedOnly:
-        roots = [root for root in sUtils.getRoots() if root.select]
+        roots = [root for root in sUtils.getRoots() if root.select_get()]
     else:
         roots = sUtils.getRoots()
     return list(roots)
@@ -116,7 +116,7 @@ def getEntityRoots():
     roots = [
         obj
         for obj in bpy.context.scene.objects
-        if sUtils.isEntity(obj) and (not getExpSettings().selectedOnly or obj.select)
+        if sUtils.isEntity(obj) and (not getExpSettings().selectedOnly or obj.select_get())
     ]
     return roots
 
@@ -542,7 +542,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
                     i += 1
         except KeyError as e:
             log("Error exporting mesh {0} as {1}: {2}".format(meshname, meshtype, str(e)), "ERROR")
-    display.setProgress(0)
+    display.endProgress()
 
 
 def exportScene(

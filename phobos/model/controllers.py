@@ -72,8 +72,7 @@ def createController(controller, reference, origin=mathutils.Matrix(), annotatio
       : bpy.types.Object -- new created controller object
 
     """
-    layers = defs.layerTypes['controller']
-    bUtils.toggleLayer(layers, value=True)
+    bUtils.toggleLayer('controller', value=True)
 
     # create controller object
     if controller['shape'].startswith('resource'):
@@ -81,7 +80,7 @@ def createController(controller, reference, origin=mathutils.Matrix(), annotatio
             controller['name'],
             'box',
             [1, 1, 1],
-            layers,
+            [],
             plocation=origin.to_translation(),
             protation=origin.to_euler(),
             pmaterial=controller['material'],

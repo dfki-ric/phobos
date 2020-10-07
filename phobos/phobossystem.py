@@ -13,7 +13,7 @@ import sys
 import os.path as path
 
 # compatible blender version
-blenderversion = '2.79'
+blenderversion = '2.90'
 
 
 def getScriptsPath():

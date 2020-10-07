@@ -83,7 +83,7 @@ def createJoint(joint, linkobj=None, links=None):
         linkobj['joint/name'] = joint['name']
 
     # select the link object
-    bUtils.toggleLayer(list(linkobj.layers).index(True), True)
+    bUtils.activateObjectCollection(linkobj)
     sUtils.selectObjects([linkobj], clear=True, active=0)
 
     # set axis

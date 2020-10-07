@@ -47,8 +47,8 @@ class ExportSceneOperator(Operator):
     bl_label = "Export Scene"
     bl_options = {'REGISTER', 'UNDO'}
 
-    exportModels = BoolProperty(name='Export models in scene')
-    sceneName = StringProperty(name='Scene name')
+    exportModels : BoolProperty(name='Export models in scene')
+    sceneName : StringProperty(name='Scene name')
 
     def invoke(self, context, event):
         """
@@ -123,11 +123,11 @@ class ExportModelOperator(Operator):
     bl_label = "Export Model"
     bl_options = {'REGISTER'}
 
-    modelname = EnumProperty(
+    modelname : EnumProperty(
         items=ioUtils.getModelListForEnumProp, name="Model", description="Model to export"
     )
 
-    exportall = BoolProperty(
+    exportall : BoolProperty(
         default=False, name="Export all", description="Export all (selected) models in the scene."
     )
 
@@ -244,9 +244,9 @@ class ImportModelOperator(bpy.types.Operator):
     bl_region_type = 'FILE'
 
     # creating property for storing the path to the .scn file
-    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+    filepath : bpy.props.StringProperty(subtype="FILE_PATH")
 
-    entitytype = EnumProperty(
+    entitytype : EnumProperty(
         name="Entity type",
         items=tuple(
             (e, e, 'file extensions: ' + str(entity_io.entity_types[e]['extensions']))
@@ -282,7 +282,7 @@ class ImportModelOperator(bpy.types.Operator):
         # bUtils.cleanScene()
         models.buildModelFromDictionary(model)
         for layer in ['link', 'inertial', 'visual', 'collision', 'sensor']:
-            bUtils.toggleLayer(defs.layerTypes[layer], True)
+            bUtils.toggleLayer(layer, True)
         return {'FINISHED'}
 
     def invoke(self, context, event):
@@ -438,7 +438,7 @@ class ImportLibRobot(Operator):
     bl_label = "Import Baked Robot"
     bl_options = {'REGISTER', 'UNDO'}
 
-    filepath = bpy.props.StringProperty(subtype="FILE_PATH")
+    filepath : bpy.props.StringProperty(subtype="FILE_PATH")
 
     def execute(self, context):
         """
@@ -489,7 +489,7 @@ class ImportSelectedLibRobot(Operator):
     bl_idname = "scene.phobos_import_selected_lib_robot"
     bl_label = "Import Baked Robot"
 
-    obj_name = StringProperty(
+    obj_name : StringProperty(
         name="New Smurf Entity Name", default="New Robot", description="Name of new Smurf Entity"
     )
 
@@ -509,8 +509,8 @@ class ImportSelectedLibRobot(Operator):
         root = None
         # TODO delete me?
         # print("modelfile: ("+modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].model_file+")")
-        if context.scene.objects.active != None:
-            root = sUtils.getRoot(context.scene.objects.active)
+        if context.view_layer.objects.active != None:
+            root = sUtils.getRoot(context.view_layer.objects.active)
         try:
             if (
                 not root
@@ -600,7 +600,7 @@ class ImportSelectedLibRobot(Operator):
                     use_facet_normal=False,
                 )
             robot_obj = bpy.context.selected_objects[0]
-            bpy.context.scene.objects.active = robot_obj
+            bpy.context.view_layer.objects.active = robot_obj
             robot_obj.name = self.obj_name
             robot_obj["model/name"] = selected_robot.robot_name
             robot_obj["entity/name"] = self.obj_name
@@ -618,11 +618,11 @@ class CreateRobotInstance(Operator):
     bl_label = "Create Robot Instance"
     bl_options = {'REGISTER', 'UNDO'}
 
-    bakeObj = EnumProperty(
+    bakeObj : EnumProperty(
         name="Robot Lib Entries", items=generateLibEntries, description="The robot lib entries"
     )
 
-    robName = StringProperty(
+    robName : StringProperty(
         name="Instance Name", default="instance", description="The instance's name"
     )
 
@@ -670,7 +670,7 @@ class ExportCurrentPoseOperator(Operator):
     bl_idname = "phobos.export_current_poses"
     bl_label = "Export Selected Pose"
 
-    decimate_type = EnumProperty(
+    decimate_type : EnumProperty(
         name="Decimate Type",
         items=[
             ('COLLAPSE', 'Collapse', 'COLLAPSE'),
@@ -678,9 +678,9 @@ class ExportCurrentPoseOperator(Operator):
             ('DISSOLVE', 'Planar', 'DISSOLVE'),
         ],
     )
-    decimate_ratio = FloatProperty(name="Ratio", default=0.15)
-    decimate_iteration = IntProperty(name="Iterations", default=1)
-    decimate_angle_limit = FloatProperty(name="Angle Limit", default=5)
+    decimate_ratio : FloatProperty(name="Ratio", default=0.15)
+    decimate_iteration : IntProperty(name="Iterations", default=1)
+    decimate_angle_limit : FloatProperty(name="Angle Limit", default=5)
 
     @classmethod
     def poll(self, context):
@@ -803,7 +803,7 @@ class ExportAllPosesOperator(Operator):
     bl_label = "Export All Poses"
     # TODO update bl options
     # bl_options = {'REGISTER', 'UNDO'}
-    decimate_type = EnumProperty(
+    decimate_type : EnumProperty(
         name="Decimate Type",
         items=[
             ('COLLAPSE', 'Collapse', 'COLLAPSE'),
@@ -811,9 +811,9 @@ class ExportAllPosesOperator(Operator):
             ('DISSOLVE', 'Planar', 'DISSOLVE'),
         ],
     )
-    decimate_ratio = FloatProperty(name="Ratio", default=0.15)
-    decimate_iteration = IntProperty(name="Iterations", default=1)
-    decimate_angle_limit = FloatProperty(name="Angle Limit", default=5)
+    decimate_ratio : FloatProperty(name="Ratio", default=0.15)
+    decimate_iteration : IntProperty(name="Iterations", default=1)
+    decimate_angle_limit : FloatProperty(name="Angle Limit", default=5)
 
     @classmethod
     def poll(self, context):
@@ -919,20 +919,32 @@ class ExportAllPosesOperator(Operator):
             )
             display.setProgress(i / len(poses))
             i += 1
+        display.endProgress()
         sUtils.selectObjects([root] + objectlist, clear=True, active=0)
         bpy.ops.scene.reload_models_and_poses_operator()
         return {'FINISHED'}
 
+classes = (
+    ExportSceneOperator,
+    ExportModelOperator,
+    ImportModelOperator,
+    ReloadModelsAndPosesOperator,
+    ImportLibRobot,
+    ImportSelectedLibRobot,
+    CreateRobotInstance,
+    ExportCurrentPoseOperator,
+    ExportAllPosesOperator,
+    )
 
 def register():
     """TODO Missing documentation"""
     print("Registering operators.io...")
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    for classdef in classes:
         bpy.utils.register_class(classdef)
 
 
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.io...")
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    for classdef in classes:
         bpy.utils.unregister_class(classdef)

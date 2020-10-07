@@ -33,7 +33,7 @@ class SelectObjectsByPhobosType(Operator):
     bl_label = "Select by Phobostype"
     bl_options = {'REGISTER', 'UNDO'}
 
-    seltype = EnumProperty(
+    seltype : EnumProperty(
         items=defs.phobostypes, name="Phobostype", default="link", description="Phobos object type"
     )
 
@@ -41,7 +41,7 @@ class SelectObjectsByPhobosType(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -53,8 +53,8 @@ class SelectObjectsByPhobosType(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -66,7 +66,7 @@ class SelectObjectsByPhobosType(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -81,7 +81,7 @@ class SelectObjectsByName(Operator):
     bl_label = "Select by Name"
     bl_options = {'REGISTER', 'UNDO'}
 
-    namefragment = StringProperty(
+    namefragment : StringProperty(
         name="Name Contains", default='', description="Part of a Phobos object name"
     )
 
@@ -89,7 +89,7 @@ class SelectObjectsByName(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -105,7 +105,7 @@ class GotoObjectOperator(Operator):
     bl_label = "Goto Object"
     bl_options = {'UNDO', 'INTERNAL'}
 
-    objectname = StringProperty(
+    objectname : StringProperty(
         name="Object Name", default='', description="The name of the object to jump to"
     )
 
@@ -114,7 +114,7 @@ class GotoObjectOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -125,7 +125,7 @@ class GotoObjectOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -162,7 +162,7 @@ class SelectRootOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -181,7 +181,7 @@ class SelectRootOperator(Operator):
 
             # select objects
             sUtils.selectObjects(list(roots), True)
-            context.scene.objects.active = list(roots)[0]
+            context.view_layer.objects.active = list(roots)[0]
         else:
             log("Couldn't find any root object.", 'ERROR')
         return {'FINISHED'}
@@ -191,7 +191,7 @@ class SelectRootOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -206,7 +206,7 @@ class SelectModelOperator(Operator):
     bl_label = "Select Model"
     bl_options = {'REGISTER', 'UNDO'}
 
-    modelname = StringProperty(
+    modelname : StringProperty(
         name="Model Name", default="", description="Name of the model to be selected"
     )
 
@@ -214,7 +214,7 @@ class SelectModelOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -236,16 +236,23 @@ class SelectModelOperator(Operator):
         sUtils.selectObjects(list(selection), True)
         return {'FINISHED'}
 
+classes = (
+    SelectObjectsByPhobosType,
+    SelectObjectsByName,
+    GotoObjectOperator,
+    SelectRootOperator,
+    SelectModelOperator,
+    )
 
 def register():
     """TODO Missing documentation"""
-    print("Registering operators.selection...")
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    print("Registering operators.selection... ")
+    for classdef in classes:
         bpy.utils.register_class(classdef)
 
 
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.selection...")
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    for classdef in classes:
         bpy.utils.unregister_class(classdef)

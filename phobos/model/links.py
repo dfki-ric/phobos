@@ -74,11 +74,10 @@ def createLink(link):
     """
     log("Creating link object '{}'...".format(link['name']), 'DEBUG', prefix='\n')
     # create armature/bone
-    bUtils.toggleLayer(defs.layerTypes['link'], True)
+    bUtils.toggleLayer('link', True)
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.ops.object.armature_add(layers=bUtils.defLayers([defs.layerTypes['link']]))
+    bpy.ops.object.armature_add()
     newlink = bpy.context.active_object
-
     # Move bone when adding at selected objects location
     if 'matrix' in link:
         newlink.matrix_world = link['matrix']
@@ -187,7 +186,7 @@ def setLinkTransformations(model, parent):
         )
 
         log("Transforming link {0}.".format(child['name']), 'DEBUG')
-        transform_matrix = location * rotation
+        transform_matrix = location @ rotation
         child['object'].matrix_local = transform_matrix
 
         # traverse the tree

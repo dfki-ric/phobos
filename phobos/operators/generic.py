@@ -90,11 +90,11 @@ def linkObjectLists(annotation, objectlist):
 class DynamicProperty(PropertyGroup):
     """A support class to handle dynamic properties in a temporary operator."""
 
-    name = bpy.props.StringProperty()
-    intProp = bpy.props.IntProperty()
-    boolProp = bpy.props.BoolProperty()
-    stringProp = bpy.props.StringProperty()
-    floatProp = bpy.props.FloatProperty()
+    name : bpy.props.StringProperty()
+    intProp : bpy.props.IntProperty()
+    boolProp : bpy.props.BoolProperty()
+    stringProp : bpy.props.StringProperty()
+    floatProp : bpy.props.FloatProperty()
 
     def assignValue(self, name, value):
         """
@@ -212,8 +212,8 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
         bl_options = {'INTERNAL'}
 
         # this contains all the single entries of the dictionary after invoking
-        phobos_data = CollectionProperty(type=DynamicProperty)
-        annotation_checks = CollectionProperty(type=DynamicProperty)
+        phobos_data : CollectionProperty(type=DynamicProperty)
+        annotation_checks : CollectionProperty(type=DynamicProperty)
         phobostype = phobtype
         obj_name = name
         preset_name = presetname
@@ -238,7 +238,7 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
 
             if self.annotation_checks:
                 box = layout.box()
-                box.label('Include annotations:')
+                box.label(text='Include annotations:')
                 for i in range(len(self.annotation_checks)):
                     name = self.annotation_checks[i].name[2:].replace('_', ' ')
                     self.annotation_checks[i].draw(box, name)
@@ -318,15 +318,15 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
 
             # select the newly added objects
             sUtils.selectObjects(new_objs + annot_objs + otherobjs, clear=True, active=0)
-            bUtils.toggleLayer(defs.layerTypes[self.phobostype], value=True)
+            bUtils.toggleLayer(self.phobostype, value=True)
 
             if annot_objs:
-                bUtils.toggleLayer(defs.layerTypes['annotation'], value=True)
+                bUtils.toggleLayer('annotation', value=True)
 
             # toggle layers for generic objects
             if otherobjs:
                 for obj in otherobjs:
-                    bUtils.toggleLayer(defs.layerTypes[obj.phobostype], value=True)
+                    bUtils.toggleLayer(obj.phobostype, value=True)
 
             return {'FINISHED'}
 
@@ -393,23 +393,23 @@ class AddAnnotationsOperator(bpy.types.Operator):
             devicetypes = [('None',) * 3]
         return devicetypes
 
-    asObject = BoolProperty(
+    asObject : BoolProperty(
         name="Add as objects", description="Add annotation as object(s)", default=True
     )
 
-    annotationtype = EnumProperty(
+    annotationtype : EnumProperty(
         items=getAnnotationTypes, name="Annotation Type", description="Annotation Types"
     )
 
-    annotationcategories = EnumProperty(
+    annotationcategories : EnumProperty(
         items=getAnnotationCategories,
         name="Categories",
         description="Categories of this annotation type.",
     )
 
-    devicetype = EnumProperty(items=getDeviceTypes, name="Device Type", description="Device Types")
+    devicetype : EnumProperty(items=getDeviceTypes, name="Device Type", description="Device Types")
 
-    annotation_data = bpy.props.CollectionProperty(type=DynamicProperty)
+    annotation_data : bpy.props.CollectionProperty(type=DynamicProperty)
 
     @classmethod
     def poll(cls, context):
@@ -467,13 +467,13 @@ class AddAnnotationsOperator(bpy.types.Operator):
         layout.prop(self, 'annotationtype')
 
         if self.annotationcategories == 'None':
-            layout.label('No categories available.')
+            layout.label(text='No categories available.')
         else:
             layout.prop(self, 'annotationcategories')
 
         # hide devicetype property when empty
         if self.devicetype == 'None':
-            layout.label('No devices defined.')
+            layout.label(text='No devices defined.')
             return
 
         layout.prop(self, 'devicetype')
@@ -497,7 +497,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
             # add unsupported stuff as labels
             for item in unsupported:
-                box.label(item, icon='ERROR')
+                box.label(text=item, icon='ERROR')
 
         if unsupported:
             log(
@@ -534,7 +534,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
         # reselect the original objects and additional annotation objects
         sUtils.selectObjects(objects + annot_objects, clear=True)
-        bUtils.toggleLayer(defs.layerTypes['annotation'], value=True)
+        bUtils.toggleLayer('annotation', value=True)
         return {'FINISHED'}
 
 

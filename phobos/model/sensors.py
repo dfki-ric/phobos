@@ -115,8 +115,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
       : The newly created sensor object
 
     """
-    layers = defs.layerTypes['sensor']
-    bUtils.toggleLayer(layers, value=True)
+    bUtils.toggleLayer('sensor', value=True)
 
     # create sensor object
     if sensor['shape'].startswith('resource'):

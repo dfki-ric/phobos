@@ -106,32 +106,37 @@ def deriveMaterial(mat, logging=False, errors=None):
 
     # create color dictionaries
     material['diffuseColor'] = dict(
-        zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)])
+        zip(['r', 'g', 'b'], [1.0 * num for num in list(mat.diffuse_color[:3])])
     )
     material['ambientColor'] = dict(
         zip(
             ['r', 'g', 'b'],
-            [mat.ambient * mat.diffuse_intensity * num for num in list(mat.diffuse_color)],
+            [1.0 * num for num in list(mat.diffuse_color)],
         )
     )
     material['specularColor'] = dict(
         zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)])
     )
-    if mat.emit > 0:
-        material['emissionColor'] = dict(
-            zip(
-                ['r', 'g', 'b'],
-                [mat.emit * mat.specular_intensity * num for num in list(mat.specular_color)],
-            )
-        )
-    material['shininess'] = mat.specular_hardness / 2
-    if mat.use_transparency:
-        material['transparency'] = 1.0 - mat.alpha
+    # todo: if mat.emit > 0:
+    #     material['emissionColor'] = dict(
+    #         zip(
+    #             ['r', 'g', 'b'],
+    #             [mat.emit * mat.specular_intensity * num for num in list(mat.specular_color)],
+    #         )
+    #     )
+    # todo: material['shininess'] = mat.specular_hardness / 2
+    material['shininess'] = mat.roughness * 100
+    #todo: if mat.use_transparency:
+    if mat.diffuse_color[3] != 1.0:
+        material['transparency'] = 1.0 - mat.diffuse_color[3]
 
     # return material without texture information if there are validation errors
     if errors:
         return material
 
+    if mat.node_tree:
+        textures = [x for x in mat.node_tree.nodes if x.type=='TEX_IMAGE']
+        print(textures[0])
     # there are always 18 slots, regardless of whether they are filled or not
     for tex in mat.texture_slots:
         if tex is not None:
@@ -415,24 +420,24 @@ def deriveVisual(obj, logging=True, **kwargs):
     if material:
         visual['material'] = material['name']
 
-    if obj.lod_levels:
-        if 'lodmaxdistances' in obj:
-            maxdlist = obj['lodmaxdistances']
-        else:
-            maxdlist = [obj.lod_levels[i + 1].distance for i in range(len(obj.lod_levels) - 1)] + [
-                100.0
-            ]
-        lodlist = []
-        for i in range(len(obj.lod_levels)):
-            filename = obj.lod_levels[i].object.data.name + ioUtils.getOutputMeshtype()
-            lodlist.append(
-                {
-                    'start': obj.lod_levels[i].distance,
-                    'end': maxdlist[i],
-                    'filename': os.path.join('meshes', filename),
-                }
-            )
-        visual['lod'] = lodlist
+    #todo2.9: if obj.lod_levels:
+    #     if 'lodmaxdistances' in obj:
+    #         maxdlist = obj['lodmaxdistances']
+    #     else:
+    #         maxdlist = [obj.lod_levels[i + 1].distance for i in range(len(obj.lod_levels) - 1)] + [
+    #             100.0
+    #         ]
+    #     lodlist = []
+    #     for i in range(len(obj.lod_levels)):
+    #         filename = obj.lod_levels[i].object.data.name + ioUtils.getOutputMeshtype()
+    #         lodlist.append(
+    #             {
+    #                 'start': obj.lod_levels[i].distance,
+    #                 'end': maxdlist[i],
+    #                 'filename': os.path.join('meshes', filename),
+    #             }
+    #         )
+    #     visual['lod'] = lodlist
     return visual
 
 
@@ -1023,8 +1028,23 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         # parse joint and motor information
         if sUtils.getEffectiveParent(link):
             # joint may be None if link is a root
+            # to prevent confusion links are always defining also joints
             jointdict = deriveJoint(link, logging=True, adjust=True)
             log("  Setting joint type '{}' for link.".format(jointdict['type']), 'DEBUG')
+            # first check if we have motor information in the joint properties
+            # if so they can be extended/overwritten by motor objects later on
+            if '$motor' in jointdict:
+                motordict = jointdict['$motor']
+                # at least we need a type property
+                if 'type' in motordict:
+                    # if no name is given derive it from the joint
+                    if not 'name' in motordict:
+                        motordict["name"] = jointdict['name']
+                    model['motors'][motordict['name']] = motordict
+                    # link the joint by name:
+                    motordict['joint'] = jointdict['name']
+                del jointdict['$motor']
+
             model['joints'][jointdict['name']] = jointdict
 
             for mot in [child for child in link.children if child.phobostype == 'motor']:
@@ -1032,7 +1052,10 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                 # motor may be None if no motor is attached
                 if motordict:
                     log("  Added motor {} to link.".format(motordict['name']), 'DEBUG')
-                    model['motors'][motordict['name']] = motordict
+                    if motordict['name'] in model["motors"]:
+                        model['motors'][motordict['name']].update(motordict)
+                    else:
+                        model['motors'][motordict['name']] = motordict
 
     # parse sensors and controllers
     sencons = [obj for obj in objectlist if obj.phobostype in ['sensor', 'controller']]
@@ -1067,27 +1090,27 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                 and (obj.data.name not in model['meshes'])
             ):
                 model['meshes'][obj.data.name] = obj
-                for lod in obj.lod_levels:
-                    if lod.object.data.name not in model['meshes']:
-                        model['meshes'][lod.object.data.name] = lod.object
+                #todo2.9: for lod in obj.lod_levels:
+                #     if lod.object.data.name not in model['meshes']:
+                #         model['meshes'][lod.object.data.name] = lod.object
         except KeyError:
             log("Undefined geometry type in object " + obj.name, "ERROR")
 
     # gather information on groups of objects
     log("Parsing groups...", 'INFO')
-    # TODO: get rid of the "data" part and check for relation to robot
-    for group in bpy.data.groups:
-        # skip empty groups
-        if not group.objects:
-            continue
+    #todo2.9: TODO: get rid of the "data" part and check for relation to robot
+    # for group in bpy.data.groups:
+    #     # skip empty groups
+    #     if not group.objects:
+    #         continue
 
-        # handle submodel groups separately from other groups
-        if 'submodeltype' in group.keys():
-            continue
-            # TODO create code to derive Submodels
-            # model['submodels'] = deriveSubmodel(group)
-        elif nUtils.getObjectName(group, 'group') != "RigidBodyWorld":
-            model['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
+    #     # handle submodel groups separately from other groups
+    #     if 'submodeltype' in group.keys():
+    #         continue
+    #         # TODO create code to derive Submodels
+    #         # model['submodels'] = deriveSubmodel(group)
+    #     elif nUtils.getObjectName(group, 'group') != "RigidBodyWorld":
+    #         model['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
 
     # gather information on chains of objects
     log("Parsing chains...", "INFO")
@@ -1183,7 +1206,7 @@ def buildModelFromDictionary(model):
         newobjects.extend(model['links'][lnk]['object'].children)
 
     log("Setting parent-child relationships", 'INFO', prefix='\n')
-    bUtils.toggleLayer(defs.layerTypes['link'], True)
+    bUtils.toggleLayer('link', True)
     for lnk in model['links']:
         parent = model['links'][lnk]
 
@@ -1313,6 +1336,10 @@ def gatherAnnotations(model):
         for key in element.keys():
             if key.startswith('$'):
                 category = key[1:]
+                # ignore motor properties for link and joint types
+                if category == "motor":
+                    if element['temp_type'] == "link" or element['temp_type'] == "joint":
+                        continue
                 if category not in annotations:
                     annotations[category] = {}
                 if element['temp_type'] not in annotations[category]:

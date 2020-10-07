@@ -72,7 +72,7 @@ bl_info = {
     "description": "A toolbox to enable editing of robot models in Blender.",
     "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Simon Reichel",
     "version": (1, 0, 1),
-    "blender": (2, 79, 0),
+    "blender": (2, 90, 0),
     "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
@@ -147,8 +147,14 @@ def register():
     Returns:
 
     """
+    #bpy.utils.register_module(__name__)
+    phobos.operators.selection.register()
+    phobos.operators.io.register()
+    phobos.operators.editing.register()
+    phobos.operators.generic.register()
+    phobos.operators.naming.register()
+    phobos.operators.poses.register()
     phobos.phobosgui.register()
-    bpy.utils.register_module(__name__)
 
 
 def unregister():

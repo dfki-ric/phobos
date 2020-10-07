@@ -683,11 +683,11 @@ def spin_inertia_3x3(inertia_3x3, rotmat, passive=True):
 
     if passive:
         # the object stands still but the inertia is expressed with respect to a rotated reference frame
-        rotated_inertia = R_T * I * R
+        rotated_inertia = R_T @ I @ R
 
     else:
         # the object moves and therefore its inertia
-        rotated_inertia = R * I * R_T
+        rotated_inertia = R @ I @ R_T
 
     return rotated_inertia
 

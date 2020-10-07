@@ -22,7 +22,7 @@ from phobos.phoboslog import log
 
 def deriveEntity(root, outpath):
     """Derives the dictionary for a SMURF entity from the phobos model dictionary.
-    
+
     # TODO savetosubfolder is not a parameter
 
     Args:
@@ -124,15 +124,15 @@ def gatherLevelOfDetailSettings(model):
 
 def sort_for_yaml_dump(dictionary, category):
     """Sorts the objects of the specified category in the dictionary and returns them.
-    
+
     If the category sorting is unknown, return the dictionary instead.
-    
+
     Supported categories are: *materials*, *motors*, *sensors*, *simulation*.
 
     Args:
       structure(dict): dictionary to sort
       category(str): category of the dictionary to sort
-      dictionary: 
+      dictionary:
 
     Returns:
       : list -- the elements of the specified category of the original dictionary in sorted order
@@ -157,7 +157,7 @@ def sort_dict_list(dict_list, sort_key):
 
     Args:
       dict_list: param sort_key:
-      sort_key: 
+      sort_key:
 
     Returns:
 
@@ -290,7 +290,7 @@ def exportSmurf(model, path):
     for motor in model['motors']:
         motordict = model['motors'][motor]
         controllerparams = {}
-        if motordict['controller'] in model['controllers']:
+        if 'controller' in  motordict and motordict['controller'] in model['controllers']:
             controllerparams = {
                 key: value
                 for key, value in model['controllers'][motordict['controller']].items()
@@ -310,7 +310,7 @@ def exportSmurf(model, path):
                     motordict['maxValue'] = joint['limits']['upper']
             except KeyError:
                 log(
-                    "Missing data in motor {}! Motor might be incomplete.".format(
+                    "Missing data in motor {}! No limits given for type PID. Motor might be incomplete.".format(
                         motordict['name']
                     ),
                     "WARNING",
@@ -319,11 +319,11 @@ def exportSmurf(model, path):
         elif motordict['type'] == 'direct':
             motordict['type'] = 'generic_dc'
             try:
-                motordict['minValue'] = -motordict["maxSpeed"]
+                motordict['minValue'] = -1. * motordict["maxSpeed"]
                 motordict['maxValue'] = motordict["maxSpeed"]
             except KeyError:
                 log(
-                    "Missing data in motor {}! Motor might be incomplete.".format(
+                    "Missing data in motor {}! No maxSpeed given for motor type direct. Motor might be incomplete.".format(
                         motordict['name']
                     ),
                     "WARNING",

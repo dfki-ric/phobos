@@ -126,39 +126,39 @@ class MoveToSceneOperator(Operator):
             scenes.remove('resources')
         return bUtils.compileEnumPropertyList(scenes)
 
-    scenename = StringProperty(
+    scenename : StringProperty(
         name='Scene Name', default='new', description='Name of the scene to which to add selection'
     )
 
-    scene = EnumProperty(
+    scene : EnumProperty(
         name='Scene', items=getSceneEnumProperty, description='List of available scenes'
     )
 
-    new = BoolProperty(name='New', default=True, description="Create new scene for configuration")
+    new : BoolProperty(name='New', default=True, description="Create new scene for configuration")
 
-    truecopy = BoolProperty(
+    truecopy : BoolProperty(
         name='Copy selected', default=False, description="Copy selected objects from active scene"
     )
 
-    link_obdata = BoolProperty(
+    link_obdata : BoolProperty(
         name='Link mesh data', default=True, description="Link mesh data to new objects"
     )
 
-    link_material = BoolProperty(
+    link_material : BoolProperty(
         name='Link material data', default=True, description="Link material data to new objects"
     )
 
-    link_texture = BoolProperty(
+    link_texture : BoolProperty(
         name='Link texture data', default=True, description="Link texture data to new objects"
     )
 
-    remove = BoolProperty(
+    remove : BoolProperty(
         name='Remove selected',
         default=False,
         description='Remove selected objects from active scene',
     )
 
-    init = BoolProperty(
+    init : BoolProperty(
         name='Link current scene',
         default=True,
         description="Link all unselected objects from the current scene",
@@ -350,7 +350,7 @@ class AddKinematicChainOperator(Operator):
     bl_label = "Add Kinematic Chain"
     bl_options = {'REGISTER', 'UNDO'}
 
-    chainname = StringProperty(
+    chainname : StringProperty(
         name='Chain Name', default='new_chain', description='Name of the chain to be created'
     )
 
@@ -409,16 +409,16 @@ class SetXRayOperator(Operator):
     bl_label = "X-Ray Vision"
     bl_options = {'REGISTER', 'UNDO'}
 
-    objects = EnumProperty(
+    objects : EnumProperty(
         name="Objects",
         default='selected',
         items=(('all',) * 3, ('selected',) * 3, ('by name',) * 3) + defs.phobostypes,
         description="Show objects via x-ray",
     )
 
-    show = BoolProperty(name="Enable X-Ray", default=True, description="Enable or disable X-Ray")
+    show : BoolProperty(name="Enable X-Ray", default=True, description="Enable or disable X-Ray")
 
-    namepart = StringProperty(
+    namepart : StringProperty(
         name="Name Contains",
         default="",
         description="Part of a name for objects to be selected in 'by name' mode",
@@ -487,7 +487,7 @@ class SetPhobosType(Operator):
     bl_label = "Set Phobostype"
     bl_options = {'REGISTER', 'UNDO'}
 
-    phobostype = EnumProperty(
+    phobostype : EnumProperty(
         items=defs.phobostypes, name="Phobostype", default="undefined", description="Phobostype"
     )
 
@@ -541,9 +541,9 @@ class BatchEditPropertyOperator(Operator):
     bl_label = "Edit Custom Property"
     bl_options = {'REGISTER', 'UNDO'}
 
-    property_name = StringProperty(name="Name", default="", description="Custom property name")
+    property_name : StringProperty(name="Name", default="", description="Custom property name")
 
-    property_value = StringProperty(name="Value", default="", description="Custom property value")
+    property_value : StringProperty(name="Value", default="", description="Custom property value")
 
     def execute(self, context):
         """
@@ -586,19 +586,19 @@ class CreateInterfaceOperator(Operator):
     bl_label = "Create Interface"
     bl_options = {'REGISTER', 'UNDO'}
 
-    interface_name = StringProperty(name='name', default='interface')
+    interface_name : StringProperty(name='name', default='interface')
 
-    interface_type = StringProperty(name='type', default='default')
+    interface_type : StringProperty(name='type', default='default')
 
-    interface_direction = EnumProperty(
+    interface_direction : EnumProperty(
         name='direction',
         items=bUtils.compileEnumPropertyList(('outgoing', 'incoming', 'bidirectional')),
         default='outgoing',
     )
 
-    all_selected = BoolProperty(name='all selected', default=False)
+    all_selected : BoolProperty(name='all selected', default=False)
 
-    scale = FloatProperty(name='scale', default=1.0)
+    scale : FloatProperty(name='scale', default=1.0)
 
     def execute(self, context):
         """
@@ -647,7 +647,7 @@ class CopyCustomProperties(Operator):
     bl_label = "Copy Custom Properties"
     bl_options = {'REGISTER', 'UNDO'}
 
-    empty_properties = BoolProperty(name='empty', default=False, description="empty properties?")
+    empty_properties : BoolProperty(name='empty', default=False, description="empty properties?")
 
     def execute(self, context):
         """
@@ -692,15 +692,15 @@ class RenameCustomProperty(Operator):
     bl_label = "Rename Custom Property"
     bl_options = {'REGISTER', 'UNDO'}
 
-    find = StringProperty(
+    find : StringProperty(
         name="Find Property Name", default='', description="Name to be searched for"
     )
 
-    replace = StringProperty(
+    replace : StringProperty(
         name="Replacement Name", default='', description="New name to be replaced with"
     )
 
-    overwrite = BoolProperty(
+    overwrite : BoolProperty(
         name='Overwrite Existing Properties',
         default=False,
         description="If a property of the specified replacement name exists, overwrite it?",
@@ -754,7 +754,7 @@ class SetGeometryType(Operator):
     bl_label = "Define Geometry"
     bl_options = {'UNDO'}
 
-    geomType = EnumProperty(
+    geomType : EnumProperty(
         items=defs.geometrytypes, name="Type", default="box", description="Phobos geometry type"
     )
 
@@ -843,6 +843,7 @@ class SmoothenSurfaceOperator(Operator):
             eUtils.smoothen_surface(obj)
             display.setProgress(i / len(context.selected_objects))
             i += 1
+        display.endProgress()
         return {'FINISHED'}
 
     @classmethod
@@ -866,11 +867,11 @@ class EditInertialData(Operator):
     bl_label = "Edit Mass/Inertia"
     bl_options = {'UNDO'}
 
-    changeInertia = BoolProperty(
+    changeInertia : BoolProperty(
         name="Change inertia", default=True, description="Change inertia values"
     )
 
-    inertiavector = FloatVectorProperty(
+    inertiavector : FloatVectorProperty(
         name="Inertia Vector",
         default=[1e-3, 1e-3, 1e-3, 1e-3, 1e-3, 1e-3],
         subtype='NONE',
@@ -879,9 +880,9 @@ class EditInertialData(Operator):
         description="New inertia values for the inertial objects",
     )
 
-    changeMass = BoolProperty(name="Change mass", default=True, description="Change mass values")
+    changeMass : BoolProperty(name="Change mass", default=True, description="Change mass values")
 
-    mass = FloatProperty(
+    mass : FloatProperty(
         name='Mass',
         default=1e-3,
         description="New mass for the inertial objects (in kg)",
@@ -1000,27 +1001,27 @@ class GenerateInertialObjectsOperator(Operator):
     bl_label = "Create Inertials"
     bl_options = {'REGISTER', 'UNDO'}
 
-    mass = FloatProperty(name='Mass', default=0.001, description="Mass (of active object) in kg")
+    mass : FloatProperty(name='Mass', default=0.001, description="Mass (of active object) in kg")
 
-    derive_inertia_from_geometry = BoolProperty(
+    derive_inertia_from_geometry : BoolProperty(
         name="Calculate inertia from geometry ",
         default=True,
         description="Derive inertia value(s) from geometry of visual or collision objects.",
     )
 
-    clear = BoolProperty(
+    clear : BoolProperty(
         name="Clear existing inertial objects",
         default=True,
         description="Clear existing inertial objects of selected links.",
     )
 
-    visuals = BoolProperty(
+    visuals : BoolProperty(
         name="visual",
         default=True,
         description="Use the selected visual objects for inertial creation.",
     )
 
-    collisions = BoolProperty(
+    collisions : BoolProperty(
         name="collision",
         default=True,
         description="Use the selected visual objects for inertial creation.",
@@ -1068,14 +1069,14 @@ class GenerateInertialObjectsOperator(Operator):
             visuals = [obj for obj in geometric_objects if obj.phobostype == 'visual']
             collisions = [obj for obj in geometric_objects if obj.phobostype == 'collision']
 
-            layout.label("Use geometry objects:")
+            layout.label(text="Use geometry objects:")
             row = layout.row(align=True)
             if not visuals:
-                row.label('visuals')
+                row.label(text='visuals')
             else:
                 row.prop(self, 'visuals', toggle=True)
             if not collisions:
-                row.label('collisions')
+                row.label(text='collisions')
             else:
                 row.prop(self, 'collisions', toggle=True)
 
@@ -1146,7 +1147,7 @@ class GenerateInertialObjectsOperator(Operator):
             # update progress bar
             display.setProgress(i / linkcount)
             i += 1
-
+        display.endProgress()
         # select the new inertialobjects
         if new_inertial_objects:
             sUtils.selectObjects(new_inertial_objects, clear=True)
@@ -1237,7 +1238,7 @@ class CreateCollisionObjects(Operator):
     bl_label = "Create Collision Object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    property_colltype = EnumProperty(
+    property_colltype : EnumProperty(
         name='Collision Type', default='box', description="Collision type", items=defs.geometrytypes
     )
 
@@ -1257,7 +1258,7 @@ class CreateCollisionObjects(Operator):
         for obj in context.selected_objects:
             if obj.phobostype == "visual":
                 visuals.append(obj)
-            obj.select = False
+            obj.select_set(False)
 
         if not visuals:
             log("No visual objects selected.", "ERROR", self)
@@ -1305,10 +1306,10 @@ class CreateCollisionObjects(Operator):
                 size = max(size) / 2
 
             # combine bbox center with the object transformation
-            center = (vis.matrix_world * mathutils.Matrix.Translation(center)).to_translation()
+            center = (vis.matrix_world @ mathutils.Matrix.Translation(center)).to_translation()
             # combine center with optional rotation (cylinder) and object transformation
             rotation_euler = (
-                vis.matrix_world * rotation * mathutils.Matrix.Translation(center)
+                vis.matrix_world @ rotation @ mathutils.Matrix.Translation(center)
             ).to_euler()
 
             # create Mesh
@@ -1317,7 +1318,6 @@ class CreateCollisionObjects(Operator):
                     collname,
                     self.property_colltype,
                     size,
-                    player=defs.layerTypes['collision'],
                     pmaterial=materialname,
                     plocation=center,
                     protation=rotation_euler,
@@ -1347,10 +1347,10 @@ class CreateCollisionObjects(Operator):
 
             # make collision object relative if visual object has a parent
             if vis.parent:
-                ob.select = True
+                ob.select_set(True)
 
                 bpy.ops.object.transform_apply(scale=True)
-                vis.parent.select = True
+                vis.parent.select_set(True)
                 eUtils.parentObjectsTo(context.selected_objects, vis.parent)
 
             # select created collision objects
@@ -1377,7 +1377,7 @@ class SetCollisionGroupOperator(Operator):
     bl_label = "Set Collision Group(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    groups = BoolVectorProperty(
+    groups : BoolVectorProperty(
         name='Collision Groups',
         size=20,
         subtype='LAYER',
@@ -1425,11 +1425,11 @@ class SetCollisionGroupOperator(Operator):
                 obj.rigid_body.collision_groups = self.groups
             # initialize rigid body settings if necessary
             except AttributeError:
-                context.scene.objects.active = obj
+                context.view_layer.objects.active = obj
                 bpy.ops.rigidbody.object_add(type='ACTIVE')
                 obj.rigid_body.kinematic = True
                 obj.rigid_body.collision_groups = self.groups
-        context.scene.objects.active = active_object
+        context.view_layer.objects.active = active_object
         return {'FINISHED'}
 
     @classmethod
@@ -1453,40 +1453,40 @@ class DefineJointConstraintsOperator(Operator):
     bl_label = "Define Joint(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    passive = BoolProperty(
+    passive : BoolProperty(
         name='Passive', default=False, description='Make the joint passive (no actuation)'
     )
 
-    useRadian = BoolProperty(
+    useRadian : BoolProperty(
         name='Use Radian', default=True, description='Use degrees or rad for joints'
     )
 
-    joint_type = EnumProperty(
+    joint_type : EnumProperty(
         name='Joint Type',
         default='revolute',
         description="Type of the joint",
         items=defs.jointtypes,
     )
 
-    lower = FloatProperty(name="Lower", default=0.0, description="Lower constraint of the joint")
+    lower : FloatProperty(name="Lower", default=0.0, description="Lower constraint of the joint")
 
-    upper = FloatProperty(name="Upper", default=0.0, description="Upper constraint of the joint")
+    upper : FloatProperty(name="Upper", default=0.0, description="Upper constraint of the joint")
 
-    maxeffort = FloatProperty(
+    maxeffort : FloatProperty(
         name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
 
-    maxvelocity = FloatProperty(
+    maxvelocity : FloatProperty(
         name="Max Velocity (m/s or rad/s)",
         default=0.0,
         description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
     )
 
-    spring = FloatProperty(
+    spring : FloatProperty(
         name="Spring Constant", default=0.0, description="Spring constant of the joint"
     )
 
-    damping = FloatProperty(
+    damping : FloatProperty(
         name="Damping Constant", default=0.0, description="Damping constant of the joint"
     )
 
@@ -1573,7 +1573,7 @@ class DefineJointConstraintsOperator(Operator):
 
         # set properties for each joint
         for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
-            context.scene.objects.active = joint
+            context.view_layer.objects.active = joint
             jUtils.setJointConstraints(
                 joint, self.joint_type, lower, upper, self.spring, self.damping
             )
@@ -1616,7 +1616,7 @@ class DissolveLink(Operator):
     bl_label = "Dissolve Link(s)"
     bl_options = {"UNDO"}
 
-    delete = BoolProperty(
+    delete : BoolProperty(
         name='Delete Other', default=False, description='Delete all non reparented children'
     )
 
@@ -1753,19 +1753,19 @@ class AddMotorOperator(Operator):
 
         return items
 
-    categ = EnumProperty(items=categorylist, description='The motor category')
-    motorType = EnumProperty(items=motorlist, description='The motor type')
-    addToAllJoints = BoolProperty(
+    categ : EnumProperty(items=categorylist, description='The motor category')
+    motorType : EnumProperty(items=motorlist, description='The motor type')
+    addToAllJoints : BoolProperty(
         name="Add to all", default=True, description="Add a motor to all selected joints"
     )
-    addControllers = BoolProperty(
+    addControllers : BoolProperty(
         name="Add controller",
         default=False,
         description="Add the controller object specified in the motor definitions",
     )
-    motorName = StringProperty(
-        name="Motor name", default='new_motor', description="Name of the motor"
-    )
+    #motorName : StringProperty(
+    #    name="Motor name", default='new_motor', description="Name of the motor"
+    #)
 
     def draw(self, context):
         """
@@ -1777,12 +1777,13 @@ class AddMotorOperator(Operator):
 
         """
         layout = self.layout
-        layout.prop(self, 'motorName')
-        layout.separator()
+        #layout.prop(self, 'motorName')
+        #layout.separator()
         layout.prop(self, 'categ', text='Motor category')
         layout.prop(self, 'motorType', text='Motor type')
         layout.prop(self, 'addToAllJoints', icon='PARTICLES')
-        layout.prop(self, 'addControllers', icon='GAME')
+        #todo2.9: layout.prop(self, 'addControllers', icon='GAME')
+        layout.prop(self, 'addControllers')
 
     def invoke(self, context, event):
         """
@@ -1847,7 +1848,7 @@ class AddMotorOperator(Operator):
         # hide controller property when creating controllers on the fly
         hideproperties = [] if not self.addControllers else ['controller']
         opName = addObjectFromYaml(
-            self.motorName,
+            '',
             'motor',
             self.motorType,
             addMotorFromYaml,
@@ -1902,6 +1903,7 @@ def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
     controller_objs = []
     for joint in joints:
         pos_matrix = joint.matrix_world
+        motor_dict['name'] = ''
         motor_obj = modelmotors.createMotor(
             motor_dict, joint, pos_matrix, addcontrollers=addcontrollers
         )
@@ -1936,30 +1938,30 @@ class CreateLinksOperator(Operator):
     bl_label = "Create Link(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    location = EnumProperty(
+    location : EnumProperty(
         items=(('3D cursor',) * 3, ('selected objects',) * 3),
         default='3D cursor',
         name='Location',
         description='Where to create new link(s)?',
     )
 
-    size = FloatProperty(name="Visual Size", default=1.0, description="Size of the created link")
+    size : FloatProperty(name="Visual Size", default=1.0, description="Size of the created link")
 
-    parent_link = BoolProperty(
+    parent_link : BoolProperty(
         name="Parent Link", default=False, description="Parent link to object's parents"
     )
 
-    parent_objects = BoolProperty(
+    parent_objects : BoolProperty(
         name='Parent Objects', default=False, description='Parent children of object to new link'
     )
 
-    nameformat = StringProperty(
+    nameformat : StringProperty(
         name="Name Format",
         description="Provide a string containing {0} {1} etc. to reuse parts of objects' names.",
         default='',
     )
 
-    linkname = StringProperty(
+    linkname : StringProperty(
         name="Link Name", description="A name for a single newly created link.", default='new_link'
     )
 
@@ -2154,12 +2156,12 @@ class AddSensorOperator(Operator):
 
         return items
 
-    categ = EnumProperty(items=categorylist, description='The sensor category')
-    sensorType = EnumProperty(items=sensorlist, description='The sensor type')
-    addLink = BoolProperty(
+    categ : EnumProperty(items=categorylist, description='The sensor category')
+    sensorType : EnumProperty(items=sensorlist, description='The sensor type')
+    addLink : BoolProperty(
         name="Add link", default=True, description="Add additional link as sensor mounting"
     )
-    sensorName = StringProperty(
+    sensorName : StringProperty(
         name="Sensor name", default='new_sensor', description="Name of the sensor"
     )
 
@@ -2343,22 +2345,23 @@ class AddControllerOperator(Operator):
             if categ == 'motor':
                 icon = 'AUTO'
             else:
-                icon = 'GAME'
+                #icon = 'GAME'
+                icon = ''
 
             items.append((categ, categ, categ, icon, i))
             i += 1
 
         return items
 
-    categ = EnumProperty(items=categorylist, description='The controller category')
+    categ : EnumProperty(items=categorylist, description='The controller category')
 
-    controllerType = EnumProperty(items=controllerlist, description='The controller type')
+    controllerType : EnumProperty(items=controllerlist, description='The controller type')
 
-    controllerName = StringProperty(
+    controllerName : StringProperty(
         name="Controller name", default='new_controller', description="Name of the controller"
     )
 
-    addToAll = BoolProperty(
+    addToAll : BoolProperty(
         name="Add to all",
         default=True,
         description="Add a controller to all controllable selected objects",
@@ -2490,15 +2493,15 @@ class CreateMimicJointOperator(Operator):
     bl_label = "Mimic Joint"
     bl_options = {'REGISTER', 'UNDO'}
 
-    multiplier = FloatProperty(
+    multiplier : FloatProperty(
         name="Multiplier", default=1.0, description="Multiplier for joint mimicry"
     )
 
-    offset = FloatProperty(name="Offset", default=0.0, description="Offset for joint mimicry")
+    offset : FloatProperty(name="Offset", default=0.0, description="Offset for joint mimicry")
 
-    mimicjoint = BoolProperty(name="Mimic Joint", default=True, description="Create joint mimicry")
+    mimicjoint : BoolProperty(name="Mimic Joint", default=True, description="Create joint mimicry")
 
-    mimicmotor = BoolProperty(name="Mimic Motor", default=False, description="Create motor mimicry")
+    mimicmotor : BoolProperty(name="Mimic Motor", default=False, description="Create motor mimicry")
 
     def execute(self, context):
         """
@@ -2551,29 +2554,29 @@ class AddHeightmapOperator(Operator):
     bl_label = "Create heightmap"
     bl_options = {'REGISTER', 'UNDO'}
 
-    name = StringProperty(
+    name : StringProperty(
         name="Name", description="The name of the new heightmap object", default="heightmap"
     )
 
-    cutNo = IntProperty(
+    cutNo : IntProperty(
         name="Number of cuts", description="Number of cuts for subdivision", default=100
     )
 
-    strength = FloatProperty(
+    strength : FloatProperty(
         name="Displacement strength", description="Strength of the displacement effect", default=0.1
     )
 
-    subsurf = BoolProperty(
+    subsurf : BoolProperty(
         name="Use subsurf", description="Use subsurf modifier to smoothen surface", default=False
     )
 
-    subsurflvl = IntProperty(
+    subsurflvl : IntProperty(
         name="Subsurf subdivisions",
         description="Number of divisions for subsurf smoothing",
         default=2,
     )
 
-    filepath = StringProperty(subtype="FILE_PATH")
+    filepath : StringProperty(subtype="FILE_PATH")
 
     def draw(self, context):
         """
@@ -2616,7 +2619,7 @@ class AddHeightmapOperator(Operator):
         h_tex.image = img
 
         # Add plane as single object (phobostype visual)
-        if context.scene.objects.active:
+        if context.view_layer.objects.active:
             bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.mesh.primitive_plane_add(view_align=False, enter_editmode=False)
         plane = context.active_object
@@ -2653,7 +2656,7 @@ class AddHeightmapOperator(Operator):
         root['joint/type'] = 'fixed'
 
         # select the plane object for further adjustments
-        context.scene.objects.active = plane
+        context.view_layer.objects.active = plane
 
         # FIXME this GUI "hack" does not work, as the buttons context enum is not updated while the operator is running @HEIGHTMAP (30)
         # current_screen = bpy.context.screen.name
@@ -2725,15 +2728,15 @@ class AddSubmodel(Operator):
         submodellist = set(submodellist)
         return [(a, a, a + ' submodel type') for a in submodellist]
 
-    submodeltype = EnumProperty(
+    submodeltype : EnumProperty(
         name="Submodel type", description="Type of the submodel", items=submodeltypes
     )
 
-    submodelname = EnumProperty(
+    submodelname : EnumProperty(
         name="Submodel name", description="Name of the submodel", items=submodelnames
     )
 
-    instancename = StringProperty(name="Instance name", default='')
+    instancename : StringProperty(name="Instance name", default='')
 
     def check(self, context):
         """
@@ -2814,15 +2817,15 @@ class DefineSubmodel(Operator):
     bl_label = "Define Submodel"
     bl_options = {'REGISTER', 'UNDO'}
 
-    submodelname = StringProperty(
+    submodelname : StringProperty(
         name="Submodel name", description="Name of the submodel", default='newsubmodel'
     )
 
-    version = StringProperty(
+    version : StringProperty(
         name="Version name", description="Name of the submodel version", default='1.0'
     )
 
-    submodeltype = EnumProperty(
+    submodeltype : EnumProperty(
         items=tuple([(sub,) * 3 for sub in defs.definitions['submodeltypes']]),
         name="Submodel type",
         default="mechanism",
@@ -2861,20 +2864,20 @@ class AssignSubmechanism(Operator):
     bl_label = "Assign Submechanism"
     bl_options = {'REGISTER', 'UNDO'}
 
-    # mechanism_type = EnumProperty(
+    # mechanism_type : EnumProperty(
     #    name="Submechanism type",
     #    items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
     #    )
     # maybe add size in brackets? lambda_mechanism(3) / [3] lambda_mechanism
 
-    # mechanism_category = EnumProperty(
+    # mechanism_category : EnumProperty(
     #    name="Submechanism category",
     #    items=bUtils.compileEnumPropertyList(defs.definitions['submechanisms'].keys()),
     #    )
 
-    linear_chain = BoolProperty(name='Serial Chain', default=False)
+    linear_chain : BoolProperty(name='Serial Chain', default=False)
 
-    mechanism_name = StringProperty(name='Name')
+    mechanism_name : StringProperty(name='Name')
 
     joints = []
 
@@ -2916,22 +2919,22 @@ class AssignSubmechanism(Operator):
         else:
             return jointlist
 
-    jointtype0 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype1 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype2 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype3 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype4 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype5 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype6 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype7 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype8 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype9 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype10 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype11 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype12 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype13 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype14 = EnumProperty(items=compileSubmechanismTreeEnum)
-    jointtype15 = EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype0 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype1 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype2 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype3 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype4 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype5 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype6 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype7 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype8 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype9 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype10 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype11 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype12 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype13 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype14 : EnumProperty(items=compileSubmechanismTreeEnum)
+    jointtype15 : EnumProperty(items=compileSubmechanismTreeEnum)
 
     @classmethod
     def poll(cls, context):
@@ -2958,7 +2961,7 @@ class AssignSubmechanism(Operator):
         """
         wm = context.window_manager
         layout = self.layout
-        layout.label('Selection contains {0} joints.'.format(len(self.joints)))
+        layout.label(text='Selection contains {0} joints.'.format(len(self.joints)))
         layout.prop(self, 'linear_chain')
         layout.prop(self, 'mechanism_name')
         if not self.linear_chain:
@@ -2972,10 +2975,10 @@ class AssignSubmechanism(Operator):
                 c1 = glayout.column(align=True)
                 c2 = glayout.column(align=True)
                 for i in range(size):
-                    c1.label(nUtils.getObjectName(self.joints[i], 'joint') + ':')
+                    c1.label(text=nUtils.getObjectName(self.joints[i], 'joint') + ':')
                     c2.prop(self, "jointtype" + str(i), text='')
             else:
-                layout.label('Please choose a valid type for selected joints.')
+                layout.label(text='Please choose a valid type for selected joints.')
 
     def execute(self, context):
         """
@@ -3069,7 +3072,7 @@ class SelectSubmechanism(Operator):
             [r['submechanism/name'] for r in sUtils.getSubmechanismRoots()]
         )
 
-    submechanism = EnumProperty(
+    submechanism : EnumProperty(
         name="Submechanism",
         description="submechanism which to select",
         items=get_submechanism_roots,
@@ -3150,7 +3153,7 @@ class DeleteSubmechanism(Operator):
             [r['submechanism/name'] for r in sUtils.getSubmechanismRoots()]
         )
 
-    submechanism = EnumProperty(
+    submechanism : EnumProperty(
         name="Submechanism", description="submechanism to remove", items=get_submechanism_roots
     )
 
@@ -3220,7 +3223,7 @@ class ToggleInterfaces(Operator):
     bl_label = "Toggle Interfaces"
     bl_options = {'REGISTER', 'UNDO'}
 
-    mode = EnumProperty(
+    mode : EnumProperty(
         name="Toggle mode",
         description="The mode in which to display the interfaces",
         items=(('toggle',) * 3, ('activate',) * 3, ('deactivate',) * 3),
@@ -3370,7 +3373,7 @@ class MergeLinks(Operator):
     bl_label = "Merge Links"
     bl_options = {'REGISTER', 'UNDO'}
 
-    movetotarget = BoolProperty(name='move to target', default=False)
+    movetotarget : BoolProperty(name='move to target', default=False)
 
     @classmethod
     def poll(cls, context):
@@ -3478,7 +3481,7 @@ class SetModelRoot(Operator):
 #     bl_label = "Select Erroneous Object"
 #     bl_options = {'REGISTER', 'UNDO'}
 #
-#     errorObj = EnumProperty(
+#     errorObj : EnumProperty(
 #         name="Erroneous Objects",
 #         items=defs.generateCheckMessages,
 #         description="The objects containing errors")
@@ -3525,7 +3528,7 @@ class CalculateMassOperator(Operator):
     bl_idname = "phobos.calculate_mass"
     bl_label = "Calculate Mass"
 
-    mass = FloatProperty(name='Mass', default=0.0, description="Calculated sum of masses")
+    mass : FloatProperty(name='Mass', default=0.0, description="Calculated sum of masses")
 
     def invoke(self, context, event):
         """
@@ -3562,7 +3565,7 @@ class CalculateMassOperator(Operator):
         Returns:
 
         """
-        self.layout.label("Sum of masses: " + str(self.mass))
+        self.layout.label(text="Sum of masses: " + str(self.mass))
 
 
 class MeasureDistanceOperator(Operator):
@@ -3572,7 +3575,7 @@ class MeasureDistanceOperator(Operator):
     bl_label = "Measure Distance"
     bl_options = {'REGISTER'}
 
-    distance = FloatProperty(
+    distance : FloatProperty(
         name="Distance",
         default=0.0,
         subtype='DISTANCE',
@@ -3581,7 +3584,7 @@ class MeasureDistanceOperator(Operator):
         description="Distance between objects",
     )
 
-    distVector = FloatVectorProperty(
+    distVector : FloatVectorProperty(
         name="Distance Vector",
         default=(0.0, 0.0, 0.0),
         subtype='TRANSLATION',
@@ -3616,12 +3619,52 @@ class MeasureDistanceOperator(Operator):
         """
         return len(context.selected_objects) == 2
 
+classes = (
+    SafelyRemoveObjectsFromSceneOperator,
+    MoveToSceneOperator,
+    SortObjectsToLayersOperator,
+    AddKinematicChainOperator,
+    SetXRayOperator,
+    SetPhobosType,
+    BatchEditPropertyOperator,
+    CreateInterfaceOperator,
+    CopyCustomProperties,
+    RenameCustomProperty,
+    SetGeometryType,
+    SmoothenSurfaceOperator,
+    EditInertialData,
+    GenerateInertialObjectsOperator,
+    EditYAMLDictionary,
+    CreateCollisionObjects,
+    SetCollisionGroupOperator,
+    DefineJointConstraintsOperator,
+    DissolveLink,
+    AddMotorOperator,
+    CreateLinksOperator,
+    AddSensorOperator,
+    AddControllerOperator,
+    CreateMimicJointOperator,
+    AddHeightmapOperator,
+    AddSubmodel,
+    DefineSubmodel,
+    AssignSubmechanism,
+    SelectSubmechanism,
+    DeleteSubmechanism,
+    ToggleInterfaces,
+    ConnectInterfacesOperator,
+    DisconnectInterfaceOperator,
+    MergeLinks,
+    SetModelRoot,
+    ValidateOperator,
+    CalculateMassOperator,
+    MeasureDistanceOperator,
+)
 
 def register():
     """TODO Missing documentation"""
     print("Registering operators.editing...")
     # TODO this seems not to be very convenient...
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    for classdef in classes:
         bpy.utils.register_class(classdef)
 
 
@@ -3629,5 +3672,5 @@ def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.editing...")
     # TODO this seems not to be very convenient...
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    for classdef in classes:
         bpy.utils.unregister_class(classdef)

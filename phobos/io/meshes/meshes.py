@@ -59,7 +59,7 @@ def exportMesh(obj, path, meshtype):
     elif meshtype == 'dae':
         bpy.ops.wm.collada_export(filepath=outpath, selected=True)
     bpy.ops.object.select_all(action='DESELECT')
-    tmpobject.select = True
+    tmpobject.select_set(True)
     bpy.ops.object.delete()
     obj.name = tmpobjname
 
@@ -95,7 +95,7 @@ def importMesh(filepath, meshtype):
     # leaving a rotation in the matrix_basis, which we here get rid of
     if meshtype == 'obj':
         bpy.ops.object.select_all(action='DESELECT')
-        newgeom.select = True
+        newgeom.select_set(True)
         bpy.ops.object.transform_apply(rotation=True)
 
     # clean the tag
