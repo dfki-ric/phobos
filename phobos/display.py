@@ -561,7 +561,9 @@ def setProgress(value, info=None):
     global progressinfo
     c = bpy.context
     c.window_manager.progress = value
-    bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
+    import sys
+    if not "-b" in sys.argv:
+        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
     progressinfo = info
     #
     # for area in c.screen.areas:
