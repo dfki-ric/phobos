@@ -1127,17 +1127,19 @@ class GenerateInertialObjectsOperator(Operator):
         new_inertial_objects = []
         for obj in objectlist:
             i = 1
-
+            mass = self.mass
             # calculate pose and inertia for the new object
             if self.derive_inertia_from_geometry:
-                inertia = inertialib.calculateInertia(obj, self.mass, adjust=True, logging=True)
+                if "mass" in obj:
+                    mass = obj["mass"]
+                inertia = inertialib.calculateInertia(obj, mass, adjust=True, logging=True)
                 pose = obj.matrix_local.to_translation()
             else:
                 inertia = [1e-3, 0., 0., 1e-3, 0., 1e-3]
                 pose = mathutils.Vector((0.0, 0.0, 0.0))
 
             # create object from dictionary
-            inertialdict = {'mass': self.mass, 'inertia': inertia, 'pose': {'translation': pose}}
+            inertialdict = {'mass': mass, 'inertia': inertia, 'pose': {'translation': pose}}
             newinertial = inertialib.createInertial(inertialdict, obj, adjust=True, logging=True)
 
             if newinertial:
