@@ -570,6 +570,8 @@ def setProgress(value, info=None):
         win.progress_update(value*100)
         progressinfo = value
     #c.window_manager.progress = value
+    #import sys
+    #    if not "-b" in sys.argv:
     #bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
     #progressinfo = info
     #
