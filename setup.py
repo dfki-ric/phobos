@@ -86,6 +86,39 @@ if __name__ == '__main__':
             blender_executable = conffile.readline().split(' #')[0]
             python_version = conffile.readline().split(' #')[0]
             blender_version = conffile.readline().split(' #')[0]
+    elif sys.platform == 'linux':
+        blender_path = path.join(path.expanduser('~'), '.config', 'blender')
+        blender_version = glob.glob(path.join(blender_path, '[0-9].[0-9][0-9]'))
+        if not blender_version or not path.isdir(blender_version[0]):
+            print(f"Could not identify the blender config folder {blender_path}.")
+            print("Installation aborted!")
+            sys.exit(1)
+        blender_version = path.basename(blender_version[0])
+        blender_executable = path.abspath(path.join(os.sep, 'usr', 'bin', 'blender'))
+        if not path.isfile(blender_executable):
+            print(f"Could not find the blender executable {blender_executable}.")
+            print("Installation aborted!")
+            sys.exit(1)
+        python_version = '3.6'
+        python_executable = path.abspath(path.join(os.sep, 'usr','bin',f'python{python_version}'))
+        if not path.isfile(python_executable):
+            print(f"Could not find the python executable {python_executable}.")
+            print("Installation aborted!")
+            sys.exit(1)
+        python_package_path = path.abspath(path.join(os.sep, 'usr','local','lib',f'python{python_version}','dist-packages'))
+        if not path.isdir(python_package_path):
+            print(f"Could not identify the python packages folder {python_package_path}.")
+            print("Installation aborted!")
+            sys.exit(1)
+        # write python dist packages path into config file
+        with open(path.join(phoboshome, 'installation.conf'), 'w') as distconffile:
+            distconffile.truncate()
+            distconffile.write(python_package_path + ' # Python package installation path\n')
+            distconffile.write(blender_path + ' # Blender installation path\n')
+            distconffile.write(python_executable + ' # python executable\n')
+            distconffile.write(blender_executable + ' # Blender executable\n')
+            distconffile.write(python_version + ' # Python version\n')
+            distconffile.write(blender_version + ' # Blender version\n')
     # check for existing YAML installation
     else:
         if not blender_path:
