@@ -346,15 +346,19 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         if len(minmax) == 2:
             limits['lower'] = minmax[0]
             limits['upper'] = minmax[1]
-    if 'maxvelocity' in props:
-        limits['velocity'] = props['maxvelocity']
-        del props['maxvelocity']
-    if 'maxeffort' in props:
-        limits['effort'] = props['maxeffort']
-        del props['maxeffort']
+    if 'maxSpeed' in props:
+        limits['velocity'] = props['maxSpeed']
+        del props['maxSpeed']
+    if 'maxEffort' in props:
+        limits['effort'] = props['maxEffort']
+        del props['maxEffort']
     if limits != {}:
         props['limits'] = limits
     props['pose'] = deriveObjectPose(obj)
+    if "$motor" in props:
+        # transfer motor limits
+        props["$motor"]["maxEffort"] = limits['effort']
+        props["$motor"]["maxSpeed"] = limits['velocity']
     # TODO: what about these?
     # - calibration
     # - dynamics

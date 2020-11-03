@@ -1556,7 +1556,7 @@ def register():
     supportedCategories = {
         'collision': {'icon_value': 'PHYSICS'},
         'visual': {'icon_value': 'RESTRICT_VIEW_OFF'},
-        'inertial': {'icon_value': 'TEXTURE_SHADED'},
+        'inertial': {'icon_value': 'SHADING_TEXTURE'},
         'joint': {'icon_value': 'FORCE_HARMONIC'},
         'sensor': {'icon_value': 'OUTLINER_OB_FORCE_FIELD'},
     }

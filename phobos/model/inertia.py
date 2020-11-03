@@ -64,7 +64,7 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
         phobostype='inertial',
     )
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
-    bpy.ops.object.transform_apply(scale=True)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
 
     # set position according to the parent link
     inertialobject.matrix_world = obj.matrix_world
@@ -76,7 +76,7 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
     # position and parent the inertial object relative to the link
     # inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
-    # bpy.ops.object.transform_apply(scale=True)
+    #bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
 
     # add properties to the object
     for prop in ('mass', 'inertia'):

@@ -155,6 +155,7 @@ def deriveMotor(obj, jointdict=None):
 
     props['joint'] = nUtils.getObjectName(obj.parent, phobostype='joint')
 
+    # todo: transfer joint limits to motor properties
     # check for a mimic motor
     for k in (obj.parent).keys():
         # Check for mimic motor

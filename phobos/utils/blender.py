@@ -135,7 +135,7 @@ def createPrimitive(
         obj.dimensions = psize
     elif ptype == "sphere":
         bpy.ops.mesh.primitive_uv_sphere_add(
-            size=psize, location=plocation, rotation=protation
+            radius=psize, location=plocation, rotation=protation
         )
     elif ptype == "cylinder":
         bpy.ops.mesh.primitive_cylinder_add(
@@ -166,7 +166,7 @@ def createPrimitive(
         )
     elif ptype == 'ico':
         bpy.ops.mesh.primitive_ico_sphere_add(
-            size=psize, location=plocation, rotation=protation
+            radius=psize, location=plocation, rotation=protation
         )
     else:
         log("Primitive type not found: " + ptype + ". Adding default cube instead.", 'WARNING')
@@ -491,6 +491,9 @@ def sortObjectToCollection(obj, cname="Collection"):
                 collection.objects.link(obj)
         elif obj.name in collection.objects:
             collection.objects.unlink(obj)
+    # unlink from general scene collection
+    if obj.name in bpy.context.scene.collection.objects:
+        bpy.context.scene.collection.objects.unlink(obj)
 
 def craeteCollectionIfNotExists(cname="Collection"):
     if not cname in bpy.context.scene.collection.children.keys():

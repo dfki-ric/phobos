@@ -63,7 +63,7 @@ class SafelyRemoveObjectsFromSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -92,7 +92,7 @@ class SafelyRemoveObjectsFromSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -111,7 +111,7 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -168,8 +168,8 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -180,7 +180,7 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -194,7 +194,7 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -222,7 +222,7 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -303,7 +303,7 @@ class MoveToSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -322,7 +322,7 @@ class SortObjectsToLayersOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -335,7 +335,7 @@ class SortObjectsToLayersOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -358,7 +358,7 @@ class AddKinematicChainOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -394,7 +394,7 @@ class AddKinematicChainOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -429,7 +429,7 @@ class SetXRayOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -440,7 +440,7 @@ class SetXRayOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -459,7 +459,7 @@ class SetXRayOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -495,7 +495,7 @@ class SetPhobosType(Operator):
         """Change phobostype of all selected objects.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -512,7 +512,7 @@ class SetPhobosType(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -523,8 +523,8 @@ class SetPhobosType(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -549,7 +549,7 @@ class BatchEditPropertyOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -570,7 +570,7 @@ class BatchEditPropertyOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -604,7 +604,7 @@ class CreateInterfaceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -629,7 +629,7 @@ class CreateInterfaceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -653,7 +653,7 @@ class CopyCustomProperties(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -675,7 +675,7 @@ class CopyCustomProperties(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -710,7 +710,7 @@ class RenameCustomProperty(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -738,7 +738,7 @@ class RenameCustomProperty(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -762,7 +762,7 @@ class SetGeometryType(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -787,7 +787,7 @@ class SetGeometryType(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -799,7 +799,7 @@ class SetGeometryType(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -812,8 +812,8 @@ class SetGeometryType(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -832,7 +832,7 @@ class SmoothenSurfaceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -851,7 +851,7 @@ class SmoothenSurfaceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -893,8 +893,8 @@ class EditInertialData(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -914,7 +914,7 @@ class EditInertialData(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -953,7 +953,7 @@ class EditInertialData(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -974,7 +974,7 @@ class EditInertialData(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -986,7 +986,7 @@ class EditInertialData(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1031,8 +1031,8 @@ class GenerateInertialObjectsOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -1053,7 +1053,7 @@ class GenerateInertialObjectsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1086,7 +1086,7 @@ class GenerateInertialObjectsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1161,7 +1161,7 @@ class GenerateInertialObjectsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1183,7 +1183,7 @@ class EditYAMLDictionary(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1224,7 +1224,7 @@ class EditYAMLDictionary(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1248,7 +1248,7 @@ class CreateCollisionObjects(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1338,6 +1338,7 @@ class CreateCollisionObjects(Operator):
                     materialname,
                     center,
                     rotation_euler,
+                    'collision'
                 )
                 ob.scale = vis.scale
                 ob.data = vis.data.copy()
@@ -1351,7 +1352,7 @@ class CreateCollisionObjects(Operator):
             if vis.parent:
                 ob.select_set(True)
 
-                bpy.ops.object.transform_apply(scale=True)
+                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
                 vis.parent.select_set(True)
                 eUtils.parentObjectsTo(context.selected_objects, vis.parent)
 
@@ -1364,7 +1365,7 @@ class CreateCollisionObjects(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1391,8 +1392,8 @@ class SetCollisionGroupOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -1411,7 +1412,7 @@ class SetCollisionGroupOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1439,7 +1440,7 @@ class SetCollisionGroupOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1470,18 +1471,18 @@ class DefineJointConstraintsOperator(Operator):
         items=defs.jointtypes,
     )
 
-    lower : FloatProperty(name="Lower", default=0.0, description="Lower constraint of the joint")
+    lower : FloatProperty(name="Lower", default=-3.14, description="Lower constraint of the joint")
 
-    upper : FloatProperty(name="Upper", default=0.0, description="Upper constraint of the joint")
+    upper : FloatProperty(name="Upper", default=3.14, description="Upper constraint of the joint")
 
     maxeffort : FloatProperty(
-        name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
+       name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
 
     maxvelocity : FloatProperty(
-        name="Max Velocity (m/s or rad/s)",
-        default=0.0,
-        description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
+       name="Max Velocity (m/s or rad/s)",
+       default=0.0,
+       description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
     )
 
     spring : FloatProperty(
@@ -1496,7 +1497,7 @@ class DefineJointConstraintsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1533,23 +1534,23 @@ class DefineJointConstraintsOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
         """
         aObject = context.active_object
-        if 'joint/type' not in aObject and 'motor/type' in aObject:
-            self.maxvelocity = aObject['motor/maxSpeed']
-            self.maxeffort = aObject['motor/maxEffort']
+        #if 'joint/type' not in aObject and 'motor/type' in aObject:
+        #    self.maxvelocity = aObject['motor/maxSpeed']
+        #    self.maxeffort = aObject['motor/maxEffort']
         return self.execute(context)
 
     def execute(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1582,13 +1583,13 @@ class DefineJointConstraintsOperator(Operator):
 
             # TODO is this still needed? Or better move it to the utility function
             if self.joint_type != 'fixed':
-                joint['joint/maxeffort'] = self.maxeffort
-                joint['joint/maxvelocity'] = velocity
+                joint['joint/maxEffort'] = self.maxeffort
+                joint['joint/maxSpeed'] = velocity
             else:
-                if "joint/maxeffort" in joint:
-                    del joint["joint/maxeffort"]
-                if "joint/maxvelocity" in joint:
-                    del joint["joint/maxvelocity"]
+                if "joint/maxEffort" in joint:
+                    del joint["joint/maxEffort"]
+                if "joint/maxSpeed" in joint:
+                    del joint["joint/maxSpeed"]
             if self.passive:
                 joint['joint/passive'] = "$true"
             else:
@@ -1601,7 +1602,7 @@ class DefineJointConstraintsOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1626,7 +1627,7 @@ class DissolveLink(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1645,7 +1646,7 @@ class DissolveLink(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1657,8 +1658,8 @@ class DissolveLink(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -1669,7 +1670,7 @@ class DissolveLink(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1681,7 +1682,7 @@ class DissolveLink(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1706,12 +1707,13 @@ class AddMotorOperator(Operator):
     bl_idname = "phobos.add_motor"
     bl_label = "Add Motor"
     bl_options = {'UNDO'}
+    lastMotorType = None
 
     def motorlist(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1719,80 +1721,76 @@ class AddMotorOperator(Operator):
         items = [
             (mot, mot.replace('_', ' '), '')
             for mot in sorted(defs.definitions['motors'])
-            if self.categ in defs.def_settings['motors'][mot]['categories']
+            #if self.categ in defs.def_settings['motors'][mot]['categories']
         ]
         return items
 
-    def categorylist(self, context):
-        """Create an enum for the motor categories. For phobos preset categories,
-        the phobosIcon is added to the enum.
-
-        Args:
-          context: 
-
-        Returns:
-
-        """
-        from phobos.phobosgui import prev_collections
-
-        phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
-        categories = [t for t in defs.def_subcategories['motors']]
-
-        icon = ''
-        items = []
-        i = 0
-        for categ in categories:
-            # assign an icon to the phobos preset categories
-            if categ == 'generic':
-                icon = 'AUTO'
-            elif categ == 'dc':
-                icon = 'PARTICLE_POINT'
-            else:
-                icon = 'LAYER_USED'
-
-            items.append((categ, categ, categ, icon, i))
-            i += 1
-
-        return items
-
-    categ : EnumProperty(items=categorylist, description='The motor category')
     motorType : EnumProperty(items=motorlist, description='The motor type')
-    addToAllJoints : BoolProperty(
-        name="Add to all", default=True, description="Add a motor to all selected joints"
+    maxeffort : FloatProperty(
+        name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
-    addControllers : BoolProperty(
-        name="Add controller",
-        default=False,
-        description="Add the controller object specified in the motor definitions",
+
+    maxvelocity : FloatProperty(
+        name="Max Speed (m/s or rad/s)",
+        default=0.0,
+        description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
     )
-    #motorName : StringProperty(
-    #    name="Motor name", default='new_motor', description="Name of the motor"
-    #)
+    controlp : FloatProperty(
+        name="P Gain", default=0.0, description="P gain of position controller."
+    )
+    controli : FloatProperty(
+        name="I Factor", default=0.0, description="Integral factor of position controller."
+    )
+    controld : FloatProperty(
+        name="D Factor", default=0.0, description="D factor of position controller"
+    )
+    knownProperties = {"maxEffort": "maxeffort",
+                       "maxSpeed": "maxvelocity",
+                       "p": "controlp",
+                       "i": "controli",
+                       "d": "controld"}
+    jointProperties = ['maxEffort', 'maxSpeed']
+
+    def updateValues(self, key, defDict, lastDict, prop):
+        # only update value if the user hasn't change the default value
+        if key in defDict:
+            if lastDict and key in lastDict and prop != lastDict[key]:
+                return prop
+            return defDict[key]
+        return prop
 
     def draw(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
         """
         layout = self.layout
-        #layout.prop(self, 'motorName')
         #layout.separator()
-        layout.prop(self, 'categ', text='Motor category')
+        setvalues = self.lastMotorType != self.motorType
+        lastDict = None
+        if self.lastMotorType != None:
+            lastDict = defs.definitions['motors'][self.lastMotorType]
+        defDict = defs.definitions['motors'][self.motorType]
         layout.prop(self, 'motorType', text='Motor type')
-        layout.prop(self, 'addToAllJoints', icon='PARTICLES')
-        #todo2.9: layout.prop(self, 'addControllers', icon='GAME')
-        layout.prop(self, 'addControllers')
+        for k,v in self.knownProperties.items():
+            if setvalues:
+                setattr(self, v, self.updateValues(k, defDict, lastDict, getattr(self, v)))
+            if k in defDict:
+                layout.prop(self, v)
+        self.lastMotorType = self.motorType
+
+
 
     def invoke(self, context, event):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -1803,7 +1801,7 @@ class AddMotorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1815,7 +1813,7 @@ class AddMotorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1827,9 +1825,15 @@ class AddMotorOperator(Operator):
         )
 
         if not active_obj:
-            return False
-
-        active_obj = context.active_object
+            for obj in context.selected_objects:
+                if obj.mode == 'OBJECT' and obj.phobostype == 'link':
+                    active_obj = obj
+                    context.active_object = obj
+                    break
+            if not active_obj:
+                return False
+        else:
+            active_obj = context.active_object
 
         joint_obj = 'joint/type' in active_obj and active_obj['joint/type'] != 'fixed'
 
@@ -1839,45 +1843,31 @@ class AddMotorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
         """
-        # match the operator to avoid dangers of eval
-        import re
 
-        # hide controller property when creating controllers on the fly
-        hideproperties = [] if not self.addControllers else ['controller']
-        opName = addObjectFromYaml(
-            '',
-            'motor',
-            self.motorType,
-            addMotorFromYaml,
-            self.addToAllJoints,
-            self.addControllers,
-            hideprops=hideproperties,
-        )
-        operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
-
-        # run the operator and pass on add link (to allow undo both new link and sensor)
-        if operatorPattern.match(opName):
-            eval('bpy.ops.' + opName + "('INVOKE_DEFAULT')")
-        else:
-            log(
-                'This motor name is not following the naming convention: '
-                + opName
-                + '. It can not be converted into an operator.',
-                'ERROR',
-            )
+        joints = [lnk for lnk in context.selected_objects if lnk.phobostype == 'link' and 'joint/type' in lnk]
+        defDict = defs.definitions['motors'][self.motorType]
+        for joint in joints:
+            for k,v in defDict.items():
+                cl = "motor/"
+                if k in self.jointProperties:
+                    cl = "joint/"
+                if k in self.knownProperties:
+                    joint[cl+k] = getattr(self, self.knownProperties[k])
+                else:
+                    joint[cl+k] = v
         return {'FINISHED'}
 
 
 def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add motors from yaml files.
-    
+
     The specified parameters match the interface of the `addObjectFromYaml` generic function.
-    
+
     As additional argument, a boolean value is required. It controls whether the specified motor
     will be added to all selected joints (True) or to the active object only (False).
 
@@ -1971,7 +1961,7 @@ class CreateLinksOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1994,7 +1984,7 @@ class CreateLinksOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2005,7 +1995,7 @@ class CreateLinksOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2023,9 +2013,9 @@ class CreateLinksOperator(Operator):
 
 def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add sensors from yaml files.
-    
+
     The specified parameters match the interface of the `addObjectFromYaml` generic function.
-    
+
     As additional argument, a boolean value is required. It controls whether the specified sensor
     will be added to a new link (True) or not (False).
 
@@ -2108,7 +2098,7 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2125,7 +2115,7 @@ class AddSensorOperator(Operator):
         the phobosIcon is added to the enum.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2171,7 +2161,7 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2187,8 +2177,8 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -2199,7 +2189,7 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2211,7 +2201,7 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2222,7 +2212,7 @@ class AddSensorOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2259,7 +2249,7 @@ class AddSensorOperator(Operator):
 
 def addControllerFromYaml(controller_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add controllers from yaml files.
-    
+
     The specified parameters match the interface of the `addObjectFromYaml` generic function.
 
     Args:
@@ -2312,7 +2302,7 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2329,7 +2319,7 @@ class AddControllerOperator(Operator):
         the phobosIcon is added to the enum.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2373,7 +2363,7 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2389,8 +2379,8 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -2401,7 +2391,7 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2413,7 +2403,7 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2424,7 +2414,7 @@ class AddControllerOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2475,8 +2465,8 @@ def getDefaultControllerParameters(scene, context):
     object.
 
     Args:
-      scene: 
-      context: 
+      scene:
+      context:
 
     Returns:
 
@@ -2509,7 +2499,7 @@ class CreateMimicJointOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2537,7 +2527,7 @@ class CreateMimicJointOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2584,7 +2574,7 @@ class AddHeightmapOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2601,7 +2591,7 @@ class AddHeightmapOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2673,8 +2663,8 @@ class AddHeightmapOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -2695,7 +2685,7 @@ class AddSubmodel(Operator):
         """Returns a list of submodels of the chosen type for use as enum
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2721,7 +2711,7 @@ class AddSubmodel(Operator):
         """Returns a list of submodel types in the scene for use as enum
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2744,7 +2734,7 @@ class AddSubmodel(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2755,7 +2745,7 @@ class AddSubmodel(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2770,8 +2760,8 @@ class AddSubmodel(Operator):
         a property dialog
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -2785,7 +2775,7 @@ class AddSubmodel(Operator):
         """Hide the operator when no submodels are defined
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2799,7 +2789,7 @@ class AddSubmodel(Operator):
         """create an instance of the submodel
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2838,8 +2828,8 @@ class DefineSubmodel(Operator):
         """Show a property dialog
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -2850,7 +2840,7 @@ class DefineSubmodel(Operator):
         """Create a submodel based on selected objects
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2887,7 +2877,7 @@ class AssignSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2902,7 +2892,7 @@ class AssignSubmechanism(Operator):
         """
 
         Args:
-          jointlist: 
+          jointlist:
 
         Returns:
 
@@ -2943,7 +2933,7 @@ class AssignSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2956,7 +2946,7 @@ class AssignSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -2986,7 +2976,7 @@ class AssignSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3065,7 +3055,7 @@ class SelectSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3085,7 +3075,7 @@ class SelectSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3099,8 +3089,8 @@ class SelectSubmechanism(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -3111,7 +3101,7 @@ class SelectSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3124,7 +3114,7 @@ class SelectSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3146,7 +3136,7 @@ class DeleteSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3164,7 +3154,7 @@ class DeleteSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3178,8 +3168,8 @@ class DeleteSubmechanism(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -3190,7 +3180,7 @@ class DeleteSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3203,7 +3193,7 @@ class DeleteSubmechanism(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3235,7 +3225,7 @@ class ToggleInterfaces(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3257,7 +3247,7 @@ class ConnectInterfacesOperator(Operator):
         match.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3294,7 +3284,7 @@ class ConnectInterfacesOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3320,7 +3310,7 @@ class DisconnectInterfaceOperator(Operator):
         Also, the selected object has to be a connected interface.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3345,7 +3335,7 @@ class DisconnectInterfaceOperator(Operator):
         """Execute disconnection
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3382,7 +3372,7 @@ class MergeLinks(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3404,7 +3394,7 @@ class MergeLinks(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3432,7 +3422,7 @@ class SetModelRoot(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3443,7 +3433,7 @@ class SetModelRoot(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3507,7 +3497,7 @@ class ValidateOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3536,8 +3526,8 @@ class CalculateMassOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -3551,7 +3541,7 @@ class CalculateMassOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3562,7 +3552,7 @@ class CalculateMassOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3600,7 +3590,7 @@ class MeasureDistanceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -3614,7 +3604,7 @@ class MeasureDistanceOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 

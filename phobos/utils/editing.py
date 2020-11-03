@@ -71,7 +71,7 @@ def dissolveLink(obj, delete_other=False):
             sUtils.selectObjects(delete, clear=True, active=-1)
             bpy.ops.object.delete()
     # Restore original layers
-    for key, value in originallayers:
+    for key, value in originallayers.items():
         bpy.context.window.view_layer.layer_collection.children[key].exclude = value
 
 
@@ -705,6 +705,8 @@ def removeProperties(obj, props, recursive=False):
 
     """
     for prop in props:
+        if len(prop) == 0:
+            continue
         if prop in obj:
             del obj[prop]
         elif prop[-1] == '*':
@@ -793,7 +795,7 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
     parentObjectsTo(annot_obj, obj)
 
     # Restore original layers
-    for key, value in originallayers:
+    for key, value in originallayers.items():
         bpy.context.window.view_layer.layer_collection.children[key].exclude = value
 
     addAnnotation(annot_obj, annotation, namespace=namespace)

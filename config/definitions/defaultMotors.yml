@@ -13,68 +13,19 @@
 # visual representation of these in the add_motor Operator!
 
 # Currently, these motors are only supported by MARS:
-# generic_dc
-# generic_bldc
-# limes_typ1
-# limes_typ2
-# limes_typ3
+# position
+# velocity
 
 motors:
     # generic motors
-    generic_bldc:
-        general:
-            type: bldc
-            shape: resource://dc
-            size: 0.2
-            categories:
-                - generic
-        controller: pid
+    position:
         maxSpeed: 3.141
         maxEffort: 50.0
-    generic_dc:
-        general:
-            type: dc
-            shape: resource://dc
-            size: 0.2
-            categories:
-                - generic
-        controller: direct
+        p: 20.0
+        i: 0.0
+        d: 0.0
+        type: PID
+    velocity:
         maxSpeed: 3.141
         maxEffort: 50.0
-    # limes motors
-    limes_typ1:
-        general:
-            type: bldc
-            shape: resource://dc
-            size: 0.2
-            categories:
-                - bldc
-                - limes
-        controller: limes_position
-        maxSpeed: 1.438
-        maxEffort: 238
-        protocol: ndlcom
-    limes_typ2:
-        general:
-            type: bldc
-            shape: resource://dc
-            size: 0.2
-            categories:
-                - bldc
-                - limes
-        controller: limes_position
-        maxSpeed: 1.966
-        maxEffort: 92
-        protocol: ndlcom
-    limes_typ3:
-        general:
-            type: bldc
-            shape: resource://dc
-            size: 0.2
-            categories:
-                - bldc
-                - limes
-        controller: limes_position
-        maxSpeed: 2.293
-        maxEffort: 54
-        protocol: ndlcom
+        type: DC

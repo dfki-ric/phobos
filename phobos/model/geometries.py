@@ -201,7 +201,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             viscol['name'], geom['type'], dimensions, phobostype=geomsrc
         )
         newgeom.select = True
-        bpy.ops.object.transform_apply(scale=True)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
 
     # from here it's the same for both meshes and primitives
     newgeom['geometry/type'] = geom['type']
