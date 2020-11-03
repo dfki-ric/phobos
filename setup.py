@@ -35,8 +35,6 @@ module_spec = util.spec_from_file_location(
 )
 phobossystem = util.module_from_spec(module_spec)
 module_spec.loader.exec_module(phobossystem)
-addonpath = path.join(phobossystem.getScriptsPath(), 'addons', 'phobos')
-blenderconfigpath = phobossystem.getBlenderConfigPath()
 
 
 def updateFolderContents(src, dst):
@@ -86,6 +84,7 @@ if __name__ == '__main__':
             blender_executable = conffile.readline().split(' #')[0]
             python_version = conffile.readline().split(' #')[0]
             blender_version = conffile.readline().split(' #')[0]
+            phobossystem.blenderversion = blender_version
     # check for existing YAML installation
     else:
         if not blender_path:
@@ -126,6 +125,7 @@ if __name__ == '__main__':
         os.system("'" + python_executable + "'" + ' -m pip install --upgrade PyYaml')
         print("... successful.\n")
 
+        phobossystem.blenderversion = blender_version
         # write python dist packages path into config file
         with open(path.join(phoboshome, 'installation.conf'), 'w') as distconffile:
             distconffile.truncate()
@@ -148,6 +148,8 @@ Debug information for Phobos:
                          '\n    - '.join(package for package in os.listdir(python_package_path))))
         sys.exit(0)
 
+    addonpath = path.join(phobossystem.getScriptsPath(), 'addons', 'phobos')
+    blenderconfigpath = phobossystem.getBlenderConfigPath()
     if install_to:
         addonpath = install_to
 
