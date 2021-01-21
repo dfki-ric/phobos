@@ -146,7 +146,7 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
             visuals, export_path=bake_outpath, modelname=modelname, previewfile=previewfile
         )
 
-        obj.select = True
+        obj.select_set(True)
 
         bpy.ops.object.delete()
         log("Done baking...", "INFO")

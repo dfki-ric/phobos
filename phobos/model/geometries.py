@@ -147,7 +147,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
 
     # create the Blender object
     if geom['type'] == 'mesh':
-        bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
+        #bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
         meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
         if not os.path.isfile(geom['filename']):
             log(
@@ -160,17 +160,20 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             )
             bpy.ops.object.add(type='MESH')
             newgeom = bpy.context.active_object
+            bUtils.sortObjectToCollection(newgeom, cname=geomsrc)
             nUtils.safelyName(newgeom, viscol['name'], phobostype=geomsrc)
         else:
             if meshname in bpy.data.meshes:
                 log('Assigning copy of existing mesh ' + meshname + ' to ' + viscol['name'], 'INFO')
                 bpy.ops.object.add(type='MESH')
                 newgeom = bpy.context.object
+                bUtils.sortObjectToCollection(newgeom, cname=geomsrc)
                 newgeom.data = bpy.data.meshes[meshname]
             else:
                 log("Importing mesh for {0} element: '{1}".format(geomsrc, viscol['name']), 'INFO')
                 filetype = geom['filename'].split('.')[-1].lower()
                 newgeom = meshes.importMesh(geom['filename'], filetype)
+                bUtils.sortObjectToCollection(newgeom, cname=geomsrc)
                 # bpy.data.meshes[newgeom].name = meshname
                 if not newgeom:
                     log('Failed to import mesh file ' + geom['filename'], 'ERROR')
@@ -194,13 +197,14 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             bpy.ops.object.empty_add(type='PLAIN_AXES', radius=0.2)
             obj = bpy.context.object
             obj.phobostype = geomsrc
+            bUtils.sortObjectToCollection(obj, cname=geomsrc)
             nUtils.safelyName(bpy.context.active_object, viscol['name'], phobostype=geomsrc)
             return None
         log("Creating primtive for {0}: {1}".format(geomsrc, viscol['name']), 'INFO')
         newgeom = bUtils.createPrimitive(
             viscol['name'], geom['type'], dimensions, phobostype=geomsrc
         )
-        newgeom.select = True
+        newgeom.select_set(True)
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
 
     # from here it's the same for both meshes and primitives
