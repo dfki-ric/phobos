@@ -75,15 +75,15 @@ if __name__ == '__main__':
     if path.isfile(path.join(phoboshome, 'installation.conf')):
         print('installation.conf found! Configuration done.')
         with open(path.join(phoboshome, 'installation.conf'), 'r') as conffile:
-            python_package_path = conffile.readline().split(' #')[0]
+            python_package_path = conffile.readline().split(' #')[0].strip()
             if not blender_path:
-                blender_path = conffile.readline().split(' #')[0]
+                blender_path = conffile.readline().split(' #')[0].strip()
             else:
                 conffile.readline()
-            python_executable = conffile.readline().split(' #')[0]
-            blender_executable = conffile.readline().split(' #')[0]
-            python_version = conffile.readline().split(' #')[0]
-            blender_version = conffile.readline().split(' #')[0]
+            python_executable = conffile.readline().split(' #')[0].strip()
+            blender_executable = conffile.readline().split(' #')[0].strip()
+            python_version = conffile.readline().split(' #')[0].strip()
+            blender_version = conffile.readline().split(' #')[0].strip()
             phobossystem.blenderversion = blender_version
     # check for existing YAML installation
     else:
