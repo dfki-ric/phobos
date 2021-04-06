@@ -88,7 +88,7 @@ class NameModelOperator(Operator):
         Returns:
 
         """
-        root = sUtils.getRoot(context.active_object)
+        root = sUtils.getRoot(context.active_object, verbose=False)
         return root and root.phobostype == 'link'
 
     def invoke(self, context, event):
@@ -150,7 +150,7 @@ class SetModelVersionOperator(Operator):
         Returns:
 
         """
-        root = sUtils.getRoot(context.active_object)
+        root = sUtils.getRoot(context.active_object, verbose=False)
         return root and root.phobostype == 'link'
 
     def invoke(self, context, event):
