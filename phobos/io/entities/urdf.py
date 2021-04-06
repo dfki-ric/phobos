@@ -726,7 +726,7 @@ def parseLink(link, urdffilepath):
                     "     Filepath for element "
                     + elementname
                     + ': '
-                    + path.relpath(filepath, start=urdffilepath),
+                    + filepath, #path.relpath(filepath, start=urdffilepath),
                     'DEBUG',
                 )
 
