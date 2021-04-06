@@ -193,7 +193,7 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, object
     return parent
 
 
-def getRoot(obj=None):
+def getRoot(obj=None, verbose=True):
     """Returns the root object of a model the Blender object obj or, if obj is
     not provided, the active object is part of, traversing up the tree.
     If no such object is found, returns None.
@@ -207,7 +207,8 @@ def getRoot(obj=None):
     """
     obj = bpy.context.active_object if obj is None else obj
     if obj is None:
-        log("No root object found! Check your object selection.", "ERROR")
+        if verbose:
+            log("No root object found! Check your object selection.", "ERROR")
         return None
     child = obj
     while child.parent and not isRoot(child):
