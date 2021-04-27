@@ -23,7 +23,6 @@
   <logo>https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png</logo>
 
   <depend package="blender"/>
-  <depend package="python3-yaml"/>
 
   <keywords>
     <keyword>Simulation</keyword>
