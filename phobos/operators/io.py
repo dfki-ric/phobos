@@ -54,8 +54,8 @@ class ExportSceneOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -67,7 +67,7 @@ class ExportSceneOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -135,8 +135,8 @@ class ExportModelOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -156,7 +156,7 @@ class ExportModelOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -246,22 +246,22 @@ class ImportModelOperator(bpy.types.Operator):
     # creating property for storing the path to the .scn file
     filepath : bpy.props.StringProperty(subtype="FILE_PATH")
 
-    entitytype : EnumProperty(
-        name="Entity type",
-        items=tuple(
-            (e, e, 'file extensions: ' + str(entity_io.entity_types[e]['extensions']))
-            for e in entity_io.entity_types
-            if 'import' in entity_io.entity_types[e]
-        ),
-        description="Type of entity to import from file",
-    )
+    # entitytype : EnumProperty(
+    #     name="Entity type",
+    #     items=tuple(
+    #         (e, e, 'file extensions: ' + str(entity_io.entity_types[e]['extensions']))
+    #         for e in entity_io.entity_types
+    #         if 'import' in entity_io.entity_types[e]
+    #     ),
+    #     description="Type of entity to import from file",
+    # )
 
     @classmethod
     def poll(cls, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -272,25 +272,30 @@ class ImportModelOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
         """
-        log("Importing " + self.filepath + ' as ' + self.entitytype, "INFO")
-        model = entity_io.entity_types[self.entitytype]['import'](self.filepath)
-        # bUtils.cleanScene()
-        models.buildModelFromDictionary(model)
-        for layer in ['link', 'inertial', 'visual', 'collision', 'sensor']:
-            bUtils.toggleLayer(layer, True)
+        suffix = self.filepath.split(".")[-1]
+        if suffix in entity_io.entity_types:
+            log("Importing " + self.filepath + ' as ' + suffix, "INFO")
+            model = entity_io.entity_types[suffix]['import'](self.filepath)
+            # bUtils.cleanScene()
+            models.buildModelFromDictionary(model)
+            for layer in ['link', 'inertial', 'visual', 'collision', 'sensor']:
+                bUtils.toggleLayer(layer, True)
+        else:
+            log("No module found to import " + suffix, "ERROR")
+
         return {'FINISHED'}
 
     def invoke(self, context, event):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -317,8 +322,8 @@ def generateLibEntries(param1, param2):
     """
 
     Args:
-      param1: 
-      param2: 
+      param1:
+      param2:
 
     Returns:
 
@@ -404,7 +409,7 @@ class ReloadModelsAndPosesOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -444,7 +449,7 @@ class ImportLibRobot(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -471,8 +476,8 @@ class ImportLibRobot(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -498,7 +503,7 @@ class ImportSelectedLibRobot(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -530,8 +535,8 @@ class ImportSelectedLibRobot(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -550,7 +555,7 @@ class ImportSelectedLibRobot(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -562,7 +567,7 @@ class ImportSelectedLibRobot(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -630,7 +635,7 @@ class CreateRobotInstance(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -656,7 +661,7 @@ class CreateRobotInstance(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -687,7 +692,7 @@ class ExportCurrentPoseOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -708,8 +713,8 @@ class ExportCurrentPoseOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -724,7 +729,7 @@ class ExportCurrentPoseOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -754,7 +759,7 @@ class ExportCurrentPoseOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -765,7 +770,7 @@ class ExportCurrentPoseOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -820,7 +825,7 @@ class ExportAllPosesOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -835,8 +840,8 @@ class ExportAllPosesOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -851,7 +856,7 @@ class ExportAllPosesOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -881,7 +886,7 @@ class ExportAllPosesOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -892,7 +897,7 @@ class ExportAllPosesOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
