@@ -11,8 +11,6 @@
 
 """
 Handles different import attempts to cope with Blender's *Reload script* functionality.
-
-Contains also some adjustments to make YAML imports deal with booleans appropriately.
 """
 
 import sys
@@ -23,7 +21,6 @@ import pkgutil
 # TODO double import of basemodule?
 import bpy
 import phobos
-import yaml
 
 def import_submodules(package, recursive=True, verbose=False):
     """Import all submodules of a module, recursively, including subpackages.
@@ -81,7 +78,6 @@ bl_info = {
     "category": "Development",
 }
 
-# TODO rework yaml import: loading module twice if yaml is not found...
 installconfpath = os.path.dirname(__file__) + "/installation.conf"
 if os.path.isfile(installconfpath):
     with open(installconfpath, 'r') as conffile:
@@ -93,44 +89,6 @@ if os.path.isfile(installconfpath):
 else:
     raise FileNotFoundError('No .conf file found. Please reinstall phobos.')
 
-
-# Add custom YAML (de-)serializer
-def bool_representer(dumper, data):
-    """
-
-    Args:
-      dumper: 
-      data: 
-
-    Returns:
-
-    """
-    if data == '$true':
-        return dumper.represent_bool(True)
-    elif data == '$false':
-        return dumper.represent_bool(False)
-    else:
-        return dumper.represent_str(str(data))
-
-
-yaml.add_representer(str, bool_representer)
-
-
-def bool_constructor(self, node):
-    """
-
-    Args:
-      node: 
-
-    Returns:
-
-    """
-    value = self.construct_yaml_bool(node)
-    return '$true' if value else '$false'
-
-
-yaml.Loader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
-yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 
 # Recursively import all submodules
 print("Importing phobos")

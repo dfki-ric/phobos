@@ -14,7 +14,7 @@ Contains all Blender operators for import and export of models/files.
 """
 
 import os
-import yaml
+import json
 import sys
 import inspect
 
@@ -325,7 +325,7 @@ def generateLibEntries(param1, param2):
     """
     # DOCU add some docstring
     with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
-        return [("None",) * 3] + [(entry,) * 3 for entry in yaml.load(f.read())]
+        return [("None",) * 3] + [(entry,) * 3 for entry in json.loads(f.read())]
 
 
 def loadModelsAndPoses():
@@ -345,7 +345,7 @@ def loadModelsAndPoses():
     robots_dict = dict()
     for robot in robots_found:
         with open(robot, 'r') as robot_smurf:
-            robot_yml = yaml.load(robot_smurf)
+            robot_yml = json.loads(robot_smurf)
             model_name = robot_yml["modelname"]
             robot_files = robot_yml["files"]
             for file in robot_files:
@@ -353,7 +353,7 @@ def loadModelsAndPoses():
                     if model_name not in robots_dict:
                         robots_dict[model_name] = []
                     with open(os.path.join(os.path.dirname(robot), file)) as poses:
-                        poses_yml = yaml.load(poses)
+                        poses_yml = json.loads(poses)
                         for pose in poses_yml['poses']:
                             robots_dict[model_name].append({"posename": pose['name']})
                             robots_dict[model_name][-1]["robotpath"] = os.path.dirname(robot)
@@ -453,15 +453,15 @@ class ImportLibRobot(Operator):
         path, file = os.path.split(self.filepath)
         if file.endswith(".bake"):
             with open(self.filepath, "r") as f:
-                info = yaml.load(f.read())
+                info = json.loads(f.read())
             if not os.path.isfile(libPath):
                 open(libPath, "a").close()
             with open(libPath, "r+") as f:
-                robot_lib = yaml.load(f.read())
+                robot_lib = json.loads(f.read())
                 robot_lib = robot_lib if robot_lib is not None else {}
                 robot_lib[info["name"]] = path
                 f.seek(0)
-                f.write(yaml.dump(robot_lib))
+                f.write(json.dumps(robot_lib, indent=2))
                 f.truncate()
         else:
             log("This is no robot bake!", "ERROR")
@@ -638,7 +638,7 @@ class CreateRobotInstance(Operator):
         if self.bakeObj == "None":
             return {"FINISHED"}
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
-            robot_lib = yaml.load(f.read())
+            robot_lib = json.loads(f.read())
         root = links.createLink(1.0, name=self.robName + "::" + self.bakeObj)
         root["model/name"] = self.bakeObj
         root["entity/name"] = self.robName

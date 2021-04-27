@@ -9,7 +9,7 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-import yaml
+import json
 import os
 from datetime import datetime
 import phobos.defs as defs
@@ -38,7 +38,7 @@ def exportYAML(model, path):
         )
 
         # write the yaml dump to the file
-        outputfile.write(yaml.dump(model))
+        outputfile.write(json.dumps(model))
 
 
 # registering export functions of types with Phobos

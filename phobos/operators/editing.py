@@ -15,7 +15,7 @@ Contains all Blender operators for editing of Phobos models.
 
 import math
 import os
-import yaml
+import json
 import inspect
 import sys
 from datetime import datetime
@@ -1202,11 +1202,11 @@ class EditYAMLDictionary(Operator):
                 tmpdict[key] = list(tmpdict[key])
         contents = [
             variablename + ' = """',
-            yaml.dump(bUtils.cleanObjectProperties(tmpdict), default_flow_style=False) + '"""\n',
+            json.dumps(bUtils.cleanObjectProperties(tmpdict), indent=2) + '"""\n',
             "# ------- Hit 'Run Script' to save your changes --------",
             "import yaml",
             "import bpy",
-            "tmpdata = yaml.load(" + variablename + ")",
+            "tmpdata = json.loads(" + variablename + ")",
             "for key in dict(bpy.context.active_object.items()):",
             "   del bpy.context.active_object[key]",
             "for key, value in tmpdata.items():",

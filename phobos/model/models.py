@@ -12,7 +12,7 @@
 import os
 import copy
 from datetime import datetime
-import yaml
+import json
 
 import bpy
 import mathutils
@@ -349,9 +349,21 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
     if 'maxSpeed' in props:
         limits['velocity'] = props['maxSpeed']
         del props['maxSpeed']
+    if 'maxspeed' in props:
+        limits['velocity'] = props['maxspeed']
+        del props['maxspeed']
+    if 'maxVelocity' in props:
+        limits['velocity'] = props['maxVelocity']
+        del props['maxVelocity']
+    if 'maxvelocity' in props:
+        limits['velocity'] = props['maxvelocity']
+        del props['maxvelocity']
     if 'maxEffort' in props:
         limits['effort'] = props['maxEffort']
         del props['maxEffort']
+    if 'maxeffort' in props:
+        limits['effort'] = props['maxeffort']
+        del props['maxeffort']
     if limits != {}:
         props['limits'] = limits
     props['pose'] = deriveObjectPose(obj)
@@ -797,8 +809,8 @@ def deriveTextData(modelname):
         except IndexError:
             log("Possibly invalidly named model data text file: " + modelname, "WARNING")
         try:
-            data = yaml.load(bUtils.readTextFile(text.name))
-        except yaml.scanner.ScannerError:
+            data = json.loads(bUtils.readTextFile(text.name))
+        except:
             log("Invalid formatting of data file: " + dataname, "ERROR")
         if data:
             datadict[dataname] = data
@@ -884,11 +896,11 @@ def deriveTextData(modelname):
 
 #             # derive additional joint
 #             model['joints'][a.name] = deriveJoint(rootlink, adjust=True)
-#             # print(yaml.dump(model['joints'][a.name]))
+#             # print(json.dumps(model['joints'][a.name]))
 #             model['joints'][a.name]['name'] = namespaced(rootlink.name, a.name)
 #             model['joints'][a.name]['parent'] = namespaced(parentlinkname, a.parent.parent.parent.name)
 #             model['joints'][a.name]['child'] = namespaced(rootlink.name, a.name)
-#             # print(yaml.dump(model['joints'][a.name]))
+#             # print(json.dumps(model['joints'][a.name]))
 #     return model
 
 

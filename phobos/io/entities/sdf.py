@@ -1404,9 +1404,9 @@ def parseSDFInertial(link):
         inertial_dict['name'] = 'inertial_' + link.attrib['name']
 
         # TODO delete me
-        import yaml
+        import json
 
-        print(yaml.dump(inertial_dict))
+        print(json.dumps(inertial_dict))
         return inertial_dict
 
         # TODO add frame support
@@ -1468,9 +1468,9 @@ def parseSDFGeometry(geometry, link, sdfpath):
                 geometrydict['scale'] = [1.0, 1.0, 1.0]
 
     # TODO remove me
-    import yaml
+    import json
 
-    print(yaml.dump(geometrydict))
+    print(json.dumps(geometrydict))
     return geometrydict
 
 
@@ -1509,9 +1509,9 @@ def parseSDFMaterial(visualname, material):
     materialdict['diffuse_intensity'] = 1.
 
     # TODO remove me
-    import yaml
+    import json
 
-    print(yaml.dump(materialdict))
+    print(json.dumps(materialdict))
     return materialdict
 
 
@@ -1646,9 +1646,9 @@ def parseSDFLink(link, filepath):
 
     newlink['annotations'] = {'sdf': sdfannos}
     # TODO delete me
-    import yaml
+    import json
 
-    print(yaml.dump(newlink))
+    print(json.dumps(newlink))
     if newlink == {}:
         log("Link information for " + newlink['name'] + " is empty.", 'WARNING')
     return newlink, materials, sensors
@@ -1817,11 +1817,11 @@ def parseSDFJoint(joint):
     jointdict['annotations'] = {'sdf': sdfannos}
 
     # TODO delete me
-    import yaml
+    import json
 
-    print('JOINT:', yaml.dump(jointdict))
-    print('POSE:', yaml.dump(pose))
-    print('SENSORS:', yaml.dump(sensors))
+    print('JOINT:', json.dumps(jointdict))
+    print('POSE:', json.dumps(pose))
+    print('SENSORS:', json.dumps(sensors))
     return jointdict, pose, sensors
 
 
@@ -1889,9 +1889,9 @@ def importSDF(filepath):
     model['materials'] = materials
 
     # TODO delete me
-    import yaml
+    import json
 
-    print(yaml.dump(materials))
+    print(json.dumps(materials))
 
     joints = {}
     log("Parsing joints...", 'INFO')

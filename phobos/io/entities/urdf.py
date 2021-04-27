@@ -11,7 +11,7 @@
 
 from os import path
 import re
-import yaml
+import json
 import xml.etree.ElementTree as ET
 
 import bpy
@@ -103,7 +103,7 @@ def exportUrdf(model, outpath):
     # CHECK test Windows path consistency
     order_file_name = model['name'] + '_urdf_order'
     if order_file_name in bpy.data.texts:
-        stored_element_order = yaml.load(bpy.data.texts[order_file_name].as_string())
+        stored_element_order = json.loads(bpy.data.texts[order_file_name].as_string())
 
     output = [xmlHeader, indent + '<robot name="' + model['name'] + '">\n\n']
     # export link information
@@ -374,7 +374,7 @@ def store_element_order(element_order, path):
     # element_order['joints'] = joint_order
 
     stream = open(path + '_element_order_debug.yml', 'w')
-    stream.write(yaml.dump(element_order))
+    stream.write(json.dumps(element_order, indent=2))
     stream.close()
 
 

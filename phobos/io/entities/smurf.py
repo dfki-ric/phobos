@@ -10,7 +10,7 @@
 # -------------------------------------------------------------------------------
 
 import os
-import yaml
+import json
 import bpy
 import phobos.defs as defs
 import phobos.model.models as models
@@ -57,7 +57,7 @@ def deriveEntity(root, outpath):
         )
         """
         with open(os.path.join(os.path.dirname(defs.__file__), "RobotLib.yml"), "r") as f:
-            robots = yaml.load(f.read())
+            robots = json.loads(f.read())
             sourcepath = robots[smurf["model/name"]]
             for filename in os.listdir(sourcepath):
                 fullpath = os.path.join(sourcepath, filename)
@@ -261,6 +261,8 @@ def exportSmurf(model, path):
     log("Writing SMURF model to " + smurf_filename, "INFO")
     # CHECK are these filepaths failsafe in Windows?
     modeldata = {
+        "SMURF version": defs.version,
+        "modelname": model['name'],
         "date": model["date"],
         "files": [urdf_path + urdf_filename] + [filenames[f] for f in fileorder if exportdata[f]],
     }
@@ -268,9 +270,7 @@ def exportSmurf(model, path):
     with open(os.path.join(path, smurf_filename), 'w') as op:
         op.write('# main SMURF file of model "' + model['name'] + '"\n')
         op.write('# created with Phobos ' + defs.version + ' - ' + defs.repository + '\n\n')
-        op.write("SMURF version: " + defs.version + "\n")
-        op.write("modelname: " + model['name'] + "\n")
-        op.write(yaml.dump(modeldata, default_flow_style=False))
+        op.write(json.dumps(modeldata, indent=2))
 
     # TODO delete me?
     # #write semantics (SRDF information in YML format)
@@ -283,7 +283,7 @@ def exportSmurf(model, path):
     #             semantics['groups'] = model['groups']
     #         if model['chains'] != {}:
     #             semantics['chains'] = model['chains']
-    #         op.write(yaml.dump(semantics, default_flow_style=False))
+    #         op.write(json.dumps(semantics, indent=2))
 
     # for smurf, we parse the controller parameters into the motors
 
@@ -345,7 +345,7 @@ def exportSmurf(model, path):
             op.write('#state' + infostring)
             op.write("modelname: " + model['name'] + '\n')
             # TODO am I still needed?
-            op.write(yaml.dump(states))  # , default_flow_style=False))
+            op.write(json.dumps(states, indent=2))
 
     # write materials, sensors, motors & controllers
     for data in ['materials', 'motors', 'sensors', 'controllers', 'lights']:
@@ -354,9 +354,9 @@ def exportSmurf(model, path):
             with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)
                 op.write(
-                    yaml.dump(
+                    json.dumps(
                         sort_for_yaml_dump({data: list(model[data].values())}, data),
-                        default_flow_style=False,
+                        indent=2
                     )
                 )
 
@@ -365,11 +365,11 @@ def exportSmurf(model, path):
         with open(os.path.join(path, filenames['collision']), 'w') as op:
             op.write('#collision data' + infostring)
             # TODO delete me?
-            # op.write(yaml.dump({'collision': list(bitmasks.values())}, default_flow_style=False))
+            # op.write(json.dumps({'collision': list(bitmasks.values())}, indent=2))
             op.write(
-                yaml.dump(
+                json.dumps(
                     {'collision': [collisiondata[key] for key in sorted(collisiondata.keys())]},
-                    default_flow_style=False,
+                    indent=2
                 )
             )
 
@@ -377,7 +377,7 @@ def exportSmurf(model, path):
     if exportdata['visuals']:
         with open(os.path.join(path, filenames['visuals']), 'w') as op:
             op.write('#visual data' + infostring)
-            op.write(yaml.dump({'visuals': list(lodsettings.values())}, default_flow_style=False))
+            op.write(json.dumps({'visuals': list(lodsettings.values())}, indent=2))
 
     # write additional information
     for category in annotationdict.keys():
@@ -387,7 +387,7 @@ def exportSmurf(model, path):
                 for elementtype in annotationdict[category]:
                     outstring += elementtype + ':\n'
                     outstring += (
-                        yaml.dump(annotationdict[category][elementtype], default_flow_style=False)
+                        json.dumps(annotationdict[category][elementtype], indent=2)
                         + "\n"
                     )
                 with open(os.path.join(path, filenames[category]), 'w') as op:
@@ -398,15 +398,15 @@ def exportSmurf(model, path):
         if exportdata[data]:
             with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)
-                op.write(yaml.dump({data: list(model[data].values())}, default_flow_style=False))
+                op.write(json.dumps({data: list(model[data].values())}, indent=2))
 
     # write submechanisms
     if model['submechanisms']:
         with open(os.path.join(path, filenames['submechanisms']), 'w') as op:
             op.write('#submechanisms' + infostring)
             op.write(
-                yaml.dump({'submechanisms': model['submechanisms']})
-            )  # , default_flow_style=False))
+                json.dumps({'submechanisms': model['submechanisms']}, indent=2)
+            )
 
     # TODO delete me?
     ## write custom yml files
@@ -429,7 +429,7 @@ def exportSmurf(model, path):
 #         #smurf = None
 #         # TODO check for filename consistency (for Windows)
 #         with open(self.filepath, 'r') as smurffile:
-#             smurf = yaml.load(smurffile)
+#             smurf = json.loads(smurffile)
 #         if smurf is None:
 #             log('No valid SMURF file.', "ERROR")
 #             return None
@@ -462,7 +462,7 @@ def exportSmurf(model, path):
 #         custom_dicts = {}
 #         for yml in ymlfiles:
 #             with open(os.path.join(self.path, yml), 'r') as ymlfile:
-#                 ymldict = yaml.load(ymlfile)
+#                 ymldict = json.loads(ymlfile)
 #             for key in ymldict:
 #                 print(key)
 #                 if key in ['materials', 'sensors', 'motors', 'controllers']:
@@ -512,7 +512,7 @@ def exportSmurf(model, path):
 #
 #         #now some debug output
 #         with open(self.filepath+'_SMURF_debug.yml', 'w') as outputfile:
-#             outputfile.write(yaml.dump(self.robot))#, default_flow_style=False)) #last parameter prevents inline formatting for lists and dictionaries
+#             outputfile.write(json.dumps(self.robot)) #last parameter prevents inline formatting for lists and dictionaries
 
 
 # registering import/export functions of types with Phobos

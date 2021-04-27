@@ -85,7 +85,6 @@ if __name__ == '__main__':
             python_version = conffile.readline().split(' #')[0].strip()
             blender_version = conffile.readline().split(' #')[0].strip()
             phobossystem.blenderversion = blender_version
-    # check for existing YAML installation
     else:
         if not blender_path:
             blender_path = path.expanduser(input('Where is Blender installed to? '))
@@ -120,11 +119,6 @@ if __name__ == '__main__':
         os.system("'" + python_executable + "'" + ' -m pip install --upgrade pip')
         print("... successful.\n")
 
-        print('Installing YAML...')
-        os.system("'" + python_executable + "'" + ' -m pip install PyYaml')
-        os.system("'" + python_executable + "'" + ' -m pip install --upgrade PyYaml')
-        print("... successful.\n")
-
         phobossystem.blenderversion = blender_version
         # write python dist packages path into config file
         with open(path.join(phoboshome, 'installation.conf'), 'w') as distconffile:
@@ -149,6 +143,7 @@ Debug information for Phobos:
         sys.exit(0)
 
     addonpath = path.join(phobossystem.getScriptsPath(), 'addons', 'phobos')
+    print("found addonpath: " + addonpath)
     blenderconfigpath = phobossystem.getBlenderConfigPath()
     if install_to:
         addonpath = install_to
