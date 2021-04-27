@@ -49,39 +49,7 @@ If you are on the hunt for a BiBTeX entry, check out the [FAQ section](https://g
 
 ## Installation
 
-Please refer to the Wiki's [installation
-page](https://github.com/dfki-ric/phobos/wiki/Installation).
-
-### macOS
-
-Gathering the information where to install Phobos is not working well on macOS. A workaround is to create an 'installation.conf' within the phosos folder with the following information:
-
-   dist_package_path
-   path_where_to_find_blender_addons
-   python_executable
-   blender_executable
-   python_version
-   blender_version
-
-*An example and maybe regular configuration is:*
-
-   /opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/python3.5/site-packages
-   ~/Library/Application\ Support/Blender/2.79//Library/Application\ Support/Blender/2.79
-   python3.5
-   /Applications/Blender/blender.app/Contents/MacOS/blender
-   3.5
-   2.79
-
-*If python3.5 is not installed on the system it is also possible to use the python version shipped with blender:*
-
-  - The blender python binary should be located is somthing like:
-    /Applications/Blender/blender.app/Contents/Resources/2.79/python/bin/
-  - load get-pip.py:
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-  - Execute the script with blender python:
-    /Applications/Blender/blender.app/Contents/Resources/2.79/python/bin/python3.5m get-pip.py
-  - Now you can configure your installation.conf to use the blender python paths
-  - To then install Phobos use also the blender python
+Just zip the `phobos` subfolder: `zip -r phobos.zip phobos` and install it via Blender: `blender->edit->preferences->addons->install`
 
 ## Overview
 
