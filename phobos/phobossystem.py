@@ -11,6 +11,7 @@
 
 import sys
 import os.path as path
+import bpy
 
 # compatible blender version
 blenderversion = '2.91'
@@ -57,14 +58,7 @@ def getConfigPath():
     Returns:
 
     """
-    if sys.platform == 'linux':
-        configpath = path.normpath(path.expanduser('~/.config/phobos'))
-    elif sys.platform == 'darwin':
-        configpath = path.normpath(path.expanduser('~/Library/Application Support/phobos'))
-    elif sys.platform == 'win32':
-        configpath = path.normpath(path.expanduser('~/AppData/Roaming/phobos'))
-    else:
-        configpath = 'ERROR: {0} not supported,'.format(sys.platform)
+    configpath = path.normpath(path.join(bpy.utils.user_resource('SCRIPTS', "addons"), "phobos", "config"))
     return configpath
 
 
