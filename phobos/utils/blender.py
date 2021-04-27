@@ -484,6 +484,9 @@ def getPhobosConfigPath():
         return getConfigPath()
 
 def sortObjectToCollection(obj, cname="Collection"):
+    set_active = False
+    if bpy.context.active_object == obj:
+        set_active = True
     craeteCollectionIfNotExists(cname)
     for name, collection in bpy.context.scene.collection.children.items():
         if name == cname:
@@ -494,6 +497,8 @@ def sortObjectToCollection(obj, cname="Collection"):
     # unlink from general scene collection
     if obj.name in bpy.context.scene.collection.objects:
         bpy.context.scene.collection.objects.unlink(obj)
+    if set_active:
+        bpy.context.view_layer.objects.active = obj
 
 def craeteCollectionIfNotExists(cname="Collection"):
     if not cname in bpy.context.scene.collection.children.keys():
