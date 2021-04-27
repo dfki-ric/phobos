@@ -1204,7 +1204,7 @@ class EditYAMLDictionary(Operator):
             variablename + ' = """',
             json.dumps(bUtils.cleanObjectProperties(tmpdict), indent=2) + '"""\n',
             "# ------- Hit 'Run Script' to save your changes --------",
-            "import yaml",
+            "import json",
             "import bpy",
             "tmpdata = json.loads(" + variablename + ")",
             "for key in dict(bpy.context.active_object.items()):",
@@ -1825,13 +1825,13 @@ class AddMotorOperator(Operator):
         )
 
         if not active_obj:
-            for obj in context.selected_objects:
-                if obj.mode == 'OBJECT' and obj.phobostype == 'link':
-                    active_obj = obj
-                    context.active_object = obj
-                    break
-            if not active_obj:
-                return False
+            return False
+            # for obj in context.selected_objects:
+            #     if obj.mode == 'OBJECT' and obj.phobostype == 'link':
+            #         active_obj = obj
+            #         context.view_layer.objects.active = obj
+            #         break
+            # if not active_obj:
         else:
             active_obj = context.active_object
 

@@ -9,7 +9,7 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-import yaml
+import json
 from datetime import datetime
 from phobos.defs import version
 from phobos.defs import repository
@@ -47,7 +47,7 @@ def exportSMURFScene(entities, path):
         entitiesdict = roundFloatsInDict(
             {'entities': entities}, ioUtils.getExpSettings().decimalPlaces
         )
-        outputfile.write(yaml.dump(entitiesdict))
+        outputfile.write(json.dumps(entitiesdict, indent=2))
 
 
 # registering import/export functions of types with Phobos

@@ -1,63 +1,80 @@
-# -------------------------------------------------------------------------------
-# This file is part of Phobos, a Blender Add-On to edit robot models.
-# Copyright (C) 2020 University of Bremen & DFKI GmbH Robotics Innovation Center
-#
-# You should have received a copy of the 3-Clause BSD License in the LICENSE file.
-# If not, see <https://opensource.org/licenses/BSD-3-Clause>.
-# -------------------------------------------------------------------------------
-
-joints:
-    revolute:
-        maxeffort:
-            required: true
-            default: 0.0
-        maxvelocity:
-            required: true
-            default: 0.0
-        passive:
-            required: false
-            default: '$false'
-    continuous:
-        maxeffort:
-            required: true
-            default: 0.0
-        maxvelocity:
-            required: true
-            default: 0.0
-        passive:
-            required: false
-            default: '$false'
-    prismatic:
-        maxeffort:
-            required: true
-            default: 0.0
-        maxvelocity:
-            required: true
-            default: 0.0
-        passive:
-            required: false
-            default: '$false'
-    fixed:
-        passive:
-            required: false
-            default: '$false'
-    floating:
-        maxeffort:
-            required: true
-            default: 0.0
-        maxvelocity:
-            required: true
-            default: 0.0
-        passive:
-            required: false
-            default: '$false'
-    planar:
-        maxeffort:
-            required: true
-            default: 0.0
-        maxvelocity:
-            required: true
-            default: 0.0
-        passive:
-            required: false
-            default: '$false'
+{
+  "joints": {
+    "revolute": {
+      "maxeffort": {
+        "required": true,
+        "default": 0.0
+      },
+      "maxvelocity": {
+        "required": true,
+        "default": 0.0
+      },
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    },
+    "continuous": {
+      "maxeffort": {
+        "required": true,
+        "default": 0.0
+      },
+      "maxvelocity": {
+        "required": true,
+        "default": 0.0
+      },
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    },
+    "prismatic": {
+      "maxeffort": {
+        "required": true,
+        "default": 0.0
+      },
+      "maxvelocity": {
+        "required": true,
+        "default": 0.0
+      },
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    },
+    "fixed": {
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    },
+    "floating": {
+      "maxeffort": {
+        "required": true,
+        "default": 0.0
+      },
+      "maxvelocity": {
+        "required": true,
+        "default": 0.0
+      },
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    },
+    "planar": {
+      "maxeffort": {
+        "required": true,
+        "default": 0.0
+      },
+      "maxvelocity": {
+        "required": true,
+        "default": 0.0
+      },
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    }
+  }
+}

@@ -1,31 +1,17 @@
-# -------------------------------------------------------------------------------
-# This file is part of Phobos, a Blender Add-On to edit robot models.
-# Copyright (C) 2020 University of Bremen & DFKI GmbH Robotics Innovation Center
-#
-# You should have received a copy of the 3-Clause BSD License in the LICENSE file.
-# If not, see <https://opensource.org/licenses/BSD-3-Clause>.
-# -------------------------------------------------------------------------------
-
-# If you want to evaluate numeric expressions in this yaml file, just enclose your expression with
-# '&'. In that simple expressions you can use the python math module.
-
-# IMPORTANT: if adding new categories to the internal phobos, also change the
-# visual representation of these in the add_motor Operator!
-
-# Currently, these motors are only supported by MARS:
-# position
-# velocity
-
-motors:
-    # generic motors
-    position:
-        maxSpeed: 3.141
-        maxEffort: 50.0
-        p: 20.0
-        i: 0.0
-        d: 0.0
-        type: PID
-    velocity:
-        maxSpeed: 3.141
-        maxEffort: 50.0
-        type: DC
+{
+  "motors": {
+    "position": {
+      "maxSpeed": 3.141,
+      "maxEffort": 50.0,
+      "p": 20.0,
+      "i": 0.0,
+      "d": 0.0,
+      "type": "PID"
+    },
+    "velocity": {
+      "maxSpeed": 3.141,
+      "maxEffort": 50.0,
+      "type": "DC"
+    }
+  }
+}

@@ -78,17 +78,6 @@ bl_info = {
     "category": "Development",
 }
 
-installconfpath = os.path.dirname(__file__) + "/installation.conf"
-if os.path.isfile(installconfpath):
-    with open(installconfpath, 'r') as conffile:
-        python_package_path = conffile.readline().split(' #')[0]
-        python_executable = conffile.readline().split(' #')[0]
-        blender_executable = conffile.readline().split(' #')[0]
-        python_version = conffile.readline().split(' #')[0]
-        blender_version = conffile.readline().split(' #')[0]
-else:
-    raise FileNotFoundError('No .conf file found. Please reinstall phobos.')
-
 
 # Recursively import all submodules
 print("Importing phobos")
