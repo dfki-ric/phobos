@@ -48,6 +48,7 @@ import phobos.model.links as modellinks
 import phobos.model.motors as modelmotors
 import phobos.model.controllers as controllermodel
 import phobos.model.sensors as sensors
+import phobos.model.models as models
 from phobos.operators.generic import addObjectFromYaml
 from phobos.phoboslog import log
 
@@ -3512,7 +3513,7 @@ class ValidateOperator(Operator):
         """
         messages = {}
         root = sUtils.getRoot(context.selected_objects[0])
-        model, objectlist = models.deriveModelDictionary(root)
+        model = models.deriveModelDictionary(root)
         vUtils.check_dict(model, defs.definitions['model'], messages)
         vUtils.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
         for entry in messages:
