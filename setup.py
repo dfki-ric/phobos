@@ -35,9 +35,14 @@ module_spec = util.spec_from_file_location(
 )
 phobossystem = util.module_from_spec(module_spec)
 module_spec.loader.exec_module(phobossystem)
-addonpath = path.join(phobossystem.getScriptsPath(), 'addons', 'phobos')
-blenderconfigpath = phobossystem.getBlenderConfigPath()
-
+blender_executable = phobossystem.getBlenderExecutable()
+blender_version_tuple = phobossystem.getBlenderVersion()
+python_executable = phobossystem.getPythonExecutable()
+python_version_tuple = phobossystem.getPythonVersion()
+blender_version = f"{blender_version_tuple[0]}.{blender_version_tuple[1]}"
+python_version = f"{python_version_tuple[0]}.{python_version_tuple[1]}"
+addonpath = path.join(phobossystem.getScriptsPath(blender_version), 'addons', 'phobos')
+blenderconfigpath = phobossystem.getBlenderConfigPath(blender_version)
 
 def updateFolderContents(src, dst):
     """Updates the directory tree at dst with everything from src.
@@ -88,19 +93,15 @@ if __name__ == '__main__':
             blender_version = conffile.readline().split(' #')[0]
     elif sys.platform == 'linux':
         blender_path = path.join(path.expanduser('~'), '.config', 'blender')
-        blender_version = glob.glob(path.join(blender_path, '[0-9].[0-9][0-9]'))
-        if not blender_version or not path.isdir(blender_version[0]):
+        blender_path = path.join(blender_path, blender_version)
+        if not blender_version or not path.isdir(blender_path):
             print(f"Could not identify the blender config folder {blender_path}.")
             print("Installation aborted!")
             sys.exit(1)
-        blender_version = path.basename(blender_version[0])
-        blender_executable = path.abspath(path.join(os.sep, 'usr', 'bin', 'blender'))
         if not path.isfile(blender_executable):
             print(f"Could not find the blender executable {blender_executable}.")
             print("Installation aborted!")
             sys.exit(1)
-        python_version = '3.6'
-        python_executable = path.abspath(path.join(os.sep, 'usr','bin',f'python{python_version}'))
         if not path.isfile(python_executable):
             print(f"Could not find the python executable {python_executable}.")
             print("Installation aborted!")
@@ -110,54 +111,6 @@ if __name__ == '__main__':
             print(f"Could not identify the python packages folder {python_package_path}.")
             print("Installation aborted!")
             sys.exit(1)
-        # write python dist packages path into config file
-        with open(path.join(phoboshome, 'installation.conf'), 'w') as distconffile:
-            distconffile.truncate()
-            distconffile.write(python_package_path + ' # Python package installation path\n')
-            distconffile.write(blender_path + ' # Blender installation path\n')
-            distconffile.write(python_executable + ' # python executable\n')
-            distconffile.write(blender_executable + ' # Blender executable\n')
-            distconffile.write(python_version + ' # Python version\n')
-            distconffile.write(blender_version + ' # Blender version\n')
-    # check for existing YAML installation
-    else:
-        if not blender_path:
-            blender_path = path.expanduser(input('Where is Blender installed to? '))
-        blender_version = glob.glob(path.join(blender_path, '[0-9].[0-9][0-9]'))
-        if not blender_version or not path.isdir(blender_version[0]):
-            print("Could not identify the blender subfolder.")
-            print("Installation aborted!")
-            sys.exit(1)
-        blender_version = path.basename(blender_version[0])
-        blender_executable = path.join(blender_path, 'blender')
-        if not path.isfile(blender_executable):
-            # try alternate MacOS installation path first
-            blender_executable = path.abspath(path.join(blender_path, '..', 'MacOS', 'blender'))
-            if not path.isfile(blender_executable):
-                print("WARNING: Could not find Blender executable.")
-                blender_executable = "not found"
-
-        bpython_files = glob.glob(path.join(
-            blender_path, blender_version, 'python', 'bin', 'py*'))
-        if not bpython_files:
-            print("Could not find python executable in Blender installation.")
-            print("Installation aborted!")
-            sys.exit(1)
-        python_executable = bpython_files[0]
-        python_version = path.basename(python_executable).strip('m').strip('python')
-        python_package_path = path.normpath((path.join(
-            blender_path, blender_version, 'python', 'lib', 'python' + python_version,
-            'site-packages')))
-
-        print('Installing PIP...')
-        os.system("'" + python_executable + "'" + ' -m ensurepip')
-        os.system("'" + python_executable + "'" + ' -m pip install --upgrade pip')
-        print("... successful.\n")
-
-        print('Installing YAML...')
-        os.system("'" + python_executable + "'" + ' -m pip install PyYaml')
-        os.system("'" + python_executable + "'" + ' -m pip install --upgrade PyYaml')
-        print("... successful.\n")
 
         # write python dist packages path into config file
         with open(path.join(phoboshome, 'installation.conf'), 'w') as distconffile:
@@ -213,7 +166,7 @@ Debug information for Phobos:
     os.remove(path.join(phobossystem.getConfigPath(), 'startup.blend'))
 
     # install templates
-    templatespath = path.join(phobossystem.getScriptsPath(), 'templates_py')
+    templatespath = path.join(phobossystem.getScriptsPath(blender_version), 'templates_py')
     copied_files = updateFolderContents(path.join(phoboshome, 'templates_py'), templatespath)
     if not copied_files:
         print('Something went wrong with copying operator presets.\nInstallation aborted.')
