@@ -99,7 +99,6 @@ avoiding confusion or obstruction of view when editing very complex models.*
   - Verbose logging
 - Saving and loading of model poses
 - Annotation of objects from motors/sensors to joints/links
-- Creation of submodels which can be incorporated into other models
 - Save/load different export configurations for the same model
 - Export with defined floating point precision
 - Model integrity checks
