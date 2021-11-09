@@ -63,17 +63,16 @@ def writeURDFGeometry(output, element, filepath):
         elif geometry['type'] == "sphere":
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
-            meshpath = ioUtils.getOutputMeshpath(path.dirname(filepath))
+            meshpath = ioUtils.getOutputMeshpath(path.dirname(filepath), None, None) + geometry['filename'] + '.' + ioUtils.getOutputMeshtype()
+            if not "package://" in meshpath:
+                meshpath = path.relpath(meshpath, filepath)
             output.append(
                 xmlline(
                     5,
                     'mesh',
                     ['filename', 'scale'],
                     [
-                        path.join(
-                            path.relpath(meshpath, filepath),
-                            geometry['filename'] + '.' + ioUtils.getOutputMeshtype(),
-                        ),
+                        meshpath,
                         l2str(geometry['scale']),
                     ],
                 )

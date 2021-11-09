@@ -186,8 +186,15 @@ def getOutputMeshtype():
     """Returns the mesh type to be used in exported files as specified in the GUI"""
     return str(getExpSettings().outputMeshtype)
 
+def getOutputPathtype():
+    """Returns the path type to be used in exported files as specified in the GUI"""
+    return str(getExpSettings().outputPathtype)
 
-def getOutputMeshpath(path, meshtype=None):
+def getRosPackageName():
+    """Returns the ros package name used for ros path definitions"""
+    return str(getExpSettings().rosPackageName)
+
+def getOutputMeshpath(path, meshtype=None, pathType="relative"):
     """Returns the folder path for mesh file export as specified in the GUI.
     
     Phobos by default creates a directory 'meshes' in the export path and subsequently creates
@@ -202,7 +209,15 @@ def getOutputMeshpath(path, meshtype=None):
       string: output path for meshes
 
     """
-    return os.path.join(path, 'meshes', meshtype if meshtype else getOutputMeshtype())
+    # pathType relative is default
+    rpath = os.path.join(path, 'meshes', meshtype if meshtype else getOutputMeshtype()) + "/"
+
+    if not pathType:
+        pathType = getOutputPathtype()
+    if pathType == "ros_package":
+        rpath = "package://"+getRosPackageName()+"/"+os.path.join('meshes', meshtype if meshtype else getOutputMeshtype()) + "/"
+
+    return rpath
 
 
 def getEntityTypesForExport():
@@ -532,7 +547,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
     mc = len(model['meshes'])
     n = mt * mc
     for meshtype in mesh_types:
-        mesh_path = getOutputMeshpath(exportpath, meshtype)
+        mesh_path = getOutputMeshpath(exportpath, meshtype, "relative")
         try:
             if getattr(bpy.context.scene, "export_mesh_" + meshtype, False):
                 securepath(mesh_path)

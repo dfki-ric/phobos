@@ -185,6 +185,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         return sorted([(mt,) * 3 for mt in meshes.mesh_types])
 
     path : StringProperty(name='path', subtype='DIR_PATH', default='../', update=updateExportPath)
+
     # TODO: CHECK which props are visible in GUI?
     selectedOnly : BoolProperty(
         name="Selected only", default=True, description="Export only selected objects"
@@ -198,6 +199,14 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         name='link',
         description="Mesh type to use in exported " + "entity/scene files.",
     )
+    outputPathtype : EnumProperty(
+        items=tuple(((l,) * 3 for l in ["relative", "ros_package"])),
+        name='file path',
+        description="Defines how pathes are generated in " + "entity/scene files.",
+    )
+
+    rosPackageName : StringProperty(name='ROS package name', default='robot_name_model')
+
 
     # obj optional information
     axis_forward_items = (
@@ -1211,12 +1220,20 @@ class PhobosExportPanel(bpy.types.Panel):
                 typename = "export_mesh_" + meshtype
                 cmesh.prop(bpy.context.scene, typename)
         cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputMeshtype')
+        cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputPathtype')
 
         cscene = inlayout.column(align=True)
         cscene.label(text="Scenes")
         for scenetype in ioUtils.getSceneTypesForExport():
             typename = "export_scene_" + scenetype
             cscene.prop(bpy.context.scene, typename)
+
+        # additional ros guiparams
+        if getattr(bpy.context.scene.phobosexportsettings, 'outputPathtype', "relative") == "ros_package":
+            layout.separator()
+            box = layout.box()
+            box.label(text='ROS')
+            box.prop(expsets, "rosPackageName")
 
         # additional obj guiparams
         if getattr(bpy.context.scene, 'export_mesh_obj', False):
