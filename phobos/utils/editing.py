@@ -510,6 +510,9 @@ def createInterface(ifdict, parent=None):
     ifobj.scale = (scale,) * 3
     ifobj['interface/type'] = ifdict['type']
     ifobj['interface/direction'] = ifdict['direction']
+    if parent is not None:
+        ifobj['interface/parent'] = parent.name
+        parentObjectsTo(ifobj, parent)
     bpy.ops.object.make_single_user(object=True, obdata=True)
 
 
