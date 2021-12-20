@@ -218,33 +218,23 @@ def calculateEllipsoidInertia(mass, size):
 
 
 def calculateMeshInertia(mass, data):
-    # Author A. Fabisch
-    """Compute inertia matrix from vertices of a triangle mesh.
+    """Calculates and returns the inertia tensor of arbitrary mesh objects.
 
-    Implemented according to
-    * https://github.com/dfki-ric/phobos/blob/master/phobos/model/inertia.py
-    * http://number-none.com/blow/inertia/body_i.html
-    * https://thescipub.com/abstract/10.3844/jmssp.2005.8.11
-      (correction: exchange of b' and c')
+    Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
+    Simply and Quickly' (2004) by Jonathan Blow (1) with formulas for tetrahedron inertia
+    from 'Explicit Exact Formulas for the 3-D Tetrahedron Inertia Tensor in Terms of its
+    Vertex Coordinates' (2004) by F. Tonon. (2). The latter has an issue, according the
+    element order of the inertia tensor: b' and c' are exchanged. According to 'Technische
+    Mechanik 3 - Dynamik' (2012) by Russel C. Hibbeler this has been fixed.
 
-    Parameters
-    ----------
-    vertices : array-like, shape (n_vertices, 3)
-        Vertices of the object.
-
-    triangles : array-like, shape (n_triangles, 3)
-        Triangles of the object.
-
-    triangle_normals : array-like, shape (n_triangles, 3)
-        Triangle normals of the object.
-
-    mass : float, optional (default: 1)
-        Mass of the triangle mesh.
-
-    Returns
-    -------
-    I : array, shape (3, 3)
-        Inertia matrix.
+    Links: (1) http://number-none.com/blow/inertia/body_i.html
+           (2) http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf
+           (3) https://elibrary.pearson.de/book/99.150005/9783863265151
+    Args:
+      data(bpy.types.BlendData): mesh data of the object
+      mass(float): mass of the object
+    Returns:
+      6: inertia tensor
     """
     tetrahedra = []
     mesh_volume = 0
