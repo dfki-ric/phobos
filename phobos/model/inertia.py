@@ -124,7 +124,7 @@ def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, l
         inertia = calculateSphereInertia(mass, geometry['radius'])
     elif geometry['type'] == 'mesh':
         sUtils.selectObjects((obj,), clear=True, active=0)
-        inertia = calculateMeshInertia(mass, obj.data)
+        inertia = calculateMeshInertia(mass, obj.data, scale=obj.scale)
 
     # Correct the inertia orientation to account for Cylinder / mesh orientation issues
     inertia = object_rotation * inertiaListToMatrix(inertia) * object_rotation.transposed()
@@ -217,7 +217,7 @@ def calculateEllipsoidInertia(mass, size):
     return ixx, ixy, ixz, iyy, iyz, izz
 
 
-def calculateMeshInertia(mass, data):
+def calculateMeshInertia(mass, data, scale=None):
     """Calculates and returns the inertia tensor of arbitrary mesh objects.
 
     Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
@@ -233,20 +233,24 @@ def calculateMeshInertia(mass, data):
     Args:
       data(bpy.types.BlendData): mesh data of the object
       mass(float): mass of the object
+      scale(list): scale vector
     Returns:
       6: inertia tensor
     """
+    if scale is None:
+        scale = [1.0, 1.0, 1.0]
+    scale = numpy.asarray(scale)
     tetrahedra = []
     mesh_volume = 0
     origin = mathutils.Vector((0.0, 0.0, 0.0))
 
-    vertices = numpy.as_array(data.vertices)
+    vertices = numpy.asarray([numpy.asarray(scale*v.co) for v in data.vertices])
     prev_mode = bpy.context.mode
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED')
     bpy.ops.object.mode_set(mode=prev_mode)
-    triangles = numpy.asarray(data.polygons)
-    triangle_normals = numpy.as_array([t.normal for t in triangles])
+    triangles = [[v for v in p.vertices] for p in data.polygons]
+    triangle_normals = numpy.asarray([t.normal for t in data.polygons])
 
     com = numpy.mean(vertices, axis=0)
     vertices = vertices - com[numpy.newaxis]
@@ -260,8 +264,7 @@ def calculateMeshInertia(mass, data):
         verts = vertices[triangles[triangle_idx]]
         triangle_normal = triangle_normals[triangle_idx]
         triangle_center = numpy.mean(verts, axis=0)
-        normal_angle = pr.angle_between_vectors(
-            triangle_center, triangle_normal)
+        normal_angle = mathutils.Vector(triangle_center).angle(mathutils.Vector(triangle_normal))
         sign = -1.0 if normal_angle > numpy.pi / 2.0 else 1.0
 
         J = numpy.array([
@@ -445,8 +448,7 @@ def calculateMeshInertia(mass, data):
     I = numpy.array([[numpy.sum(A), c_bar, b_bar],
                      [c_bar, numpy.sum(B), a_bar],
                      [b_bar, a_bar, numpy.sum(C)]])
-
-    return I.flatten().tolist()
+    return inertiaMatrixToList(I)
 
 
 def inertiaListToMatrix(inertialist):
