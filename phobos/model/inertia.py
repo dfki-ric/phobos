@@ -68,6 +68,9 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
 
     # set position according to the parent link
     inertialobject.matrix_world = obj.matrix_world
+    inertialobject.location[0] += origin[0]
+    inertialobject.location[1] += origin[1]
+    inertialobject.location[2] += origin[2]
     parent = obj
     if parent.phobostype != 'link':
         parent = sUtils.getEffectiveParent(obj, ignore_selection=True)
