@@ -134,7 +134,7 @@ yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 
 # Recursively import all submodules
 print("Importing phobos")
-import_submodules(phobos, verbose=True)
+import_submodules(phobos.blender, verbose=True)
 
 
 def register():
@@ -147,7 +147,7 @@ def register():
     Returns:
 
     """
-    phobos.phobosgui.register()
+    phobos.blender.phobosgui.register()
     bpy.utils.register_module(__name__)
 
 
@@ -156,5 +156,5 @@ def unregister():
     print("\n" + "-" * 100)
     print("Unregistering Phobos...")
     # TODO delete all imported modules to resolve reregistration conflicts
-    phobos.phobosgui.unregister()
+    phobos.blender.phobosgui.unregister()
     bpy.utils.unregister_module(__name__)

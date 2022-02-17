@@ -17,27 +17,27 @@ import yaml
 import bpy
 import mathutils
 
-import phobos.defs as defs
-import phobos.model.links as linkmodel
-import phobos.model.inertia as inertiamodel
-import phobos.model.joints as jointmodel
-import phobos.model.sensors as sensormodel
-import phobos.model.lights as lightmodel
-import phobos.model.motors as motormodel
-import phobos.model.controllers as controllermodel
-import phobos.model.materials as matmodel
-import phobos.model.poses as poses
-import phobos.utils.naming as nUtils
-import phobos.utils.selection as sUtils
-import phobos.utils.blender as bUtils
-import phobos.utils.editing as eUtils
-import phobos.utils.io as ioUtils
-from phobos.utils.validation import validate
-from phobos.phoboslog import log
-from phobos.utils.general import roundFloatsInDict, sortListsInDict
-from phobos.model.poses import deriveObjectPose
-from phobos.model.geometries import deriveGeometry
-from phobos.defs import linkobjignoretypes
+from .. import defs as defs
+from ..model import links as linkmodel
+from ..model import inertia as inertiamodel
+from ..model import joints as jointmodel
+from ..model import sensors as sensormodel
+from ..model import lights as lightmodel
+from ..model import motors as motormodel
+from ..model import controllers as controllermodel
+from ..model import materials as matmodel
+from ..model import poses as poses
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
+from ..utils import blender as bUtils
+from ..utils import editing as eUtils
+from ..utils import io as ioUtils
+from ..utils.validation import validate
+from ..phoboslog import log
+from ..utils.general import roundFloatsInDict, sortListsInDict
+from ..model.poses import deriveObjectPose
+from ..model.geometries import deriveGeometry
+from ..defs import linkobjignoretypes
 
 
 def collectMaterials(objectlist):

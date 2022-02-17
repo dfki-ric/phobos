@@ -14,9 +14,9 @@ Contains the functions required to model a material in Blender.
 """
 
 import bpy
-import phobos.defs as defs
-from phobos.utils.validation import validate
-from phobos.phoboslog import log
+from .. import defs as defs
+from ..utils.validation import validate
+from ..phoboslog import log
 
 
 @validate('material')

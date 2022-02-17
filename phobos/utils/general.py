@@ -18,7 +18,7 @@ import os
 import shutil
 from datetime import datetime
 import mathutils
-from phobos.phoboslog import log
+from ..phoboslog import log
 
 
 def is_float(text):

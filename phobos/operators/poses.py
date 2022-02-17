@@ -21,12 +21,12 @@ import blf
 import bgl
 from bpy.props import StringProperty, FloatProperty, FloatVectorProperty, EnumProperty
 from bpy.types import Operator
-from phobos.phoboslog import log
-import phobos.utils.selection as sUtils
-import phobos.utils.blender as bUtils
-import phobos.utils.naming as nUtils
-import phobos.model.poses as poses
-import phobos.model.models as models
+from ..phoboslog import log
+from ..utils import selection as sUtils
+from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..model import poses as poses
+from ..model import models as models
 
 # FIXME: this is ugly
 current_robot_name = ''

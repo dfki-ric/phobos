@@ -16,14 +16,14 @@ Contains all functions to model links within Blender.
 import bpy
 import mathutils
 import re
-import phobos.defs as defs
-import phobos.utils.naming as nUtils
-import phobos.utils.blender as bUtils
-import phobos.utils.selection as sUtils
-import phobos.utils.editing as eUtils
-import phobos.model.inertia as inertia
-import phobos.model.geometries as geometrymodel
-from phobos.phoboslog import log
+from .. import defs as defs
+from ..utils import naming as nUtils
+from ..utils import blender as bUtils
+from ..utils import selection as sUtils
+from ..utils import editing as eUtils
+from ..model import inertia as inertia
+from ..model import geometries as geometrymodel
+from ..phoboslog import log
 
 
 def getGeometricElements(link):

@@ -16,9 +16,9 @@ Contains the functions for the mechanism entity.
 import os
 import bpy
 import bpy.utils.previews
-import phobos.defs as defs
-import phobos.utils.blender as bUtils
-from phobos.phoboslog import log
+from ... import defs as defs
+from ...utils import blender as bUtils
+from ...phoboslog import log
 
 
 mechanismpreviewcollection = []

@@ -11,9 +11,9 @@
 
 import bpy
 
-from phobos.utils.selection import selectObjects, getImmediateChildren
-from phobos.model.motors import createMotor
-from phobos.utils.io import getDictFromYamlDefs
+from phobos.blender.utils.selection import selectObjects, getImmediateChildren
+from phobos.blender.model.motors import createMotor
+from phobos.blender.utils.io import getDictFromYamlDefs
 
 
 def derive_oldMotor(obj):

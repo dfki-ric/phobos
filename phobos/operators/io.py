@@ -24,20 +24,20 @@ import glob
 from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty, FloatProperty, IntProperty, BoolProperty
 
-import phobos.defs as defs
-import phobos.display as display
-from phobos.phoboslog import log
-import phobos.model.models as models
-import phobos.model.links as links
-import phobos.utils.selection as sUtils
-import phobos.utils.editing as eUtils
-import phobos.utils.io as ioUtils
-import phobos.utils.blender as bUtils
-import phobos.utils.naming as nUtils
-from phobos.utils.io import securepath
-import phobos.io.entities as entity_io
-from phobos.io.entities import entity_types
-from phobos.io.entities.entities import deriveGenericEntity
+from .. import defs as defs
+from .. import display as display
+from ..phoboslog import log
+from ..model import models as models
+from ..model import links as links
+from ..utils import selection as sUtils
+from ..utils import editing as eUtils
+from ..utils import io as ioUtils
+from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..utils.io import securepath
+from ..io import entities as entity_io
+from ..io.entities import entity_types
+from ..io.entities.entities import deriveGenericEntity
 
 
 class ExportSceneOperator(Operator):

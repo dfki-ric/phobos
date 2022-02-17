@@ -12,10 +12,10 @@
 import os
 import bpy
 import bpy.utils.previews
-import phobos.utils.naming as nUtils
-import phobos.utils.io as ioUtils
-import phobos.utils.blender as bUtils
-from phobos.phoboslog import log
+from ...utils import naming as nUtils
+from ...utils import io as ioUtils
+from ...utils import blender as bUtils
+from ...phoboslog import log
 from bpy.props import StringProperty, BoolProperty
 
 # FIXME: the global variables get overwritten by the reload function

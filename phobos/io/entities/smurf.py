@@ -12,12 +12,12 @@
 import os
 import yaml
 import bpy
-import phobos.defs as defs
-import phobos.model.models as models
-import phobos.utils.io as ioUtils
-import phobos.utils.blender as bUtils
-from phobos.io.entities.urdf import sort_urdf_elements
-from phobos.phoboslog import log
+from ... import defs as defs
+from ...model import models as models
+from ...utils import io as ioUtils
+from ...utils import blender as bUtils
+from ...io.entities.urdf import sort_urdf_elements
+from ...phoboslog import log
 
 
 def deriveEntity(root, outpath):

@@ -10,8 +10,8 @@
 # -------------------------------------------------------------------------------
 
 import bpy
-import phobos.utils.selection as sUtils
-import phobos.utils.editing as eUtils
+from ..utils import selection as sUtils
+from ..utils import editing as eUtils
 
 
 def addLight(light_dict):

@@ -13,12 +13,12 @@
 Contains the functions of the primitive entity.
 """
 
-import phobos.model.models as models
-import phobos.utils.naming as nUtils
-import phobos.utils.general as gUtils
-from phobos.phoboslog import log
-from phobos.model.geometries import deriveGeometry
-from phobos.model.poses import deriveObjectPose
+from ...model import models as models
+from ...utils import naming as nUtils
+from ...utils import general as gUtils
+from ...phoboslog import log
+from ...model.geometries import deriveGeometry
+from ...model.poses import deriveObjectPose
 
 
 def deriveEntity(primitive, outpath):

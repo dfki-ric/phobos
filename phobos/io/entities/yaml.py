@@ -12,8 +12,8 @@
 import yaml
 import os
 from datetime import datetime
-import phobos.defs as defs
-from phobos.phoboslog import log
+from ... import defs as defs
+from ...phoboslog import log
 
 
 def exportYAML(model, path):

@@ -11,11 +11,11 @@
 
 import yaml
 from datetime import datetime
-from phobos.defs import version
-from phobos.defs import repository
-from phobos.utils import io as ioUtils
-from phobos.utils.general import roundFloatsInDict
-from phobos.phoboslog import log
+from ...defs import version
+from ...defs import repository
+from ...utils import io as ioUtils
+from ...utils.general import roundFloatsInDict
+from ...phoboslog import log
 
 
 def exportSMURFScene(entities, path):

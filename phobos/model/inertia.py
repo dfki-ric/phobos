@@ -17,16 +17,16 @@ import math
 import numpy
 import bpy
 import mathutils
-import phobos.defs as defs
-from phobos.phoboslog import log
-import phobos.utils.general as gUtils
-import phobos.utils.selection as sUtils
-import phobos.utils.editing as eUtils
-import phobos.utils.blender as bUtils
-import phobos.utils.naming as nUtils
-from phobos.model.geometries import deriveGeometry
-from phobos.model.poses import deriveObjectPose
-from phobos.utils.validation import validate
+from .. import defs as defs
+from ..phoboslog import log
+from ..utils import general as gUtils
+from ..utils import selection as sUtils
+from ..utils import editing as eUtils
+from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..model.geometries import deriveGeometry
+from ..model.poses import deriveObjectPose
+from ..utils.validation import validate
 
 
 @validate('inertia_data')

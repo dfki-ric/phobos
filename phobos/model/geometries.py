@@ -12,15 +12,15 @@
 import os
 import bpy
 import mathutils
-import phobos.defs as defs
-import phobos.utils.naming as nUtils
-import phobos.utils.blender as bUtils
-import phobos.utils.selection as sUtils
-import phobos.utils.editing as eUtils
-import phobos.io.meshes.meshes as meshes
-from phobos.model.materials import assignMaterial
-from phobos.phoboslog import log
-from phobos.utils.validation import validate
+from .. import defs as defs
+from ..utils import naming as nUtils
+from ..utils import blender as bUtils
+from ..utils import selection as sUtils
+from ..utils import editing as eUtils
+from ..io.meshes import meshes as meshes
+from ..model.materials import assignMaterial
+from ..phoboslog import log
+from ..utils.validation import validate
 
 
 def getLargestDimension(geometry):

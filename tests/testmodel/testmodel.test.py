@@ -12,7 +12,7 @@ import sys
 import unittest
 
 try:
-    import phobos
+    import phobos.blender as phobos
 
     class TestInertiaModel(unittest.TestCase):
 

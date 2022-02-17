@@ -11,13 +11,13 @@
 
 import bpy
 import mathutils
-from phobos import defs
-from phobos.phoboslog import log
-import phobos.utils.blender as bUtils
-import phobos.utils.selection as sUtils
-import phobos.utils.naming as nUtils
-import phobos.utils.editing as eUtils
-import phobos.utils.io as ioUtils
+from .. import defs
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import selection as sUtils
+from ..utils import naming as nUtils
+from ..utils import editing as eUtils
+from ..utils import io as ioUtils
 
 
 def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=False):

@@ -33,23 +33,23 @@ from bpy.props import (
     BoolVectorProperty,
 )
 
-import phobos.defs as defs
-import phobos.display as display
-import phobos.model.inertia as inertialib
-import phobos.utils.selection as sUtils
-import phobos.utils.general as gUtils
-import phobos.utils.io as ioUtils
-import phobos.utils.blender as bUtils
-import phobos.utils.naming as nUtils
-import phobos.utils.editing as eUtils
-import phobos.utils.validation as vUtils
-import phobos.model.joints as jUtils
-import phobos.model.links as modellinks
-import phobos.model.motors as modelmotors
-import phobos.model.controllers as controllermodel
-import phobos.model.sensors as sensors
-from phobos.operators.generic import addObjectFromYaml
-from phobos.phoboslog import log
+from .. import defs as defs
+from .. import display as display
+from ..model import inertia as inertialib
+from ..utils import selection as sUtils
+from ..utils import general as gUtils
+from ..utils import io as ioUtils
+from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..utils import editing as eUtils
+from ..utils import validation as vUtils
+from ..model import joints as jUtils
+from ..model import links as modellinks
+from ..model import motors as modelmotors
+from ..model import controllers as controllermodel
+from ..model import sensors as sensors
+from ..operators.generic import addObjectFromYaml
+from ..phoboslog import log
 
 
 class SafelyRemoveObjectsFromSceneOperator(Operator):

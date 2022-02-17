@@ -13,9 +13,9 @@
 Contains the functions for the light entity.
 """
 
-import phobos.model.models as models
-import phobos.utils.selection as sUtils
-from phobos.phoboslog import log
+from ...model import models as models
+from ...utils import selection as sUtils
+from ...phoboslog import log
 
 
 def deriveEntity(light, outpath):

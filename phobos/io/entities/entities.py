@@ -10,9 +10,9 @@
 # -------------------------------------------------------------------------------
 
 import bpy
-import phobos.model.models as models
-import phobos.utils.naming as nUtils
-from phobos.phoboslog import log
+from ...model import models as models
+from ...utils import naming as nUtils
+from ...phoboslog import log
 
 # TODO this function won't work at all... Finish this
 def deriveGenericEntity(entityobj, outpath=None):

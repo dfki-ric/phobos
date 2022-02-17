@@ -13,7 +13,7 @@ import subprocess
 import yaml
 import bpy
 import os
-from phobos.phoboslog import log
+from ..phoboslog import log
 
 
 def isGit(folder):

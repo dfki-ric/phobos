@@ -12,9 +12,9 @@
 from copy import deepcopy as dc
 
 import bpy
-import phobos.defs as defs
-import phobos.utils.naming as nUtils
-from phobos.phoboslog import log
+from .. import defs as defs
+from ..utils import naming as nUtils
+from ..phoboslog import log
 
 
 checkMessages = {"NoObject": []}

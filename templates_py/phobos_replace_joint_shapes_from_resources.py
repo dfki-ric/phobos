@@ -10,9 +10,9 @@
 # -------------------------------------------------------------------------------
 
 import bpy
-import phobos.utils.io as ioUtils
-import phobos.utils.naming as nUtils
-from phobos.phoboslog import log
+import phobos.blender.utils.io as ioUtils
+import phobos.blender.utils.naming as nUtils
+from phobos.blender.phoboslog import log
 
 joints = [obj for obj in bpy.context.selected_objects if obj.phobostype == 'link']
 jointtypes = set()

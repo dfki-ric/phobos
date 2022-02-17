@@ -15,9 +15,9 @@ Contains the functions for the mesh entity.
 
 import os
 import bpy
-import phobos.utils.naming as nUtils
-import phobos.utils.blender as bUtils
-from phobos.phoboslog import log
+from ...utils import naming as nUtils
+from ...utils import blender as bUtils
+from ...phoboslog import log
 
 
 def exportMesh(obj, path, meshtype):
