@@ -58,23 +58,23 @@ def createMaterial(material, logging=False, adjust=False, errors=[]):
     log("  Creating material {}.".format(material), 'DEBUG')
 
     mat = bpy.data.materials.new(material['name'])
-    mat.diffuse_color = tuple(material['diffuse'][:3])
-    mat.diffuse_shader = 'LAMBERT'
+    mat.diffuse_color = tuple(material['diffuse'])
+    #mat.diffuse_shader = 'LAMBERT'
 
-    if 'diffuse_intensity' in material:
-        mat.diffuse_intensity = material['diffuse_intensity']
+    #if 'diffuse_intensity' in material:
+    #    mat.diffuse_intensity = material['diffuse_intensity']
     if 'specular' in material:
         mat.specular_color = tuple(material['specular'][:3])
-        mat.specular_shader = 'COOKTORR'
+       # mat.specular_shader = 'COOKTORR'
         mat.specular_intensity = 0.5
-    mat.alpha = material['diffuse'][-1]
-    if mat.alpha < 1.0:
-        mat.use_transparency = True
-    mat.ambient = 1
+    #mat.alpha = material['diffuse'][-1]
+    #if mat.alpha < 1.0:
+    #    mat.use_transparency = True
+    #mat.ambient = 1
     # TODO: implement textures properly
     # if texture is not None:
     #     pass
-    mat.use_fake_user = True
+    #mat.use_fake_user = True
 
     # write generic custom properties
     for prop in material:
@@ -119,5 +119,6 @@ def assignMaterial(obj, materialname):
     if materialname not in obj.data.materials:
         obj.data.materials.append(bpy.data.materials[materialname])
 
-    if obj.data.materials[materialname].use_transparency:
+    #if obj.data.materials[materialname].use_transparency:
+    if obj.data.materials[materialname].diffuse_color[3] < 1.0:
         obj.show_transparent = True

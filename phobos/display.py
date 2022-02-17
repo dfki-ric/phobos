@@ -107,14 +107,14 @@ def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2, linewid
     bgl.glEnable(bgl.GL_BLEND)
     bgl.glLineWidth(linewidth)
     if fillcolor:
-        bgl.glColor4f(*fillcolor)
+        #bgl.glColor4f(*fillcolor)
         bgl.glBegin(bgl.GL_POLYGON)
         for p in points:
             bgl.glVertex3f(*p, distance)
         bgl.glEnd()
     # frame
     if linecolor:
-        bgl.glColor4f(*linecolor)
+        #bgl.glColor4f(*linecolor)
         bgl.glBegin(bgl.GL_LINE_STRIP)
         for p in points:
             bgl.glVertex3f(*p, distance)
@@ -140,7 +140,7 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
     Returns:
 
     """
-    bgl.glColor4f(*color)
+    #bgl.glColor4f(*color)
     blf.position(font_id, *position, 0.25)
     blf.size(font_id, size, dpi)
     blf.draw(font_id, text)
@@ -255,8 +255,8 @@ def draw_progressbar(value):
     draw_2dpolygon(points, linecolor=lc, fillcolor=fc)
     draw_2dpolygon(progresspoints, fillcolor=lc, distance=0.2)
     draw_text(text, position=(xend + 20, region.height - 25), size=9)
-    if progressinfo:
-        draw_text(progressinfo, position=(xstart + 10, region.height - 42), size=6)
+    #if progressinfo:
+        #draw_text(progressinfo, position=(xstart + 10, region.height - 42), size=6)
 
 
 def draw_joint(joint, length):
@@ -270,10 +270,10 @@ def draw_joint(joint, length):
 
     """
     origin = Vector(joint.matrix_world.to_translation())
-    axis = joint.matrix_world * (length * joint.data.bones[0].vector.normalized())
+    axis = joint.matrix_world @ (length * joint.data.bones[0].vector.normalized())
     endpoint = axis
 
-    bgl.glColor4f(0.0, 1.0, 0.0, 0.5)
+    #bgl.glColor4f(0.0, 1.0, 0.0, 0.5)
     bgl.glLineWidth(2)
     bgl.glBegin(bgl.GL_LINE_STRIP)
     bgl.glVertex3f(*origin)
@@ -301,7 +301,7 @@ def draw_path(path, color=colors['white'], dim3=False, width=4):
     bgl.glLineWidth(width)
 
     bgl.glBegin(bgl.GL_LINE_STRIP)
-    bgl.glColor4f(*color)
+    #bgl.glColor4f(*color)
     for o in origins:
         if dim3:
             bgl.glVertex3f(o)
@@ -335,7 +335,7 @@ def draw_callback_3d(self, context):
     # restore opengl defaults
     bgl.glLineWidth(1)
     bgl.glDisable(bgl.GL_BLEND)
-    bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
+    #bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
 
 
 def draw_callback_2d(self, context):
@@ -435,8 +435,8 @@ def draw_callback_2d(self, context):
             )
 
     # progress bar
-    if wm.draw_progress and context.window_manager.progress not in [0, 1]:
-        draw_progressbar(wm.progress)
+    #if wm.draw_progress and context.window_manager.progress not in [0, 1]:
+    #    draw_progressbar(wm.progress)
 
     # log messages
     if wm.draw_messages:
@@ -455,7 +455,7 @@ def draw_callback_2d(self, context):
     # restore opengl defaults
     bgl.glLineWidth(1)
     bgl.glDisable(bgl.GL_BLEND)
-    bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
+    #bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
 
 
 class DisplayInformationOperator(Operator):
@@ -466,7 +466,7 @@ class DisplayInformationOperator(Operator):
 
     def get_drawing_status(self):
         """TODO Missing documentation"""
-        return bpy.context.window_manager['drawing_status']
+        return bpy.context.window_manager.drawing_status
 
     def set_drawing_status(self, value):
         """
@@ -479,7 +479,7 @@ class DisplayInformationOperator(Operator):
         """
         bpy.context.window_manager.drawing_status = value
 
-    running = BoolProperty(
+    running : BoolProperty(
         name="running",
         description="Whether the drawing thread is running or not.",
         get=get_drawing_status,
@@ -559,12 +559,21 @@ def setProgress(value, info=None):
 
     """
     global progressinfo
-    c = bpy.context
-    c.window_manager.progress = value
-    import sys
-    if not "-b" in sys.argv:
-        bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
-    progressinfo = info
+    win = bpy.context.window_manager
+    if not progressinfo:
+        win.progress_begin(0, 100)
+        win.progress_update(value*100)
+        progressinfo = value
+    elif progressinfo > value:
+        win.progress_end()
+        win.progress_begin(0, 100)
+        win.progress_update(value*100)
+        progressinfo = value
+    #c.window_manager.progress = value
+    #import sys
+    #    if not "-b" in sys.argv:
+    #bpy.ops.wm.redraw_timer(type='DRAW_WIN_SWAP', iterations=1)
+    #progressinfo = info
     #
     # for area in c.screen.areas:
     #     if area.type == 'VIEW_3D':
@@ -572,6 +581,12 @@ def setProgress(value, info=None):
     #         area.tag_redraw()
     #         break
 
+def endProgress():
+    global progressinfo
+    win = bpy.context.window_manager
+    if progressinfo:
+        win.progress_end()
+        progressinfo = None
 
 def register():
     """TODO Missing documentation"""

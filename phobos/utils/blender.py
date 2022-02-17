@@ -63,7 +63,7 @@ def getBlenderVersion():
 
 def getPhobosPreferences():
     """TODO Missing documentation"""
-    return bpy.context.user_preferences.addons["phobos"].preferences
+    return bpy.context.preferences.addons["phobos"].preferences
 
 
 def printMatrices(obj, info=None):
@@ -122,27 +122,26 @@ def createPrimitive(
 
     """
     # TODO: allow placing on currently active layer?
-    try:
-        n_layer = int(player)
-    except ValueError:
-        n_layer = defs.layerTypes[player]
-    players = defLayers([n_layer])
+    #try:
+    #    n_layer = int(player)
+    #except ValueError:
+    #    n_layer = defs.layerTypes[player]
+    #players = defLayers([n_layer])
     # the layer has to be active to prevent problems with object placement
-    bpy.context.scene.layers[n_layer] = True
+    #bpy.context.scene.layers[n_layer] = True
     if ptype == "box":
-        bpy.ops.mesh.primitive_cube_add(layers=players, location=plocation, rotation=protation)
+        bpy.ops.mesh.primitive_cube_add(location=plocation, rotation=protation)
         obj = bpy.context.object
         obj.dimensions = psize
     elif ptype == "sphere":
         bpy.ops.mesh.primitive_uv_sphere_add(
-            size=psize, layers=players, location=plocation, rotation=protation
+            radius=psize, location=plocation, rotation=protation
         )
     elif ptype == "cylinder":
         bpy.ops.mesh.primitive_cylinder_add(
             vertices=32,
             radius=psize[0],
             depth=psize[1],
-            layers=players,
             location=plocation,
             rotation=protation,
             end_fill_type='TRIFAN',
@@ -153,7 +152,6 @@ def createPrimitive(
             radius=psize[0],
             depth=psize[1],
             cap_end=True,
-            layers=players,
             location=plocation,
             rotation=protation,
             end_fill_type='TRIFAN',
@@ -165,15 +163,14 @@ def createPrimitive(
             fill_type='TRIFAN',
             location=plocation,
             rotation=protation,
-            layers=players,
         )
     elif ptype == 'ico':
         bpy.ops.mesh.primitive_ico_sphere_add(
-            size=psize, layers=players, location=plocation, rotation=protation
+            radius=psize, location=plocation, rotation=protation
         )
     else:
         log("Primitive type not found: " + ptype + ". Adding default cube instead.", 'WARNING')
-        bpy.ops.mesh.primitive_cube_add(layers=players, location=plocation, rotation=protation)
+        bpy.ops.mesh.primitive_cube_add(location=plocation, rotation=protation)
         obj = bpy.context.object
         obj.dimensions = psize
 
@@ -181,6 +178,7 @@ def createPrimitive(
     obj = bpy.context.object
     if phobostype:
         obj.phobostype = phobostype
+        sortObjectToCollection(obj, cname=phobostype)
     nUtils.safelyName(obj, pname, phobostype)
     if pmaterial:
         materials.assignMaterial(obj, pmaterial)
@@ -200,44 +198,30 @@ def setObjectLayersActive(obj, extendlayers=False):
     Returns:
 
     """
-    for layer in range(len(obj.layers)):
-        if extendlayers:
-            bpy.context.scene.layers[layer] |= obj.layers[layer]
-        else:
-            bpy.context.scene.layers[layer] = obj.layers[layer]
+    for cname, coll in bpy.context.scene.collection.children.items():
+        if obj.name in coll.objects:
+            bpy.context.window.view_layer.layer_collection.children[cname].exclude = False
+        elif not extendlayers:
+            bpy.context.window.view_layer.layer_collection.children[cname].exclude = True
 
 
-def toggleLayer(index, value=None):
-    """This function toggles a specific layer or sets it to a desired value.
+def toggleLayer(cname, value=None):
+    """This function toggles a specific collection or sets it to a desired value.
 
     Args:
-      index(int): The layer index you want to change.
+      cname(string): The collection name you want to change.
       value(bool, optional): True if visible, None for toggle. (Default value = None)
 
     Returns:
 
     """
+    craeteCollectionIfNotExists(cname)
+    coll = bpy.context.window.view_layer.layer_collection.children[cname]
     if value:
-        bpy.context.scene.layers[index] = value
+        coll.exclude = not value
     else:
-        bpy.context.scene.layers[index] = not bpy.context.scene.layers[index]
+        coll.exclude = not coll.exclude
 
-
-def defLayers(layerlist):
-    """Returns a list of 20 elements encoding the visible layers according to layerlist
-
-    Args:
-      layerlist: 
-
-    Returns:
-
-    """
-    if not isinstance(layerlist, list):
-        layerlist = [layerlist]
-    layers = 20 * [False]
-    for layer in layerlist:
-        layers[layer] = True
-    return layers
 
 
 def updateTextFile(textfilename, newContent):
@@ -398,7 +382,7 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
     else:  # use real rendering
         # create camera
         bpy.ops.object.camera_add(view_align=True)
-        cam = bpy.context.scene.objects.active
+        cam = bpy.context.active_object
         bpy.data.cameras[cam.data.name].type = 'ORTHO'
         bpy.data.scenes[0].camera = cam  # set camera as active camera
 
@@ -406,7 +390,7 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
         bpy.ops.view3d.camera_to_view_selected()
         # create light
         bpy.ops.object.lamp_add(type='SUN', radius=1)
-        light = bpy.context.scene.objects.active
+        light = bpy.context.active_object
         light.matrix_world = cam.matrix_world
         # set background
         oldcolor = bpy.data.worlds[0].horizon_color.copy()
@@ -458,7 +442,7 @@ def switchToScene(scenename):
     """
     if scenename not in bpy.data.scenes.keys():
         bpy.data.scenes.new(scenename)
-    bpy.context.screen.scene = bpy.data.scenes[scenename]
+    bpy.context.window.scene = bpy.data.scenes[scenename]
     return bpy.data.scenes[scenename]
 
 
@@ -478,7 +462,7 @@ def getCombinedDimensions(objects):
     bbpoints = []
     for o in objects:
         for p in o.bound_box:
-            bbpoints.append(o.matrix_world * mathutils.Vector(p))
+            bbpoints.append(o.matrix_world @ mathutils.Vector(p))
     mindims = [min([bbpoint[i] for bbpoint in bbpoints]) for i in (0, 1, 2)]
     maxdims = [max([bbpoint[i] for bbpoint in bbpoints]) for i in (0, 1, 2)]
     return [abs(maxdims[i] - mindims[i]) for i in (0, 1, 2)]
@@ -494,7 +478,34 @@ def getPhobosConfigPath():
     Returns:
 
     """
-    if bpy.context.user_preferences.addons["phobos"].preferences.configfolder != '':
-        return bpy.context.user_preferences.addons["phobos"].preferences.configfolder
+    if bpy.context.preferences.addons["phobos"].preferences.configfolder != '':
+        return bpy.context.preferences.addons["phobos"].preferences.configfolder
     else:  # the following if copied from setup.py, may be imported somehow in the future
         return getConfigPath()
+
+def sortObjectToCollection(obj, cname="Collection"):
+    set_active = False
+    if bpy.context.active_object == obj:
+        set_active = True
+    craeteCollectionIfNotExists(cname)
+    for name, collection in bpy.context.scene.collection.children.items():
+        if name == cname:
+            if not obj.name in collection.objects:
+                collection.objects.link(obj)
+        elif obj.name in collection.objects:
+            collection.objects.unlink(obj)
+    # unlink from general scene collection
+    if obj.name in bpy.context.scene.collection.objects:
+        bpy.context.scene.collection.objects.unlink(obj)
+    if set_active:
+        bpy.context.view_layer.objects.active = obj
+
+def craeteCollectionIfNotExists(cname="Collection"):
+    if not cname in bpy.context.scene.collection.children.keys():
+        newcollection = bpy.data.collections.new(cname)
+        bpy.context.scene.collection.children.link(newcollection)
+
+def activateObjectCollection(obj):
+    for cname,coll in bpy.context.scene.collection.children.items():
+        if obj.name in coll.objects:
+            toggleLayer(cname, True)

@@ -1,0 +1,119 @@
+{
+  "submechanisms": {
+    "revolute": {
+      "type": "R",
+      "joints": {
+        "active": [
+          "revolute"
+        ],
+        "independent": [
+          "revolute"
+        ],
+        "spanningtree": [
+          "revolute"
+        ]
+      }
+    },
+    "universal": {
+      "type": "RR",
+      "joints": {
+        "active": [
+          "revolute1",
+          "revolute2"
+        ],
+        "independent": [
+          "revolute1",
+          "revolute2"
+        ],
+        "spanningtree": [
+          "revolute1",
+          "revolute2"
+        ]
+      }
+    },
+    "spherical": {
+      "type": "RRR",
+      "joints": {
+        "active": [
+          "revolute1",
+          "revolute2",
+          "revolute3"
+        ],
+        "independent": [
+          "revolute1",
+          "revolute2",
+          "revolute3"
+        ],
+        "spanningtree": [
+          "revolute1",
+          "revolute2",
+          "revolute3"
+        ]
+      }
+    },
+    "lambda_mechanism": {
+      "type": "rrPr",
+      "joints": {
+        "active": [
+          "prismatic1"
+        ],
+        "independent": [
+          "revolute1"
+        ],
+        "spanningtree": [
+          "revolute1",
+          "revolute2",
+          "prismatic1"
+        ]
+      }
+    },
+    "2SPRR+1U": {
+      "type": "2sPrr+1u",
+      "joints": {
+        "active": [
+          "prismatic7",
+          "prismatic10"
+        ],
+        "independent": [
+          "revolute1",
+          "revolute2"
+        ],
+        "spanningtree": [
+          "revolute1",
+          "revolute2",
+          "revolute3",
+          "revolute4",
+          "revolute5",
+          "revolute6",
+          "prismatic7",
+          "revolute8",
+          "revolute9",
+          "prismatic10"
+        ]
+      }
+    },
+    "2SPU+1U": {
+      "type": "2sPu+1u",
+      "joints": {
+        "active": [
+          "prismatic5",
+          "prismatic8"
+        ],
+        "independent": [
+          "revolute1",
+          "revolute2"
+        ],
+        "spanningtree": [
+          "revolute1",
+          "revolute2",
+          "revolute3",
+          "revolute4",
+          "prismatic5",
+          "revolute6",
+          "revolute7",
+          "prismatic8"
+        ]
+      }
+    }
+  }
+}

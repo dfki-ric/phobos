@@ -12,7 +12,7 @@
 import os
 import copy
 from datetime import datetime
-import yaml
+import json
 
 import bpy
 import mathutils
@@ -106,32 +106,37 @@ def deriveMaterial(mat, logging=False, errors=None):
 
     # create color dictionaries
     material['diffuseColor'] = dict(
-        zip(['r', 'g', 'b'], [mat.diffuse_intensity * num for num in list(mat.diffuse_color)])
+        zip(['r', 'g', 'b'], [1.0 * num for num in list(mat.diffuse_color[:3])])
     )
     material['ambientColor'] = dict(
         zip(
             ['r', 'g', 'b'],
-            [mat.ambient * mat.diffuse_intensity * num for num in list(mat.diffuse_color)],
+            [1.0 * num for num in list(mat.diffuse_color)],
         )
     )
     material['specularColor'] = dict(
         zip(['r', 'g', 'b'], [mat.specular_intensity * num for num in list(mat.specular_color)])
     )
-    if mat.emit > 0:
-        material['emissionColor'] = dict(
-            zip(
-                ['r', 'g', 'b'],
-                [mat.emit * mat.specular_intensity * num for num in list(mat.specular_color)],
-            )
-        )
-    material['shininess'] = mat.specular_hardness / 2
-    if mat.use_transparency:
-        material['transparency'] = 1.0 - mat.alpha
+    # todo: if mat.emit > 0:
+    #     material['emissionColor'] = dict(
+    #         zip(
+    #             ['r', 'g', 'b'],
+    #             [mat.emit * mat.specular_intensity * num for num in list(mat.specular_color)],
+    #         )
+    #     )
+    # todo: material['shininess'] = mat.specular_hardness / 2
+    material['shininess'] = mat.roughness * 100
+    #todo: if mat.use_transparency:
+    if mat.diffuse_color[3] != 1.0:
+        material['transparency'] = 1.0 - mat.diffuse_color[3]
 
     # return material without texture information if there are validation errors
     if errors:
         return material
 
+    if mat.node_tree:
+        textures = [x for x in mat.node_tree.nodes if x.type=='TEX_IMAGE']
+        print(textures[0])
     # there are always 18 slots, regardless of whether they are filled or not
     for tex in mat.texture_slots:
         if tex is not None:
@@ -341,15 +346,31 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         if len(minmax) == 2:
             limits['lower'] = minmax[0]
             limits['upper'] = minmax[1]
+    if 'maxSpeed' in props:
+        limits['velocity'] = props['maxSpeed']
+        del props['maxSpeed']
+    if 'maxspeed' in props:
+        limits['velocity'] = props['maxspeed']
+        del props['maxspeed']
+    if 'maxVelocity' in props:
+        limits['velocity'] = props['maxVelocity']
+        del props['maxVelocity']
     if 'maxvelocity' in props:
         limits['velocity'] = props['maxvelocity']
         del props['maxvelocity']
+    if 'maxEffort' in props:
+        limits['effort'] = props['maxEffort']
+        del props['maxEffort']
     if 'maxeffort' in props:
         limits['effort'] = props['maxeffort']
         del props['maxeffort']
     if limits != {}:
         props['limits'] = limits
     props['pose'] = deriveObjectPose(obj)
+    if "$motor" in props:
+        # transfer motor limits
+        props["$motor"]["maxEffort"] = limits['effort']
+        props["$motor"]["maxSpeed"] = limits['velocity']
     # TODO: what about these?
     # - calibration
     # - dynamics
@@ -415,24 +436,24 @@ def deriveVisual(obj, logging=True, **kwargs):
     if material:
         visual['material'] = material['name']
 
-    if obj.lod_levels:
-        if 'lodmaxdistances' in obj:
-            maxdlist = obj['lodmaxdistances']
-        else:
-            maxdlist = [obj.lod_levels[i + 1].distance for i in range(len(obj.lod_levels) - 1)] + [
-                100.0
-            ]
-        lodlist = []
-        for i in range(len(obj.lod_levels)):
-            filename = obj.lod_levels[i].object.data.name + ioUtils.getOutputMeshtype()
-            lodlist.append(
-                {
-                    'start': obj.lod_levels[i].distance,
-                    'end': maxdlist[i],
-                    'filename': os.path.join('meshes', filename),
-                }
-            )
-        visual['lod'] = lodlist
+    #todo2.9: if obj.lod_levels:
+    #     if 'lodmaxdistances' in obj:
+    #         maxdlist = obj['lodmaxdistances']
+    #     else:
+    #         maxdlist = [obj.lod_levels[i + 1].distance for i in range(len(obj.lod_levels) - 1)] + [
+    #             100.0
+    #         ]
+    #     lodlist = []
+    #     for i in range(len(obj.lod_levels)):
+    #         filename = obj.lod_levels[i].object.data.name + ioUtils.getOutputMeshtype()
+    #         lodlist.append(
+    #             {
+    #                 'start': obj.lod_levels[i].distance,
+    #                 'end': maxdlist[i],
+    #                 'filename': os.path.join('meshes', filename),
+    #             }
+    #         )
+    #     visual['lod'] = lodlist
     return visual
 
 
@@ -788,8 +809,8 @@ def deriveTextData(modelname):
         except IndexError:
             log("Possibly invalidly named model data text file: " + modelname, "WARNING")
         try:
-            data = yaml.load(bUtils.readTextFile(text.name))
-        except yaml.scanner.ScannerError:
+            data = json.loads(bUtils.readTextFile(text.name))
+        except:
             log("Invalid formatting of data file: " + dataname, "ERROR")
         if data:
             datadict[dataname] = data
@@ -875,11 +896,11 @@ def deriveTextData(modelname):
 
 #             # derive additional joint
 #             model['joints'][a.name] = deriveJoint(rootlink, adjust=True)
-#             # print(yaml.dump(model['joints'][a.name]))
+#             # print(json.dumps(model['joints'][a.name]))
 #             model['joints'][a.name]['name'] = namespaced(rootlink.name, a.name)
 #             model['joints'][a.name]['parent'] = namespaced(parentlinkname, a.parent.parent.parent.name)
 #             model['joints'][a.name]['child'] = namespaced(rootlink.name, a.name)
-#             # print(yaml.dump(model['joints'][a.name]))
+#             # print(json.dumps(model['joints'][a.name]))
 #     return model
 
 
@@ -1085,27 +1106,27 @@ def deriveModelDictionary(root, name='', objectlist=[]):
                 and (obj.data.name not in model['meshes'])
             ):
                 model['meshes'][obj.data.name] = obj
-                for lod in obj.lod_levels:
-                    if lod.object.data.name not in model['meshes']:
-                        model['meshes'][lod.object.data.name] = lod.object
+                #todo2.9: for lod in obj.lod_levels:
+                #     if lod.object.data.name not in model['meshes']:
+                #         model['meshes'][lod.object.data.name] = lod.object
         except KeyError:
             log("Undefined geometry type in object " + obj.name, "ERROR")
 
     # gather information on groups of objects
     log("Parsing groups...", 'INFO')
-    # TODO: get rid of the "data" part and check for relation to robot
-    for group in bpy.data.groups:
-        # skip empty groups
-        if not group.objects:
-            continue
+    #todo2.9: TODO: get rid of the "data" part and check for relation to robot
+    # for group in bpy.data.groups:
+    #     # skip empty groups
+    #     if not group.objects:
+    #         continue
 
-        # handle submodel groups separately from other groups
-        if 'submodeltype' in group.keys():
-            continue
-            # TODO create code to derive Submodels
-            # model['submodels'] = deriveSubmodel(group)
-        elif nUtils.getObjectName(group, 'group') != "RigidBodyWorld":
-            model['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
+    #     # handle submodel groups separately from other groups
+    #     if 'submodeltype' in group.keys():
+    #         continue
+    #         # TODO create code to derive Submodels
+    #         # model['submodels'] = deriveSubmodel(group)
+    #     elif nUtils.getObjectName(group, 'group') != "RigidBodyWorld":
+    #         model['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
 
     # gather information on chains of objects
     log("Parsing chains...", "INFO")
@@ -1201,7 +1222,7 @@ def buildModelFromDictionary(model):
         newobjects.extend(model['links'][lnk]['object'].children)
 
     log("Setting parent-child relationships", 'INFO', prefix='\n')
-    bUtils.toggleLayer(defs.layerTypes['link'], True)
+    bUtils.toggleLayer('link', True)
     for lnk in model['links']:
         parent = model['links'][lnk]
 

@@ -11,8 +11,6 @@
 
 """
 Handles different import attempts to cope with Blender's *Reload script* functionality.
-
-Contains also some adjustments to make YAML imports deal with booleans appropriately.
 """
 
 import sys
@@ -23,7 +21,6 @@ import pkgutil
 # TODO double import of basemodule?
 import bpy
 import phobos
-import yaml
 
 def import_submodules(package, recursive=True, verbose=False):
     """Import all submodules of a module, recursively, including subpackages.
@@ -72,7 +69,7 @@ bl_info = {
     "description": "A toolbox to enable editing of robot models in Blender.",
     "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Simon Reichel",
     "version": (1, 0, 1),
-    "blender": (2, 79, 0),
+    "blender": (2, 90, 0),
     "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
@@ -81,56 +78,6 @@ bl_info = {
     "category": "Development",
 }
 
-# TODO rework yaml import: loading module twice if yaml is not found...
-installconfpath = os.path.dirname(__file__) + "/installation.conf"
-if os.path.isfile(installconfpath):
-    with open(installconfpath, 'r') as conffile:
-        python_package_path = conffile.readline().split(' #')[0]
-        python_executable = conffile.readline().split(' #')[0]
-        blender_executable = conffile.readline().split(' #')[0]
-        python_version = conffile.readline().split(' #')[0]
-        blender_version = conffile.readline().split(' #')[0]
-else:
-    raise FileNotFoundError('No .conf file found. Please reinstall phobos.')
-
-
-# Add custom YAML (de-)serializer
-def bool_representer(dumper, data):
-    """
-
-    Args:
-      dumper: 
-      data: 
-
-    Returns:
-
-    """
-    if data == '$true':
-        return dumper.represent_bool(True)
-    elif data == '$false':
-        return dumper.represent_bool(False)
-    else:
-        return dumper.represent_str(str(data))
-
-
-yaml.add_representer(str, bool_representer)
-
-
-def bool_constructor(self, node):
-    """
-
-    Args:
-      node: 
-
-    Returns:
-
-    """
-    value = self.construct_yaml_bool(node)
-    return '$true' if value else '$false'
-
-
-yaml.Loader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
-yaml.SafeLoader.add_constructor(u'tag:yaml.org,2002:bool', bool_constructor)
 
 # Recursively import all submodules
 print("Importing phobos")
@@ -147,8 +94,14 @@ def register():
     Returns:
 
     """
+    #bpy.utils.register_module(__name__)
+    phobos.blender.operators.selection.register()
+    phobos.blender.operators.io.register()
+    phobos.blender.operators.editing.register()
+    phobos.blender.operators.generic.register()
+    phobos.blender.operators.naming.register()
+    phobos.blender.operators.poses.register()
     phobos.blender.phobosgui.register()
-    bpy.utils.register_module(__name__)
 
 
 def unregister():

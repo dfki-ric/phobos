@@ -1,0 +1,80 @@
+{
+  "joints": {
+    "revolute": {
+      "maxeffort": {
+        "required": true,
+        "default": 0.0
+      },
+      "maxvelocity": {
+        "required": true,
+        "default": 0.0
+      },
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    },
+    "continuous": {
+      "maxeffort": {
+        "required": true,
+        "default": 0.0
+      },
+      "maxvelocity": {
+        "required": true,
+        "default": 0.0
+      },
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    },
+    "prismatic": {
+      "maxeffort": {
+        "required": true,
+        "default": 0.0
+      },
+      "maxvelocity": {
+        "required": true,
+        "default": 0.0
+      },
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    },
+    "fixed": {
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    },
+    "floating": {
+      "maxeffort": {
+        "required": true,
+        "default": 0.0
+      },
+      "maxvelocity": {
+        "required": true,
+        "default": 0.0
+      },
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    },
+    "planar": {
+      "maxeffort": {
+        "required": true,
+        "default": 0.0
+      },
+      "maxvelocity": {
+        "required": true,
+        "default": 0.0
+      },
+      "passive": {
+        "required": false,
+        "default": false
+      }
+    }
+  }
+}

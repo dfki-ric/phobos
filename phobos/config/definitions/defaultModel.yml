@@ -1,0 +1,248 @@
+{
+  "model": {
+    "sensors": {
+      "$forElem": {
+        "type": {
+          "required": true,
+          "default": "CameraSensor"
+        },
+        "$selection__type": {}
+      }
+    },
+    "geometry": {
+      "isReference": true,
+      "type": {
+        "required": true,
+        "default": "box"
+      },
+      "$selection__type": {
+        "box": {
+          "size": {
+            "required": true,
+            "default": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "sphere": {
+          "radius": {
+            "required": true,
+            "default": 1.0
+          }
+        },
+        "cylinder": {
+          "radius": {
+            "required": true,
+            "default": 1.0
+          },
+          "length": {
+            "required": true,
+            "default": 1.0
+          }
+        },
+        "plane": {
+          "size": {
+            "required": true,
+            "default": [
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "mesh": {
+          "filename": {
+            "required": true,
+            "default": "meshFileName"
+          }
+        }
+      }
+    },
+    "pose": {
+      "isReference": true,
+      "matrix": {
+        "required": true,
+        "default": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "rotation_euler": {
+        "required": true,
+        "default": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "rotation_quaternion": {
+        "required": true,
+        "default": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "translation": {
+        "required": true,
+        "default": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "links": {
+      "$forElem": {
+        "approxcollision": {
+          "required": true,
+          "default": []
+        },
+        "name": {
+          "required": true,
+          "default": "linkName"
+        },
+        "$reference": "pose",
+        "visual": {
+          "$forElem": {
+            "name": {
+              "required": true,
+              "default": "visualName"
+            },
+            "$reference": "pose"
+          }
+        },
+        "inertial": {
+          "inertia": {
+            "required": true,
+            "default": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "mass": {
+            "required": true,
+            "default": 1.0
+          },
+          "name": {
+            "required": true,
+            "default": "inertialName"
+          },
+          "$reference": "pose"
+        },
+        "collision": {
+          "$forElem": {
+            "name": {
+              "required": true,
+              "default": "collisionName"
+            },
+            "$reference": "geometry"
+          }
+        }
+      }
+    },
+    "joints": {
+      "$forElem": {
+        "state": {
+          "matrix": {
+            "required": true,
+            "default": [
+              [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ]
+          },
+          "rotation_euler": {
+            "required": true,
+            "default": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "rotation_quaternion": {
+            "required": true,
+            "default": [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "translation": {
+            "required": true,
+            "default": [
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "child": {
+          "required": true,
+          "default": "jointChild"
+        },
+        "name": {
+          "required": true,
+          "default": "jointName"
+        },
+        "parent": {
+          "required": true,
+          "default": "jointParent"
+        },
+        "type": {
+          "required": true,
+          "default": "floating"
+        }
+      }
+    }
+  }
+}

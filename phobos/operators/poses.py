@@ -36,8 +36,8 @@ def get_robot_names(scene, context):
     """
 
     Args:
-      scene: 
-      context: 
+      scene:
+      context:
 
     Returns:
 
@@ -51,8 +51,8 @@ def get_pose_names(scene, context):
     """
 
     Args:
-      scene: 
-      context: 
+      scene:
+      context:
 
     Returns:
 
@@ -83,7 +83,7 @@ def get_pose_names(scene, context):
 #     def poll(self, context):
 #         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
 #         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-#         root = sUtils.isRoot(context.scene.objects.active)
+#         root = sUtils.isRoot(context.view_layer.objects.active)
 #         return root and bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()
 #
 #     def invoke(self, context, event):
@@ -128,7 +128,7 @@ def get_pose_names(scene, context):
 #         result = False
 #         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
 #         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-#         root = sUtils.isRoot(context.scene.objects.active)
+#         root = sUtils.isRoot(context.view_layer.objects.active)
 #         if root and \
 #            (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()) and \
 #            (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["model/name"]) and \
@@ -140,8 +140,8 @@ def get_pose_names(scene, context):
 #         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
 #         activeModelPoseIndex = bpy.context.scene.active_ModelPose
 #         modelPose = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
-#         root = sUtils.getRoot(context.scene.objects.active)
-#         bpy.context.scene.objects.active = root
+#         root = sUtils.getRoot(context.view_layer.objects.active)
+#         bpy.context.view_layer.objects.active = root
 #         poses.loadPose(modelPose.robot_name, modelPose.label)
 #         return {'FINISHED'}
 
@@ -153,17 +153,17 @@ class StorePoseOperator(Operator):
     bl_label = "Store Current Pose"
     bl_options = {'REGISTER', 'UNDO'}
 
-    robot_name = EnumProperty(
+    robot_name : EnumProperty(
         items=get_robot_names, name="Robot", description="Robot to store pose for"
     )
 
-    pose_name = StringProperty(name="Pose Name", default="New Pose", description="Name of new pose")
+    pose_name : StringProperty(name="Pose Name", default="New Pose", description="Name of new pose")
 
     def execute(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -180,11 +180,11 @@ class LoadPoseOperator(Operator):
     bl_label = "Load Pose"
     bl_options = {'REGISTER', 'UNDO'}
 
-    robot_name = EnumProperty(
+    robot_name : EnumProperty(
         items=get_robot_names, name="Robot Name", description="Robot to load a pose for"
     )
 
-    pose_name = EnumProperty(
+    pose_name : EnumProperty(
         items=get_pose_names, name="Pose Name", description="Name of pose to load"
     )
 
@@ -192,7 +192,7 @@ class LoadPoseOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -300,7 +300,7 @@ class ChangePreviewOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -312,8 +312,8 @@ class ChangePreviewOperator(bpy.types.Operator):
             if activeModelPose.type != "robot_name":
                 # show on view_3d
                 root = None
-                if context.scene.objects.active != None:
-                    root = sUtils.getRoot(context.scene.objects.active)
+                if context.view_layer.objects.active != None:
+                    root = sUtils.getRoot(context.view_layer.objects.active)
                 if (
                     not bpy.context.scene.preview_visible
                     and (bpy.data.images[activeModelPoseIndex].type == 'IMAGE')
@@ -355,8 +355,8 @@ class DrawPreviewOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -376,7 +376,7 @@ class DrawPreviewOperator(bpy.types.Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -395,16 +395,22 @@ class DrawPreviewOperator(bpy.types.Operator):
         context.window_manager.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
+classes = (
+    StorePoseOperator,
+    LoadPoseOperator,
+    ChangePreviewOperator,
+    DrawPreviewOperator,
+)
 
 def register():
     """TODO Missing documentation"""
     print("Registering operators.misc...")
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    for classdef in classes:
         bpy.utils.register_class(classdef)
 
 
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.misc...")
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    for classdef in classes:
         bpy.utils.unregister_class(classdef)

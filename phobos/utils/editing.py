@@ -35,10 +35,11 @@ def dissolveLink(obj, delete_other=False):
 
     """
 
-    # Store original layers
-    originallayers = list(bpy.context.scene.layers)
-    # Select all layers which contain
-    bpy.context.scene.layers = [True for i in range(20)]
+    # Store original layers and show all layers
+    originallayers = {}
+    for name, coll in bpy.context.window.view_layer.layer_collection.children.items():
+        originallayers[name] = coll.exclude
+        coll.exclude = False
 
     if not obj.phobostype == 'link':
         log('Selected object {} is not a link!'.format(obj.name), 'ERROR')
@@ -70,7 +71,8 @@ def dissolveLink(obj, delete_other=False):
             sUtils.selectObjects(delete, clear=True, active=-1)
             bpy.ops.object.delete()
     # Restore original layers
-    bpy.context.scene.layers = originallayers
+    for key, value in originallayers.items():
+        bpy.context.window.view_layer.layer_collection.children[key].exclude = value
 
 
 def getCombinedTransform(obj, effectiveparent):
@@ -97,7 +99,7 @@ def getCombinedTransform(obj, effectiveparent):
     if parent:
         scale_mat = mathutils.Matrix.Identity(4)
         scale_mat[0][0], scale_mat[1][1], scale_mat[2][2] = parent.matrix_world.to_scale()
-        matrix = scale_mat * matrix
+        matrix = scale_mat @ matrix
 
     # combine transformations up to effective parent
     while parent is not None:
@@ -105,7 +107,7 @@ def getCombinedTransform(obj, effectiveparent):
             break
 
         # use relative rotation
-        matrix = parent.matrix_local * matrix
+        matrix = parent.matrix_local @ matrix
         parent = parent.parent
 
     return matrix
@@ -203,11 +205,11 @@ def parentObjectsTo(objects, parent, clear=False):
         objects = [objects]
 
     # Store original layers
-    originallayers = list(bpy.context.scene.layers)
+    #originallayers = list(bpy.context.scene.layers)
     # Select all layers
-    bpy.context.scene.layers = [True for i in range(20)]
+    #bpy.context.scene.layers = [True for i in range(20)]
     # Restore original layers
-    bpy.context.scene.layers = originallayers
+    #bpy.context.scene.layers = originallayers
 
     if clear:
         sUtils.selectObjects(objects, active=0, clear=True)
@@ -388,7 +390,14 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
 
     # move objects to submodel layer
     for obj in physical_objects:
-        obj.layers = bUtils.defLayers(defs.layerTypes['submodel'])
+        if not 'submodel' in bpy.context.scene.collection.children.keys():
+            newcollection = bpy.data.collections.new('submodel')
+            bpy.context.scene.collection.children.link(newcollection)
+        for name, collection in bpy.context.scene.collection.children.items():
+            if name == 'submodel':
+                collection.objects.link(obj)
+            elif obj.name in collection.objects:
+                collection.objects.unlink(obj)
     log('Created submodel group ' + submodelname + ' of type "' + submodeltype + '".', 'DEBUG')
 
     interfacegroup = None
@@ -409,7 +418,7 @@ def defineSubmodel(submodelname, submodeltype, version='', objects=None):
 
         # move objects to interface layer
         for obj in interfaces:
-            obj.layers = bUtils.defLayers(defs.layerTypes['interface'])
+            bUtils.sortObjectToCollection(obj, cname='interface')
         log('Created interface group for submodel ' + submodelname + '.', 'DEBUG')
     else:
         log('No interfaces for this submodel.', 'DEBUG')
@@ -501,6 +510,9 @@ def createInterface(ifdict, parent=None):
     ifobj.scale = (scale,) * 3
     ifobj['interface/type'] = ifdict['type']
     ifobj['interface/direction'] = ifdict['direction']
+    if parent is not None:
+        ifobj['interface/parent'] = parent.name
+        parentObjectsTo(ifobj, parent)
     bpy.ops.object.make_single_user(object=True, obdata=True)
 
 
@@ -568,7 +580,7 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
         )
 
     childinterface.matrix_world = (
-        mathutils.Matrix.Translation(loc) * rot.to_matrix().to_4x4() * transform
+        mathutils.Matrix.Translation(loc) @ rot.to_matrix().to_4x4() @ transform
     )
 
     # TODO clean this up
@@ -625,7 +637,7 @@ def disconnectInterfaces(parentinterface, childinterface, transform=None):
 
     # apply additional transform
     if transform:
-        childinterface.matrix_world = root.matrix_world * transform
+        childinterface.matrix_world = root.matrix_world @ transform
 
     # make the interfaces active again
     parentinterface.show_name = True
@@ -696,6 +708,8 @@ def removeProperties(obj, props, recursive=False):
 
     """
     for prop in props:
+        if len(prop) == 0:
+            continue
         if prop in obj:
             del obj[prop]
         elif prop[-1] == '*':
@@ -775,13 +789,17 @@ def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
         annot_obj.data = ioUtils.getResource(['annotation', 'default']).data
 
     # make sure all layers are enabled for parenting
-    originallayers = list(bpy.context.scene.layers)
-    bpy.context.scene.layers = [True for i in range(20)]
+    originallayers = {}
+    for name, coll in bpy.context.window.view_layer.layer_collection.children.items():
+        originallayers[name] = coll.exclude
+        coll.exclude = False
 
     # parent annotation object
     parentObjectsTo(annot_obj, obj)
 
-    bpy.context.scene.layers = originallayers
+    # Restore original layers
+    for key, value in originallayers.items():
+        bpy.context.window.view_layer.layer_collection.children[key].exclude = value
 
     addAnnotation(annot_obj, annotation, namespace=namespace)
     return annot_obj
@@ -818,9 +836,8 @@ def sortObjectsToLayers(objs):
     """
     for obj in objs:
         if obj.phobostype != 'undefined':
-            layers = 20 * [False]
-            layers[defs.layerTypes[obj.phobostype]] = True
-            obj.layers = layers
+            # first check if we have a collcection for the type
+            bUtils.sortObjectToCollection(obj, cname=obj.phobostype)
         else:
             log("The phobostype of object {} is undefined.".format(obj.name), 'ERROR')
 
@@ -834,7 +851,7 @@ def smoothen_surface(obj):
     Returns:
 
     """
-    bpy.context.scene.objects.active = obj
+    bpy.context.view_layer.objects.active = obj
 
     # recalculate surface normals
     bpy.ops.object.mode_set(mode='EDIT')

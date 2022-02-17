@@ -1,0 +1,487 @@
+{
+  "sensors": {
+    "Ray_sensor": {
+      "general": {
+        "type": "ray_sensor",
+        "shape": "resource://ray",
+        "size": 0.2,
+        "categories": [
+          "scanning",
+          "SDF"
+        ]
+      },
+      "width": 144,
+      "height": 1,
+      "opening_width": "&0.5*math.pi&",
+      "opening_height": "&0.5*math.pi&",
+      "max_distance": 100,
+      "min_distance": 0,
+      "mars": {
+        "type": "RaySensor"
+      },
+      "sdf": {
+        "type": "ray",
+        "scan": {
+          "horizontal": {
+            "samples": 1,
+            "resolution": 1,
+            "min_angle": 0.0,
+            "max_angle": 0.0
+          },
+          "vertical": {
+            "samples": 1,
+            "resolution": 1,
+            "min_angle": 0.0,
+            "max_angle": 0.0
+          }
+        }
+      }
+    },
+    "Rotating_ray_sensor": {
+      "general": {
+        "type": "rotating_ray_sensor",
+        "shape": "disc",
+        "size": [
+          0.2,
+          36
+        ],
+        "categories": [
+          "scanning"
+        ]
+      },
+      "bands": 16,
+      "lasers": 32,
+      "max_distance": 100.0,
+      "draw_rays": true,
+      "opening_height": 0.698132,
+      "horizontal_resolution": "&(1/180)*math.pi&",
+      "horizontal_offset": 0.0,
+      "vertical_offset": 0.0,
+      "mars": {
+        "type": "RotatingRaySensor"
+      }
+    },
+    "Scanning_sonar": {
+      "general": {
+        "type": "scanning_sensor",
+        "shape": "disc",
+        "size": [
+          0.2,
+          36
+        ],
+        "categories": [
+          "scanning",
+          "SDF"
+        ]
+      },
+      "width": 64,
+      "height": 512,
+      "resolution": 0.1,
+      "min_dist": 0,
+      "max_dist": 100.0,
+      "hud_pos": 0,
+      "update_rate": 10,
+      "gain": 1,
+      "show_cam": false,
+      "only_ray": false,
+      "extension": [
+        0.01,
+        0.004,
+        0.004
+      ],
+      "left_limit": "&math.pi&",
+      "right_limit": "&(-1)*math.pi&",
+      "ping_pong_mode": false,
+      "mars": {
+        "type": "ScanningSonar"
+      },
+      "sdf": {
+        "type": "sonar",
+        "radius": 0.5
+      }
+    },
+    "Multi_level_laser_range_finder": {
+      "general": {
+        "type": "multi_level_laser_range_finder",
+        "shape": "disc",
+        "size": [
+          0.2,
+          36
+        ],
+        "categories": [
+          "scanning"
+        ]
+      },
+      "num_rays_vertical": 32,
+      "num_rays_horizontal": 1900,
+      "rtt_resolution_x": 512,
+      "rtt_resolution_y": 256,
+      "vertical_opening_angle": "&40/180.0 * math.pi&",
+      "horizontal_opening_angle": "&2*math.pi*1899/ 1900&",
+      "max_distance": 100.0,
+      "mars": {
+        "type": "MultiLevelLaserRangeFinder"
+      }
+    },
+    "Camera": {
+      "general": {
+        "type": "camera",
+        "shape": "resource://camera",
+        "size": 0.2,
+        "categories": [
+          "camera",
+          "SDF"
+        ]
+      },
+      "width": 640,
+      "height": 480,
+      "show_cam": true,
+      "opening_width": 90,
+      "opening_height": 90,
+      "hud_pos": 0,
+      "hud_width": 320,
+      "hud_height": 240,
+      "depth_image": false,
+      "mars": {
+        "type": "CameraSensor"
+      },
+      "sdf": {
+        "horizontal_fov": 1.047,
+        "clip": {
+          "near": 0.1,
+          "far": 0.1
+        }
+      }
+    },
+    "Logical_camera": {
+      "general": {
+        "type": "logical_camera",
+        "shape": "resource://camera",
+        "size": 0.2,
+        "categories": [
+          "camera",
+          "SDF"
+        ]
+      },
+      "sdf": {
+        "near": 0.0,
+        "far": 1.0,
+        "aspect_ratio": 1.0,
+        "horizontal_fov": 1.0
+      }
+    },
+    "Joint_position": {
+      "general": {
+        "type": "joint_position",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "JointPosition",
+        "id": "$selected_objects:joint"
+      }
+    },
+    "Joint_velocity": {
+      "general": {
+        "type": "joint_velocity",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "JointVelocity",
+        "id": "$selected_objects:joint"
+      }
+    },
+    "Joint_load": {
+      "general": {
+        "type": "joint_load",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "JointLoad",
+        "id": "$selected_objects:joint"
+      }
+    },
+    "Joint_torque": {
+      "general": {
+        "type": "joint_torque",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal",
+          "SDF"
+        ]
+      },
+      "mars": {
+        "type": "JointTorque",
+        "id": "$selected_objects:joint"
+      },
+      "sdf": {
+        "type": "force_torque",
+        "frame": "parent"
+      }
+    },
+    "Joint_AVG_torque": {
+      "general": {
+        "type": "joint_avg_torque",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "JointAVGTorque",
+        "id": "$selected_objects:joint"
+      }
+    },
+    "Joint_6_DOF": {
+      "general": {
+        "type": "joint_6_dof",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "Joint6DOF"
+      }
+    },
+    "Contact": {
+      "general": {
+        "type": "contact",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal",
+          "SDF"
+        ]
+      },
+      "mars": {
+        "type": "NodeContact",
+        "id": "$selected_objects:collision"
+      },
+      "sdf": {
+        "collision": "$selected_objects:collision",
+        "topic": "__default_topic__"
+      }
+    },
+    "Node_position": {
+      "general": {
+        "type": "node_position",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "NodePosition",
+        "id": "$selected_objects:link"
+      }
+    },
+    "Node_rotation": {
+      "general": {
+        "type": "node_rotation",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "NodeRotation",
+        "id": "$selected_objects:link"
+      }
+    },
+    "Node_contact_force": {
+      "general": {
+        "type": "node_contact_force",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "NodeContactForce",
+        "id": "$selected_objects:link"
+      }
+    },
+    "Node_COM": {
+      "general": {
+        "type": "node_com",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "NodeCOM",
+        "inertianame": "$selected_objects:inertial",
+        "id": "$selected_objects:link"
+      }
+    },
+    "Node_velocity": {
+      "general": {
+        "type": "node_velocity",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "NodeVelocity",
+        "id": "$selected_objects:link"
+      }
+    },
+    "Node_angular_velocity": {
+      "general": {
+        "type": "node_angular_velocity",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "NodeAngularVelocity",
+        "id": "$selected_objects:link"
+      }
+    },
+    "Motor_current": {
+      "general": {
+        "type": "motor_current",
+        "shape": "ico",
+        "size": 0.2,
+        "categories": [
+          "internal"
+        ]
+      },
+      "mars": {
+        "type": "MotorCurrent",
+        "id": "$selected_objects:joint"
+      }
+    },
+    "Inertial_measurement_unit": {
+      "general": {
+        "type": "inertial_measurement_unit",
+        "shape": "resource://imu",
+        "size": 0.2,
+        "categories": [
+          "internal",
+          "SDF"
+        ]
+      },
+      "mars": {
+        "type": "NodeIMU",
+        "id": "$selected_objects:link"
+      },
+      "sdf": {
+        "type": "imu"
+      }
+    },
+    "Altimeter": {
+      "general": {
+        "type": "altimeter",
+        "shape": "resource://altimeter",
+        "size": 0.2,
+        "categories": [
+          "environmental",
+          "SDF"
+        ],
+        "sdf": {
+          "vertical_position": {
+            "noise": {
+              "type": "none"
+            }
+          },
+          "vertical_velocity": {
+            "noise": {
+              "type": "none"
+            }
+          }
+        }
+      }
+    },
+    "Magnetometer": {
+      "general": {
+        "type": "magnetometer",
+        "shape": "resource://magnetometer",
+        "size": 0.2,
+        "categories": [
+          "environmental",
+          "SDF"
+        ]
+      }
+    },
+    "GPS": {
+      "general": {
+        "type": "gps",
+        "shape": "resource://gps",
+        "size": 0.2,
+        "categories": [
+          "environmental",
+          "SDF"
+        ]
+      }
+    },
+    "Wireless_transceiver": {
+      "general": {
+        "type": "wireless_transceiver",
+        "shape": "resource://wireless",
+        "size": 0.2,
+        "categories": [
+          "communication",
+          "SDF"
+        ]
+      },
+      "sdf": {
+        "type": "transceiver",
+        "gain": 2.5,
+        "power": 14.5
+      }
+    },
+    "RFID_sensor": {
+      "general": {
+        "type": "rfid_sensor",
+        "shape": "resource://rfid_sensor",
+        "size": 0.2,
+        "categories": [
+          "communication",
+          "SDF"
+        ]
+      },
+      "sdf": {
+        "type": "rfid"
+      }
+    },
+    "RFID_tag": {
+      "general": {
+        "type": "rfid_tag",
+        "shape": "resource://rfid_tag",
+        "size": 0.2,
+        "categories": [
+          "communication",
+          "SDF"
+        ]
+      },
+      "sdf": {
+        "type": "rfidtag"
+      }
+    }
+  }
+}

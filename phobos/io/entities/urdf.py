@@ -11,7 +11,7 @@
 
 from os import path
 import re
-import yaml
+import json
 import xml.etree.ElementTree as ET
 
 import bpy
@@ -63,17 +63,16 @@ def writeURDFGeometry(output, element, filepath):
         elif geometry['type'] == "sphere":
             output.append(xmlline(5, 'sphere', ['radius'], [geometry['radius']]))
         elif geometry['type'] == 'mesh':
-            meshpath = ioUtils.getOutputMeshpath(path.dirname(filepath))
+            meshpath = ioUtils.getOutputMeshpath(path.dirname(filepath), None, None) + geometry['filename'] + '.' + ioUtils.getOutputMeshtype()
+            if not "package://" in meshpath:
+                meshpath = path.relpath(meshpath, filepath)
             output.append(
                 xmlline(
                     5,
                     'mesh',
                     ['filename', 'scale'],
                     [
-                        path.join(
-                            path.relpath(meshpath, filepath),
-                            geometry['filename'] + '.' + ioUtils.getOutputMeshtype(),
-                        ),
+                        meshpath,
                         l2str(geometry['scale']),
                     ],
                 )
@@ -103,7 +102,7 @@ def exportUrdf(model, outpath):
     # CHECK test Windows path consistency
     order_file_name = model['name'] + '_urdf_order'
     if order_file_name in bpy.data.texts:
-        stored_element_order = yaml.load(bpy.data.texts[order_file_name].as_string())
+        stored_element_order = json.loads(bpy.data.texts[order_file_name].as_string())
 
     output = [xmlHeader, indent + '<robot name="' + model['name'] + '">\n\n']
     # export link information
@@ -374,7 +373,7 @@ def store_element_order(element_order, path):
     # element_order['joints'] = joint_order
 
     stream = open(path + '_element_order_debug.yml', 'w')
-    stream.write(yaml.dump(element_order))
+    stream.write(json.dumps(element_order, indent=2))
     stream.close()
 
 
@@ -483,7 +482,7 @@ def add_quaternion(rot1, rot2):
     """
     quat1 = mathutils.Quaternion(rot1)
     quat2 = mathutils.Quaternion(rot2)
-    quat_sum = quat1 * quat2
+    quat_sum = quat1 @ quat2
     return (quat_sum.w, quat_sum.x, quat_sum.y, quat_sum.z)
 
 
@@ -607,7 +606,7 @@ def importUrdf(filepath):
     # load element tree from file
     tree = ET.parse(filepath)
     root = tree.getroot()
-    model['name'] = root.attrib.get('name', 'URDFImport')
+    model['name'] = root.attrib['name']
     if 'version' in root.attrib:
         model['version'] = root.attrib['version']
 
@@ -726,7 +725,7 @@ def parseLink(link, urdffilepath):
                     "     Filepath for element "
                     + elementname
                     + ': '
-                    + path.relpath(filepath, start=urdffilepath),
+                    + filepath, #path.relpath(filepath, start=urdffilepath),
                     'DEBUG',
                 )
 

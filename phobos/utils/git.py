@@ -10,7 +10,7 @@
 # -------------------------------------------------------------------------------
 
 import subprocess
-import yaml
+import json
 import bpy
 import os
 from ..phoboslog import log
@@ -358,7 +358,7 @@ def getGitRemotes(category='', folder=None):
                     remotes['push'][linedata[0]] = linedata[1]
             except IndexError:
                 log("Git return line does not fit expected output format.", "ERROR")
-        log("Found the following remotes: " + yaml.dump(remotes), "DEBUG")
+        log("Found the following remotes: " + json.dump(remotes), "DEBUG")
         try:
             return remotes[category]
         except KeyError:

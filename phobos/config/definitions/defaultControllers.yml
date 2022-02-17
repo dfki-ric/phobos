@@ -1,0 +1,56 @@
+{
+  "controllers": {
+    "pid": {
+      "general": {
+        "type": "PID",
+        "shape": "resource://pid",
+        "size": 0.2,
+        "categories": [
+          "generic",
+          "motor"
+        ]
+      },
+      "p": 20.0,
+      "i": 1.0,
+      "d": 0.1
+    },
+    "direct": {
+      "general": {
+        "type": "direct",
+        "shape": "resource://direct",
+        "size": 0.2,
+        "categories": [
+          "generic",
+          "motor"
+        ]
+      }
+    },
+    "bldc": {
+      "general": {
+        "type": "BLDC",
+        "shape": "resource://bldc",
+        "size": 0.2,
+        "categories": [
+          "generic",
+          "motor"
+        ]
+      },
+      "torque_constant": 1.0,
+      "speed_constant": 1.0
+    },
+    "limes_position": {
+      "general": {
+        "type": "limes_position",
+        "shape": "resource://generic",
+        "size": 0.2,
+        "categories": [
+          "generic",
+          "motor"
+        ]
+      },
+      "p": 20.0,
+      "i": 0.1,
+      "d": 0.0
+    }
+  }
+}

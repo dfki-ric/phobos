@@ -37,6 +37,7 @@ import phobos.utils.validation as validation
 import phobos.utils.io as ioUtils
 import phobos.utils.naming as nUtils
 
+
 from phobos import defs
 from phobos import display
 
@@ -45,15 +46,15 @@ class ModelPoseProp(bpy.types.PropertyGroup):
     """TODO Missing documentation"""
 
     # DOCU missing class description
-    robot_name = StringProperty()
-    label = StringProperty()
-    hide = BoolProperty(default=True)
-    parent = StringProperty()
-    icon = StringProperty()
-    type = StringProperty()
-    path = StringProperty()
-    model_file = StringProperty()
-    preview = StringProperty()
+    robot_name : StringProperty()
+    label : StringProperty()
+    hide : BoolProperty(default=True)
+    parent : StringProperty()
+    icon : StringProperty()
+    type : StringProperty()
+    path : StringProperty()
+    model_file : StringProperty()
+    preview : StringProperty()
 
 
 class PhobosPrefs(AddonPreferences):
@@ -69,10 +70,10 @@ class PhobosPrefs(AddonPreferences):
     bl_idname = __package__
 
     # folder for robot/scene models (used for previews and imports)
-    modelsfolder = StringProperty(name="modelsfolder", subtype="DIR_PATH", default='')
+    modelsfolder : StringProperty(name="modelsfolder", subtype="DIR_PATH", default='')
 
     # user config folder for Phobos
-    configfolder = StringProperty(
+    configfolder : StringProperty(
         name="configfolder",
         subtype="DIR_PATH",
         description="Path to the system-dependent config folder of Phobos.",
@@ -80,48 +81,48 @@ class PhobosPrefs(AddonPreferences):
     )
 
     # gazebo model folder
-    gazebomodelfolder = StringProperty(
+    gazebomodelfolder : StringProperty(
         name="Gazebo Model Folder",
         subtype="DIR_PATH",
         description="Path to the Gazebo model folder.",
         default='',
     )
 
-    exportpluginsfolder = StringProperty(
+    exportpluginsfolder : StringProperty(
         name='exportpluginsfolder', subtype='DIR_PATH', default='.'
     )
 
-    username = StringProperty(
+    username : StringProperty(
         name='username',
         default='Anonymous',
         description="Name of the user/company (used for export information etc.)",
     )
 
-    useremail = StringProperty(
+    useremail : StringProperty(
         name='useremail',
         default='None',
         description="E-mail adress of the user/company (used for export information etc.)",
     )
 
-    logactive = BoolProperty(default=False, name='logactive', description="Activate logging")
+    logactive : BoolProperty(default=False, name='logactive', description="Activate logging")
 
-    logfile = StringProperty(name="logfile", subtype="FILE_PATH", default=".")
+    logfile : StringProperty(name="logfile", subtype="FILE_PATH", default=".")
 
-    loglevel = EnumProperty(
+    loglevel : EnumProperty(
         name="loglevel", items=tuple(((l,) * 3 for l in LOGLEVELS)), default="ERROR"
     )
 
-    logtofile = BoolProperty(name="logtofile", default=False)
+    logtofile : BoolProperty(name="logtofile", default=False)
 
-    logtoterminal = BoolProperty(name="logtoterminal", default=True)
+    logtoterminal : BoolProperty(name="logtoterminal", default=True)
 
-    models_poses = CollectionProperty(type=ModelPoseProp)
+    models_poses : CollectionProperty(type=ModelPoseProp)
 
     def draw(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -162,7 +163,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -175,7 +176,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -183,49 +184,58 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         # DOCU missing description
         return sorted([(mt,) * 3 for mt in meshes.mesh_types])
 
-    path = StringProperty(name='path', subtype='DIR_PATH', default='../', update=updateExportPath)
+    path : StringProperty(name='path', subtype='DIR_PATH', default='../', update=updateExportPath)
+
     # TODO: CHECK which props are visible in GUI?
-    selectedOnly = BoolProperty(
+    selectedOnly : BoolProperty(
         name="Selected only", default=True, description="Export only selected objects"
     )
-    decimalPlaces = IntProperty(
+    decimalPlaces : IntProperty(
         name="decimals", description="Number of " + "decimal places to export", default=5, min=3
     )
-    exportTextures = BoolProperty(name='Export textures', default=True)
-    outputMeshtype = EnumProperty(
+    exportTextures : BoolProperty(name='Export textures', default=True)
+    outputMeshtype : EnumProperty(
         items=getMeshTypeListForEnumProp,
         name='link',
         description="Mesh type to use in exported " + "entity/scene files.",
     )
+    outputPathtype : EnumProperty(
+        items=tuple(((l,) * 3 for l in ["relative", "ros_package"])),
+        name='file path',
+        description="Defines how pathes are generated in " + "entity/scene files.",
+    )
+
+    rosPackageName : StringProperty(name='ROS package name', default='robot_name_model')
+
 
     # obj optional information
     axis_forward_items = (
         (item, item + ' forward', item) for item in ('X', 'Y', 'Z', '-X', '-Y', '-Z')
     )
     axis_up_items = ((item, item + ' up', item) for item in ('X', 'Y', 'Z', '-X', '-Y', '-Z'))
-    obj_axis_forward = EnumProperty(
+    obj_axis_forward : EnumProperty(
         items=axis_forward_items,
         name='Forward',
         description="Forward axis of the obj export.",
         default='-Z',
     )
-    obj_axis_up = EnumProperty(
+    obj_axis_up : EnumProperty(
         items=axis_up_items, name='Up', description="Up axis of the obj export.", default='Y'
     )
 
-    export_sdf_mesh_type = EnumProperty(
+    export_sdf_mesh_type : EnumProperty(
         items=getMeshTypeListForEnumProp,
         name='SDF mesh type',
         description="Mesh type to use in exported SDF files.",
     )
 
-    export_sdf_model_config = BoolProperty(
+    export_sdf_model_config : BoolProperty(
         default=False,
         name='Export Gazebo model.config',
         description='Export model.config file along with the SDF file.',
     )
 
-    export_sdf_to_gazebo_models = BoolProperty(
+    export_sdf_to_gazebo_models : BoolProperty(
         default=False,
         name='Export to Gazebo models folder',
         description='Export model to the Gazebo models folder.',
@@ -242,14 +252,14 @@ class Mesh_Export_UIList(bpy.types.UIList):
         """
 
         Args:
-          context: 
-          layout: 
-          data: 
-          item: 
-          icon: 
-          active_data: 
-          active_propname: 
-          index: 
+          context:
+          layout:
+          data:
+          item:
+          icon:
+          active_data:
+          active_propname:
+          index:
 
         Returns:
 
@@ -281,21 +291,21 @@ class Models_Poses_UIList(bpy.types.UIList):
         """
 
         Args:
-          context: 
-          layout: 
-          data: 
-          item: 
-          icon: 
-          active_data: 
-          active_propname: 
-          index: 
+          context:
+          layout:
+          data:
+          item:
+          icon:
+          active_data:
+          active_propname:
+          index:
 
         Returns:
 
         """
         self.use_filter_show = False
         im = item
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bpy.context.preferences.addons["phobos"].preferences.models_poses
         if im.name in modelsPosesColl.keys():
             coll_item = modelsPosesColl[im.name]
             if coll_item.type == "robot_name":
@@ -312,9 +322,9 @@ class Models_Poses_UIList(bpy.types.UIList):
         """
 
         Args:
-          context: 
-          data: 
-          propname: 
+          context:
+          data:
+          propname:
 
         Returns:
 
@@ -322,7 +332,7 @@ class Models_Poses_UIList(bpy.types.UIList):
         images = getattr(data, propname)
         flt_flags = [self.bitflag_filter_item] * len(images)
 
-        modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+        modelsPosesColl = bpy.context.preferences.addons["phobos"].preferences.models_poses
 
         # Filter items. Only show robots. Hide all other images
         for idx, im in enumerate(images):
@@ -354,7 +364,7 @@ def showPreview(self, value):
     """
 
     Args:
-      value: 
+      value:
 
     Returns:
 
@@ -369,14 +379,14 @@ class PhobosToolsPanel(bpy.types.Panel):
     bl_idname = "TOOLS_PT_PHOBOS_TOOLS"
     bl_label = "General Tools"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = 'Phobos'
 
     def draw_header(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -387,7 +397,7 @@ class PhobosToolsPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -416,8 +426,8 @@ def getMatrixData(coord, space):
     """
 
     Args:
-      coord: 
-      space: 
+      coord:
+      space:
 
     Returns:
 
@@ -446,84 +456,84 @@ class MatrixPropGroup(bpy.types.PropertyGroup):
 
     from bpy.props import FloatProperty
 
-    loc_x_local = FloatProperty(
+    loc_x_local : FloatProperty(
         name='location x',
         get=lambda self: getMatrixData('x', 'local'),
         unit='LENGTH',
         subtype='DISTANCE',
         description='X coordinate in the local space',
     )
-    loc_y_local = FloatProperty(
+    loc_y_local : FloatProperty(
         name='location y',
         get=lambda self: getMatrixData('y', 'local'),
         unit='LENGTH',
         subtype='DISTANCE',
         description='Y coordinate in the local space',
     )
-    loc_z_local = FloatProperty(
+    loc_z_local : FloatProperty(
         name='location z',
         get=lambda self: getMatrixData('z', 'local'),
         unit='LENGTH',
         subtype='DISTANCE',
         description='Z coordinate in the local space',
     )
-    rot_x_local = FloatProperty(
+    rot_x_local : FloatProperty(
         name='rotation x',
         get=lambda self: getMatrixData('rotx', 'local'),
         unit='ROTATION',
         subtype='ANGLE',
         description='Rotation around local x axis',
     )
-    rot_y_local = FloatProperty(
+    rot_y_local : FloatProperty(
         name='rotation y',
         get=lambda self: getMatrixData('roty', 'local'),
         unit='ROTATION',
         subtype='ANGLE',
         description='Rotation around local y axis',
     )
-    rot_z_local = FloatProperty(
+    rot_z_local : FloatProperty(
         name='rotation z',
         get=lambda self: getMatrixData('rotz', 'local'),
         unit='ROTATION',
         subtype='ANGLE',
         description='Rotation around local z axis',
     )
-    loc_x_world = FloatProperty(
+    loc_x_world : FloatProperty(
         name='location x',
         get=lambda self: getMatrixData('x', 'world'),
         unit='LENGTH',
         subtype='DISTANCE',
         description='X coordinate in the world space',
     )
-    loc_y_world = FloatProperty(
+    loc_y_world : FloatProperty(
         name='location y',
         get=lambda self: getMatrixData('y', 'world'),
         unit='LENGTH',
         subtype='DISTANCE',
         description='Y coordinate in the world space',
     )
-    loc_z_world = FloatProperty(
+    loc_z_world : FloatProperty(
         name='location z',
         get=lambda self: getMatrixData('z', 'world'),
         unit='LENGTH',
         subtype='DISTANCE',
         description='Z coordinate in the world space',
     )
-    rot_x_world = FloatProperty(
+    rot_x_world : FloatProperty(
         name='rotation x',
         get=lambda self: getMatrixData('rotx', 'world'),
         unit='ROTATION',
         subtype='ANGLE',
         description='Rotation around world x axis',
     )
-    rot_y_world = FloatProperty(
+    rot_y_world : FloatProperty(
         name='rotation y',
         get=lambda self: getMatrixData('roty', 'world'),
         unit='ROTATION',
         subtype='ANGLE',
         description='Rotation around world y axis',
     )
-    rot_z_world = FloatProperty(
+    rot_z_world : FloatProperty(
         name='rotation z',
         get=lambda self: getMatrixData('rotz', 'world'),
         unit='ROTATION',
@@ -553,7 +563,7 @@ class PhobosMatrixPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -564,7 +574,7 @@ class PhobosMatrixPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -578,7 +588,8 @@ class PhobosMatrixPanel(bpy.types.Panel):
         worldcol = matrixes.column(align=True)
 
         # Local data first
-        localcol.label(text='local', icon='ROTACTIVE')
+        #todo: localcol.label(text='local', icon='ROTACTIVE')
+        localcol.label(text='local')
         # add all location properties
         for locprop in dir(obj.phobosmatrixinfo):
             if locprop.startswith('loc') and locprop.endswith('local'):
@@ -616,7 +627,7 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -627,7 +638,7 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -648,18 +659,20 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
         descr = row.column()
         content = row.column()
 
-        descr.label(text='Part of model', icon='POSE_DATA')
+        #todo: descr.label(text='Part of model', icon='POSE_DATA')
+        descr.label(text='Part of model')
         content.operator('phobos.name_model', text=modelname, icon='OUTLINER_DATA_FONT')
 
-        descr.label(text='Root object', icon='OOPS')
+        #todo: descr.label(text='Root object', icon='OOPS')
+        descr.label(text='Root object')
         if obj == root:
-            content.label("selected", icon='MATCUBE')
+            content.label(text="selected", icon='MATCUBE')
         else:
             content.operator('phobos.select_root', text=rootname, icon='FILE_PARENT')
 
         # add parent object if available
         if obj.parent:
-            descr.label('Parent object', icon='CONSTRAINT')
+            descr.label(text='Parent object', icon='CONSTRAINT')
             goto_op = content.operator(
                 'phobos.goto_object', icon='FILE_PARENT', text='{0}'.format(obj.parent.name)
             )
@@ -691,7 +704,7 @@ class PhobosModelWarningsPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -702,7 +715,7 @@ class PhobosModelWarningsPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -767,7 +780,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
           props(list/str): property or list of property names to add
           values(list): list of or single float, str etc which corresponds to the property name
           layout(list): sublayout description as defined in :func:draw
-          guiparams: 
+          guiparams:
 
         Returns:
           None: None
@@ -793,7 +806,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                 self.addObjLink(prop, value, column, param)
                 continue
 
-            subtable = column.split(percentage=0.45)
+            subtable = column.split(factor=0.45)
             descr = subtable.column()
             content = subtable.column()
 
@@ -814,9 +827,9 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         """Add an object link, which is a clickable goto button in the GUI.
 
         Args:
-          prop: 
-          value: 
-          column: 
+          prop:
+          value:
+          column:
           guiparams(dict): parameters for the GUI of Blender
 
         Returns:
@@ -839,7 +852,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
     def checkParams(self, item):
         """Looks for a property name in the .. data:supportedProps.
-        
+
         If the property is not defined in .. data:supportedProps, the returned dictionary contains
         empty information required for drawing.
 
@@ -858,7 +871,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -869,7 +882,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -927,14 +940,14 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                 if category in supportedCategories:
                     if isinstance(supportedCategories[category]['icon_value'], int):
                         layout.label(
-                            category.upper(), icon_value=supportedCategories[category]['icon_value']
+                            text=category.upper(), icon_value=supportedCategories[category]['icon_value']
                         )
                     else:
                         layout.label(
-                            category.upper(), icon=supportedCategories[category]['icon_value']
+                            text=category.upper(), icon=supportedCategories[category]['icon_value']
                         )
                 else:
-                    layout.label(category.upper())
+                    layout.label(text=category.upper())
 
                 # create column hierarchy
                 box = layout.box()
@@ -975,14 +988,14 @@ class PhobosModelPanel(bpy.types.Panel):
     bl_idname = "TOOLS_PT_PHOBOS_MODEL"
     bl_label = "Model Editing"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = 'Phobos'
 
     def draw_header(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -995,7 +1008,7 @@ class PhobosModelPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1012,7 +1025,7 @@ class PhobosModelPanel(bpy.types.Panel):
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
         c2 = inlayout.column(align=True)
-        c1.label('General', icon='MESH_CUBE')
+        c1.label(text='General', icon='MESH_CUBE')
         c1.operator('phobos.set_phobostype')
         c1.operator('phobos.batch_rename')
         c1.operator('phobos.set_model_root')
@@ -1021,7 +1034,8 @@ class PhobosModelPanel(bpy.types.Panel):
         c2.operator('phobos.rename_custom_property', text="Rename", icon='OUTLINER_DATA_FONT')
         c2.operator('phobos.batch_property', text="Edit", icon='GREASEPENCIL')
         c2.operator('phobos.edityamldictionary', text="Edit Dictionary", icon='TEXT')
-        c2.operator('phobos.copy_props', text="Copy", icon='GHOST')
+        #todo: c2.operator('phobos.copy_props', text="Copy", icon='GHOST')
+        c2.operator('phobos.copy_props', text="Copy")
 
         # Kinematics
         layout.separator()
@@ -1048,7 +1062,8 @@ class PhobosModelPanel(bpy.types.Panel):
         mechlayout = layout.split()
         mc1 = mechlayout.column(align=True)
         mc2 = mechlayout.column(align=True)
-        mc1.label(text='Mechanisms', icon='SCRIPTWIN')
+        #todo: mc1.label(text='Mechanisms', icon='SCRIPTWIN')
+        mc1.label(text='Mechanisms')
         mc1.operator('phobos.assign_submechanism')
         mc1.operator('phobos.select_submechanism')
         mc1.operator('phobos.delete_submechanism')
@@ -1106,7 +1121,7 @@ class PhobosModelPanel(bpy.types.Panel):
 #         #layout.operator("scene.reload_models_and_poses_operator", text="Reload Models and Poses", icon="LIBRARY_DATA_DIRECT")
 #
 #
-#         modelsPosesColl = bpy.context.user_preferences.addons["phobos"].preferences.models_poses
+#         modelsPosesColl = bpy.context.preferences.addons["phobos"].preferences.models_poses
 #         for model_pose in modelsPosesColl:
 #             if not model_pose.name in bpy.data.images.keys():
 #                 if model_pose.type == 'robot_name':
@@ -1148,14 +1163,14 @@ class PhobosExportPanel(bpy.types.Panel):
     bl_idname = "TOOLS_EXPORT_PT_PHOBOS"
     bl_label = "Export"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = 'Phobos'
 
     def draw_header(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1168,7 +1183,7 @@ class PhobosExportPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1205,6 +1220,7 @@ class PhobosExportPanel(bpy.types.Panel):
                 typename = "export_mesh_" + meshtype
                 cmesh.prop(bpy.context.scene, typename)
         cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputMeshtype')
+        cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputPathtype')
 
         cscene = inlayout.column(align=True)
         cscene.label(text="Scenes")
@@ -1212,17 +1228,24 @@ class PhobosExportPanel(bpy.types.Panel):
             typename = "export_scene_" + scenetype
             cscene.prop(bpy.context.scene, typename)
 
+        # additional ros guiparams
+        if getattr(bpy.context.scene.phobosexportsettings, 'outputPathtype', "relative") == "ros_package":
+            layout.separator()
+            box = layout.box()
+            box.label(text='ROS')
+            box.prop(expsets, "rosPackageName")
+
         # additional obj guiparams
         if getattr(bpy.context.scene, 'export_mesh_obj', False):
             layout.separator()
             box = layout.box()
-            box.label('OBJ axis')
+            box.label(text='OBJ axis')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_forward')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_up')
         if getattr(bpy.context.scene, 'export_entity_sdf', False):
             layout.separator()
             box = layout.box()
-            box.label('SDF export')
+            box.label(text='SDF export')
             box.prop(ioUtils.getExpSettings(), 'export_sdf_mesh_type')
             box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
             box.prop(ioUtils.getExpSettings(), 'export_sdf_to_gazebo_models', icon='EXPORT')
@@ -1255,7 +1278,7 @@ class PhobosExportPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1269,14 +1292,14 @@ class PhobosImportPanel(bpy.types.Panel):
     bl_idname = "TOOLS_IMPORT_PT_PHOBOS"
     bl_label = "Import"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = 'Phobos'
 
     def draw_header(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1289,7 +1312,7 @@ class PhobosImportPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1303,14 +1326,14 @@ class PhobosSubmodelsPanel(bpy.types.Panel):
     bl_idname = "TOOLS_SUBMODELS_PT_PHOBOS"
     bl_label = "Submodels"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = 'Phobos Models'
 
     def draw_header(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1321,7 +1344,7 @@ class PhobosSubmodelsPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1338,7 +1361,7 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
     # DOCU add some docstring and update bl_idname
     bl_idname = "TOOLS_PT_PHOBOS_LOCALMODELS"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = "Phobos Models"
     bl_label = "Local Model Library"
 
@@ -1346,7 +1369,7 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1357,16 +1380,16 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
         """
         layout = self.layout
         wm = context.window_manager
-        modelsfolder = bpy.context.user_preferences.addons["phobos"].preferences.modelsfolder
+        modelsfolder = bpy.context.preferences.addons["phobos"].preferences.modelsfolder
         if modelsfolder == '':
-            layout.label('Model folder not configured.')
+            layout.label(text='Model folder not configured.')
             return
 
         layout.operator("phobos.update_model_library", icon="FILE_REFRESH")
@@ -1379,9 +1402,9 @@ class PhobosModelLibraryPanel(bpy.types.Panel):
                 layout.prop(wm, 'modelpreview')
                 layout.operator("phobos.import_model_from_library", icon="IMPORT")
             else:
-                layout.label('No models in this category.')
+                layout.label(text='No models in this category.')
         else:
-            layout.label('Model library is empty.')
+            layout.label(text='Model library is empty.')
 
 
 def get_operator_manuals():
@@ -1410,14 +1433,14 @@ class PhobosDisplayPanel(bpy.types.Panel):
     bl_idname = "TOOLS_DISPLAY_PT_PHOBOS"
     bl_label = "Display"
     bl_space_type = 'VIEW_3D'
-    bl_region_type = 'TOOLS'
+    bl_region_type = 'UI'
     bl_category = 'Phobos'
 
     def draw_header(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1428,7 +1451,7 @@ class PhobosDisplayPanel(bpy.types.Panel):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -1457,6 +1480,7 @@ class PhobosDisplayPanel(bpy.types.Panel):
 def register():
     """TODO Missing documentation"""
     print("\nRegistering phobosgui...")
+
 
     # add phobostype to Blender objects
     bpy.types.Object.phobostype = EnumProperty(
@@ -1549,7 +1573,7 @@ def register():
     supportedCategories = {
         'collision': {'icon_value': 'PHYSICS'},
         'visual': {'icon_value': 'RESTRICT_VIEW_OFF'},
-        'inertial': {'icon_value': 'TEXTURE_SHADED'},
+        'inertial': {'icon_value': 'SHADING_TEXTURE'},
         'joint': {'icon_value': 'FORCE_HARMONIC'},
         'sensor': {'icon_value': 'OUTLINER_OB_FORCE_FIELD'},
     }

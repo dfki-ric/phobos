@@ -83,7 +83,7 @@ def createJoint(joint, linkobj=None, links=None):
         linkobj['joint/name'] = joint['name']
 
     # select the link object
-    bUtils.toggleLayer(list(linkobj.layers).index(True), True)
+    bUtils.activateObjectCollection(linkobj)
     sUtils.selectObjects([linkobj], clear=True, active=0)
 
     # set axis
@@ -99,9 +99,9 @@ def createJoint(joint, linkobj=None, links=None):
 
     # add constraints to the joint
     if 'limits' in joint:
-        for param in ['effort', 'velocity']:
+        for param,newName in {'effort': 'maxEffort', 'velocity': 'maxSpeed'}.items():
             if param in joint['limits']:
-                linkobj['joint/max' + param] = joint['limits'][param]
+                linkobj['joint/' + newName] = joint['limits'][param]
             else:
                 log(
                     "Joint limits incomplete for joint {}. Missing {}.".format(

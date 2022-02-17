@@ -1,0 +1,12 @@
+{
+  "submodeltypes": {
+    "mechanism": {
+      "definitions": {
+        "dummy": "dummy"
+      },
+      "interfaces": {
+        "dummy": "dummy"
+      }
+    }
+  }
+}

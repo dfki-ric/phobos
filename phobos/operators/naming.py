@@ -33,11 +33,11 @@ class ToggleNamespaces(Operator):
     bl_label = "Toggle Namespaces"
     bl_options = {'REGISTER', 'UNDO'}
 
-    complete = BoolProperty(
+    complete : BoolProperty(
         name="Convert Complete Robot", default=False, description="Convert the complete robot"
     )
 
-    namespace = StringProperty()
+    namespace : StringProperty()
 
     def execute(self, context):
         """
@@ -74,7 +74,7 @@ class NameModelOperator(Operator):
     bl_label = "Name Model"
     bl_options = {'REGISTER', 'UNDO'}
 
-    modelname = StringProperty(
+    modelname : StringProperty(
         name="Model Name", default="", description="Name of the robot model to be assigned"
     )
 
@@ -88,7 +88,7 @@ class NameModelOperator(Operator):
         Returns:
 
         """
-        root = sUtils.getRoot(context.active_object)
+        root = sUtils.getRoot(context.active_object, verbose=False)
         return root and root.phobostype == 'link'
 
     def invoke(self, context, event):
@@ -130,11 +130,11 @@ class SetModelVersionOperator(Operator):
     bl_label = "Set Model Version"
     bl_options = {'REGISTER', 'UNDO'}
 
-    version = StringProperty(
+    version : StringProperty(
         name="Version", default="", description="Version of the model to be assigned"
     )
 
-    usegitbranch = BoolProperty(
+    usegitbranch : BoolProperty(
         name="Use Git branch name",
         default=False,
         description="Insert Git branch name in place of *?",
@@ -150,7 +150,7 @@ class SetModelVersionOperator(Operator):
         Returns:
 
         """
-        root = sUtils.getRoot(context.active_object)
+        root = sUtils.getRoot(context.active_object, verbose=False)
         return root and root.phobostype == 'link'
 
     def invoke(self, context, event):
@@ -192,19 +192,19 @@ class BatchRename(Operator):
     bl_label = "Batch Rename"
     bl_options = {'REGISTER', 'UNDO'}
 
-    find = StringProperty(name="Find:", default="", description="A string to be replaced.")
+    find : StringProperty(name="Find:", default="", description="A string to be replaced.")
 
-    replace = StringProperty(
+    replace : StringProperty(
         name="Replace:", default="", description="A string to replace the 'Find' string."
     )
 
-    add = StringProperty(
+    add : StringProperty(
         name="Add/Embed:",
         default="*",
         description="Add any string by representing the old name with '*'.",
     )
 
-    include_properties = BoolProperty(
+    include_properties : BoolProperty(
         name="Include Properties",
         default=False,
         description="Replace names stored in '*/name' properties?",
@@ -286,9 +286,9 @@ class ChangeObjectName(Operator):
     bl_label = "Change Object Name"
     bl_options = {'REGISTER', 'UNDO'}
 
-    newname = StringProperty(name="New name", description="New name of the object", default="")
+    newname : StringProperty(name="New name", description="New name of the object", default="")
 
-    jointname = StringProperty(name="Joint name", description="Name of the joint", default="")
+    jointname : StringProperty(name="Joint name", description="Name of the joint", default="")
 
     def execute(self, context):
         """
@@ -396,18 +396,25 @@ class ChangeObjectName(Operator):
         else:
             layout.prop(self, 'newname')
             self.jointname = ''
-            layout.label("Phobostype: " + obj.phobostype)
+            layout.label(text="Phobostype: " + obj.phobostype)
 
-
+classes = (
+    ToggleNamespaces,
+    NameModelOperator,
+    SetModelVersionOperator,
+    BatchRename,
+    FixObjectNames,
+    ChangeObjectName,
+)
 def register():
     """TODO Missing documentation"""
     print("Registering operators.naming...")
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    for classdef in classes:
         bpy.utils.register_class(classdef)
 
 
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.naming...")
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
+    for classdef in classes:
         bpy.utils.unregister_class(classdef)

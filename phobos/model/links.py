@@ -74,9 +74,9 @@ def createLink(link):
     """
     log("Creating link object '{}'...".format(link['name']), 'DEBUG', prefix='\n')
     # create armature/bone
-    bUtils.toggleLayer(defs.layerTypes['link'], True)
+    bUtils.toggleLayer('link', True)
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.ops.object.armature_add(layers=bUtils.defLayers([defs.layerTypes['link']]))
+    bpy.ops.object.armature_add()
     newlink = bpy.context.active_object
 
     # Move bone when adding at selected objects location
@@ -102,7 +102,7 @@ def createLink(link):
     if 'scale' in link:
         scale *= link['scale']
     newlink.scale = (scale, scale, scale)
-    bpy.ops.object.transform_apply(scale=True)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
 
     # add custom properties
     for prop in link:
@@ -125,6 +125,7 @@ def createLink(link):
         geometrymodel.createGeometry(vis, 'visual', newlink)
     for col in collisions:
         geometrymodel.createGeometry(col, 'collision', newlink)
+    bUtils.sortObjectToCollection(newlink, 'link')
     return newlink
 
 
@@ -143,12 +144,15 @@ def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False,
 
     """
     log('Deriving link from ' + nUtils.getObjectName(obj), level="INFO")
-    try:
-        nameparts = [p for p in re.split('[^a-zA-Z]', nUtils.getObjectName(obj)) if p != '']
-        linkname = nameformat.format(*nameparts)
-    except IndexError:
-        log('Invalid name format (indices) for naming: ' + nUtils.getObjectName(obj), 'WARNING')
+    if nameformat == '':
         linkname = 'link_' + nUtils.getObjectName(obj)
+    else:
+        try:
+            nameparts = [p for p in re.split('[^a-zA-Z]', nUtils.getObjectName(obj)) if p != '']
+            linkname = nameformat.format(*nameparts)
+        except IndexError:
+            log('Invalid name format (indices) for naming: ' + nUtils.getObjectName(obj), 'WARNING')
+            linkname = 'link_' + nUtils.getObjectName(obj)
     link = createLink({'scale': scale, 'name': linkname, 'matrix': obj.matrix_world})
 
     # parent link to object's parent
@@ -176,7 +180,7 @@ def setLinkTransformations(model, parent):
     Returns:
 
     """
-    bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])
+    #todo: bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes['link'])
     for chi in parent['children']:
         child = model['links'][chi]
 
@@ -187,7 +191,7 @@ def setLinkTransformations(model, parent):
         )
 
         log("Transforming link {0}.".format(child['name']), 'DEBUG')
-        transform_matrix = location * rotation
+        transform_matrix = location @ rotation
         child['object'].matrix_local = transform_matrix
 
         # traverse the tree

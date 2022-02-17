@@ -96,8 +96,8 @@ def getChildren(root, phobostypes=(), selected_only=False, include_hidden=True):
         for child in bpy.context.scene.objects
         if getRoot(child) == root
         and (child.phobostype in phobostypes if phobostypes else True)
-        and (not child.hide or include_hidden)
-        and (child.select or not selected_only)
+        and (not child.hide_viewport or include_hidden)
+        and (child.select_get() or not selected_only)
     ]
 
 
@@ -119,8 +119,8 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
         child
         for child in obj.children
         if (child.phobostype in phobostypes if phobostypes else True)
-        and (not child.hide or include_hidden)
-        and (child.select or not selected_only)
+        and (not child.hide_viewport or include_hidden)
+        and (child.select_get() or not selected_only)
     ]
 
 
@@ -180,9 +180,9 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, object
         parent
         and parent in objectlist
         and (
-            (parent.hide and not include_hidden)
+            (parent.hide_viewport and not include_hidden)
             or (
-                not parent.select
+                not parent.select_get()
                 and bpy.context.scene.phobosexportsettings.selectedOnly
                 and not ignore_selection
             )
@@ -193,7 +193,7 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, object
     return parent
 
 
-def getRoot(obj=None):
+def getRoot(obj=None, verbose=True):
     """Returns the root object of a model the Blender object obj or, if obj is
     not provided, the active object is part of, traversing up the tree.
     If no such object is found, returns None.
@@ -207,7 +207,8 @@ def getRoot(obj=None):
     """
     obj = bpy.context.active_object if obj is None else obj
     if obj is None:
-        log("No root object found! Check your object selection.", "ERROR")
+        if verbose:
+            log("No root object found! Check your object selection.", "ERROR")
         return None
     child = obj
     while child.parent and not isRoot(child):
@@ -289,14 +290,14 @@ def selectObjects(objects, clear=True, active=-1):
 
     """
     # if no object is active, object mode can't be toggled
-    if bpy.context.scene.objects.active:
+    if bpy.context.view_layer.objects.active:
         bpy.ops.object.mode_set(mode='OBJECT')
     if clear:
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
-        obj.select = True
+        obj.select_set(True)
     if active >= 0:
-        bpy.context.scene.objects.active = objects[active]
+        bpy.context.view_layer.objects.active = objects[active]
 
 
 def getObjectByName(name, phobostypes=()):

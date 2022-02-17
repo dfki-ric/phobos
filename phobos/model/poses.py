@@ -14,7 +14,7 @@ Contains all functions to model poses in Blender.
 """
 
 import os
-import yaml
+import json
 import bpy
 from ..utils import selection as sUtils
 from ..utils import editing as eUtils
@@ -146,7 +146,7 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
             visuals, export_path=bake_outpath, modelname=modelname, previewfile=previewfile
         )
 
-        obj.select = True
+        obj.select_set(True)
 
         bpy.ops.object.delete()
         log("Done baking...", "INFO")
@@ -170,7 +170,7 @@ def storePose(root, posename):
     """
     if root:
         filename = nUtils.getModelName(root) + '::poses'
-        posedict = yaml.load(bUtils.readTextFile(filename))
+        posedict = json.loads(bUtils.readTextFile(filename))
         if not posedict:
             posedict = {posename: {'name': posename, 'joints': {}}}
         else:
@@ -189,7 +189,7 @@ def storePose(root, posename):
             ].rotation_euler.y
         bpy.ops.object.mode_set(mode='OBJECT')
         posedict = gUtils.roundFloatsInDict(posedict, ioUtils.getExpSettings().decimalPlaces)
-        bUtils.updateTextFile(filename, yaml.dump(posedict, default_flow_style=False))
+        bUtils.updateTextFile(filename, json.dumps(posedict))
     else:
         log("No model root provided to store the pose for", "ERROR")
 
@@ -210,7 +210,7 @@ def loadPose(modelname, posename):
         log('No poses stored.', 'ERROR')
         return
 
-    loadedposes = yaml.load(load_file)
+    loadedposes = json.loads(load_file)
     if posename not in loadedposes:
         log('No pose with name ' + posename + ' stored for model ' + modelname, 'ERROR')
         return
@@ -246,5 +246,5 @@ def getPoses(modelname):
     load_file = bUtils.readTextFile(modelname + '::poses')
     if load_file == '':
         return []
-    poses = yaml.load(load_file)
+    poses = json.loads(load_file)
     return poses.keys()

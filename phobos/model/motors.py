@@ -36,8 +36,16 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
       bpy.types.Object: new motor object or a list of the new motor_object and the new controller object
 
     """
-    layers = defs.layerTypes['motor']
-    bUtils.toggleLayer(layers, value=True)
+    bUtils.toggleLayer('motor', value=True)
+
+    primitive_name = ''
+
+    # create name if not given by motor dict
+    if not 'name' in motor or len(motor['name']) == 0:
+        motor['name'] = parentobj.name
+        primitive_name = "motor_" + motor['name']
+    else:
+        primitive_name = motor['name']
 
     primitive_name = ''
 
@@ -54,7 +62,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
             primitive_name,
             'box',
             [1, 1, 1],
-            layers,
+            [],
             plocation=origin.to_translation(),
             protation=origin.to_euler(),
             pmaterial=motor['material'],
@@ -73,7 +81,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
             primitive_name,
             motor['shape'],
             motor['size'],
-            layers,
+            [],
             plocation=origin.to_translation(),
             protation=origin.to_euler(),
             pmaterial=motor['material'],
@@ -147,6 +155,7 @@ def deriveMotor(obj, jointdict=None):
 
     props['joint'] = nUtils.getObjectName(obj.parent, phobostype='joint')
 
+    # todo: transfer joint limits to motor properties
     # check for a mimic motor
     for k in (obj.parent).keys():
         # Check for mimic motor

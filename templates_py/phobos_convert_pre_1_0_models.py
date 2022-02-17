@@ -66,7 +66,7 @@ for obj in objectlist:
             del obj['version']
 
         if sUtils.isRoot(obj):
-            bpy.context.scene.objects.active = obj
+            bpy.context.view_layer.objects.active = obj
             bpy.ops.phobos.set_model_root()
 
 # update joint shapes for whole model

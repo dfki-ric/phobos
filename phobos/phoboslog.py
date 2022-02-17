@@ -88,8 +88,8 @@ def log(message, level="INFO", prefix="", guionly=False, logfile=True, end='\n')
     )
 
     # display only messages up to preferred log level
-    if 'phobos' in bpy.context.user_preferences.addons:
-        prefs = bpy.context.user_preferences.addons["phobos"].preferences
+    if 'phobos' in bpy.context.preferences.addons:
+        prefs = bpy.context.preferences.addons["phobos"].preferences
     else:
         prefs = None
 

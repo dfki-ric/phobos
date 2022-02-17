@@ -18,7 +18,7 @@ import os
 import glob
 import re
 
-import yaml
+import json
 import phobos.phobossystem as phobossystem
 
 # Phobos information
@@ -198,13 +198,13 @@ def __parseAllYAML(path):
                 tmpstring = f.read()
 
             try:
-                tmpyaml = yaml.load(__evaluateString(tmpstring))
+                tmpyaml = json.loads(__evaluateString(tmpstring))
 
                 if not tmpyaml:
                     print(file + " does not contain any yaml information.")
                     continue
                 dicts.append(tmpyaml)
-            except yaml.scanner.ScannerError as e:
+            except Exception as e:
                 print(os.path.relpath(file, path) + " could not be parsed:\n" + str(e))
         except FileNotFoundError:
             print(os.path.relpath(file, path=path) + " was not found.")
