@@ -15,12 +15,12 @@ Contains the functions required to model a joint within Blender.
 
 import bpy
 import mathutils
-from ..phoboslog import log
-from ..utils import naming as nUtils
-from ..utils import selection as sUtils
-from ..utils import blender as bUtils
-from ..utils import io as ioUtils
-from ..utils.validation import validate
+from phobos.blender.phoboslog import log
+import phobos.blender.utils.naming as nUtils
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.utils.blender as bUtils
+import phobos.blender.utils.io as ioUtils
+from phobos.blender.utils.validation import validate
 
 
 def createJoint(joint, linkobj=None, links=None):

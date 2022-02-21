@@ -33,24 +33,24 @@ from bpy.props import (
     BoolVectorProperty,
 )
 
-from .. import defs as defs
-from .. import display as display
-from ..model import inertia as inertialib
-from ..utils import selection as sUtils
-from ..utils import general as gUtils
-from ..utils import io as ioUtils
-from ..utils import blender as bUtils
-from ..utils import naming as nUtils
-from ..utils import editing as eUtils
-from ..utils import validation as vUtils
-from ..model import joints as jUtils
-from ..model import links as modellinks
-from ..model import motors as modelmotors
-from ..model import controllers as controllermodel
-from ..model import sensors as sensors
-from ..model import models as models
-from ..operators.generic import addObjectFromYaml
-from ..phoboslog import log
+import phobos.blender.defs as defs
+import phobos.blender.display as display
+import phobos.blender.model.inertia as inertialib
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.utils.general as gUtils
+import phobos.blender.utils.io as ioUtils
+import phobos.blender.utils.blender as bUtils
+import phobos.blender.utils.naming as nUtils
+import phobos.blender.utils.editing as eUtils
+import phobos.blender.utils.validation as vUtils
+import phobos.blender.model.joints as jUtils
+import phobos.blender.model.links as modellinks
+import phobos.blender.model.motors as modelmotors
+import phobos.blender.model.controllers as controllermodel
+import phobos.blender.model.sensors as sensors
+import phobos.blender.model.models as models
+from phobos.blender.operators.generic import addObjectFromYaml
+from phobos.blender.phoboslog import log
 
 
 class SafelyRemoveObjectsFromSceneOperator(Operator):
@@ -2121,7 +2121,7 @@ class AddSensorOperator(Operator):
         Returns:
 
         """
-        from phobos.phobosgui import prev_collections
+        from phobos.blender.phobosgui import prev_collections
 
         phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
         categories = [t for t in defs.def_subcategories['sensors']]
@@ -2325,7 +2325,7 @@ class AddControllerOperator(Operator):
         Returns:
 
         """
-        from phobos.phobosgui import prev_collections
+        from phobos.blender.phobosgui import prev_collections
 
         phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
         categories = [t for t in defs.def_subcategories['controllers']]

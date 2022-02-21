@@ -26,20 +26,20 @@ from bpy.props import (
 )
 from bpy.types import AddonPreferences
 
-from phobos.io import entities
-from phobos.io import meshes
-from phobos.io import scenes
-from phobos.io import libraries
-from phobos.model.models import deriveDictEntry
-from phobos.model.models import get_link_information
-from phobos.phoboslog import LOGLEVELS
-import phobos.utils.validation as validation
-import phobos.utils.io as ioUtils
-import phobos.utils.naming as nUtils
+from phobos.blender.io import entities
+from phobos.blender.io import meshes
+from phobos.blender.io import scenes
+from phobos.blender.io import libraries
+from phobos.blender.model.models import deriveDictEntry
+from phobos.blender.model.models import get_link_information
+from phobos.blender.phoboslog import LOGLEVELS
+import phobos.blender.utils.validation as validation
+import phobos.blender.utils.io as ioUtils
+import phobos.blender.utils.naming as nUtils
 
 
-from phobos import defs
-from phobos import display
+from phobos.blender import defs
+from phobos.blender import display
 
 
 class ModelPoseProp(bpy.types.PropertyGroup):
@@ -67,7 +67,7 @@ class PhobosPrefs(AddonPreferences):
 
     """
 
-    bl_idname = __package__
+    bl_idname = "phobos"
 
     # folder for robot/scene models (used for previews and imports)
     modelsfolder : StringProperty(name="modelsfolder", subtype="DIR_PATH", default='')
@@ -643,7 +643,7 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
         Returns:
 
         """
-        import phobos.utils.selection as sUtils
+        import phobos.blender.utils.selection as sUtils
 
         layout = self.layout
         obj = context.active_object
@@ -720,7 +720,7 @@ class PhobosModelWarningsPanel(bpy.types.Panel):
         Returns:
 
         """
-        import phobos.utils.selection as sUtils
+        import phobos.blender.utils.selection as sUtils
 
         layout = self.layout
         obj = context.active_object
@@ -1587,6 +1587,7 @@ def register():
     #         except ValueError:
     #             print('Error with class registration:', key, classdef)
     bpy.utils.register_class(ModelPoseProp)
+    print("Registering PhobosPrefs")
     bpy.utils.register_class(PhobosPrefs)
     bpy.utils.register_class(PhobosExportSettings)
     # TODO delete me?

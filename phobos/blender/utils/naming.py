@@ -62,7 +62,7 @@ def safelyName(obj, name, phobostype=None):
       str: new name of the Blender object
 
     """
-    from phobos.phoboslog import log
+    from phobos.blender.phoboslog import log
 
     objectname = name
     if not phobostype:

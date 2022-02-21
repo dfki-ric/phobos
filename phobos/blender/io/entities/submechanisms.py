@@ -9,11 +9,11 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-from ...phoboslog import log
-from ...utils import selection as sUtils
-from ...utils import naming as nUtils
-from ...model.models import deriveModelDictionary
-from ...utils.io import exportModel
+from phobos.blender.phoboslog import log
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.utils.naming as nUtils
+from phobos.blender.model.models import deriveModelDictionary
+from phobos.blender.utils.io import exportModel
 
 
 def exportSubmechanisms(model, path):

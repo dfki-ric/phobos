@@ -8,4 +8,3 @@
 # You should have received a copy of the 3-Clause BSD License in the LICENSE file.
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
-

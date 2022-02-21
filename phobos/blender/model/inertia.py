@@ -17,16 +17,16 @@ import math
 import numpy
 import bpy
 import mathutils
-from .. import defs as defs
-from ..phoboslog import log
-from ..utils import general as gUtils
-from ..utils import selection as sUtils
-from ..utils import editing as eUtils
-from ..utils import blender as bUtils
-from ..utils import naming as nUtils
-from ..model.geometries import deriveGeometry
-from ..model.poses import deriveObjectPose
-from ..utils.validation import validate
+import phobos.blender.defs as defs
+from phobos.blender.phoboslog import log
+import phobos.blender.utils.general as gUtils
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.utils.editing as eUtils
+import phobos.blender.utils.blender as bUtils
+import phobos.blender.utils.naming as nUtils
+from phobos.blender.model.geometries import deriveGeometry
+from phobos.blender.model.poses import deriveObjectPose
+from phobos.blender.utils.validation import validate
 
 
 @validate('inertia_data')
@@ -523,7 +523,7 @@ def fuse_inertia_data(inertials):
 
     """
 
-    from phobos.utils.io import getExpSettings
+    from phobos.blender.utils.io import getExpSettings
 
     expsetting = 10**(-getExpSettings().decimalPlaces)
 
@@ -744,7 +744,7 @@ def gatherInertialChilds(obj, objectlist):
       : list(bpy.types.Object) -- inertial objects which belong to the specified obj
 
     """
-    from phobos.utils.validation import validateInertiaData
+    from phobos.blender.utils.validation import validateInertiaData
 
     # only gather the links that are not in the list
     childlinks = [

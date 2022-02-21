@@ -19,7 +19,7 @@ import glob
 import re
 
 import json
-import phobos.phobossystem as phobossystem
+import phobos.blender.phobossystem as phobossystem
 
 # Phobos information
 version = '1.0.1 "Capricious Choutengan"'

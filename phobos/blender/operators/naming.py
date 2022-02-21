@@ -19,11 +19,11 @@ import inspect
 import bpy
 from bpy.types import Operator
 from bpy.props import BoolProperty, StringProperty, EnumProperty
-from ..utils import selection as sUtils
-from ..utils import naming as nUtils
-from ..utils import io as ioUtils
-from ..utils import validation as validation
-from ..phoboslog import log
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.utils.naming as nUtils
+import phobos.blender.utils.io as ioUtils
+import phobos.blender.utils.validation as validation
+from phobos.blender.phoboslog import log
 
 
 class ToggleNamespaces(Operator):

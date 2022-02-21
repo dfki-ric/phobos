@@ -19,11 +19,11 @@ import inspect
 import bpy
 from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty
-from .. import defs as defs
-from ..utils import selection as sUtils
-from ..utils import blender as bUtils
-from ..utils import naming as nUtils
-from ..phoboslog import log
+import phobos.blender.defs as defs
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.utils.blender as bUtils
+import phobos.blender.utils.naming as nUtils
+from phobos.blender.phoboslog import log
 
 
 class SelectObjectsByPhobosType(Operator):

@@ -16,7 +16,7 @@ Contains the functions for the srdf entity.
 import itertools
 import os
 import xml.etree.ElementTree as ET
-from ...utils.io import l2str, xmlline, indent, xmlHeader
+from phobos.blender.utils.io import l2str, xmlline, indent, xmlHeader
 
 
 def exportSRDF(model, path, mesh_format=''):

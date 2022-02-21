@@ -12,8 +12,8 @@
 import json
 import os
 from datetime import datetime
-from ... import defs as defs
-from ...phoboslog import log
+import phobos.blender.defs as defs
+from phobos.blender.phoboslog import log
 
 
 def exportYAML(model, path):

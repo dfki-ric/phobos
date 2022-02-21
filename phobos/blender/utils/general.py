@@ -18,7 +18,7 @@ import os
 import shutil
 from datetime import datetime
 import mathutils
-from ..phoboslog import log
+from phobos.blender.phoboslog import log
 
 
 def is_float(text):
@@ -234,7 +234,7 @@ def calculateSum(objects, numeric_prop):
                 "WARNING",
             )
         except TypeError:
-            import phobos.utils.naming as nUtils
+            import phobos.blender.utils.naming as nUtils
 
             log(
                 "Could not add this type to the sum: "

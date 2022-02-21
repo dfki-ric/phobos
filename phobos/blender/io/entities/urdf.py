@@ -16,11 +16,11 @@ import xml.etree.ElementTree as ET
 
 import bpy
 import mathutils
-from ...utils.io import l2str, xmlline, indent, xmlHeader
-from ...model import materials as matModel
-from ...utils import general as gUtils
-from ...utils import io as ioUtils
-from ...phoboslog import log
+from phobos.blender.utils.io import l2str, xmlline, indent, xmlHeader
+import phobos.blender.model.materials as matModel
+import phobos.blender.utils.general as gUtils
+import phobos.blender.utils.io as ioUtils
+from phobos.blender.phoboslog import log
 
 
 def sort_urdf_elements(elems):

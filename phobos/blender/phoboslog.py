@@ -16,7 +16,7 @@ from types import SimpleNamespace
 
 import bpy
 
-import phobos.display as display
+import phobos.blender.display as display
 
 #: Levels of detail for the logging information.
 LOGLEVELS = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')

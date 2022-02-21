@@ -17,7 +17,7 @@ from bpy_extras import view3d_utils
 from bpy.types import Operator
 from bpy.props import BoolProperty
 from mathutils import Vector
-from phobos.utils import naming as nUtils
+from phobos.blender.utils import naming as nUtils
 
 
 progressinfo = None
@@ -49,7 +49,7 @@ def push_message(text, msgtype='none'):
     """
 
     Args:
-      text: 
+      text:
       msgtype: (Default value = 'none')
 
     Returns:
@@ -68,7 +68,7 @@ def to3d(coords, distance=1.0):
     """
 
     Args:
-      coords: 
+      coords:
       distance: (Default value = 1.0)
 
     Returns:
@@ -82,7 +82,7 @@ def to2d(coords):
     """
 
     Args:
-      coords: 
+      coords:
 
     Returns:
 
@@ -94,7 +94,7 @@ def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2, linewid
     """
 
     Args:
-      points: 
+      points:
       linecolor: (Default value = None)
       fillcolor: (Default value = None)
       distance: (Default value = 0.2)
@@ -128,11 +128,11 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
     """
 
     Args:
-      text: 
-      position: 
+      text:
+      position:
       color: (Default value = (1.0)
-      1.0: 
-      1.0): 
+      1.0:
+      1.0):
       size: (Default value = 14)
       dpi: (Default value = 150)
       font_id: (Default value = 0)
@@ -162,13 +162,13 @@ def draw_textbox(
     """
 
     Args:
-      text: 
-      origin: 
+      text:
+      origin:
       textsize: (Default value = 6)
       textcolor: (Default value = colors['white'])
       backgroundcolor: (Default value = colors['background'])
       offset: (Default value = Vector((0.0)
-      0.0)): 
+      0.0)):
       linewidth: (Default value = 2)
       hborder: (Default value = 3)
       vborder: (Default value = 4)
@@ -199,9 +199,9 @@ def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
     """
 
     Args:
-      text: 
-      msgtype: 
-      slot: 
+      text:
+      msgtype:
+      slot:
       opacity: (Default value = 1.0)
       offset: (Default value = 0)
 
@@ -228,7 +228,7 @@ def draw_progressbar(value):
     """
 
     Args:
-      value: 
+      value:
 
     Returns:
 
@@ -263,8 +263,8 @@ def draw_joint(joint, length):
     """
 
     Args:
-      joint: 
-      length: 
+      joint:
+      length:
 
     Returns:
 
@@ -285,7 +285,7 @@ def draw_path(path, color=colors['white'], dim3=False, width=4):
     """
 
     Args:
-      path: 
+      path:
       color: (Default value = colors['white'])
       dim3: (Default value = False)
       width: (Default value = 4)
@@ -315,7 +315,7 @@ def draw_callback_3d(self, context):
     """Callback function for 3d drawing.
 
     Args:
-      context: 
+      context:
 
     Returns:
 
@@ -342,7 +342,7 @@ def draw_callback_2d(self, context):
     """Callback function for 2d drawing.
 
     Args:
-      context: 
+      context:
 
     Returns:
 
@@ -472,7 +472,7 @@ class DisplayInformationOperator(Operator):
         """
 
         Args:
-          value: 
+          value:
 
         Returns:
 
@@ -490,8 +490,8 @@ class DisplayInformationOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -500,7 +500,7 @@ class DisplayInformationOperator(Operator):
         context.area.tag_redraw()
 
         if not self.running:
-            from phobos.phoboslog import log
+            from phobos.blender.phoboslog import log
 
             bpy.types.SpaceView3D.draw_handler_remove(self._handle2d, 'WINDOW')
             bpy.types.SpaceView3D.draw_handler_remove(self._handle3d, 'WINDOW')
@@ -520,18 +520,18 @@ class DisplayInformationOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
         """
-        from phobos.phoboslog import log
+        from phobos.blender.phoboslog import log
 
         wm = context.window_manager
 
         if context.area.type != 'VIEW_3D':
-            from phobos.phoboslog import log
+            from phobos.blender.phoboslog import log
 
             log("View3D not found, cannot run " + self.bl_idname, 'WARNING')
             return {'CANCELLED'}
@@ -552,7 +552,7 @@ def setProgress(value, info=None):
     """
 
     Args:
-      value: 
+      value:
       info: (Default value = None)
 
     Returns:

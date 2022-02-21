@@ -11,11 +11,11 @@
 
 import json
 from datetime import datetime
-from ...defs import version
-from ...defs import repository
-from ...utils import io as ioUtils
-from ...utils.general import roundFloatsInDict
-from ...phoboslog import log
+from phobos.blender.defs import version
+from phobos.blender.defs import repository
+from phobos.blender.utils import io as ioUtils
+from phobos.blender.utils.general import roundFloatsInDict
+from phobos.blender.phoboslog import log
 
 
 def exportSMURFScene(entities, path):

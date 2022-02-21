@@ -16,10 +16,10 @@ Contains all utility functions that are connected to Blender functionality first
 import os
 import bpy
 import mathutils
-from .. import defs as defs
-from ..model import materials as materials
-from ..phoboslog import log
-from ..phobossystem import getConfigPath
+import phobos.blender.defs as defs
+import phobos.blender.model.materials as materials
+from phobos.blender.phoboslog import log
+from phobos.blender.phobossystem import getConfigPath
 from . import selection as sUtils
 from . import naming as nUtils
 

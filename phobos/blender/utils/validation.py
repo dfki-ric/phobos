@@ -12,9 +12,9 @@
 from copy import deepcopy as dc
 
 import bpy
-from .. import defs as defs
-from ..utils import naming as nUtils
-from ..phoboslog import log
+import phobos.blender.defs as defs
+import phobos.blender.utils.naming as nUtils
+from phobos.blender.phoboslog import log
 
 
 checkMessages = {"NoObject": []}
@@ -368,8 +368,8 @@ def validateJointType(link, adjust=False):
       : list(ValidateMessage) -- validation errors
 
     """
-    import phobos.model.joints as jointmodel
-    import phobos.utils.io as ioUtils
+    import phobos.blender.model.joints as jointmodel
+    import phobos.blender.utils.io as ioUtils
 
     errors = []
     if 'joint/type' not in link:
@@ -624,8 +624,8 @@ def validateInertiaData(obj, *args, adjust=False):
       tuple: list of :class:`ValidateMessage`\ s and the fixed dictionary/object
 
     """
-    from phobos.model.inertia import inertiaListToMatrix, inertiaMatrixToList
-    from phobos.utils.io import getExpSettings
+    from phobos.blender.model.inertia import inertiaListToMatrix, inertiaMatrixToList
+    from phobos.blender.utils.io import getExpSettings
     import numpy
 
     errors = []

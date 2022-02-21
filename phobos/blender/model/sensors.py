@@ -11,13 +11,13 @@
 
 import bpy
 import mathutils
-from .. import defs
-from ..phoboslog import log
-from ..utils import blender as bUtils
-from ..utils import selection as sUtils
-from ..utils import naming as nUtils
-from ..utils import editing as eUtils
-from ..utils import io as ioUtils
+from phobos.blender import defs
+from phobos.blender.phoboslog import log
+import phobos.blender.utils.blender as bUtils
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.utils.naming as nUtils
+import phobos.blender.utils.editing as eUtils
+import phobos.blender.utils.io as ioUtils
 
 
 def deriveSensor(obj, names=False, objectlist=[], logging=False):
@@ -33,7 +33,7 @@ def deriveSensor(obj, names=False, objectlist=[], logging=False):
       : dict -- phobos representation of the sensor
 
     """
-    from phobos.model.models import initObjectProperties
+    from phobos.blender.model.models import initObjectProperties
 
     if logging:
         log(

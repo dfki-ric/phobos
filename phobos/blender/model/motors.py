@@ -11,13 +11,13 @@
 
 import bpy
 import mathutils
-from .. import defs
-from ..phoboslog import log
-from ..utils import blender as bUtils
-from ..utils import selection as sUtils
-from ..utils import naming as nUtils
-from ..utils import editing as eUtils
-from ..utils import io as ioUtils
+from phobos.blender import defs
+from phobos.blender.phoboslog import log
+import phobos.blender.utils.blender as bUtils
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.utils.naming as nUtils
+import phobos.blender.utils.editing as eUtils
+import phobos.blender.utils.io as ioUtils
 
 
 def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=False):
@@ -104,7 +104,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
     newmotor['motor/name'] = motor['name']
 
     if 'controller' in defs.definitions['motors'][defname] and addcontrollers:
-        import phobos.model.controllers as controllermodel
+        import phobos.blender.model.controllers as controllermodel
 
         motorcontroller = defs.definitions['motors'][defname]['controller']
         controllerdefs = ioUtils.getDictFromYamlDefs(
@@ -134,8 +134,8 @@ def deriveMotor(obj, jointdict=None):
       : dict -- phobos representation of a motor
 
     """
-    import phobos.model.models as models
-    import phobos.model.controllers as controllermodel
+    import phobos.blender.model.models as models
+    import phobos.blender.model.controllers as controllermodel
 
     props = models.initObjectProperties(obj, phobostype='motor')
 

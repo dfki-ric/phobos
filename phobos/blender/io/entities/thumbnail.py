@@ -10,8 +10,8 @@
 # -------------------------------------------------------------------------------
 
 import bpy
-from ...phoboslog import log
-from ...utils.blender import createPreview
+from phobos.blender.phoboslog import log
+from phobos.blender.utils.blender import createPreview
 
 
 def exportPreview(model, path):

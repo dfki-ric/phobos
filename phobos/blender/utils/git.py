@@ -13,7 +13,7 @@ import subprocess
 import json
 import bpy
 import os
-from ..phoboslog import log
+from phobos.blender.phoboslog import log
 
 
 def isGit(folder):

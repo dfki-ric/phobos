@@ -14,17 +14,17 @@ import sys
 import os
 import bpy
 
-from .. import defs
-from .. import display
-from ..phoboslog import log
+from phobos.blender import defs
+from phobos.blender import display
+from phobos.blender.phoboslog import log
 
-from ..io.entities import entity_types
-from ..io.meshes import mesh_types
-from ..io.scenes import scene_types
+from phobos.blender.io.entities import entity_types
+from phobos.blender.io.meshes import mesh_types
+from phobos.blender.io.scenes import scene_types
 
-from ..utils import selection as sUtils
-from ..utils import naming as nUtils
-from ..utils import blender as bUtils
+from phobos.blender.utils import selection as sUtils
+from phobos.blender.utils import naming as nUtils
+from phobos.blender.utils import blender as bUtils
 
 
 indent = '  '

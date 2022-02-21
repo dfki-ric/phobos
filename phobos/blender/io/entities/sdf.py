@@ -9,7 +9,7 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-..import os
+import os
 import shutil
 import glob
 from xml.dom import minidom
@@ -18,16 +18,16 @@ from xml.etree.ElementTree import Element, SubElement
 
 import bpy
 
-from ... import defs as defs
-from ...utils.io import xmlHeader
-from ...utils.io import indent as phobosindentation
-from ...utils.io import l2str as list_to_string
-from ...utils.io import getExpSettings
-from ...utils import general as gUtils
-from ...utils.blender import getPhobosPreferences
-from ...utils import selection as sUtils
-from ...model import models as models
-from ...phoboslog import log
+import phobos.blender.defs as defs
+from phobos.blender.utils.io import xmlHeader
+from phobos.blender.utils.io import indent as phobosindentation
+from phobos.blender.utils.io import l2str as list_to_string
+from phobos.blender.utils.io import getExpSettings
+import phobos.blender.utils.general as gUtils
+from phobos.blender.utils.blender import getPhobosPreferences
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.model.models as models
+from phobos.blender.phoboslog import log
 
 # For future updates of the SDF spec version look at:
 # https://bitbucket.org/osrf/sdformat/src/ --> Migration.md
