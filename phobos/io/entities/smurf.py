@@ -188,6 +188,9 @@ def exportSmurf(model, path):
     """
     collisiondata = deriveRefinedCollisionData(model)
     lodsettings = gatherLevelOfDetailSettings(model)
+    prefix_string = bpy.context.scene.phobosexportsettings.prefixExport
+    if prefix_string != "":
+        prefix_string += "_"
 
     exportdata = {
         'state': False,  # model['state'] != {}, # TODO: handle state
@@ -289,6 +292,8 @@ def exportSmurf(model, path):
 
     for motor in model['motors']:
         motordict = model['motors'][motor]
+        motordict["name"] = prefix_string+motordict["name"]
+        motordict["joint"] = prefix_string+motordict["joint"]
         controllerparams = {}
         if 'controller' in  motordict and motordict['controller'] in model['controllers']:
             controllerparams = {
@@ -339,7 +344,7 @@ def exportSmurf(model, path):
             # this should always be the case, but testing doesn't hurt
             if 'state' in joint:
                 tmpstate = joint['state'].copy()
-                tmpstate['name'] = jointname
+                tmpstate['name'] = prefix_string + jointname
                 states.append(joint['state'])
         with open(os.path.join(path, filenames['state']), 'w') as op:
             op.write('#state' + infostring)
@@ -350,6 +355,11 @@ def exportSmurf(model, path):
     # write materials, sensors, motors & controllers
     for data in ['materials', 'motors', 'sensors', 'controllers', 'lights']:
         if exportdata[data]:
+            for e in model[data].values():
+                if "name" in e:
+                    e["name"] = prefix_string+e["name"]
+                if "link" in e:
+                    e["link"] = prefix_string+e["link"]
             log("Writing {} to smurf file.".format(data), 'DEBUG')
             with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)
@@ -362,6 +372,11 @@ def exportSmurf(model, path):
 
     # write additional collision information
     if exportdata['collision']:
+        for e in collisiondata.values():
+            if "name" in e:
+                e["name"] = prefix_string+e["name"]
+            if "link" in e:
+                e["link"] = prefix_string+e["link"]
         with open(os.path.join(path, filenames['collision']), 'w') as op:
             op.write('#collision data' + infostring)
             # TODO delete me?
@@ -375,6 +390,11 @@ def exportSmurf(model, path):
 
     # write visual information (level of detail, ...)
     if exportdata['visuals']:
+        for e in lodsettings.values():
+            if "name" in e:
+                e["name"] = prefix_string+e["name"]
+            if "link" in e:
+                e["link"] = prefix_string+e["link"]
         with open(os.path.join(path, filenames['visuals']), 'w') as op:
             op.write('#visual data' + infostring)
             op.write(json.dumps({'visuals': list(lodsettings.values())}, indent=2))
@@ -385,6 +405,11 @@ def exportSmurf(model, path):
             if exportdata[category]:
                 outstring = '#' + category + infostring
                 for elementtype in annotationdict[category]:
+                    for e in annotationdict[category][elementtype]:
+                        if "name" in e:
+                            e["name"] = prefix_string+e["name"]
+                        if "link" in e:
+                            e["link"] = prefix_string+e["link"]
                     outstring += elementtype + ':\n'
                     outstring += (
                         json.dumps(annotationdict[category][elementtype], indent=2)
@@ -396,11 +421,17 @@ def exportSmurf(model, path):
     # write custom data from textfiles
     for data in customdatalist:
         if exportdata[data]:
+            for e in model[data].values():
+                if "name" in e:
+                    e["name"] = prefix_string+e["name"]
+                if "link" in e:
+                    e["link"] = prefix_string+e["link"]
             with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)
                 op.write(json.dumps({data: list(model[data].values())}, indent=2))
 
     # write submechanisms
+    # todo: handle prefix handling
     if model['submechanisms']:
         with open(os.path.join(path, filenames['submechanisms']), 'w') as op:
             op.write('#submechanisms' + infostring)

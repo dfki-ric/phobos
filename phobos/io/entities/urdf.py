@@ -95,6 +95,10 @@ def exportUrdf(model, outpath):
     Returns:
 
     """
+    prefix_string = bpy.context.scene.phobosexportsettings.prefixExport
+    if prefix_string != "":
+        prefix_string += "_"
+
     log("Export URDF to " + outpath, "INFO")
     filename = path.join(outpath, model['name'] + '.urdf')
 
@@ -118,8 +122,8 @@ def exportUrdf(model, outpath):
     for l in sorted_link_keys:
         if l in model['links']:
             link = model['links'][l]
-            output.append(indent * 2 + '<link name="' + link['name'] + '">\n')
-            if 'mass' in link['inertial'] and 'inertia' in link['inertial']:
+            output.append(indent * 2 + '<link name="' + prefix_string+link['name'] + '">\n')
+            if link['inertial'] and 'mass' in link['inertial'] and 'inertia' in link['inertial']:
                 output.append(indent * 3 + '<inertial>\n')
                 if 'pose' in link['inertial']:
                     output.append(
@@ -157,7 +161,7 @@ def exportUrdf(model, outpath):
                 for v in sorted_visual_keys:
                     if v in link['visual']:
                         vis = link['visual'][v]
-                        output.append(indent * 3 + '<visual name="' + vis['name'] + '">\n')
+                        output.append(indent * 3 + '<visual name="' + prefix_string+vis['name'] + '">\n')
                         output.append(
                             xmlline(
                                 4,
@@ -175,7 +179,7 @@ def exportUrdf(model, outpath):
                             if model['materials'][vis['material']]['users'] == 0:
                                 mat = model['materials'][vis['material']]
                                 output.append(
-                                    indent * 4 + '<material name="' + mat['name'] + '">\n'
+                                    indent * 4 + '<material name="' + prefix_string+mat['name'] + '">\n'
                                 )
                                 color = mat['diffuseColor']
                                 output.append(
@@ -196,7 +200,7 @@ def exportUrdf(model, outpath):
                                 output.append(indent * 4 + '</material>\n')
                             else:
                                 output.append(
-                                    indent * 4 + '<material name="' + vis["material"] + '"/>\n'
+                                    indent * 4 + '<material name="' + prefix_string+vis["material"] + '"/>\n'
                                 )
                         output.append(indent * 3 + '</visual>\n')
             # collision object
@@ -215,7 +219,7 @@ def exportUrdf(model, outpath):
                 for c in sorted_collision_keys:
                     if c in link['collision']:
                         col = link['collision'][c]
-                        output.append(indent * 3 + '<collision name="' + col['name'] + '">\n')
+                        output.append(indent * 3 + '<collision name="' + prefix_string+col['name'] + '">\n')
                         output.append(
                             xmlline(
                                 4,
@@ -245,7 +249,7 @@ def exportUrdf(model, outpath):
         if j in model['joints']:
             joint = model['joints'][j]
             output.append(
-                indent * 2 + '<joint name="' + joint['name'] + '" type="' + joint["type"] + '">\n'
+                indent * 2 + '<joint name="' + prefix_string+joint['name'] + '" type="' + joint["type"] + '">\n'
             )
             child = model['links'][joint["child"]]
             output.append(
@@ -256,8 +260,8 @@ def exportUrdf(model, outpath):
                     [l2str(child['pose']['translation']), l2str(child['pose']['rotation_euler'])],
                 )
             )
-            output.append(indent * 3 + '<parent link="' + joint["parent"] + '"/>\n')
-            output.append(indent * 3 + '<child link="' + joint["child"] + '"/>\n')
+            output.append(indent * 3 + '<parent link="' + prefix_string+joint["parent"] + '"/>\n')
+            output.append(indent * 3 + '<child link="' + prefix_string+joint["child"] + '"/>\n')
             if 'axis' in joint:
                 output.append(indent * 3 + '<axis xyz="' + l2str(joint['axis']) + '"/>\n')
             if 'limits' in joint:
@@ -306,7 +310,7 @@ def exportUrdf(model, outpath):
         if m in model['materials']:
             # FIXME: change back to 1 when implemented in urdfloader
             if model['materials'][m]['users'] > 0:
-                output.append(indent * 2 + '<material name="' + m + '">\n')
+                output.append(indent * 2 + '<material name="' + prefix_string+m + '">\n')
                 color = model['materials'][m]['diffuseColor']
                 transparency = (
                     model['materials'][m]['transparency']
