@@ -228,8 +228,12 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
     # gather the inertials for fusing the link inertia
     inertials = inertiamodel.gatherInertialChilds(linkobj, objectlist)
 
-    # get inertia data
-    mass, com, inertia = inertiamodel.fuse_inertia_data(inertials)
+    mass = None
+    com = None
+    inertia = None
+    if len(inertials) > 0:
+        # get inertia data
+        mass, com, inertia = inertiamodel.fuse_inertia_data(inertials)
 
     if not any([mass, com, inertia]):
         if logging:
@@ -621,6 +625,11 @@ def initObjectProperties(
     # if no phobostype is defined, everything is parsed
     if not phobostype:
         for key, value in obj.items():
+            # transform Blender id_arrays into lists
+            if hasattr(value, 'to_list'):
+                value = list(value)
+            elif hasattr(value, 'to_dict'):
+                value = value.to_dict()
             props[key] = value
 
     # search for type-specific properties if phobostype is defined
@@ -629,6 +638,8 @@ def initObjectProperties(
             # transform Blender id_arrays into lists
             if hasattr(value, 'to_list'):
                 value = list(value)
+            elif hasattr(value, 'to_dict'):
+                value = value.to_dict()
 
             # remove phobostype namespaces for the object
             if key.startswith(phobostype + '/'):

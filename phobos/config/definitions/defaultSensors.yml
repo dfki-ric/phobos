@@ -142,6 +142,11 @@
       "hud_width": 320,
       "hud_height": 240,
       "depth_image": false,
+      "orientation_offset": {
+        "roll": 90,
+        "pitch": -90,
+        "yaw": 0
+      },
       "mars": {
         "type": "CameraSensor"
       },

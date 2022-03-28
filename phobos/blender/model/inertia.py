@@ -127,7 +127,7 @@ def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, l
         inertia = calculateSphereInertia(mass, geometry['radius'])
     elif geometry['type'] == 'mesh':
         sUtils.selectObjects((obj,), clear=True, active=0)
-        inertia = calculateMeshInertia(mass, obj.data)
+        inertia = calculateMeshInertia(mass, obj.data, scale=obj.scale)
 
     # Correct the inertia orientation to account for Cylinder / mesh orientation issues
     inertia = object_rotation * inertiaListToMatrix(inertia) * object_rotation.transposed()
@@ -220,259 +220,238 @@ def calculateEllipsoidInertia(mass, size):
     return ixx, ixy, ixz, iyy, iyz, izz
 
 
-def calculateMeshInertia(mass, data):
+def calculateMeshInertia(mass, data, scale=None):
     """Calculates and returns the inertia tensor of arbitrary mesh objects.
-    
+
     Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
     Simply and Quickly' (2004) by Jonathan Blow (1) with formulas for tetrahedron inertia
     from 'Explicit Exact Formulas for the 3-D Tetrahedron Inertia Tensor in Terms of its
-    Vertex Coordinates' (2004) by F. Tonon. (2)
-    
+    Vertex Coordinates' (2004) by F. Tonon. (2). The latter has an issue, according the
+    element order of the inertia tensor: b' and c' are exchanged. According to 'Technische
+    Mechanik 3 - Dynamik' (2012) by Russel C. Hibbeler this has been fixed.
+
     Links: (1) http://number-none.com/blow/inertia/body_i.html
            (2) http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf
-
+           (3) https://elibrary.pearson.de/book/99.150005/9783863265151
     Args:
       data(bpy.types.BlendData): mesh data of the object
       mass(float): mass of the object
-
+      scale(list): scale vector
     Returns:
       6: inertia tensor
-
     """
+    if scale is None:
+        scale = [1.0, 1.0, 1.0]
+    scale = numpy.asarray(scale)
     tetrahedra = []
     mesh_volume = 0
     origin = mathutils.Vector((0.0, 0.0, 0.0))
 
-    vertices = data.vertices
+    vertices = numpy.asarray([numpy.asarray(scale*v.co) for v in data.vertices])
     prev_mode = bpy.context.mode
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED')
     bpy.ops.object.mode_set(mode=prev_mode)
-    polygons = data.polygons
+    triangles = [[v for v in p.vertices] for p in data.polygons]
+    triangle_normals = numpy.asarray([t.normal for t in data.polygons])
 
-    for triangle in polygons:
-        verts = [vertices[index].co for index in triangle.vertices]
+    com = numpy.mean(vertices, axis=0)
+    vertices = vertices - com[numpy.newaxis]
 
-        tri_normal = triangle.normal
-        tri_centre = triangle.center
-        ref_tri_vector = tri_centre - origin
-        # angle returns the angle in radians
-        normal_angle = ref_tri_vector.angle(tri_normal, math.pi / 2.0)
+    mesh_volume = 0.0
+    signs = []
+    abs_det_Js = []
+    Js = []
 
-        sign = -1 if normal_angle > math.pi / 2.0 else 1
+    for triangle_idx in range(len(triangles)):
+        verts = vertices[triangles[triangle_idx]]
+        triangle_normal = triangle_normals[triangle_idx]
+        triangle_center = numpy.mean(verts, axis=0)
+        normal_angle = mathutils.Vector(triangle_center).angle(mathutils.Vector(triangle_normal))
+        sign = -1.0 if normal_angle > numpy.pi / 2.0 else 1.0
 
-        J = mathutils.Matrix(
-            (
-                (verts[0][0], verts[0][1], verts[0][2], 1),
-                (verts[1][0], verts[1][1], verts[1][2], 1),
-                (verts[2][0], verts[2][1], verts[2][2], 1),
-                (origin[0], origin[1], origin[2], 1),
-            )
-        )
+        J = numpy.array([
+            [verts[0, 0], verts[0, 1], verts[0, 2], 1.0],
+            [verts[1, 0], verts[1, 1], verts[1, 2], 1.0],
+            [verts[2, 0], verts[2, 1], verts[2, 2], 1.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
 
-        abs_det_J = J.determinant()
+        abs_det_J = numpy.linalg.det(J)
 
-        volume = sign * abs_det_J / 6
+        signs.append(sign)
+        abs_det_Js.append(abs_det_J)
+        Js.append(J)
 
-        com = mathutils.Vector(
-            (
-                (verts[0][0] + verts[1][0] + verts[2][0] + origin[0]) / 4,
-                (verts[0][1] + verts[1][1] + verts[2][1] + origin[1]) / 4,
-                (verts[0][2] + verts[1][2] + verts[2][2] + origin[2]) / 4,
-            )
-        )
-
-        tetrahedra.append({'sign': sign, 'abs(det(J))': abs_det_J, 'J': J, 'centre_of_mass': com})
+        volume = sign * abs_det_J / 6.0
         mesh_volume += volume
 
+    signs = numpy.array(signs)
+    abs_det_Js = numpy.array(abs_det_Js)
+    Js = numpy.array(Js)
+
     density = mass / mesh_volume
-    i = mathutils.Matrix().to_3x3()
-    i.zero()
-    for tetrahedron in tetrahedra:
 
-        J = tetrahedron['J']
-        x1 = J[0][0]
-        y1 = J[0][1]
-        z1 = J[0][2]
-        x2 = J[1][0]
-        y2 = J[1][1]
-        z2 = J[1][2]
-        x3 = J[2][0]
-        y3 = J[2][1]
-        z3 = J[2][2]
-        x4 = J[3][0]
-        y4 = J[3][1]
-        z4 = J[3][2]
-
-        abs_det_J = tetrahedron['abs(det(J))']
-        sign = tetrahedron['sign']
-
-        # TODO this might be easier with numpy (and more beautiful)
-        a = (
-            sign
-            * density
-            * abs_det_J
-            * (
-                y1 ** 2
-                + y1 * y2
-                + y2 ** 2
-                + y1 * y3
-                + y2 * y3
-                + y3 ** 2
-                + y1 * y4
-                + y2 * y4
-                + y3 * y4
-                + y4 ** 2
-                + z1 ** 2
-                + z1 * z2
-                + z2 ** 2
-                + z1 * z3
-                + z2 * z3
-                + z3 ** 2
-                + z1 * z4
-                + z2 * z4
-                + z3 * z4
-                + z4 ** 2
+    A = (signs
+         * density
+         * abs_det_Js
+         * (Js[:, 0, 1] ** 2
+            + Js[:, 0, 1] * Js[:, 1, 1]
+            + Js[:, 1, 1] ** 2
+            + Js[:, 0, 1] * Js[:, 2, 1]
+            + Js[:, 1, 1] * Js[:, 2, 1]
+            + Js[:, 2, 1] ** 2
+            + Js[:, 0, 1] * Js[:, 3, 1]
+            + Js[:, 1, 1] * Js[:, 3, 1]
+            + Js[:, 2, 1] * Js[:, 3, 1]
+            + Js[:, 3, 1] ** 2
+            + Js[:, 0, 2] ** 2
+            + Js[:, 0, 2] * Js[:, 1, 2]
+            + Js[:, 1, 2] ** 2
+            + Js[:, 0, 2] * Js[:, 2, 2]
+            + Js[:, 1, 2] * Js[:, 2, 2]
+            + Js[:, 2, 2] ** 2
+            + Js[:, 0, 2] * Js[:, 3, 2]
+            + Js[:, 1, 2] * Js[:, 3, 2]
+            + Js[:, 2, 2] * Js[:, 3, 2]
+            + Js[:, 3, 2] ** 2
             )
-            / 60
-        )
+         / 60
+         )
 
-        b = (
-            sign
-            * density
-            * abs_det_J
-            * (
-                x1 ** 2
-                + x1 * x2
-                + x2 ** 2
-                + x1 * x3
-                + x2 * x3
-                + x3 ** 2
-                + x1 * x4
-                + x2 * x4
-                + x3 * x4
-                + x4 ** 2
-                + z1 ** 2
-                + z1 * z2
-                + z2 ** 2
-                + z1 * z3
-                + z2 * z3
-                + z3 ** 2
-                + z1 * z4
-                + z2 * z4
-                + z3 * z4
-                + z4 ** 2
-            )
-            / 60
-        )
+    B = (signs
+         * density
+         * abs_det_Js
+         * (
+                 Js[:, 0, 0] ** 2
+                 + Js[:, 0, 0] * Js[:, 1, 0]
+                 + Js[:, 1, 0] ** 2
+                 + Js[:, 0, 0] * Js[:, 2, 0]
+                 + Js[:, 1, 0] * Js[:, 2, 0]
+                 + Js[:, 2, 0] ** 2
+                 + Js[:, 0, 0] * Js[:, 3, 0]
+                 + Js[:, 1, 0] * Js[:, 3, 0]
+                 + Js[:, 2, 0] * Js[:, 3, 0]
+                 + Js[:, 3, 0] ** 2
+                 + Js[:, 0, 2] ** 2
+                 + Js[:, 0, 2] * Js[:, 1, 2]
+                 + Js[:, 1, 2] ** 2
+                 + Js[:, 0, 2] * Js[:, 2, 2]
+                 + Js[:, 1, 2] * Js[:, 2, 2]
+                 + Js[:, 2, 2] ** 2
+                 + Js[:, 0, 2] * Js[:, 3, 2]
+                 + Js[:, 1, 2] * Js[:, 3, 2]
+                 + Js[:, 2, 2] * Js[:, 3, 2]
+                 + Js[:, 3, 2] ** 2
+         )
+         / 60
+         )
 
-        c = (
-            sign
-            * density
-            * abs_det_J
-            * (
-                x1 ** 2
-                + x1 * x2
-                + x2 ** 2
-                + x1 * x3
-                + x2 * x3
-                + x3 ** 2
-                + x1 * x4
-                + x2 * x4
-                + x3 * x4
-                + x4 ** 2
-                + y1 ** 2
-                + y1 * y2
-                + y2 ** 2
-                + y1 * y3
-                + y2 * y3
-                + y3 ** 2
-                + y1 * y4
-                + y2 * y4
-                + y3 * y4
-                + y4 ** 2
-            )
-            / 60
-        )
+    C = (signs
+         * density
+         * abs_det_Js
+         * (
+                 Js[:, 0, 0] ** 2
+                 + Js[:, 0, 0] * Js[:, 1, 0]
+                 + Js[:, 1, 0] ** 2
+                 + Js[:, 0, 0] * Js[:, 2, 0]
+                 + Js[:, 1, 0] * Js[:, 2, 0]
+                 + Js[:, 2, 0] ** 2
+                 + Js[:, 0, 0] * Js[:, 3, 0]
+                 + Js[:, 1, 0] * Js[:, 3, 0]
+                 + Js[:, 2, 0] * Js[:, 3, 0]
+                 + Js[:, 3, 0] ** 2
+                 + Js[:, 0, 1] ** 2
+                 + Js[:, 0, 1] * Js[:, 1, 1]
+                 + Js[:, 1, 1] ** 2
+                 + Js[:, 0, 1] * Js[:, 2, 1]
+                 + Js[:, 1, 1] * Js[:, 2, 1]
+                 + Js[:, 2, 1] ** 2
+                 + Js[:, 0, 1] * Js[:, 3, 1]
+                 + Js[:, 1, 1] * Js[:, 3, 1]
+                 + Js[:, 2, 1] * Js[:, 3, 1]
+                 + Js[:, 3, 1] ** 2
+         )
+         / 60
+         )
 
-        a_bar = (
-            sign
-            * density
-            * abs_det_J
-            * (
-                2 * y1 * z1
-                + y2 * z1
-                + y3 * z1
-                + y4 * z1
-                + y1 * z2
-                + 2 * y2 * z2
-                + y3 * z2
-                + y4 * z2
-                + y1 * z3
-                + y2 * z3
-                + 2 * y3 * z3
-                + y4 * z3
-                + y1 * z4
-                + y2 * z4
-                + y3 * z4
-                + 2 * y4 * z4
-            )
-            / 120
-        )
+    A_bar = (signs
+             * density
+             * abs_det_Js
+             * (2 * Js[:, 0, 1] * Js[:, 0, 2]
+                + Js[:, 1, 1] * Js[:, 0, 2]
+                + Js[:, 2, 1] * Js[:, 0, 2]
+                + Js[:, 3, 1] * Js[:, 0, 2]
+                + Js[:, 0, 1] * Js[:, 1, 2]
+                + 2 * Js[:, 1, 1] * Js[:, 1, 2]
+                + Js[:, 2, 1] * Js[:, 1, 2]
+                + Js[:, 3, 1] * Js[:, 1, 2]
+                + Js[:, 0, 1] * Js[:, 2, 2]
+                + Js[:, 1, 1] * Js[:, 2, 2]
+                + 2 * Js[:, 2, 1] * Js[:, 2, 2]
+                + Js[:, 3, 1] * Js[:, 2, 2]
+                + Js[:, 0, 1] * Js[:, 3, 2]
+                + Js[:, 1, 1] * Js[:, 3, 2]
+                + Js[:, 2, 1] * Js[:, 3, 2]
+                + 2 * Js[:, 3, 1] * Js[:, 3, 2]
+                )
+             / 120
+             )
 
-        b_bar = (
-            sign
-            * density
-            * abs_det_J
-            * (
-                2 * x1 * z1
-                + x2 * z1
-                + x3 * z1
-                + x4 * z1
-                + x1 * z2
-                + 2 * x2 * z2
-                + x3 * z2
-                + x4 * z2
-                + x1 * z3
-                + x2 * z3
-                + 2 * x3 * z3
-                + x4 * z3
-                + x1 * z4
-                + x2 * z4
-                + x3 * z4
-                + 2 * x4 * z4
-            )
-            / 120
-        )
+    B_bar = (signs
+             * density
+             * abs_det_Js
+             * (2 * Js[:, 0, 0] * Js[:, 0, 2]
+                + Js[:, 1, 0] * Js[:, 0, 2]
+                + Js[:, 2, 0] * Js[:, 0, 2]
+                + Js[:, 3, 0] * Js[:, 0, 2]
+                + Js[:, 0, 0] * Js[:, 1, 2]
+                + 2 * Js[:, 1, 0] * Js[:, 1, 2]
+                + Js[:, 2, 0] * Js[:, 1, 2]
+                + Js[:, 3, 0] * Js[:, 1, 2]
+                + Js[:, 0, 0] * Js[:, 2, 2]
+                + Js[:, 1, 0] * Js[:, 2, 2]
+                + 2 * Js[:, 2, 0] * Js[:, 2, 2]
+                + Js[:, 3, 0] * Js[:, 2, 2]
+                + Js[:, 0, 0] * Js[:, 3, 2]
+                + Js[:, 1, 0] * Js[:, 3, 2]
+                + Js[:, 2, 0] * Js[:, 3, 2]
+                + 2 * Js[:, 3, 0] * Js[:, 3, 2]
+                )
+             / 120
+             )
 
-        c_bar = (
-            sign
-            * density
-            * abs_det_J
-            * (
-                2 * x1 * y1
-                + x2 * y1
-                + x3 * y1
-                + x4 * y1
-                + x1 * y2
-                + 2 * x2 * y2
-                + x3 * y2
-                + x4 * y2
-                + x1 * y3
-                + x2 * y3
-                + 2 * x3 * y3
-                + x4 * y3
-                + x1 * y4
-                + x2 * y4
-                + x3 * y4
-                + 2 * x4 * y4
-            )
-            / 120
-        )
+    C_bar = (signs
+             * density
+             * abs_det_Js
+             * (2 * Js[:, 0, 0] * Js[:, 0, 1]
+                + Js[:, 1, 0] * Js[:, 0, 1]
+                + Js[:, 2, 0] * Js[:, 0, 1]
+                + Js[:, 3, 0] * Js[:, 0, 1]
+                + Js[:, 0, 0] * Js[:, 1, 1]
+                + 2 * Js[:, 1, 0] * Js[:, 1, 1]
+                + Js[:, 2, 0] * Js[:, 1, 1]
+                + Js[:, 3, 0] * Js[:, 1, 1]
+                + Js[:, 0, 0] * Js[:, 2, 1]
+                + Js[:, 1, 0] * Js[:, 2, 1]
+                + 2 * Js[:, 2, 0] * Js[:, 2, 1]
+                + Js[:, 3, 0] * Js[:, 2, 1]
+                + Js[:, 0, 0] * Js[:, 3, 1]
+                + Js[:, 1, 0] * Js[:, 3, 1]
+                + Js[:, 2, 0] * Js[:, 3, 1]
+                + 2 * Js[:, 3, 0] * Js[:, 3, 1]
+                )
+             / 120
+             )
 
-        i += inertiaListToMatrix([a, -b_bar, -c_bar, b, -a_bar, c])
+    a_bar = -numpy.sum(A_bar)
+    b_bar = -numpy.sum(B_bar)
+    c_bar = -numpy.sum(C_bar)
 
-    return i[0][0], i[0][1], i[0][2], i[1][1], i[1][2], i[2][2]
+    I = numpy.array([[numpy.sum(A), c_bar, b_bar],
+                     [c_bar, numpy.sum(B), a_bar],
+                     [b_bar, a_bar, numpy.sum(C)]])
+    return inertiaMatrixToList(I)
 
 
 def inertiaListToMatrix(inertialist):

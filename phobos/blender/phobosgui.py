@@ -204,6 +204,11 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         name='file path',
         description="Defines how pathes are generated in " + "entity/scene files.",
     )
+    prefixExport : StringProperty(
+        name='prefix export',
+        default="",
+        description="Use the given string to prefix all items (links, visuals, collisions, etc.)",
+    )
 
     rosPackageName : StringProperty(name='ROS package name', default='robot_name_model')
 
@@ -1221,6 +1226,7 @@ class PhobosExportPanel(bpy.types.Panel):
                 cmesh.prop(bpy.context.scene, typename)
         cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputMeshtype')
         cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputPathtype')
+        cmesh.prop(bpy.context.scene.phobosexportsettings, 'prefixExport')
 
         cscene = inlayout.column(align=True)
         cscene.label(text="Scenes")
