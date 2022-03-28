@@ -167,5 +167,9 @@ except ImportError:
         del get_distribution, DistributionNotFound
 
     print("Future import in pure python scripts.")
+    from . import utils
+    from . import ci
+    from . import geometry
+    from . import smurf
 
 
