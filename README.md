@@ -9,8 +9,10 @@ black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://gith
 
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
-Phobos is an add-on for the open-source 3D modeling software
-[Blender](http://www.blender.org) that enables the creation of WYSIWYG robot
+Phobos is both a CLI tool and add-on for the open-source 3D modeling software
+[Blender](http://www.blender.org) to support your robot model creation and editing
+
+The Blender add-on enables the creation of WYSIWYG robot
 models for use in robot frameworks like [ROS](http://wiki.ros.org/) and
 [ROCK](https://github.com/rock-core) or in real-time simulations such as
 [MARS](https://github.com/rock-simulation/mars) or
@@ -25,7 +27,8 @@ Bremen, together with the [Robotics
 Group](http://www.informatik.uni-bremen.de/robotik/index_en.php) of the
 [University of Bremen](http://www.uni-bremen.de/en.html).
 
-Please contact [Kai von Szadkowski](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/kavo01.html)
+Please contact [Kai von Szadkowski](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/kavo01.html) or
+[Henning Wiedemann](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/hewi04.html)
 for any inquiries, or any questions and feedback not suited for the issues
 page.
 
@@ -49,9 +52,27 @@ If you are on the hunt for a BiBTeX entry, check out the [FAQ section](https://g
 
 ## Installation
 
+### Blender
 Just zip the `phobos` subfolder: `zip -r phobos.zip phobos` and install it via Blender: `blender->edit->preferences->addons->install`
 
+### CLI
+Just install it using pip:
+```bash
+cd phobos
+pip install .
+```
+or without pip:
+```bash
+cd phobos
+python setup.py install
+```
+or with autoproj:
+1) Add the package to your buildconf/package_set
+2) Install via `amake`
+
 ## Overview
+
+### Blender
 
 ![Model of the SpaceClimber robot in Blender, next to the Phobos toolbar
 displayed on the
@@ -83,10 +104,17 @@ in Blender.](https://github.com/dfki-ric/phobos/wiki/img/phobos_elements.png)
 in Blender. These elements can be arranged in Blender on different layers, thus
 avoiding confusion or obstruction of view when editing very complex models.*
 
+### CLI
+
+You can either use CLI-phobos as a normal python package or use the scripts provided with it.
+
+For the latter do `phobos --help` to get a list of the currently available scripts.
+It will also tell you which dependencies are missing for some scripts.
 
 ## Features
 
 - WYSIWYG editor for robot models using Blender
+- CLI tool for automated model processing
 - Import and export of **URDF**, **SDF** **SMURF** and other
   [formats](https://github.com/dfki-ric/phobos/wiki/Formats)
 - Easy definition of robot kinematics (links and joints)

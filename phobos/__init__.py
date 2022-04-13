@@ -109,7 +109,6 @@ try:
     print("Checking requirements")
     requirements = {
         "yaml": "pyyaml",
-        # "urdf_parser_py": "urdf_parser_py",
         # "networkx": "networkx",  # optional for blender
         "numpy": "numpy",
         # "pybullet": "pybullet",  # optional for blender
