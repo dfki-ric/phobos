@@ -1,11 +1,9 @@
 <!--
-# -------------------------------------------------------------------------------
 # This file is part of Phobos, a Blender Add-On to edit robot models.
 # Copyright (C) 2020 University of Bremen & DFKI GmbH Robotics Innovation Center
 #
 # You should have received a copy of the 3-Clause BSD License in the LICENSE file.
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
-# -------------------------------------------------------------------------------
 -->
 
 <package>
@@ -23,11 +21,8 @@
   <url>https://robotik.dfki-bremen.de/en/research/softwaretools/phobos.html</url>
   <logo>https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png</logo>
 
-  <depend package="pyyaml"/>
-  <depend package="external/urdf_parser_py" />
   <depend package="control/kccdtools"/>
-  <depend package="control/urdfdom" />
-  <depend package="control/urdfdom_headers" />
+  <depend package="pyyaml"/>
   <depend package="curl" />
   <depend package="full-graphviz" />
   <depend package="networkx" />
@@ -35,6 +30,9 @@
   <depend package="python-fcl" />
   <depend package="scipy" />
   <depend package="trimesh" />
+  <!--  Only used for pdf export -->
+  <depend package="control/urdfdom" optional="1"/>
+  <depend package="control/urdfdom_headers" optional="1"/>
   <!--  Only necessary when using the blender add-on-->
   <depend package="blender" optional="1"/>
   <!--  Only used for certain tests-->
