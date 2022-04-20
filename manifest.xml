@@ -21,7 +21,6 @@
   <url>https://robotik.dfki-bremen.de/en/research/softwaretools/phobos.html</url>
   <logo>https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png</logo>
 
-  <depend package="control/kccdtools"/>
   <depend package="pyyaml"/>
   <depend package="curl" />
   <depend package="full-graphviz" />
@@ -30,6 +29,8 @@
   <depend package="python-fcl" />
   <depend package="scipy" />
   <depend package="trimesh" />
+  <!--  Only used for kccd collision export -->
+  <depend package="control/kccdtools" optional="1"/>
   <!--  Only used for pdf export -->
   <depend package="control/urdfdom" optional="1"/>
   <depend package="control/urdfdom_headers" optional="1"/>
