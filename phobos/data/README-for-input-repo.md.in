@@ -1,0 +1,11 @@
+Wiki: https://git.hb.dfki.de/phobos/ci-run/-/wikis/Home
+
+# $INPUTNAME
+This repo contains the $INPUTNAME model that is used to derive other models for the pipeline.
+
+For each derived model there has to be a configuration file. This file has to be named like the derived model.
+All configuration file must be listed in the `pipeline.yml`.
+Moreover, all repositories must be listed in the `manifest.xml`. Those are stored in the model_definitions repo.
+
+## How to update?
+Simply replace the here in given model with your new model. And have an eye on the CI pipeline to see if everything runs as with the old model.

@@ -1,0 +1,19 @@
+<package format="2">
+  <name>$INPUTNAME</name>
+  <version>$VERSION</version>
+  <description>
+    $INPUTNAME model - Processed by phobos-ci
+  </description>
+  $AUTHOR
+  $MAINTAINER
+  $URL
+  <buildtool_depend>catkin</buildtool_depend>
+  <!--<depend>roslaunch</depend>-->
+  <depend>robot_state_publisher</depend>
+  <depend>rviz</depend>
+  <depend>joint_state_publisher</depend>
+  <!--<depend>gazebo</depend>-->
+  <export>
+    <architecture_independent />
+  </export>
+</package>
