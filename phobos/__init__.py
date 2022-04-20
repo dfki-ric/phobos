@@ -170,5 +170,9 @@ except ImportError:
     from . import ci
     from . import geometry
     from . import smurf
+    from . import scripts
+    from . import core
+    from . import io
+    from . import scenes
 
 
