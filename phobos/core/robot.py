@@ -1,4 +1,5 @@
 import datetime
+import bpy
 import sys
 import os
 import xml
@@ -15,6 +16,12 @@ from ..io import representation
 from ..io.parser import parse_xml
 from ..utils.all import *
 from ..utils import misc, urdf, tree
+from ..model.models import deriveLink, deriveMaterial, deriveJoint,
+    deriveLight, deriveGroupEntry, deriveChainEntry, collectMaterials
+import phobos.blender.utils.blender as bUtils
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.utils.naming as nUtils
+import phobos.blender.utils.io as ioUtils
 
 
 class Robot(representation.Robot):
@@ -38,6 +45,8 @@ class Robot(representation.Robot):
                 root.attrib["name"] = name
 
             def go_through_children(node):
+                """Recursive function to name children of link class
+                """
                 for child in node:
                     if child.tag == "link":
                         go_through_children(child)
@@ -70,6 +79,197 @@ class Robot(representation.Robot):
             self.joints = self.get_joints_ordered_df()
 
     # helper methods
+    @classmethod
+    def get_robot_from_dict(root, name='', objectlist=[] ):
+        """
+        Uses blender workflow to access internal dictionary to call robot
+        representation. Idea is to use cli methods and formats for imports and
+        exports
+        """
+        model = derive_model_dictionary(root, name, objectlist)
+
+
+    @staticmethod
+    def derive_model_dictionary(root, name='', objectlist=[]):
+        """Returns a dictionary representation of a Phobos model.
+
+        If name is not specified, it overrides the modelname in the root. If the modelname is not
+        defined at all, 'unnamed' will be used instead.
+
+        Args:
+          root(bpy_types.Object): root object of the model
+          name(str, optional): name for the derived model (Default value = '')
+          objectlist(list: bpy_types.Object): objects to derive the model from
+          objectlist: (Default value = [])
+
+        Returns:
+
+        """
+        if root.phobostype not in ['link', 'submodel']:
+            log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
+            return None
+
+        # define model name
+        if name:
+            modelname = name
+        elif 'model/name' in root:
+            modelname = root['model/name']
+        else:
+            modelname = 'unnamed'
+
+        # define model version
+        if 'model/version' in root:
+            modelversion = root['model/version']
+        else:
+            modelversion = 'undefined'
+
+        modeldescription = bUtils.readTextFile('README.md')
+
+        model = {
+            'links': {},
+            'joints': {},
+            'sensors': {},
+            'motors': {},
+            'controllers': {},
+            'materials': {},
+            'meshes': {},
+            'lights': {},
+            'groups': {},
+            'chains': {},
+            'date': datetime.now().strftime("%Y%m%d_%H:%M"),
+            'name': modelname,
+            'version': modelversion,
+            'description': modeldescription,
+        }
+
+        log(
+            "Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.",
+            'INFO',
+            prefix="\n",
+        )
+
+        # create tuples of objects belonging to model
+        if not objectlist:
+            objectlist = sUtils.getChildren(
+                root, selected_only=ioUtils.getExpSettings().selectedOnly, include_hidden=False
+            )
+        linklist = [link for link in objectlist if link.phobostype == 'link']
+
+        # digest all the links to derive link and joint information
+        log("Parsing links, joints and motors... " + (str(len(linklist))) + " total.", "INFO")
+        for link in linklist:
+            # parse link information (including inertia)
+            model['links'][nUtils.getObjectName(link, 'link')] = deriveLink(
+                link, logging=True, objectlist=objectlist
+            )
+
+            # parse joint and motor information
+            if sUtils.getEffectiveParent(link):
+                # joint may be None if link is a root
+                # to prevent confusion links are always defining also joints
+                jointdict = deriveJoint(link, logging=True, adjust=True)
+                log("  Setting joint type '{}' for link.".format(jointdict['type']), 'DEBUG')
+                # first check if we have motor information in the joint properties
+                # if so they can be extended/overwritten by motor objects later on
+                if '$motor' in jointdict:
+                    motordict = jointdict['$motor']
+                    # at least we need a type property
+                    if 'type' in motordict:
+                        # if no name is given derive it from the joint
+                        if not 'name' in motordict:
+                            motordict["name"] = jointdict['name']
+                        model['motors'][motordict['name']] = motordict
+                        # link the joint by name:
+                        motordict['joint'] = jointdict['name']
+                    del jointdict['$motor']
+
+                model['joints'][jointdict['name']] = jointdict
+
+                for mot in [child for child in link.children if child.phobostype == 'motor']:
+                    motordict = motormodel.deriveMotor(mot, jointdict)
+                    # motor may be None if no motor is attached
+                    if motordict:
+                        log("  Added motor {} to link.".format(motordict['name']), 'DEBUG')
+                        if motordict['name'] in model["motors"]:
+                            model['motors'][motordict['name']].update(motordict)
+                        else:
+                            model['motors'][motordict['name']] = motordict
+
+        # parse sensors and controllers
+        sencons = [obj for obj in objectlist if obj.phobostype in ['sensor', 'controller']]
+        log("Parsing sensors and controllers... {} total.".format(len(sencons)), 'INFO')
+        for obj in sencons:
+            props = deriveDictEntry(obj, names=True, objectlist=objectlist)
+            model[obj.phobostype + 's'][nUtils.getObjectName(obj)] = props
+
+        # parse materials
+        log("Parsing materials...", 'INFO')
+        model['materials'] = collectMaterials(objectlist)
+        for obj in objectlist:
+            if obj.phobostype == 'visual':
+                mat = obj.active_material
+                if mat:
+                    if mat.name not in model['materials']:
+                        model['materials'][mat.name] = deriveMaterial(mat)
+                        linkname = nUtils.getObjectName(
+                            sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist))
+                        )
+                        model['links'][linkname]['visual'][nUtils.getObjectName(obj)][
+                            'material'
+                        ] = mat.name
+
+        # identify unique meshes
+        log("Parsing meshes...", "INFO")
+        for obj in objectlist:
+            try:
+                if (
+                    (obj.phobostype == 'visual' or obj.phobostype == 'collision')
+                    and (obj['geometry/type'] == 'mesh')
+                    and (obj.data.name not in model['meshes'])
+                ):
+                    model['meshes'][obj.data.name] = obj
+                    #todo2.9: for lod in obj.lod_levels:
+                    #     if lod.object.data.name not in model['meshes']:
+                    #         model['meshes'][lod.object.data.name] = lod.object
+            except KeyError:
+                log("Undefined geometry type in object " + obj.name, "ERROR")
+
+        # gather information on groups of objects
+        log("Parsing groups...", 'INFO')
+        #todo2.9: TODO: get rid of the "data" part and check for relation to robot
+        # for group in bpy.data.groups:
+        #     # skip empty groups
+        #     if not group.objects:
+        #         continue
+
+        #     # handle submodel groups separately from other groups
+        #     if 'submodeltype' in group.keys():
+        #         continue
+        #         # TODO create code to derive Submodels
+        #         # model['submodels'] = deriveSubmodel(group)
+        #     elif nUtils.getObjectName(group, 'group') != "RigidBodyWorld":
+        #         model['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
+
+        # gather information on chains of objects
+        log("Parsing chains...", "INFO")
+        chains = []
+        for obj in objectlist:
+            if obj.phobostype == 'link' and 'endChain' in obj:
+                chains.extend(deriveChainEntry(obj))
+        for chain in chains:
+            model['chains'][chain['name']] = chain
+
+        # gather information on lights
+        log("Parsing lights...", "INFO")
+        for obj in objectlist:
+            if obj.phobostype == 'light':
+                model['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
+
+        # gather submechanism information from links
+        log("Parsing submechanisms...", "INFO")
+
+        return model
+
     def get_joints_ordered_df(self):
         """Returns the joints in depth first order"""
         return tree.get_joints_depth_first(self, self.get_root())
