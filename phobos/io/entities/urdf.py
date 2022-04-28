@@ -770,7 +770,13 @@ def parseInertial(link_xml):
         inertial_dict['pose'] = parsePose(inertial_data.find('origin'))
         mass = inertial_data.find('mass')
         if mass is not None:
-            inertial_dict['mass'] = float(mass.attrib['value'])
+            if 'value' in mass.attrib:
+                inertial_dict['mass'] = float(mass.attrib['value'])
+            else:
+                # (wanglei-albert @ 2022-04-28)
+                # case of mass is in form:  <mass>0.17389</mass>
+                inertial_dict['mass'] = float(mass.text)
+
         inertia = inertial_data.find('inertia')
         if inertia is not None:
             inertial_dict['inertia'] = [
@@ -793,11 +799,41 @@ def parseJoint(joint):
     """
     jointdict = {a: joint.attrib[a] for a in joint.attrib}
     pose = parsePose(joint.find('origin'))
-    jointdict['parent'] = joint.find('parent').attrib['link']
-    jointdict['child'] = joint.find('child').attrib['link']
+
+    if 'link' in joint.find('parent').attrib:
+        jointdict['parent'] = joint.find('parent').attrib['link']
+    else:
+        # (wanglei-albert@2022-04-28)
+        # for parent link in the form: <parent>torso_lift_link</parent>
+        jointdict['parent'] = joint.find('parent').text
+
+    if 'link' in joint.find('child').attrib:
+        jointdict['child'] = joint.find('child').attrib['link']
+    else:
+        # (wanglei-albert@2022-04-28)
+        # for child link in the form: <child>torso_lift_motor_screw_link</child>
+        jointdict['child'] = joint.find('child').text
+
     axis = joint.find('axis')
+    # if axis is not None:
+    #     jointdict['axis'] = gUtils.parse_text(axis.attrib['xyz'])
     if axis is not None:
-        jointdict['axis'] = gUtils.parse_text(axis.attrib['xyz'])
+        if 'xyz' in axis.attrib:
+            # (wanglei-albert@2022-04-28)
+            # case of rotation axis form: <axis xyz="0 0 1"/>
+            jointdict['axis'] = gUtils.parse_text(axis.attrib['xyz'])
+        elif axis.find('xyz') is not None:
+            # (wanglei-albert@2022-04-28)
+            # case of rotation axis form:
+            #    < axis >
+            #       < xyz > 0 0 1 < / xyz >
+            #    < / axis >
+            jointdict['axis'] = gUtils.parse_text(axis.find('xyz').text)
+        else:
+            # case of rotation axis not provided (wanglei-albert@2022-04-28)
+            print("unexpected case for none rotation axis specified")
+            jointdict['axis'] = [0, 0, 1]
+
     limit = joint.find('limit')
     if limit is not None:
         jointdict['limits'] = {a: gUtils.parse_text(limit.attrib[a]) for a in limit.attrib}

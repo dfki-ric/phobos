@@ -465,7 +465,12 @@ def inertiaListToMatrix(inertialist):
 
     """
     il = inertialist
-    inertia = [[il[0], il[1], il[2]], [il[1], il[3], il[4]], [il[2], il[4], il[5]]]
+    inertia = []
+    if 5 == len(il):
+        inertia = [[il[0], il[1], il[2]], [il[1], il[3], il[4]], [il[2], il[4], il[5]]]
+    else:
+        # in case of invalid or none inertial specified (wanglei-albert@2022-04-28)
+        inertia = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
     return mathutils.Matrix(inertia)
 
 
