@@ -1,5 +1,4 @@
 import datetime
-import bpy
 import sys
 import os
 import xml
@@ -16,12 +15,7 @@ from ..io import representation
 from ..io.parser import parse_xml
 from ..utils.all import *
 from ..utils import misc, urdf, tree
-from ..model.models import deriveLink, deriveMaterial, deriveJoint,
-    deriveLight, deriveGroupEntry, deriveChainEntry, collectMaterials
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.io as ioUtils
+
 
 
 class Robot(representation.Robot):
@@ -86,7 +80,39 @@ class Robot(representation.Robot):
         representation. Idea is to use cli methods and formats for imports and
         exports
         """
+        import bpy
+        import ..blender.utils.blender as bUtils
+        import ..blender.utils.selection as sUtils
+        import ..blender.utils.naming as nUtils
+        import ..blender.utils.io as ioUtils
+
         model = derive_model_dictionary(root, name, objectlist)
+        links = model['links']
+        joints = model['joints']
+        name = model['name']
+        version = model['version']
+
+        # add aggregate from representation für link map of 
+
+
+        # name=None, version=None, links=None, joints=None, materials=None, transmissions=None
+
+        # model = {
+        #     'links': {},
+        #     'joints': {},
+        #     'sensors': {},
+        #     'motors': {},
+        #     'controllers': {},
+        #     'materials': {},
+        #     'meshes': {},
+        #     'lights': {},
+        #     'groups': {},
+        #     'chains': {},
+        #     'date': datetime.now().strftime("%Y%m%d_%H:%M"),
+        #     'name': modelname,
+        #     'version': modelversion,
+        #     'description': modeldescription,
+        # }
 
 
     @staticmethod
@@ -105,6 +131,10 @@ class Robot(representation.Robot):
         Returns:
 
         """
+        from ..blender.model.models import (deriveLink, deriveMaterial, deriveJoint,
+        deriveLight, deriveGroupEntry, deriveChainEntry, collectMaterials,
+        deriveDictEntry)
+
         if root.phobostype not in ['link', 'submodel']:
             log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
             return None

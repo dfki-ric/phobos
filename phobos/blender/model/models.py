@@ -13,6 +13,7 @@ import os
 import copy
 from datetime import datetime
 import json
+import pickle
 
 import bpy
 import mathutils
@@ -978,6 +979,16 @@ def namespaced(name, namespace):
     """
     return namespace + '_' + name
 
+def print_dict(dictionary, indent=0):
+    for k,v in dictionary.items():
+        print(" "*indent, k+": ", end="")
+        if type(v) == object:
+            print("Type: "+type(v))
+        elif type(v) == dict:
+            print()
+            print_dict(v, indent=indent+2)
+        else:
+            print(v)
 
 def deriveModelDictionary(root, name='', objectlist=[]):
     """Returns a dictionary representation of a Phobos model.
@@ -1015,20 +1026,20 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     modeldescription = bUtils.readTextFile('README.md')
 
     model = {
-        'links': {},
-        'joints': {},
-        'sensors': {},
-        'motors': {},
-        'controllers': {},
-        'materials': {},
-        'meshes': {},
-        'lights': {},
-        'groups': {},
-        'chains': {},
-        'date': datetime.now().strftime("%Y%m%d_%H:%M"),
-        'name': modelname,
-        'version': modelversion,
-        'description': modeldescription,
+        'links': {},        # reps robot
+        'joints': {},       # repr
+        'sensors': {},      # smurf
+        'motors': {},       # smurf
+        'controllers': {},  # irr 
+        'materials': {},    # repr robot
+        'meshes': {},       # repr meshes
+        'lights': {},       # irr vorl
+        'groups': {},       # irr vorl
+        'chains': {},       # bonus, hydrodyn
+        'date': datetime.now().strftime("%Y%m%d_%H:%M"),    # irrelevant
+        'name': modelname,  #
+        'version': modelversion, # egal
+        'description': modeldescription, # smurf robot ...
     }
 
     log(
@@ -1148,6 +1159,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     for chain in chains:
         model['chains'][chain['name']] = chain
 
+    # print_dict(model)
     # gather information on lights
     log("Parsing lights...", "INFO")
     for obj in objectlist:

@@ -27,6 +27,16 @@ bl_info = {
     "category": "Development",
 }
 
+from . import defs
+from . import utils
+from . import ci
+from . import geometry
+from . import smurf
+from . import scripts
+from . import core
+from . import io
+from . import scenes
+
 try:
     import bpy
     from . import blender
@@ -109,13 +119,14 @@ try:
     print("Checking requirements")
     requirements = {
         "yaml": "pyyaml",
-        # "networkx": "networkx",  # optional for blender
+        "networkx": "networkx",  # optional for blender
         "numpy": "numpy",
         # "pybullet": "pybullet",  # optional for blender
         # "open3d": "open3d",  # optional for blender
         "scipy": "scipy",
-        # "trimesh": "trimesh",  # optional for blender
-        # "python-fcl": "python-fcl"  # optional for blender
+        "trimesh": "trimesh",  # optional for blender
+        "python-fcl": "python-fcl",  # optional for blender
+        "pkg_resources": "setuptools"
     }
     check_requirements()
 
@@ -166,13 +177,3 @@ except ImportError:
         del get_distribution, DistributionNotFound
 
     print("Future import in pure python scripts.")
-    from . import utils
-    from . import ci
-    from . import geometry
-    from . import smurf
-    from . import scripts
-    from . import core
-    from . import io
-    from . import scenes
-
-
