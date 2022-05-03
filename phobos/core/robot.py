@@ -17,7 +17,6 @@ from ..utils.all import *
 from ..utils import misc, urdf, tree
 
 
-
 class Robot(representation.Robot):
     def __init__(self, name=None, xmlfile=None, verify_meshes_on_import=True):
         """ The basic robot class to represent a urdf.
@@ -72,7 +71,7 @@ class Robot(representation.Robot):
         if self.xmlfile is not None:
             self.joints = self.get_joints_ordered_df()
 
-    # helper methods
+
     @classmethod
     def get_robot_from_dict(root, name='', objectlist=[] ):
         """
@@ -300,6 +299,7 @@ class Robot(representation.Robot):
 
         return model
 
+     
     def get_joints_ordered_df(self):
         """Returns the joints in depth first order"""
         return tree.get_joints_depth_first(self, self.get_root())

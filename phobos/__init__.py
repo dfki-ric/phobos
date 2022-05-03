@@ -127,6 +127,8 @@ try:
         "trimesh": "trimesh",  # optional for blender
         "python-fcl": "python-fcl",  # optional for blender
         "pkg_resources": "setuptools"
+      # "python-fcl": "python-fcl"  # optional for blender
+
     }
     check_requirements()
 

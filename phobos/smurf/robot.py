@@ -20,6 +20,7 @@ from ..utils.misc import edit_name_string
 class Smurf(Robot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
                  inputfile=None, description=None):
+
         if inputfile is not None:
             if inputfile.lower().endswith(".smurf") and smurffile is None:
                 smurffile = inputfile
@@ -46,8 +47,8 @@ class Smurf(Robot):
         self.smurf_links = []
         self.smurf_joints = []
         self.smurf_materials = []
-
         self.description = "" if description is None else description
+
         # Check the input file
         self.load_smurffile(self.smurffile)
 
