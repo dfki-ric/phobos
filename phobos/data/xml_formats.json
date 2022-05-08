@@ -1,0 +1,501 @@
+{
+  "urdf": {
+    "Robot": {
+      "tag": "robot",
+      "attributes": {
+        "name": "name",
+        "version": "version"
+      },
+      "children": {
+        "link": {
+          "classname": "Link",
+          "varname": "links"
+        },
+        "joint": {
+          "classname": "Joint",
+          "varname": "joints"
+        },
+        "material": {
+          "classname": "Material",
+          "varname": "materials"
+        }
+      }
+    },
+    "Link": {
+      "tag": "link",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "inertial": {
+          "classname": "Inertial",
+          "varname": "inertial"
+        },
+        "visual": {
+          "classname": "Visual",
+          "varname": "visuals"
+        },
+        "collision": {
+          "classname": "Collision",
+          "varname": "collisions"
+        }
+      }
+    },
+    "Material": {
+      "tag": "material",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "color": {
+          "classname": "Color",
+          "varname": "color"
+        },
+        "texture": {
+          "classname": "Texture",
+          "varname": "texture"
+        }
+      }
+    },
+    "Inertial": {
+      "tag": "inertial",
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "inertia": {
+          "classname": "Inertia",
+          "varname": "inertia"
+        }
+      },
+      "attribute_children": {
+        "mass": {
+          "value": "mass"
+        }
+      }
+    },
+    "Inertia": {
+      "tag": "inertia",
+      "attributes": {
+        "ixx": "ixx",
+        "ixy": "ixy",
+        "ixz": "ixz",
+        "iyy": "iyy",
+        "iyz": "iyz",
+        "izz": "izz"
+      }
+    },
+    "Visual": {
+      "tag": "visual",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "material": {
+          "classname": "Material",
+          "varname":  "material"
+        }
+      },
+      "nested_children": {
+        "geometry": {
+          "children": {
+            "cylinder": {
+              "classname": "Cylinder",
+              "varname": "geometry"
+            },
+            "box": {
+              "classname": "Box",
+              "varname": "geometry"
+            },
+            "sphere": {
+              "classname": "Sphere",
+              "varname": "geometry"
+            },
+            "mesh": {
+              "classname": "Mesh",
+              "varname": "geometry"
+            }
+          }
+        }
+      }
+    },
+    "Collision": {
+      "tag": "collision",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "geometry": {
+          "children": {
+            "cylinder": {
+              "classname": "Cylinder",
+              "varname": "geometry"
+            },
+            "box": {
+              "classname": "Box",
+              "varname": "geometry"
+            },
+            "sphere": {
+              "classname": "Sphere",
+              "varname": "geometry"
+            },
+            "mesh": {
+              "classname": "Mesh",
+              "varname": "geometry"
+            }
+          }
+        }
+      }
+    },
+    "Pose": {
+      "tag": "origin",
+      "attributes": {
+        "rpy": "rpy",
+        "xyz": "xyz"
+      }
+    },
+    "Mesh": {
+      "tag": "mesh",
+      "attributes": {
+        "filename": "filename",
+        "scale": "scale"
+      }
+    },
+    "Box": {
+      "tag": "box",
+      "attributes": {
+        "size": "size"
+      }
+    },
+    "Cylinder": {
+      "tag": "cylinder",
+      "attributes": {
+        "radius": "radius",
+        "length": "length"
+      }
+    },
+    "Sphere": {
+      "tag": "sphere",
+      "attributes": {
+        "radius": "radius"
+      }
+    },
+    "Joint": {
+      "tag": "joint",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "limit": {
+          "classname": "JointLimit",
+          "varname": "limit"
+        },
+        "mimic": {
+          "classname": "JointMimic",
+          "varname": "mimic"
+        }
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "parent"
+        },
+        "child": {
+          "link": "child"
+        },
+        "axis": {
+          "xyz": "axis"
+        }
+      }
+    },
+    "Color": {
+      "tag": "color",
+      "attributes": {
+        "rgba": "rgba"
+      }
+    },
+    "Texture": {
+      "tag": "texture",
+      "attributes": {
+        "filename": "filename"
+      }
+    },
+    "JointLimit": {
+      "tag": "limit",
+      "attributes": {
+        "lower": "lower",
+        "upper": "upper",
+        "effort": "effort",
+        "velocity": "velocity"
+      }
+    },
+    "JointMimic": {
+      "tag": "mimic",
+      "attributes":{
+        "multiplier": "multiplier",
+        "offset": "offset",
+        "joint": "joint"
+      }
+    }
+  },
+  "sdf": {
+    "Robot": {
+      "tag": "model",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "link": {
+          "classname": "Link",
+          "varname": "links"
+        },
+        "joint": {
+          "classname": "Joint",
+          "varname": "joints"
+        },
+        "material": {
+          "classname": "Material",
+          "varname": "materials"
+        }
+      }
+    },
+    "Link": {
+      "tag": "link",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "inertial": {
+          "classname": "Inertial",
+          "varname": "inertial"
+        },
+        "visual": {
+          "classname": "Visual",
+          "varname": "visuals"
+        },
+        "collision": {
+          "classname": "Collision",
+          "varname": "collisions"
+        }
+      }
+    },
+    "Material": {
+      "tag": "material",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "diffuse": {
+          "classname": "Color",
+          "varname": "color"
+        }
+      }
+    },
+    "Inertial": {
+      "tag": "inertial",
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "inertia": {
+          "classname": "Inertia",
+          "varname": "inertia"
+        }
+      },
+      "value_children": {
+        "mass": "mass"
+      }
+    },
+    "Inertia": {
+      "tag": "inertia",
+      "value_children": {
+        "ixx": "ixx",
+        "ixy": "ixy",
+        "ixz": "ixz",
+        "iyy": "iyy",
+        "iyz": "iyz",
+        "izz": "izz"
+      }
+    },
+    "Visual": {
+      "tag": "visual",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "material": {
+          "classname": "Material",
+          "varname":  "material"
+        }
+      },
+      "nested_children": {
+        "geometry": {
+          "children": {
+            "cylinder": {
+              "classname": "Cylinder",
+              "varname": "geometry"
+            },
+            "box": {
+              "classname": "Box",
+              "varname": "geometry"
+            },
+            "sphere": {
+              "classname": "Sphere",
+              "varname": "geometry"
+            },
+            "mesh": {
+              "classname": "Mesh",
+              "varname": "geometry"
+            }
+          }
+        }
+      }
+    },
+    "Collision": {
+      "tag": "collision",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "geometry": {
+          "children": {
+            "cylinder": {
+              "classname": "Cylinder",
+              "varname": "geometry"
+            },
+            "box": {
+              "classname": "Box",
+              "varname": "geometry"
+            },
+            "sphere": {
+              "classname": "Sphere",
+              "varname": "geometry"
+            },
+            "mesh": {
+              "classname": "Mesh",
+              "varname": "geometry"
+            }
+          }
+        }
+      }
+    },
+    "Pose": {
+      "tag": "pose",
+      "value": "vec"
+    },
+    "Mesh": {
+      "tag": "mesh",
+      "value_children": {
+        "uri": "filename",
+        "scale": "scale"
+      }
+    },
+    "Box": {
+      "tag": "box",
+      "value_children": {
+        "size": "size"
+      }
+    },
+    "Cylinder": {
+      "tag": "cylinder",
+      "value_children": {
+        "radius": "radius",
+        "length": "length"
+      }
+    },
+    "Sphere": {
+      "tag": "sphere",
+      "value_children": {
+        "radius": "radius"
+      }
+    },
+    "Joint": {
+      "tag": "joint",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "mimic": {
+          "classname": "JointMimic",
+          "varname": "mimic"
+        }
+      },
+      "nested_children": {
+        "axis": {
+          "tag": "axis",
+          "children": {
+            "limit": {
+              "classname": "JointLimit",
+              "varname": "limit"
+            }
+          },
+          "value_children": {
+            "xyz": "axis"
+          }
+        }
+      },
+      "value_children": {
+        "parent": "parent",
+        "child": "child"
+      }
+    },
+    "Color": {
+      "tag": "diffuse",
+      "value": "rgba"
+    },
+    "Texture": {
+      "tag": "texture",
+      "attributes": {
+        "filename": "filename"
+      }
+    },
+    "JointLimit": {
+      "tag": "limit",
+      "value_children": {
+        "lower": "lower",
+        "upper": "upper",
+        "effort": "effort",
+        "velocity": "velocity"
+      }
+    },
+    "JointMimic": {
+      "tag": "mimic",
+      "attributes":{
+        "multiplier": "multiplier",
+        "offset": "offset",
+        "joint": "joint"
+      }
+    }
+  }
+}

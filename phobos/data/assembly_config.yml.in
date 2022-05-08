@@ -1,0 +1,131 @@
+assemble:
+  ros_package: False
+  has_submechanisms: False
+  output_mesh_format: stl
+  input_meshes_are_mars_obj: True
+  also_export_bobj: True
+  ensure_valid_joints: False
+  compare_model:
+    tolerance: 0.01
+    tolerance_mass: 0.01
+    tolerance_rad: 0.03
+    tolerance_distance: 0.003
+  export_pdf: True
+  model_tests:
+    - process_double_check
+    - load_in_pybullet
+    - compare_link_masses
+    - compare_link_transformations
+    - topological_self_consistency
+    - compare_amount_joints
+    - hyrodynChecks:
+      - load_in_hyrodyn
+  meshes:
+    stl: "meshes/stl"
+    obj: "meshes/obj"
+    mars_obj: "meshes/mars_obj"
+    bobj: "meshes/bobj"
+    iv: "meshes/iv"
+xtype_model:
+  robotname: "@MODEL_NAME@"
+  modelname: "@MODEL_NAME@-@MODEL_VERSION@"
+  model:
+    modelname: "@MODEL_NAME@"
+    modelversion: "@MODEL_VERSION@"
+
+#  compare_model:
+#    git: "git@git.hb.dfki.de:models-robots/rh5v2_models/abstract-smurf"
+#    branch: master
+#    model_in_repo: "urdf/RH5v2.urdf"
+#    submechanisms_in_repo: "submechanisms/submechanisms.yml"
+
+#  name_editing_before:
+#    collision_replacements:
+#      - collision_: "collision_"
+#    visual_replacements:
+#      - visual_: "visual_"
+#    name_replacements: {}  # dict or list
+#    collision_prefix: ""
+#    collision_suffix: ""
+#    visual_prefix: ""
+#    visual_suffix: ""
+
+  export_floatingbase: True
+  export_ros_pathes: True
+  export_kccd:
+    join_before_convexhull: True
+    remove_joints: []
+    merge_additionally: []
+    keep_stls: True
+    dirname: "kccd"
+    reduce_meshes: 0.5
+    braking_model:
+      linearFactor: 0
+      invDeceleration: 0.02
+      uncertainty: 0
+      latency: 0
+    simplify_swept_from: [ ]
+    safety_distance: 0
+    report_up_to: 0
+    computation_budget: -1
+    max_approximation_order: 1
+
+  remove_joints: []
+
+  edit_collisions:
+    default:
+      join: True
+      shape: box
+      oriented: True
+      noDataPackage: True
+    exclude: [ ]
+
+  redefine_articulation:
+    default:
+      backup: True
+      min: ["rad", -3.1415926]
+      max: ["rad", 3.1415926]
+      vel: 3.1415926
+      eff: 400.0
+      reducedDataPackage: True
+
+#  name_editing_after:
+#    collision_replacements:
+#      - collision_: "collision_"
+#    visual_replacements:
+#      - visual_: "visual_"
+#    name_replacements: { }  # dict or list
+#    collision_prefix: ""
+#    collision_suffix: ""
+#    visual_prefix: ""
+#    visual_suffix: ""
+
+#  smurf:
+#    collisions:
+#      auto_bitmask: True
+#      no_collision_between: {}
+##        BodyYaw_Link_Collision: [ "RH5v2_Root_Link_Collision", "RH5v2_Root_Link" ]
+#      default:
+#        noDataPackage: True
+#    links:
+#      default:
+#        noDataPackage: True
+#        reducedDataPackage: False
+#      CameraTorso_Link:
+#        noDataPackage: False
+#      CameraHeadLeftEye_Link:
+#        noDataPackage: False
+#    sensors: []
+#      # Single Link sensors
+#      #- type: CameraSensor
+#      #  link: CameraTorso_Link
+#      #  name: CameraTorso
+#      #  opening_height: 60
+#      #  opening_width: 90
+#      #  orientation_offset:
+#      #    x: 0.5
+#      #    y: -0.5
+#      #    z: 0.5
+#      #    w: 0.5
+
+  submechanisms_file: {}

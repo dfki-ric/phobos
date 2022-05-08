@@ -1,0 +1,70 @@
+
+# Git LFS for mesh repositories
+
+This repo uses git-lfs for the mesh repositories to save you some disk space and download time.
+
+If you check out this repo via autoproj and you have included this model-group's package_set, autoproj will take care of it.
+
+If you are checking out this repo via git you probably have to install git-lfs first:
+
+- If you haven't used git-lfs before you probably have to do:
+```
+curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+```
+
+- If you once have added git-lfs to your repos simply do:
+```
+sudo apt-get install git-lfs
+```
+
+Afterwards git-lfs will take care of checking out the lfs files for you when you use `git`.
+
+See also https://packagecloud.io/github/git-lfs/install
+
+## Troubleshooting
+
+Normally, Autoproj supports git-lfs (see [here](https://www.rock-robotics.org/rock-and-syskit/workspace/add_packages.html#git-lfs)).
+However, sometimes it seems to have trouble using git-lfs especially, if you haven't got a fresh bootstrap.
+
+
+**How to check if something went wrong**
+
+Have a look into one of your mesh files. If everything is alright, it should be a binary or at least a very large file - depending on the type.
+If something went wrong there'll be just three lines which refer to git-lfs with a hash of the respective file.
+
+
+**Here is how you can fix your issue:**
+
+1. Do the steps above to install git-lfs manually on you system.
+
+2. Go into the repo you are having trouble with.
+    ```
+    cd $FAULTY_MODEL_REPO
+    ```
+
+3. Get the remote url and copy it.
+    ```
+    git remote -v
+    ```
+4. Remove the faulty model repo:
+    ```
+    cd ..
+    rm -rf $FAULTY_MODEL_REPO
+    ```
+5. Make sure git lfs is initialized and check out the repo manually:
+    ```
+    git lfs install
+    git clone $THE_REPO_REMOTE_URL $FAULTY_MODEL_REPO
+    ```
+6. If you are using a special branch (e.g. develop) check it out:
+    ```
+    git checkout develop
+    ```
+7. Get the submodules:
+    ```
+    git submodule update --init
+    ```
+8. Everything should be fine now. But maybe you might want to rename your remote:
+    ```
+    git remote rename origin autobuild
+    ```

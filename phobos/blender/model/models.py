@@ -13,6 +13,7 @@ import os
 import copy
 from datetime import datetime
 import json
+import pickle
 
 import bpy
 import mathutils
@@ -42,9 +43,9 @@ from phobos.blender.defs import linkobjignoretypes
 
 def collectMaterials(objectlist):
     """Returns a dictionary of materials contained in a list of objects.
-    
+
     Only visual objects are considered and the dict keys represent the material names.
-    
+
     If a material is used by multiple objects, the *user* count is increased by one.
 
     Args:
@@ -70,15 +71,15 @@ def collectMaterials(objectlist):
 @validate('material')
 def deriveMaterial(mat, logging=False, errors=None):
     """Returns a Phobos representation of a Blender material.
-    
+
     Colors are returned as a dictionary with three keys ('r', 'g', 'b').
-    
+
     It contains always:
         *name*: name of the material
         *diffuseColor*: the diffuse color of the material
         *ambientColor*: the ambient color of the material
         *specularColor*: the specular color of the material
-    
+
     Depending on the material and texture configuration it might also contain:
         *emissionColor*: the emission color of the material
         *transparency*: the transparency of the material
@@ -164,10 +165,10 @@ def deriveMaterial(mat, logging=False, errors=None):
 @validate('link')
 def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
     """Derives a dictionary for the link represented by the provided obj.
-    
+
     If objectlist is provided, only objects contained in the list are taken into account
     for creating the resulting dictionary.
-    
+
     The dictionary contains (besides any generic object properties) this information:
         *parent*: name of parent object or None
         *children*: list of names of the links child links
@@ -261,7 +262,7 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
 
 def get_link_information(linkobj):
     """Returns the full link information including joint and motor data from a blender object.
-    
+
     The link information is derived according to :func:`derive_link`.
 
     Args:
@@ -386,7 +387,7 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
 @validate('inertia_data')
 def deriveInertial(obj, logging=True, **kwargs):
     """Returns a dictionary describing the inertial information represented by the provided object.
-    
+
     Contains these keys:
         *mass*: float
         *inertia*: list
@@ -397,7 +398,7 @@ def deriveInertial(obj, logging=True, **kwargs):
     Args:
       obj(bpy.types.Object): object of phobostype 'inertial'
       logging(bool, optional): whether to log information or not (Default value = True)
-      **kwargs: 
+      **kwargs:
 
     Returns:
 
@@ -415,7 +416,7 @@ def deriveInertial(obj, logging=True, **kwargs):
 @validate('visual')
 def deriveVisual(obj, logging=True, **kwargs):
     """This function derives the visual information from an object.
-    
+
     Contains these keys:
         *name*: name of the visual
         *geometry*: derived according to `deriveGeometry`
@@ -425,7 +426,7 @@ def deriveVisual(obj, logging=True, **kwargs):
     Args:
       obj(bpy.types.Object): object to derive the visual representation from
       logging: (Default value = True)
-      **kwargs: 
+      **kwargs:
 
     Returns:
       : dict -- model representation of the visual object
@@ -557,7 +558,7 @@ def deriveLight(obj):
 
 def recursive_dictionary_cleanup(dictionary):
     """Recursively enrich the dictionary and replace object links with names etc.
-    
+
     These patterns are replaced:
         [phobostype, bpyobj] -> {'object': bpyobj, 'name': getObjectName(bpyobj, phobostype)}
 
@@ -919,8 +920,8 @@ def namespaceMotor(motor, namespace):
     """
 
     Args:
-      motor: 
-      namespace: 
+      motor:
+      namespace:
 
     Returns:
 
@@ -934,8 +935,8 @@ def namespaceLink(link, namespace):
     """
 
     Args:
-      link: 
-      namespace: 
+      link:
+      namespace:
 
     Returns:
 
@@ -954,8 +955,8 @@ def namespaceJoint(joint, namespace):
     """
 
     Args:
-      joint: 
-      namespace: 
+      joint:
+      namespace:
 
     Returns:
 
@@ -970,18 +971,28 @@ def namespaced(name, namespace):
     """
 
     Args:
-      name: 
-      namespace: 
+      name:
+      namespace:
 
     Returns:
 
     """
     return namespace + '_' + name
 
+def print_dict(dictionary, indent=0):
+    for k,v in dictionary.items():
+        print(" "*indent, k+": ", end="")
+        if type(v) == object:
+            print("Type: "+type(v))
+        elif type(v) == dict:
+            print()
+            print_dict(v, indent=indent+2)
+        else:
+            print(v)
 
 def deriveModelDictionary(root, name='', objectlist=[]):
     """Returns a dictionary representation of a Phobos model.
-    
+
     If name is not specified, it overrides the modelname in the root. If the modelname is not
     defined at all, 'unnamed' will be used instead.
 
@@ -1015,20 +1026,20 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     modeldescription = bUtils.readTextFile('README.md')
 
     model = {
-        'links': {},
-        'joints': {},
-        'sensors': {},
-        'motors': {},
-        'controllers': {},
-        'materials': {},
-        'meshes': {},
-        'lights': {},
-        'groups': {},
-        'chains': {},
-        'date': datetime.now().strftime("%Y%m%d_%H:%M"),
-        'name': modelname,
-        'version': modelversion,
-        'description': modeldescription,
+        'links': {},        # reps robot
+        'joints': {},       # repr
+        'sensors': {},      # smurf
+        'motors': {},       # smurf
+        'controllers': {},  # irr 
+        'materials': {},    # repr robot
+        'meshes': {},       # repr meshes
+        'lights': {},       # irr vorl
+        'groups': {},       # irr vorl
+        'chains': {},       # bonus, hydrodyn
+        'date': datetime.now().strftime("%Y%m%d_%H:%M"),    # irrelevant
+        'name': modelname,  #
+        'version': modelversion, # egal
+        'description': modeldescription, # smurf robot ...
     }
 
     log(
@@ -1148,6 +1159,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     for chain in chains:
         model['chains'][chain['name']] = chain
 
+    # print_dict(model)
     # gather information on lights
     log("Parsing lights...", "INFO")
     for obj in objectlist:
@@ -1161,7 +1173,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         """
 
         Args:
-          link: 
+          link:
 
         Returns:
 
@@ -1385,10 +1397,10 @@ def gatherAnnotations(model):
 
 def replace_object_links(dictionary):
     """Replaces object links in a dictionary with object names.
-    
+
     This is required for generic parsed object definitions, as object links are represented by a
     simple dictionary with *name* and *object*.
-    
+
     For most exports, this can be run prior export parsing, to create the respective name linking
     within the model.
 
@@ -1425,7 +1437,7 @@ def createGroup(group):
     """
 
     Args:
-      group: 
+      group:
 
     Returns:
 
@@ -1438,7 +1450,7 @@ def createChain(group):
     """
 
     Args:
-      group: 
+      group:
 
     Returns:
 
