@@ -81,10 +81,10 @@ class Robot(representation.Robot):
         exports
         """
         import bpy
-        import ..blender.utils.blender as bUtils
-        import ..blender.utils.selection as sUtils
-        import ..blender.utils.naming as nUtils
-        import ..blender.utils.io as ioUtils
+        import blender.utils.blender as bUtils
+        import blender.utils.selection as sUtils
+        import blender.utils.naming as nUtils
+        import blender.utils.io as ioUtils
 
         model = derive_model_dictionary(root, name, objectlist)
         links = model['links']
@@ -92,7 +92,7 @@ class Robot(representation.Robot):
         name = model['name']
         version = model['version']
 
-        # add aggregate from representation für link map of 
+        # add aggregate from representation für link map of
 
 
         # name=None, version=None, links=None, joints=None, materials=None, transmissions=None
