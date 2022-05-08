@@ -17,7 +17,10 @@ from ..utils.all import *
 from ..utils import misc, urdf, tree
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 7f07861056a6d756a654a313e704350dfc6f0b43
 class Robot(representation.Robot):
     def __init__(self, name=None, xmlfile=None, verify_meshes_on_import=True):
         """ The basic robot class to represent a urdf.
@@ -39,8 +42,11 @@ class Robot(representation.Robot):
                 root.attrib["name"] = name
 
             def go_through_children(node):
+<<<<<<< HEAD
                 """Recursive function to name children of link class
                 """
+=======
+>>>>>>> 7f07861056a6d756a654a313e704350dfc6f0b43
                 for child in node:
                     if child.tag == "link":
                         go_through_children(child)
@@ -73,6 +79,7 @@ class Robot(representation.Robot):
             self.joints = self.get_joints_ordered_df()
 
     # helper methods
+<<<<<<< HEAD
     @classmethod
     def get_robot_from_dict(root, name='', objectlist=[] ):
         """
@@ -300,6 +307,8 @@ class Robot(representation.Robot):
 
         return model
 
+=======
+>>>>>>> 7f07861056a6d756a654a313e704350dfc6f0b43
     def get_joints_ordered_df(self):
         """Returns the joints in depth first order"""
         return tree.get_joints_depth_first(self, self.get_root())

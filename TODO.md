@@ -19,3 +19,6 @@ should work. However, there are still a few todos left:
 - drawing into 3d_view via opengl
 - collect all issues
 - update add motor and controller operator to not create new objects
+- [done] autmatic installation of python dependencies in blender
+- fully integrate cli-phobos starting with io
+- make compatible with blender3

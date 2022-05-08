@@ -3,6 +3,7 @@
   "@type": "Code",
   "author": [
       Kai von Szadkowski,
+      Henning Wiedemann
       Simon Reichel,
       Julius Martensen
   ],
@@ -11,9 +12,9 @@
   "datePublished": "2019-02-01",
   "dateModified": "2020-12-16",
   "dateCreated": "2019-02-01",
-  "description": "A Blender addon to create and edit robot models in a WYSIWYG environment.",
-  "keywords": "robotics, Blender, Python, URDF, SDF, model",
+  "description": "A Blender addon to create and edit robot models in a WYSIWYG environment and a python package/CLI tool to do this automated.",
+  "keywords": "robotics, Blender, Python, URDF, SDF, model, MARS, SMURF, CLI, python, package",
   "license": "BSD-3-Clause",
   "title": "Phobos",
-  "version": "1.0.1"
+  "version": "2.0.0"
 }
