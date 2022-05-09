@@ -19,11 +19,8 @@ from ..utils.misc import edit_name_string
 
 class Smurf(Robot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
-<<<<<<< HEAD
                  inputfile=None, description=None):
-=======
-                 inputfile=None):
->>>>>>> 7f07861056a6d756a654a313e704350dfc6f0b43
+
         if inputfile is not None:
             if inputfile.lower().endswith(".smurf") and smurffile is None:
                 smurffile = inputfile
@@ -50,11 +47,8 @@ class Smurf(Robot):
         self.smurf_links = []
         self.smurf_joints = []
         self.smurf_materials = []
-<<<<<<< HEAD
-
         self.description = "" if description is None else description
-=======
->>>>>>> 7f07861056a6d756a654a313e704350dfc6f0b43
+
         # Check the input file
         self.load_smurffile(self.smurffile)
 
@@ -369,12 +363,9 @@ class Smurf(Robot):
         annotation_dict = {
             'modelname': self.name,
             # 'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
-<<<<<<< HEAD
             'files': sorted(export_files),
             'description' : self.description
-=======
-            'files': sorted(export_files)
->>>>>>> 7f07861056a6d756a654a313e704350dfc6f0b43
+
         }
 
         with open(os.path.join(smurf_dir, "{}.smurf".format(self.name)), "w+") as stream:

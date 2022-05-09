@@ -122,7 +122,7 @@ class Material(Representation):
 #     def check_valid(self):
 #         pass
 #
-# 
+#
 
 
 class Visual(Representation):
@@ -338,12 +338,13 @@ class Robot(Representation):
 
     def __init__(self, name=None, version=None, links=None, joints=None, materials=None, transmissions=None):
         self.name = name
-        if version is None:
-            version = "1.0"
-        elif type(version) is not str:
-            version = str(version)
-        if version not in self.SUPPORTED_VERSIONS:
-            raise ValueError("Invalid version; only %s is supported" % (','.join(self.SUPPORTED_VERSIONS)))
+        if False:   # TODO Henning fragen ob der ValueError wichtig ist
+            if version is None:
+                version = "1.0"
+            elif type(version) is not str:
+                version = str(version)
+            if version not in self.SUPPORTED_VERSIONS:
+                raise ValueError("Invalid version; only %s is supported" % (','.join(self.SUPPORTED_VERSIONS)))
 
         self.version = version
 
@@ -431,4 +432,3 @@ class Robot(Representation):
 
         if self.version not in self.SUPPORTED_VERSIONS:
             raise ValueError("Invalid version; only %s is supported" % (','.join(self.SUPPORTED_VERSIONS)))
-
