@@ -14,7 +14,7 @@ from .. import geometry as pgu
 from ..io import representation
 from ..io.parser import parse_xml
 from ..utils.all import *
-from ..utils import misc, urdf, tree
+from ..utils import misc, urdf, tree, transform
 
 
 class Robot(representation.Robot):
@@ -86,38 +86,45 @@ class Robot(representation.Robot):
         import phobos.blender.utils.io as ioUtils
 
         root = sUtils.getRoot(bpy.context.selected_objects[0])
-        model = derive_model_dictionary(root, name, objectlist)
-        print(model['version'])
-        print(model['name'])
-        print(model['joints'])
-        # TODO bevor ich in representation.Robot übergeben kann muss die Klassen nutzen um links und joints zu definieren nach der Robot ART
-        # sonst macht add_aggregate das nicht
+        blender_model = derive_model_dictionary(root, name, objectlist)
+        cli_joints = []
+        for key, values in blender_model['joints'].items() :
+            # print(key)
+            # print(values)
+            cli_joints.append(representation.Joint(
+            name=values['name'],
+            parent=values['parent'],
+            child=values['child'],
+            type=values['type'],
+            axis=None,  # wenn fixed nicht da
+            origin=transform.to_origin(values['pose']['rawmatrix']),
+            limit=None, # same wie bei axis
+            dynamics=None, # optional
+            safety_controller=None, # optional
+            calibration=None, # optional
+            mimic=None)) # rudimentär
 
-        robot = representation.Robot(name=model['name'],
-         version=model['version'], links=model['links'],
-         joints=model['joints'], materials=model['materials'])
+
+        # cli_links = []
+        # for key, values in blender_model['links'].items():
+        #     # print(key)
+        #     # print(values)
+        #     break
+        #     cli_links.append(representation.Links(
+        #     name=values['name'],
+        #     visuals=None,
+        #     inertial=None,
+        #     collisions=None,
+        #     origin=None))   # gibts nicht bzw von joint
+
+        # robot = representation.Robot(
+        # name=model['name'],
+        # ersion=model['version'],
+        # links=model['links'],
+        # joints=model['joints'],
+        # materials=model['materials'])
+
         print("success")
-        # add aggregate from representation für link map of
-
-
-        # name=None, version=None, links=None, joints=None, materials=None, transmissions=None
-
-        # model = {
-        #     'links': {},
-        #     'joints': {},
-        #     'sensors': {},
-        #     'motors': {},
-        #     'controllers': {},
-        #     'materials': {},
-        #     'meshes': {},
-        #     'lights': {},
-        #     'groups': {},
-        #     'chains': {},
-        #     'date': datetime.now().strftime("%Y%m%d_%H:%M"),
-        #     'name': modelname,
-        #     'version': modelversion,
-        #     'description': modeldescription,
-        # }
 
     def get_joints_ordered_df(self):
         """Returns the joints in depth first order"""
