@@ -20,20 +20,24 @@ class Pose(Representation):
 
     def check_valid(self):
         assert (self.xyz is None or len(self.xyz) == 3) and \
-            (self.rpy is None or len(self.rpy) == 3)
+               (self.rpy is None or len(self.rpy) == 3)
 
     # Aliases for backwards compatibility
     @property
-    def rotation(self): return self.rpy
+    def rotation(self):
+        return self.rpy
 
     @rotation.setter
-    def rotation(self, value): self.rpy = value
+    def rotation(self, value):
+        self.rpy = value
 
     @property
-    def position(self): return self.xyz
+    def position(self):
+        return self.xyz
 
     @position.setter
-    def position(self, value): self.xyz = value
+    def position(self, value):
+        self.xyz = value
 
     def from_vec(self, vec):
         assert len(vec) == 6, "Invalid length"
@@ -86,7 +90,6 @@ class Cylinder(Representation):
 class Sphere(Representation):
     def __init__(self, radius=0.0):
         self.radius = radius
-
 
 
 class Mesh(Representation):
@@ -203,8 +206,7 @@ class Joint(Representation):
 
 
 class Link(Representation):
-    def __init__(self, name=None, visuals=None, inertial=None, collisions=None,
-                 origin=None):
+    def __init__(self, name=None, visuals=None, inertial=None, collisions=None):
         self.name = name
         self.visuals = []
         if visuals is not None:
@@ -213,7 +215,6 @@ class Link(Representation):
         self.collisions = []
         if collisions is not None:
             self.collisions = collisions
-        assert origin is None
 
     def __get_visual(self):
         """Return the first visual or None."""
@@ -258,7 +259,6 @@ class Link(Representation):
             self.visuals.append(elem)
         elif isinstance(elem, Collision) or elem_type.lower() == "collision":
             self.collisions.append(elem)
-
 
 
 # class PR2Transmission(Representation):
@@ -338,7 +338,7 @@ class Robot(Representation):
 
     def __init__(self, name=None, version=None, links=None, joints=None, materials=None, transmissions=None):
         self.name = name
-        if False:   # TODO Henning fragen ob der ValueError wichtig ist
+        if False:  # TODO Henning fragen ob der ValueError wichtig ist
             if version is None:
                 version = "1.0"
             elif type(version) is not str:
@@ -366,7 +366,6 @@ class Robot(Representation):
 
         self.materials = materials if materials is not None else []
         self.transmissions = transmissions if transmissions is not None else []
-
 
     def add_aggregate(self, typeName, elem):
         if typeName == 'joint':

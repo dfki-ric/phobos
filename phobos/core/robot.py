@@ -73,7 +73,7 @@ class Robot(representation.Robot):
 
     # helper methods
     @classmethod
-    def get_robot_from_dict(name='', objectlist=[] ):
+    def get_robot_from_dict(name='', objectlist=[]):
         """
         Uses blender workflow to access internal dictionary to call robot
         representation. Idea is to use cli methods and formats for imports and
@@ -88,43 +88,47 @@ class Robot(representation.Robot):
         root = sUtils.getRoot(bpy.context.selected_objects[0])
         blender_model = derive_model_dictionary(root, name, objectlist)
         cli_joints = []
-        for key, values in blender_model['joints'].items() :
+        for key, values in blender_model['joints'].items():
+            cli_axis = None
+            cli_limit = None
+            if not values['type'] == 'fixed':
+                cli_axis = values['axis']
+                cli_limit = values['limits']
+            cli_joints.append(representation.Joint(
+                name=values['name'],
+                parent=values['parent'],
+                child=values['child'],
+                type=values['type'],
+                axis=cli_axis,
+                origin=transform.to_origin(np.array(values['pose']['rawmatrix'])),
+                limit=cli_limit,
+                dynamics=None,  # optional
+                safety_controller=None,  # optional
+                calibration=None,  # optional
+                mimic=None))  # rudimentär
+
+        cli_links = []
+        for key, values in blender_model['links'].items():
             # print(key)
             # print(values)
-            cli_joints.append(representation.Joint(
-            name=values['name'],
-            parent=values['parent'],
-            child=values['child'],
-            type=values['type'],
-            axis=None,  # wenn fixed nicht da
-            origin=transform.to_origin(values['pose']['rawmatrix']),
-            limit=None, # same wie bei axis
-            dynamics=None, # optional
-            safety_controller=None, # optional
-            calibration=None, # optional
-            mimic=None)) # rudimentär
+            cli_links.append(representation.Link(
+                name=values['name'],
+                visuals=None,
+                inertial=None,
+                collisions=values['collision']))
 
-
-        # cli_links = []
-        # for key, values in blender_model['links'].items():
-        #     # print(key)
-        #     # print(values)
-        #     break
-        #     cli_links.append(representation.Links(
-        #     name=values['name'],
-        #     visuals=None,
-        #     inertial=None,
-        #     collisions=None,
-        #     origin=None))   # gibts nicht bzw von joint
-
-        # robot = representation.Robot(
-        # name=model['name'],
-        # ersion=model['version'],
-        # links=model['links'],
-        # joints=model['joints'],
-        # materials=model['materials'])
+        cli_robot = representation.Robot(
+            name=blender_model['name'],
+            version=blender_model['version'],
+            links=cli_links,
+            joints=cli_joints,
+            materials=blender_model['materials'])
 
         print("success")
+        new_robot = Robot()
+        new_robot.__dict__.update(cli_robot.__dict__)
+        # so geht das auch mit der SmURF klasse.
+        return new_robot
 
     def get_joints_ordered_df(self):
         """Returns the joints in depth first order"""
@@ -465,8 +469,8 @@ class Robot(representation.Robot):
                 }
             else:
                 first_line = first_line.split(" AXIS ")
-                first_line = first_line[0].split(" ") + first_line[1][:first_line[1].rfind("]") + 1].split("LIMITS")\
-                    + first_line[1][first_line[1].rfind("]") + 1:].strip().split(" ")
+                first_line = first_line[0].split(" ") + first_line[1][:first_line[1].rfind("]") + 1].split("LIMITS") \
+                             + first_line[1][first_line[1].rfind("]") + 1:].strip().split(" ")
                 if "JOINT" in first_line[0]:
                     kccd_kinematics[first_line[1]] = {
                         "type": first_line[0],
@@ -609,7 +613,7 @@ class Robot(representation.Robot):
                                      export_collisions=export_collisions, create_pdf=create_pdf,
                                      only_urdf=only_urdf, ros_pkg=ros_pkg, ros_pkg_name=ros_pkg_name,
                                      export_with_ros_pathes=export_with_ros_pathes,
-                                     export_joint_limits=export_joint_limits,)
+                                     export_joint_limits=export_joint_limits, )
             return
 
         if only_urdf is None and "only_urdf" in self._submodels[name].keys():
@@ -622,7 +626,7 @@ class Robot(representation.Robot):
             _sm_urdffile = None
             submodel_dir = os.path.join(output_dir, name)
             if only_urdf:
-                _sm_urdffile = os.path.join(output_dir, filename if filename is not None else (name+".urdf"))
+                _sm_urdffile = os.path.join(output_dir, filename if filename is not None else (name + ".urdf"))
             else:
                 _sm_urdffile = os.path.join(submodel_dir, "urdf", name + ".urdf")
             for link in _submodel.links:
@@ -739,7 +743,7 @@ class Robot(representation.Robot):
             return None
         else:
             print("Parent map keys: ", self.parent_map.keys())
-            raise AssertionError("Nothing with name "+name+" in this robot")
+            raise AssertionError("Nothing with name " + name + " in this robot")
 
         # Parentmap contains links.
         # If we want joints, then collect the children of these
@@ -1703,10 +1707,10 @@ class Robot(representation.Robot):
                 j_ancestors = [adam] + j_ancestors
                 i_ancestors = [eve] + i_ancestors
                 if (
-                    i == j or
-                    link_names[i] == link_names[j] or  # a)
-                    link_names[i] in j_ancestors or  # b) and c)
-                    link_names[j] in i_ancestors  # b) and c)
+                        i == j or
+                        link_names[i] == link_names[j] or  # a)
+                        link_names[i] in j_ancestors or  # b) and c)
+                        link_names[j] in i_ancestors  # b) and c)
                 ):
                     set_coll(i, j, 0)
                 # f)
@@ -2020,7 +2024,7 @@ class Robot(representation.Robot):
                 raise NameError("There are duplicates in visual names", repr(pvisuals & cvisuals))
 
         for mat_name in pmaterials & cmaterials:
-            if self.get_material_by_name(mat_name).to_xml_string() ==\
+            if self.get_material_by_name(mat_name).to_xml_string() == \
                     other.get_material_by_name(mat_name).to_xml_string():
                 cmaterials.remove(mat_name)
         if pmaterials & cmaterials:
@@ -2061,7 +2065,8 @@ class Robot(representation.Robot):
 
         return renamed_entities
 
-    def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None, mass=0.0):
+    def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None,
+                               mass=0.0):
         """
         Adds a link with the given parameters.
         This method has to be overridden in subclasses.
@@ -2095,7 +2100,8 @@ class Robot(representation.Robot):
         else:
             inertial = None
         link = representation.Link(name, inertial=inertial)
-        joint = representation.Joint(name=jointname if jointname is not None else name, parent=parent.name, child=link.name,
+        joint = representation.Joint(name=jointname if jointname is not None else name, parent=parent.name,
+                                     child=link.name,
                                      type=jointtype, origin=representation.Pose(translation, rotation), axis=axis)
         self.add_aggregate("link", link)
         self.add_aggregate("joint", joint)
@@ -2371,9 +2377,9 @@ class Robot(representation.Robot):
                         COM_C[0:3, 3] = np.array(child.inertial.origin.xyz)
                         COM_Cp = C_T_P.dot(COM_C)
                         new_origin = (
-                             np.array(parent.inertial.origin.xyz) * parent.inertial.mass +
-                             COM_Cp[0:3, 3] * child.inertial.mass
-                        ) / (parent.inertial.mass + child.inertial.mass)
+                                             np.array(parent.inertial.origin.xyz) * parent.inertial.mass +
+                                             COM_Cp[0:3, 3] * child.inertial.mass
+                                     ) / (parent.inertial.mass + child.inertial.mass)
                         new_origin = representation.Pose(xyz=new_origin, rpy=[0, 0, 0])
                         IC_T_IP = inv(origin_to_homogeneous(parent.inertial.origin)).dot(IC_T_P)
                         M_p = inertial_to_tensor(parent.inertial)
@@ -2438,6 +2444,7 @@ class Robot(representation.Robot):
         floatingbase.name = fb_robot.name + "_floatingbase"
         return floatingbase
 
+
 def derive_model_dictionary(root, name='', objectlist=[]):
     """Returns a dictionary representation of a Phobos model.
 
@@ -2458,11 +2465,11 @@ def derive_model_dictionary(root, name='', objectlist=[]):
     import phobos.blender.utils.naming as nUtils
     import phobos.blender.utils.io as ioUtils
     from ..blender.model.models import (deriveLink, deriveMaterial, deriveJoint,
-    deriveLight, deriveGroupEntry, deriveChainEntry, collectMaterials,
-    deriveDictEntry)
+                                        deriveLight, deriveGroupEntry, deriveChainEntry, collectMaterials,
+                                        deriveDictEntry)
 
     if root.phobostype not in ['link', 'submodel']:
-        log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
+        # log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
         return None
 
     # define model name
@@ -2545,7 +2552,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
                 motordict = motormodel.deriveMotor(mot, jointdict)
                 # motor may be None if no motor is attached
                 if motordict:
-                    log("  Added motor {} to link.".format(motordict['name']), 'DEBUG')
+                    # log("  Added motor {} to link.".format(motordict['name']), 'DEBUG')
                     if motordict['name'] in model["motors"]:
                         model['motors'][motordict['name']].update(motordict)
                     else:
@@ -2579,20 +2586,20 @@ def derive_model_dictionary(root, name='', objectlist=[]):
     for obj in objectlist:
         try:
             if (
-                (obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and (obj['geometry/type'] == 'mesh')
-                and (obj.data.name not in model['meshes'])
+                    (obj.phobostype == 'visual' or obj.phobostype == 'collision')
+                    and (obj['geometry/type'] == 'mesh')
+                    and (obj.data.name not in model['meshes'])
             ):
                 model['meshes'][obj.data.name] = obj
-                #todo2.9: for lod in obj.lod_levels:
+                # todo2.9: for lod in obj.lod_levels:
                 #     if lod.object.data.name not in model['meshes']:
                 #         model['meshes'][lod.object.data.name] = lod.object
         except KeyError:
-            log("Undefined geometry type in object " + obj.name, "ERROR")
+            pass  # log("Undefined geometry type in object " + obj.name, "ERROR")
 
     # gather information on groups of objects
     # log("Parsing groups...", 'INFO')
-    #todo2.9: TODO: get rid of the "data" part and check for relation to robot
+    # todo2.9: TODO: get rid of the "data" part and check for relation to robot
     # for group in bpy.data.groups:
     #     # skip empty groups
     #     if not group.objects:

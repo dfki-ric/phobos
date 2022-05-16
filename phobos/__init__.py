@@ -27,18 +27,17 @@ bl_info = {
     "category": "Development",
 }
 
-from . import defs
-from . import utils
-from . import ci
-from . import geometry
-from . import smurf
-from . import scripts
-from . import core
-from . import io
-from . import scenes
-
 try:
     import bpy
+    from . import defs
+    from . import utils
+    from . import ci
+    from . import geometry
+    from . import smurf
+    from . import scripts
+    from . import core
+    from . import io
+    from . import scenes
     from . import blender
 
 
