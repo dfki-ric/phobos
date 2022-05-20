@@ -13,7 +13,6 @@ import os
 import copy
 from datetime import datetime
 import json
-import pickle
 
 import bpy
 import mathutils
