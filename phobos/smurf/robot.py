@@ -20,7 +20,6 @@ from ..utils.misc import edit_name_string
 class Smurf(Robot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
                  inputfile=None, description=None):
-
         if inputfile is not None:
             if inputfile.lower().endswith(".smurf") and smurffile is None:
                 smurffile = inputfile
@@ -365,7 +364,6 @@ class Smurf(Robot):
             # 'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
             'files': sorted(export_files),
             'description' : self.description
-
         }
 
         with open(os.path.join(smurf_dir, "{}.smurf".format(self.name)), "w+") as stream:
