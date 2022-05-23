@@ -73,7 +73,7 @@ class Robot(representation.Robot):
 
     # helper methods
     @classmethod
-    def get_robot_from_dict(name='', objectlist=[]):
+    def get_robot_from_dict(cls, name='', objectlist=[]):
         """
         Uses blender workflow to access internal dictionary to call robot
         representation. Idea is to use cli methods and formats for imports and
@@ -109,8 +109,6 @@ class Robot(representation.Robot):
 
         cli_links = []
         for key, values in blender_model['links'].items():
-            # print(key)
-            # print(values)
             cli_links.append(representation.Link(
                 name=values['name'],
                 visuals=None,
@@ -124,10 +122,8 @@ class Robot(representation.Robot):
             joints=cli_joints,
             materials=blender_model['materials'])
 
-        print("success")
         new_robot = Robot()
         new_robot.__dict__.update(cli_robot.__dict__)
-        # so geht das auch mit der SmURF klasse.
         return new_robot
 
     def get_joints_ordered_df(self):

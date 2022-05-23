@@ -55,6 +55,13 @@ class Smurf(Robot):
 
         self._init_annotations()
 
+    @classmethod
+    def get_smurf_from_dict(cls, name='', objectlist=[]):
+        cli_robot = Robot.get_robot_from_dict(name, objectlist)
+        smurf_robot = Smurf()
+        smurf_robot.__dict__.update(cli_robot.__dict__)
+        return smurf_robot
+
     # helper methods
     def load_smurffile(self, smurffile):
         if smurffile is not None:
