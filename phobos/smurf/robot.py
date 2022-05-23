@@ -6,7 +6,7 @@ import sys
 import numpy as np
 import yaml
 
-from ..core import Robot
+from ..core import Robot, derive_model_dictionary
 from .motors import Motor
 from .poses import Pose
 from .core import Material, Collision, Joint, Link
@@ -57,9 +57,19 @@ class Smurf(Robot):
 
     @classmethod
     def get_smurf_from_dict(cls, name='', objectlist=[]):
+        import bpy
+        import phobos.blender.utils.selection as sUtils
+        # First get already implemented blender to core Robot conversion and then add rest of Smurf features
         cli_robot = Robot.get_robot_from_dict(name, objectlist)
         smurf_robot = Smurf()
         smurf_robot.__dict__.update(cli_robot.__dict__)
+
+        root = sUtils.getRoot(bpy.context.selected_objects[0])
+        blender_model = derive_model_dictionary(root, name, objectlist)
+        sensors = blender_model["sensors"]
+        print(sensors)
+        motors = blender_model["motors"]
+        model_description = blender_model["description"]
         return smurf_robot
 
     # helper methods

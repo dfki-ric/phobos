@@ -102,10 +102,10 @@ class Robot(representation.Robot):
                 axis=cli_axis,
                 origin=transform.to_origin(np.array(values['pose']['rawmatrix'])),
                 limit=cli_limit,
-                dynamics=None,  # optional
-                safety_controller=None,  # optional
-                calibration=None,  # optional
-                mimic=None))  # rudimentär
+                dynamics=None,
+                safety_controller=None,
+                calibration=None,
+                mimic=None))
 
         cli_links = []
         for key, values in blender_model['links'].items():

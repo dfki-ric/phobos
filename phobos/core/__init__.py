@@ -1,1 +1,1 @@
-from .robot import Robot
+from .robot import Robot, derive_model_dictionary

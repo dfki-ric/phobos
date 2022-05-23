@@ -126,7 +126,7 @@ def deriveMaterial(mat, logging=False, errors=None):
     #     )
     # todo: material['shininess'] = mat.specular_hardness / 2
     material['shininess'] = mat.roughness * 100
-    #todo: if mat.use_transparency:
+    # todo: if mat.use_transparency:
     if mat.diffuse_color[3] != 1.0:
         material['transparency'] = 1.0 - mat.diffuse_color[3]
 
@@ -135,7 +135,7 @@ def deriveMaterial(mat, logging=False, errors=None):
         return material
 
     if mat.node_tree:
-        textures = [x for x in mat.node_tree.nodes if x.type=='TEX_IMAGE']
+        textures = [x for x in mat.node_tree.nodes if x.type == 'TEX_IMAGE']
         print(textures[0])
     # there are always 18 slots, regardless of whether they are filled or not
     for tex in mat.texture_slots:
@@ -440,7 +440,7 @@ def deriveVisual(obj, logging=True, **kwargs):
     if material:
         visual['material'] = material['name']
 
-    #todo2.9: if obj.lod_levels:
+    # todo2.9: if obj.lod_levels:
     #     if 'lodmaxdistances' in obj:
     #         maxdlist = obj['lodmaxdistances']
     #     else:
@@ -479,7 +479,7 @@ def deriveCollision(obj):
     if 'collision_groups' in dir(obj.rigid_body):
         collision['bitmask'] = int(
             ''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[
-                ::-1
+            ::-1
             ],
             2,
         )
@@ -487,8 +487,8 @@ def deriveCollision(obj):
             if group:
                 log(
                     (
-                        "Object {0} is on a collision layer higher than 16. These layers are "
-                        + "ignored when exporting."
+                            "Object {0} is on a collision layer higher than 16. These layers are "
+                            + "ignored when exporting."
                     ).format(obj.name),
                     'WARNING',
                 )
@@ -580,10 +580,10 @@ def recursive_dictionary_cleanup(dictionary):
             if isinstance(item, list) and item:
                 # (phobostype, bpyobj) -> {'object': bpyobj, 'name': getObjectName(bpyobj)}
                 if (
-                    len(item) == 2
-                    and isinstance(item[0], str)
-                    and (item[0] in ['joint'] + [enum[0] for enum in defs.phobostypes])
-                    and isinstance(item[1], bpy.types.Object)
+                        len(item) == 2
+                        and isinstance(item[0], str)
+                        and (item[0] in ['joint'] + [enum[0] for enum in defs.phobostypes])
+                        and isinstance(item[1], bpy.types.Object)
                 ):
                     itemlist.append(
                         {
@@ -604,7 +604,7 @@ def recursive_dictionary_cleanup(dictionary):
 
 
 def initObjectProperties(
-    obj, phobostype=None, ignoretypes=(), includeannotations=True, ignorename=False
+        obj, phobostype=None, ignoretypes=(), includeannotations=True, ignorename=False
 ):
     """Initializes phobos dictionary of *obj*, including information stored in custom properties.
 
@@ -978,6 +978,7 @@ def namespaced(name, namespace):
     """
     return namespace + '_' + name
 
+
 def deriveModelDictionary(root, name='', objectlist=[]):
     """Returns a dictionary representation of a Phobos model.
 
@@ -1025,7 +1026,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         'groups': {},  # not relevant yet
         'chains': {},  # Implementation of hydrodyn support
         'date': datetime.now().strftime("%Y%m%d_%H:%M"),  # not relevant yet
-        'name': modelname,  #
+        'name': modelname,  # obligatory, is set empty otherwise
         'version': modelversion,  # not relevant yet
         'description': modeldescription,  # smurf.robot.Smurf
     }
@@ -1111,12 +1112,12 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     for obj in objectlist:
         try:
             if (
-                (obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and (obj['geometry/type'] == 'mesh')
-                and (obj.data.name not in model['meshes'])
+                    (obj.phobostype == 'visual' or obj.phobostype == 'collision')
+                    and (obj['geometry/type'] == 'mesh')
+                    and (obj.data.name not in model['meshes'])
             ):
                 model['meshes'][obj.data.name] = obj
-                #todo2.9: for lod in obj.lod_levels:
+                # todo2.9: for lod in obj.lod_levels:
                 #     if lod.object.data.name not in model['meshes']:
                 #         model['meshes'][lod.object.data.name] = lod.object
         except KeyError:
@@ -1124,7 +1125,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
 
     # gather information on groups of objects
     log("Parsing groups...", 'INFO')
-    #todo2.9: TODO: get rid of the "data" part and check for relation to robot
+    # todo2.9: TODO: get rid of the "data" part and check for relation to robot
     # for group in bpy.data.groups:
     #     # skip empty groups
     #     if not group.objects:
@@ -1409,7 +1410,7 @@ def replace_object_links(dictionary):
     for key, value in dictionary.items():
         if isinstance(value, list):
             if all([isinstance(item, dict) for item in value]) and all(
-                [('name' in item and 'object' in item) for item in value]
+                    [('name' in item and 'object' in item) for item in value]
             ):
                 newdict[key] = sorted([item['name'] for item in value])
 
