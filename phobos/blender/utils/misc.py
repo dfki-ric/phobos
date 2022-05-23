@@ -1,4 +1,4 @@
-from core.robot import derive_model_dictionary
+from phobos.core.robot import derive_model_dictionary
 
 
 def print_model_dict(name='', objectlist=[], indent=0):
