@@ -978,17 +978,6 @@ def namespaced(name, namespace):
     """
     return namespace + '_' + name
 
-def print_dict(dictionary, indent=0):
-    for k,v in dictionary.items():
-        print(" "*indent, k+": ", end="")
-        if type(v) == object:
-            print("Type: "+type(v))
-        elif type(v) == dict:
-            print()
-            print_dict(v, indent=indent+2)
-        else:
-            print(v)
-
 def deriveModelDictionary(root, name='', objectlist=[]):
     """Returns a dictionary representation of a Phobos model.
 
@@ -1024,21 +1013,21 @@ def deriveModelDictionary(root, name='', objectlist=[]):
 
     modeldescription = bUtils.readTextFile('README.md')
 
-    model = {
-        'links': {},        # reps robot
-        'joints': {},       # repr
-        'sensors': {},      # smurf
-        'motors': {},       # smurf
-        'controllers': {},  # irr 
-        'materials': {},    # repr robot
-        'meshes': {},       # repr meshes
-        'lights': {},       # irr vorl
-        'groups': {},       # irr vorl
-        'chains': {},       # bonus, hydrodyn
-        'date': datetime.now().strftime("%Y%m%d_%H:%M"),    # irrelevant
+    model = {  # Used in:
+        'links': {},  # representation.robot
+        'joints': {},  # representation.robot
+        'sensors': {},  # smurf.robot.Smurf
+        'motors': {},  # smurf
+        'controllers': {},  # not relevant yet
+        'materials': {},  # representation.robot
+        'meshes': {},  # repr meshes
+        'lights': {},  # not relevant yet
+        'groups': {},  # not relevant yet
+        'chains': {},  # Implementation of hydrodyn support
+        'date': datetime.now().strftime("%Y%m%d_%H:%M"),  # not relevant yet
         'name': modelname,  #
-        'version': modelversion, # egal
-        'description': modeldescription, # smurf robot ...
+        'version': modelversion,  # not relevant yet
+        'description': modeldescription,  # smurf.robot.Smurf
     }
 
     log(
