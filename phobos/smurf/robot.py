@@ -63,11 +63,25 @@ class Smurf(Robot):
         cli_robot = Robot.get_robot_from_dict(name, objectlist)
         smurf_robot = Smurf()
         smurf_robot.__dict__.update(cli_robot.__dict__)
-
         root = sUtils.getRoot(bpy.context.selected_objects[0])
         blender_model = derive_model_dictionary(root, name, objectlist)
-        sensors = blender_model["sensors"]
-        print(sensors)
+        for key, values in blender_model['sensors'].items():
+            if values["type"] == "motorCurrent":
+                pass
+            elif values["type"] == "CameraSensor":
+                pass
+            elif values["type"] == "Joint6DOF":
+                pass
+            elif values["type"] == "NodeContactForce":
+                pass
+            elif values["type"] == "JointPosition":
+                pass
+            elif values["type"] == "NodeRotation":
+                pass
+            elif values["type"] == "NodeCOM":
+                pass
+            elif values["type"] == "RotatingRaySensor":
+
         motors = blender_model["motors"]
         model_description = blender_model["description"]
         return smurf_robot
