@@ -11,7 +11,7 @@ from .motors import Motor
 from .poses import Pose
 from .core import Material, Collision, Joint, Link
 from .hyrodyn import Submechanism, Exoskeleton
-from .sensors import Sensor, MultiSensor
+from .sensors import *
 from ..geometry import get_reflection_matrix
 from ..utils import tree, transform
 from ..utils.misc import edit_name_string
@@ -59,31 +59,63 @@ class Smurf(Robot):
     def get_smurf_from_dict(cls, name='', objectlist=[]):
         import bpy
         import phobos.blender.utils.selection as sUtils
-        # First get already implemented blender to core Robot conversion and then add rest of Smurf features
+
         cli_robot = Robot.get_robot_from_dict(name, objectlist)
         smurf_robot = Smurf()
         smurf_robot.__dict__.update(cli_robot.__dict__)
         root = sUtils.getRoot(bpy.context.selected_objects[0])
         blender_model = derive_model_dictionary(root, name, objectlist)
-        for key, values in blender_model['sensors'].items():
-            if values["type"] == "motorCurrent":
-                pass
-            elif values["type"] == "CameraSensor":
-                pass
-            elif values["type"] == "Joint6DOF":
-                pass
-            elif values["type"] == "NodeContactForce":
-                pass
-            elif values["type"] == "JointPosition":
-                pass
-            elif values["type"] == "NodeRotation":
-                pass
-            elif values["type"] == "NodeCOM":
-                pass
-            elif values["type"] == "RotatingRaySensor":
+        smurf_robot.description = blender_model["description"]
 
-        motors = blender_model["motors"]
-        model_description = blender_model["description"]
+        # nutze attach motor oder sensor für das reinparsen
+        for key, values in blender_model['sensors'].items():
+            print(values)
+            if values["type"] == "motorCurrent":
+                MotorCurrent(smurf_robot,
+                             values["name"], targets=values["id"])
+            elif values["type"] == "CameraSensor":
+                CameraSensor(smurf_robot,
+                             values["name"],
+                             link=values["link"],
+                             height=values['height'], width=values['width'], hud_height=240, hud_width=0,
+                             opening_height=values['opening_height'], opening_width=values['opening_width']
+                             )
+            elif values["type"] == "RotatingRaySensor":
+                RotatingRaySensor(smurf_robot,
+                                  values["name"], link=values["link"], draw_rays=values["draw_rays"],
+                                  bands=values["bands"], horizontal_offset=0,  # dieser offset kommt im Model nicht vor
+                                  horizontal_resolution=values["horizontal_resolution"],
+                                  lasers=values["lasers"], max_distance=values["max_distance"],
+                                  opening_height=values["opening_height"], vertical_offset=values["vertical_offset"])
+            elif values["type"] == "MultiSensor":
+                MultiSensor(smurf_robot,
+                            values["name"], link=values["link"], targets=values["id"])
+            elif values["type"] == "Joint6DOF":
+                Joint6DOF(smurf_robot,
+                          values["name"], link=values["link"])
+            elif values["type"] == "JointPosition":
+                JointPosition(smurf_robot,
+                              values["name"], targets=values["id"], link=values["link"])
+            elif values["type"] == "JointVelocity":
+                JointVelocity(smurf_robot,
+                              values["name"], targets=values["id"], link=values["link"])
+            elif values["type"] == "NodePosition":
+                NodePosition(smurf_robot,
+                             values["name"], targets=values["id"], link=values["link"])
+            elif values["type"] == "NodeContactForce":
+                NodeContactForce(smurf_robot,
+                                 values["name"], targets=values["id"], link=values["link"])
+            elif values["type"] == "NodeRotation":
+                NodeRotation(smurf_robot,
+                             values["name"], targets=values["id"], link=values["link"])
+            elif values["type"] == "NodeCOM":
+                NodeCOM(smurf_robot,
+                        values["name"], targets=values["id"], link=values["link"])
+            elif values["type"] == "IMU":
+                IMU(smurf_robot,
+                    values["name"], link=values["link"])
+
+        motors = blender_model["motors"]  # bei joints reinschauen nach mimic
         return smurf_robot
 
     # helper methods
@@ -394,7 +426,7 @@ class Smurf(Robot):
             'modelname': self.name,
             # 'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
             'files': sorted(export_files),
-            'description' : self.description
+            'description': self.description
         }
 
         with open(os.path.join(smurf_dir, "{}.smurf".format(self.name)), "w+") as stream:
@@ -670,12 +702,14 @@ class Smurf(Robot):
             raise NotImplementedError("_rename() not implemented for targettype " + targettype)
         return {target: new_name}
 
-    def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None, mass=0.0,
+    def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None,
+                               mass=0.0,
                                add_default_motor=True):
         """
         Adds a link with the given parameters. See core.Robot.addLink()
         """
-        parent, link, joint = super(Smurf, self).add_link_by_properties(name, translation, rotation, parent, jointname=jointname,
+        parent, link, joint = super(Smurf, self).add_link_by_properties(name, translation, rotation, parent,
+                                                                        jointname=jointname,
                                                                         jointtype=jointtype, axis=axis, mass=mass)
         if joint.type in ["revolute", "prismatic"] and add_default_motor:
             self.attach_motor(Motor(
@@ -975,7 +1009,7 @@ class Smurf(Robot):
                             break
                         elif sorted_joints.index(jn) == joint_idx - 1:
                             inserted = True
-                            sm.jointnames.insert(sm.jointnames.index(jn)+1, jointname)
+                            sm.jointnames.insert(sm.jointnames.index(jn) + 1, jointname)
                             break
                     if inserted:
                         break
@@ -1009,8 +1043,8 @@ class Smurf(Robot):
         counter = 0
         for sm in self.submechanisms:
             if sm.auto_gen:
-                sm.name = "serial_chain"+str(counter)
-                sm.contextual_name = "serial_chain"+str(counter)
+                sm.name = "serial_chain" + str(counter)
+                sm.contextual_name = "serial_chain" + str(counter)
                 counter += 1
 
     def add_floating_base(self):
