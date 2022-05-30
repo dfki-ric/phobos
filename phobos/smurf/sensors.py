@@ -172,7 +172,9 @@ class JointPosition(MultiSensor):
 
         targets = [robot.get_joint(t) if type(t) is str else t for t in targets]
 
-        assert all([isinstance(t, representation.Joint) for t in targets])
+        if not all([isinstance(t, representation.Joint) for t in targets]):
+            print(targets)
+            raise AssertionError("Parsed invalid joint")
 
         super().__init__(robot=robot, name=name, targets=targets, sensortype='JointPosition', **kwargs)
         self.returns += ['link']
