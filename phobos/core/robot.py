@@ -87,6 +87,17 @@ class Robot(representation.Robot):
 
         root = sUtils.getRoot(bpy.context.selected_objects[0])
         blender_model = derive_model_dictionary(root, name, objectlist)
+
+        cli_materials = []
+        for key, values in blender_model['materials'].items():
+            texture = None
+            color = None
+            if 'texture' in values.keys():
+                print("Not implemnted")                 # TODO Henning fragen was mit dem Filepath ist
+            cli_materials.append(representation.Material(name=values['name'],
+                                                         color=representation.Color(),
+                                                         texture=None))
+
         cli_joints = []
         for key, values in blender_model['joints'].items():
             cli_axis = None
@@ -110,14 +121,21 @@ class Robot(representation.Robot):
         cli_links = []
         for key, values in blender_model['links'].items():
             inert_entry = values["inertial"]
-            pose_entry = inert_entry["pose"]
-            inertia_val = inert_entry['inertia']
-            print(inert_entry)
-            inert = representation.Inertial(mass=inert_entry["mass"],
-                                                 inertia=inertia_val,
-                                                 origin=representation.Pose(
-                                                     xyz=pose_entry["translation"],
-                                                     rpy=pose_entry["rotation_euler"]))
+            if not len(inert_entry) == 0:
+                inertia_list = inert_entry['inertia']
+                pose_entry = inert_entry['pose']
+                inert = representation.Inertial(mass=inert_entry["mass"],
+                                                inertia=representation.Inertia(ixx=inertia_list[0],
+                                                                               ixy=inertia_list[1],
+                                                                               ixz=inertia_list[2],
+                                                                               iyy=inertia_list[3],
+                                                                               iyz=inertia_list[4],
+                                                                               izz=inertia_list[5]),
+                                                origin=representation.Pose(
+                                                    xyz=pose_entry["translation"],
+                                                    rpy=pose_entry["rotation_euler"]))
+            else:
+                inert = None
             colls = []
             for key2, entry in values["collision"].items():
                 colls.append(representation.Collision(
