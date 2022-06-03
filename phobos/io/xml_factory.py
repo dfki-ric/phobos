@@ -133,10 +133,10 @@ class XMLDefinition(object):
         if hasattr(entry, "tolist"):
             entry = entry.tolist()
         if type(entry) == list:
-            if all([type(v) == int for v in entry]):
+            if any([type(v) == int for v in entry]):
                 entry = [str(v) for v in entry]
-            elif all([type(v) in [float, np.float64] for v in entry]):
-                entry = ["%.6f" % v for v in entry]
+            elif any([type(v) in [float, np.float64] for v in entry]):
+                entry = ["%.6f" % v if type(v) in [float, np.float64] else str(v) for v in entry]
             return " ".join(entry)
         elif type(entry) == int:
             return str(entry)
