@@ -119,6 +119,8 @@ class Robot(representation.Robot):
                                                     origin=representation.Pose(
                                                         xyz=pose_entry['translation'],
                                                         rpy=pose_entry['rotation_euler']))
+                else:
+                    inert = None
                 colls = []
                 for key2, entry in values["collision"].items():
                     colls.append(representation.Collision(
@@ -138,12 +140,23 @@ class Robot(representation.Robot):
                     inertial=inert,
                     collisions=colls
                 ))
+        mats = []
+        for key, value in blender_model['materials'].items():
+            # TODO internal dict hat mehr als eine Möglichkeit für Color, belasse es erstmal bei diffuse.
+            mats.append(representation.Material(name=value.get('name'),
+                                                color=representation.Color(value.get('diffuseColor')['r'],
+                                                                           value.get('diffuseColor')['g'],
+                                                                           value.get('diffuseColor')['b'],
+                                                                           1.       # TODO missing a Parameter in dict
+                                                                           ),
+                                                texture=None
+                                                ))
         cli_robot = representation.Robot(
             name=blender_model['name'],
             version=blender_model['version'],
             links=cli_links,
             joints=cli_joints,
-            materials=blender_model['materials'])  # siehe collsions
+            materials=mats)
 
         new_robot = Robot()
         new_robot.__dict__.update(cli_robot.__dict__)
