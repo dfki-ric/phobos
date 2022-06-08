@@ -109,35 +109,35 @@ class Robot(representation.Robot):
 
         cli_links = []
         for key, values in blender_model['links'].items():
-            inert_entry = values["inertial"]
-            pose_entry = inert_entry["pose"]
-            inertia_val = inert_entry['inertia']
-            print(inert_entry)
-            inert = representation.Inertial(mass=inert_entry["mass"],
-                                                 inertia=inertia_val,
-                                                 origin=representation.Pose(
-                                                     xyz=pose_entry["translation"],
-                                                     rpy=pose_entry["rotation_euler"]))
-            colls = []
-            for key2, entry in values["collision"].items():
-                colls.append(representation.Collision(
-                    geometry=entry["geometry"],
-                    origin=transform.to_origin(np.array(entry["pose"]['rawmatrix'])),
-                    name=entry["name"]))
-            vis = []
-            for key2, entry in values["visual"].items():
-                vis.append(representation.Visual(geometry=entry["geometry"],
-                                                 material=entry["material"],
-                                                 origin=transform.to_origin(np.array(entry["pose"]['rawmatrix'])),
-                                                 name=entry["name"]))
+            if not len(values) == 0:
+                inert_entry = values.get('inertial')
+                pose_entry = inert_entry.get('pose')
+                inertia_val = inert_entry.get('inertia')
+                if inertia_val is not None:
+                    inert = representation.Inertial(mass=inert_entry['mass'],
+                                                    inertia=representation.Inertia(*inertia_val),
+                                                    origin=representation.Pose(
+                                                        xyz=pose_entry['translation'],
+                                                        rpy=pose_entry['rotation_euler']))
+                colls = []
+                for key2, entry in values["collision"].items():
+                    colls.append(representation.Collision(
+                        geometry=entry["geometry"],
+                        origin=transform.to_origin(np.array(entry["pose"]['rawmatrix'])),
+                        name=entry["name"]))
+                vis = []
+                for key2, entry in values["visual"].items():
+                    vis.append(representation.Visual(geometry=entry["geometry"],
+                                                     material=entry["material"],
+                                                     origin=transform.to_origin(np.array(entry["pose"]['rawmatrix'])),
+                                                     name=entry["name"]))
 
-            cli_links.append(representation.Link(
-                name=values['name'],
-                visuals=vis,
-                inertial=inert,
-                collisions=colls
-            ))
-
+                cli_links.append(representation.Link(
+                    name=values['name'],
+                    visuals=vis,
+                    inertial=inert,
+                    collisions=colls
+                ))
         cli_robot = representation.Robot(
             name=blender_model['name'],
             version=blender_model['version'],
