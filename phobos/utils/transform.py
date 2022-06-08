@@ -6,11 +6,17 @@ from ..io import representation
 
 
 def matrix_to_quaternion(rotation):
-    return Rot.from_matrix(rotation).as_quat()
-
+    try:
+        return Rot.from_matrix(rotation).as_quat()
+    except:
+        return Rot.from_dcm(rotation).as_quat()
+    
 
 def quaternion_to_matrix(quat):
-    return Rot.from_quat(quat).as_matrix()
+    try:
+        return Rot.from_quat(quat).as_matrix()
+    except:
+        return Rot.from_quat(quat).as_dcm()
 
 
 def rpy_to_quaternion(rotation):
@@ -24,11 +30,17 @@ def quaternion_to_rpy(quaternion):
 
 def rpy_to_matrix(rpy):
     euler = order_angles(rpy, RPY_CONVENTION, EULER_CONVENTION)
-    return Rot.from_euler(EULER_CONVENTION, euler).as_matrix()
+    try:
+        return Rot.from_euler(EULER_CONVENTION, euler).as_matrix()
+    except:
+        return Rot.from_euler(EULER_CONVENTION, euler).as_dcm()
 
 
 def matrix_to_rpy(R):
-    angles = Rot.from_matrix(R).as_euler(EULER_CONVENTION)
+    try:
+        angles = Rot.from_matrix(R).as_euler(EULER_CONVENTION)
+    except:
+        angles = Rot.from_dcm(R).as_euler(EULER_CONVENTION)
     return order_angles(angles, EULER_CONVENTION, RPY_CONVENTION)
 
 
