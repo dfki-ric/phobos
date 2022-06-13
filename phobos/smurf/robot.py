@@ -63,15 +63,14 @@ class Smurf(Robot):
         cli_robot = Robot.get_robot_from_dict(name, objectlist)
         smurf_robot = Smurf()
         smurf_robot.__dict__.update(cli_robot.__dict__)
-        print([j.name for j in smurf_robot.joints])
+        # print([j.name for j in smurf_robot.joints])
         root = sUtils.getRoot(bpy.context.selected_objects[0])
         blender_model = derive_model_dictionary(root, name, objectlist)
         smurf_robot.description = blender_model["description"]
+        root_link_name = cli_robot.get_root()
 
         # nutze attach motor oder sensor für das reinparsen
         for key, values in blender_model['sensors'].items():
-            print(values)
-            pass
             if values["type"] == "motorCurrent":
                 MotorCurrent(smurf_robot,
                              name=values["name"],
@@ -83,7 +82,7 @@ class Smurf(Robot):
                              name=values["name"],
                              link=values["link"],
                              height=values['height'], width=values['width'],
-                             hud_height=240, hud_width=0,
+                             hud_height=240, hud_width=0,                       # TODO kein eintrag in dict dafür
                              opening_height=values['opening_height'], opening_width=values['opening_width']
                              )
             elif values["type"] == "RotatingRaySensor":
@@ -92,18 +91,18 @@ class Smurf(Robot):
                                   link=values["link"],
                                   draw_rays=values["draw_rays"],
                                   bands=values["bands"],
-                                  horizontal_offset=0, vertical_offset=values["vertical_offset"],
+                                  horizontal_offset=0, vertical_offset=values["vertical_offset"], # TODO kein eintrag in dict dafür
                                   horizontal_resolution=values["horizontal_resolution"],
                                   lasers=values["lasers"], max_distance=values["max_distance"],
                                   opening_height=values["opening_height"],
                                   )
-            elif values["type"] == "JointVelocity":  # ist da
+            elif values["type"] == "JointVelocity":
                 JointVelocity(smurf_robot,
                               name=values["name"],
                               targets=values["id"],
                               link=values["link"]
                               )
-            elif values["type"] == "IMU":   # ist da
+            elif values["type"] == "IMU":
                 IMU(smurf_robot,
                     name=values["name"],
                     link=values["link"]
@@ -120,35 +119,30 @@ class Smurf(Robot):
                               targets=values["id"],
                               link=values["link"]
                               )
-            elif values["type"] == "NodeContactForce":      # str object has no attribute called name
-                if True:
-                    NodeContactForce(smurf_robot,
-                                     values["name"],
-                                     targets=values["id"],
-                                     link=values["link"]
-                                     )
-            elif values["type"] == "NodeRotation":      # There is no link with the name root
-                if False:
-                    NodeRotation(smurf_robot,
-                                 name=values["name"],
+            elif values["type"] == "NodeContactForce":  # Funktioniert
+                NodeContactForce(smurf_robot,
+                                 values["name"],
                                  targets=values["id"],
                                  link=values["link"]
                                  )
-            elif values["type"] == "NodePosition":      # There is no link with the name root
-                if False:
-                    NodePosition(smurf_robot,
-                                 name=values["name"],
-                                 targets=values["id"],
-                                 link=values["link"]
-                                 )
-            elif values["type"] == "NodeCOM":            # There is no link with the name main_body
-                if False:
-                    NodeCOM(smurf_robot,
-                            name=values["name"],
-                            targets=values["id"],
-                            link=values["link"]
-                            )
-
+            elif values["type"] == "NodeRotation":  # Funktioniert weil rausgefischt, TODO was ist mit CHILDMAP ?
+                NodeRotation(smurf_robot,
+                             name=values["name"],
+                             targets=[root_link_name] if values["id"][0] in ['root', 'main_body'] else values["id"],
+                             link=root_link_name if values["link"] == 'root' else values["link"]
+                             )
+            elif values["type"] == "NodePosition":  # Funktioniert weil rausgefischt, TODO was ist mit CHILDMAP ?
+                NodePosition(smurf_robot,
+                             name=values["name"],
+                             targets=[root_link_name] if values["id"][0] in ['root', 'main_body'] else values["id"],
+                             link=root_link_name if values["link"] == 'root' else values["link"]
+                             )
+            elif values["type"] == "NodeCOM":  # Funktioniert weil rausgefischt, TODO was ist mit CHILDMAP ?
+                NodeCOM(smurf_robot,
+                        name=values["name"],
+                        targets=[root_link_name] if values["id"][0] in ['root', 'main_body'] else values["id"],
+                        link=root_link_name if values["link"] == 'main_body' else values["link"]
+                        )
 
         motors = blender_model["motors"]  # bei joints reinschauen nach mimic
         return smurf_robot

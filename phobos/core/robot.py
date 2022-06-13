@@ -88,16 +88,6 @@ class Robot(representation.Robot):
         root = sUtils.getRoot(bpy.context.selected_objects[0])
         blender_model = derive_model_dictionary(root, name, objectlist)
 
-        cli_materials = []
-        for key, values in blender_model['materials'].items():
-            texture = None
-            color = None
-            if 'texture' in values.keys():
-                print("Not implemnted")                 # TODO Henning fragen was mit dem Filepath ist
-            cli_materials.append(representation.Material(name=values['name'],
-                                                         color=representation.Color(),
-                                                         texture=None))
-
         cli_joints = []
         for key, values in blender_model['joints'].items():
             cli_axis = None
@@ -146,7 +136,7 @@ class Robot(representation.Robot):
                                                      name=entry["name"]))
 
                 cli_links.append(representation.Link(
-                    name=values['name'],
+                    name='body' if values['name'] in ['root', 'main_body'] else values['name'],
                     visuals=vis,
                     inertial=inert,
                     collisions=colls
@@ -168,7 +158,7 @@ class Robot(representation.Robot):
             links=cli_links,
             joints=cli_joints,
             materials=mats)
-
+        print(cli_joints)
         new_robot = Robot()
         new_robot.__dict__.update(cli_robot.__dict__)
         return new_robot
