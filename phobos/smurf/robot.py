@@ -68,6 +68,7 @@ class Smurf(Robot):
         blender_model = derive_model_dictionary(root, name, objectlist)
         smurf_robot.description = blender_model["description"]
         root_link_name = cli_robot.get_root()
+        smurf_robot._joint = []
 
         for key, value in blender_model['materials'].items():
             value.pop('diffuseColor')
@@ -164,18 +165,13 @@ class Smurf(Robot):
                                                       "link"]
                                                   ))
 
-        motors = blender_model["motors"]  # bei joints reinschauen nach mimic
+        motors = blender_model["motors"]  # TODO bei joints reinschauen nach mimic
         for key, value in motors.items():
-            print(key)
-            print(value)
             name = value.pop('name')
             joint = value.pop('joint')
-            smurf_robot.attach_motor(smurf_robot,
-                                     Motor(robot=smurf_robot,
-                                           name=name,
-                                           joint=smurf_robot.get_joint(joint),
-                                           **value),
-                                     jointname=joint)
+            smurf_robot._attach_part('motor', Motor(name=name,
+                                                    joint=smurf_robot.get_joint(joint),
+                                                    **value))
         return smurf_robot
 
     # helper methods
