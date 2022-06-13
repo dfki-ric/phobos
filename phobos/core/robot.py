@@ -158,7 +158,6 @@ class Robot(representation.Robot):
             links=cli_links,
             joints=cli_joints,
             materials=mats)
-        print(cli_joints)
         new_robot = Robot()
         new_robot.__dict__.update(cli_robot.__dict__)
         return new_robot

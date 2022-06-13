@@ -69,82 +69,113 @@ class Smurf(Robot):
         smurf_robot.description = blender_model["description"]
         root_link_name = cli_robot.get_root()
 
+        for key, value in blender_model['materials'].items():
+            value.pop('diffuseColor')
+            smurf_robot._attach_part(
+                'smurf_materials',
+                Material(**value)
+            )
+
         # nutze attach motor oder sensor für das reinparsen
         for key, values in blender_model['sensors'].items():
             if values["type"] == "motorCurrent":
-                MotorCurrent(smurf_robot,
-                             name=values["name"],
-                             targets=values["id"],
-                             link=values["link"]
-                             )
+                smurf_robot.attach_sensor(MotorCurrent(smurf_robot,
+                                                       name=values["name"],
+                                                       targets=values["id"],
+                                                       link=values["link"]
+                                                       ))
             elif values["type"] == "CameraSensor":
-                CameraSensor(smurf_robot,
-                             name=values["name"],
-                             link=values["link"],
-                             height=values['height'], width=values['width'],
-                             hud_height=240, hud_width=0,                       # TODO kein eintrag in dict dafür
-                             opening_height=values['opening_height'], opening_width=values['opening_width']
-                             )
+                smurf_robot.attach_sensor(CameraSensor(smurf_robot,
+                                                       name=values["name"],
+                                                       link=values["link"],
+                                                       height=values['height'], width=values['width'],
+                                                       hud_height=240, hud_width=0,  # TODO kein eintrag in dict dafür
+                                                       opening_height=values['opening_height'],
+                                                       opening_width=values['opening_width']
+                                                       ))
             elif values["type"] == "RotatingRaySensor":
-                RotatingRaySensor(smurf_robot,
-                                  name=values["name"],
-                                  link=values["link"],
-                                  draw_rays=values["draw_rays"],
-                                  bands=values["bands"],
-                                  horizontal_offset=0, vertical_offset=values["vertical_offset"], # TODO kein eintrag in dict dafür
-                                  horizontal_resolution=values["horizontal_resolution"],
-                                  lasers=values["lasers"], max_distance=values["max_distance"],
-                                  opening_height=values["opening_height"],
-                                  )
+                smurf_robot.attach_sensor(RotatingRaySensor(smurf_robot,
+                                                            name=values["name"],
+                                                            link=values["link"],
+                                                            draw_rays=values["draw_rays"],
+                                                            bands=values["bands"],
+                                                            # TODO kein eintrag in dict dafür
+                                                            horizontal_offset=0,
+                                                            vertical_offset=values["vertical_offset"],
+                                                            horizontal_resolution=values["horizontal_resolution"],
+                                                            lasers=values["lasers"],
+                                                            max_distance=values["max_distance"],
+                                                            opening_height=values["opening_height"],
+                                                            ))
             elif values["type"] == "JointVelocity":
-                JointVelocity(smurf_robot,
-                              name=values["name"],
-                              targets=values["id"],
-                              link=values["link"]
-                              )
+                smurf_robot.attach_sensor(JointVelocity(smurf_robot,
+                                                        name=values["name"],
+                                                        targets=values["id"],
+                                                        link=values["link"]
+                                                        ))
             elif values["type"] == "IMU":
-                IMU(smurf_robot,
-                    name=values["name"],
-                    link=values["link"]
-                    )
-
+                smurf_robot.attach_sensor(IMU(smurf_robot,
+                                              name=values["name"],
+                                              link=values["link"]
+                                              ))
             elif values["type"] == "Joint6DOF":
-                Joint6DOF(smurf_robot,
-                          name=values["name"],
-                          link=values["link"]
-                          )
+                smurf_robot.attach_sensor(Joint6DOF(smurf_robot,
+                                                    name=values["name"],
+                                                    link=values["link"]
+                                                    ))
             elif values["type"] == "JointPosition":
-                JointPosition(smurf_robot,
-                              name=values["name"],
-                              targets=values["id"],
-                              link=values["link"]
-                              )
-            elif values["type"] == "NodeContactForce":  # Funktioniert
-                NodeContactForce(smurf_robot,
-                                 values["name"],
-                                 targets=values["id"],
-                                 link=values["link"]
-                                 )
-            elif values["type"] == "NodeRotation":  # Funktioniert weil rausgefischt, TODO was ist mit CHILDMAP ?
-                NodeRotation(smurf_robot,
-                             name=values["name"],
-                             targets=[root_link_name] if values["id"][0] in ['root', 'main_body'] else values["id"],
-                             link=root_link_name if values["link"] == 'root' else values["link"]
-                             )
-            elif values["type"] == "NodePosition":  # Funktioniert weil rausgefischt, TODO was ist mit CHILDMAP ?
-                NodePosition(smurf_robot,
-                             name=values["name"],
-                             targets=[root_link_name] if values["id"][0] in ['root', 'main_body'] else values["id"],
-                             link=root_link_name if values["link"] == 'root' else values["link"]
-                             )
-            elif values["type"] == "NodeCOM":  # Funktioniert weil rausgefischt, TODO was ist mit CHILDMAP ?
-                NodeCOM(smurf_robot,
-                        name=values["name"],
-                        targets=[root_link_name] if values["id"][0] in ['root', 'main_body'] else values["id"],
-                        link=root_link_name if values["link"] == 'main_body' else values["link"]
-                        )
+                smurf_robot.attach_sensor((JointPosition(smurf_robot,
+                                                         name=values["name"],
+                                                         targets=values["id"],
+                                                         link=values["link"]
+                                                         )))
+            elif values["type"] == "NodeContactForce":
+                smurf_robot.attach_sensor((NodeContactForce(smurf_robot,
+                                                            values["name"],
+                                                            targets=values["id"],
+                                                            link=values["link"]
+                                                            )))
+            elif values["type"] == "NodeRotation":  # Funktioniert weil rausgefischt,
+                smurf_robot.attach_sensor(NodeRotation(smurf_robot,
+                                                       name=values["name"],
+                                                       targets=[root_link_name] if values["id"][0] in ['root',
+                                                                                                       'main_body'] else
+                                                       values["id"],
+                                                       link=root_link_name if values["link"] == 'root' else values[
+                                                           "link"]
+                                                       # TODO rausnehmen nach abschluss
+                                                       ))
+            elif values["type"] == "NodePosition":  # Funktioniert weil rausgefischt
+                smurf_robot.attach_sensor(NodePosition(smurf_robot,
+                                                       name=values["name"],
+                                                       targets=[root_link_name] if values["id"][0] in ['root',
+                                                                                                       'main_body'] else
+                                                       values["id"],
+                                                       link=root_link_name if values["link"] == 'root' else values[
+                                                           "link"]
+                                                       ))
+            elif values["type"] == "NodeCOM":  # Funktioniert weil rausgefischt
+                smurf_robot.attach_sensor(NodeCOM(smurf_robot,
+                                                  name=values["name"],
+                                                  targets=[root_link_name] if values["id"][0] in ['root',
+                                                                                                  'main_body'] else
+                                                  values["id"],
+                                                  link=root_link_name if values["link"] == 'main_body' else values[
+                                                      "link"]
+                                                  ))
 
         motors = blender_model["motors"]  # bei joints reinschauen nach mimic
+        for key, value in motors.items():
+            print(key)
+            print(value)
+            name = value.pop('name')
+            joint = value.pop('joint')
+            smurf_robot.attach_motor(smurf_robot,
+                                     Motor(robot=smurf_robot,
+                                           name=name,
+                                           joint=smurf_robot.get_joint(joint),
+                                           **value),
+                                     jointname=joint)
         return smurf_robot
 
     # helper methods
