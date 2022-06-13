@@ -94,7 +94,10 @@ class Robot(representation.Robot):
             cli_limit = None
             if not values['type'] == 'fixed':
                 cli_axis = values['axis']
-                cli_limit = values['limits']
+                cli_limit = representation.JointLimit(effort=values['limits']['effort'],
+                                                      velocity=values['limits']['velocity'],
+                                                      lower=values['limits']['lower'],
+                                                      upper=values['limits']['upper'])
             cli_joints.append(representation.Joint(
                 name=values['name'],
                 parent=values['parent'],
@@ -148,7 +151,7 @@ class Robot(representation.Robot):
                                                 color=representation.Color(value.get('diffuseColor')['r'],
                                                                            value.get('diffuseColor')['g'],
                                                                            value.get('diffuseColor')['b'],
-                                                                           1.       # TODO missing a Parameter in dict
+                                                                           1.  # TODO missing a Parameter in dict
                                                                            ),
                                                 texture=None
                                                 ))
