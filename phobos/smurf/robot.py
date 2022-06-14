@@ -67,14 +67,12 @@ class Smurf(Robot):
         blender_model = derive_model_dictionary(root, name, objectlist)
         smurf_robot.description = blender_model["description"]
         root_link_name = cli_robot.get_root()
-        # smurf_robot._joint = []     # TODO noch nötig ?
 
         for key, value in blender_model['materials'].items():
             value.pop('diffuseColor')
             smurf_robot._attach_part('smurf_materials', Material(**value))
 
         for key, values in blender_model['sensors'].items():
-            # Abfischen der falschen Sachen von crex # TODO rausnehmen wenn fertig
             if values.get('id') is not None:
                 values['targets'] = [x for x in values['id'] if smurf_robot.get_joint(x, verbose=False) is not None or smurf_robot.get_link(x, verbose=False) is not None or smurf_robot.get_collision_by_name(x) is not None or smurf_robot.get_visual_by_name(x) is not None]
                 values.pop('id')
