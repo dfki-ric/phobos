@@ -138,7 +138,7 @@ class MultiSensor(Sensor):
 
     @property
     def id(self):
-        return [t.name for t in self._id] if self._id else None
+        return [t.name for t in self._id]  # if self._id else None
 
     @id.setter
     def id(self, targets):
