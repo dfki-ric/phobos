@@ -155,9 +155,11 @@ class Robot(representation.Robot):
                                                                            ),
                                                 texture=None
                                                 ))
+        if blender_model['version'] != '1.0':
+            print(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
         cli_robot = representation.Robot(
             name=blender_model['name'],
-            version=blender_model['version'],
+            version=None,
             links=cli_links,
             joints=cli_joints,
             materials=mats)
