@@ -206,13 +206,14 @@ class Joint(Representation):
 
 
 class Link(Representation):
-    def __init__(self, name=None, visuals=None, inertial=None, collisions=None):
+    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None):
         self.name = name
         self.visuals = []
         if visuals is not None:
             self.visuals = visuals
         self.inertial = _singular(inertial)
         self.collisions = []
+        assert origin is None
         if collisions is not None:
             self.collisions = collisions
 
