@@ -729,7 +729,7 @@ class Robot(representation.Robot):
 
         return self.get_id('links', link_name)
 
-    def get_link(self, link_name):
+    def get_link(self, link_name, verbose=True):
         """
         Returns the link(s) corresponding to the link name(s).
         :param link_name: the name of the joint to get
@@ -742,12 +742,12 @@ class Robot(representation.Robot):
 
         if l_id is not None:
             return self.links[l_id]
-        else:
+        elif verbose:
             print("WARN: Link", link_name, "does not exist!")
             print("These are the existing links:", [ln.name for ln in self.links])
-            return None
+        return None
 
-    def get_joint(self, joint_name):
+    def get_joint(self, joint_name, verbose=True):
         """
         Returns the joint(s) corresponding to the joint name(s).
         :param joint_name: the name of the joint to get
@@ -760,9 +760,10 @@ class Robot(representation.Robot):
 
         if j_id is not None:
             return self.joints[j_id]
-        else:
-            # print(joint_name, "not found in robot with joints", [jn.name for jn in self.joints])
-            return None
+        elif verbose:
+            print("WARN: Joint", joint_name, "does not exist!")
+            print("These are the existing joints:", [jn.name for jn in self.joints])
+        return None
 
     def get_parent(self, name, targettype='joint'):
         """
