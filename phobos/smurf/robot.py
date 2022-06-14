@@ -76,27 +76,27 @@ class Smurf(Robot):
             if values.get('id') is not None:
                 values['targets'] = [x for x in values['id'] if smurf_robot.get_joint(x, verbose=False) is not None or smurf_robot.get_link(x, verbose=False) is not None or smurf_robot.get_collision_by_name(x) is not None or smurf_robot.get_visual_by_name(x) is not None]
                 values.pop('id')
-            if values["type"] == "motorCurrent":
+            if values["type"].upper() == "MOTORCURRENT":
                 smurf_robot.attach_sensor(MotorCurrent(smurf_robot, **values))
-            elif values["type"] == "CameraSensor":
+            elif values["type"].upper() == "CAMERASENSOR":
                 smurf_robot.attach_sensor(CameraSensor(smurf_robot, hud_height=240, hud_width=0, **values))
-            elif values["type"] == "RotatingRaySensor":
+            elif values["type"].upper() == "ROTATINGRAYSENSOR":
                 smurf_robot.attach_sensor(RotatingRaySensor(smurf_robot, horizontal_offset=0, **values))
-            elif values["type"] == "JointVelocity":
+            elif values["type"].upper() == "JOINTVELOCITY":
                 smurf_robot.attach_sensor(JointVelocity(smurf_robot, **values))
-            elif values["type"] == "IMU":
+            elif values["type"].upper() == "IMU":
                 smurf_robot.attach_sensor(IMU(smurf_robot, **values))
-            elif values["type"] == "Joint6DOF":
+            elif values["type"].upper() == "JOINT6DOF":
                 smurf_robot.attach_sensor(Joint6DOF(smurf_robot, **values))
-            elif values["type"] == "JointPosition":
+            elif values["type"].upper() == "JOINTPOSITION":
                 smurf_robot.attach_sensor((JointPosition(smurf_robot, **values)))
-            elif values["type"] == "NodeContactForce":
+            elif values["type"].upper() == "NODECONTACTFORCE":
                 smurf_robot.attach_sensor((NodeContactForce(smurf_robot, **values)))
-            elif values["type"] == "NodeRotation":
+            elif values["type"].upper() == "NODEROTATION":
                 smurf_robot.attach_sensor(NodeRotation(smurf_robot, **values))
-            elif values["type"] == "NodePosition":
+            elif values["type"].upper() == "NODEPOSITION":
                 smurf_robot.attach_sensor(NodePosition(smurf_robot, **values))
-            elif values["type"] == "NodeCOM":
+            elif values["type"].upper() == "NODECOM":
                 smurf_robot.attach_sensor(NodeCOM(smurf_robot, **values))
 
         motors = blender_model["motors"]  # TODO bei joints reinschauen nach mimic
