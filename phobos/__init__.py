@@ -16,9 +16,9 @@ Handles different import attempts to cope with Blender's *Reload script* functio
 bl_info = {
     "name": "Phobos",
     "description": "A toolbox to enable editing of robot models in Blender.",
-    "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Simon Reichel",
-    "version": (1, 0, 3),
-    "blender": (2, 90, 0),
+    "author": "Kai von Szadkowski, Malte Langosz, Henning Wiedemann, Julius Martensen, Ole Schwiegert, Stefan Rahms, Simon Reichel",
+    "version": (2, 0, 0),
+    "blender": (3, 2, 0),
     "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
@@ -27,41 +27,49 @@ bl_info = {
     "category": "Development",
 }
 
-try:
-    import bpy
-    from . import blender
+requirements = {
+        "yaml": "pyyaml",
+        "networkx": "networkx",  # optional for blender
+        "numpy": "numpy",
+        # "pybullet": "pybullet",  # optional for blender
+        # "open3d": "open3d",  # optional for blender
+        "scipy": "scipy",
+        "trimesh": "trimesh",  # optional for blender
+        #"python-fcl": "python-fcl",  # optional for blender
+        "pkg_resources": "setuptools"
+    }
 
 
-    def install_requirement(package_name):
-        import sys
-        import os
+def install_requirement(package_name):
+    import sys
+    import os
 
-        py_exec = str(sys.executable)
-        # Get lib directory
-        lib = None
-        for path in sys.path:
-            if "modules" in path and ("Roaming" in path or ".config" in path or "Users" in path):
-                lib = path
-                break
-        # Ensure pip is installed
-        os.system(" ".join([py_exec, "-m", "ensurepip", "--user"]))
-        # Update pip (not mandatory)
-        os.system(" ".join([py_exec, "-m", "pip", "install", "--upgrade", "pip"]))
-        # Install package
-        os.system(" ".join([py_exec, "-m", "pip", "install", f"--target={str(lib)}", package_name]))
-        print("Installing required package", package_name, "to", lib, flush=True)
-
-
-    def check_requirements():
-        import importlib
-        for import_name, req_name in requirements.items():
-            print("Checking", import_name, flush=True)
-            if importlib.util.find_spec(import_name) is None:
-                install_requirement(req_name)
-        importlib.invalidate_caches()
+    py_exec = str(sys.executable)
+    # Get lib directory
+    lib = None
+    for path in sys.path:
+        if "modules" in path and ("Roaming" in path or ".config" in path or "Users" in path):
+            lib = path
+            break
+    # Ensure pip is installed
+    os.system(" ".join([py_exec, "-m", "ensurepip", "--user"]))
+    # Update pip (not mandatory)
+    os.system(" ".join([py_exec, "-m", "pip", "install", "--upgrade", "pip"]))
+    # Install package
+    os.system(" ".join([py_exec, "-m", "pip", "install", f"--target={str(lib)}", package_name]))
+    print("Installing required package", package_name, "to", lib, flush=True)
 
 
-    def import_submodules(package, recursive=True, verbose=False):
+def check_requirements():
+    import importlib
+    for import_name, req_name in requirements.items():
+        print("Checking", import_name, flush=True)
+        if importlib.util.find_spec(import_name) is None:
+            install_requirement(req_name)
+    importlib.invalidate_caches()
+
+
+def import_submodules(package, recursive=True, verbose=False):
         """Import all submodules of a module, recursively, including subpackages.
             If a module is already imported it is reloaded instead.
             Recursion can be turned off.
@@ -106,53 +114,54 @@ try:
                 results.update(import_submodules(full_name))
         return results
 
-    print("Checking requirements")
-    requirements = {
-        "yaml": "pyyaml",
-        # "networkx": "networkx",  # optional for blender
-        "numpy": "numpy",
-        # "pybullet": "pybullet",  # optional for blender
-        # "open3d": "open3d",  # optional for blender
-        "scipy": "scipy",
-        # "trimesh": "trimesh",  # optional for blender
-        # "python-fcl": "python-fcl"  # optional for blender
-    }
-    check_requirements()
 
+def register():
+    """This function registers all modules to blender.
+
+    :return: Nothing
+
+    Args:
+
+    Returns:
+
+    """
+    check_requirements()
+    from . import defs
+    from . import utils
+    from . import ci
+    from . import geometry
+    from . import smurf
+    from . import scripts
+    from . import core
+    from . import io
+    from . import scenes
 
     # Recursively import all submodules
+    from . import blender
     print("Importing phobos")
     import_submodules(blender, verbose=True)
 
-
-    def register():
-        """This function registers all modules to blender.
-
-        :return: Nothing
-
-        Args:
-
-        Returns:
-
-        """
-        #bpy.utils.register_module(__name__)
-        blender.operators.selection.register()
-        blender.operators.io.register()
-        blender.operators.editing.register()
-        blender.operators.generic.register()
-        blender.operators.naming.register()
-        blender.operators.poses.register()
-        blender.phobosgui.register()
+    # bpy.utils.register_module(__name__)
+    blender.operators.selection.register()
+    blender.operators.io.register()
+    blender.operators.editing.register()
+    blender.operators.generic.register()
+    blender.operators.naming.register()
+    blender.operators.poses.register()
+    blender.phobosgui.register()
 
 
-    def unregister():
-        """This function unregisters all modules in Blender."""
-        print("\n" + "-" * 100)
-        print("Unregistering Phobos...")
-        # TODO delete all imported modules to resolve reregistration conflicts
-        blender.phobosgui.unregister()
-        bpy.utils.unregister_module(__name__)
+def unregister():
+    """This function unregisters all modules in Blender."""
+    print("\n" + "-" * 100)
+    print("Unregistering Phobos...")
+    # TODO delete all imported modules to resolve reregistration conflicts
+    from . import blender
+    blender.phobosgui.unregister()
 
+
+try:
+    import bpy
 except ImportError:
     from pkg_resources import get_distribution, DistributionNotFound
 
@@ -161,14 +170,19 @@ except ImportError:
         dist_name = __name__
         __version__ = get_distribution(dist_name).version
     except DistributionNotFound:
-        __version__ = '1.0.0'
+        __version__ = ".".join([str(x) for x in bl_info["version"]])
     finally:
         del get_distribution, DistributionNotFound
 
     print("Future import in pure python scripts.")
-    from . import utils
-    from . import ci
-    from . import geometry
-    from . import smurf
 
+from . import defs
+from . import utils
+from . import ci
+from . import geometry
+from . import smurf
+from . import scripts
+from . import core
+from . import io
+from . import scenes
 

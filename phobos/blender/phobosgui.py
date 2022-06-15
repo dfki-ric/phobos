@@ -1483,6 +1483,25 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc2.prop(wm, 'phobos_msg_offset')
 
 
+REGISTER_CLASSES = [
+    ModelPoseProp,
+    PhobosPrefs,
+    PhobosExportSettings,
+    # CHECK is this needed and right?
+    MatrixPropGroup,
+    PhobosMatrixPanel,
+    PhobosObjectInformationPanel,
+    PhobosPropertyInformationPanel,
+    PhobosModelWarningsPanel,
+    PhobosToolsPanel,
+    PhobosDisplayPanel,
+    PhobosModelPanel,
+    PhobosSubmodelsPanel,
+    PhobosExportPanel,
+    PhobosImportPanel,
+]
+
+
 def register():
     """TODO Missing documentation"""
     print("\nRegistering phobosgui...")
@@ -1592,31 +1611,18 @@ def register():
     #                 bpy.utils.register_class(classdef)
     #         except ValueError:
     #             print('Error with class registration:', key, classdef)
-    bpy.utils.register_class(ModelPoseProp)
-    print("Registering PhobosPrefs")
-    bpy.utils.register_class(PhobosPrefs)
-    bpy.utils.register_class(PhobosExportSettings)
+
+    for cls in REGISTER_CLASSES:
+        bpy.utils.register_class(cls)
     # TODO delete me?
     # bpy.utils.register_class(Mesh_Export_UIList)
     # bpy.utils.register_class(Models_Poses_UIList)
 
-    # CHECK is this needed and right?
-    bpy.utils.register_class(MatrixPropGroup)
-    bpy.utils.register_class(PhobosMatrixPanel)
-    bpy.utils.register_class(PhobosObjectInformationPanel)
-    bpy.utils.register_class(PhobosPropertyInformationPanel)
-    bpy.utils.register_class(PhobosModelWarningsPanel)
     bpy.types.Object.phobosmatrixinfo = PointerProperty(type=MatrixPropGroup)
     bpy.types.Scene.phobospropcategories = EnumProperty(items=[])
 
-    bpy.utils.register_class(PhobosToolsPanel)
-    bpy.utils.register_class(PhobosDisplayPanel)
-    bpy.utils.register_class(PhobosModelPanel)
     # TODO delete me?
     # bpy.utils.register_class(PhobosScenePanel)
-    bpy.utils.register_class(PhobosSubmodelsPanel)
-    bpy.utils.register_class(PhobosExportPanel)
-    bpy.utils.register_class(PhobosImportPanel)
 
     # add phobos settings to scene
     bpy.types.Scene.phobosexportsettings = PointerProperty(type=PhobosExportSettings)
@@ -1646,17 +1652,21 @@ def unregister():
     print("Unregistering phobosgui...")
     libraries.unregister()
 
+    print("Unregistering display...")
     display.unregister()
 
     # Unregister icons
+    print("Unregistering icons...")
     for pcoll in prev_collections.values():
         bpy.utils.previews.remove(pcoll)
     prev_collections.clear()
 
+    print("Unregistering classes...")
     # Unregister classes
-    for key, classdef in inspect.getmembers(sys.modules[__name__], inspect.isclass):
-        bpy.utils.unregister_class(classdef)
+    for cls in REGISTER_CLASSES:
+        bpy.utils.unregister_class(cls)
 
+    print("Unregistering manuals...")
     # Remove manuals from buttons
     bpy.utils.unregister_manual_map(get_operator_manuals)
 
