@@ -11,7 +11,8 @@ from .motors import Motor
 from .poses import Pose
 from .core import Material, Collision, Joint, Link
 from .hyrodyn import Submechanism, Exoskeleton
-from .sensors import *
+from .sensors import Joint6DOF, RotatingRaySensor, CameraSensor, IMU, MotorCurrent, \
+    JointPosition, JointVelocity, NodeContactForce, NodeCOM, NodePosition, NodeRotation
 from ..geometry import get_reflection_matrix
 from ..utils import tree, transform
 from ..utils.misc import edit_name_string
