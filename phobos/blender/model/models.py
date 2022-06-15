@@ -1014,21 +1014,21 @@ def deriveModelDictionary(root, name='', objectlist=[]):
 
     modeldescription = bUtils.readTextFile('README.md')
 
-    model = {  # Used in:
-        'links': {},  # representation.robot
-        'joints': {},  # representation.robot
-        'sensors': {},  # smurf.robot.Smurf
-        'motors': {},  # smurf
-        'controllers': {},  # not relevant yet
-        'materials': {},  # representation.robot
-        'meshes': {},  # repr meshes
-        'lights': {},  # not relevant yet
-        'groups': {},  # not relevant yet
-        'chains': {},  # Implementation of hydrodyn support
-        'date': datetime.now().strftime("%Y%m%d_%H:%M"),  # not relevant yet
-        'name': modelname,  # obligatory, is set empty otherwise
-        'version': modelversion,  # not relevant yet
-        'description': modeldescription,  # smurf.robot.Smurf
+    model = {
+        'links': {},
+        'joints': {},
+        'sensors': {},
+        'motors': {},
+        'controllers': {},
+        'materials': {},
+        'meshes': {},
+        'lights': {},
+        'groups': {},
+        'chains': {},
+        'date': datetime.now().strftime("%Y%m%d_%H:%M"),
+        'name': modelname,
+        'version': modelversion,
+        'description': modeldescription,
     }
 
     log(
