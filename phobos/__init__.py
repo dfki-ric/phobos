@@ -13,6 +13,8 @@
 Handles different import attempts to cope with Blender's *Reload script* functionality.
 """
 
+REQUIREMENTS_HAVE_BEEN_CHECKED = False
+
 bl_info = {
     "name": "Phobos",
     "description": "A toolbox to enable editing of robot models in Blender.",
@@ -31,13 +33,16 @@ requirements = {
         "yaml": "pyyaml",
         "networkx": "networkx",  # optional for blender
         "numpy": "numpy",
-        # "pybullet": "pybullet",  # optional for blender
-        # "open3d": "open3d",  # optional for blender
         "scipy": "scipy",
         "trimesh": "trimesh",  # optional for blender
-        #"python-fcl": "python-fcl",  # optional for blender
         "pkg_resources": "setuptools"
     }
+
+optional_requirements = {
+        "pybullet": "pybullet",  # optional for blender
+        "open3d": "open3d",  # optional for blender
+        "python-fcl": "python-fcl",  # optional for blender
+}
 
 
 def install_requirement(package_name):
@@ -60,13 +65,27 @@ def install_requirement(package_name):
     print("Installing required package", package_name, "to", lib, flush=True)
 
 
-def check_requirements():
+def check_requirements(optional=False, force=False):
+    global REQUIREMENTS_HAVE_BEEN_CHECKED
+    if REQUIREMENTS_HAVE_BEEN_CHECKED and not force:
+        return
+    print("Checking requirements:")
     import importlib
-    for import_name, req_name in requirements.items():
-        print("Checking", import_name, flush=True)
-        if importlib.util.find_spec(import_name) is None:
-            install_requirement(req_name)
+    reqs = [requirements]
+    if optional:
+        reqs += [optional_requirements]
+    for r in reqs:
+        for import_name, req_name in r.items():
+            print("  Checking", import_name, flush=True)
+            try:
+                if importlib.util.find_spec(import_name) is None:
+                    install_requirement(req_name)
+            except AttributeError:
+                loader = importlib.find_loader(import_name)
+                if not issubclass(type(loader), importlib.machinery.SourceFileLoader):
+                    install_requirement(req_name)
     importlib.invalidate_caches()
+    REQUIREMENTS_HAVE_BEEN_CHECKED = True
 
 
 def import_submodules(package, recursive=True, verbose=False):
@@ -162,6 +181,7 @@ def unregister():
 
 try:
     import bpy
+    check_requirements()
 except ImportError:
     from pkg_resources import get_distribution, DistributionNotFound
 
