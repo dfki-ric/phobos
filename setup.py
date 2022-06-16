@@ -45,19 +45,27 @@ def check_blender_agreement(answer):
     return True
 
 
+def exec_shell_cmd(command):
+    if sys.platform.startswith("linux"):
+        command = [" ".join(str(x) for x in command)]
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    (out, err) = proc.communicate()
+    return out.decode().strip()
+
+
 def install_requirement(py_exec, package_name, upgrade_pip=False, lib=None):
     # Ensure pip is installed
-    subprocess.check_call([py_exec, "-m", "ensurepip", "--user"])
+    exec_shell_cmd([py_exec, "-m", "ensurepip", "--user"])
     # Update pip (not mandatory)
     if upgrade_pip:
         print("  Upgrading pip...")
-        subprocess.check_call([py_exec, "-m", "pip", "install", "--upgrade", "pip"])
+        exec_shell_cmd([py_exec, "-m", "pip", "install", "--upgrade", "pip"])
     # Install package
     print("  Installing package", package_name, flush=True)
     if lib is None:
-        subprocess.check_call([py_exec, "-m", "pip", "install", package_name])
+        exec_shell_cmd([py_exec, "-m", "pip", "install", package_name])
     else:
-        subprocess.check_call([py_exec, "-m", "pip",  "install", f"--target={str(lib)}", package_name])
+        exec_shell_cmd([py_exec, "-m", "pip",  "install", f"--target={str(lib)}", package_name])
 
 
 def check_requirements(py_exec, optional=False, upgrade_pip=False, lib=None):
@@ -68,7 +76,7 @@ def check_requirements(py_exec, optional=False, upgrade_pip=False, lib=None):
         reqs += [optional_requirements]
     if upgrade_pip:
         print("  Upgrading pip...")
-        subprocess.check_call([py_exec, "-m", "pip", "install", "--upgrade", "pip"])
+        exec_shell_cmd([py_exec, "-m", "pip", "install", "--upgrade", "pip"])
     for r in reqs:
         for import_name, req_name in r.items():
             print("  Checking", import_name, flush=True)
@@ -83,24 +91,18 @@ def check_requirements(py_exec, optional=False, upgrade_pip=False, lib=None):
     importlib.invalidate_caches()
 
 
-def read_out_from_cmd(command):
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    (out, err) = proc.communicate()
-    return out.decode()
-
-
-def fetch_path_from_blender_script(blender_exec, script):
-    out = read_out_from_cmd([blender_exec, "--background", "--python", script])
+def fetch_path_from_blender_script(blender_exec, script, keyword="blender"):
+    out = exec_shell_cmd([blender_exec, "--background", "--python", script])
     path = None
     for line in out.split("\n"):
+        line = line.strip()
         if line == "":
             continue
         if line.endswith("\r"):
-            line = line.replace("\r","")
-        if Path(line).exists():
+            line = line.replace("\r", "")
+        if line.startswith("/") and keyword in line.lower():
             path = Path(line)
             break
-    assert path is not None
     return path
 
 
@@ -155,23 +157,27 @@ setuptools.setup(
 # blender addon #
 #################
 # autoproj installation can not handle user inputs
-if not "AUTOPROJ_CURRENT_ROOT" in os.environ:
+if "AUTOPROJ_CURRENT_ROOT" in os.environ:
     sys.exit()
 
 blender_path = None
 print("Thanks for installing phobos!\n\nTrying now to install blender addon")
 check_blender_agreement(input("Do you want to proceed? (y/n)>").strip())
+auto_found = False
 for cmd in ["which", "where", "Get-Command"]:
-    out = Path(read_out_from_cmd([cmd, "blender"]))
-    if out.exists():
+    out = Path(exec_shell_cmd([cmd, "blender"]))
+    if out.exists() and "blender" in str(out).lower():
+        if input(f"Take this blender version '{out}'? (y/n)>").lower() in ["y", "yes"]:
+            auto_found = True
         break
-while not out.exists() or not "blender" in str(out).lower():
+while not auto_found or not out.exists() or not "blender" in str(out).lower():
+    auto_found = True
     print("Could not retrieve blender executable from this path:", out)
     out = Path(input("Please provide the path to your blender executable: ").strip())
 blender_path = deepcopy(out)
 scripts_path = fetch_path_from_blender_script(blender_path, this_dir/"get_blender_path.py")
 modules_path = scripts_path / "modules"
-addons_path = scripts_path/ "addons"
+addons_path = scripts_path / "addons"
 print("Found the following blender installation directories:")
 print(scripts_path)
 print(modules_path)
@@ -183,5 +189,5 @@ if check_blender_agreement(input("Do you want to proceed? (y/n)>").strip()):
         shutil.rmtree(target)
     shutil.copytree(this_dir/"phobos", target)
     # install requirements
-    python_path = fetch_path_from_blender_script(blender_path,this_dir/"get_blender_python.py")
+    python_path = fetch_path_from_blender_script(blender_path, this_dir/"get_blender_python.py")
     check_requirements(python_path, upgrade_pip=True, lib=modules_path)

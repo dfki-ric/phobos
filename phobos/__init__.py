@@ -99,7 +99,33 @@ def check_requirements(optional=False, force=False, upgrade_pip=False, lib=None)
     REQUIREMENTS_HAVE_BEEN_CHECKED = True
 
 
-def import_submodules(package, recursive=True, verbose=False):
+def register():
+    """This function registers all modules to blender.
+
+    :return: Nothing
+
+    Args:
+
+    Returns:
+
+    """
+    import sys
+    if not sys.platform.startswith("win"):
+        check_requirements(upgrade_pip=True)
+    from . import defs
+    from . import utils
+    from . import ci
+    from . import geometry
+    from . import smurf
+    from . import scripts
+    from . import core
+    from . import io
+    from . import scenes
+
+    # Recursively import all submodules
+    from . import blender
+
+    def import_submodules(package, recursive=True, verbose=False):
         """Import all submodules of a module, recursively, including subpackages.
             If a module is already imported it is reloaded instead.
             Recursion can be turned off.
@@ -144,31 +170,6 @@ def import_submodules(package, recursive=True, verbose=False):
                 results.update(import_submodules(full_name))
         return results
 
-
-def register():
-    """This function registers all modules to blender.
-
-    :return: Nothing
-
-    Args:
-
-    Returns:
-
-    """
-    if not sys.platform.startswith(win):
-        check_requirements(upgrade_pip=True)
-    from . import defs
-    from . import utils
-    from . import ci
-    from . import geometry
-    from . import smurf
-    from . import scripts
-    from . import core
-    from . import io
-    from . import scenes
-
-    # Recursively import all submodules
-    from . import blender
     print("Importing phobos")
     import_submodules(blender, verbose=True)
 
@@ -215,4 +216,3 @@ from . import scenes
 
 del sys
 del BPY_AVAILABLE
-del import_submodules
