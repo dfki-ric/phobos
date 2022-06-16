@@ -12,8 +12,15 @@
 """
 Handles different import attempts to cope with Blender's *Reload script* functionality.
 """
+import sys
 
 REQUIREMENTS_HAVE_BEEN_CHECKED = False
+BPY_AVAILABLE = False
+try:
+    import bpy
+    BPY_AVAILABLE = True
+except ImportError:
+    pass
 
 bl_info = {
     "name": "Phobos",
@@ -29,6 +36,7 @@ bl_info = {
     "category": "Development",
 }
 
+# todo fill this automatically
 requirements = {
     "yaml": "pyyaml",
     "networkx": "networkx",  # optional for blender
@@ -45,27 +53,25 @@ optional_requirements = {
 }
 
 
-def install_requirement(package_name):
-    import sys
-    import os
-
-    py_exec = str(sys.executable)
-    # Get lib directory
-    lib = None
-    for path in sys.path:
-        if "modules" in path and ("Roaming" in path or ".config" in path or "Users" in path):
-            lib = path
-            break
+def install_requirement(package_name, upgrade_pip=False, lib=None):
+    import subprocess
+    if lib is None and BPY_AVAILABLE:
+        lib = bpy.utils.user_resource("SCRIPTS", path="modules")
     # Ensure pip is installed
-    os.system(" ".join([py_exec, "-m", "ensurepip", "--user"]))
+    subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
     # Update pip (not mandatory)
-    os.system(" ".join([py_exec, "-m", "pip", "install", "--upgrade", "pip"]))
+    if upgrade_pip:
+        print("  Upgrading pip...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
     # Install package
-    os.system(" ".join([py_exec, "-m", "pip", "install", f"--target={str(lib)}", package_name]))
-    print("Installing required package", package_name, "to", lib, flush=True)
+    print("  Installing package", package_name, flush=True)
+    if lib is None:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
+    else:
+        subprocess.check_call([sys.executable, "-m", "pip",  "install", f"--target={str(lib)}", package_name])
 
 
-def check_requirements(optional=False, force=False):
+def check_requirements(optional=False, force=False, upgrade_pip=False, lib=None):
     global REQUIREMENTS_HAVE_BEEN_CHECKED
     if REQUIREMENTS_HAVE_BEEN_CHECKED and not force:
         return
@@ -74,16 +80,21 @@ def check_requirements(optional=False, force=False):
     reqs = [requirements]
     if optional:
         reqs += [optional_requirements]
+    if upgrade_pip:
+        import sys
+        import subprocess
+        print("  Upgrading pip...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
     for r in reqs:
         for import_name, req_name in r.items():
             print("  Checking", import_name, flush=True)
             try:
                 if importlib.util.find_spec(import_name) is None:
-                    install_requirement(req_name)
+                    install_requirement(req_name, upgrade_pip=False, lib=lib)
             except AttributeError:
                 loader = importlib.find_loader(import_name)
                 if not issubclass(type(loader), importlib.machinery.SourceFileLoader):
-                    install_requirement(req_name)
+                    install_requirement(req_name, upgrade_pip=False, lib=lib)
     importlib.invalidate_caches()
     REQUIREMENTS_HAVE_BEEN_CHECKED = True
 
@@ -144,7 +155,8 @@ def register():
     Returns:
 
     """
-    check_requirements()
+    if not sys.platform.startswith(win):
+        check_requirements(upgrade_pip=True)
     from . import defs
     from . import utils
     from . import ci
@@ -179,10 +191,7 @@ def unregister():
     blender.phobosgui.unregister()
 
 
-try:
-    import bpy
-    check_requirements()
-except ImportError:
+if not "blender" in sys.executable.lower() and not BPY_AVAILABLE:
     from pkg_resources import get_distribution, DistributionNotFound
 
     try:
@@ -194,8 +203,6 @@ except ImportError:
     finally:
         del get_distribution, DistributionNotFound
 
-    print("Future import in pure python scripts.")
-
 from . import defs
 from . import utils
 from . import ci
@@ -206,3 +213,6 @@ from . import core
 from . import io
 from . import scenes
 
+del sys
+del BPY_AVAILABLE
+del import_submodules

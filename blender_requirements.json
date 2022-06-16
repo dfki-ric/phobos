@@ -1,0 +1,15 @@
+{
+  "requirements": {
+    "yaml": "pyyaml",
+    "networkx": "networkx",
+    "numpy": "numpy",
+    "scipy": "scipy",
+    "trimesh": "trimesh",
+    "pkg_resources": "setuptools"
+  },
+  "optional_requirements": {
+    "pybullet": "pybullet",
+    "open3d": "open3d",
+    "python-fcl": "python-fcl"
+  }
+}
