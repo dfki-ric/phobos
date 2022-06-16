@@ -11,7 +11,8 @@ from .motors import Motor
 from .poses import Pose
 from .core import Material, Collision, Joint, Link
 from .hyrodyn import Submechanism, Exoskeleton
-from .sensors import *
+from .sensors import Joint6DOF, RotatingRaySensor, CameraSensor, IMU, MotorCurrent, \
+    JointPosition, JointVelocity, NodeContactForce, NodeCOM, NodePosition, NodeRotation
 from ..geometry import get_reflection_matrix
 from ..utils import tree, transform
 from ..utils.misc import edit_name_string
@@ -79,9 +80,14 @@ class Smurf(Robot):
             if values["type"].upper() == "MOTORCURRENT":
                 smurf_robot.attach_sensor(MotorCurrent(smurf_robot, **values))
             elif values["type"].upper() == "CAMERASENSOR":
-                smurf_robot.attach_sensor(CameraSensor(smurf_robot, hud_height=240, hud_width=0, **values))
+                smurf_robot.attach_sensor(CameraSensor(smurf_robot,
+                                                       hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
+                                                       hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
+                                                       **values))
             elif values["type"].upper() == "ROTATINGRAYSENSOR":
-                smurf_robot.attach_sensor(RotatingRaySensor(smurf_robot, horizontal_offset=0, **values))
+                smurf_robot.attach_sensor(RotatingRaySensor(smurf_robot,
+                                                            horizontal_offset=0 if values.get('horizontal_offset') is None else values.pop('horizontal_offset'),
+                                                            **values))
             elif values["type"].upper() == "JOINTVELOCITY":
                 smurf_robot.attach_sensor(JointVelocity(smurf_robot, **values))
             elif values["type"].upper() == "IMU":
