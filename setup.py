@@ -7,6 +7,7 @@
 # You should have received a copy of the 3-Clause BSD License in the LICENSE file.
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
+import json
 import setuptools
 import subprocess
 
@@ -35,16 +36,18 @@ print("Attention: You are currently installing phobos for CLI usage only. If you
       "   Blender will now install the phobos add-on with all its dependencies.\n"
       "5) Click the checkbox to activate the phobos-add-on")
 
+codemeta = json.load(open("codemeta.json", "r"))
+
 setuptools.setup(
-    name="phobos",  # Replace with your own username
-    version="2.0.0",
-    author="Julius Martensen & Henning Wiedemann",
-    author_email="henning.wiedemann@dfki.de",
-    description="Phobos is a python tool for processing simulation models. Revision:" + get_git_branch() + "-"
+    name=codemeta["title"].lower(),  # Replace with your own username
+    version=codemeta["version"],
+    author=", ".join(codemeta["author"]),
+    author_email=codemeta["maintainer"],
+    description=codemeta["description"] + " Revision:" + get_git_branch() + "-"
                 + get_git_revision_short_hash(),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://git.hb.dfki.de/phobos/phobos-smurf",
+    url=codemeta["codeRepository"],
     packages=setuptools.find_packages(),
     include_package_data=True,
     package_data={'': [
