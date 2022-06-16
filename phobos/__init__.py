@@ -30,18 +30,18 @@ bl_info = {
 }
 
 requirements = {
-        "yaml": "pyyaml",
-        "networkx": "networkx",  # optional for blender
-        "numpy": "numpy",
-        "scipy": "scipy",
-        "trimesh": "trimesh",  # optional for blender
-        "pkg_resources": "setuptools"
-    }
+    "yaml": "pyyaml",
+    "networkx": "networkx",  # optional for blender
+    "numpy": "numpy",
+    "scipy": "scipy",
+    "trimesh": "trimesh",  # optional for blender
+    "pkg_resources": "setuptools"
+}
 
 optional_requirements = {
-        "pybullet": "pybullet",  # optional for blender
-        "open3d": "open3d",  # optional for blender
-        "python-fcl": "python-fcl",  # optional for blender
+    "pybullet": "pybullet",  # optional for blender
+    "open3d": "open3d",  # optional for blender
+    "python-fcl": "python-fcl",  # optional for blender
 }
 
 
