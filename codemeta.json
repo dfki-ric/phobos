@@ -2,19 +2,22 @@
   "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
   "@type": "Code",
   "author": [
-      Kai von Szadkowski,
-      Henning Wiedemann
-      Simon Reichel,
-      Julius Martensen
+    "Kai von Szadkowski",
+    "Malte Langosz",
+    "Henning Wiedemann",
+    "Simon Reichel",
+    "Julius Martensen"
   ],
+  "maintainer": "Henning Wiedemann <henning.wiedemann@dfki.de>",
   "identifier": "",
   "codeRepository": "https://github.com/dfki-ric/phobos",
   "datePublished": "2019-02-01",
   "dateModified": "2020-12-16",
   "dateCreated": "2019-02-01",
-  "description": "A Blender addon to create and edit robot models in a WYSIWYG environment and a python package/CLI tool to do this automated.",
-  "keywords": "robotics, Blender, Python, URDF, SDF, model, MARS, SMURF, CLI, python, package",
+  "description": "Phobos is a python tool for processing simulation models. It comes with a Blender addon to create, edit and annotate robot models in a WYSIWYG environment and a python package/CLI tool to do this automated.",
+  "keywords": "robotics, Blender, Python, URDF, SDF, model, MARS, SMURF, CLI",
   "license": "BSD-3-Clause",
   "title": "Phobos",
-  "version": "2.0.0"
+  "version": "2.0.0",
+  "citation": "https://doi.org/10.21105/joss.01326"
 }

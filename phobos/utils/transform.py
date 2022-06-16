@@ -1,3 +1,4 @@
+from copy import deepcopy
 from scipy.spatial.transform import Rotation as Rot
 import numpy as np
 
@@ -46,6 +47,16 @@ def matrix_to_rpy(R):
 
 def skew_symmetric(x):
     return np.array([[0, -x[2], -x[1]], [x[2], 0, -x[0]], [-x[1], x[0], 0]])
+
+
+def angle_between_vectors(a, b, acute=True):
+    a = np.array(deepcopy(a))
+    b = np.array(deepcopy(b))
+    angle = np.arccos(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+    if acute:
+        return angle
+    else:
+        return 2 * np.pi - angle
 
 
 def origin_to_homogeneous(origin):
