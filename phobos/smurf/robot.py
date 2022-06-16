@@ -75,18 +75,25 @@ class Smurf(Robot):
 
         for key, values in blender_model['sensors'].items():
             if values.get('id') is not None:
-                values['targets'] = [x for x in values['id'] if smurf_robot.get_joint(x, verbose=False) is not None or smurf_robot.get_link(x, verbose=False) is not None or smurf_robot.get_collision_by_name(x) is not None or smurf_robot.get_visual_by_name(x) is not None]
+                values['targets'] = [x for x in values['id'] if
+                                     smurf_robot.get_joint(x, verbose=False) is not None or smurf_robot.get_link(x,
+                                                                                                                 verbose=False) is not None or smurf_robot.get_collision_by_name(
+                                         x) is not None or smurf_robot.get_visual_by_name(x) is not None]
                 values.pop('id')
             if values["type"].upper() == "MOTORCURRENT":
                 smurf_robot.attach_sensor(MotorCurrent(smurf_robot, **values))
             elif values["type"].upper() == "CAMERASENSOR":
                 smurf_robot.attach_sensor(CameraSensor(smurf_robot,
-                                                       hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
-                                                       hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
+                                                       hud_height=240 if values.get(
+                                                           'hud_height') is None else values.pop('hud_height'),
+                                                       hud_width=0 if values.get('hud_width') is None else values.pop(
+                                                           'hud_width'),
                                                        **values))
             elif values["type"].upper() == "ROTATINGRAYSENSOR":
                 smurf_robot.attach_sensor(RotatingRaySensor(smurf_robot,
-                                                            horizontal_offset=0 if values.get('horizontal_offset') is None else values.pop('horizontal_offset'),
+                                                            horizontal_offset=0 if values.get(
+                                                                'horizontal_offset') is None else values.pop(
+                                                                'horizontal_offset'),
                                                             **values))
             elif values["type"].upper() == "JOINTVELOCITY":
                 smurf_robot.attach_sensor(JointVelocity(smurf_robot, **values))
@@ -110,6 +117,14 @@ class Smurf(Robot):
             name = value.pop('name')
             joint = value.pop('joint')
             smurf_robot.attach_motor(Motor(name=name, joint=smurf_robot.get_joint(joint), **value))
+        additional_info = {'lights': blender_model.get('lights'),
+                           'groups': blender_model.get('groups'),
+                           'chains': blender_model.get('chains'),
+                           'date': blender_model.get('date')
+                           }
+        for key, value in additional_info.items():
+            if value is not None and key not in smurf_robot.named_annotations.keys():
+                smurf_robot.add_named_annotation(key, additional_info[key])
         return smurf_robot
 
     # helper methods
