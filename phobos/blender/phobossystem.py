@@ -27,24 +27,9 @@ def getScriptsPath():
     Returns:
 
     """
-    if sys.platform == 'linux':
-        scriptspath = path.normpath(
-            path.expanduser('~/.config/blender/{0}/scripts'.format(blenderversion))
-        )
-    elif sys.platform == 'darwin':
-        scriptspath = path.normpath(
-            path.expanduser(
-                '~/Library/Application Support/Blender/{0}/scripts'.format(blenderversion)
-            )
-        )
-    elif sys.platform == 'win32':
-        scriptspath = path.normpath(
-            path.expanduser(
-                '~/AppData/Roaming/Blender Foundation/Blender/{0}/scripts'.format(blenderversion)
-            )
-        )
-    else:
-        scriptspath = 'ERROR: {0} not supported,'.format(sys.platform)
+    scriptspath = path.normpath(
+        path.expanduser(bpy.utils.user_resource(resource_type='SCRIPTS', path="addons"))
+    )
     return scriptspath
 
 
@@ -58,8 +43,9 @@ def getConfigPath():
     Returns:
 
     """
-    configpath = path.normpath(path.join(bpy.utils.user_resource(resource_type='SCRIPTS', path="addons"), "phobos",
-                                         "config"))
+    configpath = path.normpath(
+        path.join(bpy.utils.user_resource(resource_type='SCRIPTS', path="addons"), "phobos", "config")
+    )
     return configpath
 
 
@@ -72,22 +58,7 @@ def getBlenderConfigPath():
       : str -- scripts path
 
     """
-    if sys.platform == 'linux':
-        scriptspath = path.normpath(
-            path.expanduser('~/.config/blender/{0}/config'.format(blenderversion))
-        )
-    elif sys.platform == 'darwin':
-        scriptspath = path.normpath(
-            path.expanduser(
-                '~/Library/Application Support/Blender/{0}/config'.format(blenderversion)
-            )
-        )
-    elif sys.platform == 'win32':
-        scriptspath = path.normpath(
-            path.expanduser(
-                '~/AppData/Roaming/Blender Foundation/Blender/{0}/config'.format(blenderversion)
-            )
-        )
-    else:
-        scriptspath = 'ERROR: {0} not supported,'.format(sys.platform)
-    return scriptspath
+    configpath = path.normpath(
+        path.expanduser(bpy.utils.user_resource(resource_type='CONFIG'))
+    )
+    return configpath
