@@ -13,13 +13,10 @@ import sys
 import os.path as path
 import bpy
 
-# compatible blender version
-blenderversion = '2.91'
-
 
 def getScriptsPath():
     """Returns the path for user-specific blender scripts for all major platforms
-    
+
     Returns(str): scripts path
 
     Args:
@@ -35,7 +32,7 @@ def getScriptsPath():
 
 def getConfigPath():
     """Returns the path for configuration data for all major platforms
-    
+
     Returns(str): config path
 
     Args:
