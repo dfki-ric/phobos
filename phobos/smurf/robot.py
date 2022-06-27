@@ -67,7 +67,6 @@ class Smurf(Robot):
         root = sUtils.getRoot(bpy.context.selected_objects[0])
         blender_model = derive_model_dictionary(root, name, objectlist)
         smurf_robot.description = blender_model["description"]
-        root_link_name = cli_robot.get_root()
 
         for key, value in blender_model['materials'].items():
             value.pop('diffuseColor')
