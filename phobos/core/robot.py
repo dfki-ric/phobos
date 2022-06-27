@@ -87,13 +87,20 @@ class Robot(representation.Robot):
 
         root = sUtils.getRoot(bpy.context.selected_objects[0])
         blender_model = derive_model_dictionary(root, name, objectlist)
-
-        cli_joints = []
+        cli_joints = []     # TODO MimicJoint not handled, z.B. model: recupera
+                            # TODO Issue with importing urdf recupera if the name and version are not defined an empty dict is returned
+        print(blender_model.keys())
         for key, values in blender_model['joints'].items():
             cli_axis = None
             cli_limit = None
             if not values['type'] == 'fixed':
-                cli_axis = values['axis']
+                if values['type'] == 'floating':
+                    print(f"TODO floating joints")
+                print(values.keys())
+                print(values.get("type"))
+                print(values.get("axis"))
+                cli_axis = values.get('axis')
+                # TODO missing axis in a lot of joints in recupera, is axis mandatory dict entry ?
                 cli_limit = representation.JointLimit(effort=values['limits']['effort'],
                                                       velocity=values['limits']['velocity'],
                                                       lower=values['limits']['lower'],

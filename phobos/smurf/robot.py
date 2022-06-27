@@ -1,5 +1,4 @@
 from copy import deepcopy
-# import datetime
 import os
 import sys
 
@@ -7,7 +6,7 @@ import numpy as np
 import yaml
 
 from ..core import Robot, derive_model_dictionary
-from .motors import Motor
+from .motors import Motor, MimicMotor
 from .poses import Pose
 from .core import Material, Collision, Joint, Link
 from .hyrodyn import Submechanism, Exoskeleton
@@ -111,7 +110,9 @@ class Smurf(Robot):
             elif values["type"].upper() == "NODECOM":
                 smurf_robot.attach_sensor(NodeCOM(smurf_robot, **values))
 
-        motors = blender_model["motors"]  # TODO bei joints reinschauen nach mimic
+        motors = blender_model["motors"]  # TODO bei joints reinschauen nach mimic, MimicJoint, MimicMotor
+        for key, value in blender_model.items():
+            print(key)
         for key, value in motors.items():
             name = value.pop('name')
             joint = value.pop('joint')
@@ -119,8 +120,20 @@ class Smurf(Robot):
         additional_info = {'lights': blender_model.get('lights'),
                            'groups': blender_model.get('groups'),
                            'chains': blender_model.get('chains'),
-                           'date': blender_model.get('date')
+                           # 'date': blender_model.get('date')
                            }
+        if False:
+            mimic = blender_model["mimic"]
+            for key, value in mimic.items():
+                name = value.pop('name')
+                joint = value.pop('joint')
+                smurf_robot.attach_motor(MimicMotor(name=name, joint=smurf_robot.get_joint(joint), **value))
+            additional_info = {'lights': blender_model.get('lights'),
+                               'groups': blender_model.get('groups'),
+                               'chains': blender_model.get('chains'),
+                               # 'date': blender_model.get('date')
+                               }
+
         for key, value in additional_info.items():
             if value is not None and key not in smurf_robot.named_annotations.keys():
                 smurf_robot.add_named_annotation(key, additional_info[key])
