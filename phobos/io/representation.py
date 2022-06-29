@@ -71,28 +71,56 @@ class Color(Representation):
 #         self.damping = damping
 #         self.friction = friction
 
+class Geometry(Representation):
+    def scale_geometry(all=1, x=1, y=1, z=1):
+        assert all != 1 or any([v != 1 for v in [x,y,z]])
+        if all != 1:
+            return all, all, all
+        else:
+            return x, y, z
 
-class Box(Representation):
+class Box(Geometry):
     def __init__(self, size=None):
         self.size = size
 
+    def scale_geometry(all=1, x=1, y=1, z=1):
+        x,y,z = super().scale_geometry(all, x, y, z)
+        self.size = (v*s for v,s in zip(self.size, [x,y,z]))
 
-class Cylinder(Representation):
+
+class Cylinder(Geometry):
     def __init__(self, radius=0.0, length=0.0):
         self.radius = radius
         self.length = length
 
+    def scale_geometry(all=1, x=1, y=1, z=1):
+        x,y,z = super().scale_geometry(all, x, y, z)
+        assert x == y
+        self.radius *= x
+        self.length *= z
 
-class Sphere(Representation):
+
+class Sphere(Geometry):
     def __init__(self, radius=0.0):
         self.radius = radius
 
+    def scale_geometry(all=1, x=1, y=1, z=1):
+        x,y,z = super().scale_geometry(all, x, y, z)
+        assert x == y == z
+        self.radius *= x
 
 
-class Mesh(Representation):
+class Mesh(Geometry):
     def __init__(self, filename=None, scale=None):
         self.filename = filename
         self.scale = scale
+
+    def scale_geometry(all=1, x=1, y=1, z=1, overwrite=False):
+        x,y,z = super().scale_geometry(all, x, y, z)
+        if overwrite:
+            self.scale = (x,y,z)
+        else:
+            self.scale = (v*s for v,s in zip(self.scale, [x,y,z]))
 
 
 class Collision(Representation):
@@ -122,7 +150,7 @@ class Material(Representation):
 #     def check_valid(self):
 #         pass
 #
-# 
+#
 
 
 class Visual(Representation):
@@ -431,4 +459,3 @@ class Robot(Representation):
 
         if self.version not in self.SUPPORTED_VERSIONS:
             raise ValueError("Invalid version; only %s is supported" % (','.join(self.SUPPORTED_VERSIONS)))
-
