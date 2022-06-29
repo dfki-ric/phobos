@@ -10,7 +10,7 @@ from copy import deepcopy
 from scipy.spatial.transform import Rotation as scipy_rot
 import numpy as np
 
-from .. import geometry as pgu
+from .. import geometry as pgu, utils
 from ..io import representation
 from ..io.parser import parse_xml
 from ..utils.all import *
@@ -634,7 +634,7 @@ class Robot(representation.Robot):
 
         return self.get_id('links', link_name)
 
-    def get_link(self, link_name):
+    def get_link(self, link_name) -> [representation.Link, list]:
         """
         Returns the link(s) corresponding to the link name(s).
         :param link_name: the name of the joint to get
@@ -2381,3 +2381,40 @@ class Robot(representation.Robot):
         floatingbase.attach(fb_robot, connector)
         floatingbase.name = fb_robot.name + "_floatingbase"
         return floatingbase
+
+    def scale_link(self, linkname, scale_x, scale_y, scale_z, new_mass=None, geometry_for_inertia=None):
+        """
+        Scales the link with the given scale
+        Args:
+            linkname: The name of the link to scale
+            scale: either
+            new_mass: The new mass for the changed link
+
+        Returns:
+            None
+        """
+        link = self.get_link(linkname)
+        assert link is not None
+        scale = np.array([scale_x, scale_y, scale_z])
+        for geo in link.visuals + link.collisions:
+            _geo_scale = origin_to_homogeneous(geo.origin)[:3, :3] * scale
+            geo.geometry.scale_geometry(x=_geo_scale[0], y=_geo_scale[1], z=_geo_scale[2])
+            geo.origin.xyz = [v*s for v, s in zip(geo.origin.xyz, scale)]
+        joints = link.get_children(link.name)
+        for joint in joints:
+            joint.origin.xyz = [v*s for v, s in zip(joint.origin.xyz, scale)]
+        link.inertial.mass = new_mass
+        if geometry_for_inertia is None:
+            raise AssertionError("No geometry for inertia calculation specified!")
+        if isinstance(geometry_for_inertia, representation.Box):
+            inertia_list = utils.inertia.calculateBoxInertia(new_mass, geo.size)
+        elif isinstance(geometry_for_inertia, representation.Cylinder):
+            inertia_list = utils.inertia.calculateCylinderInertia(new_mass, geo.radius, geo.length)
+        elif isinstance(geometry_for_inertia, representation.Sphere):
+            inertia_list = utils.inertia.calculateSphereInertia(new_mass, geo.radius)
+        elif isinstance(geometry_for_inertia, representation.Mesh):
+            mesh = pgu.io.import_mesh(geo.filename, self.xmlfile)
+            inertia_list = utils.inertia.calculateMeshInertia(new_mass, mesh, geo.scale)
+        else:
+            raise TypeError("geometry_for_inertia holds invalid type "+type(geometry_for_inertia))
+        link.inertial.inertia = representation.Inertia(*inertia_list)
