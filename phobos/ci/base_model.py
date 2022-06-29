@@ -268,7 +268,7 @@ class BaseModel(yaml.YAMLObject):
                         joint.limit.effort = self.redefine_articulation[joint.name]["eff"]
                     if "mimic" in self.redefine_articulation[joint.name].keys():
                         mimic = self.redefine_articulation[joint.name]["mimic"]
-                        joint.mimic = representation.JointMimic(joint_name=mimic["joint_name"], offset=mimic["offset"],
+                        joint.mimic = representation.JointMimic(joint=mimic["joint_name"], offset=mimic["offset"],
                                                           multiplier=mimic["multiplier"])
                     if "transmission" in self.redefine_articulation[joint.name].keys():
                         tm = self.redefine_articulation[joint.name]["transmission"]
