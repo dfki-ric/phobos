@@ -8,8 +8,8 @@ import numpy as np
 import trimesh
 import struct
 
-from ..utils import all as utils
 from . import geometry
+from ..utils import misc, urdf as urdf_utils
 
 
 def as_mesh(scene_or_mesh):
@@ -131,7 +131,7 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
         )
     if dae_mesh_color is not None and filepath.lower().endswith("dae"):
         dae_xml = open(filepath, "r").read()
-        dae_xml = utils.regex_replace(dae_xml, {
+        dae_xml = misc.regex_replace(dae_xml, {
             "<color>0.0 0.0 0.0 1.0</color>": " <color>" + " ".join([str(n) for n in dae_mesh_color]) + "</color>"})
         with open(filepath, "w") as f:
             f.write(dae_xml)
@@ -205,7 +205,7 @@ def import_mesh(filepath, urdf_path=None):
     if urdf_path is not None and urdf_path.lower().endswith(".urdf"):
         urdf_path = os.path.dirname(urdf_path)
 
-    filepath = utils.read_urdf_filename(filepath, urdf_path)
+    filepath = urdf_utils.read_urdf_filename(filepath, urdf_path)
 
     if not os.path.exists(filepath):
         raise FileNotFoundError("Mesh file", filepath, "does not exist!")

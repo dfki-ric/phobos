@@ -3,6 +3,14 @@ import re
 import subprocess
 import numpy as np
 from copy import deepcopy
+from xml.dom.minidom import parseString
+from xml.etree import ElementTree as ET
+
+
+def to_pretty_xml_string(xml):
+    xml_string = xml if type(xml) == str else ET.tostring(xml, method='xml').decode('utf-8')
+    xml_string = parseString(xml_string)
+    return xml_string.toprettyxml(indent='  ').replace(u'<?xml version="1.0" ?>', '').strip()
 
 
 def read_angle_2_rad(config_input):

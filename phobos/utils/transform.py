@@ -3,7 +3,6 @@ from scipy.spatial.transform import Rotation as Rot
 import numpy as np
 
 from ..defs import EULER_CONVENTION, RPY_CONVENTION
-from ..io import representation
 
 
 def matrix_to_quaternion(rotation):
@@ -59,26 +58,10 @@ def angle_between_vectors(a, b, acute=True):
         return 2 * np.pi - angle
 
 
-def origin_to_homogeneous(origin):
-    R = rpy_to_matrix(origin.rpy if hasattr(origin, "rpy") else [0.0, 0.0, 0.0])
-    p = np.array(origin.xyz if hasattr(origin, "xyz") else [0.0, 0.0, 0.0])
-    T = np.identity(4)
-    T[0:3, 3] = p
-    T[0:3, 0:3] = R
-    T[3, 3] = 1.0
-    return T
-
-
 def order_angles(angles, in_order, out_order):
     axes = {"x": angles[in_order.lower().index("x")], "y": angles[in_order.lower().index("y")],
             "z": angles[in_order.lower().index("z")]}
     return [axes[k] for k in out_order.lower()]
-
-
-def to_origin(T, dec=6):
-    xyz = T[0:3, 3]
-    rpy = matrix_to_rpy(T[0:3, 0:3])
-    return representation.Pose(xyz=round_array(xyz, dec=dec), rpy=round_array(rpy, dec=dec))
 
 
 def round_array(array, dec):
@@ -91,7 +74,7 @@ def round_array(array, dec):
     return np.around(out, decimals=dec)
 
 
-def Homogeneous(xyz=None, rpy=None):
+def create_transformation(xyz=None, rpy=None):
     assert xyz is not None or rpy is not None
     if rpy is None:
         rpy = [0, 0, 0]
@@ -110,14 +93,9 @@ def inv(T):
     return np.linalg.inv(T)
 
 
-def Adjoint(T):
-    assert isinstance(T, representation.Pose) or isinstance(T, np.ndarray)
-    if isinstance(T, representation.Pose):
-        R = rpy_to_matrix(T.rpy)
-        P = skew_symmetric(np.array(T.xyz))
-    else:  # isinstance(T, np.ndarray):
-        R = T[0:3, 0:3]
-        P = skew_symmetric(T[0:3, 3])
+def get_adjoint(T: np.ndarray):
+    R = T[0:3, 0:3]
+    P = skew_symmetric(T[0:3, 3])
     Ad = np.zeros((6, 6))
     Ad[0:3, 0:3] = R
     Ad[3::, 0:3] = np.dot(P, R)

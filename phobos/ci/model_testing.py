@@ -6,8 +6,8 @@ import subprocess
 
 from ..defs import *
 from ..core import Robot
+from ..io import representation
 from ..utils import urdf
-from ..utils.transform import to_origin
 from ..utils.misc import execute_shell_command, list_files
 
 
@@ -227,12 +227,12 @@ class ModelTest(object):
             link_name = k + (max_length - len(k)) * " "
             if k not in root2old_links.keys():
                 print("%s doesn't exist in compare model" % link_name, flush=True)
-                print("root2link: xyz: %s \t rpy:%s" % (repr(to_origin(root2new_links[k]).xyz.tolist()),
-                                                        repr(to_origin(root2new_links[k]).rpy.tolist())),
+                print("root2link: xyz: %s \t rpy:%s" % (repr(representation.Pose.from_matrix(root2new_links[k]).xyz.tolist()),
+                                                        repr(representation.Pose.from_matrix(root2new_links[k]).rpy.tolist())),
                       flush=True)
                 continue
             diff = np.linalg.inv(root2old_links[k]).dot(root2new_links[k])
-            diff_o = to_origin(diff)
+            diff_o = representation.Pose.from_matrix(diff)
             print("%s Difference: xyz: %s\trpy: %s" % (link_name, repr(diff_o.xyz.tolist()), repr(diff_o.rpy.tolist())),
                   end="", flush=True)
             if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["tolerance_distance"] or \

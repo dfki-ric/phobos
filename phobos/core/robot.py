@@ -1,7 +1,6 @@
 import datetime
 import sys
 import os
-import xml
 import xml.etree.ElementTree as ET
 
 import pkg_resources
@@ -13,8 +12,10 @@ import numpy as np
 from .. import geometry as pgu, utils
 from ..io import representation
 from ..io.parser import parse_xml
-from ..utils.all import *
-from ..utils import misc, urdf, tree
+from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_string, execute_shell_command
+from ..utils.transform import create_transformation, inv, get_adjoint
+from ..utils.tree import find_close_ancestor_links, get_joints_depth_first
+from ..utils.urdf import read_urdf_filename, create_pdf_from_urdf, transform_object, get_joint_info_dict
 
 
 class Robot(representation.Robot):
@@ -72,7 +73,7 @@ class Robot(representation.Robot):
     # helper methods
     def get_joints_ordered_df(self):
         """Returns the joints in depth first order"""
-        return tree.get_joints_depth_first(self, self.get_root())
+        return get_joints_depth_first(self, self.get_root())
 
     def get_links_ordered_df(self):
         """Returns the joints in depth first order"""
@@ -423,7 +424,7 @@ class Robot(representation.Robot):
         kccd_meshes = os.path.join(robot_export_dir, rel_iv_meshes_path)
         kccd_path = os.path.join(robot_export_dir, dirname)
         kccd_urdf = os.path.join(kccd_path, self.name + ".urdf")
-        misc.create_dir(None, kccd_path)
+        create_dir(None, kccd_path)
         kccd_robot = deepcopy(self)
         kccd_robot.xmlfile = kccd_urdf
         if "remove_joints" in kwargs.keys():
@@ -453,7 +454,7 @@ class Robot(representation.Robot):
                 geometry=link.collisions[0].geometry,
             ))
         kccd_robot.export_urdf(outputfile=kccd_urdf, create_pdf=False)
-        misc.execute_shell_command("urdf2kccd -b " + self.name + ".urdf", cwd=kccd_path)
+        execute_shell_command("urdf2kccd -b " + self.name + ".urdf", cwd=kccd_path)
         kccd_kinematics_file = open(kccd_urdf[:-5] + "Kinematics.cfg", "r").read().split("\n\n")
         kccd_kinematics = {}
         for block in kccd_kinematics_file:
@@ -542,7 +543,7 @@ class Robot(representation.Robot):
                         elif edit_collisions[temp["link"]]["shape"].lower() == "sphere":
                             n_points = 1
                 print("Covering", temp["mesh"], "of", temp["link"], "with", n_points)
-                out, _ = misc.execute_shell_command(
+                out, _ = execute_shell_command(
                     "kccdcoveriv " + temp["mesh"] + " " + str(n_points) + " " + temp["body"], cwd=kccd_path,
                     silent=True)
                 block_lines = block.split("\n")
@@ -842,7 +843,7 @@ class Robot(representation.Robot):
     def get_material_by_name(self, material_name):
         """
         Returns the collision with the given name if it exists
-        :param collision_name: name of the searched collision
+        :param material_name: name of the searched collision
         :return: the found collision or none
         """
         for mat in self.materials:
@@ -923,7 +924,7 @@ class Robot(representation.Robot):
     def global_origin(self, stop):
         """ Get the global pose of the link.
         """
-        return to_origin(self.get_transformation(stop))
+        return representation.Pose.from_matrix(self.get_transformation(stop))
 
     def get_transformation(self, end, start=None):
         """
@@ -934,7 +935,7 @@ class Robot(representation.Robot):
         """
         if start is None:
             start = self.get_root()
-        transformation = Homogeneous((0, 0, 0), (0, 0, 0))
+        transformation = create_transformation((0, 0, 0), (0, 0, 0))
 
         assert type(end) is str
         assert type(start) is str
@@ -947,7 +948,7 @@ class Robot(representation.Robot):
             elif parent is None:
                 raise Exception(link, "has no parent, but is different from start", start)
             pjoint = self.get_joint(parent[0])
-            transformation = Homogeneous(pjoint.origin.xyz, pjoint.origin.rpy).dot(transformation)
+            transformation = create_transformation(pjoint.origin.xyz, pjoint.origin.rpy).dot(transformation)
             link = pjoint.parent
 
         return transformation
@@ -991,36 +992,36 @@ class Robot(representation.Robot):
             if parent.inertial:
                 # Merge the inertials
                 # Old one
-                I_L = inertial_to_tensor(inertia_L)
-                IP_T_IL = origin_to_homogeneous(parent.inertial.origin).dot(
-                    L_T_P.dot(origin_to_homogeneous(inertia_L.origin)))
-                Ad = Adjoint(IP_T_IL)
+                I_L = inertia_L.to_mass_matrix()
+                IP_T_IL = parent.inertial.origin.to_matrix().dot(
+                    L_T_P.dot(inertia_L.origin.to_matrix()))
+                Ad = get_adjoint(IP_T_IL)
                 # Transform into parent
-                I_NL = Ad.dot(I_L.dot(Ad.T)) + inertial_to_tensor(parent.inertial)
-                parent.inertial = create_inertial(I_NL, parent.inertial.origin)
+                I_NL = Ad.dot(I_L.dot(Ad.T)) + parent.inertial.to_mass_matrix()
+                parent.inertial = representation.Inertial.from_mass_matrix(I_NL, parent.inertial.origin)
 
             else:
                 # Set inertial to new parent
-                new_origin = L_T_P.dot(origin_to_homogeneous(inertia_L.origin))
+                new_origin = L_T_P.dot(inertia_L.origin.to_matrix())
                 parent.inertial = link.inertial
-                parent.inertial.origin = to_origin(new_origin)
+                parent.inertial.origin = representation.Pose.from_matrix(new_origin)
 
             # Set link to near zero
-            link.inertial = create_inertial(1e-5 * np.ones((6, 6)), link.inertial.origin)
+            link.inertial = representation.Inertial.from_mass_matrix(1e-5 * np.ones((6, 6)), link.inertial.origin)
 
         if visual and link.visuals:
             for vis in link.visuals:
-                VL_T_L = origin_to_homogeneous(vis.origin)
+                VL_T_L = vis.origin.to_matrix()
                 new_origin = L_T_P.dot(VL_T_L)
-                vis.origin = to_origin(new_origin)
+                vis.origin = representation.Pose.from_matrix(new_origin)
                 parent.add_aggregate('visual', deepcopy(vis))
                 link.remove_aggregate(vis)
 
         if collision and link.collisions:
             for col in link.collisions:
-                CL_T_L = origin_to_homogeneous(col.origin)
+                CL_T_L = col.origin.to_matrix()
                 new_origin = L_T_P.dot(CL_T_L)
-                col.origin = to_origin(new_origin)
+                col.origin = representation.Pose.from_matrix(new_origin)
                 parent.add_aggregate('collision', deepcopy(col))
                 link.remove_aggregate(col)
 
@@ -1048,7 +1049,7 @@ class Robot(representation.Robot):
 
         T0_old = self.get_transformation(link_name)
         T0_newp = self.get_transformation(new_parent_name)
-        joint.origin = to_origin(inv(T0_newp).dot(T0_old))
+        joint.origin = representation.Pose.from_matrix(inv(T0_newp).dot(T0_old))
         joint.parent = new_parent_name
 
     def define_submodel(self, name, start, stop=None, robotname=None, only_urdf=False, only_return=False,
@@ -1210,11 +1211,11 @@ class Robot(representation.Robot):
         for link in self.links:
             # Todo check if the I is bascically zero and then recreate the inertial using the collision
             if link.inertial:
-                M = inertial_to_tensor(self.get_inertial(link.name))
+                M = self.get_inertial(link.name).to_mass_matrix()
                 origin = link.inertial.origin
             else:
                 M = np.zeros((6, 6))
-                origin = to_origin(np.eye(4))
+                origin = representation.Pose.from_matrix(np.eye(4))
             m = M[0, 0]
             if m <= limit:
                 M[:3, :3] = np.eye(3) * limit
@@ -1231,7 +1232,7 @@ class Robot(representation.Robot):
 
                 M[3:, 3:] = I
 
-            link.inertial = create_inertial(M, origin)
+            link.inertial = representation.Inertial.from_mass_matrix(M, origin)
 
             print(" Corrected inertia for link {}".format(link.name))
 
@@ -1263,7 +1264,7 @@ class Robot(representation.Robot):
                 print("Rotating joint by \n", axis_correction)
                 print("New axis is:", new_axis)
 
-                joint.origin = to_origin(axis_correction.dot(origin_to_homogeneous(joint.origin)))
+                joint.origin = representation.Pose.from_matrix(axis_correction.dot(joint.originto_matrix()))
                 joint.axis = new_axis
 
     def compute_mass(self):
@@ -1282,7 +1283,7 @@ class Robot(representation.Robot):
         for link in self.links:
             T = self.get_transformation(link.name)
             if link.inertial is not None:
-                T = T.dot(origin_to_homogeneous(link.inertial.origin))
+                T = T.dot(link.inertial.origin.to_matrix())
                 m = link.inertial.mass
                 mass += m
                 com += T[0:3, 3] * m
@@ -1317,16 +1318,16 @@ class Robot(representation.Robot):
 
         if pjoint is not None:
             if transform_to:
-                Tinv = inv(inv(origin_to_homogeneous(pjoint[0].origin)).dot(T))
-                pjoint[0].origin = to_origin(T)
+                Tinv = inv(inv(pjoint[0].origin.to_matrix()).dot(T))
+                pjoint[0].origin = representation.Pose.from_matrix(T)
             else:
-                pjoint[0].origin = to_origin(origin_to_homogeneous(pjoint[0].origin).dot(T))
+                pjoint[0].origin = representation.Pose.from_matrix(pjoint[0].origin.to_matrix().dot(T))
         if only_frame:
             for joint in cjoint:
-                joint.origin = to_origin(Tinv.dot(origin_to_homogeneous(joint.origin)))
+                joint.origin = representation.Pose.from_matrix(Tinv.dot(joint.origin.to_matrix()))
 
             for ent in link.collisions + link.visuals:
-                ent.origin = to_origin(Tinv.dot(origin_to_homogeneous(ent.origin)))
+                ent.origin = representation.Pose.from_matrix(Tinv.dot(ent.origin.to_matrix()))
 
             self.transform_inertial(linkname, transformation=Tinv)
 
@@ -1347,24 +1348,24 @@ class Robot(representation.Robot):
         if transformation is not None:
             T = transformation
         else:
-            T = Homogeneous(translation, rotation)
+            T = create_transformation(translation, rotation)
         Tinv = inv(T)
 
         # If we have just one parent and children, we rotate the parent and inverse rotate all children
         print(" Transforming Joints")
         if pjoint is not None:
             # Transform the parent
-            assert urdf.transform_object(pjoint, T)
+            assert transform_object(pjoint, T)
             if maintain_children:
                 # Get all child origin
-                assert urdf.transform_object(cjoint, Tinv)
+                assert transform_object(cjoint, Tinv)
 
             return
 
         else:
             # Else we have to rotate everything inside the joint (if it is root)
             # Get the inertial, visual and collision
-            assert urdf.transform_object(cjoint, T)
+            assert transform_object(cjoint, T)
             assert self.transform_inertial(linkname, translation, rotation)
             assert self.transform_visual(linkname, translation, rotation)
             assert self.transform_collision(linkname, translation, rotation)
@@ -1384,24 +1385,24 @@ class Robot(representation.Robot):
         if transformation is not None:
             T = transformation
         else:
-            T = Homogeneous(xyz=translation, rpy=rotation)
+            T = create_transformation(xyz=translation, rpy=rotation)
         # Transform the origin
-        assert urdf.transform_object(inertial, T)
-        rot_part = Homogeneous(rpy=inertial.origin.rpy, xyz=[0, 0, 0])
+        assert transform_object(inertial, T)
+        rot_part = create_transformation(rpy=inertial.origin.rpy, xyz=[0, 0, 0])
         inertial.origin.rpy = [0, 0, 0]
 
         # T = rot_part.dot(T)
-        Ad = Adjoint(rot_part)
+        Ad = get_adjoint(rot_part)
         # Tinv = inv(T)
         # AdInv = Adjoint(Tinv)
 
         # Get the Inertia Tensor
-        I = inertial_to_tensor(inertial)
+        I = inertial.to_mass_matrix()
 
         # Rotate the inertial tensor
         I = np.matmul(np.transpose(Ad), np.matmul(I, Ad))
 
-        inertial = create_inertial(I, inertial.origin)
+        inertial = representation.Inertial.from_mass_matrix(I, inertial.origin)
 
         self.links[link_id].inertial = inertial
         return True
@@ -1413,8 +1414,8 @@ class Robot(representation.Robot):
         visual = self.get_visual(linkname)
         print(" Transform Visuals")
         # Transform
-        T = Homogeneous(translation, rotation)
-        assert urdf.transform_object(visual, T)
+        T = create_transformation(translation, rotation)
+        assert transform_object(visual, T)
         return True
 
     def transform_collision(self, linkname, translation, rotation):
@@ -1424,8 +1425,8 @@ class Robot(representation.Robot):
         collision = self.get_collision(linkname)
         print(" Transform Collisions")
         # Transform
-        T = Homogeneous(translation, rotation)
-        assert urdf.transform_object(collision, T)
+        T = create_transformation(translation, rotation)
+        assert transform_object(collision, T)
         return True
 
     def enforce_zero(self, xyz_tolerance=1E-4, rad_tolerance=1E-6, mass_tolerance=1E-4, i_tolerance=1E-12):
@@ -1498,7 +1499,7 @@ class Robot(representation.Robot):
         if len(link.collisions) == 0:
             return
         for coll in link.collisions:
-            T = origin_to_homogeneous(coll.origin)
+            T = coll.origin.to_matrix()
             T_com = np.identity(4)
             if isinstance(coll.geometry, representation.Mesh):
                 mesh = pgu.import_mesh(coll.geometry.filename, self.xmlfile)
@@ -1549,7 +1550,7 @@ class Robot(representation.Robot):
         planes_d = [axis[i].dot(T[i][:3, 3]) for i in range(3)]
         intersection = np.linalg.solve(axis, planes_d)
         transl = inv(T[0])[:3, :3].dot(intersection - T[0][:3, 3])
-        T_ = Homogeneous(xyz=transl, rpy=[0, 0, 0])
+        T_ = create_transformation(xyz=transl, rpy=[0, 0, 0])
         self.transform_link_orientation(mj.child, T_, only_frame=True)
 
     def check_joint_definitions(self, raise_error=False, backup=None, default_axis=None):
@@ -1776,7 +1777,7 @@ class Robot(representation.Robot):
         if not prefix and not suffix and replacements == {}:
             return renamed_entities
 
-        new_name = misc.edit_name_string(target, prefix=prefix, suffix=suffix, replacements=replacements)
+        new_name = edit_name_string(target, prefix=prefix, suffix=suffix, replacements=replacements)
 
         # Rename all instances in child and parent map as keys
         index = None  # gives the index of joint or link for parent/child maps
@@ -2145,38 +2146,38 @@ class Robot(representation.Robot):
             # transform link information to root and mirror
 
             if new_link.inertial is not None:
-                T = T_R.dot(T_link.dot(origin_to_homogeneous(link_.inertial.origin)))
-                new_origin = to_origin(inv(T_root_to_link).dot(T))
+                T = T_R.dot(T_link.dot(link_.inertial.origin.to_matrix()))
+                new_origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T))
                 new_origin.rpy = [0, 0, 0]
 
                 # Process the rotation
-                T = inv(T_root_to_link.dot(origin_to_homogeneous(link_.inertial.origin))).dot(T)
-                Ad = Adjoint(T)
+                T = inv(T_root_to_link.dot(link_.inertial.origin.to_matrix())).dot(T)
+                Ad = get_adjoint(T)
                 # Get the Inertia Tensor
-                I = inertial_to_tensor(link_.inertial)
+                I = link_.inertial.to_mass_matrix()
                 # Rotate the inertial tensor
                 I = np.matmul(np.transpose(Ad), np.matmul(I, Ad))
 
-                new_link.inertial = create_inertial(I, new_origin)
+                new_link.inertial = representation.Inertial.from_mass_matrix(I, new_origin)
 
             for vis in new_link.visuals:
-                T = T_R.dot(T_link.dot(origin_to_homogeneous(vis.origin)))
-                vis.origin = to_origin(inv(T_root_to_link).dot(T))
+                T = T_R.dot(T_link.dot(vis.origin.to_matrix()))
+                vis.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T))
                 if hasattr(vis.geometry, "filename") and not (
                         (os.path.basename(vis.geometry.filename).split(".")[0] in exclude_meshes or
                          "ALL" in exclude_meshes)):
                     pgu.mirror_geometry(vis, urdf_path=target_urdf,
-                                        transform=inv(T_root_to_link.dot(origin_to_homogeneous(vis.origin))).dot(T),
+                                        transform=inv(T_root_to_link.dot(vis.origin.to_matrix())).dot(T),
                                         name_replacements=name_replacements)
 
             for col in new_link.collisions:
-                T = T_R.dot(T_link.dot(origin_to_homogeneous(col.origin)))
-                col.origin = to_origin(inv(T_root_to_link).dot(T))
+                T = T_R.dot(T_link.dot(col.origin.to_matrix()))
+                col.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T))
                 if hasattr(col.geometry, "filename") and not (
                         (os.path.basename(col.geometry.filename).split(".")[0] in exclude_meshes or
                          "ALL" in exclude_meshes)):
                     pgu.mirror_geometry(col, target_urdf,
-                                        transform=inv(T_root_to_link.dot(origin_to_homogeneous(col.origin))).dot(T),
+                                        transform=inv(T_root_to_link.dot(col.origin.to_matrix())).dot(T),
                                         name_replacements=name_replacements)
 
             robot.add_aggregate("link", new_link)
@@ -2229,12 +2230,12 @@ class Robot(representation.Robot):
 
                 T_flip[flip_axis, flip_axis] *= -1
                 # now we transform the local coordinate system using t_flip to make it right handed
-                new_joint.origin = to_origin(
+                new_joint.origin = representation.Pose.from_matrix(
                     inv(T_root_to_link).dot(
-                        T_R.dot(T_link.dot(axis_correction.dot(origin_to_homogeneous(new_joint.origin)).dot(T_flip)))
+                        T_R.dot(T_link.dot(axis_correction.dot(new_joint.origin.to_matrix()).dot(T_flip)))
                     )
                 )
-                new_T_root_to_link = T_root_to_link.dot(origin_to_homogeneous(new_joint.origin))
+                new_T_root_to_link = T_root_to_link.dot(new_joint.origin.to_matrix())
 
                 robot.add_aggregate("joint", new_joint)
                 recursive_link_transform(joint_.child, new_T_root_to_link)
@@ -2369,8 +2370,8 @@ class Robot(representation.Robot):
             if link.name == parent.name:
                 # Correct inertial if child inertial is found
                 if child.inertial:
-                    IC_T_P = C_T_P.dot(origin_to_homogeneous(child.inertial.origin))
-                    M_c = inertial_to_tensor(child.inertial)
+                    IC_T_P = C_T_P.dot(child.inertial.origin.to_matrix())
+                    M_c = child.inertial.to_mass_matrix()
                     if parent.inertial:
                         COM_C = np.identity(4)
                         COM_C[0:3, 3] = np.array(child.inertial.origin.xyz)
@@ -2380,29 +2381,29 @@ class Robot(representation.Robot):
                              COM_Cp[0:3, 3] * child.inertial.mass
                         ) / (parent.inertial.mass + child.inertial.mass)
                         new_origin = representation.Pose(xyz=new_origin, rpy=[0, 0, 0])
-                        IC_T_IP = inv(origin_to_homogeneous(parent.inertial.origin)).dot(IC_T_P)
-                        M_p = inertial_to_tensor(parent.inertial)
-                        A = Adjoint(origin_to_homogeneous(new_origin))
+                        IC_T_IP = inv(parent.inertial.origin.to_matrix()).dot(IC_T_P)
+                        M_p = parent.inertial.to_mass_matrix()
+                        A = get_adjoint(new_origin.to_matrix())
                         M_p = np.dot(np.transpose(A), np.dot(M_p, A))
                     else:
                         IC_T_IP = IC_T_P
                         M_p = np.zeros((6, 6))
-                        new_origin = to_origin(inv(IC_T_P))
+                        new_origin = representation.Pose.from_matrix(inv(IC_T_P))
 
-                    A = Adjoint(IC_T_IP.dot(origin_to_homogeneous(new_origin)))
+                    A = get_adjoint(IC_T_IP.dot(new_origin.to_matrix()))
                     M = np.dot(np.transpose(A), np.dot(M_c, A)) + M_p
-                    link.inertial = create_inertial(M, new_origin)
+                    link.inertial = representation.Inertial.from_mass_matrix(M, new_origin)
 
                 # Correct visuals
                 for vis in child.visuals:
-                    VC_T_P = C_T_P.dot(origin_to_homogeneous(vis.origin))
-                    vis.origin = to_origin(VC_T_P)
+                    VC_T_P = C_T_P.dot(vis.origin.to_matrix())
+                    vis.origin = representation.Pose.from_matrix(VC_T_P)
                     link.add_aggregate('visual', vis)
 
                 if keep_collisions:
                     for col in child.collisions:
-                        CC_T_P = C_T_P.dot(origin_to_homogeneous(col.origin))
-                        col.origin = to_origin(CC_T_P)
+                        CC_T_P = C_T_P.dot(col.origin.to_matrix())
+                        col.origin = representation.Pose.from_matrix(CC_T_P)
                         link.add_aggregate('collision', col)
 
             if link.name != child.name:
@@ -2411,7 +2412,7 @@ class Robot(representation.Robot):
         for j in self.joints:
             if not j.name == jointname:
                 if j.name in next_joints:
-                    j.origin = to_origin(C_T_P.dot(origin_to_homogeneous(j.origin)))
+                    j.origin = representation.Pose.from_matrix(C_T_P.dot(j.origin.to_matrix()))
                     j.parent = parent.name
                 robot.add_aggregate('joint', j)
 
@@ -2461,7 +2462,7 @@ class Robot(representation.Robot):
         assert link is not None
         scale = np.array([scale_x, scale_y, scale_z])
         for geo in link.visuals + link.collisions:
-            _geo_scale = inv(origin_to_homogeneous(geo.origin))[:3, :3].dot(scale)
+            _geo_scale = inv(geo.origin.to_matrix())[:3, :3].dot(scale)
             geo.geometry.scale_geometry(x=_geo_scale[0], y=_geo_scale[1], z=_geo_scale[2])
             geo.origin.xyz = [v*s for v, s in zip(geo.origin.xyz, scale)]
         joints = self.get_children(link.name)

@@ -1,12 +1,18 @@
-from phobos.io.base import Representation
-from phobos.io.xml_factory import singular as _singular
-from phobos.geometry.io import import_mesh as _import_mesh, import_mars_mesh as _import_mars_mesh
+__IMPORTS__ = ["np", "import_mesh", "import_mars_mesh", "matrix_to_rpy", "round_array", "rpy_to_matrix", "mass_from_tensor"]
+
+import numpy as np
+
+from .base import Representation
+from .xml_factory import singular as _singular
+from ..geometry.io import import_mesh, import_mars_mesh
+from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
 
 
 class Pose(Representation):
-    def __init__(self, xyz=None, rpy=None, vec=None, extra=None):
+    def __init__(self, xyz=None, rpy=None, vec=None, extra=None, relative_to=None):
         self.xyz = xyz
         self.rpy = rpy
+        self.relative_to = relative_to
         if vec is not None:
             assert isinstance(vec, list)
             count = len(vec)
@@ -46,6 +52,21 @@ class Pose(Representation):
         xyz = self.xyz if self.xyz else [0, 0, 0]
         rpy = self.rpy if self.rpy else [0, 0, 0]
         return xyz + rpy
+
+    @staticmethod
+    def from_matrix(T, dec=6):
+        xyz = T[0:3, 3]
+        rpy = matrix_to_rpy(T[0:3, 0:3])
+        return Pose(xyz=round_array(xyz, dec=dec), rpy=round_array(rpy, dec=dec))
+
+    def to_matrix(self):
+        R = rpy_to_matrix(self.rpy if hasattr(self, "rpy") else [0.0, 0.0, 0.0])
+        p = np.array(self.xyz if hasattr(self, "xyz") else [0.0, 0.0, 0.0])
+        T = np.identity(4)
+        T[0:3, 3] = p
+        T[0:3, 0:3] = R
+        T[3, 3] = 1.0
+        return T
 
 
 class Color(Representation):
@@ -114,8 +135,8 @@ class Mesh(Representation):
 
     def load_mesh(self, urdf_path=None, mars_mesh=False):
         if mars_mesh:
-            return _import_mars_mesh(self.filename, urdf_path)
-        return _import_mesh(self.filename, urdf_path)
+            return import_mars_mesh(self.filename, urdf_path)
+        return import_mesh(self.filename, urdf_path)
 
 
 class Collision(Representation):
@@ -153,7 +174,7 @@ class Visual(Representation):
         self.geometry = _singular(geometry)
         self.material = _singular(material)
         self.name = name
-        self.origin = _singular(origin)
+        self._origin = _singular(origin)
 
 
 class Inertia(Representation):
@@ -173,12 +194,45 @@ class Inertia(Representation):
                 [self.ixy, self.iyy, self.iyz],
                 [self.ixz, self.iyz, self.izz]]
 
+    @staticmethod
+    def from_mass_matrix(M):
+        I = M[3::, 3::]
+        inertias = {
+            'ixx': I[0, 0],
+            'ixy': I[0, 1],
+            'ixz': I[0, 2],
+            'iyy': I[1, 1],
+            'iyz': I[1, 2],
+            'izz': I[2, 2]
+        }
+
+        return Inertia(**inertias)
+
 
 class Inertial(Representation):
     def __init__(self, mass=0.0, inertia=None, origin=None):
         self.mass = mass
         self.inertia = _singular(inertia)
         self.origin = _singular(origin)
+
+    @staticmethod
+    def from_mass_matrix(M, origin: Pose):
+        return Inertial(
+            mass=M[0, 0],
+            inertia=Inertia.from_mass_matrix(M),
+            origin=origin
+        )
+
+    def to_mass_matrix(self):
+        m = self.mass
+
+        I = np.array(self.inertia.to_matrix())
+
+        M = np.zeros((6, 6))
+        M[0:3, 0:3] = np.eye(3) * m
+        M[3::, 3::] = I
+        return M
+
 
 
 class JointLimit(Representation):
@@ -209,7 +263,7 @@ class Joint(Representation):
         self.child = child
         self.type = type
         self.axis = axis
-        self.origin = _singular(origin)
+        self._origin = _singular(origin)
         self.limit = _singular(limit)
         self.dynamics = _singular(dynamics)
         self.mimic = _singular(mimic)
@@ -224,10 +278,17 @@ class Joint(Representation):
     @joint_type.setter
     def joint_type(self, value): self.type = value
 
+    @property
+    def origin(self):
+        if self._origin.relative_to is None:
+            self._origin.relative_to = self.parent
+        return self._origin
+
 
 class Link(Representation):
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None,
                  origin=None):
+        assert origin is None  # Unused but might be neccesary for sdf
         self.name = name
         self.visuals = []
         if visuals is not None:
@@ -236,7 +297,9 @@ class Link(Representation):
         self.collisions = []
         if collisions is not None:
             self.collisions = collisions
-        assert origin is None
+        for geo in self.visuals + self.collisions:
+            if geo.origin.relative_to is None:
+                geo.origin.relative_to = self.name
 
     def __get_visual(self):
         """Return the first visual or None."""

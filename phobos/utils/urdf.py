@@ -1,8 +1,10 @@
-import subprocess
-import shutil
 import os
+import shutil
+import subprocess
+
 import numpy as np
-from . import transform, misc
+
+from . import misc
 from ..io import representation
 
 
@@ -65,45 +67,6 @@ def sort_children_by(parent, attr):
         sort_children_by(child, attr)
 
 
-def inertial_to_tensor(inertial):
-    m = inertial.mass
-
-    I = np.array(inertial.inertia.to_matrix())
-
-    M = np.zeros((6, 6))
-    M[0:3, 0:3] = np.eye(3) * m
-    M[3::, 3::] = I
-    return M
-
-
-def tensor_to_inertia(M):
-    I = M[3::, 3::]
-    inertias = {
-        'ixx': I[0, 0],
-        'ixy': I[0, 1],
-        'ixz': I[0, 2],
-        'iyy': I[1, 1],
-        'iyz': I[1, 2],
-        'izz': I[2, 2]
-    }
-
-    inertia = representation.Inertia(**inertias)
-
-    return inertia
-
-
-def mass_from_tensor(M):
-    return M[0, 0]
-
-
-def create_inertial(M, origin):
-    return representation.Inertial(
-        mass=mass_from_tensor(M),
-        inertia=tensor_to_inertia(M),
-        origin=origin
-    )
-
-
 def transform_object(obj, T):
     """ Transform a given object with a given homogeneous transformation T.
     """
@@ -116,10 +79,10 @@ def transform_object(obj, T):
         return False
 
     if obj.origin is not None:
-        origin = np.matmul(T, transform.origin_to_homogeneous(obj.origin))
-        obj.origin = transform.to_origin(origin)
+        origin = np.matmul(T, obj.origin.to_matrix())
+        obj.origin = representation.Pose.from_matrix(origin)
     else:
-        obj.origin = transform.to_origin(T)
+        obj.origin = representation.Pose.from_matrix(T)
     return True
 
 

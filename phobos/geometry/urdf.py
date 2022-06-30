@@ -5,7 +5,6 @@ import os
 import trimesh
 import numpy as np
 
-from ..utils import all as utils
 from . import io
 from . import geometry
 from ..io import representation
@@ -37,7 +36,7 @@ def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_fir
                 m = io.import_mars_mesh(visual.geometry.filename, urdf_path=robot.xmlfile)
             else:
                 m = io.import_mesh(visual.geometry.filename, urdf_path=robot.xmlfile)
-            m.apply_transform(utils.origin_to_homogeneous(visual.origin))
+            m.apply_transform(visual.origin.to_matrix())
             m.apply_transform(transform)
             if not join_first:
                 out += [m.convex_hull]
@@ -48,7 +47,7 @@ def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_fir
             jchild = robot.get_joint(jchildname)
             if jchild.type == "fixed" or jchildname in merge_additionally:
                 out += get_meshes_of_link_and_fixed_children(jchild.child,
-                                                             transform.dot(utils.origin_to_homogeneous(jchild.origin)))
+                                                             transform.dot(jchild.origin.to_matrix()))
         return out
 
     assert type(linkname) is str
@@ -101,7 +100,7 @@ def find_zero_pose_collisions(robot):
                 mesh = trimesh.creation.cylinder(coll.geometry.radius, coll.geometry.length)
             else:
                 raise TypeError("Geometry type not known!")
-            mesh.apply_transform(T.dot(utils.origin_to_homogeneous(coll.origin)))
+            mesh.apply_transform(T.dot(coll.origin.to_matrix()))
             coll_mgr.add_object(coll.name, mesh)
     colls_exist, zero_pose_colls = coll_mgr.in_collision_internal(return_names=True)
     return zero_pose_colls if colls_exist else None
@@ -136,7 +135,7 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
                 name = name[:-len("_collision")]
             name = str.replace(name, "/", "")
             names.append(name)
-            mesh.apply_transform(utils.origin_to_homogeneous(e.origin))
+            mesh.apply_transform(e.origin.to_matrix())
             meshes.append(mesh)
             if not only_return:
                 link.remove_aggregate(e)

@@ -4,7 +4,6 @@ from copy import deepcopy
 
 from .scene import Scene
 from ..utils import urdf
-from ..utils.transform import to_origin
 from ..io import representation
 
 
@@ -32,7 +31,7 @@ class Assembly(Scene):
                         child.parent_entity].robot.get_root(),
                     child=child.robot.get_root(),
                     type="fixed",
-                    origin=to_origin(child.transformation)
+                    origin=representation.Pose.from_matrix(child.transformation)
                 )
                 crobot = deepcopy(child.robot)
                 urdf.adapt_mesh_pathes(crobot, os.path.join(self.output_dir, "urdf"), copy_to=mesh_dir)

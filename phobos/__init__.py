@@ -113,14 +113,14 @@ def register():
     if not sys.platform.startswith("win"):
         check_requirements(upgrade_pip=True)
     from . import defs
-    from . import utils
-    from . import ci
+    from . import io
+    from . import core
     from . import geometry
     from . import smurf
-    from . import scripts
-    from . import core
-    from . import io
     from . import scenes
+    from . import utils
+    from . import ci
+    from . import scripts
 
     # Recursively import all submodules
     from . import blender
@@ -205,14 +205,14 @@ if not "blender" in sys.executable.lower() and not BPY_AVAILABLE:
         del get_distribution, DistributionNotFound
 
 from . import defs
-from . import utils
-from . import ci
+from . import io
+from . import core
 from . import geometry
 from . import smurf
-from . import scripts
-from . import core
-from . import io
 from . import scenes
+from . import utils
+from . import ci
+from . import scripts
 
 del sys
 del BPY_AVAILABLE
