@@ -17,8 +17,10 @@ def main(args):
     import yaml
     import pkg_resources
 
-    from phobos.utils.all import regex_replace, copy, create_dir, get_repo_data, order_angles
     from phobos.defs import EULER_CONVENTION, RPY_CONVENTION
+    from phobos.utils.git import get_repo_data
+    from phobos.utils.misc import create_dir, copy, regex_replace
+    from phobos.utils.transform import order_angles
 
     def invertJoint(urdfpath, name):
         try:

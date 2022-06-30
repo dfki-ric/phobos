@@ -13,6 +13,7 @@ from .core import Material, Collision, Joint, Link
 from .hyrodyn import Submechanism, Exoskeleton
 from .sensors import Sensor, MultiSensor
 from ..geometry import get_reflection_matrix
+from ..io import representation
 from ..utils import tree, transform
 from ..utils.misc import edit_name_string
 
@@ -774,7 +775,7 @@ class Smurf(Robot):
                 if not sensor.joint == joint.name:
                     new_sensors += [sensor]
                 elif sensor.link == joint.child:
-                    sensor.transform(transform.origin_to_homogeneous(joint.origin))
+                    sensor.transform(joint.origin.to_matrix())
                     new_sensors += [sensor]
         self.sensors = new_sensors
 
@@ -797,8 +798,8 @@ class Smurf(Robot):
             if hasattr(sensor, "origin") and sensor.link is not None:
                 T_link = self.get_transformation(sensor.link)
                 T_root2link = robot.get_transformation(sensor.link)
-                T = T_R.dot(T_link.dot(transform.origin_to_homogeneous(sensor.origin)))
-                sensor.origin = transform.to_origin(transform.inv(T_root2link).dot(T))
+                T = T_R.dot(T_link.dot(sensor.origin.to_matrix()))
+                sensor.origin = representation.Pose.from_matrix(transform.inv(T_root2link).dot(T))
 
         if target_smurf is not None:
             robot.load_smurffile(target_smurf)

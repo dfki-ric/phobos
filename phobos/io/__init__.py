@@ -1,6 +1,7 @@
 from . import representation
 from . import base
 from . import xml_factory
+from . import yaml_reflection
 
 for clsname in dir(representation):
     if clsname != "Representation" and not clsname.startswith("_"):
