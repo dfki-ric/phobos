@@ -1,5 +1,6 @@
 from phobos.io.base import Representation
 from phobos.io.xml_factory import singular as _singular
+from phobos.geometry.io import import_mesh as _import_mesh, import_mars_mesh as _import_mars_mesh
 
 
 class Pose(Representation):
@@ -71,20 +72,12 @@ class Color(Representation):
 #         self.damping = damping
 #         self.friction = friction
 
-def _pre_scale_geometry(all=1, x=1, y=1, z=1):
-    assert all != 1 or any([v != 1 for v in [x, y, z]])
-    if all != 1:
-        return all, all, all
-    else:
-        return x, y, z
-
 
 class Box(Representation):
     def __init__(self, size=None):
         self.size = size
 
-    def scale_geometry(self, all=1, x=1, y=1, z=1):
-        x, y, z = _pre_scale_geometry(all, x, y, z)
+    def scale_geometry(self, x=1, y=1, z=1):
         self.size = (v*s for v,s in zip(self.size, [x,y,z]))
 
 
@@ -93,8 +86,7 @@ class Cylinder(Representation):
         self.radius = radius
         self.length = length
 
-    def scale_geometry(self, all=1, x=1, y=1, z=1):
-        x,y,z = _pre_scale_geometry(all, x, y, z)
+    def scale_geometry(self, x=1, y=1, z=1):
         assert x == y
         self.radius *= x
         self.length *= z
@@ -104,8 +96,7 @@ class Sphere(Representation):
     def __init__(self, radius=0.0):
         self.radius = radius
 
-    def scale_geometry(self, all=1, x=1, y=1, z=1):
-        x,y,z = _pre_scale_geometry(all, x, y, z)
+    def scale_geometry(self, x=1, y=1, z=1):
         assert x == y == z
         self.radius *= x
 
@@ -115,12 +106,16 @@ class Mesh(Representation):
         self.filename = filename
         self.scale = scale
 
-    def scale_geometry(self, all=1, x=1, y=1, z=1, overwrite=False):
-        x,y,z = _pre_scale_geometry(all, x, y, z)
+    def scale_geometry(self, x=1, y=1, z=1, overwrite=False):
         if overwrite:
-            self.scale = (x,y,z)
+            self.scale = [x, y, z]
         else:
-            self.scale = (v*s for v,s in zip(self.scale, [x,y,z]))
+            self.scale = [v*s for v, s in zip(self.scale, [x, y, z])]
+
+    def load_mesh(self, urdf_path=None, mars_mesh=False):
+        if mars_mesh:
+            return _import_mars_mesh(self.filename, urdf_path)
+        return _import_mesh(self.filename, urdf_path)
 
 
 class Collision(Representation):

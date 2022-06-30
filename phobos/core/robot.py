@@ -2387,8 +2387,11 @@ class Robot(representation.Robot):
         Scales the link with the given scale
         Args:
             linkname: The name of the link to scale
-            scale: either
+            scale_x: scale along x axis of the link
+            scale_y: scale along y axis of the link
+            scale_z: scale along z axis of the link
             new_mass: The new mass for the changed link
+            geometry_for_inertia: an geometry object from which's shape the inertia will be calculated
 
         Returns:
             None
@@ -2397,24 +2400,25 @@ class Robot(representation.Robot):
         assert link is not None
         scale = np.array([scale_x, scale_y, scale_z])
         for geo in link.visuals + link.collisions:
-            _geo_scale = origin_to_homogeneous(geo.origin)[:3, :3] * scale
+            _geo_scale = inv(origin_to_homogeneous(geo.origin))[:3, :3].dot(scale)
             geo.geometry.scale_geometry(x=_geo_scale[0], y=_geo_scale[1], z=_geo_scale[2])
             geo.origin.xyz = [v*s for v, s in zip(geo.origin.xyz, scale)]
-        joints = link.get_children(link.name)
-        for joint in joints:
+        joints = self.get_children(link.name)
+        for jointname in joints:
+            joint = self.get_joint(jointname)
+            assert joint is not None
             joint.origin.xyz = [v*s for v, s in zip(joint.origin.xyz, scale)]
         link.inertial.mass = new_mass
         if geometry_for_inertia is None:
             raise AssertionError("No geometry for inertia calculation specified!")
         if isinstance(geometry_for_inertia, representation.Box):
-            inertia_list = utils.inertia.calculateBoxInertia(new_mass, geo.size)
+            inertia_list = utils.inertia.calculateBoxInertia(new_mass, geometry_for_inertia.size)
         elif isinstance(geometry_for_inertia, representation.Cylinder):
-            inertia_list = utils.inertia.calculateCylinderInertia(new_mass, geo.radius, geo.length)
+            inertia_list = utils.inertia.calculateCylinderInertia(new_mass, geometry_for_inertia.radius, geometry_for_inertia.length)
         elif isinstance(geometry_for_inertia, representation.Sphere):
-            inertia_list = utils.inertia.calculateSphereInertia(new_mass, geo.radius)
+            inertia_list = utils.inertia.calculateSphereInertia(new_mass, geometry_for_inertia.radius)
         elif isinstance(geometry_for_inertia, representation.Mesh):
-            mesh = pgu.io.import_mesh(geo.filename, self.xmlfile)
-            inertia_list = utils.inertia.calculateMeshInertia(new_mass, mesh, geo.scale)
+            inertia_list = utils.inertia.calculateMeshInertia(new_mass, geometry_for_inertia.load_mesh(self.xmlfile), geometry_for_inertia.scale)
         else:
             raise TypeError("geometry_for_inertia holds invalid type "+type(geometry_for_inertia))
         link.inertial.inertia = representation.Inertia(*inertia_list)
