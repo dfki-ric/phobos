@@ -1262,6 +1262,7 @@ def buildModelFromDictionary(model):
         log("Model name not specified in URDF. Make sure to define it thereafter.", 'WARNING')
     else:
         rootlink['model/name'] = model['name']
+        rootlink.pose.bones[0].custom_shape = ioUtils.getResource(('link', 'root'))
     rootlink.location = (0, 0, 0)
 
     # TODO make sure this works
