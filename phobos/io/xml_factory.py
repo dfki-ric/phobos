@@ -11,7 +11,9 @@ from ..utils.misc import to_pretty_xml_string
 FORMATS = json.load(open(pkg_resources.resource_filename("phobos", "data/xml_formats.json"), "r"))
 
 
-def is_int(val: str):
+def is_int(val):
+    if type(val) == int:
+        return True
     try:
         int(val)
         return True
@@ -19,7 +21,9 @@ def is_int(val: str):
         return False
 
 
-def is_float(val: str):
+def is_float(val):
+    if type(val) == float:
+        return True
     try:
         float(val)
         return True
@@ -30,6 +34,8 @@ def is_float(val: str):
 def get_class(classname):
     if hasattr(representation, classname) and classname not in representation.__IMPORTS__:
         cls = getattr(representation, classname)
+    elif hasattr(smurf_sensor_representation, classname) and classname not in smurf_sensor_representation.__IMPORTS__:
+        cls = getattr(smurf_sensor_representation, classname)
     else:
         raise AssertionError(f"The class {classname} is not None to the XML-Factory")
     assert isinstance(cls, Representation), f"The class {classname} is no valid Representation instance"
@@ -83,18 +89,24 @@ class XMLDefinition(object):
         # children that are created from a simple property and have only attributes
         for tag, attribute_map in self.xml_attribute_children.items():
             _attrib = {attname: self._serialize(getattr(object, varname))
-                                        for attname, varname in attribute_map.items() if getattr(object, varname) is not None}
+                       for attname, varname in attribute_map.items() if getattr(object, varname) is not None}
             if len(_attrib) == 0:
                 continue
             e = ET.Element(tag, attrib=_attrib)
             out.append(e)
         # children that have the a value as text
         for tag, varname in self.xml_value_children.items():
-            e = ET.Element(tag)
             val = getattr(object, varname)
             if val is not None:
-                e.text = self._serialize(getattr(object, varname))
-                out.append(e)
+                if type(val) == list and all([not is_int(v) and not is_float(v) and type(v) == str for v in val]):
+                    for v in val:
+                        e = ET.Element(tag)
+                        e.text = self._serialize(v)
+                        out.append(e)
+                else:
+                    e = ET.Element(tag)
+                    e.text = self._serialize(val)
+                    out.append(e)
         # children that are nested in another element
         if self.xml_nested_children != {}:
             for _, nest in self.xml_nested_children.items():
@@ -195,9 +207,12 @@ class XMLFactory(XMLDefinition):
 XML_REFLECTIONS = ["urdf", "sdf"]
 
 
-def class_factory(cls):
+def class_factory(cls, only=None):
     setattr(cls, "factory", {refl: XMLFactory(refl, cls.__name__) for refl in XML_REFLECTIONS})
     for refl in XML_REFLECTIONS:
+        if only is not None and refl not in only:
+            continue
+
         def _from_xml(c, xml, _dialect=refl):
             return c.from_xml(xml, dialect=_dialect)
 

@@ -346,6 +346,39 @@ class Link(Representation):
             self.collisions.append(elem)
 
 
+class Sensor(Representation):
+    def __init__(self, name, parent, origin=None, camera=None, contact=None, imu=None, lidar=None, always_on=False, update_rate=None,
+                 visualize=False, topic=None, enable_metrics=False):
+        self.name = name
+        self.parent = parent
+        self.type = None
+        self._origin = origin
+        self.camera = camera
+        self.contact = contact
+        self.imu = imu
+        self.lidar = lidar
+        self.always_on = always_on
+        self.update_rate = update_rate
+        assert not visualize or topic is not None, "If visualize is true you need to specify topic (see sdformat.org)"
+        self.visualize = visualize
+        self.topic = topic
+        self.enable_metrics = enable_metrics
+        assert len([t for t in [contact, camera, imu, lidar] if t is not None]), "A sensor can only be of one type1"
+        if camera is not None:
+            self.type = "camera"
+        elif contact is not None:
+            self.type = "contact"
+        elif imu is not None:
+            self.type = "imu"
+        elif lidar is not None:
+            self.type = "lidar"
+        assert self.type is not None, "Please give data about the sensor type"
+
+    @property
+    def origin(self):
+        if self._origin.relative_to is None:
+            self._origin.relative_to = self.parent
+        return self._origin
 
 # class PR2Transmission(Representation):
 #     def __init__(self, name=None, joint=None, actuator=None, type=None,
@@ -355,74 +388,41 @@ class Link(Representation):
 #         self.joint = joint
 #         self.actuator = actuator
 #         self.mechanicalReduction = mechanicalReduction
-#
-#
-# xmlr.reflect(PR2Transmission, tag='pr2_transmission', params=[
-#     name_attribute,
-#     xmlr.Attribute('type', str),
-#     xmlr.Element('joint', 'element_name'),
-#     xmlr.Element('actuator', 'element_name'),
-#     xmlr.Element('mechanicalReduction', float)
-# ])
-#
-#
-# class Actuator(Representation):
-#     def __init__(self, name=None, mechanicalReduction=1):
-#         self.name = name
-#         self.mechanicalReduction = None
-#
-#
-# xmlr.reflect(Actuator, tag='actuator', params=[
-#     name_attribute,
-#     xmlr.Element('mechanicalReduction', float, required=False)
-# ])
-#
-#
-# class TransmissionJoint(Representation):
-#     def __init__(self, name=None):
-#         self.name = name
-#         self.hardwareInterfaces = []
-#
-#     def check_valid(self):
-#         assert len(self.hardwareInterfaces) > 0, "no hardwareInterface defined"
-#
-#
-# xmlr.reflect(TransmissionJoint, tag='joint', params=[
-#     name_attribute,
-#     xmlr.AggregateElement('hardwareInterface', str),
-# ])
-#
-#
-# class Transmission(Representation):
-#     """ New format: http://wiki.ros.org/urdf/XML/Transmission """
-#
-#     def __init__(self, name=None):
-#
-#         self.name = name
-#         self.joints = []
-#         self.actuators = []
-#
-#     def check_valid(self):
-#         assert len(self.joints) > 0, "no joint defined"
-#         assert len(self.actuators) > 0, "no actuator defined"
-#
-#
-# xmlr.reflect(Transmission, tag='new_transmission', params=[
-#     name_attribute,
-#     xmlr.Element('type', str),
-#     xmlr.AggregateElement('joint', TransmissionJoint),
-#     xmlr.AggregateElement('actuator', Actuator)
-# ])
-#
-# xmlr.add_type('transmission',
-#               xmlr.DuckTypedFactory('transmission',
-#                                     [Transmission, PR2Transmission]))
+
+
+class Actuator(Representation):
+    def __init__(self, name, mechanicalReduction=1):
+        self.name = name
+        self.mechanicalReduction = mechanicalReduction
+
+
+class TransmissionJoint(Representation):
+    def __init__(self, name, hardwareInterfaces=None):
+        self.name = name
+        self.hardwareInterfaces = [] if hardwareInterfaces is None else hardwareInterfaces
+
+    def check_valid(self):
+        assert len(self.hardwareInterfaces) > 0, "no hardwareInterface defined"
+
+
+class Transmission(Representation):
+    """ New format: http://wiki.ros.org/urdf/XML/Transmission """
+
+    def __init__(self, name, joints=None, actuators=None):
+        self.name = name
+        self.joints = [] if joints is None else joints
+        self.actuators = [] if actuators is None else actuators
+
+    def check_valid(self):
+        assert len(self.joints) > 0, "no joint defined"
+        assert len(self.actuators) > 0, "no actuator defined"
 
 
 class Robot(Representation):
     SUPPORTED_VERSIONS = ["1.0"]
 
-    def __init__(self, name=None, version=None, links=None, joints=None, materials=None, transmissions=None):
+    def __init__(self, name=None, version=None, links=None, joints=None, materials=None, transmissions=None,
+                 sensors=None):
         self.name = name
         if version is None:
             version = "1.0"
@@ -451,7 +451,7 @@ class Robot(Representation):
 
         self.materials = materials if materials is not None else []
         self.transmissions = transmissions if transmissions is not None else []
-
+        self.sensors = sensors if sensors is not None else []
 
     def add_aggregate(self, typeName, elem):
         if typeName == 'joint':
@@ -517,3 +517,4 @@ class Robot(Representation):
 
         if self.version not in self.SUPPORTED_VERSIONS:
             raise ValueError("Invalid version; only %s is supported" % (','.join(self.SUPPORTED_VERSIONS)))
+

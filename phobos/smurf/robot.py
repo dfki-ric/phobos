@@ -36,7 +36,7 @@ class Smurf(Robot):
 
         # Smurf Informations
         self.motors = []
-        self.sensors = []
+        # self.sensors = [] is already defined in base class
         self.collisions = []
         self.poses = []
         self.submechanisms = []

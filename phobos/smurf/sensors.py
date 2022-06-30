@@ -58,23 +58,45 @@ class RotatingRaySensor(Sensor):
     def __init__(
             self, robot=None, name=None, link=None,
             bands=8, draw_rays=False,
-            horizontal_offset=0, horizontal_resolution=0.03,
-            lasers=32, max_distance=5.0, opening_height=0.7,
+            horizontal_offset=0, opening_width=np.pi() * 2, horizontal_resolution=0.03,
+            lasers=32, max_distance=5.0, min_distance=0.0, opening_height=0.7,
             vertical_offset=0, **kwargs):
         super().__init__(robot=robot, name=name, joint=None, link=link, sensortype='RotatingRaySensor', **kwargs)
         self.bands = bands
         self.draw_rays = draw_rays
         self.horizontal_offset = horizontal_offset
         self.horizontal_resolution = horizontal_resolution
+        self.opening_width = opening_width
         self.lasers = lasers
         self.max_distance = max_distance
+        self.min_distance = min_distance
         self.opening_height = opening_height
         self.vertical_offset = vertical_offset
         if self.link is None:
             raise ValueError("Link used for sensor" + name + "does not exist!")
         self.returns += ['link', 'bands', 'draw_rays',
                          'horizontal_offset', 'horizontal_resolution', 'vertical_offset',
-                         'opening_height', 'max_distance', 'lasers']
+                         'opening_width', 'opening_height', 'max_distance', 'lasers']
+
+    @property
+    def min_horizontal_angle(self):
+        return self.horizontal_offset
+
+    @property
+    def max_horizontal_angle(self):
+        return self.horizontal_offset + self.opening_width
+
+    @property
+    def min_vertical_angle(self):
+        return self.vertical_offset
+
+    @property
+    def max_vertical_angle(self):
+        return self.vertical_offset + self.opening_height
+
+    @property
+    def vertical_resolution(self):
+        return self.opening_height / self.lasers
 
 
 class CameraSensor(Sensor):
@@ -82,7 +104,7 @@ class CameraSensor(Sensor):
             self, robot=None, name=None, link=None,
             height=480, width=640, hud_height=240, hud_width=0,
             opening_height=90, opening_width=90,
-            depth_image=True, show_cam=False, **kwargs):
+            depth_image=True, show_cam=False, frame_offset: representation.Pose = None, **kwargs):
         super().__init__(robot=robot, name=name, joint=None, link=link, sensortype='CameraSensor', **kwargs)
         self.height = height
         self.width = width
@@ -92,9 +114,14 @@ class CameraSensor(Sensor):
         self.opening_width = opening_width
         self.depth_image = depth_image
         self.show_cam = show_cam
+        self.frame_offset = frame_offset
 
         self.returns += ['link', 'height', 'width', 'hud_height', 'hud_width',
-                         'opening_height', 'opening_width', 'depth_image', 'show_cam']
+                         'opening_height', 'opening_width', 'depth_image', 'show_cam', 'frame_offset']
+
+    @property
+    def depths(self):
+        return
 
 
 class IMU(Sensor):
