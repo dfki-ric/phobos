@@ -11,7 +11,7 @@ from . import representation
 FORMATS = json.load(open(pkg_resources.resource_filename("phobos", "data/xml_formats.json"), "r"))
 
 
-def is_int(val):
+def is_int(val: str):
     try:
         int(val)
         return True
@@ -19,7 +19,7 @@ def is_int(val):
         return False
 
 
-def is_float(val):
+def is_float(val: str):
     try:
         float(val)
         return True
@@ -79,8 +79,11 @@ class XMLDefinition(object):
             out.append(child.to_xml(self.dialect))
         # children that are created from a simple property and have only attributes
         for tag, attribute_map in self.xml_attribute_children.items():
-            e = ET.Element(tag, attrib={attname: self._serialize(getattr(object, varname))
-                                        for attname, varname in attribute_map.items() if getattr(object, varname) is not None})
+            _attrib = {attname: self._serialize(getattr(object, varname))
+                                        for attname, varname in attribute_map.items() if getattr(object, varname) is not None}
+            if len(_attrib) == 0:
+                continue
+            e = ET.Element(tag, attrib=_attrib)
             out.append(e)
         # children that have the a value as text
         for tag, varname in self.xml_value_children.items():
@@ -133,7 +136,7 @@ class XMLDefinition(object):
         if hasattr(entry, "tolist"):
             entry = entry.tolist()
         if type(entry) == list:
-            if any([type(v) == int for v in entry]):
+            if any([type(v) in [int, np.int64] for v in entry]):
                 entry = [str(v) for v in entry]
             elif any([type(v) in [float, np.float64] for v in entry]):
                 entry = ["%.6f" % v if type(v) in [float, np.float64] else str(v) for v in entry]

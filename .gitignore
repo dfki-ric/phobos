@@ -7,5 +7,6 @@ installation.conf
 *.pyc
 __pycache__
 doc/_build
-internal_dict.json
-.gitignore
+*build
+*.egg-info
+*.egg
