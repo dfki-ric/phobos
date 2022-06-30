@@ -123,7 +123,6 @@ def calculateMeshInertia(mass, data, scale=None):
     if not isinstance(data, trimesh.Trimesh):
         try:
             import bpy
-            vertices = numpy.asarray([numpy.asarray(scale * v.co) for v in data.vertices])
             prev_mode = bpy.context.mode
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED')
@@ -134,7 +133,7 @@ def calculateMeshInertia(mass, data, scale=None):
             raise TypeError("Invalid mesh type " + repr(type(data)))
 
     if vertices is None:
-        vertices = data.vertices
+        vertices = numpy.asarray([numpy.asarray(scale * v.co) for v in data.vertices])
     if faces is None:
         faces = data.faces
     if triangle_normals is None:
