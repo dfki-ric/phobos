@@ -87,27 +87,25 @@ class Robot(representation.Robot):
 
         root = sUtils.getRoot(bpy.context.selected_objects[0])
         blender_model = derive_model_dictionary(root, name, objectlist)
+        if blender_model is None:
+            print("Please name your model and assign a version")
         cli_joints = []     # TODO MimicJoint not handled, z.B. model: recupera
-                            # TODO Issue with importing urdf recupera if the name and version are not defined an empty dict is returned
         for key, values in blender_model['joints'].items():
-            cli_axis = None
-            cli_limit = None
-            if not values['type'] == 'fixed':
-                if values['type'] == 'floating':
-                    print(f"TODO floating joints")
-                else:
-                    cli_axis = values.get('axis')
-                    # TODO missing axis in a lot of joints in recupera, is axis mandatory dict entry ?
-                    cli_limit = representation.JointLimit(effort=values['limits']['effort'],
-                                                          velocity=values['limits']['velocity'],
-                                                          lower=values['limits']['lower'],
-                                                          upper=values['limits']['upper'])
+            if not values['type'] == 'fixed' and values.get("limits") is not None:
+                # Latter check needed for type floating joint
+                cli_limit = representation.JointLimit(effort=values['limits']['effort'],
+                                                      velocity=values['limits']['velocity'],
+                                                      lower=values['limits']['lower'],
+                                                      upper=values['limits']['upper'])
+            else:
+                cli_limit = None
+
             cli_joints.append(representation.Joint(
                 name=values['name'],
                 parent=values['parent'],
                 child=values['child'],
                 type=values['type'],
-                axis=cli_axis,
+                axis=values.get('axis'),
                 origin=transform.to_origin(np.array(values['pose']['rawmatrix'])),
                 limit=cli_limit,
                 dynamics=None,
