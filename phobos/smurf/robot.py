@@ -13,6 +13,7 @@ from .hyrodyn import Submechanism, Exoskeleton
 from .sensors import Joint6DOF, RotatingRaySensor, CameraSensor, IMU, MotorCurrent, \
     JointPosition, JointVelocity, NodeContactForce, NodeCOM, NodePosition, NodeRotation
 from ..geometry import get_reflection_matrix
+from ..io import representation
 from ..utils import tree, transform
 from ..utils.misc import edit_name_string
 
@@ -35,7 +36,7 @@ class Smurf(Robot):
 
         # Smurf Informations
         self.motors = []
-        self.sensors = []
+        # self.sensors = [] is already defined in base class
         self.collisions = []
         self.poses = []
         self.submechanisms = []
@@ -271,7 +272,7 @@ class Smurf(Robot):
     def get_joints_ordered_df(self):
         """Returns the joints in depth first order"""
         indep_joints = []
-        for sm in self.submechanisms + self.exoskeletons:
+        for sm in self.submechanisms:
             indep_joints += sm.jointnames_independent
         return tree.get_joints_depth_first(self, self.get_root(), independent_joints=list(set(indep_joints)))
 
@@ -865,7 +866,7 @@ class Smurf(Robot):
                 if not sensor.joint == joint.name:
                     new_sensors += [sensor]
                 elif sensor.link == joint.child:
-                    sensor.transform(transform.origin_to_homogeneous(joint.origin))
+                    sensor.transform(joint.origin.to_matrix())
                     new_sensors += [sensor]
         self.sensors = new_sensors
 
@@ -888,8 +889,8 @@ class Smurf(Robot):
             if hasattr(sensor, "origin") and sensor.link is not None:
                 T_link = self.get_transformation(sensor.link)
                 T_root2link = robot.get_transformation(sensor.link)
-                T = T_R.dot(T_link.dot(transform.origin_to_homogeneous(sensor.origin)))
-                sensor.origin = transform.to_origin(transform.inv(T_root2link).dot(T))
+                T = T_R.dot(T_link.dot(sensor.origin.to_matrix()))
+                sensor.origin = representation.Pose.from_matrix(transform.inv(T_root2link).dot(T))
 
         if target_smurf is not None:
             robot.load_smurffile(target_smurf)
@@ -976,7 +977,8 @@ class Smurf(Robot):
         self.exoskeletons = sorted(self.exoskeletons, key=lambda submech: sorted_links.index(submech.get_root(self)))
         for sm in self.submechanisms + self.exoskeletons:
             for key in ["jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent"]:
-                setattr(sm, key, sorted(getattr(sm, key), key=lambda jn: sorted_joints.index(jn)))
+                if hasattr(sm, key):
+                    setattr(sm, key, sorted(getattr(sm, key), key=lambda jn: sorted_joints.index(jn)))
         for transmission in self._transmissions:
             found = False
             for sm in self.submechanisms:

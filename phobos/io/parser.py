@@ -1,7 +1,7 @@
 import os
 from xml.etree import ElementTree as ET
 
-from phobos.io.representation import Robot
+from .representation import Robot
 
 
 def parse_xml(xml):

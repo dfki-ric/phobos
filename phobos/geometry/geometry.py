@@ -7,9 +7,9 @@ import numpy
 import trimesh
 import numpy as np
 
-from ..utils import all as utils
 from . import io
 from ..io import representation
+from ..utils import misc
 
 
 def round_vector(v):
@@ -125,7 +125,7 @@ def mirror_geometry(element, urdf_path, transform=None, name_replacements=None):
     else:
         new_filename = os.path.join(
             os.path.dirname(filename),
-            utils.regex_replace(os.path.basename(filename), name_replacements))
+            misc.regex_replace(os.path.basename(filename), name_replacements))
         if new_filename == filename:
             new_filename += "_mirrored"
         filename = new_filename + file_extension
@@ -144,7 +144,7 @@ def has_enough_vertices(element, urdf_path):
     mesh = io.import_mesh(element.geometry.filename, urdf_path=urdf_path)
     if mesh is None:
         return False
-    zero_transform = utils.origin_to_homogeneous(element.origin)
+    zero_transform = element.origin.to_matrix()
     mesh.apply_transform(zero_transform)
     if len(mesh.vertices) <= 3:
         print("Mesh has less than 4 vertices:", element.geometry.filename)
@@ -170,7 +170,7 @@ def replace_geometry(element, urdf_path, shape='box', oriented=False, scale=1.0)
         return
 
     mesh = io.import_mesh(element.geometry.filename, urdf_path=urdf_path)
-    zero_transform = utils.origin_to_homogeneous(element.origin)
+    zero_transform = element.origin.to_matrix()
     mesh.apply_transform(zero_transform)
 
     if shape == 'sphere':
@@ -191,7 +191,7 @@ def replace_geometry(element, urdf_path, shape='box', oriented=False, scale=1.0)
     else:
         rel_transform = numpy.eye(4)
 
-    new_origin = utils.to_origin(rel_transform)
+    new_origin = representation.Pose.from_matrix(rel_transform)
 
     element.geometry = new_shape
     if hasattr(element.geometry, "filename"):

@@ -50,8 +50,9 @@ class MultiJointDependency(SmurfBase):
 
 class HyrodynAnnotation(SmurfAnnotation):
     def __init__(self, robot, name,
-                 jointnames_independent, jointnames_spanningtree,
-                 jointnames_active, jointnames=None, contextual_name=None, file_path=None,
+                 jointnames_spanningtree=None, jointnames_active=None,
+                 jointnames_independent=None, jointnames_dependent=None,
+                 jointnames=None, contextual_name=None, file_path=None,
                  loop_constraints=None, multi_joint_dependencies=None,
                  type=None, around=None, auto_gen=False):
         if multi_joint_dependencies is None:
@@ -61,9 +62,7 @@ class HyrodynAnnotation(SmurfAnnotation):
         kwargs = {
             "name": name,
             "contextual_name": contextual_name if contextual_name is not None else name,
-            "jointnames_independent": jointnames_independent,
             "jointnames_spanningtree": jointnames_spanningtree,
-            "jointnames_active": jointnames_active,
             "jointnames": None,
             "multi_joint_dependencies": multi_joint_dependencies,
             "loop_constraints": loop_constraints,
@@ -71,6 +70,12 @@ class HyrodynAnnotation(SmurfAnnotation):
         }
         if file_path is not None and file_path is not False:
             kwargs["file_path"] = file_path
+        if jointnames_independent is not None:
+            kwargs["jointnames_independent"] = jointnames_independent
+        if jointnames_dependent is not None:
+            kwargs["jointnames_dependent"] = jointnames_dependent
+        if jointnames_active is not None:
+            kwargs["jointnames_active"] = jointnames_active
         if type is not None:
             kwargs["type"] = type
         if around is not None:
@@ -142,13 +147,14 @@ class HyrodynAnnotation(SmurfAnnotation):
 
 class Submechanism(HyrodynAnnotation):
     def __init__(self, robot, name,
-                 jointnames_independent, jointnames_spanningtree, jointnames_active, jointnames=None,
+                 jointnames_spanningtree, jointnames_active, jointnames_independent, jointnames=None,
                  contextual_name=None, file_path=None, type="numerical",
                  loop_constraints=None, multi_joint_dependencies=None, auto_gen=False):
         super(Submechanism, self).__init__(
             robot, name,
-            jointnames_independent, jointnames_spanningtree,
-            jointnames_active, contextual_name=contextual_name, jointnames=jointnames, file_path=file_path,
+            jointnames_spanningtree=jointnames_spanningtree,
+            jointnames_active=jointnames_active, jointnames_independent=jointnames_independent,
+            contextual_name=contextual_name, jointnames=jointnames, file_path=file_path,
             loop_constraints=loop_constraints, multi_joint_dependencies=multi_joint_dependencies,
             type=type, around=None, auto_gen=auto_gen
         )
@@ -156,14 +162,14 @@ class Submechanism(HyrodynAnnotation):
 
 class Exoskeleton(HyrodynAnnotation):
     def __init__(self, robot, name, around,
-                 jointnames_independent, jointnames_spanningtree,
-                 jointnames_active, jointnames=None, contextual_name=None, file_path=None,
+                 jointnames_spanningtree, jointnames_dependent,
+                 jointnames=None, contextual_name=None, file_path=None,
                  loop_constraints=None, multi_joint_dependencies=None,
                  auto_gen=False):
         super(Exoskeleton, self).__init__(
             robot, name,
-            jointnames_independent, jointnames_spanningtree,
-            jointnames_active, jointnames=jointnames, contextual_name=contextual_name, file_path=file_path,
+            jointnames_spanningtree=jointnames_spanningtree, jointnames_dependent=jointnames_dependent,
+            jointnames=jointnames, contextual_name=contextual_name, file_path=file_path,
             loop_constraints=loop_constraints, multi_joint_dependencies=multi_joint_dependencies,
             around=around, auto_gen=auto_gen, type=None
         )

@@ -1,8 +1,9 @@
 from ..io import representation
+from ..io.base import Representation
 from ..io.yaml_reflection import YamlReflection
 
 
-class SmurfBase(YamlReflection):
+class SmurfBase(YamlReflection, Representation):
     """Base class for a smurf object related to a urdf.
     Wraps methods for joint and link as properties and additionally which variables get exported.
     """

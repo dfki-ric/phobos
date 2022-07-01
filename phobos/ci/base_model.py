@@ -201,7 +201,7 @@ class BaseModel(yaml.YAMLObject):
 
         if hasattr(self, "transform_links"):
             for k, v in self.transform_links.items():
-                transformation = transform.Homogeneous(
+                transformation = transform.create_transformation(
                     xyz=v["xyz"] if "xyz" in v.keys() else [0, 0, 0],
                     rpy=v["rpy"] if "rpy" in v.keys() else [0, 0, 0]
                 )

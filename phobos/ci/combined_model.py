@@ -5,7 +5,7 @@ import filecmp
 import numpy as np
 
 from ..core import Robot
-from ..utils.all import regex_replace, to_origin
+from ..utils.misc import regex_replace
 from ..smurf import Smurf
 from ..io import representation
 
@@ -196,7 +196,7 @@ class CombinedModel(BaseModel):
                     src_T = parent_model.get_transformation(child["joint"]["parent"])
                     dst_T = att_model.get_transformation(child["joint"]["child"])
                     T = np.linalg.inv(src_T).dot(T).dot(dst_T)
-                    origin = to_origin(T)
+                    origin = representation.Pose.from_matrix(T)
                     child["joint"]["xyz"] = origin.xyz
                     child["joint"]["rpy"] = origin.rpy
 

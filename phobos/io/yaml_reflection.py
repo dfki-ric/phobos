@@ -1,9 +1,8 @@
 import json
 import collections
 from xml.etree import ElementTree as ET
-from xml.dom import minidom
 
-from phobos.io.xml_factory import to_pretty_xml_string
+from ..utils.misc import to_pretty_xml_string
 
 
 def to_yaml(obj):

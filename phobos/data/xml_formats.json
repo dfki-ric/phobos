@@ -18,6 +18,14 @@
         "material": {
           "classname": "Material",
           "varname": "materials"
+        },
+        "sensor": {
+          "classname": "Sensor",
+          "varname": "sensors"
+        },
+        "transmission": {
+          "classname": "Transmission",
+          "varname": "transmissions"
         }
       }
     },
@@ -251,6 +259,126 @@
         "offset": "offset",
         "joint": "joint"
       }
+    },
+    "Actuator": {
+      "tag": "actuator",
+      "attributes": {
+        "name": "name"
+      },
+      "value_children": {
+        "mechanicalReduction": "mechanicalReduction",
+        "hardwareInterface": "hardwareInterface"
+      }
+    },
+    "TransmissionJoint": {
+      "tag": "transmission",
+      "attributes": {
+        "name": "name"
+      },
+      "value_children": {
+        "hardwareInterface": "hardwareInterface"
+      }
+    },
+    "Transmission": {
+      "tag": "transmission",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "children": {
+        "joint": {
+          "classname": "TransmissionJoint",
+          "varname": "joints"
+        },
+        "actuator": {
+          "classname": "Actuator",
+          "varname": "actuators"
+        }
+      }
+    },
+    "RotatingRaySensor": {
+      "tag": "lidar",
+      "nested_children": {
+        "scan": {
+          "nested_children": {
+            "horizontal": {
+              "value_children": {
+                "samples": "bands",
+                "min_angle": "min_horizontal_angle",
+                "max_angle": "max_horizontal_angle",
+                "resolution": "horizontal_resolution"
+              }
+            },
+            "vertical": {
+              "value_children": {
+                "samples": "lasers",
+                "min_angle": "min_vertical_angle",
+                "max_angle": "max_vertical_angle",
+                "resolution": "vertical_resolution"
+              }
+            }
+          }
+        },
+        "range": {
+          "value_children": {
+            "max": "max_distance",
+            "min": "min_distance"
+          }
+        }
+      }
+    },
+    "CameraSensor": {
+      "tag": "camera",
+      "attributes": {
+        "name": "name"
+      },
+      "nested_children": {
+        "image": {
+          "value_children": {
+            "width": "width",
+            "height": "height",
+            "hfov": "opening_width"
+          }
+        }
+      }
+    },
+    "NodeContact": {
+      "tag": "contact",
+      "value_children": {
+        "collision": "collisions"
+      }
+    },
+    "Sensor": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "update_rate": "update_rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "camera": {
+          "classname": "CameraSensor",
+          "varname": "camera"
+        },
+        "contact": {
+          "classname": "NodeContact",
+          "varname": "contact"
+        },
+        "lidar": {
+          "classname": "RotatingRaySensor",
+          "varname": "lidar"
+        }
+      }
     }
   },
   "sdf": {
@@ -271,6 +399,10 @@
         "material": {
           "classname": "Material",
           "varname": "materials"
+        },
+        "sensor": {
+          "classname": "Sensor",
+          "varname": "sensors"
         }
       }
     },
@@ -407,7 +539,10 @@
     },
     "Pose": {
       "tag": "pose",
-      "value": "vec"
+      "value": "vec",
+      "attributes": {
+        "relative_to": "relative_to"
+      }
     },
     "Mesh": {
       "tag": "mesh",
@@ -495,6 +630,98 @@
         "multiplier": "multiplier",
         "offset": "offset",
         "joint": "joint"
+      }
+    },
+    "RotatingRaySensor": {
+      "tag": "lidar",
+      "nested_children": {
+        "scan": {
+          "nested_children": {
+            "horizontal": {
+              "value_children": {
+                "samples": "bands",
+                "min_angle": "min_horizontal_angle",
+                "max_angle": "max_horizontal_angle",
+                "resolution": "horizontal_resolution"
+              }
+            },
+            "vertical": {
+              "value_children": {
+                "samples": "lasers",
+                "min_angle": "min_vertical_angle",
+                "max_angle": "max_vertical_angle",
+                "resolution": "vertical_resolution"
+              }
+            }
+          }
+        },
+        "range": {
+          "value_children": {
+            "max": "max_distance",
+            "min": "min_distance"
+          }
+        }
+      }
+    },
+    "CameraSensor": {
+      "tag": "camera",
+      "attributes": {
+        "name": "name"
+      },
+      "nested_children": {
+        "image": {
+          "value_children": {
+            "width": "width",
+            "height": "height"
+          }
+        }
+      },
+      "value_children": {
+        "horizontal_fov": "opening_width"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "frame_offset"
+        }
+      }
+    },
+    "NodeContact": {
+      "tag": "contact",
+      "value_children": {
+        "collision": "collisions"
+      }
+    },
+    "Sensor": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "update_rate": "update_rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "camera": {
+          "classname": "CameraSensor",
+          "varname": "camera"
+        },
+        "contact": {
+          "classname": "NodeContact",
+          "varname": "contact"
+        },
+        "lidar": {
+          "classname": "RotatingRaySensor",
+          "varname": "lidar"
+        }
       }
     }
   }
