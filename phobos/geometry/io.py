@@ -114,13 +114,16 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
         existing_mesh = import_mesh(filepath)
         if (
             existing_mesh == mesh or
-            all(trimesh.comparison.identifier_simple(mesh) == trimesh.comparison.identifier_simple(existing_mesh)) or
-            (
+            all(trimesh.comparison.identifier_simple(mesh) == trimesh.comparison.identifier_simple(existing_mesh)) or ((
+                len(mesh.vertices.flatten()) == len(existing_mesh.vertices.flatten()) and
+                len(mesh.faces.flatten()) == len(existing_mesh.faces.flatten()) and
+                len(mesh.edges.flatten()) == len(existing_mesh.edges.flatten())
+            ) and (
                 all(np.round(mesh.vertices, decimals=8).flatten() ==
                     np.round(existing_mesh.vertices, decimals=8).flatten()) and
                 all(mesh.faces.flatten() == existing_mesh.faces.flatten()) and
                 all(mesh.edges.flatten() == existing_mesh.edges.flatten())
-            )
+            ))
         ):
             print("NOTE: Skipping export of", filepath, "as the mesh file already exists and is identical")
             do_export = False
