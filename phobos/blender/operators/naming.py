@@ -101,6 +101,8 @@ class NameModelOperator(Operator):
         Returns:
 
         """
+        root = sUtils.getRoot(context.active_object, verbose=False)
+        self.modelname = root["model/name"] if "model/name" in root else ""
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
