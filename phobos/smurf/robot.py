@@ -184,7 +184,7 @@ class Smurf(Robot):
     def get_joints_ordered_df(self):
         """Returns the joints in depth first order"""
         indep_joints = []
-        for sm in self.submechanisms + self.exoskeletons:
+        for sm in self.submechanisms:
             indep_joints += sm.jointnames_independent
         return tree.get_joints_depth_first(self, self.get_root(), independent_joints=list(set(indep_joints)))
 
@@ -886,7 +886,8 @@ class Smurf(Robot):
         self.exoskeletons = sorted(self.exoskeletons, key=lambda submech: sorted_links.index(submech.get_root(self)))
         for sm in self.submechanisms + self.exoskeletons:
             for key in ["jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent"]:
-                setattr(sm, key, sorted(getattr(sm, key), key=lambda jn: sorted_joints.index(jn)))
+                if hasattr(sm, key):
+                    setattr(sm, key, sorted(getattr(sm, key), key=lambda jn: sorted_joints.index(jn)))
         for transmission in self._transmissions:
             found = False
             for sm in self.submechanisms:
