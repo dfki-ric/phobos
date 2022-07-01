@@ -49,8 +49,9 @@ class Sensor(SmurfAnnotation):
 class Joint6DOF(Sensor):
     def __init__(self, robot=None, name=None, link=None, **kwargs):
         super().__init__(robot=robot, name=name, joint=None, link=link, sensortype='Joint6DOF', **kwargs)
-        if self.link is None:
-            raise ValueError("Link used for sensor" + name + "does not exist!")
+        if not isinstance(link, representation.Link):
+            print(link)
+            raise AssertionError("Parsed invalid link")
         self.returns += ['link']
 
 
@@ -72,8 +73,9 @@ class RotatingRaySensor(Sensor):
         self.min_distance = min_distance
         self.opening_height = opening_height
         self.vertical_offset = vertical_offset
-        if self.link is None:
-            raise ValueError("Link used for sensor" + name + "does not exist!")
+        if not isinstance(link, representation.Link):
+            print(link)
+            raise AssertionError("Parsed invalid link")
         self.returns += ['link', 'bands', 'draw_rays',
                          'horizontal_offset', 'horizontal_resolution', 'vertical_offset',
                          'opening_width', 'opening_height', 'max_distance', 'lasers']
@@ -116,6 +118,10 @@ class CameraSensor(Sensor):
         self.show_cam = show_cam
         self.frame_offset = frame_offset
 
+        if not isinstance(link, representation.Link):
+            print(link)
+            raise AssertionError("Parsed invalid link")
+
         self.returns += ['link', 'height', 'width', 'hud_height', 'hud_width',
                          'opening_height', 'opening_width', 'depth_image', 'show_cam', 'frame_offset']
 
@@ -137,7 +143,9 @@ class IMU(Sensor):
             frame = robot.get_link(frame)
         if frame is None:
             raise ValueError("Frame of sensor '" + name + "' not found!")
-        assert isinstance(frame, representation.Link)
+        if not isinstance(frame, representation.Link):
+            print(frame)
+            raise AssertionError("Parsed invalid link")
 
         super().__init__(robot=robot, name=name, joint=None, link=link, sensortype='NodeIMU', **kwargs)
         self.id = [frame]
@@ -165,7 +173,7 @@ class MultiSensor(Sensor):
 
     @property
     def id(self):
-        return [t.name for t in self._id] if self._id else None
+        return [t.name for t in self._id]  # if self._id else None
 
     @id.setter
     def id(self, targets):
@@ -186,7 +194,9 @@ class MotorCurrent(MultiSensor):
         if not isinstance(targets, list):
             targets = [targets]
 
-        assert all([isinstance(t, representation.Joint) for t in targets])
+        if not all([isinstance(t, representation.Joint) for t in targets]):
+            print(targets)
+            raise AssertionError("Parsed invalid joint")
 
         super().__init__(robot=robot, name=name, targets=targets, sensortype='MotorCurrent', **kwargs)
         self.returns += ['link']
@@ -199,7 +209,9 @@ class JointPosition(MultiSensor):
 
         targets = [robot.get_joint(t) if type(t) is str else t for t in targets]
 
-        assert all([isinstance(t, representation.Joint) for t in targets])
+        if not all([isinstance(t, representation.Joint) for t in targets]):
+            print(targets)
+            raise AssertionError("Parsed invalid joint")
 
         super().__init__(robot=robot, name=name, targets=targets, sensortype='JointPosition', **kwargs)
         self.returns += ['link']
@@ -210,7 +222,9 @@ class JointVelocity(MultiSensor):
         if not isinstance(targets, list):
             targets = [targets]
 
-        assert all([isinstance(t, representation.Joint) for t in targets])
+        if not all([isinstance(t, representation.Joint) for t in targets]):
+            print(targets)
+            raise AssertionError("Parsed invalid joint")
 
         super().__init__(robot=robot, name=name, targets=targets, sensortype='JointVelocity', **kwargs)
         self.returns += ['link']
@@ -236,7 +250,9 @@ class NodeContactForce(MultiSensor):
 
         targets = _targets
 
-        assert all([isinstance(t, representation.Collision) for t in targets])
+        if not all([isinstance(t, representation.Collision) for t in targets]):
+            print(targets)
+            raise AssertionError("Parsed invalid collision")
 
         super().__init__(robot=robot, name=name, targets=targets, sensortype='NodeContactForce', **kwargs)
 
@@ -261,7 +277,9 @@ class NodeCOM(MultiSensor):
 
         targets = _targets
 
-        assert all([isinstance(t, representation.Link) for t in targets])
+        if not all([isinstance(t, representation.Link) for t in targets]):
+            print(targets)
+            raise AssertionError("Parsed invalid link")
 
         super().__init__(robot=robot, name=name, targets=targets, sensortype='NodeCOM', **kwargs)
         self.returns += ['link']
@@ -285,7 +303,9 @@ class NodePosition(MultiSensor):
 
         targets = _targets
 
-        assert all([isinstance(t, representation.Link) for t in targets])
+        if not all([isinstance(t, representation.Link) for t in targets]):
+            print(targets)
+            raise AssertionError("Parsed invalid link")
 
         super().__init__(robot=robot, name=name, targets=targets, sensortype='NodePosition', **kwargs)
         self.returns += ['link']
@@ -310,7 +330,9 @@ class NodeRotation(MultiSensor):
 
         targets = _targets
 
-        assert all([isinstance(t, representation.Link) for t in targets])
+        if not all([isinstance(t, representation.Link) for t in targets]):
+            print(targets)
+            raise AssertionError("Parsed invalid link")
 
         super().__init__(robot=robot, name=name, targets=targets, sensortype='NodeRotation', **kwargs)
         self.returns += ['link']

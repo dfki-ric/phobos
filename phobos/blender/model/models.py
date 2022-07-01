@@ -42,9 +42,9 @@ from phobos.blender.defs import linkobjignoretypes
 
 def collectMaterials(objectlist):
     """Returns a dictionary of materials contained in a list of objects.
-    
+
     Only visual objects are considered and the dict keys represent the material names.
-    
+
     If a material is used by multiple objects, the *user* count is increased by one.
 
     Args:
@@ -70,15 +70,15 @@ def collectMaterials(objectlist):
 @validate('material')
 def deriveMaterial(mat, logging=False, errors=None):
     """Returns a Phobos representation of a Blender material.
-    
+
     Colors are returned as a dictionary with three keys ('r', 'g', 'b').
-    
+
     It contains always:
         *name*: name of the material
         *diffuseColor*: the diffuse color of the material
         *ambientColor*: the ambient color of the material
         *specularColor*: the specular color of the material
-    
+
     Depending on the material and texture configuration it might also contain:
         *emissionColor*: the emission color of the material
         *transparency*: the transparency of the material
@@ -126,7 +126,7 @@ def deriveMaterial(mat, logging=False, errors=None):
     #     )
     # todo: material['shininess'] = mat.specular_hardness / 2
     material['shininess'] = mat.roughness * 100
-    #todo: if mat.use_transparency:
+    # todo: if mat.use_transparency:
     if mat.diffuse_color[3] != 1.0:
         material['transparency'] = 1.0 - mat.diffuse_color[3]
 
@@ -135,7 +135,7 @@ def deriveMaterial(mat, logging=False, errors=None):
         return material
 
     if mat.node_tree:
-        textures = [x for x in mat.node_tree.nodes if x.type=='TEX_IMAGE']
+        textures = [x for x in mat.node_tree.nodes if x.type == 'TEX_IMAGE']
         print(textures[0])
     # there are always 18 slots, regardless of whether they are filled or not
     for tex in mat.texture_slots:
@@ -164,10 +164,10 @@ def deriveMaterial(mat, logging=False, errors=None):
 @validate('link')
 def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
     """Derives a dictionary for the link represented by the provided obj.
-    
+
     If objectlist is provided, only objects contained in the list are taken into account
     for creating the resulting dictionary.
-    
+
     The dictionary contains (besides any generic object properties) this information:
         *parent*: name of parent object or None
         *children*: list of names of the links child links
@@ -261,7 +261,7 @@ def deriveLink(linkobj, objectlist=[], logging=False, errors=None):
 
 def get_link_information(linkobj):
     """Returns the full link information including joint and motor data from a blender object.
-    
+
     The link information is derived according to :func:`derive_link`.
 
     Args:
@@ -386,7 +386,7 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
 @validate('inertia_data')
 def deriveInertial(obj, logging=True, **kwargs):
     """Returns a dictionary describing the inertial information represented by the provided object.
-    
+
     Contains these keys:
         *mass*: float
         *inertia*: list
@@ -397,7 +397,7 @@ def deriveInertial(obj, logging=True, **kwargs):
     Args:
       obj(bpy.types.Object): object of phobostype 'inertial'
       logging(bool, optional): whether to log information or not (Default value = True)
-      **kwargs: 
+      **kwargs:
 
     Returns:
 
@@ -415,7 +415,7 @@ def deriveInertial(obj, logging=True, **kwargs):
 @validate('visual')
 def deriveVisual(obj, logging=True, **kwargs):
     """This function derives the visual information from an object.
-    
+
     Contains these keys:
         *name*: name of the visual
         *geometry*: derived according to `deriveGeometry`
@@ -425,7 +425,7 @@ def deriveVisual(obj, logging=True, **kwargs):
     Args:
       obj(bpy.types.Object): object to derive the visual representation from
       logging: (Default value = True)
-      **kwargs: 
+      **kwargs:
 
     Returns:
       : dict -- model representation of the visual object
@@ -440,7 +440,7 @@ def deriveVisual(obj, logging=True, **kwargs):
     if material:
         visual['material'] = material['name']
 
-    #todo2.9: if obj.lod_levels:
+    # todo2.9: if obj.lod_levels:
     #     if 'lodmaxdistances' in obj:
     #         maxdlist = obj['lodmaxdistances']
     #     else:
@@ -479,7 +479,7 @@ def deriveCollision(obj):
     if 'collision_groups' in dir(obj.rigid_body):
         collision['bitmask'] = int(
             ''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[
-                ::-1
+            ::-1
             ],
             2,
         )
@@ -487,8 +487,8 @@ def deriveCollision(obj):
             if group:
                 log(
                     (
-                        "Object {0} is on a collision layer higher than 16. These layers are "
-                        + "ignored when exporting."
+                            "Object {0} is on a collision layer higher than 16. These layers are "
+                            + "ignored when exporting."
                     ).format(obj.name),
                     'WARNING',
                 )
@@ -557,7 +557,7 @@ def deriveLight(obj):
 
 def recursive_dictionary_cleanup(dictionary):
     """Recursively enrich the dictionary and replace object links with names etc.
-    
+
     These patterns are replaced:
         [phobostype, bpyobj] -> {'object': bpyobj, 'name': getObjectName(bpyobj, phobostype)}
 
@@ -580,10 +580,10 @@ def recursive_dictionary_cleanup(dictionary):
             if isinstance(item, list) and item:
                 # (phobostype, bpyobj) -> {'object': bpyobj, 'name': getObjectName(bpyobj)}
                 if (
-                    len(item) == 2
-                    and isinstance(item[0], str)
-                    and (item[0] in ['joint'] + [enum[0] for enum in defs.phobostypes])
-                    and isinstance(item[1], bpy.types.Object)
+                        len(item) == 2
+                        and isinstance(item[0], str)
+                        and (item[0] in ['joint'] + [enum[0] for enum in defs.phobostypes])
+                        and isinstance(item[1], bpy.types.Object)
                 ):
                     itemlist.append(
                         {
@@ -604,7 +604,7 @@ def recursive_dictionary_cleanup(dictionary):
 
 
 def initObjectProperties(
-    obj, phobostype=None, ignoretypes=(), includeannotations=True, ignorename=False
+        obj, phobostype=None, ignoretypes=(), includeannotations=True, ignorename=False
 ):
     """Initializes phobos dictionary of *obj*, including information stored in custom properties.
 
@@ -919,8 +919,8 @@ def namespaceMotor(motor, namespace):
     """
 
     Args:
-      motor: 
-      namespace: 
+      motor:
+      namespace:
 
     Returns:
 
@@ -934,8 +934,8 @@ def namespaceLink(link, namespace):
     """
 
     Args:
-      link: 
-      namespace: 
+      link:
+      namespace:
 
     Returns:
 
@@ -954,8 +954,8 @@ def namespaceJoint(joint, namespace):
     """
 
     Args:
-      joint: 
-      namespace: 
+      joint:
+      namespace:
 
     Returns:
 
@@ -970,8 +970,8 @@ def namespaced(name, namespace):
     """
 
     Args:
-      name: 
-      namespace: 
+      name:
+      namespace:
 
     Returns:
 
@@ -981,7 +981,7 @@ def namespaced(name, namespace):
 
 def deriveModelDictionary(root, name='', objectlist=[]):
     """Returns a dictionary representation of a Phobos model.
-    
+
     If name is not specified, it overrides the modelname in the root. If the modelname is not
     defined at all, 'unnamed' will be used instead.
 
@@ -1112,12 +1112,12 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     for obj in objectlist:
         try:
             if (
-                (obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                and (obj['geometry/type'] == 'mesh')
-                and (obj.data.name not in model['meshes'])
+                    (obj.phobostype == 'visual' or obj.phobostype == 'collision')
+                    and (obj['geometry/type'] == 'mesh')
+                    and (obj.data.name not in model['meshes'])
             ):
                 model['meshes'][obj.data.name] = obj
-                #todo2.9: for lod in obj.lod_levels:
+                # todo2.9: for lod in obj.lod_levels:
                 #     if lod.object.data.name not in model['meshes']:
                 #         model['meshes'][lod.object.data.name] = lod.object
         except KeyError:
@@ -1125,7 +1125,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
 
     # gather information on groups of objects
     log("Parsing groups...", 'INFO')
-    #todo2.9: TODO: get rid of the "data" part and check for relation to robot
+    # todo2.9: TODO: get rid of the "data" part and check for relation to robot
     # for group in bpy.data.groups:
     #     # skip empty groups
     #     if not group.objects:
@@ -1148,6 +1148,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     for chain in chains:
         model['chains'][chain['name']] = chain
 
+    # print_dict(model)
     # gather information on lights
     log("Parsing lights...", "INFO")
     for obj in objectlist:
@@ -1161,7 +1162,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         """
 
         Args:
-          link: 
+          link:
 
         Returns:
 
@@ -1386,10 +1387,10 @@ def gatherAnnotations(model):
 
 def replace_object_links(dictionary):
     """Replaces object links in a dictionary with object names.
-    
+
     This is required for generic parsed object definitions, as object links are represented by a
     simple dictionary with *name* and *object*.
-    
+
     For most exports, this can be run prior export parsing, to create the respective name linking
     within the model.
 
@@ -1410,7 +1411,7 @@ def replace_object_links(dictionary):
     for key, value in dictionary.items():
         if isinstance(value, list):
             if all([isinstance(item, dict) for item in value]) and all(
-                [('name' in item and 'object' in item) for item in value]
+                    [('name' in item and 'object' in item) for item in value]
             ):
                 newdict[key] = sorted([item['name'] for item in value])
 
@@ -1426,7 +1427,7 @@ def createGroup(group):
     """
 
     Args:
-      group: 
+      group:
 
     Returns:
 
@@ -1439,7 +1440,7 @@ def createChain(group):
     """
 
     Args:
-      group: 
+      group:
 
     Returns:
 

@@ -27,20 +27,24 @@ class Pose(Representation):
 
     def check_valid(self):
         assert (self.xyz is None or len(self.xyz) == 3) and \
-            (self.rpy is None or len(self.rpy) == 3)
+               (self.rpy is None or len(self.rpy) == 3)
 
     # Aliases for backwards compatibility
     @property
-    def rotation(self): return self.rpy
+    def rotation(self):
+        return self.rpy
 
     @rotation.setter
-    def rotation(self, value): self.rpy = value
+    def rotation(self, value):
+        self.rpy = value
 
     @property
-    def position(self): return self.xyz
+    def position(self):
+        return self.xyz
 
     @position.setter
-    def position(self, value): self.xyz = value
+    def position(self, value):
+        self.xyz = value
 
     def from_vec(self, vec):
         assert len(vec) == 6, "Invalid length"
@@ -120,7 +124,6 @@ class Sphere(Representation):
     def scale_geometry(self, x=1, y=1, z=1):
         assert x == y == z
         self.radius *= x
-
 
 class Mesh(Representation):
     def __init__(self, filename=None, scale=None):
@@ -286,6 +289,7 @@ class Joint(Representation):
 
 
 class Link(Representation):
+
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None,
                  origin=None):
         assert origin is None  # Unused but might be neccesary for sdf
@@ -295,6 +299,7 @@ class Link(Representation):
             self.visuals = visuals
         self.inertial = _singular(inertial)
         self.collisions = []
+        assert origin is None
         if collisions is not None:
             self.collisions = collisions
         for geo in self.visuals + self.collisions:
@@ -379,6 +384,7 @@ class Sensor(Representation):
         if self._origin.relative_to is None:
             self._origin.relative_to = self.parent
         return self._origin
+
 
 # class PR2Transmission(Representation):
 #     def __init__(self, name=None, joint=None, actuator=None, type=None,

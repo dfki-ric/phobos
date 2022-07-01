@@ -170,3 +170,10 @@ def list_files(startpath, ignore=["\.git"]):
             path = os.path.join(directory, file)
             file_list += [path]
     return sorted(file_list)
+
+
+def check_for_iterable(check_object):
+    try:
+        some_object_iterator = iter(check_object)
+    except TypeError as te:
+        print(check_object, 'is not iterable')

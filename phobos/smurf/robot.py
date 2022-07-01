@@ -1,17 +1,17 @@
 from copy import deepcopy
-# import datetime
 import os
 import sys
 
 import numpy as np
 import yaml
 
-from ..core import Robot
-from .motors import Motor
+from ..core import Robot, derive_model_dictionary
+from .motors import Motor, MimicMotor
 from .poses import Pose
 from .core import Material, Collision, Joint, Link
 from .hyrodyn import Submechanism, Exoskeleton
-from .sensors import Sensor, MultiSensor
+from .sensors import Joint6DOF, RotatingRaySensor, CameraSensor, IMU, MotorCurrent, \
+    JointPosition, JointVelocity, NodeContactForce, NodeCOM, NodePosition, NodeRotation
 from ..geometry import get_reflection_matrix
 from ..io import representation
 from ..utils import tree, transform
@@ -20,7 +20,7 @@ from ..utils.misc import edit_name_string
 
 class Smurf(Robot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
-                 inputfile=None):
+                 inputfile=None, description=None):
         if inputfile is not None:
             if inputfile.lower().endswith(".smurf") and smurffile is None:
                 smurffile = inputfile
@@ -47,12 +47,100 @@ class Smurf(Robot):
         self.smurf_links = []
         self.smurf_joints = []
         self.smurf_materials = []
+        self.description = "" if description is None else description
+
         # Check the input file
         self.load_smurffile(self.smurffile)
 
         super().__init__(name=name, xmlfile=self.xmlfile, verify_meshes_on_import=verify_meshes_on_import)
 
         self._init_annotations()
+
+    @classmethod
+    def get_smurf_from_dict(cls, name='', objectlist=[]):
+        import bpy
+        import phobos.blender.utils.selection as sUtils
+
+        cli_robot = Robot.get_robot_from_dict(name, objectlist)
+        smurf_robot = Smurf()
+        smurf_robot.__dict__.update(cli_robot.__dict__)
+        root = sUtils.getRoot(bpy.context.selected_objects[0])
+        blender_model = derive_model_dictionary(root, name, objectlist)
+        smurf_robot.description = blender_model["description"]
+
+        for key, value in blender_model['materials'].items():
+            value.pop('diffuseColor')
+            smurf_robot._attach_part('smurf_materials', Material(**value))
+
+        for key, values in blender_model['sensors'].items():
+            if values.get('id') is not None:
+                values['targets'] = [
+                    x for x in values['id'] if (
+                            smurf_robot.get_joint(x, verbose=False) is not None or
+                            smurf_robot.get_link(x, verbose=False) is not None or
+                            smurf_robot.get_collision_by_name(x) is not None or
+                            smurf_robot.get_visual_by_name(x) is not None
+                    )
+                ]
+                values.pop('id')
+            if values["type"].upper() == "MOTORCURRENT":
+                smurf_robot.attach_sensor(MotorCurrent(smurf_robot, **values))
+            elif values["type"].upper() == "CAMERASENSOR":
+                smurf_robot.attach_sensor(
+                    CameraSensor(smurf_robot,
+                                 hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
+                                 hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
+                                 **values))
+            elif values["type"].upper() == "ROTATINGRAYSENSOR":
+                smurf_robot.attach_sensor(RotatingRaySensor(smurf_robot, horizontal_offset=0 if values.get(
+                                                                'horizontal_offset') is None else values.pop(
+                                                                'horizontal_offset'),
+                                                            **values))
+            elif values["type"].upper() == "JOINTVELOCITY":
+                smurf_robot.attach_sensor(JointVelocity(smurf_robot, **values))
+            elif values["type"].upper() == "IMU":
+                smurf_robot.attach_sensor(IMU(smurf_robot, **values))
+            elif values["type"].upper() == "JOINT6DOF":
+                smurf_robot.attach_sensor(Joint6DOF(smurf_robot, **values))
+            elif values["type"].upper() == "JOINTPOSITION":
+                smurf_robot.attach_sensor((JointPosition(smurf_robot, **values)))
+            elif values["type"].upper() == "NODECONTACTFORCE":
+                smurf_robot.attach_sensor((NodeContactForce(smurf_robot, **values)))
+            elif values["type"].upper() == "NODEROTATION":
+                smurf_robot.attach_sensor(NodeRotation(smurf_robot, **values))
+            elif values["type"].upper() == "NODEPOSITION":
+                smurf_robot.attach_sensor(NodePosition(smurf_robot, **values))
+            elif values["type"].upper() == "NODECOM":
+                smurf_robot.attach_sensor(NodeCOM(smurf_robot, **values))
+
+        motors = blender_model["motors"]  # TODO bei joints reinschauen nach mimic, MimicJoint, MimicMotor
+        for key, value in blender_model.items():
+            print(key)
+        for key, value in motors.items():
+            name = value.pop('name')
+            joint = value.pop('joint')
+            smurf_robot.attach_motor(Motor(name=name, joint=smurf_robot.get_joint(joint), **value))
+        additional_info = {'lights': blender_model.get('lights'),
+                           'groups': blender_model.get('groups'),
+                           'chains': blender_model.get('chains'),
+                           # 'date': blender_model.get('date')
+                           }
+        if False:
+            mimic = blender_model["mimic"]
+            for key, value in mimic.items():
+                name = value.pop('name')
+                joint = value.pop('joint')
+                smurf_robot.attach_motor(MimicMotor(name=name, joint=smurf_robot.get_joint(joint), **value))
+            additional_info = {'lights': blender_model.get('lights'),
+                               'groups': blender_model.get('groups'),
+                               'chains': blender_model.get('chains'),
+                               # 'date': blender_model.get('date')
+                               }
+
+        for key, value in additional_info.items():
+            if value is not None and key not in smurf_robot.named_annotations.keys():
+                smurf_robot.add_named_annotation(key, additional_info[key])
+        return smurf_robot
 
     # helper methods
     def load_smurffile(self, smurffile):
@@ -361,7 +449,8 @@ class Smurf(Robot):
         annotation_dict = {
             'modelname': self.name,
             # 'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
-            'files': sorted(export_files)
+            'files': sorted(export_files),
+            'description': self.description
         }
 
         with open(os.path.join(smurf_dir, "{}.smurf".format(self.name)), "w+") as stream:
@@ -637,12 +726,14 @@ class Smurf(Robot):
             raise NotImplementedError("_rename() not implemented for targettype " + targettype)
         return {target: new_name}
 
-    def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None, mass=0.0,
+    def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None,
+                               mass=0.0,
                                add_default_motor=True):
         """
         Adds a link with the given parameters. See core.Robot.addLink()
         """
-        parent, link, joint = super(Smurf, self).add_link_by_properties(name, translation, rotation, parent, jointname=jointname,
+        parent, link, joint = super(Smurf, self).add_link_by_properties(name, translation, rotation, parent,
+                                                                        jointname=jointname,
                                                                         jointtype=jointtype, axis=axis, mass=mass)
         if joint.type in ["revolute", "prismatic"] and add_default_motor:
             self.attach_motor(Motor(
@@ -943,7 +1034,7 @@ class Smurf(Robot):
                             break
                         elif sorted_joints.index(jn) == joint_idx - 1:
                             inserted = True
-                            sm.jointnames.insert(sm.jointnames.index(jn)+1, jointname)
+                            sm.jointnames.insert(sm.jointnames.index(jn) + 1, jointname)
                             break
                     if inserted:
                         break
@@ -977,8 +1068,8 @@ class Smurf(Robot):
         counter = 0
         for sm in self.submechanisms:
             if sm.auto_gen:
-                sm.name = "serial_chain"+str(counter)
-                sm.contextual_name = "serial_chain"+str(counter)
+                sm.name = "serial_chain" + str(counter)
+                sm.contextual_name = "serial_chain" + str(counter)
                 counter += 1
 
     def add_floating_base(self):

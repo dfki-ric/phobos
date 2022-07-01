@@ -24,7 +24,7 @@ class SmurfBase(YamlReflection, Representation):
         # Collect all variables (and properties) which are given in the object self.returns
         export_props = []
         for var in self.returns:
-            if getattr(self, var) is not None:
+            if hasattr(self, var) and getattr(self, var) is not None:
                 export_props += [var]
 
         # Collect all other vars
