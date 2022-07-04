@@ -1,11 +1,11 @@
-__IMPORTS__ = ["np", "import_mesh", "import_mars_mesh", "matrix_to_rpy", "round_array", "rpy_to_matrix", "mass_from_tensor"]
-
 import numpy as np
 
 from .base import Representation
 from .xml_factory import singular as _singular
 from ..geometry.io import import_mesh, import_mars_mesh
 from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
+
+__IMPORTS__ = [x for x in dir() if not x.startswith("_")]
 
 
 class Pose(Representation):
@@ -174,7 +174,7 @@ class Visual(Representation):
         self.geometry = _singular(geometry)
         self.material = _singular(material)
         self.name = name
-        self._origin = _singular(origin)
+        self.origin = _singular(origin)
 
 
 class Inertia(Representation):
@@ -283,6 +283,10 @@ class Joint(Representation):
         if self._origin.relative_to is None:
             self._origin.relative_to = self.parent
         return self._origin
+
+    @origin.setter
+    def origin(self, origin: Pose):
+        self._origin = _singular(origin)
 
 
 class Link(Representation):
@@ -451,7 +455,6 @@ class Robot(Representation):
 
         self.materials = materials if materials is not None else []
         self.transmissions = transmissions if transmissions is not None else []
-
 
     def add_aggregate(self, typeName, elem):
         if typeName == 'joint':

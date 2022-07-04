@@ -32,7 +32,7 @@ def get_class(classname):
         cls = getattr(representation, classname)
     else:
         raise AssertionError(f"The class {classname} is not None to the XML-Factory")
-    assert isinstance(cls, Representation), f"The class {classname} is no valid Representation instance"
+    assert issubclass(cls, Representation), f"The class {classname} is no valid Representation instance"
     return cls
 
 

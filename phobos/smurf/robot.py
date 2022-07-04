@@ -263,7 +263,7 @@ class Smurf(Robot):
     # export methods
     def export_smurf(self, outputdir=None, export_visuals=True, export_collisions=True, create_pdf=False,
                      ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
-                     export_joint_limits=True, export_submodels=True):
+                     export_joint_limits=True, export_submodels=True, format="urdf"):
         """ Export self and all annotations inside a given folder with structure
         """
         # Convert to absolute path
@@ -283,7 +283,7 @@ class Smurf(Robot):
         super().full_export(output_dir=outputdir, export_visuals=export_visuals, export_collisions=export_collisions,
                             create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
                             ros_pkg_name=ros_pkg_name, export_joint_limits=export_joint_limits,
-                            export_submodels=export_submodels)
+                            export_submodels=export_submodels, format=format)
         # Export the smurf files
         smurf_dir = os.path.join(outputdir, "smurf")
         if not os.path.exists(smurf_dir):
@@ -385,9 +385,9 @@ class Smurf(Robot):
 
     def full_export(self, output_dir=None, export_visuals=True, export_collisions=True,
                     create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
-                    export_joint_limits=True, export_submodels=True):
+                    export_joint_limits=True, export_submodels=True, format="urdf"):
         self.export_smurf(output_dir, export_visuals, export_collisions, create_pdf, ros_pkg, export_with_ros_pathes,
-                          ros_pkg_name, export_joint_limits, export_submodels=export_submodels)
+                          ros_pkg_name, export_joint_limits, export_submodels=export_submodels, format=format)
 
     # getters
     def get_motor_id(self, motorname):
