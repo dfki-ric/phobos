@@ -1,4 +1,4 @@
-from .base import SmurfAnnotation, SmurfBase
+from ..io.smurf_reflection import SmurfBase
 from ..utils import tree
 
 
@@ -22,6 +22,10 @@ class LoopConstraint(SmurfBase):
 
 
 class JointDependency(SmurfBase):
+    type_dict = {
+        "joint_name": "joint"
+    }
+
     def __init__(self, joint_name, multiplier, offset):
         kwargs = {"joint": joint_name,
                   "multiplier": multiplier,
@@ -30,6 +34,10 @@ class JointDependency(SmurfBase):
 
 
 class MultiJointDependency(SmurfBase):
+    type_dict = {
+        "joint": "joint"
+    }
+
     def __init__(self, joint, joint_dependencies=None, name=None):
         if joint_dependencies is None:
             joint_dependencies = []
@@ -48,7 +56,15 @@ class MultiJointDependency(SmurfBase):
         return len(self.joint_dependencies) == 0
 
 
-class HyrodynAnnotation(SmurfAnnotation):
+class HyrodynAnnotation(SmurfBase):
+    type_dict = {
+        "jointnames_spanningtree": "joint",
+        "jointnames_active": "joint",
+        "jointnames_independent": "joint",
+        "jointnames_dependent": "joint",
+        "jointnames": "joint"
+    }
+
     def __init__(self, robot, name,
                  jointnames_spanningtree=None, jointnames_active=None,
                  jointnames_independent=None, jointnames_dependent=None,

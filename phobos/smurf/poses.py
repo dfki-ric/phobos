@@ -1,7 +1,11 @@
-from .base import SmurfAnnotation
+from ..io.smurf_reflection import SmurfBase
 
 
-class JointPose(SmurfAnnotation):
+class JointPosition(SmurfBase):
+    type_dict = {
+        "joint": "joint"
+    }
+
     def __init__(self, robot=None, joint=None, position=None):
         super().__init__(robot=robot, name=None, joint=joint)
         self._position = position
@@ -30,7 +34,7 @@ class JointPose(SmurfAnnotation):
         self.position = value
 
 
-class Pose(SmurfAnnotation):
+class JointPositionSet(SmurfBase):
     def __init__(self, robot=None, name=None, configuration=None):
         super().__init__(robot=robot, name=name)
 
@@ -41,7 +45,7 @@ class Pose(SmurfAnnotation):
         elif type(configuration) == list:
             self.configuration = configuration
 
-        assert all(type(x) == JointPose for x in self.configuration)
+        assert all(type(x) == JointPosition for x in self.configuration)
 
         self.excludes += ['configuration']
         self.returns += ['joints']
@@ -68,5 +72,5 @@ class Pose(SmurfAnnotation):
                 if robot.get_joint(joint):
                     c_joint = robot.get_joint(joint)
                     self.configuration.append(
-                        JointPose(robot=robot, joint=c_joint, position=position)
+                        JointPosition(robot=robot, joint=c_joint, position=position)
                     )

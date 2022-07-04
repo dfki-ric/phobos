@@ -74,7 +74,7 @@ class Robot(representation.Robot):
 
     # helper methods
     @classmethod
-    def get_robot_from_dict(cls, name='', objectlist=[]):
+    def get_robot_from_blender_dict(cls, name='', objectlist=[]):
         """
         Uses blender workflow to access internal dictionary to call robot
         representation. Idea is to use cli methods and formats for imports and
@@ -107,7 +107,7 @@ class Robot(representation.Robot):
                 child=values['child'],
                 type=values['type'],
                 axis=values.get('axis'),
-                origin=transform.to_origin(np.array(values['pose']['rawmatrix'])),
+                origin=representation.Pose.from_matrix(np.array(values['pose']['rawmatrix'])),
                 limit=cli_limit,
                 dynamics=None,
                 safety_controller=None,
@@ -132,13 +132,13 @@ class Robot(representation.Robot):
                 for key2, entry in values["collision"].items():
                     colls.append(representation.Collision(
                         geometry=entry["geometry"],
-                        origin=transform.to_origin(np.array(entry["pose"]['rawmatrix'])),
+                        origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
                         name=entry["name"]))
                 vis = []
                 for key2, entry in values["visual"].items():
                     vis.append(representation.Visual(geometry=entry["geometry"],
                                                      material=entry.get("material"),
-                                                     origin=transform.to_origin(np.array(entry["pose"]['rawmatrix'])),
+                                                     origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
                                                      name=entry["name"]))
 
                 cli_links.append(representation.Link(
@@ -400,7 +400,7 @@ class Robot(representation.Robot):
 
     def export_joint_limits(self, outputdir, file_name="joint_limits.yml", names=None):
         if names is None:
-            names = [j.name for j in self.joints if j.type != "fixed"]
+            names = [j.name for j in self.joints if j.joint_type != "fixed"]
         out = get_joint_info_dict(self, list(set(names)))
         if not os.path.exists(outputdir):
             os.makedirs(outputdir)
@@ -448,11 +448,11 @@ class Robot(representation.Robot):
 
         print(" Parsing joints...")
         for j in self.joints:
-            if j.type == 'revolute':
+            if j.joint_type == 'revolute':
                 rev_no += 1
-            elif j.type == 'prismatic':
+            elif j.joint_type == 'prismatic':
                 pris_no += 1
-            elif j.type == 'fixed':
+            elif j.joint_type == 'fixed':
                 fix_no += 1
             else:
                 other_no += 1
@@ -773,6 +773,18 @@ class Robot(representation.Robot):
                 return i
         return None
 
+    def get_instance(self, targettype, target):
+        """
+        Returns the id of the given instance
+        :param targettype: the tye of the searched instance
+        :param target: the name of the searched instance
+        :return: the id or None if not found
+        """
+        for obj in getattr(self, targettype + ("s" if not targettype.endswith("s") else "")):
+            if obj.name == target:
+                return target
+        return None
+
     def get_joint_id(self, joint_name):
         """
         Returns the ID (index in the joint list) of the joint.
@@ -802,6 +814,8 @@ class Robot(representation.Robot):
         :param link_name: the name of the joint to get
         :return: the link instance, None if not found
         """
+        if isinstance(link_name, representation.Link):
+            return link_name
         if isinstance(link_name, list):
             return [self.get_link(lname) for lname in link_name]
 
@@ -820,6 +834,8 @@ class Robot(representation.Robot):
         :param joint_name: the name of the joint to get
         :return: the joint instance, None if not found
         """
+        if isinstance(joint_name, representation.Joint):
+            return joint_name
         if isinstance(joint_name, list):
             return [self.get_joint(jname) for jname in joint_name]
 
@@ -899,6 +915,8 @@ class Robot(representation.Robot):
         :param visual_name: name of the searched visual
         :return: the found visual or none
         """
+        if isinstance(visual_name, representation.Visual):
+            return visual_name
         for link in self.links:
             for vis in link.visuals:
                 if vis.name == visual_name:
@@ -934,6 +952,8 @@ class Robot(representation.Robot):
         :param collision_name: name of the searched collision
         :return: the found collision or none
         """
+        if isinstance(collision_name, representation.Collision):
+            return collision_name
         for link in self.links:
             for coll in link.collisions:
                 if coll.name == collision_name:
@@ -947,6 +967,8 @@ class Robot(representation.Robot):
         :param material_name: name of the searched collision
         :return: the found collision or none
         """
+        if isinstance(material_name, representation.Material):
+            return material_name
         for mat in self.materials:
             if mat.name == material_name:
                 return mat
@@ -1342,7 +1364,7 @@ class Robot(representation.Robot):
         Turns all joints where the axis are not unit. Not yet entirely tested
         """
         if joints is None:
-            joints = [j for j in self.joints if j.type != "fixed" and hasattr(j, "axis") and j.axis is not None]
+            joints = [j for j in self.joints if j.joint_type != "fixed" and hasattr(j, "axis") and j.axis is not None]
         elif not isinstance(joints, list):
             joints = [joints]
 
@@ -1669,7 +1691,7 @@ class Robot(representation.Robot):
             default_axis = [0.0, 0.0, 1.0]
         result = 0
         for joint in self.joints:
-            if joint.type == "fixed":
+            if joint.joint_type == "fixed":
                 joint.axis = None
                 joint.limit = None
                 joint.mimic = None
@@ -1692,7 +1714,7 @@ class Robot(representation.Robot):
                     result &= 2
                     if raise_error:
                         raise ValueError("ERROR: Not all joint limits for " + joint.name + " defined!")
-                if (joint.type == "revolute" or joint.type == "prismatic") and \
+                if (joint.joint_type == "revolute" or joint.joint_type == "prismatic") and \
                         not hasattr(joint, "axis") or joint.axis is None:
                     print("WARNING: Joint axis for joint", joint.name, "not defined. Setting to [0 0 1]", flush=True,
                           file=sys.stderr)
@@ -2294,7 +2316,7 @@ class Robot(representation.Robot):
                 flip_axis = None
 
                 axis_correction = np.eye(4)
-                if new_joint.type != "fixed":
+                if new_joint.joint_type != "fixed":
                     new_joint.axis = new_joint.axis / np.linalg.norm(new_joint.axis)
                     if len(np.where(np.array(new_joint.axis) == 0.0)[0]) != 2:
                         print("WARNING: joint axis is not x, y or z unit vector:\n", new_joint.__dict__)
@@ -2308,7 +2330,7 @@ class Robot(representation.Robot):
                         print("Rotating joint by \n", axis_correction)
                         print("New axis is:", new_axis)
 
-                if new_joint.type == "prismatic":
+                if new_joint.joint_type == "prismatic":
                     """
                     For prismatic joints we want to keep the direction of this joint while mirroring the axis.
                     Therefore this axis is maintained while the other two are flipped.
@@ -2320,7 +2342,7 @@ class Robot(representation.Robot):
                         elif maintain_order[i] not in maintain_mirrored_axis and len(maintain_mirrored_axis) == 2:
                             flip_axis = maintain_order[i]
                     assert flip_axis is not None
-                elif new_joint.type == "revolute":
+                elif new_joint.joint_type == "revolute":
                     """
                     For revolute joints we want to flip the axis of the joint so that the joint acts symmetrically
                     """
@@ -2547,7 +2569,7 @@ class Robot(representation.Robot):
         floatingbase.name = fb_robot.name + "_floatingbase"
         return floatingbase
 
-     def scale_link(self, linkname, scale_x, scale_y, scale_z, new_mass=None, geometry_for_inertia=None):
+    def scale_link(self, linkname, scale_x, scale_y, scale_z, new_mass=None, geometry_for_inertia=None):
         """
         Scales the link with the given scale
         Args:

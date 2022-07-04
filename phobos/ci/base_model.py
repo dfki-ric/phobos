@@ -242,20 +242,20 @@ class BaseModel(yaml.YAMLObject):
         if hasattr(self, 'replace_joint_types'):
             for joint in self.robot.joints:
                 for old, new in self.replace_joint_types.items():
-                    if joint.type == old:
-                        joint.type = new
+                    if joint.joint_type == old:
+                        joint.joint_type = new
 
         if hasattr(self, 'redefine_articulation'):
             transmissions = {}
             for joint in self.robot.joints:
-                if joint.type == "fixed":
+                if joint.joint_type == "fixed":
                     continue
                 elif joint.name in self.redefine_articulation.keys():
                     # print("Overriding joint definition for", joint.name, flush=True)
                     if joint.limit is None:
                         joint.limit = representation.JointLimit()
                     if "type" in self.redefine_articulation[joint.name].keys():
-                        joint.type = self.redefine_articulation[joint.name]["type"]
+                        joint.joint_type = self.redefine_articulation[joint.name]["type"]
                     if "axis" in self.redefine_articulation[joint.name].keys():
                         joint.axis = self.redefine_articulation[joint.name]["axis"]
                     if "min" in self.redefine_articulation[joint.name].keys():
@@ -533,7 +533,7 @@ class BaseModel(yaml.YAMLObject):
 
             if 'poses' in self.smurf.keys():
                 for (cn, config) in self.smurf["poses"].items():
-                    pose = ps.Pose(robot=self.robot, name=cn, configuration=config)
+                    pose = ps.JointPositionSet(robot=self.robot, name=cn, configuration=config)
                     self.robot.add_pose(pose)
                     print('      Added pose {}'.format(cn), flush=True)
 
@@ -544,7 +544,7 @@ class BaseModel(yaml.YAMLObject):
                 single_sensors = [x for x in dir(ps.sensors) if
                                   not x.startswith("__") and x not in ps.sensors.__IMPORTS__ and issubclass(
                                       getattr(ps.sensors, x), ps.sensors.Sensor) and x not in multi_sensors]
-                moveable_joints = [j for j in self.robot.joints if j.type != 'fixed']
+                moveable_joints = [j for j in self.robot.joints if j.joint_type != 'fixed']
 
                 for s in self.smurf["sensors"]:
                     sensor_ = None
@@ -597,7 +597,7 @@ class BaseModel(yaml.YAMLObject):
                 if "motors" in self.smurf.keys() and joint.name in self.smurf["motors"].keys():
                     for k, v in self.smurf["motors"][joint.name].items():
                         conf[k] = v
-                if joint.type == "fixed":
+                if joint.joint_type == "fixed":
                     continue
                 if hasattr(joint, "mimic") and joint.mimic is not None:
                     motor = ps.MimicMotor(

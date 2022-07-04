@@ -20,7 +20,7 @@
           "varname": "materials"
         },
         "sensor": {
-          "classname": "Sensor",
+          "classname": "sensor_factory",
           "varname": "sensors"
         },
         "transmission": {
@@ -203,7 +203,7 @@
       "tag": "joint",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "jointtype"
       },
       "children": {
         "origin": {
@@ -296,87 +296,129 @@
         }
       }
     },
-    "RotatingRaySensor": {
-      "tag": "lidar",
-      "nested_children": {
-        "scan": {
-          "nested_children": {
-            "horizontal": {
-              "value_children": {
-                "samples": "bands",
-                "min_angle": "min_horizontal_angle",
-                "max_angle": "max_horizontal_angle",
-                "resolution": "horizontal_resolution"
-              }
-            },
-            "vertical": {
-              "value_children": {
-                "samples": "lasers",
-                "min_angle": "min_vertical_angle",
-                "max_angle": "max_vertical_angle",
-                "resolution": "vertical_resolution"
-              }
-            }
-          }
-        },
-        "range": {
-          "value_children": {
-            "max": "max_distance",
-            "min": "min_distance"
-          }
-        }
-      }
-    },
-    "CameraSensor": {
-      "tag": "camera",
-      "attributes": {
-        "name": "name"
-      },
-      "nested_children": {
-        "image": {
-          "value_children": {
-            "width": "width",
-            "height": "height",
-            "hfov": "opening_width"
-          }
-        }
-      }
-    },
-    "NodeContact": {
-      "tag": "contact",
-      "value_children": {
-        "collision": "collisions"
-      }
-    },
-    "Sensor": {
+    "Joint6DOF": {
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "rate": "rate"
       },
-      "value_children": {
-        "always_on": "always_on",
-        "update_rate": "update_rate",
-        "visualize": "visualize",
-        "topic": "topic",
-        "enable_metrics": "enable_metrics"
+      "attribute_children": {
+        "parent": "link"
       },
       "children": {
         "pose": {
           "classname": "Pose",
           "varname": "origin"
-        },
+        }
+      },
+      "nested_children": {
+        "force_torque": {
+          "value_children": {
+            "frame": "link"
+          }
+        }
+      }
+    },
+    "RotatingRaySensor": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": "link"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "ray": {
+          "nested_children": {
+            "scan": {
+              "nested_children": {
+                "horizontal": {
+                  "value_children": {
+                    "samples": "bands",
+                    "min_angle": "min_horizontal_angle",
+                    "max_angle": "max_horizontal_angle",
+                    "resolution": "horizontal_resolution"
+                  }
+                },
+                "vertical": {
+                  "value_children": {
+                    "samples": "lasers",
+                    "min_angle": "min_vertical_angle",
+                    "max_angle": "max_vertical_angle",
+                    "resolution": "vertical_resolution"
+                  }
+                }
+              }
+            },
+            "range": {
+              "value_children": {
+                "max": "max_distance",
+                "min": "min_distance"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CameraSensor": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": "link"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
         "camera": {
-          "classname": "CameraSensor",
-          "varname": "camera"
-        },
+          "attributes": {
+            "name": "name"
+          },
+          "nested_children": {
+            "image": {
+              "value_children": {
+                "width": "width",
+                "height": "height",
+                "hfov": "opening_width"
+              }
+            }
+          }
+        }
+      }
+    },
+    "NodeContact": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": "link"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
         "contact": {
-          "classname": "NodeContact",
-          "varname": "contact"
-        },
-        "lidar": {
-          "classname": "RotatingRaySensor",
-          "varname": "lidar"
+          "value_children": {
+            "collision": "targets"
+          }
         }
       }
     }
@@ -401,7 +443,7 @@
           "varname": "materials"
         },
         "sensor": {
-          "classname": "Sensor",
+          "classname": "sensor_factory",
           "varname": "sensors"
         }
       }
@@ -574,7 +616,7 @@
       "tag": "joint",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "jointtype"
       },
       "children": {
         "pose": {
@@ -632,75 +674,15 @@
         "joint": "joint"
       }
     },
-    "RotatingRaySensor": {
-      "tag": "lidar",
-      "nested_children": {
-        "scan": {
-          "nested_children": {
-            "horizontal": {
-              "value_children": {
-                "samples": "bands",
-                "min_angle": "min_horizontal_angle",
-                "max_angle": "max_horizontal_angle",
-                "resolution": "horizontal_resolution"
-              }
-            },
-            "vertical": {
-              "value_children": {
-                "samples": "lasers",
-                "min_angle": "min_vertical_angle",
-                "max_angle": "max_vertical_angle",
-                "resolution": "vertical_resolution"
-              }
-            }
-          }
-        },
-        "range": {
-          "value_children": {
-            "max": "max_distance",
-            "min": "min_distance"
-          }
-        }
-      }
-    },
-    "CameraSensor": {
-      "tag": "camera",
-      "attributes": {
-        "name": "name"
-      },
-      "nested_children": {
-        "image": {
-          "value_children": {
-            "width": "width",
-            "height": "height"
-          }
-        }
-      },
-      "value_children": {
-        "horizontal_fov": "opening_width"
-      },
-      "children": {
-        "pose": {
-          "classname": "Pose",
-          "varname": "frame_offset"
-        }
-      }
-    },
-    "NodeContact": {
-      "tag": "contact",
-      "value_children": {
-        "collision": "collisions"
-      }
-    },
-    "Sensor": {
+    "Joint6DOF": {
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "sdf_type"
       },
       "value_children": {
         "always_on": "always_on",
-        "update_rate": "update_rate",
+        "rate": "rate",
         "visualize": "visualize",
         "topic": "topic",
         "enable_metrics": "enable_metrics"
@@ -709,18 +691,136 @@
         "pose": {
           "classname": "Pose",
           "varname": "origin"
-        },
-        "camera": {
-          "classname": "CameraSensor",
-          "varname": "camera"
-        },
-        "contact": {
-          "classname": "NodeContact",
-          "varname": "contact"
-        },
+        }
+      },
+      "nested_children": {
+        "force_torque": {
+          "value_children": {
+            "frame": "link"
+          }
+        }
+      }
+    },
+    "RotatingRaySensor": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
         "lidar": {
-          "classname": "RotatingRaySensor",
-          "varname": "lidar"
+          "nested_children": {
+            "scan": {
+              "nested_children": {
+                "horizontal": {
+                  "value_children": {
+                    "samples": "bands",
+                    "min_angle": "min_horizontal_angle",
+                    "max_angle": "max_horizontal_angle",
+                    "resolution": "horizontal_resolution"
+                  }
+                },
+                "vertical": {
+                  "value_children": {
+                    "samples": "lasers",
+                    "min_angle": "min_vertical_angle",
+                    "max_angle": "max_vertical_angle",
+                    "resolution": "vertical_resolution"
+                  }
+                }
+              }
+            },
+            "range": {
+              "value_children": {
+                "max": "max_distance",
+                "min": "min_distance"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CameraSensor": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "camera": {
+          "attributes": {
+            "name": "name"
+          },
+          "nested_children": {
+            "image": {
+              "value_children": {
+                "width": "width",
+                "height": "height"
+              }
+            }
+          },
+          "value_children": {
+            "horizontal_fov": "opening_width"
+          },
+          "children": {
+            "pose": {
+              "classname": "Pose",
+              "varname": "frame_offset"
+            }
+          }
+        }
+      }
+    },
+    "NodeContact": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "contact": {
+          "value_children": {
+            "collision": "collisions"
+          }
         }
       }
     }

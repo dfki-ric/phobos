@@ -1,13 +1,20 @@
-from .base import SmurfAnnotation
-from ..io import representation
+from ..io.base import Representation
+from ..io.representation import JointLimit
+from ..io.smurf_reflection import SmurfBase
 
 
-class Motor(SmurfAnnotation):
-    def __init__(self, robot=None, name=None, joint=None, **kwargs):
-        super().__init__(robot=robot, name=name, joint=joint, link=None, **kwargs)
+class Motor(Representation, SmurfBase):
+    type_dict = {
+        "joint": "joint"
+    }
+
+    def __init__(self, name=None, joint=None, **kwargs):
+        SmurfBase.__init__(name=name, joint=joint, link=None, **kwargs)
         # This is hardcoded information
-        self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue', 'reducedDataPackage',
-                         'noDataPackage']
+        self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue']
+
+    def linking_callback(self):
+        setattr(self._joint, "motor", self)
 
     @property
     def maxEffort(self):
@@ -22,8 +29,8 @@ class Motor(SmurfAnnotation):
             if self._joint and self._joint.limit:
                 self._joint.limit.effort = effort
             else:
-                self._joint.limit = representation.JointLimit(
-                    effort=self.maxEffort,
+                self._joint.limit = JointLimit(
+                    effort=effort,
                     velocity=self.maxSpeed,
                     lower=self.minValue,
                     upper=self.maxValue
@@ -42,11 +49,11 @@ class Motor(SmurfAnnotation):
             if self._joint and self._joint.limit:
                 self._joint.limit.upper = maxval
             else:
-                self._joint.limit = representation.JointLimit(
+                self._joint.limit = JointLimit(
                     effort=self.maxEffort,
                     velocity=self.maxSpeed,
                     lower=self.minValue,
-                    upper=self.maxValue
+                    upper=maxval
                 )
 
     @property
@@ -62,10 +69,10 @@ class Motor(SmurfAnnotation):
             if self._joint and self._joint.limit:
                 self._joint.limit.lower = minval
             else:
-                self._joint.limit = representation.JointLimit(
+                self._joint.limit = JointLimit(
                     effort=self.maxEffort,
                     velocity=self.maxSpeed,
-                    lower=self.minValue,
+                    lower=minval,
                     upper=self.maxValue
                 )
 
@@ -82,34 +89,21 @@ class Motor(SmurfAnnotation):
             if self._joint and self._joint.limit:
                 self._joint.limit.velocity = speedval
             else:
-                self._joint.limit = representation.JointLimit(
+                self._joint.limit = JointLimit(
                     effort=self.maxEffort,
-                    velocity=self.maxSpeed,
+                    velocity=speedval,
                     lower=self.minValue,
                     upper=self.maxValue
                 )
 
+    @property
+    def mimic_motor(self):
+        return self._joint.mimic.joint
 
-class MimicMotor(Motor):
-    def __init__(self, robot=None, name=None, joint=None, mimic_motor=None, mimic_multiplier=1,
-                 mimic_offset=0, **kwargs):
-        super().__init__(robot=robot, name=name, joint=joint, **kwargs)
+    @property
+    def mimic_multiplier(self):
+        return self._joint.mimic.multiplier
 
-        self.mimic_motor = mimic_motor
-        self.mimic_multiplier = mimic_multiplier
-        self.mimic_offset = mimic_offset
-        # self._mimic = mimic_motor
-        self.returns += ['mimic_motor', 'mimic_multiplier', 'mimic_offset']
-        # self.excludes += ['_mimic']
-
-    # # Define the mimic motor, which is a motor
-    # @property
-    # def mimic_motor(self):
-    #     return self._mimic.name if self._mimic else None
-    #
-    # @mimic_motor.setter
-    # def mimic_motor(self, motor):
-    #     if not isinstance(motor, Motor):
-    #         self._mimic = None
-    #     else:
-    #         self._mimic = motor
+    @property
+    def mimic_offset(self):
+        return self._joint.mimic.offset

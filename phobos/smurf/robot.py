@@ -6,14 +6,16 @@ import numpy as np
 import yaml
 
 from ..core import Robot, derive_model_dictionary
-from .motors import Motor, MimicMotor
-from .poses import Pose
-from .core import Material, Collision, Joint, Link
-from .hyrodyn import Submechanism, Exoskeleton
-from .sensors import Joint6DOF, RotatingRaySensor, CameraSensor, IMU, MotorCurrent, \
-    JointPosition, JointVelocity, NodeContactForce, NodeCOM, NodePosition, NodeRotation
-from ..geometry import get_reflection_matrix
+from .motors import Motor
+from .poses import JointPositionSet
+from ..io.representation import Material, Collision, Joint, Link
 from ..io import representation
+from ..io.sensors import MultiSensor, Sensor
+from .hyrodyn import Submechanism, Exoskeleton
+from ..io.sensors import Joint6DOF, RotatingRaySensor, CameraSensor, IMU, MotorCurrent, \
+    JointPosition, JointVelocity, NodeContact, NodeContactForce, NodeCOM, NodePosition, NodeRotation
+from ..geometry import get_reflection_matrix
+from ..io.xml_factory import link_with_robot
 from ..utils import tree, transform
 from ..utils.misc import edit_name_string
 
@@ -37,13 +39,15 @@ class Smurf(Robot):
         # Smurf Informations
         self.motors = []
         # self.sensors = [] is already defined in base class
-        self.collisions = []
+        # ToDo give this information to the original collisions
         self.poses = []
+        # Hyrodyn stuff
         self.submechanisms = []
         self.exoskeletons = []
-        self._transmissions = []
-        self._loop_constraints = []
+        self.hyrodyn_transmissions = []
+        self.hyrodyn_loop_constraints = []
         # The properties that are already included in the urdf get a smurf_ prefix
+        # Todo add information to the original links
         self.smurf_links = []
         self.smurf_joints = []
         self.smurf_materials = []
@@ -56,12 +60,19 @@ class Smurf(Robot):
 
         self._init_annotations()
 
+        for entity in self.submechanisms + self.exoskeletons + self.motors:
+            link_with_robot(self, entity)
+
+    @property
+    def collisions(self):
+        return self.get_all_collisions()
+
     @classmethod
-    def get_smurf_from_dict(cls, name='', objectlist=[]):
+    def get_robot_from_blender_dict(cls, name='', objectlist=[]):
         import bpy
         import phobos.blender.utils.selection as sUtils
 
-        cli_robot = Robot.get_robot_from_dict(name, objectlist)
+        cli_robot = Robot.get_robot_from_blender_dict(name, objectlist)
         smurf_robot = Smurf()
         smurf_robot.__dict__.update(cli_robot.__dict__)
         root = sUtils.getRoot(bpy.context.selected_objects[0])
@@ -104,6 +115,8 @@ class Smurf(Robot):
                 smurf_robot.attach_sensor(Joint6DOF(smurf_robot, **values))
             elif values["type"].upper() == "JOINTPOSITION":
                 smurf_robot.attach_sensor((JointPosition(smurf_robot, **values)))
+            elif values["type"].upper() == "NODECONTACT":
+                smurf_robot.attach_sensor((NodeContact(smurf_robot, **values)))
             elif values["type"].upper() == "NODECONTACTFORCE":
                 smurf_robot.attach_sensor((NodeContactForce(smurf_robot, **values)))
             elif values["type"].upper() == "NODEROTATION":
@@ -178,8 +191,8 @@ class Smurf(Robot):
         if 'motors' in self.annotations:
             for motor in self.annotations['motors']:
                 # Search for the joint
-                j_id = self.get_joint_id(motor['joint'])
-                if j_id:
+                joint = self.get_joint(motor['joint'])
+                if joint:
                     annotations = deepcopy(motor)
                     try:
                         annotations.pop('name')
@@ -194,11 +207,12 @@ class Smurf(Robot):
                         Motor(
                             robot=self,
                             name=motor['name'] if 'name' in motor else None,
-                            joint=self.joints[j_id], **annotations
+                            joint=joint, **annotations
                         )
                     )
 
         if 'sensors' in self.annotations:
+            # Todo check if sensor is already present from urdf/sdf
             for sensor in self.annotations['sensors']:
                 # Search for the joint or link
                 input_args = {}
@@ -221,6 +235,7 @@ class Smurf(Robot):
                         )
 
                 if input_args:
+                    # TODO This won't work
                     self._attach_part('sensors',
                                       Sensor(robot=self, **input_args)
                                       )
@@ -229,31 +244,26 @@ class Smurf(Robot):
             for pose in self.annotations['poses']:
                 self._attach_part(
                     'poses',
-                    Pose(robot=self, name=pose['name'], configuration=pose['joints'])
+                    JointPositionSet(robot=self, name=pose['name'], configuration=pose['joints'])
                 )
 
         if 'joint' in self.annotations:
             for joint in self.annotations['joint']:
-                self._attach_part(
-                    'smurf_joints',
-                    Joint(robot=self, joint=joint['name'], noDataPackage=joint["noDataPackage"],
-                          reducedDataPackage=joint["reducedDataPackage"])
-                )
+                joint_instance = self.get_joint(joint['name'])
+                if joint_instance is not None:
+                    joint_instance.add_annotations(overwrite=False, **joint)
 
         if 'link' in self.annotations:
             for link in self.annotations['link']:
-                self._attach_part(
-                    'smurf_links',
-                    Link(robot=self, link=link['name'], noDataPackage=link["noDataPackage"],
-                         reducedDataPackage=link["reducedDataPackage"])
-                )
+                link_instance = self.get_link(link['name'])
+                if link_instance is not None:
+                    link_instance.add_annotations(overwrite=False, **link)
 
         if 'materials' in self.annotations:
             for material in self.annotations['materials']:
-                self._attach_part(
-                    'smurf_materials',
-                    Material(**material)
-                )
+                mat_instance = self.get_material_by_name(material['name'])
+                if mat_instance is not None:
+                    mat_instance.add_annotations(overwrite=False, **material)
 
         if 'submechanisms' in self.annotations:
             for submech in self.annotations['submechanisms']:
@@ -319,28 +329,18 @@ class Smurf(Robot):
             if add:
                 self.attach_sensor(_osensor)
 
-        for onode in source.smurf_links:
-            self.attach_smurf_version("link", deepcopy(onode))
-
-        for onode in source.smurf_joints:
-            self.attach_smurf_version("joint", deepcopy(onode))
-
-        for onode in source.smurf_materials:
-            self.attach_smurf_version("material", deepcopy(onode))
-
         for onode in source.poses:
             self.add_pose(deepcopy(onode))
 
-        self.collisions += [deepcopy(c) for c in source.collisions]
         self.sort_submechanisms()
         for subm in source.submechanisms + source.exoskeletons:
             if all([self.get_joint(j) is not None for j in subm.jointnames_spanningtree]):
                 if hasattr(subm, "loop_constraints"):
                     subm.loop_constraints = [deepcopy(lc) for lc in subm.loop_constraints]
-                    self._loop_constraints += subm.loop_constraints
+                    self.hyrodyn_loop_constraints += subm.loop_constraints
                 if hasattr(subm, "multi_joint_dependencies"):
                     subm.multi_joint_dependencies = [deepcopy(mjd) for mjd in subm.multi_joint_dependencies]
-                    self._transmissions += subm.multi_joint_dependencies
+                    self.hyrodyn_transmissions += subm.multi_joint_dependencies
                 _subm = deepcopy(subm)
                 _subm.jointnames = [jn for jn in _subm.jointnames if self.get_joint(jn) is not None]
                 if isinstance(_subm, Submechanism):
@@ -351,7 +351,7 @@ class Smurf(Robot):
     # export methods
     def export_smurf(self, outputdir=None, export_visuals=True, export_collisions=True, create_pdf=False,
                      ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
-                     export_joint_limits=True, export_submodels=True):
+                     export_joint_limits=True, export_submodels=True, format="urdf"):
         """ Export self and all annotations inside a given folder with structure
         """
         # Convert to absolute path
@@ -371,14 +371,14 @@ class Smurf(Robot):
         super().full_export(output_dir=outputdir, export_visuals=export_visuals, export_collisions=export_collisions,
                             create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
                             ros_pkg_name=ros_pkg_name, export_joint_limits=export_joint_limits,
-                            export_submodels=export_submodels)
+                            export_submodels=export_submodels, format=format)
         # Export the smurf files
         smurf_dir = os.path.join(outputdir, "smurf")
         if not os.path.exists(smurf_dir):
             os.mkdir(smurf_dir)
         # Export attr
         smurf_annotations = [
-            'motors', 'sensors', 'smurf_materials', "smurf_joints", "smurf_links", 'collisions', 'poses',
+            'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'poses',
             "submechanisms", "exoskeletons"
         ]
         export_files = [os.path.relpath(robotfile, outputdir + "/smurf")]
@@ -396,26 +396,11 @@ class Smurf(Robot):
             # Check if exists and not empty
             if hasattr(self, annotation) and getattr(self, annotation):
                 annotation_dict = {annotation: []}
-                if annotation == "smurf_joints":
-                    annotation_dict = {"joint": []}
-                if annotation == "smurf_links":
-                    annotation_dict = {"link": []}
-                if annotation == "smurf_materials":
-                    annotation_dict = {"materials": []}
                 # Collect all
                 for item in getattr(self, annotation):
-                    if not annotation.startswith("smurf_"):
-                        annotation_dict[annotation].append(item.to_yaml())
-                    elif annotation == "smurf_links" and type(item) == Link:
-                        annotation_dict["link"].append(item.to_yaml())
-                    elif annotation == "smurf_joints" and type(item) == Joint:
-                        annotation_dict["joint"].append(item.to_yaml())
-                    elif annotation == "smurf_materials":
-                        annotation_dict["materials"].append(item.to_yaml())
+                    annotation_dict[annotation].append(item.to_yaml())
                 # Export to file
                 annotation_name = annotation
-                if annotation_name.startswith("smurf_"):
-                    annotation_name = annotation_name[len("smurf_"):]
                 if annotation == "submechanisms" or annotation == "exoskeletons":
                     submechanisms[annotation] = annotation_dict[annotation]
                 else:
@@ -474,58 +459,36 @@ class Smurf(Robot):
 
     def full_export(self, output_dir=None, export_visuals=True, export_collisions=True,
                     create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
-                    export_joint_limits=True, export_submodels=True):
+                    export_joint_limits=True, export_submodels=True, format="urdf"):
         self.export_smurf(output_dir, export_visuals, export_collisions, create_pdf, ros_pkg, export_with_ros_pathes,
-                          ros_pkg_name, export_joint_limits, export_submodels=export_submodels)
+                          ros_pkg_name, export_joint_limits, export_submodels=export_submodels, format=format)
 
     # getters
-    def get_motor_id(self, motorname):
+    def get_motor(self, motorname):
         """Returns the ID (index in the motor list) of the motor(s).
         """
 
         if isinstance(motorname, list):
-            return [self.get_motor_id(motor) for motor in motorname]
+            return [self.get_motor(motor) for motor in motorname]
 
-        return self.get_id('motors', motorname)
+        return self.get_instance('motors', motorname)
 
-    def get_sensor_id(self, sensorname):
+    def get_sensor(self, sensorname):
         """Returns the ID (index in the sensor list) of the sensor(s).
         """
 
         if isinstance(sensorname, list):
-            return [self.get_sensor_id(sensor) for sensor in sensorname]
+            return [self.get_sensor(sensor) for sensor in sensorname]
 
-        return self.get_id('sensors', sensorname)
+        return self.get_instance('sensors', sensorname)
 
     # tools
-    def remove_collisions(self):
-        super(Smurf, self).remove_collisions()
-        self.collisions = []
-
     def add_named_annotation(self, name, content):
         if name in self.named_annotations.keys():
             raise NameError("A named annotation with the name " + name +
                             " does already exist. Please merge or rename your annotations!")
         else:
             self.named_annotations[name] = content
-
-    def get_smurf_collision_by_name(self, collisionname):
-        """Return the collisions with the corresponding names.
-        """
-        if not isinstance(collisionname, list):
-            cnames = [collisionname]
-        else:
-            cnames = collisionname
-
-        returns = []
-
-        for link in self.links:
-            if link.collisions:
-                for c in link.collisions:
-                    if c.name in cnames:
-                        returns += [c]
-
-        return returns
 
     def attach_motor(self, motor, jointname=None):
         """Attach a new motor to the robot. Either the joint is already defined inside the motor
@@ -548,13 +511,6 @@ class Smurf(Robot):
             raise Exception("Please provide a joint which is part of the model")
         return
 
-    def attach_smurf_version(self, node_type, node):
-        """Attaches a smurf version of link, joint, material"""
-        if not isinstance(node, Link) and not isinstance(node, Joint) and not isinstance(node, Material):
-            raise Exception("Please provide an instance of Link/Joint/Material to attach.")
-        self._attach_part('smurf_' + node_type.lower() + 's', node)
-        return
-
     def attach_sensor(self, sensor):
         """Attach a new sensor to the robot. Either a joint or link is already defined inside the sensor
         or a jointname or linkname is given. Renames the sensor if the same name is already present.
@@ -567,7 +523,7 @@ class Smurf(Robot):
     def add_pose(self, pose):
         """Add a new pose to the robot.
         """
-        if not isinstance(pose, Pose):
+        if not isinstance(pose, JointPositionSet):
             raise Exception("Please provide an instance of Pose to add.")
         self._attach_part('poses', pose)
         return
@@ -589,12 +545,10 @@ class Smurf(Robot):
                 self.set_bitmask(linkname, bitmask, collisionname=c, **kwargs)
             return
 
-        col = [c for c in link.collisions if c.name == collisionname][0]
-
-        cbit = Collision(self, link, col, bitmask, **kwargs)
-
-        self._attach_part('collisions', cbit)
-        return
+        for c in link.collisions:
+            if c.name == collisionname:
+                c.add_annotation(bitmask=bitmask, overwrite=True)
+                break
 
     def set_self_collision(self, val=False, coll_override=None, no_coll_override=None, **kwargs):
         """If True, tries to avoid self collision with bitmasks which do not intersect.
@@ -603,7 +557,6 @@ class Smurf(Robot):
             no_coll_override = {}
         if coll_override is None:
             coll_override = {}
-        self.collisions = []
 
         if not val:
             return
@@ -665,13 +618,14 @@ class Smurf(Robot):
             self.set_bitmask(link_names[i], bitmask=bitmasks[i], collisionname=coll_names[i], **kwargs)
 
     def add_loop_constraint(self, loop_constraint):
-        self._loop_constraints += [loop_constraint]
+        self.hyrodyn_loop_constraints += [loop_constraint]
 
     def add_transmission(self, transmission):
-        self._transmissions += [transmission]
+        self.hyrodyn_transmissions += [transmission]
 
     # Reimplementation of Robot methods
     def _rename(self, targettype, target, new_name):
+        # ToDo this should be obsolete
         if targettype.startswith("link"):
             for obj in self.smurf_links:
                 if obj.name == target:
@@ -679,7 +633,7 @@ class Smurf(Robot):
             for obj in self.sensors + self.collisions:
                 if obj.link == target:
                     obj.link = new_name
-            for obj in self._loop_constraints:
+            for obj in self.hyrodyn_loop_constraints:
                 if obj.prepredecessor_body == target:
                     obj.predecessor_body = new_name
                 if obj.successor_body == target:
@@ -695,10 +649,10 @@ class Smurf(Robot):
                 for key in ["jointnames_independent", "jointnames_spanningtree", "jointnames_active", "jointnames"]:
                     if hasattr(obj, key):
                         setattr(obj, key, [j if j != target else new_name for j in getattr(obj, key)])
-            for obj in self._loop_constraints:
+            for obj in self.hyrodyn_loop_constraints:
                 if obj.cut_joint == target:
                     obj.cut_joint = new_name
-            for obj in self._transmissions:
+            for obj in self.hyrodyn_transmissions:
                 if obj.joint == target:
                     obj.joint = new_name
                 for dep in obj.joint_dependencies:
@@ -735,7 +689,7 @@ class Smurf(Robot):
         parent, link, joint = super(Smurf, self).add_link_by_properties(name, translation, rotation, parent,
                                                                         jointname=jointname,
                                                                         jointtype=jointtype, axis=axis, mass=mass)
-        if joint.type in ["revolute", "prismatic"] and add_default_motor:
+        if joint.joint_type in ["revolute", "prismatic"] and add_default_motor:
             self.attach_motor(Motor(
                 robot=self,
                 name=joint.name,
@@ -758,13 +712,11 @@ class Smurf(Robot):
         if isinstance(other, Smurf):
             pmotors = set([e.name for e in self.motors])
             psensors = set([e.name for e in self.sensors])
-            pcollisions = set([e.name for e in self.collisions])
             pposes = set([e.name for e in self.poses])
             psmfp = set([e.file_path for e in self.submechanisms + self.exoskeletons if hasattr(e, "file_path")])
 
             cmotors = set([e.name for e in other.motors])
             csensors = set([e.name for e in other.sensors])
-            ccollisions = set([e.name for e in other.collisions])
             cposes = set([e.name for e in other.poses])
             csmfp = set([e.file_path for e in other.submechanisms + other.exoskeletons if hasattr(e, "file_path")])
 
@@ -793,10 +745,6 @@ class Smurf(Robot):
                                        name_suffix=name_suffix)
                 else:
                     raise NameError("There are duplicates in sensor names", repr(psensors & csensors))
-
-            if pcollisions & ccollisions:
-                raise AssertionError("There are duplicates in collision names" + repr(
-                    pcollisions & ccollisions) + "\nThis should have been handled via rename")
 
             if pposes & cposes:
                 print("Warning: Pose names are duplicates. A", name_prefix, "and a", name_suffix,
@@ -849,8 +797,6 @@ class Smurf(Robot):
         super(Smurf, self).remove_joint(jointname, keep_collisions=keep_collisions)
 
         self.motors = [m for m in self.motors if m.joint != jointname]
-        self.smurf_joints = [j for j in self.smurf_joints if j.name != joint.name]
-        self.smurf_links = [ln for ln in self.smurf_links if ln.name != joint.child]
 
         for pose in self.poses:
             pose.remove_joint(jointname)
@@ -979,7 +925,7 @@ class Smurf(Robot):
             for key in ["jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent"]:
                 if hasattr(sm, key):
                     setattr(sm, key, sorted(getattr(sm, key), key=lambda jn: sorted_joints.index(jn)))
-        for transmission in self._transmissions:
+        for transmission in self.hyrodyn_transmissions:
             found = False
             for sm in self.submechanisms:
                 if sm.contextual_name == transmission.name:
@@ -989,7 +935,7 @@ class Smurf(Robot):
             if not found:
                 print(transmission.to_yaml())
                 raise AssertionError("Couldn't assign transmission")
-        for loop_constraint in self._loop_constraints:
+        for loop_constraint in self.hyrodyn_loop_constraints:
             found = False
             for sm in self.submechanisms:
                 links = sm.get_links(self)
@@ -1024,7 +970,7 @@ class Smurf(Robot):
             joint = self.get_joint(jointname)
             joint_idx = sorted_joints.index(jointname)
             inserted = False
-            if joint.type == "fixed":
+            if joint.joint_type == "fixed":
                 # If it's just a fixed joint we might be able to add this to an existing submechanisms
                 for sm in self.submechanisms + self.exoskeletons:
                     for jn in sm.jointnames:
@@ -1040,8 +986,8 @@ class Smurf(Robot):
                         break
             if not inserted:
                 # If we have not already inserted this joint (fixed) let's create a serial mechanism for it
-                jn_spanningtree = jn_independent = jn_active = [] if joint.type == "fixed" else [jointname]
-                jn = jn_spanningtree if joint.type != "fixed" else [jointname]
+                jn_spanningtree = jn_independent = jn_active = [] if joint.joint_type == "fixed" else [jointname]
+                jn = jn_spanningtree if joint.joint_type != "fixed" else [jointname]
                 self.submechanisms += [Submechanism(
                     self,
                     name="serial",

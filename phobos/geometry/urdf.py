@@ -45,7 +45,7 @@ def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_fir
         children = robot.get_children(parent.name)
         for jchildname in children:
             jchild = robot.get_joint(jchildname)
-            if jchild.type == "fixed" or jchildname in merge_additionally:
+            if jchild.joint_type == "fixed" or jchildname in merge_additionally:
                 out += get_meshes_of_link_and_fixed_children(jchild.child,
                                                              transform.dot(jchild.origin.to_matrix()))
         return out
@@ -59,7 +59,7 @@ def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_fir
                 os.path.dirname(robot.xmlfile),
                 vis.geometry.filename)
             ), os.path.dirname(robot.xmlfile))
-    if joint is None or not (robot.get_joint(joint[0]).type == "fixed" or joint[0] in merge_additionally):
+    if joint is None or not (robot.get_joint(joint[0]).joint_type == "fixed" or joint[0] in merge_additionally):
         meshes = get_meshes_of_link_and_fixed_children(linkname)
         if len(meshes) == 0:
             return

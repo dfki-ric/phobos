@@ -1,5 +1,6 @@
 #!python3
 
+
 def can_be_used():
     return True
 

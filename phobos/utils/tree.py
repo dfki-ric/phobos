@@ -7,7 +7,7 @@ def skip_upwards_over_fixed(input_spanningtree, input_model, joint_name):
     fixed joints. Returns the next movable parent name of the given fixed joint in input_spanningtree.
     """
     j = input_model.get_joint(joint_name)
-    if j.type == 'fixed':
+    if j.joint_type == 'fixed':
         parents = input_model.get_parent(j.parent)
         if parents is not None:
             return skip_upwards_over_fixed(input_spanningtree, input_model, parents[0])

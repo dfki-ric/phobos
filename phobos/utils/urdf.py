@@ -42,7 +42,7 @@ def get_joint_info_dict(robot, joint_list):
         j = robot.get_joint(joint)
         if j is None:
             raise Exception("Joint of name "+joint+" not found in robot!")
-        if j.type != "fixed":
+        if j.joint_type != "fixed":
             out["names"] += [j.name]
             if j.limit is None:
                 print("No joint limits defined for joint", j.name)

@@ -272,8 +272,8 @@ class ModelTest(object):
             set([joint.name for joint in self.new.robot.joints])
             - set([joint.name for joint in self.old.joints])
         ), flush=True)
-        changed_joint_types1 = set([joint.name + ":" + joint.type for joint in self.new.robot.joints]) - \
-                               set([joint.name + ":" + joint.type for joint in self.old.joints])
+        changed_joint_types1 = set([joint.name + ":" + joint.joint_type for joint in self.new.robot.joints]) - \
+                               set([joint.name + ":" + joint.joint_type for joint in self.old.joints])
         print("JTypes", sorted(changed_joint_types1), flush=True)
         print("but not:", flush=True)
         removed_links = set([link.name for link in self.old.links]) - set([link.name for link in self.new.robot.links])
@@ -289,8 +289,8 @@ class ModelTest(object):
         removed_joints = set([joint.name for joint in self.old.joints]) - \
                          set([joint.name for joint in self.new.robot.joints])
         print("Joints", sorted(removed_joints), flush=True)
-        changed_joint_types2 = set([joint.name + ":" + joint.type for joint in self.old.joints]) - \
-                               set([joint.name + ":" + joint.type for joint in self.new.robot.joints])
+        changed_joint_types2 = set([joint.name + ":" + joint.joint_type for joint in self.old.joints]) - \
+                               set([joint.name + ":" + joint.joint_type for joint in self.new.robot.joints])
         print("JTypes", sorted(changed_joint_types2), flush=True)
         return len(removed_links) + len(removed_joints) + len(changed_joint_types1) + len(changed_joint_types2) == 0
 
@@ -360,7 +360,7 @@ class ModelTest(object):
                             if joint is None:
                                 print(jname, "in", submech["contextual_name"], x, "is no joint in this robot",
                                       flush=True, file=sys.stderr)
-                            elif joint.type == "fixed":
+                            elif joint.joint_type == "fixed":
                                 print(jname, "in", submech["contextual_name"], x, "is a fixed joint",
                                       flush=True, file=sys.stderr)
 
@@ -388,7 +388,7 @@ class ModelTest(object):
                 print("There are", len(jointnames), "joints defined in the submechanisms_file and",
                       len(robot.joints), "in the URDF.", flush=True, file=sys.stderr)
                 print("The number of fixed joints defined in the URDF is",
-                      len([j for j in robot.joints if j.type == "fixed"]), flush=True, file=sys.stderr)
+                      len([j for j in robot.joints if j.joint_type == "fixed"]), flush=True, file=sys.stderr)
                 raise RuntimeError("Hyrodyn aborted!")
 
         out = True

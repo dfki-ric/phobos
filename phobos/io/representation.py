@@ -1,11 +1,12 @@
-__IMPORTS__ = ["np", "import_mesh", "import_mars_mesh", "matrix_to_rpy", "round_array", "rpy_to_matrix", "mass_from_tensor"]
-
 import numpy as np
 
 from .base import Representation
-from .xml_factory import singular as _singular
+from .smurf_reflection import SmurfBase
+from .xml_factory import link_with_robot, singular as _singular
 from ..geometry.io import import_mesh, import_mars_mesh
 from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
+
+__IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
 
 class Pose(Representation):
@@ -58,10 +59,10 @@ class Pose(Representation):
         return xyz + rpy
 
     @staticmethod
-    def from_matrix(T, dec=6):
+    def from_matrix(T, dec=6, relative_to=None):
         xyz = T[0:3, 3]
         rpy = matrix_to_rpy(T[0:3, 0:3])
-        return Pose(xyz=round_array(xyz, dec=dec), rpy=round_array(rpy, dec=dec))
+        return Pose(xyz=round_array(xyz, dec=dec), rpy=round_array(rpy, dec=dec), relative_to=relative_to)
 
     def to_matrix(self):
         R = rpy_to_matrix(self.rpy if hasattr(self, "rpy") else [0.0, 0.0, 0.0])
@@ -71,6 +72,13 @@ class Pose(Representation):
         T[0:3, 0:3] = R
         T[3, 3] = 1.0
         return T
+
+    def transform(self, T):
+        """T.dot(this)"""
+        return Pose.from_matrix(
+            T.dot(self.to_matrix()),
+            self.relative_to
+        )
 
 
 class Color(Representation):
@@ -90,6 +98,11 @@ class Color(Representation):
                 self.rgba += [1.]
             if len(self.rgba) != 4:
                 raise Exception(f'Invalid color argument count for argument "{self.rgba}"')
+
+
+class Texture(Representation):
+    def __init__(self, filename=None):
+        self.filename = filename
 
 
 # class JointDynamics(Representation):
@@ -125,6 +138,7 @@ class Sphere(Representation):
         assert x == y == z
         self.radius *= x
 
+
 class Mesh(Representation):
     def __init__(self, filename=None, scale=None):
         self.filename = filename
@@ -142,20 +156,43 @@ class Mesh(Representation):
         return import_mesh(self.filename, urdf_path)
 
 
-class Collision(Representation):
-    def __init__(self, geometry=None, origin=None, name=None):
+class Collision(Representation, SmurfBase):
+    type_dict = {
+        "link": "link"
+    }
+
+    def __init__(self, robot=None, name=None, link=None, geometry=None, origin=None, bitmask=None, noDataPackage=False, reducedDataPackage=False, ccfm=None, **kwargs):
+        if type(link) is str:
+            link = link
+        elif link is not None:
+            link = link.name
+        SmurfBase.__init__(name=name, link=link, **kwargs)
         self.geometry = _singular(geometry)
-        self.name = name
         self.origin = _singular(origin)
 
+        self.returns += ['name', 'link']
+        self.bitmask = bitmask
+        if noDataPackage is not None:
+            self.noDataPackage = noDataPackage
+        if reducedDataPackage is not None:
+            self.reducedDataPackage = reducedDataPackage
+        if ccfm is not None:
+            self.ccfm = ccfm
+        if bitmask is not None:
+            self.returns += ['bitmask']
 
-class Texture(Representation):
-    def __init__(self, filename=None):
-        self.filename = filename
+        if robot is not None:
+            link_with_robot(robot, self)
 
 
-class Material(Representation):
-    def __init__(self, name=None, color=None, texture=None):
+class Material(Representation, SmurfBase):
+    def __init__(self, name=None, color=None, texture=None, **kwargs):
+        kwargs["name"] = name
+        if "diffuseColor" not in kwargs and color is not None:
+            kwargs["diffuseColor"] = {"r": color.rgba[0], "g": color.rgba[1], "b": color.rgba[2], "a": color.rgba[3]}
+        if "diffuseTexture" not in kwargs and texture is None:
+            kwargs["diffuseTexture"] = texture.filename
+        SmurfBase.__init__(**kwargs)
         self.name = name
         self.color = _singular(color)
         self.texture = _singular(texture)
@@ -165,19 +202,20 @@ class Material(Representation):
             raise Exception("Material has neither a color nor texture.")
 
 
-# class LinkMaterial(Material):
-#     def check_valid(self):
-#         pass
-#
-#
-
-
 class Visual(Representation):
-    def __init__(self, geometry=None, material=None, origin=None, name=None):
+    type_dict = {
+        "link": "link",
+        "material": "material"
+    }
+
+    def __init__(self, robot=None, geometry=None, material=None, origin=None, name=None):
         self.geometry = _singular(geometry)
         self.material = _singular(material)
         self.name = name
-        self._origin = _singular(origin)
+        self.origin = _singular(origin)
+
+        if robot is not None:
+            link_with_robot(robot, self)
 
 
 class Inertia(Representation):
@@ -237,7 +275,6 @@ class Inertial(Representation):
         return M
 
 
-
 class JointLimit(Representation):
     def __init__(self, effort=None, velocity=None, lower=None, upper=None):
         self.effort = effort
@@ -247,39 +284,66 @@ class JointLimit(Representation):
 
 
 class JointMimic(Representation):
+    type_dict = {
+        "joint": "joint"
+    }
+
     def __init__(self, joint=None, multiplier=None, offset=None):
         self.joint = joint
         self.multiplier = multiplier
         self.offset = offset
 
 
-class Joint(Representation):
+class Joint(Representation, SmurfBase):
     TYPES = ['unknown', 'revolute', 'continuous', 'prismatic',
              'floating', 'planar', 'fixed']
 
-    def __init__(self, name=None, parent=None, child=None, type=None,
-                 axis=None, origin=None,
-                 limit=None, dynamics=None, safety_controller=None,
-                 calibration=None, mimic=None):
+    type_dict = {
+        "parent": "link",
+        "child": "link",
+        "motor": "motor"
+    }
+
+    def __init__(self, name=None, parent=None, child=None, joint_type=None,
+                 axis=None, origin=None, limit=None,
+                 dynamics=None, safety_controller=None, calibration=None,
+                 mimic=None, motor: str = None,
+                 noDataPackage=False, reducedDataPackage=False,
+                 damping_const_constraint_axis1=None, springDamping=None, springStiffness=None,
+                 spring_const_constraint_axis1=None, **kwargs):
+        SmurfBase.__init__(**kwargs)
         self.name = name
-        self.parent = parent
-        self.child = child
-        self.type = type
+        self.returns = ['name']
+        self.parent = parent if type(parent) == str else parent.name
+        self.child = child if type(child) == str else child.name
+        self.joint_type = joint_type
         self.axis = axis
         self._origin = _singular(origin)
         self.limit = _singular(limit)
         self.dynamics = _singular(dynamics)
         self.mimic = _singular(mimic)
+        self.motor = (motor if type(motor) == str else motor.name) if motor is not None else None
+        if noDataPackage is not None:
+            self.noDataPackage = noDataPackage
+            self.returns += ["noDataPackage"]
+        if reducedDataPackage is not None:
+            self.reducedDataPackage = reducedDataPackage
+            self.returns += ["reducedDataPackage"]
+        if damping_const_constraint_axis1 is not None:
+            self.damping_const_constraint_axis1 = damping_const_constraint_axis1
+            self.returns += ["damping_const_constraint_axis1"]
+        if springDamping is not None:
+            self.springDamping = springDamping
+            self.returns += ["springDamping"]
+        if springStiffness is not None:
+            self.springStiffness = springStiffness
+            self.returns += ["springStiffness"]
+        if spring_const_constraint_axis1 is not None:
+            self.spring_const_constraint_axis1 = spring_const_constraint_axis1
+            self.returns += ["spring_const_constraint_axis1"]
 
     def check_valid(self):
-        assert self.type in self.TYPES, "Invalid joint type: {}".format(self.type)  # noqa
-
-    # Aliases
-    @property
-    def joint_type(self): return self.type
-
-    @joint_type.setter
-    def joint_type(self, value): self.type = value
+        assert self.joint_type in self.TYPES, "Invalid joint type: {}".format(self.joint_type)  # noqa
 
     @property
     def origin(self):
@@ -288,23 +352,29 @@ class Joint(Representation):
         return self._origin
 
 
-class Link(Representation):
-
+class Link(Representation, SmurfBase):
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None,
-                 origin=None):
+                 origin=None, noDataPackage=False, reducedDataPackage=False, **kwargs):
         assert origin is None  # Unused but might be neccesary for sdf
+        SmurfBase.__init__(**kwargs)
         self.name = name
+        self.returns += ['name']
         self.visuals = []
         if visuals is not None:
             self.visuals = visuals
         self.inertial = _singular(inertial)
         self.collisions = []
-        assert origin is None
         if collisions is not None:
             self.collisions = collisions
         for geo in self.visuals + self.collisions:
             if geo.origin.relative_to is None:
                 geo.origin.relative_to = self.name
+        if noDataPackage is not None:
+            self.noDataPackage = noDataPackage
+            self.returns += ['noDataPackage']
+        if reducedDataPackage is not None:
+            self.reducedDataPackage = reducedDataPackage
+            self.returns += ['reducedDataPackage']
 
     def __get_visual(self):
         """Return the first visual or None."""
@@ -351,39 +421,11 @@ class Link(Representation):
             self.collisions.append(elem)
 
 
-class Sensor(Representation):
-    def __init__(self, name, parent, origin=None, camera=None, contact=None, imu=None, lidar=None, always_on=False, update_rate=None,
-                 visualize=False, topic=None, enable_metrics=False):
-        self.name = name
-        self.parent = parent
-        self.type = None
-        self._origin = origin
-        self.camera = camera
-        self.contact = contact
-        self.imu = imu
-        self.lidar = lidar
-        self.always_on = always_on
-        self.update_rate = update_rate
-        assert not visualize or topic is not None, "If visualize is true you need to specify topic (see sdformat.org)"
-        self.visualize = visualize
-        self.topic = topic
-        self.enable_metrics = enable_metrics
-        assert len([t for t in [contact, camera, imu, lidar] if t is not None]), "A sensor can only be of one type1"
-        if camera is not None:
-            self.type = "camera"
-        elif contact is not None:
-            self.type = "contact"
-        elif imu is not None:
-            self.type = "imu"
-        elif lidar is not None:
-            self.type = "lidar"
-        assert self.type is not None, "Please give data about the sensor type"
-
-    @property
-    def origin(self):
-        if self._origin.relative_to is None:
-            self._origin.relative_to = self.parent
-        return self._origin
+    # @property
+    # def origin(self):
+    #     if self._origin.relative_to is None:
+    #         self._origin.relative_to = self.parent
+    #     return self._origin
 
 
 # class PR2Transmission(Representation):
@@ -458,6 +500,13 @@ class Robot(Representation):
         self.materials = materials if materials is not None else []
         self.transmissions = transmissions if transmissions is not None else []
         self.sensors = sensors if sensors is not None else []
+
+        for entity in self.links + self.sensors:
+            link_with_robot(self, entity)
+        for entity in self.joints:
+            link_with_robot(self, entity)
+            if entity.mimic is not None:
+                link_with_robot(entity.mimic)
 
     def add_aggregate(self, typeName, elem):
         if typeName == 'joint':

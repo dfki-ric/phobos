@@ -5,7 +5,6 @@ import numpy as np
 import pkg_resources
 
 from .base import Representation
-from . import representation
 from ..utils.misc import to_pretty_xml_string
 
 FORMATS = json.load(open(pkg_resources.resource_filename("phobos", "data/xml_formats.json"), "r"))
@@ -32,13 +31,15 @@ def is_float(val):
 
 
 def get_class(classname):
+    from . import representation
+    from . import sensors as sensor_representation
     if hasattr(representation, classname) and classname not in representation.__IMPORTS__:
         cls = getattr(representation, classname)
-    elif hasattr(smurf_sensor_representation, classname) and classname not in smurf_sensor_representation.__IMPORTS__:
-        cls = getattr(smurf_sensor_representation, classname)
+    elif hasattr(sensor_representation, classname) and classname not in sensor_representation.__IMPORTS__:
+        cls = getattr(sensor_representation, classname)
     else:
         raise AssertionError(f"The class {classname} is not None to the XML-Factory")
-    assert isinstance(cls, Representation), f"The class {classname} is no valid Representation instance"
+    assert callable(cls) or issubclass(cls, Representation), f"The class {classname} is not a valid Representation instance"
     return cls
 
 
@@ -183,25 +184,33 @@ class XMLDefinition(object):
 
 class XMLFactory(XMLDefinition):
     def __init__(self, dialect, classname):
-        super(XMLFactory, self).__init__(
-            dialect=dialect,
-            tag=FORMATS[dialect][classname]["tag"],
-            value=FORMATS[dialect][classname]["value"] if "value" in FORMATS[dialect][classname] else None,
-            attributes=FORMATS[dialect][classname]["attributes"] if "attributes" in FORMATS[dialect][classname] else None,
-            children=FORMATS[dialect][classname]["children"] if "children" in FORMATS[dialect][classname] else None,
-            value_children=FORMATS[dialect][classname]["value_children"] if "value_children" in FORMATS[dialect][classname] else {},
-            attribute_children=FORMATS[dialect][classname]["attribute_children"] if "attribute_children" in FORMATS[dialect][classname] else None,
-            nested_children=FORMATS[dialect][classname]["nested_children"] if "nested_children" in FORMATS[dialect][classname] else None
-        )
+        self.available_in_dialect = classname in FORMATS[dialect].keys()
+        if self.available_in_dialect:
+            super(XMLFactory, self).__init__(
+                dialect=dialect,
+                tag=FORMATS[dialect][classname]["tag"],
+                value=FORMATS[dialect][classname]["value"] if "value" in FORMATS[dialect][classname] else None,
+                attributes=FORMATS[dialect][classname]["attributes"] if "attributes" in FORMATS[dialect][classname] else None,
+                children=FORMATS[dialect][classname]["children"] if "children" in FORMATS[dialect][classname] else None,
+                value_children=FORMATS[dialect][classname]["value_children"] if "value_children" in FORMATS[dialect][classname] else {},
+                attribute_children=FORMATS[dialect][classname]["attribute_children"] if "attribute_children" in FORMATS[dialect][classname] else None,
+                nested_children=FORMATS[dialect][classname]["nested_children"] if "nested_children" in FORMATS[dialect][classname] else None
+            )
 
     def from_xml(self, classtype, xml: ET.Element):
-        return classtype(**super(XMLFactory, self).kwargs_from_xml(xml))
+        if self.available_in_dialect:
+            return classtype(**super(XMLFactory, self).kwargs_from_xml(xml))
+        return None
 
     def to_xml_string(self, object):
-        return to_pretty_xml_string(self.to_xml(object))
+        if self.available_in_dialect:
+            return to_pretty_xml_string(self.to_xml(object))
+        return None
 
     def from_xml_string(self, classtype, xml_string: str):
-        return self.from_xml(classtype, ET.fromstring(xml_string))
+        if self.available_in_dialect:
+            return self.from_xml(classtype, ET.fromstring(xml_string))
+        return None
 
 
 XML_REFLECTIONS = ["urdf", "sdf"]
@@ -242,3 +251,41 @@ def singular(prop):
         return prop[0]
     else:
         return prop
+
+
+def link_with_robot(robot, object):
+    converter_dict = {var: getattr(robot, "get_"+vtype.lower()
+                                   + ("_by_name" if vtype.lower() in ["collision", "visual"] else ""))
+                      for var, vtype in object.type_dict.items() if hasattr(object, var)}
+    for var, conv in converter_dict:
+        def _getter(instance):
+            content = getattr(instance, "_" + var)
+            if content is None:
+                return None
+            if type(content) == list:
+                return [x.name for x in content]
+            return content.name
+
+        def _setter(instance, new_value):
+            content = getattr(instance, "_" + var)
+            assert type(new_value) == type(content) or content is None
+            if type(content) == list:
+                setattr(instance, "_"+var, [conv(x) for x in new_value])
+            else:
+                setattr(instance, "_" + var, conv(new_value))
+
+        value = getattr(object, var)
+        if type(value) == list and all([type(v) == str for v in value]):
+            setattr(object, "_" + var, [conv(v) for v in value])
+        elif type(value) == str:
+            setattr(object, "_" + var, conv(value))
+        elif value is not None:
+            raise RuntimeError("Can't deal with value of type " + type(value) + " during link_with_robot()!")
+
+        setattr(object, var, property(_getter, _setter))
+
+        del _getter
+        del _setter
+
+        if hasattr(object, "linking_callback"):
+            object.linking_callback()

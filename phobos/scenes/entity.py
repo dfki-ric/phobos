@@ -2,7 +2,8 @@ import os.path
 
 import numpy as np
 
-from phobos.smurf import Smurf, SmurfBase
+from phobos.io.smurf_reflection import SmurfBase
+from phobos.smurf import Smurf
 from phobos.utils.transform import rpy_to_matrix, quaternion_to_matrix
 
 WORLD = "world"
