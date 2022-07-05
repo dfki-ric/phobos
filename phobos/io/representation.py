@@ -128,7 +128,7 @@ class Mesh(Representation):
         self.scale = scale
 
     def scale_geometry(self, x=1, y=1, z=1, overwrite=False):
-        if overwrite:
+        if overwrite or self.scale is None:
             self.scale = [x, y, z]
         else:
             self.scale = [v*s for v, s in zip(self.scale, [x, y, z])]
