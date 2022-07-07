@@ -123,7 +123,7 @@ def add_remote(repo, target_remote_url, target_remote_name="target_remote"):
 
 
 def push(repo, remote="target_remote", branch="$CI_UPDATE_TARGET_BRANCH", merge_request=None):
-    options = "" if merge_request is None else merge_request.getOptions()
+    options = "" if merge_request is None else merge_request.get_options()
     execute_shell_command("git push " + remote + " " + branch + " " + options, repo, dry_run=False)
     return os.environ[branch[1:]] if branch.startswith("$") else branch
 
