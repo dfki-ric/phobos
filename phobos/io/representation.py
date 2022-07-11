@@ -145,7 +145,7 @@ class Mesh(Representation):
         self.scale = scale
 
     def scale_geometry(self, x=1, y=1, z=1, overwrite=False):
-        if overwrite:
+        if overwrite or self.scale is None:
             self.scale = [x, y, z]
         else:
             self.scale = [v*s for v, s in zip(self.scale, [x, y, z])]
@@ -350,6 +350,16 @@ class Joint(Representation, SmurfBase):
         if self._origin.relative_to is None:
             self._origin.relative_to = self.parent
         return self._origin
+
+    @property
+    def origin(self):
+        if self._origin.relative_to is None:
+            self._origin.relative_to = self.parent
+        return self._origin
+
+    @origin.setter
+    def origin(self, origin: Pose):
+        self._origin = _singular(origin)
 
 
 class Link(Representation, SmurfBase):

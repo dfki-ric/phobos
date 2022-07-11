@@ -3,6 +3,7 @@ from . import sensors
 
 
 from . import xml_factory
+from . import yaml_reflection
 
 for clsname in dir(representation):
     if not clsname.startswith("_") and not clsname in representation.__IMPORTS__:
