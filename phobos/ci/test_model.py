@@ -1,15 +1,15 @@
-from ..smurf import Smurf
-
 import yaml
 import os
+
+from phobos.core import Robot
 
 
 class TestModel(object):
     def __init__(self, root, tolerances, model_in_repo=None, submechanisms_in_repo=None, floating_base=False,
                  floatingbase_submechanisms_in_repo=None, swing_my_robot=False):
         self.root = root
-        self.robot = Smurf(inputfile=os.path.abspath(model_in_repo),
-                           submechanisms_file=os.path.abspath(submechanisms_in_repo),)
+        self.robot = Robot(inputfile=os.path.abspath(model_in_repo),
+                                submechanisms_file=os.path.abspath(submechanisms_in_repo), )
         self.submechanisms_file_path = self.robot.submechanisms_file
         self.submechanisms_file = None
         if os.path.isfile(self.submechanisms_file_path):

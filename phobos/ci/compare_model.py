@@ -1,4 +1,4 @@
-from ..smurf import Smurf as Robot
+from ..core.robot import Robot
 
 
 class CompareModel(Robot):

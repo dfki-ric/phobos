@@ -19,7 +19,7 @@ def main(args):
     import os.path as path
     import yaml
     from copy import deepcopy
-    from ..smurf import Smurf as Robot
+    from ..core.robot import Robot
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf or smurf file')

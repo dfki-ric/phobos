@@ -1,6 +1,6 @@
 {
   "urdf": {
-    "Robot": {
+    "XMLRobot": {
       "tag": "robot",
       "attributes": {
         "name": "name",
@@ -424,7 +424,7 @@
     }
   },
   "sdf": {
-    "Robot": {
+    "XMLRobot": {
       "tag": "model",
       "attributes": {
         "name": "name"

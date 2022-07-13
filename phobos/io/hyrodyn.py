@@ -1,6 +1,8 @@
 from ..io.smurf_reflection import SmurfBase
 from ..utils import tree
 
+__IMPORTS__ = [x for x in dir() if not x.startswith("__")]
+
 
 class ConstraintAxis(SmurfBase):
     def __init__(self, name, axis, **kwargs):
@@ -10,6 +12,12 @@ class ConstraintAxis(SmurfBase):
 
 
 class LoopConstraint(SmurfBase):
+    type_dict = {
+        "cut_joint": "joint",
+        "predecessor_body": "link",
+        "successor_body": "link"
+    }
+
     def __init__(self, cut_joint, predecessor_body, successor_body, constraint_axes=None):
         kwargs = {"cut_joint": cut_joint,
                   "predecessor_body": predecessor_body,
@@ -22,10 +30,6 @@ class LoopConstraint(SmurfBase):
 
 
 class JointDependency(SmurfBase):
-    type_dict = {
-        "joint_name": "joint"
-    }
-
     def __init__(self, joint_name, multiplier, offset):
         kwargs = {"joint": joint_name,
                   "multiplier": multiplier,
@@ -34,10 +38,6 @@ class JointDependency(SmurfBase):
 
 
 class MultiJointDependency(SmurfBase):
-    type_dict = {
-        "joint": "joint"
-    }
-
     def __init__(self, joint, joint_dependencies=None, name=None):
         if joint_dependencies is None:
             joint_dependencies = []

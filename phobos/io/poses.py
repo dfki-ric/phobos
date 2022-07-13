@@ -2,10 +2,6 @@ from ..io.smurf_reflection import SmurfBase
 
 
 class JointPosition(SmurfBase):
-    type_dict = {
-        "joint": "joint"
-    }
-
     def __init__(self, robot=None, joint=None, position=None):
         super().__init__(robot=robot, name=None, joint=joint)
         self._position = position

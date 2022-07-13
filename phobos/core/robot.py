@@ -1,7 +1,6 @@
 import datetime
 import sys
 import os
-import xml.etree.ElementTree as ET
 
 import pkg_resources
 import yaml
@@ -10,69 +9,28 @@ from scipy.spatial.transform import Rotation as scipy_rot
 import numpy as np
 
 from .. import geometry as pgu, utils
-from ..io import representation
-from ..io.parser import parse_xml
+from ..geometry import get_reflection_matrix
+from ..io import representation, sensors
+from ..io.hyrodyn import Submechanism, Exoskeleton
+from ..io.motors import Motor
+from ..io.xmlrobot import XMLRobot
+from ..io.smurfrobot import SMURFRobot
+from ..utils import transform
 from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_string, execute_shell_command
 from ..utils.transform import create_transformation, inv, get_adjoint
-from ..utils.tree import find_close_ancestor_links, get_joints_depth_first
+from ..utils.tree import find_close_ancestor_links
 from ..utils.urdf import read_urdf_filename, create_pdf_from_urdf, transform_object, get_joint_info_dict
 
 
-class Robot(representation.Robot):
-    def __init__(self, name=None, xmlfile=None, verify_meshes_on_import=True):
+class Robot(SMURFRobot):
+    def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
+                 inputfile=None, description=None):
         """ The basic robot class to represent a urdf.
         """
-        super().__init__(name=name)
+        super().__init__(xmlfile=xmlfile, submechanisms_file=submechanisms_file, smurffile=smurffile,
+                         verify_meshes_on_import=verify_meshes_on_import, inputfile=inputfile, description=description)
+        self.name = name
 
-        self.xmlfile = xmlfile
-        self._submodels = {}
-
-        if xmlfile is not None:
-            # Adding name tags for visuals and collisions and rename robot
-            try:
-                etree = ET.parse(xmlfile)
-            except ET.ParseError:
-                print("Reading of URDF/SDF file", xmlfile, "failed!")
-                raise
-            root = etree.getroot()
-            if name is not None:
-                root.attrib["name"] = name
-
-            def go_through_children(node):
-                """Recursive function to name children of link class
-                """
-                for child in node:
-                    if child.tag == "link":
-                        go_through_children(child)
-                    elif child.tag in ["visual", "collision"]:
-                        if "name" not in child.attrib.keys() or child.attrib["name"] == "":
-                            child.attrib.update({'name': child.tag + "_" + node.attrib["name"]})
-
-            go_through_children(root)
-            # Overwrite dictionary with urdf dict
-            xmlfile = os.path.abspath(xmlfile)
-            if os.path.splitext(xmlfile)[-1] in ['.urdf']:
-                # print("Loading URDF", xmlfile, flush=True)
-                robot = parse_xml(root)
-                self.__dict__.update(robot.__dict__)
-                self.xmlfile = xmlfile
-            elif os.path.splitext(xmlfile)[-1] in ['.yml']:
-                raise NotImplementedError("Import from YAML not supported!")
-            elif os.path.splitext(xmlfile)[-1] in ['.sdf']:
-                # print("Loading SDF", xmlfile, flush=True)
-                robot = parse_xml(root)
-                self.__dict__.update(robot.__dict__)
-                self.xmlfile = xmlfile
-            else:
-                raise NotImplementedError("The format of ", xmlfile, " is not supported!")
-
-        if verify_meshes_on_import:
-            self.verify_meshes()
-
-        if self.xmlfile is not None:
-            self.joints = self.get_joints_ordered_df()
-
-    # helper methods
     @classmethod
     def get_robot_from_blender_dict(cls, name='', objectlist=[]):
         """
@@ -160,7 +118,7 @@ class Robot(representation.Robot):
                                                 ))
         if blender_model['version'] != '1.0':
             print(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
-        cli_robot = representation.Robot(
+        cli_robot = XMLRobot(
             name=blender_model['name'],
             version=None,
             links=cli_links,
@@ -168,85 +126,127 @@ class Robot(representation.Robot):
             materials=mats)
         new_robot = Robot()
         new_robot.__dict__.update(cli_robot.__dict__)
+        new_robot.description = blender_model["description"]
+
+        for key, value in blender_model['materials'].items():
+            value.pop('diffuseColor')
+            new_robot.add_aggregate('materials', representation.Material(**value))
+
+        for key, values in blender_model['sensors'].items():
+            if values.get('id') is not None:
+                values['targets'] = [
+                    x for x in values['id'] if (
+                            new_robot.get_joint(x, verbose=False) is not None or
+                            new_robot.get_link(x, verbose=False) is not None or
+                            new_robot.get_collision_by_name(x) is not None or
+                            new_robot.get_visual_by_name(x) is not None
+                    )
+                ]
+                values.pop('id')
+            if values["type"].upper() == "CAMERASENSOR":
+                new_robot.add_sensor(
+                    sensors.CameraSensor(new_robot,
+                                 hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
+                                 hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
+                                 **values))
+            elif values["type"].upper() == "ROTATINGRAYSENSOR":
+                new_robot.add_sensor(sensors.RotatingRaySensor(new_robot, horizontal_offset=0 if values.get(
+                    'horizontal_offset') is None else values.pop(
+                    'horizontal_offset'),
+                                                         **values))
+            else:
+                new_robot.add_sensor(getattr(sensors, values["type"])(**values))
+
+        motors = blender_model["motors"]  # TODO bei joints reinschauen nach mimic, MimicJoint, MimicMotor
+        for key, value in blender_model.items():
+            print(key)
+        for key, value in motors.items():
+            name = value.pop('name')
+            joint = value.pop('joint')
+            new_robot.add_motor(Motor(name=name, joint=new_robot.get_joint(joint), **value))
+        additional_info = {'lights': blender_model.get('lights'),
+                           'groups': blender_model.get('groups'),
+                           'chains': blender_model.get('chains'),
+                           # 'date': blender_model.get('date')
+                           }
+        if False:
+            mimic = blender_model["mimic"]
+            for key, value in mimic.items():
+                name = value.pop('name')
+                joint = value.pop('joint')
+                new_robot.add_motor(MimicMotor(name=name, joint=new_robot.get_joint(joint), **value))
+            additional_info = {'lights': blender_model.get('lights'),
+                               'groups': blender_model.get('groups'),
+                               'chains': blender_model.get('chains'),
+                               # 'date': blender_model.get('date')
+                               }
+
+        for key, value in additional_info.items():
+            if value is not None and key not in new_robot.named_annotations.keys():
+                new_robot.add_named_annotation(key, additional_info[key])
         return new_robot
 
-    def get_joints_ordered_df(self):
-        """Returns the joints in depth first order"""
-        return get_joints_depth_first(self, self.get_root())
-
-    def get_links_ordered_df(self):
-        """Returns the joints in depth first order"""
-        joints = self.get_joints_ordered_df()
-        out = [self.get_root()] + [jn.child for jn in joints]
-        return [self.get_link(ln) for ln in out]
-
-    def get_joint_level(self, jointname):
-        joint = self.get_joint(jointname)
-        return self.get_link_level(joint.parent)
-
-    def get_link_level(self, linkname):
-        parent = self.get_parent(linkname)
-        level = 0
-        while parent is not None:
-            joint = self.get_joint(parent[0])
-            parent = self.get_parent(joint.parent)
-            level += 1
-        return level
-
-    def _get_children_lists(self, parentlist, childrenlist, targettype='link'):
+    def copy_related_annotations(self, source, renamed_entities=None):
         """
-        Used recursively. Returns a list of all links that can be considered parents/children for the given parent list
-        :param parentlist:
-        :param childrenlist:
-        :param targettype:
-        :return:
-        """
-        childs = []
-        for parent in parentlist:
-            childs += self.get_children(parent, targettype=targettype)
-
-        if len(childs) > 0:
-            newparents, newchildren = self._get_children_lists(childs, [])
-            return parentlist + newparents, childrenlist + childs + newchildren
-        else:
-            return [], []
-
-    def _rename(self, targettype, target, new_name):
-        """
-        This method will be called when an object is renamed and should be overridden in subclasses
-        """
-        renamed_entities = {}
-        return renamed_entities
-
-    def _attach_part(self, targettype, target):
-        """
-        Safely attach a new object to the robot. Checks if the name is already given.
-        :param targettype: type of the part ot attach
-        :param target: what to attach
-        :return:
-        """
-        # Collect all instances which have the same name
-        instances = []
-        # Original list
-        objects = getattr(self, targettype)
-        for obj in objects:
-            if target.name in obj.name:
-                instances.append(obj.name)
-        if instances:
-            target.name += "_{}".format(len(instances))
-            print("Renamed object to {}".format(target.name))
-        objects += [target]
-        setattr(self, targettype, objects)
-        return
-
-    def copy_related_annotations(self, source):
-        """
-        Copies aplicable/relevant further annotations e.g. such that consider more than one joint/link/material from
+        Copies applicable/relevant further annotations e.g. such that consider more than one joint/link/material from
         the source to this Robot instance.
-        :param source:
-        :return:
+        :param source: Another robot instance from which we copy the annotations
+        :return: None
         """
-        pass
+        jointnames = [j.name for j in self.joints]
+        linknames = [ln.name for ln in self.links]
+
+        if renamed_entities is None:
+            renamed_entities = {}
+        for omotor in source.motors:
+            jointname = omotor.joint if omotor.joint not in renamed_entities.keys() else renamed_entities[omotor.joint]
+            if omotor.joint in self.joints:
+                self.add_motor(
+                    deepcopy(omotor),
+                    jointname
+                )
+
+        for osensor in source.sensors:
+            _osensor = deepcopy(osensor)
+            jointname = osensor.joint if _osensor.joint not in renamed_entities.keys() \
+                else renamed_entities[_osensor.joint]
+            linkname = osensor.link if _osensor.link not in renamed_entities.keys() \
+                else renamed_entities[_osensor.link]
+            add = True
+            if isinstance(_osensor, sensors.MultiSensor):
+                _ids = []
+                for _id in _osensor.id:
+                    _id = _id if _id not in renamed_entities.keys() else renamed_entities[_id]
+                    if _id in linknames:
+                        _ids += [_id]
+                _osensor.id = _ids
+                add &= len(_osensor.id) > 0
+            else:
+                if "link" in _osensor.returns:
+                    add &= linkname in linknames
+                if "joint" in _osensor.returns:
+                    add &= jointname in jointnames
+            if add:
+                self.add_sensor(_osensor)
+
+        for onode in source.poses:
+            self.add_pose(deepcopy(onode))
+
+        self.sort_submechanisms()
+        for subm in source.submechanisms + source.exoskeletons:
+            if all([self.get_joint(j) is not None for j in subm.jointnames_spanningtree]):
+                if hasattr(subm, "loop_constraints"):
+                    subm.loop_constraints = [deepcopy(lc) for lc in subm.loop_constraints]
+                    self.hyrodyn_loop_constraints += subm.loop_constraints
+                if hasattr(subm, "multi_joint_dependencies"):
+                    subm.multi_joint_dependencies = [deepcopy(mjd) for mjd in subm.multi_joint_dependencies]
+                    self.hyrodyn_transmissions += subm.multi_joint_dependencies
+                _subm = deepcopy(subm)
+                _subm.jointnames = [jn for jn in _subm.jointnames if self.get_joint(jn) is not None]
+                if isinstance(_subm, Submechanism):
+                    self.submechanisms += [deepcopy(_subm)]
+                elif isinstance(_subm, Exoskeleton):
+                    self.exoskeletons += [deepcopy(_subm)]
 
     # export methods
     def export_urdf(self, outputfile=None, export_visuals=True, export_collisions=True, create_pdf=False,
@@ -355,7 +355,7 @@ class Robot(representation.Robot):
         else:
             raise IOError("Unknown export format:" + format)
 
-    def full_export(self, output_dir=None, export_visuals=True, export_collisions=True,
+    def export_xml_with_meshes(self, output_dir=None, export_visuals=True, export_collisions=True,
                     create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
                     export_joint_limits=True, export_submodels=True, format="urdf"):
         """ Exports all model information stored inside this instance.
@@ -398,6 +398,99 @@ class Robot(representation.Robot):
                                      ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
                                      ros_pkg_name=ros_pkg_name, format=format)
 
+    def export_smurf(self, outputdir=None, export_visuals=True, export_collisions=True, create_pdf=False,
+                     ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
+                     export_joint_limits=True, export_submodels=True, format="urdf"):
+        """ Export self and all annotations inside a given folder with structure
+        """
+        # Convert to absolute path
+        outputdir = os.path.abspath(outputdir)
+        if not os.path.exists(outputdir):
+            os.mkdir(outputdir)
+
+        submech_dir = os.path.join(outputdir, "submechanisms")
+        if len(self.submechanisms) > 0 or len(self.exoskeletons) > 0:
+            if not os.path.exists(submech_dir):
+                os.makedirs(submech_dir)
+
+        # First, export the urdf
+        robotfile = os.path.join(outputdir, "urdf/{}.urdf".format(self.name))
+        if not os.path.exists(os.path.dirname(robotfile)):
+            os.mkdir(os.path.dirname(robotfile))
+        self.export_xml_with_meshes(output_dir=outputdir, export_visuals=export_visuals, export_collisions=export_collisions,
+                            create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
+                            ros_pkg_name=ros_pkg_name, export_joint_limits=export_joint_limits,
+                            export_submodels=export_submodels, format=format)
+        # Export the smurf files
+        smurf_dir = os.path.join(outputdir, "smurf")
+        if not os.path.exists(smurf_dir):
+            os.mkdir(smurf_dir)
+        # Export attr
+        smurf_annotations = [
+            'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'poses',
+            "submechanisms", "exoskeletons"
+        ]
+        export_files = [os.path.relpath(robotfile, outputdir + "/smurf")]
+        submechanisms = {}
+        self.fill_submechanisms()
+        for sm in self.submechanisms + self.exoskeletons:
+            if hasattr(sm, "file_path"):
+                _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
+                                                 stop=sm.get_leaves(self), robotname=sm.name)
+                sm.file_path = "../submechanisms/" + os.path.basename(sm.file_path)
+                self.export_submodel(name="#sub_mech#", output_dir=os.path.join(outputdir, "submechanisms"),
+                                     filename=os.path.basename(sm.file_path), only_urdf=True)
+                self.remove_submodel(name="#sub_mech#")
+        for annotation in smurf_annotations:
+            # Check if exists and not empty
+            if hasattr(self, annotation) and getattr(self, annotation):
+                annotation_dict = {annotation: []}
+                # Collect all
+                for item in getattr(self, annotation):
+                    annotation_dict[annotation].append(item.to_yaml())
+                # Export to file
+                annotation_name = annotation
+                if annotation == "submechanisms" or annotation == "exoskeletons":
+                    submechanisms[annotation] = annotation_dict[annotation]
+                else:
+                    with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, annotation_name)), "w+") as stream:
+                        yaml.safe_dump(annotation_dict, stream, default_style=False)
+                        export_files.append(os.path.split(stream.name)[-1])
+        if submechanisms != {}:
+            self.submechanisms_file = os.path.join(smurf_dir, "{}_submechanisms.yml".format(self.name))
+            with open(self.submechanisms_file, "w+") as stream:
+                yaml.safe_dump(submechanisms, stream, default_style=False)
+                export_files.append(os.path.split(stream.name)[-1])
+
+        # further annotations
+        for k, v in self.annotations.items():
+            if k not in smurf_annotations + ["materials", "link", "joint"]:
+                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w+") as stream:
+                    yaml.safe_dump({k: v}, stream, default_style=False)
+                    export_files.append(os.path.split(stream.name)[-1])
+
+        for k, v in self.named_annotations.items():
+            if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k))):
+                raise NameError("You can't overwrite the already existing SMURF-Annotation-File " +
+                                os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)) +
+                                "\nPlease choose another name for you annotation")
+            else:
+                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w") as stream:
+                    yaml.safe_dump(v, stream, default_style=False)
+                    export_files.append(os.path.split(stream.name)[-1])
+
+        # Create the smurf file itsself
+        annotation_dict = {
+            'modelname': self.name,
+            # 'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
+            'files': sorted(export_files),
+            'description': self.description
+        }
+
+        with open(os.path.join(smurf_dir, "{}.smurf".format(self.name)), "w+") as stream:
+            yaml.safe_dump(annotation_dict, stream, default_style=False, sort_keys=True)
+        print("SMURF written to", smurf_dir)
+
     def export_joint_limits(self, outputdir, file_name="joint_limits.yml", names=None):
         if names is None:
             names = [j.name for j in self.joints if j.joint_type != "fixed"]
@@ -408,6 +501,19 @@ class Robot(representation.Robot):
             f.write("limits:\n")
             f.write("  names: " + yaml.safe_dump(out["names"], default_flow_style=True) + "\n")
             f.write("  elements: " + yaml.safe_dump(out["elements"], default_flow_style=True))
+
+        jointnames_independent = []
+        jointnames_active = []
+        for sm in self.submechanisms + self.exoskeletons:
+            if hasattr(sm, outputdir):
+                jointnames_independent += sm.jointnames_independent
+                jointnames_active += sm.jointnames_active
+        super(SMURFRobot, self).export_joint_limits(outputdir=os.path.join(outputdir, "../submechanisms"),
+                                                    file_name="joint_limits_independent.yml",
+                                                    names=jointnames_independent)
+        super(SMURFRobot, self).export_joint_limits(outputdir=os.path.join(outputdir, "../submechanisms"),
+                                                    file_name="joint_limits_active.yml",
+                                                    names=jointnames_active)
 
     def export_yaml(self, output_dir=None):
         """ Export the robot data into yaml file in such a way that it can be used to check the model.
@@ -680,7 +786,6 @@ class Robot(representation.Robot):
         if not keep_urdf:
             os.system("rm -rf {}".format(kccd_urdf))
 
-    # has to be overridden in SMURF
     def export_floatingbase(self, outputdir, ros_pkg_name=None, export_with_ros_pathes=False,
                             create_pdf=False, format="urdf"):
         floatingbase = self.add_floating_base()
@@ -751,6 +856,12 @@ class Robot(representation.Robot):
         else:
             print(f"No submodel named {name}")
 
+    def full_export(self, output_dir=None, export_visuals=True, export_collisions=True,
+                    create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
+                    export_joint_limits=True, export_submodels=True, format="urdf"):
+        self.export_smurf(output_dir, export_visuals, export_collisions, create_pdf, ros_pkg, export_with_ros_pathes,
+                          ros_pkg_name, export_joint_limits, export_submodels=export_submodels, format=format)
+
     # getters
     def get_submodel(self, name):
         """ Return the submodel with the given name.
@@ -760,270 +871,6 @@ class Robot(representation.Robot):
         else:
             print("No submodel named {}".format(name))
         return
-
-    def get_id(self, targettype, target):
-        """
-        Returns the id of the given instance
-        :param targettype: the tye of the searched instance
-        :param target: the name of the searched instance
-        :return: the id or None if not found
-        """
-        for i, obj in enumerate(getattr(self, targettype)):
-            if obj.name == target:
-                return i
-        return None
-
-    def get_instance(self, targettype, target):
-        """
-        Returns the id of the given instance
-        :param targettype: the tye of the searched instance
-        :param target: the name of the searched instance
-        :return: the id or None if not found
-        """
-        for obj in getattr(self, targettype + ("s" if not targettype.endswith("s") else "")):
-            if obj.name == target:
-                return target
-        return None
-
-    def get_joint_id(self, joint_name):
-        """
-        Returns the ID (index in the joint list) of the joint.
-        :param joint_name: the name of the joint to search
-        :return: the Id if found else None
-        """
-        if isinstance(joint_name, list):
-            return [self.get_id('joints', name) for name in joint_name]
-
-        return self.get_id('joints', joint_name)
-
-    def get_link_id(self, link_name):
-        """
-        Returns the ID (index in the link list) of the link.
-        :param link_name: the name of the link to search
-        :return: the Id if found else None
-        """
-        if isinstance(link_name, list):
-            return [self.get_id('links', name) for name in link_name]
-
-        return self.get_id('links', link_name)
-
-
-    def get_link(self, link_name, verbose=True) -> [representation.Link, list]:
-        """
-        Returns the link(s) corresponding to the link name(s).
-        :param link_name: the name of the joint to get
-        :return: the link instance, None if not found
-        """
-        if isinstance(link_name, representation.Link):
-            return link_name
-        if isinstance(link_name, list):
-            return [self.get_link(lname) for lname in link_name]
-
-        l_id = self.get_link_id(link_name)
-
-        if l_id is not None:
-            return self.links[l_id]
-        elif verbose:
-            print("WARN: Link", link_name, "does not exist!")
-            print("These are the existing links:", [ln.name for ln in self.links])
-        return None
-
-    def get_joint(self, joint_name, verbose=True) -> [representation.Joint, list]:
-        """
-        Returns the joint(s) corresponding to the joint name(s).
-        :param joint_name: the name of the joint to get
-        :return: the joint instance, None if not found
-        """
-        if isinstance(joint_name, representation.Joint):
-            return joint_name
-        if isinstance(joint_name, list):
-            return [self.get_joint(jname) for jname in joint_name]
-
-        j_id = self.get_joint_id(joint_name)
-
-        if j_id is not None:
-            return self.joints[j_id]
-        elif verbose:
-            print("WARN: Joint", joint_name, "does not exist!")
-            print("These are the existing joints:", [jn.name for jn in self.joints])
-        return None
-
-    def get_parent(self, name, targettype='joint'):
-        """
-        Get the parent of targettype for the given link name.
-        :param name: the name of the joint or link to get the parent for
-        :param targettype: the next parent joint or the next parent link (default: 'joint')
-        :return: List with one element (todo)
-        """
-        # Check if the name is present
-        if name in self.parent_map.keys():
-            parents = self.parent_map[name]
-        elif name in self.child_map.keys():
-            return None
-        else:
-            print("Parent map keys: ", self.parent_map.keys())
-            raise AssertionError("Nothing with name " + name + " in this robot")
-
-        # Parentmap contains links.
-        # If we want joints, then collect the children of these
-        assert parents is not None
-        if targettype == "link":
-            return [parents[1]]
-        if targettype == 'joint':
-            return [parents[0]]
-
-        return parents
-
-    def get_inertial(self, link_name):
-        """
-        Returns the inertial of the given link.
-        :param link_name: the name of the respective link
-        :return: the inertial of the given link
-        """
-        link_id = self.get_link_id(link_name)
-
-        if link_id is None:
-            return None
-
-        return self.links[link_id].inertial
-
-    def get_visual(self, link_name):
-        """
-        Return all visuals of the given link if it exists.
-        :param link_name: the name of the respective link
-        :return: list of visuals of the given link, if there are else none
-        """
-        link_id = self.get_link_id(link_name)
-
-        if link_id is None:
-            return None
-
-        if self.links[link_id].visuals:
-            return self.links[link_id].visuals
-        else:
-            return None
-
-    def get_all_visuals(self):
-        visuals = []
-        for link in self.links:
-            visuals += link.visuals
-        return visuals
-
-    def get_visual_by_name(self, visual_name):
-        """
-        Returns the visual with the given name if it exists
-        :param visual_name: name of the searched visual
-        :return: the found visual or none
-        """
-        if isinstance(visual_name, representation.Visual):
-            return visual_name
-        for link in self.links:
-            for vis in link.visuals:
-                if vis.name == visual_name:
-                    return vis
-
-        return None
-
-    def get_collision(self, link_name):
-        """
-        Return all collisions of the given link if it exists.
-        :param link_name: the name of the respective link
-        :return: list of collisions of the given link, if there are else none
-        """
-        link_id = self.get_link_id(link_name)
-
-        if link_id is None:
-            return None
-
-        if self.links[link_id].collisions:
-            return self.links[link_id].collisions
-        else:
-            return None
-
-    def get_all_collisions(self):
-        collisions = []
-        for link in self.links:
-            collisions += link.collisions
-        return collisions
-
-    def get_collision_by_name(self, collision_name):
-        """
-        Returns the collision with the given name if it exists
-        :param collision_name: name of the searched collision
-        :return: the found collision or none
-        """
-        if isinstance(collision_name, representation.Collision):
-            return collision_name
-        for link in self.links:
-            for coll in link.collisions:
-                if coll.name == collision_name:
-                    return coll
-
-        return None
-
-    def get_material_by_name(self, material_name):
-        """
-        Returns the collision with the given name if it exists
-        :param material_name: name of the searched collision
-        :return: the found collision or none
-        """
-        if isinstance(material_name, representation.Material):
-            return material_name
-        for mat in self.materials:
-            if mat.name == material_name:
-                return mat
-
-        return None
-
-    def get_children(self, name, targettype='joint'):
-        """
-        Get the children of type targettype for the given link name.
-        :param name: the name of the parent link
-        :param targettype: whether we want the next joint children or link childrne
-        :return: list of children of the given link
-        """
-        if isinstance(name, list):
-            children = []
-            for n in name:
-                new_children = self.get_children(n, targettype=targettype)
-                children += new_children if new_children else []
-            return children
-
-        children = []
-
-        if name in self.child_map.keys():
-            children = self.child_map[name]
-
-        if children:
-            if targettype == 'joint':
-                children = [i[0] for i in children]
-            elif targettype == 'link':
-                children = [i[1] for i in children]
-
-        return children
-
-    def get_leaves(self, start=None):
-        """
-        Get all leaves of the given start link.
-        If start is provided, returns leaves of the sub
-        :param start: the root link for which to get the leaves
-        :return:
-        """
-        if not start:
-            parentset = set(self.parent_map.keys())
-            childset = set(self.child_map.keys())
-            return list(parentset - childset)
-
-        if start not in self.parent_map.keys():
-            return None
-
-        parents = [start]
-        parents, children = self._get_children_lists(parents, [])
-
-        parentset = set(parents)
-        childrenset = set(children)
-
-        return parentset, childrenset
 
     # tools
     def remove_visuals(self):
@@ -1043,38 +890,6 @@ class Robot(representation.Robot):
         for link in self.links:
             for coll in link.collisions:
                 link.remove_aggregate(coll)
-
-    def global_origin(self, stop):
-        """ Get the global pose of the link.
-        """
-        return representation.Pose.from_matrix(self.get_transformation(stop))
-
-    def get_transformation(self, end, start=None):
-        """
-        Returns the transformation from start to end
-        :param end: the end link of the transformation
-        :param start: the start link of the transformation (default is root)
-        :return: the transformation matrix
-        """
-        if start is None:
-            start = self.get_root()
-        transformation = create_transformation((0, 0, 0), (0, 0, 0))
-
-        assert type(end) is str
-        assert type(start) is str
-
-        link = end
-        while link != start:
-            parent = self.get_parent(link)
-            if parent is not None and len(parent) > 1:
-                print("Multiple parents:", parent, flush=True)
-            elif parent is None:
-                raise Exception(link, "has no parent, but is different from start", start)
-            pjoint = self.get_joint(parent[0])
-            transformation = create_transformation(pjoint.origin.xyz, pjoint.origin.rpy).dot(transformation)
-            link = pjoint.parent
-
-        return transformation
 
     def reparent_link(self, link_name, parent, inertia=True, visual=True, collision=True):
         """
@@ -1314,18 +1129,6 @@ class Robot(representation.Robot):
     #     # difference = list(driver_joints.difference(other_joints))
     #     #
     #     # return difference
-
-    def verify_meshes(self):
-        no_problems = True
-        for link in self.links:
-            for vc in link.collisions + link.visuals:
-                if hasattr(vc.geometry, "filename") and \
-                        pgu.import_mesh(vc.geometry.filename, urdf_path=self.xmlfile) is None:
-                    print("WARNING: Mesh file", vc.geometry.filename,
-                          "is empty and therefore the corresponding visual/geometry removed!")
-                    no_problems = False
-                    link.remove_aggregate(vc)
-        return no_problems
 
     def correct_inertials(self, limit=1e-5):
         """
@@ -1869,6 +1672,73 @@ class Robot(representation.Robot):
         # print(coll_matrix)
         return coll_names, coll_matrix
 
+    def set_self_collision(self, val=False, coll_override=None, no_coll_override=None, **kwargs):
+        """If True, tries to avoid self collision with bitmasks which do not intersect.
+        """
+        if no_coll_override is None:
+            no_coll_override = {}
+        if coll_override is None:
+            coll_override = {}
+
+        if not val:
+            return
+
+        coll_names, coll_matrix = self.generate_collision_matrix(coll_override=coll_override,
+                                                                 no_coll_override=no_coll_override)
+
+        colls = {}
+        link_colls = {}
+        for link in self.links:
+            colls.update({c.name: {"coll": c, "linkname": link.name} for c in link.collisions})
+            link_colls.update({link.name: [c.name for c in link.collisions]})
+        link_names = [colls[cn]["linkname"] for cn in coll_names]
+
+        # find-bitmask-algo
+        bits = [[] for _ in range(16)]  # list of list for each bit containing the collisions that lie on this bit
+        X = coll_matrix
+        for i in range(X.shape[0]):
+            for j in range(X.shape[1]):
+                if i == j or coll_matrix[i, j] == 0:
+                    continue
+                # check if this collision is already entered
+                coll_exists = False
+                for b in bits:
+                    if i in b and j in b:
+                        coll_exists = True
+                if coll_exists:
+                    continue
+                # check if we have i already entered somewhere and if it's possible to enter j there, too
+                for b in bits:
+                    if i in b and all([X[j, x] == 1 for x in b]):
+                        b.append(j)
+                        coll_exists = True
+                    elif j in b and all([X[i, x] == 1 for x in b]):
+                        b.append(i)
+                        coll_exists = True
+                    elif (all([X[i, x] == 1 for x in b]) and all([X[j, x] == 1 for x in b])) or len(b) == 0:
+                        b.append(i)
+                        b.append(j)
+                        coll_exists = True
+                    if coll_exists:
+                        break
+                if not coll_exists:
+                    print("WARNING: Auto-Bitmask algorithm was unable to create the collision:", coll_names[i], "<->",
+                          coll_names[j])
+        for b in bits:
+            for i in b:
+                for j in b:
+                    if X[i, j] == 0 and not i == j:
+                        raise AssertionError("Unwanted Collision: " + coll_names[i] + " " + coll_names[j])
+        # create the bitmasks
+        bitmasks = [0 for _ in range(X.shape[0])]
+        for i in range(X.shape[0]):
+            for exp in range(len(bits)):
+                if i in bits[exp]:
+                    bitmasks[i] += 2 ** exp
+
+        for i in range(len(coll_names)):
+            self.set_bitmask(link_names[i], bitmask=bitmasks[i], collisionname=coll_names[i], **kwargs)
+
     def rename(self, targettype, target, prefix=None, suffix=None, replacements=None, do_not_double=True):
         """
         Renames the target with the given args
@@ -1974,7 +1844,7 @@ class Robot(representation.Robot):
             if obj is not None:
                 obj.name = new_name
         elif targettype == 'material':
-            obj = self.get_material_by_name(target)
+            obj = self.get_material(target)
             if obj is not None:
                 obj.name = new_name
         renamed_entities.update(self._rename(targettype, target, new_name=new_name))
@@ -2149,8 +2019,8 @@ class Robot(representation.Robot):
                 raise NameError("There are duplicates in visual names", repr(pvisuals & cvisuals))
 
         for mat_name in pmaterials & cmaterials:
-            if self.get_material_by_name(mat_name).to_xml_string() == \
-                    other.get_material_by_name(mat_name).to_xml_string():
+            if self.get_material(mat_name).to_xml_string() == \
+                    other.get_material(mat_name).to_xml_string():
                 cmaterials.remove(mat_name)
         if pmaterials & cmaterials:
             if not do_not_rename:
@@ -2188,10 +2058,20 @@ class Robot(representation.Robot):
 
         self.add_aggregate('joint', joint)
 
+        # this will be done by fill_submechanisms
+        # # Add the connection joint to the submechanism tree
+        # self.submechanisms += [Submechanism(self, name=joint.name, type="serial", contextual_name="ConnectionJoint",
+        #                                     jointnames_independent=[] if joint.type == "fixed" else [joint.name],
+        #                                     jointnames_spanningtree=[] if joint.type == "fixed" else [joint.name],
+        #                                     jointnames_active=[] if joint.type == "fixed" else [joint.name],
+        #                                     jointnames=[joint.name])]
+
+        self.copy_related_annotations(other, renamed_entities)
         return renamed_entities
 
     def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None,
-                               mass=0.0):
+                               mass=0.0,
+                               add_default_motor=True):
         """
         Adds a link with the given parameters.
         This method has to be overridden in subclasses.
@@ -2219,8 +2099,8 @@ class Robot(representation.Robot):
                     ixx=1e-6,
                     iyy=1e-6,
                     izz=1e-6,
-                    origin=representation.Pose(xyz=[0, 0, 0], rpy=[0, 0, 0])
-                )
+                ),
+                origin=representation.Pose(xyz=[0, 0, 0], rpy=[0, 0, 0])
             )
         else:
             inertial = None
@@ -2230,11 +2110,16 @@ class Robot(representation.Robot):
                                      type=jointtype, origin=representation.Pose(translation, rotation), axis=axis)
         self.add_aggregate("link", link)
         self.add_aggregate("joint", joint)
-        return parent, link, joint
+        if joint.joint_type in ["revolute", "prismatic"] and add_default_motor:
+            self.add_motor(Motor(
+                robot=self,
+                name=joint.name,
+                joint=joint
+            ))
 
     # has to be overridden in smurf and hyrodyn?
     def mirror_model(self, mirror_plane=None, maintain_order=None, exclude_meshes=None, name_replacements=None,
-                     target_urdf=None, only_return=False):
+                     target_urdf=None, target_smurf=None, only_return=False):
         """
         Mirrors the robot model.
         :param mirror_plane: The normal of the mirror plane. Default y-plane
@@ -2373,9 +2258,23 @@ class Robot(representation.Robot):
         for k, v in self.__dict__.items():
             if k not in robot.__dict__.keys() or robot.__dict__[k] is None:
                 robot.__dict__[k] = v
-        if not only_return:
-            self.__dict__ = robot.__dict__
-        return robot
+
+        # reflection matrix
+        T_R = get_reflection_matrix(normal=np.array(mirror_plane))
+
+        # transform sensor frames
+        for sensor in self.sensors:
+            if hasattr(sensor, "origin") and sensor.link is not None:
+                T_link = self.get_transformation(sensor.link)
+                T_root2link = robot.get_transformation(sensor.link)
+                T = T_R.dot(T_link.dot(sensor.origin.to_matrix()))
+                sensor.origin = representation.Pose.from_matrix(transform.inv(T_root2link).dot(T))
+
+        if target_smurf is not None:
+            robot.read_smurffile(target_smurf)
+        if only_return:
+            return robot
+        self.__dict__ = robot.__dict__
 
     def split_robot(self, link_to_cut):
         """
@@ -2545,6 +2444,33 @@ class Robot(representation.Robot):
 
         self.__dict__.update(robot.__dict__)
 
+        self.motors = [m for m in self.motors if m.joint != jointname]
+
+        for pose in self.poses:
+            pose.remove_joint(jointname)
+
+        new_sensors = []
+        for sensor in self.sensors:
+            if isinstance(sensor, sensors.MultiSensor):
+                sensor.remove_target(joint.child)
+                sensor.remove_target(joint.name)
+                if not sensor.is_empty():
+                    new_sensors += [sensor]
+            else:
+                if not sensor.joint == joint.name:
+                    new_sensors += [sensor]
+                elif sensor.link == joint.child:
+                    sensor.transform(joint.origin.to_matrix())
+                    new_sensors += [sensor]
+        self.sensors = new_sensors
+
+        for sub in self.submechanisms + self.exoskeletons:
+            for key in ["jointnames", "jointnames_spanningtree", "jointnames_independent", "jointnames_active"]:
+                if jointname in sub[key]:
+                    setattr(sub, key, [j for j in getattr(sub, key) if j != jointname])
+        self.submechanisms = [sm for sm in self.submechanisms if not sm.is_empty()]
+        self.exoskeletons = [sm for sm in self.exoskeletons if not sm.is_empty()]
+
     def add_floating_base(self):
         """
         Returns a copy of this robot with a floatingbase mechanisms prepended
@@ -2567,6 +2493,18 @@ class Robot(representation.Robot):
         fb_robot = deepcopy(self)
         floatingbase.attach(fb_robot, connector)
         floatingbase.name = fb_robot.name + "_floatingbase"
+        freeflyer = {
+            "type": "3T+3R",
+            "name": "free_flyer_joint",
+            "contextual_name": "free_flyer_joint",
+            "jointnames_independent": ["FreeFlyerX", "FreeFlyerY", "FreeFlyerZ", "FreeFlyerRX", "FreeFlyerRY",
+                                       "FreeFlyerRZ"],
+            "jointnames_spanningtree": ["FreeFlyerX", "FreeFlyerY", "FreeFlyerZ", "FreeFlyerRX", "FreeFlyerRY",
+                                        "FreeFlyerRZ"],
+            "jointnames_active": [],
+            "jointnames": ["FreeFlyerX", "FreeFlyerY", "FreeFlyerZ", "FreeFlyerRX", "FreeFlyerRY", "FreeFlyerRZ"]
+        }
+        floatingbase.submechanisms += [Submechanism(**freeflyer)]
         return floatingbase
 
     def scale_link(self, linkname, scale_x, scale_y, scale_z, new_mass=None, geometry_for_inertia=None):

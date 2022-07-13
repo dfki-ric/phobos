@@ -6,11 +6,15 @@ class SmurfBase(YamlReflection):
     Wraps methods for joint and link as properties and additionally which variables get exported.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, target_type: str = None, **kwargs):
+        super(YamlReflection, self).__init__(
+            robot=kwargs["robot"] if "robot" in kwargs else None, target_type=target_type)
+
         # The object has to know which properties to export, this is done via
         self.returns = []
         # Additionally, we must exclude some private attributes
         self.excludes = ['returns', 'excludes']
+        # if the SmurfBase instance has a target property this will set the expected type
 
         self.add_annotations(**kwargs)
 
@@ -31,6 +35,12 @@ class SmurfBase(YamlReflection):
         # Just Parse everything else
         for category, information in kwargs.items():
             if overwrite or not hasattr(self, category):
-                setattr(self, category, information)
+                if category in self._type_dict.keys():
+                    if type(information) == list:
+                        information = [x if type(information) == str else information.name for x in information]
+                    elif type(information) != str and information is not None:
+                        information = information.name
+                if information is not None:
+                    setattr(self, category, information if category not in self._type_dict or type(information) == str else information.name)
         # The object has to know which properties to export, this is done via
         self.returns += list(kwargs.keys())

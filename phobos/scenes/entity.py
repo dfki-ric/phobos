@@ -2,9 +2,9 @@ import os.path
 
 import numpy as np
 
-from phobos.io.smurf_reflection import SmurfBase
-from phobos.smurf import Smurf
-from phobos.utils.transform import rpy_to_matrix, quaternion_to_matrix
+from ..io.smurf_reflection import SmurfBase
+from ..core.robot import Robot
+from ..utils.transform import rpy_to_matrix, quaternion_to_matrix
 
 WORLD = "world"
 PARENT = "parent"
@@ -70,7 +70,7 @@ class BaseEntity(SmurfBase):
 class Entity(BaseEntity):
     def __init__(self, name, robot, parent=None, anchor=None, transformation=np.identity(4), root=False, **kwargs):
         if "file" not in kwargs.keys():
-            if isinstance(robot, Smurf):
+            if isinstance(robot, Robot):
                 kwargs["file"] = robot.smurffile
             else:
                 kwargs["file"] = robot.xmlfile
@@ -88,7 +88,7 @@ class Entity(BaseEntity):
 
         _type = Entity.get_type(entity_entry)
         if _type in ["urdf", "smurf"]:
-            robot = Smurf(inputfile=abs_file)
+            robot = Robot(inputfile=abs_file)
         elif _type in ["smurfs", "smurfa"]:
             raise AssertionError("You have to resolve smurfs/smurfa before loading entity")
         else:

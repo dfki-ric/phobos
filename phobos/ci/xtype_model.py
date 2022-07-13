@@ -1,6 +1,6 @@
 import yaml
 
-from ..smurf import Smurf
+from ..core import Robot
 from ..defs import *
 
 from .combined_model import CombinedModel
@@ -66,18 +66,18 @@ class XTypeModel(CombinedModel):
     def _load_robot(self):
         if not self.processed_model_exists:
             if os.path.exists(os.path.join(self.basedir, "smurf", "combined_model.smurf")):
-                self.robot = Smurf(name=self.robotname if self.robotname else None,
-                                   smurffile=os.path.join(self.basedir, "smurf", "combined_model.smurf"))
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                        smurffile=os.path.join(self.basedir, "smurf", "combined_model.smurf"))
             else:
-                self.robot = Smurf(name=self.robotname if self.robotname else None,
-                                   xmlfile=self.basefile)
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                        xmlfile=self.basefile)
             return
         else:
             if not os.path.isfile(self.exporturdf):
                 raise Exception('Preprocessed file {} not found!'.format(self.exporturdf))
             if os.path.exists(os.path.join(self.exportdir, "smurf", self.robotname + ".smurf")):
-                self.robot = Smurf(name=self.robotname if self.robotname else None,
-                                   smurffile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                        smurffile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
             else:
-                self.robot = Smurf(name=self.robotname if self.robotname else None,
-                                   xmlfile=self.exporturdf)
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                        xmlfile=self.exporturdf)

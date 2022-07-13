@@ -1,7 +1,7 @@
 import os
 from xml.etree import ElementTree as ET
 
-from .representation import Robot
+from .xmlrobot import XMLRobot
 
 
 def parse_xml(xml):
@@ -12,7 +12,7 @@ def parse_xml(xml):
             xml_string = open(xml, "r").read()
             if xml.upper().endswith("SDF"):
                 file_type = "sdf"
-            elif xml.uppert().endswith("URDF"):
+            elif xml.upper().endswith("URDF"):
                 file_type = "urdf"
         else:
             xml_string = xml
@@ -27,11 +27,11 @@ def parse_xml(xml):
             file_type = "sdf"
             if len(xml_root.findall("./model")) > 1:
                 print("WARNING: Multiple robots detected in this sdf!")
-                return [Robot.from_xml(x, dialect=file_type) for x in xml_root.findall("./model")]
+                return [XMLRobot.from_xml(x, dialect=file_type) for x in xml_root.findall("./model")]
             else:
                 xml_root = xml_root.findall("./model")[0]
         elif xml_root.tag == "model":
             file_type = "sdf"
         elif xml_root.tag == "robot":
             file_type = "urdf"
-    return Robot.from_xml(xml_root, dialect=file_type)
+    return XMLRobot.from_xml(xml_root, dialect=file_type)

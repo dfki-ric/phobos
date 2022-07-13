@@ -3,8 +3,9 @@ import json
 
 import numpy as np
 import pkg_resources
+from typing import List
 
-from .base import Representation
+from .base import Representation, Linkable
 from ..utils.misc import to_pretty_xml_string
 
 FORMATS = json.load(open(pkg_resources.resource_filename("phobos", "data/xml_formats.json"), "r"))
@@ -244,6 +245,26 @@ def class_factory(cls, only=None):
         del _to_xml
         del _to_string
 
+    if cls.__class__ == type and issubclass(cls, Linkable):
+        # creates the setters and getters for all linked attributes
+        if hasattr(cls, "type_dict"):
+            for k, v in cls.type_dict.items():
+                cls._type_dict[k] = v
+        class_vars = [var for var in dir(cls) if var in cls._type_dict.keys() and not var.startswith("_") and not callable(getattr(cls, var))]
+        for var in class_vars:
+            setattr(cls, "_"+var, None)
+
+            def _getter(cls, _var=var) -> [str, List[str]]:
+                return cls._attr_get_name(_var)
+
+            def _setter(cls, new_value: [str, List[str]], _var=var):
+                cls._attr_set_name(_var, new_value)
+
+            setattr(cls, var, property(_getter, _setter))
+
+            del _getter
+            del _setter
+
 
 def singular(prop):
     if type(prop) == list:
@@ -253,39 +274,4 @@ def singular(prop):
         return prop
 
 
-def link_with_robot(robot, object):
-    converter_dict = {var: getattr(robot, "get_"+vtype.lower()
-                                   + ("_by_name" if vtype.lower() in ["collision", "visual"] else ""))
-                      for var, vtype in object.type_dict.items() if hasattr(object, var)}
-    for var, conv in converter_dict:
-        def _getter(instance):
-            content = getattr(instance, "_" + var)
-            if content is None:
-                return None
-            if type(content) == list:
-                return [x.name for x in content]
-            return content.name
 
-        def _setter(instance, new_value):
-            content = getattr(instance, "_" + var)
-            assert type(new_value) == type(content) or content is None
-            if type(content) == list:
-                setattr(instance, "_"+var, [conv(x) for x in new_value])
-            else:
-                setattr(instance, "_" + var, conv(new_value))
-
-        value = getattr(object, var)
-        if type(value) == list and all([type(v) == str for v in value]):
-            setattr(object, "_" + var, [conv(v) for v in value])
-        elif type(value) == str:
-            setattr(object, "_" + var, conv(value))
-        elif value is not None:
-            raise RuntimeError("Can't deal with value of type " + type(value) + " during link_with_robot()!")
-
-        setattr(object, var, property(_getter, _setter))
-
-        del _getter
-        del _setter
-
-        if hasattr(object, "linking_callback"):
-            object.linking_callback()

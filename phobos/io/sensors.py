@@ -3,7 +3,6 @@ import numpy as np
 from .base import Representation
 from .representation import Pose
 from .smurf_reflection import SmurfBase
-from .xml_factory import link_with_robot
 from ..io import representation
 from ..utils import transform
 
@@ -11,22 +10,15 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
 
 class Sensor(Representation, SmurfBase):
-    type_dict = {
-        "link": "link",
-        "joint": "joint"
-    }
-
-    def __init__(self, robot=None, name: str = None, joint=None, link=None, rate=None, sensortype=None, origin=None, **kwargs):
+    def __init__(self, name: str = None, joint=None, link=None, rate=None, sensortype=None, origin=None, **kwargs):
         if link is not None and type(link) != str:
             link = link.name
         if joint is not None and type(joint) != str:
             joint = joint.name
-        super(SmurfBase).__init__(name=name, joint=joint, link=link, rate=None, origin=origin, **kwargs)
+        super(SmurfBase).__init__(name=name, joint=joint, link=link, rate=rate, origin=origin, **kwargs)
         self.type = sensortype
         self.returns += ['type']
         self.excludes += ['origin']
-        if robot is not None:
-            link_with_robot(robot, self)
 
     @property
     def position_offset(self):
@@ -35,7 +27,7 @@ class Sensor(Representation, SmurfBase):
 
     @property
     def orientation_offset(self):
-        quat = transform.matrix_to_quaternion(self.origin.to_matrix()[0:3, 0:3])\
+        quat = transform.matrix_to_quaternion(self.origin.to_matrix()[0:3, 0:3]) \
             if hasattr(self, "origin") else [0, 0, 0, 1]
         return {"x": quat[0], "y": quat[1], "z": quat[2], "w": quat[3]}
 
@@ -55,6 +47,9 @@ class Sensor(Representation, SmurfBase):
 
 
 class Joint6DOF(Sensor):
+    name = None
+    link = None
+
     def __init__(self, name=None, link=None, **kwargs):
         super().__init__(name=name, joint=None, link=link, sensortype='Joint6DOF', **kwargs)
         self.returns += ['link']
@@ -62,6 +57,19 @@ class Joint6DOF(Sensor):
 
 
 class RotatingRaySensor(Sensor):
+    name = None
+    link = None
+    bands = 0
+    draw_rays = False
+    horizontal_offset = 0
+    horizontal_resolution = 0
+    opening_width = np.pi * 2
+    lasers = 32
+    max_distance = 5.0
+    min_distance = 0
+    opening_height = 0.8
+    vertical_offset = 0
+
     def __init__(
             self, name=None, link=None,
             bands=8, draw_rays=False,
@@ -109,6 +117,18 @@ class RotatingRaySensor(Sensor):
 
 
 class CameraSensor(Sensor):
+    name = None
+    link = None
+    height = 480
+    width = 640
+    hud_height = 240
+    hud_width = 0
+    opening_height = 90
+    opening_width = 90
+    depth_image = True
+    show_cam = False
+    frame_offset = None
+
     def __init__(
             self, name=None, link=None,
             height=480, width=640, hud_height=240, hud_width=0,
@@ -134,11 +154,10 @@ class CameraSensor(Sensor):
 
 
 class IMU(Sensor):
-    type_dict = {
-        "link": "link",
-        "frame": "link"
-    }
-    
+    name = None
+    link = None
+    frame = None
+
     def __init__(self, name=None, link=None, frame=None, **kwargs):
         super().__init__(name=name, joint=None, link=link, frame=frame, sensortype='NodeIMU', **kwargs)
         self.returns += ['link', 'id']
@@ -170,7 +189,7 @@ class MultiSensor(Sensor):
         return
 
     def remove_target(self, target):
-        self.targets = [t for t in self.targets if t!=(target if type(target) == str else target.name)]
+        self.targets = [t for t in self.targets if t != (target if type(target) == str else target.name)]
 
     def is_empty(self):
         return len(self.targets) == 0
@@ -178,6 +197,8 @@ class MultiSensor(Sensor):
 
 class MotorCurrent(MultiSensor):
     type_dict = {"targets": "joint"}
+    name = None
+    targets = None
 
     def __init__(self, name=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -189,6 +210,8 @@ class MotorCurrent(MultiSensor):
 
 class JointPosition(MultiSensor):
     type_dict = {"targets": "joint"}
+    name = None
+    targets = None
 
     def __init__(self, name=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -200,6 +223,8 @@ class JointPosition(MultiSensor):
 
 class JointVelocity(MultiSensor):
     type_dict = {"targets": "joint"}
+    name = None
+    targets = None
 
     def __init__(self, name=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -214,10 +239,10 @@ class JointVelocity(MultiSensor):
 
 
 class NodeContact(MultiSensor):
-    type_dict = {
-        "link": "link",
-        "targets": "link"
-    }
+    type_dict = {"targets": "link"}
+    name = None
+    link = None
+    targets = None
 
     def __init__(self, name=None, link=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -230,10 +255,10 @@ class NodeContact(MultiSensor):
 
 
 class NodeContactForce(MultiSensor):
-    type_dict = {
-        "link": "link",
-        "targets": "link"
-    }
+    type_dict = {"targets": "link"}
+    name = None
+    link = None
+    targets = None
 
     def __init__(self, name=None, link=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -246,6 +271,8 @@ class NodeContactForce(MultiSensor):
 
 class NodeCOM(MultiSensor):
     type_dict = {"targets": "link"}
+    name = None
+    targets = None
 
     def __init__(self, name=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -256,8 +283,10 @@ class NodeCOM(MultiSensor):
 
 class NodePosition(MultiSensor):
     type_dict = {"targets": "link"}
+    name = None
+    targets = None
 
-    def __init__(self, name: str =None, targets=None, **kwargs):
+    def __init__(self, name: str = None, targets=None, **kwargs):
         if not isinstance(targets, list):
             targets = [targets]
 
@@ -265,6 +294,10 @@ class NodePosition(MultiSensor):
 
 
 class NodeRotation(MultiSensor):
+    type_dict = {"targets": "link"}
+    name = None
+    targets = None
+
     def __init__(self, name=None, targets=None, **kwargs):
         if not isinstance(targets, list):
             targets = [targets]
@@ -294,9 +327,9 @@ def sensor_factory(name, parent=None, sdf_type=None, origin=None, **kwargs):
         return RotatingRaySensor(
             name=name,
             horizontal_offset=kwargs["min_horizontal_angle"],
-            opening_width=kwargs["max_horizontal_angle"]-kwargs["min_horizontal_angle"],
+            opening_width=kwargs["max_horizontal_angle"] - kwargs["min_horizontal_angle"],
             vertical_offset=kwargs["min_vertical_angle"],
-            opening_height=kwargs["max_vertical_angle"]-kwargs["min_vertical_angle"],
+            opening_height=kwargs["max_vertical_angle"] - kwargs["min_vertical_angle"],
             draw_rays="visualize" in kwargs,
             **kwargs
         )

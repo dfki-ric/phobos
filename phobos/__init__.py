@@ -116,7 +116,6 @@ def register():
     from . import io
     from . import core
     from . import geometry
-    from . import smurf
     from . import scenes
     from . import utils
     from . import ci
@@ -208,7 +207,6 @@ from . import defs
 from . import io
 from . import core
 from . import geometry
-from . import smurf
 from . import scenes
 from . import utils
 from . import ci

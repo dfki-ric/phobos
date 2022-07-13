@@ -6,7 +6,6 @@ import numpy as np
 
 from ..core import Robot
 from ..utils.misc import regex_replace
-from ..smurf import Smurf
 from ..io import representation
 
 from ..ci.base_model import BaseModel
@@ -66,7 +65,7 @@ class CombinedModel(BaseModel):
                     kwargs["smurffile"] = config["basefile"]
                 else:
                     kwargs["xmlfile"] = config["basefile"]
-                self.dep_models.update({name: Smurf(name=name, **kwargs)})
+                self.dep_models.update({name: Robot(name=name, **kwargs)})
                 # copy the mesh files to the temporary combined model directory
                 for link in self.dep_models[name].links:
                     for v in link.visuals + link.collisions:
@@ -88,7 +87,7 @@ class CombinedModel(BaseModel):
                     ignore_failure=True
                 )
                 self.dep_models.update({
-                    name: Smurf(name=name, inputfile=os.path.join(repo_path, config["repo"]["model_in_repo"]))
+                    name: Robot(name=name, inputfile=os.path.join(repo_path, config["repo"]["model_in_repo"]))
                 })
                 # copy the mesh files to the temporary combined model directory
                 for link in self.dep_models[name].links:
@@ -311,18 +310,18 @@ class CombinedModel(BaseModel):
     def _load_robot(self):
         if not self.processed_model_exists:
             if os.path.exists(os.path.join(self.basedir, "smurf", "combined_model.smurf")):
-                self.robot = Smurf(name=self.robotname if self.robotname else None,
-                                   smurffile=os.path.join(self.basedir, "smurf", "combined_model.smurf"))
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                        smurffile=os.path.join(self.basedir, "smurf", "combined_model.smurf"))
             else:
-                self.robot = Smurf(name=self.robotname if self.robotname else None,
-                                   xmlfile=self.basefile)
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                        xmlfile=self.basefile)
             return
         else:
             if not os.path.isfile(self.exporturdf):
                 raise Exception('Preprocessed file {} not found!'.format(self.exporturdf))
             if os.path.exists(os.path.join(self.exportdir, "smurf", self.robotname + ".smurf")):
-                self.robot = Smurf(name=self.robotname if self.robotname else None,
-                                   smurffile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                        smurffile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
             else:
-                self.robot = Smurf(name=self.robotname if self.robotname else None,
-                                   xmlfile=self.exporturdf)
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                        xmlfile=self.exporturdf)

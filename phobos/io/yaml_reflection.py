@@ -2,6 +2,7 @@ import json
 import collections
 from xml.etree import ElementTree as ET
 
+from .base import Linkable
 from ..utils.misc import to_pretty_xml_string
 
 
@@ -32,12 +33,18 @@ def to_yaml(obj):
     return out
 
 
-class SelectiveReflection(object):
+class SelectiveReflection(Linkable):
+    def __init__(self, robot=None, target_type=None):
+        super(SelectiveReflection, self).__init__(robot=robot, target_type=target_type)
+
     def get_refl_vars(self):
         return list(vars(self).keys())
 
 
 class YamlReflection(SelectiveReflection):
+    def __init__(self, robot=None, target_type=None):
+        super(YamlReflection, self).__init__(robot=robot, target_type=target_type)
+
     def to_yaml(self):
         raw = dict((var, getattr(self, var)) for var in self.get_refl_vars())
         return to_yaml(raw)

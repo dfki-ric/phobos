@@ -5,13 +5,14 @@ import pkg_resources
 import yaml
 from copy import deepcopy
 
-from .. import smurf as ps
+from ..core import Robot
 from ..geometry import replace_collision, join_collisions, remove_collision, import_mesh, import_mars_mesh, \
     export_mesh, export_mars_mesh, export_bobj_mesh
-from ..smurf import Smurf as Robot
-from ..smurf.hyrodyn import JointDependency, MultiJointDependency
+from ..io.hyrodyn import JointDependency, MultiJointDependency
+from ..io.motors import Motor
+from ..io.smurfrobot import SMURFRobot
 from ..utils import misc, git, urdf, transform, tree
-from ..io import representation
+from ..io import representation, sensors as sensor_representations
 
 SUBMECHS_VIA_ASSEMBLIES = False
 
@@ -52,7 +53,7 @@ class BaseModel(yaml.YAMLObject):
         # list directly imported mesh pathes
         self._meshes = []
         if hasattr(self, "basefile"):
-            r = Robot(xmlfile=self.basefile)
+            r = SMURFRobot(xmlfile=self.basefile)
             for link in r.links:
                 for g in link.visuals + link.collisions:
                     if hasattr(g.geometry, "filename"):
@@ -60,7 +61,7 @@ class BaseModel(yaml.YAMLObject):
         elif hasattr(self, "depends_on"):
             for _, v in self.depends_on.items():
                 if "basefile" in v.keys():
-                    r = Robot(xmlfile=v["basefile"])
+                    r = SMURFRobot(xmlfile=v["basefile"])
                     for link in r.links:
                         for g in link.visuals + link.collisions:
                             if hasattr(g.geometry, "filename"):
@@ -76,7 +77,7 @@ class BaseModel(yaml.YAMLObject):
                 ignore_failure=True
             )
             self.basefile = os.path.join(repo_path, self.repo["model_in_repo"])
-            r = Robot(inputfile=self.basefile)
+            r = SMURFRobot(inputfile=self.basefile)
             for link in r.links:
                 for g in link.visuals + link.collisions:
                     if hasattr(g.geometry, "filename"):
@@ -141,20 +142,20 @@ class BaseModel(yaml.YAMLObject):
             if not os.path.isfile(self.basefile):
                 raise Exception('{} not found!'.format(self.basefile))
             if self.basefile.endswith("smurf"):
-                self.robot = ps.Smurf(name=self.robotname if self.robotname else None,
-                                      smurffile=self.basefile)
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                   smurffile=self.basefile)
             else:
-                self.robot = ps.Smurf(name=self.robotname if self.robotname else None,
-                                      xmlfile=self.basefile)
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                   xmlfile=self.basefile)
         else:
             if not os.path.isfile(self.exporturdf):
                 raise Exception('Preprocessed file {} not found!'.format(self.exporturdf))
             if os.path.exists(self.exportsmurf):
-                self.robot = ps.Smurf(name=self.robotname if self.robotname else None,
-                                      smurffile=self.exportsmurf)
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                   smurffile=self.exportsmurf)
             else:
-                self.robot = ps.Smurf(name=self.robotname if self.robotname else None,
-                                      xmlfile=self.exporturdf)
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                   xmlfile=self.exporturdf)
 
     def recreate_sym_links(self):
         misc.create_symlink(self.pipeline,
@@ -282,7 +283,7 @@ class BaseModel(yaml.YAMLObject):
                     if "smurf" in self.modeltype \
                             and ("reducedDataPackage" in self.redefine_articulation[joint.name].keys()
                                  or "noDataPackage" in self.redefine_articulation[joint.name].keys()):
-                        self.robot.smurf_joints += [ps.Joint(
+                        self.robot.smurf_joints += [representation.Joint(
                             robot=self.robot,
                             joint=joint.name,
                             reducedDataPackage=self.redefine_articulation[joint.name]["reducedDataPackage"]
@@ -320,7 +321,7 @@ class BaseModel(yaml.YAMLObject):
                     if "smurf" in self.modeltype \
                             and ("reducedDataPackage" in self.redefine_articulation["default"].keys()
                                  or "noDataPackage" in self.redefine_articulation["default"].keys()):
-                        self.robot.smurf_joints += [ps.Joint(
+                        self.robot.smurf_joints += [representation.Joint(
                             robot=self.robot,
                             joint=joint.name,
                             reducedDataPackage=self.redefine_articulation["default"]["reducedDataPackage"]
@@ -417,7 +418,7 @@ class BaseModel(yaml.YAMLObject):
                         if "no_collision_between" in self.smurf["collisions"].keys() else {},
                         **kwargs
                     )
-                    for coll in self.robot.collisions:
+                    for coll in self.robot.get_all_collisions():
                         if coll.name in self.smurf["collisions"].keys():
                             for k, v in self.smurf["collisions"][coll.name].items():
                                 setattr(coll, k, v)
@@ -430,7 +431,7 @@ class BaseModel(yaml.YAMLObject):
                             if coll.name in self.smurf["collisions"].keys():
                                 conf = self.smurf["collisions"][coll.name]
                             smurf_collisions += [
-                                ps.Collision(
+                                representation.Collision(
                                     robot=self.robot,
                                     link=link,
                                     collision=coll,
@@ -533,24 +534,24 @@ class BaseModel(yaml.YAMLObject):
 
             if 'poses' in self.smurf.keys():
                 for (cn, config) in self.smurf["poses"].items():
-                    pose = ps.JointPositionSet(robot=self.robot, name=cn, configuration=config)
+                    pose = representation.JointPositionSet(robot=self.robot, name=cn, configuration=config)
                     self.robot.add_pose(pose)
                     print('      Added pose {}'.format(cn), flush=True)
 
             if 'sensors' in self.smurf.keys():
-                multi_sensors = [x for x in dir(ps.sensors) if
-                                 not x.startswith("__") and x not in ps.sensors.__IMPORTS__ and
-                                 issubclass(getattr(ps.sensors, x), ps.sensors.MultiSensor)]
-                single_sensors = [x for x in dir(ps.sensors) if
-                                  not x.startswith("__") and x not in ps.sensors.__IMPORTS__ and issubclass(
-                                      getattr(ps.sensors, x), ps.sensors.Sensor) and x not in multi_sensors]
+                multi_sensors = [x for x in dir(sensor_representations) if
+                                 not x.startswith("__") and x not in sensor_representations.__IMPORTS__ and
+                                 issubclass(getattr(sensor_representations, x), sensor_representations.MultiSensor)]
+                single_sensors = [x for x in dir(sensor_representations) if
+                                  not x.startswith("__") and x not in sensor_representations.__IMPORTS__ and issubclass(
+                                      getattr(sensor_representations, x), sensor_representations.Sensor) and x not in multi_sensors]
                 moveable_joints = [j for j in self.robot.joints if j.joint_type != 'fixed']
 
                 for s in self.smurf["sensors"]:
                     sensor_ = None
                     if s["type"] in single_sensors:
                         kwargs = {k: v for k, v in s.items() if k != "type"}
-                        sensor_ = getattr(ps.sensors, s["type"])(robot=self.robot, **kwargs)
+                        sensor_ = getattr(sensor_representations, s["type"])(robot=self.robot, **kwargs)
 
                     if s["type"] in multi_sensors:
                         if "targets" not in s:
@@ -562,29 +563,25 @@ class BaseModel(yaml.YAMLObject):
                         else:
                             raise ValueError('Targets can only be a list or "All"!')
                         kwargs = {k: v for k, v in s.items() if k != "type"}
-                        sensor_ = getattr(ps.sensors, s["type"])(robot=self.robot, **kwargs)
+                        sensor_ = getattr(sensor_representations, s["type"])(robot=self.robot, **kwargs)
 
                     if sensor_ is not None:
-                        self.robot.attach_sensor(sensor_)
+                        self.robot.add_sensor(sensor_)
                         print('      Attached {} {}'.format(s["type"], s['name']), flush=True)
 
             if 'links' in self.smurf.keys():
                 for link in self.robot.links:
                     name = link.name if link.name in self.smurf["links"].keys() else "default"
                     if name in self.smurf["links"].keys():
-                        self.robot.smurf_links += [ps.Link(
-                            robot=self.robot,
-                            link=link.name,
-                            noDataPackage=self.smurf["links"][name]["noDataPackage"]
-                            if "noDataPackage" in self.smurf["links"][name].keys() else False,
-                            reducedDataPackage=self.smurf["links"][name]["reducedDataPackage"]
-                            if "reducedDataPackage" in self.smurf["links"][name].keys() else False
-                        )]
+                        link_instance = self.robot.get_link(link.name),
+                        link_instance.noDataPackage=self.smurf["links"][name]["noDataPackage"] if "noDataPackage" in self.smurf["links"][name].keys() else False,
+                        link_instance.reducedDataPackage=self.smurf["links"][name]["reducedDataPackage"] if "reducedDataPackage" in self.smurf["links"][name].keys() else False
                         print('      Defined Link {}'.format(link.name), flush=True)
 
             if "materials" in self.smurf.keys():
                 for m in self.smurf["materials"]:
-                    self.robot.smurf_materials += [ps.Material(**m)]
+                    material_instance = self.robot.get_material(m["name"])
+                    material_instance.add_annotations(**m)
                     print('      Defined Material {}'.format(m["name"]), flush=True)
 
             # motors
@@ -599,34 +596,17 @@ class BaseModel(yaml.YAMLObject):
                         conf[k] = v
                 if joint.joint_type == "fixed":
                     continue
-                if hasattr(joint, "mimic") and joint.mimic is not None:
-                    motor = ps.MimicMotor(
-                        joint=joint,
-                        name=conf["name"] if "name" in conf.keys() else joint.name,  # + "_motor",
-                        robot=self.robot,
-                        p=conf["p"] if "p" in conf.keys() else 20.0,
-                        i=conf["i"] if "i" in conf.keys() else 0.0,
-                        d=conf["d"] if "d" in conf.keys() else 0.1,
-                        mimic_motor=joint.mimic.joint,  # + "_motor",
-                        mimic_multiplier=joint.mimic.multiplier,
-                        mimic_offset=joint.mimic.offset,
-                        maxEffort=joint.limit.effort if joint.limit is not None and joint.limit.effort > 0.0 else 400,
-                        reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
-                        noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
-                    )
-                    self.robot.attach_motor(motor=motor)
-                else:
-                    motor = ps.Motor(
-                        joint=joint,
-                        name=conf["name"] if "name" in conf.keys() else joint.name,  # + "_motor",
-                        robot=self.robot,
-                        p=conf["p"] if "p" in conf.keys() else 20.0,
-                        i=conf["i"] if "i" in conf.keys() else 0.0,
-                        d=conf["d"] if "d" in conf.keys() else 0.1,
-                        reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
-                        noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
-                    )
-                    self.robot.attach_motor(motor=motor)
+                self.robot.add_motor(motor=Motor(
+                    joint=joint,
+                    name=conf["name"] if "name" in conf.keys() else joint.name,  # + "_motor",
+                    robot=self.robot,
+                    p=conf["p"] if "p" in conf.keys() else 20.0,
+                    i=conf["i"] if "i" in conf.keys() else 0.0,
+                    d=conf["d"] if "d" in conf.keys() else 0.1,
+                    maxEffort=joint.limit.effort if joint.limit is not None and joint.limit.effort > 0.0 else 400,
+                    reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
+                    noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
+                ))
 
             if "further_annotations" in self.smurf.keys():
                 for k, v in self.smurf["further_annotations"]:
@@ -700,7 +680,7 @@ class BaseModel(yaml.YAMLObject):
 
             for file in self.export_joint_limits:
                 if file["type"].upper() == "URDF":
-                    temp_model = ps.Smurf(name="temp", xmlfile=os.path.join(self.exportdir, file["in"]))
+                    temp_model = Robot(name="temp", xmlfile=os.path.join(self.exportdir, file["in"]))
                     if "joints" in file.keys():
                         out = urdf.get_joint_info_dict(temp_model, get_joints(temp_model, file["joints"]))
                     else:

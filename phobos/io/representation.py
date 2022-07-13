@@ -2,7 +2,7 @@ import numpy as np
 
 from .base import Representation
 from .smurf_reflection import SmurfBase
-from .xml_factory import link_with_robot, singular as _singular
+from .xml_factory import singular as _singular
 from ..geometry.io import import_mesh, import_mars_mesh
 from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
 
@@ -10,7 +10,12 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
 
 class Pose(Representation):
+    xyz = None
+    rpy = None
+    relative_to = None
+
     def __init__(self, xyz=None, rpy=None, vec=None, extra=None, relative_to=None):
+        super().__init__()
         self.xyz = xyz
         self.rpy = rpy
         self.relative_to = relative_to
@@ -82,7 +87,10 @@ class Pose(Representation):
 
 
 class Color(Representation):
+    rgba = None
+
     def __init__(self, *args, rgba=None):
+        super().__init__()
         # What about named colors?
         count = len(args)
         if rgba is not None:
@@ -101,7 +109,10 @@ class Color(Representation):
 
 
 class Texture(Representation):
+    filename = None
+
     def __init__(self, filename=None):
+        super().__init__()
         self.filename = filename
 
 
@@ -112,15 +123,22 @@ class Texture(Representation):
 
 
 class Box(Representation):
+    size = None
+
     def __init__(self, size=None):
+        super().__init__()
         self.size = size
 
     def scale_geometry(self, x=1, y=1, z=1):
-        self.size = (v*s for v,s in zip(self.size, [x,y,z]))
+        self.size = (v * s for v, s in zip(self.size, [x, y, z]))
 
 
 class Cylinder(Representation):
+    radius = None
+    length = None
+
     def __init__(self, radius=0.0, length=0.0):
+        super().__init__()
         self.radius = radius
         self.length = length
 
@@ -131,7 +149,10 @@ class Cylinder(Representation):
 
 
 class Sphere(Representation):
+    radius = None
+
     def __init__(self, radius=0.0):
+        super().__init__()
         self.radius = radius
 
     def scale_geometry(self, x=1, y=1, z=1):
@@ -140,7 +161,11 @@ class Sphere(Representation):
 
 
 class Mesh(Representation):
+    filename = None
+    scale = None
+
     def __init__(self, filename=None, scale=None):
+        super().__init__()
         self.filename = filename
         self.scale = scale
 
@@ -148,7 +173,7 @@ class Mesh(Representation):
         if overwrite or self.scale is None:
             self.scale = [x, y, z]
         else:
-            self.scale = [v*s for v, s in zip(self.scale, [x, y, z])]
+            self.scale = [v * s for v, s in zip(self.scale, [x, y, z])]
 
     def load_mesh(self, urdf_path=None, mars_mesh=False):
         if mars_mesh:
@@ -157,16 +182,19 @@ class Mesh(Representation):
 
 
 class Collision(Representation, SmurfBase):
-    type_dict = {
-        "link": "link"
-    }
+    name = None
+    link = None
+    geometry = None
+    origin = None
+    bitmask = None
 
-    def __init__(self, robot=None, name=None, link=None, geometry=None, origin=None, bitmask=None, noDataPackage=False, reducedDataPackage=False, ccfm=None, **kwargs):
+    def __init__(self, name=None, link=None, geometry=None, origin=None, bitmask=None, noDataPackage=False,
+                 reducedDataPackage=False, ccfm=None, **kwargs):
         if type(link) is str:
             link = link
         elif link is not None:
             link = link.name
-        SmurfBase.__init__(name=name, link=link, **kwargs)
+        SmurfBase.__init__(self, name=name, link=link, **kwargs)
         self.geometry = _singular(geometry)
         self.origin = _singular(origin)
 
@@ -181,47 +209,66 @@ class Collision(Representation, SmurfBase):
         if bitmask is not None:
             self.returns += ['bitmask']
 
-        if robot is not None:
-            link_with_robot(robot, self)
+    def link_with_robot(self, robot):
+        super(Collision, self).link_with_robot(robot)
+        self.origin.link_with_robot(robot)
 
 
 class Material(Representation, SmurfBase):
+    name = None
+    color = None
+    texture = None
+
     def __init__(self, name=None, color=None, texture=None, **kwargs):
-        kwargs["name"] = name
-        if "diffuseColor" not in kwargs and color is not None:
-            kwargs["diffuseColor"] = {"r": color.rgba[0], "g": color.rgba[1], "b": color.rgba[2], "a": color.rgba[3]}
-        if "diffuseTexture" not in kwargs and texture is None:
-            kwargs["diffuseTexture"] = texture.filename
-        SmurfBase.__init__(**kwargs)
         self.name = name
         self.color = _singular(color)
         self.texture = _singular(texture)
+        kwargs["name"] = name
+        if "diffuseColor" not in kwargs and self.color is not None:
+            kwargs["diffuseColor"] = {"r": self.color.rgba[0], "g": self.color.rgba[1], "b": self.color.rgba[2], "a": self.color.rgba[3]}
+        if "diffuseTexture" not in kwargs and self.texture is not None:
+            kwargs["diffuseTexture"] = self.texture.filename
+        SmurfBase.__init__(self, **kwargs)
 
     def check_valid(self):
         if self.color is None and self.texture is None:
             raise Exception("Material has neither a color nor texture.")
 
 
-class Visual(Representation):
-    type_dict = {
-        "link": "link",
-        "material": "material"
-    }
+class Visual(Representation, SmurfBase):
+    name = None
+    geometry = None
+    material = None
+    origin = None
 
     def __init__(self, robot=None, geometry=None, material=None, origin=None, name=None):
+        super().__init__(robot=robot)
+        self.name = name
         self.geometry = _singular(geometry)
         self.material = _singular(material)
-        self.name = name
         self.origin = _singular(origin)
 
-        if robot is not None:
-            link_with_robot(robot, self)
+    def link_with_robot(self, robot):
+        super(Visual, self).link_with_robot(robot)
+        self.origin.link_with_robot(robot)
+        # we have the specialty that we hold materials in the robot and in visuals so we check whether those two are in sync
+        robot_material = robot.get_material(self._material.name)
+        if robot_material is None:
+            self.robot.add_aggregate("material", self._material)
+        assert id(self._material) == id(robot.get_material(self._material.name))
 
 
 class Inertia(Representation):
     KEYS = ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz']
+    ixx = 0.0
+    ixy = 0.0
+    ixz = 0.0
+    iyy = 0.0
+    iyz = 0.0
+    izz = 0.0
 
     def __init__(self, ixx=0.0, ixy=0.0, ixz=0.0, iyy=0.0, iyz=0.0, izz=0.0):
+        super().__init__()
         assert type(ixx) != str and ixx is not None
         self.ixx = ixx
         self.ixy = ixy
@@ -251,7 +298,12 @@ class Inertia(Representation):
 
 
 class Inertial(Representation):
+    mass = None
+    inertia = None
+    origin = None
+
     def __init__(self, mass=0.0, inertia=None, origin=None):
+        super().__init__()
         self.mass = mass
         self.inertia = _singular(inertia)
         self.origin = _singular(origin)
@@ -274,9 +326,20 @@ class Inertial(Representation):
         M[3::, 3::] = I
         return M
 
+    def link_with_robot(self, robot):
+        super(Inertial, self).link_with_robot(robot)
+        print(self.__dict__)
+        self.origin.link_with_robot(robot)
+
 
 class JointLimit(Representation):
+    effort = None
+    velocity = None
+    lower = None
+    upper = None
+
     def __init__(self, effort=None, velocity=None, lower=None, upper=None):
+        super().__init__()
         self.effort = effort
         self.velocity = velocity
         self.lower = lower
@@ -284,11 +347,12 @@ class JointLimit(Representation):
 
 
 class JointMimic(Representation):
-    type_dict = {
-        "joint": "joint"
-    }
+    joint = None
+    multiplier = None
+    offset = None
 
     def __init__(self, joint=None, multiplier=None, offset=None):
+        super().__init__()
         self.joint = joint
         self.multiplier = multiplier
         self.offset = offset
@@ -301,17 +365,25 @@ class Joint(Representation, SmurfBase):
     type_dict = {
         "parent": "link",
         "child": "link",
-        "motor": "motor"
     }
+    name = None
+    parent = None
+    child = None
+    joint_type = None
+    axis = None
+    limit = None
+    dynamics = None
+    mimic = None
+    motor = None
 
     def __init__(self, name=None, parent=None, child=None, joint_type=None,
                  axis=None, origin=None, limit=None,
                  dynamics=None, safety_controller=None, calibration=None,
-                 mimic=None, motor: str = None,
+                 mimic=None, motor=None,
                  noDataPackage=False, reducedDataPackage=False,
                  damping_const_constraint_axis1=None, springDamping=None, springStiffness=None,
                  spring_const_constraint_axis1=None, **kwargs):
-        SmurfBase.__init__(**kwargs)
+        SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.returns = ['name']
         self.parent = parent if type(parent) == str else parent.name
@@ -351,22 +423,26 @@ class Joint(Representation, SmurfBase):
             self._origin.relative_to = self.parent
         return self._origin
 
-    @property
-    def origin(self):
-        if self._origin.relative_to is None:
-            self._origin.relative_to = self.parent
-        return self._origin
-
     @origin.setter
     def origin(self, origin: Pose):
         self._origin = _singular(origin)
 
+    def link_with_robot(self, robot):
+        super(Joint, self).link_with_robot(robot)
+        if self.mimic is not None:
+            self.mimic.link_with_robot(robot)
+
 
 class Link(Representation, SmurfBase):
+    name = None
+    visuals = []
+    collisions = []
+    inertial = None
+
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None,
                  origin=None, noDataPackage=False, reducedDataPackage=False, **kwargs):
         assert origin is None  # Unused but might be neccesary for sdf
-        SmurfBase.__init__(**kwargs)
+        SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.returns += ['name']
         self.visuals = []
@@ -386,37 +462,19 @@ class Link(Representation, SmurfBase):
             self.reducedDataPackage = reducedDataPackage
             self.returns += ['reducedDataPackage']
 
-    def __get_visual(self):
-        """Return the first visual or None."""
-        if self.visuals:
-            return self.visuals[0]
+        for geo in self.collisions:
+            i = 0
+            if geo.name is None:
+                geo.name = self.name + "_collision"
+                if i > 0:
+                    geo.name += str(i)
 
-    def __set_visual(self, visual):
-        """Set the first visual."""
-        if self.visuals:
-            self.visuals[0] = visual
-        else:
-            self.visuals.append(visual)
-        if visual:
-            self.add_aggregate('visual', visual)
-
-    def __get_collision(self):
-        """Return the first collision or None."""
-        if self.collisions:
-            return self.collisions[0]
-
-    def __set_collision(self, collision):
-        """Set the first collision."""
-        if self.collisions:
-            self.collisions[0] = collision
-        else:
-            self.collisions.append(collision)
-        if collision:
-            self.add_aggregate('collision', collision)
-
-    # Properties for backwards compatibility
-    visual = property(__get_visual, __set_visual)
-    collision = property(__get_collision, __set_collision)
+        for geo in self.visuals:
+            i = 0
+            if geo.name is None:
+                geo.name = self.name + "_visual"
+                if i > 0:
+                    geo.name += str(i)
 
     def remove_aggregate(self, elem):
         if isinstance(elem, Visual):
@@ -431,13 +489,6 @@ class Link(Representation, SmurfBase):
             self.collisions.append(elem)
 
 
-    # @property
-    # def origin(self):
-    #     if self._origin.relative_to is None:
-    #         self._origin.relative_to = self.parent
-    #     return self._origin
-
-
 # class PR2Transmission(Representation):
 #     def __init__(self, name=None, joint=None, actuator=None, type=None,
 #                  mechanicalReduction=1):
@@ -449,13 +500,21 @@ class Link(Representation, SmurfBase):
 
 
 class Actuator(Representation):
+    name = None
+    mechanicalReduction = None
+
     def __init__(self, name, mechanicalReduction=1):
+        super().__init__()
         self.name = name
         self.mechanicalReduction = mechanicalReduction
 
 
 class TransmissionJoint(Representation):
+    name = None
+    hardwareInterface = None
+
     def __init__(self, name, hardwareInterfaces=None):
+        super().__init__()
         self.name = name
         self.hardwareInterfaces = [] if hardwareInterfaces is None else hardwareInterfaces
 
@@ -465,8 +524,12 @@ class TransmissionJoint(Representation):
 
 class Transmission(Representation):
     """ New format: http://wiki.ros.org/urdf/XML/Transmission """
+    name = None
+    joints = []
+    actuators = []
 
-    def __init__(self, name, joints=None, actuators=None):
+    def __init__(self, name, joints:TransmissionJoint=None, actuators=None):
+        super().__init__()
         self.name = name
         self.joints = [] if joints is None else joints
         self.actuators = [] if actuators is None else actuators
@@ -476,110 +539,107 @@ class Transmission(Representation):
         assert len(self.actuators) > 0, "no actuator defined"
 
 
-class Robot(Representation):
-    SUPPORTED_VERSIONS = ["1.0"]
+class Motor(Representation, SmurfBase):
+    name = None
+    joint = None
 
-    def __init__(self, name=None, version=None, links=None, joints=None, materials=None, transmissions=None,
-                 sensors=None):
-        self.name = name
-        if version is None:
-            version = "1.0"
-        elif type(version) is not str:
-            version = str(version)
-        if version not in self.SUPPORTED_VERSIONS:
-            raise ValueError("Invalid version; only %s is supported" % (','.join(self.SUPPORTED_VERSIONS)))
+    def __init__(self, name=None, joint=None, **kwargs):
+        SmurfBase.__init__(name=name, joint=joint, link=None, **kwargs)
+        # This is hardcoded information
+        self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue']
 
-        self.version = version
+    def link_with_robot(self, robot):
+        super(Motor, self).link_with_robot(robot)
+        setattr(self._joint, "motor", self)
 
-        self.joints = []
-        self.links = []
+    @property
+    def maxEffort(self):
+        if self._joint:
+            return self._joint.limit.effort if self._joint.limit else 0
+        else:
+            return 0
 
-        self.joint_map = {}
-        self.link_map = {}
-
-        self.parent_map = {}
-        self.child_map = {}
-
-        if joints is not None:
-            for joint in joints:
-                self.add_aggregate("joint", joint)
-        if links is not None:
-            for link in links:
-                self.add_aggregate("link", link)
-
-        self.materials = materials if materials is not None else []
-        self.transmissions = transmissions if transmissions is not None else []
-        self.sensors = sensors if sensors is not None else []
-
-        for entity in self.links + self.sensors:
-            link_with_robot(self, entity)
-        for entity in self.joints:
-            link_with_robot(self, entity)
-            if entity.mimic is not None:
-                link_with_robot(entity.mimic)
-
-    def add_aggregate(self, typeName, elem):
-        if typeName == 'joint':
-            joint = elem
-            self.joint_map[joint.name] = joint
-            self.parent_map[joint.child] = (joint.name, joint.parent)
-            if joint.parent in self.child_map:
-                self.child_map[joint.parent].append((joint.name, joint.child))
+    @maxEffort.setter
+    def maxEffort(self, effort):
+        if type(effort) in [float, int] and effort > 0:
+            if self._joint and self._joint.limit:
+                self._joint.limit.effort = effort
             else:
-                self.child_map[joint.parent] = [(joint.name, joint.child)]
-            if elem not in self.joints:
-                self.joints += [elem]
-        elif typeName == 'link':
-            link = elem
-            self.link_map[link.name] = link
-            if elem not in self.links:
-                self.links += [elem]
+                self._joint.limit = JointLimit(
+                    effort=effort,
+                    velocity=self.maxSpeed,
+                    lower=self.minValue,
+                    upper=self.maxValue
+                )
 
-    def add_link(self, link):
-        self.add_aggregate('link', link)
+    @property
+    def maxValue(self):
+        if self._joint:
+            return self._joint.limit.upper if self._joint.limit else 0
+        else:
+            return 0
 
-    def add_joint(self, joint):
-        self.add_aggregate('joint', joint)
+    @maxValue.setter
+    def maxValue(self, maxval):
+        if type(maxval) in [float, int] and maxval >= self.minValue:
+            if self._joint and self._joint.limit:
+                self._joint.limit.upper = maxval
+            else:
+                self._joint.limit = JointLimit(
+                    effort=self.maxEffort,
+                    velocity=self.maxSpeed,
+                    lower=self.minValue,
+                    upper=maxval
+                )
 
-    def get_chain(self, root, tip, joints=True, links=True, fixed=True):
-        chain = []
-        if links:
-            chain.append(tip)
-        link = tip
-        while link != root:
-            (joint, parent) = self.parent_map[link]
-            if joints:
-                if fixed or self.joint_map[joint].joint_type != 'fixed':
-                    chain.append(joint)
-            if links:
-                chain.append(parent)
-            link = parent
-        chain.reverse()
-        return chain
+    @property
+    def minValue(self):
+        if self._joint:
+            return self._joint.limit.lower if self._joint.limit else 0
+        else:
+            return 0
 
-    def get_root(self):
-        root = None
-        for link in self.link_map:
-            if link not in self.parent_map:
-                assert root is None, "Multiple roots detected, invalid URDF."
-                root = link
-        assert root is not None, "No roots detected, invalid URDF."
-        return root
+    @minValue.setter
+    def minValue(self, minval):
+        if type(minval) in [float, int] and minval <= self.maxValue:
+            if self._joint and self._joint.limit:
+                self._joint.limit.lower = minval
+            else:
+                self._joint.limit = JointLimit(
+                    effort=self.maxEffort,
+                    velocity=self.maxSpeed,
+                    lower=minval,
+                    upper=self.maxValue
+                )
 
-    def post_read_xml(self):
-        if self.version is None:
-            self.version = "1.0"
+    @property
+    def maxSpeed(self):
+        if self._joint:
+            return self._joint.limit.velocity if self._joint.limit else 0
+        else:
+            return 0
 
-        split = self.version.split(".")
-        if len(split) != 2:
-            raise ValueError("The version attribute should be in the form 'x.y'")
+    @maxSpeed.setter
+    def maxSpeed(self, speedval):
+        if type(speedval) in [float, int] and speedval > 0:
+            if self._joint and self._joint.limit:
+                self._joint.limit.velocity = speedval
+            else:
+                self._joint.limit = JointLimit(
+                    effort=self.maxEffort,
+                    velocity=speedval,
+                    lower=self.minValue,
+                    upper=self.maxValue
+                )
 
-        if split[0] == '' or split[1] == '':
-            raise ValueError("Empty major or minor number is not allowed")
+    @property
+    def mimic_motor(self):
+        return self._joint.mimic.joint
 
-        if int(split[0]) < 0 or int(split[1]) < 0:
-            raise ValueError("Version number must be positive")
+    @property
+    def mimic_multiplier(self):
+        return self._joint.mimic.multiplier
 
-        if self.version not in self.SUPPORTED_VERSIONS:
-            raise ValueError("Invalid version; only %s is supported" % (','.join(self.SUPPORTED_VERSIONS)))
-
+    @property
+    def mimic_offset(self):
+        return self._joint.mimic.offset
