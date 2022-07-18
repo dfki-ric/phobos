@@ -49,6 +49,3 @@ class YamlReflection(SelectiveReflection):
         raw = dict((var, getattr(self, var)) for var in self.get_refl_vars())
         return to_yaml(raw)
 
-    def __str__(self):
-        # Good idea? Will it remove other important things?
-        return json.dumps(self.to_yaml()).rstrip()

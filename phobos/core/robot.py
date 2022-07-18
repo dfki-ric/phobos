@@ -404,7 +404,7 @@ class Robot(SMURFRobot):
 
         # further annotations
         for k, v in self.annotations.items():
-            if k not in smurf_annotations + ["materials", "link", "joint"]:
+            if k not in smurf_annotations:
                 with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w+") as stream:
                     yaml.safe_dump({k: v}, stream, default_style=False)
                     export_files.append(os.path.split(stream.name)[-1])
@@ -1004,7 +1004,7 @@ class Robot(SMURFRobot):
         motors = []
         for joint in joints:
             if joint.motor is not None:
-                motors.append(joint.motor)
+                motors.append(joint._motor)
         sensors = []
         for sensor in self.sensors:
             if sensor.is_related_to(links + joints):

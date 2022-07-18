@@ -204,7 +204,7 @@
       "tag": "joint",
       "attributes": {
         "name": "name",
-        "type": "jointtype"
+        "type": "joint_type"
       },
       "children": {
         "origin": {
@@ -304,7 +304,9 @@
         "rate": "rate"
       },
       "attribute_children": {
-        "parent": "link"
+        "parent": {
+          "link": "link"
+        }
       },
       "children": {
         "pose": {
@@ -327,12 +329,8 @@
         "rate": "rate"
       },
       "attribute_children": {
-        "parent": "link"
-      },
-      "children": {
-        "origin": {
-          "classname": "Pose",
-          "varname": "origin"
+        "parent": {
+          "link": "link"
         }
       },
       "nested_children": {
@@ -375,12 +373,14 @@
         "rate": "rate"
       },
       "attribute_children": {
-        "parent": "link"
+        "parent": {
+          "link": "link"
+        }
       },
       "children": {
         "origin": {
           "classname": "Pose",
-          "varname": "origin"
+          "varname": "frame_offset"
         }
       },
       "nested_children": {
@@ -407,7 +407,9 @@
         "rate": "rate"
       },
       "attribute_children": {
-        "parent": "link"
+        "parent": {
+          "link": "link"
+        }
       },
       "children": {
         "origin": {
@@ -618,7 +620,7 @@
       "tag": "joint",
       "attributes": {
         "name": "name",
-        "type": "jointtype"
+        "type": "joint_type"
       },
       "children": {
         "pose": {
@@ -716,12 +718,6 @@
         "topic": "topic",
         "enable_metrics": "enable_metrics"
       },
-      "children": {
-        "pose": {
-          "classname": "Pose",
-          "varname": "origin"
-        }
-      },
       "nested_children": {
         "lidar": {
           "nested_children": {
@@ -771,7 +767,7 @@
       "children": {
         "pose": {
           "classname": "Pose",
-          "varname": "origin"
+          "varname": "frame_offset"
         }
       },
       "nested_children": {

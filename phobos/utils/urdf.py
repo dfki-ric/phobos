@@ -45,7 +45,7 @@ def get_joint_info_dict(robot, joint_list):
         if j.joint_type != "fixed":
             out["names"] += [j.name]
             if j.limit is None:
-                print("WARNING: No joint limits defined for joint", j.name)
+                print(f"WARNING: No joint limits defined for joint {j.name} (type: {j.joint_type})")
             out["elements"] += [{
                 # "name" : j,
                 "max": {

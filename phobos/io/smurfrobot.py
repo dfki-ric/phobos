@@ -3,9 +3,9 @@ import os
 
 import yaml
 
-from .motors import Motor
 from .poses import JointPositionSet
-from ..io import sensors
+from ..io import sensor_representations
+from ..io import representation
 from ..io.xmlrobot import XMLRobot
 from ..io.parser import parse_xml
 from .hyrodyn import Submechanism, Exoskeleton
@@ -37,6 +37,7 @@ class SMURFRobot(XMLRobot):
                 smurffile = inputfile
             elif inputfile.lower().endswith(".urdf") and xmlfile is None:
                 xmlfile = inputfile
+        self.xmlfile = xmlfile
         self.smurffile = smurffile
         self.submechanisms_file = submechanisms_file
 
@@ -44,14 +45,13 @@ class SMURFRobot(XMLRobot):
             # Check the input file
             self.read_smurffile(self.smurffile)
 
-        if xmlfile is not None:
+        super(SMURFRobot, self).__init__(xmlfile=self.xmlfile)
+        if self.xmlfile is not None:
             # Fill everything with the xml information
-            base_robot = parse_xml(xmlfile)
+            base_robot = parse_xml(self.xmlfile)
             assert type(base_robot) == XMLRobot, f"{type(base_robot)}"
             for k, v in base_robot.__dict__.items():
                 setattr(self, k, v)
-        else:
-            super(SMURFRobot, self).__init__()
 
         self.description = "" if description is None else description
 
@@ -98,17 +98,18 @@ class SMURFRobot(XMLRobot):
                 # Get abs
                 if f.lower().endswith('.urdf'):
                     self.xmlfile = os.path.abspath(f)
+                    self.inputfiles.remove(f)
 
     def _parse_annotations(self, annotationfile):
         # Load the file
         with open(annotationfile, 'r') as stream:
             try:
-                annotation = yaml.safe_load(stream)
+                annotation = yaml.safe_load(stream.read())
                 if "submechanisms" in annotation.keys():
                     self.submechanisms_file = os.path.abspath(annotationfile)
+                self.annotations.update(annotation)
             except yaml.YAMLError as exc:
                 print(exc)
-        self.annotations.update(annotation)
 
     def _init_annotations(self):
         if 'motors' in self.annotations:
@@ -121,8 +122,7 @@ class SMURFRobot(XMLRobot):
                         annotations.pop('name')
                     self.add_aggregate(
                         'motors',
-                        Motor(
-                            robot=self,
+                        representation.Motor(
                             name=motor['name'] if 'name' in motor else motor['joint']+"_motor",
                             **annotations
                         )
@@ -136,7 +136,7 @@ class SMURFRobot(XMLRobot):
                 # Search for the joint or link
                 input_args = {}
                 existing = self.get_sensor(sensor_def["name"])
-                sensor = getattr(sensors, sensor_def["sensortype"])(**sensor_def)
+                sensor = getattr(sensor_representations, sensor_def["type"])(**sensor_def)
                 if existing is not None and existing != sensor:
                     print("WARNING: There is already a sensor with name", sensor_def["name"])
                 elif existing is None:

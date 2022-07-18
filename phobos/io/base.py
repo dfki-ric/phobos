@@ -16,7 +16,6 @@ class Linkable(object):
 
     def __init__(self, robot=None):
         self._class_attributes = [var for var in self._class_variables if var in self.type_dict.keys() and not var.startswith("_")]
-
         if robot is not None:
             self.link_with_robot(robot)
 
@@ -24,8 +23,11 @@ class Linkable(object):
         if self._related_robot_instance is None or isinstance(new_value, Representation):
             return new_value
         vtype = self.type_dict[varname].lower()
-        return getattr(self._related_robot_instance,
+        converted = getattr(self._related_robot_instance,
                        "get_" + vtype + ("_by_name" if vtype in ["collision", "visual"] else ""))(new_value)
+        if converted is None and new_value is not None:
+            print(f"WARNING: There is no {vtype} with name {new_value} in {self._related_robot_instance.name} setting {varname} to None")
+        return converted
 
     def _attr_get_name(self, attribute):
         if getattr(self, "_" + attribute) is None:

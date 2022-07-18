@@ -33,11 +33,11 @@ def is_float(val):
 
 def get_class(classname):
     from . import representation
-    from . import sensors as sensor_representation
+    from . import sensor_representations
     if hasattr(representation, classname) and classname not in representation.__IMPORTS__:
         cls = getattr(representation, classname)
-    elif hasattr(sensor_representation, classname) and classname not in sensor_representation.__IMPORTS__:
-        cls = getattr(sensor_representation, classname)
+    elif hasattr(sensor_representations, classname) and classname not in sensor_representations.__IMPORTS__:
+        cls = getattr(sensor_representations, classname)
     else:
         raise AssertionError(f"The class {classname} is not None to the XML-Factory")
     assert callable(cls) or issubclass(cls, Representation), f"The class {classname} is not a valid Representation instance"
@@ -83,7 +83,7 @@ class XMLDefinition(object):
         for tag, var in self.xml_children.items():
             obj = getattr(object, var["varname"])
             if type(obj) == list:
-                children += [o for o in obj if isinstance(o, var["class"])]
+                children += [o for o in obj]
             elif isinstance(obj, var["class"]):
                 children += [obj]
         for child in sorted(children, key=lambda x: x.sort_string()):

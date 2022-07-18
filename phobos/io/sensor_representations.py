@@ -11,14 +11,19 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
 class Sensor(Representation, SmurfBase):
     def __init__(self, name: str = None, joint=None, link=None, rate=None, sensortype=None, origin=None, **kwargs):
-        if link is not None and type(link) != str:
-            link = link.name
-        if joint is not None and type(joint) != str:
-            joint = joint.name
-        super(SmurfBase).__init__(name=name, joint=joint, link=link, rate=rate, origin=origin, **kwargs)
+        if link is not None:
+            if type(link) != str:
+                link = link.name
+            kwargs["link"] = link
+        if joint is not None:
+            if type(joint) != str:
+                joint = joint.name
+            kwargs["joint"] = joint
+        SmurfBase.__init__(self, name=name, rate=rate, returns=["type", "rate"], **kwargs)
         self.type = sensortype
-        self.returns += ['type']
-        self.excludes += ['origin']
+
+    def __str__(self):
+        return self.name
 
     @property
     def position_offset(self):
@@ -81,9 +86,6 @@ class RotatingRaySensor(Sensor):
         self.min_distance = min_distance
         self.opening_height = opening_height
         self.vertical_offset = vertical_offset
-        if not isinstance(link, representation.Link):
-            print(link)
-            raise AssertionError("Parsed invalid link")
         self.returns += ['link', 'bands', 'draw_rays',
                          'horizontal_offset', 'horizontal_resolution', 'vertical_offset',
                          'opening_width', 'opening_height', 'max_distance', 'lasers']

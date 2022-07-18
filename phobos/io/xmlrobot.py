@@ -1,4 +1,4 @@
-from . import representation, xml_factory
+from . import representation, xml_factory, sensor_representations
 from . import sensors as sensor_representation
 from .base import Representation
 from ..utils.transform import create_transformation
@@ -144,16 +144,14 @@ class XMLRobot(Representation):
         if type(elem) == list:
             return [self.add_aggregate(typeName, e) for e in elem]
         if typeName in ['joint', 'joints']:
-            joint = elem
-            self.parent_map[str(joint.child)] = (joint.name, joint.parent)
-            if joint.parent in self.child_map:
-                self.child_map[joint.parent].append((joint.name, joint.child))
+            self.parent_map[str(elem.child)] = (elem.name, elem.parent)
+            if elem.parent in self.child_map:
+                self.child_map[elem.parent].append((elem.name, elem.child))
             else:
-                self.child_map[joint.parent] = [(joint.name, joint.child)]
+                self.child_map[elem.parent] = [(elem.name, elem.child)]
             if elem not in self.joints:
                 self.joints += [elem]
         elif typeName in ['link', 'links']:
-            link = elem
             if elem not in self.links:
                 self.links += [elem]
         else:
@@ -165,8 +163,6 @@ class XMLRobot(Representation):
             objects = getattr(self, typeName)
             for obj in objects:
                 if elem.name == obj.name and not elem.equivalent(obj):
-                    print(elem.__dict__)
-                    print(obj.__dict__)
                     instances.append(obj.name)
             if instances:
                 elem.name += "_{}".format(len(instances))
@@ -185,8 +181,8 @@ class XMLRobot(Representation):
         self.add_aggregate('joint', joint)
 
     def add_sensor(self, sensor):
-        if not isinstance(sensor, sensor_representation.Sensor):
-            raise Exception("Please provide an instance of Sensor to attach.")
+        if not isinstance(sensor, sensor_representations.Sensor):
+            raise Exception(f"Please provide an instance of Sensor to attach. Received: {repr(type(sensor))}")
         self.add_aggregate('sensors', sensor)
         return
 
@@ -231,7 +227,7 @@ class XMLRobot(Representation):
             names.append(obj.name)
             if obj.name == str(target):
                 return obj
-        # print(f"Robot has no {targettype} with name {target}, only these: {repr(names)}")
+        #print(f"Robot has no {targettype} with name {target}, only these: {repr(names)}")
         return None
 
     def get_link(self, link_name, verbose=True) -> [representation.Link, list]:

@@ -222,6 +222,9 @@ class Collision(Representation, SmurfBase):
         if bitmask is not None:
             self.returns += ['bitmask']
 
+    def __str__(self):
+        return self.name
+
     def link_with_robot(self, robot):
         super(Collision, self).link_with_robot(robot)
         self.origin.link_with_robot(robot)
@@ -246,6 +249,7 @@ class Material(Representation, SmurfBase):
         if "diffuseTexture" not in kwargs and self.texture is not None:
             kwargs["diffuseTexture"] = self.texture.filename
         SmurfBase.__init__(self, **kwargs)
+        self.excludes += ["color"]
 
     def __str__(self):
         return self.name
@@ -270,6 +274,9 @@ class Visual(Representation, SmurfBase):
         self.geometry = _singular(geometry)
         self.material = _singular(material)
         self.origin = _singular(origin)
+
+    def __str__(self):
+        return self.name
 
     def link_with_robot(self, robot):
         super(Visual, self).link_with_robot(robot)
@@ -441,6 +448,7 @@ class Joint(Representation, SmurfBase):
         if spring_const_constraint_axis1 is not None:
             self.spring_const_constraint_axis1 = spring_const_constraint_axis1
             self.returns += ["spring_const_constraint_axis1"]
+        self.excludes += ["limit"]
 
     def __str__(self):
         return self.name
@@ -596,13 +604,22 @@ class Motor(Representation, SmurfBase):
     _class_variables = ["name", "joint"]
 
     def __init__(self, name=None, joint=None, **kwargs):
-        SmurfBase.__init__(name=name, joint=joint, link=None, **kwargs)
+        SmurfBase.__init__(self, name=name, joint=joint,**kwargs)
         # This is hardcoded information
+        self._maxEffort = None
+        self._maxSpeed = None
+        self._maxValue = None
+        self._minValue = None
         self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue']
 
-    def link_with_robot(self, robot):
+    def __str__(self):
+        return self.name
+
+    def link_with_robot(self, robot, check_linkage_later=False):
         super(Motor, self).link_with_robot(robot)
         setattr(self._joint, "motor", self)
+        if not check_linkage_later:
+            self.check_linkage()
 
     @property
     def maxEffort(self):
@@ -613,16 +630,19 @@ class Motor(Representation, SmurfBase):
 
     @maxEffort.setter
     def maxEffort(self, effort):
-        if type(effort) in [float, int] and effort > 0:
-            if self._joint and self._joint.limit:
-                self._joint.limit.effort = effort
-            else:
-                self._joint.limit = JointLimit(
-                    effort=effort,
-                    velocity=self.maxSpeed,
-                    lower=self.minValue,
-                    upper=self.maxValue
-                )
+        if self._related_robot_instance is None:
+            self._maxEffort = effort
+        else:
+            if type(effort) in [float, int] and effort > 0:
+                if self._joint is not None and self._joint.limit:
+                    self._joint.limit.effort = effort
+                else:
+                    self._joint.limit = JointLimit(
+                        effort=effort,
+                        velocity=self.maxSpeed,
+                        lower=self.minValue,
+                        upper=self.maxValue
+                    )
 
     @property
     def maxValue(self):
@@ -633,16 +653,19 @@ class Motor(Representation, SmurfBase):
 
     @maxValue.setter
     def maxValue(self, maxval):
-        if type(maxval) in [float, int] and maxval >= self.minValue:
-            if self._joint and self._joint.limit:
-                self._joint.limit.upper = maxval
-            else:
-                self._joint.limit = JointLimit(
-                    effort=self.maxEffort,
-                    velocity=self.maxSpeed,
-                    lower=self.minValue,
-                    upper=maxval
-                )
+        if self._related_robot_instance is None:
+            self._maxValue = maxval
+        else:
+            if type(maxval) in [float, int] and maxval >= self.minValue:
+                if self._joint and self._joint.limit:
+                    self._joint.limit.upper = maxval
+                else:
+                    self._joint.limit = JointLimit(
+                        effort=self.maxEffort,
+                        velocity=self.maxSpeed,
+                        lower=self.minValue,
+                        upper=maxval
+                    )
 
     @property
     def minValue(self):
@@ -653,16 +676,19 @@ class Motor(Representation, SmurfBase):
 
     @minValue.setter
     def minValue(self, minval):
-        if type(minval) in [float, int] and minval <= self.maxValue:
-            if self._joint and self._joint.limit:
-                self._joint.limit.lower = minval
-            else:
-                self._joint.limit = JointLimit(
-                    effort=self.maxEffort,
-                    velocity=self.maxSpeed,
-                    lower=minval,
-                    upper=self.maxValue
-                )
+        if self._related_robot_instance is None:
+            self._minValue = minval
+        else:
+            if type(minval) in [float, int] and minval <= self.maxValue:
+                if self._joint and self._joint.limit:
+                    self._joint.limit.lower = minval
+                else:
+                    self._joint.limit = JointLimit(
+                        effort=self.maxEffort,
+                        velocity=self.maxSpeed,
+                        lower=minval,
+                        upper=self.maxValue
+                    )
 
     @property
     def maxSpeed(self):
@@ -673,25 +699,43 @@ class Motor(Representation, SmurfBase):
 
     @maxSpeed.setter
     def maxSpeed(self, speedval):
-        if type(speedval) in [float, int] and speedval > 0:
-            if self._joint and self._joint.limit:
-                self._joint.limit.velocity = speedval
-            else:
-                self._joint.limit = JointLimit(
-                    effort=self.maxEffort,
-                    velocity=speedval,
-                    lower=self.minValue,
-                    upper=self.maxValue
-                )
+        if self._related_robot_instance is None:
+            self._maxSpeed = speedval
+        else:
+            if type(speedval) in [float, int] and speedval > 0:
+                if self._joint and self._joint.limit:
+                    self._joint.limit.velocity = speedval
+                else:
+                    self._joint.limit = JointLimit(
+                        effort=self.maxEffort,
+                        velocity=speedval,
+                        lower=self.minValue,
+                        upper=self.maxValue
+                    )
 
     @property
     def mimic_motor(self):
-        return self._joint.mimic.joint
+        if self._joint.mimic is not None:
+            return self._joint.mimic.joint
+
+    @mimic_motor.setter
+    def mimic_motor(self, val):
+        pass
 
     @property
     def mimic_multiplier(self):
-        return self._joint.mimic.multiplier
+        if self._joint.mimic is not None:
+            return self._joint.mimic.multiplier
+
+    @mimic_multiplier.setter
+    def mimic_multiplier(self, val):
+        pass
 
     @property
     def mimic_offset(self):
-        return self._joint.mimic.offset
+        if self._joint.mimic is not None:
+            return self._joint.mimic.offset
+
+    @mimic_offset.setter
+    def mimic_offset(self, val):
+        pass
