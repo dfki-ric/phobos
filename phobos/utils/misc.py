@@ -7,6 +7,12 @@ from xml.dom.minidom import parseString
 from xml.etree import ElementTree as ET
 
 
+def duplicate(obj, link_obj=False):
+    if link_obj:
+        return obj
+    return deepcopy(obj)
+
+
 def to_pretty_xml_string(xml):
     xml_string = xml if type(xml) == str else ET.tostring(xml, method='xml').decode('utf-8')
     xml_string = parseString(xml_string)

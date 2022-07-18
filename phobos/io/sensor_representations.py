@@ -1,6 +1,6 @@
 import numpy as np
 
-from .base import Representation
+from .base import Representation, Linkable
 from .representation import Pose
 from .smurf_reflection import SmurfBase
 from ..io import representation
@@ -45,10 +45,15 @@ class Sensor(Representation, SmurfBase):
 
         return super(Sensor, self).get_refl_vars()
 
+    def equivalent(self, other):
+        return False
+
+    def merge(self, other):
+        raise NotImplementedError
+
 
 class Joint6DOF(Sensor):
-    name = None
-    link = None
+    _class_variables = ["name", "link"]
 
     def __init__(self, name=None, link=None, **kwargs):
         super().__init__(name=name, joint=None, link=link, sensortype='Joint6DOF', **kwargs)
@@ -57,18 +62,7 @@ class Joint6DOF(Sensor):
 
 
 class RotatingRaySensor(Sensor):
-    name = None
-    link = None
-    bands = 0
-    draw_rays = False
-    horizontal_offset = 0
-    horizontal_resolution = 0
-    opening_width = np.pi * 2
-    lasers = 32
-    max_distance = 5.0
-    min_distance = 0
-    opening_height = 0.8
-    vertical_offset = 0
+    _class_variables = ["name", "link", "bands", "draw_rays", "horizontal_offset", "horizontal_resolution", "opening_width", "lasers", "max_distance", "min_distance", "opening_height", "vertical_offset"]
 
     def __init__(
             self, name=None, link=None,
@@ -115,19 +109,28 @@ class RotatingRaySensor(Sensor):
     def vertical_resolution(self):
         return self.opening_height / self.lasers
 
+    def equivalent(self, other):
+        return (self.type and other.type and
+                self.link and other.link and
+                self.bands == other.bands and
+                self.draw_rays == other.draw_rays and
+                self.horizontal_offset == other.horizontal_offset and
+                self.horizontal_resolution == other.horizontal_resolution and
+                self.opening_width == other.opening_width and
+                self.lasers == other.lasers and
+                self.max_distance == other.max_distance and
+                self.min_distance == other.min_distance and
+                self.opening_height == other.opening_height and
+                self.vertical_offset == other.vertical_offset)
+
+    def merge(self, other):
+        assert self.equivalent(other)
+        # Nothing to do here
+        pass
+
 
 class CameraSensor(Sensor):
-    name = None
-    link = None
-    height = 480
-    width = 640
-    hud_height = 240
-    hud_width = 0
-    opening_height = 90
-    opening_width = 90
-    depth_image = True
-    show_cam = False
-    frame_offset = None
+    _class_variables = ["name", "link", "height", "width", "hud_height", "hud_width", "opening_height", "opening_width", "depth_image", "show_cam", "frame_offset"]
 
     def __init__(
             self, name=None, link=None,
@@ -152,11 +155,27 @@ class CameraSensor(Sensor):
     def depths(self):
         return
 
+    def equivalent(self, other):
+        return (self.type and other.type and
+                self.link and other.link and
+                self.height == other.height and
+                self.width == other.width and
+                self.hud_height == other.hud_height and
+                self.hud_width == other.hud_width and
+                self.opening_height == other.opening_height and
+                self.opening_width == other.opening_width and
+                self.depth_image == other.depth_image and
+                self.show_cam == other.show_cam and
+                self.frame_offset == other.frame_offset)
+
+    def merge(self, other):
+        assert self.equivalent(other)
+        # Nothing to do here
+        pass
+
 
 class IMU(Sensor):
-    name = None
-    link = None
-    frame = None
+    _class_variables = ["name", "link", "frame"]
 
     def __init__(self, name=None, link=None, frame=None, **kwargs):
         super().__init__(name=name, joint=None, link=link, frame=frame, sensortype='NodeIMU', **kwargs)
@@ -169,6 +188,8 @@ class IMU(Sensor):
 
 
 class MultiSensor(Sensor):
+    _class_variables = ["name", "targets"]
+
     def __init__(self, name=None, targets=None, sensortype='MultiSensor', **kwargs):
         super().__init__(name=name, sensortype=sensortype, **kwargs)
         self.targets = targets if isinstance(targets, list) else []
@@ -194,11 +215,21 @@ class MultiSensor(Sensor):
     def is_empty(self):
         return len(self.targets) == 0
 
+    def reduce_to_match(self, targets):
+        assert type(targets) == list
+        _targets = [t.name if isinstance(t, Linkable) else t for t in targets]
+        self.targets = [t for t in self.targets if t in _targets]
+
+    def equivalent(self, other):
+        return other.type == self.type
+
+    def merge(self, other):
+        assert self.equivalent(other)
+        self.targets += other.targets
+
 
 class MotorCurrent(MultiSensor):
     type_dict = {"targets": "joint"}
-    name = None
-    targets = None
 
     def __init__(self, name=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -210,8 +241,6 @@ class MotorCurrent(MultiSensor):
 
 class JointPosition(MultiSensor):
     type_dict = {"targets": "joint"}
-    name = None
-    targets = None
 
     def __init__(self, name=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -223,8 +252,6 @@ class JointPosition(MultiSensor):
 
 class JointVelocity(MultiSensor):
     type_dict = {"targets": "joint"}
-    name = None
-    targets = None
 
     def __init__(self, name=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -240,9 +267,7 @@ class JointVelocity(MultiSensor):
 
 class NodeContact(MultiSensor):
     type_dict = {"targets": "link"}
-    name = None
-    link = None
-    targets = None
+    _class_variables = ["name", "link", "targets"]
 
     def __init__(self, name=None, link=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -253,12 +278,13 @@ class NodeContact(MultiSensor):
         self.returns += ['link']
         self.sdf_type = "contact"
 
+    def equivalent(self, other):
+        return other.type == self.type and self.link and other.link
+
 
 class NodeContactForce(MultiSensor):
     type_dict = {"targets": "link"}
-    name = None
-    link = None
-    targets = None
+    _class_variables = ["name", "link", "targets"]
 
     def __init__(self, name=None, link=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -268,11 +294,12 @@ class NodeContactForce(MultiSensor):
 
         self.returns += ['link']
 
+    def equivalent(self, other):
+        return other.type == self.type and self.link and other.link
+
 
 class NodeCOM(MultiSensor):
     type_dict = {"targets": "link"}
-    name = None
-    targets = None
 
     def __init__(self, name=None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -283,8 +310,6 @@ class NodeCOM(MultiSensor):
 
 class NodePosition(MultiSensor):
     type_dict = {"targets": "link"}
-    name = None
-    targets = None
 
     def __init__(self, name: str = None, targets=None, **kwargs):
         if not isinstance(targets, list):
@@ -295,8 +320,6 @@ class NodePosition(MultiSensor):
 
 class NodeRotation(MultiSensor):
     type_dict = {"targets": "link"}
-    name = None
-    targets = None
 
     def __init__(self, name=None, targets=None, **kwargs):
         if not isinstance(targets, list):

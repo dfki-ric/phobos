@@ -55,6 +55,17 @@ class MultiJointDependency(SmurfBase):
     def is_empty(self):
         return len(self.joint_dependencies) == 0
 
+    def link_with_robot(self, robot, check_linkage_later=False):
+        super(MultiJointDependency, self).link_with_robot(robot)
+        for jd in self.joint_dependencies:
+            jd.link_with_robot(robot)
+            jd.check_linkage()
+
+    def unlink_from_robot(self):
+        super(MultiJointDependency, self).unlink_from_robot()
+        for jd in self.joint_dependencies:
+            jd.unlink_from_robot()
+
 
 class HyrodynAnnotation(SmurfBase):
     type_dict = {
@@ -62,7 +73,8 @@ class HyrodynAnnotation(SmurfBase):
         "jointnames_active": "joint",
         "jointnames_independent": "joint",
         "jointnames_dependent": "joint",
-        "jointnames": "joint"
+        "jointnames": "joint",
+        "around": "joint"
     }
 
     def __init__(self, robot, name,
@@ -97,6 +109,7 @@ class HyrodynAnnotation(SmurfBase):
         if around is not None:
             kwargs["around"] = around
         super().__init__(robot=robot, **kwargs)
+        self.jointnames = None
         self.fill_jointnames(robot)
         assert self.jointnames is not None
         if jointnames is not None:

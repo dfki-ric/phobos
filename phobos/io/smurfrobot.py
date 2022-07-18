@@ -14,57 +14,73 @@ from ..utils import tree
 
 
 class SMURFRobot(XMLRobot):
-    def __init__(self, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
+    def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
                  inputfile=None, description=None):
+        self.name = None
+        self.smurffile = None
+        self.submechanisms_file = None
+        self.inputfiles = []
+        self.annotations = {}
+        self.named_annotations = {}
+        # Smurf Informations
+        self.motors = []
+        self.poses = []
+        self.description = None
+        # Hyrodyn stuff
+        self.submechanisms = []
+        self.exoskeletons = []
+        self.hyrodyn_multi_joint_dependencies = []
+        self.hyrodyn_loop_constraints = []
+
         if inputfile is not None:
             if inputfile.lower().endswith(".smurf") and smurffile is None:
                 smurffile = inputfile
             elif inputfile.lower().endswith(".urdf") and xmlfile is None:
                 xmlfile = inputfile
-        self.xmlfile = xmlfile
         self.smurffile = smurffile
         self.submechanisms_file = submechanisms_file
 
-        # Empty init for the props
-        self.inputfiles = []
+        if self.smurffile is not None:
+            # Check the input file
+            self.read_smurffile(self.smurffile)
 
-        # Check the input file
-        self.read_smurffile(self.smurffile)
-
-        # Fill everything with the xml information
-        base_robot = parse_xml(self.xmlfile)
-        assert type(base_robot) == XMLRobot, f"{type(base_robot)}"
-        for k, v in base_robot.__dict__.items():
-            self.__dict__[k] = v
-
-        self.annotations = {}
-        self.named_annotations = {}
-
-        # Smurf Informations
-        self.motors = []
-        self.poses = []
-        # Hyrodyn stuff
-        self.submechanisms = []
-        self.exoskeletons = []
-        self.hyrodyn_transmissions = []
-        self.hyrodyn_loop_constraints = []
+        if xmlfile is not None:
+            # Fill everything with the xml information
+            base_robot = parse_xml(xmlfile)
+            assert type(base_robot) == XMLRobot, f"{type(base_robot)}"
+            for k, v in base_robot.__dict__.items():
+                setattr(self, k, v)
+        else:
+            super(SMURFRobot, self).__init__()
 
         self.description = "" if description is None else description
-
 
         for f in self.inputfiles:
             self._parse_annotations(f)
         self._init_annotations()
 
-        for entity in self.submechanisms + self.exoskeletons + self.motors:
-            entity.link_with_robot(self)
+        self.link_entities()
 
         if verify_meshes_on_import:
             self.verify_meshes()
 
-        self.joints = self.get_joints_ordered_df()
+        if len(self.links) > 0 and len(self.joints) > 0:
+            self.joints = self.get_joints_ordered_df()
+
+        if self.name is None and self.xmlfile is not None:
+            self.name, _ = os.path.splitext(self.xmlfile)
 
     # helper methods
+    def link_entities(self):
+        super(SMURFRobot, self).link_entities()
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.hyrodyn_multi_joint_dependencies + self.hyrodyn_loop_constraints:
+            entity.link_with_robot(self)
+
+    def unlink_entities(self):
+        super(SMURFRobot, self).unlink_entities()
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.hyrodyn_multi_joint_dependencies + self.hyrodyn_loop_constraints:
+            entity.unlink_from_robot(self)
+
     def read_smurffile(self, smurffile):
         if smurffile is not None:
             self.smurffile = os.path.abspath(smurffile)
@@ -195,25 +211,14 @@ class SMURFRobot(XMLRobot):
         else:
             self.named_annotations[name] = content
 
-    def add_motor(self, motor, jointname=None):
+    def add_motor(self, motor):
         """Attach a new motor to the robot. Either the joint is already defined inside the motor
         or a jointname is given. Renames the motor if already given.
         """
         if not isinstance(motor, Motor):
             raise Exception("Please provide an instance of Motor to attach.")
         # Check if the motor already contains joint information
-        motor.robot = self
-        if not jointname and motor._joint:
-            if motor._joint in self.joints:
-                self.add_aggregate('motors', motor)
-                return
-        # Check if the joint is part of the robot if a jointname is given
-        elif jointname and self.get_joint_id(jointname):
-            motor._joint = self.joints[self.get_joint_id(jointname)]
-            self.add_aggregate('motors', motor)
-            return
-        else:
-            raise Exception("Please provide a joint which is part of the model")
+        self.add_aggregate("motor", motor)
         return
 
     def add_pose(self, pose):
@@ -250,71 +255,16 @@ class SMURFRobot(XMLRobot):
         self.hyrodyn_loop_constraints += [loop_constraint]
 
     def add_transmission(self, transmission):
-        self.hyrodyn_transmissions += [transmission]
+        self.hyrodyn_multi_joint_dependencies += [transmission]
 
     # Reimplementation of Robot methods
-    def _rename(self, targettype, target, new_name):
-        # ToDo this should be obsolete
-        # if targettype.startswith("link"):
-        #     for obj in self.links:
-        #         if obj.name == target:
-        #             obj.name = new_name
-        #     for obj in self.sensors + self.get_all_collisions():
-        #         if obj.link == target:
-        #             obj.link = new_name
-        #     for obj in self.hyrodyn_loop_constraints:
-        #         if obj.prepredecessor_body == target:
-        #             obj.predecessor_body = new_name
-        #         if obj.successor_body == target:
-        #             obj.successor_body = new_name
-        # elif targettype.startswith("joint"):
-        #     for obj in self.smurf_joints:
-        #         if obj.name == target:
-        #             obj.name = new_name
-        #     for obj in self.motors + self.poses:
-        #         if obj.joint == target:
-        #             obj.joint = new_name
-        #     for obj in self.exoskeletons + self.submechanisms:
-        #         for key in ["jointnames_independent", "jointnames_spanningtree", "jointnames_active", "jointnames"]:
-        #             if hasattr(obj, key):
-        #                 setattr(obj, key, [j if j != target else new_name for j in getattr(obj, key)])
-        #     for obj in self.hyrodyn_loop_constraints:
-        #         if obj.cut_joint == target:
-        #             obj.cut_joint = new_name
-        #     for obj in self.hyrodyn_transmissions:
-        #         if obj.joint == target:
-        #             obj.joint = new_name
-        #         for dep in obj.joint_dependencies:
-        #             if dep.joint == target:
-        #                 dep.joint = new_name
-        # elif targettype.startswith("material"):
-        #     for obj in self.smurf_materials:
-        #         if obj.name == target:
-        #             obj.name = new_name
-        # elif targettype.startswith("collision"):
-        #     for obj in self.get_all_collisions():
-        #         if obj.name == target:
-        #             obj.name = new_name
-        # elif targettype.startswith("visual"):
-        #     pass
-        # elif targettype.startswith("motor"):
-        #     for obj in self.motors:
-        #         if obj.name == target:
-        #             obj.name = new_name
-        # elif targettype.startswith("sensor"):
-        #     for obj in self.sensors:
-        #         if obj.name == target:
-        #             obj.name = new_name
-        # else:
-        #     raise NotImplementedError("_rename() not implemented for targettype " + targettype)
-        return {target: new_name}
 
     def get_joints_ordered_df(self):
         """Returns the joints in depth first order"""
         indep_joints = []
         for sm in self.submechanisms:
             indep_joints += sm.jointnames_independent
-        return tree.get_joints_depth_first(self, self.get_root(), independent_joints=list(set(indep_joints)))
+        return tree.get_joints_depth_first(self, self.get_root(), independent_joints=list(set(indep_joints)) if len(indep_joints) > 0 else None)
 
     # submechanism related
     def create_submechanism(self, name, definition):
@@ -397,7 +347,7 @@ class SMURFRobot(XMLRobot):
             for key in ["jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent"]:
                 if hasattr(sm, key):
                     setattr(sm, key, sorted(getattr(sm, key), key=lambda jn: sorted_joints.index(jn)))
-        for transmission in self.hyrodyn_transmissions:
+        for transmission in self.hyrodyn_multi_joint_dependencies:
             found = False
             for sm in self.submechanisms:
                 if sm.contextual_name == transmission.name:

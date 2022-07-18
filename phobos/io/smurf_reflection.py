@@ -6,9 +6,8 @@ class SmurfBase(YamlReflection):
     Wraps methods for joint and link as properties and additionally which variables get exported.
     """
 
-    def __init__(self, target_type: str = None, **kwargs):
-        super(YamlReflection, self).__init__(
-            robot=kwargs["robot"] if "robot" in kwargs else None, target_type=target_type)
+    def __init__(self, robot=None, **kwargs):
+        super(YamlReflection, self).__init__(robot=robot)
 
         # The object has to know which properties to export, this is done via
         self.returns = []
@@ -20,27 +19,25 @@ class SmurfBase(YamlReflection):
 
     # Define the export variables, overwrite the standard get_refl_vars
     def get_refl_vars(self):
+        out = []
         # Collect all variables (and properties) which are given in the object self.returns
-        export_props = []
+        export_props = [v for v in vars(self).keys() if v not in self.excludes and not v.startswith("_")] + self.returns
         for var in self.returns:
             if getattr(self, var) is not None:
-                export_props += [var]
+                out += [var]
 
-        # Collect all other vars
-        export_props += [v for v in vars(self).keys() if v not in self.excludes]
-
-        return list(set(export_props))
+        return list(set(out))
 
     def add_annotations(self, overwrite=False, **kwargs):
         # Just Parse everything else
         for category, information in kwargs.items():
             if overwrite or not hasattr(self, category):
-                if category in self._type_dict.keys():
+                if category in self.type_dict.keys():
                     if type(information) == list:
-                        information = [x if type(information) == str else information.name for x in information]
+                        information = [x if type(x) == str else x.name for x in information]
                     elif type(information) != str and information is not None:
                         information = information.name
                 if information is not None:
-                    setattr(self, category, information if category not in self._type_dict or type(information) == str else information.name)
+                    setattr(self, category, information)
         # The object has to know which properties to export, this is done via
         self.returns += list(kwargs.keys())

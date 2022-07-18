@@ -1,5 +1,5 @@
 from . import representation, xml_factory
-from . import sensors
+from . import sensors as sensor_representation
 from .base import Representation
 from ..utils.transform import create_transformation
 from ..utils.tree import get_joints_depth_first
@@ -9,8 +9,17 @@ class XMLRobot(Representation):
     SUPPORTED_VERSIONS = ["1.0"]
 
     def __init__(self, name=None, version=None, links=None, joints=None, materials=None, transmissions=None,
-                 sensors=None):
+                 sensors=None, xmlfile=None):
         super().__init__()
+        self.joints = []
+        self.links = []
+        self.parent_map = {}
+        self.child_map = {}
+        self.materials = []
+        self.transmissions = []
+        self.sensors = []
+        self.xmlfile = xmlfile
+
         self.name = name
         if version is None:
             version = "1.0"
@@ -20,15 +29,6 @@ class XMLRobot(Representation):
             raise ValueError("Invalid version; only %s is supported" % (','.join(self.SUPPORTED_VERSIONS)))
 
         self.version = version
-
-        self.joints = []
-        self.links = []
-
-        self.joint_map = {}
-        self.link_map = {}
-
-        self.parent_map = {}
-        self.child_map = {}
 
         if joints is not None:
             for joint in joints:
@@ -45,6 +45,22 @@ class XMLRobot(Representation):
             entity.link_with_robot(self)
         for entity in self.joints:
             entity.link_with_robot(self)
+
+    def link_entities(self):
+        for entity in self.links + self.sensors:
+            entity.link_with_robot(self)
+        for entity in self.joints:
+            entity.link_with_robot(self)
+
+    def unlink_entities(self):
+        for entity in self.links + self.sensors:
+            entity.unlink_from_robot()
+        for entity in self.joints:
+            entity.unlink_from_robot()
+
+    def relink_entities(self):
+        self.unlink_entities()
+        self.link_entities()
 
     def _get_children_lists(self, parentlist, childrenlist, targettype='link'):
         """
@@ -64,11 +80,72 @@ class XMLRobot(Representation):
         else:
             return [], []
 
+    def _rename(self, targettype, target, new_name):
+        assert self.get_instance(targettype, new_name) is None # new_name exists? otherwise we'd have to fix the name
+        if targettype.startswith("link"):
+            if target in self.parent_map.keys():
+                self.parent_map[new_name] = self.parent_map[target]
+            if target in self.child_map.keys():
+                self.child_map[new_name] = self.child_map[target]
+        #     for obj in self.links:
+        #         if obj.name == target:
+        #             obj.name = new_name
+        #     for obj in self.sensors + self.get_all_collisions():
+        #         if obj.link == target:
+        #             obj.link = new_name
+        #     for obj in self.hyrodyn_loop_constraints:
+        #         if obj.prepredecessor_body == target:
+        #             obj.predecessor_body = new_name
+        #         if obj.successor_body == target:
+        #             obj.successor_body = new_name
+        # elif targettype.startswith("joint"):
+        #     for obj in self.smurf_joints:
+        #         if obj.name == target:
+        #             obj.name = new_name
+        #     for obj in self.motors + self.poses:
+        #         if obj.joint == target:
+        #             obj.joint = new_name
+        #     for obj in self.exoskeletons + self.submechanisms:
+        #         for key in ["jointnames_independent", "jointnames_spanningtree", "jointnames_active", "jointnames"]:
+        #             if hasattr(obj, key):
+        #                 setattr(obj, key, [j if j != target else new_name for j in getattr(obj, key)])
+        #     for obj in self.hyrodyn_loop_constraints:
+        #         if obj.cut_joint == target:
+        #             obj.cut_joint = new_name
+        #     for obj in self.hyrodyn_transmissions:
+        #         if obj.joint == target:
+        #             obj.joint = new_name
+        #         for dep in obj.joint_dependencies:
+        #             if dep.joint == target:
+        #                 dep.joint = new_name
+        # elif targettype.startswith("material"):
+        #     for obj in self.smurf_materials:
+        #         if obj.name == target:
+        #             obj.name = new_name
+        # elif targettype.startswith("collision"):
+        #     for obj in self.get_all_collisions():
+        #         if obj.name == target:
+        #             obj.name = new_name
+        # elif targettype.startswith("visual"):
+        #     pass
+        # elif targettype.startswith("motor"):
+        #     for obj in self.motors:
+        #         if obj.name == target:
+        #             obj.name = new_name
+        # elif targettype.startswith("sensor"):
+        #     for obj in self.sensors:
+        #         if obj.name == target:
+        #             obj.name = new_name
+        # else:
+        #     raise NotImplementedError("_rename() not implemented for targettype " + targettype)
+        return {target: new_name}
+
     def add_aggregate(self, typeName, elem):
+        if type(elem) == list:
+            return [self.add_aggregate(typeName, e) for e in elem]
         if typeName in ['joint', 'joints']:
             joint = elem
-            self.joint_map[joint.name] = joint
-            self.parent_map[joint.child] = (joint.name, joint.parent)
+            self.parent_map[str(joint.child)] = (joint.name, joint.parent)
             if joint.parent in self.child_map:
                 self.child_map[joint.parent].append((joint.name, joint.child))
             else:
@@ -77,7 +154,6 @@ class XMLRobot(Representation):
                 self.joints += [elem]
         elif typeName in ['link', 'links']:
             link = elem
-            self.link_map[link.name] = link
             if elem not in self.links:
                 self.links += [elem]
         else:
@@ -88,7 +164,9 @@ class XMLRobot(Representation):
             # Original list
             objects = getattr(self, typeName)
             for obj in objects:
-                if elem.name in obj.name:
+                if elem.name == obj.name and not elem.equivalent(obj):
+                    print(elem.__dict__)
+                    print(obj.__dict__)
                     instances.append(obj.name)
             if instances:
                 elem.name += "_{}".format(len(instances))
@@ -107,7 +185,7 @@ class XMLRobot(Representation):
         self.add_aggregate('joint', joint)
 
     def add_sensor(self, sensor):
-        if not isinstance(sensor, sensors.Sensor):
+        if not isinstance(sensor, sensor_representation.Sensor):
             raise Exception("Please provide an instance of Sensor to attach.")
         self.add_aggregate('sensors', sensor)
         return
@@ -115,12 +193,12 @@ class XMLRobot(Representation):
     def get_chain(self, root, tip, joints=True, links=True, fixed=True):
         chain = []
         if links:
-            chain.append(tip)
-        link = tip
-        while link != root:
+            chain.append(str(tip))
+        link = str(tip)
+        while str(link) != str(root):
             (joint, parent) = self.parent_map[link]
             if joints:
-                if fixed or self.joint_map[joint].joint_type != 'fixed':
+                if fixed or self.get_joint(joint).joint_type != 'fixed':
                     chain.append(joint)
             if links:
                 chain.append(parent)
@@ -130,9 +208,9 @@ class XMLRobot(Representation):
 
     def get_root(self):
         root = None
-        for link in self.link_map:
-            if link not in self.parent_map:
-                assert root is None, "Multiple roots detected, invalid URDF."
+        for link in self.links:
+            if link.name not in self.parent_map:
+                assert root is None, f"Multiple roots detected, invalid URDF. Already found: {root.name, link.name}"
                 root = link
         assert root is not None, "No roots detected, invalid URDF."
         return root
@@ -144,11 +222,16 @@ class XMLRobot(Representation):
         :param target: the name of the searched instance
         :return: the id or None if not found
         """
+        if type(target) == list:
+            return [self.get_instance(targettype, str(t)) for t in target]
+        names = []
         if not targettype.endswith("s"):
             targettype += "s"
         for obj in getattr(self, targettype):
-            if obj.name == target:
+            names.append(obj.name)
+            if obj.name == str(target):
                 return obj
+        # print(f"Robot has no {targettype} with name {target}, only these: {repr(names)}")
         return None
 
     def get_link(self, link_name, verbose=True) -> [representation.Link, list]:
@@ -191,7 +274,7 @@ class XMLRobot(Representation):
             print("These are the existing joints:", [jn.name for jn in self.joints])
         return None
 
-    def get_sensor(self, sensor_name) -> [sensors.Sensor, list]:
+    def get_sensor(self, sensor_name) -> [sensor_representation.Sensor, list]:
         """Returns the ID (index in the sensor list) of the sensor(s).
         """
         if isinstance(sensor_name, list):

@@ -34,16 +34,16 @@ def to_yaml(obj):
 
 
 class SelectiveReflection(Linkable):
-    def __init__(self, robot=None, target_type=None):
-        super(SelectiveReflection, self).__init__(robot=robot, target_type=target_type)
+    def __init__(self, robot=None):
+        super(SelectiveReflection, self).__init__(robot=robot)
 
     def get_refl_vars(self):
-        return list(vars(self).keys())
+        return [v for v in vars(self).keys() if not v.startswith("_")]
 
 
 class YamlReflection(SelectiveReflection):
-    def __init__(self, robot=None, target_type=None):
-        super(YamlReflection, self).__init__(robot=robot, target_type=target_type)
+    def __init__(self, robot=None):
+        super(YamlReflection, self).__init__(robot=robot)
 
     def to_yaml(self):
         raw = dict((var, getattr(self, var)) for var in self.get_refl_vars())

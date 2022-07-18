@@ -115,8 +115,7 @@ class XMLDefinition(object):
                 out.append(nest.to_xml(object))
         return out
 
-    def kwargs_from_xml(self, xml: ET.Element):
-        kwargs = {}
+    def kwargs_from_xml(self, xml: ET.Element, **kwargs):
         # attributes
         for attname, varname in self.xml_attributes.items():
             if attname in xml.attrib:
@@ -198,9 +197,9 @@ class XMLFactory(XMLDefinition):
                 nested_children=FORMATS[dialect][classname]["nested_children"] if "nested_children" in FORMATS[dialect][classname] else None
             )
 
-    def from_xml(self, classtype, xml: ET.Element):
+    def from_xml(self, classtype, xml: ET.Element, **kwargs):
         if self.available_in_dialect:
-            return classtype(**super(XMLFactory, self).kwargs_from_xml(xml))
+            return classtype(**super(XMLFactory, self).kwargs_from_xml(xml, **kwargs))
         return None
 
     def to_xml_string(self, object):
@@ -223,8 +222,8 @@ def class_factory(cls, only=None):
         if only is not None and refl not in only:
             continue
 
-        def _from_xml(c, xml, _dialect=refl):
-            return c.from_xml(xml, dialect=_dialect)
+        def _from_xml(c, xml, _dialect=refl, **kwargs):
+            return c.from_xml(xml, dialect=_dialect, **kwargs)
 
         def _from_string(c, xml, _dialect=refl):
             return c.from_xml_string(xml, dialect=_dialect)
@@ -248,9 +247,11 @@ def class_factory(cls, only=None):
     if cls.__class__ == type and issubclass(cls, Linkable):
         # creates the setters and getters for all linked attributes
         if hasattr(cls, "type_dict"):
-            for k, v in cls.type_dict.items():
-                cls._type_dict[k] = v
-        class_vars = [var for var in dir(cls) if var in cls._type_dict.keys() and not var.startswith("_") and not callable(getattr(cls, var))]
+            for k, v in cls._type_dict.items():
+                cls.type_dict[k] = v
+        else:
+            setattr(cls, "type_dict", cls._type_dict)
+        class_vars = [var for var in cls._class_variables if var in cls.type_dict.keys()  and not var.startswith("_")]
         for var in class_vars:
             setattr(cls, "_"+var, None)
 

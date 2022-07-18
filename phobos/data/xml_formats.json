@@ -103,10 +103,11 @@
         "origin": {
           "classname": "Pose",
           "varname": "origin"
-        },
+        }
+      },
+      "attribute_children": {
         "material": {
-          "classname": "Material",
-          "varname":  "material"
+          "name": "material"
         }
       },
       "nested_children": {
@@ -516,10 +517,6 @@
         "origin": {
           "classname": "Pose",
           "varname": "origin"
-        },
-        "material": {
-          "classname": "Material",
-          "varname":  "material"
         }
       },
       "nested_children": {
@@ -541,6 +538,11 @@
               "classname": "Mesh",
               "varname": "geometry"
             }
+          }
+        },
+        "material": {
+          "value_children": {
+            "name": "material"
           }
         }
       }
