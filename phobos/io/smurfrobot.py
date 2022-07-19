@@ -1,4 +1,4 @@
-from copy import deepcopy
+from copy import deepcopy, copy
 import os
 
 import yaml
@@ -344,9 +344,9 @@ class SMURFRobot(XMLRobot):
         self.submechanisms = sorted(self.submechanisms, key=lambda submech: sorted_links.index(submech.get_root(self)))
         self.exoskeletons = sorted(self.exoskeletons, key=lambda submech: sorted_links.index(submech.get_root(self)))
         for sm in self.submechanisms + self.exoskeletons:
-            for key in ["jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent"]:
+            for key in ["jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent", "jointnames_dependent"]:
                 if hasattr(sm, key):
-                    setattr(sm, key, sorted(getattr(sm, key), key=lambda jn: sorted_joints.index(jn)))
+                    setattr(sm, key, sorted(set(getattr(sm, key)), key=lambda jn: sorted_joints.index(jn)))
         for transmission in self.hyrodyn_multi_joint_dependencies:
             found = False
             for sm in self.submechanisms:
@@ -411,7 +411,7 @@ class SMURFRobot(XMLRobot):
                 jn_spanningtree = jn_independent = jn_active = [] if joint.joint_type == "fixed" else [jointname]
                 jn = jn_spanningtree if joint.joint_type != "fixed" else [jointname]
                 self.submechanisms += [Submechanism(
-                    self,
+                    robot=self,
                     name="serial",
                     type="serial",
                     jointnames_active=jn_active,
@@ -425,12 +425,21 @@ class SMURFRobot(XMLRobot):
         new_submechanisms = []
         for sm in self.submechanisms:
             if sm.auto_gen and len(new_submechanisms) > 0 and new_submechanisms[-1].auto_gen:
-                new_submechanisms[-1].jointnames += sm.jointnames
-                new_submechanisms[-1].jointnames_active += sm.jointnames_active
-                new_submechanisms[-1].jointnames_independent += sm.jointnames_independent
-                new_submechanisms[-1].jointnames_spanningtree += sm.jointnames_spanningtree
+                new_submechanisms[-1].jointnames = list(set(new_submechanisms[-1].jointnames + sm.jointnames))
+                new_submechanisms[-1].jointnames_active = list(set(new_submechanisms[-1].jointnames_active + sm.jointnames_active))
+                new_submechanisms[-1].jointnames_independent = list(set(new_submechanisms[-1].jointnames_independent + sm.jointnames_independent))
+                new_submechanisms[-1].jointnames_spanningtree = list(set(new_submechanisms[-1].jointnames_spanningtree + sm.jointnames_spanningtree))
             else:
-                new_submechanisms += [deepcopy(sm)]
+                new_submechanisms += [Submechanism(
+                    robot=self,
+                    name="serial",
+                    type="serial",
+                    jointnames_active=sm.jointnames_active,
+                    jointnames_independent=sm.jointnames_independent,
+                    jointnames_spanningtree=sm.jointnames_spanningtree,
+                    jointnames=sm.jointnames,
+                    auto_gen=True
+                )]
         self.submechanisms = new_submechanisms
         self.sort_submechanisms()
         counter = 0
