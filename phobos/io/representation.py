@@ -196,6 +196,8 @@ class Mesh(Representation):
     def link_with_robot(self, robot, check_linkage_later=False):
         super(Mesh, self).link_with_robot(robot)
         self.filename = self._filename
+        if not check_linkage_later:
+            self.check_linkage()
 
 
 class Collision(Representation, SmurfBase):
@@ -207,11 +209,9 @@ class Collision(Representation, SmurfBase):
             link = link
         elif link is not None:
             link = link.name
-        SmurfBase.__init__(self, name=name, link=link, **kwargs)
+        SmurfBase.__init__(self, name=name, link=link, returns=['name', 'link'], **kwargs)
         self.geometry = _singular(geometry)
         self.origin = _singular(origin)
-
-        self.returns += ['name', 'link']
         self.bitmask = bitmask
         if noDataPackage is not None:
             self.noDataPackage = noDataPackage
@@ -278,7 +278,7 @@ class Visual(Representation, SmurfBase):
     def __str__(self):
         return self.name
 
-    def link_with_robot(self, robot):
+    def link_with_robot(self, robot, check_linkage_later=False):
         super(Visual, self).link_with_robot(robot)
         self.origin.link_with_robot(robot)
         # due to the specialty of having materials in both robot and visuals, we check whether those two are in sync
@@ -300,6 +300,8 @@ class Visual(Representation, SmurfBase):
                     self._material.name = new_mat_name
         if isinstance(self.geometry, Mesh):
             self.geometry.link_with_robot(robot)
+        if not check_linkage_later:
+            self.check_linkage()
 
     def unlink_from_robot(self):
         super(Visual, self).unlink_from_robot()
