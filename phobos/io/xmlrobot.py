@@ -1,5 +1,4 @@
 from . import representation, xml_factory, sensor_representations
-from . import sensors as sensor_representation
 from .base import Representation
 from ..utils.transform import create_transformation
 from ..utils.tree import get_joints_depth_first
@@ -270,7 +269,7 @@ class XMLRobot(Representation):
             print("These are the existing joints:", [jn.name for jn in self.joints])
         return None
 
-    def get_sensor(self, sensor_name) -> [sensor_representation.Sensor, list]:
+    def get_sensor(self, sensor_name) -> [sensor_representations.Sensor, list]:
         """Returns the ID (index in the sensor list) of the sensor(s).
         """
         if isinstance(sensor_name, list):

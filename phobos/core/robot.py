@@ -157,7 +157,7 @@ class Robot(SMURFRobot):
                     'horizontal_offset'),
                                                          **values))
             else:
-                new_robot.add_sensor(getattr(sensors, values["type"])(**values))
+                new_robot.add_sensor(getattr(sensor_representations, values["type"])(**values))
 
         motors = blender_model["motors"]  # TODO bei joints reinschauen nach mimic, MimicJoint, MimicMotor
         for key, value in blender_model.items():
@@ -165,7 +165,7 @@ class Robot(SMURFRobot):
         for key, value in motors.items():
             name = value.pop('name')
             joint = value.pop('joint')
-            new_robot.add_motor(Motor(name=name, joint=new_robot.get_joint(joint), **value))
+            new_robot.add_motor(representation.Motor(name=name, joint=new_robot.get_joint(joint), **value))
         additional_info = {'lights': blender_model.get('lights'),
                            'groups': blender_model.get('groups'),
                            'chains': blender_model.get('chains'),

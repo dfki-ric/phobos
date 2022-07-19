@@ -215,7 +215,7 @@ class SMURFRobot(XMLRobot):
         """Attach a new motor to the robot. Either the joint is already defined inside the motor
         or a jointname is given. Renames the motor if already given.
         """
-        if not isinstance(motor, Motor):
+        if not isinstance(motor, representation.Motor):
             raise Exception("Please provide an instance of Motor to attach.")
         # Check if the motor already contains joint information
         self.add_aggregate("motor", motor)

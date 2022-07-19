@@ -9,10 +9,9 @@ from ..core import Robot
 from ..geometry import replace_collision, join_collisions, remove_collision, import_mesh, import_mars_mesh, \
     export_mesh, export_mars_mesh, export_bobj_mesh
 from ..io.hyrodyn import JointDependency, MultiJointDependency
-from ..io.motors import Motor
 from ..io.smurfrobot import SMURFRobot
 from ..utils import misc, git, urdf, transform, tree
-from ..io import representation, sensors as sensor_representations
+from ..io import representation, sensor_representations, poses
 
 SUBMECHS_VIA_ASSEMBLIES = False
 
@@ -280,29 +279,30 @@ class BaseModel(yaml.YAMLObject):
                         mjd = MultiJointDependency(name=tm["name"], joint=joint.name, joint_dependencies=jds)
                         self.robot.add_transmission(mjd)
 
-                    if "smurf" in self.modeltype \
-                            and ("reducedDataPackage" in self.redefine_articulation[joint.name].keys()
-                                 or "noDataPackage" in self.redefine_articulation[joint.name].keys()):
-                        self.robot.smurf_joints += [representation.Joint(
-                            robot=self.robot,
-                            joint=joint.name,
-                            reducedDataPackage=self.redefine_articulation[joint.name]["reducedDataPackage"]
-                            if "reducedDataPackage" in self.redefine_articulation[joint.name].keys() else False,
-                            noDataPackage=self.redefine_articulation[joint.name]["noDataPackage"]
-                            if "noDataPackage" in self.redefine_articulation[joint.name].keys() else False,
-                            damping_const_constraint_axis1=self.redefine_articulation[joint.name][
-                                "damping_const_constraint_axis1"]
-                            if "damping_const_constraint_axis1" in self.redefine_articulation[
-                                joint.name].keys() else False,
-                            springDamping=self.redefine_articulation[joint.name]["springDamping"]
-                            if "springDamping" in self.redefine_articulation[joint.name].keys() else False,
-                            springStiffness=self.redefine_articulation[joint.name]["springStiffness"]
-                            if "springStiffness" in self.redefine_articulation[joint.name].keys() else False,
-                            spring_const_constraint_axis1=self.redefine_articulation[joint.name][
-                                "spring_const_constraint_axis1"]
-                            if "spring_const_constraint_axis1" in self.redefine_articulation[
-                                joint.name].keys() else False
-                        )]
+                    #Todo rework the smurf handling with the new representation
+                    # if "smurf" in self.modeltype \
+                    #         and ("reducedDataPackage" in self.redefine_articulation[joint.name].keys()
+                    #              or "noDataPackage" in self.redefine_articulation[joint.name].keys()):
+                        # self.robot.joints += [representation.Joint(
+                        #     robot=self.robot,
+                        #     joint=joint.name,
+                        #     reducedDataPackage=self.redefine_articulation[joint.name]["reducedDataPackage"]
+                        #     if "reducedDataPackage" in self.redefine_articulation[joint.name].keys() else False,
+                        #     noDataPackage=self.redefine_articulation[joint.name]["noDataPackage"]
+                        #     if "noDataPackage" in self.redefine_articulation[joint.name].keys() else False,
+                        #     damping_const_constraint_axis1=self.redefine_articulation[joint.name][
+                        #         "damping_const_constraint_axis1"]
+                        #     if "damping_const_constraint_axis1" in self.redefine_articulation[
+                        #         joint.name].keys() else False,
+                        #     springDamping=self.redefine_articulation[joint.name]["springDamping"]
+                        #     if "springDamping" in self.redefine_articulation[joint.name].keys() else False,
+                        #     springStiffness=self.redefine_articulation[joint.name]["springStiffness"]
+                        #     if "springStiffness" in self.redefine_articulation[joint.name].keys() else False,
+                        #     spring_const_constraint_axis1=self.redefine_articulation[joint.name][
+                        #         "spring_const_constraint_axis1"]
+                        #     if "spring_const_constraint_axis1" in self.redefine_articulation[
+                        #         joint.name].keys() else False
+                        # )]
                 elif "default" in self.redefine_articulation.keys():
                     if joint.limit is None:
                         joint.limit = representation.JointLimit()
@@ -318,29 +318,29 @@ class BaseModel(yaml.YAMLObject):
                     if "eff" in self.redefine_articulation["default"].keys() and (
                             joint.limit is None or joint.limit.effort is None):
                         joint.limit.effort = self.redefine_articulation["default"]["eff"]
-                    if "smurf" in self.modeltype \
-                            and ("reducedDataPackage" in self.redefine_articulation["default"].keys()
-                                 or "noDataPackage" in self.redefine_articulation["default"].keys()):
-                        self.robot.smurf_joints += [representation.Joint(
-                            robot=self.robot,
-                            joint=joint.name,
-                            reducedDataPackage=self.redefine_articulation["default"]["reducedDataPackage"]
-                            if "reducedDataPackage" in self.redefine_articulation["default"].keys() else False,
-                            noDataPackage=self.redefine_articulation["default"]["noDataPackage"]
-                            if "noDataPackage" in self.redefine_articulation["default"].keys() else False,
-                            damping_const_constraint_axis1=self.redefine_articulation["default"][
-                                "damping_const_constraint_axis1"]
-                            if "damping_const_constraint_axis1" in self.redefine_articulation[
-                                "default"].keys() else False,
-                            springDamping=self.redefine_articulation["default"]["springDamping"]
-                            if "springDamping" in self.redefine_articulation["default"].keys() else False,
-                            springStiffness=self.redefine_articulation["default"]["springStiffness"]
-                            if "springStiffness" in self.redefine_articulation["default"].keys() else False,
-                            spring_const_constraint_axis1=self.redefine_articulation["default"][
-                                "spring_const_constraint_axis1"]
-                            if "spring_const_constraint_axis1" in self.redefine_articulation[
-                                "default"].keys() else False
-                        )]
+                    # if "smurf" in self.modeltype \
+                    #         and ("reducedDataPackage" in self.redefine_articulation["default"].keys()
+                    #              or "noDataPackage" in self.redefine_articulation["default"].keys()):
+                    #     self.robot.smurf_joints += [representation.Joint(
+                    #         robot=self.robot,
+                    #         joint=joint.name,
+                    #         reducedDataPackage=self.redefine_articulation["default"]["reducedDataPackage"]
+                    #         if "reducedDataPackage" in self.redefine_articulation["default"].keys() else False,
+                    #         noDataPackage=self.redefine_articulation["default"]["noDataPackage"]
+                    #         if "noDataPackage" in self.redefine_articulation["default"].keys() else False,
+                    #         damping_const_constraint_axis1=self.redefine_articulation["default"][
+                    #             "damping_const_constraint_axis1"]
+                    #         if "damping_const_constraint_axis1" in self.redefine_articulation[
+                    #             "default"].keys() else False,
+                    #         springDamping=self.redefine_articulation["default"]["springDamping"]
+                    #         if "springDamping" in self.redefine_articulation["default"].keys() else False,
+                    #         springStiffness=self.redefine_articulation["default"]["springStiffness"]
+                    #         if "springStiffness" in self.redefine_articulation["default"].keys() else False,
+                    #         spring_const_constraint_axis1=self.redefine_articulation["default"][
+                    #             "spring_const_constraint_axis1"]
+                    #         if "spring_const_constraint_axis1" in self.redefine_articulation[
+                    #             "default"].keys() else False
+                    #     )]
                 # else:
                 # print("    Leaving joint", joint.name, "(", joint.type, ") untouched", flush=True)
             for _, transmission in transmissions.items():
@@ -534,7 +534,7 @@ class BaseModel(yaml.YAMLObject):
 
             if 'poses' in self.smurf.keys():
                 for (cn, config) in self.smurf["poses"].items():
-                    pose = representation.JointPositionSet(robot=self.robot, name=cn, configuration=config)
+                    pose = poses.JointPositionSet(robot=self.robot, name=cn, configuration=config)
                     self.robot.add_pose(pose)
                     print('      Added pose {}'.format(cn), flush=True)
 
@@ -596,7 +596,7 @@ class BaseModel(yaml.YAMLObject):
                         conf[k] = v
                 if joint.joint_type == "fixed":
                     continue
-                self.robot.add_motor(motor=Motor(
+                self.robot.add_motor(motor=representation.Motor(
                     joint=joint,
                     name=conf["name"] if "name" in conf.keys() else joint.name,  # + "_motor",
                     robot=self.robot,
