@@ -1,3 +1,4 @@
+from xml.etree import ElementTree as ET
 import numpy as np
 
 from .base import Representation, Linkable
@@ -67,14 +68,28 @@ class Joint6DOF(Sensor):
 
 
 class RotatingRaySensor(Sensor):
-    _class_variables = ["name", "link", "bands", "draw_rays", "horizontal_offset", "horizontal_resolution", "opening_width", "lasers", "max_distance", "min_distance", "opening_height", "vertical_offset"]
+    _class_variables = ["name", "link", "bands", "draw_rays", "horizontal_offset", "horizontal_resolution",
+                        "opening_width", "lasers", "max_distance", "min_distance", "opening_height", "vertical_offset"]
 
     def __init__(
             self, name=None, link=None,
-            bands=8, draw_rays=False,
-            horizontal_offset=0, opening_width=np.pi * 2, horizontal_resolution=0.03,
-            lasers=32, max_distance=5.0, min_distance=0.0, opening_height=0.7,
-            vertical_offset=0, **kwargs):
+            bands=None, draw_rays=False,
+            horizontal_offset=None, opening_width=None, horizontal_resolution=None,
+            lasers=None, max_distance=5.0, min_distance=None, opening_height=None,
+            vertical_offset=None, **kwargs):
+        if "max_horizontal_angle" in kwargs:
+            assert "min_horizontal_angle" in kwargs
+            kwargs["opening_width"] = kwargs["max_horizontal_angle"] - kwargs["min_horizontal_angle"]
+            kwargs.pop("max_horizontal_angle")
+        if "max_vertical_angle" in kwargs:
+            assert "min_vertical_angle" in kwargs
+            kwargs["opening_height"] = kwargs["max_vertical_angle"] - kwargs["min_vertical_angle"]
+            kwargs.pop("max_vertical_angle")
+        if "vertical_resolution" in kwargs:
+            assert lasers is not None
+            if opening_height is None and "opening_height" not in kwargs:
+                kwargs["opening_height"] = kwargs["vertical_resolution"] * lasers
+            kwargs.pop("vertical_resolution")
         super().__init__(name=name, joint=None, link=link, sensortype='RotatingRaySensor', **kwargs)
         self.bands = bands
         self.draw_rays = draw_rays
@@ -95,6 +110,10 @@ class RotatingRaySensor(Sensor):
     def min_horizontal_angle(self):
         return self.horizontal_offset
 
+    @min_horizontal_angle.setter
+    def min_horizontal_angle(self, val):
+        self.horizontal_offset = val
+
     @property
     def max_horizontal_angle(self):
         return self.horizontal_offset + self.opening_width
@@ -102,6 +121,10 @@ class RotatingRaySensor(Sensor):
     @property
     def min_vertical_angle(self):
         return self.vertical_offset
+
+    @min_vertical_angle.setter
+    def min_vertical_angle(self, val):
+        self.vertical_offset = val
 
     @property
     def max_vertical_angle(self):
@@ -132,7 +155,8 @@ class RotatingRaySensor(Sensor):
 
 
 class CameraSensor(Sensor):
-    _class_variables = ["name", "link", "height", "width", "hud_height", "hud_width", "opening_height", "opening_width", "depth_image", "show_cam", "frame_offset"]
+    _class_variables = ["name", "link", "height", "width", "hud_height", "hud_width", "opening_height", "opening_width",
+                        "depth_image", "show_cam", "frame_offset"]
 
     def __init__(
             self, name=None, link=None,
@@ -330,36 +354,54 @@ class NodeRotation(MultiSensor):
         super().__init__(name=name, targets=targets, sensortype='NodeRotation', **kwargs)
 
 
-def sensor_factory(name, parent=None, sdf_type=None, origin=None, **kwargs):
-    if sdf_type is None and "bands" in kwargs or "lasers" in kwargs:
-        sdf_type = "lidar"
-    if parent is None:
-        parent = origin.relative_to
-    if sdf_type == "camera":
-        return CameraSensor(
-            name=name,
-            link=parent,
-            **kwargs
-        )
-    elif sdf_type == "contact":
-        return NodeContact(
-            name=name,
-            **kwargs
-        )
-    # elif sdf_type == "imu":
-    #     raise NotImplemented
-    elif sdf_type == "lidar":
-        return RotatingRaySensor(
-            name=name,
-            horizontal_offset=kwargs["min_horizontal_angle"],
-            opening_width=kwargs["max_horizontal_angle"] - kwargs["min_horizontal_angle"],
-            vertical_offset=kwargs["min_vertical_angle"],
-            opening_height=kwargs["max_vertical_angle"] - kwargs["min_vertical_angle"],
-            draw_rays="visualize" in kwargs,
-            **kwargs
-        )
-    elif sdf_type == "force_torque":
-        return Joint6DOF(
-            name=name,
-            **kwargs
-        )
+class SensorFactory(Representation):
+    @classmethod
+    def create(cls, name, xml: ET.Element = None, link=None, sdf_type=None, origin=None, **kwargs):
+        if sdf_type is None:
+            if xml is not None:
+                children = [child.tag for child in xml]
+                if "camera" in children:
+                    sdf_type = "camera"
+                elif "lidar" in children or "ray" in children:
+                    sdf_type = "lidar"
+                elif "contact" in children:
+                    sdf_type = "contact"
+                elif "force_torque" in children:
+                    sdf_type = "force_torque"
+                elif "imu" in children:
+                    sdf_type = "imu"
+            elif "bands" in kwargs or "lasers" in kwargs:
+                sdf_type = "lidar"
+        if link is None and origin is not None:
+            link = origin.relative_to
+        if origin is None:
+            origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=link)
+        if sdf_type == "camera":
+            return CameraSensor(
+                name=name,
+                link=link,
+                **kwargs
+            )
+        elif sdf_type == "contact":
+            return NodeContact(
+                name=name,
+                **kwargs
+            )
+        # elif sdf_type == "imu":
+        #     raise NotImplemented
+        elif sdf_type == "lidar":
+            return RotatingRaySensor(
+                name=name,
+                horizontal_offset=kwargs["min_horizontal_angle"],
+                opening_width=kwargs["max_horizontal_angle"] - kwargs["min_horizontal_angle"],
+                vertical_offset=kwargs["min_vertical_angle"],
+                opening_height=kwargs["max_vertical_angle"] - kwargs["min_vertical_angle"],
+                draw_rays="visualize" in kwargs,
+                **kwargs
+            )
+        elif sdf_type == "force_torque":
+            return Joint6DOF(
+                name=name,
+                **kwargs
+            )
+        raise RuntimeError(f"Couldn't instantiate sensor from {repr(kwargs)}")

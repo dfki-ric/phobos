@@ -5,7 +5,7 @@ try:
     # Change here if project is renamed and does not equal the package name
     __version__ = get_distribution("phobos").version
 except DistributionNotFound:
-    __version__ = 'v1.0.0'
+    __version__ = 'v2.0.0'
 finally:
     del get_distribution, DistributionNotFound
 
@@ -20,12 +20,15 @@ def main():
     unavailable_scripts = [(f, getattr(scripts, f).INFO, getattr(scripts, f).cant_be_used_msg()) for f in script_files
                            if not getattr(scripts, f).can_be_used()]
 
-    if len(sys.argv) > 1 and sys.argv[1] in [ascr[0] for ascr in available_scripts]:
+    if len(sys.argv) > 1 and sys.argv[1] in [ascr[0] for ascr in available_scripts + unavailable_scripts]:
+        if sys.argv[1] in unavailable_scripts:
+            print("Attention: Script might not work properly:", getattr(scripts, sys.argv[1]).cant_be_used_msg())
         getattr(scripts, sys.argv[1]).main(sys.argv[2:])
     else:
         print("Phobos is a tool to process simulation models"+"\n")
         print("Usage:")
         print("phobos COMMAND ARGUMENTS")
+        print("Commands:")
         spaces = 0
         for script in available_scripts + unavailable_scripts:
             if len(script[0]) > spaces:

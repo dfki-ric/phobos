@@ -36,6 +36,10 @@ class SmurfBase(YamlReflection):
                     elif type(information) != str and information is not None:
                         information = information.name
                 if information is not None or category in self.returns:
-                    setattr(self, category, information)
+                    try:
+                        setattr(self, category, information)
+                    except AttributeError as e:
+                        print(category, information)
+                        raise e
         # The object has to know which properties to export, this is done via
         self.returns += list(set(kwargs.keys()))

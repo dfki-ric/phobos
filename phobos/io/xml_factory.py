@@ -199,7 +199,9 @@ class XMLFactory(XMLDefinition):
 
     def from_xml(self, classtype, xml: ET.Element, **kwargs):
         if self.available_in_dialect:
-            return classtype(**super(XMLFactory, self).kwargs_from_xml(xml, **kwargs))
+            if "Factory" in classtype.__name__:
+                return classtype.create(**super(XMLFactory, self).kwargs_from_xml(xml, **kwargs), xml=xml)
+            return classtype.create(**super(XMLFactory, self).kwargs_from_xml(xml, **kwargs))
         return None
 
     def to_xml_string(self, object):
@@ -251,7 +253,7 @@ def class_factory(cls, only=None):
                 cls.type_dict[k] = v
         else:
             setattr(cls, "type_dict", cls._type_dict)
-        class_vars = [var for var in cls._class_variables if var in cls.type_dict.keys()  and not var.startswith("_")]
+        class_vars = [var for var in cls._class_variables if var in cls.type_dict.keys() and not var.startswith("_")]
         for var in class_vars:
             setattr(cls, "_"+var, None)
 

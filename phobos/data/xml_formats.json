@@ -20,7 +20,7 @@
           "varname": "materials"
         },
         "sensor": {
-          "classname": "sensor_factory",
+          "classname": "SensorFactory",
           "varname": "sensors"
         },
         "transmission": {
@@ -297,6 +297,77 @@
         }
       }
     },
+    "SensorFactory": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "force_torque": {
+          "value_children": {
+            "frame": "link"
+          }
+        },
+        "ray": {
+          "nested_children": {
+            "scan": {
+              "nested_children": {
+                "horizontal": {
+                  "value_children": {
+                    "samples": "bands",
+                    "min_angle": "min_horizontal_angle",
+                    "max_angle": "max_horizontal_angle",
+                    "resolution": "horizontal_resolution"
+                  }
+                },
+                "vertical": {
+                  "value_children": {
+                    "samples": "lasers",
+                    "min_angle": "min_vertical_angle",
+                    "max_angle": "max_vertical_angle",
+                    "resolution": "vertical_resolution"
+                  }
+                }
+              }
+            },
+            "range": {
+              "value_children": {
+                "max": "max_distance",
+                "min": "min_distance"
+              }
+            }
+          }
+        },
+        "camera": {
+          "nested_children": {
+            "image": {
+              "value_children": {
+                "width": "width",
+                "height": "height",
+                "hfov": "opening_width"
+              }
+            }
+          }
+        },
+        "contact": {
+          "value_children": {
+            "collision": "targets"
+          }
+        }
+      }
+    },
     "Joint6DOF": {
       "tag": "sensor",
       "attributes": {
@@ -385,9 +456,6 @@
       },
       "nested_children": {
         "camera": {
-          "attributes": {
-            "name": "name"
-          },
           "nested_children": {
             "image": {
               "value_children": {
@@ -446,7 +514,7 @@
           "varname": "materials"
         },
         "sensor": {
-          "classname": "sensor_factory",
+          "classname": "SensorFactory",
           "varname": "sensors"
         }
       }
@@ -676,6 +744,77 @@
         "multiplier": "multiplier",
         "offset": "offset",
         "joint": "joint"
+      }
+    },
+    "SensorFactory": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "force_torque": {
+          "value_children": {
+            "frame": "link"
+          }
+        },
+        "ray": {
+          "nested_children": {
+            "scan": {
+              "nested_children": {
+                "horizontal": {
+                  "value_children": {
+                    "samples": "bands",
+                    "min_angle": "min_horizontal_angle",
+                    "max_angle": "max_horizontal_angle",
+                    "resolution": "horizontal_resolution"
+                  }
+                },
+                "vertical": {
+                  "value_children": {
+                    "samples": "lasers",
+                    "min_angle": "min_vertical_angle",
+                    "max_angle": "max_vertical_angle",
+                    "resolution": "vertical_resolution"
+                  }
+                }
+              }
+            },
+            "range": {
+              "value_children": {
+                "max": "max_distance",
+                "min": "min_distance"
+              }
+            }
+          }
+        },
+        "camera": {
+          "nested_children": {
+            "image": {
+              "value_children": {
+                "width": "width",
+                "height": "height",
+                "hfov": "opening_width"
+              }
+            }
+          }
+        },
+        "contact": {
+          "value_children": {
+            "collision": "targets"
+          }
+        }
       }
     },
     "Joint6DOF": {

@@ -101,6 +101,10 @@ class Representation(Linkable):
         super(Representation, self).__init__(robot=robot)
 
     @classmethod
+    def create(cls, *args, **kwargs):
+        return cls(*args, **kwargs)
+
+    @classmethod
     def from_xml(cls, xml: ET.Element, dialect, **kwargs):
         return cls.factory[dialect].from_xml(cls, xml, **kwargs)
 

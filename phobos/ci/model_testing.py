@@ -8,6 +8,7 @@ from ..defs import *
 from ..core import Robot
 from ..io import representation
 from ..utils import urdf
+from ..utils.hyrodyn import get_load_report, debug_report
 from ..utils.misc import execute_shell_command, list_files
 
 
@@ -37,22 +38,13 @@ class ModelTest(object):
                     "urdf": os.path.join(sm_path, au["name"], "urdf", au["name"] + ".urdf"),
                     "submech": os.path.join(sm_path, au["name"], "smurf", au["name"] + "_submechanisms.yml")
                 }]
-                self.new_sm_hml_test[-1]["report"] = self._hyrodyn_load_test(
+                self.new_sm_hml_test[-1]["report"] = get_load_report(
                     self.new_sm_hml_test[-1]["urdf"],
                     self.new_sm_hml_test[-1]["submech"]
                 )
         self.old_hml_test = None
         if self.old is not None:
-            self.old_hml_test = self._hyrodyn_load_test(self.old.xmlfile, self.old.submechanisms_path)
-
-    @staticmethod
-    def _hyrodyn_load_test(urdf_file, submechs):
-        proc = subprocess.Popen([
-            "python -c 'import hyrodyn; hyrodyn.RobotModel(\"{}\", \"{}\")'".format(urdf_file, submechs)],
-            restore_signals=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=os.getcwd())
-        # proc.wait()
-        (out, err) = proc.communicate()
-        return out.decode(), err.decode(), proc.returncode
+            self.old_hml_test = get_load_report(self.old.xmlfile, self.old.submechanisms_path)
 
     def _load_old_hyrodyn_model(self):
         if self.old is None:
@@ -332,68 +324,9 @@ class ModelTest(object):
             print('Hyrodyn not present', flush=True)
             return True
 
-        def routine(report, urdf_file, submech_file):
-            print("Trying to load model in hyrodyn:", urdf_file,
-                  "(file exists)" if os.path.exists(urdf_file) else "(does not exist)", submech_file,
-                  "(file exists)" if os.path.exists(submech_file) else "(does not exist)",
-                  flush=True)
-            # print(submech_file, open(submech_file, "r").read(), yaml.safe_load(open(submech_file, "r").read()))
-            submech_dict = yaml.safe_load(open(submech_file, "r").read())
-            robot = Robot(xmlfile=urdf_file)
-            if report[2] > 0:
-                print(report[0], file=sys.stdout, flush=True)
-                print(report[1], file=sys.stderr, flush=True)
-                jointnames = []
-                jointnames_spanningtree = []
-                for submech in submech_dict["submechanisms"]:
-                    jointnames += submech["jointnames"] if "jointnames" in submech.keys() else []
-                    if "jointnames" in submech.keys():
-                        for jname in submech["jointnames"]:
-                            joint = robot.get_joint(jname)
-                            if joint is None:
-                                print(jname, "in", submech["contextual_name"], "jointnames",
-                                      "is no joint in this robot", flush=True, file=sys.stderr)
-                    for x in ["jointnames_active", "jointnames_spanningtree", "jointnames_independent"]:
-                        jointnames_spanningtree += submech[x]
-                        for jname in submech[x]:
-                            joint = robot.get_joint(jname)
-                            if joint is None:
-                                print(jname, "in", submech["contextual_name"], x, "is no joint in this robot",
-                                      flush=True, file=sys.stderr)
-                            elif joint.joint_type == "fixed":
-                                print(jname, "in", submech["contextual_name"], x, "is a fixed joint",
-                                      flush=True, file=sys.stderr)
-
-                if "exoskeletons" in submech_dict.keys():
-                    for submech in submech_dict["exoskeletons"]:
-                        jointnames += submech["jointnames"] if "jointnames" in submech.keys() else []
-                        jointnames_spanningtree += submech["jointnames_spanningtree"]
-                doubles = []
-                temp = []
-                for j in jointnames:
-                    if j not in temp:
-                        temp += [j]
-                    else:
-                        doubles += [j]
-                doubles = list(set(doubles))
-                jointnames = set(jointnames)
-                print("The following joints are not defined in the submechanisms_file:", flush=True, file=sys.stderr)
-                print(sorted(set([j.name for j in robot.joints])-jointnames), flush=True, file=sys.stderr)
-                print("The following joints are defined in the submechanisms_file but are not in the robot:",
-                      flush=True, file=sys.stderr)
-                print(sorted(jointnames-set([j.name for j in robot.joints])), flush=True, file=sys.stderr)
-                print("The following joints are defined multiple times in the submechanisms_file:",
-                      flush=True, file=sys.stderr)
-                print(sorted(doubles), flush=True, file=sys.stderr)
-                print("There are", len(jointnames), "joints defined in the submechanisms_file and",
-                      len(robot.joints), "in the URDF.", flush=True, file=sys.stderr)
-                print("The number of fixed joints defined in the URDF is",
-                      len([j for j in robot.joints if j.joint_type == "fixed"]), flush=True, file=sys.stderr)
-                raise RuntimeError("Hyrodyn aborted!")
-
         out = True
         try:
-            routine(self.new_hml_test, self.new.urdf, self.new.submechanisms_file_path)
+            debug_report(self.new_hml_test, self.new.urdf, self.new.submechanisms_file_path, raise_error_failure=True)
             self.new_hyrodyn = hyrodyn.RobotModel(self.new.urdf, self.new.submechanisms_file_path)
             print("Model loaded!", flush=True)
             out &= True
@@ -403,8 +336,8 @@ class ModelTest(object):
             out &= False
         if self.new.floatingbase is True:
             try:
-                routine(self.new_fb_hml_test, self.new.floatingbase_urdf,
-                        self.new.floatingbase_submechanisms_file_path)
+                debug_report(self.new_fb_hml_test, self.new.floatingbase_urdf,
+                             self.new.floatingbase_submechanisms_file_path, raise_error_failure=True)
                 print("Floatingbase model loaded!", flush=True)
                 out &= True
             except RuntimeError as e:
@@ -414,7 +347,7 @@ class ModelTest(object):
                 out &= False
         for test in self.new_sm_hml_test:
             try:
-                routine(test["report"], test["urdf"], test["submech"])
+                debug_report(test["report"], test["urdf"], test["submech"], raise_error_failure=True)
                 print(test["name"]+" submodel loaded!", flush=True)
                 out &= True
             except RuntimeError as e:
