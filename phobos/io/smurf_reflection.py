@@ -6,8 +6,8 @@ class SmurfBase(YamlReflection):
     Wraps methods for joint and link as properties and additionally which variables get exported.
     """
 
-    def __init__(self, robot=None, returns=None, **kwargs):
-        super(YamlReflection, self).__init__(robot=robot)
+    def __init__(self, returns=None, **kwargs):
+        super(YamlReflection, self).__init__()
         # The object has to know which properties to export, this is done via
         self.returns = [] if returns is None else returns
         # Additionally, we must exclude some private attributes
@@ -29,6 +29,10 @@ class SmurfBase(YamlReflection):
     def add_annotations(self, overwrite=False, **kwargs):
         # Just Parse everything else
         for category, information in kwargs.items():
+            if category.startswith("_"):
+                continue
+            # The object has to know which properties to export, this is done via
+            self.returns.append(category)
             if overwrite or not hasattr(self, category):
                 if category in self.type_dict.keys():
                     if type(information) == list:
@@ -41,5 +45,3 @@ class SmurfBase(YamlReflection):
                     except AttributeError as e:
                         print(category, information)
                         raise e
-        # The object has to know which properties to export, this is done via
-        self.returns += list(set(kwargs.keys()))

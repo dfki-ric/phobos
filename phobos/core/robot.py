@@ -5,7 +5,7 @@ from typing import List, Any
 
 import pkg_resources
 import yaml
-from copy import deepcopy
+from copy import deepcopy, copy
 from scipy.spatial.transform import Rotation as scipy_rot
 import numpy as np
 
@@ -65,7 +65,7 @@ class Robot(SMURFRobot):
                 name=values['name'],
                 parent=values['parent'],
                 child=values['child'],
-                type=values['type'],
+                joint_type=values['type'],
                 axis=values.get('axis'),
                 origin=representation.Pose.from_matrix(np.array(values['pose']['rawmatrix'])),
                 limit=cli_limit,
@@ -201,7 +201,11 @@ class Robot(SMURFRobot):
 
         outputfile = os.path.abspath(outputfile)
 
+        self.unlink_entities()
         export_robot = deepcopy(self)
+        self.link_entities()
+        export_robot.link_entities()
+
         if not export_visuals:
             export_robot.remove_visuals()
         if not export_collisions:
@@ -307,10 +311,11 @@ class Robot(SMURFRobot):
             os.makedirs(os.path.dirname(model_file))
         if ros_pkg_name is None and (export_with_ros_pathes or ros_pkg):
             ros_pkg_name = os.path.basename(output_dir)
+        self.relink_entities()
         self.xmlfile = model_file
         self.export_xml(outputfile=model_file, create_pdf=create_pdf, ros_pkg=ros_pkg,
-                         export_with_ros_pathes=export_with_ros_pathes)
-
+                        export_with_ros_pathes=export_with_ros_pathes)
+        # Todo handle meshes
         if export_joint_limits:
             self.export_joint_limits(os.path.join(output_dir, format))
 
@@ -358,9 +363,9 @@ class Robot(SMURFRobot):
         if not os.path.exists(os.path.dirname(robotfile)):
             os.mkdir(os.path.dirname(robotfile))
         self.export_xml_with_meshes(output_dir=outputdir, export_visuals=export_visuals, export_collisions=export_collisions,
-                            create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
-                            ros_pkg_name=ros_pkg_name, export_joint_limits=export_joint_limits,
-                            export_submodels=export_submodels, format=format)
+                                    create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
+                                    ros_pkg_name=ros_pkg_name, export_joint_limits=export_joint_limits,
+                                    export_submodels=export_submodels, format=format)
         # Export the smurf files
         smurf_dir = os.path.join(outputdir, "smurf")
         if not os.path.exists(smurf_dir):
@@ -768,11 +773,6 @@ class Robot(SMURFRobot):
                 _sm_xmlfile = os.path.join(output_dir, filename if filename is not None else (f"{name}.{format}"))
             else:
                 _sm_xmlfile = os.path.join(submodel_dir, format, f"{name}.{format}")
-            for link in _submodel.links:
-                for obj in link.collisions + link.visuals:
-                    if hasattr(obj.geometry, "filename"):
-                        obj.geometry.filename = os.path.relpath(read_urdf_filename(obj.geometry.filename,
-                                                                                   self.xmlfile), start=_sm_xmlfile)
             if robotname is not None:
                 _submodel.name = robotname
             if only_urdf:
@@ -946,6 +946,30 @@ class Robot(SMURFRobot):
             self._submodels[name] = definition
         return self.instantiate_submodel(name)
 
+    def get_links_and_joints_in_subtree(self, start, stop=None):
+        if stop is None:
+            # Collect all links on the way to the leaves
+            parents, children = self._get_children_lists([start], [])
+            parentset = set(parents)
+            childrenset = set(children)
+            linknames = list(parentset.union(childrenset))
+        else:
+            linknames = set()
+            try:
+                for leave in stop:
+                    linknames.update(set(self.get_chain(start, leave, joints=False)))
+            except Exception as e:
+                print(self.get_root())
+                print(self.parent_map.keys())
+                print([link.name for link in self.links])
+                print("Start", start, "Stop", stop)
+                raise e
+            linknames = list(linknames)
+
+        jointnames = [j for j in self.get_joint(self.get_children(linknames)) if j.child in linknames]
+
+        return linknames, jointnames
+
     def instantiate_submodel(self, name=None, definition=None, link_obj=True):
         """
         Instantiates a submodel by it's definition. Takes either name or definition. If both are given, the submodel
@@ -965,42 +989,37 @@ class Robot(SMURFRobot):
         elif name is None and definition is None:
             raise AssertionError("No args given!")
 
+        if "stop" not in definition.keys():
+            definition["stop"] = None
         assert all([x in definition.keys() for x in ["name", "start", "stop"]])
-
-        if definition["stop"] is None:
-            # Collect all links on the way to the leaves
-            parents, children = self._get_children_lists([definition["start"]], [])
-            parentset = set(parents)
-            childrenset = set(children)
-            linknames = list(parentset.union(childrenset))
-        else:
-            linknames = set()
-            try:
-                for leave in definition["stop"]:
-                    linknames.update(set(self.get_chain(definition["start"], leave, joints=False)))
-            except Exception as e:
-                print(self.get_root())
-                print(self.parent_map.keys())
-                print([link.name for link in self.links])
-                print("Start", definition["start"], "Stop", definition["stop"])
-                raise e
-            linknames = list(linknames)
-
-        jointnames = self.get_children(linknames)
-
-        if "robotname" not in definition.keys() or definition["robotname"] is None:
-            definition["robotname"] = name
+        if "robotname" not in definition.keys():
+            definition["robotname"] = definition["name"]
 
         submodel = type(self)(name=definition["robotname"])
 
+        linknames, jointnames = self.get_links_and_joints_in_subtree(start=definition["start"], stop=definition["stop"])
+
         links = self.get_link(linknames)
-        joints = self.get_joint(jointnames)
-        materials = []
+        _joints = self.get_joint(jointnames)
+        # remove mimic relation if the mimiced joint is not in here
+        joints = []
+        for joint in _joints:
+            if joint.mimic is not None and str(joint.mimic.joint) not in jointnames:
+                joint = copy(joint)
+                joint.mimic = None
+                print(f"WARNING: Removing mimic relation in submodel {definition['robotname']} for {joint.name}!")
+            joints.append(joint)
+        assert all([j.mimic is None or str(j.mimic.joint) in jointnames for j in joints])
+
+        submodel.add_aggregate("links", self.get_instance("link", links))
+        submodel.add_aggregate("joints", self.get_instance("joint", joints))
+
+        materials = set()
         for link in links:
             for visual in link.visuals:
                 if visual.material is not None:
                     assert isinstance(visual._material, representation.Material)
-                    materials.append(visual._material)
+                    materials.add(visual._material)
         motors = []
         for joint in joints:
             if joint.motor is not None:
@@ -1014,28 +1033,26 @@ class Robot(SMURFRobot):
                     sensors.append(sensor)
         hyrodyn_multi_joint_dependencies = []
         for ht in self.hyrodyn_multi_joint_dependencies:
-            if ht.is_related_to(joints + links):
+            if ht.is_related_to(joints + links, pure=True):
                 hyrodyn_multi_joint_dependencies.append(ht)
         hyrodyn_loop_constraints = []
         for lc in self.hyrodyn_loop_constraints:
-            if lc.is_related_to(joints + links):
+            if lc.is_related_to(joints + links, pure=True):
                 hyrodyn_loop_constraints.append(lc)
         submechanisms = []
         for subm in self.submechanisms:
-            if subm.is_related_to(joints + links):
+            if subm.is_related_to(joints, pure=True):
                 submechanisms.append(subm)
         exoskeletons = []
         for exo in self.exoskeletons:
-            if exo.is_related_to(joints + links):
+            if exo.is_related_to(joints, pure=True):
                 exoskeletons.append(exo)
 
         if not link_obj:
             for entity in links + joints + materials + motors + sensors + hyrodyn_multi_joint_dependencies + hyrodyn_loop_constraints + submechanisms + exoskeletons:
                 entity.unlink_from_robot()
 
-        submodel.add_aggregate("links", self.get_instance("link", links))
-        submodel.add_aggregate("joints", self.get_instance("joint", joints))
-        submodel.add_aggregate("materials", self.get_instance("material", materials))
+        submodel.add_aggregate("materials", self.get_instance("material", list(materials)))
         submodel.add_aggregate("motors", self.get_instance("motor", motors))
         submodel.add_aggregate("sensors", self.get_instance("sensor", sensors))
         submodel.add_aggregate("hyrodyn_multi_joint_dependencies", hyrodyn_multi_joint_dependencies)
@@ -1043,12 +1060,12 @@ class Robot(SMURFRobot):
         submodel.add_aggregate("submechanisms", submechanisms)
         submodel.add_aggregate("exoskeletons", exoskeletons)
 
-        if not link_obj:
-            for entity in links + joints + motors + sensors + hyrodyn_multi_joint_dependencies + hyrodyn_loop_constraints + submechanisms + exoskeletons:
-                entity.link_with_robot(submodel)
-        else:
-            for entity in links + joints + motors + sensors + hyrodyn_multi_joint_dependencies + hyrodyn_loop_constraints + submechanisms + exoskeletons:
-                entity.link_with_robot(self)
+        # copy all annotations we not yet have
+        for k, v in self.__dict__.items():
+            if k not in submodel.__dict__.keys() or submodel.__dict__[k] is None:
+                submodel.__dict__[k] = v
+
+        submodel.link_entities()
 
         return submodel
 
@@ -1490,7 +1507,8 @@ class Robot(SMURFRobot):
                         upper=backup["max"] if "max" in backup.keys() else None)
                     print("Warning: Joint limits for ", joint.name, "not defined taking default values!")
                 elif raise_error:
-                    raise ValueError("ERROR: Joint limits for ", joint.name, "not defined!")
+                    print(joint.to_urdf_string())
+                    raise ValueError(f"ERROR: Joint limits for {joint.name} not defined!")
             else:
                 if any([not hasattr(joint.limit, x) for x in ["lower", "upper", "effort", "velocity"]]) or \
                         any([getattr(joint.limit, x) is None for x in ["lower", "upper", "effort", "velocity"]]):
@@ -1752,69 +1770,15 @@ class Robot(SMURFRobot):
             return renamed_entities
 
         new_name = edit_name_string(target, prefix=prefix, suffix=suffix, replacements=replacements)
+        renamed_entities.update(self._rename(targettype, target, new_name))
 
-        # Rename all instances in child and parent map as keys
-        index = None  # gives the index of joint or link for parent/child maps
-        if targettype.startswith('link'):
-            index = 1
-            for j in self.joints:
-                if j.parent == target:
-                    j.parent = new_name
-                if j.child == target:
-                    j.child = new_name
-        elif targettype.startswith('joint'):
-            index = 0
-            for j in self.joints:
-                if hasattr(j, "mimic") and j.mimic is not None and j.mimic.joint == target:
-                    j.mimic.joint = new_name
-
-        if targettype.startswith("link") or targettype.startswith("joint"):
-            # Iterate over the values of parent child map and rename the values
-            new_child_map = {}
-            for k, v in self.child_map.items():
-                for i, vi in enumerate(v):
-                    if target == vi[index]:
-                        v[i] = tuple([new_name if i == index else n for i, n in enumerate(vi)])
-                if k == target:
-                    new_child_map[new_name] = v
-                else:
-                    new_child_map[k] = v
-            self.child_map = new_child_map
-
-            new_parent_map = {}
-            for k, v in self.parent_map.items():
-                if target == v[index]:
-                    v = tuple([new_name if i == index else n for i, n in enumerate(v)])
-                if k == target:
-                    new_parent_map[new_name] = v
-                else:
-                    new_parent_map[k] = v
-            self.parent_map = new_parent_map
-
-        renamed_entities[target] = new_name
-
-        if targettype == 'link':
-            self.get_link(target).name = new_name
+        if targettype in ['link', "links"]:
             for k, v in self._submodels.items():
                 if target == v["start"]:
                     self._submodels[k]["start"] = new_name
                 if target in v["stop"]:
                     self._submodels[k]["stop"] = [link if link != target else new_name for link in v]
-        elif targettype == 'joint':
-            self.get_joint(target).name = new_name
-        elif targettype == 'collision':
-            obj = self.get_collision_by_name(target)
-            if obj is not None:
-                obj.name = new_name
-        elif targettype == 'visual':
-            obj = self.get_visual_by_name(target)
-            if obj is not None:
-                obj.name = new_name
-        elif targettype == 'material':
-            obj = self.get_material(target)
-            if obj is not None:
-                obj.name = new_name
-        renamed_entities.update(self._rename(targettype, target, new_name=new_name))
+        #todo submechanisms
         return renamed_entities
 
     def edit_names(self, cfg):
@@ -1916,14 +1880,16 @@ class Robot(SMURFRobot):
         :param name_suffix: a prefix to add to the names the have to be renamed (default: "_2")
         :return: None
         """
-        if link_other:
-            other = deepcopy(other)
         # Check if other is robot
         if not isinstance(other, Robot):
             raise Exception("Can only attach robot to robot.")
 
-        if link_other:
+        if not link_other:
             other = deepcopy(other)
+        elif not do_not_rename:
+            print(f"WARNING: Robot::attach(): The arguments you chose may result in the renaming of parts of the robot {other.name}")
+
+        other.relink_entities()
 
         if self.get_link_id(joint.parent) is None:
             raise Exception("Provide valid link to attach to. '" + joint.parent + "' is not in " + str(
@@ -1962,6 +1928,7 @@ class Robot(SMURFRobot):
         # cposes = set([m.name for m in other.poses]) # Todo rework poses
 
         renamed_entities = {}
+        joint.unlink_from_robot()
 
         if plink & clink:
             if not do_not_rename:
@@ -1971,18 +1938,15 @@ class Robot(SMURFRobot):
                     other.rename(targettype="link", target=list(plink & clink), prefix=name_prefix, suffix=name_suffix))
                 if joint.child in list(plink & clink):
                     joint.child = name_prefix + joint.child + name_suffix
-                return self.attach(other, joint, do_not_rename=do_not_rename, name_prefix=name_prefix,
-                                   name_suffix=name_suffix)
             else:
                 raise NameError("There are duplicates in link names", repr(plink & clink))
 
         if pjoints & cjoints:
             if not do_not_rename:
                 print("Warning : Joint names are duplicates a _2 will be appended!", pjoints & cjoints, file=sys.stderr)
-                renamed_entities.update(other.rename(targettype="joint", target=list(pjoints & cjoints), suffix="_2"))
+                renamed_entities.update(other.rename(targettype="joint", target=list(pjoints & cjoints), prefix=name_prefix, suffix=name_suffix))
                 if joint.name in list(pjoints & cjoints):
                     joint.name = joint.name + "_2"
-                return self.attach(other, joint, do_not_rename=do_not_rename)
             else:
                 raise NameError("There are duplicates in joint names", repr(pjoints & cjoints))
 
@@ -1991,8 +1955,7 @@ class Robot(SMURFRobot):
                 print("Warning : Collision names are duplicates a _2 will be appended!", pcollisions & ccollisions,
                       file=sys.stderr)
                 renamed_entities.update(
-                    other.rename(targettype="collision", target=list(pcollisions & ccollisions), suffix="_2"))
-                return self.attach(other, joint, do_not_rename=do_not_rename)
+                    other.rename(targettype="collision", target=list(pcollisions & ccollisions), prefix=name_prefix, suffix=name_suffix))
             else:
                 raise NameError("There are duplicates in collision names", repr(pcollisions & ccollisions))
 
@@ -2001,8 +1964,7 @@ class Robot(SMURFRobot):
                 print("Warning : Visual names are duplicates a _2 will be appended!", pvisuals & cvisuals,
                       file=sys.stderr)
                 renamed_entities.update(
-                    other.rename(targettype="visual", target=list(pvisuals & cvisuals), suffix="_2"))
-                return self.attach(other, joint, do_not_rename=do_not_rename)
+                    other.rename(targettype="visual", target=list(pvisuals & cvisuals), prefix=name_prefix, suffix=name_suffix))
             else:
                 raise NameError("There are duplicates in visual names", repr(pvisuals & cvisuals))
 
@@ -2014,24 +1976,22 @@ class Robot(SMURFRobot):
                 print("Warning : Material names are duplicates a _2 will be appended!", pmaterials & cmaterials,
                       file=sys.stderr)
                 renamed_entities.update(
-                    other.rename(targettype="material", target=list(pmaterials & cmaterials), suffix="_2"))
-                return self.attach(other, joint, do_not_rename=do_not_rename)
+                    other.rename(targettype="material", target=list(pmaterials & cmaterials), prefix=name_prefix, suffix=name_suffix))
             else:
                 raise NameError("There are duplicates in material names", repr(pmaterials & cmaterials))
 
         # check equivalence
         conflicting_sensors = psensors & csensors
-        for sname in conflicting_sensors:
+        for sname in psensors & csensors:
             if self.get_sensor(sname).equivalent(other.get_sensor(sname)):
                 self.get_sensor(sname).merge(other.get_sensor(sname))
-                conflicting_sensors.pop(sname)
+                conflicting_sensors.remove(sname)
         if conflicting_sensors:
             if not do_not_rename:
                 print("Warning : Sensor names are duplicates a _2 will be appended!", conflicting_sensors,
                       file=sys.stderr)
                 renamed_entities.update(
-                    other.rename(targettype="sensor", target=list(conflicting_sensors), suffix="_2"))
-                return self.attach(other, joint, do_not_rename=do_not_rename)
+                    other.rename(targettype="sensor", target=list(conflicting_sensors), prefix=name_prefix, suffix=name_suffix))
             else:
                 raise NameError("There are duplicates in sensor names", repr(conflicting_sensors))
         
@@ -2040,8 +2000,7 @@ class Robot(SMURFRobot):
                 print("Warning : Transmission names are duplicates a _2 will be appended!", ptransmissions & ctransmissions,
                       file=sys.stderr)
                 renamed_entities.update(
-                    other.rename(targettype="transmission", target=list(ptransmissions & ctransmissions), suffix="_2"))
-                return self.attach(other, joint, do_not_rename=do_not_rename)
+                    other.rename(targettype="transmission", target=list(ptransmissions & ctransmissions), prefix=name_prefix, suffix=name_suffix))
             else:
                 raise NameError("There are duplicates in transmission names", repr(ptransmissions & ctransmissions))
             
@@ -2050,8 +2009,7 @@ class Robot(SMURFRobot):
                 print("Warning : Exoskeleton names are duplicates a _2 will be appended!", pexoskeletons & cexoskeletons,
                       file=sys.stderr)
                 renamed_entities.update(
-                    other.rename(targettype="exoskeleton", target=list(pexoskeletons & cexoskeletons), suffix="_2"))
-                return self.attach(other, joint, do_not_rename=do_not_rename)
+                    other.rename(targettype="exoskeleton", target=list(pexoskeletons & cexoskeletons), prefix=name_prefix, suffix=name_suffix))
             else:
                 raise NameError("There are duplicates in exoskeleton names", repr(pexoskeletons & cexoskeletons))
             
@@ -2060,11 +2018,16 @@ class Robot(SMURFRobot):
                 print("Warning : Submechanism names are duplicates a _2 will be appended!", psubmechanisms & csubmechanisms,
                       file=sys.stderr)
                 renamed_entities.update(
-                    other.rename(targettype="submechanism", target=list(psubmechanisms & csubmechanisms), suffix="_2"))
-                return self.attach(other, joint, do_not_rename=do_not_rename)
+                    other.rename(targettype="submechanism", target=list(psubmechanisms & csubmechanisms), prefix=name_prefix, suffix=name_suffix))
             else:
                 raise NameError("There are duplicates in submechanism names", repr(psubmechanisms & csubmechanisms))
 
+        if renamed_entities != {}:
+            return self.attach(other, joint, do_not_rename=do_not_rename,
+                               link_other=True)  # this has been copied here already if link_other false
+
+        n_joints = len(self.joints)
+        n_links = len(self.links)
         # Add all joints
         for cJoint in other.joints:
             self.add_aggregate('joint', cJoint)
@@ -2073,17 +2036,7 @@ class Robot(SMURFRobot):
             self.add_aggregate('link', cLink)
 
         for cMaterial in other.materials:
-            if any([((oMat.color is not None and
-                      cMaterial.color is not None and
-                      oMat.color.rgba == cMaterial.color.rgba)
-                     or oMat.color == cMaterial.color)
-                    and ((oMat.texture is not None and
-                          cMaterial.texture is not None and
-                          oMat.texture.filename == cMaterial.texture.filename)
-                         or oMat.texture == cMaterial.texture)
-                    for oMat in other.materials]):
-                continue
-            else:
+            if not any([cMaterial.equivalent(sMat) and sMat.name == cMaterial.name for sMat in self.materials]):
                 self.add_aggregate('material', cMaterial)
 
         for cTransmission in other.transmissions:
@@ -2095,10 +2048,10 @@ class Robot(SMURFRobot):
         for cMotor in other.motors:
             self.add_aggregate('motor', cMotor)
 
-        for cHyrodyn_loop_constraints in other.hyrodyn_loop_constraintss:
+        for cHyrodyn_loop_constraints in other.hyrodyn_loop_constraints:
             self.add_aggregate('hyrodyn_loop_constraints', cHyrodyn_loop_constraints)
             
-        for cHyrodyn_multi_joint_dependencies in other.hyrodyn_multi_joint_dependenciess:
+        for cHyrodyn_multi_joint_dependencies in other.hyrodyn_multi_joint_dependencies:
             self.add_aggregate('hyrodyn_multi_joint_dependencies', cHyrodyn_multi_joint_dependencies)
 
         for cSubmechanism in other.submechanisms:
@@ -2110,8 +2063,15 @@ class Robot(SMURFRobot):
         # Todo rework poses
         # for cPose in other.poses:
         #     self.add_aggregate('pose', cPose)
-
+        joint.link_with_robot(self)
         self.add_aggregate('joint', joint)
+        assert joint.check_valid()
+        assert str(other.get_root()) == str(joint.child)
+        assert len(set([str(l) for l in self.links])) == len(self.links)
+        assert len(self.joints) - n_joints == len(other.joints) + 1
+        assert len(set([j.child for j in self.joints])) == len([j.child for j in self.joints])
+        assert len(self.joints) == len(self.links) - 1
+        assert self.get_root()
 
         # this will be done by fill_submechanisms we are delaying this to the export to give the user the opportunity to define something thereselves
         # # Add the connection joint to the submechanism tree
@@ -2162,7 +2122,7 @@ class Robot(SMURFRobot):
         link = representation.Link(name, inertial=inertial)
         joint = representation.Joint(name=jointname if jointname is not None else name, parent=parent.name,
                                      child=link.name,
-                                     type=jointtype, origin=representation.Pose(translation, rotation), axis=axis)
+                                     joint_type=jointtype, origin=representation.Pose(translation, rotation), axis=axis)
         self.add_aggregate("link", link)
         self.add_aggregate("joint", joint)
         if joint.joint_type in ["revolute", "prismatic"] and add_default_motor:
@@ -2184,6 +2144,7 @@ class Robot(SMURFRobot):
         :param only_return: if set to true this instance remains untouched and the mirrored model will only be returned
         :return: None or mirrored model depending on only_return
         """
+        self.unlink_entities()  # so we dont mess up everything when deepcopying
         # Create a new robot
         if name_replacements is None:
             name_replacements = {}
@@ -2194,10 +2155,28 @@ class Robot(SMURFRobot):
         if mirror_plane is None:
             mirror_plane = [0, 1, 0]
         robot = type(self)(self.name)
+        # add everything on which mirroring has no influence
         for mat in self.materials:
             robot.add_aggregate("material", mat)
+        for mat in self.transmissions:
+            robot.add_aggregate("transmission", mat)
+        for mat in self.exoskeletons:
+            robot.add_aggregate("exoskeleton", mat)
+        for mat in self.submechanisms:
+            robot.add_aggregate("submechanism", mat)
+        for mat in self.hyrodyn_loop_constraints:
+            robot.add_aggregate("hyrodyn_loop_contraint", mat)
+        for mat in self.hyrodyn_multi_joint_dependencies:
+            robot.add_aggregate("hyrodyn_multi_joint_dependencies", mat)
+        for mat in self.motors:
+            robot.add_aggregate("motor", mat)
+        for mat in self.poses:
+            robot.add_aggregate("pose", mat)
+        for mat in self.sensors:
+            robot.add_aggregate("sensor", mat)
         if not target_urdf:
             target_urdf = self.xmlfile
+        robot.xmlfile = target_urdf
 
         # reflection matrix
         T_R = pgu.get_reflection_matrix(normal=np.array(mirror_plane))
@@ -2306,10 +2285,16 @@ class Robot(SMURFRobot):
                 recursive_link_transform(joint_.child, new_T_root_to_link)
 
         recursive_link_transform(self.get_root(), np.eye(4))
+
+        robot.link_entities()
+        self.link_entities()
+
         robot.rename("link", robot.links, replacements=name_replacements)
         robot.rename("joint", robot.joints, replacements=name_replacements)
         robot.rename("collision", robot.get_all_collisions(), replacements=name_replacements)
-        robot.rename("visual", self.get_all_visuals(), replacements=name_replacements)
+        robot.rename("visual", robot.get_all_visuals(), replacements=name_replacements)
+
+        # copy all annotations we not yet have
         for k, v in self.__dict__.items():
             if k not in robot.__dict__.keys() or robot.__dict__[k] is None:
                 robot.__dict__[k] = v
@@ -2318,7 +2303,7 @@ class Robot(SMURFRobot):
         T_R = get_reflection_matrix(normal=np.array(mirror_plane))
 
         # transform sensor frames
-        for sensor in self.sensors:
+        for sensor in robot.sensors:
             if hasattr(sensor, "origin") and sensor.link is not None:
                 T_link = self.get_transformation(sensor.link)
                 T_root2link = robot.get_transformation(sensor.link)
@@ -2326,10 +2311,12 @@ class Robot(SMURFRobot):
                 sensor.origin = representation.Pose.from_matrix(transform.inv(T_root2link).dot(T))
 
         if target_smurf is not None:
-            robot.read_smurffile(target_smurf)
+            robot.smurffile = target_smurf
+
         if only_return:
             return robot
-        self.__dict__ = robot.__dict__
+        for k, v in robot.__dict__.items():
+            setattr(self, k, v)
 
     def split_robot(self, link_to_cut):
         """
@@ -2342,51 +2329,28 @@ class Robot(SMURFRobot):
         if type(link_to_cut) is str:
             links_to_cut = [link_to_cut]
         else:
-            links_to_cut = deepcopy(link_to_cut)
+            links_to_cut = [str(l) for l in link_to_cut]
 
         # Create new robot
-        before = type(self)(self.name)
-        for mat in self.materials:
-            before.add_aggregate("material", mat)
-        beyond = {new_root: type(self)(self.name) for new_root in links_to_cut}
-        for _, v in beyond.items():
-            for mat in self.materials:
-                v.add_aggregate("material", mat)
-        # add link recursively from root
-        root = self.get_root()
-
-        def recursive_add(link, robot2add2, all_links=False):
-            if link not in links_to_cut or all_links:
-                for jointname in self.get_children(link):
-                    joint = self.get_joint(jointname)
-                    if joint is None:
-                        raise ValueError("Joint with name " + jointname + " not found!")
-                    robot2add2.add_aggregate("link", self.get_link(joint.child))
-                    robot2add2.add_aggregate("joint", joint)
-                    recursive_add(joint.child, robot2add2)
-
-        before.add_aggregate("link", self.get_link(self.get_root()))
-        recursive_add(root, before)
-        before.copy_related_annotations(self)
-
-        for root, robot in beyond.items():
-            robot.add_aggregate("link", self.get_link(root))
-            recursive_add(root, robot, all_links=True)
-            robot.copy_related_annotations(self)
-            setattr(robot, 'xmlfile', self.xmlfile)
-
-        # finalize the robot
-        setattr(before, 'xmlfile', self.xmlfile)
+        before = self.instantiate_submodel(definition={
+            "name": self.name,
+            "start": self.get_root(),
+            "stop": links_to_cut
+        })
+        beyond = {new_root: self.instantiate_submodel(definition={
+            "name": self.name,
+            "start": new_root
+        }) for new_root in links_to_cut}
         return before, beyond
 
-    def remove_beyond(self, link_to_cut):
+    def get_before(self, link_to_cut):
         """
         Wrapper for split_robot(). Removes everything beyond the given link
         :param link_to_cut: str or list, the link(s) where to cut. this link(s) will be included
         :return: None
         """
         before, _ = self.split_robot(link_to_cut)
-        self.__dict__ = before.__dict__
+        return before
 
     def get_beyond(self, link_to_cut):
         """
@@ -2396,16 +2360,6 @@ class Robot(SMURFRobot):
         """
         _, beyond = self.split_robot(link_to_cut)
         return beyond
-
-    def remove_before(self, link_to_cut):
-        """
-        Wrapper for split_robot(). Removes everything before this link.
-        :param link_to_cut: str
-        :return: None
-        """
-        assert type(link_to_cut) is str
-        _, beyond = self.split_robot(link_to_cut)
-        self.__dict__ = beyond[link_to_cut].__dict__
 
     def remove_joint(self, jointname, keep_collisions=True):
         """Remove the joint(s) from the mechanism and transforms all inertia, visuals and collisions
@@ -2536,7 +2490,7 @@ class Robot(SMURFRobot):
             name="FreeFlyerRZ",
             parent="FreeFlyerRY_Link",
             child=self.get_root(),
-            type='revolute',
+            joint_type='revolute',
             axis=[0, 0, 1],
             limit=representation.JointLimit(
                 effort=0,

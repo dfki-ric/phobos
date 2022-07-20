@@ -1,3 +1,6 @@
+import os
+from typing import List
+
 from . import representation, xml_factory, sensor_representations
 from .base import Representation
 from ..utils.transform import create_transformation
@@ -7,7 +10,10 @@ from ..utils.tree import get_joints_depth_first
 class XMLRobot(Representation):
     SUPPORTED_VERSIONS = ["1.0"]
 
-    def __init__(self, name=None, version=None, links=None, joints=None, materials=None, transmissions=None,
+    def __init__(self, name=None, version=None, links: List[representation.Link] = None,
+                 joints: List[representation.Joint] = None,
+                 materials: List[representation.Material] = None,
+                 transmissions: List[representation.Transmission] = None,
                  sensors=None, xmlfile=None):
         super().__init__()
         self.joints = []
@@ -19,7 +25,13 @@ class XMLRobot(Representation):
         self.sensors = []
         self.xmlfile = xmlfile
 
-        self.name = name
+        if name is None or len(name) == 0:
+            if self.xmlfile is not None:
+                self.name, _ = os.path.splitext(xmlfile)
+            else:
+                self.name = None
+        else:
+            self.name = name
         if version is None:
             version = "1.0"
         elif type(version) is not str:
@@ -44,6 +56,14 @@ class XMLRobot(Representation):
             entity.link_with_robot(self)
         for entity in self.joints:
             entity.link_with_robot(self)
+
+    @property
+    def collisions(self):
+        return self.get_all_collisions()
+
+    @property
+    def visuals(self):
+        return self.get_all_visuals()
 
     def link_entities(self):
         for entity in self.links + self.sensors:
@@ -80,63 +100,56 @@ class XMLRobot(Representation):
             return [], []
 
     def _rename(self, targettype, target, new_name):
-        assert self.get_instance(targettype, new_name) is None # new_name exists? otherwise we'd have to fix the name
-        if targettype.startswith("link"):
-            if target in self.parent_map.keys():
-                self.parent_map[new_name] = self.parent_map[target]
-            if target in self.child_map.keys():
-                self.child_map[new_name] = self.child_map[target]
-        #     for obj in self.links:
-        #         if obj.name == target:
-        #             obj.name = new_name
-        #     for obj in self.sensors + self.get_all_collisions():
-        #         if obj.link == target:
-        #             obj.link = new_name
-        #     for obj in self.hyrodyn_loop_constraints:
-        #         if obj.prepredecessor_body == target:
-        #             obj.predecessor_body = new_name
-        #         if obj.successor_body == target:
-        #             obj.successor_body = new_name
-        # elif targettype.startswith("joint"):
-        #     for obj in self.smurf_joints:
-        #         if obj.name == target:
-        #             obj.name = new_name
-        #     for obj in self.motors + self.poses:
-        #         if obj.joint == target:
-        #             obj.joint = new_name
-        #     for obj in self.exoskeletons + self.submechanisms:
-        #         for key in ["jointnames_independent", "jointnames_spanningtree", "jointnames_active", "jointnames"]:
-        #             if hasattr(obj, key):
-        #                 setattr(obj, key, [j if j != target else new_name for j in getattr(obj, key)])
-        #     for obj in self.hyrodyn_loop_constraints:
-        #         if obj.cut_joint == target:
-        #             obj.cut_joint = new_name
-        #     for obj in self.hyrodyn_transmissions:
-        #         if obj.joint == target:
-        #             obj.joint = new_name
-        #         for dep in obj.joint_dependencies:
-        #             if dep.joint == target:
-        #                 dep.joint = new_name
-        # elif targettype.startswith("material"):
-        #     for obj in self.smurf_materials:
-        #         if obj.name == target:
-        #             obj.name = new_name
-        # elif targettype.startswith("collision"):
-        #     for obj in self.get_all_collisions():
-        #         if obj.name == target:
-        #             obj.name = new_name
-        # elif targettype.startswith("visual"):
-        #     pass
-        # elif targettype.startswith("motor"):
-        #     for obj in self.motors:
-        #         if obj.name == target:
-        #             obj.name = new_name
-        # elif targettype.startswith("sensor"):
-        #     for obj in self.sensors:
-        #         if obj.name == target:
-        #             obj.name = new_name
-        # else:
-        #     raise NotImplementedError("_rename() not implemented for targettype " + targettype)
+        if target == new_name:
+            return {}
+        # new_name exists? otherwise we'd have to fix the name
+        assert (self.get_instance(targettype, new_name) is None,
+                f"Can't rename {targettype} {target} to {new_name} as the new name already exists")
+        index = None  # gives the index of joint or link for parent/child maps
+        if targettype in ['link', "links"]:
+            index = 1
+            obj = self.get_link(target)
+            if obj is not None:
+                obj.name = new_name
+        elif targettype in ['joint', "joints"]:
+            index = 0
+            obj = self.get_joint(target)
+            if obj is not None:
+                obj.name = new_name
+        if targettype in ["link", "links", "joint", "joints"]:
+            # Iterate over the values of parent child map and rename the values
+            new_child_map = {}
+            for k, v in self.child_map.items():
+                for i, vi in enumerate(v):
+                    if target == vi[index]:
+                        v[i] = tuple([new_name if i == index else n for i, n in enumerate(vi)])
+                if k == target:
+                    new_child_map[new_name] = v
+                else:
+                    new_child_map[k] = v
+            self.child_map = new_child_map
+
+            new_parent_map = {}
+            for k, v in self.parent_map.items():
+                if target == v[index]:
+                    v = tuple([new_name if i == index else n for i, n in enumerate(v)])
+                if k == target:
+                    new_parent_map[new_name] = v
+                else:
+                    new_parent_map[k] = v
+            self.parent_map = new_parent_map
+        elif targettype in ['collision', 'collisions']:
+            obj = self.get_collision_by_name(target)
+            if obj is not None:
+                obj.name = new_name
+        elif targettype in ['visual', 'visuals']:
+            obj = self.get_visual_by_name(target)
+            if obj is not None:
+                obj.name = new_name
+        elif targettype in ['material', 'materials']:
+            obj = self.get_material(target)
+            if obj is not None:
+                obj.name = new_name
         return {target: new_name}
 
     def add_aggregate(self, typeName, elem):
@@ -210,7 +223,7 @@ class XMLRobot(Representation):
         assert root is not None, "No roots detected, invalid URDF."
         return root
 
-    def get_instance(self, targettype, target):
+    def get_instance(self, targettype, target, verbose=False):
         """
         Returns the id of the given instance
         :param targettype: the tye of the searched instance
@@ -226,7 +239,8 @@ class XMLRobot(Representation):
             names.append(obj.name)
             if obj.name == str(target):
                 return obj
-        #print(f"Robot has no {targettype} with name {target}, only these: {repr(names)}")
+        if verbose:
+          print(f"Robot {self.name} has no {targettype} with name {target}, only these: {repr(names)}")
         return None
 
     def get_link(self, link_name, verbose=True) -> [representation.Link, list]:
@@ -240,14 +254,7 @@ class XMLRobot(Representation):
         if isinstance(link_name, list):
             return [self.get_link(lname) for lname in link_name]
 
-        out = self.get_instance("link", link_name)
-
-        if out is not None:
-            return out
-        elif verbose:
-            print("WARN: Link", link_name, "does not exist!")
-            print("These are the existing links:", [ln.name for ln in self.links])
-        return None
+        return self.get_instance("link", link_name, verbose=verbose)
 
     def get_joint(self, joint_name, verbose=True) -> [representation.Joint, list]:
         """
@@ -260,14 +267,7 @@ class XMLRobot(Representation):
         if isinstance(joint_name, list):
             return [self.get_joint(jname) for jname in joint_name]
 
-        out = self.get_instance("joint", joint_name)
-
-        if out is not None:
-            return out
-        elif verbose:
-            print("WARN: Joint", joint_name, "does not exist!")
-            print("These are the existing joints:", [jn.name for jn in self.joints])
-        return None
+        return self.get_instance("joint", joint_name, verbose=verbose)
 
     def get_sensor(self, sensor_name) -> [sensor_representations.Sensor, list]:
         """Returns the ID (index in the sensor list) of the sensor(s).
@@ -528,11 +528,8 @@ class XMLRobot(Representation):
             start = self.get_root()
         transformation = create_transformation((0, 0, 0), (0, 0, 0))
 
-        assert type(end) is str
-        assert type(start) is str
-
-        link = end
-        while link != start:
+        link = str(end)
+        while link != str(start):
             parent = self.get_parent(link)
             if parent is not None and len(parent) > 1:
                 print("Multiple parents:", parent, flush=True)
@@ -540,7 +537,7 @@ class XMLRobot(Representation):
                 raise Exception(link, "has no parent, but is different from start", start)
             pjoint = self.get_joint(parent[0])
             transformation = create_transformation(pjoint.origin.xyz, pjoint.origin.rpy).dot(transformation)
-            link = pjoint.parent
+            link = str(pjoint.parent)
 
         return transformation
 

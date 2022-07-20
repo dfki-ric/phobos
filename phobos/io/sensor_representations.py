@@ -11,7 +11,7 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
 
 class Sensor(Representation, SmurfBase):
-    def __init__(self, name: str = None, joint=None, link=None, rate=None, sensortype=None, origin=None, **kwargs):
+    def __init__(self, name: str = None, joint=None, link=None, rate=None, sensortype=None, **kwargs):
         if link is not None:
             if type(link) != str:
                 link = link.name
@@ -218,7 +218,7 @@ class MultiSensor(Sensor):
 
     def __init__(self, name=None, targets=None, sensortype='MultiSensor', **kwargs):
         super().__init__(name=name, sensortype=sensortype, **kwargs)
-        self.targets = targets if isinstance(targets, list) else []
+        self.targets = [str(t) for t in targets] if isinstance(targets, list) else []
         self.returns += ['id']
         self.excludes += ['_id']
 
@@ -227,7 +227,7 @@ class MultiSensor(Sensor):
 
     @property
     def id(self):
-        return [t.name for t in self.targets]  # if self._id else None
+        return [str(t) for t in self.targets]  # if self._id else None
 
     @id.setter
     def id(self, targets):

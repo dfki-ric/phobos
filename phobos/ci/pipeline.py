@@ -299,7 +299,7 @@ class Pipeline(yaml.YAMLObject):
                                 name=model.robotname,
                                 directory=compare_model_path,
                                 robotfile=os.path.join(compare_model_path, model.compare_model["model_in_repo"]),
-                                submechanisms_path=os.path.join(
+                                submechanisms_file=os.path.join(
                                     compare_model_path,
                                     model.compare_model["submechanisms_in_repo"]
                                     if "submechanisms_in_repo" in model.compare_model
@@ -597,7 +597,7 @@ class TestingPipeline(yaml.YAMLObject):
                         name=self.model.modelname,
                         directory=compare_model_path,
                         robotfile=os.path.join(compare_model_path, self.compare_model["model_in_repo"]),
-                        submechanisms_path=os.path.join(
+                        submechanisms_file=os.path.join(
                             compare_model_path,
                             self.compare_model["submechanisms_path"]
                             if "submechanisms_path" in self.compare_model

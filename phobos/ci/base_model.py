@@ -9,7 +9,6 @@ from ..core import Robot
 from ..geometry import replace_collision, join_collisions, remove_collision, import_mesh, import_mars_mesh, \
     export_mesh, export_mars_mesh, export_bobj_mesh
 from ..io.hyrodyn import JointDependency, MultiJointDependency
-from ..io.smurfrobot import SMURFRobot
 from ..utils import misc, git, urdf, transform, tree
 from ..io import representation, sensor_representations, poses
 
@@ -60,7 +59,7 @@ class BaseModel(yaml.YAMLObject):
         elif hasattr(self, "depends_on"):
             for _, v in self.depends_on.items():
                 if "basefile" in v.keys():
-                    r = SMURFRobot(xmlfile=v["basefile"])
+                    r = Robot(xmlfile=v["basefile"])
                     for link in r.links:
                         for g in link.visuals + link.collisions:
                             if hasattr(g.geometry, "filename"):
@@ -76,7 +75,7 @@ class BaseModel(yaml.YAMLObject):
                 ignore_failure=True
             )
             self.basefile = os.path.join(repo_path, self.repo["model_in_repo"])
-            r = SMURFRobot(inputfile=self.basefile)
+            r = Robot(inputfile=self.basefile)
             for link in r.links:
                 for g in link.visuals + link.collisions:
                     if hasattr(g.geometry, "filename"):
@@ -190,14 +189,11 @@ class BaseModel(yaml.YAMLObject):
             self.robot.edit_names(name_editing_dict)
 
         if hasattr(self, "take_leaf"):
-            self.robot.remove_before(self.take_leaf)
+            assert type(self.take_leanf) == str
+            self.robot = self.robot.get_beyond(self.take_leaf)
 
         if hasattr(self, "remove_beyond"):
-            if type(self.remove_beyond) is list:
-                for x in self.join["remove_beyond"]:
-                    self.robot.remove_beyond(x)
-            else:
-                self.robot.remove_beyond(self.remove_beyond)
+            self.robot = self.robot.get_before(self.remove_beyond)
 
         if hasattr(self, "transform_links"):
             for k, v in self.transform_links.items():
@@ -460,19 +456,19 @@ class BaseModel(yaml.YAMLObject):
                     if "mars_obj" in v.geometry.filename.lower() or (
                             "input_meshes_are_mars_obj" in self.typedef.keys() and
                             self.typedef["input_meshes_are_mars_obj"]):
-                        mesh = import_mars_mesh(v.geometry.filename, urdf_path=os.path.dirname(self.basefile))
+                        mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile), mars_mesh=True)
                     elif v.geometry.filename.lower().endswith("bobj"):
                         raise NotImplementedError("Can't load bobj meshes!")
                     else:
                         if v.geometry.filename.lower().endswith("obj"):
                             print("WARNING: Loading obj mesh, where the orientation convention might be unknown")
-                        mesh = import_mesh(v.geometry.filename, urdf_path=os.path.dirname(self.basefile))
+                        mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile))
                     meshexport = os.path.join(self.exportdir, self.typedef["meshespath"],
                                               os.path.basename(v.geometry.filename)[:-3])
                     b_meshexport = os.path.join(self.exportdir, self.pipeline.meshes["bobj"],
                                                 os.path.basename(v.geometry.filename)[:-3])
                     v.geometry.filename = v.geometry.filename.replace(" ", "_")
-                    v.geometry.filename = os.path.relpath(meshexport, os.path.join(self.exportdir, "urdf"))
+                    v.geometry.filename = meshexport
                     if self.typedef["output_mesh_format"].lower() == "mars_obj":
                         export_mars_mesh(mesh, meshexport + "obj", urdf_path=self.exporturdf)
                         v.geometry.filename += "obj"
@@ -596,17 +592,18 @@ class BaseModel(yaml.YAMLObject):
                         conf[k] = v
                 if joint.joint_type == "fixed":
                     continue
-                self.robot.add_motor(motor=representation.Motor(
+                motor = representation.Motor(
                     joint=joint,
                     name=conf["name"] if "name" in conf.keys() else joint.name,  # + "_motor",
-                    robot=self.robot,
                     p=conf["p"] if "p" in conf.keys() else 20.0,
                     i=conf["i"] if "i" in conf.keys() else 0.0,
                     d=conf["d"] if "d" in conf.keys() else 0.1,
                     maxEffort=joint.limit.effort if joint.limit is not None and joint.limit.effort > 0.0 else 400,
                     reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
                     noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
-                ))
+                )
+                self.robot.add_motor(motor=motor)
+                motor.link_with_robot(self.robot)
 
             if "further_annotations" in self.smurf.keys():
                 for k, v in self.smurf["further_annotations"]:

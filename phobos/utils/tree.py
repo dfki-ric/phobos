@@ -28,6 +28,7 @@ def find_common_root(input_model, input_spanningtree):
     chains = []
     for jointname in input_spanningtree:
         joint = input_model.get_joint(jointname)
+        assert joint is not None
         chain = input_model.get_chain(input_model.get_root(), joint.parent, joints=False)
         chains += [chain]
         intersection = intersection & set(chain)
@@ -129,15 +130,23 @@ def find_close_ancestor_links(robot, linkname):  # Todo find also siblings?
 
 def get_joints_depth_first(robot, start_link, independent_joints=None):
     joints = []
-    start_link = robot.get_link(start_link)
-    children = robot.get_children(start_link.name)
+    start_link = robot.get_link(str(start_link))
+    assert start_link is not None
+    children = robot.get_children(str(start_link))
     if independent_joints is not None:
         indep_children = [child for child in children if child in independent_joints]
         other_children = [child for child in children if child not in indep_children]
         children = indep_children + other_children
     for child in children:
         joint = robot.get_joint(child)
+        assert joint is not None
         joints += [joint]
-        joints += get_joints_depth_first(robot, joint.child, independent_joints=independent_joints)
+        try:
+            joints += get_joints_depth_first(robot, str(joint.child), independent_joints=independent_joints)
+        except Exception as e:
+            print(joint.to_urdf_string(), joint.child, joint._child)
+            raise e
+            import sys
+            sys.exit()
     return joints
 

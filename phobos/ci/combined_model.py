@@ -148,14 +148,11 @@ class CombinedModel(BaseModel):
                               replacements=self.join["name_replacements"])
 
         if "remove_beyond" in self.join.keys():
-            if type(self.join["remove_beyond"]) is list:
-                for x in self.join["remove_beyond"]:
-                    combined_model.remove_beyond(x)
-            else:
-                combined_model.remove_beyond(self.join["remove_beyond"])
+            combined_model = combined_model.get_before(self.join["remove_beyond"])
 
         if "take_leaf" in self.join.keys():
-            combined_model.remove_before(self.join["take_leaf"])
+            assert type(self.join["take_leaf"]) == str
+            combined_model = combined_model.get_beyond(self.join["take_leaf"])
 
         if "mirror" in self.join.keys():
             combined_model.mirror_model(
@@ -181,6 +178,8 @@ class CombinedModel(BaseModel):
                     att_model = deepcopy(self.dep_models[child["model"]])
                 else:
                     att_model = deepcopy(self.dep_models[child["model"]].robot)
+
+                att_model.relink_entities()
 
                 if child["joint"]["parent"] is None:
                     child["joint"]["parent"] = parent_model.get_root()
@@ -242,14 +241,11 @@ class CombinedModel(BaseModel):
                                       replacements=child["name_replacements"])
 
                 if "remove_beyond" in child.keys():
-                    if type(child["remove_beyond"]) is list:
-                        for x in child["remove_beyond"]:
-                            att_model.remove_beyond(x)
-                    else:
-                        att_model.remove_beyond(child["remove_beyond"])
+                    att_model = att_model.get_before(child["remove_beyond"])
 
                 if "take_leaf" in child.keys():
-                    att_model.remove_before(child["take_leaf"])
+                    assert type(child["take_leaf"]) == str
+                    att_model = att_model.get_beyond(child["take_leaf"])
 
                 if "mirror" in child.keys():
                     att_model.mirror_model(
@@ -277,7 +273,7 @@ class CombinedModel(BaseModel):
                     name=child["joint"]["name"],
                     parent=parent.get_link(child["joint"]["parent"]).name,
                     child=att_model.get_link(child["joint"]["child"]).name,
-                    type=child["joint"]["type"],
+                    joint_type=child["joint"]["type"],
                     origin=representation.Pose(
                         child["joint"]["xyz"] if "xyz" in child["joint"].keys() else [0, 0, 0],
                         child["joint"]["rpy"] if "rpy" in child["joint"].keys() else [0, 0, 0]
@@ -290,7 +286,7 @@ class CombinedModel(BaseModel):
                     if child["joint"]["type"] != "fixed" else None
                 )
 
-                parent.attach(att_model if isinstance(att_model, Robot) else att_model.robot, joint, do_not_rename=True)
+                parent.attach(att_model if isinstance(att_model, Robot) else att_model.robot, joint, do_not_rename=False)
                 if "remove_joint_later" in child["joint"] and child["joint"]["remove_joint_later"]:
                     if hasattr(self, "remove_joints") and type(self.remove_joints) == list:
                         self.remove_joints += [child["joint"]["name"]]

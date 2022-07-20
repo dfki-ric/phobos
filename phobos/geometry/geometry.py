@@ -147,10 +147,10 @@ def has_enough_vertices(element, urdf_path):
     zero_transform = element.origin.to_matrix()
     mesh.apply_transform(zero_transform)
     if len(mesh.vertices) <= 3:
-        print("Mesh has less than 4 vertices:", element.geometry.filename)
+        print("Mesh has less than 4 vertices:", element.geometry._filename)
         return False
-    elif len(mesh.vertices) < 100 and np.linalg.norm(mesh.bounding_box_oriented.primitive.extents) <= 0.01:
-        print("Mesh has less than 100 vertices and is smaller than 1cm:", element.geometry.filename)
+    elif np.linalg.norm(mesh.bounding_box_oriented.primitive.extents) <= 0.01:
+        print("Mesh is smaller than 1cm:", element.geometry._filename)
         return False
     return True
 

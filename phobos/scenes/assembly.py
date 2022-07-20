@@ -30,7 +30,7 @@ class Assembly(Scene):
                     parent=child.parent_link if child.parent_link is not None else self.entities_by_name[
                         child.parent_entity].robot.get_root(),
                     child=child.robot.get_root(),
-                    type="fixed",
+                    joint_type="fixed",
                     origin=representation.Pose.from_matrix(child.transformation)
                 )
                 crobot = deepcopy(child.robot)

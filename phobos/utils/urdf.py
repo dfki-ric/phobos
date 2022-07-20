@@ -106,14 +106,14 @@ def adapt_mesh_pathes(robot, new_urdf_dir, copy_to=None):
 
 
 def read_urdf_filename(filename, urdf_file_path):
-    if urdf_file_path is None:
+    if urdf_file_path is None or os.path.isabs(filename):
         return filename
     if not os.path.isabs(urdf_file_path):
         urdf_file_path = os.path.abspath(urdf_file_path)
+    if urdf_file_path.endswith(".urdf"):
+        urdf_file_path = os.path.dirname(urdf_file_path)  # /bla/blub/urdf/blib.urdf -> /bla/blub/urdf
     if filename.startswith("package://"):  # ROS Package
-        if urdf_file_path.endswith(".urdf"):
-            package_dir = os.path.dirname(os.path.dirname(urdf_file_path))  # /bla/blub/urdf/blib.urdf -> /bla/blub
-        elif urdf_file_path.endswith("/urdf"):
+        if urdf_file_path.endswith("/urdf"):
             package_dir = os.path.dirname(urdf_file_path)  # /bla/blub/urdf -> /bla/blub
         elif urdf_file_path.endswith("/urdf/"):
             package_dir = os.path.dirname(urdf_file_path[:-1])  # /bla/blub/urdf/ -> /bla/blub
@@ -123,8 +123,5 @@ def read_urdf_filename(filename, urdf_file_path):
     elif os.path.isabs(filename):
         out = filename
     else:  # normal urdf
-        if urdf_file_path.endswith(".urdf"):
-            out = os.path.join(os.path.dirname(urdf_file_path), filename)
-        else:
-            out = os.path.join(urdf_file_path, filename)
+        out = os.path.join(urdf_file_path, filename)
     return os.path.normpath(out)

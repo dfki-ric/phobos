@@ -44,7 +44,7 @@ class ModelTest(object):
                 )
         self.old_hml_test = None
         if self.old is not None:
-            self.old_hml_test = get_load_report(self.old.xmlfile, self.old.submechanisms_path)
+            self.old_hml_test = get_load_report(self.old.xmlfile, self.old.submechanisms_file)
 
     def _load_old_hyrodyn_model(self):
         if self.old is None:
@@ -57,8 +57,8 @@ class ModelTest(object):
                     "Trying to load old model in hyrodyn:",
                     self.old.xmlfile,
                     "(file exists)" if os.path.exists(self.old.xmlfile) else "(does not exist)",
-                    os.path.join(self.old.submechanisms_path),
-                    "(file exists)" if os.path.exists(os.path.join(self.old.submechanisms_path))
+                    os.path.join(self.old.submechanisms_file),
+                    "(file exists)" if os.path.exists(os.path.join(self.old.submechanisms_file))
                     else "(does not exist)",
                     flush=True
                 )
@@ -68,7 +68,7 @@ class ModelTest(object):
                     raise Exception("Hyrodyn aborted!")
                 self.old_hyrodyn = hyrodyn.RobotModel(
                     self.old.xmlfile,
-                    self.old.submechanisms_path
+                    self.old.submechanisms_file
                 )
                 print("Old model loaded!", flush=True)
                 return True
@@ -88,7 +88,7 @@ class ModelTest(object):
             return
         submech_file = self.new.submechanisms_file_path
         cmd = "swing_my_robot.py"
-        if self.new.submechanisms_path is not None and os.path.exists(self.new.submechanisms_path):
+        if self.new.submechanisms_file is not None and os.path.exists(self.new.submechanisms_file):
             print("Submechs:", submech_file, "exists!" if os.path.isfile(submech_file) else "does not exist!")
             cmd += " --submechanism_yml " + submech_file
         limits_file = os.path.join(self.new.modeldir, "submechanisms/joint_limits.yml")

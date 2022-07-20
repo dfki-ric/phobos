@@ -103,6 +103,10 @@
         "origin": {
           "classname": "Pose",
           "varname": "origin"
+        },
+        "material": {
+          "classname": "Material",
+          "varname": "material_"
         }
       },
       "attribute_children": {
@@ -377,12 +381,6 @@
       "attribute_children": {
         "parent": {
           "link": "link"
-        }
-      },
-      "children": {
-        "pose": {
-          "classname": "Pose",
-          "varname": "origin"
         }
       },
       "nested_children": {
@@ -829,12 +827,6 @@
         "visualize": "visualize",
         "topic": "topic",
         "enable_metrics": "enable_metrics"
-      },
-      "children": {
-        "pose": {
-          "classname": "Pose",
-          "varname": "origin"
-        }
       },
       "nested_children": {
         "force_torque": {

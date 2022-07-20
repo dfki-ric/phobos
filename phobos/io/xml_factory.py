@@ -87,7 +87,9 @@ class XMLDefinition(object):
             elif isinstance(obj, var["class"]):
                 children += [obj]
         for child in sorted(children, key=lambda x: x.sort_string()):
-            out.append(child.to_xml(self.dialect))
+            e = child.to_xml(self.dialect)
+            if e is not None:
+                out.append(e)
         # children that are created from a simple property and have only attributes
         for tag, attribute_map in self.xml_attribute_children.items():
             _attrib = {attname: self._serialize(getattr(object, varname))
@@ -124,20 +126,20 @@ class XMLDefinition(object):
             if self.xml_value is not None:
                 # value
                 kwargs[self.xml_value] = self._deserialize(child.text)
-            elif child.tag in self.xml_children.keys():
+            if child.tag in self.xml_children.keys():
                 # normal children
                 if self.xml_children[child.tag]["varname"] not in kwargs:
                     kwargs[self.xml_children[child.tag]["varname"]] = []
-                kwargs[self.xml_children[child.tag]["varname"]] += [self.xml_children[child.tag]["class"].from_xml(child, self.dialect)]
-            elif child.tag in self.xml_attribute_children.keys():
+                kwargs[self.xml_children[child.tag]["varname"]] += [self.xml_children[child.tag]["class"].from_xml(child, self.dialect, _parent_xml=xml)]
+            if child.tag in self.xml_attribute_children.keys():
                 # children that are created from a simple property and have only attributes
                 for attname, varname in self.xml_attribute_children[child.tag].items():
                     if attname in child.attrib.keys():
                         kwargs[varname] = self._deserialize(child.attrib[attname])
-            elif child.tag in self.xml_value_children.keys():
+            if child.tag in self.xml_value_children.keys():
                 # children that have the a value as text
                 kwargs[self.xml_value_children[child.tag]] = self._deserialize(child.text)
-            elif child.tag in self.xml_nested_children.keys():
+            if child.tag in self.xml_nested_children.keys():
                 # children that are nested in another element
                 _kwargs = self.xml_nested_children[child.tag].kwargs_from_xml(child)
                 for k, v in _kwargs.items():
@@ -200,9 +202,15 @@ class XMLFactory(XMLDefinition):
     def from_xml(self, classtype, xml: ET.Element, **kwargs):
         if self.available_in_dialect:
             if "Factory" in classtype.__name__:
-                return classtype.create(**super(XMLFactory, self).kwargs_from_xml(xml, **kwargs), xml=xml)
+                return classtype.create(**super(XMLFactory, self).kwargs_from_xml(xml, **kwargs), _xml=xml)
             return classtype.create(**super(XMLFactory, self).kwargs_from_xml(xml, **kwargs))
         return None
+
+    def to_xml(self, object):
+        if self.available_in_dialect:
+            return super(XMLFactory, self).to_xml(object)
+        else:
+            return None
 
     def to_xml_string(self, object):
         if self.available_in_dialect:

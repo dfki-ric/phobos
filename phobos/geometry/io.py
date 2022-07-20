@@ -99,15 +99,7 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
     if urdf_path is not None and urdf_path.lower().endswith(".urdf"):
         urdf_path = os.path.dirname(urdf_path)
 
-    # Check if filepath is abspath
-    if not os.path.isabs(filepath) and not urdf_path:
-        filepath = os.path.abspath(filepath)
-    elif not os.path.isabs(filepath) and urdf_path:
-        filepath = os.path.join(
-            os.path.abspath(urdf_path), filepath
-        )
-    elif not os.path.isabs(filepath):
-        filepath = os.path.abspath(filepath)
+    filepath = urdf_utils.read_urdf_filename(filepath, urdf_path)
 
     do_export = True
     if os.path.isfile(filepath):
@@ -125,7 +117,7 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
                 all(mesh.edges.flatten() == existing_mesh.edges.flatten())
             ))
         ):
-            print("NOTE: Skipping export of", filepath, "as the mesh file already exists and is identical")
+            #print("NOTE: Skipping export of", filepath, "as the mesh file already exists and is identical")
             do_export = False
 
     if do_export:
@@ -145,7 +137,6 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
 def export_mars_mesh(mesh, filepath, urdf_path=None):
     """Export the mesh as obj rotated according to mars to a given filepath with an urdf_path.
     """
-
     m = deepcopy(mesh)
 
     if filepath.split(".")[-1] == 'obj':
@@ -205,13 +196,10 @@ def import_mesh(filepath, urdf_path=None):
     """Import the mesh from a given filepath with an urdf_path.
     """
 
-    if urdf_path is not None and urdf_path.lower().endswith(".urdf"):
-        urdf_path = os.path.dirname(urdf_path)
-
     filepath = urdf_utils.read_urdf_filename(filepath, urdf_path)
 
     if not os.path.exists(filepath):
-        raise FileNotFoundError("Mesh file", filepath, "does not exist!")
+        raise FileNotFoundError(f"Mesh file {filepath} does not exist!")
     out = as_mesh(trimesh.load_mesh(filepath))
     if out is None:
         print("WARNING:", filepath, "contains empty mesh!")
