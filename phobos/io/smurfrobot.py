@@ -3,7 +3,7 @@ import os
 
 import yaml
 
-from .poses import JointPositionSet
+from .poses import JointPoseSet
 from ..io import sensor_representations
 from ..io import representation
 from ..io.xmlrobot import XMLRobot
@@ -73,12 +73,12 @@ class SMURFRobot(XMLRobot):
     # helper methods
     def link_entities(self):
         super(SMURFRobot, self).link_entities()
-        for entity in self.submechanisms + self.exoskeletons + self.motors + self.hyrodyn_multi_joint_dependencies + self.hyrodyn_loop_constraints:
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.hyrodyn_multi_joint_dependencies + self.hyrodyn_loop_constraints + self.poses:
             entity.link_with_robot(self)
 
     def unlink_entities(self):
         super(SMURFRobot, self).unlink_entities()
-        for entity in self.submechanisms + self.exoskeletons + self.motors + self.hyrodyn_multi_joint_dependencies + self.hyrodyn_loop_constraints:
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.hyrodyn_multi_joint_dependencies + self.hyrodyn_loop_constraints + self.poses:
             entity.unlink_from_robot()
 
     def read_smurffile(self, smurffile):
@@ -146,7 +146,7 @@ class SMURFRobot(XMLRobot):
             for pose in self.annotations['poses']:
                 self.add_aggregate(
                     'poses',
-                    JointPositionSet(robot=self, name=pose['name'], configuration=pose['joints'])
+                    JointPoseSet(robot=self, name=pose['name'], configuration=pose['joints'])
                 )
 
         if 'joint' in self.annotations:
@@ -224,7 +224,7 @@ class SMURFRobot(XMLRobot):
     def add_pose(self, pose):
         """Add a new pose to the robot.
         """
-        if not isinstance(pose, JointPositionSet):
+        if not isinstance(pose, JointPoseSet):
             raise Exception("Please provide an instance of Pose to add.")
         self.add_aggregate('poses', pose)
         return

@@ -157,6 +157,7 @@ class XMLRobot(Representation):
             return [self.add_aggregate(typeName, e) for e in elem]
         if typeName in ['joint', 'joints']:
             self.parent_map[str(elem.child)] = (elem.name, elem.parent)
+            self.parent_map[str(elem.name)] = (elem.name, elem.parent)
             if elem.parent in self.child_map:
                 self.child_map[elem.parent].append((elem.name, elem.child))
             else:
@@ -444,7 +445,7 @@ class XMLRobot(Representation):
     def get_parent(self, name, targettype='joint'):
         """
         Get the parent of targettype for the given link name.
-        :param name: the name of the joint or link to get the parent for
+        :param name: the name of the link to get the parent for
         :param targettype: the next parent joint or the next parent link (default: 'joint')
         :return: List with one element (todo)
         """
@@ -497,25 +498,17 @@ class XMLRobot(Representation):
     def get_leaves(self, start=None):
         """
         Get all leaves of the given start link.
-        If start is provided, returns leaves of the sub
+        If start is provided, returns leaves of the sub tree
         :param start: the root link for which to get the leaves
         :return:
         """
-        if not start:
-            parentset = set(self.parent_map.keys())
-            childset = set(self.child_map.keys())
-            return list(parentset - childset)
+        all_leaves = [link for link in self.links if str(link) not in self.child_map.keys()]
+        if start is None:
+            return all_leaves
 
-        if start not in self.parent_map.keys():
-            return None
+        chains_to_leave = {str(leave): [str(link) for link in self.get_chain(self.get_root(), leave, joints=False)] for leave in all_leaves}
 
-        parents = [start]
-        parents, children = self._get_children_lists(parents, [])
-
-        parentset = set(parents)
-        childrenset = set(children)
-
-        return parentset, childrenset
+        return [leave for leave, chain in chains_to_leave.items() if str(start) in chain]
 
     def get_transformation(self, end, start=None):
         """

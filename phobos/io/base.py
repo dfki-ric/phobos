@@ -21,8 +21,7 @@ class Linkable(object):
         if self._related_robot_instance is None or isinstance(new_value, Representation):
             return new_value
         vtype = self.type_dict[varname].lower()
-        converted = getattr(self._related_robot_instance,
-                       "get_" + vtype + ("_by_name" if vtype in ["collision", "visual"] else ""))(new_value)
+        converted = self._related_robot_instance.get_instance(f"{vtype}", new_value)
         if converted is None and new_value is not None:
             print(f"WARNING: There is no {vtype} with name {new_value} in {self._related_robot_instance.name}; setting {varname} to None")
             print(f"Available are: {repr([x.name for x in getattr(self._related_robot_instance, vtype+'s')])}")
@@ -126,8 +125,9 @@ class Representation(Linkable):
     def to_xml_string(self, dialect) -> ET.Element:
         return self.factory[dialect].to_xml_string(self)
 
-    def sort_string(self) -> str:
+    def sort_string(self, dialect=None) -> str:
+        prefix = type(self).__name__ if dialect is None else self.to_xml(dialect).tag
         if hasattr(self, "name"):
-            return type(self).__name__ + ":" + self.name
+            return prefix + ":" + self.name
         else:
-            return type(self).__name__
+            return prefix

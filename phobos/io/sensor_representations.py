@@ -48,7 +48,6 @@ class Sensor(Representation, SmurfBase):
             self.returns += ["position_offset"]
         if self.orientation_offset != {"x": 0, "y": 0, "z": 0, "w": 1}:
             self.returns += ["orientation_offset"]
-
         return super(Sensor, self).get_refl_vars()
 
     def equivalent(self, other):
@@ -262,7 +261,6 @@ class MotorCurrent(MultiSensor):
             targets = [targets]
 
         super().__init__(name=name, targets=targets, sensortype='MotorCurrent', **kwargs)
-        self.returns += ['link']
 
 
 class JointPosition(MultiSensor):
@@ -273,7 +271,6 @@ class JointPosition(MultiSensor):
             targets = [targets]
 
         super().__init__(name=name, targets=targets, sensortype='JointPosition', **kwargs)
-        self.returns += ['link']
 
 
 class JointVelocity(MultiSensor):
@@ -288,7 +285,6 @@ class JointVelocity(MultiSensor):
             raise AssertionError("Parsed invalid joint")
 
         super().__init__(name=name, targets=targets, sensortype='JointVelocity', **kwargs)
-        self.returns += ['link']
 
 
 class NodeContact(MultiSensor):

@@ -146,7 +146,5 @@ def get_joints_depth_first(robot, start_link, independent_joints=None):
         except Exception as e:
             print(joint.to_urdf_string(), joint.child, joint._child)
             raise e
-            import sys
-            sys.exit()
     return joints
 

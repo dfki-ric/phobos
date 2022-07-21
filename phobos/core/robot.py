@@ -947,6 +947,7 @@ class Robot(SMURFRobot):
         return self.instantiate_submodel(name)
 
     def get_links_and_joints_in_subtree(self, start, stop=None):
+        assert self.get_link(start) is not None
         if stop is None:
             # Collect all links on the way to the leaves
             parents, children = self._get_children_lists([start], [])
@@ -956,8 +957,20 @@ class Robot(SMURFRobot):
         else:
             linknames = set()
             try:
-                for leave in stop:
-                    linknames.update(set(self.get_chain(start, leave, joints=False)))
+                chains = [[str(link) for link in self.get_chain(self.get_root(), leave, joints=False)] for leave
+                                    in self.get_leaves()]
+                chains = [chain for chain in chains if str(start) in chain]
+                for chain in chains:
+                    begin = chain.index(str(start))
+                    end = None
+                    for leave in stop:
+                        if str(leave) in chain:
+                            assert end is None, f"The leave {chain[end]} and {str(leave)} are on the same branch."
+                            end = chain.index(str(leave))
+                    if end is not None:
+                        linknames.update(chain[begin:end+1])
+                    else:
+                        linknames.update(chain[begin:])
             except Exception as e:
                 print(self.get_root())
                 print(self.parent_map.keys())
@@ -966,7 +979,7 @@ class Robot(SMURFRobot):
                 raise e
             linknames = list(linknames)
 
-        jointnames = [j for j in self.get_joint(self.get_children(linknames)) if j.child in linknames]
+        jointnames = [str(j) for j in self.get_joint(self.get_children(linknames)) if j.child in linknames]
 
         return linknames, jointnames
 
@@ -992,7 +1005,7 @@ class Robot(SMURFRobot):
         if "stop" not in definition.keys():
             definition["stop"] = None
         assert all([x in definition.keys() for x in ["name", "start", "stop"]])
-        if "robotname" not in definition.keys():
+        if "robotname" not in definition.keys() or definition["robotname"] is None:
             definition["robotname"] = definition["name"]
 
         submodel = type(self)(name=definition["robotname"])

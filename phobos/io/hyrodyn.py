@@ -78,8 +78,7 @@ class HyrodynAnnotation(SmurfBase):
         "jointnames_active": "joint",
         "jointnames_independent": "joint",
         "jointnames_dependent": "joint",
-        "jointnames": "joint",
-        "around": "joint"
+        "jointnames": "joint"
     }
 
     def __init__(self, name,
@@ -115,6 +114,9 @@ class HyrodynAnnotation(SmurfBase):
             kwargs["around"] = around
         super().__init__(**kwargs)
         self.returns = [key for key in kwargs.keys() if key not in self.excludes]
+
+    def __str__(self):
+        return self.name
 
     def get_refl_vars(self):
         out = super(HyrodynAnnotation, self).get_refl_vars()

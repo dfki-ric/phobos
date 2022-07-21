@@ -1,7 +1,9 @@
 from ..io.smurf_reflection import SmurfBase
 
 
-class JointPosition(SmurfBase):
+class JointPose(SmurfBase):
+    _class_variables = ["joint"]
+
     def __init__(self, robot=None, joint=None, position=None):
         super().__init__(robot=robot, name=None, joint=joint)
         self._position = position
@@ -23,14 +25,14 @@ class JointPosition(SmurfBase):
 
     @property
     def pose(self):
-        return {self.joint: self.position}
+        return {str(self.joint): self.position}
 
     @pose.setter
     def pose(self, value):
         self.position = value
 
 
-class JointPositionSet(SmurfBase):
+class JointPoseSet(SmurfBase):
     def __init__(self, robot=None, name=None, configuration=None):
         super().__init__(robot=robot, name=name)
 
@@ -41,17 +43,22 @@ class JointPositionSet(SmurfBase):
         elif type(configuration) == list:
             self.configuration = configuration
 
-        assert all(type(x) == JointPosition for x in self.configuration)
+        assert all(type(x) == JointPose for x in self.configuration)
 
         self.excludes += ['configuration']
         self.returns += ['joints']
 
     def remove_joint(self, jointname):
-        if jointname in self.joints.keys():
-            self.configuration.pop(jointname)
+        for joint_pose in self.configuration:
+            if str(joint_pose.joint) == jointname:
+                self.configuration.remove(joint_pose)
+                break
 
     def set_joint_pose(self, jointname, value):
-        self.configuration[jointname] = value
+        for joint_pose in self.configuration:
+            if str(joint_pose.joint) == jointname:
+                joint_pose.position = value
+                break
 
     @property
     def joints(self):
@@ -68,5 +75,15 @@ class JointPositionSet(SmurfBase):
                 if robot.get_joint(joint):
                     c_joint = robot.get_joint(joint)
                     self.configuration.append(
-                        JointPosition(robot=robot, joint=c_joint, position=position)
+                        JointPose(robot=robot, joint=c_joint, position=position)
                     )
+
+    def link_with_robot(self, robot, check_linkage_later=False):
+        super(JointPoseSet, self).link_with_robot(robot, check_linkage_later=True)
+        self.configuration.link_with_robot(robot, check_linkage_later=True)
+        if not check_linkage_later:
+            self.check_linkage()
+
+    def unlink_from_robot(self):
+        super(JointPoseSet, self).unlink_from_robot()
+        self.configuration.unlink_from_robot()

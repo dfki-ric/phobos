@@ -51,7 +51,7 @@ class BaseModel(yaml.YAMLObject):
         # list directly imported mesh pathes
         self._meshes = []
         if hasattr(self, "basefile"):
-            r = SMURFRobot(xmlfile=self.basefile)
+            r = Robot(xmlfile=self.basefile)
             for link in r.links:
                 for g in link.visuals + link.collisions:
                     if hasattr(g.geometry, "filename"):
@@ -275,30 +275,17 @@ class BaseModel(yaml.YAMLObject):
                         mjd = MultiJointDependency(name=tm["name"], joint=joint.name, joint_dependencies=jds)
                         self.robot.add_transmission(mjd)
 
-                    #Todo rework the smurf handling with the new representation
-                    # if "smurf" in self.modeltype \
-                    #         and ("reducedDataPackage" in self.redefine_articulation[joint.name].keys()
-                    #              or "noDataPackage" in self.redefine_articulation[joint.name].keys()):
-                        # self.robot.joints += [representation.Joint(
-                        #     robot=self.robot,
-                        #     joint=joint.name,
-                        #     reducedDataPackage=self.redefine_articulation[joint.name]["reducedDataPackage"]
-                        #     if "reducedDataPackage" in self.redefine_articulation[joint.name].keys() else False,
-                        #     noDataPackage=self.redefine_articulation[joint.name]["noDataPackage"]
-                        #     if "noDataPackage" in self.redefine_articulation[joint.name].keys() else False,
-                        #     damping_const_constraint_axis1=self.redefine_articulation[joint.name][
-                        #         "damping_const_constraint_axis1"]
-                        #     if "damping_const_constraint_axis1" in self.redefine_articulation[
-                        #         joint.name].keys() else False,
-                        #     springDamping=self.redefine_articulation[joint.name]["springDamping"]
-                        #     if "springDamping" in self.redefine_articulation[joint.name].keys() else False,
-                        #     springStiffness=self.redefine_articulation[joint.name]["springStiffness"]
-                        #     if "springStiffness" in self.redefine_articulation[joint.name].keys() else False,
-                        #     spring_const_constraint_axis1=self.redefine_articulation[joint.name][
-                        #         "spring_const_constraint_axis1"]
-                        #     if "spring_const_constraint_axis1" in self.redefine_articulation[
-                        #         joint.name].keys() else False
-                        # )]
+                    if "smurf" in self.modeltype \
+                            and ("reducedDataPackage" in self.redefine_articulation[joint.name].keys()
+                                 or "noDataPackage" in self.redefine_articulation[joint.name].keys()):
+                        joint.add_annotations({
+                            "reducedDataPackage": self.redefine_articulation[joint.name]["reducedDataPackage"] if "reducedDataPackage" in self.redefine_articulation[joint.name].keys() else False,
+                            "noDataPackage": self.redefine_articulation[joint.name]["noDataPackage"] if "noDataPackage" in self.redefine_articulation[joint.name].keys() else False,
+                            "damping_const_constraint_axis1": self.redefine_articulation[joint.name]["damping_const_constraint_axis1"] if "damping_const_constraint_axis1" in self.redefine_articulation[joint.name].keys() else False,
+                            "springDamping": self.redefine_articulation[joint.name]["springDamping"] if "springDamping" in self.redefine_articulation[joint.name].keys() else False,
+                            "springStiffness": self.redefine_articulation[joint.name]["springStiffness"] if "springStiffness" in self.redefine_articulation[joint.name].keys() else False,
+                            "spring_const_constraint_axis1": self.redefine_articulation[joint.name]["spring_const_constraint_axis1"] if "spring_const_constraint_axis1" in self.redefine_articulation[joint.name].keys() else False
+                        })
                 elif "default" in self.redefine_articulation.keys():
                     if joint.limit is None:
                         joint.limit = representation.JointLimit()
@@ -314,29 +301,17 @@ class BaseModel(yaml.YAMLObject):
                     if "eff" in self.redefine_articulation["default"].keys() and (
                             joint.limit is None or joint.limit.effort is None):
                         joint.limit.effort = self.redefine_articulation["default"]["eff"]
-                    # if "smurf" in self.modeltype \
-                    #         and ("reducedDataPackage" in self.redefine_articulation["default"].keys()
-                    #              or "noDataPackage" in self.redefine_articulation["default"].keys()):
-                    #     self.robot.smurf_joints += [representation.Joint(
-                    #         robot=self.robot,
-                    #         joint=joint.name,
-                    #         reducedDataPackage=self.redefine_articulation["default"]["reducedDataPackage"]
-                    #         if "reducedDataPackage" in self.redefine_articulation["default"].keys() else False,
-                    #         noDataPackage=self.redefine_articulation["default"]["noDataPackage"]
-                    #         if "noDataPackage" in self.redefine_articulation["default"].keys() else False,
-                    #         damping_const_constraint_axis1=self.redefine_articulation["default"][
-                    #             "damping_const_constraint_axis1"]
-                    #         if "damping_const_constraint_axis1" in self.redefine_articulation[
-                    #             "default"].keys() else False,
-                    #         springDamping=self.redefine_articulation["default"]["springDamping"]
-                    #         if "springDamping" in self.redefine_articulation["default"].keys() else False,
-                    #         springStiffness=self.redefine_articulation["default"]["springStiffness"]
-                    #         if "springStiffness" in self.redefine_articulation["default"].keys() else False,
-                    #         spring_const_constraint_axis1=self.redefine_articulation["default"][
-                    #             "spring_const_constraint_axis1"]
-                    #         if "spring_const_constraint_axis1" in self.redefine_articulation[
-                    #             "default"].keys() else False
-                    #     )]
+                    if "smurf" in self.modeltype \
+                            and ("reducedDataPackage" in self.redefine_articulation["default"].keys()
+                                 or "noDataPackage" in self.redefine_articulation["default"].keys()):
+                        joint.add_annotations({
+                            "reducedDataPackage": self.redefine_articulation["default"]["reducedDataPackage"] if "reducedDataPackage" in self.redefine_articulation["default"].keys() else False,
+                            "noDataPackage": self.redefine_articulation["default"]["noDataPackage"] if "noDataPackage" in self.redefine_articulation["default"].keys() else False,
+                            "damping_const_constraint_axis1": self.redefine_articulation["default"]["damping_const_constraint_axis1"] if "damping_const_constraint_axis1" in self.redefine_articulation["default"].keys() else False,
+                            "springDamping": self.redefine_articulation["default"]["springDamping"] if "springDamping" in self.redefine_articulation["default"].keys() else False,
+                            "springStiffness": self.redefine_articulation["default"]["springStiffness"] if "springStiffness" in self.redefine_articulation["default"].keys() else False,
+                            "spring_const_constraint_axis1": self.redefine_articulation["default"]["spring_const_constraint_axis1"] if "spring_const_constraint_axis1" in self.redefine_articulation["default"].keys() else False
+                        })
                 # else:
                 # print("    Leaving joint", joint.name, "(", joint.type, ") untouched", flush=True)
             for _, transmission in transmissions.items():
@@ -530,7 +505,7 @@ class BaseModel(yaml.YAMLObject):
 
             if 'poses' in self.smurf.keys():
                 for (cn, config) in self.smurf["poses"].items():
-                    pose = poses.JointPositionSet(robot=self.robot, name=cn, configuration=config)
+                    pose = poses.JointPoseSet(robot=self.robot, name=cn, configuration=config)
                     self.robot.add_pose(pose)
                     print('      Added pose {}'.format(cn), flush=True)
 
@@ -594,7 +569,7 @@ class BaseModel(yaml.YAMLObject):
                     continue
                 motor = representation.Motor(
                     joint=joint,
-                    name=conf["name"] if "name" in conf.keys() else joint.name,  # + "_motor",
+                    name=conf["name"] if "name" in conf.keys() else joint.name + "_motor",
                     p=conf["p"] if "p" in conf.keys() else 20.0,
                     i=conf["i"] if "i" in conf.keys() else 0.0,
                     d=conf["d"] if "d" in conf.keys() else 0.1,

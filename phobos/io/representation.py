@@ -337,7 +337,6 @@ class Visual(Representation, SmurfBase):
                 if self._material.is_delegate() or self._material.equivalent(robot_material):
                     self._material = robot_material
                 else:
-                    print(self._material.to_urdf_string(), robot_material.to_urdf_string())
                     new_mat_name = self._material.name
                     index = 1
                     while robot.get_material(new_mat_name) is not None:
