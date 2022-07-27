@@ -201,6 +201,7 @@ def exportSmurf(model, path):
         'collision': collisiondata != {},
         'visuals': lodsettings != {},
         'lights': model['lights'] != {},
+        'joints': model['joints'] != {},
         'submechanisms': model['submechanisms'] != [],
     }
 
@@ -215,6 +216,7 @@ def exportSmurf(model, path):
         'collision': model['name'] + "_collision.yml",
         'visuals': model['name'] + "_visuals.yml",
         'lights': model['name'] + "_lights.yml",
+        'joints': model['name'] + "_joints.yml",
         'submechanisms': model['name'] + "_submechanisms.yml",
     }
     fileorder = [
@@ -292,8 +294,6 @@ def exportSmurf(model, path):
 
     for motor in model['motors']:
         motordict = model['motors'][motor]
-        motordict["name"] = prefix_string+motordict["name"]
-        motordict["joint"] = prefix_string+motordict["joint"]
         controllerparams = {}
         if 'controller' in  motordict and motordict['controller'] in model['controllers']:
             controllerparams = {
@@ -360,6 +360,8 @@ def exportSmurf(model, path):
                     e["name"] = prefix_string+e["name"]
                 if "link" in e:
                     e["link"] = prefix_string+e["link"]
+                if "joint" in e:
+                    e["joint"] = prefix_string+e["joint"]
             log("Writing {} to smurf file.".format(data), 'DEBUG')
             with open(os.path.join(path, filenames[data]), 'w') as op:
                 op.write('#' + data + infostring)
