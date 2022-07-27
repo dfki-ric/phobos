@@ -32,6 +32,7 @@ from bpy.props import (
     FloatVectorProperty,
     BoolVectorProperty,
 )
+from idprop.types import IDPropertyGroup
 
 import phobos.defs as defs
 import phobos.display as display
@@ -1201,15 +1202,23 @@ class EditYAMLDictionary(Operator):
             # transform Blender id_arrays into lists
             if hasattr(tmpdict[key], 'to_list'):
                 tmpdict[key] = list(tmpdict[key])
+        cleandict = bUtils.cleanObjectProperties(tmpdict)
+        # convert to python key value pairs
+        tmpdict = {}
+        for key,value in cleandict.items():
+            if not isinstance(value, IDPropertyGroup):
+                tmpdict[key] = value
         contents = [
             variablename + ' = """',
-            json.dumps(bUtils.cleanObjectProperties(tmpdict), indent=2) + '"""\n',
+            json.dumps(tmpdict, indent=2) + '"""\n',
             "# ------- Hit 'Run Script' to save your changes --------",
             "import json",
             "import bpy",
             "tmpdata = json.loads(" + variablename + ")",
             "for key in dict(bpy.context.active_object.items()):",
-            "   del bpy.context.active_object[key]",
+            "   if key not in ['phobostype', 'startChain', 'endChain', '_RNA_UI', 'cycles_visibility', 'masschanged']:",
+            "       if type(bpy.context.active_object[key]) != 'IDPropertyGroup':",
+            "           del bpy.context.active_object[key]",
             "for key, value in tmpdata.items():",
             "    bpy.context.active_object[key] = value",
             "bpy.ops.text.unlink()",
