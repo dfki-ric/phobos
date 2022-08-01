@@ -219,18 +219,17 @@ class ModelTest(object):
             link_name = k + (max_length - len(k)) * " "
             if k not in root2old_links.keys():
                 print("%s doesn't exist in compare model" % link_name, flush=True)
-                print("root2link: xyz: %s \t rpy:%s" % (repr(representation.Pose.from_matrix(root2new_links[k]).xyz.tolist()),
-                                                        repr(representation.Pose.from_matrix(root2new_links[k]).rpy.tolist())),
+                print("root2link: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple(to_origin(root2new_links[k]).xyz.tolist() + to_origin(root2new_links[k]).rpy.tolist()),
                       flush=True)
                 continue
             diff = np.linalg.inv(root2old_links[k]).dot(root2new_links[k])
             diff_o = representation.Pose.from_matrix(diff)
-            print("%s Difference: xyz: %s\trpy: %s" % (link_name, repr(diff_o.xyz.tolist()), repr(diff_o.rpy.tolist())),
+            print("%s Difference: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple([link_name] + diff_o.xyz.tolist() + diff_o.rpy.tolist()),
                   end="", flush=True)
             if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["tolerance_distance"] or \
                any(abs(diff_o.rpy) > [self.new.tolerances["tolerance_rad"]]*3):
                 if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["tolerance_distance"]:
-                    print(np.linalg.norm(diff[0:3, 3]), ">", self.new.tolerances["tolerance_distance"],
+                    print(" %.6f" % (np.linalg.norm(diff[0:3, 3])), ">", self.new.tolerances["tolerance_distance"],
                           end="", flush=True)
                 if any(abs(diff_o.rpy) > [self.new.tolerances["tolerance_rad"]]*3):
                     print(abs(diff_o.rpy), ">", [self.new.tolerances["tolerance_rad"]]*3, end="", flush=True)
