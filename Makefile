@@ -21,10 +21,10 @@ help:
 		@echo	'  version   - Prints some help relating to drafting a new version.'
 
 init:
-		pip install -r requirements.txt
+		pip3 install -r requirements.txt
 
 install:
-		python3 setup.py
+		pip3 install .
 
 clean:
 		rm installation.conf
