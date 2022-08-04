@@ -55,6 +55,9 @@ If you are on the hunt for a BiBTeX entry, check out the [FAQ section](https://g
 ### Blender
 Just zip the `phobos` subfolder: `zip -r phobos.zip phobos` and install it via Blender: `blender->edit->preferences->addons->install`
 
+After installation the phobos main menu can be found on the right hand side of the 3D Viewport. If not already visible, one can find a very small arrow to open the Blender toolbar (purple circle showing it in the image).
+![Small arrow to open the phobos toolbar widget.](https://github.com/dfki-ric/phobos/wiki/img/blender_phobos_menu_open.png)
+
 ### CLI
 Just install it using pip:
 ```bash
