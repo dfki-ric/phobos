@@ -81,6 +81,13 @@ class XMLRobot(Representation):
         self.unlink_entities()
         self.link_entities()
 
+    def duplicate(self):
+        self.unlink_entities()
+        out = deepcopy(self)
+        self.link_entities()
+        out.link_entities()
+        return out
+
     def _get_children_lists(self, parentlist, childrenlist, targettype='link'):
         """
         Used recursively. Returns a list of all links that can be considered parents/children for the given parent list

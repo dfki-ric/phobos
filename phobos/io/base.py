@@ -86,11 +86,13 @@ class Linkable(object):
         else:
             return any(out)
 
-    def duplicate(self):
+    def duplicate(self, to_robot=None):
         _robot = self._related_robot_instance
         self.unlink_from_robot()
         out = deepcopy(self)
         self.link_with_robot(_robot)
+        if to_robot is not None:
+            out.link_with_robot(to_robot)
         return out
 
     def equivalent(self, other):

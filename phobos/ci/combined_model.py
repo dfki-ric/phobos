@@ -105,9 +105,9 @@ class CombinedModel(BaseModel):
         # now we can join theses models
         # 1. get root model
         if isinstance(self.dep_models[self.join["model"]], Robot):
-            combined_model = deepcopy(self.dep_models[self.join["model"]])
+            combined_model = self.dep_models[self.join["model"]].duplicate()
         else:  # it must be an instance of BaseModel
-            combined_model = deepcopy(self.dep_models[self.join["model"]].robot)
+            combined_model = self.dep_models[self.join["model"]].robot.duplicate()
         combined_model.name = self.robotname
         combined_model.smurffile = self.basefile
         combined_model.xmlfile = os.path.join(self.basedir, "urdf", "combined_model.urdf")
@@ -175,9 +175,9 @@ class CombinedModel(BaseModel):
                     parent_model = self.dep_models[parentname].robot
 
                 if isinstance(self.dep_models[child["model"]], Robot):
-                    att_model = deepcopy(self.dep_models[child["model"]])
+                    att_model = self.dep_models[child["model"]].duplicate()
                 else:
-                    att_model = deepcopy(self.dep_models[child["model"]].robot)
+                    att_model = self.dep_models[child["model"]].robot.duplicate()
 
                 att_model.relink_entities()
 

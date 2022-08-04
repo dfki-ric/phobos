@@ -17,7 +17,7 @@ class Assembly(Scene):
         self._robot = None
 
     def merge(self, copy_meshes=False):
-        self._robot = deepcopy(self.entities[0].robot)
+        self._robot = self.entities[0].robot.duplicate()
         mesh_dir = None
         if copy_meshes:
             mesh_dir = os.path.join(self.output_dir, "meshes")
@@ -33,7 +33,7 @@ class Assembly(Scene):
                     joint_type="fixed",
                     origin=representation.Pose.from_matrix(child.transformation)
                 )
-                crobot = deepcopy(child.robot)
+                crobot = child.robot.duplicate()
                 urdf.adapt_mesh_pathes(crobot, os.path.join(self.output_dir, "urdf"), copy_to=mesh_dir)
 
                 self._robot.attach(crobot, joint)
@@ -57,8 +57,15 @@ class Assembly(Scene):
         assembly.scene_name = deepcopy(scene.scene_name)
         assembly.scenedir = deepcopy(scene.scenedir)
         assembly.filedict = deepcopy(scene.filedict)
-        assembly.entities = deepcopy(scene.entities)
-        assembly.entities_by_name = deepcopy(scene.entities_by_name)
+        assembly.entities = [e.duplicate() for e in scene.entities]
+        assembly.entities_by_name = {}
+
+        def go_through_parts(children):
+            for child in children:
+                assembly.entities_by_name[child.name] = child
+                go_through_parts(child.children)
+
+        go_through_parts(assembly.entities)
 
         return assembly
 
@@ -69,7 +76,7 @@ class Assembly(Scene):
         assembly.scene_name = None
         assembly.scenedir = None
         assembly.filedict = None
-        assembly.entities = [deepcopy(entities)]
+        assembly.entities = [e.duplicate() for e in entities]
         assembly.entities_by_name = {}
 
         def go_through_parts(children):

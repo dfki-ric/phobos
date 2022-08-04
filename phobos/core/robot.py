@@ -201,17 +201,14 @@ class Robot(SMURFRobot):
 
         outputfile = os.path.abspath(outputfile)
 
-        self.unlink_entities()
-        export_robot = deepcopy(self)
-        self.link_entities()
-        export_robot.link_entities()
+        export_robot = self.dupliacte()
 
         if not export_visuals:
             export_robot.remove_visuals()
         if not export_collisions:
             export_robot.remove_collisions()
 
-        xml_string = self.to_urdf_string()
+        xml_string = export_robot.to_urdf_string()
 
         if ros_pkg is True:
             xml_string = regex_replace(xml_string, {'filename="../': 'filename="package://'})
@@ -251,13 +248,14 @@ class Robot(SMURFRobot):
 
         outputfile = os.path.abspath(outputfile)
 
-        export_robot = deepcopy(self)
+        export_robot = self.duplicate()
+
         if not export_visuals:
             export_robot.remove_visuals()
         if not export_collisions:
             export_robot.remove_collisions()
 
-        xml_string = "<sdf>\n"+self.to_sdf_string()+"\n</sdf>"
+        xml_string = "<sdf>\n"+export_robot.to_sdf_string()+"\n</sdf>"
 
         if ros_pkg is True:
             xml_string = regex_replace(xml_string, {'<uri>"../': '<uri>"package://'})
@@ -569,7 +567,7 @@ class Robot(SMURFRobot):
         kccd_path = os.path.join(robot_export_dir, dirname)
         kccd_urdf = os.path.join(kccd_path, self.name + ".urdf")
         create_dir(None, kccd_path)
-        kccd_robot = deepcopy(self)
+        kccd_robot = self.duplicate()
         kccd_robot.xmlfile = kccd_urdf
         if "remove_joints" in kwargs.keys():
             for j in kwargs["remove_joints"]:
@@ -886,7 +884,7 @@ class Robot(SMURFRobot):
                 VL_T_L = vis.origin.to_matrix()
                 new_origin = L_T_P.dot(VL_T_L)
                 vis.origin = representation.Pose.from_matrix(new_origin)
-                parent.add_aggregate('visual', deepcopy(vis))
+                parent.add_aggregate('visual', vis.duplicate())
                 link.remove_aggregate(vis)
 
         if collision and link.collisions:
@@ -894,12 +892,13 @@ class Robot(SMURFRobot):
                 CL_T_L = col.origin.to_matrix()
                 new_origin = L_T_P.dot(CL_T_L)
                 col.origin = representation.Pose.from_matrix(new_origin)
-                parent.add_aggregate('collision', deepcopy(col))
+                parent.add_aggregate('collision', col.duplicate())
                 link.remove_aggregate(col)
 
         # Reinit the link
-        link.to_xml()
-        parent.to_xml()
+        # link.to_xml()
+        # parent.to_xml()
+        self.relink_entities()
         return
 
     def move_link_in_tree(self, link_name, new_parent_name):
@@ -2198,7 +2197,7 @@ class Robot(SMURFRobot):
         def recursive_link_transform(link_, T_root_to_link):
             link_ = self.get_link(link_)
             T_link = self.get_transformation(link_.name)
-            new_link = deepcopy(link_)
+            new_link = link_.duplicate()
 
             # transform link information to root and mirror
 
@@ -2242,7 +2241,7 @@ class Robot(SMURFRobot):
             # joints:
             for jointname in self.get_children(link_.name):
                 joint_ = self.get_joint(jointname)
-                new_joint = deepcopy(joint_)
+                new_joint = joint_.duplicate()
 
                 T_flip = np.eye(4)
                 flip_axis = None
@@ -2512,7 +2511,7 @@ class Robot(SMURFRobot):
                 upper=1.57
             )
         )
-        fb_robot = deepcopy(self)
+        fb_robot = self.duplicate()
         floatingbase.attach(fb_robot, connector)
         floatingbase.name = fb_robot.name + "_floatingbase"
         freeflyer = {

@@ -1,4 +1,5 @@
 import os.path
+from copy import deepcopy
 
 import numpy as np
 
@@ -36,6 +37,9 @@ class BaseEntity(SmurfBase):
             self.excludes += ["anchor"]
         if parent is None:
             self.excludes += ["parent"]
+
+    def duplicate(self):
+        return deepcopy(self)
 
     def set_parent(self, parent):
         self.parent = parent.strip() if parent is not None else WORLD
@@ -78,6 +82,12 @@ class Entity(BaseEntity):
         super(Entity, self).__init__(parent=parent, anchor=anchor, transformation=transformation, root=root, **kwargs)
         self.robot = robot
         self.excludes += ["robot"]
+
+    def duplicate(self):
+        self.robot.unlink_entities()
+        out = deepcopy(self)
+        out.robot.link_entities()
+        return out
 
     @staticmethod
     def from_yaml(entity_entry, root_path):
