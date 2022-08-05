@@ -1,4 +1,5 @@
-from ..io.smurf_reflection import SmurfBase
+from .smurf_reflection import SmurfBase
+from .representation import JointMimic
 from ..utils import tree
 
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
@@ -30,23 +31,13 @@ class LoopConstraint(SmurfBase):
         super(LoopConstraint, self).__init__(**kwargs)
 
 
-class JointDependency(SmurfBase):
-    _class_variables = ["joint", "multiplier", "offset"]
-
-    def __init__(self, joint_name, multiplier, offset):
-        kwargs = {"joint": joint_name,
-                  "multiplier": multiplier,
-                  "offset": offset}
-        super(JointDependency, self).__init__(**kwargs)
-
-
 class MultiJointDependency(SmurfBase):
     _class_variables = ["joint", "joint_dependencies"]
 
     def __init__(self, joint, joint_dependencies=None, name=None):
         if joint_dependencies is None:
             joint_dependencies = []
-        assert all([isinstance(jd, JointDependency) for jd in joint_dependencies])
+        assert all([isinstance(jd, JointMimic) for jd in joint_dependencies])
         kwargs = {"joint": joint,
                   "joint_dependencies": joint_dependencies}
         if name is not None:
@@ -54,7 +45,7 @@ class MultiJointDependency(SmurfBase):
         super(MultiJointDependency, self).__init__(**kwargs)
 
     def add_dependency(self, joint_dependency):
-        assert isinstance(joint_dependency, JointDependency)
+        assert isinstance(joint_dependency, JointMimic)
         self.joint_dependencies += [joint_dependency]
 
     def is_empty(self):
@@ -81,19 +72,15 @@ class HyrodynAnnotation(SmurfBase):
         "jointnames": "joint"
     }
 
-    def __init__(self, name,
+    def __init__(self, name, contextual_name,
                  jointnames_spanningtree=None, jointnames_active=None,
                  jointnames_independent=None, jointnames_dependent=None,
-                 jointnames=None, contextual_name=None, file_path=None,
+                 jointnames=None, file_path=None,
                  loop_constraints=None, multi_joint_dependencies=None,
                  type=None, around=None, auto_gen=False):
-        if multi_joint_dependencies is None:
-            multi_joint_dependencies = []
-        if loop_constraints is None:
-            loop_constraints = []
         kwargs = {
             "name": name,
-            "contextual_name": contextual_name if contextual_name is not None else name,
+            "contextual_name": contextual_name,
             "jointnames_spanningtree": jointnames_spanningtree,
             "jointnames": jointnames,
             "multi_joint_dependencies": multi_joint_dependencies,
@@ -115,16 +102,11 @@ class HyrodynAnnotation(SmurfBase):
         super().__init__(**kwargs)
         self.returns = [key for key in kwargs.keys() if key not in self.excludes]
 
-    def __str__(self):
-        return self.name
+    def set_unique_name(self, value):
+        self.contextual_name = value
 
-    def get_refl_vars(self):
-        out = super(HyrodynAnnotation, self).get_refl_vars()
-        if len(self.loop_constraints) == 0 and "loop_constraints" in out:
-            out = [o for o in out if o != "loop_constraints"]
-        if len(self.multi_joint_dependencies) == 0 and "multi_joint_dependencies" in out:
-            out = [o for o in out if o != "multi_joint_dependencies"]
-        return out
+    def __str__(self):
+        return self.contextual_name
 
     def is_empty(self):
         return len(self.jointnames) == 0
@@ -132,13 +114,6 @@ class HyrodynAnnotation(SmurfBase):
     def is_valid(self, robot):
         joints = self.get_joints()
         out = all([robot.get_joint(j) is not None for j in joints])
-        for lc in self.loop_constraints:
-            out &= robot.get_link(lc.predecessor_body) is not None
-            out &= robot.get_link(lc.successor_body) is not None
-        for mjd in self.multi_joint_dependencies:
-            out &= robot.get_joint(mjd.joint) is not None
-            for jd in mjd.joint_dependencies:
-                out &= robot.get_joint(jd.joint) is not None
         # (not done as this is computationally expensive) check if the joints are in a correct order
         # ToDO check if all fixed joints in the area of this submechanism are included
         return out
@@ -177,32 +152,90 @@ class HyrodynAnnotation(SmurfBase):
 
 class Submechanism(HyrodynAnnotation):
     _class_variables = ["name", "jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent"]
-    def __init__(self, name,
+
+    def __init__(self, name, contextual_name,
                  jointnames_spanningtree, jointnames_active, jointnames_independent, jointnames=None,
-                 contextual_name=None, file_path=None, type="numerical",
+                 file_path=None, type="numerical",
                  loop_constraints=None, multi_joint_dependencies=None, auto_gen=False):
         super(Submechanism, self).__init__(
-            name,
+            name=name, contextual_name=contextual_name,
             jointnames_spanningtree=jointnames_spanningtree,
             jointnames_active=jointnames_active, jointnames_independent=jointnames_independent,
-            contextual_name=contextual_name, jointnames=jointnames, file_path=file_path,
+            jointnames=jointnames, file_path=file_path,
             loop_constraints=loop_constraints, multi_joint_dependencies=multi_joint_dependencies,
             type=type, around=None, auto_gen=auto_gen
         )
+        if multi_joint_dependencies is None:
+            multi_joint_dependencies = []
+        if loop_constraints is None:
+            loop_constraints = []
+        self._multi_joint_dependencies = multi_joint_dependencies
+        self._loop_constraints = loop_constraints
+        self.returns += ["multi_joint_dependencies"]
+
+    @property
+    def multi_joint_dependencies(self):
+        if self._related_robot_instance is not None:
+            for j in self.get_joints():
+                joint = self._related_robot_instance.get_joint(j, verbose=True)
+                assert joint is not None
+                if len(joint.joint_dependencies) > 1:
+                    self._multi_joint_dependencies.append({"name": j.name, "depends_on": j.joint_dependencies})
+        if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
+            return self._multi_joint_dependencies
+        else:
+            return None
+
+    @multi_joint_dependencies.setter
+    def multi_joint_dependencies(self, value):
+        if self._related_robot_instance is None:
+            self._multi_joint_dependencies = value
+        else:
+            #Todo
+            pass
+
+    @property
+    def loop_constraints(self):
+        if self._related_robot_instance is not None:
+            for j in self.get_joints():
+                joint = self._related_robot_instance.get_joint(j)
+                if joint.cut_joint:
+                    self._loop_constraints.append(LoopConstraint(cut_joint=joint.name, predecessor_body=joint.parent,
+                                                                 successor_body=joint.child,
+                                                                 constraint_axes=joint.constraint_axes))
+        if self._loop_constraints is not None and len(self._loop_constraints) > 0:
+            return self._loop_constraints
+        else:
+            return None
+
+    @loop_constraints.setter
+    def loop_constraints(self, value):
+        if self._related_robot_instance is None:
+            self._loop_constraints = value
+        else:
+            #Todo
+            pass
+
+    def link_with_robot(self, robot, check_linkage_later=False):
+        #Todo
+        super(Submechanism, self).link_with_robot(robot, check_linkage_later=True)
+
+    def unlink_from_robot(self):
+        #Todo
+        super(Submechanism, self).unlink_from_robot()
 
 
 class Exoskeleton(HyrodynAnnotation):
     _class_variables = ["name", "jointnames", "jointnames_spanningtree", "jointnames_dependent", "around"]
 
-    def __init__(self, name, around,
+    def __init__(self, name, around, contextual_name,
                  jointnames_spanningtree, jointnames_dependent,
-                 jointnames=None, contextual_name=None, file_path=None,
+                 jointnames=None, file_path=None,
                  loop_constraints=None, multi_joint_dependencies=None,
                  auto_gen=False):
         super(Exoskeleton, self).__init__(
-            name,
+            name=name, contextual_name=contextual_name,
             jointnames_spanningtree=jointnames_spanningtree, jointnames_dependent=jointnames_dependent,
-            jointnames=jointnames, contextual_name=contextual_name, file_path=file_path,
-            loop_constraints=loop_constraints, multi_joint_dependencies=multi_joint_dependencies,
+            jointnames=jointnames, file_path=file_path,
             around=around, auto_gen=auto_gen, type=None
         )

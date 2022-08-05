@@ -285,4 +285,13 @@ def singular(prop):
         return prop
 
 
+def plural(prop):
+    if type(prop) == list:
+        return prop
+    elif prop is None:
+        return []
+    else:
+        return [prop]
+
+
 

@@ -133,14 +133,14 @@ class CombinedModel(BaseModel):
                     _robot.rename(targettype="collision", target=coll.name,
                                   prefix=self.join["name_prefix"],
                                   replacements=self.join["name_replacements"])
-                    # _robot.rename(targettype="collision", target=coll.name,
+                    # att_model.rename(targettype="collision", target=coll.name,
                     #                  prefix=child["collision_prefix"], suffix=child["collision_suffix"],
                     #                  replacements=child["collision_replacements"])
                 for vis in lnk.visuals:
                     _robot.rename(targettype="visual", target=vis.name,
                                   prefix=self.join["name_prefix"],
                                   replacements=self.join["name_replacements"])
-                    # _robot.rename(targettype="visual", target=coll.name,
+                    # att_model.rename(targettype="visual", target=coll.name,
                     #                  prefix=child["visual_prefix"], suffix=child["visual_suffix"],
                     #                  replacements=child["visual_replacements"])
             for jnt in _robot.joints:
@@ -215,37 +215,36 @@ class CombinedModel(BaseModel):
                                                                       child["name_replacements"])
                             if not cchild["joint"]["parent"].startswith(child["name_prefix"]):
                                 cchild["joint"]["parent"] = child["name_prefix"] + cchild["joint"]["parent"]
-                    if isinstance(att_model, Robot):
-                        _robot = att_model
-                    else:
-                        _robot = att_model.robot
-                    for lnk in _robot.links:
-                        _robot.rename(targettype="link", target=lnk.name, prefix=child["name_prefix"],
+
+                    for lnk in att_model.links:
+                        att_model.rename(targettype="link", target=lnk.name, prefix=child["name_prefix"],
                                       replacements=child["name_replacements"])
                         for coll in lnk.collisions:
-                            _robot.rename(targettype="collision", target=coll.name,
+                            att_model.rename(targettype="collision", target=coll.name,
                                           prefix=child["name_prefix"],
                                           replacements=child["name_replacements"])
-                            # _robot.rename(targettype="collision", target=coll.name,
+                            # att_model.rename(targettype="collision", target=coll.name,
                             #                  prefix=child["collision_prefix"], suffix=child["collision_suffix"],
                             #                  replacements=child["collision_replacements"])
                         for vis in lnk.visuals:
-                            _robot.rename(targettype="visual", target=vis.name,
+                            att_model.rename(targettype="visual", target=vis.name,
                                           prefix=child["name_prefix"],
                                           replacements=child["name_replacements"])
-                            # _robot.rename(targettype="visual", target=coll.name,
+                            # att_model.rename(targettype="visual", target=coll.name,
                             #                  prefix=child["visual_prefix"], suffix=child["visual_suffix"],
                             #                  replacements=child["visual_replacements"])
-                    for jnt in _robot.joints:
-                        _robot.rename(targettype="joint", target=jnt.name, prefix=child["name_prefix"],
+                    for jnt in att_model.joints:
+                        att_model.rename(targettype="joint", target=jnt.name, prefix=child["name_prefix"],
                                       replacements=child["name_replacements"])
 
                 if "remove_beyond" in child.keys():
                     att_model = att_model.get_before(child["remove_beyond"])
+                    att_model.relink_entities()
 
                 if "take_leaf" in child.keys():
                     assert type(child["take_leaf"]) == str
                     att_model = att_model.get_beyond(child["take_leaf"])
+                    att_model.relink_entities()
 
                 if "mirror" in child.keys():
                     att_model.mirror_model(
@@ -292,12 +291,14 @@ class CombinedModel(BaseModel):
                         self.remove_joints += [child["joint"]["name"]]
                     else:
                         self.remove_joints = [child["joint"]["name"]]
+                parent.relink_entities()
 
                 if "children" in child.keys():
                     recursive_attach(parent, child["children"], child["model"])
 
         if "children" in self.join.keys() and len(self.join["children"]) > 0:
             recursive_attach(combined_model, self.join["children"], parentname=self.join["model"])
+            combined_model.relink_entities()
 
         # 3. save combined_model to the temp directory
         combined_model.name = "combined_model"
@@ -307,17 +308,17 @@ class CombinedModel(BaseModel):
         if not self.processed_model_exists:
             if os.path.exists(os.path.join(self.basedir, "smurf", "combined_model.smurf")):
                 self.robot = Robot(name=self.robotname if self.robotname else None,
-                                        smurffile=os.path.join(self.basedir, "smurf", "combined_model.smurf"))
+                                   smurffile=os.path.join(self.basedir, "smurf", "combined_model.smurf"))
             else:
                 self.robot = Robot(name=self.robotname if self.robotname else None,
-                                        xmlfile=self.basefile)
+                                   xmlfile=self.basefile)
             return
         else:
             if not os.path.isfile(self.exporturdf):
                 raise Exception('Preprocessed file {} not found!'.format(self.exporturdf))
             if os.path.exists(os.path.join(self.exportdir, "smurf", self.robotname + ".smurf")):
                 self.robot = Robot(name=self.robotname if self.robotname else None,
-                                        smurffile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
+                                   smurffile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
             else:
                 self.robot = Robot(name=self.robotname if self.robotname else None,
-                                        xmlfile=self.exporturdf)
+                                   xmlfile=self.exporturdf)

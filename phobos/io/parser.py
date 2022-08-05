@@ -19,7 +19,11 @@ def parse_xml(xml):
                 file_type = "urdf"
         else:
             xml_string = xml
-        xml_root = ET.fromstring(xml_string)
+        try:
+            xml_root = ET.fromstring(xml_string)
+        except ET.ParseError as e:
+            print("ERROR: Tried to parse:\n", xml)
+            raise IOError("Could not parse xml. See above for more info what was tried to parse! Error:"+ e.msg)
     elif type(xml) == ET.ElementTree:
         xml_root = xml.getroot()
     elif type(xml) == ET.Element:

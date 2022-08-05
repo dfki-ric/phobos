@@ -15,6 +15,17 @@ class SmurfBase(YamlReflection):
         # if the SmurfBase instance has a target property this will set the expected type
         self.add_annotations(overwrite=True, **kwargs)
 
+    def __str__(self):
+        if hasattr(self, "name"):
+            return self.name
+        raise NotImplementedError("Not implemented for "+str(type(self)))
+
+    def set_unique_name(self, value):
+        if hasattr(self, "name"):
+            self.name = value
+        else:
+            raise NotImplementedError("Not implemented for "+str(type(self)))
+
     # Define the export variables, overwrite the standard get_refl_vars
     def get_refl_vars(self):
         out = []
@@ -36,12 +47,11 @@ class SmurfBase(YamlReflection):
             if overwrite or not hasattr(self, category):
                 if category in self.type_dict.keys():
                     if type(information) == list:
-                        information = [x if type(x) == str else x.name for x in information]
+                        information = [x if type(x) == str else str(x) for x in information]
                     elif type(information) != str and information is not None:
-                        information = information.name
+                        information = str(information)
                 if information is not None or category in self.returns:
                     try:
                         setattr(self, category, information)
-                    except AttributeError as e:
-                        print(category, information)
-                        raise e
+                    except AttributeError:
+                        raise AttributeError(f"Can't set attribute {category} to {information} of {str(type(self))} {str(self)}")

@@ -24,6 +24,8 @@ def rpy_to_quaternion(rotation):
 
 
 def quaternion_to_rpy(quaternion):
+    if type(quaternion) == dict:
+        quaternion = [quaternion["x"], quaternion["y"],  quaternion["z"], quaternion["w"]]
     angles = Rot.from_quat(quaternion).as_euler(EULER_CONVENTION)
     return order_angles(angles, EULER_CONVENTION, RPY_CONVENTION)
 

@@ -31,11 +31,19 @@ class Sensor(Representation, SmurfBase):
         pos = self.origin.position() if hasattr(self, "origin") else [0, 0, 0]
         return {"x": pos[0], "y": pos[1], "z": pos[2]}
 
+    @position_offset.setter
+    def position_offset(self, val):
+        self.origin.xyz = [val["x"], val["y"], val["z"]]
+
     @property
     def orientation_offset(self):
         quat = transform.matrix_to_quaternion(self.origin.to_matrix()[0:3, 0:3]) \
             if hasattr(self, "origin") else [0, 0, 0, 1]
         return {"x": quat[0], "y": quat[1], "z": quat[2], "w": quat[3]}
+
+    @orientation_offset.setter
+    def orientation_offset(self, val):
+        self.origin.rpy = transform.quaternion_to_rpy([val["x"], val["y"], val["z"], val["w"]])
 
     def transform(self, transformation):
         if hasattr(self, "origin"):
@@ -171,7 +179,7 @@ class CameraSensor(Sensor):
         self.opening_width = opening_width
         self.depth_image = depth_image
         self.show_cam = show_cam
-        self.frame_offset = frame_offset
+        self.origin = frame_offset
         self.returns += ['link', 'height', 'width', 'hud_height', 'hud_width',
                          'opening_height', 'opening_width', 'depth_image', 'show_cam', 'frame_offset']
         self.sdf_type = "camera"
@@ -197,6 +205,10 @@ class CameraSensor(Sensor):
         assert self.equivalent(other)
         # Nothing to do here
         pass
+
+    @property
+    def frame_offset(self):
+        return self.origin
 
 
 class IMU(Sensor):

@@ -17,6 +17,17 @@ class Linkable(object):
     def __init__(self):
         self._class_attributes = [var for var in self._class_variables if var in self.type_dict.keys() and not var.startswith("_")]
 
+    def set_unique_name(self, value):
+        raise NotImplementedError("Not implemented for "+str(type(self)))
+
+    def __str__(self):
+        """
+        Get's the unique name.
+        By using __str__ we can call this on the Linkable instance and
+        when the variable already holds the unique string.
+        """
+        raise NotImplementedError("Not implemented for "+str(type(self)))
+
     def _converter(self, varname, new_value):
         if self._related_robot_instance is None or isinstance(new_value, Representation):
             return new_value
@@ -24,7 +35,7 @@ class Linkable(object):
         converted = self._related_robot_instance.get_instance(f"{vtype}", new_value)
         if converted is None and new_value is not None:
             print(f"WARNING: There is no {vtype} with name {new_value} in {self._related_robot_instance.name}; setting {varname} to None")
-            print(f"Available are: {repr([x.name for x in getattr(self._related_robot_instance, vtype+'s')])}")
+            print(f"Available are: {repr([str(x) for x in getattr(self._related_robot_instance, vtype+'s')])}")
             raise RuntimeError
         return converted
 
@@ -35,7 +46,7 @@ class Linkable(object):
             return [str(x) for x in getattr(self, "_" + attribute)]
         if type(getattr(self, "_" + attribute)) == str:
             return getattr(self, "_" + attribute)
-        return getattr(self, "_" + attribute).name
+        return str(getattr(self, "_" + attribute))
 
     def _attr_set_name(self, attribute, new_value, no_check=False):
         if type(new_value) == list and all([type(v) == str or isinstance(v, Linkable) for v in new_value]):
@@ -90,7 +101,8 @@ class Linkable(object):
         _robot = self._related_robot_instance
         self.unlink_from_robot()
         out = deepcopy(self)
-        self.link_with_robot(_robot)
+        if _robot is not None:
+            self.link_with_robot(_robot)
         if to_robot is not None:
             out.link_with_robot(to_robot)
         return out
@@ -130,6 +142,6 @@ class Representation(Linkable):
     def sort_string(self, dialect=None) -> str:
         prefix = type(self).__name__ if dialect is None else self.to_xml(dialect).tag
         if hasattr(self, "name"):
-            return prefix + ":" + self.name
+            return prefix + ":" + str(self)
         else:
             return prefix

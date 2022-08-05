@@ -15,6 +15,7 @@
   </joint>
   <link name="FreeFlyerRX_Link"/>
   <joint name="FreeFlyerRY" type="revolute">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
     <axis xyz="0.0 1.0 0.0"/>
     <parent link="FreeFlyerRX_Link"/>
     <child link="FreeFlyerRY_Link"/>
@@ -30,6 +31,7 @@
   </joint>
   <link name="FreeFlyerX_Link"/>
   <joint name="FreeFlyerY" type="prismatic">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
     <axis xyz="0.0 1.0 0.0"/>
     <parent link="FreeFlyerX_Link"/>
     <child link="FreeFlyerY_Link"/>
@@ -37,6 +39,7 @@
   </joint>
   <link name="FreeFlyerY_Link"/>
   <joint name="FreeFlyerZ" type="prismatic">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
     <axis xyz="0.0 0.0 1.0"/>
     <parent link="FreeFlyerY_Link"/>
     <child link="FreeFlyerZ_Link"/>

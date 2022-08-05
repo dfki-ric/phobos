@@ -29,8 +29,6 @@ class SMURFRobot(XMLRobot):
         # Hyrodyn stuff
         self.submechanisms = []
         self.exoskeletons = []
-        self.hyrodyn_multi_joint_dependencies = []
-        self.hyrodyn_loop_constraints = []
 
         if inputfile is not None:
             if inputfile.lower().endswith(".smurf") and smurffile is None:
@@ -55,6 +53,8 @@ class SMURFRobot(XMLRobot):
 
         self.description = "" if description is None else description
 
+        if self.submechanisms_file is not None:
+            self.inputfiles.append(self.submechanisms_file)
         for f in self.inputfiles:
             self._parse_annotations(f)
         self._init_annotations()
@@ -73,12 +73,12 @@ class SMURFRobot(XMLRobot):
     # helper methods
     def link_entities(self):
         super(SMURFRobot, self).link_entities()
-        for entity in self.submechanisms + self.exoskeletons + self.motors + self.hyrodyn_multi_joint_dependencies + self.hyrodyn_loop_constraints + self.poses:
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses:
             entity.link_with_robot(self)
 
     def unlink_entities(self):
         super(SMURFRobot, self).unlink_entities()
-        for entity in self.submechanisms + self.exoskeletons + self.motors + self.hyrodyn_multi_joint_dependencies + self.hyrodyn_loop_constraints + self.poses:
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses:
             entity.unlink_from_robot()
 
     def read_smurffile(self, smurffile):
@@ -181,6 +181,12 @@ class SMURFRobot(XMLRobot):
                     Exoskeleton(**exo)
                 )
 
+    def _rename(self, targettype, target, new_name, further_targettypes=None):
+        other_targettypes = ["motors", "poses", "submechanisms", "exoskeletons"]
+        if further_targettypes is not None:
+            other_targettypes += further_targettypes
+        return super(SMURFRobot, self)._rename(targettype, target, new_name, further_targettypes=other_targettypes)
+
     # getters
     def get_motor(self, motorname):
         """Returns the ID (index in the motor list) of the motor(s).
@@ -251,12 +257,6 @@ class SMURFRobot(XMLRobot):
                 c.add_annotations(bitmask=bitmask, overwrite=True)
                 break
 
-    def add_loop_constraint(self, loop_constraint):
-        self.hyrodyn_loop_constraints += [loop_constraint]
-
-    def add_transmission(self, transmission):
-        self.hyrodyn_multi_joint_dependencies += [transmission]
-
     # Reimplementation of Robot methods
 
     def get_joints_ordered_df(self):
@@ -312,6 +312,8 @@ class SMURFRobot(XMLRobot):
         lead to joints that are included in multiple definitions.
         :return: None
         """
+        if type(submechanism_definition) == str and os.path.isfile(submechanism_definition):
+            submechanism_definition = yaml.safe_load(open(submechanism_definition, "r").read())
         if not add:
             self.submechanisms = []
             self.exoskeletons = []
@@ -330,9 +332,9 @@ class SMURFRobot(XMLRobot):
             raise TypeError("submechanism_definition is neither list nor dict")
 
         for sm in _submechs:
-            self.submechanisms += [Submechanism(**sm)]
+            self.add_aggregate("submechanism", Submechanism(**sm))
         for ex in _exoskels:
-            self.exoskeletons += [Exoskeleton(**ex)]
+            self.add_aggregate("exoskeletons", Exoskeleton(**ex))
 
     def sort_submechanisms(self):
         """
@@ -348,28 +350,6 @@ class SMURFRobot(XMLRobot):
                 if hasattr(sm, key):
                     setattr(sm, key, sorted(set(getattr(sm, key)),
                                             key=lambda jn: sorted_joints.index(jn)) if getattr(sm, key) is not None else None)
-        for transmission in self.hyrodyn_multi_joint_dependencies:
-            found = False
-            for sm in self.submechanisms:
-                if sm.contextual_name == transmission.name:
-                    sm.multi_joint_dependencies += [transmission]
-                    found = True
-                    break
-            if not found:
-                print(transmission.to_yaml())
-                raise AssertionError("Couldn't assign transmission")
-        for loop_constraint in self.hyrodyn_loop_constraints:
-            found = False
-            for sm in self.submechanisms:
-                links = sm.get_links(self)
-                sm.loop_constraints = []
-                if all([x in links for x in [loop_constraint.predecessor_body, loop_constraint.successor_body]]):
-                    sm.loop_constraints += [loop_constraint]
-                    found = True
-                    break
-            if not found:
-                print(loop_constraint.to_yaml())
-                raise AssertionError("Couldn't assign loop constraint")
 
     def _get_joints_not_included_in_submechanisms(self):
         """
@@ -411,15 +391,16 @@ class SMURFRobot(XMLRobot):
                 # If we have not already inserted this joint (fixed) let's create a serial mechanism for it
                 jn_spanningtree = jn_independent = jn_active = [] if joint.joint_type == "fixed" else [jointname]
                 jn = jn_spanningtree if joint.joint_type != "fixed" else [jointname]
-                self.submechanisms += [Submechanism(
+                self.add_aggregate("submechanism", Submechanism(
                     name="serial",
+                    contextual_name="serial",
                     type="serial",
                     jointnames_active=jn_active,
                     jointnames_independent=jn_independent,
                     jointnames_spanningtree=jn_spanningtree,
                     jointnames=jn,
                     auto_gen=True
-                )]
+                ), silent=True)
         self.sort_submechanisms()
         # Now we merge all serial mechanisms to reduce the number of mechanisms
         new_submechanisms = []
@@ -430,20 +411,12 @@ class SMURFRobot(XMLRobot):
                 new_submechanisms[-1].jointnames_independent = list(set(new_submechanisms[-1].jointnames_independent + sm.jointnames_independent))
                 new_submechanisms[-1].jointnames_spanningtree = list(set(new_submechanisms[-1].jointnames_spanningtree + sm.jointnames_spanningtree))
             else:
-                new_submechanisms += [Submechanism(
-                    name="serial",
-                    type="serial",
-                    jointnames_active=sm.jointnames_active,
-                    jointnames_independent=sm.jointnames_independent,
-                    jointnames_spanningtree=sm.jointnames_spanningtree,
-                    jointnames=sm.jointnames,
-                    auto_gen=True
-                )]
+                new_submechanisms.append(sm)
         self.submechanisms = new_submechanisms
         self.sort_submechanisms()
         counter = 0
         for sm in self.submechanisms:
             if sm.auto_gen:
-                sm.name = "serial_chain" + str(counter)
+                sm.name = "serial_chain"
                 sm.contextual_name = "serial_chain" + str(counter)
                 counter += 1

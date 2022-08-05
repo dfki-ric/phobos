@@ -201,7 +201,7 @@ class Robot(SMURFRobot):
 
         outputfile = os.path.abspath(outputfile)
 
-        export_robot = self.dupliacte()
+        export_robot = self.duplicate()
 
         if not export_visuals:
             export_robot.remove_visuals()
@@ -379,7 +379,7 @@ class Robot(SMURFRobot):
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
-                                                 stop=sm.get_leaves(self), robotname=sm.name)
+                                                 stop=sm.get_leaves(self), robotname=str(sm))
                 sm.file_path = "../submechanisms/" + os.path.basename(sm.file_path)
                 self.export_submodel(name="#sub_mech#", output_dir=os.path.join(outputdir, "submechanisms"),
                                      filename=os.path.basename(sm.file_path), only_urdf=True)
@@ -990,6 +990,7 @@ class Robot(SMURFRobot):
         :param definition: definition of a submodel
         :return: the submodel
         """
+        # ToDo link_obj has to be reviewed
         assert name is not None or definition is not None
         if name is not None and definition is None:
             definition = self._submodels[name]
@@ -1016,15 +1017,17 @@ class Robot(SMURFRobot):
         # remove mimic relation if the mimiced joint is not in here
         joints = []
         for joint in _joints:
-            if joint.mimic is not None and str(joint.mimic.joint) not in jointnames:
-                joint = copy(joint)
-                joint.mimic = None
-                print(f"WARNING: Removing mimic relation in submodel {definition['robotname']} for {joint.name}!")
-            joints.append(joint)
-        assert all([j.mimic is None or str(j.mimic.joint) in jointnames for j in joints])
+            if any([jd.joint not in jointnames for jd in joint.joint_dependencies]):
+                _joint = joint.duplicate()
+                print(f"WARNING: Removing mimic relation in submodel {definition['robotname']} for {_joint.name} (mimiced {_joint.mimic.joint})!")
+                _joint.joint_dependencies = [jd for jd in _joint.joint_dependencies if jd.joint in jointnames]
+                joints.append(_joint)
+            else:
+                joints.append(joint)
 
         submodel.add_aggregate("links", self.get_instance("link", links))
-        submodel.add_aggregate("joints", self.get_instance("joint", joints))
+        submodel.add_aggregate("joints", joints)
+        assert all([j.mimic is None or str(j.mimic.joint) in jointnames for j in submodel.joints])
 
         materials = set()
         for link in links:
@@ -1043,14 +1046,6 @@ class Robot(SMURFRobot):
                     sensors.append(sensor.duplicate().reduce_to_match(links + joints))
                 else:
                     sensors.append(sensor)
-        hyrodyn_multi_joint_dependencies = []
-        for ht in self.hyrodyn_multi_joint_dependencies:
-            if ht.is_related_to(joints + links, pure=True):
-                hyrodyn_multi_joint_dependencies.append(ht)
-        hyrodyn_loop_constraints = []
-        for lc in self.hyrodyn_loop_constraints:
-            if lc.is_related_to(joints + links, pure=True):
-                hyrodyn_loop_constraints.append(lc)
         submechanisms = []
         for subm in self.submechanisms:
             if subm.is_related_to(joints, pure=True):
@@ -1061,14 +1056,12 @@ class Robot(SMURFRobot):
                 exoskeletons.append(exo)
 
         if not link_obj:
-            for entity in links + joints + materials + motors + sensors + hyrodyn_multi_joint_dependencies + hyrodyn_loop_constraints + submechanisms + exoskeletons:
+            for entity in links + joints + materials + motors + sensors + submechanisms + exoskeletons:
                 entity.unlink_from_robot()
 
         submodel.add_aggregate("materials", self.get_instance("material", list(materials)))
         submodel.add_aggregate("motors", self.get_instance("motor", motors))
         submodel.add_aggregate("sensors", self.get_instance("sensor", sensors))
-        submodel.add_aggregate("hyrodyn_multi_joint_dependencies", hyrodyn_multi_joint_dependencies)
-        submodel.add_aggregate("hyrodyn_loop_constraints", hyrodyn_loop_constraints)
         submodel.add_aggregate("submechanisms", submechanisms)
         submodel.add_aggregate("exoskeletons", exoskeletons)
 
@@ -1769,7 +1762,7 @@ class Robot(SMURFRobot):
                                                     replacements=replacements, do_not_double=do_not_double))
             return renamed_entities
         elif type(target) is not str:
-            target = target.name
+            target = str(target)
         if replacements is None:
             replacements = {}
         if do_not_double:
@@ -1790,7 +1783,7 @@ class Robot(SMURFRobot):
                     self._submodels[k]["start"] = new_name
                 if target in v["stop"]:
                     self._submodels[k]["stop"] = [link if link != target else new_name for link in v]
-        #todo submechanisms
+
         return renamed_entities
 
     def edit_names(self, cfg):
@@ -1911,33 +1904,30 @@ class Robot(SMURFRobot):
             raise Exception("Provide valid joint type.")
 
         # Check for naming and rename if necessary
-        plink = set([link.name for link in self.links])
-        pjoints = set([j.name for j in self.joints])
-        pcollisions = set([c.name for c in self.get_all_collisions()])
-        pvisuals = set([v.name for v in self.get_all_visuals()])
-        pmaterials = set([m.name for m in self.materials])
-        psensors = set([m.name for m in self.sensors])
-        ptransmissions = set([m.name for m in self.transmissions])
+        # Todo attach the rest
+        plink = set([str(link) for link in self.links])
+        pjoints = set([str(j) for j in self.joints])
+        pcollisions = set([str(c) for c in self.get_all_collisions()])
+        pvisuals = set([str(v) for v in self.get_all_visuals()])
+        pmaterials = set([str(m) for m in self.materials])
+        psensors = set([str(m) for m in self.sensors])
+        ptransmissions = set([str(m) for m in self.transmissions])
         # pmotors = set([m.name for m in self.motors])
-        # phyrodyn_multi_joint_dependencies = set([m.name for m in self.hyrodyn_multi_joint_dependencies])
-        # phyrodyn_loop_constraints = set([m.name for m in self.hyrodyn_loop_constraints])
-        psubmechanisms = set([m.name for m in self.submechanisms])
-        pexoskeletons = set([m.name for m in self.exoskeletons])
-        # pposes = set([m.name for m in self.poses]) # Todo rework poses
+        psubmechanisms = set([str(m) for m in self.submechanisms])
+        pexoskeletons = set([str(m) for m in self.exoskeletons])
+        # pposes = set([m.name for m in self.poses])
 
-        clink = set([link.name for link in other.links])
-        cjoints = set([j.name for j in other.joints])
-        ccollisions = set([c.name for c in other.get_all_collisions()])
-        cvisuals = set([v.name for v in other.get_all_visuals()])
-        cmaterials = set([m.name for m in other.materials])
-        csensors = set([m.name for m in other.sensors])
-        ctransmissions = set([m.name for m in other.transmissions])
+        clink = set([str(link) for link in other.links])
+        cjoints = set([str(j) for j in other.joints])
+        ccollisions = set([str(c) for c in other.get_all_collisions()])
+        cvisuals = set([str(v) for v in other.get_all_visuals()])
+        cmaterials = set([str(m) for m in other.materials])
+        csensors = set([str(m) for m in other.sensors])
+        ctransmissions = set([str(m) for m in other.transmissions])
         # cmotors = set([m.name for m in other.motors])
-        # chyrodyn_multi_joint_dependencies = set([m.name for m in other.hyrodyn_multi_joint_dependencies])
-        # chyrodyn_loop_constraints = set([m.name for m in other.hyrodyn_loop_constraints])
-        csubmechanisms = set([m.name for m in other.submechanisms])
-        cexoskeletons = set([m.name for m in other.exoskeletons])
-        # cposes = set([m.name for m in other.poses]) # Todo rework poses
+        csubmechanisms = set([str(m) for m in other.submechanisms])
+        cexoskeletons = set([str(m) for m in other.exoskeletons])
+        # cposes = set([m.name for m in other.poses])
 
         renamed_entities = {}
         joint.unlink_from_robot()
@@ -2060,12 +2050,6 @@ class Robot(SMURFRobot):
         for cMotor in other.motors:
             self.add_aggregate('motor', cMotor)
 
-        for cHyrodyn_loop_constraints in other.hyrodyn_loop_constraints:
-            self.add_aggregate('hyrodyn_loop_constraints', cHyrodyn_loop_constraints)
-            
-        for cHyrodyn_multi_joint_dependencies in other.hyrodyn_multi_joint_dependencies:
-            self.add_aggregate('hyrodyn_multi_joint_dependencies', cHyrodyn_multi_joint_dependencies)
-
         for cSubmechanism in other.submechanisms:
             self.add_aggregate('submechanism', cSubmechanism)
 
@@ -2176,10 +2160,6 @@ class Robot(SMURFRobot):
             robot.add_aggregate("exoskeleton", mat)
         for mat in self.submechanisms:
             robot.add_aggregate("submechanism", mat)
-        for mat in self.hyrodyn_loop_constraints:
-            robot.add_aggregate("hyrodyn_loop_contraint", mat)
-        for mat in self.hyrodyn_multi_joint_dependencies:
-            robot.add_aggregate("hyrodyn_multi_joint_dependencies", mat)
         for mat in self.motors:
             robot.add_aggregate("motor", mat)
         for mat in self.poses:
@@ -2329,6 +2309,7 @@ class Robot(SMURFRobot):
             return robot
         for k, v in robot.__dict__.items():
             setattr(self, k, v)
+        self.relink_entities()
 
     def split_robot(self, link_to_cut):
         """
@@ -2377,7 +2358,7 @@ class Robot(SMURFRobot):
         """Remove the joint(s) from the mechanism and transforms all inertia, visuals and collisions
         to the corresponding parent of the joint.
         """
-
+        # ToDo rework with new implementation
         if isinstance(jointname, list):
             for joint in jointname:
                 self.remove_joint(joint)
@@ -2458,7 +2439,7 @@ class Robot(SMURFRobot):
             if not j.name == jointname:
                 if j.name in next_joints:
                     j.origin = representation.Pose.from_matrix(C_T_P.dot(j.origin.to_matrix()))
-                    j.parent = parent.name
+                    j.parent = parent.name # ToDo this seems to be problematic
                 robot.add_aggregate('joint', j)
 
         setattr(robot, 'xmlfile', self.xmlfile)

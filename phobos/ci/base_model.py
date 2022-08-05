@@ -8,7 +8,7 @@ from copy import deepcopy
 from ..core import Robot
 from ..geometry import replace_collision, join_collisions, remove_collision, import_mesh, import_mars_mesh, \
     export_mesh, export_mars_mesh, export_bobj_mesh
-from ..io.hyrodyn import JointDependency, MultiJointDependency
+from ..io.hyrodyn import ConstraintAxis
 from ..utils import misc, git, urdf, transform, tree
 from ..io import representation, sensor_representations, poses
 
@@ -139,21 +139,13 @@ class BaseModel(yaml.YAMLObject):
         if not self.processed_model_exists and hasattr(self, "basefile"):
             if not os.path.isfile(self.basefile):
                 raise Exception('{} not found!'.format(self.basefile))
-            if self.basefile.endswith("smurf"):
-                self.robot = Robot(name=self.robotname if self.robotname else None,
-                                   smurffile=self.basefile)
-            else:
-                self.robot = Robot(name=self.robotname if self.robotname else None,
-                                   xmlfile=self.basefile)
+            self.robot = Robot(name=self.robotname if self.robotname else None,
+                               inputfile=self.basefile)
         else:
             if not os.path.isfile(self.exporturdf):
                 raise Exception('Preprocessed file {} not found!'.format(self.exporturdf))
-            if os.path.exists(self.exportsmurf):
-                self.robot = Robot(name=self.robotname if self.robotname else None,
-                                   smurffile=self.exportsmurf)
-            else:
-                self.robot = Robot(name=self.robotname if self.robotname else None,
-                                   xmlfile=self.exporturdf)
+            self.robot = Robot(name=self.robotname if self.robotname else None,
+                               inputfile=self.exportsmurf)
 
     def recreate_sym_links(self):
         misc.create_symlink(self.pipeline,
@@ -262,18 +254,20 @@ class BaseModel(yaml.YAMLObject):
                         joint.limit.velocity = self.redefine_articulation[joint.name]["vel"]
                     if "eff" in self.redefine_articulation[joint.name].keys():
                         joint.limit.effort = self.redefine_articulation[joint.name]["eff"]
+                    if "cut_joint" in self.redefine_articulation[joint.name].keys():
+                        joint.cut_joint = self.redefine_articulation[joint.name]["cut_joint"]
+                        joint.constraint_axes = [ConstraintAxis(**ca) for ca in self.redefine_articulation[joint.name]["constraint_axes"]]
                     if "mimic" in self.redefine_articulation[joint.name].keys():
                         mimic = self.redefine_articulation[joint.name]["mimic"]
-                        joint.mimic = representation.JointMimic(joint=mimic["joint_name"], offset=mimic["offset"],
-                                                          multiplier=mimic["multiplier"])
+                        joint.joint_dependencies.append(representation.JointMimic(joint=mimic["joint_name"],
+                                                                                  offset=mimic["offset"],
+                                                                                  multiplier=mimic["multiplier"]))
                     if "transmission" in self.redefine_articulation[joint.name].keys():
                         tm = self.redefine_articulation[joint.name]["transmission"]
-                        jds = [JointDependency(joint_name=mimic["joint_name"],
-                                               offset=mimic["offset"],
-                                               multiplier=mimic["multiplier"])
-                               for mimic in tm["mimics"]]
-                        mjd = MultiJointDependency(name=tm["name"], joint=joint.name, joint_dependencies=jds)
-                        self.robot.add_transmission(mjd)
+                        joint.joint_dependencies = [
+                            representation.JointMimic(joint=mimic["joint_name"],
+                                                      offset=mimic["offset"],
+                                                      multiplier=mimic["multiplier"]) for mimic in tm["mimics"]]
 
                     if "smurf" in self.modeltype \
                             and ("reducedDataPackage" in self.redefine_articulation[joint.name].keys()
@@ -472,8 +466,7 @@ class BaseModel(yaml.YAMLObject):
                             "also_export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"]:
                         export_bobj_mesh(mesh, b_meshexport + "bobj", urdf_path=self.exporturdf)
                     processed_meshes.append(v.geometry.filename)
-            print('       {} with {} meshes as {}'.format(link.name, v_c, self.typedef["output_mesh_format"]),
-                  flush=True)
+            # print('       {} with {} meshes as {}'.format(link.name, v_c, self.typedef["output_mesh_format"]), flush=True)
 
         if hasattr(self, "name_editing_after") and self.name_editing_after is not None:
             self.robot.edit_names(self.name_editing_after)
@@ -486,8 +479,7 @@ class BaseModel(yaml.YAMLObject):
                 for sm in self.submechanisms_file["submechanisms"]:
                     spanningtree += sm["jointnames_spanningtree"]
                 spanningtree = list(set(spanningtree))
-                root = tree.find_common_root(
-                    input_spanningtree=spanningtree, input_model=self.robot)
+                root = tree.find_common_root(input_spanningtree=spanningtree, input_model=self.robot)
                 self.robot.define_submodel(name=self.export_total_submechanisms, start=root,
                                            stop=tree.find_leaves(self.robot, spanningtree),
                                            only_urdf=True)
@@ -544,9 +536,9 @@ class BaseModel(yaml.YAMLObject):
                 for link in self.robot.links:
                     name = link.name if link.name in self.smurf["links"].keys() else "default"
                     if name in self.smurf["links"].keys():
-                        link_instance = self.robot.get_link(link.name),
-                        link_instance.noDataPackage=self.smurf["links"][name]["noDataPackage"] if "noDataPackage" in self.smurf["links"][name].keys() else False,
-                        link_instance.reducedDataPackage=self.smurf["links"][name]["reducedDataPackage"] if "reducedDataPackage" in self.smurf["links"][name].keys() else False
+                        link_instance = self.robot.get_link(link.name)
+                        link_instance.noDataPackage = self.smurf["links"][name]["noDataPackage"] if "noDataPackage" in self.smurf["links"][name].keys() else False
+                        link_instance.reducedDataPackage = self.smurf["links"][name]["reducedDataPackage"] if "reducedDataPackage" in self.smurf["links"][name].keys() else False
                         print('      Defined Link {}'.format(link.name), flush=True)
 
             if "materials" in self.smurf.keys():

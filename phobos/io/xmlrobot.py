@@ -1,5 +1,6 @@
 import os
 from typing import List
+from copy import deepcopy
 
 from . import representation, xml_factory, sensor_representations
 from .base import Representation
@@ -57,6 +58,9 @@ class XMLRobot(Representation):
         for entity in self.joints:
             entity.link_with_robot(self)
 
+    def __str__(self):
+        return self.name
+
     @property
     def collisions(self):
         return self.get_all_collisions()
@@ -106,23 +110,32 @@ class XMLRobot(Representation):
         else:
             return [], []
 
-    def _rename(self, targettype, target, new_name):
+    def _rename(self, targettype, target, new_name, further_targettypes=None):
         if target == new_name:
             return {}
         # new_name exists? otherwise we'd have to fix the name
         assert (self.get_instance(targettype, new_name) is None,
                 f"Can't rename {targettype} {target} to {new_name} as the new name already exists")
+
+        other_targettypes = ['collision', 'visual', 'material']
+        if further_targettypes is not None:
+            other_targettypes += further_targettypes
+        other_targettypes = set([o[:-1] if o.endswith("s") else o for o in other_targettypes])
+        other_targettypes = list(other_targettypes) + [o+"s" if not o.endswith("s") else o for o in other_targettypes]
         index = None  # gives the index of joint or link for parent/child maps
+        renamed = False
         if targettype in ['link', "links"]:
             index = 1
             obj = self.get_link(target)
             if obj is not None:
-                obj.name = new_name
+                obj.set_unique_name(new_name)
+                renamed = True
         elif targettype in ['joint', "joints"]:
             index = 0
             obj = self.get_joint(target)
             if obj is not None:
-                obj.name = new_name
+                obj.set_unique_name(new_name)
+                renamed = True
         if targettype in ["link", "links", "joint", "joints"]:
             # Iterate over the values of parent child map and rename the values
             new_child_map = {}
@@ -145,24 +158,19 @@ class XMLRobot(Representation):
                 else:
                     new_parent_map[k] = v
             self.parent_map = new_parent_map
-        elif targettype in ['collision', 'collisions']:
-            obj = self.get_collision_by_name(target)
+        elif targettype in other_targettypes:
+            obj = self.get_instance(targettype, target)
             if obj is not None:
-                obj.name = new_name
-        elif targettype in ['visual', 'visuals']:
-            obj = self.get_visual_by_name(target)
-            if obj is not None:
-                obj.name = new_name
-        elif targettype in ['material', 'materials']:
-            obj = self.get_material(target)
-            if obj is not None:
-                obj.name = new_name
-        return {target: new_name}
+                obj.set_unique_name(new_name)
+                renamed = True
+        if renamed:
+            return {target: new_name}
+        return {}
 
-    def add_aggregate(self, typeName, elem):
+    def add_aggregate(self, typeName, elem, silent=False):
         if type(elem) == list:
             return [self.add_aggregate(typeName, e) for e in elem]
-        if typeName in ['joint', 'joints']:
+        if typeName in 'joints':
             self.parent_map[str(elem.child)] = (elem.name, elem.parent)
             self.parent_map[str(elem.name)] = (elem.name, elem.parent)
             if elem.parent in self.child_map:
@@ -171,7 +179,7 @@ class XMLRobot(Representation):
                 self.child_map[elem.parent] = [(elem.name, elem.child)]
             if elem not in self.joints:
                 self.joints += [elem]
-        elif typeName in ['link', 'links']:
+        elif typeName in 'links':
             if elem not in self.links:
                 self.links += [elem]
         else:
@@ -181,12 +189,14 @@ class XMLRobot(Representation):
             instances = []
             # Original list
             objects = getattr(self, typeName)
-            for obj in objects:
-                if elem.name == obj.name and not elem.equivalent(obj):
-                    instances.append(obj.name)
-            if instances:
-                elem.name += "_{}".format(len(instances))
-                print("Renamed object to {}".format(elem.name))
+            object_names = [str(obj) for obj in objects]
+            counter = 1
+            if str(elem) in object_names:
+                while str(elem) + f"_{counter}" in object_names:
+                    counter += 1
+                if not silent:
+                    print(f"Renamed {typeName} {str(elem)} to {str(elem)}_{counter}")
+                elem.set_unique_name(str(elem) + f"_{counter}")
             objects += [elem]
             setattr(self, typeName, objects)
 
@@ -211,6 +221,8 @@ class XMLRobot(Representation):
         if links:
             chain.append(str(tip))
         link = str(tip)
+        assert self.get_link(root) is not None
+        assert self.get_link(link) is not None
         while str(link) != str(root):
             (joint, parent) = self.parent_map[link]
             if joints:
@@ -245,10 +257,10 @@ class XMLRobot(Representation):
             targettype += "s"
         for obj in getattr(self, targettype):
             names.append(obj.name)
-            if obj.name == str(target):
+            if str(obj) == str(target):
                 return obj
         if verbose:
-          print(f"Robot {self.name} has no {targettype} with name {target}, only these: {repr(names)}")
+            print(f"Robot {self.name} has no {targettype} with name {target}, only these: {repr(names)}")
         return None
 
     def get_link(self, link_name, verbose=True) -> [representation.Link, list]:
