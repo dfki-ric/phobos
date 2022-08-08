@@ -171,7 +171,8 @@ class Submechanism(HyrodynAnnotation):
             loop_constraints = []
         self._multi_joint_dependencies = multi_joint_dependencies
         self._loop_constraints = loop_constraints
-        self.returns += ["multi_joint_dependencies"]
+        self.returns += ["multi_joint_dependencies", "loop_constraints"]
+        self._has_unlinked_changes = multi_joint_dependencies is not None or loop_constraints is not None
 
     @property
     def multi_joint_dependencies(self):
@@ -191,8 +192,7 @@ class Submechanism(HyrodynAnnotation):
         if self._related_robot_instance is None:
             self._multi_joint_dependencies = value
         else:
-            #Todo
-            pass
+            raise RuntimeError("Please set the joint_dependencies of the corresponding joint.")
 
     @property
     def loop_constraints(self):
@@ -213,16 +213,27 @@ class Submechanism(HyrodynAnnotation):
         if self._related_robot_instance is None:
             self._loop_constraints = value
         else:
-            #Todo
-            pass
+            raise RuntimeError("Please set the cut_joint and constraint_axes of the corresponding cut-joint!")
 
     def link_with_robot(self, robot, check_linkage_later=False):
-        #Todo
         super(Submechanism, self).link_with_robot(robot, check_linkage_later=True)
+        if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
+            for mjd in self._multi_joint_dependencies:
+                joint = self._related_robot_instance.get_joint(mjd["name"])
+                joint.joint_dependencies.append(JointMimic(**mjd["joint_dependencies"]))
+        if self._loop_constraints is not None and len(self._loop_constraints) > 0:
+            for lc in self._loop_constraints:
+                joint = self._related_robot_instance.get_joint(lc["cut_joint"])
+                joint.cut_joint = True
+                for ax in lc["constraint_axes"]:
+                    joint.constraint_axes.append(JointMimic(**ax))
 
     def unlink_from_robot(self):
-        #Todo
+        mjd = self.multi_joint_dependencies
+        lc = self.loop_constraints
         super(Submechanism, self).unlink_from_robot()
+        self._multi_joint_dependencies = mjd
+        self._loop_constraints = lc
 
 
 class Exoskeleton(HyrodynAnnotation):

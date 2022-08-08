@@ -28,21 +28,28 @@ class Sensor(Representation, SmurfBase):
 
     @property
     def position_offset(self):
-        pos = self.origin.position() if hasattr(self, "origin") else [0, 0, 0]
+        if self.origin is None:
+            return None
+        pos = self.origin.position if hasattr(self, "origin") else [0, 0, 0]
         return {"x": pos[0], "y": pos[1], "z": pos[2]}
 
     @position_offset.setter
     def position_offset(self, val):
+        if self.origin is None:
+            self.origin = representation.Pose()
         self.origin.xyz = [val["x"], val["y"], val["z"]]
 
     @property
     def orientation_offset(self):
-        quat = transform.matrix_to_quaternion(self.origin.to_matrix()[0:3, 0:3]) \
-            if hasattr(self, "origin") else [0, 0, 0, 1]
+        if self.origin is None:
+            return None
+        quat = transform.matrix_to_quaternion(self.origin.to_matrix()[0:3, 0:3]) if hasattr(self, "origin") else [0, 0, 0, 1]
         return {"x": quat[0], "y": quat[1], "z": quat[2], "w": quat[3]}
 
     @orientation_offset.setter
     def orientation_offset(self, val):
+        if self.origin is None:
+            self.origin = representation.Pose()
         self.origin.rpy = transform.quaternion_to_rpy([val["x"], val["y"], val["z"], val["w"]])
 
     def transform(self, transformation):
@@ -52,10 +59,11 @@ class Sensor(Representation, SmurfBase):
             self.origin = Pose.from_matrix(transformation)
 
     def get_refl_vars(self):
-        if self.position_offset != {"x": 0, "y": 0, "z": 0}:
-            self.returns += ["position_offset"]
-        if self.orientation_offset != {"x": 0, "y": 0, "z": 0, "w": 1}:
-            self.returns += ["orientation_offset"]
+        if hasattr(self, "origin") and self.origin is not None:
+            if self.position_offset != {"x": 0, "y": 0, "z": 0}:
+                self.returns += ["position_offset"]
+            if self.orientation_offset != {"x": 0, "y": 0, "z": 0, "w": 1}:
+                self.returns += ["orientation_offset"]
         return super(Sensor, self).get_refl_vars()
 
     def equivalent(self, other):
@@ -163,14 +171,14 @@ class RotatingRaySensor(Sensor):
 
 class CameraSensor(Sensor):
     _class_variables = ["name", "link", "height", "width", "hud_height", "hud_width", "opening_height", "opening_width",
-                        "depth_image", "show_cam", "frame_offset"]
+                        "depth_image", "show_cam", "origin"]
 
     def __init__(
             self, name=None, link=None,
             height=480, width=640, hud_height=240, hud_width=0,
             opening_height=90, opening_width=90,
             depth_image=True, show_cam=False, frame_offset: representation.Pose = None, **kwargs):
-        super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor', **kwargs)
+        super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor', origin=frame_offset, **kwargs)
         self.height = height
         self.width = width
         self.hud_height = hud_height
@@ -179,7 +187,6 @@ class CameraSensor(Sensor):
         self.opening_width = opening_width
         self.depth_image = depth_image
         self.show_cam = show_cam
-        self.origin = frame_offset
         self.returns += ['link', 'height', 'width', 'hud_height', 'hud_width',
                          'opening_height', 'opening_width', 'depth_image', 'show_cam', 'frame_offset']
         self.sdf_type = "camera"
@@ -210,6 +217,10 @@ class CameraSensor(Sensor):
     def frame_offset(self):
         return self.origin
 
+    @frame_offset.setter
+    def frame_offset(self, value):
+        self.origin = value
+
 
 class IMU(Sensor):
     _class_variables = ["name", "link", "frame"]
@@ -229,12 +240,14 @@ class MultiSensor(Sensor):
 
     def __init__(self, name=None, targets=None, sensortype='MultiSensor', **kwargs):
         super().__init__(name=name, sensortype=sensortype, **kwargs)
-        self.targets = [str(t) for t in targets] if isinstance(targets, list) else []
+        self.targets = [str(t) for t in targets if t is not None] if isinstance(targets, list) else []
         self.returns += ['id']
         self.excludes += ['_id']
 
     def add_target(self, target):
-        self.targets = self.targets + [target if type(target) == str else target.name]
+        if self.targets is None:
+            self.targets = []
+        self.targets = self.targets + [target if type(target) == str else str(target)]
 
     @property
     def id(self):
@@ -254,7 +267,7 @@ class MultiSensor(Sensor):
 
     def reduce_to_match(self, targets):
         assert type(targets) == list
-        _targets = [t.name if isinstance(t, Linkable) else t for t in targets]
+        _targets = [str(t) for t in targets if t is not None]
         self.targets = [t for t in self.targets if t in _targets]
 
     def equivalent(self, other):
@@ -269,6 +282,8 @@ class MotorCurrent(MultiSensor):
     type_dict = {"targets": "joint"}
 
     def __init__(self, name=None, targets=None, **kwargs):
+        if targets is None:
+            targets = []
         if not isinstance(targets, list):
             targets = [targets]
 
@@ -279,6 +294,8 @@ class JointPosition(MultiSensor):
     type_dict = {"targets": "joint"}
 
     def __init__(self, name=None, targets=None, **kwargs):
+        if targets is None:
+            targets = []
         if not isinstance(targets, list):
             targets = [targets]
 
@@ -289,6 +306,8 @@ class JointVelocity(MultiSensor):
     type_dict = {"targets": "joint"}
 
     def __init__(self, name=None, targets=None, **kwargs):
+        if targets is None:
+            targets = []
         if not isinstance(targets, list):
             targets = [targets]
 
@@ -321,6 +340,8 @@ class NodeContactForce(MultiSensor):
     _class_variables = ["name", "link", "targets"]
 
     def __init__(self, name=None, link=None, targets=None, **kwargs):
+        if targets is None:
+            targets = []
         if not isinstance(targets, list):
             targets = [targets]
 
@@ -336,6 +357,8 @@ class NodeCOM(MultiSensor):
     type_dict = {"targets": "link"}
 
     def __init__(self, name=None, targets=None, **kwargs):
+        if targets is None:
+            targets = []
         if not isinstance(targets, list):
             targets = [targets]
 
@@ -346,6 +369,8 @@ class NodePosition(MultiSensor):
     type_dict = {"targets": "link"}
 
     def __init__(self, name: str = None, targets=None, **kwargs):
+        if targets is None:
+            targets = []
         if not isinstance(targets, list):
             targets = [targets]
 
@@ -356,6 +381,8 @@ class NodeRotation(MultiSensor):
     type_dict = {"targets": "link"}
 
     def __init__(self, name=None, targets=None, **kwargs):
+        if targets is None:
+            targets = []
         if not isinstance(targets, list):
             targets = [targets]
 
@@ -364,10 +391,10 @@ class NodeRotation(MultiSensor):
 
 class SensorFactory(Representation):
     @classmethod
-    def create(cls, name, xml: ET.Element = None, link=None, sdf_type=None, origin=None, **kwargs):
+    def create(cls, name, _xml: ET.Element = None, link=None, sdf_type=None, origin=None, **kwargs):
         if sdf_type is None:
-            if xml is not None:
-                children = [child.tag for child in xml]
+            if _xml is not None:
+                children = [child.tag for child in _xml]
                 if "camera" in children:
                     sdf_type = "camera"
                 elif "lidar" in children or "ray" in children:

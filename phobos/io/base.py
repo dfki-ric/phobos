@@ -6,7 +6,7 @@ class Linkable(object):
     _type_dict = {
         "link": "link",
         "joint": "joint",
-        "frame": "frame",
+        "frame": "link",
         "motor": "motor",
         "material": "material",
         "relative_to": "link"
