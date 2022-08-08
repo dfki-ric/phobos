@@ -106,88 +106,95 @@ def fetch_path_from_blender_script(blender_exec, script, keyword="blender"):
     return path
 
 
-# data
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-codemeta = json.load(open("codemeta.json", "r"))
-deps = json.load(open("blender_requirements.json", "r"))
-requirements = deps["requirements"]
-optional_requirements = deps["optional_requirements"]
-this_dir = Path(__file__).parent
+def main(args):
 
-##################
-# python package #
-##################
-kwargs = {
-    "name": codemeta["title"].lower(),  # Replace with your own username
-    "version": codemeta["version"],
-    "author":",  ".join(codemeta["author"]),
-    "author_email": codemeta["maintainer"],
-    "description": codemeta["description"] + " Revision:" + get_git_branch() + "-"
-                + get_git_revision_short_hash(),
-    "long_description": long_description,
-    "long_description_content_type":" text/markdown",
-    "url": codemeta["codeRepository"],
-    "packages": setuptools.find_packages(),
-    "include_package_data": True,
-    "package_data":{'':  [os.path.join("data", x) for x in os.listdir(this_dir/"phobos"/"data")],},
-    "classifiers": [
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.10",
-        "Operating System :: OS Independent",
-    ],
-    "python_requires": '>= 3.6',
-    "entry_points": {
-        'console_scripts': [
-            'phobos=phobos.scripts.phobos:main',
-        ]
+    # data
+    with open("README.md", "r") as fh:
+        long_description = fh.read()
+    codemeta = json.load(open("codemeta.json", "r"))
+    deps = json.load(open("blender_requirements.json", "r"))
+    requirements = deps["requirements"]
+    optional_requirements = deps["optional_requirements"]
+    this_dir = Path(__file__).parent
+
+    ##################
+    # python package #
+    ##################
+    kwargs = {
+        "name": codemeta["title"].lower(),  # Replace with your own username
+        "version": codemeta["version"],
+        "author":",  ".join(codemeta["author"]),
+        "author_email": codemeta["maintainer"],
+        "description": codemeta["description"] + " Revision:" + get_git_branch() + "-"
+                    + get_git_revision_short_hash(),
+        "long_description": long_description,
+        "long_description_content_type":" text/markdown",
+        "url": codemeta["codeRepository"],
+        "packages": setuptools.find_packages(),
+        "include_package_data": True,
+        "package_data":{'':  [os.path.join("data", x) for x in os.listdir(this_dir/"phobos"/"data")],},
+        "classifiers": [
+            "Programming Language :: Python :: 3",
+            "Programming Language :: Python :: 3.6",
+            "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: 3.10",
+            "Operating System :: OS Independent",
+        ],
+        "python_requires": '>= 3.6',
+        "entry_points": {
+            'console_scripts': [
+                'phobos=phobos.scripts.phobos:main',
+            ]
+        }
     }
-}
-# # autoproj handling
-# if not "AUTOPROJ_CURRENT_ROOT" in os.environ:
-#     kwargs["install_requires"] = list(requirements.values()) #+ list(optional_requirements.keys())
+    # # autoproj handling
+    # if not "AUTOPROJ_CURRENT_ROOT" in os.environ:
+    #     kwargs["install_requires"] = list(requirements.values()) #+ list(optional_requirements.keys())
 
-setuptools.setup(
-    **kwargs
-)
+    setuptools.setup(
+        **kwargs
+    )
 
-#################
-# blender addon #
-#################
-# autoproj installation can not handle user inputs
-if "AUTOPROJ_CURRENT_ROOT" in os.environ:
-    sys.exit()
+    if "--blender" in args:
+        #################
+        # blender addon #
+        #################
+        # autoproj installation can not handle user inputs
+        if "AUTOPROJ_CURRENT_ROOT" in os.environ:
+            sys.exit()
 
-blender_path = None
-print("Thanks for installing phobos!\n\nTrying now to install blender addon")
-check_blender_agreement(input("Do you want to proceed? (y/n)>").strip())
-auto_found = False
-for cmd in ["which", "where", "Get-Command"]:
-    out = Path(exec_shell_cmd([cmd, "blender"]))
-    if out.exists() and "blender" in str(out).lower():
-        if input(f"Take this blender version '{out}'? (y/n)>").lower() in ["y", "yes"]:
+        blender_path = None
+        print("Thanks for installing phobos!\n\nTrying now to install blender addon")
+        auto_found = False
+        for cmd in ["which", "where", "Get-Command"]:
+            out = Path(exec_shell_cmd([cmd, "blender"]))
+            if out.exists() and "blender" in str(out).lower():
+                if input(f"Take this blender version '{out}'? (y/n)>").lower() in ["y", "yes"]:
+                    auto_found = True
+                break
+        while not auto_found or not out.exists() or not "blender" in str(out).lower():
             auto_found = True
-        break
-while not auto_found or not out.exists() or not "blender" in str(out).lower():
-    auto_found = True
-    print("Could not retrieve blender executable from this path:", out)
-    out = Path(input("Please provide the path to your blender executable: ").strip())
-blender_path = deepcopy(out)
-scripts_path = fetch_path_from_blender_script(blender_path, this_dir/"get_blender_path.py")
-modules_path = scripts_path / "modules"
-addons_path = scripts_path / "addons"
-print("Found the following blender installation directories:")
-print(scripts_path)
-print(modules_path)
-print(addons_path)
-if check_blender_agreement(input("Do you want to proceed? (y/n)>").strip()):
-    #install phobos
-    target = addons_path/"phobos"
-    if target.exists():
-        shutil.rmtree(target)
-    shutil.copytree(this_dir/"phobos", target)
-    # install requirements
-    python_path = fetch_path_from_blender_script(blender_path, this_dir/"get_blender_python.py")
-    check_requirements(python_path, upgrade_pip=True, lib=modules_path)
+            print("Could not retrieve blender executable from this path:", out)
+            out = Path(input("Please provide the path to your blender executable: ").strip())
+        blender_path = deepcopy(out)
+        scripts_path = fetch_path_from_blender_script(blender_path, this_dir/"get_blender_path.py")
+        modules_path = scripts_path / "modules"
+        addons_path = scripts_path / "addons"
+        print("Found the following blender installation directories:")
+        print(scripts_path)
+        print(modules_path)
+        print(addons_path)
+        if check_blender_agreement(input("Do you want to proceed? (y/n)>").strip()):
+            #install phobos
+            target = addons_path/"phobos"
+            if target.exists():
+                shutil.rmtree(target)
+            shutil.copytree(this_dir/"phobos", target)
+            # install requirements
+            python_path = fetch_path_from_blender_script(blender_path, this_dir/"get_blender_python.py")
+            check_requirements(python_path, upgrade_pip=True, lib=modules_path)
+
+
+if __name__ == "__main__":
+    import sys
+    main(sys.argv)
