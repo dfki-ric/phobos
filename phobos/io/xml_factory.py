@@ -143,8 +143,8 @@ class XMLDefinition(object):
                 # children that are nested in another element
                 _kwargs = self.xml_nested_children[child.tag].kwargs_from_xml(child)
                 for k, v in _kwargs.items():
-                    if k in kwargs.keys():
-                        raise IndexError(f"Key {k} of nested xml node {child.tag} already defined by superior node with keys: {str(kwargs.keys())}")
+                    if k in kwargs.keys() and v != kwargs[k]:
+                        raise IndexError(f"Key {k} of nested xml node {child.tag} already defined in conflict ({v}<>{kwargs[k]}) by superior node with keys: {str(kwargs.keys())}")
                     else:
                         kwargs[k] = v
         return kwargs

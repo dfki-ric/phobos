@@ -388,22 +388,14 @@ class BaseModel(yaml.YAMLObject):
                             for k, v in self.smurf["collisions"][coll.name].items():
                                 setattr(coll, k, v)
                 else:
-                    smurf_collisions = []
-                    for link in self.robot.links:
-                        for coll in link.collisions:
-                            conf = self.smurf["collisions"]["default"] if "default" in self.smurf[
-                                "collisions"].keys() else {}
-                            if coll.name in self.smurf["collisions"].keys():
-                                conf = self.smurf["collisions"][coll.name]
-                            smurf_collisions += [
-                                representation.Collision(
-                                    robot=self.robot,
-                                    link=link,
-                                    collision=coll,
-                                    **conf
-                                )
-                            ]
-                    self.robot.collisions = smurf_collisions
+                    for coll_name in self.smurf["collisions"].keys():
+                        conf = self.smurf["collisions"][coll_name]
+                        coll = self.robot.get_collision_by_name(coll_name)
+                        if coll is not None:
+                            for key in ["name", "link", "geometry", "origin"]:
+                                if key in conf:
+                                    conf.pop(key)
+                            coll.add_annotations(**conf)
 
         print('  Re-exporting meshes', flush=True)
         misc.create_symlink(self.pipeline,
@@ -454,7 +446,7 @@ class BaseModel(yaml.YAMLObject):
                     elif self.typedef["output_mesh_format"].lower() == "dae":
                         color = None
                         for m in self.robot.materials:
-                            if m.name != v.material.name:
+                            if str(m) != str(v.material):
                                 continue
                             else:
                                 color = m.color.rgba

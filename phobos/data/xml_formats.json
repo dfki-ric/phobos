@@ -449,7 +449,7 @@
       "children": {
         "origin": {
           "classname": "Pose",
-          "varname": "frame_offset"
+          "varname": "origin"
         }
       },
       "nested_children": {
@@ -898,7 +898,7 @@
       "children": {
         "pose": {
           "classname": "Pose",
-          "varname": "frame_offset"
+          "varname": "origin"
         }
       },
       "nested_children": {

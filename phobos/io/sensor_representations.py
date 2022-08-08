@@ -30,7 +30,7 @@ class Sensor(Representation, SmurfBase):
     def position_offset(self):
         if self.origin is None:
             return None
-        pos = self.origin.position if hasattr(self, "origin") else [0, 0, 0]
+        pos = self.origin.position if hasattr(self, "origin") and self.origin.position is not None else [0, 0, 0]
         return {"x": pos[0], "y": pos[1], "z": pos[2]}
 
     @position_offset.setter
@@ -50,7 +50,7 @@ class Sensor(Representation, SmurfBase):
     def orientation_offset(self, val):
         if self.origin is None:
             self.origin = representation.Pose()
-        self.origin.rpy = transform.quaternion_to_rpy([val["x"], val["y"], val["z"], val["w"]])
+        self.origin.rotation = val
 
     def transform(self, transformation):
         if hasattr(self, "origin"):
@@ -89,9 +89,9 @@ class RotatingRaySensor(Sensor):
     def __init__(
             self, name=None, link=None,
             bands=None, draw_rays=False,
-            horizontal_offset=None, opening_width=None, horizontal_resolution=None,
-            lasers=None, max_distance=5.0, min_distance=None, opening_height=None,
-            vertical_offset=None, **kwargs):
+            horizontal_offset=0, opening_width=2*np.pi, horizontal_resolution=None,
+            lasers=24, max_distance=5.0, min_distance=None, opening_height=2*np.pi,
+            vertical_offset=0, **kwargs):
         if "max_horizontal_angle" in kwargs:
             assert "min_horizontal_angle" in kwargs
             kwargs["opening_width"] = kwargs["max_horizontal_angle"] - kwargs["min_horizontal_angle"]
@@ -109,13 +109,18 @@ class RotatingRaySensor(Sensor):
         self.bands = bands
         self.draw_rays = draw_rays
         self.horizontal_offset = horizontal_offset
+        assert self.horizontal_offset is not None
         self.horizontal_resolution = horizontal_resolution
         self.opening_width = opening_width
+        assert self.opening_width is not None
         self.lasers = lasers
+        assert self.lasers is not None
         self.max_distance = max_distance
         self.min_distance = min_distance
         self.opening_height = opening_height
+        assert self.opening_height is not None
         self.vertical_offset = vertical_offset
+        assert self.vertical_offset is not None
         self.returns += ['link', 'bands', 'draw_rays',
                          'horizontal_offset', 'horizontal_resolution', 'vertical_offset',
                          'opening_width', 'opening_height', 'max_distance', 'lasers']
@@ -171,14 +176,14 @@ class RotatingRaySensor(Sensor):
 
 class CameraSensor(Sensor):
     _class_variables = ["name", "link", "height", "width", "hud_height", "hud_width", "opening_height", "opening_width",
-                        "depth_image", "show_cam", "origin"]
+                        "depth_image", "show_cam"]
 
     def __init__(
             self, name=None, link=None,
             height=480, width=640, hud_height=240, hud_width=0,
             opening_height=90, opening_width=90,
-            depth_image=True, show_cam=False, frame_offset: representation.Pose = None, **kwargs):
-        super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor', origin=frame_offset, **kwargs)
+            depth_image=True, show_cam=False, frame_offset=1, origin=None, **kwargs):
+        super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor', origin=origin if origin is not None else Pose(), **kwargs)
         self.height = height
         self.width = width
         self.hud_height = hud_height
@@ -187,9 +192,11 @@ class CameraSensor(Sensor):
         self.opening_width = opening_width
         self.depth_image = depth_image
         self.show_cam = show_cam
+        self.frame_offset = frame_offset
         self.returns += ['link', 'height', 'width', 'hud_height', 'hud_width',
                          'opening_height', 'opening_width', 'depth_image', 'show_cam', 'frame_offset']
         self.sdf_type = "camera"
+
 
     @property
     def depths(self):
@@ -212,14 +219,6 @@ class CameraSensor(Sensor):
         assert self.equivalent(other)
         # Nothing to do here
         pass
-
-    @property
-    def frame_offset(self):
-        return self.origin
-
-    @frame_offset.setter
-    def frame_offset(self, value):
-        self.origin = value
 
 
 class IMU(Sensor):
@@ -338,7 +337,7 @@ class NodeContact(MultiSensor):
 
 
 class NodeContactForce(MultiSensor):
-    type_dict = {"targets": "link"}
+    type_dict = {"targets": "collision"}
     _class_variables = ["name", "link", "targets"]
 
     def __init__(self, name=None, link=None, targets=None, **kwargs):

@@ -1318,7 +1318,7 @@ class Robot(SMURFRobot):
         # Transform the origin
         assert transform_object(inertial, T)
         rot_part = create_transformation(rpy=inertial.origin.rpy, xyz=[0, 0, 0])
-        inertial.origin.rpy = [0, 0, 0]
+        inertial.origin.rotation = [0, 0, 0]
 
         # T = rot_part.dot(T)
         Ad = get_adjoint(rot_part)
@@ -2184,7 +2184,7 @@ class Robot(SMURFRobot):
             if new_link.inertial is not None:
                 T = T_R.dot(T_link.dot(link_.inertial.origin.to_matrix()))
                 new_origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T))
-                new_origin.rpy = [0, 0, 0]
+                new_origin.rotation = [0, 0, 0]
 
                 # Process the rotation
                 T = inv(T_root_to_link.dot(link_.inertial.origin.to_matrix())).dot(T)

@@ -7,7 +7,7 @@ from .smurf_reflection import SmurfBase
 from .xml_factory import singular as _singular, plural as _plural
 from ..geometry.io import import_mesh, import_mars_mesh
 from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
-from ..utils import urdf as urdf_utils
+from ..utils import urdf as urdf_utils, transform
 
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
@@ -19,7 +19,7 @@ class Pose(Representation, SmurfBase):
         Representation.__init__(self)
         SmurfBase.__init__(self, returns=["rotation", "position"])
         self.xyz = xyz
-        self.rpy = rpy
+        self.rotation = rpy
         self.relative_to = relative_to
         if vec is not None:
             assert isinstance(vec, list)
@@ -44,7 +44,27 @@ class Pose(Representation, SmurfBase):
 
     @rotation.setter
     def rotation(self, value):
-        self.rpy = value
+        if type(value) == int:
+            self.rpy = [0, 0, value]
+        elif type(value) in [list, np.ndarray] and len(value) == 3:
+            self.rpy = value
+        elif type(value) in [list, np.ndarray] and len(value) == 4:
+            self.rpy = transform.quaternion_to_rpy(value)
+        elif type(value) == dict and len(value) == 3:
+            if all([k in "rpy" for k in value.keys()]):
+                self.rpy = [value["r"], value["p"], value["y"]]
+            elif all([k in "xyz" for k in value.keys()]):
+                self.rpy = [value["x"], value["y"], value["z"]]
+            else:
+                raise ValueError("Can't parse rotation" + str(value))
+        elif type(value) == dict and len(value) == 4:
+            self.rpy = [value["x"], value["y"], value["z"], value["w"]]
+        elif type(value) in [list, np.ndarray]:
+            self.rpy = transform.matrix_to_rpy(value)
+        elif value is None:
+            self.rpy = [0, 0, 0]
+        else:
+            raise ValueError("Can't parse rotation " + str(value))
 
     @property
     def position(self):
@@ -52,6 +72,7 @@ class Pose(Representation, SmurfBase):
 
     @position.setter
     def position(self, value):
+        assert type(value) in [list, np.ndarray] and len(value) == 3
         self.xyz = value
 
     def from_vec(self, vec):
@@ -242,7 +263,7 @@ class Collision(Representation, SmurfBase):
         self.original_name = name
         if name is None or len(name) == 0:
             if link is not None:
-                name = link.name + "_collision"
+                name = str(link) + "_collision"
             elif "_parent_xml" in kwargs:
                 link = kwargs["_parent_xml"].attrib["name"]
                 name = link + "_collision"
@@ -250,7 +271,10 @@ class Collision(Representation, SmurfBase):
                 name = None
         SmurfBase.__init__(self, name=name, link=link, returns=['name', 'link'], **kwargs)
         self.geometry = _singular(geometry)
+        if origin is None:
+            origin = Pose()
         self.origin = _singular(origin)
+        assert isinstance(self.origin, Pose)
         self.bitmask = bitmask
         if noDataPackage is not None:
             self.noDataPackage = noDataPackage
@@ -329,7 +353,10 @@ class Visual(Representation, SmurfBase):
         elif isinstance(material, Material):
             assert material_ is None or material_.equivalent(material)
         self.material = material_
+        if origin is None:
+            origin = Pose()
         self.origin = _singular(origin)
+        assert isinstance(self.origin, Pose)
 
     @property
     def material_(self):
@@ -415,7 +442,10 @@ class Inertial(Representation):
         super().__init__()
         self.mass = mass
         self.inertia = _singular(inertia)
+        if origin is None:
+            origin = Pose()
         self.origin = _singular(origin)
+        assert type(self.origin) == Pose, f"{origin} is not Pose"
 
     @staticmethod
     def from_mass_matrix(M, origin: Pose):
