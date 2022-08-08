@@ -323,6 +323,8 @@ class NodeContact(MultiSensor):
     _class_variables = ["name", "link", "targets"]
 
     def __init__(self, name=None, link=None, targets=None, **kwargs):
+        if targets is None:
+            targets = []
         if not isinstance(targets, list):
             targets = [targets]
 
