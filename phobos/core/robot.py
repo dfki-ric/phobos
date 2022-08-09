@@ -573,6 +573,7 @@ class Robot(SMURFRobot):
             for j in kwargs["remove_joints"]:
                 # print("Removing joint for kccd:", j)
                 kccd_robot.remove_joint(j)
+                assert str(j) not in [str(jnt) for jnt in kccd_robot.joints]
         # generate collision model
         pgu.generate_kccd_optimizer_ready_collision(kccd_robot, [link.name for link in kccd_robot.links],
                                                     outputdir=kccd_meshes,
@@ -1025,7 +1026,7 @@ class Robot(SMURFRobot):
             else:
                 joints.append(joint)
 
-        submodel.add_aggregate("links", self.get_instance("link", links))
+        submodel.add_aggregate("links", self.get_aggregate("link", links))
         submodel.add_aggregate("joints", joints)
         assert all([j.mimic is None or str(j.mimic.joint) in jointnames for j in submodel.joints])
 
@@ -1059,9 +1060,9 @@ class Robot(SMURFRobot):
             for entity in links + joints + materials + motors + sensors + submechanisms + exoskeletons:
                 entity.unlink_from_robot()
 
-        submodel.add_aggregate("materials", self.get_instance("material", list(materials)))
-        submodel.add_aggregate("motors", self.get_instance("motor", motors))
-        submodel.add_aggregate("sensors", self.get_instance("sensor", sensors))
+        submodel.add_aggregate("materials", self.get_aggregate("material", list(materials)))
+        submodel.add_aggregate("motors", self.get_aggregate("motor", motors))
+        submodel.add_aggregate("sensors", self.get_aggregate("sensor", sensors))
         submodel.add_aggregate("submechanisms", submechanisms)
         submodel.add_aggregate("exoskeletons", exoskeletons)
 
@@ -2354,124 +2355,11 @@ class Robot(SMURFRobot):
         _, beyond = self.split_robot(link_to_cut)
         return beyond
 
-    def remove_joint(self, jointname, keep_collisions=True):
+    def remove_joint(self, jointname):
         """Remove the joint(s) from the mechanism and transforms all inertia, visuals and collisions
         to the corresponding parent of the joint.
         """
-        # ToDo rework with new implementation
-        if isinstance(jointname, list):
-            for joint in jointname:
-                self.remove_joint(joint)
-            return
-
-        j_id = self.get_joint_id(jointname)
-
-        if j_id is None:
-            print("Joint {} not in model.".format(jointname))
-            return
-
-        # Collect the parent and the child
-        joint = self.joints[j_id]
-
-        # Create a new robot
-        robot = type(self)(self.name)
-        for mat in self.materials:
-            robot.add_aggregate("material", mat)
-
-        parent_id = self.get_link_id(joint.parent)
-        child_id = self.get_link_id(joint.child)
-
-        parent = self.links[parent_id]
-        child = self.links[child_id]
-
-        if child.name in self.child_map.keys():
-            next_joints = [names[0] for names in self.child_map[child.name]]
-        else:
-            next_joints = []
-
-        # Get the transformation
-        C_T_P = self.get_transformation(start=parent.name, end=child.name)
-
-        for link in self.links:
-            if link.name == parent.name:
-                # Correct inertial if child inertial is found
-                if child.inertial:
-                    IC_T_P = C_T_P.dot(child.inertial.origin.to_matrix())
-                    M_c = child.inertial.to_mass_matrix()
-                    if parent.inertial:
-                        COM_C = np.identity(4)
-                        COM_C[0:3, 3] = np.array(child.inertial.origin.xyz)
-                        COM_Cp = C_T_P.dot(COM_C)
-                        new_origin = (
-                                             np.array(parent.inertial.origin.xyz) * parent.inertial.mass +
-                                             COM_Cp[0:3, 3] * child.inertial.mass
-                                     ) / (parent.inertial.mass + child.inertial.mass)
-                        new_origin = representation.Pose(xyz=new_origin, rpy=[0, 0, 0])
-                        IC_T_IP = inv(parent.inertial.origin.to_matrix()).dot(IC_T_P)
-                        M_p = parent.inertial.to_mass_matrix()
-                        A = get_adjoint(new_origin.to_matrix())
-                        M_p = np.dot(np.transpose(A), np.dot(M_p, A))
-                    else:
-                        IC_T_IP = IC_T_P
-                        M_p = np.zeros((6, 6))
-                        new_origin = representation.Pose.from_matrix(inv(IC_T_P))
-
-                    A = get_adjoint(IC_T_IP.dot(new_origin.to_matrix()))
-                    M = np.dot(np.transpose(A), np.dot(M_c, A)) + M_p
-                    link.inertial = representation.Inertial.from_mass_matrix(M, new_origin)
-
-                # Correct visuals
-                for vis in child.visuals:
-                    VC_T_P = C_T_P.dot(vis.origin.to_matrix())
-                    vis.origin = representation.Pose.from_matrix(VC_T_P)
-                    link.add_aggregate('visual', vis)
-
-                if keep_collisions:
-                    for col in child.collisions:
-                        CC_T_P = C_T_P.dot(col.origin.to_matrix())
-                        col.origin = representation.Pose.from_matrix(CC_T_P)
-                        link.add_aggregate('collision', col)
-
-            if link.name != child.name:
-                robot.add_aggregate('link', link)
-
-        for j in self.joints:
-            if not j.name == jointname:
-                if j.name in next_joints:
-                    j.origin = representation.Pose.from_matrix(C_T_P.dot(j.origin.to_matrix()))
-                    j.parent = parent.name # ToDo this seems to be problematic
-                robot.add_aggregate('joint', j)
-
-        setattr(robot, 'xmlfile', self.xmlfile)
-
-        self.__dict__.update(robot.__dict__)
-
-        self.motors = [m for m in self.motors if m.joint != jointname]
-
-        for pose in self.poses:
-            pose.remove_joint(jointname)
-
-        new_sensors = []
-        for sensor in self.sensors:
-            if isinstance(sensor, sensor_representations.MultiSensor):
-                sensor.remove_target(joint.child)
-                sensor.remove_target(joint.name)
-                if not sensor.is_empty():
-                    new_sensors += [sensor]
-            else:
-                if not sensor.joint == joint.name:
-                    new_sensors += [sensor]
-                elif sensor.link == joint.child:
-                    sensor.transform(joint.origin.to_matrix())
-                    new_sensors += [sensor]
-        self.sensors = new_sensors
-
-        for sub in self.submechanisms + self.exoskeletons:
-            for key in ["jointnames", "jointnames_spanningtree", "jointnames_independent", "jointnames_active"]:
-                if jointname in sub[key]:
-                    setattr(sub, key, [j for j in getattr(sub, key) if j != jointname])
-        self.submechanisms = [sm for sm in self.submechanisms if not sm.is_empty()]
-        self.exoskeletons = [sm for sm in self.exoskeletons if not sm.is_empty()]
+        self.remove_aggregate("joints", self.get_joint(jointname))
 
     def add_floating_base(self):
         """

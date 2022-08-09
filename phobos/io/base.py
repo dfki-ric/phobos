@@ -7,7 +7,6 @@ class Linkable(object):
         "link": "link",
         "joint": "joint",
         "frame": "link",
-        "motor": "motor",
         "material": "material",
         "relative_to": "link"
     }
@@ -32,11 +31,11 @@ class Linkable(object):
         if self._related_robot_instance is None or isinstance(new_value, Representation):
             return new_value
         vtype = self.type_dict[varname].lower()
-        converted = self._related_robot_instance.get_instance(f"{vtype}", new_value)
+        converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value)
         if converted is None and new_value is not None:
             print(f"WARNING: There is no {vtype} with name {new_value} in {self._related_robot_instance.name}; setting {varname} to None")
             print(f"Available are: {repr([str(x) for x in getattr(self._related_robot_instance, vtype+'s')])}")
-            raise RuntimeError(f"{str(type(self))}, has no converter for value {new_value} with value type {vtype}")
+            raise RuntimeError(f"{str(type(self))}, can not convert {new_value} to value type {vtype}")
         return converted
 
     def _attr_get_name(self, attribute):

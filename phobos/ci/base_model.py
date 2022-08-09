@@ -211,7 +211,7 @@ class BaseModel(yaml.YAMLObject):
 
         if hasattr(self, 'remove_joints'):
             for j in self.remove_joints:
-                self.robot.remove_joint(j, keep_collisions=True)
+                self.robot.remove_joint(j)
 
         if hasattr(self, 'add_frames'):
             for j in self.add_frames:
@@ -561,7 +561,7 @@ class BaseModel(yaml.YAMLObject):
                     reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
                     noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
                 )
-                self.robot.add_motor(motor=motor)
+                self.robot.add_motor(motor)
                 motor.link_with_robot(self.robot)
 
             if "further_annotations" in self.smurf.keys():

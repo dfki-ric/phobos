@@ -513,6 +513,7 @@ class Joint(Representation, SmurfBase):
     type_dict = {
         "parent": "link",
         "child": "link",
+        "motor": "motor"
     }
     _class_variables = ["name", "parent", "child", "joint_type", "axis", "limit", "dynamics", "mimic", "motor"]
 

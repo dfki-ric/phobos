@@ -187,15 +187,44 @@ class SMURFRobot(XMLRobot):
             other_targettypes += further_targettypes
         return super(SMURFRobot, self)._rename(targettype, target, new_name, further_targettypes=other_targettypes)
 
+    def remove_aggregate(self, typeName, elem):
+        if type(elem) == str:
+            elem = self.get_aggregate(typeName, elem)
+        if elem is None:
+            return
+        if typeName in "motors":
+            elem.joint.motor = None
+            super(SMURFRobot, self).remove_aggregate(typeName, elem)
+        elif typeName in "joints":
+            super(SMURFRobot, self).remove_aggregate(typeName, elem)
+            # motors
+            self.motors = [m for m in self.motors if m.joint != str(elem)]
+            # poses
+            poses_to_remove = []
+            for p in self.poses:
+                p.remove_joint(str(elem))
+                if len(p.configuration) == 0:
+                    poses_to_remove.append(p)
+            for p in poses_to_remove:
+                self.poses.remove(p)
+            # hyrodyn
+            for sub in self.submechanisms + self.exoskeletons:
+                for key in ["jointnames", "jointnames_spanningtree", "jointnames_independent", "jointnames_active"]:
+                    if str(elem) in getattr(sub, key):
+                        setattr(sub, key, [j for j in getattr(sub, key) if j != str(elem)])
+            self.submechanisms = [sm for sm in self.submechanisms if not sm.is_empty()]
+            self.exoskeletons = [sm for sm in self.exoskeletons if not sm.is_empty()]
+        else:
+            super(SMURFRobot, self).remove_aggregate(typeName, elem)
+
     # getters
-    def get_motor(self, motorname):
+    def get_motor(self, motor_name) -> [representation.Motor, list]:
         """Returns the ID (index in the motor list) of the motor(s).
         """
+        if isinstance(motor_name, list):
+            return [self.get_motor(motor) for motor in motor_name]
 
-        if isinstance(motorname, list):
-            return [self.get_motor(motor) for motor in motorname]
-
-        return self.get_instance('motors', motorname)
+        return self.get_aggregate('motors', motor_name)
 
     # tools
     def verify_meshes(self):
@@ -224,8 +253,7 @@ class SMURFRobot(XMLRobot):
         if not isinstance(motor, representation.Motor):
             raise Exception("Please provide an instance of Motor to attach.")
         # Check if the motor already contains joint information
-        self.add_aggregate("motor", motor)
-        return
+        self.add_aggregate("motors", motor)
 
     def add_pose(self, pose):
         """Add a new pose to the robot.
@@ -233,7 +261,6 @@ class SMURFRobot(XMLRobot):
         if not isinstance(pose, JointPoseSet):
             raise Exception("Please provide an instance of Pose to add.")
         self.add_aggregate('poses', pose)
-        return
 
     def set_bitmask(self, linkname, bitmask, collisionname=None, **kwargs):
         """Set the bitmask used for collisiondetection for the corresponding link. If no 'collisionname'(s) are given,

@@ -2,9 +2,11 @@ import os
 from typing import List
 from copy import deepcopy
 
+import numpy as np
+
 from . import representation, xml_factory, sensor_representations
 from .base import Representation
-from ..utils.transform import create_transformation
+from ..utils.transform import create_transformation, get_adjoint, inv
 from ..utils.tree import get_joints_depth_first
 
 
@@ -114,7 +116,7 @@ class XMLRobot(Representation):
         if target == new_name:
             return {}
         # new_name exists? otherwise we'd have to fix the name
-        assert (self.get_instance(targettype, new_name) is None,
+        assert (self.get_aggregate(targettype, new_name) is None,
                 f"Can't rename {targettype} {target} to {new_name} as the new name already exists")
 
         other_targettypes = ['collision', 'visual', 'material']
@@ -159,13 +161,34 @@ class XMLRobot(Representation):
                     new_parent_map[k] = v
             self.parent_map = new_parent_map
         elif targettype in other_targettypes:
-            obj = self.get_instance(targettype, target)
+            obj = self.get_aggregate(targettype, target)
             if obj is not None:
                 obj.set_unique_name(new_name)
                 renamed = True
         if renamed:
             return {target: new_name}
         return {}
+
+    def regenerate_tree_maps(self):
+        """
+        Regenerates the child and parent maps
+        """
+        self.child_map = {}
+        self.parent_map = {}
+        # the link entries
+        for j in self.joints:
+            self.parent_map[j.child] = (j.name, j.parent)
+            if j.parent in self.child_map:
+                self.child_map[j.parent].append((j.name, j.child))
+            else:
+                self.child_map[j.parent] = [(j.name, j.child)]
+        # the joint entries
+        for j in self.joints:
+            self.parent_map[j.name] = (self.parent_map[j.parent][0] if j.parent in self.parent_map else None, j.parent)
+            if j.name in self.child_map:
+                self.child_map[j.name].append((self.child_map[j.child][0] if j.child in self.child_map else None, j.child))
+            else:
+                self.child_map[j.name] = [(self.child_map[j.child][0] if j.child in self.child_map else None, j.child)]
 
     def add_aggregate(self, typeName, elem, silent=False):
         if type(elem) == list:
@@ -199,6 +222,117 @@ class XMLRobot(Representation):
                 elem.set_unique_name(str(elem) + f"_{counter}")
             objects += [elem]
             setattr(self, typeName, objects)
+
+    def remove_aggregate(self, typeName, elem):
+        """
+        Removes the given aggregate
+        ATTENTION: This simply removes the aggregate, removing links and joints using only this may corrupt
+        the robot structure
+        """
+        if type(elem) == str:
+            elem = self.get_aggregate(typeName, elem)
+        if elem is None:
+            return
+        if type(elem) == list:
+            return [self.remove_aggregate(typeName, e) for e in elem]
+        if typeName in 'joints' or typeName in "links":
+            # find the corresponding link/joint we have to delete as well
+            if typeName in "joints":
+                joint = elem
+                child = self.get_aggregate("link", elem.child)
+            else:
+                child = elem
+                joint = self.get_parent(child)
+                if joint is not None:
+                    joint = self.get_joint(joint)
+                else:  # in case we want to delete the root link
+                    raise NotImplementedError("Deleting the root link, when is not yet possible!")
+
+            parent = self.get_link(joint.parent)
+            if child.name in self.child_map.keys():
+                next_joints = [names[0] for names in self.child_map[child.name]]
+            else:
+                next_joints = []
+
+            # Get the transformation
+            C_T_P = self.get_transformation(start=parent.name, end=child.name)
+            # merging the link when removing the joint
+            if typeName in "joints":
+                # Correct inertial if child inertial is found
+                if child.inertial:
+                    IC_T_P = C_T_P.dot(child.inertial.origin.to_matrix())
+                    M_c = child.inertial.to_mass_matrix()
+                    if parent.inertial:
+                        COM_C = np.identity(4)
+                        COM_C[0:3, 3] = np.array(child.inertial.origin.xyz)
+                        COM_Cp = C_T_P.dot(COM_C)
+                        new_origin = (
+                                             np.array(parent.inertial.origin.xyz) * parent.inertial.mass +
+                                             COM_Cp[0:3, 3] * child.inertial.mass) / (
+                                                 parent.inertial.mass + child.inertial.mass)
+                        new_origin = representation.Pose(xyz=new_origin, rpy=[0, 0, 0])
+                        IC_T_IP = inv(parent.inertial.origin.to_matrix()).dot(IC_T_P)
+                        M_p = parent.inertial.to_mass_matrix()
+                        A = get_adjoint(new_origin.to_matrix())
+                        M_p = np.dot(np.transpose(A), np.dot(M_p, A))
+                    else:
+                        IC_T_IP = IC_T_P
+                        M_p = np.zeros((6, 6))
+                        new_origin = representation.Pose.from_matrix(inv(IC_T_P))
+
+                    A = get_adjoint(IC_T_IP.dot(new_origin.to_matrix()))
+                    M = np.dot(np.transpose(A), np.dot(M_c, A)) + M_p
+                    parent.inertial = representation.Inertial.from_mass_matrix(M, new_origin)
+
+                for vis in child.visuals:
+                    VC_T_P = C_T_P.dot(vis.origin.to_matrix())
+                    vis.origin = representation.Pose.from_matrix(VC_T_P)
+                    parent.add_aggregate('visual', vis)
+
+                for col in child.collisions:
+                    CC_T_P = C_T_P.dot(col.origin.to_matrix())
+                    col.origin = representation.Pose.from_matrix(CC_T_P)
+                    parent.add_aggregate('collision', col)
+            # reparent the following joints
+            new_joints = []
+            for j in self.joints:
+                if j is not joint:
+                    if j.name in next_joints:
+                        j.origin = representation.Pose.from_matrix(C_T_P.dot(j.origin.to_matrix()))
+                        j.parent = parent.name
+                    new_joints += [j]
+            # remove the joint and links
+            self.joints = new_joints
+            self.links = [l for l in self.links if l is not child]
+            self.regenerate_tree_maps()
+            # check the consequences
+            new_sensors = []
+            for sensor in self.sensors:
+                if isinstance(sensor, sensor_representations.MultiSensor):
+                    sensor.remove_target([str(child), str(joint)])
+                    if not sensor.is_empty():
+                        new_sensors += [sensor]
+                else:
+                    if not hasattr(sensor, "joint") or sensor.joint != joint.name:
+                        new_sensors += [sensor]
+                    elif hasattr(sensor, "link") and sensor.link == joint.child:
+                        sensor.transform(joint.origin.to_matrix())
+                        sensor.link = str(parent)
+                        new_sensors += [sensor]
+            self.sensors = new_sensors
+
+            new_transmissions = []
+            for tm in self.transmissions:
+                tm.joints = [j for j in tm.joints if str(j.name) != str(joint)]
+                if len(tm.joints) > 0:
+                    new_transmissions.append(tm)
+            self.transmissions = new_transmissions
+        else:  # basically handle any other aggregates
+            if not typeName.endswith("s"):
+                typeName += "s"
+            # Original list
+            objects = getattr(self, typeName)
+            setattr(self, typeName, [o for o in objects if o is not elem])
 
     def add_link(self, link):
         if not isinstance(link, representation.Link):
@@ -243,7 +377,7 @@ class XMLRobot(Representation):
         assert root is not None, "No roots detected, invalid URDF."
         return root
 
-    def get_instance(self, targettype, target, verbose=False):
+    def get_aggregate(self, targettype, target, verbose=False):
         """
         Returns the id of the given instance
         :param targettype: the tye of the searched instance
@@ -251,12 +385,12 @@ class XMLRobot(Representation):
         :return: the id or None if not found
         """
         if type(target) == list:
-            return [self.get_instance(targettype, str(t)) for t in target]
+            return [self.get_aggregate(targettype, str(t)) for t in target]
         names = []
         if not targettype.endswith("s"):
             targettype += "s"
         for obj in getattr(self, targettype):
-            names.append(obj.name)
+            names.append(str(obj))
             if str(obj) == str(target):
                 return obj
         if verbose:
@@ -274,7 +408,7 @@ class XMLRobot(Representation):
         if isinstance(link_name, list):
             return [self.get_link(lname) for lname in link_name]
 
-        return self.get_instance("link", link_name, verbose=verbose)
+        return self.get_aggregate("link", link_name, verbose=verbose)
 
     def get_joint(self, joint_name, verbose=True) -> [representation.Joint, list]:
         """
@@ -287,7 +421,7 @@ class XMLRobot(Representation):
         if isinstance(joint_name, list):
             return [self.get_joint(jname) for jname in joint_name]
 
-        return self.get_instance("joint", joint_name, verbose=verbose)
+        return self.get_aggregate("joint", joint_name, verbose=verbose)
 
     def get_sensor(self, sensor_name) -> [sensor_representations.Sensor, list]:
         """Returns the ID (index in the sensor list) of the sensor(s).
@@ -295,7 +429,7 @@ class XMLRobot(Representation):
         if isinstance(sensor_name, list):
             return [self.get_sensor(sensor) for sensor in sensor_name]
 
-        return self.get_instance('sensors', sensor_name)
+        return self.get_aggregate('sensors', sensor_name)
 
     def get_inertial(self, link_name):
         """

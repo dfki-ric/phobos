@@ -259,7 +259,10 @@ class MultiSensor(Sensor):
         return
 
     def remove_target(self, target):
-        self.targets = [t for t in self.targets if t != (target if type(target) == str else target.name)]
+        if type(target) != list:
+            target = [target]
+        target = [str(t) for t in target]
+        self.targets = [t for t in self.targets if str(t) not in target]
 
     def is_empty(self):
         return len(self.targets) == 0
