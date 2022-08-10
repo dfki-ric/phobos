@@ -25,7 +25,7 @@ from phobos.blender.io.scenes import scene_types
 from phobos.blender.utils import selection as sUtils
 from phobos.blender.utils import naming as nUtils
 from phobos.blender.utils import blender as bUtils
-
+from phobos.core import Robot
 
 indent = '  '
 xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
@@ -524,24 +524,20 @@ def exportModel(model, exportpath='.', entitytypes=None):
                     # update the texture path in the model
                     mat[texturetype] = 'textures/' + path.basename(mat[texturetype])
 
-    # export model in selected formats
-    for entitytype in entitytypes:
-        typename = "export_entity_" + entitytype
-        # check if format exists and should be exported
-        if not getattr(bpy.context.scene, typename, False):
-            continue
-        # format exists and is exported:
-        model_path = os.path.join(exportpath, entitytype)
-        securepath(model_path)
+    robot = Robot.get_robot_from_blender_dict()
+    export_args = {
+        "outputdir": exportpath,
+        "formats": [format for format in entitytypes if format in ["urdf", "srdf", "sdf"]],
+        "ros_pkg": getattr(bpy.context.scene.phobosexportsettings, 'outputPathtype', "relative") == "ros_package",
+        "ros_pkg_name": None if len(getRosPackageName()) == 0 else getRosPackageName(),
+        "export_joint_limits": "joint_limits" in entitytypes
+    }
+    if "smurf" in entitytypes:
+        robot.export_smurf(**export_args)
+    elif len(export_args["xml_formats"]) > 0:
+        robot.export_xml_with_meshes(**export_args)
 
-        # export model using entity export function
-        log("Export model '" + model['name'] + "' as " + entitytype + " to " + model_path, "DEBUG")
-
-        # pass a model copy to the entity export, as these might alter the dictionary
-        newmodel = copy_model(model)
-        entity_types[entitytype]['export'](newmodel, model_path)
-
-    # export meshes in selected formats
+    # ToDo export meshes in selected formats
     i = 1
     mt = len([m for m in mesh_types if getattr(bpy.context.scene, "export_mesh_" + m, False)])
     mc = len(model['meshes'])

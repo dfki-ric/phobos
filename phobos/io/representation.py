@@ -307,6 +307,13 @@ class Material(Representation, SmurfBase):
     _class_variables = ["name", "color", "texture"]
 
     def __init__(self, name=None, color=None, texture=None, **kwargs):
+        if color is None and "diffuseColor" in kwargs:
+            self.color = Color([
+                kwargs["diffuseColor"]["r"],
+                kwargs["diffuseColor"]["g"],
+                kwargs["diffuseColor"]["b"],
+                kwargs["diffuseColor"]["a"] if "a" in kwargs["diffuseColor"]["a"] else 1.
+            ])
         self.color = _singular(color)
         self.texture = _singular(texture)
         self.original_name = name

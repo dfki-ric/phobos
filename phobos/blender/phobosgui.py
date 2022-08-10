@@ -1214,9 +1214,8 @@ class PhobosExportPanel(bpy.types.Panel):
 
         cmodel = inlayout.column(align=True)
         cmodel.label(text="Models")
-        for entitytype in ioUtils.getEntityTypesForExport():
-            typename = "export_entity_" + entitytype
-            cmodel.prop(bpy.context.scene, typename)
+        for entitytype in ["smurf", "urdf", "sdf", "srdf", "joint_limits"]:
+            cmodel.prop(bpy.context.scene, entitytype)
 
         cmesh = inlayout.column(align=True)
         cmesh.label(text="Meshes")
@@ -1226,7 +1225,7 @@ class PhobosExportPanel(bpy.types.Panel):
                 cmesh.prop(bpy.context.scene, typename)
         cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputMeshtype')
         cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputPathtype')
-        cmesh.prop(bpy.context.scene.phobosexportsettings, 'prefixExport')
+        # cmesh.prop(bpy.context.scene.phobosexportsettings, 'prefixExport')
 
         cscene = inlayout.column(align=True)
         cscene.label(text="Scenes")
