@@ -715,6 +715,23 @@ class Link(Representation, SmurfBase):
             col.check_linkage()
 
 
+class Interface(Representation, SmurfBase):
+    _class_variables = ["name", "origin", "parent"]
+    type_dict = {
+        "parent": "link"
+    }
+
+    def __init__(self, name=None, origin=None, parent=None, **kwargs):
+        SmurfBase.__init__(self, **kwargs)
+        self.name = name
+        assert self.name is not None
+        if origin is None:
+            origin = Pose()
+        self.origin = _singular(origin)
+        self.parent = parent
+        assert self.parent is not None
+
+
 # class PR2Transmission(Representation):
 #     def __init__(self, name=None, joint=None, actuator=None, type=None,
 #                  mechanicalReduction=1):

@@ -1055,9 +1055,13 @@ class Robot(SMURFRobot):
         for exo in self.exoskeletons:
             if exo.is_related_to(joints, pure=True):
                 exoskeletons.append(exo)
+        interfaces = []
+        for interf in self.interfaces:
+            if interf.is_related_to(joints):
+                interfaces.append(interf)
 
         if not link_obj:
-            for entity in links + joints + materials + motors + sensors + submechanisms + exoskeletons:
+            for entity in links + joints + materials + motors + sensors + submechanisms + exoskeletons + interfaces:
                 entity.unlink_from_robot()
 
         submodel.add_aggregate("materials", self.get_aggregate("material", list(materials)))
@@ -1065,6 +1069,7 @@ class Robot(SMURFRobot):
         submodel.add_aggregate("sensors", self.get_aggregate("sensor", sensors))
         submodel.add_aggregate("submechanisms", submechanisms)
         submodel.add_aggregate("exoskeletons", exoskeletons)
+        submodel.add_aggregate("interfaces", interfaces)
 
         # copy all annotations we not yet have
         for k, v in self.__dict__.items():
@@ -1913,9 +1918,10 @@ class Robot(SMURFRobot):
         pmaterials = set([str(m) for m in self.materials])
         psensors = set([str(m) for m in self.sensors])
         ptransmissions = set([str(m) for m in self.transmissions])
-        # pmotors = set([m.name for m in self.motors])
+        pmotors = set([m.name for m in self.motors])
         psubmechanisms = set([str(m) for m in self.submechanisms])
         pexoskeletons = set([str(m) for m in self.exoskeletons])
+        pinterfaces = set([str(m) for m in self.interfaces])
         # pposes = set([m.name for m in self.poses])
 
         clink = set([str(link) for link in other.links])
@@ -1925,9 +1931,10 @@ class Robot(SMURFRobot):
         cmaterials = set([str(m) for m in other.materials])
         csensors = set([str(m) for m in other.sensors])
         ctransmissions = set([str(m) for m in other.transmissions])
-        # cmotors = set([m.name for m in other.motors])
+        cmotors = set([m.name for m in other.motors])
         csubmechanisms = set([str(m) for m in other.submechanisms])
         cexoskeletons = set([str(m) for m in other.exoskeletons])
+        cinterfaces = set([str(m) for m in other.interfaces])
         # cposes = set([m.name for m in other.poses])
 
         renamed_entities = {}
@@ -2007,6 +2014,15 @@ class Robot(SMURFRobot):
             else:
                 raise NameError("There are duplicates in transmission names", repr(ptransmissions & ctransmissions))
             
+        if pmotors & cmotors:
+            if not do_not_rename:
+                print("Warning : Motor names are duplicates a _2 will be appended!", pmotors & cmotors,
+                      file=sys.stderr)
+                renamed_entities.update(
+                    other.rename(targettype="motor", target=list(pmotors & cmotors), prefix=name_prefix, suffix=name_suffix))
+            else:
+                raise NameError("There are duplicates in motor names", repr(pmotors & cmotors))
+            
         if pexoskeletons & cexoskeletons:
             if not do_not_rename:
                 print("Warning : Exoskeleton names are duplicates a _2 will be appended!", pexoskeletons & cexoskeletons,
@@ -2024,6 +2040,15 @@ class Robot(SMURFRobot):
                     other.rename(targettype="submechanism", target=list(psubmechanisms & csubmechanisms), prefix=name_prefix, suffix=name_suffix))
             else:
                 raise NameError("There are duplicates in submechanism names", repr(psubmechanisms & csubmechanisms))
+
+        if pinterfaces & cinterfaces:
+            if not do_not_rename:
+                print("Warning : Interface names are duplicates a _2 will be appended!", pinterfaces & cinterfaces,
+                      file=sys.stderr)
+                renamed_entities.update(
+                    other.rename(targettype="interface", target=list(pinterfaces & cinterfaces), prefix=name_prefix, suffix=name_suffix))
+            else:
+                raise NameError("There are duplicates in interface names", repr(pinterfaces & cinterfaces))
 
         if renamed_entities != {}:
             return self.attach(other, joint, do_not_rename=do_not_rename,
@@ -2056,6 +2081,10 @@ class Robot(SMURFRobot):
 
         for cExoskeleton in other.exoskeletons:
             self.add_aggregate('exoskeleton', cExoskeleton)
+
+        for cInterface in other.interfaces:
+            self.add_aggregate('interface', cInterface)
+
 
         # Todo rework poses
         # for cPose in other.poses:

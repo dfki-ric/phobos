@@ -11,6 +11,7 @@ from .hyrodyn import Submechanism, Exoskeleton
 from ..geometry import import_mesh
 from ..utils import tree
 from ..defs import load_json, dump_json, dump_yaml
+from ..utils.transform import inv
 
 
 class SMURFRobot(XMLRobot):
@@ -29,6 +30,8 @@ class SMURFRobot(XMLRobot):
         # Hyrodyn stuff
         self.submechanisms = []
         self.exoskeletons = []
+        # Modular stuff
+        self.interfaces = []
 
         if inputfile is not None:
             if inputfile.lower().endswith(".smurf") and smurffile is None:
@@ -73,12 +76,12 @@ class SMURFRobot(XMLRobot):
     # helper methods
     def link_entities(self):
         super(SMURFRobot, self).link_entities()
-        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses:
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
             entity.link_with_robot(self)
 
     def unlink_entities(self):
         super(SMURFRobot, self).unlink_entities()
-        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses:
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
             entity.unlink_from_robot()
 
     def read_smurffile(self, smurffile):
@@ -108,7 +111,7 @@ class SMURFRobot(XMLRobot):
                 if "submechanisms" in annotation.keys():
                     self.submechanisms_file = os.path.abspath(annotationfile)
                 self.annotations.update(annotation)
-            except yaml.YAMLError as exc:
+            except Exception as exc:
                 print(exc)
 
     def _init_annotations(self):
@@ -180,9 +183,16 @@ class SMURFRobot(XMLRobot):
                     'exoskeletons',
                     Exoskeleton(**exo)
                 )
+                
+        if 'interfaces' in self.annotations:
+            for interf in self.annotations['interfaces']:
+                self.add_aggregate(
+                    'interfaces',
+                    representation.Interface(**interf)
+                )
 
     def _rename(self, targettype, target, new_name, further_targettypes=None):
-        other_targettypes = ["motors", "poses", "submechanisms", "exoskeletons"]
+        other_targettypes = ["motors", "poses", "submechanisms", "exoskeletons", "interfaces"]
         if further_targettypes is not None:
             other_targettypes += further_targettypes
         return super(SMURFRobot, self)._rename(targettype, target, new_name, further_targettypes=other_targettypes)
@@ -199,6 +209,11 @@ class SMURFRobot(XMLRobot):
             super(SMURFRobot, self).remove_aggregate(typeName, elem)
             # motors
             self.motors = [m for m in self.motors if m.joint != str(elem)]
+            # interfaces
+            for interf in self.interfaces:
+                if interf.parent == elem.child:
+                    interf.origin = representation.Pose.from_matrix(elem.origin.to_matrix().dot(interf.origin.to_matrix()))
+                    interf.parent = elem.parent
             # poses
             poses_to_remove = []
             for p in self.poses:
@@ -214,6 +229,10 @@ class SMURFRobot(XMLRobot):
                         setattr(sub, key, [j for j in getattr(sub, key) if j != str(elem)])
             self.submechanisms = [sm for sm in self.submechanisms if not sm.is_empty()]
             self.exoskeletons = [sm for sm in self.exoskeletons if not sm.is_empty()]
+        elif typeName in "links":
+            super(SMURFRobot, self).remove_aggregate(typeName, elem)
+            # interfaces
+            self.interfaces = [m for m in self.interfaces if str(m.parent) != str(elem)]
         else:
             super(SMURFRobot, self).remove_aggregate(typeName, elem)
 

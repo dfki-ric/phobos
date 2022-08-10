@@ -327,6 +327,7 @@ class XMLRobot(Representation):
                 if len(tm.joints) > 0:
                     new_transmissions.append(tm)
             self.transmissions = new_transmissions
+            return joint, child
         else:  # basically handle any other aggregates
             if not typeName.endswith("s"):
                 typeName += "s"
