@@ -1,10 +1,10 @@
-import yaml
 import os.path
 from copy import deepcopy
 
 from .scene import Scene
 from ..utils import urdf
 from ..io import representation
+from ..defs import dump_json, load_json, dump_yaml
 
 
 class Assembly(Scene):
@@ -93,4 +93,4 @@ class Assembly(Scene):
         for entity in self.entities_by_name.values():
             out["smurfa"].append(entity.to_yaml())
         with open(outputfile, "w") as f:
-            f.write(yaml.safe_dump(out, default_flow_style=False))
+            f.write(dump_json(out, default_flow_style=False))

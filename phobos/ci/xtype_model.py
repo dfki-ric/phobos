@@ -1,5 +1,3 @@
-import yaml
-
 from ..core import Robot
 from ..defs import *
 
@@ -8,7 +6,7 @@ from .combined_model import CombinedModel
 
 class XTypeModel(CombinedModel):
     def __init__(self, configfile, pipeline, processed_model_exists=True, only_create=False):
-        configfile = yaml.safe_load(open(configfile, 'r'))
+        configfile = load_json(open(configfile, 'r'))
         if only_create:
             if "model" in configfile["xtype_model"].keys():
                 configfile = {
@@ -53,7 +51,7 @@ class XTypeModel(CombinedModel):
             self.deimos.convertParts()
             kwargs = self.deimos.generateURDFAssemblyCfg()["xtype_model"]
             with open(self.tempdir+"/join_cfg.yml", "w") as f:
-                f.write(yaml.safe_dump(kwargs))
+                f.write(dump_json(kwargs))
             for (k, v) in kwargs.items():
                 setattr(self, k, v)
             super()._join_to_basefile()

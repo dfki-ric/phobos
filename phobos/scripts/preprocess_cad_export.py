@@ -15,13 +15,13 @@ INFO = 'Preprocess CAD->URDF exports to use with pipeline.'
 def main(args):
     import argparse
     import os
-    import yaml
     import pkg_resources
 
     from phobos.defs import EULER_CONVENTION, RPY_CONVENTION
     from phobos.utils.git import get_repo_data
     from phobos.utils.misc import create_dir, copy, regex_replace
     from phobos.utils.transform import order_angles
+    from phobos.defs import load_json, dump_json, dump_yaml
 
     def invertJoint(urdfpath, name):
         try:
@@ -125,7 +125,7 @@ def main(args):
                 print("  Replacing strings according to replacements.yml")
                 copy(None, os.path.join(args.input_directory, "replacements.yml"),
                      os.path.join(args.output_directory, "replacements.yml"))
-                replacements = yaml.safe_load(open(os.path.join(args.input_directory, "replacements.yml"), "r").read())
+                replacements = load_json(open(os.path.join(args.input_directory, "replacements.yml"), "r").read())
                 content = regex_replace(content, replacements)
                 for file in [f for f in os.listdir(os.path.join(args.output_directory, "meshes")) if
                              os.path.isfile(os.path.join(args.output_directory, "meshes", f))]:

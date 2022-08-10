@@ -1,7 +1,7 @@
 import numpy as np
-import yaml
 import os
 from .entity import WORLD, PARENT, Entity, BaseEntity
+from ..defs import load_json, dump_json, dump_yaml
 
 
 class Scene(object):
@@ -14,7 +14,7 @@ class Scene(object):
         self.scene_name, extension = os.path.splitext(os.path.basename(self.scenefile)) \
             if self.scenefile is not None else None, None
         self.scenedir = os.path.dirname(self.scenefile) if self.scenefile is not None else None
-        self.filedict = yaml.safe_load(open(self.scenefile, "r").read()) if not copy_construct else None
+        self.filedict = load_json(open(self.scenefile, "r").read()) if not copy_construct else None
         self.entities = []
         self.entities_by_name = {}
         if not copy_construct:
@@ -25,7 +25,7 @@ class Scene(object):
 
     def recursive_parse(self, scenefile, transformation_offset=np.identity(4), connect_root_to=False):
         root_path = os.path.dirname(scenefile)
-        smurf_dict = yaml.safe_load(open(scenefile, "r").read())
+        smurf_dict = load_json(open(scenefile, "r").read())
         if "entities" not in smurf_dict.keys():
             smurf_dict["entities"] = []
         if "smurfs" not in smurf_dict.keys():
@@ -102,4 +102,4 @@ class Scene(object):
         for entity in self.entities_by_name.values():
             out["smurfs"].append(entity.to_yaml())
         with open(outputfile, "w") as f:
-            f.write(yaml.safe_dump(out, default_flow_style=False))
+            f.write(dump_json(out, default_flow_style=False))

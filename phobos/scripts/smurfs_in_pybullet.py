@@ -1,5 +1,5 @@
 #!python3
-from ..defs import PYBULLET_AVAILABLE
+from ..defs import PYBULLET_AVAILABLE, load_json, dump_json
 
 
 def can_be_used():
@@ -30,14 +30,15 @@ def main(args):
     import numpy as np
     import pybullet as pb
     import pybullet_data
-    import yaml
     # noinspection SpellCheckingInspection
     from scipy.spatial.transform import Rotation as SciPyRot
+
+    from phobos.defs import load_json, dump_json, dump_yaml
 
     def parse_smurf(path, basedir):
         smurf_path = os.path.join(basedir, path)
         dir_path = os.path.dirname(smurf_path)
-        smurf = yaml.safe_load(open(smurf_path, "r").read())
+        smurf = load_json(open(smurf_path, "r").read())
         urdf_path = os.path.join(dir_path, [f for f in smurf["files"] if f.lower().endswith("urdf")][0])
         # setting a convention here!!! If there is another URDF with a pb_ prefix we load this instead
         pb_urdf_path = os.path.join(os.path.dirname(urdf_path), "pb_" + os.path.basename(urdf_path))
@@ -46,7 +47,7 @@ def main(args):
             urdf_path = pb_urdf_path
         for f in smurf["files"]:
             if f.lower().endswith(".yml"):
-                d = yaml.safe_load(open(os.path.join(dir_path, f), "r").read())
+                d = load_json(open(os.path.join(dir_path, f), "r").read())
                 for k, v in d.items():
                     smurf[k] = v
         return urdf_path, smurf
@@ -56,7 +57,7 @@ def main(args):
             loaded = {}
         smurfs_path = os.path.join(basedir, path)
         dir_path = os.path.dirname(smurfs_path)
-        smurfs = yaml.safe_load(open(smurfs_path, "r").read())
+        smurfs = load_json(open(smurfs_path, "r").read())
         # physics
         if "physics" in smurfs.keys():
             if "gravity" in smurfs["physics"].keys():

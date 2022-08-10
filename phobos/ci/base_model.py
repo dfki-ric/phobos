@@ -3,6 +3,8 @@ import sys
 import re
 import pkg_resources
 import yaml
+
+from ..defs import load_json, dump_json, dump_yaml
 from copy import deepcopy
 
 from ..core import Robot
@@ -20,7 +22,7 @@ class BaseModel(yaml.YAMLObject):
         if type(configfile) is str:
             if not os.path.isfile(configfile):
                 raise Exception('{} not found!'.format(configfile))
-            self.cfg = yaml.safe_load(open(configfile, 'r'))
+            self.cfg = load_json(open(configfile, 'r'))
         else:
             self.cfg = configfile
 
@@ -96,7 +98,7 @@ class BaseModel(yaml.YAMLObject):
 
     @staticmethod
     def get_exported_model_path(pipeline, configfile):
-        cfg = yaml.safe_load(open(configfile, 'r'))
+        cfg = load_json(open(configfile, 'r'))
         if "model" in cfg.keys():
             cfg = cfg['model']
         elif "combined_model" in cfg.keys():
@@ -562,6 +564,7 @@ class BaseModel(yaml.YAMLObject):
                     noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
                 )
                 self.robot.add_motor(motor)
+                print([str(m) for m in self.robot.motors])
                 motor.link_with_robot(self.robot)
 
             if "further_annotations" in self.smurf.keys():
@@ -604,10 +607,12 @@ class BaseModel(yaml.YAMLObject):
                 print("Exporting joint_limits file", os.path.join(self.exportdir, file_path), flush=True)
                 if not os.path.isdir(os.path.dirname(os.path.join(self.exportdir, file_path))):
                     os.makedirs(os.path.dirname(os.path.join(self.exportdir, file_path)))
+                output_dict = {"limits": output_dict}
                 with open(os.path.join(self.exportdir, file_path), "w") as jl_file:
-                    jl_file.write("limits:\n")
-                    jl_file.write("  names: " + yaml.safe_dump(output_dict["names"], default_flow_style=True) + "\n")
-                    jl_file.write("  elements: " + yaml.safe_dump(output_dict["elements"], default_flow_style=True))
+                    jl_file.write(dump_json(output_dict))
+                    #jl_file.write("limits:\n")
+                    #jl_file.write("  names: " + dump_yaml(output_dict["names"], default_flow_style=True) + "\n")
+                    #jl_file.write("  elements: " + dump_yaml(output_dict["elements"], default_flow_style=True))
 
             def get_joints(robot, joint_desc):
                 robot_joint_names = [jnt.name for jnt in robot.joints]
@@ -656,7 +661,7 @@ class BaseModel(yaml.YAMLObject):
                     "dirname": "kccd",
                     "reduce_meshes": 0
                 }
-            print("Creating kccd model with config:\n", yaml.safe_dump(self.export_kccd, default_flow_style=False),
+            print("Creating kccd model with config:\n", dump_yaml(self.export_kccd, default_flow_style=False),
                   flush=True)
             misc.create_symlink(self.pipeline,
                                 os.path.join(self.pipeline.temp_dir, self.pipeline.meshes["iv"]),
@@ -857,7 +862,7 @@ class BaseModel(yaml.YAMLObject):
         if os.path.isfile(self.pipeline.test_protocol):
             print("INFO: Appending test_protocol to MR description")
             with open(self.pipeline.test_protocol, "r") as f:
-                protocol = yaml.safe_load(f.read())
+                protocol = load_json(f.read())
                 mr.description = misc.append_string(mr.description, "\n" + str(protocol["all"]))
                 mr.description = misc.append_string(mr.description, str(protocol[self.modelname]))
         else:
@@ -870,7 +875,7 @@ class BaseModel(yaml.YAMLObject):
             return_msg = "pushed to " + git.push(repo, branch="master")
             # deploy to mirror
         if hasattr(self, "deploy_to_mirror"):
-            print("Deploying to mirror:\n", yaml.safe_dump(self.deploy_to_mirror, default_flow_style=False), flush=True,
+            print("Deploying to mirror:\n", dump_yaml(self.deploy_to_mirror, default_flow_style=False), flush=True,
                   file=sys.stdout)
             print("Deploying to mirror", flush=True, file=sys.stderr)
             mirror_dir = os.path.join(self.tempdir, "deploy_mirror")

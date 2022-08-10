@@ -1,9 +1,9 @@
 import sys
 import subprocess
 import os
-import yaml
 
 from ..core import Robot
+from ..defs import load_json, dump_json, dump_yaml
 
 
 def get_load_report(urdf_file, submechs):
@@ -20,8 +20,8 @@ def debug_report(report, urdf_file, submech_file, raise_error_failure=False):
           "(file exists)" if os.path.exists(urdf_file) else "(does not exist)", submech_file,
           "(file exists)" if os.path.exists(submech_file) else "(does not exist)",
           flush=True)
-    # print(submech_file, open(submech_file, "r").read(), yaml.safe_load(open(submech_file, "r").read()))
-    submech_dict = yaml.safe_load(open(submech_file, "r").read())
+    # print(submech_file, open(submech_file, "r").read(), load_json(open(submech_file, "r").read()))
+    submech_dict = load_json(open(submech_file, "r").read())
     robot = Robot(xmlfile=urdf_file)
     if report[2] > 0:
         print(report[0], file=sys.stdout, flush=True)

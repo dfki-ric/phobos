@@ -1,7 +1,6 @@
 import sys
 from copy import deepcopy
 import numpy as np
-import yaml
 import subprocess
 
 from ..defs import *
@@ -312,10 +311,10 @@ class ModelTest(object):
         new_files = list_files(self.new.exportdir, ignore=["\.gv", "\.pdf", "\.git*", "README\.md", "manifest\.xml"])
         old_files = list_files(self.old.directory, ignore=["\.gv", "\.pdf", "\.git*", "README\.md", "manifest\.xml"])
         print("New model contains:", flush=True)
-        print(yaml.safe_dump(sorted(list(set(new_files) - set(old_files)))), flush=True)
+        print(dump_json(sorted(list(set(new_files) - set(old_files)))), flush=True)
         print("but not:", flush=True)
         removed_files = set(old_files) - set(new_files)
-        print(yaml.safe_dump(sorted(list(removed_files))), flush=True)
+        print(dump_json(sorted(list(removed_files))), flush=True)
         return len(removed_files) == 0
 
     def test_hyrodyn_load_in_hyrodyn(self):

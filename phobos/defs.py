@@ -30,3 +30,23 @@ try:
     print("Deimos available.", flush=True)
 except ImportError:
     print("Deimos not available.", flush=True)
+
+
+def dump_json(obj, **kwargs):
+    import json
+    if "default_flow_style" in kwargs:
+        kwargs.pop("default_flow_style")
+    if "default_style" in kwargs:
+        kwargs.pop("default_style")
+    return json.dumps(obj, **kwargs)
+
+
+YAML_AVAILABLE = False
+try:
+    from yaml import safe_load as load_json, safe_dump as dump_yaml
+    YAML_AVAILABLE = True
+    print("YAML available (backwards compatibility).")
+except ImportError:
+    from json import loads as load_json, dumps
+    dump_yaml = dump_json
+    print("YAML not available (backwards compatibility).")

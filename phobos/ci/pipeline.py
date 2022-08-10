@@ -33,7 +33,7 @@ class Pipeline(yaml.YAMLObject):
         if not os.path.isfile(configfile):
             raise Exception('{} not found!'.format(configfile))
 
-        kwargs = yaml.safe_load(open(configfile, 'r'))['pipeline']
+        kwargs = load_json(open(configfile, 'r'))['pipeline']
 
         for (k, v) in kwargs.items():
             setattr(self, k, v)
@@ -46,7 +46,7 @@ class Pipeline(yaml.YAMLObject):
         self.test_protocol = os.path.join(self.temp_dir, "test_protocol.txt")
         if os.path.isfile(self.faillog) and processed_model_exists:
             with open(self.faillog, "r") as f:
-                self.processing_failed = yaml.safe_load(f.read())
+                self.processing_failed = load_json(f.read())
 
         for k, v in self.modeltypes.items():
             if k != "default":
@@ -59,7 +59,7 @@ class Pipeline(yaml.YAMLObject):
                 "meshespath": self.meshes[cfg["output_mesh_format"]]
             })
 
-        print("Model types:\n", yaml.safe_dump(self.modeltypes, default_flow_style=False), flush=True)
+        print("Model types:\n", dump_yaml(self.modeltypes, default_flow_style=False), flush=True)
         print("Models to process:", self.model_definitions, flush=True)
         print("Finished reading config", configfile, flush=True)
 
@@ -73,7 +73,7 @@ class Pipeline(yaml.YAMLObject):
                 self.processing_failed[md[:-4]] = {"load": "N/A", "process": "N/A", "test": "N/A", "deploy": "N/A",
                                                    "order": order}
             try:
-                cfg = yaml.safe_load(open(os.path.join(self.configdir, md), "r").read())
+                cfg = load_json(open(os.path.join(self.configdir, md), "r").read())
                 cfg_ = cfg[list(cfg.keys())[0]]
             except KeyError as e:
                 self.processing_failed[md[:-4]]["load"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
@@ -131,7 +131,7 @@ class Pipeline(yaml.YAMLObject):
                 continue
         if os.path.exists(os.path.join(self.temp_dir)):
             with open(self.faillog, "w") as f:
-                f.write(yaml.safe_dump(self.processing_failed, default_flow_style=False))
+                f.write(dump_json(self.processing_failed, default_flow_style=False))
 
     def _get_model_failure_state(self, modelname):
         state = 0
@@ -182,7 +182,7 @@ class Pipeline(yaml.YAMLObject):
             phases = []
         if len(phases) == 0:
             phases = ["process", "test", "deploy"]
-        log = yaml.safe_load(open(self.faillog, "r").read())
+        log = load_json(open(self.faillog, "r").read())
         all_models = float(len(log.keys()))
         fails = 0.0
         all_models *= len(phases)
@@ -195,7 +195,7 @@ class Pipeline(yaml.YAMLObject):
         return 1 - fails / all_models
 
     def print_fail_log(self, file=sys.stdout):
-        log = yaml.safe_load(open(self.faillog, "r").read())
+        log = load_json(open(self.faillog, "r").read())
         print("\nModel Failure Report:\n---------------------", file=file)
         report = [(k, v) for k, v in log.items()]
         order_val = ["order", "load", "process", "test", "deploy"]
@@ -219,7 +219,7 @@ class Pipeline(yaml.YAMLObject):
         # delete the temp_dir if there is already one
         misc.recreate_dir(self, self.temp_dir)
         with open(self.faillog, "w") as f:
-            f.write(yaml.safe_dump(self.processing_failed, default_flow_style=False))
+            f.write(dump_json(self.processing_failed, default_flow_style=False))
 
         # create the central mesh folders
         for name, cfg in self.modeltypes.items():
@@ -250,12 +250,12 @@ class Pipeline(yaml.YAMLObject):
                     traceback.format_exception(None, e, e.__traceback__))
                 traceback.print_exc()
         with open(self.faillog, "w") as f:
-            f.write(yaml.safe_dump(self.processing_failed, default_flow_style=False))
+            f.write(dump_json(self.processing_failed, default_flow_style=False))
 
     def test_models(self):
         """Runs the configured test_routines over all models"""
         with open(self.faillog, "r") as f:
-            self.processing_failed = yaml.safe_load(f.read())
+            self.processing_failed = load_json(f.read())
         failures_ignored_for = []
         for model in self.models:
             fstate = self._get_model_failure_state(model.modelname)
@@ -394,7 +394,7 @@ class Pipeline(yaml.YAMLObject):
             if not test["compare_model_present"]:
                 test_protocol[modelname] = misc.append_string(test_protocol[modelname], " (Compare model not present):",
                                                               end="", print=True, flush=True)
-            test_protocol[modelname] = misc.append_string(test_protocol[modelname], "\n    " + yaml.safe_dump(
+            test_protocol[modelname] = misc.append_string(test_protocol[modelname], "\n    " + dump_yaml(
                 {"Compare Model": test["compare_model"]}, default_flow_style=False, indent=6) + "    Test Results:",
                                                           flush=True, print=True)
             for testname, result in test.items():
@@ -421,16 +421,16 @@ class Pipeline(yaml.YAMLObject):
                     # else:
                     #     print(flush=True)
             with open(self.faillog, "w") as f:
-                f.write(yaml.safe_dump(self.processing_failed, default_flow_style=False))
+                f.write(dump_json(self.processing_failed, default_flow_style=False))
         print("The test routine", "succeeded!" if success else "failed!", flush=True)
         with open(self.test_protocol, "w") as f:
-            f.write(yaml.safe_dump(test_protocol, default_flow_style=False))
+            f.write(dump_json(test_protocol, default_flow_style=False))
         return success
 
     def deploy_models(self):
         """Moves everything from the temp to the repositories and pushes it to the repos"""
         with open(self.faillog, "r") as f:
-            self.processing_failed = yaml.safe_load(f.read())
+            self.processing_failed = load_json(f.read())
         mesh_repos = {}
         # copying the files to the repos
         uses_lfs = False
@@ -515,7 +515,7 @@ class Pipeline(yaml.YAMLObject):
                     text = "master"
                 git.create_pipeline_badge(self, model.modelname, text, color, target="${BADGE_DIRECTORY}")
         with open(self.faillog, "w") as f:
-            f.write(yaml.safe_dump(self.processing_failed, default_flow_style=False))
+            f.write(dump_json(self.processing_failed, default_flow_style=False))
 
     def relpath(self, path):
         return os.path.relpath(path, self.root)
@@ -529,7 +529,7 @@ class TestingPipeline(yaml.YAMLObject):
         if not os.path.isfile(self.configfile):
             raise Exception('{} not found!'.format(self.configfile))
 
-        kwargs = yaml.safe_load(open(configfile, 'r'))['test']
+        kwargs = load_json(open(configfile, 'r'))['test']
 
         for (k, v) in kwargs.items():
             setattr(self, k, v)
@@ -690,7 +690,7 @@ class TestingPipeline(yaml.YAMLObject):
             if not test["compare_model_present"]:
                 test_protocol[modelname] = misc.append_string(test_protocol[modelname], " (Compare model not present):",
                                                               end="", print=True, flush=True)
-            test_protocol[modelname] = misc.append_string(test_protocol[modelname], "\n    " + yaml.safe_dump(
+            test_protocol[modelname] = misc.append_string(test_protocol[modelname], "\n    " + dump_yaml(
                 {"Compare Model": test["compare_model"]}, default_flow_style=False, indent=6) + "    Test Results:",
                                                           flush=True, print=True)
             for testname, result in test.items():
@@ -720,7 +720,7 @@ class TestingPipeline(yaml.YAMLObject):
                     #     print(flush=True)
         print("The test routine", "succeeded!" if success else "failed!", flush=True)
         with open(self.test_protocol, "w") as f:
-            f.write(yaml.safe_dump(test_protocol, default_flow_style=False))
+            f.write(dump_json(test_protocol, default_flow_style=False))
         return success
 
 
@@ -734,7 +734,7 @@ class XTypePipeline(yaml.YAMLObject):
         if not os.path.isfile(configfile):
             raise Exception('{} not found!'.format(configfile))
         self.configfile = configfile
-        kwargs = yaml.safe_load(open(configfile, 'r'))['assemble']
+        kwargs = load_json(open(configfile, 'r'))['assemble']
 
         self.modeltypes = {"xtype": kwargs}
 
@@ -749,7 +749,7 @@ class XTypePipeline(yaml.YAMLObject):
         self.test_protocol = os.path.join(self.temp_dir, "test_protocol.txt")
         if os.path.isfile(self.faillog) and processed_model_exists:
             with open(self.faillog, "r") as f:
-                self.processing_failed = yaml.safe_load(f.read())
+                self.processing_failed = load_json(f.read())
 
         self.meshespath = self.meshes[self.output_mesh_format]
 
@@ -760,7 +760,7 @@ class XTypePipeline(yaml.YAMLObject):
 
         self.processing_failed = {"load": "N/A", "process": "N/A", "test": "N/A", "deploy": "N/A"}
         try:
-            yaml.safe_load(open(configfile, "r").read())["xtype_model"]
+            load_json(open(configfile, "r").read())["xtype_model"]
         except KeyError as e:
             self.processing_failed["load"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
             print("Could not load model config!")
@@ -790,7 +790,7 @@ class XTypePipeline(yaml.YAMLObject):
             print(self.processing_failed["load"])
         if os.path.exists(os.path.join(self.temp_dir)):
             with open(self.faillog, "w") as f:
-                f.write(yaml.safe_dump(self.processing_failed, default_flow_style=False))
+                f.write(dump_json(self.processing_failed, default_flow_style=False))
 
     def _get_model_failure_state(self):
         state = 0
@@ -824,7 +824,7 @@ class XTypePipeline(yaml.YAMLObject):
             phases = []
         if len(phases) == 0:
             phases = ["process", "test", "deploy"]
-        log = yaml.safe_load(open(self.faillog, "r").read())
+        log = load_json(open(self.faillog, "r").read())
         all_models = float(len(log.keys()))
         fails = 0.0
         all_models *= len(phases)
@@ -833,7 +833,7 @@ class XTypePipeline(yaml.YAMLObject):
         return 1 - fails / all_models
 
     def print_fail_log(self, file=sys.stdout):
-        log = yaml.safe_load(open(self.faillog, "r").read())
+        log = load_json(open(self.faillog, "r").read())
         print("\nModel Failure Report:\n---------------------", file=file)
         report = log
         order_val = ["load", "process", "test", "deploy"]
@@ -854,7 +854,7 @@ class XTypePipeline(yaml.YAMLObject):
         # delete the temp_dir if there is already one
         misc.recreate_dir(self, self.temp_dir)
         with open(self.faillog, "w") as f:
-            f.write(yaml.safe_dump(self.processing_failed, default_flow_style=False))
+            f.write(dump_json(self.processing_failed, default_flow_style=False))
 
         # create the central mesh folders
         misc.create_dir(self, os.path.join(self.temp_dir, self.meshespath))
@@ -899,13 +899,13 @@ class XTypePipeline(yaml.YAMLObject):
                 self.processing_failed["process"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
                 traceback.print_exc()
         with open(self.faillog, "w") as f:
-            f.write(yaml.safe_dump(self.processing_failed, default_flow_style=False))
+            f.write(dump_json(self.processing_failed, default_flow_style=False))
 
     def test_models(self):
         raise NotImplementedError
         # """Runs the configured test_routines over all models"""
         # with open(self.faillog, "r") as f:
-        #     self.processing_failed = yaml.safe_load(f.read())
+        #     self.processing_failed = load_json(f.read())
         # failures_ignored_for = []
         # fstate = self._get_model_failure_state(self.model.modelname)
         # if bool(fstate & (F_LOAD | F_PROC | NA_LOAD | NA_PROC)):
@@ -1040,7 +1040,7 @@ class XTypePipeline(yaml.YAMLObject):
         #                                                      " (Compare model not present):",
         #                                                      end="", print=True, flush=True)
         #     test_protocol[modelname] = misc.appendString(
-        #         test_protocol[modelname], "\n    "+yaml.safe_dump({"Compare Model": test["compare_model"]},
+        #         test_protocol[modelname], "\n    "+dump_yaml({"Compare Model": test["compare_model"]},
         #         default_flow_style=False, indent=6)+"    Test Results:", flush=True, print=True)
         #     for testname, result in test.items():
         #         if testname in ["ignore_failure", "compare_model_present", "compare_model"]:
@@ -1065,17 +1065,17 @@ class XTypePipeline(yaml.YAMLObject):
         #             # else:
         #             #     print(flush=True)
         #     with open(self.faillog, "w") as f:
-        #         f.write(yaml.safe_dump(self.processing_failed, default_flow_style=False))
+        #         f.write(dump_json(self.processing_failed, default_flow_style=False))
         # print("The test routine", "succeeded!" if success else "failed!", flush=True)
         # with open(self.test_protocol, "w") as f:
-        #     f.write(yaml.safe_dump(test_protocol, default_flow_style=False))
+        #     f.write(dump_json(test_protocol, default_flow_style=False))
         # return success
 
     def deploy_models(self):
         raise NotImplementedError
         # """Moves everything from the temp to the repositories and pushes it to the repos"""
         # with open(self.faillog, "r") as f:
-        #     self.processing_failed = yaml.safe_load(f.read())
+        #     self.processing_failed = load_json(f.read())
         # mesh_repos = {}
         # # copying the files to the repos
         # uses_lfs = False
@@ -1133,7 +1133,7 @@ class XTypePipeline(yaml.YAMLObject):
         #           traceback.format_exception(None, e,e.__traceback__))
         #         traceback.print_exc()
         # with open(self.faillog, "w") as f:
-        #     f.write(yaml.safe_dump(self.processing_failed, default_flow_style=False))
+        #     f.write(dump_json(self.processing_failed, default_flow_style=False))
 
     def relpath(self, path):
         return os.path.relpath(path, self.root)

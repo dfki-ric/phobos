@@ -17,9 +17,9 @@ def main(args):
     import argparse
     import sys
     import os.path as path
-    import yaml
     from copy import deepcopy
     from ..core.robot import Robot
+    from ..defs import load_json, dump_json, dump_yaml
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf or smurf file')
@@ -100,7 +100,7 @@ def main(args):
             print("ERROR: Won't overwrite " + args.output)
             sys.exit(1)
         with open(args.output, "w") as f:
-            f.write(yaml.safe_dump(report))
+            f.write(dump_json(report))
         print("Wrote full output to", args.output)
     else:
         for link, lr in report.items():

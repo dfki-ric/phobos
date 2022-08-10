@@ -4,11 +4,11 @@ import os
 from typing import List, Any
 
 import pkg_resources
-import yaml
 from copy import deepcopy, copy
 from scipy.spatial.transform import Rotation as scipy_rot
 import numpy as np
 
+from ..defs import load_json, dump_json
 from .. import geometry as pgu, utils
 from ..geometry import get_reflection_matrix
 from ..io import representation, sensor_representations
@@ -200,9 +200,7 @@ class Robot(SMURFRobot):
             outputfile = self.name
 
         outputfile = os.path.abspath(outputfile)
-
         export_robot = self.duplicate()
-
         if not export_visuals:
             export_robot.remove_visuals()
         if not export_collisions:
@@ -323,7 +321,7 @@ class Robot(SMURFRobot):
         #         os.mkdir(os.path.join(output_dir, "submechanisms"))
         #     submechanisms_general = self.generate_serial_submechanisms()
         #     with open(os.path.join(output_dir, "submechanisms", submechanisms_file), "w") as f:
-        #         f.write(yaml.safe_dump(submechanisms_general))
+        #         f.write(dump_json(submechanisms_general))
         #         print("Submechanisms written to", os.path.join(output_dir, "submechanisms", submechanisms_file))
 
         if self._submodels and export_submodels:
@@ -397,19 +395,19 @@ class Robot(SMURFRobot):
                     submechanisms[annotation] = annotation_dict[annotation]
                 else:
                     with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, annotation_name)), "w+") as stream:
-                        yaml.safe_dump(annotation_dict, stream, default_style=False)
+                        stream.write(dump_json(annotation_dict, default_style=False))
                         export_files.append(os.path.split(stream.name)[-1])
         if submechanisms != {}:
             self.submechanisms_file = os.path.join(smurf_dir, "{}_submechanisms.yml".format(self.name))
             with open(self.submechanisms_file, "w+") as stream:
-                yaml.safe_dump(submechanisms, stream, default_style=False)
+                stream.write(dump_json(submechanisms, default_style=False))
                 export_files.append(os.path.split(stream.name)[-1])
 
         # further annotations
         for k, v in self.annotations.items():
             if k not in smurf_annotations:
                 with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w+") as stream:
-                    yaml.safe_dump({k: v}, stream, default_style=False)
+                    stream.write(dump_json({k: v}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
 
         for k, v in self.named_annotations.items():
@@ -419,7 +417,7 @@ class Robot(SMURFRobot):
                                 "\nPlease choose another name for you annotation")
             else:
                 with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w") as stream:
-                    yaml.safe_dump(v, stream, default_style=False)
+                    stream.write(dump_json(v, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
 
         # Create the smurf file itsself
@@ -431,7 +429,7 @@ class Robot(SMURFRobot):
         }
 
         with open(os.path.join(smurf_dir, "{}.smurf".format(self.name)), "w+") as stream:
-            yaml.safe_dump(annotation_dict, stream, default_style=False, sort_keys=True)
+            stream.write(dump_json(annotation_dict, default_style=False, sort_keys=True))
         print("SMURF written to", smurf_dir)
 
     def export_joint_limits(self, outputdir, file_name="joint_limits.yml", names=None):
@@ -440,10 +438,12 @@ class Robot(SMURFRobot):
         out = get_joint_info_dict(self, list(set(names)))
         if not os.path.exists(outputdir):
             os.makedirs(outputdir)
+        out = {"limits": out}
         with open(os.path.join(outputdir, file_name), "w") as f:
-            f.write("limits:\n")
-            f.write("  names: " + yaml.safe_dump(out["names"], default_flow_style=True) + "\n")
-            f.write("  elements: " + yaml.safe_dump(out["elements"], default_flow_style=True))
+            f.write(dump_json(out))
+            #f.write("limits:\n")
+            #f.write("  names: " + dump_yaml(out["names"], default_flow_style=True) + "\n")
+            #f.write("  elements: " + dump_yaml(out["elements"], default_flow_style=True))
 
         jointnames_independent = []
         jointnames_active = []
@@ -620,8 +620,8 @@ class Robot(SMURFRobot):
                         "type": first_line[0],
                         "name": first_line[1],
                         "frame": first_line[2],
-                        "axis": yaml.safe_load(first_line[3]),
-                        "limits": yaml.safe_load(first_line[4]),
+                        "axis": load_json(first_line[3]),
+                        "limits": load_json(first_line[4]),
                         "jointIdx": int(first_line[5]),
                         "order": int(first_line[6]),
                     }

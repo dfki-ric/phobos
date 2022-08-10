@@ -1,8 +1,7 @@
-import yaml
 import os
 
 from phobos.core import Robot
-
+from phobos.defs import dump_json, load_json, dump_yaml
 
 class TestModel(object):
     def __init__(self, root, tolerances, model_in_repo=None, submechanisms_in_repo=None, floating_base=False,
@@ -13,7 +12,7 @@ class TestModel(object):
         self.submechanisms_file_path = self.robot.submechanisms_file
         self.submechanisms_file = None
         if os.path.isfile(self.submechanisms_file_path):
-            self.submechanisms_file = yaml.safe_load(
+            self.submechanisms_file = load_json(
                 open(os.path.join(self.root, self.submechanisms_file_path), "r").read())
         self.tolerances = tolerances
         self.floatingbase = floating_base

@@ -1,7 +1,6 @@
 from copy import deepcopy, copy
 import os
 
-import yaml
 
 from .poses import JointPoseSet
 from ..io import sensor_representations
@@ -11,6 +10,7 @@ from ..io.parser import parse_xml
 from .hyrodyn import Submechanism, Exoskeleton
 from ..geometry import import_mesh
 from ..utils import tree
+from ..defs import load_json, dump_json, dump_yaml
 
 
 class SMURFRobot(XMLRobot):
@@ -85,7 +85,7 @@ class SMURFRobot(XMLRobot):
         if smurffile is not None:
             self.smurffile = os.path.abspath(smurffile)
             with open(smurffile, 'r') as stream:
-                smurf_dict = yaml.safe_load(stream)
+                smurf_dict = load_json(stream)
                 self.name = smurf_dict['modelname']
                 self.inputfiles = smurf_dict['files']
 
@@ -104,7 +104,7 @@ class SMURFRobot(XMLRobot):
         # Load the file
         with open(annotationfile, 'r') as stream:
             try:
-                annotation = yaml.safe_load(stream.read())
+                annotation = load_json(stream.read())
                 if "submechanisms" in annotation.keys():
                     self.submechanisms_file = os.path.abspath(annotationfile)
                 self.annotations.update(annotation)
@@ -340,7 +340,7 @@ class SMURFRobot(XMLRobot):
         :return: None
         """
         if type(submechanism_definition) == str and os.path.isfile(submechanism_definition):
-            submechanism_definition = yaml.safe_load(open(submechanism_definition, "r").read())
+            submechanism_definition = load_json(open(submechanism_definition, "r").read())
         if not add:
             self.submechanisms = []
             self.exoskeletons = []
