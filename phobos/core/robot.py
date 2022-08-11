@@ -34,7 +34,7 @@ class Robot(SMURFRobot):
         self._submodels = {}
 
     @classmethod
-    def get_robot_from_blender_dict(cls, name='', objectlist=[], model=None):
+    def get_robot_from_blender_dict(cls, name='', objectlist=[], blender_model=None):
         """
         Uses blender workflow to access internal dictionary to call robot
         representation. Idea is to use cli methods and formats for imports and
@@ -45,11 +45,13 @@ class Robot(SMURFRobot):
         import phobos.blender.utils.selection as sUtils
         import phobos.blender.utils.naming as nUtils
         import phobos.blender.utils.io as ioUtils
+        from phobos.defs import MESH_TYPES
 
-        root = sUtils.getRoot(bpy.context.selected_objects[0])
-        blender_model = derive_model_dictionary(root, name, objectlist)
         if blender_model is None:
-            print("Please name your model and assign a version")
+            root = sUtils.getRoot(bpy.context.selected_objects[0])
+            blender_model = derive_model_dictionary(root, name, objectlist)
+            if blender_model is None:
+                print("Please name your model and assign a version")
         cli_joints = []
         for key, values in blender_model['joints'].items():
             if not values['type'] == 'fixed' and values.get("limits") is not None:
@@ -92,12 +94,12 @@ class Robot(SMURFRobot):
                 colls = []
                 for key2, entry in values["collision"].items():
                     colls.append(representation.Collision(
-                        geometry=entry["geometry"],
+                        geometry=representation.GeometryFactory.create(**entry["geometry"]),
                         origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
                         name=entry["name"]))
                 vis = []
                 for key2, entry in values["visual"].items():
-                    vis.append(representation.Visual(geometry=entry["geometry"],
+                    vis.append(representation.Visual(geometry=representation.GeometryFactory.create(**entry["geometry"]),
                                                      material=entry.get("material"),
                                                      origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
                                                      name=entry["name"]))
@@ -122,7 +124,8 @@ class Robot(SMURFRobot):
             version=None,
             links=cli_links,
             joints=cli_joints,
-            materials=mats)
+            materials=mats,
+        )
         new_robot = Robot()
         new_robot.__dict__.update(cli_robot.__dict__)
         new_robot.description = blender_model["description"]
@@ -316,6 +319,7 @@ class Robot(SMURFRobot):
         self.export_xml(output_dir=output_dir, export_visuals=export_visuals, export_collisions=export_collisions,
                    create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes, ros_pkg_name=ros_pkg_name,
                    export_joint_limits=export_joint_limits, export_submodels=export_submodels, formats=formats, filename=filename)
+
     def export_smurf(self, outputdir=None, export_visuals=True, export_collisions=True, create_pdf=False,
                      ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
                      export_joint_limits=True, export_submodels=True, formats=["urdf"], filename=None):
@@ -388,14 +392,14 @@ class Robot(SMURFRobot):
                     export_files.append(os.path.split(stream.name)[-1])
 
         for k, v in self.named_annotations.items():
-            if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k))):
-                raise NameError("You can't overwrite the already existing SMURF-Annotation-File " +
-                                os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)) +
-                                "\nPlease choose another name for you annotation")
-            else:
-                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w") as stream:
-                    stream.write(dump_json(v, default_style=False))
-                    export_files.append(os.path.split(stream.name)[-1])
+            # if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k))):
+            #     raise NameError("You can't overwrite the already existing SMURF-Annotation-File " +
+            #                     os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)) +
+            #                     "\nPlease choose another name for you annotation")
+            # else:
+            with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w") as stream:
+                stream.write(dump_json(v, default_style=False))
+                export_files.append(os.path.split(stream.name)[-1])
 
         # Create the smurf file itsself
         annotation_dict = {

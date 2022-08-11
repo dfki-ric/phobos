@@ -1,5 +1,4 @@
 import json
-import collections
 from xml.etree import ElementTree as ET
 
 from .base import Linkable
@@ -28,7 +27,7 @@ def to_yaml(obj):
     elif hasattr(obj, 'tolist'):
         # For numpy objects
         out = to_yaml(obj.tolist())
-    elif isinstance(obj, collections.Iterable):
+    elif type(obj) in [set, list, tuple]:
         out = [to_yaml(item) for item in obj]
     else:
         out = str(obj)

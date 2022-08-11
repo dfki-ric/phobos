@@ -19,7 +19,7 @@ from phobos.blender import display
 from phobos.blender.phoboslog import log
 
 from phobos.blender.io.entities import entity_types
-from phobos.blender.io.meshes import mesh_types
+from phobos.geometry.io import mesh_types
 from phobos.blender.io.scenes import scene_types
 
 from phobos.blender.utils import selection as sUtils
@@ -489,6 +489,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
         exportpath = getExportPath()
     if not entitytypes:
         entitytypes = getEntityTypesForExport()
+    exportpath += model['name']
 
     # TODO: Move texture export to individual formats? This is practically SMURF
     # TODO: Also, this does not properly take care of textures embedded in a .blend file
@@ -524,20 +525,6 @@ def exportModel(model, exportpath='.', entitytypes=None):
                     # update the texture path in the model
                     mat[texturetype] = 'textures/' + path.basename(mat[texturetype])
 
-    robot = Robot.get_robot_from_blender_dict()
-    export_args = {
-        "outputdir": exportpath,
-        "formats": [format for format in entitytypes if format in ["urdf", "srdf", "sdf"]],
-        "ros_pkg": getattr(bpy.context.scene.phobosexportsettings, 'outputPathtype', "relative") == "ros_package",
-        "ros_pkg_name": None if len(getRosPackageName()) == 0 else getRosPackageName(),
-        "export_joint_limits": "joint_limits" in entitytypes,
-        "create_pdf": "pdf" in entitytypes
-    }
-    if "smurf" in entitytypes:
-        robot.export_smurf(**export_args)
-    elif len(export_args["xml_formats"]) > 0:
-        robot.export_xml_with_meshes(**export_args)
-
     # ToDo export meshes in selected formats
     i = 1
     mt = len([m for m in mesh_types if getattr(bpy.context.scene, "export_mesh_" + m, False)])
@@ -549,12 +536,38 @@ def exportModel(model, exportpath='.', entitytypes=None):
             if getattr(bpy.context.scene, "export_mesh_" + meshtype, False):
                 securepath(mesh_path)
                 for meshname in model['meshes']:
+                    mesh_path = os.path.join(mesh_path, meshname+"."+mesh_types[meshtype]['extension'])
                     mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_path)
+                    for ln, link in model["links"].items():
+                        for cn, collision in link["collision"].items():
+                            if collision["geometry"]["filename"] == meshname:
+                                model["links"][ln]["collision"][cn]["geometry"]["filepath"] = mesh_path
+                        for vn, visual in link["visuals"].items():
+                            if visual["geometry"]["filename"] == meshname:
+                                model["links"][ln]["visual"][vn]["geometry"]["filepath"] = mesh_path
                     display.setProgress(i / n, 'Exporting ' + meshname + '.' + meshtype + '...')
                     i += 1
         except KeyError as e:
             log("Error exporting mesh {0} as {1}: {2}".format(meshname, meshtype, str(e)), "ERROR")
     display.endProgress()
+
+    robot = Robot.get_robot_from_blender_dict(blender_model=model)
+    export_args = {
+        "outputdir": exportpath,
+        "formats": [format for format in entitytypes
+                    if format in ["urdf", "srdf", "sdf"] and getattr(bpy.context.scene, 'export_entity_'+format, False)
+                    ],
+        "ros_pkg": getattr(getExpSettings(), 'outputPathtype', "relative") == "ros_package",
+        "ros_pkg_name": None if len(getRosPackageName()) == 0 else getRosPackageName(),
+        "export_joint_limits": "joint_limits" in entitytypes,
+        "create_pdf": "pdf" in entitytypes
+    }
+    if "smurf" in entitytypes:
+        robot.export_smurf(**export_args)
+    elif len(export_args["xml_formats"]) > 0:
+        robot.export_xml_with_meshes(**export_args)
+
+
 
 
 def exportScene(

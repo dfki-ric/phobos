@@ -18,21 +18,16 @@ def as_mesh(scene_or_mesh, scale=None):
     if scale is None:
         scale = [1.0, 1.0, 1.0]
     scale = np.asarray(scale)
-    if scene_or_mesh.bounds is None:
+    if hasattr(scene_or_mesh, "bounds") and scene_or_mesh.bounds is None:
         return None
     if isinstance(scene_or_mesh, trimesh.Scene):
         mesh = trimesh.util.concatenate([
             trimesh.Trimesh(vertices=m.vertices, faces=m.faces)
             for m in scene_or_mesh.geometry.values()])
-    elif not isinstance(scene_or_mesh, trimesh.Trimesh) and BPY_AVAILABLE:
-        import bpy
-        vertices = np.asarray([np.asarray(scale * v.co) for v in scene_or_mesh.vertices])
-        prev_mode = bpy.context.mode
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED')
-        bpy.ops.object.mode_set(mode=prev_mode)
-        faces = [[v for v in p.vertices] for p in scene_or_mesh.polygons]
-        mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
+    elif not isinstance(scene_or_mesh, trimesh.Trimesh): # we assume it's blender
+        vertices = np.asarray([np.asarray(scale * v.co) for v in scene_or_mesh.data.vertices])
+        faces = np.array([[v for v in p.vertices] for p in scene_or_mesh.data.polygons], dtype=np.int64)
+        mesh = trimesh.Trimesh(vertices=vertices, faces=trimesh.geometry.triangulate_quads(faces))
     else:
         mesh = scene_or_mesh
     assert isinstance(mesh, trimesh.Trimesh), f"Can't convert {type(scene_or_mesh)} to trimesh.Trimesh!"
@@ -110,6 +105,7 @@ def export_bobj(outname, mesh):
 def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
     """Export the mesh to a given filepath with an urdf_path.
     """
+    mesh = as_mesh(mesh)
 
     if urdf_path is not None and urdf_path.lower().endswith(".urdf"):
         urdf_path = os.path.dirname(urdf_path)
@@ -140,10 +136,11 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
 def export_mars_mesh(mesh, filepath, urdf_path=None):
     """Export the mesh as obj rotated according to mars to a given filepath with an urdf_path.
     """
-    m = deepcopy(mesh)
+    m = as_mesh(mesh)
+    m = deepcopy(m)
 
     if filepath.split(".")[-1] == 'obj':
-        v_ = mesh.vertices
+        v_ = m.vertices
 
         # Swap according to blender
         v = np.column_stack(
@@ -152,7 +149,7 @@ def export_mars_mesh(mesh, filepath, urdf_path=None):
 
         m.vertices = v
         trimesh.repair.broken_faces(m)
-        m.merge_vertices(textured=False)
+        m.merge_vertices()
 
         try:
             trimesh.repair.fix_normals(m)
@@ -163,10 +160,11 @@ def export_mars_mesh(mesh, filepath, urdf_path=None):
 
 
 def export_bobj_mesh(mesh, filepath, urdf_path=None):
-    m = deepcopy(mesh)
+    m = as_mesh(mesh)
+    m = deepcopy(m)
 
     # if filepath.split(".")[-1] == 'bobj':
-    #     v_ = mesh.vertices
+    #     v_ = m.vertices
     #
     #     # Swap according to blender
     #     v = np.column_stack(
@@ -175,7 +173,7 @@ def export_bobj_mesh(mesh, filepath, urdf_path=None):
     #
     #     m.vertices = v
     #     trimesh.repair.broken_faces(m)
-    #     m.merge_vertices(textured=False)
+    #     m.merge_vertices()
     #
     #     try:
     #         trimesh.repair.fix_normals(m)
@@ -223,7 +221,7 @@ def import_mars_mesh(filepath, urdf_path=None):
 
     m.vertices = v
     trimesh.repair.broken_faces(m)
-    m.merge_vertices(textured=False)
+    m.merge_vertices()
 
     try:
         trimesh.repair.fix_normals(m)
@@ -231,3 +229,12 @@ def import_mars_mesh(filepath, urdf_path=None):
         pass
 
     return m
+
+
+mesh_types = {
+    "dae": {"export": export_mesh, "import": None, "extension": "dae"},
+    "stl": {"export": export_mesh, "import": None, "extension": "stl"},
+    "obj": {"export": export_mesh, "import": None, "extension": "obj"},
+    "mars_obj": {"export": export_mars_mesh, "import": None, "extension": ".mars.obj"},
+    "bobj": {"export": export_bobj_mesh, "import": None, "extension": "bobj"},
+}

@@ -82,8 +82,8 @@ class Pose(Representation, SmurfBase):
 
     @property
     def vec(self):
-        xyz = self.xyz if self.xyz else [0, 0, 0]
-        rpy = self.rpy if self.rpy else [0, 0, 0]
+        xyz = self.xyz if self.xyz is not None else [0, 0, 0]
+        rpy = self.rpy if self.rpy is not None else [0, 0, 0]
         return xyz + rpy
 
     @staticmethod
@@ -207,10 +207,13 @@ class Sphere(Representation):
 class Mesh(Representation):
     _class_variables = ["filename", "scale"]
 
-    def __init__(self, filename=None, scale=None, **kwargs):
+    def __init__(self, filename=None, scale=None, filepath=None, **kwargs):
         self._filename = None
         super().__init__()
-        self.filename = filename
+        if filepath:
+            self.filename = filepath
+        else:
+            self.filename = filename
         self.scale = scale
 
     def __str__(self):
@@ -249,7 +252,7 @@ class Mesh(Representation):
 
     def link_with_robot(self, robot, check_linkage_later=False):
         super(Mesh, self).link_with_robot(robot, check_linkage_later=True)
-        assert self._related_robot_instance is not None and self._related_robot_instance.xmlfile is not None
+        assert os.path.isabs(self._filename) or (self._related_robot_instance is not None and self._related_robot_instance.xmlfile is not None)
         self.filename = self._filename
         if not check_linkage_later:
             self.check_linkage()

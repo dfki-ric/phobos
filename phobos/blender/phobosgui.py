@@ -41,6 +41,8 @@ from phobos import defs as phobos_defs
 from phobos.blender import defs
 from phobos.blender import display
 
+from phobos.geometry.io import mesh_types
+
 
 class ModelPoseProp(bpy.types.PropertyGroup):
     """TODO Missing documentation"""
@@ -182,7 +184,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
         """
         # DOCU missing description
-        return sorted([(mt,) * 3 for mt in phobos_defs.MESH_TYPES])
+        return sorted([(mt,) * 3 for mt in mesh_types])
 
     path : StringProperty(name='path', subtype='DIR_PATH', default='../', update=updateExportPath)
 
@@ -1225,7 +1227,7 @@ class PhobosExportPanel(bpy.types.Panel):
 
         cmesh = inlayout.column(align=True)
         cmesh.label(text="Meshes")
-        for meshtype in phobos_defs.MESH_TYPES:
+        for meshtype in mesh_types:
             typename = "export_mesh_" + meshtype
             cmesh.prop(bpy.context.scene, typename)
         # cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputMeshtype') # is now done by export_urdf_mesh_type
@@ -1558,7 +1560,7 @@ def register():
     )
 
     # add i/o settings to scene to preserve settings for every model
-    for meshtype in phobos_defs.MESH_TYPES:
+    for meshtype in mesh_types:
         typename = "export_mesh_" + meshtype
         setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=False))
 
