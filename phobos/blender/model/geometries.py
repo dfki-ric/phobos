@@ -147,7 +147,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
 
     # create the Blender object
     if geom['type'] == 'mesh':
-        #bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
+        # bpy.context.scene.layers = bUtils.defLayers(defs.layerTypes[geomsrc])
         meshname = "".join(os.path.basename(geom["filename"]).split(".")[:-1])
         if not os.path.isfile(geom['filename']):
             log(

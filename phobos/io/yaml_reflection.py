@@ -13,6 +13,8 @@ def to_yaml(obj):
     # Ordered dict: http://pyyaml.org/ticket/29#comment:11
     if obj is None or isinstance(obj, str):
         out = str(obj)
+    elif isinstance(obj, Linkable) and obj.stringable():
+        return str(obj)
     elif type(obj) in [int, float, bool]:
         return obj
     elif hasattr(obj, 'to_yaml'):

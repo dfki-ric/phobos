@@ -15,9 +15,9 @@ class ConstraintAxis(SmurfBase):
 class LoopConstraint(SmurfBase):
     _class_variables = ["cut_joint", "predecessor_body", "successor_body"]
     type_dict = {
-        "cut_joint": "joint",
-        "predecessor_body": "link",
-        "successor_body": "link"
+        "cut_joint": "joints",
+        "predecessor_body": "links",
+        "successor_body": "links"
     }
 
     def __init__(self, cut_joint, predecessor_body, successor_body, constraint_axes=None):
@@ -65,11 +65,11 @@ class MultiJointDependency(SmurfBase):
 
 class HyrodynAnnotation(SmurfBase):
     type_dict = {
-        "jointnames_spanningtree": "joint",
-        "jointnames_active": "joint",
-        "jointnames_independent": "joint",
-        "jointnames_dependent": "joint",
-        "jointnames": "joint"
+        "jointnames_spanningtree": "joints",
+        "jointnames_active": "joints",
+        "jointnames_independent": "joints",
+        "jointnames_dependent": "joints",
+        "jointnames": "joints"
     }
 
     def __init__(self, name, contextual_name,

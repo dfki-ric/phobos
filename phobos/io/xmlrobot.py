@@ -55,10 +55,7 @@ class XMLRobot(Representation):
         self.transmissions = transmissions if transmissions is not None else []
         self.sensors = sensors if sensors is not None else []
 
-        for entity in self.links + self.sensors:
-            entity.link_with_robot(self)
-        for entity in self.joints:
-            entity.link_with_robot(self)
+        self.link_entities()
 
     def __str__(self):
         return self.name
@@ -72,15 +69,11 @@ class XMLRobot(Representation):
         return self.get_all_visuals()
 
     def link_entities(self):
-        for entity in self.links + self.sensors:
-            entity.link_with_robot(self)
-        for entity in self.joints:
+        for entity in self.links + self.joints + self.sensors:
             entity.link_with_robot(self)
 
     def unlink_entities(self):
-        for entity in self.links + self.sensors:
-            entity.unlink_from_robot()
-        for entity in self.joints:
+        for entity in self.links + self.joints + self.sensors:
             entity.unlink_from_robot()
 
     def relink_entities(self):
@@ -411,7 +404,7 @@ class XMLRobot(Representation):
 
         return self.get_aggregate("link", link_name, verbose=verbose)
 
-    def get_joint(self, joint_name, verbose=True) -> [representation.Joint, list]:
+    def get_joint(self, joint_name, verbose=False) -> [representation.Joint, list]:
         """
         Returns the joint(s) corresponding to the joint name(s).
         :param joint_name: the name of the joint to get

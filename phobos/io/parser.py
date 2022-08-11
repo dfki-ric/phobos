@@ -8,7 +8,7 @@ def parse_xml(xml):
     xml_root = None
     file_type = None
     xml_file = None
-    print("Parsing", xml)
+    print("Parsing", xml, flush=True)
     if type(xml) == str:
         if os.path.isfile(xml):
             xml_file = xml

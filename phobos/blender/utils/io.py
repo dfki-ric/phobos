@@ -530,7 +530,8 @@ def exportModel(model, exportpath='.', entitytypes=None):
         "formats": [format for format in entitytypes if format in ["urdf", "srdf", "sdf"]],
         "ros_pkg": getattr(bpy.context.scene.phobosexportsettings, 'outputPathtype', "relative") == "ros_package",
         "ros_pkg_name": None if len(getRosPackageName()) == 0 else getRosPackageName(),
-        "export_joint_limits": "joint_limits" in entitytypes
+        "export_joint_limits": "joint_limits" in entitytypes,
+        "create_pdf": "pdf" in entitytypes
     }
     if "smurf" in entitytypes:
         robot.export_smurf(**export_args)

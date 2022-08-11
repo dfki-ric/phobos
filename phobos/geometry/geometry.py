@@ -194,7 +194,7 @@ def replace_geometry(element, urdf_path, shape='box', oriented=False, scale=1.0)
     new_origin = representation.Pose.from_matrix(rel_transform)
 
     element.geometry = new_shape
-    if hasattr(element.geometry, "filename"):
+    if isinstance(element.geometry, representation.Mesh):
         element.geometry.scale = [scale] * 3
     element.origin = new_origin
     return
@@ -217,3 +217,19 @@ def reduce_mesh(mesh, factor):
     print("Reduced", f, "->", f_, "(" + str(np.round(1000 * f_ / f) / 10) + "%) faces and ", v, "->", v_,
           "(" + str(np.round(1000 * v_ / v) / 10) + "%) vertices")
     return out
+
+
+def identical(mesh_a, mesh_b):
+    return (
+        mesh_a == mesh_b or
+        all(trimesh.comparison.identifier_simple(mesh_a) == trimesh.comparison.identifier_simple(mesh_b)) or
+        ((
+               len(mesh_a.vertices.flatten()) == len(mesh_b.vertices.flatten()) and
+               len(mesh_a.faces.flatten()) == len(mesh_b.faces.flatten()) and
+               len(mesh_a.edges.flatten()) == len(mesh_b.edges.flatten())
+        ) and (
+               all(np.round(mesh_a.vertices, decimals=8).flatten() == np.round(mesh_b.vertices, decimals=8).flatten()) and
+               all(mesh_a.faces.flatten() == mesh_b.faces.flatten()) and
+               all(mesh_a.edges.flatten() == mesh_b.edges.flatten())
+        ))
+    )

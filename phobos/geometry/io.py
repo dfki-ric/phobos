@@ -9,18 +9,33 @@ import trimesh
 import struct
 
 from . import geometry
+from .geometry import identical
+from ..defs import BPY_AVAILABLE
 from ..utils import misc, urdf as urdf_utils
 
 
-def as_mesh(scene_or_mesh):
+def as_mesh(scene_or_mesh, scale=None):
+    if scale is None:
+        scale = [1.0, 1.0, 1.0]
+    scale = np.asarray(scale)
     if scene_or_mesh.bounds is None:
         return None
     if isinstance(scene_or_mesh, trimesh.Scene):
         mesh = trimesh.util.concatenate([
             trimesh.Trimesh(vertices=m.vertices, faces=m.faces)
             for m in scene_or_mesh.geometry.values()])
+    elif not isinstance(scene_or_mesh, trimesh.Trimesh) and BPY_AVAILABLE:
+        import bpy
+        vertices = np.asarray([np.asarray(scale * v.co) for v in scene_or_mesh.vertices])
+        prev_mode = bpy.context.mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED')
+        bpy.ops.object.mode_set(mode=prev_mode)
+        faces = [[v for v in p.vertices] for p in scene_or_mesh.polygons]
+        mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
     else:
         mesh = scene_or_mesh
+    assert isinstance(mesh, trimesh.Trimesh), f"Can't convert {type(scene_or_mesh)} to trimesh.Trimesh!"
     return mesh
 
 
@@ -104,19 +119,7 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
     do_export = True
     if os.path.isfile(filepath):
         existing_mesh = import_mesh(filepath)
-        if (
-            existing_mesh == mesh or
-            all(trimesh.comparison.identifier_simple(mesh) == trimesh.comparison.identifier_simple(existing_mesh)) or ((
-                len(mesh.vertices.flatten()) == len(existing_mesh.vertices.flatten()) and
-                len(mesh.faces.flatten()) == len(existing_mesh.faces.flatten()) and
-                len(mesh.edges.flatten()) == len(existing_mesh.edges.flatten())
-            ) and (
-                all(np.round(mesh.vertices, decimals=8).flatten() ==
-                    np.round(existing_mesh.vertices, decimals=8).flatten()) and
-                all(mesh.faces.flatten() == existing_mesh.faces.flatten()) and
-                all(mesh.edges.flatten() == existing_mesh.edges.flatten())
-            ))
-        ):
+        if identical(mesh, existing_mesh):
             #print("NOTE: Skipping export of", filepath, "as the mesh file already exists and is identical")
             do_export = False
 
@@ -159,7 +162,7 @@ def export_mars_mesh(mesh, filepath, urdf_path=None):
     return export_mesh(m, filepath, urdf_path=urdf_path)
 
 
-def export_bobj_mesh(mesh, filepath, urdf_path):
+def export_bobj_mesh(mesh, filepath, urdf_path=None):
     m = deepcopy(mesh)
 
     # if filepath.split(".")[-1] == 'bobj':

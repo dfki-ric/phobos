@@ -37,7 +37,7 @@ import phobos.blender.utils.validation as validation
 import phobos.blender.utils.io as ioUtils
 import phobos.blender.utils.naming as nUtils
 
-
+from phobos import defs as phobos_defs
 from phobos.blender import defs
 from phobos.blender import display
 
@@ -182,7 +182,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
         """
         # DOCU missing description
-        return sorted([(mt,) * 3 for mt in meshes.mesh_types])
+        return sorted([(mt,) * 3 for mt in phobos_defs.MESH_TYPES])
 
     path : StringProperty(name='path', subtype='DIR_PATH', default='../', update=updateExportPath)
 
@@ -194,21 +194,21 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         name="decimals", description="Number of " + "decimal places to export", default=5, min=3
     )
     exportTextures : BoolProperty(name='Export textures', default=True)
-    outputMeshtype : EnumProperty(
-        items=getMeshTypeListForEnumProp,
-        name='link',
-        description="Mesh type to use in exported " + "entity/scene files.",
-    )
+    # outputMeshtype : EnumProperty(
+    #     items=getMeshTypeListForEnumProp,
+    #     name='link',
+    #     description="Mesh type to use in exported " + "entity/scene files.",
+    # )
     outputPathtype : EnumProperty(
         items=tuple(((l,) * 3 for l in ["relative", "ros_package"])),
         name='file path',
         description="Defines how pathes are generated in " + "entity/scene files.",
     )
-    prefixExport : StringProperty(
-        name='prefix export',
-        default="",
-        description="Use the given string to prefix all items (links, visuals, collisions, etc.)",
-    )
+    # prefixExport : StringProperty(
+    #     name='prefix export',
+    #     default="",
+    #     description="Use the given string to prefix all items (links, visuals, collisions, etc.)",
+    # )
 
     rosPackageName : StringProperty(name='ROS package name', default='robot_name_model')
 
@@ -226,6 +226,12 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     )
     obj_axis_up : EnumProperty(
         items=axis_up_items, name='Up', description="Up axis of the obj export.", default='Y'
+    )
+
+    export_urdf_mesh_type : EnumProperty(
+        items=getMeshTypeListForEnumProp,
+        name='URDF mesh type',
+        description="Mesh type to use in exported URDF files.",
     )
 
     export_sdf_mesh_type : EnumProperty(
@@ -1214,16 +1220,15 @@ class PhobosExportPanel(bpy.types.Panel):
 
         cmodel = inlayout.column(align=True)
         cmodel.label(text="Models")
-        for entitytype in ["smurf", "urdf", "sdf", "srdf", "joint_limits"]:
-            cmodel.prop(bpy.context.scene, entitytype)
+        for entitytype in phobos_defs.ENTITY_TYPES:
+            cmodel.prop(bpy.context.scene, "export_entity_"+entitytype)
 
         cmesh = inlayout.column(align=True)
         cmesh.label(text="Meshes")
-        for meshtype in sorted(meshes.mesh_types):
-            if 'export' in meshes.mesh_types[meshtype]:
-                typename = "export_mesh_" + meshtype
-                cmesh.prop(bpy.context.scene, typename)
-        cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputMeshtype')
+        for meshtype in phobos_defs.MESH_TYPES:
+            typename = "export_mesh_" + meshtype
+            cmesh.prop(bpy.context.scene, typename)
+        # cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputMeshtype') # is now done by export_urdf_mesh_type
         cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputPathtype')
         # cmesh.prop(bpy.context.scene.phobosexportsettings, 'prefixExport')
 
@@ -1247,6 +1252,11 @@ class PhobosExportPanel(bpy.types.Panel):
             box.label(text='OBJ axis')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_forward')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_up')
+        if getattr(bpy.context.scene, 'export_entity_urdf', False):
+            layout.separator()
+            box = layout.box()
+            box.label(text='URDF export')
+            box.prop(ioUtils.getExpSettings(), 'export_urdf_mesh_type')
         if getattr(bpy.context.scene, 'export_entity_sdf', False):
             layout.separator()
             box = layout.box()
@@ -1548,15 +1558,13 @@ def register():
     )
 
     # add i/o settings to scene to preserve settings for every model
-    for meshtype in meshes.mesh_types:
-        if 'export' in meshes.mesh_types[meshtype]:
-            typename = "export_mesh_" + meshtype
-            setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=False))
+    for meshtype in phobos_defs.MESH_TYPES:
+        typename = "export_mesh_" + meshtype
+        setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=False))
 
-    for entitytype in entities.entity_types:
-        if 'export' in entities.entity_types[entitytype]:
-            typename = "export_entity_" + entitytype
-            setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=False))
+    for entitytype in phobos_defs.ENTITY_TYPES:
+        typename = "export_entity_" + entitytype
+        setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=False))
 
     for scenetype in scenes.scene_types:
         if 'export' in scenes.scene_types[scenetype]:

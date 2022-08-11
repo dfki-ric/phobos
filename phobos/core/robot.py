@@ -263,49 +263,36 @@ class Robot(SMURFRobot):
         print("Robot written to {}".format(outputfile))
         return
 
-    def export_xml(self, outputfile=None, export_visuals=True, export_collisions=True, create_pdf=False,
-                   ros_pkg=False, export_with_ros_pathes=None):
-        """Helper method that calls export_sdf or export_urdf depending on the outputfile"""
-        if outputfile.lower().endswith("urdf"):
-            return self.export_urdf(outputfile=outputfile, export_visuals=export_visuals,
-                               export_collisions=export_collisions, create_pdf=create_pdf,
-                               ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes)
-        elif outputfile.lower().endswith("sdf"):
-            return self.export_sdf(outputfile=outputfile, export_visuals=export_visuals,
-                              export_collisions=export_collisions, create_pdf=create_pdf,
-                              ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes)
-        else:
-            raise IOError("Unknown export format:" + format)
-
-    def export_xml_with_meshes(self, output_dir=None, export_visuals=True, export_collisions=True,
-                    create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
-                    export_joint_limits=True, export_submodels=True, formats=["urdf"]):
+    def export_xml(self, output_dir=None, export_visuals=True, export_collisions=True,
+                   create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
+                   export_joint_limits=True, export_submodels=True, formats=["urdf"], filename=None):
         """ Exports all model information stored inside this instance.
         """
         for format in formats:
             format = format.lower()
             # Main model
-            model_file = os.path.join(output_dir, f"{format}/{self.name}.{format}")
+            model_file = os.path.join(output_dir, f"{format}/{self.name if filename is None else filename}.{format}")
             if not os.path.exists(os.path.dirname(model_file)):
                 os.makedirs(os.path.dirname(model_file))
             if ros_pkg_name is None and (export_with_ros_pathes or ros_pkg):
                 ros_pkg_name = os.path.basename(output_dir)
             self.relink_entities()
             self.xmlfile = model_file
-            self.export_xml(outputfile=model_file, create_pdf=create_pdf, ros_pkg=ros_pkg,
-                            export_with_ros_pathes=export_with_ros_pathes)
-            # Todo handle meshes
+
+            assert len(self.links) == len(self.joints) + 1
+            if format == "urdf":
+                self.export_urdf(outputfile=model_file, export_visuals=export_visuals,
+                                 export_collisions=export_collisions, create_pdf=create_pdf,
+                                 ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes)
+            elif format == "sdf":
+                self.export_sdf(outputfile=model_file, export_visuals=export_visuals,
+                                export_collisions=export_collisions, create_pdf=create_pdf,
+                                ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes)
+            else:
+                raise IOError("Unknown export format:" + format)
+
             if export_joint_limits:
                 self.export_joint_limits(os.path.join(output_dir, format))
-
-            # ToDo ensure that this is done elsewhere
-            # elif generate_serial_submechs:
-            #     if not os.path.exists(os.path.join(output_dir, "submechanisms")):
-            #         os.mkdir(os.path.join(output_dir, "submechanisms"))
-            #     submechanisms_general = self.generate_serial_submechanisms()
-            #     with open(os.path.join(output_dir, "submechanisms", submechanisms_file), "w") as f:
-            #         f.write(dump_json(submechanisms_general))
-            #         print("Submechanisms written to", os.path.join(output_dir, "submechanisms", submechanisms_file))
 
             if self._submodels and export_submodels:
                 submodel_folder = os.path.join(output_dir, "submodels")
@@ -322,9 +309,16 @@ class Robot(SMURFRobot):
                                          ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
                                          ros_pkg_name=ros_pkg_name, formats=formats)
 
+    def export_xml_with_meshes(self, output_dir=None, export_visuals=True, export_collisions=True,
+                   create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
+                   export_joint_limits=True, export_submodels=True, formats=["urdf"], filename=None):
+        # ToDo export meshes
+        self.export_xml(output_dir=output_dir, export_visuals=export_visuals, export_collisions=export_collisions,
+                   create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes, ros_pkg_name=ros_pkg_name,
+                   export_joint_limits=export_joint_limits, export_submodels=export_submodels, formats=formats, filename=filename)
     def export_smurf(self, outputdir=None, export_visuals=True, export_collisions=True, create_pdf=False,
                      ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
-                     export_joint_limits=True, export_submodels=True, formats=["urdf"]):
+                     export_joint_limits=True, export_submodels=True, formats=["urdf"], filename=None):
         """ Export self and all annotations inside a given folder with structure
         """
         # Convert to absolute path
@@ -739,44 +733,42 @@ class Robot(SMURFRobot):
                                      export_collisions=export_collisions, create_pdf=create_pdf,
                                      only_urdf=only_urdf, ros_pkg=ros_pkg, ros_pkg_name=ros_pkg_name,
                                      export_with_ros_pathes=export_with_ros_pathes,
-                                     export_joint_limits=export_joint_limits, format=format)
+                                     export_joint_limits=export_joint_limits, formats=formats)
             return
-        format = format.lower()
-        if only_urdf is None and "only_urdf" in self._submodels[name].keys():
-            only_urdf = self._submodels[name]["only_urdf"]
-        elif only_urdf is None:
-            only_urdf = True if name.startswith("#sub_mech#") else False
+        for format in formats:
+            format = format.lower()
+            if only_urdf is None and "only_urdf" in self._submodels[name].keys():
+                only_urdf = self._submodels[name]["only_urdf"]
+            elif only_urdf is None:
+                only_urdf = True if name.startswith("#sub_mech#") else False
 
-        if name in self._submodels.keys():
-            _submodel = self.instantiate_submodel(name)
-            _sm_xmlfile = None
-            submodel_dir = os.path.join(output_dir, name)
-            if only_urdf:
-                _sm_xmlfile = os.path.join(output_dir, filename if filename is not None else (f"{name}.{format}"))
-            else:
-                _sm_xmlfile = os.path.join(submodel_dir, format, f"{name}.{format}")
-            if robotname is not None:
-                _submodel.name = robotname
-            if only_urdf:
-                _submodel.export_xml(outputfile=_sm_xmlfile, export_visuals=export_visuals,
-                                     export_collisions=export_collisions, create_pdf=create_pdf, ros_pkg=ros_pkg,
-                                     export_with_ros_pathes=export_with_ros_pathes)
+            if name in self._submodels.keys():
+                _submodel = self.instantiate_submodel(name)
+                _sm_xmlfile = filename if filename is not None else (f"{name}.{format}")
+                submodel_dir = os.path.join(output_dir, name)
+                if robotname is not None:
+                    _submodel.name = robotname
+                if only_urdf:
+                    _submodel.export_xml(output_dir=output_dir, filename=_sm_xmlfile, export_visuals=export_visuals,
+                                         export_collisions=export_collisions, create_pdf=create_pdf, ros_pkg=ros_pkg,
+                                         export_with_ros_pathes=export_with_ros_pathes, formats=formats)
 
+                else:
+                    os.makedirs(submodel_dir, exist_ok=True)
+                    _submodel.full_export(output_dir=submodel_dir, filename=_sm_xmlfile, export_visuals=export_visuals,
+                                          export_collisions=export_collisions, create_pdf=create_pdf,
+                                          ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
+                                          ros_pkg_name=ros_pkg_name, export_joint_limits=export_joint_limits,
+                                          export_submodels=False, formats=formats)
             else:
-                os.makedirs(submodel_dir, exist_ok=True)
-                _submodel.full_export(output_dir=submodel_dir, export_visuals=export_visuals,
-                                      export_collisions=export_collisions, create_pdf=create_pdf,
-                                      ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
-                                      ros_pkg_name=ros_pkg_name, export_joint_limits=export_joint_limits,
-                                      export_submodels=False, formats=formats)
-        else:
-            print(f"No submodel named {name}")
+                print(f"No submodel named {name}")
 
     def full_export(self, output_dir=None, export_visuals=True, export_collisions=True,
                     create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
-                    export_joint_limits=True, export_submodels=True, formats=["urdf"]):
+                    export_joint_limits=True, export_submodels=True, formats=["urdf"], filename=None):
         self.export_smurf(output_dir, export_visuals, export_collisions, create_pdf, ros_pkg, export_with_ros_pathes,
-                          ros_pkg_name, export_joint_limits, export_submodels=export_submodels, formats=formats)
+                          ros_pkg_name, export_joint_limits, export_submodels=export_submodels, formats=formats,
+                          filename=filename)
 
     # getters
     def get_submodel(self, name):
@@ -2212,7 +2204,7 @@ class Robot(SMURFRobot):
             for vis in new_link.visuals:
                 T = T_R.dot(T_link.dot(vis.origin.to_matrix()))
                 vis.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T))
-                if hasattr(vis.geometry, "filename") and not (
+                if isinstance(vis.geometry, representation.Mesh) and not (
                         (os.path.basename(vis.geometry.filename).split(".")[0] in exclude_meshes or
                          "ALL" in exclude_meshes)):
                     pgu.mirror_geometry(vis, urdf_path=target_urdf,
@@ -2222,7 +2214,7 @@ class Robot(SMURFRobot):
             for col in new_link.collisions:
                 T = T_R.dot(T_link.dot(col.origin.to_matrix()))
                 col.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T))
-                if hasattr(col.geometry, "filename") and not (
+                if isinstance(col.geometry, representation.Mesh) and not (
                         (os.path.basename(col.geometry.filename).split(".")[0] in exclude_meshes or
                          "ALL" in exclude_meshes)):
                     pgu.mirror_geometry(col, target_urdf,
@@ -2470,9 +2462,10 @@ def derive_model_dictionary(root, name='', objectlist=[]):
     import phobos.blender.utils.selection as sUtils
     import phobos.blender.utils.naming as nUtils
     import phobos.blender.utils.io as ioUtils
-    from ..blender.model.models import (deriveLink, deriveMaterial, deriveJoint,
+    from phobos.blender.model.models import (deriveLink, deriveMaterial, deriveJoint,
                                         deriveLight, deriveGroupEntry, deriveChainEntry, collectMaterials,
                                         deriveDictEntry)
+    from phobos.blender.model.motors import deriveMotor
 
     if root.phobostype not in ['link', 'submodel']:
         # log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
@@ -2555,7 +2548,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
             model['joints'][jointdict['name']] = jointdict
 
             for mot in [child for child in link.children if child.phobostype == 'motor']:
-                motordict = motormodel.deriveMotor(mot, jointdict)
+                motordict = deriveMotor(mot, jointdict)
                 # motor may be None if no motor is attached
                 if motordict:
                     # log("  Added motor {} to link.".format(motordict['name']), 'DEBUG')

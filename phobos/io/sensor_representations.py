@@ -281,7 +281,7 @@ class MultiSensor(Sensor):
 
 
 class MotorCurrent(MultiSensor):
-    type_dict = {"targets": "joint"}
+    type_dict = {"targets": "joints"}
 
     def __init__(self, name=None, targets=None, **kwargs):
         if targets is None:
@@ -293,7 +293,7 @@ class MotorCurrent(MultiSensor):
 
 
 class JointPosition(MultiSensor):
-    type_dict = {"targets": "joint"}
+    type_dict = {"targets": "joints"}
 
     def __init__(self, name=None, targets=None, **kwargs):
         if targets is None:
@@ -305,7 +305,7 @@ class JointPosition(MultiSensor):
 
 
 class JointVelocity(MultiSensor):
-    type_dict = {"targets": "joint"}
+    type_dict = {"targets": "joints"}
 
     def __init__(self, name=None, targets=None, **kwargs):
         if targets is None:
@@ -321,8 +321,8 @@ class JointVelocity(MultiSensor):
 
 
 class NodeContact(MultiSensor):
-    type_dict = {"targets": "link"}
     _class_variables = ["name", "link", "targets"]
+    type_dict = {"targets": "links"}
 
     def __init__(self, name=None, link=None, targets=None, **kwargs):
         if targets is None:
@@ -340,8 +340,8 @@ class NodeContact(MultiSensor):
 
 
 class NodeContactForce(MultiSensor):
-    type_dict = {"targets": "collision"}
     _class_variables = ["name", "link", "targets"]
+    type_dict = {"targets": "collisions"}
 
     def __init__(self, name=None, link=None, targets=None, **kwargs):
         if targets is None:
@@ -358,7 +358,7 @@ class NodeContactForce(MultiSensor):
 
 
 class NodeCOM(MultiSensor):
-    type_dict = {"targets": "link"}
+    type_dict = {"targets": "links"}
 
     def __init__(self, name=None, targets=None, **kwargs):
         if targets is None:
@@ -370,7 +370,7 @@ class NodeCOM(MultiSensor):
 
 
 class NodePosition(MultiSensor):
-    type_dict = {"targets": "link"}
+    type_dict = {"targets": "links"}
 
     def __init__(self, name: str = None, targets=None, **kwargs):
         if targets is None:
@@ -382,7 +382,7 @@ class NodePosition(MultiSensor):
 
 
 class NodeRotation(MultiSensor):
-    type_dict = {"targets": "link"}
+    type_dict = {"targets": "links"}
 
     def __init__(self, name=None, targets=None, **kwargs):
         if targets is None:

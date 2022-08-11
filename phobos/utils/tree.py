@@ -138,7 +138,7 @@ def get_joints_depth_first(robot, start_link, independent_joints=None):
         other_children = [child for child in children if child not in indep_children]
         children = indep_children + other_children
     for child in children:
-        joint = robot.get_joint(child)
+        joint = robot.get_joint(str(child))
         assert joint is not None
         joints += [joint]
         try:

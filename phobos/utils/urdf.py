@@ -89,7 +89,7 @@ def transform_object(obj, T):
 def adapt_mesh_pathes(robot, new_urdf_dir, copy_to=None):
     for link in robot.links:
         for geo in link.visuals + link.collisions:
-            if hasattr(geo.geometry, "filename"):
+            if isinstance(geo.geometry, representation.Mesh):
                 new_mesh_path = read_urdf_filename(geo.geometry.filename, robot.xmlfile)
                 if copy_to is not None:
                     new_mesh_path = os.path.join(copy_to,

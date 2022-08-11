@@ -56,7 +56,7 @@ class BaseModel(yaml.YAMLObject):
             r = Robot(xmlfile=self.basefile)
             for link in r.links:
                 for g in link.visuals + link.collisions:
-                    if hasattr(g.geometry, "filename"):
+                    if isinstance(g.geometry, representation.Mesh):
                         self._meshes += [urdf.read_urdf_filename(g.geometry.filename, self.basefile)]
         elif hasattr(self, "depends_on"):
             for _, v in self.depends_on.items():
@@ -80,7 +80,7 @@ class BaseModel(yaml.YAMLObject):
             r = Robot(inputfile=self.basefile)
             for link in r.links:
                 for g in link.visuals + link.collisions:
-                    if hasattr(g.geometry, "filename"):
+                    if isinstance(g.geometry, representation.Mesh):
                         self._meshes += [urdf.read_urdf_filename(g.geometry.filename[:-4], self.basefile)]
 
         if self.modeltype in pipeline.modeltypes.keys():

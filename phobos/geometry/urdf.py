@@ -123,7 +123,7 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
     names = []
     primitives = []
     for e in elements:
-        if not hasattr(e.geometry, "filename"):
+        if not isinstance(e.geometry, representation.Mesh):
             primitives += [e]
             continue
         else:
@@ -200,7 +200,7 @@ def reduce_mesh_collision(robot, linkname, collisionname=None, reduction=0.4):
     link = robot.get_link(linkname)
     if link is not None:
         for c in link.collisions:
-            if (collisionname is None or c.name in collisionname) and hasattr(c.geometry, "filename"):
+            if (collisionname is None or c.name in collisionname) and isinstance(c.geometry, representation.Mesh):
                 mesh = io.import_mesh(c.geometry.filename, urdf_path=robot.xmlfile)
                 mesh = geometry.improve_mesh(mesh)
                 mesh = geometry.reduce_mesh(mesh, 1 - reduction)

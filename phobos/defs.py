@@ -1,4 +1,3 @@
-import os
 
 EULER_CONVENTION = 'xyz'
 RPY_CONVENTION = 'xyz'
@@ -6,14 +5,24 @@ RPY_CONVENTION = 'xyz'
 HYRODYN_AVAILABLE = False
 try:
     import hyrodyn
+    import os
     if "AUTOPROJ_CURRENT_ROOT" in os.environ.keys():
         HYRODYN_AVAILABLE = True
         print("HyRoDyn tests available.", flush=True)
     else:
         HYRODYN_AVAILABLE = False
         print("HyRoDyn can't be used as the autoproj env hasn't be sourced.", flush=True)
+    del os
 except ImportError:
     print("HyRoDyn tests not available.", flush=True)
+
+BPY_AVAILABLE = False
+try:
+    import bpy
+    BPY_AVAILABLE = True
+    print("Blender-Python (bpy) available.", flush=True)
+except ImportError:
+    print("Blender-Python (bpy) not available.", flush=True)
 
 PYBULLET_AVAILABLE = False
 try:
@@ -50,3 +59,6 @@ except ImportError:
     from json import loads as load_json, dumps
     dump_yaml = dump_json
     print("YAML not available (backwards compatibility).")
+
+MESH_TYPES = ["dae", "stl", "obj", "mars_obj", "bobj"]
+ENTITY_TYPES = ["smurf", "urdf", "sdf", "srdf", "joint_limits", "pdf"]

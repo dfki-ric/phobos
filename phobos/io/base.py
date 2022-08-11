@@ -4,11 +4,11 @@ from copy import deepcopy
 
 class Linkable(object):
     _type_dict = {
-        "link": "link",
-        "joint": "joint",
-        "frame": "link",
-        "material": "material",
-        "relative_to": "link"
+        "link": "links",
+        "joint": "joints",
+        "frame": "links",
+        "material": "materials",
+        "relative_to": "links"
     }
     _related_robot_instance = None
     _class_variables = []
@@ -25,7 +25,7 @@ class Linkable(object):
         By using __str__ we can call this on the Linkable instance and
         when the variable already holds the unique string.
         """
-        raise NotImplementedError("Not implemented for "+str(type(self)))
+        raise NotImplementedError("__str__ not implemented for "+str(type(self)))
 
     def _converter(self, varname, new_value):
         if self._related_robot_instance is None or isinstance(new_value, Representation):
@@ -109,6 +109,8 @@ class Linkable(object):
     def equivalent(self, other):
         return id(self) == id(other)
 
+    def stringable(self):
+        return True
 
 class Representation(Linkable):
     factory = {}

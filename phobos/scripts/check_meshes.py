@@ -13,12 +13,13 @@ INFO = 'Checks whether all meshes are available.'
 
 def main(args):
     print("\n--> Checking meshes!")
-    from phobos.utils import urdf
     import argparse
     import sys
     import os.path as path
     from copy import deepcopy
+    from ..utils import urdf
     from ..core.robot import Robot
+    from ..io import representation
     from ..defs import load_json, dump_json, dump_yaml
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
@@ -40,7 +41,7 @@ def main(args):
         link_report = {}
         link_issues = False
         for geo in link.collisions + link.visuals:
-            if hasattr(geo.geometry, "filename"):
+            if isinstance(geo.geometry, representation.Mesh):
                 mesh_path = urdf.read_urdf_filename(geo.geometry.filename, robot.xmlfile)
                 geo_report = {"path": mesh_path, "found": True, "error": False, "warning": False, "note": ""}
                 if not path.isfile(path.realpath(mesh_path)):

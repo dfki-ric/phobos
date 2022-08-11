@@ -108,6 +108,9 @@ class Pose(Representation, SmurfBase):
             self.relative_to
         )
 
+    def stringable(self):
+        return False
+
 
 class Color(Representation):
     _class_variables = ["rgba"]
@@ -135,6 +138,8 @@ class Color(Representation):
     def get_hex_color(self):
         return "#" + "".join([hex(int(x * 255))[2:] for x in self.rgba])
 
+    def stringable(self):
+        return False
 
 class Texture(Representation):
     filename = None
@@ -142,6 +147,9 @@ class Texture(Representation):
     def __init__(self, filename=None, **kwargs):
         super().__init__()
         self.filename = filename
+
+    def __str__(self):
+        return self.filename
 
 
 # class JointDynamics(Representation):
@@ -249,6 +257,23 @@ class Mesh(Representation):
     def check_linkage(self, attribute=None):
         super(Mesh, self).check_linkage()
         assert os.path.isabs(self._filename)
+
+    def equivalent(self, other):
+        return other._filepath == self._filepath or identical(self.load_mesh(), other.load_mesh())
+
+
+class GeometryFactory(Representation):
+    @classmethod
+    def create(cls, *args, **kwargs):
+        if kwargs["type"] == "mesh":
+            return Mesh(**kwargs)
+        elif kwargs["type"] == "box":
+            return Box(**kwargs)
+        elif kwargs["type"] == "cylinder":
+            return Cylinder(**kwargs)
+        elif kwargs["type"] == "sphere":
+            return Sphere(**kwargs)
+        raise Exception("Can't create geometry from: "+repr(kwargs))
 
 
 class Collision(Representation, SmurfBase):
@@ -518,9 +543,9 @@ class Joint(Representation, SmurfBase):
              'floating', 'planar', 'fixed']
 
     type_dict = {
-        "parent": "link",
-        "child": "link",
-        "motor": "motor"
+        "parent": "links",
+        "child": "links",
+        "motor": "motors"
     }
     _class_variables = ["name", "parent", "child", "joint_type", "axis", "limit", "dynamics", "mimic", "motor"]
 
@@ -725,7 +750,7 @@ class Link(Representation, SmurfBase):
 class Interface(Representation, SmurfBase):
     _class_variables = ["name", "origin", "parent"]
     type_dict = {
-        "parent": "link"
+        "parent": "links"
     }
 
     def __init__(self, name=None, origin=None, parent=None, **kwargs):
@@ -761,7 +786,7 @@ class Actuator(Representation):
 class TransmissionJoint(Representation):
     _class_variables = ["name", "hardwareInterface"]
 
-    _type_dict = {"name": "joint"}
+    _type_dict = {"name": "joints"}
 
     def __init__(self, name, hardwareInterfaces=None, **kwargs):
         super().__init__()

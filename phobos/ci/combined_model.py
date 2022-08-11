@@ -122,29 +122,25 @@ class CombinedModel(BaseModel):
                     c["joint"]["parent"] = regex_replace(c["joint"]["parent"], self.join["name_replacements"])
                     if not c["joint"]["parent"].startswith(self.join["name_prefix"]):
                         c["joint"]["parent"] = self.join["name_prefix"] + c["joint"]["parent"]
-            if isinstance(combined_model, Robot):
-                _robot = combined_model
-            else:
-                _robot = combined_model.robot
             for lnk in combined_model.links:
-                _robot.rename(targettype="link", target=lnk.name, prefix=self.join["name_prefix"],
+                combined_model.rename(targettype="link", target=lnk.name, prefix=self.join["name_prefix"],
                               replacements=self.join["name_replacements"])
                 for coll in lnk.collisions:
-                    _robot.rename(targettype="collision", target=coll.name,
+                    combined_model.rename(targettype="collision", target=coll.name,
                                   prefix=self.join["name_prefix"],
                                   replacements=self.join["name_replacements"])
                     # att_model.rename(targettype="collision", target=coll.name,
                     #                  prefix=child["collision_prefix"], suffix=child["collision_suffix"],
                     #                  replacements=child["collision_replacements"])
                 for vis in lnk.visuals:
-                    _robot.rename(targettype="visual", target=vis.name,
+                    combined_model.rename(targettype="visual", target=vis.name,
                                   prefix=self.join["name_prefix"],
                                   replacements=self.join["name_replacements"])
                     # att_model.rename(targettype="visual", target=coll.name,
                     #                  prefix=child["visual_prefix"], suffix=child["visual_suffix"],
                     #                  replacements=child["visual_replacements"])
-            for jnt in _robot.joints:
-                _robot.rename(targettype="joint", target=jnt.name, prefix=self.join["name_prefix"],
+            for jnt in combined_model.joints:
+                combined_model.rename(targettype="joint", target=jnt.name, prefix=self.join["name_prefix"],
                               replacements=self.join["name_replacements"])
 
         if "remove_beyond" in self.join.keys():

@@ -250,7 +250,7 @@ class SMURFRobot(XMLRobot):
         no_problems = True
         for link in self.links:
             for vc in link.collisions + link.visuals:
-                if hasattr(vc.geometry, "filename") and \
+                if isinstance(vc.geometry, representation.Mesh) and \
                         import_mesh(vc.geometry.filename, urdf_path=self.xmlfile) is None:
                     print("WARNING: Mesh file", vc.geometry.filename,
                           "is empty and therefore the corresponding visual/geometry removed!")
