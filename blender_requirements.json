@@ -4,7 +4,8 @@
     "numpy": "numpy",
     "scipy": "scipy",
     "trimesh": "trimesh",
-    "pkg_resources": "setuptools"
+    "pkg_resources": "setuptools",
+    "collada": "collada"
   },
   "optional_requirements": {
     "yaml": "pyyaml",

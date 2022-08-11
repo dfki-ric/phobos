@@ -7,6 +7,7 @@ import sys
 import numpy as np
 import trimesh
 import struct
+import json
 
 from . import geometry
 from .geometry import identical
@@ -120,17 +121,22 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
             do_export = False
 
     if do_export:
-        mesh.export(
-            file_obj=filepath
-        )
-    if dae_mesh_color is not None and filepath.lower().endswith("dae"):
-        dae_xml = open(filepath, "r").read()
-        dae_xml = misc.regex_replace(dae_xml, {
-            "<color>0.0 0.0 0.0 1.0</color>": " <color>" + " ".join([str(n) for n in dae_mesh_color]) + "</color>"})
-        with open(filepath, "w") as f:
-            f.write(dae_xml)
-
-    return
+        if filepath.lower().endswith("dae"):
+            dae_xml = trimesh.exchange.dae.export_collada(mesh)
+            if dae_mesh_color is not None:
+                dae_xml = dae_xml.decode(json.detect_encoding(dae_xml))
+                dae_xml = misc.regex_replace(dae_xml, {
+                    "<color>0.0 0.0 0.0 1.0</color>": " <color>" + " ".join(
+                        [str(n) for n in dae_mesh_color]) + "</color>"})
+                with open(filepath, "w") as f:
+                    f.write(dae_xml)
+            else:
+                with open(filepath, "wb") as f:
+                    f.write(dae_xml)
+        else:
+            mesh.export(
+                file_obj=filepath
+            )
 
 
 def export_mars_mesh(mesh, filepath, urdf_path=None):

@@ -41,11 +41,7 @@ class Robot(SMURFRobot):
         exports
         """
         import bpy
-        import phobos.blender.utils.blender as bUtils
         import phobos.blender.utils.selection as sUtils
-        import phobos.blender.utils.naming as nUtils
-        import phobos.blender.utils.io as ioUtils
-        from phobos.defs import MESH_TYPES
 
         if blender_model is None:
             root = sUtils.getRoot(bpy.context.selected_objects[0])

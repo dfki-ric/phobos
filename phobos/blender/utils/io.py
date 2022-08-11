@@ -525,7 +525,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
                     # update the texture path in the model
                     mat[texturetype] = 'textures/' + path.basename(mat[texturetype])
 
-    # ToDo export meshes in selected formats
+    # export meshes in selected formats
     i = 1
     mt = len([m for m in mesh_types if getattr(bpy.context.scene, "export_mesh_" + m, False)])
     mc = len(model['meshes'])

@@ -43,7 +43,8 @@ requirements = {
     "numpy": "numpy",
     "scipy": "scipy",
     "trimesh": "trimesh",  # optional for blender
-    "pkg_resources": "setuptools"
+    "pkg_resources": "setuptools",
+    "collada": "pycollada"
 }
 
 optional_requirements = {
@@ -55,6 +56,7 @@ optional_requirements = {
 
 def install_requirement(package_name, upgrade_pip=False, lib=None):
     import subprocess
+    import sys
     if lib is None and BPY_AVAILABLE:
         lib = bpy.utils.user_resource("SCRIPTS", path="modules")
     # Ensure pip is installed
@@ -68,7 +70,7 @@ def install_requirement(package_name, upgrade_pip=False, lib=None):
     if lib is None:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
     else:
-        subprocess.check_call([sys.executable, "-m", "pip",  "install", f"--target={str(lib)}", package_name])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", f"--target={str(lib)}", package_name])
 
 
 def check_requirements(optional=False, force=False, upgrade_pip=False, lib=None):
@@ -213,4 +215,3 @@ from . import ci
 from . import scripts
 
 del sys
-del BPY_AVAILABLE
