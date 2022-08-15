@@ -61,19 +61,31 @@ class XMLDefinition(object):
                 nest["tag"] = tag
             self.xml_nested_children[tag] = XMLDefinition(dialect, **nest)
 
-    def to_xml(self, object):
+    def to_xml(self, object, float_fmt_dict=None, **kwargs):
+        """
+        Serializes the given object ot xml
+        Args:
+            object: the object ot serialize to xml
+            float_fmt_dict: A dictionary of tag/attribute name to float format string (Style: '%.6f')
+               For simple attributes the attributename is taken, for all others (attribute_children, value_children, ...) the tag
+
+        Returns:
+            An XML object
+        """
         # attributes
+        if float_fmt_dict is None:
+            float_fmt_dict = {}
         attrib = {}
         for attname, varname in self.xml_attributes.items():
             val = getattr(object, varname)
             if val is not None:
-                attrib[attname] = self._serialize(val)
+                attrib[attname] = self._serialize(val, float_fmt=float_fmt_dict[attname] if attname in float_fmt_dict else None)
         out = ET.Element(self.xml_tag, attrib=attrib)
         # value
         if self.xml_value is not None:
             assert all([x == {} for x in [self.xml_children, self.xml_value_children, self.xml_attribute_children, self.xml_nested_children]])
             val = getattr(object, self.xml_value)
-            out.text = self._serialize(val)
+            out.text = self._serialize(val, float_fmt=float_fmt_dict[self.xml_tag] if self.xml_tag in float_fmt_dict else None)
             if val is not None:
                 return out
             else:
@@ -92,7 +104,7 @@ class XMLDefinition(object):
                 out.append(e)
         # children that are created from a simple property and have only attributes
         for tag, attribute_map in self.xml_attribute_children.items():
-            _attrib = {attname: self._serialize(getattr(object, varname))
+            _attrib = {attname: self._serialize(getattr(object, varname), float_fmt=float_fmt_dict[tag] if tag in float_fmt_dict else None)
                        for attname, varname in attribute_map.items() if getattr(object, varname) is not None}
             if len(_attrib) == 0:
                 continue
@@ -105,11 +117,11 @@ class XMLDefinition(object):
                 if type(val) == list and all([not is_int(v) and not is_float(v) and type(v) == str for v in val]):
                     for v in val:
                         e = ET.Element(tag)
-                        e.text = self._serialize(v)
+                        e.text = self._serialize(v, float_fmt=float_fmt_dict[tag] if tag in float_fmt_dict else None)
                         out.append(e)
                 else:
                     e = ET.Element(tag)
-                    e.text = self._serialize(val)
+                    e.text = self._serialize(val, float_fmt=float_fmt_dict[tag] if tag in float_fmt_dict else None)
                     out.append(e)
         # children that are nested in another element
         if self.xml_nested_children != {}:
@@ -149,20 +161,31 @@ class XMLDefinition(object):
                         kwargs[k] = v
         return kwargs
 
-    def _serialize(self, entry) -> str:
+    def _serialize(self, entry, float_fmt=None) -> str:
+        """
+
+        Args:
+            entry: The entry to serialize
+            precision_dict: the float format in the style "%.6f"
+
+        Returns:
+
+        """
         assert entry is not None
+        if float_fmt is None:
+            float_fmt = "%.6f"
         if hasattr(entry, "tolist"):
             entry = entry.tolist()
         if type(entry) == list:
             if any([type(v) in [int, np.int64] for v in entry]):
                 entry = [str(v) for v in entry]
             elif any([type(v) in [float, np.float64] for v in entry]):
-                entry = ["%.6f" % v if type(v) in [float, np.float64] else str(v) for v in entry]
+                entry = [float_fmt % v if type(v) in [float, np.float64] else str(v) for v in entry]
             return " ".join(entry)
         elif type(entry) == int:
             return str(entry)
         elif type(entry) in [float, np.float64]:
-            return "%.6f" % entry
+            return float_fmt % entry
         else:
             return entry
 
@@ -206,15 +229,17 @@ class XMLFactory(XMLDefinition):
             return classtype.create(**super(XMLFactory, self).kwargs_from_xml(xml, **kwargs))
         return None
 
-    def to_xml(self, object):
+    def to_xml(self, object, float_fmt_dict=None, **kwargs):
+        if float_fmt_dict is None:
+            float_fmt_dict = {}
         if self.available_in_dialect:
-            return super(XMLFactory, self).to_xml(object)
+            return super(XMLFactory, self).to_xml(object, float_fmt_dict=float_fmt_dict)
         else:
             return None
 
-    def to_xml_string(self, object):
+    def to_xml_string(self, object, float_fmt_dict=None, **kwargs):
         if self.available_in_dialect:
-            return to_pretty_xml_string(self.to_xml(object))
+            return to_pretty_xml_string(self.to_xml(object, float_fmt_dict=float_fmt_dict, **kwargs))
         return None
 
     def from_xml_string(self, classtype, xml_string: str):
@@ -238,11 +263,11 @@ def class_factory(cls, only=None):
         def _from_string(c, xml, _dialect=refl):
             return c.from_xml_string(xml, dialect=_dialect)
 
-        def _to_xml(obj, _dialect=refl):
-            return obj.to_xml(dialect=_dialect)
+        def _to_xml(obj, _dialect=refl, **kwargs):
+            return obj.to_xml(dialect=_dialect, **kwargs)
 
-        def _to_string(obj, _dialect=refl):
-            return obj.to_xml_string(dialect=_dialect)
+        def _to_string(obj, _dialect=refl, **kwargs):
+            return obj.to_xml_string(dialect=_dialect, **kwargs)
 
         setattr(cls, f"from_{refl}", classmethod(_from_xml))
         setattr(cls, f"from_{refl}_string", classmethod(_from_string))

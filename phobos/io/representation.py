@@ -6,6 +6,7 @@ from .base import Representation
 from .smurf_reflection import SmurfBase
 from .xml_factory import singular as _singular, plural as _plural
 from ..geometry.io import import_mesh, import_mars_mesh
+from ..utils.misc import trunc
 from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
 from ..utils import urdf as urdf_utils, transform
 
@@ -65,6 +66,16 @@ class Pose(Representation, SmurfBase):
             self.rpy = [0, 0, 0]
         else:
             raise ValueError("Can't parse rotation " + str(value))
+        # if we have an pi or pi/2, pi/4 approximation let's make pi or pi/2, pi/4 out of it
+        for i in range(3):
+            if type(self.rpy[i]) in [float, np.float64, np.float32] and "e" not in str(self.rpy[i]).lower():
+                in_decimals = len(str(self.rpy[i]).split(".")[1])
+                if in_decimals >= 3:
+                    for div in [1, 2, 4]:
+                        if str(self.rpy[i]) == f"%.{in_decimals}f" % (np.pi / div) or \
+                               self.rpy[i] == np.round(np.pi/div, decimals=in_decimals) or \
+                               self.rpy[i] == trunc(np.pi/div, decimals=in_decimals):
+                            self.rpy[i] = np.pi / div
 
     @property
     def position(self):
@@ -87,10 +98,10 @@ class Pose(Representation, SmurfBase):
         return xyz + rpy
 
     @staticmethod
-    def from_matrix(T, dec=6, relative_to=None):
+    def from_matrix(T, dec=16, relative_to=None):
         xyz = T[0:3, 3]
         rpy = matrix_to_rpy(T[0:3, 0:3])
-        return Pose(xyz=round_array(xyz, dec=dec), rpy=round_array(rpy, dec=dec), relative_to=relative_to)
+        return Pose(xyz=xyz, rpy=rpy, dec=dec, relative_to=relative_to)
 
     def to_matrix(self):
         R = rpy_to_matrix(self.rpy if hasattr(self, "rpy") else [0.0, 0.0, 0.0])

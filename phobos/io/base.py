@@ -134,11 +134,11 @@ class Representation(Linkable):
     def from_xml_string(cls, xml: str, dialect):
         return cls.factory[dialect].from_xml_string(cls, xml)
 
-    def to_xml(self, dialect) -> ET.Element:
-        return self.factory[dialect].to_xml(self)
+    def to_xml(self, dialect, **kwargs) -> ET.Element:
+        return self.factory[dialect].to_xml(self, float_fmt_dict=kwargs["float_fmt_dict"] if "float_fmt_dict" in kwargs else None)
 
-    def to_xml_string(self, dialect) -> ET.Element:
-        return self.factory[dialect].to_xml_string(self)
+    def to_xml_string(self, dialect, **kwargs) -> ET.Element:
+        return self.factory[dialect].to_xml_string(self, float_fmt_dict=kwargs["float_fmt_dict"] if "float_fmt_dict" in kwargs else None)
 
     def sort_string(self, dialect=None) -> str:
         prefix = type(self).__name__ if dialect is None else self.to_xml(dialect).tag
