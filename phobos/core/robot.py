@@ -20,6 +20,9 @@ from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_
 from ..utils.transform import create_transformation, inv, get_adjoint
 from ..utils.tree import find_close_ancestor_links
 from ..utils.urdf import read_urdf_filename, create_pdf_from_urdf, transform_object, get_joint_info_dict
+from ..utils.commandline_logging import get_logger
+
+log = get_logger(__name__)
 
 
 class Robot(SMURFRobot):
@@ -47,7 +50,7 @@ class Robot(SMURFRobot):
             root = sUtils.getRoot(bpy.context.selected_objects[0])
             blender_model = derive_model_dictionary(root, name, objectlist)
             if blender_model is None:
-                print("Please name your model and assign a version")
+                log.warning("Warning name your model and assign a version, otherwise blender-dictionary is None")
         cli_joints = []
         for key, values in blender_model['joints'].items():
             if not values['type'] == 'fixed' and values.get("limits") is not None:
@@ -114,7 +117,7 @@ class Robot(SMURFRobot):
                                                 diffuseColor=value.get("diffuseColor")
                                                 ))
         if blender_model['version'] != '1.0':
-            print(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
+            log.info(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
         cli_robot = XMLRobot(
             name=blender_model['name'],
             version=None,
@@ -129,8 +132,8 @@ class Robot(SMURFRobot):
         for key, value in blender_model['materials'].items():
             value.pop('diffuseColor')
             new_robot.add_aggregate('materials', representation.Material(**value))
-
         for key, values in blender_model['sensors'].items():
+            # TODO "type" Abfragen an die verschiedenen User-Präferenzen angleichen
             if values.get('id') is not None:
                 values['targets'] = [
                     x for x in values['id'] if (
@@ -2468,7 +2471,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
     from phobos.blender.model.motors import deriveMotor
 
     if root.phobostype not in ['link', 'submodel']:
-        # log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
+        log.error(root.name + " is no valid 'link' or 'submodel' object.")
         return None
 
     # define model name
@@ -2504,11 +2507,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
         'description': modeldescription,
     }
 
-    # log(
-    #     "Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.",
-    #     'INFO',
-    #     prefix="\n",
-    # )
+    log.info("Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.")
 
     # create tuples of objects belonging to model
     if not objectlist:
@@ -2518,7 +2517,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
     linklist = [link for link in objectlist if link.phobostype == 'link']
 
     # digest all the links to derive link and joint information
-    # log("Parsing links, joints and motors... " + (str(len(linklist))) + " total.", "INFO")
+    log.info("Parsing links, joints and motors... " + (str(len(linklist))) + " total.")
     for link in linklist:
         # parse link information (including inertia)
         model['links'][nUtils.getObjectName(link, 'link')] = deriveLink(
@@ -2530,7 +2529,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
             # joint may be None if link is a root
             # to prevent confusion links are always defining also joints
             jointdict = deriveJoint(link, logging=True, adjust=True)
-            # log("  Setting joint type '{}' for link.".format(jointdict['type']), 'DEBUG')
+            log.debug("  Setting joint type '{}' for link.".format(jointdict['type']))
             # first check if we have motor information in the joint properties
             # if so they can be extended/overwritten by motor objects later on
             if '$motor' in jointdict:
@@ -2551,7 +2550,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
                 motordict = deriveMotor(mot, jointdict)
                 # motor may be None if no motor is attached
                 if motordict:
-                    # log("  Added motor {} to link.".format(motordict['name']), 'DEBUG')
+                    log.debug("  Added motor {} to link.".format(motordict['name']))
                     if motordict['name'] in model["motors"]:
                         model['motors'][motordict['name']].update(motordict)
                     else:
@@ -2559,13 +2558,13 @@ def derive_model_dictionary(root, name='', objectlist=[]):
 
     # parse sensors and controllers
     sencons = [obj for obj in objectlist if obj.phobostype in ['sensor', 'controller']]
-    # log("Parsing sensors and controllers... {} total.".format(len(sencons)), 'INFO')
+    log.info("Parsing sensors and controllers... {} total.".format(len(sencons)))
     for obj in sencons:
         props = deriveDictEntry(obj, names=True, objectlist=objectlist)
         model[obj.phobostype + 's'][nUtils.getObjectName(obj)] = props
 
     # parse materials
-    # log("Parsing materials...", 'INFO')
+    log.info("Parsing materials...")
     model['materials'] = collectMaterials(objectlist)
     for obj in objectlist:
         if obj.phobostype == 'visual':
@@ -2581,7 +2580,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
                     ] = mat.name
 
     # identify unique meshes
-    # log("Parsing meshes...", "INFO")
+    log.info("Parsing meshes...")
     for obj in objectlist:
         try:
             if (
@@ -2597,7 +2596,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
             pass  # log("Undefined geometry type in object " + obj.name, "ERROR")
 
     # gather information on groups of objects
-    # log("Parsing groups...", 'INFO')
+    log.info("Parsing groups...")
     # todo2.9: TODO: get rid of the "data" part and check for relation to robot
     # for group in bpy.data.groups:
     #     # skip empty groups
@@ -2613,7 +2612,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
     #         model['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
 
     # gather information on chains of objects
-    # log("Parsing chains...", "INFO")
+    log.info("Parsing chains...")
     chains = []
     for obj in objectlist:
         if obj.phobostype == 'link' and 'endChain' in obj:
@@ -2622,7 +2621,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
         model['chains'][chain['name']] = chain
 
     # gather information on lights
-    # log("Parsing lights...", "INFO")
+    log.info("Parsing lights...")
     for obj in objectlist:
         if obj.phobostype == 'light':
             model['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)

@@ -1,4 +1,6 @@
 #!python3
+from ..utils.commandline_logging import setup_logger_level, get_logger
+log = get_logger(__name__)
 
 def can_be_used():
     try:
@@ -16,7 +18,7 @@ INFO = 'Checks whether the model can be loaded in Hyrodyn.'
 
 
 def main(args):
-    print("\n--> Checking Model in Hyrodyn!")
+    log.info("\n--> Checking Model in Hyrodyn!")
     from phobos.utils import hyrodyn as hyrodyn_utils
     import argparse
     import os.path as path

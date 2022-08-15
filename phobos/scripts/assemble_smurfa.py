@@ -1,5 +1,9 @@
 #!python3
 
+from ..utils.commandline_logging import setup_logger_level, get_logger
+log = get_logger(__name__)
+
+
 def can_be_used():
     return True
 
@@ -23,22 +27,20 @@ def main(args):
     parser.add_argument('-c', '--copy-meshes', help='Copies the meshes', action='store_true', default=False)
     args = parser.parse_args(args)
 
-    print(
-        "ATTENTION : Unique names for all links and joints are assumed to create a valid .urdf file!"
-    )
+    log.info("Unique names for all links and joints are assumed to create a valid .urdf file!")
 
     scene = Scene(args.input)
     if scene.is_empty():
-        print("Given file is empty!")
+        log.error("Given file is empty!")
         sys.exit(1)
     elif scene.has_one_root():
-        print("Found assembly!")
+        log.info("Found assembly!")
         assembly = Assembly.from_scene(scene, output_dir=args.output)
         assembly.merge(copy_meshes=args.copy_meshes)
         assembly.robot.name = os.path.basename(args.input).split(".")[0]
         assembly.robot.full_export(output_dir=args.output)
     else:
-        print("Found Scene!")
+        log.info("Found Scene!")
         for i, ents in enumerate(scene.entities):
             name = os.path.basename(args.input).split(".")[0] + "_part"+str(i)
             assembly = Assembly.from_entities(ents, output_dir=os.path.join(args.output, name))

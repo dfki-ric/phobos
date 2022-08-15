@@ -1,4 +1,6 @@
 #!python3
+from ..utils.commandline_logging import setup_logger_level, get_logger
+log = get_logger(__name__)
 
 def can_be_used():
     return True

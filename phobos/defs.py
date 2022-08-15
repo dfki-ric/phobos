@@ -3,6 +3,9 @@ EULER_CONVENTION = 'xyz'
 RPY_CONVENTION = 'xyz'
 
 HYRODYN_AVAILABLE = False
+BASE_LOG_LEVEL = "INFO"
+LOG_FILE_CONVENTION = None
+
 try:
     import hyrodyn
     import os

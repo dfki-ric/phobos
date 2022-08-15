@@ -128,8 +128,11 @@ class Color(Representation):
         elif count == 0:
             self.rgba = None
         if self.rgba is not None:
-            if len(self.rgba) == 3:
+            if len(self.rgba) == 3 and type(args) is list:
                 self.rgba += [1.]
+            elif len(self.rgba) == 3 and type(args) is tuple:
+                self.rgba += (1.,)
+                self.rgba = list(self.rgba)
             if len(self.rgba) != 4:
                 raise Exception(f'Invalid color argument count for argument "{self.rgba}"')
         # round everything
@@ -340,7 +343,7 @@ class Material(Representation, SmurfBase):
                 kwargs["diffuseColor"]["r"],
                 kwargs["diffuseColor"]["g"],
                 kwargs["diffuseColor"]["b"],
-                kwargs["diffuseColor"]["a"] if "a" in kwargs["diffuseColor"]["a"] else 1.
+                kwargs["diffuseColor"]["a"] if "a" in kwargs["diffuseColor"] else 1.
             ])
         self.color = _singular(color)
         self.texture = _singular(texture)
@@ -383,7 +386,7 @@ class Visual(Representation, SmurfBase):
         self.geometry = _singular(geometry)
         material_ = _singular(material_)
         material = _singular(material)
-        if type(material) == str:
+        if type(material) == str and hasattr(material_, "original_name"):
             assert material_ is not None and material_.original_name == material
         elif isinstance(material, Material):
             assert material_ is None or material_.equivalent(material)

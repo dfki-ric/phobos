@@ -1,5 +1,9 @@
 #!python3
-from ..defs import PYBULLET_AVAILABLE, load_json, dump_json
+from ..utils.commandline_logging import get_logger
+
+log = get_logger(__name__)
+
+from ..defs import PYBULLET_AVAILABLE
 
 
 def can_be_used():
@@ -17,7 +21,7 @@ def main(args):
     import argparse
     import os
 
-    parser = argparse.ArgumentParser(description=INFO, prog="phobos "+os.path.basename(__file__)[:-3])
+    parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
     parser.add_argument('smurfs', type=str, help='Path to the smurfs file', default="pipeline.yml")
     parser.add_argument('-g', '--add_plane', help='Add a ground plane', action='store_true', default=False)
     parser.add_argument('-i', '--pb_id', type=int,
@@ -43,7 +47,7 @@ def main(args):
         # setting a convention here!!! If there is another URDF with a pb_ prefix we load this instead
         pb_urdf_path = os.path.join(os.path.dirname(urdf_path), "pb_" + os.path.basename(urdf_path))
         if os.path.exists(pb_urdf_path):
-            print("INFO: Loading pybullet URDF for", smurf_path)
+            log.info(f"Loading pybullet URDF for {smurf_path}")
             urdf_path = pb_urdf_path
         for f in smurf["files"]:
             if f.lower().endswith(".yml"):
@@ -97,11 +101,11 @@ def main(args):
                 loaded = parse_smurfs(client_id, entity["file"], dir_path, loaded=loaded)
                 continue
             elif entity["file"].lower().endswith("smurfa"):
-                print("WARNING: PyBullet can't create a joints between entities. Therefore smurfa is not supported"
-                      "if you have only an arrangement of robots use smurfs!")
+                log.warning("PyBullet can't create a joints between entities. Therefore smurfa is not supported"
+                            "if you have only an arrangement of robots use smurfs!")
                 continue
             else:
-                print("ERROR: The entity", entity["file"], "has an unknown format and can't be loaded")
+                log.error(f"The entity {entity['file']} has an unknown format and can't be loaded")
                 continue
             ori = entity["rotation"] if "rotation" in entity.keys() else [0, 0, 0]
             if type(ori) is not list:
@@ -134,7 +138,7 @@ def main(args):
                     mtl = True
                     break
             if mtl:
-                print("INFO: Using found mtl files for", entity["file"])
+                log.info(f"Using found mtl files for {entity['file']}")
                 load_dict["flags"] |= pb.URDF_USE_MATERIAL_COLORS_FROM_MTL
             # orientation
             if "parent" in entity.keys():
@@ -142,8 +146,8 @@ def main(args):
                     parent_name, parent_link = entity["parent"].split("::")
                     parent_link_id = None
                     if parent_name not in loaded.keys():
-                        print("ERROR: The entity", parent_name, "was not loaded before", entity["file"],
-                              ". Therefore the latter can't be loaded relatively")
+                        log.error(f"The entity {parent_name}  was not loaded before {entity['file']} ."
+                                  f" Therefore the latter can't be loaded relatively")
                         continue
                     for j in pb.getJointInfo(bodyUniqueId=loaded[parent_name]["id"], physicsClientId=client_id):
                         if j[12] == parent_link:
@@ -162,7 +166,7 @@ def main(args):
                 if entity["anchor"] == "world" or entity["anchor"] == "parent" and entity["parent"] == "world":
                     load_dict["useFixedBase"] = 1
                 elif entity["anchor"] == "parent" and entity["parent"] != "world":
-                    print("WARNING: PyBullet can't create a joint for the parent anchoring in entity", entity["file"])
+                    log.warning(f"PyBullet can't create a joint for the parent anchoring in entity {entity['file']} ")
             load_dict["id"] = pb.loadURDF(**load_dict)
             if info is not None:
                 load_dict["info"] = info
@@ -170,9 +174,10 @@ def main(args):
                 if entity["name"] not in loaded.keys():
                     loaded[entity["name"]] = deepcopy(load_dict)
                 else:
-                    print("WARNING: The entity name", entity["name"], "of", entity["file"], "is a duplicate!")
+                    log.warning(
+                        f"The entity name {entity['name']} of {entity['file']} is a duplicate!")
             else:
-                print("WARNING: The entity", entity["file"], "does not have a name!")
+                log.warning(f"The entity {entity['file']} does not have a name!")
         return loaded
 
     if arguments.pb_id is None:

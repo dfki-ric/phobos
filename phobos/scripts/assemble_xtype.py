@@ -1,4 +1,6 @@
 #!python3
+from ..utils.commandline_logging import setup_logger_level, get_logger
+log = get_logger(__name__)
 
 def can_be_used():
     from ..defs import DEIMOS_AVAILABLE
@@ -25,7 +27,7 @@ def main(args):
     try:
         from deimos.deimos import Deimos
     except ImportError:
-        print("Package tools/cad/deimos is required for this tool!")
+        log.error("Package tools/cad/deimos is required for this tool!")
         sys.exit(1)
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
@@ -86,6 +88,7 @@ def main(args):
         if len(phases) > 0:
             pipeline.print_fail_log(file=sys.stderr)
             print("Success rate: {:.2f} %".format(pipeline.get_coverage(phases=phases) * 100), file=sys.stderr)
+            log.info("Success rate: {:.2f} %".format(pipeline.get_coverage(phases=phases) * 100))
 
         if args.output is not None:
             if not args.overwrite_existing and os.path.exists(args.output):

@@ -40,12 +40,14 @@ def get_class(classname):
         cls = getattr(sensor_representations, classname)
     else:
         raise AssertionError(f"The class {classname} is not None to the XML-Factory")
-    assert callable(cls) or issubclass(cls, Representation), f"The class {classname} is not a valid Representation instance"
+    assert callable(cls) or issubclass(cls,
+                                       Representation), f"The class {classname} is not a valid Representation instance"
     return cls
 
 
 class XMLDefinition(object):
-    def __init__(self, dialect, tag, value=None, attributes=None, children=None, value_children=None, attribute_children=None, nested_children=None):
+    def __init__(self, dialect, tag, value=None, attributes=None, children=None, value_children=None,
+                 attribute_children=None, nested_children=None):
         self.dialect = dialect
         self.xml_tag = tag
         self.xml_value = value
@@ -71,7 +73,8 @@ class XMLDefinition(object):
         out = ET.Element(self.xml_tag, attrib=attrib)
         # value
         if self.xml_value is not None:
-            assert all([x == {} for x in [self.xml_children, self.xml_value_children, self.xml_attribute_children, self.xml_nested_children]])
+            assert all([x == {} for x in [self.xml_children, self.xml_value_children, self.xml_attribute_children,
+                                          self.xml_nested_children]])
             val = getattr(object, self.xml_value)
             out.text = self._serialize(val)
             if val is not None:
@@ -130,7 +133,8 @@ class XMLDefinition(object):
                 # normal children
                 if self.xml_children[child.tag]["varname"] not in kwargs:
                     kwargs[self.xml_children[child.tag]["varname"]] = []
-                kwargs[self.xml_children[child.tag]["varname"]] += [self.xml_children[child.tag]["class"].from_xml(child, self.dialect, _parent_xml=xml)]
+                kwargs[self.xml_children[child.tag]["varname"]] += [
+                    self.xml_children[child.tag]["class"].from_xml(child, self.dialect, _parent_xml=xml)]
             if child.tag in self.xml_attribute_children.keys():
                 # children that are created from a simple property and have only attributes
                 for attname, varname in self.xml_attribute_children[child.tag].items():
@@ -144,7 +148,8 @@ class XMLDefinition(object):
                 _kwargs = self.xml_nested_children[child.tag].kwargs_from_xml(child)
                 for k, v in _kwargs.items():
                     if k in kwargs.keys() and v != kwargs[k]:
-                        raise IndexError(f"Key {k} of nested xml node {child.tag} already defined in conflict ({v}<>{kwargs[k]}) by superior node with keys: {str(kwargs.keys())}")
+                        raise IndexError(
+                            f"Key {k} of nested xml node {child.tag} already defined in conflict ({v}<>{kwargs[k]}) by superior node with keys: {str(kwargs.keys())}")
                     else:
                         kwargs[k] = v
         return kwargs
@@ -263,7 +268,7 @@ def class_factory(cls, only=None):
             setattr(cls, "type_dict", cls._type_dict)
         class_vars = [var for var in cls._class_variables if var in cls.type_dict.keys() and not var.startswith("_")]
         for var in class_vars:
-            setattr(cls, "_"+var, None)
+            setattr(cls, "_" + var, None)
 
             def _getter(cls, _var=var) -> [str, List[str]]:
                 return cls._attr_get_name(_var)
@@ -292,6 +297,3 @@ def plural(prop):
         return []
     else:
         return [prop]
-
-
-

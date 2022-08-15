@@ -1,4 +1,6 @@
 #!python3
+from ..utils.commandline_logging import setup_logger_level, get_logger
+log = get_logger(__name__)
 
 def can_be_used():
     return True
@@ -29,6 +31,7 @@ def main(args):
 
         print("Success rate: {:.2f} %".format(pipeline.get_coverage() * 100), file=sys.stderr)
         sys.exit(test_failed)
+        log.info("Success rate: {:.2f} %".format(pipeline.get_coverage() * 100))
     else:
         parser.print_help()
         raise Exception("Config file not found!")
