@@ -54,11 +54,10 @@ class Robot(SMURFRobot):
         cli_joints = []
         for key, values in blender_model['joints'].items():
             if not values['type'] == 'fixed' and values.get("limits") is not None:
-                # Latter check needed for type floating joint
-                cli_limit = representation.JointLimit(effort=values['limits']['effort'],
-                                                      velocity=values['limits']['velocity'],
-                                                      lower=values['limits']['lower'],
-                                                      upper=values['limits']['upper'])
+                cli_limit = representation.JointLimit(effort=values['limits'].get('effort'),
+                                                      velocity=values['limits'].get('velocity'),
+                                                      lower=values['limits'].get('lower'),
+                                                      upper=values['limits'].get('upper'))
             else:
                 cli_limit = None
             cli_joints.append(representation.Joint(
@@ -111,11 +110,10 @@ class Robot(SMURFRobot):
                 ))
         mats = []
         for key, value in blender_model['materials'].items():
-            # TODO internal dict hat mehr als eine Möglichkeit für Color
-            mats.append(representation.Material(name=value.get('name'),
+            mats.append(representation.Material(name=value.pop('name'),
                                                 texture=None,
-                                                diffuseColor=value.get("diffuseColor")
-                                                ))
+                                                diffuseColor=value.pop("diffuseColor"),
+                                                **value))
         if blender_model['version'] != '1.0':
             log.info(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
         cli_robot = XMLRobot(
@@ -129,9 +127,6 @@ class Robot(SMURFRobot):
         new_robot.__dict__.update(cli_robot.__dict__)
         new_robot.description = blender_model["description"]
 
-        for key, value in blender_model['materials'].items():
-            value.pop('diffuseColor')
-            new_robot.add_aggregate('materials', representation.Material(**value))
         for key, values in blender_model['sensors'].items():
             # TODO "type" Abfragen an die verschiedenen User-Präferenzen angleichen
             if values.get('id') is not None:
@@ -153,9 +148,7 @@ class Robot(SMURFRobot):
             else:
                 new_robot.add_sensor(getattr(sensor_representations, values["type"])(**values))
 
-        motors = blender_model["motors"]  # TODO bei joints reinschauen nach mimic, MimicJoint, MimicMotor
-        for key, value in blender_model.items():
-            print(key)
+        motors = blender_model["motors"]  # TODO Teste ob Hennings umstrukturierung funktioniert
         for key, value in motors.items():
             name = value.pop('name')
             joint = value.pop('joint')
@@ -2465,6 +2458,8 @@ def derive_model_dictionary(root, name='', objectlist=[]):
     import phobos.blender.utils.selection as sUtils
     import phobos.blender.utils.naming as nUtils
     import phobos.blender.utils.io as ioUtils
+    from phobos.blender.model.models import deriveTextData
+    from phobos.blender.utils.general import roundFloatsInDict, sortListsInDict
     from phobos.blender.model.models import (deriveLink, deriveMaterial, deriveJoint,
                                         deriveLight, deriveGroupEntry, deriveChainEntry, collectMaterials,
                                         deriveDictEntry)
@@ -2534,7 +2529,9 @@ def derive_model_dictionary(root, name='', objectlist=[]):
             # if so they can be extended/overwritten by motor objects later on
             if '$motor' in jointdict:
                 motordict = jointdict['$motor']
-                # at least we need a type property
+                if 'mimic_motor' in motordict:
+                    motordict['type'] = 'mimic'
+                # at least we need a type property, TODO WIESO ? DESHALB FLIEGEN ALLE 'mimic_motor', HOTFIXED
                 if 'type' in motordict:
                     # if no name is given derive it from the joint
                     if not 'name' in motordict:
@@ -2627,6 +2624,54 @@ def derive_model_dictionary(root, name='', objectlist=[]):
             model['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
 
     # gather submechanism information from links
-    # log("Parsing submechanisms...", "INFO")
+    log.info("Parsing submechanisms...")
 
+    def getSubmechanisms(link):
+        """
+
+        Args:
+          link:
+
+        Returns:
+
+        """
+
+        if 'submechanism/name' in link.keys():
+            submech = {
+                'type': link['submechanism/type'],
+                'contextual_name': link['submechanism/name'],
+                'name': link['submechanism/subtype']
+                if 'submechanism/subtype' in link
+                else link['submechanism/type'],
+                'jointnames_independent': [
+                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/independent']
+                ],
+                'jointnames_spanningtree': [
+                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/spanningtree']
+                ],
+                'jointnames_active': [
+                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/active']
+                ],
+                # TODO: this should work in almost all cases, still a bit of a hack:
+                'file_path': '../submechanisms/urdf/' + link['submechanism/name'] + '.urdf',
+            }
+            log.debug('    ' + submech['contextual_name'])
+        else:
+            submech = None
+        mechanisms = [submech] if submech else []
+        for c in link.children:
+            if c.phobostype in ['link', 'interface'] and c in objectlist:
+                mechanisms.extend(getSubmechanisms(c))
+        return mechanisms
+
+    model['submechanisms'] = getSubmechanisms(root)
+
+    # add additional data to model
+    model.update(deriveTextData(model['name']))
+
+    # shorten numbers in dictionary to n decimalPlaces and return it
+    log.info("Rounding numbers to {} digits.".format(ioUtils.getExpSettings().decimalPlaces))
+    model = roundFloatsInDict(model, ioUtils.getExpSettings().decimalPlaces)
+    log.debug("Sorting objects.")
+    model = sortListsInDict(model)
     return model
