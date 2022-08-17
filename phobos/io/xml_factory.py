@@ -172,20 +172,18 @@ class XMLDefinition(object):
 
         """
         assert entry is not None
-        if float_fmt is None:
-            float_fmt = "%.6f"
         if hasattr(entry, "tolist"):
             entry = entry.tolist()
         if type(entry) == list:
             if any([type(v) in [int, np.int64] for v in entry]):
                 entry = [str(v) for v in entry]
             elif any([type(v) in [float, np.float64] for v in entry]):
-                entry = [float_fmt % v if type(v) in [float, np.float64] else str(v) for v in entry]
+                entry = [float_fmt % v if type(v) in [float, np.float64] and float_fmt is not None else str(v) for v in entry]
             return " ".join(entry)
         elif type(entry) == int:
             return str(entry)
         elif type(entry) in [float, np.float64]:
-            return float_fmt % entry
+            return float_fmt % entry if float_fmt is not None else str(entry)
         else:
             return entry
 
