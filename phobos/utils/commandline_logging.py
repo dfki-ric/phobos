@@ -52,4 +52,4 @@ def get_logger(module_name, verbose_argument=None):
             root_logger.setLevel(logging.CRITICAL)
     child_logger = logging.getLogger(LOGGER_NAME).getChild(module_name)
     child_logger.setLevel(logging.NOTSET)  # This ensures that child logger inherits from parent logger
-    return logging.getLogger(LOGGER_NAME).getChild(module_name)
+    return child_logger
