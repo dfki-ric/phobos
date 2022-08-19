@@ -1,6 +1,6 @@
 #!python3
-from ..utils.commandline_logging import setup_logger_level, get_logger
-log = get_logger(__name__)
+from ..utils.commandline_logging import get_logger
+
 
 def can_be_used():
     from ..defs import DEIMOS_AVAILABLE
@@ -27,7 +27,7 @@ def main(args):
     try:
         from deimos.deimos import Deimos
     except ImportError:
-        log.error("Package tools/cad/deimos is required for this tool!")
+        print("Package tools/cad/deimos is required for this tool!")
         sys.exit(1)
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
@@ -54,7 +54,11 @@ def main(args):
     parser.add_argument('-o', '--output', help='Output model directory', type=str, action='store', default=None)
     parser.add_argument('-k', '--keep-temp', help='Keep the temp directory', action='store_true', default=False)
 
+    parser.add_argument("verbose_argument", '-v', '--verbose',
+                        type=str, help="allowed levels: DEBUG, INFO, WARNING, ERROR, CRITICAL", default=None)
     args = parser.parse_args(args)
+
+    log = get_logger(__name__, verbose_argument=args.verbose_argument)
 
     def generate_cfg(cfg_path, overwrite=False):
         if not os.path.exists(os.path.dirname(os.path.abspath(cfg_path))):
