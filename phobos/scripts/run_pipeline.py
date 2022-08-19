@@ -1,6 +1,5 @@
 #!python3
-from ..utils.commandline_logging import setup_logger_level, get_logger
-log = get_logger(__name__)
+from ..utils.commandline_logging import get_logger
 
 def can_be_used():
     return True
@@ -30,7 +29,10 @@ def main(args):
     parser.add_argument('--allow_na_in_verify',
                         help='Set this when you run this for a branch from which will not be deployed',
                         action='store_true', default=False)
+    parser.add_argument("verbose_argument", '-v', '--verbose',
+                        type=str, help="allowed levels: DEBUG, INFO, WARNING, ERROR, CRITICAL", default=None)
     args = parser.parse_args(args)
+    log = get_logger(__name__, verbose_argument=args.verbose_argument)
     test_failed = False
     if any([args.process, args.test, args.deploy, args.verify]) is True:
         if os.path.isfile(args.config_file):

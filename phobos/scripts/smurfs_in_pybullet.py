@@ -1,7 +1,6 @@
 #!python3
 from ..utils.commandline_logging import get_logger
 
-log = get_logger(__name__)
 
 from ..defs import PYBULLET_AVAILABLE
 
@@ -27,8 +26,11 @@ def main(args):
     parser.add_argument('-i', '--pb_id', type=int,
                         help='pyBullet client id, when this should be parsed to an existing pybullet session',
                         action='store', default=None)
+    parser.add_argument("verbose_argument", '-v', '--verbose',
+                        type=str, help="allowed levels: DEBUG, INFO, WARNING, ERROR, CRITICAL", default=None)
     arguments = parser.parse_args(args)
 
+    log = get_logger(__name__, verbose_argument=args.verbose_argument)
     import os
     from copy import deepcopy
     import numpy as np

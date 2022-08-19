@@ -1,6 +1,5 @@
 #!python3
-from ..utils.commandline_logging import setup_logger_level, get_logger
-log = get_logger(__name__)
+from ..utils.commandline_logging import get_logger
 
 def can_be_used():
     return True
@@ -23,9 +22,12 @@ def main(args):
                         default=None)
     parser.add_argument('-a', '--all', help='Writes everything not only issues', action="store_true", default=False)
     parser.add_argument('-w', '--warn', help='Show warnings', action="store_true", default=False)
+    parser.add_argument("verbose_argument", '-v', '--verbose',
+                        type=str, help="allowed levels: DEBUG, INFO, WARNING, ERROR, CRITICAL", default=None)
 
     args = parser.parse_args(args)
 
+    log = get_logger(__name__, verbose_argument=args.verbose_argument)
 
 if __name__ == '__main__':
     import sys

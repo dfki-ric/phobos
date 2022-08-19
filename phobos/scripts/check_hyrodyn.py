@@ -1,6 +1,5 @@
 #!python3
-from ..utils.commandline_logging import setup_logger_level, get_logger
-log = get_logger(__name__)
+from ..utils.commandline_logging import get_logger
 
 def can_be_used():
     try:
@@ -18,7 +17,6 @@ INFO = 'Checks whether the model can be loaded in Hyrodyn.'
 
 
 def main(args):
-    log.info("\n--> Checking Model in Hyrodyn!")
     from phobos.utils import hyrodyn as hyrodyn_utils
     import argparse
     import os.path as path
@@ -26,9 +24,13 @@ def main(args):
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf file')
     parser.add_argument('submechanisms_file', type=str, help='Path to the urdf or smurf file')
+    parser.add_argument("verbose_argument", '-v', '--verbose',
+                        type=str, help="allowed levels: DEBUG, INFO, WARNING, ERROR, CRITICAL", default=None)
 
     args = parser.parse_args(args)
 
+    log = get_logger(__name__, verbose_argument=args.verbose_argument)
+    log.info("\n--> Checking Model in Hyrodyn!")
     report = hyrodyn_utils.get_load_report(args.robot_file, args.submechanisms_file)
     hyrodyn_utils.debug_report(report, args.robot_file, args.submechanisms_file)
 

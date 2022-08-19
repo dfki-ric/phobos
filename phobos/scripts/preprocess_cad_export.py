@@ -1,6 +1,5 @@
 #!python3
-from ..utils.commandline_logging import setup_logger_level, get_logger
-log = get_logger(__name__)
+from ..utils.commandline_logging import get_logger
 
 
 def can_be_used():
@@ -78,9 +77,12 @@ def main(args):
                         action='store_false', default=True)
     parser.add_argument('-i', '--invert-joint', dest="invertJoint", type=str,
                         help='Invert the joint with the given name', default=None)
+    parser.add_argument("verbose_argument", '-v', '--verbose',
+                        type=str, help="allowed levels: DEBUG, INFO, WARNING, ERROR, CRITICAL", default=None)
 
     args = parser.parse_args(args)
 
+    log = get_logger(__name__, verbose_argument=args.verbose_argument)
     if os.path.exists(args.input_directory) and args.output_directory:
         log.info("Preprocessing:")
         # create output
