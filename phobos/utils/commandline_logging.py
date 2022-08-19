@@ -37,5 +37,19 @@ def setup_logger_level(log_level=BASE_LOG_LEVEL, file_name=LOG_FILE_CONVENTION):
         return logger
 
 
-def get_logger(module_name):
+def get_logger(module_name, verbose_argument=None):
+    if verbose_argument is not None:
+        root_logger = logging.getLogger(LOGGER_NAME)
+        if verbose_argument.upper() == "DEBUG":
+            root_logger.setLevel(logging.DEBUG)
+        elif verbose_argument.upper() == "INFO":
+            root_logger.setLevel(logging.INFO)
+        elif verbose_argument.upper() == "WARNING":
+            root_logger.setLevel(logging.WARNING)
+        elif verbose_argument.upper() == "ERROR":
+            root_logger.setLevel(logging.ERROR)
+        elif verbose_argument.upper() == "CRITICAL":
+            root_logger.setLevel(logging.CRITICAL)
+    child_logger = logging.getLogger(LOGGER_NAME).getChild(module_name)
+    child_logger.setLevel(logging.NOTSET)  # This ensures that child logger inherits from parent logger
     return logging.getLogger(LOGGER_NAME).getChild(module_name)
