@@ -564,7 +564,6 @@ class BaseModel(yaml.YAMLObject):
                     noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
                 )
                 self.robot.add_motor(motor)
-                print([str(m) for m in self.robot.motors])
                 motor.link_with_robot(self.robot)
 
             if "further_annotations" in self.smurf.keys():
@@ -583,7 +582,8 @@ class BaseModel(yaml.YAMLObject):
         return True
 
     def export(self):
-        self.robot.enforce_zero()
+        if "enforce_zero" in self.typedef and self.typedef["enforce_zero"]:
+            self.robot.enforce_zero()
         if "smurf" in self.modeltype:
             self.robot.export_smurf(
                 self.exportdir, create_pdf=self.typedef["export_pdf"],

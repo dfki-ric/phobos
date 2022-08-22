@@ -304,7 +304,6 @@ class SMURFRobot(XMLRobot):
                 break
 
     # Reimplementation of Robot methods
-
     def get_joints_ordered_df(self):
         """Returns the joints in depth first order"""
         indep_joints = []
