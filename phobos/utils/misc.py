@@ -23,7 +23,7 @@ def read_angle_2_rad(config_input):
     """Converts ["rad"/"deg", value] into the rad value"""
     if type(config_input) is list:
         if config_input[0] == "deg":
-            return np.pi * config_input[1] / 180
+            return np.pi * config_input[1] / 180.
         elif config_input[0] == "rad":
             return config_input[1]
         else:
@@ -31,6 +31,10 @@ def read_angle_2_rad(config_input):
     else:
         print("Rad/deg not defined, taking rad!", flush=True)
         return config_input
+
+
+def trunc(values, decimals=0):
+    return np.trunc(values*10**decimals)/(10**decimals)
 
 
 def regex_replace(string, replacements, verbose=False):
