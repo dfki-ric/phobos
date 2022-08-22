@@ -857,7 +857,8 @@ class Motor(Representation, SmurfBase):
             self.check_linkage()
 
     def unlink_from_robot(self):
-        self._joint.motor = None
+        if self._related_robot_instance is not None:
+            self._joint.motor = None
         super(Motor, self).unlink_from_robot()
 
     def check_linkage(self, attribute=None):
