@@ -1,6 +1,6 @@
 #!python
 from pkg_resources import get_distribution, DistributionNotFound
-from ..utils.commandline_logging import setup_logger_level, get_logger
+from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
 
 try:

@@ -1,6 +1,5 @@
 #!python3
-from ..utils.commandline_logging import setup_logger_level, get_logger
-log = get_logger(__name__)
+from ..utils.commandline_logging import get_logger
 
 
 def can_be_used():
@@ -24,6 +23,7 @@ def main(args):
     from phobos.utils.misc import create_dir, copy, regex_replace
     from phobos.utils.transform import order_angles
     from phobos.defs import load_json, dump_json, dump_yaml
+    from ..defs import BASE_LOG_LEVEL
 
     def invertJoint(urdfpath, name):
         try:
@@ -78,8 +78,11 @@ def main(args):
                         action='store_false', default=True)
     parser.add_argument('-i', '--invert-joint', dest="invertJoint", type=str,
                         help='Invert the joint with the given name', default=None)
-
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
+
+    log = get_logger(__name__, verbose_argument=args.loglevel)
 
     if os.path.exists(args.input_directory) and args.output_directory:
         log.info("Preprocessing:")

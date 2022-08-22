@@ -1,7 +1,6 @@
 #!python3
 
-from ..utils.commandline_logging import setup_logger_level, get_logger
-log = get_logger(__name__)
+from ..utils.commandline_logging import get_logger
 
 
 def can_be_used():
@@ -20,13 +19,17 @@ def main(args):
     import os
 
     from ..scenes import Scene, Assembly
+    from ..defs import BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=str, help="SMURFA or SMURFS file")
     parser.add_argument("output", type=str,  help="The output directory")
     parser.add_argument('-c', '--copy-meshes', help='Copies the meshes', action='store_true', default=False)
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
 
+    log = get_logger(__name__, verbose_argument=args.loglevel)
     log.info("Unique names for all links and joints are assumed to create a valid .urdf file!")
 
     scene = Scene(args.input)
