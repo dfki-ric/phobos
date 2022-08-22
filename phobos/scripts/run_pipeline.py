@@ -17,6 +17,7 @@ def main(args):
 
     import argparse
     import os
+    from ..defs import BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos "+os.path.basename(__file__)[:-3])
     parser.add_argument('config_file', type=str, help='Path to the pipeline configfile', default="pipeline.yml")
@@ -29,10 +30,10 @@ def main(args):
     parser.add_argument('--allow_na_in_verify',
                         help='Set this when you run this for a branch from which will not be deployed',
                         action='store_true', default=False)
-    parser.add_argument("verbose_argument", '-v', '--verbose',
-                        type=str, help="allowed levels: DEBUG, INFO, WARNING, ERROR, CRITICAL", default=None)
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
-    log = get_logger(__name__, verbose_argument=args.verbose_argument)
+    log = get_logger(__name__, verbose_argument=args.loglevel)
     test_failed = False
     if any([args.process, args.test, args.deploy, args.verify]) is True:
         if os.path.isfile(args.config_file):

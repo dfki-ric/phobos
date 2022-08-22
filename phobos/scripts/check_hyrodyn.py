@@ -20,16 +20,16 @@ def main(args):
     from phobos.utils import hyrodyn as hyrodyn_utils
     import argparse
     import os.path as path
+    from ..defs import BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf file')
     parser.add_argument('submechanisms_file', type=str, help='Path to the urdf or smurf file')
-    parser.add_argument("verbose_argument", '-v', '--verbose',
-                        type=str, help="allowed levels: DEBUG, INFO, WARNING, ERROR, CRITICAL", default=None)
-
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
 
-    log = get_logger(__name__, verbose_argument=args.verbose_argument)
+    log = get_logger(__name__, verbose_argument=args.loglevel)
     log.info("\n--> Checking Model in Hyrodyn!")
     report = hyrodyn_utils.get_load_report(args.robot_file, args.submechanisms_file)
     hyrodyn_utils.debug_report(report, args.robot_file, args.submechanisms_file)

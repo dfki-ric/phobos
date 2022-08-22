@@ -22,7 +22,7 @@ def main(args):
     from ..utils import urdf
     from ..core.robot import Robot
     from ..io import representation
-    from ..defs import load_json, dump_json, dump_yaml
+    from ..defs import load_json, dump_json, dump_yaml, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf or smurf file')
@@ -30,12 +30,11 @@ def main(args):
                         default=None)
     parser.add_argument('-a', '--all', help='Writes everything not only issues', action="store_true", default=False)
     parser.add_argument('-w', '--warn', help='Show warnings', action="store_true", default=False)
-    parser.add_argument("verbose_argument", '-v', '--verbose',
-                        type=str, help="allowed levels: DEBUG, INFO, WARNING, ERROR, CRITICAL", default=None)
-
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
+    log = get_logger(__name__, verbose_argument=args.loglevel)
 
-    log = get_logger(__name__, verbose_argument=args.verbose_argument)
     robot = Robot(inputfile=args.robot_file)
 
     report = {}

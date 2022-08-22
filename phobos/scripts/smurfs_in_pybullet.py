@@ -19,6 +19,7 @@ INFO = 'Loads a "smurfs" file in pyBullet.'
 def main(args):
     import argparse
     import os
+    from ..defs import BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
     parser.add_argument('smurfs', type=str, help='Path to the smurfs file', default="pipeline.yml")
@@ -26,11 +27,11 @@ def main(args):
     parser.add_argument('-i', '--pb_id', type=int,
                         help='pyBullet client id, when this should be parsed to an existing pybullet session',
                         action='store', default=None)
-    parser.add_argument("verbose_argument", '-v', '--verbose',
-                        type=str, help="allowed levels: DEBUG, INFO, WARNING, ERROR, CRITICAL", default=None)
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     arguments = parser.parse_args(args)
 
-    log = get_logger(__name__, verbose_argument=args.verbose_argument)
+    log = get_logger(__name__, verbose_argument=args.loglevel)
     import os
     from copy import deepcopy
     import numpy as np
