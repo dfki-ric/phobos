@@ -66,7 +66,7 @@ def order_angles(angles, in_order, out_order):
     return [axes[k] for k in out_order.lower()]
 
 
-def round_array(array, dec):
+def round_array(array, dec=16):
     out = []
     for x in array:
         if 1*10**-(dec+1) > x > -1*10**-(dec+1):
