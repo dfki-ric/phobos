@@ -31,7 +31,7 @@ def main(args):
                         default=BASE_LOG_LEVEL)
     arguments = parser.parse_args(args)
 
-    log = get_logger(__name__, verbose_argument=args.loglevel)
+    log = get_logger(__name__, verbose_argument=arguments.loglevel)
     import os
     from copy import deepcopy
     import numpy as np
