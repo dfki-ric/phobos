@@ -1,4 +1,5 @@
 #!python3
+from ..utils.commandline_logging import get_logger
 
 
 def can_be_used():
@@ -22,6 +23,7 @@ def main(args):
     from phobos.utils.misc import create_dir, copy, regex_replace
     from phobos.utils.transform import order_angles
     from phobos.defs import load_json, dump_json, dump_yaml
+    from ..defs import BASE_LOG_LEVEL
 
     def invertJoint(urdfpath, name):
         try:
@@ -32,8 +34,8 @@ def main(args):
             try:
                 tree = ET.parse(urdfpath)
             except ET.ParseError as error:
-                print("Reading of URDF file", urdfpath, "failed!")
-                print("If this is a yaml please check if you wanted to give a basefile or a derived_base!")
+                log.error(f"Reading of URDF file {urdfpath} failed!")
+                log.error("If this is a yaml please check if you wanted to give a basefile or a derived_base!")
                 raise error
             root = tree.getroot()
 
@@ -65,9 +67,9 @@ def main(args):
 
             tree.write(urdfpath)
             if not done:
-                print("Couldn't find joint", args.invertJoint)
+                log.warning(f"Couldn't find joint {args.invertJoint}")
         except ImportError:
-            print("Couldn't import required modules! Can't invert joint")
+            log.error("Couldn't import required modules! Can't invert joint")
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
     parser.add_argument('input_directory', type=str, help='Path to the freshly exported CAD model')
@@ -76,11 +78,14 @@ def main(args):
                         action='store_false', default=True)
     parser.add_argument('-i', '--invert-joint', dest="invertJoint", type=str,
                         help='Invert the joint with the given name', default=None)
-
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
 
+    log = get_logger(__name__, verbose_argument=args.loglevel)
+
     if os.path.exists(args.input_directory) and args.output_directory:
-        print("Preprocessing:")
+        log.info("Preprocessing:")
         # create output
         create_dir(None, args.output_directory)
         create_dir(None, os.path.join(args.output_directory, "urdf"))
@@ -88,7 +93,7 @@ def main(args):
         # reduce meshes
         if args.meshes:
             try:
-                print("  Reducing meshes ...")
+                log.info("  Reducing meshes ...")
                 import meshlabxml as mlx
                 in_dir = os.path.join(args.input_directory, "meshes")
                 out_dir = os.path.join(args.output_directory, "meshes")
@@ -104,7 +109,7 @@ def main(args):
                         script_file=pkg_resources.resource_filename(__name__, "data/simplify_stl.mlx"))
                     # os.system("meshlabserver -i "+in_mesh+" -o "+out_mesh+" -s "+cfg_file)
             except Exception as e:
-                print("  WARNING: Failed to reduce mesh as meshxml:", e)
+                log.warning(f"Failed to reduce mesh as meshxml: {e}")
                 # copy meshes
                 copy(None, os.path.join(args.input_directory, "meshes"), os.path.join(args.output_directory))
         else:
@@ -116,13 +121,13 @@ def main(args):
         urdf_path = os.path.join(args.output_directory, "urdf", "model.urdf")
         with open(os.path.join(args.input_directory, "urdf", urdf_name[0]), "r") as input_file:
             content = input_file.read()
-            print("  Replacing meshes pathes and xml version ...")
+            log.info("  Replacing meshes pathes and xml version ...")
             content = regex_replace(content, {
                 "package://.*/meshes": "../meshes",
                 "<\?xml version.*\?>\n": ""
             })
             if os.path.exists(os.path.join(args.input_directory, "replacements.yml")):
-                print("  Replacing strings according to replacements.yml")
+                log.info("  Replacing strings according to replacements.yml")
                 copy(None, os.path.join(args.input_directory, "replacements.yml"),
                      os.path.join(args.output_directory, "replacements.yml"))
                 replacements = load_json(open(os.path.join(args.input_directory, "replacements.yml"), "r").read())
@@ -131,15 +136,15 @@ def main(args):
                              os.path.isfile(os.path.join(args.output_directory, "meshes", f))]:
                     file_new = regex_replace(file, replacements)
                     if file != file_new:
-                        print("Renaming", file, "to", file_new)
+                        log.info(f"Renaming {file} to {file_new}")
                         os.rename(os.path.join(args.output_directory, "meshes", file),
                                   os.path.join(args.output_directory, "meshes", file_new))
-            print("  Writing updated URDF to model.urdf ...")
+            log.info("  Writing updated URDF to model.urdf ...")
             with open(os.path.join(args.output_directory, "urdf", "model.urdf"), "w") as output:
                 output.write(content)
 
         if args.invertJoint is not None:
-            print("  Inverting Joint", args.invertJoint, "...")
+            log.info(f"  Inverting {Jointargs.invertJoint} ...")
             invertJoint(urdf_path, args.invertJoint)
 
         if os.path.basename(os.path.dirname(__file__)) == "ci-run":
@@ -161,7 +166,7 @@ def main(args):
         #         if not os.path.exists(os.path.join(args.output_directory, "manifest.xml")):
         #             copy(manifest_path, os.path.join(args.output_directory, "manifest.xml"))
         else:
-            print("Couldn't insert default README.md file, remember updating this in your input repo!")
+            log.warning("Couldn't insert default README.md file, remember updating this in your input repo!")
 
         if os.path.exists(os.path.join(args.output_directory, "README.md")):
             with open(os.path.join(args.output_directory, "README.md"), "r") as readme:
@@ -169,8 +174,8 @@ def main(args):
                 content = regex_replace(content, {
                     "\$INPUTNAME": os.path.basename(os.path.abspath(args.output_directory))
                 })
-                print("  Replacing $INPUTNAME with",
-                      os.path.basename(os.path.abspath(args.output_directory)), "in README.md ...")
+                log.info("  Replacing $INPUTNAME with" +
+                      str(os.path.basename(os.path.abspath(args.output_directory))) + "in README.md ...")
             with open(os.path.join(args.output_directory, "README.md"), "w") as readme:
                 readme.write(content)
 
@@ -186,25 +191,23 @@ def main(args):
                     "\$MAINTAINER": "<maintainer>" + maintainer + "</maintainer>" if maintainer != "" else "",
                     "\$URL": "<url>" + url + "</url>" if url != "" else "",
                 })
-                print("  Inserting contents of manifest.xml in",
-                      os.path.basename(os.path.abspath(args.output_directory)),
-                      "...")
+                log.info(f"  Inserting contents of manifest.xml in {os.path.basename(os.path.abspath(args.output_directory))} ...")
             with open(os.path.join(args.output_directory, "manifest.xml"), "w") as manifest:
                 manifest.write(content)
 
         try:
-            print("  Trying to check URDF ...")
+            log.info("  Trying to check URDF ...")
             os.system("check_urdf " + urdf_path)
         except:
             pass
 
         try:
-            print("  Trying to generate PDF ...")
+            log.info("  Trying to generate PDF ...")
             os.system("urdf_to_graphiz " + urdf_path)
         except:
             pass
 
-        print("Finished!")
+        log.info("Finished!")
 
         try:
             print("Trying to load model in pybullet... (Press CTRL+C to interrupt)")
@@ -222,7 +225,7 @@ def main(args):
         except:
             pass
     else:
-        print("Input directory does not exist!")
+        log.error("Input directory does not exist!")
         parser.print_help()
 
 

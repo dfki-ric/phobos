@@ -1,4 +1,5 @@
 #!python3
+from ..utils.commandline_logging import get_logger
 
 def can_be_used():
     return True
@@ -17,10 +18,15 @@ def main(args):
     import argparse
     import os
 
+    from ..defs import BASE_LOG_LEVEL
+
     parser = argparse.ArgumentParser(description=INFO, prog="phobos "+os.path.basename(__file__)[:-3])
     parser.add_argument('config_file', type=str, help='Path to the test configfile', default="test_config.yml")
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
 
+    log = get_logger(__name__, verbose_argument=args.loglevel)
     if os.path.isfile(args.config_file):
         from phobos.ci.pipeline import TestingPipeline
         pipeline = TestingPipeline(root=os.getcwd(), configfile=args.config_file)

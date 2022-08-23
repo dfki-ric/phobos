@@ -1,4 +1,5 @@
 #!python3
+from ..utils.commandline_logging import get_logger
 
 def can_be_used():
     return True
@@ -13,6 +14,7 @@ INFO = 'Checks whether all meshes are available.'
 
 def main(args):
     print("\n--> Checking meshes!")
+    from phobos.utils import urdf
     import argparse
     import sys
     import os.path as path
@@ -20,7 +22,7 @@ def main(args):
     from ..utils import urdf
     from ..core.robot import Robot
     from ..io import representation
-    from ..defs import load_json, dump_json, dump_yaml
+    from ..defs import load_json, dump_json, dump_yaml, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf or smurf file')
@@ -28,8 +30,10 @@ def main(args):
                         default=None)
     parser.add_argument('-a', '--all', help='Writes everything not only issues', action="store_true", default=False)
     parser.add_argument('-w', '--warn', help='Show warnings', action="store_true", default=False)
-
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
+    log = get_logger(__name__, verbose_argument=args.loglevel)
 
     robot = Robot(inputfile=args.robot_file)
 
@@ -98,23 +102,25 @@ def main(args):
 
     if args.output is not None:
         if path.exists(args.output):
-            print("ERROR: Won't overwrite " + args.output)
+            log.error(f"Won't overwrite {args.output}")
             sys.exit(1)
         with open(args.output, "w") as f:
             f.write(dump_json(report))
-        print("Wrote full output to", args.output)
+        log.info(f"Wrote full output to {args.output}")
     else:
         for link, lr in report.items():
             if lr["issues"] or (args.all and len(lr["report"].items()) > 0):
-                print(link + ":")
+                log.info(f"{link} :")
                 for geo, gr in lr["report"].items():
                     if gr["error"] or (args.warn and gr["warning"]) or args.all:
-                        print("  " + geo + ":", gr["note"])
-                        print("    " + gr["path"])
+                        note = gr["note"]
+                        path_string = gr["path"]
+                        log.info(f" {geo} : {note}")
+                        log.info(f"    {path_string}")
 
-    print(n_errors, "mesh errors and", n_warnings, "warnings found!")
+    log.info(f"{n_errors} mesh errors and {n_warnings} warnings found!")
     if not args.warn and n_warnings != 0:
-        print("Note: To display warnings add -w option.")
+        log.info("To display warnings add -w option.")
 
 
 if __name__ == '__main__':

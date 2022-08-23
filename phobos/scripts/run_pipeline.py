@@ -1,4 +1,5 @@
 #!python3
+from ..utils.commandline_logging import get_logger
 
 def can_be_used():
     return True
@@ -16,6 +17,7 @@ def main(args):
 
     import argparse
     import os
+    from ..defs import BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos "+os.path.basename(__file__)[:-3])
     parser.add_argument('config_file', type=str, help='Path to the pipeline configfile', default="pipeline.yml")
@@ -28,7 +30,10 @@ def main(args):
     parser.add_argument('--allow_na_in_verify',
                         help='Set this when you run this for a branch from which will not be deployed',
                         action='store_true', default=False)
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
+    log = get_logger(__name__, verbose_argument=args.loglevel)
     test_failed = False
     if any([args.process, args.test, args.deploy, args.verify]) is True:
         if os.path.isfile(args.config_file):
@@ -58,7 +63,11 @@ def main(args):
         print("Success rate: {:.2f} %".format(pipeline.get_coverage(
             phases=phases if not args.verify else ["process", "test", "deploy"],
             allow_na=args.allow_na_in_verify)*100), file=sys.stderr)
+        log.info("Success rate: {:.2f} %".format(pipeline.get_coverage(
+            phases=phases if not args.verify else ["process", "test", "deploy"],
+            allow_na=args.allow_na_in_verify)*100))
         print("Number of not successfully processed models:", pipeline.number_unfinished_models(), file=sys.stderr)
+        log.info(f"Number of not successfully processed models: {pipeline.number_unfinished_models()}")
         if not args.verify:
             sys.exit(0)
         else:

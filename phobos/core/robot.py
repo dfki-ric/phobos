@@ -20,6 +20,9 @@ from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_
 from ..utils.transform import create_transformation, inv, get_adjoint
 from ..utils.tree import find_close_ancestor_links
 from ..utils.urdf import read_urdf_filename, create_pdf_from_urdf, transform_object, get_joint_info_dict
+from ..utils.commandline_logging import get_logger
+
+log = get_logger(__name__)
 
 
 class Robot(SMURFRobot):
@@ -50,15 +53,14 @@ class Robot(SMURFRobot):
             root = sUtils.getRoot(bpy.context.selected_objects[0])
             blender_model = derive_model_dictionary(root, name, objectlist)
             if blender_model is None:
-                print("Please name your model and assign a version")
+                log.warning("Warning name your model and assign a version, otherwise blender-dictionary is None")
         cli_joints = []
         for key, values in blender_model['joints'].items():
             if not values['type'] == 'fixed' and values.get("limits") is not None:
-                # Latter check needed for type floating joint
-                cli_limit = representation.JointLimit(effort=values['limits']['effort'],
-                                                      velocity=values['limits']['velocity'],
-                                                      lower=values['limits']['lower'],
-                                                      upper=values['limits']['upper'])
+                cli_limit = representation.JointLimit(effort=values['limits'].get('effort'),
+                                                      velocity=values['limits'].get('velocity'),
+                                                      lower=values['limits'].get('lower'),
+                                                      upper=values['limits'].get('upper'))
             else:
                 cli_limit = None
             cli_joints.append(representation.Joint(
@@ -111,13 +113,12 @@ class Robot(SMURFRobot):
                 ))
         mats = []
         for key, value in blender_model['materials'].items():
-            # TODO internal dict hat mehr als eine Möglichkeit für Color
-            mats.append(representation.Material(name=value.get('name'),
+            mats.append(representation.Material(name=value.pop('name'),
                                                 texture=None,
-                                                diffuseColor=value.get("diffuseColor")
-                                                ))
+                                                diffuseColor=value.pop("diffuseColor"),
+                                                **value))
         if blender_model['version'] != '1.0':
-            print(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
+            log.info(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
         cli_robot = XMLRobot(
             name=blender_model['name'],
             version=None,
@@ -129,11 +130,8 @@ class Robot(SMURFRobot):
         new_robot.__dict__.update(cli_robot.__dict__)
         new_robot.description = blender_model["description"]
 
-        for key, value in blender_model['materials'].items():
-            value.pop('diffuseColor')
-            new_robot.add_aggregate('materials', representation.Material(**value))
-
         for key, values in blender_model['sensors'].items():
+            # TODO "type" Abfragen an die verschiedenen User-Präferenzen angleichen
             if values.get('id') is not None:
                 values['targets'] = [
                     x for x in values['id'] if (
@@ -153,9 +151,8 @@ class Robot(SMURFRobot):
             else:
                 new_robot.add_sensor(getattr(sensor_representations, values["type"])(**values))
 
-        motors = blender_model["motors"]  # TODO bei joints reinschauen nach mimic, MimicJoint, MimicMotor
-        for key, value in blender_model.items():
-            print(key)
+
+        motors = blender_model["motors"]  # TODO Teste ob Hennings umstrukturierung funktioniert
         for key, value in motors.items():
             name = value.pop('name')
             joint = value.pop('joint')
@@ -217,7 +214,7 @@ class Robot(SMURFRobot):
 
         if create_pdf:
             create_pdf_from_urdf(outputfile)
-        print("Robot written to {}".format(outputfile))
+        log.info("Robot written to {}".format(outputfile))
         return
 
     def export_sdf(self, outputfile=None, export_visuals=True, export_collisions=True, create_pdf=False,
@@ -266,7 +263,7 @@ class Robot(SMURFRobot):
 
         if create_pdf:
             create_pdf_from_urdf(outputfile)
-        print("Robot written to {}".format(outputfile))
+        log.info("Robot written to {}".format(outputfile))
         return
 
     def export_xml(self, output_dir=None, export_visuals=True, export_collisions=True,
@@ -423,7 +420,7 @@ class Robot(SMURFRobot):
 
         with open(os.path.join(smurf_dir, "{}.smurf".format(self.name)), "w+") as stream:
             stream.write(dump_json(annotation_dict, default_style=False, sort_keys=True))
-        print("SMURF written to", smurf_dir)
+        log.info("SMURF written to", smurf_dir)
 
     def export_joint_limits(self, outputdir, file_name="joint_limits.yml", names=None):
         if names is None:
@@ -552,7 +549,7 @@ class Robot(SMURFRobot):
                         "mesh": entry[8]}
                 coll_name = os.path.basename(temp["mesh"][:temp["mesh"].rfind("_")])
                 if coll_name in kccd_dict.keys():
-                    print(temp["mesh"], "->", coll_name, "already in kccd_dict keys!")
+                    log.info("{temp['mesh']} ->  {coll_name} already in kccd_dict keys!")
                     raise AssertionError
                 if "DONTCHECK" in block:
                     dontchecks += [block[block.find("DONTCHECK") + 9:block.find("END")].strip().split(" WITH ")]
@@ -572,7 +569,7 @@ class Robot(SMURFRobot):
                             n_points = 8
                         elif edit_collisions[temp["link"]]["shape"].lower() == "sphere":
                             n_points = 1
-                print("Covering", temp["mesh"], "of", temp["link"], "with", n_points)
+                log.info(f"Covering {temp['mesh']} of {temp['link']} with {n_points}")
                 out, _ = execute_shell_command(
                     "kccdcoveriv " + temp["mesh"] + " " + str(n_points) + " " + temp["body"], cwd=kccd_path,
                     silent=True)
@@ -674,7 +671,7 @@ class Robot(SMURFRobot):
                                           ros_pkg_name=ros_pkg_name, export_joint_limits=export_joint_limits,
                                           export_submodels=False, formats=formats, float_fmt_dict=float_fmt_dict)
             else:
-                print(f"No submodel named {name}")
+                log.warning(f"No submodel named {name}")
 
     def full_export(self, output_dir=None, export_visuals=True, export_collisions=True,
                     create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
@@ -690,7 +687,7 @@ class Robot(SMURFRobot):
         if name in self._submodels.keys():
             return self._submodels[name]
         else:
-            print("No submodel named {}".format(name))
+            log.warning("No submodel named {}".format(name))
         return
 
     # tools
@@ -736,7 +733,7 @@ class Robot(SMURFRobot):
         parent = self.get_link(parent)
 
         if not link or not parent:
-            print("Link or new parent not found!")
+            log.warning("Link or new parent not found!")
             return
 
         # Get the transformation
@@ -860,10 +857,10 @@ class Robot(SMURFRobot):
                     else:
                         linknames.update(chain[begin:])
             except Exception as e:
-                print(self.get_root())
-                print(self.parent_map.keys())
-                print([link.name for link in self.links])
-                print("Start", start, "Stop", stop)
+                log.info(self.get_root())
+                log.info(self.parent_map.keys())
+                log.info([link.name for link in self.links])
+                log.info(f"Start {start} Stop {stop}")
                 raise e
             linknames = list(linknames)
 
@@ -908,7 +905,8 @@ class Robot(SMURFRobot):
         for joint in _joints:
             if any([jd.joint not in jointnames for jd in joint.joint_dependencies]):
                 _joint = joint.duplicate()
-                print(f"WARNING: Removing mimic relation in submodel {definition['robotname']} for {_joint.name} (mimiced {_joint.mimic.joint})!")
+                log.warning(f"Removing mimic relation in submodel {definition['robotname']} for {_joint.name} (mimiced "
+                            f"{_joint.mimic.joint})!")
                 _joint.joint_dependencies = [jd for jd in _joint.joint_dependencies if jd.joint in jointnames]
                 joints.append(_joint)
             else:
@@ -1042,7 +1040,7 @@ class Robot(SMURFRobot):
             m = M[0, 0]
             if m <= limit:
                 M[:3, :3] = np.eye(3) * limit
-                print(" Corrected mass for link {}".format(link.name))
+                log.info(" Corrected mass for link {}".format(link.name))
 
             I = M[3:, 3:]
 
@@ -1057,7 +1055,7 @@ class Robot(SMURFRobot):
 
             link.inertial = representation.Inertial.from_mass_matrix(M, origin)
 
-            print(" Corrected inertia for link {}".format(link.name))
+            log.info(" Corrected inertia for link {}".format(link.name))
 
     def correct_axes(self, joints=None, tol=1E-3):
         """
@@ -1072,11 +1070,9 @@ class Robot(SMURFRobot):
             joint.axis = joint.axis / np.linalg.norm(joint.axis)
             axis_correction = np.eye(4)
             if 1 - (np.amax(np.abs(joint.axis))) > tol:
-                print(
-                    "WARNING: Axis of joint " + joint.name + " is not even close to unit! No changes made Axis:" + str(
-                        joint.axis))
+                log.warning(f"Axis of joint {joint.name} is not even close to unit! No changes made Axis:{joint.axis}")
             elif joint.type != "fixed" and len(np.where(np.array(joint.axis) == 0.0)[0]) != 2:
-                print("WARNING: joint axis is not x, y or z unit vector:\n", joint.__dict__)
+                log.warning(f"Joint axis is not x, y or z unit vector:\n {joint.__dict__}")
                 v = [np.abs(a) for a in joint.axis]
                 new_axis = [0 if i != np.argmax(v) else 1 for i in range(3)]
                 if joint.axis[np.argmax(v)] < 0:
@@ -1084,8 +1080,8 @@ class Robot(SMURFRobot):
                 R = scipy_rot.align_vectors([new_axis], [joint.axis])
                 # joint.axis = new_axis
                 axis_correction[:3, :3] = R[0].as_matrix()
-                print("Rotating joint by \n", axis_correction)
-                print("New axis is:", new_axis)
+                log.info(f"Rotating joint by \n {axis_correction}")
+                log.info(f"New axis is: {new_axis}")
 
                 joint.origin = representation.Pose.from_matrix(axis_correction.dot(joint.originto_matrix()))
                 joint.axis = new_axis
@@ -1097,7 +1093,7 @@ class Robot(SMURFRobot):
         m = 0.0
         for link in self.links:
             m += link.inertial.mass if link.inertial else 0.0
-        print("{} has a total mass of {} kg.".format(self.name, m))
+        log.info("{} has a total mass of {} kg.".format(self.name, m))
         return m
 
     def compute_com(self):
@@ -1161,7 +1157,7 @@ class Robot(SMURFRobot):
             raise Exception(
                 "Provide valid link to attach to. '" + linkname + "' is not in " + str([ln.name for ln in self.links]))
 
-        print("Transform {}...".format(linkname))
+        log.info("Transform {}...".format(linkname))
         # Get the parent joint
         pjoint = self.get_joint(self.get_parent(linkname))
 
@@ -1175,7 +1171,7 @@ class Robot(SMURFRobot):
         Tinv = inv(T)
 
         # If we have just one parent and children, we rotate the parent and inverse rotate all children
-        print(" Transforming Joints")
+        log.info(" Transforming Joints")
         if pjoint is not None:
             # Transform the parent
             assert transform_object(pjoint, T)
@@ -1203,7 +1199,7 @@ class Robot(SMURFRobot):
         if inertial is None:
             return True
 
-        print(" Transforming Inertials")
+        log.info(" Transforming Inertials")
         # Process the rotation
         if transformation is not None:
             T = transformation
@@ -1235,7 +1231,7 @@ class Robot(SMURFRobot):
         """
         # Get the visual
         visual = self.get_visual(linkname)
-        print(" Transform Visuals")
+        log.info(" Transform Visuals")
         # Transform
         T = create_transformation(translation, rotation)
         assert transform_object(visual, T)
@@ -1246,7 +1242,7 @@ class Robot(SMURFRobot):
         """
         # Get the collision
         collision = self.get_collision(linkname)
-        print(" Transform Collisions")
+        log.info(" Transform Collisions")
         # Transform
         T = create_transformation(translation, rotation)
         assert transform_object(collision, T)
@@ -1314,7 +1310,7 @@ class Robot(SMURFRobot):
         assert (link is not None and type(link) is representation.Link)
 
         if dont_overwrite and any([v != 0 for v in link.inertial.origin.xyz]):
-            print("Not overwriting com of link: ", link.name)
+            log.warning(f"Not overwriting com of link: {link.name}")
             return
 
         volume = 0.0
@@ -1404,29 +1400,27 @@ class Robot(SMURFRobot):
                         velocity=backup["vel"] if "vel" in backup.keys() else None,
                         lower=backup["min"] if "min" in backup.keys() else None,
                         upper=backup["max"] if "max" in backup.keys() else None)
-                    print("Warning: Joint limits for ", joint.name, "not defined taking default values!")
+                    log.warfning(f"Joint limits for {joint.name} not defined taking default values!")
                 elif raise_error:
-                    print(joint.to_urdf_string())
+                    log.error(joint.to_urdf_string())
                     raise ValueError(f"ERROR: Joint limits for {joint.name} not defined!")
             else:
                 if any([not hasattr(joint.limit, x) for x in ["lower", "upper", "effort", "velocity"]]) or \
                         any([getattr(joint.limit, x) is None for x in ["lower", "upper", "effort", "velocity"]]):
-                    print(joint.name, joint.limit.lower, joint.limit.upper, joint.limit.effort, joint.limit.velocity)
+                    log.error(f"{joint.name} {joint.limit.lower} {joint.limit.upper} {joint.limit.effort} "
+                              f"{joint.limit.velocity}")
                     result &= 2
                     if raise_error:
                         raise ValueError("ERROR: Not all joint limits for " + joint.name + " defined!")
                 if (joint.joint_type == "revolute" or joint.joint_type == "prismatic") and \
                         not hasattr(joint, "axis") or joint.axis is None:
-                    print("WARNING: Joint axis for joint", joint.name, "not defined. Setting to [0 0 1]", flush=True,
-                          file=sys.stderr)
+                    log.warning(f"Joint axis for joint {joint.name} not defined. Setting to [0 0 1]")
                     joint.axis = default_axis
                     result &= 4
                 if hasattr(joint, "limit") and joint.limit is not None and (
                         joint.limit.lower == joint.limit.upper or joint.limit.velocity == 0):
-                    print("WARNING: The joint limits of joint", joint.name, "might restrict motion:\n",
-                          "min:", joint.limit.lower, "max", joint.limit.upper, "vel", joint.limit.velocity, "eff",
-                          joint.limit.effort,
-                          flush=True, file=sys.stderr)
+                    log.warning(f"The joint limits of joint {joint.name} might restrict motion:\n min: {joint.limit.lower}"
+                                f"max: {joint.limit.upper} vel {joint.limit.velocity} eff {joint.limit.effort}")
                     result &= 8
                     if backup is not None:
                         limit_temp = [joint.limit.lower, joint.limit.upper]
@@ -1438,11 +1432,9 @@ class Robot(SMURFRobot):
                             joint.limit.velocity = backup["vel"]
                         if "eff" in backup.keys() and joint.limit.effort == 0:
                             joint.limit.effort = backup["eff"]
-                        print(" Therefore we take the backup/default values for the joint limits:\n",
-                              "min:", joint.limit.lower, "max", joint.limit.upper, "vel", joint.limit.velocity, "eff",
-                              joint.limit.effort,
-                              flush=True, file=sys.stderr
-                              )
+                        log.warning(f"Therefore we take the backup/default values for the joint limits:\n"
+                                    f"min: {joint.limit.lower} max {joint.limit.upper} vel {joint.limit.velocity} "
+                                    f"eff {joint.limit.effort}")
 
     def generate_collision_matrix(self, coll_override=None, no_coll_override=None):
         """
@@ -1620,8 +1612,7 @@ class Robot(SMURFRobot):
                     if coll_exists:
                         break
                 if not coll_exists:
-                    print("WARNING: Auto-Bitmask algorithm was unable to create the collision:", coll_names[i], "<->",
-                          coll_names[j])
+                    log.warning(f"Auto-Bitmask algorithm was unable to create the collision: {coll_names[i]} <-> {coll_names[j]}")
         for b in bits:
             for i in b:
                 for j in b:
@@ -1759,13 +1750,11 @@ class Robot(SMURFRobot):
         for link in self.links:
             for coll in link.collisions:
                 if not pgu.has_enough_vertices(coll, self.xmlfile):
-                    print("WARNING: Mesh", coll.name, "has not enough vertices. Removing geometry!", flush=True,
-                          file=sys.stderr)
+                    log.warning(f"Mesh {coll.name} has not enough vertices. Removing geometry!")
                     pgu.remove_collision(self, link.name, collisionname=coll.name)
             for vis in link.visuals:
                 if not pgu.has_enough_vertices(vis, self.xmlfile):
-                    print("WARNING: Mesh", vis.name, "has not enough vertices. Removing geometry!", flush=True,
-                          file=sys.stderr)
+                    log.warning(f"Mesh {vis.name} has not enough vertices. Removing geometry!")
                     pgu.remove_visual(self, link.name, visualname=vis.name)
 
     def attach(self, other, joint, do_not_rename=False, name_prefix="", name_suffix="_2", link_other=False):
@@ -1786,7 +1775,7 @@ class Robot(SMURFRobot):
         if not link_other:
             other = deepcopy(other)
         elif not do_not_rename:
-            print(f"WARNING: Robot::attach(): The arguments you chose may result in the renaming of parts of the robot {other.name}")
+            log.warning(f"Robot::attach(): The arguments you chose may result in the renaming of parts of the robot {other.name}")
 
         other.relink_entities()
 
@@ -1830,8 +1819,8 @@ class Robot(SMURFRobot):
 
         if plink & clink:
             if not do_not_rename:
-                print("Warning : Link names are duplicates. A", name_prefix, "and a", name_suffix,
-                      "will be pre-/appended!", plink & clink, file=sys.stderr)
+                log.warning(f"Link names are duplicates. A {name_prefix} and a {name_suffix}"
+                            f" will be pre-/appended! {plink & clink}")
                 renamed_entities.update(
                     other.rename(targettype="link", target=list(plink & clink), prefix=name_prefix, suffix=name_suffix))
                 if joint.child in list(plink & clink):
@@ -1841,7 +1830,7 @@ class Robot(SMURFRobot):
 
         if pjoints & cjoints:
             if not do_not_rename:
-                print("Warning : Joint names are duplicates a _2 will be appended!", pjoints & cjoints, file=sys.stderr)
+                log.warning(f"Joint names are duplicates a _2 will be appended! {pjoints & cjoints}")
                 renamed_entities.update(other.rename(targettype="joint", target=list(pjoints & cjoints), prefix=name_prefix, suffix=name_suffix))
                 if joint.name in list(pjoints & cjoints):
                     joint.name = joint.name + "_2"
@@ -1850,8 +1839,7 @@ class Robot(SMURFRobot):
 
         if pcollisions & ccollisions:
             if not do_not_rename:
-                print("Warning : Collision names are duplicates a _2 will be appended!", pcollisions & ccollisions,
-                      file=sys.stderr)
+                log.warning(f"Collision names are duplicates a _2 will be appended! {pcollisions & ccollisions}")
                 renamed_entities.update(
                     other.rename(targettype="collision", target=list(pcollisions & ccollisions), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -1859,8 +1847,7 @@ class Robot(SMURFRobot):
 
         if pvisuals & cvisuals:
             if not do_not_rename:
-                print("Warning : Visual names are duplicates a _2 will be appended!", pvisuals & cvisuals,
-                      file=sys.stderr)
+                log.warning(f"Visual names are duplicates a _2 will be appended! {pvisuals & cvisuals}")
                 renamed_entities.update(
                     other.rename(targettype="visual", target=list(pvisuals & cvisuals), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -1871,8 +1858,7 @@ class Robot(SMURFRobot):
                 cmaterials.remove(mat_name)
         if pmaterials & cmaterials:
             if not do_not_rename:
-                print("Warning : Material names are duplicates a _2 will be appended!", pmaterials & cmaterials,
-                      file=sys.stderr)
+                log.warning(f"Material names are duplicates a _2 will be appended! {pmaterials & cmaterials}")
                 renamed_entities.update(
                     other.rename(targettype="material", target=list(pmaterials & cmaterials), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -1886,8 +1872,7 @@ class Robot(SMURFRobot):
                 conflicting_sensors.remove(sname)
         if conflicting_sensors:
             if not do_not_rename:
-                print("Warning : Sensor names are duplicates a _2 will be appended!", conflicting_sensors,
-                      file=sys.stderr)
+                log.warning(f"Sensor names are duplicates a _2 will be appended! {conflicting_sensors}")
                 renamed_entities.update(
                     other.rename(targettype="sensor", target=list(conflicting_sensors), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -1895,8 +1880,7 @@ class Robot(SMURFRobot):
         
         if ptransmissions & ctransmissions:
             if not do_not_rename:
-                print("Warning : Transmission names are duplicates a _2 will be appended!", ptransmissions & ctransmissions,
-                      file=sys.stderr)
+                log.warning(f"Transmission names are duplicates a _2 will be appended! {ptransmissions & ctransmissions}")
                 renamed_entities.update(
                     other.rename(targettype="transmission", target=list(ptransmissions & ctransmissions), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -1904,8 +1888,7 @@ class Robot(SMURFRobot):
             
         if pmotors & cmotors:
             if not do_not_rename:
-                print("Warning : Motor names are duplicates a _2 will be appended!", pmotors & cmotors,
-                      file=sys.stderr)
+                log.warning(f"Motor names are duplicates a _2 will be appended! {pmotors & cmotors}")
                 renamed_entities.update(
                     other.rename(targettype="motor", target=list(pmotors & cmotors), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -1913,8 +1896,7 @@ class Robot(SMURFRobot):
             
         if pexoskeletons & cexoskeletons:
             if not do_not_rename:
-                print("Warning : Exoskeleton names are duplicates a _2 will be appended!", pexoskeletons & cexoskeletons,
-                      file=sys.stderr)
+                log.warning(f"Exoskeleton names are duplicates a _2 will be appended! {pexoskeletons & cexoskeletons}")
                 renamed_entities.update(
                     other.rename(targettype="exoskeleton", target=list(pexoskeletons & cexoskeletons), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -1922,8 +1904,7 @@ class Robot(SMURFRobot):
             
         if psubmechanisms & csubmechanisms:
             if not do_not_rename:
-                print("Warning : Submechanism names are duplicates a _2 will be appended!", psubmechanisms & csubmechanisms,
-                      file=sys.stderr)
+                log.warning(f"Submechanism names are duplicates a _2 will be appended! {psubmechanisms & csubmechanisms}")
                 renamed_entities.update(
                     other.rename(targettype="submechanism", target=list(psubmechanisms & csubmechanisms), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -1931,8 +1912,7 @@ class Robot(SMURFRobot):
 
         if pinterfaces & cinterfaces:
             if not do_not_rename:
-                print("Warning : Interface names are duplicates a _2 will be appended!", pinterfaces & cinterfaces,
-                      file=sys.stderr)
+                log.warning(f"Interface names are duplicates a _2 will be appended! {pinterfaces & cinterfaces}")
                 renamed_entities.update(
                     other.rename(targettype="interface", target=list(pinterfaces & cinterfaces), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2148,7 +2128,7 @@ class Robot(SMURFRobot):
                 if new_joint.joint_type != "fixed":
                     new_joint.axis = new_joint.axis / np.linalg.norm(new_joint.axis)
                     if len(np.where(np.array(new_joint.axis) == 0.0)[0]) != 2:
-                        print("WARNING: joint axis is not x, y or z unit vector:\n", new_joint.__dict__)
+                        log.warning(f"joint axis is not x, y or z unit vector:\n {new_joint.__dict__}")
                         vec = [np.abs(a) for a in new_joint.axis]
                         new_axis = [0 if i != np.argmax(vec) else 1 for i in range(3)]
                         if new_joint.axis[np.argmax(vec)] < 0:
@@ -2156,8 +2136,8 @@ class Robot(SMURFRobot):
                         rot = scipy_rot.align_vectors([new_axis], [new_joint.axis])
                         new_joint.axis = new_axis
                         axis_correction[:3, :3] = rot[0].as_matrix()
-                        print("Rotating joint by \n", axis_correction)
-                        print("New axis is:", new_axis)
+                        log.info(f"Rotating joint by \n {axis_correction}")
+                        log.info(f"New axis is: {new_axis}")
 
                 if new_joint.joint_type == "prismatic":
                     """
@@ -2375,13 +2355,15 @@ def derive_model_dictionary(root, name='', objectlist=[]):
     import phobos.blender.utils.selection as sUtils
     import phobos.blender.utils.naming as nUtils
     import phobos.blender.utils.io as ioUtils
+    from phobos.blender.model.models import deriveTextData
+    from phobos.blender.utils.general import roundFloatsInDict, sortListsInDict
     from phobos.blender.model.models import (deriveLink, deriveMaterial, deriveJoint,
                                         deriveLight, deriveGroupEntry, deriveChainEntry, collectMaterials,
                                         deriveDictEntry)
     from phobos.blender.model.motors import deriveMotor
 
     if root.phobostype not in ['link', 'submodel']:
-        # log(root.name + " is no valid 'link' or 'submodel' object.", "ERROR")
+        log.error(root.name + " is no valid 'link' or 'submodel' object.")
         return None
 
     # define model name
@@ -2417,11 +2399,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
         'description': modeldescription,
     }
 
-    # log(
-    #     "Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.",
-    #     'INFO',
-    #     prefix="\n",
-    # )
+    log.info("Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.")
 
     # create tuples of objects belonging to model
     if not objectlist:
@@ -2431,7 +2409,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
     linklist = [link for link in objectlist if link.phobostype == 'link']
 
     # digest all the links to derive link and joint information
-    # log("Parsing links, joints and motors... " + (str(len(linklist))) + " total.", "INFO")
+    log.info("Parsing links, joints and motors... " + (str(len(linklist))) + " total.")
     for link in linklist:
         # parse link information (including inertia)
         model['links'][nUtils.getObjectName(link, 'link')] = deriveLink(
@@ -2443,12 +2421,14 @@ def derive_model_dictionary(root, name='', objectlist=[]):
             # joint may be None if link is a root
             # to prevent confusion links are always defining also joints
             jointdict = deriveJoint(link, logging=True, adjust=True)
-            # log("  Setting joint type '{}' for link.".format(jointdict['type']), 'DEBUG')
+            log.debug("  Setting joint type '{}' for link.".format(jointdict['type']))
             # first check if we have motor information in the joint properties
             # if so they can be extended/overwritten by motor objects later on
             if '$motor' in jointdict:
                 motordict = jointdict['$motor']
-                # at least we need a type property
+                if 'mimic_motor' in motordict:
+                    motordict['type'] = 'mimic'
+                # at least we need a type property, TODO WIESO ? DESHALB FLIEGEN ALLE 'mimic_motor', HOTFIXED
                 if 'type' in motordict:
                     # if no name is given derive it from the joint
                     if not 'name' in motordict:
@@ -2464,7 +2444,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
                 motordict = deriveMotor(mot, jointdict)
                 # motor may be None if no motor is attached
                 if motordict:
-                    # log("  Added motor {} to link.".format(motordict['name']), 'DEBUG')
+                    log.debug("  Added motor {} to link.".format(motordict['name']))
                     if motordict['name'] in model["motors"]:
                         model['motors'][motordict['name']].update(motordict)
                     else:
@@ -2472,13 +2452,13 @@ def derive_model_dictionary(root, name='', objectlist=[]):
 
     # parse sensors and controllers
     sencons = [obj for obj in objectlist if obj.phobostype in ['sensor', 'controller']]
-    # log("Parsing sensors and controllers... {} total.".format(len(sencons)), 'INFO')
+    log.info("Parsing sensors and controllers... {} total.".format(len(sencons)))
     for obj in sencons:
         props = deriveDictEntry(obj, names=True, objectlist=objectlist)
         model[obj.phobostype + 's'][nUtils.getObjectName(obj)] = props
 
     # parse materials
-    # log("Parsing materials...", 'INFO')
+    log.info("Parsing materials...")
     model['materials'] = collectMaterials(objectlist)
     for obj in objectlist:
         if obj.phobostype == 'visual':
@@ -2494,7 +2474,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
                     ] = mat.name
 
     # identify unique meshes
-    # log("Parsing meshes...", "INFO")
+    log.info("Parsing meshes...")
     for obj in objectlist:
         try:
             if (
@@ -2510,7 +2490,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
             pass  # log("Undefined geometry type in object " + obj.name, "ERROR")
 
     # gather information on groups of objects
-    # log("Parsing groups...", 'INFO')
+    log.info("Parsing groups...")
     # todo2.9: TODO: get rid of the "data" part and check for relation to robot
     # for group in bpy.data.groups:
     #     # skip empty groups
@@ -2526,7 +2506,7 @@ def derive_model_dictionary(root, name='', objectlist=[]):
     #         model['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
 
     # gather information on chains of objects
-    # log("Parsing chains...", "INFO")
+    log.info("Parsing chains...")
     chains = []
     for obj in objectlist:
         if obj.phobostype == 'link' and 'endChain' in obj:
@@ -2535,12 +2515,60 @@ def derive_model_dictionary(root, name='', objectlist=[]):
         model['chains'][chain['name']] = chain
 
     # gather information on lights
-    # log("Parsing lights...", "INFO")
+    log.info("Parsing lights...")
     for obj in objectlist:
         if obj.phobostype == 'light':
             model['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
 
     # gather submechanism information from links
-    # log("Parsing submechanisms...", "INFO")
+    log.info("Parsing submechanisms...")
 
+    def getSubmechanisms(link):
+        """
+
+        Args:
+          link:
+
+        Returns:
+
+        """
+
+        if 'submechanism/name' in link.keys():
+            submech = {
+                'type': link['submechanism/type'],
+                'contextual_name': link['submechanism/name'],
+                'name': link['submechanism/subtype']
+                if 'submechanism/subtype' in link
+                else link['submechanism/type'],
+                'jointnames_independent': [
+                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/independent']
+                ],
+                'jointnames_spanningtree': [
+                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/spanningtree']
+                ],
+                'jointnames_active': [
+                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/active']
+                ],
+                # TODO: this should work in almost all cases, still a bit of a hack:
+                'file_path': '../submechanisms/urdf/' + link['submechanism/name'] + '.urdf',
+            }
+            log.debug('    ' + submech['contextual_name'])
+        else:
+            submech = None
+        mechanisms = [submech] if submech else []
+        for c in link.children:
+            if c.phobostype in ['link', 'interface'] and c in objectlist:
+                mechanisms.extend(getSubmechanisms(c))
+        return mechanisms
+
+    model['submechanisms'] = getSubmechanisms(root)
+
+    # add additional data to model
+    model.update(deriveTextData(model['name']))
+
+    # shorten numbers in dictionary to n decimalPlaces and return it
+    log.info("Rounding numbers to {} digits.".format(ioUtils.getExpSettings().decimalPlaces))
+    model = roundFloatsInDict(model, ioUtils.getExpSettings().decimalPlaces)
+    log.debug("Sorting objects.")
+    model = sortListsInDict(model)
     return model

@@ -2,13 +2,15 @@ import os
 from xml.etree import ElementTree as ET
 
 from .xmlrobot import XMLRobot
+from ..utils.commandline_logging import setup_logger_level, get_logger
+log = get_logger(__name__)
 
 
 def parse_xml(xml):
     xml_root = None
     file_type = None
     xml_file = None
-    print("Parsing", xml, flush=True)
+    log.info(f"Parsing {xml}")
     if type(xml) == str:
         if os.path.isfile(xml):
             xml_file = xml
@@ -22,7 +24,7 @@ def parse_xml(xml):
         try:
             xml_root = ET.fromstring(xml_string)
         except ET.ParseError as e:
-            print("ERROR: Tried to parse:\n", xml)
+            log.error(f"Tried to parse:\n  {xml}")
             raise IOError("Could not parse xml. See above for more info what was tried to parse! Error:"+ e.msg)
     elif type(xml) == ET.ElementTree:
         xml_root = xml.getroot()
@@ -34,7 +36,7 @@ def parse_xml(xml):
         if xml_root.tag == "sdf":
             file_type = "sdf"
             if len(xml_root.findall("./model")) > 1:
-                print("WARNING: Multiple robots detected in this sdf!")
+                log.warning("Multiple robots detected in this sdf!")
                 return [XMLRobot.from_xml(x, dialect=file_type, xmlfile=xml_file) for x in xml_root.findall("./model")]
             else:
                 xml_root = xml_root.findall("./model")[0]

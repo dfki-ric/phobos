@@ -1,4 +1,6 @@
 #!python3
+from ..utils.commandline_logging import get_logger
+
 
 def can_be_used():
     from ..defs import DEIMOS_AVAILABLE
@@ -21,6 +23,8 @@ def main(args):
 
     from phobos.ci import XTypePipeline
     import phobos.utils.misc as misc
+
+    from ..defs import BASE_LOG_LEVEL
 
     try:
         from deimos.deimos import Deimos
@@ -52,7 +56,11 @@ def main(args):
     parser.add_argument('-o', '--output', help='Output model directory', type=str, action='store', default=None)
     parser.add_argument('-k', '--keep-temp', help='Keep the temp directory', action='store_true', default=False)
 
+    parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
+
+    log = get_logger(__name__, verbose_argument=args.loglevel)
 
     def generate_cfg(cfg_path, overwrite=False):
         if not os.path.exists(os.path.dirname(os.path.abspath(cfg_path))):
@@ -86,6 +94,7 @@ def main(args):
         if len(phases) > 0:
             pipeline.print_fail_log(file=sys.stderr)
             print("Success rate: {:.2f} %".format(pipeline.get_coverage(phases=phases) * 100), file=sys.stderr)
+            log.info("Success rate: {:.2f} %".format(pipeline.get_coverage(phases=phases) * 100))
 
         if args.output is not None:
             if not args.overwrite_existing and os.path.exists(args.output):
