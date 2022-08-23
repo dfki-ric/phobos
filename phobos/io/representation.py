@@ -694,10 +694,11 @@ class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial"]
 
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None,
-                 origin=None, noDataPackage=False, reducedDataPackage=False, **kwargs):
+                 origin=None, noDataPackage=False, reducedDataPackage=False, is_human=False, **kwargs):
         assert origin is None  # Unused but might be neccesary for sdf
         SmurfBase.__init__(self, **kwargs)
         self.name = name
+        self.is_human = is_human
         self.returns += ['name']
         self.visuals = []
         if visuals is not None:

@@ -61,10 +61,10 @@ class CombinedModel(BaseModel):
         for name, config in self.depends_on.items():
             if "basefile" in config.keys():
                 kwargs = {}
-                if config["basefile"].lower().endswith(".smurf"):
-                    kwargs["smurffile"] = config["basefile"]
-                else:
-                    kwargs["xmlfile"] = config["basefile"]
+                kwargs["inputfile"] = config["basefile"]
+                if "is_human" in config:
+                    kwargs["is_human"] = config["is_human"]
+                kwargs["inputfile"] = config["basefile"]
                 self.dep_models.update({name: Robot(name=name, **kwargs)})
                 # copy the mesh files to the temporary combined model directory
                 for link in self.dep_models[name].links:

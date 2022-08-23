@@ -50,6 +50,8 @@ def dump_json(obj, **kwargs):
         kwargs.pop("default_flow_style")
     if "default_style" in kwargs:
         kwargs.pop("default_style")
+    if "indent" not in kwargs:
+        kwargs["indent"] = 2
     return json.dumps(obj, **kwargs)
 
 

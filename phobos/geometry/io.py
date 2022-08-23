@@ -25,9 +25,18 @@ def as_mesh(scene_or_mesh, scale=None):
         mesh = trimesh.util.concatenate([
             trimesh.Trimesh(vertices=m.vertices, faces=m.faces)
             for m in scene_or_mesh.geometry.values()])
-    elif not isinstance(scene_or_mesh, trimesh.Trimesh): # we assume it's blender
-        vertices = np.asarray([np.asarray(scale * v.co) for v in scene_or_mesh.data.vertices])
-        faces = np.array([[v for v in p.vertices] for p in scene_or_mesh.data.polygons], dtype=np.int64)
+    elif not isinstance(scene_or_mesh, trimesh.Trimesh):  # we assume it's blender
+        blender_mesh = scene_or_mesh.data
+        if len(set([len(p.vertices) for p in blender_mesh.polygons])) > 1:
+            assert BPY_AVAILABLE
+            import bmesh
+            bm = bmesh.new()
+            bm.from_mesh(scene_or_mesh.data)
+            bmesh.ops.triangulate(bm, faces=bm.faces[:])
+            bm.to_mesh(blender_mesh)
+            bm.free()
+        vertices = np.asarray([np.asarray(scale * v.co) for v in blender_mesh.vertices])
+        faces = np.array([[v for v in p.vertices] for p in blender_mesh.polygons], dtype=np.int64)
         mesh = trimesh.Trimesh(vertices=vertices, faces=trimesh.geometry.triangulate_quads(faces))
     else:
         mesh = scene_or_mesh
