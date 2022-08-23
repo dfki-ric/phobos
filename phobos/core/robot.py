@@ -24,7 +24,7 @@ from ..utils.urdf import read_urdf_filename, create_pdf_from_urdf, transform_obj
 
 class Robot(SMURFRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
-                 inputfile=None, description=None):
+                 inputfile=None, description=None, is_human=False):
         """ The basic robot class to represent a urdf.
         """
         super().__init__(xmlfile=xmlfile, submechanisms_file=submechanisms_file, smurffile=smurffile,
@@ -32,6 +32,9 @@ class Robot(SMURFRobot):
         if name is not None:
             self.name = name
         self._submodels = {}
+        if is_human:
+            for link in self.links:
+                link.is_human = True
 
     @classmethod
     def get_robot_from_blender_dict(cls, name='', objectlist=[], blender_model=None):
@@ -269,13 +272,16 @@ class Robot(SMURFRobot):
     def export_xml(self, output_dir=None, export_visuals=True, export_collisions=True,
                    create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
                    export_joint_limits=True, export_submodels=True, formats=["urdf"], filename=None,
-                   float_fmt_dict=None):
+                   float_fmt_dict=None, no_format_dir=False):
         """ Exports all model information stored inside this instance.
         """
         for format in formats:
             format = format.lower()
             # Main model
-            model_file = os.path.join(output_dir, f"{format}/{self.name if filename is None else filename}")
+            if no_format_dir:
+                model_file = os.path.join(output_dir, f"{self.name if filename is None else filename}")
+            else:
+                model_file = os.path.join(output_dir, f"{format}/{self.name if filename is None else filename}")
             if not model_file.lower().endswith(format):
                 model_file += "." + format
             if not os.path.exists(os.path.dirname(model_file)):
@@ -298,7 +304,7 @@ class Robot(SMURFRobot):
                 raise IOError("Unknown export format:" + format)
 
             if export_joint_limits:
-                self.export_joint_limits(os.path.join(output_dir, format))
+                self.export_joint_limits(output_dir if no_format_dir else os.path.join(output_dir, format))
 
             if self._submodels and export_submodels:
                 submodel_folder = os.path.join(output_dir, "submodels")
@@ -363,8 +369,11 @@ class Robot(SMURFRobot):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
                                                  stop=sm.get_leaves(self), robotname=str(sm))
                 sm.file_path = "../submechanisms/" + os.path.basename(sm.file_path)
-                self.export_submodel(name="#sub_mech#", output_dir=os.path.join(outputdir, "submechanisms"),
-                                     filename=os.path.basename(sm.file_path), only_urdf=True)
+                if not os.path.isfile(sm.file_path):
+                    self.export_submodel(name="#sub_mech#", output_dir=os.path.join(outputdir, "submechanisms"),
+                                         filename=os.path.basename(sm.file_path), only_urdf=True, no_format_dir=True)
+                else:
+                    print(f"WARNING: File {sm.file_path} does already exist. Not exported submechanism urdf.")
                 self.remove_submodel(name="#sub_mech#")
         for annotation in smurf_annotations:
             # Check if exists and not empty
@@ -435,112 +444,6 @@ class Robot(SMURFRobot):
             if hasattr(sm, outputdir):
                 jointnames_independent += sm.jointnames_independent
                 jointnames_active += sm.jointnames_active
-
-    # def export_yaml(self, output_dir=None):
-    #     """ Export the robot data into yaml file in such a way that it can be used to check the model.
-    #     WARNING: export_yaml is currently not maintained! (todo)
-    #     """
-    #     print("WARNING: export_yaml is currently not maintained!")
-    #     # Model statistics
-    #     vis_no = 0
-    #     col_no = 0
-    #     rev_no = 0
-    #     pris_no = 0
-    #     fix_no = 0
-    #     other_no = 0
-    #
-    #     if not output_dir:
-    #         output_dir = os.path.join(os.getcwd(), "yaml")
-    #         if not os.path.exists(output_dir):
-    #             os.mkdir(output_dir)
-    #
-    #     output_data = {"links": {}, "joints": {}, "parent_map": {}, "child_map": {}}
-    #
-    #     print("Dumping model information of {0} to {1}".format(self.name, output_dir))
-    #
-    #     print(" Parsing links...")
-    #     for link in self.links:
-    #         # Get global position and orientation
-    #         global_transform = self.global_origin(link.name).to_yaml()
-    #
-    #         # Append to link data in output data
-    #         current_data = link.to_yaml()
-    #         current_data["global_transformations"] = global_transform
-    #         output_data["links"].update(
-    #             {link.name: current_data}
-    #         )
-    #
-    #         vis_no += len(link.visuals)
-    #         col_no += len(link.collisions)
-    #
-    #     print(" Parsing joints...")
-    #     for j in self.joints:
-    #         if j.joint_type == 'revolute':
-    #             rev_no += 1
-    #         elif j.joint_type == 'prismatic':
-    #             pris_no += 1
-    #         elif j.joint_type == 'fixed':
-    #             fix_no += 1
-    #         else:
-    #             other_no += 1
-    #
-    #         output_data["joints"].update(
-    #             {j.name: j.to_yaml()}
-    #         )
-    #
-    #     print(" Parse child map...")
-    #     for k, v in self.child_map.items():
-    #         current_children = []
-    #         for vi in v:
-    #             current_children += [{'joint': vi[0], 'link': vi[1]}]
-    #
-    #         output_data["child_map"].update(
-    #             {k: current_children}
-    #         )
-    #
-    #     print(" Parse parent map...")
-    #     for k, v in self.parent_map.items():
-    #         output_data["parent_map"].update(
-    #             {k: {'joint': v[0], 'link': v[1]}}
-    #         )
-    #
-    #     noalias_dumper = yaml.dumper.SafeDumper
-    #     noalias_dumper.ignore_aliases = lambda inst, data: True
-    #
-    #     export_files = []
-    #     for k, v in output_data.items():
-    #         outputfile = os.path.join(output_dir, self.name + "_" + k + ".yml")
-    #         print(" Writing {0} into {1}".format(k, outputfile))
-    #         export_files += [outputfile]
-    #         with open(outputfile, 'w') as outfile:
-    #             yaml.dump(v, outfile, default_flow_style=False, Dumper=noalias_dumper)
-    #
-    #     # Write mother yml file
-    #     outputfile = os.path.join(output_dir, self.name + ".yml")
-    #
-    #     annotation_dict = {
-    #         'modelname': self.name,
-    #         'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
-    #         'files': export_files,
-    #         'modelinformation': {
-    #             'directory': os.path.dirname(self.xmlfile),
-    #             'root': self.get_root(),
-    #             'mass': self.compute_mass(),
-    #             'joints': {'total': len(self.joints), 'revolute': rev_no, 'prismatic': pris_no, 'fixed': fix_no,
-    #                        'other': other_no},
-    #             'links': len(self.links),
-    #             'visuals': vis_no,
-    #             'collisions': col_no,
-    #             'submodels': self._submodels,
-    #             'submechanisms': self._submechanisms,
-    #         }
-    #     }
-    #
-    #     with open(outputfile, 'w') as outfile:
-    #         yaml.dump(annotation_dict, outfile, default_flow_style=False, Dumper=noalias_dumper)
-    #
-    #     print("Finished")
-    #     return
 
     def export_kccd(self, robot_export_dir, rel_iv_meshes_path, output_mesh_format, join_before_convexhull=True,
                     keep_stls=False, keep_urdf=False, dirname="kccd",
@@ -716,7 +619,8 @@ class Robot(SMURFRobot):
 
     def export_submodel(self, name, output_dir=None, filename=None, export_visuals=True, export_collisions=True,
                         robotname=None, create_pdf=False, ros_pkg=False, export_with_ros_pathes=None,
-                        ros_pkg_name=None, export_joint_limits=True, only_urdf=None, formats=["urdf"], float_fmt_dict=None):
+                        ros_pkg_name=None, export_joint_limits=True, only_urdf=None, formats=["urdf"],
+                        float_fmt_dict=None, no_format_dir=True):
         """
         Export the submodel to the given output.
         :param filename: filename of the urdf if only_urdf is true and name relates to a single submodel and is not a
@@ -741,7 +645,7 @@ class Robot(SMURFRobot):
                                      only_urdf=only_urdf, ros_pkg=ros_pkg, ros_pkg_name=ros_pkg_name,
                                      export_with_ros_pathes=export_with_ros_pathes,
                                      export_joint_limits=export_joint_limits, formats=formats,
-                                     float_fmt_dict=float_fmt_dict)
+                                     float_fmt_dict=float_fmt_dict, no_format_dir=no_format_dir)
             return
         for format in formats:
             format = format.lower()
@@ -759,7 +663,8 @@ class Robot(SMURFRobot):
                 if only_urdf:
                     _submodel.export_xml(output_dir=output_dir, filename=_sm_xmlfile, export_visuals=export_visuals,
                                          export_collisions=export_collisions, create_pdf=create_pdf, ros_pkg=ros_pkg,
-                                         export_with_ros_pathes=export_with_ros_pathes, formats=formats, float_fmt_dict=float_fmt_dict)
+                                         export_with_ros_pathes=export_with_ros_pathes, formats=formats,
+                                         float_fmt_dict=float_fmt_dict, no_format_dir=no_format_dir)
 
                 else:
                     os.makedirs(submodel_dir, exist_ok=True)

@@ -112,6 +112,7 @@ class Linkable(object):
     def stringable(self):
         return True
 
+
 class Representation(Linkable):
     factory = {}
 
