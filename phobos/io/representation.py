@@ -33,6 +33,8 @@ class Pose(Representation, SmurfBase):
             assert xyz is None, "Cannot specify 6-length vector and 3-length vector"  # noqa
             assert len(extra) == 3, "Invalid length"
             self.rpy = extra
+        self.rpy = np.array(self.rpy) if self.rpy is not None else None
+        self.xyz = np.array(self.xyz) if self.xyz is not None else None
 
     def check_valid(self):
         assert (self.xyz is None or len(self.xyz) == 3) and \
@@ -76,6 +78,7 @@ class Pose(Representation, SmurfBase):
                                self.rpy[i] == np.round(np.pi/div, decimals=in_decimals) or \
                                self.rpy[i] == trunc(np.pi/div, decimals=in_decimals):
                             self.rpy[i] = np.pi / div
+        self.rpy = np.array(self.rpy)
 
     @property
     def position(self):
@@ -84,18 +87,18 @@ class Pose(Representation, SmurfBase):
     @position.setter
     def position(self, value):
         assert type(value) in [list, np.ndarray] and len(value) == 3
-        self.xyz = value
+        self.xyz = np.array(value)
 
     def from_vec(self, vec):
         assert len(vec) == 6, "Invalid length"
-        self.xyz = vec[:3]
-        self.rpy = vec[3:6]
+        self.xyz = np.array(vec[:3])
+        self.rpy = np.array(vec[3:6])
 
     @property
     def vec(self):
         xyz = self.xyz if self.xyz is not None else [0, 0, 0]
         rpy = self.rpy if self.rpy is not None else [0, 0, 0]
-        return xyz + rpy
+        return xyz.tolist() + rpy.tolist()
 
     @staticmethod
     def from_matrix(T, dec=16, relative_to=None):

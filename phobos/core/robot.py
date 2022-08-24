@@ -360,7 +360,12 @@ class Robot(SMURFRobot):
         ]
         export_files = [os.path.relpath(robotfile, outputdir + "/smurf")]
         submechanisms = {}
-        self.fill_submechanisms()
+        if self.autogenerate_submechanisms:
+            self.fill_submechanisms()
+        else:
+            missing_joints = self._get_joints_not_included_in_submechanisms()
+            if len(missing_joints) != 0:
+                print(f"WARNING: Not all joints defined in the submechanisms definition! Lacking definition for:\n{missing_joints}")
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
@@ -1980,7 +1985,7 @@ class Robot(SMURFRobot):
 
     def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None,
                                mass=0.0,
-                               add_default_motor=True):
+                               add_default_motor=True, is_human=False):
         """
         Adds a link with the given parameters.
         This method has to be overridden in subclasses.
@@ -2015,8 +2020,8 @@ class Robot(SMURFRobot):
             inertial = None
         link = representation.Link(name, inertial=inertial)
         joint = representation.Joint(name=jointname if jointname is not None else name, parent=parent.name,
-                                     child=link.name,
-                                     joint_type=jointtype, origin=representation.Pose(translation, rotation), axis=axis)
+                                     child=link.name, joint_type=jointtype,
+                                     origin=representation.Pose(translation, rotation), axis=axis, is_human=is_human)
         self.add_aggregate("link", link)
         self.add_aggregate("joint", joint)
         if joint.joint_type in ["revolute", "prismatic"] and add_default_motor:
