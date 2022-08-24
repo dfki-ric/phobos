@@ -73,7 +73,7 @@ class HyrodynAnnotation(SmurfBase):
     }
 
     def __init__(self, name, contextual_name,
-                 jointnames_spanningtree=None, jointnames_active=None,
+                 jointnames_spanningtree, jointnames_active=None,
                  jointnames_independent=None, jointnames_dependent=None,
                  jointnames=None, file_path=None,
                  loop_constraints=None, multi_joint_dependencies=None,
@@ -242,7 +242,6 @@ class Exoskeleton(HyrodynAnnotation):
     def __init__(self, name, around,
                  jointnames_spanningtree, jointnames_dependent, contextual_name=None,
                  jointnames=None, file_path=None,
-                 loop_constraints=None, multi_joint_dependencies=None,
                  auto_gen=False):
         super(Exoskeleton, self).__init__(
             name=name, contextual_name=contextual_name if contextual_name is not None else name,
