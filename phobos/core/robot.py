@@ -27,17 +27,15 @@ log = get_logger(__name__)
 
 class Robot(SMURFRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
-                 inputfile=None, description=None, is_human=False):
+                 inputfile=None, description=None, is_human=False, autogenerate_submechanisms=True):
         """ The basic robot class to represent a urdf.
         """
         super().__init__(xmlfile=xmlfile, submechanisms_file=submechanisms_file, smurffile=smurffile,
-                         verify_meshes_on_import=verify_meshes_on_import, inputfile=inputfile, description=description)
+                         verify_meshes_on_import=verify_meshes_on_import, inputfile=inputfile, description=description,
+                         autogenerate_submechanisms=autogenerate_submechanisms, is_human=is_human)
         if name is not None:
             self.name = name
         self._submodels = {}
-        if is_human:
-            for link in self.links:
-                link.is_human = True
 
     @classmethod
     def get_robot_from_blender_dict(cls, name='', objectlist=[], blender_model=None):
@@ -361,7 +359,7 @@ class Robot(SMURFRobot):
         export_files = [os.path.relpath(robotfile, outputdir + "/smurf")]
         submechanisms = {}
         if self.autogenerate_submechanisms:
-            self.fill_submechanisms()
+            self.generate_submechanisms()
         else:
             missing_joints = self._get_joints_not_included_in_submechanisms()
             if len(missing_joints) != 0:
@@ -858,7 +856,7 @@ class Robot(SMURFRobot):
                             end = chain.index(str(leave))
                             while extend_by_single_fixed and end+1 < len(chain) and\
                                 self.get_joint(self.get_parent(chain[end+1])).joint_type == "fixed" and \
-                                len(self.get_children(chain[end]))==1:
+                                len(self.get_children(chain[end])) == 1:
                                 end += 1
                     if end is not None:
                         linknames.update(chain[begin:end+1])
@@ -876,7 +874,8 @@ class Robot(SMURFRobot):
 
         return linknames, jointnames
 
-    def instantiate_submodel(self, name=None, definition=None, link_obj=True):
+    def instantiate_submodel(self, name=None, definition=None, link_obj=True,
+                             include_unstopped_branches=True, extend_by_single_fixed=False):
         """
         Instantiates a submodel by it's definition. Takes either name or definition. If both are given, the submodel
         definition with the given name will be updated including renaming it
@@ -904,7 +903,9 @@ class Robot(SMURFRobot):
 
         submodel = type(self)(name=definition["robotname"])
 
-        linknames, jointnames = self.get_links_and_joints_in_subtree(start=definition["start"], stop=definition["stop"])
+        linknames, jointnames = self.get_links_and_joints_in_subtree(
+            start=definition["start"], stop=definition["stop"],
+            include_unstopped_branches=include_unstopped_branches, extend_by_single_fixed=extend_by_single_fixed)
 
         links = self.get_link(linknames)
         _joints = self.get_joint(jointnames)
@@ -1961,10 +1962,10 @@ class Robot(SMURFRobot):
         for cInterface in other.interfaces:
             self.add_aggregate('interface', cInterface)
 
-
         # Todo rework poses
         # for cPose in other.poses:
         #     self.add_aggregate('pose', cPose)
+
         joint.link_with_robot(self)
         self.add_aggregate('joint', joint)
         assert joint.check_valid()
@@ -1987,8 +1988,7 @@ class Robot(SMURFRobot):
         return renamed_entities
 
     def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None,
-                               mass=0.0,
-                               add_default_motor=True, is_human=False):
+                               mass=0.0, add_default_motor=True, is_human=False):
         """
         Adds a link with the given parameters.
         This method has to be overridden in subclasses.
@@ -2021,10 +2021,10 @@ class Robot(SMURFRobot):
             )
         else:
             inertial = None
-        link = representation.Link(name, inertial=inertial)
+        link = representation.Link(name, inertial=inertial, is_human=is_human)
         joint = representation.Joint(name=jointname if jointname is not None else name, parent=parent.name,
                                      child=link.name, joint_type=jointtype,
-                                     origin=representation.Pose(translation, rotation), axis=axis, is_human=is_human)
+                                     origin=representation.Pose(translation, rotation), axis=axis)
         self.add_aggregate("link", link)
         self.add_aggregate("joint", joint)
         if joint.joint_type in ["revolute", "prismatic"] and add_default_motor:

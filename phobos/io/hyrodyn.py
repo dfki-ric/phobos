@@ -77,7 +77,7 @@ class HyrodynAnnotation(SmurfBase):
                  jointnames_independent=None, jointnames_dependent=None,
                  jointnames=None, file_path=None,
                  loop_constraints=None, multi_joint_dependencies=None,
-                 type=None, around=None, auto_gen=False):
+                 type=None, around=None, auto_gen=False, **kwargs):
         kwargs = {
             "name": name,
             "contextual_name": contextual_name,
@@ -118,14 +118,6 @@ class HyrodynAnnotation(SmurfBase):
         # ToDO check if all fixed joints in the area of this submechanism are included
         return out
 
-    def fill_jointnames(self, robot):
-        if robot.autogenerate_submechanisms:
-            assert False
-            if len(self.get_joints()) == 0:
-                self.jointnames = None
-            else:
-                _, self.jointnames = robot.get_links_and_joints_in_subtree(start=self.get_root(robot), stop=self.get_leaves(robot))
-
     def get_joints(self):
         return list(set(([] if self.jointnames is None else self.jointnames) + self.jointnames_spanningtree))
 
@@ -148,8 +140,17 @@ class HyrodynAnnotation(SmurfBase):
         return list(set(links))
 
     def link_with_robot(self, robot, check_linkage_later=False):
-        self.fill_jointnames(robot)
         super(HyrodynAnnotation, self).link_with_robot(robot)
+
+    def get_submodel(self, robot):
+        return robot.instantiate_submodel(definition={
+                "name": str(self),
+                "start": self.get_root(robot), "stop": self.get_leaves(robot)
+            },
+            include_unstopped_branches=False, extend_by_single_fixed=True)
+
+    def regenerate(self, robot):
+        raise NotImplementedError
 
 
 class Submechanism(HyrodynAnnotation):
@@ -158,14 +159,14 @@ class Submechanism(HyrodynAnnotation):
     def __init__(self, name, contextual_name,
                  jointnames_spanningtree, jointnames_active, jointnames_independent, jointnames=None,
                  file_path=None, type="numerical",
-                 loop_constraints=None, multi_joint_dependencies=None, auto_gen=False):
+                 loop_constraints=None, multi_joint_dependencies=None, auto_gen=False, **kwargs):
         super(Submechanism, self).__init__(
             name=name, contextual_name=contextual_name,
             jointnames_spanningtree=jointnames_spanningtree,
             jointnames_active=jointnames_active, jointnames_independent=jointnames_independent,
             jointnames=jointnames, file_path=file_path,
             loop_constraints=loop_constraints, multi_joint_dependencies=multi_joint_dependencies,
-            type=type, around=None, auto_gen=auto_gen
+            type=type, around=None, auto_gen=auto_gen, **kwargs
         )
         if multi_joint_dependencies is None:
             multi_joint_dependencies = []
@@ -237,12 +238,19 @@ class Submechanism(HyrodynAnnotation):
         self._multi_joint_dependencies = mjd
         self._loop_constraints = lc
 
+    def regenerate(self, robot):
+        submodel = self.get_submodel(robot)
+        self.jointnames = [str(j) for j in submodel.get_joints_ordered_df()]
+        self.jointnames_active = sorted(self.jointnames_active, key=lambda x: self.jointnames.index(x))
+        self.jointnames_independent = sorted(self.jointnames_independent, key=lambda x: self.jointnames.index(x))
+        self.jointnames_spanningtree = sorted(self.jointnames_spanningtree, key=lambda x: self.jointnames.index(x))
+
 
 class Exoskeleton(HyrodynAnnotation):
     _class_variables = ["name", "jointnames", "jointnames_spanningtree", "jointnames_dependent", "around"]
 
     def __init__(self, name, around,
-                 jointnames_spanningtree, jointnames_dependent,
+                 jointnames_spanningtree=None, jointnames_dependent=None,
                  jointnames=None, file_path=None, contextual_name=None,
                  auto_gen=False):
         super(Exoskeleton, self).__init__(
@@ -252,12 +260,8 @@ class Exoskeleton(HyrodynAnnotation):
             around=around, auto_gen=auto_gen, type=None
         )
 
-    def fill_jointnames(self, robot):
-        if robot.autogenerate_submechanisms:
-            if len(self.get_joints()) == 0:
-                self.jointnames = None
-            else:
-                _, self.jointnames = robot.get_links_and_joints_in_subtree(start=self.get_root(robot), stop=self.get_leaves(robot))
-                joints = [robot.get_joint(joint) for joint in self.jointnames]
-                self.jointnames = [joint for joint in joints if joint._child.is_human]
-
+    def regenerate(self, robot):
+        joints_df = robot.get_joints_ordered_df()
+        self.jointnames = [str(j) for j in joints_df if j._child.is_human]
+        self.jointnames_spanningtree = [str(j) for j in joints_df if j._child.is_human and j.joint_type != "fixed"]
+        self.jointnames_dependent = [str(j.mimic.joint) for j in joints_df if j._child.is_human and j.joint_type != "fixed"]

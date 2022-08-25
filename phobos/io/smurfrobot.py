@@ -16,7 +16,7 @@ from ..utils.transform import inv
 
 class SMURFRobot(XMLRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
-                 inputfile=None, description=None, autogenerate_submechanisms=False):
+                 inputfile=None, description=None, autogenerate_submechanisms=True, is_human=False):
         self.name = None
         self.smurffile = None
         self.submechanisms_file = None
@@ -47,7 +47,7 @@ class SMURFRobot(XMLRobot):
             # Check the input file
             self.read_smurffile(self.smurffile)
 
-        super(SMURFRobot, self).__init__(xmlfile=self.xmlfile)
+        super(SMURFRobot, self).__init__(xmlfile=self.xmlfile, is_human=is_human)
         if self.xmlfile is not None:
             # Fill everything with the xml information
             base_robot = parse_xml(self.xmlfile)
@@ -62,7 +62,8 @@ class SMURFRobot(XMLRobot):
         for f in self.inputfiles:
             self._parse_annotations(f)
         self._init_annotations()
-
+        if is_human:
+            self.annotate_as_human()
         self.link_entities()
 
         if verify_meshes_on_import:
@@ -127,7 +128,7 @@ class SMURFRobot(XMLRobot):
                     self.add_aggregate(
                         'motors',
                         representation.Motor(
-                            name=motor['name'] if 'name' in motor else motor['joint']+"_motor",
+                            name=motor['name'] if 'name' in motor else motor['joint'] + "_motor",
                             **annotations
                         )
                     )
@@ -153,14 +154,14 @@ class SMURFRobot(XMLRobot):
                     JointPoseSet(robot=self, name=pose['name'], configuration=pose['joints'])
                 )
 
-        if 'joint' in self.annotations:
-            for joint in self.annotations['joint']:
+        if 'joints' in self.annotations:
+            for joint in self.annotations['joints']:
                 joint_instance = self.get_joint(joint['name'])
                 if joint_instance is not None:
                     joint_instance.add_annotations(overwrite=False, **joint)
 
-        if 'link' in self.annotations:
-            for link in self.annotations['link']:
+        if 'links' in self.annotations:
+            for link in self.annotations['links']:
                 link_instance = self.get_link(link['name'])
                 if link_instance is not None:
                     link_instance.add_annotations(overwrite=False, **link)
@@ -184,7 +185,7 @@ class SMURFRobot(XMLRobot):
                     'exoskeletons',
                     Exoskeleton(**exo)
                 )
-                
+
         if 'interfaces' in self.annotations:
             for interf in self.annotations['interfaces']:
                 self.add_aggregate(
@@ -305,12 +306,12 @@ class SMURFRobot(XMLRobot):
                 break
 
     # Reimplementation of Robot methods
-    def get_joints_ordered_df(self):
+    def get_joints_ordered_df(self, ignore_indep=False):
         """Returns the joints in depth first order"""
         indep_joints = []
         for sm in self.submechanisms:
             indep_joints += sm.jointnames_independent
-        return tree.get_joints_depth_first(self, self.get_root(), independent_joints=list(set(indep_joints)) if len(indep_joints) > 0 else None)
+        return tree.get_joints_depth_first(self, self.get_root(), independent_joints=None if ignore_indep else list(set(indep_joints)) if len(indep_joints) > 0 else None)
 
     # submechanism related
     def create_submechanism(self, name, definition):
@@ -388,14 +389,12 @@ class SMURFRobot(XMLRobot):
         :return: None
         """
         sorted_joints = [jn.name for jn in self.get_joints_ordered_df()]
-        sorted_links = [jn.name for jn in self.get_links_ordered_df()]
-        self.submechanisms = sorted(self.submechanisms, key=lambda submech: sorted_links.index(submech.get_root(self)))
-        self.exoskeletons = sorted(self.exoskeletons, key=lambda submech: sorted_links.index(submech.get_root(self)))
+        # sorted_links = [jn.name for jn in self.get_links_ordered_df()]
+        self.submechanisms = sorted(self.submechanisms, key=lambda submech: sorted_joints.index(submech.get_root_joints(self)[0]))
         for sm in self.submechanisms + self.exoskeletons:
             for key in ["jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent", "jointnames_dependent"]:
-                if hasattr(sm, key):
-                    setattr(sm, key, sorted(set(getattr(sm, key)),
-                                            key=lambda jn: sorted_joints.index(jn)) if getattr(sm, key) is not None else None)
+                if hasattr(sm, key) and getattr(sm, key) is not None:
+                    setattr(sm, key, sorted(set(getattr(sm, key)), key=lambda jn: sorted_joints.index(jn)))
 
     def _get_joints_not_included_in_submechanisms(self):
         """
@@ -408,87 +407,77 @@ class SMURFRobot(XMLRobot):
             sm_joints += sm.get_joints()
         return list(set(joints) - set(sm_joints))
 
-    def fill_submechanisms(self):
+    def generate_submechanisms(self):
         """
         Scans the defined submechanisms and creates the entries for missing joints
         :return: None
         """
-        missing_joints = self._get_joints_not_included_in_submechanisms()
-        sorted_joints = [jn.name for jn in self.get_joints_ordered_df()]
-        create_exo = False
-        human_joints = [joint for joint in self.get_joints_ordered_df() if joint._child.is_human]
-        for jointname in missing_joints:
-            joint = self.get_joint(jointname)
-            joint_idx = sorted_joints.index(jointname)
-            inserted = False
-            if joint.joint_type == "fixed":
-                # If it's just a fixed joint we might be able to add this to an existing submechanisms
-                if joint._child.is_human:
-                    # joints that belong to a human representation are not in the submechanisms but in the exoskeletons
-                    for exo in self.exoskeletons:
-                        for jn in exo.jointnames:
-                            if sorted_joints.index(jn) == joint_idx + 1:
-                                inserted = True
-                                exo.jointnames.insert(exo.jointnames.index(jn), jointname)
-                                break
-                            elif sorted_joints.index(jn) == joint_idx - 1:
-                                inserted = True
-                                exo.jointnames.insert(exo.jointnames.index(jn) + 1, jointname)
-                                break
-                        if inserted:
-                            break
-                else:
-                    for sm in self.submechanisms:
-                        for jn in sm.jointnames:
-                            if sorted_joints.index(jn) == joint_idx + 1:
-                                inserted = True
-                                sm.jointnames.insert(sm.jointnames.index(jn), jointname)
-                                break
-                            elif sorted_joints.index(jn) == joint_idx - 1:
-                                inserted = True
-                                sm.jointnames.insert(sm.jointnames.index(jn) + 1, jointname)
-                                break
-                        if inserted:
-                            break
-            if not inserted:
-                if joint._child.is_human:
-                    if len(self.exoskeletons) == 1:
-                        # We have already an exoskeleton definition here, as the joint is not in there we update it accordingly
-                        self.exoskeletons[0].jointnames_spanningtree = [joint for joint in human_joints if joint.joint_type != "fixed"]
-                        self.exoskeletons[0].jointnames = human_joints
-                    elif len(self.exoskeletons) >= 1:
-                        NotImplementedError("Robots with mutiple exoskeleton entries for hyrodyn are not yet supported!")
-                    else:
-                        create_exo = True
-                else:
-                    # If we have not already inserted this joint (fixed) let's create a serial mechanism for it
-                    jn_spanningtree = jn_independent = jn_active = [] if joint.joint_type == "fixed" else [jointname]
-                    jn = jn_spanningtree if joint.joint_type != "fixed" else [jointname]
-                    self.add_aggregate("submechanism", Submechanism(
-                        name="serial",
-                        contextual_name="serial",
-                        type="serial",
-                        jointnames_active=jn_active,
-                        jointnames_independent=jn_independent,
-                        jointnames_spanningtree=jn_spanningtree,
-                        jointnames=jn,
-                        auto_gen=True
-                    ), silent=True)
-                    inserted = True
-        if create_exo:
-            self.exoskeletons.append(Exoskeleton(
+        if len(self.submechanisms) == 0:
+            return
+        has_exo = len(self.exoskeletons) != 0
+        for link in self.links:
+            has_exo |= False if link.is_human is None else link.is_human
+            if has_exo:
+                break
+        if has_exo and len(self.exoskeletons) == 0:
+            self.exoskeletons = [Exoskeleton(
                 name="exo",
                 contextual_name="exo",
                 around="human",
                 file_path=self.xmlfile,
-                jointnames_spanningtree=[joint for joint in human_joints if joint.joint_type != "fixed"],
-                jointnames_dependent=[joint for joint in human_joints if
-                                      joint.joint_type != "fixed" and not joint._child.is_human],
-                jointnames=human_joints,
-                auto_gen=True
-            ))
+                auto_gen=True,
+                jointnames_spanningtree=[], jointnames_dependent=[]
+            )]
             print("WARNING: Currently it's not fully supported to create exokeleton definitions automatically, "
                   "a preliminary version has been created. Make sure to check it before usage.")
+        for sm in self.submechanisms + self.exoskeletons:
+            sm.regenerate(self)
+        missing_joints = self._get_joints_not_included_in_submechanisms()
+        sorted_joints = [jn.name for jn in self.get_joints_ordered_df()]
+        if len(missing_joints) == 0:
+            return
+        self.sort_submechanisms()
+        for jointname in missing_joints:
+            joint = self.get_joint(jointname)
+            joint_idx = sorted_joints.index(jointname)
+            inserted = False
+            if joint.joint_type == "fixed" and joint._child.is_human is not True:
+                # If it's just a fixed joint we might be able to add this to an existing submechanisms
+                for sm in self.submechanisms:
+                    for jn in sm.jointnames:
+                        if sorted_joints.index(jn) == joint_idx + 1:
+                            temp = sm.jointnames
+                            temp.insert(sm.jointnames.index(jn), jointname)
+                            sm.jointnames = temp
+                            inserted = True
+                            break
+                        elif sorted_joints.index(jn) == joint_idx - 1:
+                            temp = sm.jointnames
+                            temp.insert(sm.jointnames.index(jn) + 1, jointname)
+                            sm.jointnames = temp
+                            inserted = True
+                            break
+                    if inserted:
+                        # print("Inserted", jointname)
+                        break
+            if not inserted and joint._child.is_human is not True:
+                # If we have not already inserted this joint (fixed) let's create a serial mechanism for it
+                jn_spanningtree = jn_independent = jn_active = [] if joint.joint_type == "fixed" else [jointname]
+                jn = jn_spanningtree if joint.joint_type != "fixed" else [jointname]
+                self.add_aggregate("submechanisms", Submechanism(
+                    name="serial",
+                    contextual_name="serial",
+                    type="serial",
+                    jointnames_active=jn_active,
+                    jointnames_independent=jn_independent,
+                    jointnames_spanningtree=jn_spanningtree,
+                    jointnames=jn,
+                    auto_gen=True
+                ), silent=True)
+                # print("Created for", jointname)
+                inserted = True
+            assert inserted, f"{jointname}, {joint.joint_type}, {joint._child.is_human} {joint.child}"
+        assert len(self._get_joints_not_included_in_submechanisms()) == 0, [str(j) for j in self._get_joints_not_included_in_submechanisms()]
         self.sort_submechanisms()
         # Now we merge all serial mechanisms to reduce the number of mechanisms
         new_submechanisms = []
@@ -504,7 +493,7 @@ class SMURFRobot(XMLRobot):
         self.sort_submechanisms()
         counter = 0
         for sm in self.submechanisms:
-            if sm.auto_gen:
-                sm.name = "serial_chain"
-                sm.contextual_name = "serial_chain" + str(counter)
-                counter += 1
+           if sm.auto_gen:
+               sm.name = "serial_chain"
+               sm.contextual_name = "serial_chain" + str(counter)
+               counter += 1
