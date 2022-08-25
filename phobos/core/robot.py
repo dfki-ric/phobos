@@ -806,7 +806,6 @@ class Robot(SMURFRobot):
         jointname = self.get_parent(link_name)
         if jointname is None:
             raise AssertionError("Can't move the root link.")
-        jointname = jointname[0]
         joint = self.get_joint(jointname)
 
         T0_old = self.get_transformation(link_name)
@@ -836,7 +835,7 @@ class Robot(SMURFRobot):
             self._submodels[name] = definition
         return self.instantiate_submodel(name)
 
-    def get_links_and_joints_in_subtree(self, start, stop=None):
+    def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=True, extend_by_single_fixed=False):
         assert self.get_link(start) is not None
         if stop is None:
             # Collect all links on the way to the leaves
@@ -857,9 +856,13 @@ class Robot(SMURFRobot):
                         if str(leave) in chain:
                             assert end is None, f"The leave {chain[end]} and {str(leave)} are on the same branch."
                             end = chain.index(str(leave))
+                            while extend_by_single_fixed and end+1 < len(chain) and\
+                                self.get_joint(self.get_parent(chain[end+1])).joint_type == "fixed" and \
+                                len(self.get_children(chain[end]))==1:
+                                end += 1
                     if end is not None:
                         linknames.update(chain[begin:end+1])
-                    else:
+                    elif include_unstopped_branches:
                         linknames.update(chain[begin:])
             except Exception as e:
                 log.info(self.get_root())
@@ -1142,10 +1145,10 @@ class Robot(SMURFRobot):
 
         if pjoint is not None:
             if transform_to:
-                Tinv = inv(inv(pjoint[0].origin.to_matrix()).dot(T))
-                pjoint[0].origin = representation.Pose.from_matrix(T)
+                Tinv = inv(inv(pjoint.origin.to_matrix()).dot(T))
+                pjoint.origin = representation.Pose.from_matrix(T)
             else:
-                pjoint[0].origin = representation.Pose.from_matrix(pjoint[0].origin.to_matrix().dot(T))
+                pjoint.origin = representation.Pose.from_matrix(pjoint.origin.to_matrix().dot(T))
         if only_frame:
             for joint in cjoint:
                 joint.origin = representation.Pose.from_matrix(Tinv.dot(joint.origin.to_matrix()))
@@ -1724,7 +1727,7 @@ class Robot(SMURFRobot):
                         self.rename(targettype="link", target=link.name, suffix="_Link")
                     elif cfg["append_link_suffix"].upper() == "NAME_DUPLICATES":
                         pjoint = self.get_parent(link.name)
-                        if pjoint is not None and pjoint[0] == link.name:
+                        if pjoint is not None and pjoint == link.name:
                             self.rename(targettype="link", target=link.name, suffix="_Link")
 
     def set_collision_scale(self, linkname, scale):

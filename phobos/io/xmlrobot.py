@@ -560,7 +560,7 @@ class XMLRobot(Representation):
         parent = self.get_parent(linkname)
         level = 0
         while parent is not None:
-            joint = self.get_joint(parent[0])
+            joint = self.get_joint(parent)
             parent = self.get_parent(joint.parent)
             level += 1
         return level
@@ -609,11 +609,11 @@ class XMLRobot(Representation):
         # If we want joints, then collect the children of these
         assert parents is not None
         if targettype == "link":
-            return [parents[1]]
+            return parents[1]
         if targettype == 'joint':
-            return [parents[0]]
+            return parents[0]
 
-        return parents
+        raise ValueError("Unknown targettype")
 
     def get_children(self, name, targettype='joint'):
         """
@@ -675,7 +675,7 @@ class XMLRobot(Representation):
                 print("Multiple parents:", parent, flush=True)
             elif parent is None:
                 raise Exception(link, "has no parent, but is different from start", start)
-            pjoint = self.get_joint(parent[0])
+            pjoint = self.get_joint(parent)
             transformation = create_transformation(pjoint.origin.xyz, pjoint.origin.rpy).dot(transformation)
             link = str(pjoint.parent)
 
