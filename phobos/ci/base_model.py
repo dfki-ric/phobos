@@ -222,7 +222,8 @@ class BaseModel(yaml.YAMLObject):
                     jointname=j["jointname"] if "jointname" in j.keys() else None,
                     jointtype=j["type"] if "type" in j.keys() else "fixed",
                     axis=j["axis"] if "axis" in j.keys() else [0, 0, 1],
-                    mass=j["mass"] if "mass" in j.keys() else 0.0
+                    mass=j["mass"] if "mass" in j.keys() else 0.0,
+                    is_human=j["is_human"] if "is_human" in j else False
                 )
 
         if hasattr(self, "move_joints_to_intersection"):
@@ -466,6 +467,7 @@ class BaseModel(yaml.YAMLObject):
             self.robot.edit_names(self.name_editing_after)
 
         if hasattr(self, "submechanisms_file"):
+            self.robot.autogenerate_submechanisms = False
             self.robot.load_submechanisms(deepcopy(self.submechanisms_file))
             if hasattr(self, "export_total_submechanisms"):
                 # add all to one urdf

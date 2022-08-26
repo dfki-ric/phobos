@@ -52,6 +52,8 @@ def dump_json(obj, **kwargs):
         kwargs.pop("default_style")
     if "indent" not in kwargs:
         kwargs["indent"] = 2
+    if "sort_keys" not in kwargs:
+        kwargs["sort_keys"] = True
     return json.dumps(obj, **kwargs)
 
 

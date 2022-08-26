@@ -2,10 +2,12 @@ import sys
 from copy import deepcopy
 import numpy as np
 import subprocess
+import os
 
 from ..defs import *
 from ..core import Robot
 from ..io import representation
+from ..io.representation import Pose
 from ..utils import urdf
 from ..utils.hyrodyn import get_load_report, debug_report
 from ..utils.misc import execute_shell_command, list_files
@@ -21,11 +23,11 @@ class ModelTest(object):
         self.old = old_robot
         self.new_hyrodyn = None
         self.old_hyrodyn = None
-        self.new_hml_test = self._hyrodyn_load_test(self.new.urdf, self.new.submechanisms_file_path)
+        self.new_hml_test = get_load_report(self.new.urdf, self.new.submechanisms_file_path)
         self.new_fb_hml_test = None
         self.new_sm_hml_test = []
         if hasattr(self.new, "export_floatingbase") and self.new.floatingbase is True:
-            self.new_fb_hml_test = self._hyrodyn_load_test(self.new.urdf[:-5]+"_floatingbase.urdf",
+            self.new_fb_hml_test = get_load_report(self.new.urdf[:-5]+"_floatingbase.urdf",
                                                            self.new.floatingbase_submechanisms_file_path)
         if hasattr(self.new, "export_submodels"):
             sm_path = os.path.join(self.new.exportdir, "submodels")
@@ -218,7 +220,8 @@ class ModelTest(object):
             link_name = k + (max_length - len(k)) * " "
             if k not in root2old_links.keys():
                 print("%s doesn't exist in compare model" % link_name, flush=True)
-                print("root2link: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple(to_origin(root2new_links[k]).xyz.tolist() + to_origin(root2new_links[k]).rpy.tolist()),
+                _temp_pose = Pose.from_matrix(root2new_links[k])
+                print("root2link: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple(_temp_pose.xyz.tolist() + _temp_pose.rpy.tolist()),
                       flush=True)
                 continue
             diff = np.linalg.inv(root2old_links[k]).dot(root2new_links[k])

@@ -73,7 +73,7 @@ class HyrodynAnnotation(SmurfBase):
     }
 
     def __init__(self, name, contextual_name,
-                 jointnames_spanningtree=None, jointnames_active=None,
+                 jointnames_spanningtree, jointnames_active=None,
                  jointnames_independent=None, jointnames_dependent=None,
                  jointnames=None, file_path=None,
                  loop_constraints=None, multi_joint_dependencies=None,
@@ -109,7 +109,7 @@ class HyrodynAnnotation(SmurfBase):
         return self.contextual_name
 
     def is_empty(self):
-        return len(self.jointnames) == 0
+        return len(set(self.jointnames + self.jointnames_spanningtree)) == 0
 
     def is_valid(self, robot):
         joints = self.get_joints()
@@ -119,10 +119,12 @@ class HyrodynAnnotation(SmurfBase):
         return out
 
     def fill_jointnames(self, robot):
-        if len(self.jointnames_spanningtree) == 0:
-            self.jointnames = []
-        else:
-            _, self.jointnames = robot.get_links_and_joints_in_subtree(start=self.get_root(robot), stop=self.get_leaves(robot))
+        if robot.autogenerate_submechanisms:
+            assert False
+            if len(self.get_joints()) == 0:
+                self.jointnames = None
+            else:
+                _, self.jointnames = robot.get_links_and_joints_in_subtree(start=self.get_root(robot), stop=self.get_leaves(robot))
 
     def get_joints(self):
         return list(set(([] if self.jointnames is None else self.jointnames) + self.jointnames_spanningtree))
@@ -240,9 +242,8 @@ class Exoskeleton(HyrodynAnnotation):
     _class_variables = ["name", "jointnames", "jointnames_spanningtree", "jointnames_dependent", "around"]
 
     def __init__(self, name, around,
-                 jointnames_spanningtree, jointnames_dependent, contextual_name=None,
-                 jointnames=None, file_path=None,
-                 loop_constraints=None, multi_joint_dependencies=None,
+                 jointnames_spanningtree, jointnames_dependent,
+                 jointnames=None, file_path=None, contextual_name=None,
                  auto_gen=False):
         super(Exoskeleton, self).__init__(
             name=name, contextual_name=contextual_name if contextual_name is not None else name,
@@ -250,3 +251,13 @@ class Exoskeleton(HyrodynAnnotation):
             jointnames=jointnames, file_path=file_path,
             around=around, auto_gen=auto_gen, type=None
         )
+
+    def fill_jointnames(self, robot):
+        if robot.autogenerate_submechanisms:
+            if len(self.get_joints()) == 0:
+                self.jointnames = None
+            else:
+                _, self.jointnames = robot.get_links_and_joints_in_subtree(start=self.get_root(robot), stop=self.get_leaves(robot))
+                joints = [robot.get_joint(joint) for joint in self.jointnames]
+                self.jointnames = [joint for joint in joints if joint._child.is_human]
+

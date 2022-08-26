@@ -359,7 +359,12 @@ class Robot(SMURFRobot):
         ]
         export_files = [os.path.relpath(robotfile, outputdir + "/smurf")]
         submechanisms = {}
-        self.fill_submechanisms()
+        if self.autogenerate_submechanisms:
+            self.fill_submechanisms()
+        else:
+            missing_joints = self._get_joints_not_included_in_submechanisms()
+            if len(missing_joints) != 0:
+                print(f"WARNING: Not all joints defined in the submechanisms definition! Lacking definition for:\n{missing_joints}")
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
@@ -800,7 +805,6 @@ class Robot(SMURFRobot):
         jointname = self.get_parent(link_name)
         if jointname is None:
             raise AssertionError("Can't move the root link.")
-        jointname = jointname[0]
         joint = self.get_joint(jointname)
 
         T0_old = self.get_transformation(link_name)
@@ -830,7 +834,7 @@ class Robot(SMURFRobot):
             self._submodels[name] = definition
         return self.instantiate_submodel(name)
 
-    def get_links_and_joints_in_subtree(self, start, stop=None):
+    def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=True, extend_by_single_fixed=False):
         assert self.get_link(start) is not None
         if stop is None:
             # Collect all links on the way to the leaves
@@ -851,9 +855,13 @@ class Robot(SMURFRobot):
                         if str(leave) in chain:
                             assert end is None, f"The leave {chain[end]} and {str(leave)} are on the same branch."
                             end = chain.index(str(leave))
+                            while extend_by_single_fixed and end+1 < len(chain) and\
+                                self.get_joint(self.get_parent(chain[end+1])).joint_type == "fixed" and \
+                                len(self.get_children(chain[end]))==1:
+                                end += 1
                     if end is not None:
                         linknames.update(chain[begin:end+1])
-                    else:
+                    elif include_unstopped_branches:
                         linknames.update(chain[begin:])
             except Exception as e:
                 log.info(self.get_root())
@@ -1136,10 +1144,10 @@ class Robot(SMURFRobot):
 
         if pjoint is not None:
             if transform_to:
-                Tinv = inv(inv(pjoint[0].origin.to_matrix()).dot(T))
-                pjoint[0].origin = representation.Pose.from_matrix(T)
+                Tinv = inv(inv(pjoint.origin.to_matrix()).dot(T))
+                pjoint.origin = representation.Pose.from_matrix(T)
             else:
-                pjoint[0].origin = representation.Pose.from_matrix(pjoint[0].origin.to_matrix().dot(T))
+                pjoint.origin = representation.Pose.from_matrix(pjoint.origin.to_matrix().dot(T))
         if only_frame:
             for joint in cjoint:
                 joint.origin = representation.Pose.from_matrix(Tinv.dot(joint.origin.to_matrix()))
@@ -1718,7 +1726,7 @@ class Robot(SMURFRobot):
                         self.rename(targettype="link", target=link.name, suffix="_Link")
                     elif cfg["append_link_suffix"].upper() == "NAME_DUPLICATES":
                         pjoint = self.get_parent(link.name)
-                        if pjoint is not None and pjoint[0] == link.name:
+                        if pjoint is not None and pjoint == link.name:
                             self.rename(targettype="link", target=link.name, suffix="_Link")
 
     def set_collision_scale(self, linkname, scale):
@@ -1979,7 +1987,7 @@ class Robot(SMURFRobot):
 
     def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None,
                                mass=0.0,
-                               add_default_motor=True):
+                               add_default_motor=True, is_human=False):
         """
         Adds a link with the given parameters.
         This method has to be overridden in subclasses.
@@ -2014,8 +2022,8 @@ class Robot(SMURFRobot):
             inertial = None
         link = representation.Link(name, inertial=inertial)
         joint = representation.Joint(name=jointname if jointname is not None else name, parent=parent.name,
-                                     child=link.name,
-                                     joint_type=jointtype, origin=representation.Pose(translation, rotation), axis=axis)
+                                     child=link.name, joint_type=jointtype,
+                                     origin=representation.Pose(translation, rotation), axis=axis, is_human=is_human)
         self.add_aggregate("link", link)
         self.add_aggregate("joint", joint)
         if joint.joint_type in ["revolute", "prismatic"] and add_default_motor:

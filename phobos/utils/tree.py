@@ -10,7 +10,7 @@ def skip_upwards_over_fixed(input_spanningtree, input_model, joint_name):
     if j.joint_type == 'fixed':
         parents = input_model.get_parent(j.parent)
         if parents is not None:
-            return skip_upwards_over_fixed(input_spanningtree, input_model, parents[0])
+            return skip_upwards_over_fixed(input_spanningtree, input_model, parents)
         else:
             return j.name
     else:
@@ -97,7 +97,7 @@ def find_close_ancestor_links(robot, linkname):  # Todo find also siblings?
             only_rot_tree += result
             next_children += nc
     else:
-        joint = robot.get_joint(jointname[0])
+        joint = robot.get_joint(jointname)
         # Go up through the tree
         prev_joint = None
         while np.allclose(joint.origin.xyz, [0, 0, 0], atol=1e-2):
@@ -107,7 +107,7 @@ def find_close_ancestor_links(robot, linkname):  # Todo find also siblings?
                 # we have reached the root of the robot
                 break
             prev_joint = joint
-            joint = robot.get_joint(jointname[0])
+            joint = robot.get_joint(jointname)
         next_parent = joint.parent
 
         # as we have found the root of this only-rotational subtree we can go it down, too to find children and siblings
