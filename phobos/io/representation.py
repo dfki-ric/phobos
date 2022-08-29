@@ -5,6 +5,7 @@ import numpy as np
 from .base import Representation
 from .smurf_reflection import SmurfBase
 from .xml_factory import singular as _singular, plural as _plural
+from ..geometry.geometry import identical
 from ..geometry.io import import_mesh, import_mars_mesh
 from ..utils.misc import trunc
 from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
@@ -697,12 +698,12 @@ class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial"]
 
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None,
-                 origin=None, noDataPackage=False, reducedDataPackage=False, is_human=False, **kwargs):
+                 origin=None, noDataPackage=False, reducedDataPackage=False, is_human=None, **kwargs):
         assert origin is None  # Unused but might be neccesary for sdf
         SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.is_human = is_human
-        self.returns += ['name']
+        self.returns += ['name', "is_human"]
         self.visuals = []
         if visuals is not None:
             self.visuals = visuals

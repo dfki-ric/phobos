@@ -17,7 +17,7 @@ class XMLRobot(Representation):
                  joints: List[representation.Joint] = None,
                  materials: List[representation.Material] = None,
                  transmissions: List[representation.Transmission] = None,
-                 sensors=None, xmlfile=None):
+                 sensors=None, xmlfile=None, is_human=False):
         super().__init__()
         self.joints = []
         self.links = []
@@ -54,6 +54,8 @@ class XMLRobot(Representation):
         self.materials = materials if materials is not None else []
         self.transmissions = transmissions if transmissions is not None else []
         self.sensors = sensors if sensors is not None else []
+        if is_human:
+            self.annotate_as_human()
 
         self.link_entities()
 
@@ -67,6 +69,10 @@ class XMLRobot(Representation):
     @property
     def visuals(self):
         return self.get_all_visuals()
+
+    def annotate_as_human(self):
+        for link in self.links:
+            link.is_human = True
 
     def link_entities(self):
         for entity in self.links + self.joints + self.sensors:
@@ -565,13 +571,13 @@ class XMLRobot(Representation):
             level += 1
         return level
 
-    def get_joints_ordered_df(self):
+    def get_joints_ordered_df(self, **kwargs):
         """Returns the joints in depth first order"""
         return get_joints_depth_first(self, self.get_root())
 
-    def get_links_ordered_df(self):
+    def get_links_ordered_df(self, ignore_indep=False):
         """Returns the joints in depth first order"""
-        joints = self.get_joints_ordered_df()
+        joints = self.get_joints_ordered_df(ignore_indep=ignore_indep)
         out = [self.get_root()] + [jn.child for jn in joints]
         return [self.get_link(ln) for ln in out]
 
@@ -671,9 +677,7 @@ class XMLRobot(Representation):
         link = str(end)
         while link != str(start):
             parent = self.get_parent(link)
-            if parent is not None and len(parent) > 1:
-                print("Multiple parents:", parent, flush=True)
-            elif parent is None:
+            if parent is None:
                 raise Exception(link, "has no parent, but is different from start", start)
             pjoint = self.get_joint(parent)
             transformation = create_transformation(pjoint.origin.xyz, pjoint.origin.rpy).dot(transformation)

@@ -53,7 +53,7 @@ class BaseModel(yaml.YAMLObject):
         # list directly imported mesh pathes
         self._meshes = []
         if hasattr(self, "basefile"):
-            r = Robot(xmlfile=self.basefile)
+            r = Robot(inputfile=self.basefile)
             for link in r.links:
                 for g in link.visuals + link.collisions:
                     if isinstance(g.geometry, representation.Mesh):
@@ -61,7 +61,7 @@ class BaseModel(yaml.YAMLObject):
         elif hasattr(self, "depends_on"):
             for _, v in self.depends_on.items():
                 if "basefile" in v.keys():
-                    r = Robot(xmlfile=v["basefile"])
+                    r = Robot(inputfile=v["basefile"], is_human=v["is_human"] if "is_human" in v else False)
                     for link in r.links:
                         for g in link.visuals + link.collisions:
                             if hasattr(g.geometry, "filename"):
@@ -271,18 +271,14 @@ class BaseModel(yaml.YAMLObject):
                             representation.JointMimic(joint=mimic["joint_name"],
                                                       offset=mimic["offset"],
                                                       multiplier=mimic["multiplier"]) for mimic in tm["mimics"]]
-
-                    if "smurf" in self.modeltype \
-                            and ("reducedDataPackage" in self.redefine_articulation[joint.name].keys()
-                                 or "noDataPackage" in self.redefine_articulation[joint.name].keys()):
-                        joint.add_annotations({
-                            "reducedDataPackage": self.redefine_articulation[joint.name]["reducedDataPackage"] if "reducedDataPackage" in self.redefine_articulation[joint.name].keys() else False,
-                            "noDataPackage": self.redefine_articulation[joint.name]["noDataPackage"] if "noDataPackage" in self.redefine_articulation[joint.name].keys() else False,
-                            "damping_const_constraint_axis1": self.redefine_articulation[joint.name]["damping_const_constraint_axis1"] if "damping_const_constraint_axis1" in self.redefine_articulation[joint.name].keys() else False,
-                            "springDamping": self.redefine_articulation[joint.name]["springDamping"] if "springDamping" in self.redefine_articulation[joint.name].keys() else False,
-                            "springStiffness": self.redefine_articulation[joint.name]["springStiffness"] if "springStiffness" in self.redefine_articulation[joint.name].keys() else False,
-                            "spring_const_constraint_axis1": self.redefine_articulation[joint.name]["spring_const_constraint_axis1"] if "spring_const_constraint_axis1" in self.redefine_articulation[joint.name].keys() else False
-                        })
+                    joint.add_annotations({
+                        "reducedDataPackage": self.redefine_articulation[joint.name]["reducedDataPackage"] if "reducedDataPackage" in self.redefine_articulation[joint.name].keys() else False,
+                        "noDataPackage": self.redefine_articulation[joint.name]["noDataPackage"] if "noDataPackage" in self.redefine_articulation[joint.name].keys() else False,
+                        "damping_const_constraint_axis1": self.redefine_articulation[joint.name]["damping_const_constraint_axis1"] if "damping_const_constraint_axis1" in self.redefine_articulation[joint.name].keys() else False,
+                        "springDamping": self.redefine_articulation[joint.name]["springDamping"] if "springDamping" in self.redefine_articulation[joint.name].keys() else False,
+                        "springStiffness": self.redefine_articulation[joint.name]["springStiffness"] if "springStiffness" in self.redefine_articulation[joint.name].keys() else False,
+                        "spring_const_constraint_axis1": self.redefine_articulation[joint.name]["spring_const_constraint_axis1"] if "spring_const_constraint_axis1" in self.redefine_articulation[joint.name].keys() else False
+                    })
                 elif "default" in self.redefine_articulation.keys():
                     if joint.limit is None:
                         joint.limit = representation.JointLimit()
@@ -311,6 +307,7 @@ class BaseModel(yaml.YAMLObject):
                         })
                 # else:
                 # print("    Leaving joint", joint.name, "(", joint.type, ") untouched", flush=True)
+                joint.link_with_robot(self.robot)
             for _, transmission in transmissions.items():
                 self.robot.add_aggregate("transmission", transmission)
 
@@ -370,9 +367,8 @@ class BaseModel(yaml.YAMLObject):
                     # if conf["shape"] == "convex":
                     #     reduceMeshCollision(self.robot, link.name, reduction=0.3)
 
-        if "smurf" in self.modeltype and hasattr(self, "smurf"):
+        if hasattr(self, "smurf"):
             print('  Smurfing Collisions', flush=True)
-
             if 'collisions' in self.smurf.keys():
                 if "auto_bitmask" in self.smurf["collisions"].keys() and \
                         self.smurf["collisions"]["auto_bitmask"] is True:
@@ -466,19 +462,24 @@ class BaseModel(yaml.YAMLObject):
         if hasattr(self, "name_editing_after") and self.name_editing_after is not None:
             self.robot.edit_names(self.name_editing_after)
 
-        if hasattr(self, "submechanisms_file"):
+        if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):
+            if hasattr(self, "exoskeletons"):
+                self.robot.load_submechanisms({"exoskeletons": deepcopy(self.exoskeletons)})
+            if hasattr(self, "submechanisms"):
+                self.robot.load_submechanisms({"submechanisms": deepcopy(self.submechanisms)})
+        elif hasattr(self, "submechanisms_file"):
             self.robot.autogenerate_submechanisms = False
             self.robot.load_submechanisms(deepcopy(self.submechanisms_file))
-            if hasattr(self, "export_total_submechanisms"):
-                # add all to one urdf
-                spanningtree = []
-                for sm in self.submechanisms_file["submechanisms"]:
-                    spanningtree += sm["jointnames_spanningtree"]
-                spanningtree = list(set(spanningtree))
-                root = tree.find_common_root(input_spanningtree=spanningtree, input_model=self.robot)
-                self.robot.define_submodel(name=self.export_total_submechanisms, start=root,
-                                           stop=tree.find_leaves(self.robot, spanningtree),
-                                           only_urdf=True)
+        if hasattr(self, "export_total_submechanisms"):
+            # add all to one urdf
+            spanningtree = []
+            for sm in self.robot.submechanisms:
+                spanningtree += sm.jointnames_spanningtree
+            spanningtree = list(set(spanningtree))
+            root = tree.find_common_root(input_spanningtree=spanningtree, input_model=self.robot)
+            self.robot.define_submodel(name=self.export_total_submechanisms, start=root,
+                                       stop=tree.find_leaves(self.robot, spanningtree),
+                                       only_urdf=True)
 
         if hasattr(self, "additional_urdfs") and not hasattr(self, "export_submodels"):
             setattr(self, "export_submodels", self.additional_urdfs)
@@ -488,7 +489,7 @@ class BaseModel(yaml.YAMLObject):
                                            stop=au["stop"] if "stop" in au else None,
                                            only_urdf=au["only_urdf"] if "only_urdf" in au.keys() else None)
 
-        if "smurf" in self.modeltype and hasattr(self, "smurf"):
+        if hasattr(self, "smurf"):
             print('  Smurfing poses, sensors, links, materials, etc.', flush=True)
 
             if 'poses' in self.smurf.keys():

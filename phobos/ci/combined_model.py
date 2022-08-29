@@ -87,7 +87,8 @@ class CombinedModel(BaseModel):
                     ignore_failure=True
                 )
                 self.dep_models.update({
-                    name: Robot(name=name, inputfile=os.path.join(repo_path, config["repo"]["model_in_repo"]))
+                    name: Robot(name=name, inputfile=os.path.join(repo_path, config["repo"]["model_in_repo"]),
+                                is_human=config["is_human"] if "is_human" in config else False)
                 })
                 # copy the mesh files to the temporary combined model directory
                 for link in self.dep_models[name].links:
@@ -109,6 +110,7 @@ class CombinedModel(BaseModel):
         else:  # it must be an instance of BaseModel
             combined_model = self.dep_models[self.join["model"]].robot.duplicate()
         combined_model.name = self.robotname
+        combined_model.autogenerate_submechanisms = False
         combined_model.smurffile = self.basefile
         combined_model.xmlfile = os.path.join(self.basedir, "urdf", "combined_model.urdf")
 
