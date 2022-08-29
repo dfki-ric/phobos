@@ -20,6 +20,7 @@ class Pose(Representation, SmurfBase):
     def __init__(self, xyz=None, rpy=None, vec=None, extra=None, relative_to=None, **kwargs):
         Representation.__init__(self)
         SmurfBase.__init__(self, returns=["rotation", "position"])
+        self.excludes += ["xyz", "rpy"]
         self.xyz = xyz
         self.rotation = rpy
         self.relative_to = relative_to
@@ -778,9 +779,12 @@ class Interface(Representation, SmurfBase):
         "parent": "links"
     }
 
-    def __init__(self, name=None, origin=None, parent=None, **kwargs):
+    def __init__(self, name=None, origin=None, parent=None, type=None, direction=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
+        self.excludes += ["origin"]
         self.name = name
+        self.type = type
+        self.direction = direction
         assert self.name is not None
         if origin is None:
             origin = Pose()

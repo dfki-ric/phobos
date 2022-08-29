@@ -489,7 +489,8 @@ def exportModel(model, exportpath='.', entitytypes=None):
         exportpath = getExportPath()
     if not entitytypes:
         entitytypes = getEntityTypesForExport()
-    exportpath += model['name']
+    if not exportpath.endswith(model["name"]) and not exportpath.endswith(model["name"]+"/"):
+        exportpath += model['name']
 
     # TODO: Move texture export to individual formats? This is practically SMURF
     # TODO: Also, this does not properly take care of textures embedded in a .blend file
