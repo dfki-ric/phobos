@@ -401,11 +401,14 @@ class Visual(Representation, SmurfBase):
         self.geometry = _singular(geometry)
         material_ = _singular(material_)
         material = _singular(material)
-        if type(material) == str and hasattr(material_, "original_name"):
-            assert material_ is not None and material_.original_name == material
+        if type(material) == str:
+            self.material = material
+            if material_ is not None:
+                assert isinstance(material_, Material) and material_.original_name == material
+                self.material = material_
         elif isinstance(material, Material):
             assert material_ is None or material_.equivalent(material)
-        self.material = material_
+            self.material = material_
         if origin is None:
             origin = Pose()
         self.origin = _singular(origin)
@@ -859,7 +862,8 @@ class Motor(Representation, SmurfBase):
             self.check_linkage()
 
     def unlink_from_robot(self):
-        self._joint.motor = None
+        if self._related_robot_instance is not None:
+            self._joint.motor = None
         super(Motor, self).unlink_from_robot()
 
     def check_linkage(self, attribute=None):

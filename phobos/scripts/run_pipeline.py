@@ -63,11 +63,7 @@ def main(args):
         print("Success rate: {:.2f} %".format(pipeline.get_coverage(
             phases=phases if not args.verify else ["process", "test", "deploy"],
             allow_na=args.allow_na_in_verify)*100), file=sys.stderr)
-        log.info("Success rate: {:.2f} %".format(pipeline.get_coverage(
-            phases=phases if not args.verify else ["process", "test", "deploy"],
-            allow_na=args.allow_na_in_verify)*100))
         print("Number of not successfully processed models:", pipeline.number_unfinished_models(), file=sys.stderr)
-        log.info(f"Number of not successfully processed models: {pipeline.number_unfinished_models()}")
         if not args.verify:
             sys.exit(0)
         else:

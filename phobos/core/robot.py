@@ -77,38 +77,37 @@ class Robot(SMURFRobot):
 
         cli_links = []
         for key, values in blender_model['links'].items():
-            if not len(values) == 0:
-                inert_entry = values.get('inertial')
-                pose_entry = inert_entry.get('pose')
-                inertia_val = inert_entry.get('inertia')
-                if inertia_val is not None:
-                    inert = representation.Inertial(mass=inert_entry['mass'],
-                                                    inertia=representation.Inertia(*inertia_val),
-                                                    origin=representation.Pose(
-                                                        xyz=pose_entry['translation'],
-                                                        rpy=pose_entry['rotation_euler']
-                                                    ))
-                else:
-                    inert = None
-                colls = []
-                for key2, entry in values["collision"].items():
-                    colls.append(representation.Collision(
-                        geometry=representation.GeometryFactory.create(**entry["geometry"]),
-                        origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
-                        name=entry["name"]))
-                vis = []
-                for key2, entry in values["visual"].items():
-                    vis.append(representation.Visual(geometry=representation.GeometryFactory.create(**entry["geometry"]),
-                                                     material=entry.get("material"),
-                                                     origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
-                                                     name=entry["name"]))
+            inert_entry = values.get('inertial')
+            pose_entry = inert_entry.get('pose')
+            inertia_val = inert_entry.get('inertia')
+            if inertia_val is not None:
+                inert = representation.Inertial(mass=inert_entry['mass'],
+                                                inertia=representation.Inertia(*inertia_val),
+                                                origin=representation.Pose(
+                                                    xyz=pose_entry['translation'],
+                                                    rpy=pose_entry['rotation_euler']
+                                                ))
+            else:
+                inert = None
+            colls = []
+            for key2, entry in values["collision"].items():
+                colls.append(representation.Collision(
+                    geometry=representation.GeometryFactory.create(**entry["geometry"]),
+                    origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
+                    name=entry["name"]))
+            vis = []
+            for key2, entry in values["visual"].items():
+                vis.append(representation.Visual(geometry=representation.GeometryFactory.create(**entry["geometry"]),
+                                                 material=entry.get("material"),
+                                                 origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
+                                                 name=entry["name"]))
 
-                cli_links.append(representation.Link(
-                    name='body' if values['name'] in ['root', 'main_body'] else values['name'],
-                    visuals=vis,
-                    inertial=inert,
-                    collisions=colls
-                ))
+            cli_links.append(representation.Link(
+                name='body' if values['name'] in ['root', 'main_body'] else values['name'],
+                visuals=vis,
+                inertial=inert,
+                collisions=colls
+            ))
         mats = []
         for key, value in blender_model['materials'].items():
             mats.append(representation.Material(name=value.pop('name'),

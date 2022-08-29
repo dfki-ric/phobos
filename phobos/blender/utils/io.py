@@ -525,26 +525,29 @@ def exportModel(model, exportpath='.', entitytypes=None):
                     # update the texture path in the model
                     mat[texturetype] = 'textures/' + path.basename(mat[texturetype])
 
+    for meshname in model['meshes']:
+        mesh_path = getOutputMeshpath(exportpath, getExpSettings().export_urdf_mesh_type, "relative")
+        mesh_path = os.path.join(mesh_path, meshname + "." + mesh_types[getExpSettings().export_urdf_mesh_type]['extension'])
+        for ln, link in model["links"].items():
+            for key in ["collision", "collisions", "visual", "visuals"]:
+                if key in link:
+                    assert (key.endswith("s") and key + "s" not in link) or (not key.endswith("s") and key[:-1] not in link)
+                    for cn, geo_property in link[key].items():
+                        if geo_property["geometry"]["type"] == "mesh" and geo_property["geometry"]["filename"] == meshname:
+                            model["links"][ln][key][cn]["geometry"]["filepath"] = mesh_path
     # export meshes in selected formats
     i = 1
     mt = len([m for m in mesh_types if getattr(bpy.context.scene, "export_mesh_" + m, False)])
     mc = len(model['meshes'])
     n = mt * mc
     for meshtype in mesh_types:
-        mesh_path = getOutputMeshpath(exportpath, meshtype, "relative")
         try:
             if getattr(bpy.context.scene, "export_mesh_" + meshtype, False):
+                mesh_path = getOutputMeshpath(exportpath, meshtype, "relative")
                 securepath(mesh_path)
                 for meshname in model['meshes']:
-                    mesh_path = os.path.join(mesh_path, meshname+"."+mesh_types[meshtype]['extension'])
-                    mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_path)
-                    for ln, link in model["links"].items():
-                        for cn, collision in link["collision"].items():
-                            if collision["geometry"]["filename"] == meshname:
-                                model["links"][ln]["collision"][cn]["geometry"]["filepath"] = mesh_path
-                        for vn, visual in link["visuals"].items():
-                            if visual["geometry"]["filename"] == meshname:
-                                model["links"][ln]["visual"][vn]["geometry"]["filepath"] = mesh_path
+                    mesh_filepath = os.path.join(mesh_path, meshname+"."+mesh_types[meshtype]['extension'])
+                    mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_filepath)
                     display.setProgress(i / n, 'Exporting ' + meshname + '.' + meshtype + '...')
                     i += 1
         except KeyError as e:
