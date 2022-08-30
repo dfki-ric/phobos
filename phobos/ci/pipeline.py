@@ -337,7 +337,7 @@ class Pipeline(yaml.YAMLObject):
                     return value
 
                 # these tests will be run always
-                obligatory_tests = ["topological_self_consistency"]
+                obligatory_tests = ["topological_self_consistency", "file_consistency"]
                 for otest in obligatory_tests:
                     if otest not in model.typedef["model_tests"]:
                         model.typedef["model_tests"] += [otest]
