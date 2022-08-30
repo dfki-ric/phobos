@@ -8,6 +8,8 @@ from . import representation, xml_factory, sensor_representations
 from .base import Representation
 from ..utils.transform import create_transformation, get_adjoint, inv
 from ..utils.tree import get_joints_depth_first
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 
 class XMLRobot(Representation):
@@ -217,7 +219,7 @@ class XMLRobot(Representation):
                 while str(elem) + f"_{counter}" in object_names:
                     counter += 1
                 if not silent:
-                    print(f"Renamed {typeName} {str(elem)} to {str(elem)}_{counter}")
+                    log.debug(f"Renamed {typeName} {str(elem)} to {str(elem)}_{counter}")
                 elem.set_unique_name(str(elem) + f"_{counter}")
             objects += [elem]
             setattr(self, typeName, objects)
@@ -394,7 +396,7 @@ class XMLRobot(Representation):
             if str(obj) == str(target):
                 return obj
         if verbose:
-            print(f"Robot {self.name} has no {targettype} with name {target}, only these: {repr(names)}")
+            log.warning(f"Robot {self.name} has no {targettype} with name {target}, only these: {repr(names)}")
         return None
 
     def get_link(self, link_name, verbose=True) -> [representation.Link, list]:
@@ -608,7 +610,7 @@ class XMLRobot(Representation):
         elif name in self.child_map.keys():
             return None
         else:
-            print("Parent map keys: ", self.parent_map.keys())
+            log.error(f"Parent map keys: {self.parent_map.keys()}")
             raise AssertionError("Nothing with name " + name + " in this robot")
 
         # Parentmap contains links.

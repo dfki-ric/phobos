@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 from copy import deepcopy
-
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 class Linkable(object):
     _type_dict = {
@@ -33,8 +34,8 @@ class Linkable(object):
         vtype = self.type_dict[varname].lower()
         converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value)
         if converted is None and new_value is not None:
-            print(f"WARNING: There is no {vtype} with name {new_value} in {self._related_robot_instance.name}; setting {varname} to None")
-            print(f"Available are: {repr([str(x) for x in getattr(self._related_robot_instance, vtype+'s')])}")
+            log.warning(f"There is no {vtype} with name {new_value} in {self._related_robot_instance.name}; setting {varname} to None")
+            log.warning(f"Available are: {repr([str(x) for x in getattr(self._related_robot_instance, vtype+'s')])}")
             raise RuntimeError(f"{str(type(self))}, can not convert {new_value} to value type {vtype}")
         return converted
 
@@ -124,7 +125,7 @@ class Representation(Linkable):
         try:
             return cls(*args, **kwargs)
         except TypeError as e:
-            print(cls.__name__)
+            log.error(cls.__name__)
             raise e
 
     @classmethod

@@ -1,5 +1,5 @@
 #!python3
-from ..utils.commandline_logging import get_logger
+from ..utils.commandline_logging import setup_logger_level
 
 def can_be_used():
     return True
@@ -33,7 +33,7 @@ def main(args):
     parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                         default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
-    log = get_logger(__name__, verbose_argument=args.loglevel)
+    log = setup_logger_level(log_level=args.loglevel)
     test_failed = False
     if any([args.process, args.test, args.deploy, args.verify]) is True:
         if os.path.isfile(args.config_file):

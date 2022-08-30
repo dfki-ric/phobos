@@ -12,7 +12,8 @@ from ..geometry import import_mesh
 from ..utils import tree
 from ..defs import load_json, dump_json, dump_yaml
 from ..utils.transform import inv
-
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 class SMURFRobot(XMLRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
@@ -114,7 +115,7 @@ class SMURFRobot(XMLRobot):
                     self.submechanisms_file = os.path.abspath(annotationfile)
                 self.annotations.update(annotation)
             except Exception as exc:
-                print(exc)
+                log.error(exc)
 
     def _init_annotations(self):
         if 'motors' in self.annotations:
@@ -133,8 +134,8 @@ class SMURFRobot(XMLRobot):
                         )
                     )
                 else:
-                    print(motor)
-                    print("ERROR: There is no joint to which the above motor definition relates. Skipping...")
+                    log.error(motor)
+                    log.error("There is no joint to which the above motor definition relates. Skipping...")
 
         if 'sensors' in self.annotations:
             for sensor_def in self.annotations['sensors']:
@@ -143,7 +144,7 @@ class SMURFRobot(XMLRobot):
                 existing = self.get_sensor(sensor_def["name"])
                 sensor = getattr(sensor_representations, sensor_def["type"])(**sensor_def)
                 if existing is not None and existing != sensor:
-                    print("WARNING: There is already a sensor with name", sensor_def["name"])
+                    log.warning(f"There is already a sensor with name {sensor_def['name']}")
                 elif existing is None:
                     self.add_sensor(sensor)
 
@@ -254,7 +255,7 @@ class SMURFRobot(XMLRobot):
             for vc in link.collisions + link.visuals:
                 if isinstance(vc.geometry, representation.Mesh) and \
                         import_mesh(vc.geometry.filename, urdf_path=self.xmlfile) is None:
-                    print("WARNING: Mesh file", vc.geometry.filename,
+                    log.warning("Mesh file", vc.geometry.filename,
                           "is empty and therefore the corresponding visual/geometry removed!")
                     no_problems = False
                     link.remove_aggregate(vc)
@@ -372,7 +373,7 @@ class SMURFRobot(XMLRobot):
             if "exoskeletons" in submechanism_definition.keys():
                 _exoskels = submechanism_definition["exoskeletons"]
         elif type(submechanism_definition) == list:
-            print("WARNING: Loading submechanisms from list. This list is interpreted as list of nothing but"
+            log.warning("Loading submechanisms from list. This list is interpreted as list of nothing but"
                   " submechanisms. This means no exoskeletons will be created.")
             _submechs = submechanism_definition
         else:
@@ -428,7 +429,7 @@ class SMURFRobot(XMLRobot):
                 auto_gen=True,
                 jointnames_spanningtree=[], jointnames_dependent=[]
             )]
-            print("WARNING: Currently it's not fully supported to create exokeleton definitions automatically, "
+            log.warning("Currently it's not fully supported to create exokeleton definitions automatically, "
                   "a preliminary version has been created. Make sure to check it before usage.")
         for sm in self.submechanisms + self.exoskeletons:
             sm.regenerate(self)

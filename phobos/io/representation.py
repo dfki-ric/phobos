@@ -446,7 +446,7 @@ class Visual(Representation, SmurfBase):
                     while robot.get_material(new_mat_name) is not None:
                         new_mat_name = self._material.name + "_" + str(index)
                         index += 1
-                    print("WARNING: Ambiguous material in ", self.name, "renamed ", self._material.name, "to",
+                    log.warning("Ambiguous material in ", self.name, "renamed ", self._material.name, "to",
                           new_mat_name)
                     self._material.name = new_mat_name
         if isinstance(self.geometry, Mesh):
@@ -466,8 +466,8 @@ class Visual(Representation, SmurfBase):
             self.geometry.check_linkage()
 
     def equivalent(self, other):
-        return self.geometry.equivalent(other.geometry) and self._material.equivalent(
-            other._material) and self.origin == other.origin
+        return self.geometry.equivalent(other.geometry) and self._material.equivalent(other._material) and \
+               self.origin == other.origin
 
 
 class Inertia(Representation):
@@ -843,8 +843,8 @@ class Joint(Representation, SmurfBase):
             skip = False
             for v2 in new_val[idx:]:
                 if v1.equivalent(v2) and v1 != v2:
-                    print(v1.to_yaml())
-                    print(v2.to_yaml())
+                    log.error(v1.to_yaml())
+                    log.error(v2.to_yaml())
                     raise AssertionError("Received conflicting joint dependencies!")
                 elif v1 == v2:
                     skip = True

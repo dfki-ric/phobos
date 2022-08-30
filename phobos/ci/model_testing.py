@@ -11,7 +11,8 @@ from ..io.representation import Pose
 from ..utils import urdf
 from ..utils.hyrodyn import get_load_report, debug_report
 from ..utils.misc import execute_shell_command, list_files
-
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 class ModelTest(object):
     """Checks the general validity of a new model possibly against an old model.
@@ -54,7 +55,7 @@ class ModelTest(object):
             return False
         if self.old_hyrodyn is None and HYRODYN_AVAILABLE:
             try:
-                print(
+                log.info(
                     "Trying to load old model in hyrodyn:",
                     self.old.xmlfile,
                     "(file exists)" if os.path.exists(self.old.xmlfile) else "(does not exist)",
@@ -71,32 +72,31 @@ class ModelTest(object):
                     self.old.xmlfile,
                     self.old.submechanisms_file
                 )
-                print("Old model loaded!", flush=True)
+                log.info("Old model loaded!")
                 return True
             except Exception as e:
-                print("Failed to load old model in hyrodyn:", flush=True)
-                print(e, flush=True)
+                log.error("Failed to load old model in hyrodyn:")
+                log.error(e)
                 return False
 
     # info procedures
     def info_swing_my_robot(self):
         if not (hasattr(self.new, "swing_my_robot") and self.new.swing_my_robot is True):
             return
-        print("Running swing_my_robot", flush=True)
+        log.info("Running swing_my_robot")
         if not HYRODYN_AVAILABLE:
-            print('WARNING: Info procedure swing_my_robot not possible: Hyrodyn not present',
-                  flush=True, file=sys.stderr)
+            log.warning('Info procedure swing_my_robot not possible: Hyrodyn not present')
             return
         submech_file = self.new.submechanisms_file_path
         cmd = "swing_my_robot.py"
         if self.new.submechanisms_file is not None and os.path.exists(self.new.submechanisms_file):
-            print("Submechs:", submech_file, "exists!" if os.path.isfile(submech_file) else "does not exist!")
+            log.info(f'Submechs: {submech_file} {"exists!" if os.path.isfile(submech_file) else "does not exist!"}')
             cmd += " --submechanism_yml " + submech_file
         limits_file = os.path.join(self.new.modeldir, "submechanisms/joint_limits.yml")
-        print("Limits:", limits_file, "exists!" if os.path.isfile(limits_file) else "does not exist!")
+        log.info(f'Limits: {limits_file} {"exists!" if os.path.isfile(limits_file) else "does not exist!"}')
         if os.path.isfile(limits_file):
             cmd += " --joint_limits_yml " + limits_file
-        print("URDF:", self.new.robot.xmlfile,
+        log.info("URDF:", self.new.robot.xmlfile,
               "exists!" if os.path.isfile(self.new.robot.xmlfile) else "does not exist!")
         # cmd += " --export_animation"
         cmd += " --export_animation_as_mp4"
@@ -106,23 +106,23 @@ class ModelTest(object):
         try:
             execute_shell_command(cmd, os.getcwd())
         except ImportError as e:
-            print("Can't run swing_my_robot procedure because of missing library:\n", e)
+            log.warning(f"Can't run swing_my_robot procedure because of missing library:\n {e}")
             return
         except AssertionError as e:
-            print("Swing_my_robot.py failed due to an assertion error:", e)
+            log.error(f"Swing_my_robot.py failed due to an assertion error: {e}")
             return
         except:
             try:
                 execute_shell_command("python " + os.path.join(os.environ["AUTOPROJ_CURRENT_ROOT"],
                                                                "control/hyrodyn/python/") + cmd, os.getcwd())
             except ImportError as e:
-                print("Can't run swing_my_robot procedure because of missing library:\n", e)
+                log.warning(f"Can't run swing_my_robot procedure because of missing library:\n {e}")
                 return
             except AssertionError as e:
-                print("Swing_my_robot.py failed due to an assertion error:", e)
+                log.error(f"Swing_my_robot.py failed due to an assertion error: {e}")
                 return
             except Exception as e:
-                print("Swing_my_robot.py failed due to an unknown error", e)
+                log.error(f"Swing_my_robot.py failed due to an unknown error {e}")
 
     # test procedures
     def test_process_double_check(self):
@@ -141,13 +141,13 @@ class ModelTest(object):
                 if os.path.isfile(mesh_path):
                     success &= True
                 else:
-                    print("Mesh", mesh_path, "does not exist!")
+                    log.error(f"Mesh {mesh_path} does not exist!")
                     success = False
         return success
 
     def test_compare_link_masses(self):
         success = True
-        print("Masses of Links:", flush=True)
+        log.info("Masses of Links:")
         new_link_masses = {
             link.name: (link.inertial.mass if link.inertial is not None else 0) for link in self.new.robot.links
         }
@@ -156,28 +156,26 @@ class ModelTest(object):
                 link.name: (link.inertial.mass if link.inertial is not None else 0) for link in self.old.links
             }
         else:
-            print("Old model not present! Skipping test!", flush=True)
+            log.info("Old model not present! Skipping test!")
             return "skipped (no model to compare)"
         max_length = max(*[len(n) for n in new_link_masses.keys()])
         for k in new_link_masses.keys():
             link_name = k + (max_length - len(k)) * " "
+            outmsg = None
             if k not in old_link_masses.keys():
-                print("%s New: %8.4e\t Old: non-existent" % (link_name, new_link_masses[k]), flush=True)
+                outmsg = "%s New: %8.4e\t Old: non-existent\n" % (link_name, new_link_masses[k])
                 continue
-            print("%s New: %8.4e\t Old: %8.4e\t Diff: %8.4e"
-                  % (link_name, new_link_masses[k], old_link_masses[k], new_link_masses[k] - old_link_masses[k]),
-                  end="", flush=True)
+            outmsg += "%s New: %8.4e\t Old: %8.4e\t Diff: %8.4e" % (link_name, new_link_masses[k], old_link_masses[k], new_link_masses[k] - old_link_masses[k])
             if abs(new_link_masses[k] - old_link_masses[k]) > self.new.tolerances["tolerance_mass"]:
-                print(" too big!", flush=True)
+                outmsg +=" too big!"
                 success = False
-            else:
-                print("", flush=True)
+            log.info(outmsg)
         return success
 
     def test_symmetry_check_masses(self, left_right_end_effectors):
         for ee in left_right_end_effectors:
             if self.new.robot.get_link_id(ee) is None:
-                print("Existing links:", [link.name for link in self.new.robot.links])
+                log.error(f"Existing links: {[link.name for link in self.new.robot.links]}")
                 raise AssertionError(ee + " Link does not exist in the newly exported model!")
 
         masses = {}
@@ -188,115 +186,108 @@ class ModelTest(object):
         right = self.new.robot.get_chain(self.new.robot.get_root(), left_right_end_effectors[1],
                                          links=True, joints=False, fixed=True)
         assert len(left) == len(right)
-        print("Symmetry Check Masses:", flush=True)
+        log.info("Symmetry Check Masses:")
         success = True
         max_len = np.array([len(left[i] + "/" + right[i]) for i in range(len(left))]).max(initial=0)
         for i in range(len(left)):
             left_mass = masses[left[i]]
             right_mass = masses[right[i]]
             diff = left_mass - right_mass
-            print("{}\t{}\t{}\t{}\t{}".format(
+            log.info("{}\t{}\t{}\t{}\t{}".format(
                 left[i] + "/" + right[i] + " " * (max_len - (len(left[i] + "/" + right[i]))),
                 "{:f}".format(left_mass),
                 "{:f}".format(right_mass),
                 "{:f}".format(diff),
                 "!!!" if diff is None or np.abs(diff) > self.new.tolerances["tolerance_mass"] or np.isnan(diff) else ""
-            ), flush=True)
+            ))
             success &= not (np.abs(diff) > self.new.tolerances["tolerance_mass"] or np.isnan(diff))
-        print("  Success?", success, flush=True)
+        log.info(f"  Success? {success}")
         return success
 
     def test_compare_link_transformations(self):
         success = True
-        print("Transformation changes of Links:", flush=True)
+        log.info("Transformation changes of Links:")
         root2new_links = {link.name: self.new.robot.get_transformation(link.name) for link in self.new.robot.links}
         if self.old is not None:
             root2old_links = {link.name: self.old.get_transformation(link.name) for link in self.old.links}
         else:
-            print("Old model not present! Skipping test!", flush=True)
+            log.info("Old model not present! Skipping test!")
             return "skipped (no model to compare)"
         max_length = max(*[len(n) for n in root2new_links.keys()])
         for k in root2new_links.keys():
             link_name = k + (max_length - len(k)) * " "
             if k not in root2old_links.keys():
-                print("%s doesn't exist in compare model" % link_name, flush=True)
+                log.info("%s doesn't exist in compare model" % link_name)
                 _temp_pose = Pose.from_matrix(root2new_links[k])
-                print("root2link: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple(_temp_pose.xyz.tolist() + _temp_pose.rpy.tolist()),
+                log.info("root2link: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple(_temp_pose.xyz.tolist() + _temp_pose.rpy.tolist()),
                       flush=True)
                 continue
             diff = np.linalg.inv(root2old_links[k]).dot(root2new_links[k])
             diff_o = representation.Pose.from_matrix(diff)
-            print("%s Difference: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple([link_name] + diff_o.xyz.tolist() + diff_o.rpy.tolist()),
-                  end="", flush=True)
+            outmsg = "%s Difference: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple([link_name] + diff_o.xyz.tolist() + diff_o.rpy.tolist())
             if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["tolerance_distance"] or \
                any(abs(diff_o.rpy) > [self.new.tolerances["tolerance_rad"]]*3):
                 if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["tolerance_distance"]:
-                    print(" %.6f" % (np.linalg.norm(diff[0:3, 3])), ">", self.new.tolerances["tolerance_distance"],
-                          end="", flush=True)
+                    outmsg += " %.6f" % (np.linalg.norm(diff[0:3, 3])), ">", self.new.tolerances["tolerance_distance"]
                 if any(abs(diff_o.rpy) > [self.new.tolerances["tolerance_rad"]]*3):
-                    print(abs(diff_o.rpy), ">", [self.new.tolerances["tolerance_rad"]]*3, end="", flush=True)
-                print(" !!!", flush=True)
-                # print("Difference as Transformation Matrix from old to new:", flush=True)
-                # print(diff, flush=True)
+                    outmsg += abs(diff_o.rpy), ">", [self.new.tolerances["tolerance_rad"]]*3
+                outmsg += " !!!"
+                log.erro(outmsg)
+                # print("Difference as Transformation Matrix from old to new:")
+                # print(diff)
                 success = False
             else:
-                print("", flush=True)
+                log.info(outmsg)
         return success
 
     def test_topological_self_consistency(self):
         if self.old is None:
-            print("Old model not present! Skipping test!", flush=True)
+            log.info("Old model not present! Skipping test!")
             return "skipped (no model to compare)"
         # The new model is allowed to have more joints/links than the previous
-        print("New model contains:", flush=True)
-        print("Links", sorted(
+        log.info("New model contains:")
+        log.info("Links", sorted(
             set([link.name for link in self.new.robot.links])
             - set([link.name for link in self.old.links])
-        ), flush=True)
-        print("Coll", sorted(
+        ))
+        log.info("Coll", sorted(
             set([collision.name for link in self.new.robot.links for collision in link.collisions])
             - set([collision.name for link in self.old.links for collision in link.collisions])
-        ), flush=True)
-        print("Vis", sorted(
+        ))
+        log.info("Vis", sorted(
             set([visual.name for link in self.new.robot.links for visual in link.visuals])
             - set([visual.name for link in self.old.links for visual in link.visuals])
-        ), flush=True)
-        print("Joints", sorted(
+        ))
+        log.info("Joints", sorted(
             set([joint.name for joint in self.new.robot.joints])
             - set([joint.name for joint in self.old.joints])
-        ), flush=True)
+        ))
         changed_joint_types1 = set([joint.name + ":" + joint.joint_type for joint in self.new.robot.joints]) - \
                                set([joint.name + ":" + joint.joint_type for joint in self.old.joints])
-        print("JTypes", sorted(changed_joint_types1), flush=True)
-        print("but not:", flush=True)
+        log.info(f"JTypes {sorted(changed_joint_types1)}")
+        log.info("but not:")
         removed_links = set([link.name for link in self.old.links]) - set([link.name for link in self.new.robot.links])
-        print("Links", sorted(removed_links), flush=True)
-        print("Coll", sorted(
-            set([collision.name for link in self.old.links for collision in link.collisions])
-            - set([collision.name for link in self.new.robot.links for collision in link.collisions])
-        ), flush=True)
-        print("Vis", sorted(
-            set([visual.name for link in self.old.links for visual in link.visuals])
-            - set([visual.name for link in self.new.robot.links for visual in link.visuals])
-        ), flush=True)
+        log.info(f"Links {sorted(removed_links)}")
+        log.info(f"Coll {sorted(set([collision.name for link in self.old.links for collision in link.collisions]) - set([collision.name for link in self.new.robot.links for collision in link.collisions]))}")
+        log.info(f"Vis {sorted(set([visual.name for link in self.old.links for visual in link.visuals]) - set([visual.name for link in self.new.robot.links for visual in link.visuals]))}")
         removed_joints = set([joint.name for joint in self.old.joints]) - \
                          set([joint.name for joint in self.new.robot.joints])
-        print("Joints", sorted(removed_joints), flush=True)
+        log.info(f"Joints {sorted(removed_joints)}")
         changed_joint_types2 = set([joint.name + ":" + joint.joint_type for joint in self.old.joints]) - \
                                set([joint.name + ":" + joint.joint_type for joint in self.new.robot.joints])
-        print("JTypes", sorted(changed_joint_types2), flush=True)
+        log.info(f"JTypes {sorted(changed_joint_types2)}")
         return len(removed_links) + len(removed_joints) + len(changed_joint_types1) + len(changed_joint_types2) == 0
 
     def test_compare_amount_joints(self):
         if self.old is None:
-            print("Old model not present! Skipping test!", flush=True)
+            log.info("Old model not present! Skipping test!")
             return "skipped (no model to compare)"
-        print("New Model has", len(self.new.robot.joints), "and old model has", len(self.old.joints))
+        log.info(f"New Model has {len(self.new.robot.joints)} and old model has {len(self.old.joints)}")
         return len(self.new.robot.joints) == len(self.old.joints)
 
     def test_load_in_pybullet(self):
         if not PYBULLET_AVAILABLE:
-            print('Pybullet not present', flush=True)
+            log.warning('Pybullet not present')
             return True
         try:
             client = pb.connect(pb.DIRECT)
@@ -304,135 +295,130 @@ class ModelTest(object):
             pb.disconnect(client)
             return True
         except Exception as e:
-            print("Failed: pyBullet check failed!\n", e, flush=True)
+            log.error(f"Failed: pyBullet check failed!\n {e}")
             return False
 
     def test_file_consistency(self):
         if self.old is None:
-            print("Old model not present! Skipping test!", flush=True)
+            log.info("Old model not present! Skipping test!")
             return "skipped (no model to compare)"
         new_files = list_files(self.new.exportdir, ignore=["\.gv", "\.pdf", "\.git*", "README\.md", "manifest\.xml"])
         old_files = list_files(self.old.directory, ignore=["\.gv", "\.pdf", "\.git*", "README\.md", "manifest\.xml"])
-        print("New model contains:", flush=True)
-        print(dump_json(sorted(list(set(new_files) - set(old_files)))), flush=True)
-        print("but not:", flush=True)
+        log.info("New model contains:")
+        log.info(dump_json(sorted(list(set(new_files) - set(old_files)))))
+        log.info("but not:")
         removed_files = set(old_files) - set(new_files)
-        print(dump_json(sorted(list(removed_files))), flush=True)
+        log.info(dump_json(sorted(list(removed_files))))
         return len(removed_files) == 0
 
     def test_hyrodyn_load_in_hyrodyn(self):
         if not HYRODYN_AVAILABLE:
-            print('Hyrodyn not present', flush=True)
+            print('Hyrodyn not present')
             return True
 
         out = True
         try:
             debug_report(self.new_hml_test, self.new.urdf, self.new.submechanisms_file_path, raise_error_failure=True)
             self.new_hyrodyn = hyrodyn.RobotModel(self.new.urdf, self.new.submechanisms_file_path)
-            print("Model loaded!", flush=True)
+            log.info("Model loaded!")
             out &= True
         except RuntimeError as e:
-            print("Failed to load model in HyRoDyn:", flush=True, file=sys.stderr)
-            print("Failed: Loading the model in HyRoDyn not possible. Check failed!", e, flush=True, file=sys.stderr)
+            log.error(f"Failed: Loading the model in HyRoDyn not possible. Check failed! {e}")
             out &= False
         if self.new.floatingbase is True:
             try:
                 debug_report(self.new_fb_hml_test, self.new.floatingbase_urdf,
                              self.new.floatingbase_submechanisms_file_path, raise_error_failure=True)
-                print("Floatingbase model loaded!", flush=True)
+                log.info("Floatingbase model loaded!")
                 out &= True
             except RuntimeError as e:
-                print("Failed to load floatingbase model in HyRoDyn:", flush=True, file=sys.stderr)
-                print("Failed: Loading floatingbase model in HyRoDyn not possible. Check failed!", e,
-                      flush=True, file=sys.stderr)
+                log.error(f"Failed: Loading floatingbase model in HyRoDyn not possible. Check failed! {e}")
                 out &= False
         for test in self.new_sm_hml_test:
             try:
                 debug_report(test["report"], test["urdf"], test["submech"], raise_error_failure=True)
-                print(test["name"]+" submodel loaded!", flush=True)
+                log.info(test["name"]+" submodel loaded!")
                 out &= True
             except RuntimeError as e:
-                print("Failed to load "+test["name"]+" submodel model in HyRoDyn:", flush=True, file=sys.stderr)
-                print("Failed: Loading "+test["name"]+" submodel in HyRoDyn not possible. Check failed!", e,
-                      flush=True, file=sys.stderr)
+                log.error(f"Failed: Loading {test['name']} submodel in HyRoDyn not possible. Check failed! {e}")
                 out &= False
         return out
 
     def test_hyrodyn_compare_masses(self):
         if not HYRODYN_AVAILABLE:
-            print('Hyrodyn not present', flush=True)
+            log.info('Hyrodyn not present')
             return "skipped (no HyRoDyn)"
         if self.old_hyrodyn is None:
             self._load_old_hyrodyn_model()
         if self.new_hyrodyn is None and self.new_hml_test[2] == 0:
             self.test_hyrodyn_load_in_hyrodyn()
         if self.new_hyrodyn is None:
-            print("New HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("New HyRoDyn model not present! Skipping test!")
             return "skipped (HyRoDyn model not loaded)"
         if self.old_hyrodyn is None and self.old is None:
-            print("Old HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("Old HyRoDyn model not present! Skipping test!")
             return "skipped (no model to compare)"
         elif self.old_hyrodyn is None:
-            print("Old HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("Old HyRoDyn model not present! Skipping test!")
             return "skipped (no hyrodyn model to compare)"
 
         self.old_hyrodyn.calculate_com_properties()
         self.new_hyrodyn.calculate_com_properties()
-        print("Comparing masses:", flush=True)
-        print("  Total mass of old model =", self.old_hyrodyn.mass, flush=True)
-        print("  Total mass of new model =", self.new_hyrodyn.mass, flush=True)
+        log.info("Comparing masses:")
+        log.info(f"  Total mass of old model = {self.old_hyrodyn.mass}")
+        log.info(f"  Total mass of new model = {self.new_hyrodyn.mass}")
         value = self.old_hyrodyn.mass - self.new_hyrodyn.mass
         check = value < self.new.tolerances["tolerance_mass"] * self.old_hyrodyn.mass
-        print("  Success?", check, "Diff:", value, flush=True)
+        log.info("  Success? {check} Diff: {value}")
         return check
 
     def test_hyrodyn_compare_com(self):
         if not HYRODYN_AVAILABLE:
-            print('Hyrodyn not present', flush=True)
+            log.info('Hyrodyn not present')
             return "skipped (no HyRoDyn)"
         if self.old_hyrodyn is None:
             self._load_old_hyrodyn_model()
         if self.new_hyrodyn is None and self.new_hml_test[2] == 0:
             self.test_hyrodyn_load_in_hyrodyn()
         if self.new_hyrodyn is None:
-            print("New HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("New HyRoDyn model not present! Skipping test!")
             return "skipped (HyRoDyn model not loaded)"
         if self.old_hyrodyn is None and self.old is None:
-            print("Old HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("Old HyRoDyn model not present! Skipping test!")
             return "skipped (no model to compare)"
         elif self.old_hyrodyn is None:
-            print("Old HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("Old HyRoDyn model not present! Skipping test!")
             return "skipped (no hyrodyn model to compare)"
 
-        print("Compare COM position:", flush=True)
-        print("  COM of old robot =", self.old_hyrodyn.com, flush=True)
-        print("  COM of new robot =", self.new_hyrodyn.com, flush=True)
+        log.info("Compare COM position:")
+        log.info(f"  COM of old robot = {self.old_hyrodyn.com}")
+        log.info(f"  COM of new robot = {self.new_hyrodyn.com}")
         diff = self.old_hyrodyn.com - self.new_hyrodyn.com
         value = np.linalg.norm(diff)
         check = value < (self.new.tolerances["tolerance_distance"] and
                          not any([np.isnan(x) for x in diff.reshape((diff.size,))]))
-        print("  Success?", check, "Diff:", value, flush=True)
+        log.info(f"  Success? {check} Diff: {value}")
         return check
 
     def test_hyrodyn_compare_torques(self):
         if not HYRODYN_AVAILABLE:
-            print('Hyrodyn not present', flush=True)
+            log.info('Hyrodyn not present')
             return "skipped (no HyRoDyn)"
         if self.old_hyrodyn is None:
             self._load_old_hyrodyn_model()
         if self.new_hyrodyn is None and self.new_hml_test[2] == 0:
             self.test_hyrodyn_load_in_hyrodyn()
         if self.new_hyrodyn is None:
-            print("New HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("New HyRoDyn model not present! Skipping test!")
             return "skipped (HyRoDyn model not loaded)"
         if self.old_hyrodyn is None and self.old is None:
-            print("Old HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("Old HyRoDyn model not present! Skipping test!")
             return "skipped (no model to compare)"
         elif self.old_hyrodyn is None:
-            print("Old HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("Old HyRoDyn model not present! Skipping test!")
             return "skipped (no hyrodyn model to compare)"
 
-        print("Compare joint torques:", flush=True)
+        log.info("Compare joint torques:")
         self.old_hyrodyn.calculate_inverse_dynamics()
         self.new_hyrodyn.calculate_inverse_dynamics()
         torques = {}
@@ -448,17 +434,17 @@ class ModelTest(object):
                     torques.update({
                         self.new_hyrodyn.jointnames_active[i]: {"N": self.new_hyrodyn.Tau_actuated[0][i], "O": None}
                     })
-            print("Name                          \tOld        \tNew        \tDiff", flush=True)
+            log.info("Name                          \tOld        \tNew        \tDiff")
             for k, v in torques.items():
                 diff = v["O"] - v["N"] if v["O"] is not None and v["N"] is not None else None
                 name = "".join([k[j] if j < len(k) else " " for j in range(30)])
-                print("{}\t{}\t{}\t{}\t{}".format(
+                log.info("{}\t{}\t{}\t{}\t{}".format(
                     name,
                     "{:f}".format(v["O"]) if v["O"] is not None else "   ---   ",
                     "{:f}".format(v["N"]) if v["N"] is not None else "   ---   ",
                     "{:f}".format(diff) if v["O"] is not None and v["N"] is not None else "   ---   ",
                     "!!!" if diff is None or np.abs(diff) > self.new.tolerances["tolerance"] or np.isnan(diff) else ""
-                ), flush=True)
+                ))
             if self.old_hyrodyn.Tau_actuated.shape == self.new_hyrodyn.Tau_actuated.shape:
                 diff = np.abs(self.old_hyrodyn.Tau_actuated - self.new_hyrodyn.Tau_actuated)
                 value = np.amax(diff)
@@ -467,63 +453,63 @@ class ModelTest(object):
             else:
                 value = None
                 check = "skipped (not the same joints)"
-            print("  Success?", check, "Diff:", value, flush=True)
+            log.info(f"  Success? {check} Diff: {value}")
             return check
         except Exception as e:
-            print("  Failed due to error:", e)
+            log.error(f"  Failed due to error: {e}")
             return False
 
     def test_hyrodyn_compare_link_positions(self, end_effectors):
         if not HYRODYN_AVAILABLE:
-            print('Hyrodyn not present', flush=True)
+            log.info('Hyrodyn not present')
             return "skipped (no HyRoDyn)"
         if self.old_hyrodyn is None:
             self._load_old_hyrodyn_model()
         if self.new_hyrodyn is None and self.new_hml_test[2] == 0:
             self.test_hyrodyn_load_in_hyrodyn()
         if self.new_hyrodyn is None:
-            print("New HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("New HyRoDyn model not present! Skipping test!")
             return "skipped (HyRoDyn model not loaded)"
         if self.old_hyrodyn is None and self.old is None:
-            print("Old HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("Old HyRoDyn model not present! Skipping test!")
             return "skipped (no model to compare)"
         elif self.old_hyrodyn is None:
-            print("Old HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("Old HyRoDyn model not present! Skipping test!")
             return "skipped (no hyrodyn model to compare)"
 
         succ = True
 
-        print("Compare EE positions:", flush=True)
+        log.info("Compare EE positions:")
         for ee in end_effectors:
             if ee not in [link.name for link in self.old.links]:
-                print(ee, "not found in compare model. Skipping comparison", file=sys.stderr, flush=True)
+                log.error(f"{ee} not found in compare model. Skipping comparison")
                 continue
             self.old_hyrodyn.calculate_forward_kinematics(ee)
             old_pose = deepcopy(self.old_hyrodyn.pose)
             self.new_hyrodyn.calculate_forward_kinematics(ee)
             new_pose = deepcopy(self.new_hyrodyn.pose)
 
-            print(ee, " pose of old model", old_pose, flush=True)
-            print(ee, " pose of new model", new_pose, flush=True)
+            log.info(f"ee pose of old model {old_pose}")
+            log.info(f"ee pose of new model {new_pose}")
             value = np.linalg.norm(old_pose[0, 0:3] - new_pose[0, 0:3])
             check = value < self.new.tolerances["tolerance_distance"]
-            print("  Success?", check, "Diff:", value, flush=True)
+            log.info(f"  Success? {check} Diff: {value}")
             succ &= check
         return succ
 
     def test_hyrodyn_symmetry_check(self, left_right_end_effectors):
         if not HYRODYN_AVAILABLE:
-            print('Hyrodyn not present', flush=True)
+            log.info('Hyrodyn not present')
             return True
         if self.new_hyrodyn is None and self.new_hml_test[2] == 0:
             self.test_hyrodyn_load_in_hyrodyn()
         if self.new_hyrodyn is None:
-            print("New HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("New HyRoDyn model not present! Skipping test!")
             return "skipped (HyRoDyn model not loaded)"
 
         for ee in left_right_end_effectors:
             if self.new.robot.get_link_id(ee) is None:
-                print("Existing links:", [link.name for link in self.new.robot.links])
+                log.info(f"Existing links: {[link.name for link in self.new.robot.links]}")
                 raise AssertionError(ee + " Link does not exist in the newly exported model!")
 
         self.new_hyrodyn.calculate_forward_kinematics(left_right_end_effectors[0])
@@ -531,8 +517,8 @@ class ModelTest(object):
         self.new_hyrodyn.calculate_forward_kinematics(left_right_end_effectors[1])
         right_pose = deepcopy(self.new_hyrodyn.pose)
 
-        print("Symmetry Check:", flush=True)
-        print("      Right EE of new model", right_pose[0, 0:3], flush=True)
+        log.info("Symmetry Check:")
+        log.info(f"      Right EE of new model {right_pose[0, 0:3]}")
         mirrored_left_pose = np.array([left_pose[0, 0],
                                        -left_pose[0, 1],
                                        left_pose[0, 2],
@@ -540,26 +526,26 @@ class ModelTest(object):
                                        -left_pose[0, 4],
                                        left_pose[0, 5],
                                        left_pose[0, 6]]).reshape(1, 7)
-        print("  (-y) Left EE of new model", mirrored_left_pose[0, 0:3], flush=True)
+        log.info(f"  (-y) Left EE of new model {mirrored_left_pose[0, 0:3]}")
         value = np.linalg.norm(right_pose[0, 0:3] - mirrored_left_pose[0, 0:3])
         check = value < self.new.tolerances["tolerance_distance"]
-        print("  Success?", check, "Diff:", value, flush=True)
-        print("!!! Check ignores orientation !!!", flush=True)
+        log.info(f"  Success? {check} Diff: {value}")
+        log.info("!!! Check ignores orientation !!!")
         return check
 
     def test_hyrodyn_symmetry_check_torques(self, left_right_end_effectors):
         if not HYRODYN_AVAILABLE:
-            print('Hyrodyn not present', flush=True)
+            log.info('Hyrodyn not present')
             return True
         if self.new_hyrodyn is None and self.new_hml_test[2] == 0:
             self.test_hyrodyn_load_in_hyrodyn()
         if self.new_hyrodyn is None:
-            print("New HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("New HyRoDyn model not present! Skipping test!")
             return "skipped (HyRoDyn model not loaded)"
 
         for ee in left_right_end_effectors:
             if self.new.robot.get_link_id(ee) is None:
-                print("Existing links:", [link.name for link in self.new.robot.links])
+                log.error(f"Existing links: {[link.name for link in self.new.robot.links]}")
                 raise AssertionError(ee + " Link does not exist in the newly exported model!")
 
         self.new_hyrodyn.calculate_inverse_dynamics()
@@ -572,43 +558,42 @@ class ModelTest(object):
         right = self.new.robot.get_chain(self.new.robot.get_root(), left_right_end_effectors[1],
                                          links=False, joints=True, fixed=False)
         assert len(left) == len(right)
-        print("Symmetry Check Torques:", flush=True)
-        print("Calculated inverse dynamics for pose: ", self.new_hyrodyn.y, flush=True)
+        log.info("Symmetry Check Torques:")
+        log.info(f"Calculated inverse dynamics for pose: {self.new_hyrodyn.y}")
         success = True
         max_len = np.array([len(left[i] + "/" + right[i]) for i in range(len(left))]).max(initial=0)
         for i in range(len(left)):
             left_torque = torques[left[i]]
             right_torque = torques[right[i]]
             diff = left_torque - right_torque
-            print("{}\t{}\t{}\t{}\t{}".format(
+            log.info("{}\t{}\t{}\t{}\t{}".format(
                 left[i] + "/" + right[i] + " " * (max_len - (len(left[i] + "/" + right[i]))),
                 "{:f}".format(left_torque),
                 "{:f}".format(right_torque),
                 "{:f}".format(diff),
                 "!!!" if diff is None or np.abs(diff) > self.new.tolerances["tolerance"] or np.isnan(diff) else ""
-            ), flush=True)
+            ))
             success &= not (np.abs(diff) > self.new.tolerances["tolerance"] or np.isnan(diff))
-        print("  Success?", success, flush=True)
+        log.info(f"  Success? {success}")
         return success
 
     def move_hyrodyn_model(self, new_joint_angles):
         if not HYRODYN_AVAILABLE:
-            print('Hyrodyn not present', flush=True)
+            log.info('Hyrodyn not present')
             return True
         if self.old_hyrodyn is None:
             self._load_old_hyrodyn_model()
         if self.new_hyrodyn is None and self.new_hml_test[2] == 0:
             self.test_hyrodyn_load_in_hyrodyn()
         if self.new_hyrodyn is None:
-            print("New HyRoDyn model not present! Skipping test!", flush=True)
+            log.info("New HyRoDyn model not present! Skipping test!")
             return "skipped (HyRoDyn model not loaded)"
 
         if type(new_joint_angles) is float:
             self.new_hyrodyn.y = np.full(self.new_hyrodyn.y.size, 0.0)
             if self.old_hyrodyn is not None:
                 if self.new_hyrodyn.y.size != self.old_hyrodyn.y.size:
-                    print("WARNING: Number of joints in old model differ from those in new model!",
-                          flush=True, file=sys.stderr)
+                    log.warning("Number of joints in old model differ from those in new model!")
                 self.old_hyrodyn.y = np.full(self.old_hyrodyn.y.size, new_joint_angles)
         elif type(new_joint_angles) is list:
             self.new_hyrodyn.y = np.array(new_joint_angles).reshape(self.new_hyrodyn.y.size)

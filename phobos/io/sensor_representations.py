@@ -6,6 +6,8 @@ from .representation import Pose
 from .smurf_reflection import SmurfBase
 from ..io import representation
 from ..utils import transform
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
@@ -314,7 +316,7 @@ class JointVelocity(MultiSensor):
             targets = [targets]
 
         if not all([isinstance(t, representation.Joint) for t in targets]):
-            print(targets)
+            log.error(targets)
             raise AssertionError("Parsed invalid joint")
 
         super().__init__(name=name, targets=targets, sensortype='JointVelocity', **kwargs)

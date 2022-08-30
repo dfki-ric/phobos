@@ -2,6 +2,8 @@ import os
 
 from ..utils import misc
 from .base_model import BaseModel
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 SUBMECHS_VIA_ASSEMBLIES = False
 
@@ -24,7 +26,7 @@ class Model(BaseModel):
         if self.processed_model_exists:
             self._load_robot()
 
-        print("Finished reading config", configfile, flush=True)
+        log.debug(f"Finished reading config {configfile}")
 
     def process(self):
         misc.recreate_dir(self.pipeline, self.tempdir)

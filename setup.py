@@ -61,7 +61,7 @@ def install_requirement(py_exec, package_name, upgrade_pip=False, lib=None):
         print("  Upgrading pip...")
         exec_shell_cmd([py_exec, "-m", "pip", "install", "--upgrade", "pip"])
     # Install package
-    print("  Installing package", package_name, flush=True)
+    print("  Installing package", package_name)
     if lib is None:
         exec_shell_cmd([py_exec, "-m", "pip", "install", package_name])
     else:
@@ -93,7 +93,7 @@ def check_requirements(py_exec, optional=False, upgrade_pip=False, lib=None):
         exec_shell_cmd([py_exec, "-m", "pip", "install", "--upgrade", "pip"])
     for r in reqs:
         for import_name, req_name in r.items():
-            print("  Checking", import_name, flush=True)
+            print("  Checking", import_name)
             install_requirement(py_exec, req_name, upgrade_pip=False, lib=lib)
             # try:
             #     if importlib.util.find_spec(import_name) is None:

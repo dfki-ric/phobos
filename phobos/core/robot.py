@@ -374,7 +374,7 @@ class Robot(SMURFRobot):
         else:
             missing_joints = self._get_joints_not_included_in_submechanisms()
             if len(missing_joints) != 0:
-                print(f"WARNING: Not all joints defined in the submechanisms definition! Lacking definition for:\n{missing_joints}")
+                log.debug(f"Not all joints defined in the submechanisms definition! Lacking definition for:\n{missing_joints}")
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
@@ -384,7 +384,7 @@ class Robot(SMURFRobot):
                     self.export_submodel(name="#sub_mech#", output_dir=os.path.join(outputdir, "submechanisms"),
                                          filename=os.path.basename(sm.file_path), only_urdf=True, no_format_dir=True)
                 else:
-                    print(f"WARNING: File {sm.file_path} does already exist. Not exported submechanism urdf.")
+                    log.warning(f"File {sm.file_path} does already exist. Not exported submechanism urdf.")
                 self.remove_submodel(name="#sub_mech#")
         for annotation in smurf_annotations:
             # Check if exists and not empty
@@ -434,7 +434,7 @@ class Robot(SMURFRobot):
 
         with open(os.path.join(smurf_dir, "{}.smurf".format(self.name)), "w+") as stream:
             stream.write(dump_json(annotation_dict, default_style=False, sort_keys=True))
-        log.info("SMURF written to", smurf_dir)
+        log.info(f"SMURF written to {smurf_dir}")
 
     def export_joint_limits(self, outputdir, file_name="joint_limits.yml", names=None):
         if names is None:
@@ -1219,7 +1219,6 @@ class Robot(SMURFRobot):
         if inertial is None:
             return True
 
-        log.info(" Transforming Inertials")
         # Process the rotation
         if transformation is not None:
             T = transformation
