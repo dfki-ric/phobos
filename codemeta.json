@@ -12,7 +12,7 @@
   "identifier": "",
   "codeRepository": "https://github.com/dfki-ric/phobos",
   "datePublished": "2019-02-01",
-  "dateModified": "2020-12-16",
+  "dateModified": "2022-08-30",
   "dateCreated": "2019-02-01",
   "description": "Phobos is a python tool for processing simulation models. It comes with a Blender addon to create, edit and annotate robot models in a WYSIWYG environment and a python package/CLI tool to do this automated.",
   "keywords": "robotics, Blender, Python, URDF, SDF, model, MARS, SMURF, CLI",

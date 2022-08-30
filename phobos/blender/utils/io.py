@@ -559,7 +559,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
     export_args = {
         "outputdir": exportpath,
         "formats": [format for format in entitytypes
-                    if format in ["urdf", "srdf", "sdf"] and getattr(bpy.context.scene, 'export_entity_'+format, False)
+                    if format in ["urdf", "sdf"] and getattr(bpy.context.scene, 'export_entity_'+format, False)
                     ],
         "ros_pkg": getattr(getExpSettings(), 'outputPathtype', "relative") == "ros_package",
         "ros_pkg_name": None if len(getRosPackageName()) == 0 else getRosPackageName(),

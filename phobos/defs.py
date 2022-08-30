@@ -1,4 +1,3 @@
-
 EULER_CONVENTION = 'xyz'
 RPY_CONVENTION = 'xyz'
 
@@ -68,4 +67,4 @@ except ImportError:
     print("YAML not available (backwards compatibility).")
 
 MESH_TYPES = ["dae", "stl", "obj", "mars_obj", "bobj"]
-ENTITY_TYPES = ["smurf", "urdf", "sdf", "srdf", "joint_limits", "pdf"]
+ENTITY_TYPES = ["smurf", "urdf", "sdf", "joint_limits", "pdf"]

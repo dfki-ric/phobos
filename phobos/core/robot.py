@@ -20,8 +20,8 @@ from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_
 from ..utils.transform import create_transformation, inv, get_adjoint
 from ..utils.tree import find_close_ancestor_links
 from ..utils.urdf import read_urdf_filename, create_pdf_from_urdf, transform_object, get_joint_info_dict
-from ..utils.commandline_logging import get_logger
 
+from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
 
 
