@@ -68,7 +68,7 @@ def safelyName(obj, name, phobostype=None):
     if not phobostype:
         phobostype = obj.phobostype
 
-    if obj.phobostype == phobostype:
+    if obj.phobostype == phobostype and obj.name != objectname:
         objectname = getUniqueName(objectname, bpy.data.objects)
         log("Acquired unique name for Blender object: " + objectname, 'DEBUG')
         obj.name = objectname
