@@ -10,7 +10,7 @@ black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://gith
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
 Phobos is both a CLI tool and add-on for the open-source 3D modeling software
-[Blender](http://www.blender.org) to support your robot model creation and editing
+[Blender](http://www.blender.org) to support your robot model creation and editing.
 
 The Blender add-on enables the creation of WYSIWYG robot
 models for use in robot frameworks like [ROS](http://wiki.ros.org/) and
@@ -58,6 +58,7 @@ Just zip the `phobos` subfolder: `zip -r phobos.zip phobos` and install it via B
 After installation the phobos main menu can be found on the right hand side of the 3D Viewport. If not already visible, one can find a very small arrow to open the Blender toolbar (purple circle showing it in the image).
 ![Small arrow to open the phobos toolbar widget.](https://github.com/dfki-ric/phobos/wiki/img/blender_phobos_menu_open.png)
 
+Phobos is currently tested and running with Blender v3.2.
 ### CLI
 Just install it using pip:
 ```bash

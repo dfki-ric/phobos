@@ -76,7 +76,7 @@ class Scene(object):
                                 return go_through_entities(child.children)
                             else:
                                 continue
-                        print(self.entities_by_name.keys())
+                        log.error(self.entities_by_name.keys())
                         raise AssertionError(
                             "Parent " + entity.parent_entity + " of " + entity.name + " not yet loaded!")
 

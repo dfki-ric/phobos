@@ -20,8 +20,8 @@ from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_
 from ..utils.transform import create_transformation, inv, get_adjoint
 from ..utils.tree import find_close_ancestor_links
 from ..utils.urdf import read_urdf_filename, create_pdf_from_urdf, transform_object, get_joint_info_dict
-from ..utils.commandline_logging import get_logger
 
+from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
 
 
@@ -123,10 +123,11 @@ class Robot(SMURFRobot):
         """
         import bpy
         import phobos.blender.utils.selection as sUtils
+        from phobos.blender.model.models import deriveModelDictionary
 
         if blender_model is None:
             root = sUtils.getRoot(bpy.context.selected_objects[0])
-            blender_model = derive_model_dictionary(root, name, objectlist)
+            blender_model = deriveModelDictionary(root, name, objectlist)
             if blender_model is None:
                 log.warning("Warning name your model and assign a version, otherwise blender-dictionary is None")
         cli_joints = []
@@ -204,34 +205,45 @@ class Robot(SMURFRobot):
         new_robot.__dict__.update(cli_robot.__dict__)
         new_robot.description = blender_model["description"]
 
-        for key, values in blender_model['sensors'].items():
-            # TODO "type" Abfragen an die verschiedenen User-Präferenzen angleichen
-            if values.get('id') is not None:
-                values['targets'] = [
-                    x for x in values['id'] if (
-                            new_robot.get_joint(x, verbose=False) is not None or
-                            new_robot.get_link(x, verbose=False) is not None or
-                            new_robot.get_collision_by_name(x) is not None or
-                            new_robot.get_visual_by_name(x) is not None
-                    )
-                ]
-                values.pop('id')
-            if values["type"].upper() == "CAMERASENSOR":
-                new_robot.add_sensor(
-                    sensor_representations.CameraSensor(
-                                 hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
-                                 hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
-                                 **values))
-            else:
-                new_robot.add_sensor(getattr(sensor_representations, values["type"])(**values))
+        if "sensors" in blender_model:
+            for key, values in blender_model['sensors'].items():
+                # TODO "type" Abfragen an die verschiedenen User-Präferenzen angleichen
+                if values.get('id') is not None:
+                    values['targets'] = [
+                        x for x in values['id'] if (
+                                new_robot.get_joint(x, verbose=False) is not None or
+                                new_robot.get_link(x, verbose=False) is not None or
+                                new_robot.get_collision_by_name(x) is not None or
+                                new_robot.get_visual_by_name(x) is not None
+                        )
+                    ]
+                    values.pop('id')
+                if values["type"].upper() == "CAMERASENSOR":
+                    new_robot.add_sensor(
+                        sensor_representations.CameraSensor(
+                                     hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
+                                     hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
+                                     **values))
+                else:
+                    new_robot.add_sensor(getattr(sensor_representations, values["type"])(**values))
 
+        if "motors" in blender_model:
+            motors = blender_model["motors"]  # TODO Teste ob Hennings umstrukturierung funktioniert
+            for key, value in motors.items():
+                name = value.pop('name')
+                joint = value.pop('joint')
+                new_robot.add_motor(representation.Motor(name=name, joint=new_robot.get_joint(joint), **value))
 
-        motors = blender_model["motors"]  # TODO Teste ob Hennings umstrukturierung funktioniert
-        for key, value in motors.items():
-            name = value.pop('name')
-            joint = value.pop('joint')
-            new_robot.add_motor(representation.Motor(name=name, joint=new_robot.get_joint(joint), **value))
-
+        if "interfaces" in blender_model:
+            interfaces = blender_model["interfaces"]
+            for key, value in interfaces.items():
+                parent = value.pop('parent')
+                pose = value.pop('pose')
+                new_robot.add_aggregate("interfaces", representation.Interface(
+                    parent=new_robot.get_link(parent),
+                    origin=representation.Pose.from_matrix(np.array(pose['rawmatrix'])),
+                    **value
+                ))
         additional_info = {'lights': blender_model.get('lights'),
                            'groups': blender_model.get('groups'),
                            'chains': blender_model.get('chains'),
@@ -439,7 +451,7 @@ class Robot(SMURFRobot):
         else:
             missing_joints = self._get_joints_not_included_in_submechanisms()
             if len(missing_joints) != 0:
-                print(f"WARNING: Not all joints defined in the submechanisms definition! Lacking definition for:\n{missing_joints}")
+                log.debug(f"Not all joints defined in the submechanisms definition! Lacking definition for:\n{missing_joints}")
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
@@ -449,7 +461,7 @@ class Robot(SMURFRobot):
                     self.export_submodel(name="#sub_mech#", output_dir=os.path.join(outputdir, "submechanisms"),
                                          filename=os.path.basename(sm.file_path), only_urdf=True, no_format_dir=True)
                 else:
-                    print(f"WARNING: File {sm.file_path} does already exist. Not exported submechanism urdf.")
+                    log.warning(f"File {sm.file_path} does already exist. Not exported submechanism urdf.")
                 self.remove_submodel(name="#sub_mech#")
         for annotation in smurf_annotations:
             # Check if exists and not empty
@@ -499,7 +511,7 @@ class Robot(SMURFRobot):
 
         with open(os.path.join(smurf_dir, "{}.smurf".format(self.name)), "w+") as stream:
             stream.write(dump_json(annotation_dict, default_style=False, sort_keys=True))
-        log.info("SMURF written to", smurf_dir)
+        log.info(f"SMURF written to {smurf_dir}")
 
     def export_joint_limits(self, outputdir, file_name="joint_limits.yml", names=None):
         if names is None:
@@ -1284,7 +1296,6 @@ class Robot(SMURFRobot):
         if inertial is None:
             return True
 
-        log.info(" Transforming Inertials")
         # Process the rotation
         if transformation is not None:
             T = transformation
@@ -2420,239 +2431,3 @@ class Robot(SMURFRobot):
         link.inertial.inertia = representation.Inertia(*inertia_list)
 
 
-def derive_model_dictionary(root, name='', objectlist=[]):
-    """Returns a dictionary representation of a Phobos model.
-
-    If name is not specified, it overrides the modelname in the root. If the modelname is not
-    defined at all, 'unnamed' will be used instead.
-
-    Args:
-      root(bpy_types.Object): root object of the model
-      name(str, optional): name for the derived model (Default value = '')
-      objectlist(list: bpy_types.Object): objects to derive the model from
-      objectlist: (Default value = [])
-
-    Returns:
-
-    """
-    import phobos.blender.utils.blender as bUtils
-    import phobos.blender.utils.selection as sUtils
-    import phobos.blender.utils.naming as nUtils
-    import phobos.blender.utils.io as ioUtils
-    from phobos.blender.model.models import deriveTextData
-    from phobos.blender.utils.general import roundFloatsInDict, sortListsInDict
-    from phobos.blender.model.models import (deriveLink, deriveMaterial, deriveJoint,
-                                        deriveLight, deriveGroupEntry, deriveChainEntry, collectMaterials,
-                                        deriveDictEntry)
-    from phobos.blender.model.motors import deriveMotor
-
-    if root.phobostype not in ['link', 'submodel']:
-        log.error(root.name + " is no valid 'link' or 'submodel' object.")
-        return None
-
-    # define model name
-    if name:
-        modelname = name
-    elif 'model/name' in root:
-        modelname = root['model/name']
-    else:
-        modelname = 'unnamed'
-
-    # define model version
-    if 'model/version' in root:
-        modelversion = root['model/version']
-    else:
-        modelversion = 'undefined'
-
-    modeldescription = bUtils.readTextFile('README.md')
-
-    model = {
-        'links': {},
-        'joints': {},
-        'sensors': {},
-        'motors': {},
-        'controllers': {},
-        'materials': {},
-        'meshes': {},
-        'lights': {},
-        'groups': {},
-        'chains': {},
-        'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
-        'name': modelname,
-        'version': modelversion,
-        'description': modeldescription,
-    }
-
-    log.info("Creating dictionary for model '" + modelname + "' with root '" + root.name + "'.")
-
-    # create tuples of objects belonging to model
-    if not objectlist:
-        objectlist = sUtils.getChildren(
-            root, selected_only=ioUtils.getExpSettings().selectedOnly, include_hidden=False
-        )
-    linklist = [link for link in objectlist if link.phobostype == 'link']
-
-    # digest all the links to derive link and joint information
-    log.info("Parsing links, joints and motors... " + (str(len(linklist))) + " total.")
-    for link in linklist:
-        # parse link information (including inertia)
-        model['links'][nUtils.getObjectName(link, 'link')] = deriveLink(
-            link, logging=True, objectlist=objectlist
-        )
-
-        # parse joint and motor information
-        if sUtils.getEffectiveParent(link):
-            # joint may be None if link is a root
-            # to prevent confusion links are always defining also joints
-            jointdict = deriveJoint(link, logging=True, adjust=True)
-            log.debug("  Setting joint type '{}' for link.".format(jointdict['type']))
-            # first check if we have motor information in the joint properties
-            # if so they can be extended/overwritten by motor objects later on
-            if '$motor' in jointdict:
-                motordict = jointdict['$motor']
-                if 'mimic_motor' in motordict:
-                    motordict['type'] = 'mimic'
-                # at least we need a type property, TODO WIESO ? DESHALB FLIEGEN ALLE 'mimic_motor', HOTFIXED
-                if 'type' in motordict:
-                    # if no name is given derive it from the joint
-                    if not 'name' in motordict:
-                        motordict["name"] = jointdict['name']
-                    model['motors'][motordict['name']] = motordict
-                    # link the joint by name:
-                    motordict['joint'] = jointdict['name']
-                del jointdict['$motor']
-
-            model['joints'][jointdict['name']] = jointdict
-
-            for mot in [child for child in link.children if child.phobostype == 'motor']:
-                motordict = deriveMotor(mot, jointdict)
-                # motor may be None if no motor is attached
-                if motordict:
-                    log.debug("  Added motor {} to link.".format(motordict['name']))
-                    if motordict['name'] in model["motors"]:
-                        model['motors'][motordict['name']].update(motordict)
-                    else:
-                        model['motors'][motordict['name']] = motordict
-
-    # parse sensors and controllers
-    sencons = [obj for obj in objectlist if obj.phobostype in ['sensor', 'controller']]
-    log.info("Parsing sensors and controllers... {} total.".format(len(sencons)))
-    for obj in sencons:
-        props = deriveDictEntry(obj, names=True, objectlist=objectlist)
-        model[obj.phobostype + 's'][nUtils.getObjectName(obj)] = props
-
-    # parse materials
-    log.info("Parsing materials...")
-    model['materials'] = collectMaterials(objectlist)
-    for obj in objectlist:
-        if obj.phobostype == 'visual':
-            mat = obj.active_material
-            if mat:
-                if mat.name not in model['materials']:
-                    model['materials'][mat.name] = deriveMaterial(mat)
-                    linkname = nUtils.getObjectName(
-                        sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist))
-                    )
-                    model['links'][linkname]['visual'][nUtils.getObjectName(obj)][
-                        'material'
-                    ] = mat.name
-
-    # identify unique meshes
-    log.info("Parsing meshes...")
-    for obj in objectlist:
-        try:
-            if (
-                    (obj.phobostype == 'visual' or obj.phobostype == 'collision')
-                    and (obj['geometry/type'] == 'mesh')
-                    and (obj.data.name not in model['meshes'])
-            ):
-                model['meshes'][obj.data.name] = obj
-                # todo2.9: for lod in obj.lod_levels:
-                #     if lod.object.data.name not in model['meshes']:
-                #         model['meshes'][lod.object.data.name] = lod.object
-        except KeyError:
-            pass  # log("Undefined geometry type in object " + obj.name, "ERROR")
-
-    # gather information on groups of objects
-    log.info("Parsing groups...")
-    # todo2.9: TODO: get rid of the "data" part and check for relation to robot
-    # for group in bpy.data.groups:
-    #     # skip empty groups
-    #     if not group.objects:
-    #         continue
-
-    #     # handle submodel groups separately from other groups
-    #     if 'submodeltype' in group.keys():
-    #         continue
-    #         # TODO create code to derive Submodels
-    #         # model['submodels'] = deriveSubmodel(group)
-    #     elif nUtils.getObjectName(group, 'group') != "RigidBodyWorld":
-    #         model['groups'][nUtils.getObjectName(group, 'group')] = deriveGroupEntry(group)
-
-    # gather information on chains of objects
-    log.info("Parsing chains...")
-    chains = []
-    for obj in objectlist:
-        if obj.phobostype == 'link' and 'endChain' in obj:
-            chains.extend(deriveChainEntry(obj))
-    for chain in chains:
-        model['chains'][chain['name']] = chain
-
-    # gather information on lights
-    log.info("Parsing lights...")
-    for obj in objectlist:
-        if obj.phobostype == 'light':
-            model['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
-
-    # gather submechanism information from links
-    log.info("Parsing submechanisms...")
-
-    def getSubmechanisms(link):
-        """
-
-        Args:
-          link:
-
-        Returns:
-
-        """
-
-        if 'submechanism/name' in link.keys():
-            submech = {
-                'type': link['submechanism/type'],
-                'contextual_name': link['submechanism/name'],
-                'name': link['submechanism/subtype']
-                if 'submechanism/subtype' in link
-                else link['submechanism/type'],
-                'jointnames_independent': [
-                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/independent']
-                ],
-                'jointnames_spanningtree': [
-                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/spanningtree']
-                ],
-                'jointnames_active': [
-                    nUtils.getObjectName(j, 'joint') for j in link['submechanism/active']
-                ],
-                # TODO: this should work in almost all cases, still a bit of a hack:
-                'file_path': '../submechanisms/urdf/' + link['submechanism/name'] + '.urdf',
-            }
-            log.debug('    ' + submech['contextual_name'])
-        else:
-            submech = None
-        mechanisms = [submech] if submech else []
-        for c in link.children:
-            if c.phobostype in ['link', 'interface'] and c in objectlist:
-                mechanisms.extend(getSubmechanisms(c))
-        return mechanisms
-
-    model['submechanisms'] = getSubmechanisms(root)
-
-    # add additional data to model
-    model.update(deriveTextData(model['name']))
-
-    # shorten numbers in dictionary to n decimalPlaces and return it
-    log.info("Rounding numbers to {} digits.".format(ioUtils.getExpSettings().decimalPlaces))
-    model = roundFloatsInDict(model, ioUtils.getExpSettings().decimalPlaces)
-    log.debug("Sorting objects.")
-    model = sortListsInDict(model)
-    return model

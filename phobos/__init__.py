@@ -66,7 +66,7 @@ def install_requirement(package_name, upgrade_pip=False, lib=None):
         print("  Upgrading pip...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
     # Install package
-    print("  Installing package", package_name, flush=True)
+    print("  Installing package", package_name)
     if lib is None:
         subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
     else:
@@ -89,7 +89,7 @@ def check_requirements(optional=False, force=False, upgrade_pip=False, lib=None)
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
     for r in reqs:
         for import_name, req_name in r.items():
-            print("  Checking", import_name, flush=True)
+            print("  Checking", import_name)
             try:
                 if importlib.util.find_spec(import_name) is None:
                     install_requirement(req_name, upgrade_pip=False, lib=lib)

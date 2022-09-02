@@ -13,6 +13,8 @@ from ..geometry import replace_collision, join_collisions, remove_collision, imp
 from ..io.hyrodyn import ConstraintAxis
 from ..utils import misc, git, urdf, transform, tree
 from ..io import representation, sensor_representations, poses
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 SUBMECHS_VIA_ASSEMBLIES = False
 
@@ -86,7 +88,7 @@ class BaseModel(yaml.YAMLObject):
         if self.modeltype in pipeline.modeltypes.keys():
             self.typedef = pipeline.modeltypes[self.modeltype]
         else:
-            print('Model type {} not known using default!'.format(self.modeltype), flush=True)
+            log.warning('Model type {} not known using default!'.format(self.modeltype))
             self.typedef = pipeline.modeltypes["default"]
         self.ros_pkg_name = self.modelname if "ros_package" in self.typedef.keys() and self.typedef[
             "ros_package"] else None
@@ -165,7 +167,7 @@ class BaseModel(yaml.YAMLObject):
                                 os.path.join(self.exportdir, self.pipeline.meshes["iv"]))
 
     def _process(self):
-        print('Start processing robot', flush=True)
+        log.info('Start processing robot')
 
         self._load_robot()
 
@@ -203,7 +205,7 @@ class BaseModel(yaml.YAMLObject):
                 self.robot.transform_link_orientation(linkname=k, transformation=transformation,
                                                       only_frame=v["only_frame"] if "only_frame" in v.keys() else True,
                                                       transform_to="transform" in v.keys() and v["transform"] == "TO")
-                print('       {}'.format(k), flush=True)
+                log.debug('       {}'.format(k))
 
         if hasattr(self, "move_link_in_tree"):
             for link in self.move_link_in_tree:
@@ -242,7 +244,7 @@ class BaseModel(yaml.YAMLObject):
                 if joint.joint_type == "fixed":
                     continue
                 elif joint.name in self.redefine_articulation.keys():
-                    # print("Overriding joint definition for", joint.name, flush=True)
+                    # print("Overriding joint definition for", joint.name)
                     if joint.limit is None:
                         joint.limit = representation.JointLimit()
                     if "type" in self.redefine_articulation[joint.name].keys():
@@ -306,7 +308,7 @@ class BaseModel(yaml.YAMLObject):
                             "spring_const_constraint_axis1": self.redefine_articulation["default"]["spring_const_constraint_axis1"] if "spring_const_constraint_axis1" in self.redefine_articulation["default"].keys() else False
                         })
                 # else:
-                # print("    Leaving joint", joint.name, "(", joint.type, ") untouched", flush=True)
+                # print("    Leaving joint", joint.name, "(", joint.type, ") untouched")
                 joint.link_with_robot(self.robot)
             for _, transmission in transmissions.items():
                 self.robot.add_aggregate("transmission", transmission)
@@ -330,13 +332,13 @@ class BaseModel(yaml.YAMLObject):
         if hasattr(self, 'replace_collisions'):
             self.edit_collisions = self.replace_collisions
         if hasattr(self, 'edit_collisions'):
-            print('  Replacing collisions', flush=True)
+            log.debug('  Replacing collisions')
             for link in self.robot.links:
                 conf = deepcopy(self.edit_collisions["default"])
                 exclude = self.edit_collisions["exclude"] if "exclude" in self.edit_collisions.keys() else []
                 if link.name in exclude:
                     continue
-                print('       {}'.format(link.name), flush=True)
+                log.debug('       {}'.format(link.name))
                 if link.name in self.edit_collisions.keys():
                     for k, v in self.edit_collisions[link.name].items():
                         conf[k] = v
@@ -368,11 +370,11 @@ class BaseModel(yaml.YAMLObject):
                     #     reduceMeshCollision(self.robot, link.name, reduction=0.3)
 
         if hasattr(self, "smurf"):
-            print('  Smurfing Collisions', flush=True)
+            log.debug('  Smurfing Collisions')
             if 'collisions' in self.smurf.keys():
                 if "auto_bitmask" in self.smurf["collisions"].keys() and \
                         self.smurf["collisions"]["auto_bitmask"] is True:
-                    print("         Setting auto bitmask", flush=True)
+                    log.debug("         Setting auto bitmask")
                     kwargs = self.smurf["collisions"]["default"] if "default" in self.smurf["collisions"].keys() else {}
                     self.robot.set_self_collision(
                         1,
@@ -396,7 +398,7 @@ class BaseModel(yaml.YAMLObject):
                                     conf.pop(key)
                             coll.add_annotations(**conf)
 
-        print('  Re-exporting meshes', flush=True)
+        log.info('  Re-exporting meshes')
         misc.create_symlink(self.pipeline,
                             os.path.join(self.pipeline.temp_dir, self.typedef["meshespath"]),
                             os.path.join(self.exportdir, self.typedef["meshespath"])
@@ -421,7 +423,7 @@ class BaseModel(yaml.YAMLObject):
                         raise NotImplementedError("Can't load bobj meshes!")
                     else:
                         if v.geometry.filename.lower().endswith("obj"):
-                            print("WARNING: Loading obj mesh, where the orientation convention might be unknown")
+                            log.warning("Loading obj mesh, where the orientation convention might be unknown")
                         mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile))
                     meshexport = os.path.join(self.exportdir, self.typedef["meshespath"],
                                               os.path.basename(v.geometry.filename)[:-3])
@@ -457,7 +459,7 @@ class BaseModel(yaml.YAMLObject):
                             "also_export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"]:
                         export_bobj_mesh(mesh, b_meshexport + "bobj", urdf_path=self.exporturdf)
                     processed_meshes.append(v.geometry.filename)
-            # print('       {} with {} meshes as {}'.format(link.name, v_c, self.typedef["output_mesh_format"]), flush=True)
+            # print('       {} with {} meshes as {}'.format(link.name, v_c, self.typedef["output_mesh_format"]))
 
         if hasattr(self, "name_editing_after") and self.name_editing_after is not None:
             self.robot.edit_names(self.name_editing_after)
@@ -490,13 +492,13 @@ class BaseModel(yaml.YAMLObject):
                                            only_urdf=au["only_urdf"] if "only_urdf" in au.keys() else None)
 
         if hasattr(self, "smurf"):
-            print('  Smurfing poses, sensors, links, materials, etc.', flush=True)
+            log.debug('  Smurfing poses, sensors, links, materials, etc.')
 
             if 'poses' in self.smurf.keys():
                 for (cn, config) in self.smurf["poses"].items():
                     pose = poses.JointPoseSet(robot=self.robot, name=cn, configuration=config)
                     self.robot.add_pose(pose)
-                    print('      Added pose {}'.format(cn), flush=True)
+                    log.debug('      Added pose {}'.format(cn))
 
             if 'sensors' in self.smurf.keys():
                 multi_sensors = [x for x in dir(sensor_representations) if
@@ -527,7 +529,7 @@ class BaseModel(yaml.YAMLObject):
 
                     if sensor_ is not None:
                         self.robot.add_sensor(sensor_)
-                        print('      Attached {} {}'.format(s["type"], s['name']), flush=True)
+                        log.debug('      Attached {} {}'.format(s["type"], s['name']))
 
             if 'links' in self.smurf.keys():
                 for link in self.robot.links:
@@ -536,13 +538,13 @@ class BaseModel(yaml.YAMLObject):
                         link_instance = self.robot.get_link(link.name)
                         link_instance.noDataPackage = self.smurf["links"][name]["noDataPackage"] if "noDataPackage" in self.smurf["links"][name].keys() else False
                         link_instance.reducedDataPackage = self.smurf["links"][name]["reducedDataPackage"] if "reducedDataPackage" in self.smurf["links"][name].keys() else False
-                        print('      Defined Link {}'.format(link.name), flush=True)
+                        log.debug('      Defined Link {}'.format(link.name))
 
             if "materials" in self.smurf.keys():
                 for m in self.smurf["materials"]:
                     material_instance = self.robot.get_material(m["name"])
                     material_instance.add_annotations(**m)
-                    print('      Defined Material {}'.format(m["name"]), flush=True)
+                    log.debug('      Defined Material {}'.format(m["name"]))
 
             # motors
             self.robot.motors = []
@@ -580,7 +582,7 @@ class BaseModel(yaml.YAMLObject):
                 for k, v in self.smurf["named_annotations"].items():
                     self.robot.add_named_annotation(k, v)
 
-        print('Finished processing', flush=True)
+        log.info('Finished processing')
 
         return True
 
@@ -607,7 +609,7 @@ class BaseModel(yaml.YAMLObject):
 
         if hasattr(self, "export_joint_limits"):
             def limits_file_export(file_path, output_dict):
-                print("Exporting joint_limits file", os.path.join(self.exportdir, file_path), flush=True)
+                log.debug(f"Exporting joint_limits file {os.path.join(self.exportdir, file_path)}")
                 if not os.path.isdir(os.path.dirname(os.path.join(self.exportdir, file_path))):
                     os.makedirs(os.path.dirname(os.path.join(self.exportdir, file_path)))
                 output_dict = {"limits": output_dict}
@@ -664,8 +666,7 @@ class BaseModel(yaml.YAMLObject):
                     "dirname": "kccd",
                     "reduce_meshes": 0
                 }
-            print("Creating kccd model with config:\n", dump_yaml(self.export_kccd, default_flow_style=False),
-                  flush=True)
+            log.debug(f"Creating kccd model with config:\n {dump_yaml(self.export_kccd, default_flow_style=False)}")
             misc.create_symlink(self.pipeline,
                                 os.path.join(self.pipeline.temp_dir, self.pipeline.meshes["iv"]),
                                 os.path.join(self.exportdir, self.pipeline.meshes["iv"]))
@@ -673,7 +674,7 @@ class BaseModel(yaml.YAMLObject):
                                    edit_collisions=self.edit_collisions, **self.export_kccd)
 
         if hasattr(self, "export_floatingbase") and self.export_floatingbase is True:
-            print("Creating floatingbase model...", flush=True)
+            log.info("Creating floatingbase model...")
             self.robot.export_floatingbase(
                 self.exportdir,
                 ros_pkg_name=self.ros_pkg_name
@@ -686,7 +687,7 @@ class BaseModel(yaml.YAMLObject):
             git.reset(self.targetdir, "autobuild", "master")
             misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
 
-        print('Finished export of the new model', flush=True)
+        log.info('Finished export of the new model')
         self.processed_model_exists = True
 
         if hasattr(self, "post_processing"):
@@ -696,7 +697,7 @@ class BaseModel(yaml.YAMLObject):
                 else:
                     script["cwd"] = os.path.abspath(script["cwd"])
                 misc.execute_shell_command(script["cmd"], script["cwd"])
-            print('Finished post_processing of the new model', flush=True)
+            log.info('Finished post_processing of the new model')
 
         if self.ros_pkg_name is not None:
             # ROS CMakeLists.txt
@@ -863,13 +864,13 @@ class BaseModel(yaml.YAMLObject):
         mr.title = self.pipeline.mr_title if not hasattr(self, "mr_title") else self.mr_title
         mr.description = self.pipeline.mr_description
         if os.path.isfile(self.pipeline.test_protocol):
-            print("INFO: Appending test_protocol to MR description")
+            log.info("Appending test_protocol to MR description")
             with open(self.pipeline.test_protocol, "r") as f:
                 protocol = load_json(f.read())
                 mr.description = misc.append_string(mr.description, "\n" + str(protocol["all"]))
                 mr.description = misc.append_string(mr.description, str(protocol[self.modelname]))
         else:
-            print("INFO: Did not find test_protocol file at:", self.pipeline.test_protocol, flush=True, file=sys.stderr)
+            log.warning(f"Did not find test_protocol file at: {self.pipeline.test_protocol}")
         if failed_model:
             if hasattr(self.pipeline, "mr_mention") or hasattr(self, "mr_mention"):
                 mr.mention = self.pipeline.mr_mention if not hasattr(self, "mr_mention") else self.mr_mention
@@ -878,9 +879,7 @@ class BaseModel(yaml.YAMLObject):
             return_msg = "pushed to " + git.push(repo, branch="master")
             # deploy to mirror
         if hasattr(self, "deploy_to_mirror"):
-            print("Deploying to mirror:\n", dump_yaml(self.deploy_to_mirror, default_flow_style=False), flush=True,
-                  file=sys.stdout)
-            print("Deploying to mirror", flush=True, file=sys.stderr)
+            log.info(f"Deploying to mirror:\n {dump_yaml(self.deploy_to_mirror, default_flow_style=False)}")
             mirror_dir = os.path.join(self.tempdir, "deploy_mirror")
             git.clone(self.pipeline, self.deploy_to_mirror["repo"], mirror_dir, branch="master", shallow=False)
             git.update(mirror_dir, update_remote="origin", update_target_branch=self.deploy_to_mirror["branch"])

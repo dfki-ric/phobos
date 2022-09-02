@@ -13,7 +13,8 @@ from . import geometry
 from .geometry import identical
 from ..defs import BPY_AVAILABLE
 from ..utils import misc, urdf as urdf_utils
-
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 def as_mesh(scene_or_mesh, scale=None):
     if scale is None:
@@ -59,12 +60,12 @@ def export_bobj(outname, mesh):
     # else:
     #     write_uv = False
 
-    print("Exporting", outname, "with", len(mesh.vertices), "vertices...")
+    log.info(f"Exporting {outname} with {len(mesh.vertices)} vertices...")
     if os.path.isfile(outname):
         # TODO load bobj mesh
         # test_mesh = import_mesh(outname)
         # if all(trimesh.comparison.identifier_simple(mesh) == trimesh.comparison.identifier_simple(test_mesh)):
-        print("WARNING: Mesh", outname, " does already exist. Skipping export.", flush=True, file=sys.stderr)
+        log.warning(f"Mesh {outname} does already exist. Skipping export.")
         return
     mesh.fix_normals()
     mesh.merge_vertices()
@@ -218,7 +219,7 @@ def import_mesh(filepath, urdf_path=None):
         raise FileNotFoundError(f"Mesh file {filepath} does not exist!")
     out = as_mesh(trimesh.load_mesh(filepath))
     if out is None:
-        print("WARNING:", filepath, "contains empty mesh!")
+        log.warning(f"{filepath} contains empty mesh!")
     return out
 
 

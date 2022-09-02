@@ -43,7 +43,7 @@ class XTypeModel(CombinedModel):
         if self.processed_model_exists:
             self._load_robot()
 
-        print("Finished reading config and joining models to base model", configfile, flush=True)
+        log.info("Finished reading config and joining models to base model {configfile}")
 
     def _join_to_basefile(self):
         if hasattr(self, "model"):

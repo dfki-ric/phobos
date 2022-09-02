@@ -12,6 +12,8 @@ from .model_testing import ModelTest
 from .compare_model import CompareModel
 from .xtype_model import XTypeModel
 from ..utils import git, misc
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 # Failure States:
 F_LOAD = int('00000001', 2)
@@ -39,7 +41,7 @@ class Pipeline(yaml.YAMLObject):
             setattr(self, k, v)
 
         self.root = os.path.abspath(os.path.join(self.configdir, self.root))
-        print("Working from", self.root, flush=True)
+        log.info(f"Working from {self.root}")
         self.git_rev = git.revision(os.path.abspath(self.configdir))
         self.temp_dir = os.path.join(self.root, "temp")
         self.faillog = os.path.join(self.temp_dir, "failures.txt")
@@ -59,16 +61,16 @@ class Pipeline(yaml.YAMLObject):
                 "meshespath": self.meshes[cfg["output_mesh_format"]]
             })
 
-        print("Model types:\n", dump_yaml(self.modeltypes, default_flow_style=False), flush=True)
-        print("Models to process:", self.model_definitions, flush=True)
-        print("Finished reading config", configfile, flush=True)
+        log.debug(f"Model types:\n {dump_yaml(self.modeltypes, default_flow_style=False)}")
+        log.debug(f"Models to process: {self.model_definitions}")
+        log.debug(f"Finished reading config {configfile}")
 
         self.models = []
         imported_meshes = []
         order = 0
         for md in self.model_definitions:
             order += 1
-            print("Loading ", md, "...", flush=True)
+            log.info(f"Loading {md} ...")
             if md[:-4] not in self.processing_failed.keys():
                 self.processing_failed[md[:-4]] = {"load": "N/A", "process": "N/A", "test": "N/A", "deploy": "N/A",
                                                    "order": order}
@@ -77,13 +79,13 @@ class Pipeline(yaml.YAMLObject):
                 cfg_ = cfg[list(cfg.keys())[0]]
             except KeyError as e:
                 self.processing_failed[md[:-4]]["load"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
-                print("Could not load model config " + md)
+                log.error("Could not load model config " + md)
                 traceback.print_exc()
                 continue
             fstate = self._get_model_failure_state(md[:-4])
             self.processing_failed[md[:-4]]["load"] = ""
             if bool(fstate & (F_PROC | NA_PROC)) and processed_model_exists:
-                print("WARNING: Skipping model " + md + " as it was not successfully processed")
+                log.warning("Skipping model " + md + " as it was not successfully processed")
                 self.processing_failed[md[:-4]]["load"] += \
                     "Skipping model " + md + " as it was not successfully processed!\n"
                 continue
@@ -92,13 +94,13 @@ class Pipeline(yaml.YAMLObject):
                 self.processing_failed[md[:-4]]["process"] = "N/A"
             if "derived_base" in cfg_.keys() and self._get_model_failure_state(cfg_["derived_base"][:-4]) & (
                     F_LOAD | F_PROC):
-                print("WARNING: Skipping model " + md + " as parent model was not successfully processed!")
+                log.warning("Skipping model " + md + " as parent model was not successfully processed!")
                 self.processing_failed[md[:-4]]["load"] += \
                     "Skipping model " + md + " as parent model was not successfully processed!\n"
                 continue
             if "depends_on" in cfg_.keys() and any(["derived_base" in v.keys() and self._get_model_failure_state(
                     v["derived_base"][:-4]) & (F_LOAD | F_PROC) for _, v in cfg_["depends_on"].items()]):
-                print("WARNING: Skipping model " + md + " as at least one parent model was not successfully processed!")
+                log.warning("Skipping model " + md + " as at least one parent model was not successfully processed!")
                 self.processing_failed[md[:-4]]["load"] += \
                     "Skipping model " + md + " as at least one parent model was not successfully processed!\n"
                 continue
@@ -110,9 +112,8 @@ class Pipeline(yaml.YAMLObject):
                 elif list(cfg.keys())[0] == "xtype_model":
                     self.models += [XTypeModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
                 else:
-                    self.processing_failed[md[:-4]][
-                        "load"] = "Skipping " + md + " as it is no valid model definition!\n"
-                    print(self.processing_failed[md[:-4]]["load"])
+                    self.processing_failed[md[:-4]][ "load"] = f"Skipping {md} as it is no valid model definition!\n"
+                    log.error(self.processing_failed[md[:-4]]["load"])
                     continue
                 for m in self.models[-1].get_imported_meshes():
                     for m2 in imported_meshes:
@@ -127,7 +128,7 @@ class Pipeline(yaml.YAMLObject):
                 self.processing_failed[md[:-4]][
                     "load"] += "Loading " + md + " failed with the following error:" + ''.join(
                     traceback.format_exception(None, e, e.__traceback__))
-                print(self.processing_failed[md[:-4]]["load"])
+                log.error(self.processing_failed[md[:-4]]["load"])
                 continue
         if os.path.exists(os.path.join(self.temp_dir)):
             with open(self.faillog, "w") as f:
@@ -196,7 +197,7 @@ class Pipeline(yaml.YAMLObject):
 
     def print_fail_log(self, file=sys.stdout):
         log = load_json(open(self.faillog, "r").read())
-        print("\nModel Failure Report:\n---------------------", file=file)
+        print("\nPipeline Report:\n---------------------", file=file)
         report = [(k, v) for k, v in log.items()]
         order_val = ["order", "load", "process", "test", "deploy"]
         if len(report) == 0:
@@ -230,22 +231,18 @@ class Pipeline(yaml.YAMLObject):
         if any([hasattr(x, "export_kccd") and x.export_kccd is not False for x in self.models]):
             misc.create_dir(self, os.path.join(self.temp_dir, self.meshes["iv"]))
         for model in self.models:
-            print("\nProcessing", model.modelname, "model...", flush=True)
-            print("\nProcessing", model.modelname, "model...", flush=True, file=sys.stderr)
+            log.info(f"\nProcessing {model.modelname} model...")
             if self._get_model_failure_state(model.modelname) & (F_LOAD | NA_LOAD):
                 self.processing_failed[model.modelname]["process"] = \
                     "Skipping ", model.modelname, " as it model definition file wasn't loaded successfully!"
-                print(self.processing_failed[model.modelname]["process"], flush=True)
-                print(self.processing_failed[model.modelname]["process"], flush=True, file=sys.stderr)
+                log.info(self.processing_failed[model.modelname]["process"])
                 continue
             try:
                 model.process()
                 model.export()
                 self.processing_failed[model.modelname]["process"] = "Good"
             except Exception as e:
-                print("\nFailed processing", model.modelname, "model. Skipping to next...", flush=True)
-                print("\nFailed processing", model.modelname, "model with the following error:\n", e, flush=True,
-                      file=sys.stderr)
+                log.error(f"\nFailed processing {model.modelname} model with the following error and skipped to next:\n {e}")
                 self.processing_failed[model.modelname]["process"] = ''.join(
                     traceback.format_exception(None, e, e.__traceback__))
                 traceback.print_exc()
@@ -260,16 +257,13 @@ class Pipeline(yaml.YAMLObject):
         for model in self.models:
             fstate = self._get_model_failure_state(model.modelname)
             if bool(fstate & (F_LOAD | F_PROC | NA_LOAD | NA_PROC)):
-                print("\nSkipping", model.modelname,
-                      "model as it wasn't succesfully created. (Code: " + bin(fstate) + ")", flush=True)
-                print("\nSkipping", model.modelname,
-                      "model as it wasn't succesfully created. (Code: " + bin(fstate) + ")", flush=True,
+                log.warning("\nSkipping", model.modelname,
+                      "model as it wasn't succesfully created. (Code: " + bin(fstate) + ")",
                       file=sys.stderr)
                 continue
             model.processed_model_exists = True
             model._load_robot()
-            print("\nTesting", model.modelname, "model...", flush=True)
-            print("\nTesting", model.modelname, "model...", flush=True, file=sys.stderr)
+            log.info(f"\nTesting {model.modelname} model...")
             try:
                 model.recreate_sym_links()
                 commit_hash = ""
@@ -291,7 +285,7 @@ class Pipeline(yaml.YAMLObject):
                         commit_hash, _ = misc.execute_shell_command("git rev-parse HEAD", compare_model_path)
                         if commit_hash.startswith(str(model.compare_model["ignore_failing_tests_for"])):
                             failures_ignored_for += [model.modelname]
-                        print("Loading compare model:",
+                        log.debug("Loading compare model:",
                               self.relpath(os.path.join(compare_model_path, model.compare_model["model_in_repo"])),
                               flush=True)
                         try:
@@ -308,18 +302,18 @@ class Pipeline(yaml.YAMLObject):
                             )
                         except Exception as e:
                             model.compare_model["issues"] = repr(e)
-                            print("Failed to load compare model. Exception was:\n",
+                            log.error("Failed to load compare model. Exception was:\n",
                                   ''.join(traceback.format_exception(None, e, e.__traceback__)) + "\n")
                             traceback.print_exc()
                     else:
-                        print("WARNING: Compare model not found!", flush=True, file=sys.stderr)
+                        log.warning("Compare model not found!")
 
                 model_test = ModelTest(model, compare_model)
-                print("\nRunning info procedures:", flush=True)
+                log.info("\nRunning info procedures:")
                 for p in dir(model_test):
                     if p.startswith("info_"):
                         getattr(model_test, p)()
-                print("\nRunning test procedures:", flush=True)
+                log.info("\nRunning test procedures:")
                 self.test_results[model.modelname] = {
                     "ignore_failure": commit_hash.startswith(
                         str(model.compare_model["ignore_failing_tests_for"])) if compare_model is not None else False,
@@ -337,46 +331,44 @@ class Pipeline(yaml.YAMLObject):
                     return value
 
                 # these tests will be run always
-                obligatory_tests = ["topological_self_consistency"]
+                obligatory_tests = ["topological_self_consistency", "file_consistency"]
                 for otest in obligatory_tests:
                     if otest not in model.typedef["model_tests"]:
                         model.typedef["model_tests"] += [otest]
                 # let's go testing
                 for test in model.typedef["model_tests"]:
                     if type(test) is str:
-                        print("  -> ", test, flush=True)
+                        print("  -> ", test)
                         if not add_test_result(model.modelname, test, getattr(model_test, "test_" + test)()):
-                            print("Test", test, "failed for", model.modelname, flush=True)
+                            print("Test", test, "failed for", model.modelname)
                     elif type(test) is dict and list(test.keys())[0] == "hyrodynChecks":
                         if not HYRODYN_AVAILABLE:
-                            print("Hyrodyn checks not possible, as Hyrodyn couldn't be loaded", flush=True)
+                            print("Hyrodyn checks not possible, as Hyrodyn couldn't be loaded")
                         for htest in test["hyrodynChecks"]:
                             if type(htest) is str:
-                                print("  -> ", htest, flush=True)
+                                print("  -> ", htest)
                                 if not add_test_result(model.modelname, htest,
                                                        getattr(model_test, "test_hyrodyn_" + htest)()):
-                                    print("Hyrodyn-Test", htest, "failed for", model.modelname, flush=True)
+                                    print("Hyrodyn-Test", htest, "failed for", model.modelname)
                             elif type(htest) is dict and "move_hyrodyn_model" in htest.keys():
                                 k, v = list(htest.items())[0]
                                 getattr(model_test, k)(v)
-                                print("  -> ", k, flush=True)
+                                print("  -> ", k)
                             elif type(htest) is dict:
                                 k, v = list(htest.items())[0]
-                                print("  -> ", k, flush=True)
+                                print("  -> ", k)
                                 if not add_test_result(model.modelname, k, getattr(model_test, "test_hyrodyn_" + k)(v)):
-                                    print("Hyrodyn-Test", k, "failed for", model.modelname, flush=True)
+                                    print("Hyrodyn-Test", k, "failed for", model.modelname)
                             else:
-                                print("Couldn't process test definition", htest)
+                                log.error(f"Couldn't process test definition {htest}")
                     elif type(test) is dict:
                         k, v = list(test.items())[0]
-                        print("  -> ", test, flush=True)
+                        log.info(f"  -> {test}")
                         if not add_test_result(model.modelname, k, getattr(model_test, "test_" + k)(v)):
-                            print("Hyrodyn-Test", test, "failed for", model.modelname, flush=True)
+                            log.error(f"Hyrodyn-Test {test} failed for {model.modelname}")
                 self.processing_failed[model.modelname]["test"] = "Good"
             except Exception as e:
-                print("\nFailed testing", model.modelname, "model. Skipping to next...", flush=True)
-                print("\nFailed testing", model.modelname, "model with the following error:\n", e, flush=True,
-                      file=sys.stderr)
+                log.error(f"\nFailed testing {model.modelname} model with the following error and skipped to nexr:\n {e}")
                 self.processing_failed[model.modelname]["test"] = ''.join(
                     traceback.format_exception(None, e, e.__traceback__)) + "\n"
                 traceback.print_exc()
@@ -387,13 +379,13 @@ class Pipeline(yaml.YAMLObject):
         for modelname, test in self.test_results.items():
             test_protocol[modelname] = ""
             test_protocol[modelname] = misc.append_string(test_protocol[modelname], "  " + modelname, end="",
-                                                          print=True, flush=True)
+                                                          print=True)
             if test["ignore_failure"]:
                 test_protocol[modelname] = misc.append_string(test_protocol[modelname], " (Ignoring failures)", end="",
-                                                              print=True, flush=True)
+                                                              print=True)
             if not test["compare_model_present"]:
                 test_protocol[modelname] = misc.append_string(test_protocol[modelname], " (Compare model not present):",
-                                                              end="", print=True, flush=True)
+                                                              end="", print=True)
             test_protocol[modelname] = misc.append_string(test_protocol[modelname], "\n    " + dump_yaml(
                 {"Compare Model": test["compare_model"]}, default_flow_style=False, indent=6) + "    Test Results:",
                                                           flush=True, print=True)
@@ -409,7 +401,7 @@ class Pipeline(yaml.YAMLObject):
                     test_protocol[modelname] = misc.append_string(test_protocol[modelname], "    ", sign,
                                                                   testname + ":",
                                                                   str(result) if type(result) is bool else result,
-                                                                  print=True, flush=True)
+                                                                  print=True)
                     if not result and not test["ignore_failure"]:
                         success = False
                         if self.processing_failed[modelname]["test"].upper().startswith("GOOD") or \
@@ -417,12 +409,12 @@ class Pipeline(yaml.YAMLObject):
                             self.processing_failed[modelname]["test"] = ""
                         self.processing_failed[modelname][
                             "test"] += "Test " + testname + " failed (and was not ignored)!\n"
-                    #     print(" !!! Causes Failure !!!", flush=True)
+                    #     print(" !!! Causes Failure !!!")
                     # else:
                     #     print(flush=True)
             with open(self.faillog, "w") as f:
                 f.write(dump_json(self.processing_failed, default_flow_style=False))
-        print("The test routine", "succeeded!" if success else "failed!", flush=True)
+        print("The test routine", "succeeded!" if success else "failed!")
         with open(self.test_protocol, "w") as f:
             f.write(dump_json(test_protocol, default_flow_style=False))
         return success
@@ -443,8 +435,7 @@ class Pipeline(yaml.YAMLObject):
                 git.create_pipeline_badge(self, os.path.basename(path), "not processed", "inactive",
                                           target="${BADGE_DIRECTORY}", filename=name + ".svg")
         for name, path in self.meshes.items():
-            print("\nDeploying meshes", path, flush=True)
-            print("\nDeploying meshes", path, flush=True, file=sys.stderr)
+            log.info(f"\nDeploying meshes... {path}")
             repo = os.path.join(self.root, path)
             git.update(repo, update_target_branch="$CI_MESH_UPDATE_TARGET_BRANCH")
             if os.path.basename(path).lower().startswith("lfs"):
@@ -480,21 +471,17 @@ class Pipeline(yaml.YAMLObject):
         for model in self.models:
             fstate = self._get_model_failure_state(model.modelname)
             if bool(fstate & (F_LOAD | F_PROC | NA_LOAD | NA_PROC)):
-                print("\nSkipping", model.modelname,
-                      "model as it wasn't successfully created. (Code: " + bin(fstate) + ")", flush=True)
-                print("\nSkipping", model.modelname,
-                      "model as it wasn't successfully created. (Code: " + bin(fstate) + ")", flush=True,
+                log.warning("\nSkipping", model.modelname,
+                      "model as it wasn't successfully created. (Code: " + bin(fstate) + ")",
                       file=sys.stderr)
                 continue
-            print("\nDeploying", model.modelname, "model...", flush=True)
-            print("\nDeploying", model.modelname, "model...", flush=True, file=sys.stderr)
+            log.info(f"\nDeploying {model.modelname} model...")
             try:
                 dpl_msg = model.deploy(mesh_repos, uses_lfs=uses_lfs,
                                        failed_model=bool(fstate & F_TEST) or bool(fstate & NA_TEST))
                 self.processing_failed[model.modelname]["deploy"] = "Good" + " (" + dpl_msg + ")"
             except Exception as e:
-                print("\nFailed deploying", model.modelname, "model. Skipping to next...", flush=True)
-                print("\nFailed deploying", model.modelname, "model with the following error:\n", e, flush=True,
+                log.error("\nFailed deploying", model.modelname, "model with the following error and skipped to next:\n", e,
                       file=sys.stderr)
                 self.processing_failed[model.modelname]["deploy"] = ''.join(
                     traceback.format_exception(None, e, e.__traceback__))
@@ -534,7 +521,7 @@ class TestingPipeline(yaml.YAMLObject):
         for (k, v) in kwargs.items():
             setattr(self, k, v)
 
-        print("Working from", self.root, flush=True)
+        print("Working from", self.root)
         self.git_rev = git.revision(os.path.abspath(self.root))
         self.git_branch = git.get_branch(os.path.abspath(self.root))
         self.temp_dir = os.path.join(self.root, "temp")
@@ -548,7 +535,7 @@ class TestingPipeline(yaml.YAMLObject):
         self.n_done_tests = 0
         self.processing_failed = {self.model.modelname: {}}
 
-        print("Finished reading config", configfile, flush=True)
+        print("Finished reading config", configfile)
 
     def relpath(self, path):
         return os.path.relpath(path, self.root)
@@ -559,8 +546,7 @@ class TestingPipeline(yaml.YAMLObject):
     def test_models(self):
         """Runs the configured test_routines over all models"""
         failures_ignored_for = []
-        print("\nTesting", self.model.modelname, "model...", flush=True)
-        print("\nTesting", self.model.modelname, "model...", flush=True, file=sys.stderr)
+        log.info(f"\nTesting {self.model.modelname} model...")
         try:
             commit_hash = ""
             compare_model = None
@@ -568,7 +554,7 @@ class TestingPipeline(yaml.YAMLObject):
                 assert (hasattr(self, "compare_model") and self.compare_model is not None)
                 # Load compare model
                 compare_model_path = os.path.join(self.temp_dir, "compare_model")
-                print(self.git_branch, str(self.compare_model["branch"]).strip())
+                log.info(f"{self.git_branch}, {str(self.compare_model['branch']).strip()}")
                 git.clone(
                     self,
                     self.compare_model["git"],
@@ -582,7 +568,7 @@ class TestingPipeline(yaml.YAMLObject):
                 )
                 if self.git_rev == git.revision(compare_model_path):
                     git.checkout(git.get_previous_commit_hash(compare_model_path), compare_model_path)
-                print("Comparing with compare model at commit", git.revision(compare_model_path), flush=True)
+                log.info(f"Comparing with compare model at commit {git.revision(compare_model_path)}")
                 if "ignore_failing_tests_for" not in self.compare_model.keys():
                     self.compare_model["ignore_failing_tests_for"] = "None"
                 if os.path.exists(os.path.join(compare_model_path, self.compare_model["model_in_repo"])):
@@ -590,7 +576,7 @@ class TestingPipeline(yaml.YAMLObject):
                     self.compare_model["commit"] = commit_hash[:8]
                     if commit_hash.startswith(str(self.compare_model["ignore_failing_tests_for"])):
                         failures_ignored_for += [self.model.modelname]
-                    print("Loading compare model:",
+                    log.info("Loading compare model:",
                           self.relpath(os.path.join(compare_model_path, self.compare_model["model_in_repo"])),
                           flush=True)
                     compare_model = CompareModel(
@@ -606,14 +592,14 @@ class TestingPipeline(yaml.YAMLObject):
                                      "submechanisms_file") and self.model.submechanisms_file is not None else None
                     )
                 else:
-                    print("WARNING: Compare model not found!", flush=True, file=sys.stderr)
+                    log.warning("Compare model not found!")
 
             model_test = ModelTest(self.model, compare_model)
-            print("\nRunning info procedures:", flush=True)
+            log.info("\nRunning info procedures:")
             for p in dir(model_test):
                 if p.startswith("info_"):
                     getattr(model_test, p)()
-            print("\nRunning test procedures:", flush=True)
+            log.info("\nRunning test procedures:")
             self.test_results[self.model.modelname] = {
                 "ignore_failure": commit_hash.startswith(
                     str(self.compare_model["ignore_failing_tests_for"])) if compare_model is not None else False,
@@ -638,39 +624,38 @@ class TestingPipeline(yaml.YAMLObject):
             # let's go testing
             for test in self.tests:
                 if type(test) is str:
-                    print("  -> ", test, flush=True)
+                    log.info("  -> {test}")
                     if not add_test_result(self.model.modelname, test, getattr(model_test, "test_" + test)()):
-                        print("Test", test, "failed for", self.model.modelname, flush=True)
+                        log.error(f"Test {test} failed for {self.model.modelname}")
                 elif type(test) is dict and list(test.keys())[0] == "hyrodynChecks":
                     if not HYRODYN_AVAILABLE:
-                        print("Hyrodyn checks not possible, as Hyrodyn couldn't be loaded", flush=True)
+                        log.warning("Hyrodyn checks not possible, as Hyrodyn couldn't be loaded")
                     for htest in test["hyrodynChecks"]:
                         if type(htest) is str:
-                            print("  -> ", htest, flush=True)
+                            log.info(f"  -> {htest}")
                             if not add_test_result(self.model.modelname, htest,
                                                    getattr(model_test, "test_hyrodyn_" + htest)()):
-                                print("Hyrodyn-Test", htest, "failed for", self.model.modelname, flush=True)
+                                log.error(f"Hyrodyn-Test {htest} failed for {self.model.modelname}")
                         elif type(htest) is dict and "move_hyrodyn_model" in htest.keys():
                             k, v = list(htest.items())[0]
                             getattr(model_test, k)(v)
-                            print("  -> ", k, flush=True)
+                            log.info(f"  -> {k}")
                         elif type(htest) is dict:
                             k, v = list(htest.items())[0]
-                            print("  -> ", k, flush=True)
+                            log.info(f"  -> {k}")
                             if not add_test_result(self.model.modelname, k,
                                                    getattr(model_test, "test_hyrodyn_" + k)(v)):
-                                print("Hyrodyn-Test", k, "failed for", self.model.modelname, flush=True)
+                                log.error(f"Hyrodyn-Test {k} failed for {self.model.modelname}")
                         else:
-                            print("Couldn't process test definition", htest)
+                            log.error(f"Couldn't process test definition {htest}")
                 elif type(test) is dict:
                     k, v = list(test.items())[0]
-                    print("  -> ", test, flush=True)
+                    log.info(f"  -> {test}")
                     if not add_test_result(self.model.modelname, k, getattr(model_test, "test_hyrodyn_" + k)(v)):
-                        print("Hyrodyn-Test", test, "failed for", self.model.modelname, flush=True)
+                        log.error(f"Hyrodyn-Test {test} failed for {self.model.modelname}")
             self.processing_failed[self.model.modelname]["test"] = "Good"
         except Exception as e:
-            print("\nFailed testing", self.model.modelname, "model. Skipping to next...", flush=True)
-            print("\nFailed testing", self.model.modelname, "model with the following error:\n", e, flush=True,
+            log.error("\nFailed testing", self.model.modelname, "model with the following error and skipped to next:\n", e,
                   file=sys.stderr)
             self.processing_failed[self.model.modelname]["test"] = ''.join(
                 traceback.format_exception(None, e, e.__traceback__)) + "\n"
@@ -683,13 +668,13 @@ class TestingPipeline(yaml.YAMLObject):
             test_protocol[modelname] = ""
             test_protocol[modelname] = misc.append_string(test_protocol[modelname],
                                                           "  " + modelname + " Commit: " + self.git_rev[:8], end="",
-                                                          print=True, flush=True)
+                                                          print=True)
             if test["ignore_failure"]:
                 test_protocol[modelname] = misc.append_string(test_protocol[modelname], " (Ignoring failures)", end="",
-                                                              print=True, flush=True)
+                                                              print=True)
             if not test["compare_model_present"]:
                 test_protocol[modelname] = misc.append_string(test_protocol[modelname], " (Compare model not present):",
-                                                              end="", print=True, flush=True)
+                                                              end="", print=True)
             test_protocol[modelname] = misc.append_string(test_protocol[modelname], "\n    " + dump_yaml(
                 {"Compare Model": test["compare_model"]}, default_flow_style=False, indent=6) + "    Test Results:",
                                                           flush=True, print=True)
@@ -706,7 +691,7 @@ class TestingPipeline(yaml.YAMLObject):
                     test_protocol[modelname] = misc.append_string(test_protocol[modelname], "    ", sign,
                                                                   testname + ":",
                                                                   str(result) if type(result) is bool else result,
-                                                                  print=True, flush=True)
+                                                                  print=True)
                     if not result and not test["ignore_failure"]:
                         self.n_failed_tests += 1
                         success = False
@@ -715,10 +700,10 @@ class TestingPipeline(yaml.YAMLObject):
                             self.processing_failed[modelname]["test"] = ""
                         self.processing_failed[modelname][
                             "test"] += "Test " + testname + " failed (and was not ignored)!\n"
-                    #     print(" !!! Causes Failure !!!", flush=True)
+                    #     print(" !!! Causes Failure !!!")
                     # else:
                     #     print(flush=True)
-        print("The test routine", "succeeded!" if success else "failed!", flush=True)
+        print("The test routine", "succeeded!" if success else "failed!")
         with open(self.test_protocol, "w") as f:
             f.write(dump_json(test_protocol, default_flow_style=False))
         return success
@@ -742,7 +727,7 @@ class XTypePipeline(yaml.YAMLObject):
             setattr(self, k, v)
 
         self.root = os.getcwd()
-        print("Working from", self.root, flush=True)
+        print("Working from", self.root)
         self.git_rev = git.revision(os.path.abspath(self.configdir))
         self.temp_dir = os.path.join(self.root, "temp")
         self.faillog = os.path.join(self.temp_dir, "failures.txt")
@@ -753,7 +738,7 @@ class XTypePipeline(yaml.YAMLObject):
 
         self.meshespath = self.meshes[self.output_mesh_format]
 
-        print("Finished reading config", configfile, flush=True)
+        print("Finished reading config", configfile)
 
         self.model = None
         imported_meshes = []
@@ -763,12 +748,12 @@ class XTypePipeline(yaml.YAMLObject):
             load_json(open(configfile, "r").read())["xtype_model"]
         except KeyError as e:
             self.processing_failed["load"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
-            print("Could not load model config!")
+            log.error("Could not load model config!")
             traceback.print_exc()
         fstate = self._get_model_failure_state()
         self.processing_failed["load"] = ""
         if bool(fstate & (F_PROC | NA_PROC)) and processed_model_exists:
-            print("WARNING: Model was not successfully processed")
+            log.warning("Model was not successfully processed")
             self.processing_failed["load"] += \
                 "Model was not successfully processed!\n"
         elif bool(fstate & (F_PROC | NA_PROC)):
@@ -787,7 +772,7 @@ class XTypePipeline(yaml.YAMLObject):
         except Exception as e:
             self.processing_failed["load"] += "Loading failed with the following error:" + ''.join(
                 traceback.format_exception(None, e, e.__traceback__))
-            print(self.processing_failed["load"])
+            log.error(self.processing_failed["load"])
         if os.path.exists(os.path.join(self.temp_dir)):
             with open(self.faillog, "w") as f:
                 f.write(dump_json(self.processing_failed, default_flow_style=False))
@@ -834,7 +819,7 @@ class XTypePipeline(yaml.YAMLObject):
 
     def print_fail_log(self, file=sys.stdout):
         log = load_json(open(self.faillog, "r").read())
-        print("\nModel Failure Report:\n---------------------", file=file)
+        print("\nPipeline Report:\n---------------------", file=file)
         report = log
         order_val = ["load", "process", "test", "deploy"]
         if len(report) == 0:
@@ -862,12 +847,10 @@ class XTypePipeline(yaml.YAMLObject):
             misc.create_dir(self, os.path.join(self.temp_dir, self.meshes["bobj"]))
         if hasattr(self, "export_kccd") and self.export_kccd:
             misc.create_dir(self, os.path.join(self.temp_dir, self.meshes["iv"]))
-        print("\nProcessing model...", flush=True)
-        print("\nProcessing model...", flush=True, file=sys.stderr)
+        log.info("\nProcessing model...")
         if self._get_model_failure_state() & (F_LOAD | NA_LOAD):
             self.processing_failed["process"] = "Skipping as it model definition file wasn't loaded successfully!"
-            print(self.processing_failed["process"], flush=True)
-            print(self.processing_failed["process"], flush=True, file=sys.stderr)
+            log.warning(self.processing_failed["process"])
         else:
             try:
                 self.model.process()
@@ -894,8 +877,7 @@ class XTypePipeline(yaml.YAMLObject):
                         os.removedirs(os.path.dirname(os.path.join(self.temp_dir, self.meshes["iv"])))
                 self.processing_failed["process"] = "Good"
             except Exception as e:
-                print("\nFailed processing model. Skipping to next...", flush=True)
-                print("\nFailed processing model with the following error:\n", e, flush=True, file=sys.stderr)
+                log.error(f"\nFailed processing model with the following error and skipped to next:\n {e}")
                 self.processing_failed["process"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
                 traceback.print_exc()
         with open(self.faillog, "w") as f:
@@ -909,12 +891,12 @@ class XTypePipeline(yaml.YAMLObject):
         # failures_ignored_for = []
         # fstate = self._get_model_failure_state(self.model.modelname)
         # if bool(fstate & (F_LOAD | F_PROC | NA_LOAD | NA_PROC)):
-        #     print("\nModel wasn't successfully created. (Code: "+bin(fstate)+")", flush=True)
+        #     print("\nModel wasn't successfully created. (Code: "+bin(fstate)+")")
         #     raise AssertionError("Model wasn't successfully created. (Code: "+bin(fstate)+")",)
         # self.model.processed_model_exists = True
         # self.model._load_robot()
-        # print("\nTesting", self.model.modelname, "model...", flush=True)
-        # print("\nTesting", self.model.modelname, "model...", flush=True, file=sys.stderr)
+        # print("\nTesting", self.model.modelname, "model...")
+        # print("\nTesting", self.model.modelname, "model...", file=sys.stderr)
         # try:
         #     self.model.recreate_sym_links()
         #     commit_hash = ""
@@ -937,7 +919,7 @@ class XTypePipeline(yaml.YAMLObject):
         #             if commit_hash.startswith(str(self.model.compare_model["ignore_failing_tests_for"])):
         #                 failures_ignored_for += [self.model.modelname]
         #             print("Loading compare model:", self.relpath(os.path.join(compare_model_path,
-        #                   self.model.compare_model["model_in_repo"])), flush=True)
+        #                   self.model.compare_model["model_in_repo"])))
         #             try:
         #                 compare_model = CompareModel(
         #                     name=self.model.robotname,
@@ -956,14 +938,14 @@ class XTypePipeline(yaml.YAMLObject):
         #                       ''.join(traceback.format_exception(None, e, e.__traceback__)) + "\n")
         #                 traceback.print_exc()
         #         else:
-        #             print("WARNING: Compare model not found!", flush=True, file=sys.stderr)
+        #             print("WARNING: Compare model not found!", file=sys.stderr)
         #
         #     model_test = ModelTest(self.model, compare_model)
-        #     print("\nRunning info procedures:", flush=True)
+        #     print("\nRunning info procedures:")
         #     for p in dir(model_test):
         #         if p.startswith("info_"):
         #             getattr(model_test, p)()
-        #     print("\nRunning test procedures:", flush=True)
+        #     print("\nRunning test procedures:")
         #     self.test_results[self.model.modelname] = {
         #         "ignore_failure": commit_hash.startswith(str(self.model.compare_model["ignore_failing_tests_for"]))
         #         if compare_model is not None else False,
@@ -987,61 +969,61 @@ class XTypePipeline(yaml.YAMLObject):
         #     # let's go testing
         #     for test in self.model.typedef["model_tests"]:
         #         if type(test) is str:
-        #             print("  -> ", test, flush=True)
+        #             print("  -> ", test)
         #             if not add_test_result(self.model.modelname, test, getattr(model_test, "test_"+test)()):
-        #                 print("Test", test, "failed for", self.model.modelname, flush=True)
+        #                 print("Test", test, "failed for", self.model.modelname)
         #         elif type(test) is dict and list(test.keys())[0] == "hyrodynChecks":
         #             if not HYRODYN_AVAILABLE:
-        #                 print("Hyrodyn checks not possible, as Hyrodyn couldn't be loaded", flush=True)
+        #                 print("Hyrodyn checks not possible, as Hyrodyn couldn't be loaded")
         #             for htest in test["hyrodynChecks"]:
         #                 if type(htest) is str:
-        #                     print("  -> ", htest, flush=True)
+        #                     print("  -> ", htest)
         #                     if not add_test_result(self.model.modelname, htest,
         #                                            getattr(model_test, "test_hyrodyn_"+htest)()):
-        #                         print("Hyrodyn-Test", htest, "failed for", self.model.modelname, flush=True)
+        #                         print("Hyrodyn-Test", htest, "failed for", self.model.modelname)
         #                 elif type(htest) is dict and "move_hyrodyn_model" in htest.keys():
         #                     k, v = list(htest.items())[0]
         #                     getattr(model_test, k)(v)
-        #                     print("  -> ", k, flush=True)
+        #                     print("  -> ", k)
         #                 elif type(htest) is dict:
         #                     k, v = list(htest.items())[0]
-        #                     print("  -> ", k, flush=True)
+        #                     print("  -> ", k)
         #                     if not add_test_result(self.model.modelname, k,
         #                                            getattr(model_test, "test_hyrodyn_"+k)(v)):
-        #                         print("Hyrodyn-Test", k, "failed for", self.model.modelname, flush=True)
+        #                         print("Hyrodyn-Test", k, "failed for", self.model.modelname)
         #                 else:
         #                     print("Couldn't process test definition", htest)
         #         elif type(test) is dict:
         #             k, v = list(test.items())[0]
-        #             print("  -> ", test, flush=True)
+        #             print("  -> ", test)
         #             if not add_test_result(self.model.modelname, k, getattr(model_test, "test_hyrodyn_" + k)(v)):
-        #                 print("Hyrodyn-Test", test, "failed for", self.model.modelname, flush=True)
+        #                 print("Hyrodyn-Test", test, "failed for", self.model.modelname)
         #     self.processing_failed[self.model.modelname]["test"] = "Good"
         # except Exception as e:
-        #     print("\nFailed testing", self.model.modelname, "model. Skipping to next...", flush=True)
-        #     print("\nFailed testing", self.model.modelname, "model with the following error:\n", e, flush=True,
+        #     print("\nFailed testing", self.model.modelname, "model. Skipping to next...")
+        #     print("\nFailed testing", self.model.modelname, "model with the following error:\n", e,
         #           file=sys.stderr)
         #     self.processing_failed[self.model.modelname]["test"] = ''.join(traceback.format_exception(None, e,
         #     e.__traceback__)) + "\n"
         #     traceback.print_exc()
         # test_protocol = {"all": ""}
         # test_protocol["all"] = misc.appendString(test_protocol["all"], "----------\nTest protocol:",
-        #                                          print=True, flush=True)
+        #                                          print=True)
         # success = True
         # for modelname, test in self.test_results.items():
         #     test_protocol[modelname] = ""
         #     test_protocol[modelname] = misc.appendString(test_protocol[modelname], "  "+modelname, end="",
-        #                                                  print=True, flush=True)
+        #                                                  print=True)
         #     if test["ignore_failure"]:
         #         test_protocol[modelname] = misc.appendString(test_protocol[modelname], " (Ignoring failures)",
-        #                                                      end="", print=True, flush=True)
+        #                                                      end="", print=True)
         #     if not test["compare_model_present"]:
         #         test_protocol[modelname] = misc.appendString(test_protocol[modelname],
         #                                                      " (Compare model not present):",
-        #                                                      end="", print=True, flush=True)
+        #                                                      end="", print=True)
         #     test_protocol[modelname] = misc.appendString(
         #         test_protocol[modelname], "\n    "+dump_yaml({"Compare Model": test["compare_model"]},
-        #         default_flow_style=False, indent=6)+"    Test Results:", flush=True, print=True)
+        #         default_flow_style=False, indent=6)+"    Test Results:", print=True)
         #     for testname, result in test.items():
         #         if testname in ["ignore_failure", "compare_model_present", "compare_model"]:
         #             continue
@@ -1053,7 +1035,7 @@ class XTypePipeline(yaml.YAMLObject):
         #                 sign = "-"
         #             test_protocol[modelname] = misc.appendString(
         #                 test_protocol[modelname], "    ", sign, testname+":",
-        #                 str(result) if type(result) is bool else result, print=True, flush=True)
+        #                 str(result) if type(result) is bool else result, print=True)
         #             if not result and not test["ignore_failure"]:
         #                 success = False
         #                 if self.processing_failed[modelname]["test"].upper().startswith("GOOD") or\
@@ -1061,12 +1043,12 @@ class XTypePipeline(yaml.YAMLObject):
         #                     self.processing_failed[modelname]["test"] = ""
         #                 self.processing_failed[modelname]["test"] += "Test " + testname + ""
         #                     "failed (and was not ignored)!\n"
-        #             #     print(" !!! Causes Failure !!!", flush=True)
+        #             #     print(" !!! Causes Failure !!!")
         #             # else:
         #             #     print(flush=True)
         #     with open(self.faillog, "w") as f:
         #         f.write(dump_json(self.processing_failed, default_flow_style=False))
-        # print("The test routine", "succeeded!" if success else "failed!", flush=True)
+        # print("The test routine", "succeeded!" if success else "failed!")
         # with open(self.test_protocol, "w") as f:
         #     f.write(dump_json(test_protocol, default_flow_style=False))
         # return success
@@ -1080,8 +1062,8 @@ class XTypePipeline(yaml.YAMLObject):
         # # copying the files to the repos
         # uses_lfs = False
         # for name, path in self.meshes.items():
-        #     print("\nDeploying meshes", path, flush=True)
-        #     print("\nDeploying meshes", path, flush=True, file=sys.stderr)
+        #     print("\nDeploying meshes", path)
+        #     print("\nDeploying meshes", path, file=sys.stderr)
         #     repo = os.path.join(self.root, path)
         #     git.update(repo, update_target_branch="$CI_MESH_UPDATE_TARGET_BRANCH")
         #     if os.path.basename(path).lower().startswith("lfs"):
@@ -1113,12 +1095,12 @@ class XTypePipeline(yaml.YAMLObject):
         #     fstate = self._get_model_failure_state(model.modelname)
         #     if bool(fstate & (F_LOAD | F_PROC | NA_LOAD | NA_PROC)):
         #         print("\nSkipping", model.modelname, "model as it wasn't successfully created."
-        #               " (Code: "+bin(fstate)+")", flush=True)
+        #               " (Code: "+bin(fstate)+")")
         #         print("\nSkipping", model.modelname, "model as it wasn't successfully created."
-        #               " (Code: "+bin(fstate)+")", flush=True, file=sys.stderr)
+        #               " (Code: "+bin(fstate)+")", file=sys.stderr)
         #         continue
-        #     print("\nDeploying", model.modelname, "model...", flush=True)
-        #     print("\nDeploying", model.modelname, "model...", flush=True, file=sys.stderr)
+        #     print("\nDeploying", model.modelname, "model...")
+        #     print("\nDeploying", model.modelname, "model...", file=sys.stderr)
         #     try:
         #         model.deploy(mesh_repos, uses_lfs=uses_lfs,
         #                      failed_model=bool(fstate & F_TEST) or bool(fstate & NA_TEST))
@@ -1126,7 +1108,7 @@ class XTypePipeline(yaml.YAMLObject):
         #                                                             ("develop" if bool(fstate & F_TEST) else "master")
         #                                                             + ")"
         #     except Exception as e:
-        #         print("\nFailed deploying", model.modelname, "model. Skipping to next...", flush=True)
+        #         print("\nFailed deploying", model.modelname, "model. Skipping to next...")
         #         print("\nFailed deploying", model.modelname, "model with the following error:\n", e,
         #               flush=True, file=sys.stderr)
         #         self.processing_failed[model.modelname]["deploy"] = ''.join(

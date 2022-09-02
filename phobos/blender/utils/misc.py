@@ -1,4 +1,4 @@
-from phobos.core.robot import derive_model_dictionary
+from phobos.blender.model.models import deriveModelDictionary
 
 
 def print_model_dict(name='', objectlist=[], indent=0):
@@ -8,7 +8,7 @@ def print_model_dict(name='', objectlist=[], indent=0):
     import bpy
     import phobos.blender.utils.selection as sUtils
     root = sUtils.getRoot(bpy.context.selected_objects[0])
-    blender_model = derive_model_dictionary(root, name, objectlist)
+    blender_model = deriveModelDictionary(root, name, objectlist)
     print_dict(blender_model, indent)
 
 

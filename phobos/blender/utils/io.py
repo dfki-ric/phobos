@@ -489,7 +489,8 @@ def exportModel(model, exportpath='.', entitytypes=None):
         exportpath = getExportPath()
     if not entitytypes:
         entitytypes = getEntityTypesForExport()
-    exportpath += model['name']
+    if not exportpath.endswith(model["name"]) and not exportpath.endswith(model["name"]+"/"):
+        exportpath += model['name']
 
     # TODO: Move texture export to individual formats? This is practically SMURF
     # TODO: Also, this does not properly take care of textures embedded in a .blend file
@@ -558,7 +559,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
     export_args = {
         "outputdir": exportpath,
         "formats": [format for format in entitytypes
-                    if format in ["urdf", "srdf", "sdf"] and getattr(bpy.context.scene, 'export_entity_'+format, False)
+                    if format in ["urdf", "sdf"] and getattr(bpy.context.scene, 'export_entity_'+format, False)
                     ],
         "ros_pkg": getattr(getExpSettings(), 'outputPathtype', "relative") == "ros_package",
         "ros_pkg_name": None if len(getRosPackageName()) == 0 else getRosPackageName(),

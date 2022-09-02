@@ -1,5 +1,4 @@
 #!python3
-from ..utils.commandline_logging import get_logger
 
 
 from ..defs import PYBULLET_AVAILABLE
@@ -20,6 +19,7 @@ def main(args):
     import argparse
     import os
     from ..defs import BASE_LOG_LEVEL
+    from ..utils.commandline_logging import setup_logger_level
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
     parser.add_argument('smurfs', type=str, help='Path to the smurfs file', default="pipeline.yml")
@@ -31,7 +31,7 @@ def main(args):
                         default=BASE_LOG_LEVEL)
     arguments = parser.parse_args(args)
 
-    log = get_logger(__name__, verbose_argument=arguments.loglevel)
+    log = setup_logger_level(log_level=arguments.loglevel)
     import os
     from copy import deepcopy
     import numpy as np

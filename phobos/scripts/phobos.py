@@ -1,7 +1,5 @@
 #!python
 from pkg_resources import get_distribution, DistributionNotFound
-from ..utils.commandline_logging import get_logger
-log = get_logger(__name__)
 
 try:
     # Change here if project is renamed and does not equal the package name
@@ -24,7 +22,7 @@ def main():
 
     if len(sys.argv) > 1 and sys.argv[1] in [ascr[0] for ascr in available_scripts + unavailable_scripts]:
         if sys.argv[1] in unavailable_scripts:
-            log.warning("Attention: Script might not work properly:" + str(getattr(scripts, sys.argv[1]).cant_be_used_msg()))
+            print(f"Attention: Script might not work properly:" + getattr(scripts, sys.argv[1]).cant_be_used_msg())
         getattr(scripts, sys.argv[1]).main(sys.argv[2:])
     else:
         print("Phobos is a tool to process simulation models \n")
