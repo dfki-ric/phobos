@@ -37,6 +37,26 @@ class Robot(SMURFRobot):
             self.name = name
         self._submodels = {}
 
+    def robot_to_model_dictionary(self):
+        robot_dict = self.__dict__
+        model = {
+            'links': {},
+            'joints': {},
+            'sensors': {},
+            'motors': {},
+            'controllers': {},
+            'materials': {},
+            'meshes': {},
+            'lights': {},
+            'groups': {},
+            'chains': {},
+            'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
+            'name': robot_dict["name"],
+            'version': self.version,
+            'description': robot_dict["description"],
+        }
+        return model
+
     @classmethod
     def get_robot_from_blender_dict(cls, name='', objectlist=[], blender_model=None):
         """
