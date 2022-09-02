@@ -89,6 +89,29 @@ class Robot(SMURFRobot):
                                                       "material": [],
                                                       "geometry": []
                                                       }
+        for joint_instance in robot_dict["joints"]:
+            joint_dict = joint_instance.__dict__
+            print(joint_instance.__dict__)
+            if joint_dict["joint_type"] == 'fixed':
+                model["links"][joint_instance.name] = {"name": joint_instance.name,
+                                                       "type": joint_dict["joint_type"],
+                                                       "parent": robot_dict["parent_map"].get(joint_instance.name)[1],
+                                                       "child": robot_dict["child_map"][joint_instance.name][0][1] if
+                                                       joint_instance.name in robot_dict["child_map"].keys() else
+                                                       joint_instance.name
+                                                      }
+            elif joint_dict["joint_type"] == 'revolute':
+                model["links"][joint_instance.name] = {"name": joint_instance.name,
+                                                       "type": joint_dict["joint_type"],
+                                                       "parent": robot_dict["parent_map"].get(joint_instance.name)[1],
+                                                       "child": robot_dict["child_map"][joint_instance.name][0][1] if
+                                                       joint_instance.name in robot_dict["child_map"].keys() else
+                                                       joint_instance.name,
+                                                       "axis": [],
+                                                       "limits": []
+                                                       }
+
+
         return model
 
     @classmethod
