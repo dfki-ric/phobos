@@ -55,6 +55,40 @@ class Robot(SMURFRobot):
             'version': self.version,
             'description': robot_dict["description"],
         }
+        for link_instance in robot_dict["links"]:  # to_yaml funktion anschauen in io.yankreflec
+            link_dict = link_instance.__dict__
+            if link_dict.get("inertial") is not None:
+                inertial_dict = link_dict["inertial"].__dict__
+                inertia_dict = inertial_dict["inertia"].__dict__
+                pose_dict = inertial_dict["origin"].__dict__
+                inertia_dict.pop("_class_attributes")
+                model["links"][link_instance.name] = {"name": link_instance.name,
+                                                      "children": [x[1] for x in
+                                                                   robot_dict["child_map"].get(link_instance.name)] if
+                                                      robot_dict["child_map"].get(
+                                                          link_instance.name) is not None else " ",
+                                                      "inertial": {"pose": {'translation': list(pose_dict["xyz"]),
+                                                                            'rotation_euler': list(pose_dict["rpy"]),
+                                                                            },
+                                                                   "mass": inertial_dict["mass"],
+                                                                   "inertia": [*inertia_dict.values()],
+                                                                   "name": f"inertial_{link_instance.name}"
+                                                                   },
+                                                      "visual": [],
+                                                      "material": [],
+                                                      "geometry": []
+                                                      }
+            else:
+                model["links"][link_instance.name] = {"name": link_instance.name,
+                                                      "children": [x[1] for x in
+                                                                   robot_dict["child_map"].get(link_instance.name)] if
+                                                      robot_dict["child_map"].get(
+                                                          link_instance.name) is not None else " ",
+                                                      "inertial": [],
+                                                      "visual": [],
+                                                      "material": [],
+                                                      "geometry": []
+                                                      }
         return model
 
     @classmethod
