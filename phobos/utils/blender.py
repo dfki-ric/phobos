@@ -373,7 +373,7 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
     for ob in bpy.data.objects:
         if not (ob in objects):
             ob.hide_render = True
-            ob.hide = True
+            ob.hide_viewport = True
 
     # render the preview
     if opengl:  # use the viewport representation to create preview
@@ -381,7 +381,7 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
         bpy.ops.render.opengl(view_context=True)
     else:  # use real rendering
         # create camera
-        bpy.ops.object.camera_add(view_align=True)
+        bpy.ops.object.camera_add(align='VIEW')
         cam = bpy.context.active_object
         bpy.data.cameras[cam.data.name].type = 'ORTHO'
         bpy.data.scenes[0].camera = cam  # set camera as active camera
@@ -389,14 +389,14 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
         sUtils.selectObjects(objects, True, 0)
         bpy.ops.view3d.camera_to_view_selected()
         # create light
-        bpy.ops.object.lamp_add(type='SUN', radius=1)
+        bpy.ops.object.light_add(type='SUN', radius=1)
         light = bpy.context.active_object
         light.matrix_world = cam.matrix_world
         # set background
-        oldcolor = bpy.data.worlds[0].horizon_color.copy()
-        bpy.data.worlds[0].horizon_color = mathutils.Color((1.0, 1.0, 1.0))
+        oldcolor = bpy.data.worlds['World'].node_tree.nodes['Background'].inputs[0].default_value[:3]
+        bpy.data.worlds['World'].node_tree.nodes['Background'].inputs[0].default_value[:3] = (1,1,1)
         bpy.ops.render.render()
-        bpy.data.worlds[0].horizon_color = oldcolor
+        bpy.data.worlds['World'].node_tree.nodes['Background'].inputs[0].default_value[:3] = oldcolor
         sUtils.selectObjects([cam, light], True, 0)
         bpy.ops.object.delete()
 
@@ -407,7 +407,7 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
     # make all objects visible again
     for ob in bpy.data.objects:
         ob.hide_render = False
-        ob.hide = False
+        ob.hide_viewport = False
 
 
 def toggleTransformLock(obj, setting=None):
