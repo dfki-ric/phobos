@@ -161,11 +161,10 @@ class ModelTest(object):
         max_length = max(*[len(n) for n in new_link_masses.keys()])
         for k in new_link_masses.keys():
             link_name = k + (max_length - len(k)) * " "
-            outmsg = None
             if k not in old_link_masses.keys():
                 outmsg = "%s New: %8.4e\t Old: non-existent\n" % (link_name, new_link_masses[k])
                 continue
-            outmsg += "%s New: %8.4e\t Old: %8.4e\t Diff: %8.4e" % (link_name, new_link_masses[k], old_link_masses[k], new_link_masses[k] - old_link_masses[k])
+            outmsg = "%s New: %8.4e\t Old: %8.4e\t Diff: %8.4e" % (link_name, new_link_masses[k], old_link_masses[k], new_link_masses[k] - old_link_masses[k])
             if abs(new_link_masses[k] - old_link_masses[k]) > self.new.tolerances["tolerance_mass"]:
                 outmsg +=" too big!"
                 success = False
@@ -219,8 +218,7 @@ class ModelTest(object):
             if k not in root2old_links.keys():
                 log.info("%s doesn't exist in compare model" % link_name)
                 _temp_pose = Pose.from_matrix(root2new_links[k])
-                log.info("root2link: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple(_temp_pose.xyz.tolist() + _temp_pose.rpy.tolist()),
-                      flush=True)
+                log.info("root2link: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple(_temp_pose.xyz.tolist() + _temp_pose.rpy.tolist()))
                 continue
             diff = np.linalg.inv(root2old_links[k]).dot(root2new_links[k])
             diff_o = representation.Pose.from_matrix(diff)
@@ -228,11 +226,11 @@ class ModelTest(object):
             if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["tolerance_distance"] or \
                any(abs(diff_o.rpy) > [self.new.tolerances["tolerance_rad"]]*3):
                 if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["tolerance_distance"]:
-                    outmsg += " %.6f" % (np.linalg.norm(diff[0:3, 3])), ">", self.new.tolerances["tolerance_distance"]
+                    outmsg += " %.6f" % (np.linalg.norm(diff[0:3, 3])) + " > " + str(self.new.tolerances["tolerance_distance"])
                 if any(abs(diff_o.rpy) > [self.new.tolerances["tolerance_rad"]]*3):
-                    outmsg += abs(diff_o.rpy), ">", [self.new.tolerances["tolerance_rad"]]*3
+                    outmsg += str(abs(diff_o.rpy)) + " > " + str([self.new.tolerances["tolerance_rad"]]*3)
                 outmsg += " !!!"
-                log.erro(outmsg)
+                log.error(outmsg)
                 # print("Difference as Transformation Matrix from old to new:")
                 # print(diff)
                 success = False
@@ -246,22 +244,10 @@ class ModelTest(object):
             return "skipped (no model to compare)"
         # The new model is allowed to have more joints/links than the previous
         log.info("New model contains:")
-        log.info("Links", sorted(
-            set([link.name for link in self.new.robot.links])
-            - set([link.name for link in self.old.links])
-        ))
-        log.info("Coll", sorted(
-            set([collision.name for link in self.new.robot.links for collision in link.collisions])
-            - set([collision.name for link in self.old.links for collision in link.collisions])
-        ))
-        log.info("Vis", sorted(
-            set([visual.name for link in self.new.robot.links for visual in link.visuals])
-            - set([visual.name for link in self.old.links for visual in link.visuals])
-        ))
-        log.info("Joints", sorted(
-            set([joint.name for joint in self.new.robot.joints])
-            - set([joint.name for joint in self.old.joints])
-        ))
+        log.info(f"Links {sorted(set([link.name for link in self.new.robot.links]) - set([link.name for link in self.old.links]))}")
+        log.info(f"Coll {sorted(set([collision.name for link in self.new.robot.links for collision in link.collisions]) - set([collision.name for link in self.old.links for collision in link.collisions]))}")
+        log.info(f"Vis {sorted(set([visual.name for link in self.new.robot.links for visual in link.visuals]) - set([visual.name for link in self.old.links for visual in link.visuals]))}")
+        log.info(f"Joints {sorted(set([joint.name for joint in self.new.robot.joints]) - set([joint.name for joint in self.old.joints]))}")
         changed_joint_types1 = set([joint.name + ":" + joint.joint_type for joint in self.new.robot.joints]) - \
                                set([joint.name + ":" + joint.joint_type for joint in self.old.joints])
         log.info(f"JTypes {sorted(changed_joint_types1)}")

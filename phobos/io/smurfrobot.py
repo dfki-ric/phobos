@@ -143,8 +143,12 @@ class SMURFRobot(XMLRobot):
                 input_args = {}
                 existing = self.get_sensor(sensor_def["name"])
                 sensor = getattr(sensor_representations, sensor_def["type"])(**sensor_def)
-                if existing is not None and existing != sensor:
-                    log.warning(f"There is already a sensor with name {sensor_def['name']}")
+                if existing is not None and not existing.equivalent(sensor):
+                    log.debug(f"Replacing existing sensor with name {sensor_def['name']}\n"
+                                f"existing: {existing.to_yaml()}\n"
+                                f"new: {sensor.to_yaml()}")
+                    self.remove_aggregate("sensors", existing)
+                    self.add_sensor(sensor)
                 elif existing is None:
                     self.add_sensor(sensor)
 

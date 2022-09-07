@@ -5,6 +5,8 @@ import numpy as np
 from copy import deepcopy
 from xml.dom.minidom import parseString
 from xml.etree import ElementTree as ET
+
+from ..defs import dump_json
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
 
@@ -78,7 +80,7 @@ def append_string(s, *args, **kwargs):
         new += "\n"
     if "print" in kwargs.keys() and kwargs["print"]:
         kwargs.pop("print")
-        log.debug(*args, **kwargs)
+        log.debug(" ".join(args) + dump_json(kwargs))
     return s + new
 
 
@@ -170,16 +172,20 @@ def edit_name_string(name, prefix=None, suffix=None, replacements=None):
     return name
 
 
-def list_files(startpath, ignore=["\.git"]):
+def list_files(startpath, ignore=["\.git"], resolve_symlinks=False, abs_path=False):
     file_list = []
     for directory, _, files in os.walk(startpath, followlinks=True):
-        directory = os.path.relpath(directory, startpath)
+        if not abs_path:
+            directory = os.path.relpath(directory, startpath)
         if any([re.search(pattern, directory) is not None for pattern in ignore]):
             continue
         for file in files:
             if any([re.search(pattern, file) is not None for pattern in ignore]):
                 continue
-            path = os.path.join(directory, file)
+            path = (os.path.join(directory, file))
+            if resolve_symlinks:
+                assert abs_path == True, "Use abs_path=True when resolving symlinks"
+                path = os.path.realpath(os.path.abspath(path))
             file_list += [path]
     return sorted(file_list)
 

@@ -52,6 +52,8 @@ class BaseModel(yaml.YAMLObject):
         # self.tempfile = os.path.join(self.tempdir,)
         self.targetdir = os.path.join(self.pipeline.root, self.modelname)
 
+        self.processed_meshes = []
+
         # list directly imported mesh pathes
         self._meshes = []
         if hasattr(self, "basefile"):
@@ -409,11 +411,11 @@ class BaseModel(yaml.YAMLObject):
                                 os.path.join(self.pipeline.temp_dir, self.pipeline.meshes["bobj"]),
                                 os.path.join(self.exportdir, self.pipeline.meshes["bobj"])
                                 )
-        processed_meshes = []
+        assert self.processed_meshes == []
         for link in self.robot.links:
             v_c = 0
             for v in link.visuals + link.collisions:
-                if isinstance(v.geometry, representation.Mesh) and v.geometry.filename not in processed_meshes:
+                if isinstance(v.geometry, representation.Mesh) and v.geometry.filename not in self.processed_meshes:
                     v_c += 1
                     if "mars_obj" in v.geometry.filename.lower() or (
                             "input_meshes_are_mars_obj" in self.typedef.keys() and
@@ -455,10 +457,11 @@ class BaseModel(yaml.YAMLObject):
                         v.geometry.filename += "dae"
                     else:
                         raise ValueError("Unknown mesh type" + self.typedef["output_mesh_format"].lower())
+                    self.processed_meshes.append(os.path.realpath(v.geometry._filename))
                     if self.typedef["output_mesh_format"].lower() != "bobj" and \
                             "also_export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"]:
-                        export_bobj_mesh(mesh, b_meshexport + "bobj", urdf_path=self.exporturdf)
-                    processed_meshes.append(v.geometry.filename)
+                        _filepath = export_bobj_mesh(mesh, b_meshexport + "bobj", urdf_path=self.exporturdf)
+                        self.processed_meshes.append(os.path.realpath(_filepath))
             # print('       {} with {} meshes as {}'.format(link.name, v_c, self.typedef["output_mesh_format"]))
 
         if hasattr(self, "name_editing_after") and self.name_editing_after is not None:

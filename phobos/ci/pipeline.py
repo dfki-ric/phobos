@@ -225,11 +225,21 @@ class Pipeline(yaml.YAMLObject):
         # create the central mesh folders
         for name, cfg in self.modeltypes.items():
             misc.create_dir(self, os.path.join(self.temp_dir, cfg["meshespath"]))
+            ext = None
+            if cfg["meshespath"].endswith("stl"):
+                ext = "stl"
+            elif cfg["meshespath"].endswith("bobj"):
+                ext = "bobj"
+            elif cfg["meshespath"].endswith("obj"):
+                ext = "obj"
+            misc.copy(self, os.path.join(self.root, cfg["meshespath"], "*."+ext), os.path.join(self.temp_dir, cfg["meshespath"]))
         if any(["also_export_bobj" in x and x["also_export_bobj"] is True for x in
                 [v for k, v in self.modeltypes.items() if "smurf" in k]]):
             misc.create_dir(self, os.path.join(self.temp_dir, self.meshes["bobj"]))
+            misc.copy(self, os.path.join(self.root, self.meshes["bobj"], "*.bobj"), os.path.join(self.temp_dir, self.meshes["bobj"]))
         if any([hasattr(x, "export_kccd") and x.export_kccd is not False for x in self.models]):
             misc.create_dir(self, os.path.join(self.temp_dir, self.meshes["iv"]))
+        processed_meshes = []
         for model in self.models:
             log.info(f"\nProcessing {model.modelname} model...")
             if self._get_model_failure_state(model.modelname) & (F_LOAD | NA_LOAD):
@@ -239,6 +249,7 @@ class Pipeline(yaml.YAMLObject):
                 continue
             try:
                 model.process()
+                processed_meshes += model.processed_meshes
                 model.export()
                 self.processing_failed[model.modelname]["process"] = "Good"
             except Exception as e:
@@ -246,6 +257,18 @@ class Pipeline(yaml.YAMLObject):
                 self.processing_failed[model.modelname]["process"] = ''.join(
                     traceback.format_exception(None, e, e.__traceback__))
                 traceback.print_exc()
+        # Remove all mesh files we have initially copied but that haven't been processed
+        existing_meshes = []
+        for name, cfg in self.modeltypes.items():
+            # misc.create_dir(self, os.path.join(self.temp_dir, cfg["meshespath"]))
+            existing_meshes += misc.list_files(os.path.join(self.temp_dir, cfg["meshespath"]), ignore=["\.gv", "\.pdf", "\.git*", "README\.md", "manifest\.xml"],
+                                                            resolve_symlinks=True, abs_path=True)
+        existing_meshes = set(existing_meshes)
+        processed_meshes = set(processed_meshes)
+        for unused_mesh in existing_meshes - processed_meshes:
+            log.debug("Removing unused mesh: "+unused_mesh)
+            assert os.path.isfile(unused_mesh)
+            os.remove(unused_mesh)
         with open(self.faillog, "w") as f:
             f.write(dump_json(self.processing_failed, default_flow_style=False))
 
@@ -285,9 +308,7 @@ class Pipeline(yaml.YAMLObject):
                         commit_hash, _ = misc.execute_shell_command("git rev-parse HEAD", compare_model_path)
                         if commit_hash.startswith(str(model.compare_model["ignore_failing_tests_for"])):
                             failures_ignored_for += [model.modelname]
-                        log.debug("Loading compare model:",
-                              self.relpath(os.path.join(compare_model_path, model.compare_model["model_in_repo"])),
-                              flush=True)
+                        log.debug(f"Loading compare model: {self.relpath(os.path.join(compare_model_path, model.compare_model['model_in_repo']))}")
                         try:
                             compare_model = CompareModel(
                                 name=model.robotname,
@@ -302,8 +323,8 @@ class Pipeline(yaml.YAMLObject):
                             )
                         except Exception as e:
                             model.compare_model["issues"] = repr(e)
-                            log.error("Failed to load compare model. Exception was:\n",
-                                  ''.join(traceback.format_exception(None, e, e.__traceback__)) + "\n")
+                            log.error("Failed to load compare model. Exception was:\n" +
+                                      ''.join(traceback.format_exception(None, e, e.__traceback__)) + "\n")
                             traceback.print_exc()
                     else:
                         log.warning("Compare model not found!")

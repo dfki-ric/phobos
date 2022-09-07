@@ -378,7 +378,8 @@ class Robot(SMURFRobot):
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
-                                                 stop=sm.get_leaves(self), robotname=str(sm))
+                                                 stop=sm.get_leaves(self), robotname=str(sm),
+                                                 no_submechanisms=True)
                 sm.file_path = "../submechanisms/" + os.path.basename(sm.file_path)
                 if not os.path.isfile(sm.file_path):
                     self.export_submodel(name="#sub_mech#", output_dir=os.path.join(outputdir, "submechanisms"),
@@ -823,7 +824,7 @@ class Robot(SMURFRobot):
         joint.parent = new_parent_name
 
     def define_submodel(self, name, start, stop=None, robotname=None, only_urdf=False, only_return=False,
-                        overwrite=False):
+                        overwrite=False, no_submechanisms=False):
         """Defines a submodel from a given starting link.
         If stop is provided than the chain from start to stop is used.
         """
@@ -837,12 +838,12 @@ class Robot(SMURFRobot):
             "only_urdf": only_urdf
         }
         if only_return:
-            return self.instantiate_submodel(definition=definition)
+            return self.instantiate_submodel(definition=definition, no_submechanisms=no_submechanisms)
         if name in self._submodels.keys() and not overwrite:
             raise NameError("A submodel with the given name is already defined")
         else:
             self._submodels[name] = definition
-        return self.instantiate_submodel(name)
+        return self.instantiate_submodel(name, no_submechanisms=no_submechanisms)
 
     def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=True, extend_by_single_fixed=False):
         assert self.get_link(start) is not None
@@ -886,7 +887,8 @@ class Robot(SMURFRobot):
         return linknames, jointnames
 
     def instantiate_submodel(self, name=None, definition=None, link_obj=True,
-                             include_unstopped_branches=True, extend_by_single_fixed=False):
+                             include_unstopped_branches=True, extend_by_single_fixed=False,
+                             no_submechanisms=False):
         """
         Instantiates a submodel by it's definition. Takes either name or definition. If both are given, the submodel
         definition with the given name will be updated including renaming it
@@ -950,21 +952,22 @@ class Robot(SMURFRobot):
         for sensor in self.sensors:
             if sensor.is_related_to(links + joints):
                 if isinstance(sensor, sensor_representations.MultiSensor):
-                    sensors.append(sensor.duplicate().reduce_to_match(links + joints))
+                    sensors.append(sensor.duplicate(to_robot=submodel).reduce_to_match(links + joints))
                 else:
-                    sensors.append(sensor)
+                    sensors.append(sensor.duplicate(to_robot=submodel))
         submechanisms = []
-        for subm in self.submechanisms:
-            if subm.is_related_to(joints, pure=True):
-                submechanisms.append(subm)
         exoskeletons = []
-        for exo in self.exoskeletons:
-            if exo.is_related_to(joints, pure=True):
-                exoskeletons.append(exo)
+        if not no_submechanisms:
+            for subm in self.submechanisms:
+                if subm.is_related_to(joints, pure=True):
+                    submechanisms.append(subm.duplicate(to_robot=submodel))
+            for exo in self.exoskeletons:
+                if exo.is_related_to(joints, pure=True):
+                    exoskeletons.append(exo.duplicate(to_robot=submodel))
         interfaces = []
         for interf in self.interfaces:
             if interf.is_related_to(joints):
-                interfaces.append(interf)
+                interfaces.append(interf.duplicate(to_robot=submodel))
 
         if not link_obj:
             for entity in links + joints + materials + motors + sensors + submechanisms + exoskeletons + interfaces:
@@ -973,8 +976,9 @@ class Robot(SMURFRobot):
         submodel.add_aggregate("materials", self.get_aggregate("material", list(materials)))
         submodel.add_aggregate("motors", self.get_aggregate("motor", motors))
         submodel.add_aggregate("sensors", self.get_aggregate("sensor", sensors))
-        submodel.add_aggregate("submechanisms", submechanisms)
-        submodel.add_aggregate("exoskeletons", exoskeletons)
+        if not no_submechanisms:
+            submodel.add_aggregate("submechanisms", submechanisms)
+            submodel.add_aggregate("exoskeletons", exoskeletons)
         submodel.add_aggregate("interfaces", interfaces)
 
         # copy all annotations we not yet have
@@ -982,7 +986,7 @@ class Robot(SMURFRobot):
             if k not in submodel.__dict__.keys() or submodel.__dict__[k] is None:
                 submodel.__dict__[k] = v
 
-        submodel.link_entities()
+        submodel.relink_entities()
 
         return submodel
 
@@ -1438,8 +1442,9 @@ class Robot(SMURFRobot):
                     result &= 4
                 if hasattr(joint, "limit") and joint.limit is not None and (
                         joint.limit.lower == joint.limit.upper or joint.limit.velocity == 0):
-                    log.warning(f"The joint limits of joint {joint.name} might restrict motion:\n min: {joint.limit.lower}"
-                                f"max: {joint.limit.upper} vel {joint.limit.velocity} eff {joint.limit.effort}")
+                    log.warning(f"The joint limits of joint {joint.name} might restrict motion: "
+                                f"min: {joint.limit.lower} max: {joint.limit.upper} vel: {joint.limit.velocity} "
+                                f"eff: {joint.limit.effort}")
                     result &= 8
                     if backup is not None:
                         limit_temp = [joint.limit.lower, joint.limit.upper]
