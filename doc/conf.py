@@ -62,7 +62,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Phobos'
-copyright = u'2018, DFKI GmbH'
+copyright = u'Robotics Research Group, University of Bremen and DFKI GmbH Robotics Innovation Center'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
