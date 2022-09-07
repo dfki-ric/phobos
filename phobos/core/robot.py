@@ -223,7 +223,7 @@ class Robot(SMURFRobot):
 
         if create_pdf:
             create_pdf_from_urdf(outputfile)
-        log.info("Robot written to {}".format(outputfile))
+        log.info("URDF written to {}".format(outputfile))
         return
 
     def export_sdf(self, outputfile=None, export_visuals=True, export_collisions=True, create_pdf=False,
@@ -272,7 +272,7 @@ class Robot(SMURFRobot):
 
         if create_pdf:
             create_pdf_from_urdf(outputfile)
-        log.info("Robot written to {}".format(outputfile))
+        log.info("SDF written to {}".format(outputfile))
         return
 
     def export_xml(self, output_dir=None, export_visuals=True, export_collisions=True,

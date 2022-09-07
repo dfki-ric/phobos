@@ -184,7 +184,7 @@ class Submechanism(HyrodynAnnotation):
                 joint = self._related_robot_instance.get_joint(j, verbose=True)
                 assert joint is not None
                 if len(joint.joint_dependencies) > 1:
-                    self._multi_joint_dependencies.append({"name": j.name, "depends_on": j.joint_dependencies})
+                    self._multi_joint_dependencies.append({"name": str(joint), "depends_on": joint.joint_dependencies})
         if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
             return self._multi_joint_dependencies
         else:

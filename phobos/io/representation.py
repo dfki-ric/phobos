@@ -719,6 +719,9 @@ class JointMimic(Representation, SmurfBase):
     def __eq__(self, other):
         return other.joint == self.joint and other.offset == self.offset and other.multiplier == self.multiplier
 
+    def stringable(self):
+        return False
+
 
 class Joint(Representation, SmurfBase):
     TYPES = ['unknown', 'revolute', 'continuous', 'prismatic',
