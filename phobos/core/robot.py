@@ -4,6 +4,7 @@ import os
 from typing import List, Any
 
 import pkg_resources
+import pydot
 from copy import deepcopy, copy
 from scipy.spatial.transform import Rotation as scipy_rot
 import numpy as np
@@ -19,7 +20,7 @@ from ..utils import transform
 from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_string, execute_shell_command, duplicate
 from ..utils.transform import create_transformation, inv, get_adjoint
 from ..utils.tree import find_close_ancestor_links
-from ..utils.urdf import read_urdf_filename, create_pdf_from_urdf, transform_object, get_joint_info_dict
+from ..utils.urdf import read_urdf_filename, transform_object, get_joint_info_dict
 
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
@@ -222,7 +223,7 @@ class Robot(SMURFRobot):
                 f.close()
 
         if create_pdf:
-            create_pdf_from_urdf(outputfile)
+            self.export_pdf(outputfile[:-5]+".pdf")
         log.info("URDF written to {}".format(outputfile))
         return
 
@@ -271,7 +272,7 @@ class Robot(SMURFRobot):
                 f.close()
 
         if create_pdf:
-            create_pdf_from_urdf(outputfile)
+            self.export_pdf(outputfile[:-5]+".pdf")
         log.info("SDF written to {}".format(outputfile))
         return
 
@@ -694,6 +695,74 @@ class Robot(SMURFRobot):
         self.export_smurf(output_dir, export_visuals, export_collisions, create_pdf, ros_pkg, export_with_ros_pathes,
                           ros_pkg_name, export_joint_limits, export_submodels=export_submodels, formats=formats,
                           filename=filename, float_fmt_dict=float_fmt_dict)
+
+    def export_pdf(robot, file):
+        SUBMECH_COLORS = ["cyan", "darkslateblue", "steelblue", "indigo", "darkblue", "royalblue", "lightskyblue",
+                          "teal", "blue", "dodgerblue", "paleturquoise", "lightcyan", "mediumslateblue"]
+        EXOSKEL_COLORS = ["lawngreen", "green", "darkgreen", "seagreen", "lightseagreen", "mediumspringgreen",
+                          "palegreen", "olive"]
+
+        def add_joint(joint):
+            _out = f"\"{joint.parent}\" -> \"{joint.name}\" [label="
+            _out += f"\"xyz: {joint.origin.xyz[0]} {joint.origin.xyz[1]} {joint.origin.xyz[2]} "
+            _out += f"\\nrpy: {joint.origin.rpy[0]} {joint.origin.rpy[1]} {joint.origin.rpy[2]} "
+            if joint.axis is not None:
+                _out += f"\\naxis: {joint.axis[0]} {joint.axis[1]} {joint.axis[2]} "
+            _out += f"\\ntype: {joint.joint_type} "
+            if len(joint.joint_dependencies) > 0:
+                _out += f"\\ndepends on: "
+                for jd in joint.joint_dependencies:
+                    _out += f"\\n- {jd.joint} factor: {jd.multiplier} offset: {jd.offset}"
+            if joint.motor is not None:
+                _out += f"\\nmotor: {str(joint.motor)}"
+            _out += f"\"] \"{joint.name}\" -> \"{joint.child}\"\n"
+            return _out
+
+        out = "digraph G {\n"
+        out += "esep=10;\n"
+        out += "sep=10;\n"
+        out += "nodesep=0.5;\n"
+        out += "node [shape=box];\n"
+        for link in robot.get_links_ordered_df():
+            out += f"\"{str(link)}\" [label=\"{str(link)}\"];\n"
+
+        printed_joints = []
+        if hasattr(robot, "submechanisms") and robot.submechanisms is not None and len(robot.submechanisms) > 0:
+            for i, sm in enumerate(robot.submechanisms):
+                out += f"node [shape=box, color={SUBMECH_COLORS[i]}, fontcolor=black];\n"
+                out += f"\"{str(sm)}\" [label="
+                out += f"\"Submechanism\ntype: {sm.type} "
+                out += f"\\nname: {sm.name} "
+                out += f"\\ncontextual_name: {sm.contextual_name} "
+                out += "\"];\n"
+                for link in robot.get_links_ordered_df():
+                    out += f"\"{str(link)}\" [label=\"{str(link)}\"];\n"
+                out += f"node [shape=ellipse, color={SUBMECH_COLORS[i]}, fontcolor=black];\n"
+                for joint in sorted(sm.get_joints()):
+                    joint = robot.get_joint(joint)
+                    printed_joints.append(str(joint))
+                    out += add_joint(joint)
+        if hasattr(robot, "exoskeletons") and robot.exoskeletons is not None and len(robot.exoskeletons) > 0:
+            for i, exo in enumerate(robot.exoskeletons):
+                out += f"node [shape=septagon, color={EXOSKEL_COLORS[i]}, fontcolor=black];\n"
+                for joint in sorted(exo.get_joints()):
+                    joint = robot.get_joint(joint)
+                    if joint.is_human:
+                        printed_joints.append(str(joint))
+                        out += add_joint(joint)
+        if len(printed_joints) < len(robot.joints):
+            out += f"node [shape=ellipse, color=black, fontcolor=black];\n"
+            for joint in robot.get_joints_ordered_df():
+                if str(joint) not in printed_joints:
+                    out += add_joint(robot.get_joint(joint))
+
+        out += "}\n"
+
+        with open(file+".gv", "w") as f:
+            f.write(out)
+
+        graph = pydot.graph_from_dot_data(out)
+        graph[0].write_pdf(file)
 
     # getters
     def get_submodel(self, name):
