@@ -80,7 +80,7 @@ def append_string(s, *args, **kwargs):
         new += "\n"
     if "print" in kwargs.keys() and kwargs["print"]:
         kwargs.pop("print")
-        log.debug(" ".join(args) + dump_json(kwargs))
+        log.info(" ".join(args))
     return s + new
 
 

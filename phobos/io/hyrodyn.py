@@ -1,3 +1,5 @@
+from copy import copy
+
 from .smurf_reflection import SmurfBase
 from .representation import JointMimic
 from ..utils import tree
@@ -242,11 +244,10 @@ class Submechanism(HyrodynAnnotation):
         self._loop_constraints = lc
 
     def regenerate(self, robot):
-        submodel = self.get_submodel(robot)
-        self.jointnames = [str(j) for j in submodel.get_joints_ordered_df()]
+        self.jointnames = sorted([j for j in self.jointnames_spanningtree], key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
         self.jointnames_active = sorted(self.jointnames_active, key=lambda x: self.jointnames.index(x))
         self.jointnames_independent = sorted(self.jointnames_independent, key=lambda x: self.jointnames.index(x))
-        self.jointnames_spanningtree = sorted(self.jointnames_spanningtree, key=lambda x: self.jointnames.index(x))
+        self.jointnames_spanningtree = copy(self.jointnames)
 
 
 class Exoskeleton(HyrodynAnnotation):

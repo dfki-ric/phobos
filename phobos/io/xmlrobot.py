@@ -605,13 +605,13 @@ class XMLRobot(Representation):
         :return: List with one element (todo)
         """
         # Check if the name is present
-        if name in self.parent_map.keys():
-            parents = self.parent_map[name]
-        elif name in self.child_map.keys():
+        if str(name) in self.parent_map.keys():
+            parents = self.parent_map[str(name)]
+        elif str(name) in self.child_map.keys():
             return None
         else:
             log.error(f"Parent map keys: {self.parent_map.keys()}")
-            raise AssertionError("Nothing with name " + name + " in this robot")
+            raise AssertionError("Nothing with name " + str(name) + " in this robot")
 
         # Parentmap contains links.
         # If we want joints, then collect the children of these
@@ -639,8 +639,8 @@ class XMLRobot(Representation):
 
         children = []
 
-        if name in self.child_map.keys():
-            children = self.child_map[name]
+        if str(name) in self.child_map.keys():
+            children = self.child_map[str(name)]
 
         if children:
             if targettype == 'joint':

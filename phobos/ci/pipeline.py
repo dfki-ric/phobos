@@ -280,9 +280,7 @@ class Pipeline(yaml.YAMLObject):
         for model in self.models:
             fstate = self._get_model_failure_state(model.modelname)
             if bool(fstate & (F_LOAD | F_PROC | NA_LOAD | NA_PROC)):
-                log.warning("\nSkipping", model.modelname,
-                      "model as it wasn't succesfully created. (Code: " + bin(fstate) + ")",
-                      file=sys.stderr)
+                log.warning(f"\nSkipping {model.modelname} model as it wasn't succesfully created. (Code: " + bin(fstate) + ")")
                 continue
             model.processed_model_exists = True
             model._load_robot()
@@ -394,8 +392,7 @@ class Pipeline(yaml.YAMLObject):
                     traceback.format_exception(None, e, e.__traceback__)) + "\n"
                 traceback.print_exc()
         test_protocol = {"all": ""}
-        test_protocol["all"] = misc.append_string(test_protocol["all"], "----------\nTest protocol:", print=True,
-                                                  flush=True)
+        test_protocol["all"] = misc.append_string(test_protocol["all"], "----------\nTest protocol:", print=True)
         success = True
         for modelname, test in self.test_results.items():
             test_protocol[modelname] = ""
@@ -409,7 +406,7 @@ class Pipeline(yaml.YAMLObject):
                                                               end="", print=True)
             test_protocol[modelname] = misc.append_string(test_protocol[modelname], "\n    " + dump_yaml(
                 {"Compare Model": test["compare_model"]}, default_flow_style=False, indent=6) + "    Test Results:",
-                                                          flush=True, print=True)
+                                                          print=True)
             for testname, result in test.items():
                 if testname in ["ignore_failure", "compare_model_present", "compare_model"]:
                     continue
