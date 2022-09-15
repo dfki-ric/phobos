@@ -323,9 +323,6 @@ class Mesh(Representation):
         if not check_linkage_later:
             self.check_linkage()
 
-    def check_linkage(self, attribute=None):
-        super(Mesh, self).check_linkage()
-        assert os.path.isabs(self._filename)
 
     def equivalent(self, other):
         return other._filepath == self._filepath or identical(self.load_mesh(), other.load_mesh())
@@ -379,23 +376,6 @@ class Collision(Representation, SmurfBase):
         if bitmask is not None:
             self.returns += ['bitmask']
 
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Collision, self).link_with_robot(robot, check_linkage_later=True)
-        self.origin.link_with_robot(robot, check_linkage_later=True)
-        if isinstance(self.geometry, Mesh):
-            self.geometry.link_with_robot(robot, check_linkage_later=True)
-        if not check_linkage_later:
-            self.check_linkage()
-
-    def unlink_from_robot(self):
-        super(Collision, self).unlink_from_robot()
-        self.origin.unlink_from_robot()
-
-    def check_linkage(self, attribute=None):
-        super(Collision, self).check_linkage()
-        if isinstance(self.geometry, Mesh):
-            self.geometry.check_linkage()
-
 
 class Visual(Representation, SmurfBase):
     _class_variables = ["name", "geometry", "material", "origin"]
@@ -429,41 +409,6 @@ class Visual(Representation, SmurfBase):
     @property
     def material_(self):
         return None
-
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Visual, self).link_with_robot(robot, check_linkage_later=True)
-        # due to the specialty of having materials in both robot and visuals, we check whether those two are in sync
-        if self.material is not None:
-            robot_material = robot.get_material(self.material)
-            if robot_material is None:
-                robot.add_aggregate("material", self._material)
-            elif id(self._material) != id(robot_material):
-                if self._material.is_delegate() or self._material.equivalent(robot_material):
-                    self._material = robot_material
-                else:
-                    new_mat_name = self._material.name
-                    index = 1
-                    while robot.get_material(new_mat_name) is not None:
-                        new_mat_name = self._material.name + "_" + str(index)
-                        index += 1
-                    log.warning("Ambiguous material in ", self.name, "renamed ", self._material.name, "to",
-                          new_mat_name)
-                    self._material.name = new_mat_name
-        if isinstance(self.geometry, Mesh):
-            self.geometry.link_with_robot(robot, check_linkage_later=True)
-        if not check_linkage_later:
-            self.check_linkage()
-
-    def unlink_from_robot(self):
-        super(Visual, self).unlink_from_robot()
-        self.origin.unlink_from_robot()
-        if isinstance(self._material, Material):
-            self._material.unlink_from_robot()
-
-    def check_linkage(self, attribute=None):
-        super(Visual, self).check_linkage()
-        if isinstance(self.geometry, Mesh):
-            self.geometry.check_linkage()
 
     def equivalent(self, other):
         return self.geometry.equivalent(other.geometry) and self._material.equivalent(other._material) and \
@@ -532,16 +477,6 @@ class Inertial(Representation):
         M[0:3, 0:3] = np.eye(3) * m
         M[3::, 3::] = I
         return M
-
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Inertial, self).link_with_robot(robot)
-        self.origin.link_with_robot(robot)
-        if not check_linkage_later:
-            self.check_linkage()
-
-    def unlink_from_robot(self):
-        super(Inertial, self).unlink_from_robot()
-        self.origin.unlink_from_robot()
 
 
 class KCCDHull(Representation, SmurfBase):
@@ -660,28 +595,6 @@ class Link(Representation, SmurfBase):
         elif isinstance(elem, Collision) or elem_type.lower() == "collision":
             self.collisions.append(elem)
 
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Link, self).link_with_robot(robot, check_linkage_later=True)
-        for vis in self.visuals:
-            vis.link_with_robot(robot, check_linkage_later=True)
-        for col in self.collisions:
-            col.link_with_robot(robot, check_linkage_later=True)
-        if not check_linkage_later:
-            self.check_linkage()
-
-    def unlink_from_robot(self):
-        super(Link, self).unlink_from_robot()
-        for vis in self.visuals:
-            vis.unlink_from_robot()
-        for col in self.collisions:
-            col.unlink_from_robot()
-
-    def check_linkage(self, attribute=None):
-        super(Link, self).check_linkage()
-        for vis in self.visuals:
-            vis.check_linkage()
-        for col in self.collisions:
-            col.check_linkage()
 
 
 # class JointDynamics(Representation):
@@ -706,7 +619,7 @@ class JointMimic(Representation, SmurfBase):
 
     def __init__(self, joint=None, multiplier=None, offset=None, **kwargs):
         super().__init__()
-        self.joint = joint
+        self.joint = _singular(joint)
         assert self.joint is not None
         self.multiplier = multiplier
         assert self.multiplier is not None
@@ -724,15 +637,15 @@ class JointMimic(Representation, SmurfBase):
 
 
 class Joint(Representation, SmurfBase):
-    TYPES = ['unknown', 'revolute', 'continuous', 'prismatic',
-             'floating', 'planar', 'fixed']
+    TYPES = ['unknown', 'revolute', 'continuous', 'prismatic', 'floating', 'planar', 'fixed']
 
     type_dict = {
         "parent": "links",
         "child": "links",
         "motor": "motors"
     }
-    _class_variables = ["name", "parent", "child", "joint_type", "axis", "limit", "dynamics", "mimic", "motor"]
+    _class_variables = ["name", "parent", "child", "joint_type", "axis", "limit", "dynamics", "motor", "origin",
+                        "joint_dependencies"]
 
     def __init__(self, name=None, parent=None, child=None, joint_type=None,
                  axis=None, origin=None, limit=None,
@@ -813,22 +726,7 @@ class Joint(Representation, SmurfBase):
         else:
             raise ValueError("Can not set mimic for a joint that depends on mulitple joints. Consider using the joint_dependency setter.")
 
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Joint, self).link_with_robot(robot, check_linkage_later=True)
-        for mimic in self.joint_dependencies:
-            mimic.link_with_robot(robot, check_linkage_later=True)
-        if not check_linkage_later:
-            self.check_linkage()
 
-    def unlink_from_robot(self):
-        super(Joint, self).unlink_from_robot()
-        for mimic in self.joint_dependencies:
-            mimic.unlink_from_robot()
-
-    def check_linkage(self, attribute=None):
-        super(Joint, self).check_linkage()
-        for mimic in self.joint_dependencies:
-            mimic.check_linkage()
 
     @property
     def joint_dependencies(self):
@@ -853,6 +751,9 @@ class Joint(Representation, SmurfBase):
                     skip = True
             if not skip:
                 self._joint_dependencies.append(v1)
+        if self._related_robot_instance is not None:
+            for jd in self._joint_dependencies:
+                jd.link_with_robot(robot=self._related_robot_instance)
 
 
 class Interface(Representation, SmurfBase):
@@ -922,11 +823,6 @@ class Transmission(Representation):
         assert len(self.joints) > 0, "no joint defined"
         assert len(self.actuators) > 0, "no actuator defined"
 
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Transmission, self).link_with_robot(robot)
-        for j in self.joints:
-            j.link_with_robot(robot)
-
 
 class Motor(Representation, SmurfBase):
     _class_variables = ["name", "joint"]
@@ -940,21 +836,6 @@ class Motor(Representation, SmurfBase):
         self._maxValue = None
         self._minValue = None
         self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue']
-
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Motor, self).link_with_robot(robot, check_linkage_later=True)
-        self._joint.motor = self.name
-        if not check_linkage_later:
-            self.check_linkage()
-
-    def unlink_from_robot(self):
-        if self._related_robot_instance is not None:
-            self._joint.motor = None
-        super(Motor, self).unlink_from_robot()
-
-    def check_linkage(self, attribute=None):
-        super(Motor, self).check_linkage()
-        assert id(self._joint._motor) == id(self)
 
     @property
     def maxEffort(self):

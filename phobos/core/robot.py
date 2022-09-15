@@ -193,11 +193,14 @@ class Robot(SMURFRobot):
             outputfile = self.name
 
         outputfile = os.path.abspath(outputfile)
-        export_robot = self.duplicate()
-        if not export_visuals:
-            export_robot.remove_visuals()
-        if not export_collisions:
-            export_robot.remove_collisions()
+        if not export_visuals or not export_collisions:
+            export_robot = self.duplicate()
+            if not export_visuals:
+                export_robot.remove_visuals()
+            if not export_collisions:
+                export_robot.remove_collisions()
+        else:
+            export_robot = self
 
         xml_string = export_robot.to_urdf_string(float_fmt_dict=float_fmt_dict)
 
@@ -955,7 +958,7 @@ class Robot(SMURFRobot):
 
         return linknames, jointnames
 
-    def instantiate_submodel(self, name=None, definition=None, link_obj=True,
+    def instantiate_submodel(self, name=None, definition=None,
                              include_unstopped_branches=True, extend_by_single_fixed=False,
                              no_submechanisms=False):
         """
@@ -990,6 +993,15 @@ class Robot(SMURFRobot):
             include_unstopped_branches=include_unstopped_branches, extend_by_single_fixed=extend_by_single_fixed)
 
         links = self.get_link(linknames)
+        materials = set()
+        for link in links:
+            for visual in link.visuals:
+                if visual.material is not None:
+                    _mat = self.get_material(visual.material)
+                    materials.add(_mat)
+        submodel.add_aggregate("materials", self.get_aggregate("material", list(materials)))
+        submodel.add_aggregate("links", [ln.duplicate() for ln in links])
+
         _joints = self.get_joint(jointnames)
         # remove mimic relation if the mimiced joint is not in here
         joints = []
@@ -1001,50 +1013,40 @@ class Robot(SMURFRobot):
                 _joint.joint_dependencies = [jd for jd in _joint.joint_dependencies if jd.joint in jointnames]
                 joints.append(_joint)
             else:
-                joints.append(joint)
+                joints.append(joint.duplicate())
 
-        submodel.add_aggregate("links", self.get_aggregate("link", links))
         submodel.add_aggregate("joints", joints)
         assert all([j.mimic is None or str(j.mimic.joint) in jointnames for j in submodel.joints])
 
-        materials = set()
-        for link in links:
-            for visual in link.visuals:
-                if visual.material is not None:
-                    assert isinstance(visual._material, representation.Material)
-                    materials.add(visual._material)
         motors = []
         for joint in joints:
             if joint.motor is not None:
-                motors.append(joint._motor)
+                motors.append(joint._motor.duplicate() if type(joint._motor) != str else self.get_motor(joint._motor))
+        submodel.add_motor(motors)
+
         sensors = []
         for sensor in self.sensors:
             if sensor.is_related_to(links + joints):
                 if isinstance(sensor, sensor_representations.MultiSensor):
-                    sensors.append(sensor.duplicate(to_robot=submodel).reduce_to_match(links + joints))
+                    _sensor = sensor.duplicate()
+                    _sensor.reduce_to_match(links + joints)
+                    sensors.append(_sensor)
                 else:
-                    sensors.append(sensor.duplicate(to_robot=submodel))
+                    sensors.append(sensor.duplicate())
+        submodel.add_aggregate("sensors", sensors)
         submechanisms = []
         exoskeletons = []
         if not no_submechanisms:
             for subm in self.submechanisms:
                 if subm.is_related_to(joints, pure=True):
-                    submechanisms.append(subm.duplicate(to_robot=submodel))
+                    submechanisms.append(subm.duplicate())
             for exo in self.exoskeletons:
                 if exo.is_related_to(joints, pure=True):
-                    exoskeletons.append(exo.duplicate(to_robot=submodel))
+                    exoskeletons.append(exo.duplicate())
         interfaces = []
         for interf in self.interfaces:
             if interf.is_related_to(joints):
-                interfaces.append(interf.duplicate(to_robot=submodel))
-
-        if not link_obj:
-            for entity in links + joints + materials + motors + sensors + submechanisms + exoskeletons + interfaces:
-                entity.unlink_from_robot()
-
-        submodel.add_aggregate("materials", self.get_aggregate("material", list(materials)))
-        submodel.add_aggregate("motors", self.get_aggregate("motor", motors))
-        submodel.add_aggregate("sensors", self.get_aggregate("sensor", sensors))
+                interfaces.append(interf.duplicate())
         if not no_submechanisms:
             submodel.add_aggregate("submechanisms", submechanisms)
             submodel.add_aggregate("exoskeletons", exoskeletons)
@@ -1866,7 +1868,7 @@ class Robot(SMURFRobot):
             raise Exception("Can only attach robot to robot.")
 
         if not link_other:
-            other = deepcopy(other)
+            other = other.duplicate()
         elif not do_not_rename:
             log.warning(f"Robot::attach(): The arguments you chose may result in the renaming of parts of the robot {other.name}")
 
@@ -2035,7 +2037,7 @@ class Robot(SMURFRobot):
             self.add_aggregate('sensor', cSensor)
             
         for cMotor in other.motors:
-            self.add_aggregate('motor', cMotor)
+            self.add_motor(cMotor)
 
         for cSubmechanism in other.submechanisms:
             self.add_aggregate('submechanism', cSubmechanism)
@@ -2113,7 +2115,6 @@ class Robot(SMURFRobot):
         self.add_aggregate("joint", joint)
         if joint.joint_type in ["revolute", "prismatic"] and add_default_motor:
             self.add_motor(representation.Motor(
-                robot=self,
                 name=joint.name,
                 joint=joint
             ))
@@ -2151,7 +2152,7 @@ class Robot(SMURFRobot):
         for mat in self.submechanisms:
             robot.add_aggregate("submechanism", mat)
         for mat in self.motors:
-            robot.add_aggregate("motor", mat)
+            robot.add_motor(mat)
         for mat in self.poses:
             robot.add_aggregate("pose", mat)
         for mat in self.sensors:

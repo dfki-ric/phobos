@@ -77,15 +77,29 @@ class SMURFRobot(XMLRobot):
             self.name, _ = os.path.splitext(self.xmlfile)
 
     # helper methods
-    def link_entities(self):
-        super(SMURFRobot, self).link_entities()
+    def link_entities(self, check_linkage_later=False):
+        super(SMURFRobot, self).link_entities(check_linkage_later=True)
         for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
-            entity.link_with_robot(self)
+            entity.link_with_robot(self, check_linkage_later=True)
+        if not check_linkage_later:
+            self.check_linkage()
 
-    def unlink_entities(self):
-        super(SMURFRobot, self).unlink_entities()
+    def unlink_entities(self, check_linkage_later=False):
+        super(SMURFRobot, self).unlink_entities(check_linkage_later=True)
         for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
-            entity.unlink_from_robot()
+            entity.unlink_from_robot(check_linkage_later=True)
+        if not check_linkage_later:
+            self.check_unlinkage()
+
+    def check_linkage(self):
+        super(SMURFRobot, self).check_linkage()
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
+            entity.check_linkage()
+
+    def check_unlinkage(self):
+        super(SMURFRobot, self).check_unlinkage()
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
+            entity.check_unlinkage()
 
     def read_smurffile(self, smurffile):
         if smurffile is not None:
@@ -276,10 +290,16 @@ class SMURFRobot(XMLRobot):
         """Attach a new motor to the robot. Either the joint is already defined inside the motor
         or a jointname is given. Renames the motor if already given.
         """
+        if isinstance(motor, list):
+            return [self.add_motor(m) for m in motor]
         if not isinstance(motor, representation.Motor):
-            raise Exception("Please provide an instance of Motor to attach.")
+            raise Exception(f"Please provide an instance of Motor to attach. Got {type(motor)}")
         # Check if the motor already contains joint information
+        joint = self.get_joint(motor.joint)
+        assert joint is not None
+        motor.link_with_robot(self)
         self.add_aggregate("motors", motor)
+        joint.motor = motor
 
     def add_pose(self, pose):
         """Add a new pose to the robot.

@@ -53,17 +53,6 @@ class MultiJointDependency(SmurfBase):
     def is_empty(self):
         return len(self.joint_dependencies) == 0
 
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(MultiJointDependency, self).link_with_robot(robot)
-        for jd in self.joint_dependencies:
-            jd.link_with_robot(robot)
-            jd.check_linkage()
-
-    def unlink_from_robot(self):
-        super(MultiJointDependency, self).unlink_from_robot()
-        for jd in self.joint_dependencies:
-            jd.unlink_from_robot()
-
 
 class HyrodynAnnotation(SmurfBase):
     type_dict = {
@@ -235,13 +224,17 @@ class Submechanism(HyrodynAnnotation):
                 joint.cut_joint = True
                 for ax in lc["constraint_axes"]:
                     joint.constraint_axes.append(JointMimic(**ax))
+        if not check_linkage_later:
+            assert self.check_linkage()
 
-    def unlink_from_robot(self):
+    def unlink_from_robot(self, check_linkage_later=False):
         mjd = self.multi_joint_dependencies
         lc = self.loop_constraints
         super(Submechanism, self).unlink_from_robot()
         self._multi_joint_dependencies = mjd
         self._loop_constraints = lc
+        if not check_linkage_later:
+            assert self.check_unlinkage()
 
     def regenerate(self, robot):
         self.jointnames = sorted([j for j in self.jointnames_spanningtree], key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))

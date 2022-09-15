@@ -76,13 +76,25 @@ class XMLRobot(Representation):
         for link in self.links:
             link.is_human = True
 
-    def link_entities(self):
-        for entity in self.links + self.joints + self.sensors:
-            entity.link_with_robot(self)
+    def link_entities(self, check_linkage_later=False):
+        for entity in self.links + self.joints + self.sensors + self.materials:
+            entity.link_with_robot(self, check_linkage_later=True)
+        if not check_linkage_later:
+            self.check_linkage()
 
-    def unlink_entities(self):
-        for entity in self.links + self.joints + self.sensors:
-            entity.unlink_from_robot()
+    def unlink_entities(self, check_linkage_later=False):
+        for entity in self.links + self.joints + self.sensors + self.materials:
+            entity.unlink_from_robot(check_linkage_later=True)
+        if not check_linkage_later:
+            self.check_unlinkage()
+
+    def check_linkage(self):
+        for entity in self.links + self.joints + self.sensors + self.materials:
+            entity.check_linkage()
+
+    def check_unlinkage(self):
+        for entity in self.links + self.joints + self.sensors + self.materials:
+            entity.check_unlinkage()
 
     def relink_entities(self):
         self.unlink_entities()
@@ -94,6 +106,12 @@ class XMLRobot(Representation):
         self.link_entities()
         out.link_entities()
         return out
+
+    def link_with_robot(self, robot, check_linkage_later=False):
+        raise NotImplementedError
+
+    def unlink_from_robot(self, check_linkage_later=False):
+        raise NotImplementedError
 
     def _get_children_lists(self, parentlist, childrenlist, targettype='link'):
         """

@@ -516,7 +516,7 @@ class BaseModel(yaml.YAMLObject):
                     sensor_ = None
                     if s["type"] in single_sensors:
                         kwargs = {k: v for k, v in s.items() if k != "type"}
-                        sensor_ = getattr(sensor_representations, s["type"])(robot=self.robot, **kwargs)
+                        sensor_ = getattr(sensor_representations, s["type"])(**kwargs)
 
                     if s["type"] in multi_sensors:
                         if "targets" not in s:
@@ -528,7 +528,7 @@ class BaseModel(yaml.YAMLObject):
                         else:
                             raise ValueError('Targets can only be a list or "All"!')
                         kwargs = {k: v for k, v in s.items() if k != "type"}
-                        sensor_ = getattr(sensor_representations, s["type"])(robot=self.robot, **kwargs)
+                        sensor_ = getattr(sensor_representations, s["type"])(**kwargs)
 
                     if sensor_ is not None:
                         self.robot.add_sensor(sensor_)
