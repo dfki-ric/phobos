@@ -596,11 +596,13 @@ class Link(Representation, SmurfBase):
             self.collisions.append(elem)
 
 
-
-# class JointDynamics(Representation):
-#     def __init__(self, damping=None, friction=None):
-#         self.damping = damping
-#         self.friction = friction
+class JointDynamics(Representation):
+    def __init__(self, damping=None, friction=None, spring_stiffness=None, spring_reference=None):
+        super().__init__()
+        self.damping = damping
+        self.friction = friction
+        self.spring_stiffness = spring_stiffness
+        self.spring_reference = spring_reference
 
 
 class JointLimit(Representation):
@@ -668,7 +670,6 @@ class Joint(Representation, SmurfBase):
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self._origin = _singular(origin)
         self.limit = _singular(limit)
-        self.dynamics = _singular(dynamics)
         self._joint_dependencies = _plural(mimic)
         self.cut_joint = cut_joint
         self.constraint_axes = constraint_axes if constraint_axes is not None else []
@@ -679,16 +680,18 @@ class Joint(Representation, SmurfBase):
         if reducedDataPackage is not None:
             self.reducedDataPackage = reducedDataPackage
             self.returns += ["reducedDataPackage"]
+        # dynamics
+        self.dynamics = _singular(dynamics)
         if damping_const_constraint_axis1 is not None:
             self.damping_const_constraint_axis1 = damping_const_constraint_axis1
             self.returns += ["damping_const_constraint_axis1"]
         if springDamping is not None:
             self.springDamping = springDamping
             self.returns += ["springDamping"]
-        if springStiffness is not None:
+        if springStiffness is not None:  # todo provide this to JointDynamics
             self.springStiffness = springStiffness
             self.returns += ["springStiffness"]
-        if spring_const_constraint_axis1 is not None:
+        if spring_const_constraint_axis1 is not None:  # todo provide this to JointDynamics (spring_reference)
             self.spring_const_constraint_axis1 = spring_const_constraint_axis1
             self.returns += ["spring_const_constraint_axis1"]
         self.excludes += ["limit", "mimic"]
@@ -726,7 +729,16 @@ class Joint(Representation, SmurfBase):
         else:
             raise ValueError("Can not set mimic for a joint that depends on mulitple joints. Consider using the joint_dependency setter.")
 
+    @property
+    def springStiffness(self):
+        return self.dynamics.spring_stiffness if self.dynamics is not None else None
 
+    @springStiffness.setter
+    def springStiffness(self, value):
+        if self.dynamics is None:
+            self.dynamics = JointDynamics(spring_stiffness=value)
+        else:
+            self.dynamics.spring_stiffness = value
 
     @property
     def joint_dependencies(self):
