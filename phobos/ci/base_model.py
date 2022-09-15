@@ -475,16 +475,16 @@ class BaseModel(yaml.YAMLObject):
         elif hasattr(self, "submechanisms_file"):
             self.robot.autogenerate_submechanisms = False
             self.robot.load_submechanisms(deepcopy(self.submechanisms_file))
-        if hasattr(self, "export_total_submechanisms"):
-            # add all to one urdf
-            spanningtree = []
-            for sm in self.robot.submechanisms:
-                spanningtree += sm.jointnames_spanningtree
-            spanningtree = list(set(spanningtree))
-            root = tree.find_common_root(input_spanningtree=spanningtree, input_model=self.robot)
-            self.robot.define_submodel(name=self.export_total_submechanisms, start=root,
-                                       stop=tree.find_leaves(self.robot, spanningtree),
-                                       only_urdf=True)
+        # if hasattr(self, "export_total_submechanisms"):
+        #     # add all to one urdf
+        #     spanningtree = []
+        #     for sm in self.robot.submechanisms:
+        #         spanningtree += sm.jointnames_spanningtree
+        #     spanningtree = list(set(spanningtree))
+        #     root = tree.find_common_root(input_spanningtree=spanningtree, input_model=self.robot)
+        #     self.robot.define_submodel(name=self.export_total_submechanisms, start=root,
+        #                                stop=tree.find_leaves(self.robot, spanningtree),
+        #                                only_urdf=True)
 
         if hasattr(self, "additional_urdfs") and not hasattr(self, "export_submodels"):
             setattr(self, "export_submodels", self.additional_urdfs)
