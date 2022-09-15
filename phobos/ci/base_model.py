@@ -494,9 +494,34 @@ class BaseModel(yaml.YAMLObject):
                                            stop=au["stop"] if "stop" in au else None,
                                            only_urdf=au["only_urdf"] if "only_urdf" in au.keys() else None)
 
+        # motors
+        assert self.robot.motors == []
+        for joint in self.robot.joints:
+            if hasattr(self, "smurf"):
+                conf = self.smurf["motors"]["default"] if "motors" in self.smurf.keys() and "default" in self.smurf["motors"].keys() else {}
+            else:
+                conf = {}
+            if "name" in conf.keys():  # we dont ẃant that someone overwrites the same name for all motors
+                conf.pop("name")
+            if "motors" in self.smurf.keys() and joint.name in self.smurf["motors"].keys():
+                for k, v in self.smurf["motors"][joint.name].items():
+                    conf[k] = v
+            if joint.joint_type == "fixed":
+                continue
+            motor = representation.Motor(
+                joint=joint,
+                name=conf["name"] if "name" in conf.keys() else joint.name + "_motor",
+                p=conf["p"] if "p" in conf.keys() else 20.0,
+                i=conf["i"] if "i" in conf.keys() else 0.0,
+                d=conf["d"] if "d" in conf.keys() else 0.1,
+                maxEffort=joint.limit.effort if joint.limit is not None and joint.limit.effort > 0.0 else 400,
+                reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
+                noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
+            )
+            self.robot.add_motor(motor)
+
         if hasattr(self, "smurf"):
             log.debug('  Smurfing poses, sensors, links, materials, etc.')
-
             if 'poses' in self.smurf.keys():
                 for (cn, config) in self.smurf["poses"].items():
                     pose = poses.JointPoseSet(robot=self.robot, name=cn, configuration=config)
@@ -548,31 +573,6 @@ class BaseModel(yaml.YAMLObject):
                     material_instance = self.robot.get_material(m["name"])
                     material_instance.add_annotations(**m)
                     log.debug('      Defined Material {}'.format(m["name"]))
-
-            # motors
-            self.robot.motors = []
-            for joint in self.robot.joints:
-                conf = self.smurf["motors"]["default"] if "motors" in self.smurf.keys() and "default" in self.smurf[
-                    "motors"].keys() else {}
-                if "name" in conf.keys():  # we dont ẃant that someone overwrites the same name for all motors
-                    conf.pop("name")
-                if "motors" in self.smurf.keys() and joint.name in self.smurf["motors"].keys():
-                    for k, v in self.smurf["motors"][joint.name].items():
-                        conf[k] = v
-                if joint.joint_type == "fixed":
-                    continue
-                motor = representation.Motor(
-                    joint=joint,
-                    name=conf["name"] if "name" in conf.keys() else joint.name + "_motor",
-                    p=conf["p"] if "p" in conf.keys() else 20.0,
-                    i=conf["i"] if "i" in conf.keys() else 0.0,
-                    d=conf["d"] if "d" in conf.keys() else 0.1,
-                    maxEffort=joint.limit.effort if joint.limit is not None and joint.limit.effort > 0.0 else 400,
-                    reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
-                    noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
-                )
-                self.robot.add_motor(motor)
-                motor.link_with_robot(self.robot)
 
             if "further_annotations" in self.smurf.keys():
                 for k, v in self.smurf["further_annotations"]:
