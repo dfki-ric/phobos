@@ -7,9 +7,12 @@ from .smurf_reflection import SmurfBase
 from .xml_factory import singular as _singular, plural as _plural
 from ..geometry.geometry import identical
 from ..geometry.io import import_mesh, import_mars_mesh
-from ..utils.misc import trunc
+from ..utils.misc import trunc, execute_shell_command
 from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
 from ..utils import urdf as urdf_utils, transform
+
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
@@ -20,6 +23,7 @@ class Pose(Representation, SmurfBase):
     def __init__(self, xyz=None, rpy=None, vec=None, extra=None, relative_to=None, **kwargs):
         Representation.__init__(self)
         SmurfBase.__init__(self, returns=["rotation", "position"])
+        self.excludes += ["xyz", "rpy"]
         self.xyz = xyz
         self.rotation = rpy
         self.relative_to = relative_to
@@ -159,6 +163,7 @@ class Color(Representation):
     def stringable(self):
         return False
 
+
 class Texture(Representation):
     filename = None
 
@@ -170,10 +175,40 @@ class Texture(Representation):
         return self.filename
 
 
-# class JointDynamics(Representation):
-#     def __init__(self, damping=None, friction=None):
-#         self.damping = damping
-#         self.friction = friction
+class Material(Representation, SmurfBase):
+    _class_variables = ["name", "color", "texture"]
+
+    def __init__(self, name=None, color=None, texture=None, **kwargs):
+        if color is None and "diffuseColor" in kwargs:
+            self.color = Color([
+                kwargs["diffuseColor"]["r"],
+                kwargs["diffuseColor"]["g"],
+                kwargs["diffuseColor"]["b"],
+                kwargs["diffuseColor"]["a"] if "a" in kwargs["diffuseColor"] else 1.
+            ])
+        self.color = _singular(color)
+        self.texture = _singular(texture)
+        self.original_name = name
+        if len(name) == 0 or name is None:
+            name = self.color.get_hex_color() + (os.path.basename(self.texture.filename) if texture is not None else "")
+        self.name = name
+        if "diffuseColor" not in kwargs and self.color is not None:
+            kwargs["diffuseColor"] = {"r": self.color.rgba[0], "g": self.color.rgba[1], "b": self.color.rgba[2],
+                                      "a": self.color.rgba[3]}
+        if "diffuseTexture" not in kwargs and self.texture is not None:
+            kwargs["diffuseTexture"] = self.texture.filename
+        SmurfBase.__init__(self, returns=["name"], **kwargs)
+        self.excludes += ["color"]
+
+    def check_valid(self):
+        if self.color is None and self.texture is None:
+            raise Exception("Material has neither a color nor texture.")
+
+    def equivalent(self, other):
+        return other.texture == self.texture and other.color.rgba == self.color.rgba
+
+    def is_delegate(self):
+        return self.color is None and self.texture is None
 
 
 class Box(Representation):
@@ -185,6 +220,19 @@ class Box(Representation):
 
     def scale_geometry(self, x=1, y=1, z=1):
         self.size = (v * s for v, s in zip(self.size, [x, y, z]))
+
+    def get_corners(self):
+
+        return [
+            np.array([-self.size[0] / 2, -self.size[1] / 2, -self.size[2] / 2]),
+            np.array([ self.size[0] / 2, -self.size[1] / 2, -self.size[2] / 2]),
+            np.array([-self.size[0] / 2,  self.size[1] / 2, -self.size[2] / 2]),
+            np.array([ self.size[0] / 2,  self.size[1] / 2, -self.size[2] / 2]),
+            np.array([-self.size[0] / 2, -self.size[1] / 2,  self.size[2] / 2]),
+            np.array([ self.size[0] / 2, -self.size[1] / 2,  self.size[2] / 2]),
+            np.array([-self.size[0] / 2,  self.size[1] / 2,  self.size[2] / 2]),
+            np.array([ self.size[0] / 2,  self.size[1] / 2,  self.size[2] / 2]),
+        ]
 
     def __str__(self):
         return "box"
@@ -275,9 +323,6 @@ class Mesh(Representation):
         if not check_linkage_later:
             self.check_linkage()
 
-    def check_linkage(self, attribute=None):
-        super(Mesh, self).check_linkage()
-        assert os.path.isabs(self._filename)
 
     def equivalent(self, other):
         return other._filepath == self._filepath or identical(self.load_mesh(), other.load_mesh())
@@ -331,59 +376,6 @@ class Collision(Representation, SmurfBase):
         if bitmask is not None:
             self.returns += ['bitmask']
 
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Collision, self).link_with_robot(robot, check_linkage_later=True)
-        self.origin.link_with_robot(robot, check_linkage_later=True)
-        if isinstance(self.geometry, Mesh):
-            self.geometry.link_with_robot(robot, check_linkage_later=True)
-        if not check_linkage_later:
-            self.check_linkage()
-
-    def unlink_from_robot(self):
-        super(Collision, self).unlink_from_robot()
-        self.origin.unlink_from_robot()
-
-    def check_linkage(self, attribute=None):
-        super(Collision, self).check_linkage()
-        if isinstance(self.geometry, Mesh):
-            self.geometry.check_linkage()
-
-
-class Material(Representation, SmurfBase):
-    _class_variables = ["name", "color", "texture"]
-
-    def __init__(self, name=None, color=None, texture=None, **kwargs):
-        if color is None and "diffuseColor" in kwargs:
-            self.color = Color([
-                kwargs["diffuseColor"]["r"],
-                kwargs["diffuseColor"]["g"],
-                kwargs["diffuseColor"]["b"],
-                kwargs["diffuseColor"]["a"] if "a" in kwargs["diffuseColor"] else 1.
-            ])
-        self.color = _singular(color)
-        self.texture = _singular(texture)
-        self.original_name = name
-        if len(name) == 0 or name is None:
-            name = self.color.get_hex_color() + (os.path.basename(self.texture.filename) if texture is not None else "")
-        self.name = name
-        if "diffuseColor" not in kwargs and self.color is not None:
-            kwargs["diffuseColor"] = {"r": self.color.rgba[0], "g": self.color.rgba[1], "b": self.color.rgba[2],
-                                      "a": self.color.rgba[3]}
-        if "diffuseTexture" not in kwargs and self.texture is not None:
-            kwargs["diffuseTexture"] = self.texture.filename
-        SmurfBase.__init__(self, returns=["name"], **kwargs)
-        self.excludes += ["color"]
-
-    def check_valid(self):
-        if self.color is None and self.texture is None:
-            raise Exception("Material has neither a color nor texture.")
-
-    def equivalent(self, other):
-        return other.texture == self.texture and other.color.rgba == self.color.rgba
-
-    def is_delegate(self):
-        return self.color is None and self.texture is None
-
 
 class Visual(Representation, SmurfBase):
     _class_variables = ["name", "geometry", "material", "origin"]
@@ -418,44 +410,9 @@ class Visual(Representation, SmurfBase):
     def material_(self):
         return None
 
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Visual, self).link_with_robot(robot, check_linkage_later=True)
-        # due to the specialty of having materials in both robot and visuals, we check whether those two are in sync
-        if self.material is not None:
-            robot_material = robot.get_material(self.material)
-            if robot_material is None:
-                robot.add_aggregate("material", self._material)
-            elif id(self._material) != id(robot_material):
-                if self._material.is_delegate() or self._material.equivalent(robot_material):
-                    self._material = robot_material
-                else:
-                    new_mat_name = self._material.name
-                    index = 1
-                    while robot.get_material(new_mat_name) is not None:
-                        new_mat_name = self._material.name + "_" + str(index)
-                        index += 1
-                    print("WARNING: Ambiguous material in ", self.name, "renamed ", self._material.name, "to",
-                          new_mat_name)
-                    self._material.name = new_mat_name
-        if isinstance(self.geometry, Mesh):
-            self.geometry.link_with_robot(robot, check_linkage_later=True)
-        if not check_linkage_later:
-            self.check_linkage()
-
-    def unlink_from_robot(self):
-        super(Visual, self).unlink_from_robot()
-        self.origin.unlink_from_robot()
-        if isinstance(self._material, Material):
-            self._material.unlink_from_robot()
-
-    def check_linkage(self, attribute=None):
-        super(Visual, self).check_linkage()
-        if isinstance(self.geometry, Mesh):
-            self.geometry.check_linkage()
-
     def equivalent(self, other):
-        return self.geometry.equivalent(other.geometry) and self._material.equivalent(
-            other._material) and self.origin == other.origin
+        return self.geometry.equivalent(other.geometry) and self._material.equivalent(other._material) and \
+               self.origin == other.origin
 
 
 class Inertia(Representation):
@@ -521,15 +478,131 @@ class Inertial(Representation):
         M[3::, 3::] = I
         return M
 
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Inertial, self).link_with_robot(robot)
-        self.origin.link_with_robot(robot)
-        if not check_linkage_later:
-            self.check_linkage()
 
-    def unlink_from_robot(self):
-        super(Inertial, self).unlink_from_robot()
-        self.origin.unlink_from_robot()
+class KCCDHull(Representation, SmurfBase):
+    _class_variables = ["link", "points", "radius"]
+
+    def __init__(self, points=None, radius=None, frame=None, **kwargs):
+        """
+
+        Args:
+            points: relative to the link
+            radius:
+            **kwargs:
+        """
+        SmurfBase.__init__(returns=["points", "radius", "frame"], **kwargs)
+        self._npoints = len(points)
+        self.points = points
+        self.radius = radius
+        self.frame = frame
+
+    @classmethod
+    def from_collision(self, coll, npoints=None, iv_mesh=None, kccd_path=None):
+        self.frame = coll.link
+        if isinstance(coll.geometry, Sphere):
+            self._npoints = 1
+            self.radius = coll.geometry.radius
+            self.points = [coll.origin.position]
+        elif isinstance(coll.geometry, Cylinder):
+            self._npoints = 2
+            self.radius = coll.geometry.radius
+            axis = coll.origin.to_matrix()[0:3, 0:3].dot(np.array([coll.geometry.length, 0, 0]))
+            self.points = [coll.origin.position - axis, coll.origin.position+axis]
+            self.radius = coll.geometry.radius
+        elif isinstance(coll.geometry, Box):
+            if npoints == 1:
+                self._npoints = 1
+                self.points = [coll.origin.position]
+                self.radius = 2**0.5 * np.linalg.norm(coll.geometry.size)/2
+            elif npoints != 8:
+                log.warning(f"Can create kccd hull for a box either as sphere with one point or with eight. "
+                            f"You asked for {npoints}, falling back to 8.")
+            self._npoints = 8
+            self.radius = 0.
+            self.points = [coll.origin.to_matrix()[0:3, 0:3].dot(c) for c in coll.geometry.get_corners()]
+        elif isinstance(coll.geometry, Mesh):
+            assert npoints is not None
+            assert iv_mesh is not None and os.path.isfile(iv_mesh)
+            assert kccd_path is not None and os.path.isdir(kccd_path)
+            self._npoints = npoints
+            self.points = []
+            log.info(f"Covering {iv_mesh} of {self.frame} with {self._npoints}")
+            out, _ = execute_shell_command(f"kccdcoveriv {iv_mesh} {self._npoints} {self.frame}",
+                                           cwd=kccd_path, silent=True)
+            block_lines = out.split("\n")
+            for line in block_lines:
+                if line.startswith("BODYRADIUS"):
+                    self.radius = float(line.split[-1])
+                elif line.startswith("BODYPOINT"):
+                    line = line.replace("[", "")
+                    line = line.replace(",", "")
+                    self.points.append(np.array([float(x) for x in line.split()[-3:]]))
+
+
+class Link(Representation, SmurfBase):
+    _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hulls"]
+
+    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
+                 noDataPackage=False, reducedDataPackage=False, is_human=None, kccd_hulls=None, **kwargs):
+        assert origin is None  # Unused but might be neccesary for sdf
+        SmurfBase.__init__(self, **kwargs)
+        self.name = name
+        self.is_human = is_human
+        self.returns += ['name', "is_human"]
+        self.visuals = []
+        if visuals is not None:
+            self.visuals = visuals
+        self.inertial = _singular(inertial)
+        self.collisions = []
+        if collisions is not None:
+            self.collisions = collisions
+        self.kccd_hulls = []
+        if kccd_hulls is not None:
+            self.kccd_hulls = kccd_hulls
+        for geo in self.visuals + self.collisions:
+            if geo.origin.relative_to is None:
+                geo.origin.relative_to = self.name
+        if noDataPackage is not None:
+            self.noDataPackage = noDataPackage
+            self.returns += ['noDataPackage']
+        if reducedDataPackage is not None:
+            self.reducedDataPackage = reducedDataPackage
+            self.returns += ['reducedDataPackage']
+        for geo in self.collisions:
+            i = 0
+            if geo.name is None:
+                geo.name = self.name + "_collision"
+                if i > 0:
+                    geo.name += str(i)
+
+        for geo in self.visuals:
+            i = 0
+            if geo.name is None:
+                geo.name = self.name + "_visual"
+                if i > 0:
+                    geo.name += str(i)
+        self.excludes += ["inertial"]
+
+    def remove_aggregate(self, elem):
+        if isinstance(elem, Visual):
+            self.visuals.remove(elem)
+        elif isinstance(elem, Collision):
+            self.collisions.remove(elem)
+
+    def add_aggregate(self, elem_type, elem):
+        if isinstance(elem, Visual) or elem_type.lower() == "visual":
+            self.visuals.append(elem)
+        elif isinstance(elem, Collision) or elem_type.lower() == "collision":
+            self.collisions.append(elem)
+
+
+class JointDynamics(Representation):
+    def __init__(self, damping=None, friction=None, spring_stiffness=None, spring_reference=None):
+        super().__init__()
+        self.damping = damping
+        self.friction = friction
+        self.spring_stiffness = spring_stiffness
+        self.spring_reference = spring_reference
 
 
 class JointLimit(Representation):
@@ -548,7 +621,7 @@ class JointMimic(Representation, SmurfBase):
 
     def __init__(self, joint=None, multiplier=None, offset=None, **kwargs):
         super().__init__()
-        self.joint = joint
+        self.joint = _singular(joint)
         assert self.joint is not None
         self.multiplier = multiplier
         assert self.multiplier is not None
@@ -561,17 +634,20 @@ class JointMimic(Representation, SmurfBase):
     def __eq__(self, other):
         return other.joint == self.joint and other.offset == self.offset and other.multiplier == self.multiplier
 
+    def stringable(self):
+        return False
+
 
 class Joint(Representation, SmurfBase):
-    TYPES = ['unknown', 'revolute', 'continuous', 'prismatic',
-             'floating', 'planar', 'fixed']
+    TYPES = ['unknown', 'revolute', 'continuous', 'prismatic', 'floating', 'planar', 'fixed']
 
     type_dict = {
         "parent": "links",
         "child": "links",
         "motor": "motors"
     }
-    _class_variables = ["name", "parent", "child", "joint_type", "axis", "limit", "dynamics", "mimic", "motor"]
+    _class_variables = ["name", "parent", "child", "joint_type", "axis", "limit", "dynamics", "motor", "origin",
+                        "joint_dependencies"]
 
     def __init__(self, name=None, parent=None, child=None, joint_type=None,
                  axis=None, origin=None, limit=None,
@@ -594,7 +670,6 @@ class Joint(Representation, SmurfBase):
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self._origin = _singular(origin)
         self.limit = _singular(limit)
-        self.dynamics = _singular(dynamics)
         self._joint_dependencies = _plural(mimic)
         self.cut_joint = cut_joint
         self.constraint_axes = constraint_axes if constraint_axes is not None else []
@@ -605,16 +680,18 @@ class Joint(Representation, SmurfBase):
         if reducedDataPackage is not None:
             self.reducedDataPackage = reducedDataPackage
             self.returns += ["reducedDataPackage"]
+        # dynamics
+        self.dynamics = _singular(dynamics)
         if damping_const_constraint_axis1 is not None:
             self.damping_const_constraint_axis1 = damping_const_constraint_axis1
             self.returns += ["damping_const_constraint_axis1"]
         if springDamping is not None:
             self.springDamping = springDamping
             self.returns += ["springDamping"]
-        if springStiffness is not None:
+        if springStiffness is not None:  # todo provide this to JointDynamics
             self.springStiffness = springStiffness
             self.returns += ["springStiffness"]
-        if spring_const_constraint_axis1 is not None:
+        if spring_const_constraint_axis1 is not None:  # todo provide this to JointDynamics (spring_reference)
             self.spring_const_constraint_axis1 = spring_const_constraint_axis1
             self.returns += ["spring_const_constraint_axis1"]
         self.excludes += ["limit", "mimic"]
@@ -652,22 +729,16 @@ class Joint(Representation, SmurfBase):
         else:
             raise ValueError("Can not set mimic for a joint that depends on mulitple joints. Consider using the joint_dependency setter.")
 
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Joint, self).link_with_robot(robot, check_linkage_later=True)
-        for mimic in self.joint_dependencies:
-            mimic.link_with_robot(robot, check_linkage_later=True)
-        if not check_linkage_later:
-            self.check_linkage()
+    @property
+    def springStiffness(self):
+        return self.dynamics.spring_stiffness if self.dynamics is not None else None
 
-    def unlink_from_robot(self):
-        super(Joint, self).unlink_from_robot()
-        for mimic in self.joint_dependencies:
-            mimic.unlink_from_robot()
-
-    def check_linkage(self, attribute=None):
-        super(Joint, self).check_linkage()
-        for mimic in self.joint_dependencies:
-            mimic.check_linkage()
+    @springStiffness.setter
+    def springStiffness(self, value):
+        if self.dynamics is None:
+            self.dynamics = JointDynamics(spring_stiffness=value)
+        else:
+            self.dynamics.spring_stiffness = value
 
     @property
     def joint_dependencies(self):
@@ -685,91 +756,16 @@ class Joint(Representation, SmurfBase):
             skip = False
             for v2 in new_val[idx:]:
                 if v1.equivalent(v2) and v1 != v2:
-                    print(v1.to_yaml())
-                    print(v2.to_yaml())
+                    log.error(v1.to_yaml())
+                    log.error(v2.to_yaml())
                     raise AssertionError("Received conflicting joint dependencies!")
                 elif v1 == v2:
                     skip = True
             if not skip:
                 self._joint_dependencies.append(v1)
-
-
-class Link(Representation, SmurfBase):
-    _class_variables = ["name", "visuals", "collisions", "inertial"]
-
-    def __init__(self, name=None, visuals=None, inertial=None, collisions=None,
-                 origin=None, noDataPackage=False, reducedDataPackage=False, is_human=None, **kwargs):
-        assert origin is None  # Unused but might be neccesary for sdf
-        SmurfBase.__init__(self, **kwargs)
-        self.name = name
-        self.is_human = is_human
-        self.returns += ['name', "is_human"]
-        self.visuals = []
-        if visuals is not None:
-            self.visuals = visuals
-        self.inertial = _singular(inertial)
-        self.collisions = []
-        if collisions is not None:
-            self.collisions = collisions
-        for geo in self.visuals + self.collisions:
-            if geo.origin.relative_to is None:
-                geo.origin.relative_to = self.name
-        if noDataPackage is not None:
-            self.noDataPackage = noDataPackage
-            self.returns += ['noDataPackage']
-        if reducedDataPackage is not None:
-            self.reducedDataPackage = reducedDataPackage
-            self.returns += ['reducedDataPackage']
-
-        for geo in self.collisions:
-            i = 0
-            if geo.name is None:
-                geo.name = self.name + "_collision"
-                if i > 0:
-                    geo.name += str(i)
-
-        for geo in self.visuals:
-            i = 0
-            if geo.name is None:
-                geo.name = self.name + "_visual"
-                if i > 0:
-                    geo.name += str(i)
-        self.excludes += ["inertial"]
-
-    def remove_aggregate(self, elem):
-        if isinstance(elem, Visual):
-            self.visuals.remove(elem)
-        elif isinstance(elem, Collision):
-            self.collisions.remove(elem)
-
-    def add_aggregate(self, elem_type, elem):
-        if isinstance(elem, Visual) or elem_type.lower() == "visual":
-            self.visuals.append(elem)
-        elif isinstance(elem, Collision) or elem_type.lower() == "collision":
-            self.collisions.append(elem)
-
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Link, self).link_with_robot(robot, check_linkage_later=True)
-        for vis in self.visuals:
-            vis.link_with_robot(robot, check_linkage_later=True)
-        for col in self.collisions:
-            col.link_with_robot(robot, check_linkage_later=True)
-        if not check_linkage_later:
-            self.check_linkage()
-
-    def unlink_from_robot(self):
-        super(Link, self).unlink_from_robot()
-        for vis in self.visuals:
-            vis.unlink_from_robot()
-        for col in self.collisions:
-            col.unlink_from_robot()
-
-    def check_linkage(self, attribute=None):
-        super(Link, self).check_linkage()
-        for vis in self.visuals:
-            vis.check_linkage()
-        for col in self.collisions:
-            col.check_linkage()
+        if self._related_robot_instance is not None:
+            for jd in self._joint_dependencies:
+                jd.link_with_robot(robot=self._related_robot_instance)
 
 
 class Interface(Representation, SmurfBase):
@@ -778,9 +774,12 @@ class Interface(Representation, SmurfBase):
         "parent": "links"
     }
 
-    def __init__(self, name=None, origin=None, parent=None, **kwargs):
+    def __init__(self, name=None, origin=None, parent=None, type=None, direction=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
+        self.excludes += ["origin"]
         self.name = name
+        self.type = type
+        self.direction = direction
         assert self.name is not None
         if origin is None:
             origin = Pose()
@@ -836,11 +835,6 @@ class Transmission(Representation):
         assert len(self.joints) > 0, "no joint defined"
         assert len(self.actuators) > 0, "no actuator defined"
 
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Transmission, self).link_with_robot(robot)
-        for j in self.joints:
-            j.link_with_robot(robot)
-
 
 class Motor(Representation, SmurfBase):
     _class_variables = ["name", "joint"]
@@ -854,21 +848,6 @@ class Motor(Representation, SmurfBase):
         self._maxValue = None
         self._minValue = None
         self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue']
-
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Motor, self).link_with_robot(robot, check_linkage_later=True)
-        self._joint.motor = self.name
-        if not check_linkage_later:
-            self.check_linkage()
-
-    def unlink_from_robot(self):
-        if self._related_robot_instance is not None:
-            self._joint.motor = None
-        super(Motor, self).unlink_from_robot()
-
-    def check_linkage(self, attribute=None):
-        super(Motor, self).check_linkage()
-        assert id(self._joint._motor) == id(self)
 
     @property
     def maxEffort(self):

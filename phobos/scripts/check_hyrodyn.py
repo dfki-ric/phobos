@@ -1,5 +1,4 @@
 #!python3
-from ..utils.commandline_logging import get_logger
 
 def can_be_used():
     try:
@@ -21,6 +20,7 @@ def main(args):
     import argparse
     import os.path as path
     from ..defs import BASE_LOG_LEVEL
+    from ..utils.commandline_logging import setup_logger_level
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf file')
@@ -29,7 +29,7 @@ def main(args):
                         default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
 
-    log = get_logger(__name__, verbose_argument=args.loglevel)
+    log = setup_logger_level(log_level=args.loglevel)
     log.info("\n--> Checking Model in Hyrodyn!")
     report = hyrodyn_utils.get_load_report(args.robot_file, args.submechanisms_file)
     hyrodyn_utils.debug_report(report, args.robot_file, args.submechanisms_file)

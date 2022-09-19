@@ -10,6 +10,8 @@ import numpy as np
 from . import io
 from ..io import representation
 from ..utils import misc
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 
 def round_vector(v):
@@ -82,7 +84,7 @@ def create_convex_hull(mesh, filepath, urdf_path, scale=1.0):
     convex_mesh = mesh.convex_hull
     if "_convexhull" in filepath and all(
             trimesh.comparison.identifier_simple(mesh) == trimesh.comparison.identifier_simple(mesh.convex_hull)):
-        print("Mesh is already convex hull: ", filepath)
+        log.info(f"Mesh is already convex hull: {filepath}")
         return representation.Mesh(filename=filepath, scale=[scale, scale, scale])
 
     # Get the format and export
@@ -147,10 +149,10 @@ def has_enough_vertices(element, urdf_path):
     zero_transform = element.origin.to_matrix()
     mesh.apply_transform(zero_transform)
     if len(mesh.vertices) <= 3:
-        print("Mesh has less than 4 vertices:", element.geometry._filename)
+        log.info(f"Mesh has less than 4 vertices: {element.geometry._filename}")
         return False
     elif np.linalg.norm(mesh.bounding_box_oriented.primitive.extents) <= 0.01:
-        print("Mesh is smaller than 1cm:", element.geometry._filename)
+        log.info(f"Mesh is smaller than 1cm: {element.geometry._filename}")
         return False
     return True
 
@@ -214,8 +216,7 @@ def reduce_mesh(mesh, factor):
     v_ = len(out.vertices)
     f = len(mesh.faces)
     f_ = len(out.faces)
-    print("Reduced", f, "->", f_, "(" + str(np.round(1000 * f_ / f) / 10) + "%) faces and ", v, "->", v_,
-          "(" + str(np.round(1000 * v_ / v) / 10) + "%) vertices")
+    log.info(f"Reduced {f} -> {f_} ({np.round(1000 * f_ / f) / 10}%) faces and {v} -> {v_} ({np.round(1000 * v_ / v) / 10}%) vertices")
     return out
 
 

@@ -50,5 +50,5 @@ install:
   - ls ${PWD}/tmp/blender/3.2/scripts/addons/phobos
 
 # Finally start our test runner passing it the blender executable from the downloaded blender release
-script: python testrunner.py ./tmp/blender/blender
+script: python test/testrunner.py ./tmp/blender/blender
 

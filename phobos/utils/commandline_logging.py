@@ -25,9 +25,10 @@ def setup_logger_level(log_level=BASE_LOG_LEVEL, file_name=LOG_FILE_CONVENTION):
             logger.setLevel(logging.ERROR)
         elif log_level.upper() == "CRITICAL":
             logger.setLevel(logging.CRITICAL)
+        sh_formatter = logging.Formatter("%(message)s")
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         sh = logging.StreamHandler(sys.stdout)
-        sh.setFormatter(formatter)
+        sh.setFormatter(sh_formatter)
         logger.handlers.clear()
         logger.addHandler(sh)
         if file_name:
@@ -37,19 +38,7 @@ def setup_logger_level(log_level=BASE_LOG_LEVEL, file_name=LOG_FILE_CONVENTION):
         return logger
 
 
-def get_logger(module_name, verbose_argument=None):
-    if verbose_argument is not None:
-        root_logger = logging.getLogger(LOGGER_NAME)
-        if verbose_argument.upper() == "DEBUG":
-            root_logger.setLevel(logging.DEBUG)
-        elif verbose_argument.upper() == "INFO":
-            root_logger.setLevel(logging.INFO)
-        elif verbose_argument.upper() == "WARNING":
-            root_logger.setLevel(logging.WARNING)
-        elif verbose_argument.upper() == "ERROR":
-            root_logger.setLevel(logging.ERROR)
-        elif verbose_argument.upper() == "CRITICAL":
-            root_logger.setLevel(logging.CRITICAL)
+def get_logger(module_name):
     child_logger = logging.getLogger(LOGGER_NAME).getChild(module_name)
     child_logger.setLevel(logging.NOTSET)  # This ensures that child logger inherits from parent logger
     return child_logger

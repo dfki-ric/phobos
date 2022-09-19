@@ -1,5 +1,4 @@
 #!python3
-from ..utils.commandline_logging import get_logger
 
 
 def can_be_used():
@@ -23,7 +22,7 @@ def main(args):
 
     from phobos.ci import XTypePipeline
     import phobos.utils.misc as misc
-
+    from ..utils.commandline_logging import setup_logger_level
     from ..defs import BASE_LOG_LEVEL
 
     try:
@@ -60,7 +59,7 @@ def main(args):
                         default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
 
-    log = get_logger(__name__, verbose_argument=args.loglevel)
+    log = setup_logger_level(log_level=args.loglevel)
 
     def generate_cfg(cfg_path, overwrite=False):
         if not os.path.exists(os.path.dirname(os.path.abspath(cfg_path))):

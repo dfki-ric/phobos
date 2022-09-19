@@ -1,8 +1,4 @@
 #!python3
-
-from ..utils.commandline_logging import get_logger
-
-
 def can_be_used():
     return True
 
@@ -20,6 +16,7 @@ def main(args):
 
     from ..scenes import Scene, Assembly
     from ..defs import BASE_LOG_LEVEL
+    from ..utils.commandline_logging import setup_logger_level
 
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=str, help="SMURFA or SMURFS file")
@@ -29,7 +26,7 @@ def main(args):
                         default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
 
-    log = get_logger(__name__, verbose_argument=args.loglevel)
+    log = setup_logger_level(log_level=args.loglevel)
     log.info("Unique names for all links and joints are assumed to create a valid .urdf file!")
 
     scene = Scene(args.input)

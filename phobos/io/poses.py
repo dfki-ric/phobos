@@ -4,8 +4,8 @@ from ..io.smurf_reflection import SmurfBase
 class JointPose(SmurfBase):
     _class_variables = ["joint"]
 
-    def __init__(self, robot=None, joint=None, position=None):
-        super().__init__(robot=robot, name=None, joint=joint)
+    def __init__(self, joint=None, position=None):
+        super().__init__(name=None, joint=joint)
         self._position = position
 
         self.excludes += ['_position', 'name']
@@ -33,8 +33,10 @@ class JointPose(SmurfBase):
 
 
 class JointPoseSet(SmurfBase):
+    _class_variables = ["configuration"]
+
     def __init__(self, robot=None, name=None, configuration=None):
-        super().__init__(robot=robot, name=name)
+        super().__init__(name=name)
 
         self.configuration = None
 
@@ -75,15 +77,5 @@ class JointPoseSet(SmurfBase):
                 if robot.get_joint(joint):
                     c_joint = robot.get_joint(joint)
                     self.configuration.append(
-                        JointPose(robot=robot, joint=c_joint, position=position)
+                        JointPose(joint=c_joint, position=position)
                     )
-
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(JointPoseSet, self).link_with_robot(robot, check_linkage_later=True)
-        self.configuration.link_with_robot(robot, check_linkage_later=True)
-        if not check_linkage_later:
-            self.check_linkage()
-
-    def unlink_from_robot(self):
-        super(JointPoseSet, self).unlink_from_robot()
-        self.configuration.unlink_from_robot()

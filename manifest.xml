@@ -28,13 +28,12 @@
   <depend package="python-fcl" />
   <depend package="scipy" />
   <depend package="trimesh" />
+  <!--  Used for pdf export -->
+  <depend package="pydot"/>
   <!--  Only used for CI and backwards compatibility in import/and prettier printing -->
   <depend package="pyyaml"/><!-- optional="1"/>-->
   <!--  Only used for kccd collision export -->
   <depend package="control/kccdtools" optional="1"/>
-  <!--  Only used for pdf export -->
-  <depend package="control/urdfdom" optional="1"/>
-  <depend package="control/urdfdom_headers" optional="1"/>
   <!--  Only necessary when using the blender add-on-->
   <depend package="blender" optional="1"/>
   <!--  Only used for certain tests-->

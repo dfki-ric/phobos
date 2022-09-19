@@ -61,7 +61,7 @@ def install_requirement(py_exec, package_name, upgrade_pip=False, lib=None):
         print("  Upgrading pip...")
         exec_shell_cmd([py_exec, "-m", "pip", "install", "--upgrade", "pip"])
     # Install package
-    print("  Installing package", package_name, flush=True)
+    print("  Installing package", package_name)
     if lib is None:
         exec_shell_cmd([py_exec, "-m", "pip", "install", package_name])
     else:
@@ -71,6 +71,20 @@ def install_requirement(py_exec, package_name, upgrade_pip=False, lib=None):
 def check_requirements(py_exec, optional=False, upgrade_pip=False, lib=None):
     print("Checking requirements:")
     import importlib
+    requirements = [
+        "networkx",
+        "numpy",
+        "scipy",
+        "trimesh",
+        "setuptools",
+        "collada"
+    ]
+    optional_requirements = [
+        "pyyaml",
+        "pybullet",
+        "open3d",
+        "python-fcl"
+    ]
     reqs = [requirements]
     if optional:
         reqs += [optional_requirements]
@@ -79,7 +93,7 @@ def check_requirements(py_exec, optional=False, upgrade_pip=False, lib=None):
         exec_shell_cmd([py_exec, "-m", "pip", "install", "--upgrade", "pip"])
     for r in reqs:
         for import_name, req_name in r.items():
-            print("  Checking", import_name, flush=True)
+            print("  Checking", import_name)
             install_requirement(py_exec, req_name, upgrade_pip=False, lib=lib)
             # try:
             #     if importlib.util.find_spec(import_name) is None:
@@ -107,7 +121,6 @@ def fetch_path_from_blender_script(blender_exec, script, keyword="blender"):
 
 
 def main(args):
-
     # data
     with open("README.md", "r") as fh:
         long_description = fh.read()
@@ -123,10 +136,9 @@ def main(args):
     kwargs = {
         "name": codemeta["title"].lower(),  # Replace with your own username
         "version": codemeta["version"],
-        "author":",  ".join(codemeta["author"]),
+        "author": ",  ".join(codemeta["author"]),
         "author_email": codemeta["maintainer"],
-        "description": codemeta["description"] + " Revision:" + get_git_branch() + "-"
-                    + get_git_revision_short_hash(),
+        "description": codemeta["description"] + " Revision:" + get_git_branch() + "-" + get_git_revision_short_hash(),
         "long_description": long_description,
         "long_description_content_type":" text/markdown",
         "url": codemeta["codeRepository"],

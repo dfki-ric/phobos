@@ -8,6 +8,8 @@ from . import representation, xml_factory, sensor_representations
 from .base import Representation
 from ..utils.transform import create_transformation, get_adjoint, inv
 from ..utils.tree import get_joints_depth_first
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 
 class XMLRobot(Representation):
@@ -74,13 +76,25 @@ class XMLRobot(Representation):
         for link in self.links:
             link.is_human = True
 
-    def link_entities(self):
-        for entity in self.links + self.joints + self.sensors:
-            entity.link_with_robot(self)
+    def link_entities(self, check_linkage_later=False):
+        for entity in self.links + self.joints + self.sensors + self.materials:
+            entity.link_with_robot(self, check_linkage_later=True)
+        if not check_linkage_later:
+            self.check_linkage()
 
-    def unlink_entities(self):
-        for entity in self.links + self.joints + self.sensors:
-            entity.unlink_from_robot()
+    def unlink_entities(self, check_linkage_later=False):
+        for entity in self.links + self.joints + self.sensors + self.materials:
+            entity.unlink_from_robot(check_linkage_later=True)
+        if not check_linkage_later:
+            self.check_unlinkage()
+
+    def check_linkage(self):
+        for entity in self.links + self.joints + self.sensors + self.materials:
+            entity.check_linkage()
+
+    def check_unlinkage(self):
+        for entity in self.links + self.joints + self.sensors + self.materials:
+            entity.check_unlinkage()
 
     def relink_entities(self):
         self.unlink_entities()
@@ -92,6 +106,12 @@ class XMLRobot(Representation):
         self.link_entities()
         out.link_entities()
         return out
+
+    def link_with_robot(self, robot, check_linkage_later=False):
+        raise NotImplementedError
+
+    def unlink_from_robot(self, check_linkage_later=False):
+        raise NotImplementedError
 
     def _get_children_lists(self, parentlist, childrenlist, targettype='link'):
         """
@@ -217,7 +237,7 @@ class XMLRobot(Representation):
                 while str(elem) + f"_{counter}" in object_names:
                     counter += 1
                 if not silent:
-                    print(f"Renamed {typeName} {str(elem)} to {str(elem)}_{counter}")
+                    log.debug(f"Renamed {typeName} {str(elem)} to {str(elem)}_{counter}")
                 elem.set_unique_name(str(elem) + f"_{counter}")
             objects += [elem]
             setattr(self, typeName, objects)
@@ -394,7 +414,7 @@ class XMLRobot(Representation):
             if str(obj) == str(target):
                 return obj
         if verbose:
-            print(f"Robot {self.name} has no {targettype} with name {target}, only these: {repr(names)}")
+            log.warning(f"Robot {self.name} has no {targettype} with name {target}, only these: {repr(names)}")
         return None
 
     def get_link(self, link_name, verbose=True) -> [representation.Link, list]:
@@ -603,13 +623,13 @@ class XMLRobot(Representation):
         :return: List with one element (todo)
         """
         # Check if the name is present
-        if name in self.parent_map.keys():
-            parents = self.parent_map[name]
-        elif name in self.child_map.keys():
+        if str(name) in self.parent_map.keys():
+            parents = self.parent_map[str(name)]
+        elif str(name) in self.child_map.keys():
             return None
         else:
-            print("Parent map keys: ", self.parent_map.keys())
-            raise AssertionError("Nothing with name " + name + " in this robot")
+            log.error(f"Parent map keys: {self.parent_map.keys()}")
+            raise AssertionError("Nothing with name " + str(name) + " in this robot")
 
         # Parentmap contains links.
         # If we want joints, then collect the children of these
@@ -637,8 +657,8 @@ class XMLRobot(Representation):
 
         children = []
 
-        if name in self.child_map.keys():
-            children = self.child_map[name]
+        if str(name) in self.child_map.keys():
+            children = self.child_map[str(name)]
 
         if children:
             if targettype == 'joint':

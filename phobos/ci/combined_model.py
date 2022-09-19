@@ -12,6 +12,8 @@ from ..ci.base_model import BaseModel
 from ..utils import git
 from ..utils import misc
 
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 class CombinedModel(BaseModel):
     def __init__(self, configfile, pipeline, processed_model_exists=True, super_call=False):
@@ -25,7 +27,7 @@ class CombinedModel(BaseModel):
             if self.processed_model_exists:
                 self._load_robot()
 
-            print("Finished reading config and joining models to base model", configfile, flush=True)
+            log.debug(f"Finished reading config and joining models to base model  {configfile}")
 
     def process(self):
         misc.recreate_dir(self.pipeline, self.tempdir)
@@ -257,12 +259,12 @@ class CombinedModel(BaseModel):
                     )
 
                 if parent.get_link(child["joint"]["parent"]) is None:
-                    print("Parent links:", sorted([lnk.name for lnk in parent.links]))
+                    log.error(f"Parent links: {sorted([lnk.name for lnk in parent.links])}")
                     raise AssertionError(
                         "Problem with assembling joint " + child["joint"]["parent"] + " -> " + child["joint"]["child"]
                         + ": the parent link doesn't exist!")
                 elif att_model.get_link(child["joint"]["child"]) is None:
-                    print("Child links:", sorted([lnk.name for lnk in att_model.links]))
+                    log.error(f"Child links: {sorted([lnk.name for lnk in att_model.links])}")
                     raise AssertionError(
                         "Problem with assembling joint " + child["joint"]["parent"] + " -> " + child["joint"]["child"]
                         + ": the child link doesn't exist!")

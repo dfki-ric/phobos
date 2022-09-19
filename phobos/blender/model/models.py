@@ -555,6 +555,29 @@ def deriveLight(obj):
     return light
 
 
+def deriveInterface(obj):
+    """This function derives an interface from a given blender object
+
+    Args:
+      obj(bpy_types.Object): The blender object to derive the light from.
+
+    Returns:
+      : tuple
+
+    """
+    assert obj.phobostype == "interface"
+    interface = initObjectProperties(obj, phobostype='interface')
+    if "name" not in interface:
+        interface["name"] = nUtils.getObjectName(obj)
+    if "parent" not in interface:
+        interface["parent"] = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
+    pose = deriveObjectPose(obj)
+    interface['pose'] = pose
+    interface['position'] = pose['translation']
+    interface['rotation'] = pose['rotation_euler']
+    return interface
+
+
 def recursive_dictionary_cleanup(dictionary):
     """Recursively enrich the dictionary and replace object links with names etc.
 
@@ -1025,6 +1048,7 @@ def deriveModelDictionary(root, name='', objectlist=[]):
         'lights': {},
         'groups': {},
         'chains': {},
+        'interfaces': {},
         'date': datetime.now().strftime("%Y%m%d_%H:%M"),
         'name': modelname,
         'version': modelversion,
@@ -1062,7 +1086,9 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             # if so they can be extended/overwritten by motor objects later on
             if '$motor' in jointdict:
                 motordict = jointdict['$motor']
-                # at least we need a type property
+                if 'mimic_motor' in motordict:
+                    motordict['type'] = 'mimic'
+                # at least we need a type property, TODO WIESO ? DESHALB FLIEGEN ALLE 'mimic_motor', HOTFIXED
                 if 'type' in motordict:
                     # if no name is given derive it from the joint
                     if not 'name' in motordict:
@@ -1154,6 +1180,12 @@ def deriveModelDictionary(root, name='', objectlist=[]):
     for obj in objectlist:
         if obj.phobostype == 'light':
             model['lights'][nUtils.getObjectName(obj)] = deriveLight(obj)
+
+    # gather information on interfaces
+    log("Parsing interfaces...", "INFO")
+    for obj in objectlist:
+        if obj.phobostype == 'interface':
+            model['interfaces'][nUtils.getObjectName(obj)] = deriveInterface(obj)
 
     # gather submechanism information from links
     log("Parsing submechanisms...", "INFO")
