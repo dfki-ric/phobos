@@ -10,7 +10,7 @@ import struct
 import json
 
 from . import geometry
-from .geometry import identical
+from .geometry import identical, improve_mesh, reduce_mesh
 from ..defs import BPY_AVAILABLE
 from ..utils import misc, urdf as urdf_utils
 from ..utils.commandline_logging import get_logger
@@ -60,7 +60,6 @@ def export_bobj(outname, mesh):
     # else:
     #     write_uv = False
 
-    log.info(f"Exporting {outname} with {len(mesh.vertices)} vertices...")
     if os.path.isfile(outname):
         # TODO load bobj mesh
         # test_mesh = import_mesh(outname)
@@ -69,7 +68,9 @@ def export_bobj(outname, mesh):
         return
     mesh.fix_normals()
     mesh.merge_vertices()
+    mesh = improve_mesh(mesh)
 
+    log.info(f"Exporting {outname} with {len(mesh.vertices)} vertices...")
     if not outname.endswith(".bobj"):
         outname += ".bobj"
 
@@ -117,6 +118,7 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
     """Export the mesh to a given filepath with an urdf_path.
     """
     mesh = as_mesh(mesh)
+    mesh = improve_mesh(mesh)
 
     if urdf_path is not None and urdf_path.lower().endswith(".urdf"):
         urdf_path = os.path.dirname(urdf_path)
@@ -147,6 +149,7 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
             mesh.export(
                 file_obj=filepath
             )
+    return filepath
 
 
 def export_mars_mesh(mesh, filepath, urdf_path=None):
@@ -154,6 +157,7 @@ def export_mars_mesh(mesh, filepath, urdf_path=None):
     """
     m = as_mesh(mesh)
     m = deepcopy(m)
+    m = improve_mesh(m)
 
     if filepath.split(".")[-1] == 'obj':
         v_ = m.vertices
@@ -207,6 +211,7 @@ def export_bobj_mesh(mesh, filepath, urdf_path=None):
         filepath = os.path.abspath(filepath)
 
     export_bobj(filepath, m)
+    return filepath
 
 
 def import_mesh(filepath, urdf_path=None):

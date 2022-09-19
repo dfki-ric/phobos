@@ -4,6 +4,7 @@ import os
 from typing import List, Any
 
 import pkg_resources
+import pydot
 from copy import deepcopy, copy
 from scipy.spatial.transform import Rotation as scipy_rot
 import numpy as np
@@ -19,7 +20,7 @@ from ..utils import transform
 from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_string, execute_shell_command, duplicate
 from ..utils.transform import create_transformation, inv, get_adjoint
 from ..utils.tree import find_close_ancestor_links
-from ..utils.urdf import read_urdf_filename, create_pdf_from_urdf, transform_object, get_joint_info_dict
+from ..utils.urdf import read_urdf_filename, transform_object, get_joint_info_dict
 
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
@@ -269,11 +270,14 @@ class Robot(SMURFRobot):
             outputfile = self.name
 
         outputfile = os.path.abspath(outputfile)
-        export_robot = self.duplicate()
-        if not export_visuals:
-            export_robot.remove_visuals()
-        if not export_collisions:
-            export_robot.remove_collisions()
+        if not export_visuals or not export_collisions:
+            export_robot = self.duplicate()
+            if not export_visuals:
+                export_robot.remove_visuals()
+            if not export_collisions:
+                export_robot.remove_collisions()
+        else:
+            export_robot = self
 
         xml_string = export_robot.to_urdf_string(float_fmt_dict=float_fmt_dict)
 
@@ -299,8 +303,8 @@ class Robot(SMURFRobot):
                 f.close()
 
         if create_pdf:
-            create_pdf_from_urdf(outputfile)
-        log.info("Robot written to {}".format(outputfile))
+            self.export_pdf(outputfile[:-5]+".pdf")
+        log.info("URDF written to {}".format(outputfile))
         return
 
     def export_sdf(self, outputfile=None, export_visuals=True, export_collisions=True, create_pdf=False,
@@ -348,8 +352,8 @@ class Robot(SMURFRobot):
                 f.close()
 
         if create_pdf:
-            create_pdf_from_urdf(outputfile)
-        log.info("Robot written to {}".format(outputfile))
+            self.export_pdf(outputfile[:-5]+".pdf")
+        log.info("SDF written to {}".format(outputfile))
         return
 
     def export_xml(self, output_dir=None, export_visuals=True, export_collisions=True,
@@ -455,7 +459,8 @@ class Robot(SMURFRobot):
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
-                                                 stop=sm.get_leaves(self), robotname=str(sm))
+                                                 stop=sm.get_leaves(self), robotname=str(sm),
+                                                 no_submechanisms=True)
                 sm.file_path = "../submechanisms/" + os.path.basename(sm.file_path)
                 if not os.path.isfile(sm.file_path):
                     self.export_submodel(name="#sub_mech#", output_dir=os.path.join(outputdir, "submechanisms"),
@@ -771,6 +776,74 @@ class Robot(SMURFRobot):
                           ros_pkg_name, export_joint_limits, export_submodels=export_submodels, formats=formats,
                           filename=filename, float_fmt_dict=float_fmt_dict)
 
+    def export_pdf(robot, file):
+        SUBMECH_COLORS = ["cyan", "darkslateblue", "steelblue", "indigo", "darkblue", "royalblue", "lightskyblue",
+                          "teal", "blue", "dodgerblue", "paleturquoise", "lightcyan", "mediumslateblue"]
+        EXOSKEL_COLORS = ["lawngreen", "green", "darkgreen", "seagreen", "lightseagreen", "mediumspringgreen",
+                          "palegreen", "olive"]
+
+        def add_joint(joint):
+            _out = f"\"{joint.parent}\" -> \"{joint.name}\" [label="
+            _out += f"\"xyz: {joint.origin.xyz[0]} {joint.origin.xyz[1]} {joint.origin.xyz[2]} "
+            _out += f"\\nrpy: {joint.origin.rpy[0]} {joint.origin.rpy[1]} {joint.origin.rpy[2]} "
+            if joint.axis is not None:
+                _out += f"\\naxis: {joint.axis[0]} {joint.axis[1]} {joint.axis[2]} "
+            _out += f"\\ntype: {joint.joint_type} "
+            if len(joint.joint_dependencies) > 0:
+                _out += f"\\ndepends on: "
+                for jd in joint.joint_dependencies:
+                    _out += f"\\n- {jd.joint} factor: {jd.multiplier} offset: {jd.offset}"
+            if joint.motor is not None:
+                _out += f"\\nmotor: {str(joint.motor)}"
+            _out += f"\"] \"{joint.name}\" -> \"{joint.child}\"\n"
+            return _out
+
+        out = "digraph G {\n"
+        out += "esep=10;\n"
+        out += "sep=10;\n"
+        out += "nodesep=0.5;\n"
+        out += "node [shape=box];\n"
+        for link in robot.get_links_ordered_df():
+            out += f"\"{str(link)}\" [label=\"{str(link)}\"];\n"
+
+        printed_joints = []
+        if hasattr(robot, "submechanisms") and robot.submechanisms is not None and len(robot.submechanisms) > 0:
+            for i, sm in enumerate(robot.submechanisms):
+                out += f"node [shape=box, color={SUBMECH_COLORS[i]}, fontcolor=black];\n"
+                out += f"\"{str(sm)}\" [label="
+                out += f"\"Submechanism\ntype: {sm.type} "
+                out += f"\\nname: {sm.name} "
+                out += f"\\ncontextual_name: {sm.contextual_name} "
+                out += "\"];\n"
+                for link in robot.get_links_ordered_df():
+                    out += f"\"{str(link)}\" [label=\"{str(link)}\"];\n"
+                out += f"node [shape=ellipse, color={SUBMECH_COLORS[i]}, fontcolor=black];\n"
+                for joint in sorted(sm.get_joints()):
+                    joint = robot.get_joint(joint)
+                    printed_joints.append(str(joint))
+                    out += add_joint(joint)
+        if hasattr(robot, "exoskeletons") and robot.exoskeletons is not None and len(robot.exoskeletons) > 0:
+            for i, exo in enumerate(robot.exoskeletons):
+                out += f"node [shape=septagon, color={EXOSKEL_COLORS[i]}, fontcolor=black];\n"
+                for joint in sorted(exo.get_joints()):
+                    joint = robot.get_joint(joint)
+                    if joint.is_human:
+                        printed_joints.append(str(joint))
+                        out += add_joint(joint)
+        if len(printed_joints) < len(robot.joints):
+            out += f"node [shape=ellipse, color=black, fontcolor=black];\n"
+            for joint in robot.get_joints_ordered_df():
+                if str(joint) not in printed_joints:
+                    out += add_joint(robot.get_joint(joint))
+
+        out += "}\n"
+
+        with open(file+".gv", "w") as f:
+            f.write(out)
+
+        graph = pydot.graph_from_dot_data(out)
+        graph[0].write_pdf(file)
+
     # getters
     def get_submodel(self, name):
         """ Return the submodel with the given name.
@@ -900,7 +973,7 @@ class Robot(SMURFRobot):
         joint.parent = new_parent_name
 
     def define_submodel(self, name, start, stop=None, robotname=None, only_urdf=False, only_return=False,
-                        overwrite=False):
+                        overwrite=False, no_submechanisms=False):
         """Defines a submodel from a given starting link.
         If stop is provided than the chain from start to stop is used.
         """
@@ -914,12 +987,12 @@ class Robot(SMURFRobot):
             "only_urdf": only_urdf
         }
         if only_return:
-            return self.instantiate_submodel(definition=definition)
+            return self.instantiate_submodel(definition=definition, no_submechanisms=no_submechanisms)
         if name in self._submodels.keys() and not overwrite:
             raise NameError("A submodel with the given name is already defined")
         else:
             self._submodels[name] = definition
-        return self.instantiate_submodel(name)
+        return self.instantiate_submodel(name, no_submechanisms=no_submechanisms)
 
     def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=True, extend_by_single_fixed=False):
         assert self.get_link(start) is not None
@@ -962,8 +1035,9 @@ class Robot(SMURFRobot):
 
         return linknames, jointnames
 
-    def instantiate_submodel(self, name=None, definition=None, link_obj=True,
-                             include_unstopped_branches=True, extend_by_single_fixed=False):
+    def instantiate_submodel(self, name=None, definition=None,
+                             include_unstopped_branches=True, extend_by_single_fixed=False,
+                             no_submechanisms=False):
         """
         Instantiates a submodel by it's definition. Takes either name or definition. If both are given, the submodel
         definition with the given name will be updated including renaming it
@@ -996,6 +1070,15 @@ class Robot(SMURFRobot):
             include_unstopped_branches=include_unstopped_branches, extend_by_single_fixed=extend_by_single_fixed)
 
         links = self.get_link(linknames)
+        materials = set()
+        for link in links:
+            for visual in link.visuals:
+                if visual.material is not None:
+                    _mat = self.get_material(visual.material)
+                    materials.add(_mat)
+        submodel.add_aggregate("materials", self.get_aggregate("material", list(materials)))
+        submodel.add_aggregate("links", [ln.duplicate() for ln in links])
+
         _joints = self.get_joint(jointnames)
         # remove mimic relation if the mimiced joint is not in here
         joints = []
@@ -1007,51 +1090,43 @@ class Robot(SMURFRobot):
                 _joint.joint_dependencies = [jd for jd in _joint.joint_dependencies if jd.joint in jointnames]
                 joints.append(_joint)
             else:
-                joints.append(joint)
+                joints.append(joint.duplicate())
 
-        submodel.add_aggregate("links", self.get_aggregate("link", links))
         submodel.add_aggregate("joints", joints)
         assert all([j.mimic is None or str(j.mimic.joint) in jointnames for j in submodel.joints])
 
-        materials = set()
-        for link in links:
-            for visual in link.visuals:
-                if visual.material is not None:
-                    assert isinstance(visual._material, representation.Material)
-                    materials.add(visual._material)
         motors = []
         for joint in joints:
             if joint.motor is not None:
-                motors.append(joint._motor)
+                motors.append(joint._motor.duplicate() if type(joint._motor) != str else self.get_motor(joint._motor))
+        submodel.add_motor(motors)
+
         sensors = []
         for sensor in self.sensors:
             if sensor.is_related_to(links + joints):
                 if isinstance(sensor, sensor_representations.MultiSensor):
-                    sensors.append(sensor.duplicate().reduce_to_match(links + joints))
+                    _sensor = sensor.duplicate()
+                    _sensor.reduce_to_match(links + joints)
+                    sensors.append(_sensor)
                 else:
-                    sensors.append(sensor)
+                    sensors.append(sensor.duplicate())
+        submodel.add_aggregate("sensors", sensors)
         submechanisms = []
-        for subm in self.submechanisms:
-            if subm.is_related_to(joints, pure=True):
-                submechanisms.append(subm)
         exoskeletons = []
-        for exo in self.exoskeletons:
-            if exo.is_related_to(joints, pure=True):
-                exoskeletons.append(exo)
+        if not no_submechanisms:
+            for subm in self.submechanisms:
+                if subm.is_related_to(joints, pure=True):
+                    submechanisms.append(subm.duplicate())
+            for exo in self.exoskeletons:
+                if exo.is_related_to(joints, pure=True):
+                    exoskeletons.append(exo.duplicate())
         interfaces = []
         for interf in self.interfaces:
             if interf.is_related_to(joints):
-                interfaces.append(interf)
-
-        if not link_obj:
-            for entity in links + joints + materials + motors + sensors + submechanisms + exoskeletons + interfaces:
-                entity.unlink_from_robot()
-
-        submodel.add_aggregate("materials", self.get_aggregate("material", list(materials)))
-        submodel.add_aggregate("motors", self.get_aggregate("motor", motors))
-        submodel.add_aggregate("sensors", self.get_aggregate("sensor", sensors))
-        submodel.add_aggregate("submechanisms", submechanisms)
-        submodel.add_aggregate("exoskeletons", exoskeletons)
+                interfaces.append(interf.duplicate())
+        if not no_submechanisms:
+            submodel.add_aggregate("submechanisms", submechanisms)
+            submodel.add_aggregate("exoskeletons", exoskeletons)
         submodel.add_aggregate("interfaces", interfaces)
 
         # copy all annotations we not yet have
@@ -1059,7 +1134,7 @@ class Robot(SMURFRobot):
             if k not in submodel.__dict__.keys() or submodel.__dict__[k] is None:
                 submodel.__dict__[k] = v
 
-        submodel.link_entities()
+        submodel.relink_entities()
 
         return submodel
 
@@ -1515,8 +1590,9 @@ class Robot(SMURFRobot):
                     result &= 4
                 if hasattr(joint, "limit") and joint.limit is not None and (
                         joint.limit.lower == joint.limit.upper or joint.limit.velocity == 0):
-                    log.warning(f"The joint limits of joint {joint.name} might restrict motion:\n min: {joint.limit.lower}"
-                                f"max: {joint.limit.upper} vel {joint.limit.velocity} eff {joint.limit.effort}")
+                    log.warning(f"The joint limits of joint {joint.name} might restrict motion: "
+                                f"min: {joint.limit.lower} max: {joint.limit.upper} vel: {joint.limit.velocity} "
+                                f"eff: {joint.limit.effort}")
                     result &= 8
                     if backup is not None:
                         limit_temp = [joint.limit.lower, joint.limit.upper]
@@ -1869,7 +1945,7 @@ class Robot(SMURFRobot):
             raise Exception("Can only attach robot to robot.")
 
         if not link_other:
-            other = deepcopy(other)
+            other = other.duplicate()
         elif not do_not_rename:
             log.warning(f"Robot::attach(): The arguments you chose may result in the renaming of parts of the robot {other.name}")
 
@@ -2038,7 +2114,7 @@ class Robot(SMURFRobot):
             self.add_aggregate('sensor', cSensor)
             
         for cMotor in other.motors:
-            self.add_aggregate('motor', cMotor)
+            self.add_motor(cMotor)
 
         for cSubmechanism in other.submechanisms:
             self.add_aggregate('submechanism', cSubmechanism)
@@ -2116,7 +2192,6 @@ class Robot(SMURFRobot):
         self.add_aggregate("joint", joint)
         if joint.joint_type in ["revolute", "prismatic"] and add_default_motor:
             self.add_motor(representation.Motor(
-                robot=self,
                 name=joint.name,
                 joint=joint
             ))
@@ -2154,7 +2229,7 @@ class Robot(SMURFRobot):
         for mat in self.submechanisms:
             robot.add_aggregate("submechanism", mat)
         for mat in self.motors:
-            robot.add_aggregate("motor", mat)
+            robot.add_motor(mat)
         for mat in self.poses:
             robot.add_aggregate("pose", mat)
         for mat in self.sensors:

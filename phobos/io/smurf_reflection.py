@@ -7,6 +7,7 @@ class SmurfBase(YamlReflection):
     """
 
     def __init__(self, returns=None, **kwargs):
+        assert "robot" not in kwargs
         super(YamlReflection, self).__init__()
         # The object has to know which properties to export, this is done via
         self.returns = [] if returns is None else returns
@@ -30,7 +31,7 @@ class SmurfBase(YamlReflection):
     def get_refl_vars(self):
         out = []
         # Collect all variables (and properties) which are given in the object self.returns
-        export_props = [v for v in vars(self).keys() if v not in self.excludes and not v.startswith("_")] + self.returns
+        export_props = [v for v in vars(self).keys() if v not in self.excludes and not v.startswith("_")] + list(set(self.returns))
         for var in export_props:
             if getattr(self, var) is not None:
                 out += [var]

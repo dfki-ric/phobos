@@ -1,3 +1,5 @@
+from copy import copy
+
 from .smurf_reflection import SmurfBase
 from .representation import JointMimic
 from ..utils import tree
@@ -50,17 +52,6 @@ class MultiJointDependency(SmurfBase):
 
     def is_empty(self):
         return len(self.joint_dependencies) == 0
-
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(MultiJointDependency, self).link_with_robot(robot)
-        for jd in self.joint_dependencies:
-            jd.link_with_robot(robot)
-            jd.check_linkage()
-
-    def unlink_from_robot(self):
-        super(MultiJointDependency, self).unlink_from_robot()
-        for jd in self.joint_dependencies:
-            jd.unlink_from_robot()
 
 
 class HyrodynAnnotation(SmurfBase):
@@ -184,7 +175,9 @@ class Submechanism(HyrodynAnnotation):
                 joint = self._related_robot_instance.get_joint(j, verbose=True)
                 assert joint is not None
                 if len(joint.joint_dependencies) > 1:
-                    self._multi_joint_dependencies.append({"name": j.name, "depends_on": j.joint_dependencies})
+                    if self._multi_joint_dependencies is None:
+                        self._multi_joint_dependencies = []
+                    self._multi_joint_dependencies.append({"name": str(joint), "depends_on": joint.joint_dependencies})
         if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
             return self._multi_joint_dependencies
         else:
@@ -223,27 +216,31 @@ class Submechanism(HyrodynAnnotation):
         if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
             for mjd in self._multi_joint_dependencies:
                 joint = self._related_robot_instance.get_joint(mjd["name"])
-                joint.joint_dependencies.append(JointMimic(**mjd["joint_dependencies"]))
+                for jd in mjd["depends_on"]:
+                    joint.joint_dependencies = joint.joint_dependencies + [jd]
         if self._loop_constraints is not None and len(self._loop_constraints) > 0:
             for lc in self._loop_constraints:
                 joint = self._related_robot_instance.get_joint(lc["cut_joint"])
                 joint.cut_joint = True
                 for ax in lc["constraint_axes"]:
                     joint.constraint_axes.append(JointMimic(**ax))
+        if not check_linkage_later:
+            assert self.check_linkage()
 
-    def unlink_from_robot(self):
+    def unlink_from_robot(self, check_linkage_later=False):
         mjd = self.multi_joint_dependencies
         lc = self.loop_constraints
         super(Submechanism, self).unlink_from_robot()
         self._multi_joint_dependencies = mjd
         self._loop_constraints = lc
+        if not check_linkage_later:
+            assert self.check_unlinkage()
 
     def regenerate(self, robot):
-        submodel = self.get_submodel(robot)
-        self.jointnames = [str(j) for j in submodel.get_joints_ordered_df()]
+        self.jointnames = sorted([j for j in self.jointnames_spanningtree], key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
         self.jointnames_active = sorted(self.jointnames_active, key=lambda x: self.jointnames.index(x))
         self.jointnames_independent = sorted(self.jointnames_independent, key=lambda x: self.jointnames.index(x))
-        self.jointnames_spanningtree = sorted(self.jointnames_spanningtree, key=lambda x: self.jointnames.index(x))
+        self.jointnames_spanningtree = copy(self.jointnames)
 
 
 class Exoskeleton(HyrodynAnnotation):

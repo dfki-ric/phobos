@@ -77,15 +77,29 @@ class SMURFRobot(XMLRobot):
             self.name, _ = os.path.splitext(self.xmlfile)
 
     # helper methods
-    def link_entities(self):
-        super(SMURFRobot, self).link_entities()
+    def link_entities(self, check_linkage_later=False):
+        super(SMURFRobot, self).link_entities(check_linkage_later=True)
         for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
-            entity.link_with_robot(self)
+            entity.link_with_robot(self, check_linkage_later=True)
+        if not check_linkage_later:
+            self.check_linkage()
 
-    def unlink_entities(self):
-        super(SMURFRobot, self).unlink_entities()
+    def unlink_entities(self, check_linkage_later=False):
+        super(SMURFRobot, self).unlink_entities(check_linkage_later=True)
         for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
-            entity.unlink_from_robot()
+            entity.unlink_from_robot(check_linkage_later=True)
+        if not check_linkage_later:
+            self.check_unlinkage()
+
+    def check_linkage(self):
+        super(SMURFRobot, self).check_linkage()
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
+            entity.check_linkage()
+
+    def check_unlinkage(self):
+        super(SMURFRobot, self).check_unlinkage()
+        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
+            entity.check_unlinkage()
 
     def read_smurffile(self, smurffile):
         if smurffile is not None:
@@ -143,8 +157,12 @@ class SMURFRobot(XMLRobot):
                 input_args = {}
                 existing = self.get_sensor(sensor_def["name"])
                 sensor = getattr(sensor_representations, sensor_def["type"])(**sensor_def)
-                if existing is not None and existing != sensor:
-                    log.warning(f"There is already a sensor with name {sensor_def['name']}")
+                if existing is not None and not existing.equivalent(sensor):
+                    log.debug(f"Replacing existing sensor with name {sensor_def['name']}\n"
+                                f"existing: {existing.to_yaml()}\n"
+                                f"new: {sensor.to_yaml()}")
+                    self.remove_aggregate("sensors", existing)
+                    self.add_sensor(sensor)
                 elif existing is None:
                     self.add_sensor(sensor)
 
@@ -272,10 +290,16 @@ class SMURFRobot(XMLRobot):
         """Attach a new motor to the robot. Either the joint is already defined inside the motor
         or a jointname is given. Renames the motor if already given.
         """
+        if isinstance(motor, list):
+            return [self.add_motor(m) for m in motor]
         if not isinstance(motor, representation.Motor):
-            raise Exception("Please provide an instance of Motor to attach.")
+            raise Exception(f"Please provide an instance of Motor to attach. Got {type(motor)}")
         # Check if the motor already contains joint information
+        joint = self.get_joint(motor.joint)
+        assert joint is not None
+        motor.link_with_robot(self)
         self.add_aggregate("motors", motor)
+        joint.motor = motor
 
     def add_pose(self, pose):
         """Add a new pose to the robot.
@@ -440,28 +464,7 @@ class SMURFRobot(XMLRobot):
         self.sort_submechanisms()
         for jointname in missing_joints:
             joint = self.get_joint(jointname)
-            joint_idx = sorted_joints.index(jointname)
-            inserted = False
-            if joint.joint_type == "fixed" and joint._child.is_human is not True:
-                # If it's just a fixed joint we might be able to add this to an existing submechanisms
-                for sm in self.submechanisms:
-                    for jn in sm.jointnames:
-                        if sorted_joints.index(jn) == joint_idx + 1:
-                            temp = sm.jointnames
-                            temp.insert(sm.jointnames.index(jn), jointname)
-                            sm.jointnames = temp
-                            inserted = True
-                            break
-                        elif sorted_joints.index(jn) == joint_idx - 1:
-                            temp = sm.jointnames
-                            temp.insert(sm.jointnames.index(jn) + 1, jointname)
-                            sm.jointnames = temp
-                            inserted = True
-                            break
-                    if inserted:
-                        # print("Inserted", jointname)
-                        break
-            if not inserted and joint._child.is_human is not True:
+            if joint.joint_type != "fixed" and joint._child.is_human is not True:
                 # If we have not already inserted this joint (fixed) let's create a serial mechanism for it
                 jn_spanningtree = jn_independent = jn_active = [] if joint.joint_type == "fixed" else [jointname]
                 jn = jn_spanningtree if joint.joint_type != "fixed" else [jointname]
@@ -476,21 +479,54 @@ class SMURFRobot(XMLRobot):
                     auto_gen=True
                 ), silent=True)
                 # print("Created for", jointname)
-                inserted = True
-            assert inserted, f"{jointname}, {joint.joint_type}, {joint._child.is_human} {joint.child}"
-        assert len(self._get_joints_not_included_in_submechanisms()) == 0, [str(j) for j in self._get_joints_not_included_in_submechanisms()]
         self.sort_submechanisms()
         # Now we merge all serial mechanisms to reduce the number of mechanisms
         new_submechanisms = []
         for sm in self.submechanisms:
             if sm.auto_gen and len(new_submechanisms) > 0 and new_submechanisms[-1].auto_gen:
                 new_submechanisms[-1].jointnames = list(set(new_submechanisms[-1].jointnames + sm.jointnames))
-                new_submechanisms[-1].jointnames_active = list(set(new_submechanisms[-1].jointnames_active + sm.jointnames_active))
-                new_submechanisms[-1].jointnames_independent = list(set(new_submechanisms[-1].jointnames_independent + sm.jointnames_independent))
-                new_submechanisms[-1].jointnames_spanningtree = list(set(new_submechanisms[-1].jointnames_spanningtree + sm.jointnames_spanningtree))
+                new_submechanisms[-1].jointnames_active = list(
+                    set(new_submechanisms[-1].jointnames_active + sm.jointnames_active))
+                new_submechanisms[-1].jointnames_independent = list(
+                    set(new_submechanisms[-1].jointnames_independent + sm.jointnames_independent))
+                new_submechanisms[-1].jointnames_spanningtree = list(
+                    set(new_submechanisms[-1].jointnames_spanningtree + sm.jointnames_spanningtree))
             else:
                 new_submechanisms.append(sm)
         self.submechanisms = new_submechanisms
+        self.sort_submechanisms()
+        # As movable joints are now placed, we place the fixed joints
+        insertion_happened = True
+        while insertion_happened:
+            insertion_happened = False
+            for jointname in self._get_joints_not_included_in_submechanisms():
+                joint = self.get_joint(jointname)
+                joint_idx = sorted_joints.index(jointname)
+                if joint.joint_type == "fixed" and joint._child.is_human is not True:
+                    # If it's just a fixed joint we might be able to add this to an existing submechanisms
+                    for sm in self.submechanisms:
+                        for jn in sm.get_joints():
+                            # print(jointname, jn, sorted_joints.index(jn) == joint_idx + 1, self.get_children(joint.child))
+                            if sorted_joints.index(jn) == joint_idx - 1 and self.get_parent(joint.parent) == jn and len(self.get_children(joint.parent)) <= 1:
+                                # place after jn
+                                temp = sm.jointnames
+                                temp.insert(sm.jointnames.index(jn) + 1, jointname)
+                                sm.jointnames = temp
+                                insertion_happened = True
+                                # print("Inserted", jointname)
+                                break
+                            elif sorted_joints.index(jn) == joint_idx + 1 and len(self.get_children(joint.parent)) > 1 and jn in self.get_children(joint.child):
+                                # place before jn
+                                temp = sm.jointnames
+                                temp.insert(sm.jointnames.index(jn), jointname)
+                                sm.jointnames = temp
+                                insertion_happened = True
+                                # print("Inserted", jointname)
+                                break
+                        # print(jointname, jn, sorted_joints.index(jn) == joint_idx - 1, self.get_parent(joint.parent), self.get_children(joint.child), insertion_happened)
+                        if insertion_happened:
+                            break
+        assert len(self._get_joints_not_included_in_submechanisms()) == 0, [str(j) for j in self._get_joints_not_included_in_submechanisms()]
         self.sort_submechanisms()
         counter = 0
         for sm in self.submechanisms:

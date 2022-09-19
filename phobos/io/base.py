@@ -3,19 +3,20 @@ from copy import deepcopy
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
 
+
 class Linkable(object):
     _type_dict = {
         "link": "links",
         "joint": "joints",
         "frame": "links",
         "material": "materials",
-        "relative_to": "links"
+        "relative_to": "links",
     }
     _related_robot_instance = None
     _class_variables = []
 
     def __init__(self):
-        self._class_attributes = [var for var in self._class_variables if var in self.type_dict.keys() and not var.startswith("_")]
+        self._class_linkables = [var for var in self._class_variables if var in self.type_dict.keys() and not var.startswith("_")]
 
     def set_unique_name(self, value):
         raise NotImplementedError("Not implemented for "+str(type(self)))
@@ -35,8 +36,8 @@ class Linkable(object):
         converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value)
         if converted is None and new_value is not None:
             log.warning(f"There is no {vtype} with name {new_value} in {self._related_robot_instance.name}; setting {varname} to None")
-            log.warning(f"Available are: {repr([str(x) for x in getattr(self._related_robot_instance, vtype+'s')])}")
-            raise RuntimeError(f"{str(type(self))}, can not convert {new_value} to value type {vtype}")
+            log.warning(f"Available are: {repr([str(x) for x in getattr(self._related_robot_instance, vtype)])}")
+            raise AssertionError(f"{str(type(self))}, can not convert {new_value} to value type {vtype}")
         return converted
 
     def _attr_get_name(self, attribute):
@@ -44,8 +45,6 @@ class Linkable(object):
             return None
         if type(getattr(self, "_" + attribute)) == list:
             return [str(x) for x in getattr(self, "_" + attribute)]
-        if type(getattr(self, "_" + attribute)) == str:
-            return getattr(self, "_" + attribute)
         return str(getattr(self, "_" + attribute))
 
     def _attr_set_name(self, attribute, new_value, no_check=False):
@@ -54,39 +53,142 @@ class Linkable(object):
         elif type(new_value) == str:
             setattr(self, "_" + attribute, self._converter(attribute, new_value))
         elif isinstance(new_value, Linkable):
-            setattr(self, "_" + attribute, new_value)
+            if self._related_robot_instance is not None:
+                existing = self._related_robot_instance.get_aggregate(self.type_dict[attribute].lower(), str(new_value))
+                if existing is None:
+                    self._related_robot_instance.add_aggregate(self.type_dict[attribute].lower(), new_value)
+                    new_value.link_with_robot(self._related_robot_instance, check_linkage_later=True)
+                    setattr(self, "_" + attribute, new_value)
+                    log.debug(f"Added {type(new_value)} {str(new_value)} to robot")
+                elif id(new_value) != id(existing):
+                    if (hasattr(new_value, "is_delegate") and new_value.is_delegate()) or new_value.equivalent(existing):
+                        setattr(self, "_" + attribute, existing)
+                    else:
+                        new_mat_name = new_value.name
+                        index = 1
+                        while self._related_robot_instance.get_material(new_mat_name) is not None:
+                            new_mat_name = new_value.name + "_" + str(index)
+                            index += 1
+                        log.warning(f"Ambiguous {type(new_value)} in ", str(self), "renamed ", new_value.name, "to", new_mat_name)
+                        new_value.name = new_mat_name
+                    new_value.link_with_robot(self._related_robot_instance, check_linkage_later=True)
+                    setattr(self, "_" + attribute, new_value)
+            else:
+                setattr(self, "_" + attribute, new_value)
         elif new_value is not None:
             raise RuntimeError(f"Can't deal with value of type {repr(type(new_value))} during link_with_robot()! Value: {new_value}")
         if self._related_robot_instance is not None and not no_check:
             self.check_linkage(attribute=attribute)
 
     def link_with_robot(self, robot, check_linkage_later=False):
+        # if self._related_robot_instance is None:
+        assert robot is not None
         self._related_robot_instance = robot
-        for attribute in self._class_attributes:
+        for attribute in self._class_linkables:
             self._attr_set_name(attribute, getattr(self, "_" + attribute), no_check=True)
+            # if getattr(self, "_" + attribute) is not None:
+            #     if isinstance(getattr(self, "_" + attribute), Linkable):
+            #         getattr(self, "_" + attribute).link_with_robot(robot, check_linkage_later=True)
+            #     elif isinstance(getattr(self, "_" + attribute), list):
+            #         for v in getattr(self, "_" + attribute):
+            #             if isinstance(v, Linkable):
+            #                 v.link_with_robot(robot, check_linkage_later=True)
+        for var in self._class_variables:
+            if isinstance(getattr(self, var), Linkable):
+                getattr(self, var).link_with_robot(robot, check_linkage_later=True)
+            elif isinstance(getattr(self, var), list):
+                for v in getattr(self, var):
+                    if isinstance(v, Linkable):
+                        v.link_with_robot(robot, check_linkage_later=True)
         if not check_linkage_later:
-            self.check_linkage()
+            assert self.check_linkage()
 
-    def unlink_from_robot(self):
+    def unlink_from_robot(self, check_linkage_later=False):
+        # if self._related_robot_instance is not None:
         self._related_robot_instance = None
-        for attribute in self._class_attributes:
+        for attribute in self._class_linkables:
+            # if getattr(self, "_" + attribute) is not None:
+            #     if isinstance(getattr(self, "_" + attribute), Linkable):
+            #         getattr(self, "_" + attribute).unlink_from_robot(check_linkage_later=True)
+            #     elif isinstance(getattr(self, "_" + attribute), list):
+            #         for v in getattr(self, "_" + attribute):
+            #             if isinstance(v, Linkable):
+            #                 v.unlink_from_robot(check_linkage_later=True)
             self._attr_set_name(attribute, self._attr_get_name(attribute))
+            assert type(getattr(self, "_"+attribute)) in [str, list, type(None)], attribute+" "+str(getattr(self, "_"+attribute))+str(type(getattr(self, "_"+attribute)))
+        for var in self._class_variables:
+            if isinstance(getattr(self, var), Linkable):
+                getattr(self, var).unlink_from_robot(check_linkage_later=True)
+            elif isinstance(getattr(self, var), list):
+                for v in getattr(self, var):
+                    if isinstance(v, Linkable):
+                        v.unlink_from_robot(check_linkage_later=True)
+        if not check_linkage_later:
+            assert self.check_unlinkage()
 
     def check_linkage(self, attribute=None):
-        _class_attributes = self._class_attributes
+        linked = self._related_robot_instance is not None
+        assert linked, type(self)
+        _class_attributes = self._class_linkables
         if attribute is not None:
-            _class_attributes = [var for var in self._class_attributes if var == attribute]
+            _class_attributes = [var for var in self._class_linkables if var == attribute]
+        else:
+            for var in self._class_variables:
+                if isinstance(getattr(self, var), Linkable):
+                    linked &= getattr(self, var).check_linkage()
+                elif isinstance(getattr(self, var), list):
+                    for v in getattr(self, var):
+                        if isinstance(v, Linkable):
+                            linked &= v.check_linkage()
         for attribute in _class_attributes:
-            assert getattr(self, "_" + attribute) is None or isinstance(getattr(self, "_" + attribute), Linkable) or \
-            (isinstance(getattr(self, "_" + attribute), list) and all([isinstance(x, Linkable) for x in getattr(self, "_" + attribute)])),\
-                f"{attribute} is not an instance of Linkable. type: {type(getattr(self, '_' + attribute))}"
+            linked &= (
+                getattr(self, "_" + attribute) is None or
+                (isinstance(getattr(self, "_" + attribute), Linkable) and getattr(self, "_" + attribute)._related_robot_instance is not None) or
+                (isinstance(getattr(self, "_" + attribute), list) and
+                 all([(isinstance(x, Linkable) and x._related_robot_instance is not None) or x is None for x in getattr(self, "_" + attribute)]))
+            )
+            # if not linked:
+            #     print(
+            #         getattr(self, "_" + attribute) is None,
+            #         isinstance(getattr(self, "_" + attribute), Linkable),
+            #         isinstance(getattr(self, "_" + attribute), Linkable) and getattr(self, "_" + attribute)._related_robot_instance is not None,
+            #         isinstance(getattr(self, "_" + attribute), list),
+            #         getattr(self, "_" + attribute),
+            #         [(isinstance(x, Linkable) and x._related_robot_instance is not None) for x in getattr(self, "_" + attribute)] if isinstance(getattr(self, "_" + attribute), list) else None
+            #     )
+            assert linked, f"Attribute {attribute} of {type(self)} {str(self) if self.stringable() else ''} is not linked. type: {type(getattr(self, '_' + attribute))}"
+        return linked
+
+    def check_unlinkage(self, attribute=None):
+        unlinked = self._related_robot_instance is None
+        assert unlinked, type(self)
+        _class_attributes = self._class_linkables
+        if attribute is not None:
+            _class_attributes = [var for var in self._class_linkables if var == attribute]
+        else:
+            for var in self._class_variables:
+                if isinstance(getattr(self, var), Linkable):
+                    unlinked &= getattr(self, var).check_unlinkage()
+                elif isinstance(getattr(self, var), list):
+                    for v in getattr(self, var):
+                        if isinstance(v, Linkable):
+                            unlinked &= v.check_unlinkage()
+        for attribute in _class_attributes:
+            unlinked &= (
+                getattr(self, "_" + attribute) is None or
+                type(getattr(self, "_" + attribute)) == str or
+                (isinstance(getattr(self, "_" + attribute), list) and
+                 all([type(x) == str or x is None for x in getattr(self, "_" + attribute)]))
+            )
+            assert unlinked, f"Attribute {attribute} of {type(self)} {str(self) if self.stringable() else ''} is still linked. type: {type(getattr(self, '_' + attribute))}"
+        return unlinked
 
     def is_related_to(self, entity, pure=False):
         if type(entity) not in [list, tuple, set]:
             entity = [entity]
         entity = [str(e) for e in entity]
         out = []
-        for attribute in self._class_attributes:
+        for attribute in self._class_linkables:
             value = self._attr_get_name(attribute)
             if type(value) == list:
                 out += [str(v) in entity for v in value]

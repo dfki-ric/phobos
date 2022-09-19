@@ -222,6 +222,10 @@
         "mimic": {
           "classname": "JointMimic",
           "varname": "mimic"
+        },
+        "dynamics": {
+          "classname": "JointDynamics",
+          "varname": "dynamics"
         }
       },
       "attribute_children": {
@@ -263,6 +267,13 @@
         "multiplier": "multiplier",
         "offset": "offset",
         "joint": "joint"
+      }
+    },
+    "JointDynamics": {
+      "tag": "dynamics",
+      "attributes":{
+        "damping": "damping",
+        "friction": "friction"
       }
     },
     "Actuator": {
@@ -705,6 +716,10 @@
             "limit": {
               "classname": "JointLimit",
               "varname": "limit"
+            },
+            "dynamics": {
+              "classname": "JointDynamics",
+              "varname": "dynamics"
             }
           },
           "value_children": {
@@ -742,6 +757,14 @@
         "multiplier": "multiplier",
         "offset": "offset",
         "joint": "joint"
+      }
+    },
+    "JointDynamics": {
+      "tag": "dynamics",
+      "value_children":{
+        "damping": "damping",
+        "friction": "friction",
+        "spring_stiffness": "spring_stiffness"
       }
     },
     "SensorFactory": {

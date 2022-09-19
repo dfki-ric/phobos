@@ -18,10 +18,9 @@ def get_load_report(urdf_file, submechs):
 
 
 def debug_report(report, urdf_file, submech_file, raise_error_failure=False):
-    log.info("Trying to load model in hyrodyn:", urdf_file,
-          "(file exists)" if os.path.exists(urdf_file) else "(does not exist)", submech_file,
-          "(file exists)" if os.path.exists(submech_file) else "(does not exist)",
-          flush=True)
+    log.info(f"Trying to load model in hyrodyn: {urdf_file}" +
+          " (file exists) " if os.path.exists(urdf_file) else " (does not exist) " + submech_file +
+          " (file exists) " if os.path.exists(submech_file) else " (does not exist)")
     # print(submech_file, open(submech_file, "r").read(), load_json(open(submech_file, "r").read()))
     submech_dict = load_json(open(submech_file, "r").read())
     robot = Robot(xmlfile=urdf_file)
@@ -66,8 +65,7 @@ def debug_report(report, urdf_file, submech_file, raise_error_failure=False):
         log.info("The following joints are defined multiple times in the submechanisms_file:")
         log.info(sorted(doubles))
         log.info(f"There are {len(jointnames)} joints defined in the submechanisms_file and {len(robot.joints)} in the URDF.")
-        log.info("The number of fixed joints defined in the URDF is",
-              len([j for j in robot.joints if j.joint_type == "fixed"]))
+        log.info(f"The number of fixed joints defined in the URDF is {len([j for j in robot.joints if j.joint_type == 'fixed'])}")
         if raise_error_failure:
             raise RuntimeError("Hyrodyn aborted!")
         sys.exit(report[2])

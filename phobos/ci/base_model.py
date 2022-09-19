@@ -52,6 +52,8 @@ class BaseModel(yaml.YAMLObject):
         # self.tempfile = os.path.join(self.tempdir,)
         self.targetdir = os.path.join(self.pipeline.root, self.modelname)
 
+        self.processed_meshes = []
+
         # list directly imported mesh pathes
         self._meshes = []
         if hasattr(self, "basefile"):
@@ -409,11 +411,11 @@ class BaseModel(yaml.YAMLObject):
                                 os.path.join(self.pipeline.temp_dir, self.pipeline.meshes["bobj"]),
                                 os.path.join(self.exportdir, self.pipeline.meshes["bobj"])
                                 )
-        processed_meshes = []
+        assert self.processed_meshes == []
         for link in self.robot.links:
             v_c = 0
             for v in link.visuals + link.collisions:
-                if isinstance(v.geometry, representation.Mesh) and v.geometry.filename not in processed_meshes:
+                if isinstance(v.geometry, representation.Mesh) and v.geometry.filename not in self.processed_meshes:
                     v_c += 1
                     if "mars_obj" in v.geometry.filename.lower() or (
                             "input_meshes_are_mars_obj" in self.typedef.keys() and
@@ -455,10 +457,11 @@ class BaseModel(yaml.YAMLObject):
                         v.geometry.filename += "dae"
                     else:
                         raise ValueError("Unknown mesh type" + self.typedef["output_mesh_format"].lower())
+                    self.processed_meshes.append(os.path.realpath(v.geometry._filename))
                     if self.typedef["output_mesh_format"].lower() != "bobj" and \
                             "also_export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"]:
-                        export_bobj_mesh(mesh, b_meshexport + "bobj", urdf_path=self.exporturdf)
-                    processed_meshes.append(v.geometry.filename)
+                        _filepath = export_bobj_mesh(mesh, b_meshexport + "bobj", urdf_path=self.exporturdf)
+                        self.processed_meshes.append(os.path.realpath(_filepath))
             # print('       {} with {} meshes as {}'.format(link.name, v_c, self.typedef["output_mesh_format"]))
 
         if hasattr(self, "name_editing_after") and self.name_editing_after is not None:
@@ -472,16 +475,16 @@ class BaseModel(yaml.YAMLObject):
         elif hasattr(self, "submechanisms_file"):
             self.robot.autogenerate_submechanisms = False
             self.robot.load_submechanisms(deepcopy(self.submechanisms_file))
-        if hasattr(self, "export_total_submechanisms"):
-            # add all to one urdf
-            spanningtree = []
-            for sm in self.robot.submechanisms:
-                spanningtree += sm.jointnames_spanningtree
-            spanningtree = list(set(spanningtree))
-            root = tree.find_common_root(input_spanningtree=spanningtree, input_model=self.robot)
-            self.robot.define_submodel(name=self.export_total_submechanisms, start=root,
-                                       stop=tree.find_leaves(self.robot, spanningtree),
-                                       only_urdf=True)
+        # if hasattr(self, "export_total_submechanisms"):
+        #     # add all to one urdf
+        #     spanningtree = []
+        #     for sm in self.robot.submechanisms:
+        #         spanningtree += sm.jointnames_spanningtree
+        #     spanningtree = list(set(spanningtree))
+        #     root = tree.find_common_root(input_spanningtree=spanningtree, input_model=self.robot)
+        #     self.robot.define_submodel(name=self.export_total_submechanisms, start=root,
+        #                                stop=tree.find_leaves(self.robot, spanningtree),
+        #                                only_urdf=True)
 
         if hasattr(self, "additional_urdfs") and not hasattr(self, "export_submodels"):
             setattr(self, "export_submodels", self.additional_urdfs)
@@ -491,9 +494,34 @@ class BaseModel(yaml.YAMLObject):
                                            stop=au["stop"] if "stop" in au else None,
                                            only_urdf=au["only_urdf"] if "only_urdf" in au.keys() else None)
 
+        # motors
+        assert self.robot.motors == []
+        for joint in self.robot.joints:
+            if hasattr(self, "smurf"):
+                conf = self.smurf["motors"]["default"] if "motors" in self.smurf.keys() and "default" in self.smurf["motors"].keys() else {}
+            else:
+                conf = {}
+            if "name" in conf.keys():  # we dont ẃant that someone overwrites the same name for all motors
+                conf.pop("name")
+            if "motors" in self.smurf.keys() and joint.name in self.smurf["motors"].keys():
+                for k, v in self.smurf["motors"][joint.name].items():
+                    conf[k] = v
+            if joint.joint_type == "fixed":
+                continue
+            motor = representation.Motor(
+                joint=joint,
+                name=conf["name"] if "name" in conf.keys() else joint.name + "_motor",
+                p=conf["p"] if "p" in conf.keys() else 20.0,
+                i=conf["i"] if "i" in conf.keys() else 0.0,
+                d=conf["d"] if "d" in conf.keys() else 0.1,
+                maxEffort=joint.limit.effort if joint.limit is not None and joint.limit.effort > 0.0 else 400,
+                reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
+                noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
+            )
+            self.robot.add_motor(motor)
+
         if hasattr(self, "smurf"):
             log.debug('  Smurfing poses, sensors, links, materials, etc.')
-
             if 'poses' in self.smurf.keys():
                 for (cn, config) in self.smurf["poses"].items():
                     pose = poses.JointPoseSet(robot=self.robot, name=cn, configuration=config)
@@ -513,7 +541,7 @@ class BaseModel(yaml.YAMLObject):
                     sensor_ = None
                     if s["type"] in single_sensors:
                         kwargs = {k: v for k, v in s.items() if k != "type"}
-                        sensor_ = getattr(sensor_representations, s["type"])(robot=self.robot, **kwargs)
+                        sensor_ = getattr(sensor_representations, s["type"])(**kwargs)
 
                     if s["type"] in multi_sensors:
                         if "targets" not in s:
@@ -525,7 +553,7 @@ class BaseModel(yaml.YAMLObject):
                         else:
                             raise ValueError('Targets can only be a list or "All"!')
                         kwargs = {k: v for k, v in s.items() if k != "type"}
-                        sensor_ = getattr(sensor_representations, s["type"])(robot=self.robot, **kwargs)
+                        sensor_ = getattr(sensor_representations, s["type"])(**kwargs)
 
                     if sensor_ is not None:
                         self.robot.add_sensor(sensor_)
@@ -545,31 +573,6 @@ class BaseModel(yaml.YAMLObject):
                     material_instance = self.robot.get_material(m["name"])
                     material_instance.add_annotations(**m)
                     log.debug('      Defined Material {}'.format(m["name"]))
-
-            # motors
-            self.robot.motors = []
-            for joint in self.robot.joints:
-                conf = self.smurf["motors"]["default"] if "motors" in self.smurf.keys() and "default" in self.smurf[
-                    "motors"].keys() else {}
-                if "name" in conf.keys():  # we dont ẃant that someone overwrites the same name for all motors
-                    conf.pop("name")
-                if "motors" in self.smurf.keys() and joint.name in self.smurf["motors"].keys():
-                    for k, v in self.smurf["motors"][joint.name].items():
-                        conf[k] = v
-                if joint.joint_type == "fixed":
-                    continue
-                motor = representation.Motor(
-                    joint=joint,
-                    name=conf["name"] if "name" in conf.keys() else joint.name + "_motor",
-                    p=conf["p"] if "p" in conf.keys() else 20.0,
-                    i=conf["i"] if "i" in conf.keys() else 0.0,
-                    d=conf["d"] if "d" in conf.keys() else 0.1,
-                    maxEffort=joint.limit.effort if joint.limit is not None and joint.limit.effort > 0.0 else 400,
-                    reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
-                    noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
-                )
-                self.robot.add_motor(motor)
-                motor.link_with_robot(self.robot)
 
             if "further_annotations" in self.smurf.keys():
                 for k, v in self.smurf["further_annotations"]:
