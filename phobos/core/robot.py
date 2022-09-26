@@ -58,11 +58,7 @@ class Robot(SMURFRobot):
         }
         for material_instance in robot_dict["materials"]:
             model["materials"][material_instance.name] = {"name": material_instance.name,
-                                                          "diffuseColor": material_instance.color,
-                                                          "ambientColor": [],
-                                                          "specularColor": [],
-                                                          "shininess": [],
-                                                           "users": []
+                                                          "diffuse": material_instance.color.__dict__.get("rgba")
                                                           }
 
         for sensors_instance in robot_dict["sensors"]:
