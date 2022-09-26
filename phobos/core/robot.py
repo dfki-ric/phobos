@@ -78,7 +78,8 @@ class Robot(SMURFRobot):
                 inertial_dict = link_dict["inertial"].__dict__
                 inertia_dict = inertial_dict["inertia"].__dict__
                 pose_dict = inertial_dict["origin"].__dict__
-                inertia_dict.pop("_class_attributes")
+                if "_class_attributes" in inertia_dict:
+                    inertia_dict.pop("_class_attributes")
                 model["links"][link_instance.name] = {"name": link_instance.name,
                                                       "children": [x[1] for x in
                                                                    robot_dict["child_map"].get(link_instance.name)] if
