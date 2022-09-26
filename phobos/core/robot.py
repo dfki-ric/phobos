@@ -85,7 +85,12 @@ class Robot(SMURFRobot):
                                                                             'rotation_euler': list(pose_dict["rpy"]),
                                                                             },
                                                                    "mass": inertial_dict["mass"],
-                                                                   "inertia": [*inertia_dict.values()],
+                                                                   "inertia": [inertia_dict['ixx'],
+                                                                               inertia_dict['ixy'],
+                                                                               inertia_dict['ixz'],
+                                                                               inertia_dict['iyy'],
+                                                                               inertia_dict['iyz'],
+                                                                               inertia_dict['izz']],
                                                                    "name": f"inertial_{link_instance.name}"
                                                                    },
                                                       "visual": [],
