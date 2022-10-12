@@ -6,6 +6,7 @@
     "trimesh": "trimesh",
     "pkg_resources": "setuptools",
     "collada": "collada"
+    "pydot": "pydot"
   },
   "optional_requirements": {
     "yaml": "pyyaml",

@@ -17,4 +17,5 @@ open3d
 scipy
 trimesh
 python-fcl
+pydot
 

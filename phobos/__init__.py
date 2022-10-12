@@ -45,6 +45,7 @@ requirements = {
     "trimesh": "trimesh",  # optional for blender
     "pkg_resources": "setuptools",
     "collada": "pycollada"
+    "pydot": "pydot"
 }
 
 optional_requirements = {

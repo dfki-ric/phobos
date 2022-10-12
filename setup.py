@@ -76,6 +76,7 @@ def check_requirements(py_exec, optional=False, upgrade_pip=False, lib=None):
         "numpy",
         "scipy",
         "trimesh",
+        "pydot",
         "setuptools",
         "collada"
     ]

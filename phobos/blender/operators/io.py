@@ -277,10 +277,25 @@ class ImportModelOperator(bpy.types.Operator):
         Returns:
 
         """
+        import phobos.core.robot
         suffix = self.filepath.split(".")[-1]
         if suffix in entity_io.entity_types:
             log("Importing " + self.filepath + ' as ' + suffix, "INFO")
             model = entity_io.entity_types[suffix]['import'](self.filepath)
+            robot = phobos.core.Robot(inputfile=self.filepath)
+
+            for key, value in model.items():
+                print("Vorher_Model:", key, "\n")
+                print(value, "\n")
+
+            for key, value in robot.__dict__.items():
+                print("Robot_Model:",key, "\n")
+                print(value, "\n")
+
+            model_new = robot.robot_to_model_dictionary()
+            for key, value in model_new.items():
+                print("Neues_Blender_Modell:",key, "\n")
+                print(value, "\n")
             # bUtils.cleanScene()
             models.buildModelFromDictionary(model)
             for layer in ['link', 'inertial', 'visual', 'collision', 'sensor']:
