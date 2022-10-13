@@ -1,5 +1,7 @@
 from ..io.smurf_reflection import SmurfBase
 
+__IMPORTS__ = [x for x in dir() if not x.startswith("__")]
+
 
 class JointPose(SmurfBase):
     _class_variables = ["joint"]

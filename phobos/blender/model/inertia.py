@@ -46,7 +46,7 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
       : bpy_types.Object -- newly created blender inertial object
 
     """
-    if errors and not adjust:
+    if errors is not None and not adjust:
         log('Can not create inertial object.', 'ERROR')
 
     try:

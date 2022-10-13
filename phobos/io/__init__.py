@@ -11,6 +11,11 @@ for clsname in dir(sensor_representations):
     if not clsname.startswith("_") and clsname not in sensor_representations.__IMPORTS__:
         xml_factory.class_factory(getattr(sensor_representations, clsname))
 
+from . import poses
+for clsname in dir(poses):
+    if not clsname.startswith("_") and clsname not in poses.__IMPORTS__:
+        xml_factory.class_factory(getattr(poses, clsname))
+
 from . import hyrodyn
 for clsname in dir(hyrodyn):
     if not clsname.startswith("_") and clsname not in hyrodyn.__IMPORTS__:

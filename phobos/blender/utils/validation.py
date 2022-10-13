@@ -690,6 +690,8 @@ def validateInertiaData(obj, *args, adjust=False):
             obj['inertial/mass'] = 1e-3
         inertia = obj['inertial/inertia']
         mass = obj['inertial/mass']
+    else:
+        raise AssertionError(type(obj))
 
     # Check inertia vector for various properties, round to export precision
     inertia = numpy.around(

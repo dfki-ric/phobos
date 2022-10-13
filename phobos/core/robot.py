@@ -38,8 +38,7 @@ class Robot(SMURFRobot):
             self.name = name
         self._submodels = {}
 
-    def robot_to_model_dictionary(self):
-        robot_dict = self.__dict__
+    def get_blender_model_dictionary(self):
         model = {
             'links': {},
             'joints': {},
@@ -52,89 +51,90 @@ class Robot(SMURFRobot):
             'groups': {},
             'chains': {},
             'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
-            'name': robot_dict["name"],
+            'name': self.name,
             'version': self.version,
-            'description': robot_dict["description"],
+            'description': self.description,
         }
-        for material_instance in robot_dict["materials"]:
-            model["materials"][material_instance.name] = {"name": material_instance.name,
-                                                          "diffuse": material_instance.color.__dict__.get("rgba")
-                                                          }
+        for material in self.materials:
+            model["materials"][material.name] = {"name": material.name,
+                                                 "diffuse": material.color.rgba
+                                                }
+            if hasattr(material, "specularColor"):
+                model["materials"][material.name]["specular"] = material.specularColor
 
-        for sensors_instance in robot_dict["sensors"]:
-            model["sensors"][sensors_instance.name] = {"name": sensors_instance.name,
-                                                       "type": sensors_instance.type,
-                                                       # [... TBC]
-                                                       }
+        for link in self.links:
+            model["links"][link.name] = {
+                "name": link.name,
+                "children": self.get_children(link.name, targettype="link"),
+                "parent": self.get_parent(link.name, targettype="link"),
+                "inertial": {},
+                "visual": {},
+                "collision": {}
+            }
+            if link.inertial is not None:
+                model["links"][link.name]["inertial"] = {
+                    "pose": {'translation': link.inertial.origin.xyz,
+                             'rotation_euler': link.inertial.origin.rpy,
+                            },
+                    "mass": link.inertial.mass,
+                    "inertia": link.inertial.inertia.to_list(),
+                    "name": f"inertial_{link.name}"
+                }
+            for obj in link.visuals + link.collisions:
+                geometry_entry = {}
+                if type(obj.geometry) == representation.Mesh:
+                    geometry_entry["type"] = "mesh"
+                    geometry_entry["filename"] = obj.geometry.filepath
+                    geometry_entry["filepath"] = obj.geometry.filepath
+                    geometry_entry["scale"] = obj.geometry.scale
+                elif type(obj.geometry) == representation.Sphere:
+                    geometry_entry["type"] = "sphere"
+                    geometry_entry["radius"] = obj.geometry.radius
+                elif type(obj.geometry) == representation.Cylinder:
+                    geometry_entry["type"] = "cylinder"
+                    geometry_entry["radius"] = obj.geometry.radius
+                    geometry_entry["length"] = obj.geometry.length
+                elif type(obj.geometry) == representation.Box:
+                    geometry_entry["type"] = "box"
+                    geometry_entry["size"] = obj.geometry.size
+                model["links"][link.name]["visual" if type(obj) == representation.Visual else "collision"][obj.name] = {
+                    "name": obj.name,
+                    "pose": {'translation': obj.origin.xyz,
+                             'rotation_euler': obj.origin.rpy,
+                            },
+                    "geometry": geometry_entry
+                }
+                if type(obj) == representation.Visual and obj.material is not None:
+                    model["links"][link.name]["visual"][obj.name]["material"] = obj.material
 
-        for link_instance in robot_dict["links"]:  # to_yaml funktion anschauen in io.yankreflec
-            # TBD : VISUAL, MATERIAL, GEOMETRY
-            link_dict = link_instance.__dict__
-            if link_dict.get("inertial") is not None:
-                inertial_dict = link_dict["inertial"].__dict__
-                inertia_dict = inertial_dict["inertia"].__dict__
-                pose_dict = inertial_dict["origin"].__dict__
-                if "_class_attributes" in inertia_dict:
-                    inertia_dict.pop("_class_attributes")
-                model["links"][link_instance.name] = {"name": link_instance.name,
-                                                      "children": [x[1] for x in
-                                                                   robot_dict["child_map"].get(link_instance.name)] if
-                                                      robot_dict["child_map"].get(
-                                                          link_instance.name) is not None else " ",
-                                                      "inertial": {"pose": {'translation': list(pose_dict["xyz"]),
-                                                                            'rotation_euler': list(pose_dict["rpy"]),
-                                                                            },
-                                                                   "mass": inertial_dict["mass"],
-                                                                   "inertia": [inertia_dict['ixx'],
-                                                                               inertia_dict['ixy'],
-                                                                               inertia_dict['ixz'],
-                                                                               inertia_dict['iyy'],
-                                                                               inertia_dict['iyz'],
-                                                                               inertia_dict['izz']],
-                                                                   "name": f"inertial_{link_instance.name}"
-                                                                   },
-                                                      "visual": [],
-                                                      "material": [],
-                                                      "geometry": []
-                                                      }
-            else:
-                model["links"][link_instance.name] = {"name": link_instance.name,
-                                                      "children": [x[1] for x in
-                                                                   robot_dict["child_map"].get(link_instance.name)] if
-                                                      robot_dict["child_map"].get(
-                                                          link_instance.name) is not None else " ",
-                                                      "inertial": [],
-                                                      "visual": [],
-                                                      "material": [],
-                                                      "geometry": []
-                                                      }
-        for joint_instance in robot_dict["joints"]:
-            joint_dict = joint_instance.__dict__
-            if joint_dict["joint_type"] == 'fixed':
-                model["joints"][joint_instance.name] = {"name": joint_instance.name,
-                                                       "type": joint_dict["joint_type"],
-                                                       "parent": robot_dict["parent_map"].get(joint_instance.name)[1],
-                                                       "child": robot_dict["child_map"][joint_instance.name][0][1] if
-                                                       joint_instance.name in robot_dict["child_map"].keys() else
-                                                       joint_instance.name
-                                                      }
-            elif joint_dict["joint_type"] == 'revolute' or joint_dict["joint_type"] == 'prismatic':
-                joint_limits_dict = joint_dict.get("limit").__dict__
-                model["joints"][joint_instance.name] = {"name": joint_instance.name,
-                                                       "type": joint_dict["joint_type"],
-                                                       "parent": robot_dict["parent_map"].get(joint_instance.name)[1],
-                                                       "child": robot_dict["child_map"][joint_instance.name][0][1] if
-                                                       joint_instance.name in robot_dict["child_map"].keys() else
-                                                       joint_instance.name,
-                                                       "axis": joint_dict.get("axis"),
-                                                       "limits": {"lower": joint_limits_dict["lower"],
-                                                                  "upper": joint_limits_dict["upper"],
-                                                                  "effort": joint_limits_dict["effort"],
-                                                                  "velocity": joint_limits_dict["velocity"],
-                                                                  }
-                                                       }
+        for joint in self.joints:
+            model["joints"][joint.name] = {"name": joint.name,
+                                           "type": joint.joint_type,
+                                           "parent": joint.parent,
+                                           "child": joint.child,
+                                           }
+            if joint.axis is not None and joint.joint_type != "fixed":
+                model["joints"][joint.name]["axis"] = joint.axis
+            if joint.limit is not None:
+                model["joints"][joint.name]["limits"] = {
+                    "lower": joint.limit.lower,
+                    "upper": joint.limit.upper,
+                    "effort": joint.limit.effort,
+                    "velocity": joint.limit.velocity
+                }
+            if joint.mimic is not None:
+                model["joints"][joint.name]["mimic"] = joint.mimic.to_yaml()
+            # Todo dynamics, etc.
+            model["links"][joint.child]["pose"] = {'translation': joint.origin.xyz,
+                                                   'rotation_euler': joint.origin.rpy,
+                                                  }
 
+        for link in model["links"].keys():
+            if 'pose' not in model["links"][link]:
+                model["links"][link]['pose'] = {'translation': [0, 0, 0], 'rotation_euler': [0, 0, 0]}
 
+        for sensor in self.sensors:
+            model["sensors"][sensor.name] = sensor.to_yaml()
 
         return model
 

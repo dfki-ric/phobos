@@ -1278,10 +1278,12 @@ def buildModelFromDictionary(model):
 
     # set transformations
     log("Transforming links...  ({} total)".format(len(model['links'])), 'INFO', prefix='\n')
+    root = None
     for lnk in model['links']:
-        if 'parent' not in model['links'][lnk]:
+        if 'parent' not in model['links'][lnk] or model['links'][lnk]['parent'] is None:
             root = model['links'][lnk]
             break
+    assert root
     linkmodel.setLinkTransformations(model, root)
 
     log("Creating joints... ({} total)".format(len(model['joints'])), 'INFO', prefix='\n')

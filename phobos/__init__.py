@@ -44,7 +44,7 @@ requirements = {
     "scipy": "scipy",
     "trimesh": "trimesh",  # optional for blender
     "pkg_resources": "setuptools",
-    "collada": "pycollada"
+    "collada": "pycollada",
     "pydot": "pydot"
 }
 

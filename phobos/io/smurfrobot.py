@@ -15,10 +15,11 @@ from ..utils.transform import inv
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
 
+
 class SMURFRobot(XMLRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
                  inputfile=None, description=None, autogenerate_submechanisms=True, is_human=False):
-        self.name = None
+        self.name = name
         self.smurffile = None
         self.submechanisms_file = None
         self.autogenerate_submechanisms = autogenerate_submechanisms
@@ -38,8 +39,10 @@ class SMURFRobot(XMLRobot):
         if inputfile is not None:
             if inputfile.lower().endswith(".smurf") and smurffile is None:
                 smurffile = inputfile
-            elif inputfile.lower().endswith(".urdf") and xmlfile is None:
+            elif inputfile.lower().endswith(".urdf") or inputfile.lower().endswith(".sdf") and xmlfile is None:
                 xmlfile = inputfile
+            else:
+                raise ValueError("Can't parse robot format: "+inputfile.lower().split(".")[-1])
         self.xmlfile = xmlfile
         self.smurffile = smurffile
         self.submechanisms_file = submechanisms_file

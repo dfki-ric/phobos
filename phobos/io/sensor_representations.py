@@ -235,6 +235,18 @@ class IMU(Sensor):
     def id(self):
         return [self.frame]
 
+    @id.setter
+    def id(self, value):
+        if type(value) in [list, set]:
+            assert len(value) == 1
+            self.frame = value[0]
+        elif type(value) == str:
+            self.frame = value
+
+
+NodeIMU = IMU
+__IMPORTS__ += ["NodeIMU"]
+
 
 class MultiSensor(Sensor):
     _class_variables = ["name", "targets"]
