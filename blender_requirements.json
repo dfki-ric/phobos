@@ -5,7 +5,7 @@
     "scipy": "scipy",
     "trimesh": "trimesh",
     "pkg_resources": "setuptools",
-    "collada": "collada"
+    "collada": "collada",
     "pydot": "pydot"
   },
   "optional_requirements": {
