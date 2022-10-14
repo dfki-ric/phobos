@@ -82,6 +82,7 @@ class Joint6DOF(Sensor):
         super().__init__(name=name, joint=None, link=link, sensortype='Joint6DOF', **kwargs)
         self.returns += ['link']
         self.sdf_type = "force_torque"
+        self.blender_type = "Joint_6_DOF"
 
 
 class RotatingRaySensor(Sensor):
@@ -127,6 +128,7 @@ class RotatingRaySensor(Sensor):
                          'horizontal_offset', 'horizontal_resolution', 'vertical_offset',
                          'opening_width', 'opening_height', 'max_distance', 'lasers']
         self.sdf_type = "lidar"
+        self.blender_type = "Rotating_ray_sensor"
 
     @property
     def min_horizontal_angle(self):
@@ -198,7 +200,7 @@ class CameraSensor(Sensor):
         self.returns += ['link', 'height', 'width', 'hud_height', 'hud_width',
                          'opening_height', 'opening_width', 'depth_image', 'show_cam', 'frame_offset']
         self.sdf_type = "camera"
-
+        self.blender_type = "Camera"
 
     @property
     def depths(self):
@@ -230,6 +232,7 @@ class IMU(Sensor):
         super().__init__(name=name, joint=None, link=link, frame=frame, sensortype='NodeIMU', **kwargs)
         self.returns += ['link', 'id']
         self.sdf_type = "imu"
+        self.blender_type = "Inertial_measurement_unit"
 
     @property
     def id(self):
@@ -304,6 +307,7 @@ class MotorCurrent(MultiSensor):
             targets = [targets]
 
         super().__init__(name=name, targets=targets, sensortype='MotorCurrent', **kwargs)
+        self.blender_type = "Motor_current"
 
 
 class JointPosition(MultiSensor):
@@ -316,6 +320,7 @@ class JointPosition(MultiSensor):
             targets = [targets]
 
         super().__init__(name=name, targets=targets, sensortype='JointPosition', **kwargs)
+        self.blender_type = "Joint_position"
 
 
 class JointVelocity(MultiSensor):
@@ -332,6 +337,7 @@ class JointVelocity(MultiSensor):
             raise AssertionError("Parsed invalid joint")
 
         super().__init__(name=name, targets=targets, sensortype='JointVelocity', **kwargs)
+        self.blender_type = "Joint_velocity"
 
 
 class NodeContact(MultiSensor):
@@ -348,6 +354,7 @@ class NodeContact(MultiSensor):
 
         self.returns += ['link']
         self.sdf_type = "contact"
+        self.blender_type = "Contact"
 
     def equivalent(self, other):
         return other.type == self.type and self.link and other.link
@@ -366,6 +373,7 @@ class NodeContactForce(MultiSensor):
         super().__init__(name=name, targets=targets, link=link, sensortype='NodeContactForce', **kwargs)
 
         self.returns += ['link']
+        self.blender_type = "Node_contact_force"
 
     def equivalent(self, other):
         return other.type == self.type and self.link and other.link
@@ -381,6 +389,7 @@ class NodeCOM(MultiSensor):
             targets = [targets]
 
         super().__init__(name=name, targets=targets, sensortype='NodeCOM', **kwargs)
+        self.blender_type = "Node_COM"
 
 
 class NodePosition(MultiSensor):
@@ -393,6 +402,7 @@ class NodePosition(MultiSensor):
             targets = [targets]
 
         super().__init__(name=name, targets=targets, sensortype='NodePosition', **kwargs)
+        self.blender_type = "Node_position"
 
 
 class NodeRotation(MultiSensor):
@@ -405,6 +415,7 @@ class NodeRotation(MultiSensor):
             targets = [targets]
 
         super().__init__(name=name, targets=targets, sensortype='NodeRotation', **kwargs)
+        self.blender_type = "Node_rotation"
 
 
 class SensorFactory(Representation):

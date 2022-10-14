@@ -61,7 +61,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
         newmotor = bUtils.createPrimitive(
             primitive_name,
             'box',
-            [1, 1, 1],
+            (motor['size'],) * 3,
             [],
             plocation=origin.to_translation(),
             protation=origin.to_euler(),
@@ -80,7 +80,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
         newmotor = bUtils.createPrimitive(
             primitive_name,
             motor['shape'],
-            motor['size'],
+            (motor['size'],) * 3,
             [],
             plocation=origin.to_translation(),
             protation=origin.to_euler(),
@@ -92,29 +92,30 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
     if parentobj is not None:
         sUtils.selectObjects([newmotor, parentobj], clear=True, active=1)
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        newmotor.matrix_local = origin
 
     # set motor properties
     newmotor.phobostype = 'motor'
     # should not be nessaccary: newmotor.name = motor['name']
-    defname = motor['defname']
 
     # write the custom properties to the motor
     eUtils.addAnnotation(newmotor, motor['props'], namespace='motor', ignore=['defname'])
     # fix motor name since it can differe from object name
     newmotor['motor/name'] = motor['name']
 
-    if 'controller' in defs.definitions['motors'][defname] and addcontrollers:
-        import phobos.blender.model.controllers as controllermodel
+    newcontroller = None
+    if addcontrollers:
+        defname = motor['defname']
+        if 'controller' in defs.definitions['motors'][defname] and addcontrollers:
+            import phobos.blender.model.controllers as controllermodel
 
-        motorcontroller = defs.definitions['motors'][defname]['controller']
-        controllerdefs = ioUtils.getDictFromYamlDefs(
-            'controller', motorcontroller, newmotor.name + '_controller'
-        )
-        newcontroller = controllermodel.createController(
-            controllerdefs, newmotor, origin=newmotor.matrix_world, annotations='all'
-        )
-    else:
-        newcontroller = None
+            motorcontroller = defs.definitions['motors'][defname]['controller']
+            controllerdefs = ioUtils.getDictFromYamlDefs(
+                'controller', motorcontroller, newmotor.name + '_controller'
+            )
+            newcontroller = controllermodel.createController(
+                controllerdefs, newmotor, origin=newmotor.matrix_world, annotations='all'
+            )
 
     # select the new motor
     sUtils.selectObjects(

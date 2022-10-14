@@ -152,6 +152,7 @@ def createSensor(sensor, reference, origin=mathutils.Matrix()):
     # assign the parent if available
     if reference is not None:
         eUtils.parentObjectsTo(newsensor, reference)
+        newsensor.matrix_local = origin
 
     # TODO we need to deal with other types of parameters for sensors
 

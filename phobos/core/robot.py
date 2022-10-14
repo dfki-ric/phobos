@@ -39,6 +39,9 @@ class Robot(SMURFRobot):
         self._submodels = {}
 
     def get_blender_model_dictionary(self):
+        from phobos.blender import defs
+        from phobos.blender.utils import selection as sUtils
+        import mathutils
         model = {
             'links': {},
             'joints': {},
@@ -67,7 +70,6 @@ class Robot(SMURFRobot):
                 "name": link.name,
                 "children": self.get_children(link.name, targettype="link"),
                 "parent": self.get_parent(link.name, targettype="link"),
-                "inertial": {},
                 "visual": {},
                 "collision": {}
             }
@@ -80,6 +82,7 @@ class Robot(SMURFRobot):
                     "inertia": link.inertial.inertia.to_list(),
                     "name": f"inertial_{link.name}"
                 }
+
             for obj in link.visuals + link.collisions:
                 geometry_entry = {}
                 if type(obj.geometry) == representation.Mesh:
@@ -134,7 +137,54 @@ class Robot(SMURFRobot):
                 model["links"][link]['pose'] = {'translation': [0, 0, 0], 'rotation_euler': [0, 0, 0]}
 
         for sensor in self.sensors:
-            model["sensors"][sensor.name] = sensor.to_yaml()
+            model["sensors"][sensor.name] = {
+                "name": sensor.name,
+                "props": sensor.to_yaml(),
+                "type": sensor.type,
+                "material": None,
+                "shape": None,
+                "size": None,
+            }
+            if hasattr(sensor, "origin"):
+                location = mathutils.Matrix.Translation(tuple(sensor.origin.xyz) if sensor.origin.xyz is not None else (0,0,0))
+                rotation = (
+                    mathutils.Euler(tuple(sensor.origin.rpy) if sensor.origin.rpy is not None else (0,0,0), 'XYZ').to_matrix().to_4x4()
+                )
+                model["sensors"][sensor.name]["origin"] = location @ rotation
+            if 'material' in defs.def_settings['sensors'][sensor.blender_type]:
+                model["sensors"][sensor.name]["material"] = defs.def_settings['sensors'][sensor.blender_type]['material']
+            if 'shape' in defs.def_settings['sensors'][sensor.blender_type]:
+                model["sensors"][sensor.name]["shape"] = defs.def_settings['sensors'][sensor.blender_type]['shape']
+            if 'size' in defs.def_settings['sensors'][sensor.blender_type]:
+                model["sensors"][sensor.name]["size"] = defs.def_settings['sensors'][sensor.blender_type]['size']
+            if "parent" in model["sensors"][sensor.name]["props"]:
+                model["sensors"][sensor.name]["parent"] = model["sensors"][sensor.name]["props"]["parent"]
+            else:
+                if "link" in model["sensors"][sensor.name]["props"]:
+                    model["sensors"][sensor.name]["parent"] = model["sensors"][sensor.name]["props"]["link"]
+                elif "joint" in model["sensors"][sensor.name]["props"]:
+                    model["sensors"][sensor.name]["parent"] = self.get_joint(model["sensors"][sensor.name]["props"]["joint"]).child
+                else:
+                    raise AssertionError(f"Couldn't determine 'parent' of {sensor.name}")
+
+        print(defs.def_settings['motors'])
+        for motor in self.motors:
+            model["motors"][motor.name] = {
+                "name": motor.name,
+                "props": motor.to_yaml(),
+                "material": None,
+                "shape": "resource://dc",
+                "size": 0.25,
+                "joint": str(motor.joint),
+                "parent": self.get_joint(motor.joint).child
+            }
+
+        for interface in self.interfaces:
+            model["interfaces"][interface.name] = interface.to_yaml()
+
+        model['lights'] = self.annotations.get('lights')
+        model['groups'] = self.annotations.get('groups')
+        model['chains'] = self.annotations.get('chains')
 
         return model
 

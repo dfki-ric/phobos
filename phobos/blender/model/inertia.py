@@ -46,8 +46,12 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
       : bpy_types.Object -- newly created blender inertial object
 
     """
-    if errors is not None and not adjust:
-        log('Can not create inertial object.', 'ERROR')
+    if errors is not None and (len(errors) > 0 or type(errors) != list) and not adjust:
+        log(f'Can not create inertial object for {nUtils.getObjectName(obj)}.', 'ERROR')
+        log('Erros were:', 'ERROR')
+        for e in errors:
+            log("  "+e.message, 'ERROR')
+            log("   "+str(e.information), 'ERROR')
 
     try:
         origin = mathutils.Vector(inertialdict['pose']['translation'])

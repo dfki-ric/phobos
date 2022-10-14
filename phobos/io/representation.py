@@ -428,7 +428,7 @@ class Visual(Representation, SmurfBase):
 class Inertia(Representation):
     _class_variables = ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz']
 
-    def __init__(self, ixx=0.0, ixy=0.0, ixz=0.0, iyy=0.0, iyz=0.0, izz=0.0, **kwargs):
+    def __init__(self, ixx=1e-16, ixy=0.0, ixz=0.0, iyy=1e-16, iyz=0.0, izz=1e-16, **kwargs):
         super().__init__()
         assert type(ixx) != str and ixx is not None
         self.ixx = ixx

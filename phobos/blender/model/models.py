@@ -1304,17 +1304,25 @@ def buildModelFromDictionary(model):
     log("Creating sensors...", 'INFO')
     if 'sensors' in model and model['sensors']:
         for sen in model['sensors']:
-            sensormodel.createSensor(model['sensors'][sen], model['sensors'][sen]['parent'])
+            if type(model['sensors'][sen]['parent']) == str:
+                model['sensors'][sen]['parent'] = sUtils.getObjectByName(model["sensors"][sen]["parent"], "link")
+            if "origin" in model["sensors"][sen]:
+                sensormodel.createSensor(model['sensors'][sen], model['sensors'][sen]['parent'], model["sensors"][sen]["origin"])
+            else:
+                sensormodel.createSensor(model['sensors'][sen], model['sensors'][sen]['parent'],)
     else:
         log("  No sensors in model.", 'INFO')
 
     # TODO make sure this works
     log("Creating motors...", 'INFO')
     if 'motors' in model and model['motors']:
-        for motor in model['motors']:
+        for mot in model['motors']:
+            if type(model['motors'][mot]['parent']) == str:
+                model['motors'][mot]['parent'] = sUtils.getObjectByName(model['motors'][mot]["parent"], "link")
+            motormodel.createMotor(model['motors'][mot], model['motors'][mot]["parent"])
             eUtils.setProperties(
-                model['joints'][model['motors'][motor]['joint']],
-                model['motors'][motor],
+                model['joints'][model['motors'][mot]['joint']],
+                model['motors'][mot],
                 category='motor',
             )
     else:
