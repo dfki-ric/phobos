@@ -180,7 +180,7 @@ class Material(Representation, SmurfBase):
 
     def __init__(self, name=None, color=None, texture=None, **kwargs):
         if color is None and "diffuseColor" in kwargs:
-            self.color = Color([
+            color = Color([
                 kwargs["diffuseColor"]["r"],
                 kwargs["diffuseColor"]["g"],
                 kwargs["diffuseColor"]["b"],
@@ -790,6 +790,7 @@ class Interface(Representation, SmurfBase):
     def __init__(self, name=None, origin=None, parent=None, type=None, direction=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
         self.excludes += ["origin"]
+        self.returns += ["parent"]
         self.name = name
         self.type = type
         self.direction = direction

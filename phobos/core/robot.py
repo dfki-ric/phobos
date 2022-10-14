@@ -49,6 +49,7 @@ class Robot(SMURFRobot):
             'motors': {},
             'controllers': {},
             'materials': {},
+            'interfaces': {},
             'meshes': {},
             'lights': {},
             'groups': {},
@@ -59,11 +60,12 @@ class Robot(SMURFRobot):
             'description': self.description,
         }
         for material in self.materials:
-            model["materials"][material.name] = {"name": material.name,
-                                                 "diffuse": material.color.rgba
-                                                }
-            if hasattr(material, "specularColor"):
-                model["materials"][material.name]["specular"] = material.specularColor
+            model["materials"][material.name] = {
+                "name": material.name,
+            }
+            for key, value in material.to_yaml().items():
+                if key.endswith("Color"):
+                    model["materials"][material.name][key[:-5]] = [value[x] for x in "rgba" if x in value.keys()]
 
         for link in self.links:
             model["links"][link.name] = {
@@ -278,6 +280,7 @@ class Robot(SMURFRobot):
         new_robot = Robot()
         new_robot.__dict__.update(cli_robot.__dict__)
         new_robot.description = blender_model["description"]
+        new_robot.relink_entities()
 
         if "sensors" in blender_model:
             for key, values in blender_model['sensors'].items():
@@ -318,6 +321,7 @@ class Robot(SMURFRobot):
                     origin=representation.Pose.from_matrix(np.array(pose['rawmatrix'])),
                     **value
                 ))
+
         additional_info = {'lights': blender_model.get('lights'),
                            'groups': blender_model.get('groups'),
                            'chains': blender_model.get('chains'),
@@ -327,6 +331,7 @@ class Robot(SMURFRobot):
         for key, value in additional_info.items():
             if value is not None and key not in new_robot.named_annotations.keys():
                 new_robot.add_named_annotation(key, additional_info[key])
+        new_robot.relink_entities()
         return new_robot
 
     # export methods
