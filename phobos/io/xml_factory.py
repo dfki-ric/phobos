@@ -133,6 +133,9 @@ class XMLDefinition(object):
         return out
 
     def kwargs_from_xml(self, xml: ET.Element, **kwargs):
+        # value
+        if self.xml_value is not None and xml.text is not None:
+            kwargs[self.xml_value] = self._deserialize(xml.text)
         # attributes
         for attname, varname in self.xml_attributes.items():
             if attname in xml.attrib:

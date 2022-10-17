@@ -32,7 +32,7 @@ def parse_xml(xml):
         xml_root = xml
     else:
         raise ValueError("Couldn't parse xml value of type" + repr(type(xml)))
-    if file_type is None:
+    if file_type is None or file_type == "sdf":
         if xml_root.tag == "sdf":
             file_type = "sdf"
             if len(xml_root.findall("./model")) > 1:

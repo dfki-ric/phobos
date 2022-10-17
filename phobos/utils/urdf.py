@@ -86,11 +86,17 @@ def read_urdf_filename(filename, urdf_file_path):
         urdf_file_path = os.path.abspath(urdf_file_path)
     if urdf_file_path.endswith(".urdf"):
         urdf_file_path = os.path.dirname(urdf_file_path)  # /bla/blub/urdf/blib.urdf -> /bla/blub/urdf
+    elif urdf_file_path.endswith(".sdf"):
+        urdf_file_path = os.path.dirname(urdf_file_path)  # /bla/blub/sdf/blib.sdf -> /bla/blub/sdf
     if filename.startswith("package://"):  # ROS Package
         if urdf_file_path.endswith("/urdf"):
             package_dir = os.path.dirname(urdf_file_path)  # /bla/blub/urdf -> /bla/blub
         elif urdf_file_path.endswith("/urdf/"):
             package_dir = os.path.dirname(urdf_file_path[:-1])  # /bla/blub/urdf/ -> /bla/blub
+        elif urdf_file_path.endswith("/sdf"):
+            package_dir = os.path.dirname(urdf_file_path)  # /bla/blub/sdf -> /bla/blub
+        elif urdf_file_path.endswith("/sdf/"):
+            package_dir = os.path.dirname(urdf_file_path[:-1])  # /bla/blub/sdf/ -> /bla/blub
         else:
             raise IOError("Can't derive package_dir from " + urdf_file_path)
         out = os.path.join(package_dir, filename[len("package://"):])

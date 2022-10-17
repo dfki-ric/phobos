@@ -154,6 +154,8 @@ class Color(Representation):
                 self.rgba = list(self.rgba)
             if len(self.rgba) != 4:
                 raise Exception(f'Invalid color argument count for argument "{self.rgba}"')
+        else:
+            raise AssertionError("Color not given!")
         # round everything
         self.rgba = [int(x * 255) / 255 for x in self.rgba]
 
