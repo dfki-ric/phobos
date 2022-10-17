@@ -1300,7 +1300,6 @@ def buildModelFromDictionary(model):
         rootlink.pose.bones[0].custom_shape = ioUtils.getResource(('link', 'root'))
     rootlink.location = (0, 0, 0)
 
-    # TODO make sure this works
     log("Creating sensors...", 'INFO')
     if 'sensors' in model and model['sensors']:
         for sen in model['sensors']:
@@ -1313,7 +1312,6 @@ def buildModelFromDictionary(model):
     else:
         log("  No sensors in model.", 'INFO')
 
-    # TODO make sure this works
     log("Creating motors...", 'INFO')
     if 'motors' in model and model['motors']:
         for mot in model['motors']:
@@ -1327,6 +1325,8 @@ def buildModelFromDictionary(model):
             )
     else:
         log("  No motors in model.", 'INFO')
+
+    # TODO add interfaces here
 
     # TODO make sure this works
     log("Creating groups...", 'INFO')
