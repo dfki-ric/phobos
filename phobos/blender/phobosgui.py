@@ -1337,91 +1337,91 @@ class PhobosImportPanel(bpy.types.Panel):
         self.layout.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
 
 
-class PhobosSubmodelsPanel(bpy.types.Panel):
-    """TODO Missing documentation"""
+# class PhobosSubmodelsPanel(bpy.types.Panel):
+#     """TODO Missing documentation"""
+#
+#     bl_idname = "TOOLS_SUBMODELS_PT_PHOBOS"
+#     bl_label = "Submodels"
+#     bl_space_type = 'VIEW_3D'
+#     bl_region_type = 'UI'
+#     bl_category = 'Phobos Models'
+#
+#     def draw_header(self, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         self.layout.label(icon_value=phobosIcon)
+#
+#     def draw(self, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         self.layout.operator("phobos.define_submodel")
+#         self.layout.operator("phobos.add_submodel")
+#         self.layout.operator("phobos.toggle_interfaces")
+#         self.layout.operator("phobos.connect_interfaces")
 
-    bl_idname = "TOOLS_SUBMODELS_PT_PHOBOS"
-    bl_label = "Submodels"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Phobos Models'
 
-    def draw_header(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        self.layout.label(icon_value=phobosIcon)
-
-    def draw(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        self.layout.operator("phobos.define_submodel")
-        self.layout.operator("phobos.add_submodel")
-        self.layout.operator("phobos.toggle_interfaces")
-        self.layout.operator("phobos.connect_interfaces")
-
-
-class PhobosModelLibraryPanel(bpy.types.Panel):
-    """TODO Missing documentation"""
-
-    # DOCU add some docstring and update bl_idname
-    bl_idname = "TOOLS_PT_PHOBOS_LOCALMODELS"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = "Phobos Models"
-    bl_label = "Local Model Library"
-
-    def draw_header(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        self.layout.label(icon_value=phobosIcon)
-
-    def draw(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        layout = self.layout
-        wm = context.window_manager
-        modelsfolder = bpy.context.preferences.addons["phobos"].preferences.modelsfolder
-        if modelsfolder == '':
-            layout.label(text='Model folder not configured.')
-            return
-
-        layout.operator("phobos.update_model_library", icon="FILE_REFRESH")
-
-        if wm.category != '-':
-            layout.prop(wm, 'category')
-
-            if wm.modelpreview != '-':
-                layout.template_icon_view(wm, 'modelpreview', show_labels=True, scale=5.0)
-                layout.prop(wm, 'modelpreview')
-                layout.operator("phobos.import_model_from_library", icon="IMPORT")
-            else:
-                layout.label(text='No models in this category.')
-        else:
-            layout.label(text='Model library is empty.')
+# class PhobosModelLibraryPanel(bpy.types.Panel):
+#     """TODO Missing documentation"""
+#
+#     # DOCU add some docstring and update bl_idname
+#     bl_idname = "TOOLS_PT_PHOBOS_LOCALMODELS"
+#     bl_space_type = 'VIEW_3D'
+#     bl_region_type = 'UI'
+#     bl_category = "Phobos Models"
+#     bl_label = "Local Model Library"
+#
+#     def draw_header(self, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         self.layout.label(icon_value=phobosIcon)
+#
+#     def draw(self, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         layout = self.layout
+#         wm = context.window_manager
+#         modelsfolder = bpy.context.preferences.addons["phobos"].preferences.modelsfolder
+#         if modelsfolder == '':
+#             layout.label(text='Model folder not configured.')
+#             return
+#
+#         layout.operator("phobos.update_model_library", icon="FILE_REFRESH")
+#
+#         if wm.category != '-':
+#             layout.prop(wm, 'category')
+#
+#             if wm.modelpreview != '-':
+#                 layout.template_icon_view(wm, 'modelpreview', show_labels=True, scale=5.0)
+#                 layout.prop(wm, 'modelpreview')
+#                 layout.operator("phobos.import_model_from_library", icon="IMPORT")
+#             else:
+#                 layout.label(text='No models in this category.')
+#         else:
+#             layout.label(text='Model library is empty.')
 
 
 def get_operator_manuals():
@@ -1507,7 +1507,7 @@ REGISTER_CLASSES = [
     PhobosToolsPanel,
     PhobosDisplayPanel,
     PhobosModelPanel,
-    PhobosSubmodelsPanel,
+#    PhobosSubmodelsPanel,
     PhobosExportPanel,
     PhobosImportPanel,
 ]
