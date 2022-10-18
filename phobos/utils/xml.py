@@ -9,7 +9,7 @@ log = get_logger(__name__)
 
 def get_joint_info_dict(robot, joint_list):
     """
-    Gets the joint information used for joint_limits file from the urdf of robot
+    Gets the joint information used for joint_limits file from the robot
     """
     out = {"names": [], "elements": []}
     for joint in sorted(joint_list):

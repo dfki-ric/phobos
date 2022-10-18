@@ -11,7 +11,7 @@ from ..core import Robot
 from ..geometry import replace_collision, join_collisions, remove_collision, import_mesh, import_mars_mesh, \
     export_mesh, export_mars_mesh, export_bobj_mesh
 from ..io.hyrodyn import ConstraintAxis
-from ..utils import misc, git, urdf, transform, tree
+from ..utils import misc, git, xml, transform, tree
 from ..io import representation, sensor_representations, poses
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
@@ -61,7 +61,7 @@ class BaseModel(yaml.YAMLObject):
             for link in r.links:
                 for g in link.visuals + link.collisions:
                     if isinstance(g.geometry, representation.Mesh):
-                        self._meshes += [urdf.read_urdf_filename(g.geometry.filename, self.basefile)]
+                        self._meshes += [xml.read_urdf_filename(g.geometry.filename, self.basefile)]
         elif hasattr(self, "depends_on"):
             for _, v in self.depends_on.items():
                 if "basefile" in v.keys():
@@ -69,7 +69,7 @@ class BaseModel(yaml.YAMLObject):
                     for link in r.links:
                         for g in link.visuals + link.collisions:
                             if hasattr(g.geometry, "filename"):
-                                self._meshes += [urdf.read_urdf_filename(g.geometry.filename[:-4], v["basefile"])]
+                                self._meshes += [xml.read_urdf_filename(g.geometry.filename[:-4], v["basefile"])]
         elif hasattr(self, "repo"):
             repo_path = os.path.join(self.tempdir, "repo", os.path.basename(self.repo["git"]))
             git.clone(
@@ -85,7 +85,7 @@ class BaseModel(yaml.YAMLObject):
             for link in r.links:
                 for g in link.visuals + link.collisions:
                     if isinstance(g.geometry, representation.Mesh):
-                        self._meshes += [urdf.read_urdf_filename(g.geometry.filename[:-4], self.basefile)]
+                        self._meshes += [xml.read_urdf_filename(g.geometry.filename[:-4], self.basefile)]
 
         if self.modeltype in pipeline.modeltypes.keys():
             self.typedef = pipeline.modeltypes[self.modeltype]
@@ -651,11 +651,11 @@ class BaseModel(yaml.YAMLObject):
                 if file["type"].upper() == "URDF":
                     temp_model = Robot(name="temp", xmlfile=os.path.join(self.exportdir, file["in"]))
                     if "joints" in file.keys():
-                        out = urdf.get_joint_info_dict(temp_model, get_joints(temp_model, file["joints"]))
+                        out = xml.get_joint_info_dict(temp_model, get_joints(temp_model, file["joints"]))
                     else:
-                        out = urdf.get_joint_info_dict(temp_model, get_joints(temp_model, "ALL"))
+                        out = xml.get_joint_info_dict(temp_model, get_joints(temp_model, "ALL"))
                 elif file["type"].upper() == "JOINTS":
-                    out = urdf.get_joint_info_dict(self.robot, get_joints(self.robot, file["joints"]))
+                    out = xml.get_joint_info_dict(self.robot, get_joints(self.robot, file["joints"]))
                 else:
                     raise Exception("Invalid export joint limits type:" + file["type"])
                 limits_file_export(file["out"], out)

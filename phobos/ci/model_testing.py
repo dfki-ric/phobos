@@ -5,14 +5,14 @@ import subprocess
 import os
 
 from ..defs import *
-from ..core import Robot
 from ..io import representation
 from ..io.representation import Pose
-from ..utils import urdf
+from ..utils import xml
 from ..utils.hyrodyn import get_load_report, debug_report
 from ..utils.misc import execute_shell_command, list_files
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
+
 
 class ModelTest(object):
     """Checks the general validity of a new model possibly against an old model.
@@ -137,7 +137,7 @@ class ModelTest(object):
         for link in self.new.robot.links:
             for mesh in [c.geometry.filename for c in link.collisions if hasattr(c.geometry, "filename")] +\
                         [c.geometry.filename for c in link.visuals if hasattr(c.geometry, "filename")]:
-                mesh_path = urdf.read_urdf_filename(mesh, self.new.robot.xmlfile)
+                mesh_path = xml.read_urdf_filename(mesh, self.new.robot.xmlfile)
                 if os.path.isfile(mesh_path):
                     success &= True
                 else:

@@ -15,6 +15,7 @@ from ..utils import misc
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
 
+
 class CombinedModel(BaseModel):
     def __init__(self, configfile, pipeline, processed_model_exists=True, super_call=False):
         super().__init__(configfile, pipeline, processed_model_exists)

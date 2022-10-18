@@ -12,9 +12,10 @@ import json
 from . import geometry
 from .geometry import identical, improve_mesh, reduce_mesh
 from ..defs import BPY_AVAILABLE
-from ..utils import misc, urdf as urdf_utils
+from ..utils import misc, xml as xml_utils
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
+
 
 def as_mesh(scene_or_mesh, scale=None):
     if scale is None:
@@ -123,7 +124,7 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
     if urdf_path is not None and urdf_path.lower().endswith(".urdf"):
         urdf_path = os.path.dirname(urdf_path)
 
-    filepath = urdf_utils.read_urdf_filename(filepath, urdf_path)
+    filepath = xml_utils.read_urdf_filename(filepath, urdf_path)
 
     do_export = True
     if os.path.isfile(filepath):
@@ -218,7 +219,7 @@ def import_mesh(filepath, urdf_path=None):
     """Import the mesh from a given filepath with an urdf_path.
     """
 
-    filepath = urdf_utils.read_urdf_filename(filepath, urdf_path)
+    filepath = xml_utils.read_urdf_filename(filepath, urdf_path)
 
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Mesh file {filepath} does not exist!")

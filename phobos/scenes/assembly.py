@@ -2,7 +2,7 @@ import os.path
 from copy import deepcopy
 
 from .scene import Scene
-from ..utils import urdf
+from ..utils import xml
 from ..io import representation
 from ..defs import dump_json, load_json, dump_yaml
 
@@ -21,7 +21,7 @@ class Assembly(Scene):
         mesh_dir = None
         if copy_meshes:
             mesh_dir = os.path.join(self.output_dir, "meshes")
-        urdf.adapt_mesh_pathes(self._robot, os.path.join(self.output_dir, "urdf"), copy_to=mesh_dir)
+        xml.adapt_mesh_pathes(self._robot, os.path.join(self.output_dir, "urdf"), copy_to=mesh_dir)
 
         def go_though_parts(children):
             for child in children:
@@ -34,7 +34,7 @@ class Assembly(Scene):
                     origin=representation.Pose.from_matrix(child.transformation)
                 )
                 crobot = child.robot.duplicate()
-                urdf.adapt_mesh_pathes(crobot, os.path.join(self.output_dir, "urdf"), copy_to=mesh_dir)
+                xml.adapt_mesh_pathes(crobot, os.path.join(self.output_dir, "urdf"), copy_to=mesh_dir)
 
                 self._robot.attach(crobot, joint)
 
