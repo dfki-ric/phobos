@@ -17,7 +17,8 @@ from ..io.hyrodyn import Submechanism, Exoskeleton
 from ..io.xmlrobot import XMLRobot
 from ..io.smurfrobot import SMURFRobot
 from ..utils import transform
-from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_string, execute_shell_command, duplicate
+from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_string, execute_shell_command, \
+    duplicate, color_parser
 from ..utils.transform import create_transformation, inv, get_adjoint
 from ..utils.tree import find_close_ancestor_links
 from ..utils.xml import read_urdf_filename, transform_object, get_joint_info_dict
@@ -65,7 +66,7 @@ class Robot(SMURFRobot):
             }
             for key, value in material.to_yaml().items():
                 if key.endswith("Color"):
-                    model["materials"][material.name][key[:-5]] = [value[x] for x in "rgba" if x in value.keys()]
+                    model["materials"][material.name][key[:-5]] = color_parser(value)
 
         for link in self.links:
             model["links"][link.name] = {

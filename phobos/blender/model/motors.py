@@ -90,8 +90,7 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
 
     # assign the parent if available
     if parentobj is not None:
-        sUtils.selectObjects([newmotor, parentobj], clear=True, active=1)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        eUtils.parentObjectsTo(newmotor, parentobj)
         newmotor.matrix_local = origin
 
     # set motor properties
@@ -179,7 +178,7 @@ def deriveMotor(obj, jointdict=None):
     # assign the derived controller
     if controller:
         props['controller'] = controller['name']
-    else:
+    elif "controller" in props:
         del props['controller']
 
     return props

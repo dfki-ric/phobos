@@ -206,12 +206,14 @@ def color_parser(*args, rgba=None):
         out = args
     elif count == 1:
         out = args[0]
+        if type(out) == dict:
+            out = [out[k] for k in "rgba" if k in out.keys()]
     elif count == 0:
         out = None
     if out is not None:
-        if len(out) == 3 and type(args) is list:
+        if len(out) == 3 and type(args) == list:
             out += [1.]
-        elif len(out) == 3 and type(args) is tuple:
+        elif len(out) == 3 and type(args) == tuple:
             out += (1.,)
             out = list(out)
         if len(out) != 4:
