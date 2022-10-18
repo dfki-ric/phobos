@@ -464,58 +464,6 @@ def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
     return False
 
 
-def createInterface(ifdict, parent=None):
-    """Create an interface object and optionally parent to existing object.
-    
-    ifdict is expected as:
-    
-    | **type**: str
-    | **direction**: str
-    | **model**: str
-    | **name**: str
-    | **parent**: bpy.types.Object (optional)
-    | **scale**: float (optional)
-
-    Args:
-      ifdict(dict): interface data
-      parent(bpy.types.Object, optional): designated parent object (Default value = None)
-
-    Returns:
-      bpy.data.Object: newly created interface object
-
-    """
-    if not parent:
-        try:
-            parent = ifdict['parent']
-            assert isinstance(parent, bpy.types.Object)
-        except (AttributeError, AssertionError, KeyError):
-            parent = None
-    location = parent.matrix_world.translation if parent else mathutils.Vector()
-    rotation = parent.matrix_world.to_euler() if parent else mathutils.Euler()
-
-    model = ifdict['model'] if 'model' in ifdict else 'default'
-    templateobj = ioUtils.getResource(('interface', model, ifdict['direction']))
-    scale = ifdict['scale'] if 'scale' in ifdict else 1.0
-    ifobj = bUtils.createPrimitive(
-        ifdict['name'],
-        'box',
-        (1.0, 1.0, 1.0),
-        defs.layerTypes['interface'],
-        plocation=location,
-        protation=rotation,
-        phobostype='interface',
-    )
-    nUtils.safelyName(ifobj, ifdict['name'], 'interface')
-    ifobj.data = templateobj.data
-    ifobj.scale = (scale,) * 3
-    ifobj['interface/type'] = ifdict['type']
-    ifobj['interface/direction'] = ifdict['direction']
-    if parent is not None:
-        ifobj['interface/parent'] = parent.name
-        parentObjectsTo(ifobj, parent)
-    bpy.ops.object.make_single_user(object=True, obdata=True)
-
-
 def toggleInterfaces(interfaces=None, modename='toggle'):
     """
 
@@ -543,8 +491,8 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
     """
 
     Args:
-      parentinterface: 
-      childinterface: 
+      parentinterface:
+      childinterface:
       transform: (Default value = None)
 
     Returns:
@@ -608,8 +556,8 @@ def disconnectInterfaces(parentinterface, childinterface, transform=None):
     """
 
     Args:
-      parentinterface: 
-      childinterface: 
+      parentinterface:
+      childinterface:
       transform: (Default value = None)
 
     Returns:

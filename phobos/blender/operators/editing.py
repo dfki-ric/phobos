@@ -48,6 +48,7 @@ import phobos.blender.model.joints as jUtils
 import phobos.blender.model.links as modellinks
 import phobos.blender.model.motors as modelmotors
 import phobos.blender.model.controllers as controllermodel
+import phobos.blender.model.interfaces as interfmodel
 import phobos.blender.model.sensors as sensors
 import phobos.blender.model.models as models
 from phobos.blender.operators.generic import addObjectFromYaml
@@ -621,9 +622,9 @@ class CreateInterfaceOperator(Operator):
             for link in [obj for obj in context.selected_objects if obj.phobostype == 'link']:
                 ifdict['parent'] = link
                 ifdict['name'] = link.name + '_' + self.interface_name
-                eUtils.createInterface(ifdict, link)
+                interfmodel.createInterface(ifdict, link)
         else:
-            eUtils.createInterface(ifdict, context.object)
+            interfmodel.createInterface(ifdict, context.object)
         return {'FINISHED'}
 
     @classmethod

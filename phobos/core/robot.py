@@ -183,6 +183,14 @@ class Robot(SMURFRobot):
 
         for interface in self.interfaces:
             model["interfaces"][interface.name] = interface.to_yaml()
+            if hasattr(interface, "origin"):
+                location = mathutils.Matrix.Translation(
+                    tuple(interface.origin.xyz) if interface.origin.xyz is not None else (0, 0, 0))
+                rotation = (
+                    mathutils.Euler(tuple(interface.origin.rpy) if interface.origin.rpy is not None else (0, 0, 0),
+                                    'XYZ').to_matrix().to_4x4()
+                )
+                model["interfaces"][interface.name]["origin"] = location @ rotation
 
         model['lights'] = self.annotations.get('lights')
         model['groups'] = self.annotations.get('groups')

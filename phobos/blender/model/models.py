@@ -27,6 +27,7 @@ import phobos.blender.model.motors as motormodel
 import phobos.blender.model.controllers as controllermodel
 import phobos.blender.model.materials as matmodel
 import phobos.blender.model.poses as poses
+import phobos.blender.model.interfaces as interfmodel
 import phobos.blender.utils.naming as nUtils
 import phobos.blender.utils.selection as sUtils
 import phobos.blender.utils.blender as bUtils
@@ -1327,6 +1328,17 @@ def buildModelFromDictionary(model):
         log("  No motors in model.", 'INFO')
 
     # TODO add interfaces here
+    log("Creating interfaces...", 'INFO')
+    if 'interfaces' in model and model['interfaces']:
+        for interf in model['interfaces']:
+            if type(model['interfaces'][interf]['parent']) == str:
+                model['interfaces'][interf]['parent'] = sUtils.getObjectByName(model['interfaces'][interf]["parent"], "link")
+            if "origin" in model["interfaces"][interf]:
+                interfmodel.createInterface(model['interfaces'][interf], model['interfaces'][interf]["parent"], model["interfaces"][interf]["origin"])
+            else:
+                interfmodel.createInterface(model['interfaces'][interf], model['interfaces'][interf]["parent"])
+    else:
+        log("  No interfaces in model.", 'INFO')
 
     # TODO make sure this works
     log("Creating groups...", 'INFO')

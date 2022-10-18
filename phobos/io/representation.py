@@ -771,18 +771,34 @@ class Interface(Representation, SmurfBase):
     }
 
     def __init__(self, name=None, origin=None, parent=None, type=None, direction=None, **kwargs):
-        SmurfBase.__init__(self, **kwargs)
-        self.excludes += ["origin"]
-        self.returns += ["parent"]
         self.name = name
+        assert self.name is not None
         self.type = type
         self.direction = direction
-        assert self.name is not None
         if origin is None:
             origin = Pose()
         self.origin = _singular(origin)
         self.parent = parent
         assert self.parent is not None
+        SmurfBase.__init__(self, returns=["parent", "position", "rotation"], **kwargs)
+        self.excludes += ["origin"]
+
+    @property
+    def position(self):
+        return self.origin.position
+
+    @position.setter
+    def position(self, value):
+        self.origin.position = value
+
+    @property
+    def rotation(self):
+        return self.origin.rotation
+
+    @rotation.setter
+    def rotation(self, value):
+        self.origin.rotation = value
+
 
 
 # class PR2Transmission(Representation):
