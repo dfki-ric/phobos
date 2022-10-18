@@ -195,3 +195,33 @@ def check_for_iterable(check_object):
         some_object_iterator = iter(check_object)
     except TypeError as te:
         log.error(check_object, 'is not iterable')
+
+
+def color_parser(*args, rgba=None):
+    out = None
+    count = len(args)
+    if rgba is not None:
+        out = rgba
+    elif count == 4 or count == 3:
+        out = args
+    elif count == 1:
+        out = args[0]
+    elif count == 0:
+        out = None
+    if out is not None:
+        if len(out) == 3 and type(args) is list:
+            out += [1.]
+        elif len(out) == 3 and type(args) is tuple:
+            out += (1.,)
+            out = list(out)
+        if len(out) != 4:
+            raise Exception(f'Invalid color argument count for argument "{out}"')
+    else:
+        return None
+    # round everything
+    out = [int(x * 255) / 255 for x in out]
+    return out
+
+
+def to_hex_color(color_as_list):
+    return "#" + "".join([hex(int(x * 255))[2:] for x in color_as_list])

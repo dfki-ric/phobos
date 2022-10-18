@@ -69,7 +69,7 @@ class Linkable(object):
                         while self._related_robot_instance.get_material(new_mat_name) is not None:
                             new_mat_name = new_value.name + "_" + str(index)
                             index += 1
-                        log.warning(f"Ambiguous {type(new_value)} in ", str(self), "renamed ", new_value.name, "to", new_mat_name)
+                        log.warning(f"Ambiguous {type(new_value)} in {str(self)} renamed {new_value.name} to {new_mat_name}")
                         new_value.name = new_mat_name
                     new_value.link_with_robot(self._related_robot_instance, check_linkage_later=True)
                     setattr(self, "_" + attribute, new_value)

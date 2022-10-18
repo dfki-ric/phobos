@@ -54,14 +54,12 @@
       "attributes": {
         "name": "name"
       },
-      "children": {
+      "attribute_children": {
         "color": {
-          "classname": "Color",
-          "varname": "color"
+          "rgba": "diffuse"
         },
         "texture": {
-          "classname": "Texture",
-          "varname": "texture"
+          "filename": "texture"
         }
       }
     },
@@ -238,18 +236,6 @@
         "axis": {
           "xyz": "axis"
         }
-      }
-    },
-    "Color": {
-      "tag": "color",
-      "attributes": {
-        "rgba": "rgba"
-      }
-    },
-    "Texture": {
-      "tag": "texture",
-      "attributes": {
-        "filename": "filename"
       }
     },
     "JointLimit": {
@@ -550,14 +536,12 @@
     },
     "Material": {
       "tag": "material",
-      "attributes": {
-        "name": "name"
-      },
-      "children": {
-        "diffuse": {
-          "classname": "Color",
-          "varname": "color"
-        }
+      "value_children": {
+        "script": "name",
+        "diffuse": "diffuse",
+        "ambient": "ambient",
+        "specular": "specular",
+        "emissive": "emissive"
       }
     },
     "Inertial": {
@@ -730,16 +714,6 @@
       "value_children": {
         "parent": "parent",
         "child": "child"
-      }
-    },
-    "Color": {
-      "tag": "diffuse",
-      "value": "rgba"
-    },
-    "Texture": {
-      "tag": "texture",
-      "attributes": {
-        "filename": "filename"
       }
     },
     "JointLimit": {

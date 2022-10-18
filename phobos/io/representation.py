@@ -7,7 +7,7 @@ from .smurf_reflection import SmurfBase
 from .xml_factory import singular as _singular, plural as _plural
 from ..geometry.geometry import identical
 from ..geometry.io import import_mesh, import_mars_mesh
-from ..utils.misc import trunc, execute_shell_command
+from ..utils.misc import trunc, execute_shell_command, to_hex_color, color_parser
 from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
 from ..utils import urdf as urdf_utils, transform
 
@@ -131,86 +131,67 @@ class Pose(Representation, SmurfBase):
         return False
 
 
-class Color(Representation):
-    _class_variables = ["rgba"]
-
-    def __init__(self, *args, rgba=None, **kwargs):
-        super().__init__()
-        # What about named colors?
-        count = len(args)
-        if rgba is not None:
-            self.rgba = rgba
-        elif count == 4 or count == 3:
-            self.rgba = args
-        elif count == 1:
-            self.rgba = args[0]
-        elif count == 0:
-            self.rgba = None
-        if self.rgba is not None:
-            if len(self.rgba) == 3 and type(args) is list:
-                self.rgba += [1.]
-            elif len(self.rgba) == 3 and type(args) is tuple:
-                self.rgba += (1.,)
-                self.rgba = list(self.rgba)
-            if len(self.rgba) != 4:
-                raise Exception(f'Invalid color argument count for argument "{self.rgba}"')
-        else:
-            raise AssertionError("Color not given!")
-        # round everything
-        self.rgba = [int(x * 255) / 255 for x in self.rgba]
-
-    def get_hex_color(self):
-        return "#" + "".join([hex(int(x * 255))[2:] for x in self.rgba])
-
-    def stringable(self):
-        return False
-
-
-class Texture(Representation):
-    filename = None
-
-    def __init__(self, filename=None, **kwargs):
-        super().__init__()
-        self.filename = filename
-
-    def __str__(self):
-        return self.filename
-
-
 class Material(Representation, SmurfBase):
-    _class_variables = ["name", "color", "texture"]
+    _class_variables = ["name", "diffuse", "ambient", "emissive", "specular", "texture"]
 
-    def __init__(self, name=None, color=None, texture=None, **kwargs):
-        if color is None and "diffuseColor" in kwargs:
-            color = Color([
-                kwargs["diffuseColor"]["r"],
-                kwargs["diffuseColor"]["g"],
-                kwargs["diffuseColor"]["b"],
-                kwargs["diffuseColor"]["a"] if "a" in kwargs["diffuseColor"] else 1.
-            ])
-        self.color = _singular(color)
-        self.texture = _singular(texture)
+    def __init__(self, name=None, diffuse=None, ambient=None, specular=None, emissive=None, texture=None, **kwargs):
+        self.diffuse = color_parser(rgba=diffuse)
+        self.ambient = color_parser(rgba=ambient)
+        self.specular = color_parser(rgba=specular)
+        self.emissive = color_parser(rgba=emissive)
+        self.texture = texture
         self.original_name = name
-        if len(name) == 0 or name is None:
-            name = self.color.get_hex_color() + (os.path.basename(self.texture.filename) if texture is not None else "")
+        SmurfBase.__init__(self, returns=["name", "diffuseColor", "ambientColor", "specularColor", "emissionColor"],
+                           **kwargs)
+        if name is None or len(name) == 0:
+            name = to_hex_color(self.diffuse) + (os.path.basename(self.texture) if texture is not None else "")
         self.name = name
-        if "diffuseColor" not in kwargs and self.color is not None:
-            kwargs["diffuseColor"] = {"r": self.color.rgba[0], "g": self.color.rgba[1], "b": self.color.rgba[2],
-                                      "a": self.color.rgba[3]}
-        if "diffuseTexture" not in kwargs and self.texture is not None:
-            kwargs["diffuseTexture"] = self.texture.filename
-        SmurfBase.__init__(self, returns=["name"], **kwargs)
-        self.excludes += ["color"]
+        self.excludes += ["diffuse", "ambient", "specular", "emissive"]
 
     def check_valid(self):
-        if self.color is None and self.texture is None:
+        # TODO REVIEW add other colors here
+        if self.diffuse is None and self.texture is None:
             raise Exception("Material has neither a color nor texture.")
 
     def equivalent(self, other):
-        return other.texture == self.texture and other.color.rgba == self.color.rgba
+        # TODO REVIEW add other colors here
+        return other.texture == self.texture and other.diffuse == self.diffuse
 
     def is_delegate(self):
-        return self.color is None and self.texture is None
+        # TODO REVIEW add other colors here
+        return self.diffuse is None and self.texture is None
+
+    @property
+    def diffuseColor(self):
+        return self.diffuse
+
+    @diffuseColor.setter
+    def diffuseColor(self, *args, rgba=None):
+        self.diffuse = color_parser(*args, rgba=rgba)
+
+    @property
+    def ambientColor(self):
+        return self.ambient
+
+    @ambientColor.setter
+    def ambientColor(self, *args, rgba=None):
+        self.ambient = color_parser(*args, rgba=rgba)
+
+    @property
+    def specularColor(self):
+        return self.specular
+
+    @specularColor.setter
+    def specularColor(self, *args, rgba=None):
+        self.specular = color_parser(*args, rgba=rgba)
+
+    @property
+    def emissionColor(self):
+        return self.emissive
+
+    @emissiveColor.setter
+    def emissionColor(self, *args, rgba=None):
+        self.emissive = color_parser(*args, rgba=rgba)
 
 
 class Box(Representation):
