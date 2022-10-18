@@ -189,7 +189,7 @@ class Material(Representation, SmurfBase):
     def emissionColor(self):
         return self.emissive
 
-    @emissiveColor.setter
+    @emissionColor.setter
     def emissionColor(self, *args, rgba=None):
         self.emissive = color_parser(*args, rgba=rgba)
 
