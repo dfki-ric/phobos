@@ -116,6 +116,7 @@ class HyrodynAnnotation(SmurfBase):
         return tree.find_common_root(robot, self.get_joints())
 
     def get_root_joints(self, robot):
+        "Returns the joints that are connected to the root link of this submechanism"
         out = [jn for jn in self.get_joints() if jn in robot.get_children(self.get_root(robot))]
         assert len(out) > 0
         return out
@@ -237,7 +238,14 @@ class Submechanism(HyrodynAnnotation):
             assert self.check_unlinkage()
 
     def regenerate(self, robot):
-        self.jointnames = sorted([j for j in self.jointnames_spanningtree], key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
+        jointnames = []
+        root = self.get_root(robot)
+        for j in self.jointnames_spanningtree:
+            chain = robot.get_chain(root, robot.get_joint(j).parent, links=False)
+            for c in chain:
+                if robot.get_joint(c).joint_type == "fixed":
+                    jointnames.append(c)
+        self.jointnames = sorted([j for j in self.jointnames_spanningtree]+jointnames, key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
         self.jointnames_active = sorted(self.jointnames_active, key=lambda x: self.jointnames.index(x))
         self.jointnames_independent = sorted(self.jointnames_independent, key=lambda x: self.jointnames.index(x))
         self.jointnames_spanningtree = copy(self.jointnames)

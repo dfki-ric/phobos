@@ -91,6 +91,7 @@ class CombinedModel(BaseModel):
                 )
                 self.dep_models.update({
                     name: Robot(name=name, inputfile=os.path.join(repo_path, config["repo"]["model_in_repo"]),
+                                submechanisms_file=os.path.join(repo_path, config["repo"]["submechanisms_in_repo"]) if "submechanisms_in_repo" in config["repo"] else None,
                                 is_human=config["is_human"] if "is_human" in config else False)
                 })
                 # copy the mesh files to the temporary combined model directory
@@ -183,9 +184,11 @@ class CombinedModel(BaseModel):
                 att_model.relink_entities()
 
                 if child["joint"]["parent"] is None:
-                    child["joint"]["parent"] = parent_model.get_root()
-                if child["joint"]["child"] is None:
-                    child["joint"]["child"] = att_model.get_root()
+                    child["joint"]["parent"] = str(parent_model.get_root())
+                if "child" not in child["joint"].keys() or child["joint"]["child"] is None:
+                    child["joint"]["child"] = str(att_model.get_root())
+                    if "take_leaf" in child:
+                        child["joint"]["child"] = child["take_leaf"]
                 if "name" not in child["joint"].keys() or child["joint"]["name"] is None:
                     child["joint"]["name"] = child["joint"]["parent"] + "2" + child["joint"]["child"]
                 if "type" not in child["joint"].keys() or child["joint"]["type"] is None:
@@ -245,6 +248,8 @@ class CombinedModel(BaseModel):
                 if "take_leaf" in child.keys():
                     assert type(child["take_leaf"]) == str
                     att_model = att_model.get_beyond(child["take_leaf"])
+                    assert len(att_model.keys()) == 1, "take_leaf: Please cut the tree in a way to get only one leaf"
+                    att_model = list(att_model.values())[0]
                     att_model.relink_entities()
 
                 if "mirror" in child.keys():

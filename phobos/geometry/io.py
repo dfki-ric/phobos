@@ -225,7 +225,7 @@ def import_mesh(filepath, urdf_path=None):
         raise FileNotFoundError(f"Mesh file {filepath} does not exist!")
     out = as_mesh(trimesh.load_mesh(filepath))
     if out is None:
-        log.warning(f"{filepath} contains empty mesh!")
+        log.info(f"{filepath} contains empty mesh!")
     return out
 
 

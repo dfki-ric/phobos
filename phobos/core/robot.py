@@ -29,12 +29,17 @@ log = get_logger(__name__)
 
 class Robot(SMURFRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
-                 inputfile=None, description=None, is_human=False, autogenerate_submechanisms=True):
+                 inputfile=None, description=None, is_human=False, autogenerate_submechanisms=None):
         """ The basic robot class to represent a urdf.
         """
-        super().__init__(xmlfile=xmlfile, submechanisms_file=submechanisms_file, smurffile=smurffile,
-                         verify_meshes_on_import=verify_meshes_on_import, inputfile=inputfile, description=description,
-                         autogenerate_submechanisms=autogenerate_submechanisms, is_human=is_human)
+        try:
+            super().__init__(xmlfile=xmlfile, submechanisms_file=submechanisms_file, smurffile=smurffile,
+                             verify_meshes_on_import=verify_meshes_on_import, inputfile=inputfile, description=description,
+                             autogenerate_submechanisms=autogenerate_submechanisms, is_human=is_human)
+        except Exception as e:
+            log.error(f"Failed loading:\n  xml: {xmlfile}\n  submechanims: {submechanisms_file}\n  smurf: {smurffile}")
+            raise e
+
         if name is not None:
             self.name = name
         self._submodels = {}
@@ -170,7 +175,7 @@ class Robot(SMURFRobot):
                 else:
                     raise AssertionError(f"Couldn't determine 'parent' of {sensor.name}")
 
-        print(defs.def_settings['motors'])
+        # print(defs.def_settings['motors'])
         for motor in self.motors:
             model["motors"][motor.name] = {
                 "name": motor.name,
@@ -537,7 +542,7 @@ class Robot(SMURFRobot):
         ]
         export_files = [os.path.relpath(robotfile, outputdir + "/smurf")]
         submechanisms = {}
-        if self.autogenerate_submechanisms:
+        if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
             self.generate_submechanisms()
         else:
             missing_joints = self._get_joints_not_included_in_submechanisms()
@@ -836,6 +841,7 @@ class Robot(SMURFRobot):
 
             if name in self._submodels.keys():
                 _submodel = self.instantiate_submodel(name)
+                assert _submodel.autogenerate_submechanisms == self.autogenerate_submechanisms
                 _sm_xmlfile = filename if filename is not None else (f"{name}.{format}")
                 submodel_dir = os.path.join(output_dir, name)
                 if robotname is not None:
@@ -1216,7 +1222,7 @@ class Robot(SMURFRobot):
             submodel.add_aggregate("exoskeletons", exoskeletons)
         submodel.add_aggregate("interfaces", interfaces)
 
-        # copy all annotations we not yet have
+        # copy all annotations we do not have yet
         for k, v in self.__dict__.items():
             if k not in submodel.__dict__.keys() or submodel.__dict__[k] is None:
                 submodel.__dict__[k] = v
@@ -1691,7 +1697,7 @@ class Robot(SMURFRobot):
                             joint.limit.velocity = backup["vel"]
                         if "eff" in backup.keys() and joint.limit.effort == 0:
                             joint.limit.effort = backup["eff"]
-                        log.warning(f"Therefore we take the backup/default values for the joint limits:\n"
+                        log.info(f"Therefore we take the backup/default values for the joint limits:\n"
                                     f"min: {joint.limit.lower} max {joint.limit.upper} vel {joint.limit.velocity} "
                                     f"eff {joint.limit.effort}")
 
@@ -2549,6 +2555,7 @@ class Robot(SMURFRobot):
             "jointnames": ["FreeFlyerX", "FreeFlyerY", "FreeFlyerZ", "FreeFlyerRX", "FreeFlyerRY", "FreeFlyerRZ"]
         }
         floatingbase.submechanisms += [Submechanism(**freeflyer)]
+        floatingbase.autogenerate_submechanisms = self.autogenerate_submechanisms
         return floatingbase
 
     def scale_link(self, linkname, scale_x, scale_y, scale_z, new_mass=None, geometry_for_inertia=None):
