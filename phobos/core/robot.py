@@ -902,7 +902,8 @@ class Robot(SMURFRobot):
         printed_joints = []
         if hasattr(self, "submechanisms") and self.submechanisms is not None and len(self.submechanisms) > 0:
             for i, sm in enumerate(self.submechanisms):
-                out += f"node [shape=box, color={SUBMECH_COLORS[i]}, fontcolor=black];\n"
+                # ToDo pretty setting of the submechanism legend
+                out += f"node [shape=box, color={SUBMECH_COLORS[i%len(SUBMECH_COLORS)]}, fontcolor=black];\n"
                 out += f"\"{str(sm)}\" [label="
                 out += f"\"Submechanism\ntype: {sm.type} "
                 out += f"\\nname: {sm.name} "
@@ -910,14 +911,14 @@ class Robot(SMURFRobot):
                 out += "\"];\n"
                 for link in self.get_links_ordered_df():
                     out += f"\"{str(link)}\" [label=\"{str(link)}\"];\n"
-                out += f"node [shape=ellipse, color={SUBMECH_COLORS[i]}, fontcolor=black];\n"
+                out += f"node [shape=ellipse, color={SUBMECH_COLORS[i%len(SUBMECH_COLORS)]}, fontcolor=black];\n"
                 for joint in sorted(sm.get_joints()):
                     joint = self.get_joint(joint)
                     printed_joints.append(str(joint))
                     out += add_joint(joint)
         if hasattr(self, "exoskeletons") and self.exoskeletons is not None and len(self.exoskeletons) > 0:
             for i, exo in enumerate(self.exoskeletons):
-                out += f"node [shape=septagon, color={EXOSKEL_COLORS[i]}, fontcolor=black];\n"
+                out += f"node [shape=septagon, color={EXOSKEL_COLORS[i%len(SUBMECH_COLORS)]}, fontcolor=black];\n"
                 for joint in sorted(exo.get_joints()):
                     joint = self.get_joint(joint)
                     if joint.is_human:
@@ -1208,11 +1209,20 @@ class Robot(SMURFRobot):
         exoskeletons = []
         if not no_submechanisms:
             for subm in self.submechanisms:
-                if subm.is_related_to(joints, pure=True):
-                    submechanisms.append(subm.duplicate())
+                subm.unlink_from_robot()
+                _subm = deepcopy(subm)
+                subm.link_with_robot(self)
+                _subm._jointnames = None
+                assert _subm.jointnames is None
+                if _subm.is_related_to(joints, pure=True):
+                    submechanisms.append(_subm)
             for exo in self.exoskeletons:
-                if exo.is_related_to(joints, pure=True):
-                    exoskeletons.append(exo.duplicate())
+                exo.unlink_from_robot()
+                _exo = deepcopy(exo)
+                exo.link_with_robot(self)
+                _exo._jointnames = None
+                if _exo.is_related_to(joints, pure=True):
+                    exoskeletons.append(_exo)
         interfaces = []
         for interf in self.interfaces:
             if interf.is_related_to(joints):

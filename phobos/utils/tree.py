@@ -27,7 +27,7 @@ def find_common_root(input_model, input_spanningtree):
     intersection = set([ln.name for ln in input_model.links])
     chains = []
     for jointname in input_spanningtree:
-        joint = input_model.get_joint(jointname)
+        joint = input_model.get_joint(jointname, verbose=True)
         assert joint is not None
         chain = input_model.get_chain(input_model.get_root(), joint.parent, joints=False)
         chains += [chain]

@@ -238,17 +238,25 @@ class Submechanism(HyrodynAnnotation):
             assert self.check_unlinkage()
 
     def regenerate(self, robot):
-        jointnames = []
+        jointnames = set()
         root = self.get_root(robot)
         for j in self.jointnames_spanningtree:
+            # chain from root of submech to this j
             chain = robot.get_chain(root, robot.get_joint(j).parent, links=False)
             for c in chain:
                 if robot.get_joint(c).joint_type == "fixed":
-                    jointnames.append(c)
-        self.jointnames = sorted([j for j in self.jointnames_spanningtree]+jointnames, key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
-        self.jointnames_active = sorted(self.jointnames_active, key=lambda x: self.jointnames.index(x))
-        self.jointnames_independent = sorted(self.jointnames_independent, key=lambda x: self.jointnames.index(x))
-        self.jointnames_spanningtree = copy(self.jointnames)
+                    jointnames.add(c)
+            # chain from j to the leaves
+            leaves = robot.get_leaves(start=robot.get_joint(j).child)
+            for leave in leaves:
+                chain = robot.get_chain(robot.get_joint(j).child, leave, links=False)
+                if all([robot.get_joint(joint).joint_type == "fixed" for joint in chain]):
+                    # if all joints in the chain after j are fixed
+                    jointnames.update(chain)
+        self.jointnames = sorted([j for j in self.jointnames_spanningtree]+list(jointnames), key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
+        self.jointnames_spanningtree = sorted([j for j in self.jointnames_spanningtree], key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
+        self.jointnames_active = sorted(self.jointnames_active, key=lambda x: self.jointnames_spanningtree.index(x))
+        self.jointnames_independent = sorted(self.jointnames_independent, key=lambda x: self.jointnames_spanningtree.index(x))
 
 
 class Exoskeleton(HyrodynAnnotation):

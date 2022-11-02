@@ -417,6 +417,8 @@ class SMURFRobot(XMLRobot):
         """
         sorted_joints = [jn.name for jn in self.get_joints_ordered_df()]
         # sorted_links = [jn.name for jn in self.get_links_ordered_df()]
+        for x in self.submechanisms:
+            assert len(x.get_root_joints(self)) > 0, x.name
         self.submechanisms = sorted(self.submechanisms, key=lambda submech: sorted_joints.index(submech.get_root_joints(self)[0]))
         for sm in self.submechanisms + self.exoskeletons:
             for key in ["jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent", "jointnames_dependent"]:
@@ -479,6 +481,8 @@ class SMURFRobot(XMLRobot):
                     auto_gen=True
                 ), silent=True)
                 # print("Created for", jointname)
+        for sm in self.submechanisms + self.exoskeletons:
+            sm.regenerate(self)
         self.sort_submechanisms()
         # Now we merge all serial mechanisms to reduce the number of mechanisms
         new_submechanisms = []
@@ -530,7 +534,22 @@ class SMURFRobot(XMLRobot):
                         # print(jointname, jn, sorted_joints.index(jn) == joint_idx - 1, self.get_parent(joint.parent), self.get_children(joint.child), insertion_happened)
                         if insertion_happened:
                             break
-        assert len(self._get_joints_not_included_in_submechanisms()) == 0, [str(j) for j in self._get_joints_not_included_in_submechanisms()]
+                        # else:
+                        #     print("Couldn't insert ", jointname, "into", sm.to_yaml())
+        for jointname in self._get_joints_not_included_in_submechanisms():
+            joint = self.get_joint(jointname)
+            if joint._child.is_human is not True:
+                # We create submechanisms now for the missing fixed joints
+                self.add_aggregate("submechanisms", Submechanism(
+                    name="serial",
+                    contextual_name="serial",
+                    type="serial",
+                    jointnames_active=[] if joint.joint_type == "fixed" else [jointname],
+                    jointnames_independent=[] if joint.joint_type == "fixed" else [jointname],
+                    jointnames_spanningtree=[] if joint.joint_type == "fixed" else [jointname],
+                    jointnames=[jointname],
+                    auto_gen=True
+                ), silent=True)
         self.sort_submechanisms()
         counter = 0
         for sm in self.submechanisms:

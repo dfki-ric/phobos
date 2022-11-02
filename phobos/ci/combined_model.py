@@ -130,24 +130,24 @@ class CombinedModel(BaseModel):
                         c["joint"]["parent"] = self.join["name_prefix"] + c["joint"]["parent"]
             for lnk in combined_model.links:
                 combined_model.rename(targettype="link", target=lnk.name, prefix=self.join["name_prefix"],
-                              replacements=self.join["name_replacements"])
+                                      replacements=self.join["name_replacements"])
                 for coll in lnk.collisions:
                     combined_model.rename(targettype="collision", target=coll.name,
-                                  prefix=self.join["name_prefix"],
-                                  replacements=self.join["name_replacements"])
+                                          prefix=self.join["name_prefix"],
+                                          replacements=self.join["name_replacements"])
                     # att_model.rename(targettype="collision", target=coll.name,
                     #                  prefix=child["collision_prefix"], suffix=child["collision_suffix"],
                     #                  replacements=child["collision_replacements"])
                 for vis in lnk.visuals:
                     combined_model.rename(targettype="visual", target=vis.name,
-                                  prefix=self.join["name_prefix"],
-                                  replacements=self.join["name_replacements"])
+                                          prefix=self.join["name_prefix"],
+                                          replacements=self.join["name_replacements"])
                     # att_model.rename(targettype="visual", target=coll.name,
                     #                  prefix=child["visual_prefix"], suffix=child["visual_suffix"],
                     #                  replacements=child["visual_replacements"])
             for jnt in combined_model.joints:
                 combined_model.rename(targettype="joint", target=jnt.name, prefix=self.join["name_prefix"],
-                              replacements=self.join["name_replacements"])
+                                      replacements=self.join["name_replacements"])
 
         if "remove_beyond" in self.join.keys():
             combined_model = combined_model.get_before(self.join["remove_beyond"])

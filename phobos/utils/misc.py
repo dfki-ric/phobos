@@ -33,7 +33,7 @@ def read_angle_2_rad(config_input):
         else:
             raise AttributeError("unit not properly defined")
     else:
-        log.warning("Rad/deg not defined, taking rad!")
+        log.info("Rad/deg not defined, taking rad!")
         return config_input
 
 

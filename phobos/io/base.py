@@ -192,6 +192,8 @@ class Linkable(object):
             value = self._attr_get_name(attribute)
             if type(value) == list:
                 out += [str(v) in entity for v in value]
+            elif value is None:
+                continue
             else:
                 out.append(str(value) in entity)
         if pure:
