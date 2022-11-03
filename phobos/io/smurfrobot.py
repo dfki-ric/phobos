@@ -378,17 +378,17 @@ class SMURFRobot(XMLRobot):
         self.submechanisms += [Submechanism(**sort_defs)]
         return
 
-    def load_submechanisms(self, submechanism_definition, add=False):
+    def load_submechanisms(self, submechanism_definition, replace_only_conflicting=False):
         """
         Loads the given submechanisms definition and creates instances of Submechanism or Exoskeleton for each entry
         :param submechanism_definition: The submechanism dict given in the file.
-        :param add: Whether the loaded definition should be added to the exiting ones. (Not recommended as this might
+        :param replace_only_conflicting: Whether the loaded definition should be added to the exiting ones. (Not recommended as this might
         lead to joints that are included in multiple definitions.
         :return: None
         """
         if type(submechanism_definition) == str and os.path.isfile(submechanism_definition):
             submechanism_definition = load_json(open(submechanism_definition, "r").read())
-        if not add:
+        if not replace_only_conflicting:
             self.submechanisms = []
             self.exoskeletons = []
         _submechs = []
@@ -399,16 +399,26 @@ class SMURFRobot(XMLRobot):
             if "exoskeletons" in submechanism_definition.keys():
                 _exoskels = submechanism_definition["exoskeletons"]
         elif type(submechanism_definition) == list:
-            log.warning("Loading submechanisms from list. This list is interpreted as list of nothing but"
-                  " submechanisms. This means no exoskeletons will be created.")
+            log.warning("Loading submechanisms from list. This list is interpreted as list of nothing but "
+                        "submechanisms. This means no exoskeletons will be created.")
             _submechs = submechanism_definition
         else:
             raise TypeError("submechanism_definition is neither list nor dict")
 
         for sm in _submechs:
-            self.add_aggregate("submechanism", Submechanism(**sm))
+            _sm = Submechanism(**sm)
+            if replace_only_conflicting:
+                for existing in self.submechanisms:
+                    if set(existing.get_joints()) & set(_sm.get_joints()):
+                        self.submechanisms.remove(existing)
+            self.add_aggregate("submechanism", _sm)
         for ex in _exoskels:
-            self.add_aggregate("exoskeletons", Exoskeleton(**ex))
+            _ex = Exoskeleton(**ex)
+            if replace_only_conflicting:
+                for existing in self.exoskeletons:
+                    if set(existing.get_joints()) & set(_ex.get_joints()):
+                        self.exoskeletons.remove(existing)
+            self.add_aggregate("exoskeletons", _ex)
 
     def sort_submechanisms(self):
         """
@@ -435,6 +445,18 @@ class SMURFRobot(XMLRobot):
         for sm in self.submechanisms + self.exoskeletons:
             sm_joints += sm.get_joints()
         return list(set(joints) - set(sm_joints))
+
+    def _get_joints_included_twice_in_submechanisms(self):
+        """
+        Scans the joints not included in any submechanism definition
+        :return: A list of joints that are not included in the submechanism definition
+        """
+        sm_joints = []
+        twice = set()
+        for sm in self.submechanisms + self.exoskeletons:
+            twice = set(sm_joints) & set(sm.get_joints())
+            sm_joints += sm.get_joints()
+        return twice
 
     def generate_submechanisms(self):
         """

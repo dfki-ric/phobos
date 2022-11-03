@@ -216,6 +216,8 @@ class XMLRobot(Representation):
             self.parent_map[str(elem.child)] = (elem.name, elem.parent)
             self.parent_map[str(elem.name)] = (elem.name, elem.parent)
             if elem.parent in self.child_map:
+                assert elem.name not in [j for j, l in self.child_map[elem.parent]], str(elem.to_yaml())
+                assert elem.child not in [l for j, l in self.child_map[elem.parent]], str(elem.to_yaml())
                 self.child_map[elem.parent].append((elem.name, elem.child))
             else:
                 self.child_map[elem.parent] = [(elem.name, elem.child)]
@@ -622,6 +624,8 @@ class XMLRobot(Representation):
         :param targettype: the next parent joint or the next parent link (default: 'joint')
         :return: List with one element (todo)
         """
+        if type(name) in [list, tuple, set]:
+            return [self.get_parent(n, targettype=targettype) for n in name]
         # Check if the name is present
         if str(name) in self.parent_map.keys():
             parents = self.parent_map[str(name)]

@@ -469,9 +469,9 @@ class BaseModel(yaml.YAMLObject):
 
         if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):
             if hasattr(self, "exoskeletons"):
-                self.robot.load_submechanisms({"exoskeletons": deepcopy(self.exoskeletons)})
+                self.robot.load_submechanisms({"exoskeletons": deepcopy(self.exoskeletons)}, replace_only_conflicting=True)
             if hasattr(self, "submechanisms"):
-                self.robot.load_submechanisms({"submechanisms": deepcopy(self.submechanisms)})
+                self.robot.load_submechanisms({"submechanisms": deepcopy(self.submechanisms)}, replace_only_conflicting=True)
         elif hasattr(self, "submechanisms_file"):
             self.robot.autogenerate_submechanisms = False
             self.robot.load_submechanisms(deepcopy(self.submechanisms_file))

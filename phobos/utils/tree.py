@@ -136,6 +136,8 @@ def get_joints_depth_first(robot, start_link, independent_joints=None):
     if independent_joints is not None:
         indep_children = sorted([child for child in children if child in independent_joints], key=lambda x: str(x))
         other_children = sorted([child for child in children if child not in indep_children], key=lambda x: str(x))
+        assert len(set(indep_children) & set(other_children)) == 0
+        assert len(children) == len(indep_children) + len(other_children)
         children = indep_children + other_children
     for child in children:
         joint = robot.get_joint(str(child))
@@ -144,7 +146,7 @@ def get_joints_depth_first(robot, start_link, independent_joints=None):
         try:
             joints += get_joints_depth_first(robot, str(joint.child), independent_joints=independent_joints)
         except Exception as e:
-            log.error(joint.to_urdf_string(), joint.child, joint._child)
+            print(joint.to_urdf_string(), joint.child, joint._child)
             raise e
     return joints
 

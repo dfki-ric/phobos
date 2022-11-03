@@ -274,6 +274,7 @@ class CombinedModel(BaseModel):
                     raise AssertionError(
                         "Problem with assembling joint " + child["joint"]["parent"] + " -> " + child["joint"]["child"]
                         + ": the child link doesn't exist!")
+                assert att_model.get_joint(child["joint"]["name"]) is None and parent_model.get_joint(child["joint"]["name"]) is None, f'Can not join using joint name {child["joint"]["name"]} as this name already exists.'
                 joint = representation.Joint(
                     name=child["joint"]["name"],
                     parent=parent.get_link(child["joint"]["parent"]).name,
@@ -292,6 +293,7 @@ class CombinedModel(BaseModel):
                 )
 
                 parent.attach(att_model if isinstance(att_model, Robot) else att_model.robot, joint, do_not_rename=False)
+                assert len(combined_model.links) == len(combined_model.joints) + 1
                 if "remove_joint_later" in child["joint"] and child["joint"]["remove_joint_later"]:
                     if hasattr(self, "remove_joints") and type(self.remove_joints) == list:
                         self.remove_joints += [child["joint"]["name"]]
@@ -307,6 +309,7 @@ class CombinedModel(BaseModel):
             combined_model.relink_entities()
 
         # 3. save combined_model to the temp directory
+        assert len(combined_model.links) == len(combined_model.joints) + 1
         combined_model.name = "combined_model"
         combined_model.full_export(self.basedir)
 

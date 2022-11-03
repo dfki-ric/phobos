@@ -22,6 +22,7 @@ def main(args):
     from phobos.utils.misc import create_dir, copy, regex_replace
     from phobos.utils.transform import order_angles
     from phobos.defs import load_json, dump_json, dump_yaml
+    from phobos.core import Robot
     from ..defs import BASE_LOG_LEVEL
     from ..utils.commandline_logging import setup_logger_level
 
@@ -196,16 +197,13 @@ def main(args):
                 manifest.write(content)
 
         try:
-            log.info("  Trying to check URDF ...")
+            log.info("  Trying to check URDF using urdfdom...")
             os.system("check_urdf " + urdf_path)
         except:
             pass
 
-        try:
-            log.info("  Trying to generate PDF ...")
-            os.system("urdf_to_graphiz " + urdf_path)
-        except:
-            pass
+        robot = Robot(inputfile=urdf_path)
+        robot.export_pdf(outputfile=urdf_path[:-4]+"pdf")
 
         log.info("Finished!")
 
