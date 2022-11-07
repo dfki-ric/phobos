@@ -495,30 +495,31 @@ class BaseModel(yaml.YAMLObject):
                                            only_urdf=au["only_urdf"] if "only_urdf" in au.keys() else None)
 
         # motors
-        assert self.robot.motors == []
-        for joint in self.robot.joints:
-            if hasattr(self, "smurf"):
-                conf = self.smurf["motors"]["default"] if "motors" in self.smurf.keys() and "default" in self.smurf["motors"].keys() else {}
-            else:
-                conf = {}
-            if "name" in conf.keys():  # we dont ẃant that someone overwrites the same name for all motors
-                conf.pop("name")
-            if "motors" in self.smurf.keys() and joint.name in self.smurf["motors"].keys():
-                for k, v in self.smurf["motors"][joint.name].items():
-                    conf[k] = v
-            if joint.joint_type == "fixed":
-                continue
-            motor = representation.Motor(
-                joint=joint,
-                name=conf["name"] if "name" in conf.keys() else joint.name + "_motor",
-                p=conf["p"] if "p" in conf.keys() else 20.0,
-                i=conf["i"] if "i" in conf.keys() else 0.0,
-                d=conf["d"] if "d" in conf.keys() else 0.1,
-                maxEffort=joint.limit.effort if joint.limit is not None and joint.limit.effort > 0.0 else 400,
-                reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
-                noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
-            )
-            self.robot.add_motor(motor)
+        if hasattr(self, "smurf"):
+            assert self.robot.motors == []
+            for joint in self.robot.joints:
+                if hasattr(self, "smurf"):
+                    conf = self.smurf["motors"]["default"] if "motors" in self.smurf.keys() and "default" in self.smurf["motors"].keys() else {}
+                else:
+                    conf = {}
+                if "name" in conf.keys():  # we dont ẃant that someone overwrites the same name for all motors
+                    conf.pop("name")
+                if hasattr(self, "smurf") and "motors" in self.smurf.keys() and joint.name in self.smurf["motors"].keys():
+                    for k, v in self.smurf["motors"][joint.name].items():
+                        conf[k] = v
+                if joint.joint_type == "fixed":
+                    continue
+                motor = representation.Motor(
+                    joint=joint,
+                    name=conf["name"] if "name" in conf.keys() else joint.name + "_motor",
+                    p=conf["p"] if "p" in conf.keys() else 20.0,
+                    i=conf["i"] if "i" in conf.keys() else 0.0,
+                    d=conf["d"] if "d" in conf.keys() else 0.1,
+                    maxEffort=joint.limit.effort if joint.limit is not None and joint.limit.effort > 0.0 else 400,
+                    reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
+                    noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
+                )
+                self.robot.add_motor(motor)
 
         if hasattr(self, "smurf"):
             log.debug('  Smurfing poses, sensors, links, materials, etc.')
