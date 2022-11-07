@@ -205,7 +205,7 @@ class Robot(SMURFRobot):
         return model
 
     @classmethod
-    def get_robot_from_blender_dict(cls, name='', objectlist=[], blender_model=None):
+    def get_robot_from_blender_dict(cls, name='', objectlist=[], blender_model=None, xmlfile=None):
         """
         Uses blender workflow to access internal dictionary to call robot
         representation. Idea is to use cli methods and formats for imports and
@@ -290,6 +290,7 @@ class Robot(SMURFRobot):
             links=cli_links,
             joints=cli_joints,
             materials=mats,
+            xmlfile=xmlfile
         )
         new_robot = Robot()
         new_robot.__dict__.update(cli_robot.__dict__)
@@ -454,6 +455,7 @@ class Robot(SMURFRobot):
                    float_fmt_dict=None, no_format_dir=False):
         """ Exports all model information stored inside this instance.
         """
+        assert self.get_root()
         for format in formats:
             format = format.lower()
             # Main model
@@ -544,13 +546,14 @@ class Robot(SMURFRobot):
         submechanisms = {}
         if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
             self.generate_submechanisms()
-        missing_joints = self._get_joints_not_included_in_submechanisms()
-        if len(missing_joints) != 0:
-            log.warning(f"Not all joints defined in the submechanisms definition! Lacking definition for:\n{missing_joints}")
-        double_joints = self._get_joints_included_twice_in_submechanisms()
-        if len(double_joints) != 0:
-            log.error(f"The following joints are multiply defined in the submechanisms definition: \n{double_joints}")
-            raise AssertionError
+        if (self.submechanisms is not None and len(self.submechanisms)) > 0 or (self.exoskeletons is not None and len(self.exoskeletons)):
+            missing_joints = self._get_joints_not_included_in_submechanisms()
+            if len(missing_joints) != 0:
+                log.warning(f"Not all joints defined in the submechanisms definition! Lacking definition for:\n{missing_joints}")
+            double_joints = self._get_joints_included_twice_in_submechanisms()
+            if len(double_joints) != 0:
+                log.error(f"The following joints are multiply defined in the submechanisms definition: \n{double_joints}")
+                raise AssertionError
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
