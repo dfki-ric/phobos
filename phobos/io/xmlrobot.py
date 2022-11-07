@@ -197,24 +197,17 @@ class XMLRobot(Representation):
         # the link entries
         for j in self.joints:
             self.parent_map[j.child] = (j.name, j.parent)
-            if j.parent in self.child_map:
+            if j.parent in self.child_map.keys():
                 self.child_map[j.parent].append((j.name, j.child))
             else:
                 self.child_map[j.parent] = [(j.name, j.child)]
-        # the joint entries
-        for j in self.joints:
-            self.parent_map[j.name] = (self.parent_map[j.parent][0] if j.parent in self.parent_map else None, j.parent)
-            if j.name in self.child_map:
-                self.child_map[j.name].append((self.child_map[j.child][0] if j.child in self.child_map else None, j.child))
-            else:
-                self.child_map[j.name] = [(self.child_map[j.child][0] if j.child in self.child_map else None, j.child)]
 
     def add_aggregate(self, typeName, elem, silent=False):
         if type(elem) == list:
             return [self.add_aggregate(typeName, e) for e in elem]
         if typeName in 'joints':
             self.parent_map[str(elem.child)] = (elem.name, elem.parent)
-            self.parent_map[str(elem.name)] = (elem.name, elem.parent)
+            # self.parent_map[str(elem.name)] = (elem.name, elem.parent)
             if elem.parent in self.child_map:
                 assert elem.name not in [j for j, l in self.child_map[elem.parent]], str(elem.to_yaml())
                 assert elem.child not in [l for j, l in self.child_map[elem.parent]], str(elem.to_yaml())
@@ -627,6 +620,7 @@ class XMLRobot(Representation):
         if type(name) in [list, tuple, set]:
             return [self.get_parent(n, targettype=targettype) for n in name]
         # Check if the name is present
+        assert self.get_link(name) is not None
         if str(name) in self.parent_map.keys():
             parents = self.parent_map[str(name)]
         elif str(name) in self.child_map.keys():
@@ -659,15 +653,14 @@ class XMLRobot(Representation):
                 children += new_children if new_children else []
             return children
 
+        assert self.get_link(name) is not None
         children = []
 
         if str(name) in self.child_map.keys():
             children = self.child_map[str(name)]
-
-        if children:
-            if targettype == 'joint':
+            if targettype in 'joints':
                 children = [i[0] for i in children]
-            elif targettype == 'link':
+            elif targettype in 'links':
                 children = [i[1] for i in children]
 
         return children

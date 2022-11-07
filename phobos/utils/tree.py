@@ -84,7 +84,7 @@ def find_close_ancestor_links(robot, linkname):  # Todo find also siblings?
         elif pjoint is not None:
             far_children += [pjoint.child]
         else:
-            far_children += robot.get_children(pjoint)
+            far_children += robot.get_children(pjoint.child)
         return tree, far_children
 
     jointname = robot.get_parent(linkname)
@@ -140,7 +140,7 @@ def get_joints_depth_first(robot, start_link, independent_joints=None):
         assert len(children) == len(indep_children) + len(other_children)
         children = indep_children + other_children
     for child in children:
-        joint = robot.get_joint(str(child))
+        joint = robot.get_joint(str(child), verbose=True)
         assert joint is not None
         joints += [joint]
         try:

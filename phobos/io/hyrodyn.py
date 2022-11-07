@@ -100,7 +100,7 @@ class HyrodynAnnotation(SmurfBase):
         return self.contextual_name
 
     def is_empty(self):
-        return len(set(self.jointnames + self.jointnames_spanningtree)) == 0
+        return len(self.get_joints()) == 0
 
     def is_valid(self, robot):
         joints = self.get_joints()

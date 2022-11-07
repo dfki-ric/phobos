@@ -249,7 +249,7 @@ class SMURFRobot(XMLRobot):
             # hyrodyn
             for sub in self.submechanisms + self.exoskeletons:
                 for key in ["jointnames", "jointnames_spanningtree", "jointnames_independent", "jointnames_active", "jointnames_dependent"]:
-                    if hasattr(sub, key) and str(elem) in getattr(sub, key):
+                    if hasattr(sub, key) and getattr(sub, key) is not None and str(elem) in getattr(sub, key):
                         setattr(sub, key, [j for j in getattr(sub, key) if j != str(elem)])
             self.submechanisms = [sm for sm in self.submechanisms if not sm.is_empty()]
             self.exoskeletons = [sm for sm in self.exoskeletons if not sm.is_empty()]

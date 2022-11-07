@@ -2540,7 +2540,11 @@ class Robot(SMURFRobot):
         """Remove the joint(s) from the mechanism and transforms all inertia, visuals and collisions
         to the corresponding parent of the joint.
         """
-        self.remove_aggregate("joints", self.get_joint(jointname))
+        joint = self.get_joint(jointname)
+        if joint is None:
+            log.warning(f"remove_joint(): Skipping removal of {jointname} as robot contains no joint with that name!")
+        else:
+            self.remove_aggregate("joints", self.get_joint(jointname))
 
     def add_floating_base(self):
         """
