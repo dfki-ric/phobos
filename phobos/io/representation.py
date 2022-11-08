@@ -40,6 +40,10 @@ class Pose(Representation, SmurfBase):
             self.rpy = extra
         self.rpy = np.array(self.rpy) if self.rpy is not None else None
         self.xyz = np.array(self.xyz) if self.xyz is not None else None
+        if self.rpy is None and "rotation" in kwargs:
+            self.rotation = kwargs["rotation"]
+        if self.xyz is None and "position" in kwargs:
+            self.position = kwargs["position"]
 
     def check_valid(self):
         assert (self.xyz is None or len(self.xyz) == 3) and \
@@ -54,9 +58,9 @@ class Pose(Representation, SmurfBase):
     def rotation(self, value):
         if type(value) == int:
             self.rpy = [0, 0, value]
-        elif type(value) in [list, np.ndarray] and len(value) == 3:
+        elif type(value) in [list, tuple, np.ndarray] and len(value) == 3:
             self.rpy = value
-        elif type(value) in [list, np.ndarray] and len(value) == 4:
+        elif type(value) in [list, tuple, np.ndarray] and len(value) == 4:
             self.rpy = transform.quaternion_to_rpy(value)
         elif type(value) == dict and len(value) == 3:
             if all([k in "rpy" for k in value.keys()]):
@@ -66,7 +70,7 @@ class Pose(Representation, SmurfBase):
             else:
                 raise ValueError("Can't parse rotation" + str(value))
         elif type(value) == dict and len(value) == 4:
-            self.rpy = [value["x"], value["y"], value["z"], value["w"]]
+            self.rpy = transform.quaternion_to_rpy([value["x"], value["y"], value["z"], value["w"]])
         elif type(value) in [list, np.ndarray]:
             self.rpy = transform.matrix_to_rpy(value)
         elif value is None:

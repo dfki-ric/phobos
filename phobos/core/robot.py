@@ -46,7 +46,7 @@ class Robot(SMURFRobot):
 
     def get_blender_model_dictionary(self):
         from phobos.blender import defs
-        from phobos.blender.utils import selection as sUtils
+        from phobos.blender.utils import naming as nUtils
         import mathutils
         model = {
             'links': {},
@@ -171,9 +171,9 @@ class Robot(SMURFRobot):
                 if "link" in model["sensors"][sensor.name]["props"]:
                     model["sensors"][sensor.name]["parent"] = model["sensors"][sensor.name]["props"]["link"]
                 elif "joint" in model["sensors"][sensor.name]["props"]:
-                    model["sensors"][sensor.name]["parent"] = self.get_joint(model["sensors"][sensor.name]["props"]["joint"]).child
+                    model["sensors"][sensor.name]["parent"] = nUtils.getObjectName(str(self.get_joint(model["sensors"][sensor.name]["props"]["joint"]).child))
                 else:
-                    raise AssertionError(f"Couldn't determine 'parent' of {sensor.name}")
+                    model["sensors"][sensor.name]["parent"] = nUtils.getObjectName(str(self.get_root()))
 
         # print(defs.def_settings['motors'])
         for motor in self.motors:
@@ -315,6 +315,7 @@ class Robot(SMURFRobot):
                         sensor_representations.CameraSensor(
                                      hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
                                      hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
+                                     origin=None if values.get('origin') is None else representation.Pose(**values.pop("origin")),
                                      **values))
                 else:
                     new_robot.add_sensor(getattr(sensor_representations, values["type"])(**values))

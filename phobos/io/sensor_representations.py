@@ -62,9 +62,9 @@ class Sensor(Representation, SmurfBase):
 
     def get_refl_vars(self):
         if hasattr(self, "origin") and self.origin is not None:
-            if self.position_offset != {"x": 0, "y": 0, "z": 0}:
+            if self.position_offset is not None:
                 self.returns += ["position_offset"]
-            if self.orientation_offset != {"x": 0, "y": 0, "z": 0, "w": 1}:
+            if self.orientation_offset is not None:
                 self.returns += ["orientation_offset"]
         return super(Sensor, self).get_refl_vars()
 
@@ -187,6 +187,7 @@ class CameraSensor(Sensor):
             height=480, width=640, hud_height=240, hud_width=0,
             opening_height=90, opening_width=90,
             depth_image=True, show_cam=False, frame_offset=1, origin=None, **kwargs):
+        assert origin is None or isinstance(origin, Pose), str(origin)
         super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor', origin=origin if origin is not None else Pose(), **kwargs)
         self.height = height
         self.width = width
