@@ -42,6 +42,15 @@ try:
 except ImportError:
     print("Deimos not available.")
 
+XDBI_AVAILABLE = False
+try:
+    import xtypes_py
+    import xdbi_py
+    XDBI_AVAILABLE = True
+    print("XDBI available.")
+except ImportError:
+    print("XDBI not available.")
+
 
 def dump_json(obj, **kwargs):
     import json
