@@ -134,7 +134,8 @@ class Robot(SMURFRobot):
                     "velocity": joint.limit.velocity
                 }
             if joint.mimic is not None:
-                model["joints"][joint.name]["mimic"] = joint.mimic.to_yaml()
+                for k, v in joint.mimic.to_yaml().items():
+                    model["joints"][joint.name]["mimic_"+k] = v
             # Todo dynamics, etc.
             model["links"][joint.child]["pose"] = {'translation': joint.origin.xyz,
                                                    'rotation_euler': joint.origin.rpy,
@@ -220,134 +221,142 @@ class Robot(SMURFRobot):
             blender_model = deriveModelDictionary(root, name, objectlist)
             if blender_model is None:
                 log.warning("Warning name your model and assign a version, otherwise blender-dictionary is None")
-        cli_joints = []
-        for key, values in blender_model['joints'].items():
-            if not values['type'] == 'fixed' and values.get("limits") is not None:
-                cli_limit = representation.JointLimit(effort=values['limits'].get('effort'),
-                                                      velocity=values['limits'].get('velocity'),
-                                                      lower=values['limits'].get('lower'),
-                                                      upper=values['limits'].get('upper'))
-            else:
-                cli_limit = None
-            cli_joints.append(representation.Joint(
-                name=values['name'],
-                parent=values['parent'],
-                child=values['child'],
-                joint_type=values['type'],
-                axis=values.get('axis'),
-                origin=representation.Pose.from_matrix(np.array(values['pose']['rawmatrix'])),
-                limit=cli_limit,
-                dynamics=None,
-                safety_controller=None,
-                calibration=None,
-                mimic=representation.JointMimic(**values["mimic"]) if "mimic" in values else None
-            ))
-
-        cli_links = []
-        for key, values in blender_model['links'].items():
-            inert_entry = values.get('inertial')
-            pose_entry = inert_entry.get('pose')
-            inertia_val = inert_entry.get('inertia')
-            if inertia_val is not None:
-                inert = representation.Inertial(mass=inert_entry['mass'],
-                                                inertia=representation.Inertia(*inertia_val),
-                                                origin=representation.Pose(
-                                                    xyz=pose_entry['translation'],
-                                                    rpy=pose_entry['rotation_euler']
-                                                ))
-            else:
-                inert = None
-            colls = []
-            for key2, entry in values["collision"].items():
-                colls.append(representation.Collision(
-                    geometry=representation.GeometryFactory.create(**entry["geometry"]),
-                    origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
-                    name=entry["name"]))
-            vis = []
-            for key2, entry in values["visual"].items():
-                vis.append(representation.Visual(geometry=representation.GeometryFactory.create(**entry["geometry"]),
-                                                 material=entry.get("material"),
-                                                 origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
-                                                 name=entry["name"]))
-
-            cli_links.append(representation.Link(
-                name='body' if values['name'] in ['root', 'main_body'] else values['name'],
-                visuals=vis,
-                inertial=inert,
-                collisions=colls
-            ))
-        mats = []
-        for key, value in blender_model['materials'].items():
-            mats.append(representation.Material(name=value.pop('name'),
-                                                texture=None,
-                                                diffuseColor=value.pop("diffuseColor"),
-                                                **value))
-        if blender_model['version'] != '1.0':
-            log.info(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
-        cli_robot = XMLRobot(
-            name=blender_model['name'],
-            version=None,
-            links=cli_links,
-            joints=cli_joints,
-            materials=mats,
-            xmlfile=xmlfile
-        )
-        new_robot = Robot()
-        new_robot.__dict__.update(cli_robot.__dict__)
-        new_robot.description = blender_model["description"]
-        new_robot.relink_entities()
-
-        if "sensors" in blender_model:
-            for key, values in blender_model['sensors'].items():
-                # TODO "type" Abfragen an die verschiedenen User-Präferenzen angleichen
-                if values.get('id') is not None:
-                    values['targets'] = [
-                        x for x in values['id'] if (
-                                new_robot.get_joint(x, verbose=False) is not None or
-                                new_robot.get_link(x, verbose=False) is not None or
-                                new_robot.get_collision_by_name(x) is not None or
-                                new_robot.get_visual_by_name(x) is not None
-                        )
-                    ]
-                    values.pop('id')
-                if values["type"].upper() == "CAMERASENSOR":
-                    new_robot.add_sensor(
-                        sensor_representations.CameraSensor(
-                                     hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
-                                     hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
-                                     origin=None if values.get('origin') is None else representation.Pose(**values.pop("origin")),
-                                     **values))
+        try:
+            cli_joints = []
+            for key, values in blender_model['joints'].items():
+                if not values['type'] == 'fixed' and values.get("limits") is not None:
+                    cli_limit = representation.JointLimit(effort=values['limits'].get('effort'),
+                                                          velocity=values['limits'].get('velocity'),
+                                                          lower=values['limits'].get('lower'),
+                                                          upper=values['limits'].get('upper'))
                 else:
-                    new_robot.add_sensor(getattr(sensor_representations, values["type"])(**values))
-
-        if "motors" in blender_model:
-            motors = blender_model["motors"]  # TODO Teste ob Hennings umstrukturierung funktioniert
-            for key, value in motors.items():
-                name = value.pop('name')
-                joint = value.pop('joint')
-                new_robot.add_motor(representation.Motor(name=name, joint=new_robot.get_joint(joint), **value))
-
-        if "interfaces" in blender_model:
-            interfaces = blender_model["interfaces"]
-            for key, value in interfaces.items():
-                parent = value.pop('parent')
-                pose = value.pop('pose')
-                new_robot.add_aggregate("interfaces", representation.Interface(
-                    parent=new_robot.get_link(parent),
-                    origin=representation.Pose.from_matrix(np.array(pose['rawmatrix'])),
-                    **value
+                    cli_limit = None
+                mimic_dict = {}
+                for k, v in values.items(): #TODO this doesn't work, it seems phobos input dictionary is differently handled than the output dict
+                    if k.startswith("mimic_"):
+                        mimic_dict[k[len("mimic_"):]] = v
+                cli_joints.append(representation.Joint(
+                    name=values['name'],
+                    parent=values['parent'],
+                    child=values['child'],
+                    joint_type=values['type'],
+                    axis=values.get('axis'),
+                    origin=representation.Pose.from_matrix(np.array(values['pose']['rawmatrix'])),
+                    limit=cli_limit,
+                    dynamics=None,
+                    safety_controller=None,
+                    calibration=None,
+                    mimic=representation.JointMimic(**mimic_dict) if len(mimic_dict) > 0 else None
                 ))
 
-        additional_info = {'lights': blender_model.get('lights'),
-                           'groups': blender_model.get('groups'),
-                           'chains': blender_model.get('chains'),
-                           # 'date': blender_model.get('date')
-                           }
+            cli_links = []
+            for key, values in blender_model['links'].items():
+                inert_entry = values.get('inertial')
+                pose_entry = inert_entry.get('pose')
+                inertia_val = inert_entry.get('inertia')
+                if inertia_val is not None:
+                    inert = representation.Inertial(mass=inert_entry['mass'],
+                                                    inertia=representation.Inertia(*inertia_val),
+                                                    origin=representation.Pose(
+                                                        xyz=pose_entry['translation'],
+                                                        rpy=pose_entry['rotation_euler']
+                                                    ))
+                else:
+                    inert = None
+                colls = []
+                for key2, entry in values["collision"].items():
+                    colls.append(representation.Collision(
+                        geometry=representation.GeometryFactory.create(**entry["geometry"]),
+                        origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
+                        name=entry["name"]))
+                vis = []
+                for key2, entry in values["visual"].items():
+                    vis.append(representation.Visual(geometry=representation.GeometryFactory.create(**entry["geometry"]),
+                                                     material=entry.get("material"),
+                                                     origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
+                                                     name=entry["name"]))
 
-        for key, value in additional_info.items():
-            if value is not None and key not in new_robot.named_annotations.keys():
-                new_robot.add_named_annotation(key, additional_info[key])
-        new_robot.relink_entities()
+                cli_links.append(representation.Link(
+                    name=values['name'],
+                    visuals=vis,
+                    inertial=inert,
+                    collisions=colls
+                ))
+            mats = []
+            for key, value in blender_model['materials'].items():
+                mats.append(representation.Material(name=value.pop('name'),
+                                                    texture=None,
+                                                    diffuseColor=value.pop("diffuseColor"),
+                                                    **value))
+            if blender_model['version'] != '1.0':
+                log.info(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
+            cli_robot = XMLRobot(
+                name=blender_model['name'],
+                version=None,
+                links=cli_links,
+                joints=cli_joints,
+                materials=mats,
+                xmlfile=xmlfile
+            )
+            new_robot = Robot()
+            new_robot.__dict__.update(cli_robot.__dict__)
+            new_robot.description = blender_model["description"]
+            new_robot.relink_entities()
+
+            if "sensors" in blender_model:
+                for key, values in blender_model['sensors'].items():
+                    # TODO "type" Abfragen an die verschiedenen User-Präferenzen angleichen
+                    if values.get('id') is not None:
+                        values['targets'] = [
+                            x for x in values['id'] if (
+                                    new_robot.get_joint(x, verbose=False) is not None or
+                                    new_robot.get_link(x, verbose=False) is not None or
+                                    new_robot.get_collision_by_name(x) is not None or
+                                    new_robot.get_visual_by_name(x) is not None
+                            )
+                        ]
+                        values.pop('id')
+                    if values["type"].upper() == "CAMERASENSOR":
+                        new_robot.add_sensor(
+                            sensor_representations.CameraSensor(
+                                         hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
+                                         hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
+                                         origin=None if values.get('origin') is None else representation.Pose(**values.pop("origin")),
+                                         **values))
+                    else:
+                        new_robot.add_sensor(getattr(sensor_representations, values["type"])(**values))
+
+            if "motors" in blender_model:
+                motors = blender_model["motors"]  # TODO Teste ob Hennings umstrukturierung funktioniert
+                for key, value in motors.items():
+                    name = value.pop('name')
+                    joint = value.pop('joint')
+                    new_robot.add_motor(representation.Motor(name=name, joint=new_robot.get_joint(joint), **value))
+
+            if "interfaces" in blender_model:
+                interfaces = blender_model["interfaces"]
+                for key, value in interfaces.items():
+                    parent = value.pop('parent')
+                    pose = value.pop('pose')
+                    new_robot.add_aggregate("interfaces", representation.Interface(
+                        parent=new_robot.get_link(parent),
+                        origin=representation.Pose.from_matrix(np.array(pose['rawmatrix'])),
+                        **value
+                    ))
+
+            additional_info = {'lights': blender_model.get('lights'),
+                               'groups': blender_model.get('groups'),
+                               'chains': blender_model.get('chains'),
+                               # 'date': blender_model.get('date')
+                               }
+
+            for key, value in additional_info.items():
+                if value is not None and key not in new_robot.named_annotations.keys():
+                    new_robot.add_named_annotation(key, additional_info[key])
+            new_robot.relink_entities()
+        except Exception as e:
+            print(blender_model)
+            raise e
         return new_robot
 
     # export methods
@@ -601,9 +610,10 @@ class Robot(SMURFRobot):
             #                     os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)) +
             #                     "\nPlease choose another name for you annotation")
             # else:
-            with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w") as stream:
-                stream.write(dump_json(v, default_style=False))
-                export_files.append(os.path.split(stream.name)[-1])
+            if len(v) > 0:
+                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w") as stream:
+                    stream.write(dump_json({k: v}, default_style=False))
+                    export_files.append(os.path.split(stream.name)[-1])
 
         # Create the smurf file itsself
         annotation_dict = {
@@ -2305,11 +2315,14 @@ class Robot(SMURFRobot):
                                      origin=representation.Pose(translation, rotation), axis=axis)
         self.add_aggregate("link", link)
         self.add_aggregate("joint", joint)
+        link.link_with_robot(self)
+        joint.link_with_robot(self)
         if joint.joint_type in ["revolute", "prismatic"] and add_default_motor:
-            self.add_motor(representation.Motor(
+            motor = representation.Motor(
                 name=joint.name,
                 joint=joint
-            ))
+            )
+            self.add_motor(motor)
 
     # has to be overridden in smurf and hyrodyn?
     def mirror_model(self, mirror_plane=None, maintain_order=None, exclude_meshes=None, name_replacements=None,

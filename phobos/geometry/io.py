@@ -257,6 +257,6 @@ mesh_types = {
     "dae": {"export": export_mesh, "import": None, "extension": "dae"},
     "stl": {"export": export_mesh, "import": None, "extension": "stl"},
     "obj": {"export": export_mesh, "import": None, "extension": "obj"},
-    "mars_obj": {"export": export_mars_mesh, "import": None, "extension": ".mars.obj"},
+    "mars_obj": {"export": export_mars_mesh, "import": None, "extension": "mars.obj"},
     "bobj": {"export": export_bobj_mesh, "import": None, "extension": "bobj"},
 }

@@ -372,6 +372,7 @@ class Collision(Representation, SmurfBase):
             self.ccfm = ccfm
         if bitmask is not None:
             self.returns += ['bitmask']
+        self.excludes += ["origin", "original_name", "geometry"]
 
 
 class Visual(Representation, SmurfBase):
