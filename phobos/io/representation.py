@@ -322,7 +322,7 @@ class Mesh(Representation):
             self.check_linkage()
 
     def equivalent(self, other):
-        return other._filepath == self._filepath or identical(self.load_mesh(), other.load_mesh())
+        return other.filepath == self.filepath or identical(self.load_mesh(), other.load_mesh())
 
 
 class GeometryFactory(Representation):
