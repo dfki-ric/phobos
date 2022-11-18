@@ -5,7 +5,7 @@ import filecmp
 import numpy as np
 
 from ..core import Robot
-from ..utils.misc import regex_replace
+from ..utils.misc import regex_replace, edit_name_string
 from ..io import representation
 
 from ..ci.base_model import BaseModel
@@ -118,36 +118,19 @@ class CombinedModel(BaseModel):
         combined_model.smurffile = self.basefile
         combined_model.xmlfile = os.path.join(self.basedir, "urdf", "combined_model.urdf")
 
-        if "name_prefix" in self.join.keys() or "name_replacements" in self.join.keys():
-            if "name_prefix" not in self.join.keys():
-                self.join["name_prefix"] = ""
-            if "name_replacements" not in self.join.keys():
-                self.join["name_replacements"] = {}
-            if "children" in self.join.keys():
-                for c in self.join["children"]:
-                    c["joint"]["parent"] = regex_replace(c["joint"]["parent"], self.join["name_replacements"])
-                    if not c["joint"]["parent"].startswith(self.join["name_prefix"]):
-                        c["joint"]["parent"] = self.join["name_prefix"] + c["joint"]["parent"]
-            for lnk in combined_model.links:
-                combined_model.rename(targettype="link", target=lnk.name, prefix=self.join["name_prefix"],
-                                      replacements=self.join["name_replacements"])
-                for coll in lnk.collisions:
-                    combined_model.rename(targettype="collision", target=coll.name,
-                                          prefix=self.join["name_prefix"],
-                                          replacements=self.join["name_replacements"])
-                    # att_model.rename(targettype="collision", target=coll.name,
-                    #                  prefix=child["collision_prefix"], suffix=child["collision_suffix"],
-                    #                  replacements=child["collision_replacements"])
-                for vis in lnk.visuals:
-                    combined_model.rename(targettype="visual", target=vis.name,
-                                          prefix=self.join["name_prefix"],
-                                          replacements=self.join["name_replacements"])
-                    # att_model.rename(targettype="visual", target=coll.name,
-                    #                  prefix=child["visual_prefix"], suffix=child["visual_suffix"],
-                    #                  replacements=child["visual_replacements"])
-            for jnt in combined_model.joints:
-                combined_model.rename(targettype="joint", target=jnt.name, prefix=self.join["name_prefix"],
-                                      replacements=self.join["name_replacements"])
+        if "name_editing" in self.join.keys():
+            combined_model.edit_names(self.join["name_editing"])
+            for c in self.join["children"]:
+                c["joint"]["parent"] = edit_name_string(
+                    c["joint"]["parent"],
+                    prefix=self.join["name_editing"]["prefix"] if "prefix" in self.join["name_editing"] else "",
+                    suffix=self.join["name_editing"]["suffix"] if "suffix" in self.join["name_editing"] else "",
+                    replacements=self.join["name_editing"]["replacements"] if "replacements" in self.join["name_editing"] else {})
+                c["joint"]["parent"] = edit_name_string(
+                    c["joint"]["parent"],
+                    prefix=self.join["name_editing"]["link_prefix"] if "link_prefix" in self.join["name_editing"] else "",
+                    suffix=self.join["name_editing"]["link_suffix"] if "link_suffix" in self.join["name_editing"] else "",
+                    replacements=self.join["name_editing"]["link_replacements"] if "link_replacements" in self.join["name_editing"] else {})
 
         if "remove_beyond" in self.join.keys():
             combined_model = combined_model.get_before(self.join["remove_beyond"])
@@ -163,8 +146,6 @@ class CombinedModel(BaseModel):
                     "mirror"].keys() else [0, 2, 1],
                 exclude_meshes=self.join["mirror"]["exclude_meshes"] if "exclude_meshes" in self.join[
                     "mirror"].keys() else [],
-                name_replacements=self.join["mirror"]["name_replacements"] if "name_replacements" in self.join[
-                    "mirror"].keys() else {},
                 target_urdf=os.path.dirname(self.basefile)
             )
 
@@ -183,16 +164,11 @@ class CombinedModel(BaseModel):
 
                 att_model.relink_entities()
 
-                if child["joint"]["parent"] is None:
-                    child["joint"]["parent"] = str(parent_model.get_root())
                 if "child" not in child["joint"].keys() or child["joint"]["child"] is None:
                     child["joint"]["child"] = str(att_model.get_root())
                     if "take_leaf" in child:
                         child["joint"]["child"] = child["take_leaf"]
-                if "name" not in child["joint"].keys() or child["joint"]["name"] is None:
-                    child["joint"]["name"] = child["joint"]["parent"] + "2" + child["joint"]["child"]
-                if "type" not in child["joint"].keys() or child["joint"]["type"] is None:
-                    child["joint"]["type"] = "fixed"
+
                 if "r2r_transform" in child["joint"].keys():
                     T = np.array(child["joint"]["r2r_transform"])
                     src_T = parent_model.get_transformation(child["joint"]["parent"])
@@ -202,44 +178,30 @@ class CombinedModel(BaseModel):
                     child["joint"]["xyz"] = origin.xyz
                     child["joint"]["rpy"] = origin.rpy
 
-                if "name_prefix" in child.keys() or "name_replacements" in child.keys():
-                    if "name_prefix" not in child.keys():
-                        child["name_prefix"] = ""
-                    if "name_replacements" not in child.keys():
-                        child["name_replacements"] = {}
-                    child["joint"]["child"] = regex_replace(child["joint"]["child"], child["name_replacements"])
-                    if not child["joint"]["child"].startswith(child["name_prefix"]):
-                        child["joint"]["child"] = child["name_prefix"] + child["joint"]["child"]
-                    if not child["joint"]["name"].startswith(child["name_prefix"]):
-                        child["joint"]["name"] = child["name_prefix"] + child["joint"]["name"]
-
-                    if "children" in child.keys():
-                        for cchild in child["children"]:
-                            cchild["joint"]["parent"] = regex_replace(cchild["joint"]["parent"],
-                                                                      child["name_replacements"])
-                            if not cchild["joint"]["parent"].startswith(child["name_prefix"]):
-                                cchild["joint"]["parent"] = child["name_prefix"] + cchild["joint"]["parent"]
-
-                    for lnk in att_model.links:
-                        att_model.rename(targettype="link", target=lnk.name, prefix=child["name_prefix"],
-                                      replacements=child["name_replacements"])
-                        for coll in lnk.collisions:
-                            att_model.rename(targettype="collision", target=coll.name,
-                                          prefix=child["name_prefix"],
-                                          replacements=child["name_replacements"])
-                            # att_model.rename(targettype="collision", target=coll.name,
-                            #                  prefix=child["collision_prefix"], suffix=child["collision_suffix"],
-                            #                  replacements=child["collision_replacements"])
-                        for vis in lnk.visuals:
-                            att_model.rename(targettype="visual", target=vis.name,
-                                          prefix=child["name_prefix"],
-                                          replacements=child["name_replacements"])
-                            # att_model.rename(targettype="visual", target=coll.name,
-                            #                  prefix=child["visual_prefix"], suffix=child["visual_suffix"],
-                            #                  replacements=child["visual_replacements"])
-                    for jnt in att_model.joints:
-                        att_model.rename(targettype="joint", target=jnt.name, prefix=child["name_prefix"],
-                                      replacements=child["name_replacements"])
+                if "name_editing" in child.keys():
+                    att_model.edit_names(child["name_editing"])
+                    child["joint"]["child"] = edit_name_string(
+                        child["joint"]["child"],
+                        prefix=child["name_editing"]["prefix"] if "prefix" in child["name_editing"] else "",
+                        suffix=child["name_editing"]["suffix"] if "suffix" in child["name_editing"] else "",
+                        replacements=child["name_editing"]["replacements"] if "replacements" in child["name_editing"] else {})
+                    child["joint"]["child"] = edit_name_string(
+                        child["joint"]["child"],
+                        prefix=child["name_editing"]["link_prefix"] if "link_prefix" in child["name_editing"] else "",
+                        suffix=child["name_editing"]["link_suffix"] if "link_suffix" in child["name_editing"] else "",
+                        replacements=child["name_editing"]["link_replacements"] if "link_replacements" in child["name_editing"] else {})
+                    if "children" in child:
+                        for c in child["children"]:
+                            c["joint"]["parent"] = edit_name_string(
+                                c["joint"]["parent"],
+                                prefix=child["name_editing"]["prefix"] if "prefix" in child["name_editing"] else "",
+                                suffix=child["name_editing"]["suffix"] if "suffix" in child["name_editing"] else "",
+                                replacements=child["name_editing"]["replacements"] if "replacements" in child["name_editing"] else {})
+                            c["joint"]["parent"] = edit_name_string(
+                                c["joint"]["parent"],
+                                prefix=child["name_editing"]["link_prefix"] if "link_prefix" in child["name_editing"] else "",
+                                suffix=child["name_editing"]["link_suffix"] if "link_suffix" in child["name_editing"] else "",
+                                replacements=child["name_editing"]["link_replacements"] if "link_replacements" in child["name_editing"] else {})
 
                 if "remove_beyond" in child.keys():
                     att_model = att_model.get_before(child["remove_beyond"])
@@ -259,10 +221,13 @@ class CombinedModel(BaseModel):
                             "mirror"].keys() else [0, 2, 1],
                         exclude_meshes=child["mirror"]["exclude_meshes"] if "exclude_meshes" in child[
                             "mirror"].keys() else [],
-                        name_replacements=child["mirror"]["name_replacements"] if "name_replacements" in child[
-                            "mirror"].keys() else {},
                         target_urdf=combined_model.xmlfile
                     )
+
+                if "name" not in child["joint"].keys() or child["joint"]["name"] is None:
+                    child["joint"]["name"] = child["joint"]["parent"] + "2" + child["joint"]["child"]
+                if "type" not in child["joint"].keys() or child["joint"]["type"] is None:
+                    child["joint"]["type"] = "fixed"
 
                 if parent.get_link(child["joint"]["parent"]) is None:
                     log.error(f"Parent links: {sorted([lnk.name for lnk in parent.links])}")
@@ -274,12 +239,12 @@ class CombinedModel(BaseModel):
                     raise AssertionError(
                         "Problem with assembling joint " + child["joint"]["parent"] + " -> " + child["joint"]["child"]
                         + ": the child link doesn't exist!")
-                assert att_model.get_joint(child["joint"]["name"]) is None and parent_model.get_joint(child["joint"]["name"]) is None, f'Can not join using joint name {child["joint"]["name"]} as this name already exists.'
+                assert att_model.get_joint(child["joint"]["name"]) is None and parent.get_joint(child["joint"]["name"]) is None, f'Can not join using joint name {child["joint"]["name"]} as this name already exists.'
                 joint = representation.Joint(
                     name=child["joint"]["name"],
                     parent=parent.get_link(child["joint"]["parent"]).name,
                     child=att_model.get_link(child["joint"]["child"]).name,
-                    joint_type=child["joint"]["type"],
+                    joint_type=child["joint"]["type"] if "type" in child["joint"].keys() else "fixed",
                     origin=representation.Pose(
                         child["joint"]["xyz"] if "xyz" in child["joint"].keys() else [0, 0, 0],
                         child["joint"]["rpy"] if "rpy" in child["joint"].keys() else [0, 0, 0]

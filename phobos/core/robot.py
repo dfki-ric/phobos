@@ -1988,7 +1988,7 @@ class Robot(SMURFRobot):
         {
             joint_equals_link_name: whether the joint shall be named like the link without the "_link" suffix
             append_link_suffix: ALWAYS or NAME_DUPLICATES or False
-            name_replacements: dict or list of dicts, applied on everything
+            replacements: dict or list of dicts, applied on everything
             collision_replacements: dict or list of dicts, applied on collisionnames
             collision_prefix: str
             collision_suffix: str
@@ -1999,29 +1999,39 @@ class Robot(SMURFRobot):
         :param cfg:
         :return:
         """
+        prefix = cfg["prefix"] if "prefix" in cfg.keys() else ""
+        suffix = cfg["suffix"] if "suffix" in cfg.keys() else ""
+        replacements = cfg["replacements"] if "replacements" in cfg.keys() else {}
         vis_replacements = cfg["visual_replacements"] if "visual_replacements" in cfg.keys() else {}
         vis_suffix = cfg["visual_suffix"] if "visual_suffix" in cfg.keys() else ""
         vis_prefix = cfg["visual_prefix"] if "visual_prefix" in cfg.keys() else ""
         coll_replacements = cfg["collision_replacements"] if "collision_replacements" in cfg.keys() else {}
         coll_suffix = cfg["collision_suffix"] if "collision_suffix" in cfg.keys() else ""
         coll_prefix = cfg["collision_prefix"] if "collision_prefix" in cfg.keys() else ""
-        name_replacements = cfg["name_replacements"] if "name_replacements" in cfg.keys() else {}
+        link_replacements = cfg["link_replacements"] if "link_replacements" in cfg.keys() else {}
+        link_suffix = cfg["link_suffix"] if "link_suffix" in cfg.keys() else ""
+        link_prefix = cfg["link_prefix"] if "link_prefix" in cfg.keys() else ""
+        joint_replacements = cfg["joint_replacements"] if "joint_replacements" in cfg.keys() else {}
+        joint_suffix = cfg["joint_suffix"] if "joint_suffix" in cfg.keys() else ""
+        joint_prefix = cfg["joint_prefix"] if "joint_prefix" in cfg.keys() else ""
         for link in self.links:
-            self.rename("link", link.name, replacements=name_replacements)
+            self.rename("link", link.name, replacements=replacements, prefix=prefix, suffix=suffix)
+            self.rename("link", link.name, replacements=link_replacements, prefix=link_prefix, suffix=link_suffix)
             for collision in link.collisions:
-                self.rename("collision", collision.name, replacements=name_replacements)
+                self.rename("collision", collision.name, replacements=replacements, prefix=prefix, suffix=suffix)
                 self.rename("collision", collision.name, prefix=coll_prefix, suffix=coll_suffix,
                             replacements=coll_replacements)
             for visual in link.visuals:
-                self.rename("visual", visual.name, replacements=name_replacements)
+                self.rename("visual", visual.name, replacements=replacements, prefix=prefix, suffix=suffix)
                 self.rename("visual", visual.name, prefix=vis_prefix, suffix=vis_suffix, replacements=vis_replacements)
         for joint in self.joints:
             if "joint_equals_link_name" in cfg.keys() and cfg["joint_equals_link_name"]:
-                self.rename(targettype="joint", target=joint.name, replacements={
+                self.rename(targettype="joint", target=joint.name, prefix=prefix, suffix=suffix, replacements={
                     joint.name: joint.child if not joint.child.upper().endswith("_LINK") else joint.child[:-5]
                 })
             else:
-                self.rename(targettype="joint", target=joint.name, replacements=name_replacements)
+                self.rename(targettype="joint", target=joint.name, prefix=prefix, suffix=suffix, replacements=replacements)
+                self.rename(targettype="joint", target=joint.name, prefix=joint_prefix, suffix=joint_suffix, replacements=joint_replacements)
         if "append_link_suffix" in cfg.keys() and cfg["append_link_suffix"] is not False:
             for link in self.links:
                 if not link.name[-4:].upper() == "LINK":
