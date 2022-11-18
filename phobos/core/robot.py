@@ -1,6 +1,7 @@
 import datetime
 import sys
 import os
+import traceback
 from typing import List, Any
 
 import pkg_resources
@@ -232,7 +233,7 @@ class Robot(SMURFRobot):
                 else:
                     cli_limit = None
                 mimic_dict = {}
-                for k, v in values.items(): #TODO this doesn't work, it seems phobos input dictionary is differently handled than the output dict
+                for k, v in values.items():  # TODO this doesn't work, it seems phobos input dictionary is differently handled than the output dict
                     if k.startswith("mimic_"):
                         mimic_dict[k[len("mimic_"):]] = v
                 cli_joints.append(representation.Joint(
@@ -2437,15 +2438,19 @@ class Robot(SMURFRobot):
                     new_joint.axis = new_joint.axis / np.linalg.norm(new_joint.axis)
                     if len(np.where(np.array(new_joint.axis) == 0.0)[0]) != 2:
                         log.warning(f"joint axis is not x, y or z unit vector:\n {new_joint.__dict__}")
-                        vec = [np.abs(a) for a in new_joint.axis]
-                        new_axis = [0 if i != np.argmax(vec) else 1 for i in range(3)]
-                        if new_joint.axis[np.argmax(vec)] < 0:
-                            new_axis *= -1
-                        rot = scipy_rot.align_vectors([new_axis], [new_joint.axis])
-                        new_joint.axis = new_axis
-                        axis_correction[:3, :3] = rot[0].as_matrix()
-                        log.info(f"Rotating joint by \n {axis_correction}")
-                        log.info(f"New axis is: {new_axis}")
+                        #Todo doesn't work for recupera triple joint
+                        try:
+                            vec = [np.abs(a) for a in new_joint.axis]
+                            new_axis = [0 if i != np.argmax(vec) else 1 for i in range(3)]
+                            if new_joint.axis[np.argmax(vec)] < 0:
+                                new_axis *= -1
+                            rot = scipy_rot.align_vectors([new_axis], [new_joint.axis])
+                            new_joint.axis = new_axis
+                            axis_correction[:3, :3] = rot[0].as_matrix()
+                            log.info(f"Rotating joint by \n {axis_correction}")
+                            log.info(f"New axis is: {new_axis}")
+                        except Exception as e:
+                            log.error(f"There was an error while correcting joint axis after mirroring:\n {''.join(traceback.format_exception(None, e, e.__traceback__))}")
 
                 if new_joint.joint_type == "prismatic":
                     """
