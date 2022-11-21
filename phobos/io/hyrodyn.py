@@ -224,7 +224,7 @@ class Submechanism(HyrodynAnnotation):
                 joint = self._related_robot_instance.get_joint(lc["cut_joint"])
                 joint.cut_joint = True
                 for ax in lc["constraint_axes"]:
-                    joint.constraint_axes.append(JointMimic(**ax))
+                    joint.constraint_axes.append(ConstraintAxis(**ax))
         if not check_linkage_later:
             assert self.check_linkage()
 
