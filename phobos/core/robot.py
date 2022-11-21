@@ -20,7 +20,7 @@ from ..io.smurfrobot import SMURFRobot
 from ..utils import transform
 from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_string, execute_shell_command, \
     duplicate, color_parser
-from ..utils.transform import create_transformation, inv, get_adjoint
+from ..utils.transform import create_transformation, inv, get_adjoint, round_array
 from ..utils.tree import find_close_ancestor_links
 from ..utils.xml import read_urdf_filename, transform_object, get_joint_info_dict
 
@@ -38,7 +38,7 @@ class Robot(SMURFRobot):
                              verify_meshes_on_import=verify_meshes_on_import, inputfile=inputfile, description=description,
                              autogenerate_submechanisms=autogenerate_submechanisms, is_human=is_human)
         except Exception as e:
-            log.error(f"Failed loading:\n  xml: {xmlfile}\n  submechanims: {submechanisms_file}\n  smurf: {smurffile}")
+            log.error(f"Failed loading:\n  input: {inputfile}\n  xml: {xmlfile}\n  submechanims: {submechanisms_file}\n  smurf: {smurffile}")
             raise e
 
         if name is not None:
@@ -2353,7 +2353,7 @@ class Robot(SMURFRobot):
             name_replacements = {}
         if exclude_meshes is None:
             exclude_meshes = []
-        if maintain_order is None:
+        if maintain_order is None: # Todo exchange to give flip_axis=y directly
             maintain_order = [0, 2, 1]
         if mirror_plane is None:
             mirror_plane = [0, 1, 0]
@@ -2431,57 +2431,22 @@ class Robot(SMURFRobot):
                 new_joint = joint_.duplicate()
 
                 T_flip = np.eye(4)
-                flip_axis = None
 
-                axis_correction = np.eye(4)
-                if new_joint.joint_type != "fixed":
-                    new_joint.axis = new_joint.axis / np.linalg.norm(new_joint.axis)
-                    if len(np.where(np.array(new_joint.axis) == 0.0)[0]) != 2:
-                        log.warning(f"joint axis is not x, y or z unit vector:\n {new_joint.__dict__}")
-                        #Todo doesn't work for recupera triple joint
-                        try:
-                            vec = [np.abs(a) for a in new_joint.axis]
-                            new_axis = [0 if i != np.argmax(vec) else 1 for i in range(3)]
-                            if new_joint.axis[np.argmax(vec)] < 0:
-                                new_axis *= -1
-                            rot = scipy_rot.align_vectors([new_axis], [new_joint.axis])
-                            new_joint.axis = new_axis
-                            axis_correction[:3, :3] = rot[0].as_matrix()
-                            log.info(f"Rotating joint by \n {axis_correction}")
-                            log.info(f"New axis is: {new_axis}")
-                        except Exception as e:
-                            log.error(f"There was an error while correcting joint axis after mirroring:\n {''.join(traceback.format_exception(None, e, e.__traceback__))}")
-
-                if new_joint.joint_type == "prismatic":
-                    """
-                    For prismatic joints we want to keep the direction of this joint while mirroring the axis.
-                    Therefore this axis is maintained while the other two are flipped.
-                    """
-                    maintain_mirrored_axis = [np.where(np.array(new_joint.axis) != 0)[0][0]]
-                    for i in range(3):
-                        if maintain_order[i] not in maintain_mirrored_axis and len(maintain_mirrored_axis) <= 1:
-                            maintain_mirrored_axis.append(maintain_order[i])
-                        elif maintain_order[i] not in maintain_mirrored_axis and len(maintain_mirrored_axis) == 2:
-                            flip_axis = maintain_order[i]
-                    assert flip_axis is not None
-                elif new_joint.joint_type == "revolute":
-                    """
-                    For revolute joints we want to flip the axis of the joint so that the joint acts symmetrically
-                    """
-                    flip_axis = np.where(np.array(new_joint.axis) != 0)[0][0]
-                else:
-                    """
-                    For all other joints (fixed) we take the least maintain axis
-                    """
-                    flip_axis = maintain_order[-1]
-
+                # All frames are mirrored using least-maintain-axis as flip axis
+                flip_axis = maintain_order[-1]
                 T_flip[flip_axis, flip_axis] *= -1
                 # now we transform the local coordinate system using t_flip to make it right handed
-                new_joint.origin = representation.Pose.from_matrix(
-                    inv(T_root_to_link).dot(
-                        T_R.dot(T_link.dot(axis_correction.dot(new_joint.origin.to_matrix()).dot(T_flip)))
-                    )
-                )
+                new_root_to_joint = T_R.dot(T_link.dot(joint_.origin.to_matrix().dot(T_flip)))
+                new_joint.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(new_root_to_joint))
+                # the joint axes are mirrored so that there movement happens symmetrically
+                if new_joint.joint_type != "fixed":
+                    assert new_joint.axis is not None and np.linalg.norm(new_joint.axis) > 0.0
+                    old_axis_point = T_link.dot(joint_.origin.to_matrix().dot(create_transformation(xyz=new_joint.axis)))
+                    new_axis_point = T_R.dot(old_axis_point)
+                    new_axis_point_in_joint_frame = inv(new_root_to_joint).dot(new_axis_point)
+                    new_joint.axis = new_axis_point_in_joint_frame[0:3, 3]/np.linalg.norm(new_axis_point_in_joint_frame[0:3, 3])
+                    new_joint.axis = list(round_array(new_joint.axis, dec=7))
+
                 new_T_root_to_link = T_root_to_link.dot(new_joint.origin.to_matrix())
 
                 robot.add_aggregate("joint", new_joint)

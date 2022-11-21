@@ -1,8 +1,14 @@
 from copy import copy
 
+import numpy
+
 from .smurf_reflection import SmurfBase
 from .representation import JointMimic
 from ..utils import tree
+from ..utils.transform import matrix_to_quaternion, quaternion_to_rpy
+
+from ..utils.commandline_logging import get_logger
+log = get_logger(__name__)
 
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
@@ -143,6 +149,35 @@ class HyrodynAnnotation(SmurfBase):
 
     def regenerate(self, robot):
         raise NotImplementedError
+
+    def get_rotation_convention(self):
+        """For a linked submechanism this returns the frame convention of this submechanism relative to the root"""
+        assert self._related_robot_instance is not None
+        if self.type in ["serial", "R"] or len(self.jointnames_spanningtree) <= 1:
+            return None
+
+        rotation_convention = None
+        rotations = []
+        for joint in self._jointnames_spanningtree:
+            T = self._related_robot_instance.get_transformation(joint.child)
+            rotations.append(matrix_to_quaternion(T[0:3, 0:3]))
+        rotation_convention = numpy.average(rotations, axis=0)
+
+        diffs = [rotation_convention - l for l in rotations]
+        if any([numpy.linalg.norm(d) > 1e-3 for d in diffs]):
+            # check if there's only one deviant
+            log.warning(f"Frame in submechanisms {str(self)} orientations don't rely all to the same convention (xyzw)\n"+"\n".join([str(r) for r in rotations]))
+            new_diffs = [rotations[0] - l for l in rotations]
+            deviants = numpy.where([numpy.linalg.norm(d) > 1e-3 for d in new_diffs])
+            if len(deviants) == 1:
+                rotation_convention = numpy.average([r for i, r in enumerate(rotations) if i not in deviants], axis=0)
+                log.warning("Guessing main convention: " + str(rotation_convention))
+            elif len(deviants == len(rotations)-1):
+                rotation_convention = numpy.average([r for i, r in enumerate(rotations) if i in deviants], axis=0)
+                log.warning("Guessing main convention: " + str(rotation_convention))
+            else:
+                return None
+        return rotation_convention
 
 
 class Submechanism(HyrodynAnnotation):
