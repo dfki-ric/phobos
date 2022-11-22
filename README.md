@@ -59,18 +59,13 @@ After installation the phobos main menu can be found on the right hand side of t
 
 ![Small arrow to open the phobos toolbar widget.](https://github.com/dfki-ric/phobos/wiki/img/blender_phobos_menu_open.png)
 
-Phobos is currently tested and running with Blender v3.2.
+Phobos is currently tested and running with Blender v3.3 LTS.
 
 ### CLI
 Just install it using pip:
 ```bash
 cd phobos
 pip install .
-```
-or without pip:
-```bash
-cd phobos
-python setup.py install
 ```
 or with autoproj:
 1) Add the package to your buildconf/package_set
@@ -120,7 +115,8 @@ It will also tell you which dependencies are missing for some scripts.
 ## Features
 
 - WYSIWYG editor for robot models using Blender
-- CLI tool for automated model processing
+- CLI tools for fast and easy model handling and inspection
+- CI tool to run phobos headless in your CI-pipeline for atomated model processing and maintenance
 - Import and export of **URDF**, **SDF** **SMURF** and other
   [formats](https://github.com/dfki-ric/phobos/wiki/Formats)
 - Easy definition of robot kinematics (links and joints)
