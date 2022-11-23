@@ -310,8 +310,12 @@ def class_factory(cls, only=None):
 
 def singular(prop):
     if type(prop) == list:
-        assert len(prop) == 1
-        return prop[0]
+        if len(prop) == 1:
+            return prop[0]
+        elif len(prop) == 0:
+            return None
+        else:
+            raise AssertionError(f"Got list with contetn {prop} where max 1 element is allowed")
     else:
         return prop
 

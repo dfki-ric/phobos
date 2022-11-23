@@ -287,7 +287,6 @@ class Robot(SMURFRobot):
             for key, value in blender_model['materials'].items():
                 mats.append(representation.Material(name=value.pop('name'),
                                                     texture=None,
-                                                    diffuseColor=value.pop("diffuseColor"),
                                                     **value))
             if blender_model['version'] != '1.0':
                 log.info(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
@@ -317,7 +316,7 @@ class Robot(SMURFRobot):
                             )
                         ]
                         values.pop('id')
-                    if values["type"].upper() == "CAMERASENSOR":
+                    if values["type"].upper() in ["CAMERASENSOR", "CAMERA"]:
                         new_robot.add_sensor(
                             sensor_representations.CameraSensor(
                                          hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),

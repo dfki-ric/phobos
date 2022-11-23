@@ -187,7 +187,8 @@ class CameraSensor(Sensor):
             height=480, width=640, hud_height=240, hud_width=0,
             opening_height=90, opening_width=90,
             depth_image=True, show_cam=False, frame_offset=1, origin=None, **kwargs):
-        assert origin is None or isinstance(origin, Pose), str(origin)
+        if origin is not None and not isinstance(origin, Pose):
+            origin = Pose(**origin)
         super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor', origin=origin if origin is not None else Pose(), **kwargs)
         self.height = height
         self.width = width
@@ -202,6 +203,7 @@ class CameraSensor(Sensor):
                          'opening_height', 'opening_width', 'depth_image', 'show_cam', 'frame_offset']
         self.sdf_type = "camera"
         self.blender_type = "Camera"
+        self.excludes += ["blender_type", "sdf_type", "origin"]
 
     @property
     def depths(self):

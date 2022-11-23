@@ -95,6 +95,8 @@ class Pose(Representation, SmurfBase):
 
     @position.setter
     def position(self, value):
+        if value is None:
+            self.xyz = [0, 0, 0]
         assert type(value) in [list, np.ndarray] and len(value) == 3
         self.xyz = np.array(value)
 
@@ -150,7 +152,7 @@ class Material(Representation, SmurfBase):
         if name is None or len(name) == 0:
             name = to_hex_color(self.diffuse) + (os.path.basename(self.texture) if texture is not None else "")
         self.name = name
-        self.excludes += ["diffuse", "ambient", "specular", "emissive"]
+        self.excludes += ["diffuse", "ambient", "specular", "emissive", "original_name", "users"]
 
     def check_valid(self):
         # TODO REVIEW add other colors here
@@ -541,10 +543,10 @@ class KCCDHull(Representation, SmurfBase):
 
 
 class Link(Representation, SmurfBase):
-    _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hulls"]
+    _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull"]
 
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
-                 noDataPackage=False, reducedDataPackage=False, is_human=None, kccd_hulls=None, **kwargs):
+                 noDataPackage=False, reducedDataPackage=False, is_human=None, kccd_hull=None, **kwargs):
         assert origin is None  # Unused but might be neccesary for sdf
         SmurfBase.__init__(self, **kwargs)
         self.name = name
@@ -557,9 +559,7 @@ class Link(Representation, SmurfBase):
         self.collisions = []
         if collisions is not None:
             self.collisions = collisions
-        self.kccd_hulls = []
-        if kccd_hulls is not None:
-            self.kccd_hulls = kccd_hulls
+        self.kccd_hull = kccd_hull
         for geo in self.visuals + self.collisions:
             if geo.origin.relative_to is None:
                 geo.origin.relative_to = self.name
@@ -695,7 +695,7 @@ class Joint(Representation, SmurfBase):
         if spring_const_constraint_axis1 is not None:  # todo provide this to JointDynamics (spring_reference)
             self.spring_const_constraint_axis1 = spring_const_constraint_axis1
             self.returns += ["spring_const_constraint_axis1"]
-        self.excludes += ["limit", "mimic"]
+        self.excludes += ["limit", "mimic", "axis"]
 
     def check_valid(self):
         return (self.joint_type in self.TYPES, "Invalid joint type: {}".format(self.joint_type) and  # noqa
