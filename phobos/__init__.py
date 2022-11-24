@@ -27,7 +27,7 @@ bl_info = {
     "description": "A toolbox to enable editing of robot models in Blender.",
     "author": "Kai von Szadkowski, Malte Langosz, Henning Wiedemann, Simon Reichel, Julius Martensen, Ole Schwiegert, Stefan Rahms, ",
     "version": (2, 0, 0),
-    "blender": (3, 2, 0),
+    "blender": (3, 3, 1),
     "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
@@ -39,10 +39,8 @@ bl_info = {
 # todo fill this automatically
 requirements = {
     "yaml": "pyyaml",
-    "networkx": "networkx",  # optional for blender
     "numpy": "numpy",
     "scipy": "scipy",
-    "trimesh": "trimesh",  # optional for blender
     "pkg_resources": "setuptools",
     "collada": "pycollada",
     "pydot": "pydot"
@@ -50,9 +48,14 @@ requirements = {
 
 optional_requirements = {
     "lxml": "lxml",
+    "networkx": "networkx",  # optional for blender
+    "trimesh": "trimesh",  # optional for blender
+}
+
+extra_requirements = {
     "pybullet": "pybullet",  # optional for blender
     "open3d": "open3d",  # optional for blender
-    "python-fcl": "python-fcl",  # optional for blender
+    "python-fcl": "python-fcl"  # optional for blender
 }
 
 
@@ -75,7 +78,7 @@ def install_requirement(package_name, upgrade_pip=False, lib=None):
         subprocess.check_call([sys.executable, "-m", "pip", "install", f"--target={str(lib)}", package_name])
 
 
-def check_requirements(optional=False, force=False, upgrade_pip=False, lib=None):
+def check_requirements(optional=False, extra=False, force=False, upgrade_pip=False, lib=None):
     global REQUIREMENTS_HAVE_BEEN_CHECKED
     if REQUIREMENTS_HAVE_BEEN_CHECKED and not force:
         return
@@ -84,6 +87,8 @@ def check_requirements(optional=False, force=False, upgrade_pip=False, lib=None)
     reqs = [requirements]
     if optional:
         reqs += [optional_requirements]
+    if extra:
+        reqs += [extra_requirements]
     if upgrade_pip:
         import sys
         import subprocess
@@ -99,6 +104,11 @@ def check_requirements(optional=False, force=False, upgrade_pip=False, lib=None)
                 loader = importlib.find_loader(import_name)
                 if not issubclass(type(loader), importlib.machinery.SourceFileLoader):
                     install_requirement(req_name, upgrade_pip=False, lib=lib)
+            except subprocess.CalledProcessError as e:
+                if import_name in optional_requirements.keys():
+                    print(f"Couldn't install optional_requirement {import_name} ({req_name})")
+                else:
+                    raise e
     importlib.invalidate_caches()
     REQUIREMENTS_HAVE_BEEN_CHECKED = True
 
@@ -115,7 +125,7 @@ def register():
     """
     import sys
     if not sys.platform.startswith("win"):
-        check_requirements(upgrade_pip=True)
+        check_requirements(optional=True, upgrade_pip=True)
     from . import defs
     from . import io
     from . import core
