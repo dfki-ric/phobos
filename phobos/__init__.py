@@ -49,6 +49,7 @@ requirements = {
 }
 
 optional_requirements = {
+    "lxml": "lxml",
     "pybullet": "pybullet",  # optional for blender
     "open3d": "open3d",  # optional for blender
     "python-fcl": "python-fcl",  # optional for blender

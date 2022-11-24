@@ -1,6 +1,9 @@
-from xml.etree import ElementTree as ET
-import json
+try:
+    from lxml import etree as ET
+except ImportError:
+    from xml.etree import ElementTree as ET
 
+import json
 import numpy as np
 import pkg_resources
 from typing import List
