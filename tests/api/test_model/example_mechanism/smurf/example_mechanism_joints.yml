@@ -1,0 +1,36 @@
+{
+  "joints": [
+    {
+      "constraint_axes": [],
+      "cut_joint": false,
+      "joint_type": "revolute",
+      "name": "passive_a_joint",
+      "noDataPackage": false,
+      "reducedDataPackage": false
+    },
+    {
+      "constraint_axes": [],
+      "cut_joint": false,
+      "joint_type": "revolute",
+      "name": "end_effector_joint",
+      "noDataPackage": false,
+      "reducedDataPackage": false
+    },
+    {
+      "constraint_axes": [],
+      "cut_joint": false,
+      "joint_type": "revolute",
+      "name": "passive_b_joint",
+      "noDataPackage": false,
+      "reducedDataPackage": false
+    },
+    {
+      "constraint_axes": [],
+      "cut_joint": false,
+      "joint_type": "prismatic",
+      "name": "prismatic_joint",
+      "noDataPackage": false,
+      "reducedDataPackage": false
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "links": [
+    {
+      "collisions": [
+        "root_collision"
+      ],
+      "name": "root",
+      "noDataPackage": false,
+      "reducedDataPackage": false,
+      "visuals": [
+        "root_visual"
+      ]
+    },
+    {
+      "collisions": [
+        "passive_a_collision"
+      ],
+      "name": "passive_a",
+      "noDataPackage": false,
+      "reducedDataPackage": false,
+      "visuals": [
+        "passive_a_visual"
+      ]
+    },
+    {
+      "collisions": [
+        "passive_b_collision"
+      ],
+      "name": "passive_b",
+      "noDataPackage": false,
+      "reducedDataPackage": false,
+      "visuals": [
+        "passive_b_visual"
+      ]
+    },
+    {
+      "collisions": [
+        "prismatic_collision"
+      ],
+      "name": "prismatic",
+      "noDataPackage": false,
+      "reducedDataPackage": false,
+      "visuals": [
+        "prismatic_visual"
+      ]
+    },
+    {
+      "collisions": [
+        "end_effector_collision"
+      ],
+      "name": "end_effector",
+      "noDataPackage": false,
+      "reducedDataPackage": false,
+      "visuals": [
+        "end_effector_visual"
+      ]
+    }
+  ]
+}

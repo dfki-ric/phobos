@@ -1,0 +1,29 @@
+{
+  "collisions": [
+    {
+      "name": "root_collision",
+      "noDataPackage": false,
+      "reducedDataPackage": false
+    },
+    {
+      "name": "passive_a_collision",
+      "noDataPackage": false,
+      "reducedDataPackage": false
+    },
+    {
+      "name": "passive_b_collision",
+      "noDataPackage": false,
+      "reducedDataPackage": false
+    },
+    {
+      "name": "prismatic_collision",
+      "noDataPackage": false,
+      "reducedDataPackage": false
+    },
+    {
+      "name": "end_effector_collision",
+      "noDataPackage": false,
+      "reducedDataPackage": false
+    }
+  ]
+}

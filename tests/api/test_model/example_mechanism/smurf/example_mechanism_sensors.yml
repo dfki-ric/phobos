@@ -1,0 +1,30 @@
+{
+  "sensors": [
+    {
+      "depth_image": 0,
+      "frame_offset": 1,
+      "height": 480,
+      "hud_height": 240,
+      "hud_idx": 0,
+      "hud_width": 320,
+      "link": "end_effector",
+      "name": "camera_in_z",
+      "opening_height": 90,
+      "opening_width": 90,
+      "orientation_offset": {
+        "w": 1.0,
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "position_offset": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.5
+      },
+      "show_cam": 1,
+      "type": "CameraSensor",
+      "width": 640
+    }
+  ]
+}
