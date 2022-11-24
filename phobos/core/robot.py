@@ -520,12 +520,19 @@ class Robot(SMURFRobot):
                    create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes, ros_pkg_name=ros_pkg_name,
                    export_joint_limits=export_joint_limits, export_submodels=export_submodels, formats=formats, filename=filename, float_fmt_dict=float_fmt_dict)
 
-    def export_smurf(self, outputdir=None, export_visuals=True, export_collisions=True, create_pdf=False,
+    def export_smurf(self, outputdir=None, outputfile=None, export_visuals=True, export_collisions=True, create_pdf=False,
                      ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
                      export_joint_limits=True, export_submodels=True, formats=["urdf"], filename=None, float_fmt_dict=None):
         """ Export self and all annotations inside a given folder with structure
         """
         # Convert to absolute path
+        if outputfile is not None:
+            assert outputdir is None
+            outputdir = os.path.dirname(outputfile)
+            if outputdir.lower().endswith("smurf"):
+                outputdir = os.path.dirname(outputdir)
+            else:
+                raise AssertionError("Smurf files have to be placed in a smurf subfolder")
         outputdir = os.path.abspath(outputdir)
         if not os.path.exists(outputdir):
             os.mkdir(outputdir)

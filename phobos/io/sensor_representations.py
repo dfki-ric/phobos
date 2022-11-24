@@ -13,7 +13,8 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
 
 class Sensor(Representation, SmurfBase):
-    def __init__(self, name: str = None, joint=None, link=None, rate=None, sensortype=None, **kwargs):
+    def __init__(self, name: str = None, joint=None, link=None, rate=None, sensortype=None,
+                 _sdf_type=None, _blender_type=None, **kwargs):
         if link is not None:
             if type(link) != str:
                 link = link.name
@@ -24,6 +25,9 @@ class Sensor(Representation, SmurfBase):
             kwargs["joint"] = joint
         SmurfBase.__init__(self, name=name, rate=rate, returns=["type", "rate"], **kwargs)
         self.type = sensortype
+        self._sdf_type = _sdf_type
+        self._blender_type = _blender_type
+        self.excludes += ["_blender_type", "_sdf_type"]
 
     def __str__(self):
         return self.name
@@ -79,10 +83,8 @@ class Joint6DOF(Sensor):
     _class_variables = ["name", "link"]
 
     def __init__(self, name=None, link=None, **kwargs):
-        super().__init__(name=name, joint=None, link=link, sensortype='Joint6DOF', **kwargs)
+        super().__init__(name=name, joint=None, link=link, sensortype='Joint6DOF', _blender_type="Joint_6_DOF", sdf_type="force_torque",  **kwargs)
         self.returns += ['link']
-        self.sdf_type = "force_torque"
-        self.blender_type = "Joint_6_DOF"
 
 
 class RotatingRaySensor(Sensor):
@@ -108,7 +110,7 @@ class RotatingRaySensor(Sensor):
             if opening_height is None and "opening_height" not in kwargs:
                 kwargs["opening_height"] = kwargs["vertical_resolution"] * lasers
             kwargs.pop("vertical_resolution")
-        super().__init__(name=name, joint=None, link=link, sensortype='RotatingRaySensor', **kwargs)
+        super().__init__(name=name, joint=None, link=link, sensortype='RotatingRaySensor', sdf_type="lidar", _blender_type="Rotating_ray_sensor"**kwargs)
         self.bands = bands
         self.draw_rays = draw_rays
         self.horizontal_offset = horizontal_offset
@@ -127,8 +129,7 @@ class RotatingRaySensor(Sensor):
         self.returns += ['link', 'bands', 'draw_rays',
                          'horizontal_offset', 'horizontal_resolution', 'vertical_offset',
                          'opening_width', 'opening_height', 'max_distance', 'lasers']
-        self.sdf_type = "lidar"
-        self.blender_type = "Rotating_ray_sensor"
+
 
     @property
     def min_horizontal_angle(self):
@@ -189,7 +190,11 @@ class CameraSensor(Sensor):
             depth_image=True, show_cam=False, frame_offset=1, origin=None, **kwargs):
         if origin is not None and not isinstance(origin, Pose):
             origin = Pose(**origin)
-        super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor', origin=origin if origin is not None else Pose(), **kwargs)
+        self.origin = origin if origin is not None else Pose()
+        super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor',
+                         _sdf_type="camera", _blender_type="Camera",
+                         **kwargs)
+
         self.height = height
         self.width = width
         self.hud_height = hud_height
@@ -201,9 +206,7 @@ class CameraSensor(Sensor):
         self.frame_offset = frame_offset
         self.returns += ['link', 'height', 'width', 'hud_height', 'hud_width',
                          'opening_height', 'opening_width', 'depth_image', 'show_cam', 'frame_offset']
-        self.sdf_type = "camera"
-        self.blender_type = "Camera"
-        self.excludes += ["blender_type", "sdf_type", "origin"]
+        self.excludes += ["origin"]
 
     @property
     def depths(self):
@@ -232,10 +235,10 @@ class IMU(Sensor):
     _class_variables = ["name", "link", "frame"]
 
     def __init__(self, name=None, link=None, frame=None, **kwargs):
-        super().__init__(name=name, joint=None, link=link, frame=frame, sensortype='NodeIMU', **kwargs)
+        super().__init__(name=name, joint=None, link=link, frame=frame, sensortype='NodeIMU', _sdf_type="imu",
+                         _blender_type="Inertial_measurement_unit", **kwargs)
         self.returns += ['link', 'id']
-        self.sdf_type = "imu"
-        self.blender_type = "Inertial_measurement_unit"
+
 
     @property
     def id(self):
@@ -257,8 +260,8 @@ __IMPORTS__ += ["NodeIMU"]
 class MultiSensor(Sensor):
     _class_variables = ["name", "targets"]
 
-    def __init__(self, name=None, targets=None, sensortype='MultiSensor', **kwargs):
-        super().__init__(name=name, sensortype=sensortype, **kwargs)
+    def __init__(self, name=None, targets=None, sensortype='MultiSensor', _sdf_type=None, _blender_type=None, **kwargs):
+        super().__init__(name=name, sensortype=sensortype, _sdf_type=_sdf_type, _blender_type=_blender_type, **kwargs)
         self.targets = [str(t) for t in targets if t is not None] if isinstance(targets, list) else []
         self.returns += ['id']
         self.excludes += ['_id']
@@ -309,8 +312,7 @@ class MotorCurrent(MultiSensor):
         if not isinstance(targets, list):
             targets = [targets]
 
-        super().__init__(name=name, targets=targets, sensortype='MotorCurrent', **kwargs)
-        self.blender_type = "Motor_current"
+        super().__init__(name=name, targets=targets, sensortype='MotorCurrent', _blender_type="Motor_current", **kwargs)
 
 
 class JointPosition(MultiSensor):
@@ -321,9 +323,8 @@ class JointPosition(MultiSensor):
             targets = []
         if not isinstance(targets, list):
             targets = [targets]
-
-        super().__init__(name=name, targets=targets, sensortype='JointPosition', **kwargs)
-        self.blender_type = "Joint_position"
+        super().__init__(name=name, targets=targets, sensortype='JointPosition', _blender_type="Joint_position",
+                         **kwargs)
 
 
 class JointVelocity(MultiSensor):
@@ -339,8 +340,8 @@ class JointVelocity(MultiSensor):
             log.error(targets)
             raise AssertionError("Parsed invalid joint")
 
-        super().__init__(name=name, targets=targets, sensortype='JointVelocity', **kwargs)
-        self.blender_type = "Joint_velocity"
+        super().__init__(name=name, targets=targets, sensortype='JointVelocity', _blender_type="Joint_velocity",
+                         **kwargs)
 
 
 class NodeContact(MultiSensor):
@@ -353,11 +354,9 @@ class NodeContact(MultiSensor):
         if not isinstance(targets, list):
             targets = [targets]
 
-        super().__init__(name=name, targets=targets, link=link, sensortype='NodeContact', **kwargs)
-
+        super().__init__(name=name, targets=targets, link=link, sensortype='NodeContact', _sdf_type="contact",
+                         _blender_type="Contact", **kwargs)
         self.returns += ['link']
-        self.sdf_type = "contact"
-        self.blender_type = "Contact"
 
     def equivalent(self, other):
         return other.type == self.type and self.link and other.link
@@ -373,10 +372,9 @@ class NodeContactForce(MultiSensor):
         if not isinstance(targets, list):
             targets = [targets]
 
-        super().__init__(name=name, targets=targets, link=link, sensortype='NodeContactForce', **kwargs)
-
+        super().__init__(name=name, targets=targets, link=link, sensortype='NodeContactForce',
+                         _blender_type="Node_contact_force", **kwargs)
         self.returns += ['link']
-        self.blender_type = "Node_contact_force"
 
     def equivalent(self, other):
         return other.type == self.type and self.link and other.link
@@ -391,8 +389,7 @@ class NodeCOM(MultiSensor):
         if not isinstance(targets, list):
             targets = [targets]
 
-        super().__init__(name=name, targets=targets, sensortype='NodeCOM', **kwargs)
-        self.blender_type = "Node_COM"
+        super().__init__(name=name, targets=targets, sensortype='NodeCOM', _blender_type="Node_COM", **kwargs)
 
 
 class NodePosition(MultiSensor):
@@ -404,8 +401,7 @@ class NodePosition(MultiSensor):
         if not isinstance(targets, list):
             targets = [targets]
 
-        super().__init__(name=name, targets=targets, sensortype='NodePosition', **kwargs)
-        self.blender_type = "Node_position"
+        super().__init__(name=name, targets=targets, sensortype='NodePosition', _blender_type="Node_position", **kwargs)
 
 
 class NodeRotation(MultiSensor):
@@ -417,8 +413,7 @@ class NodeRotation(MultiSensor):
         if not isinstance(targets, list):
             targets = [targets]
 
-        super().__init__(name=name, targets=targets, sensortype='NodeRotation', **kwargs)
-        self.blender_type = "Node_rotation"
+        super().__init__(name=name, targets=targets, sensortype='NodeRotation', _blender_type="Node_rotation", **kwargs)
 
 
 class SensorFactory(Representation):

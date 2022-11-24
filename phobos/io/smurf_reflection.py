@@ -31,7 +31,8 @@ class SmurfBase(YamlReflection):
     def get_refl_vars(self):
         out = []
         # Collect all variables (and properties) which are given in the object self.returns
-        export_props = [v for v in vars(self).keys() if v not in self.excludes and not v.startswith("_")] + list(set(self.returns))
+        export_props = [v for v in vars(self).keys() if v not in self.excludes and not v.startswith("_")] + \
+                       [v for v in set(self.returns) if v not in self.excludes]
         for var in export_props:
             if getattr(self, var) is not None:
                 out += [var]
