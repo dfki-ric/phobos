@@ -20,34 +20,36 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 class Pose(Representation, SmurfBase):
     _class_variables = ["xyz", "rpy", "relative_to"]
 
-    def __init__(self, xyz=None, rpy=None, vec=None, extra=None, relative_to=None, **kwargs):
+    def __init__(self, xyz=None, rpy=None, vec=None, relative_to=None, **kwargs):
         Representation.__init__(self)
         SmurfBase.__init__(self, returns=["rotation", "position"])
         self.excludes += ["xyz", "rpy"]
-        self.xyz = xyz
-        self.rotation = rpy
         self.relative_to = relative_to
+        self.xyz = None
+        self.rpy = None
         if vec is not None:
+            assert xyz is None and rpy is None
+            assert "rotation" not in kwargs and "position" not in kwargs
             assert isinstance(vec, list)
-            count = len(vec)
-            if count == 3:
-                self.xyz = vec
+            if len(vec) == 3:
+                self.position = np.array(vec)
             else:
                 self.from_vec(vec)
-        elif extra is not None:
-            assert xyz is None, "Cannot specify 6-length vector and 3-length vector"  # noqa
-            assert len(extra) == 3, "Invalid length"
-            self.rpy = extra
-        self.rpy = np.array(self.rpy) if self.rpy is not None else None
-        self.xyz = np.array(self.xyz) if self.xyz is not None else None
-        if self.rpy is None and "rotation" in kwargs:
-            self.rotation = kwargs["rotation"]
-        if self.xyz is None and "position" in kwargs:
-            self.position = kwargs["position"]
+        else:
+            if "position" in kwargs:
+                assert xyz is None or xyz == kwargs["position"]
+                self.position = kwargs["position"]
+            else:
+                self.position = xyz
+            if "rotation" in kwargs:
+                assert rpy is None or rpy == kwargs["rotation"]
+                self.rotation = kwargs["rotation"]
+            else:
+                self.rotation = rpy
 
     def check_valid(self):
-        assert (self.xyz is None or len(self.xyz) == 3) and \
-               (self.rpy is None or len(self.rpy) == 3)
+        assert (len(self.xyz) == 3) and \
+               (len(self.rpy) == 3)
 
     # Aliases for backwards compatibility
     @property
@@ -74,7 +76,7 @@ class Pose(Representation, SmurfBase):
         elif type(value) in [list, np.ndarray]:
             self.rpy = transform.matrix_to_rpy(value)
         elif value is None:
-            self.rpy = [0, 0, 0]
+            self.rpy = [0.0, 0.0, 0.0]
         else:
             raise ValueError("Can't parse rotation " + str(value))
         # if we have an pi or pi/2, pi/4 approximation let's make pi or pi/2, pi/4 out of it
@@ -96,19 +98,20 @@ class Pose(Representation, SmurfBase):
     @position.setter
     def position(self, value):
         if value is None:
-            self.xyz = [0, 0, 0]
-        assert type(value) in [list, np.ndarray] and len(value) == 3
-        self.xyz = np.array(value)
+            self.xyz = np.array([0.0, 0.0, 0.0])
+        else:
+            assert type(value) in [list, np.ndarray] and len(value) == 3
+            self.xyz = np.array(value)
 
     def from_vec(self, vec):
         assert len(vec) == 6, "Invalid length"
-        self.xyz = np.array(vec[:3])
-        self.rpy = np.array(vec[3:6])
+        self.position = np.array(vec[:3])
+        self.rotation = np.array(vec[3:6])
 
     @property
     def vec(self):
-        xyz = self.xyz if self.xyz is not None else [0, 0, 0]
-        rpy = self.rpy if self.rpy is not None else [0, 0, 0]
+        xyz = self.xyz if self.xyz is not None else np.array([0.0, 0.0, 0.0])
+        rpy = self.rpy if self.rpy is not None else np.array([0.0, 0.0, 0.0])
         return xyz.tolist() + rpy.tolist()
 
     @staticmethod
@@ -118,8 +121,8 @@ class Pose(Representation, SmurfBase):
         return Pose(xyz=xyz, rpy=rpy, dec=dec, relative_to=relative_to)
 
     def to_matrix(self):
-        R = rpy_to_matrix(self.rpy if hasattr(self, "rpy") else [0.0, 0.0, 0.0])
-        p = np.array(self.xyz if hasattr(self, "xyz") else [0.0, 0.0, 0.0])
+        R = rpy_to_matrix(self.rpy if hasattr(self, "rpy") else np.array([0.0, 0.0, 0.0]))
+        p = np.array(self.xyz if hasattr(self, "xyz") else np.array([0.0, 0.0, 0.0]))
         T = np.identity(4)
         T[0:3, 3] = p
         T[0:3, 0:3] = R

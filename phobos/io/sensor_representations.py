@@ -7,13 +7,16 @@ from .smurf_reflection import SmurfBase
 from ..io import representation
 from ..utils import transform
 from ..utils.commandline_logging import get_logger
+from .xml_factory import singular as _singular, plural as _plural
+
 log = get_logger(__name__)
 
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
 
 class Sensor(Representation, SmurfBase):
-    def __init__(self, name: str = None, joint=None, link=None, rate=None, sensortype=None,
+    def __init__(self, name: str = None, joint=None, link=None, sensortype=None,
+                 rate=None, always_on=True, visualize=False, topic=None, enable_metrics=False,
                  _sdf_type=None, _blender_type=None, **kwargs):
         if link is not None:
             if type(link) != str:
@@ -23,7 +26,10 @@ class Sensor(Representation, SmurfBase):
             if type(joint) != str:
                 joint = joint.name
             kwargs["joint"] = joint
-        SmurfBase.__init__(self, name=name, rate=rate, returns=["type", "rate"], **kwargs)
+        SmurfBase.__init__(self, name=name,
+                           rate=rate, always_on=always_on, visualize=visualize, topic=topic,
+                           enable_metrics=enable_metrics,
+                           returns=["type", "rate",], **kwargs)
         self.type = sensortype
         self._sdf_type = _sdf_type
         self._blender_type = _blender_type
@@ -36,7 +42,7 @@ class Sensor(Representation, SmurfBase):
     def position_offset(self):
         if self.origin is None:
             return None
-        pos = self.origin.position if hasattr(self, "origin") and self.origin.position is not None else [0, 0, 0]
+        pos = self.origin.position if self.origin.position is not None else [0.0, 0.0, 0.0]
         return {"x": pos[0], "y": pos[1], "z": pos[2]}
 
     @position_offset.setter
@@ -49,7 +55,7 @@ class Sensor(Representation, SmurfBase):
     def orientation_offset(self):
         if self.origin is None:
             return None
-        quat = transform.matrix_to_quaternion(self.origin.to_matrix()[0:3, 0:3]) if hasattr(self, "origin") else [0, 0, 0, 1]
+        quat = transform.matrix_to_quaternion(self.origin.to_matrix()[0:3, 0:3]) if hasattr(self, "origin") else [0.0, 0.0, 0.0, 1.0]
         return {"x": quat[0], "y": quat[1], "z": quat[2], "w": quat[3]}
 
     @orientation_offset.setter
@@ -189,12 +195,11 @@ class CameraSensor(Sensor):
             opening_height=90, opening_width=90,
             depth_image=True, show_cam=False, frame_offset=1, origin=None, **kwargs):
         if origin is not None and not isinstance(origin, Pose):
-            origin = Pose(**origin)
+            origin = Pose(**origin, relative_to=link)
         self.origin = origin if origin is not None else Pose()
         super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor',
                          _sdf_type="camera", _blender_type="Camera",
                          **kwargs)
-
         self.height = height
         self.width = width
         self.hud_height = hud_height
@@ -419,6 +424,7 @@ class NodeRotation(MultiSensor):
 class SensorFactory(Representation):
     @classmethod
     def create(cls, name, _xml: ET.Element = None, link=None, sdf_type=None, origin=None, **kwargs):
+        origin = _singular(origin)
         if sdf_type is None:
             if _xml is not None:
                 children = [child.tag for child in _xml]
@@ -437,11 +443,14 @@ class SensorFactory(Representation):
         if link is None and origin is not None:
             link = origin.relative_to
         if origin is None:
-            origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=link)
+            origin = Pose(relative_to=link)
+        elif origin.relative_to is None and link is not None:
+            origin.relative_to = link
         if sdf_type == "camera":
             return CameraSensor(
                 name=name,
                 link=link,
+                origin=origin,
                 **kwargs
             )
         elif sdf_type == "contact":

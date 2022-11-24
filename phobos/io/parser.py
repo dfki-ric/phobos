@@ -14,7 +14,8 @@ def parse_xml(xml):
     if type(xml) == str:
         if os.path.isfile(xml):
             xml_file = xml
-            xml_string = open(xml, "r").read()
+            with open(xml, "r") as f:
+                xml_string = f.read()
             if xml.upper().endswith("SDF"):
                 file_type = "sdf"
             elif xml.upper().endswith("URDF"):

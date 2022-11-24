@@ -310,7 +310,7 @@
         }
       },
       "children": {
-        "pose": {
+        "origin": {
           "classname": "Pose",
           "varname": "origin"
         }
@@ -577,7 +577,7 @@
         "name": "name"
       },
       "children": {
-        "origin": {
+        "pose": {
           "classname": "Pose",
           "varname": "origin"
         }
@@ -616,7 +616,7 @@
         "name": "name"
       },
       "children": {
-        "origin": {
+        "pose": {
           "classname": "Pose",
           "varname": "origin"
         }
@@ -917,7 +917,7 @@
           "children": {
             "pose": {
               "classname": "Pose",
-              "varname": "frame_offset"
+              "varname": "origin"
             }
           }
         }

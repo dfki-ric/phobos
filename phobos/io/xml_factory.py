@@ -123,11 +123,21 @@ class XMLDefinition(object):
                 if type(val) == list and all([not is_int(v) and not is_float(v) and type(v) == str for v in val]):
                     for v in val:
                         e = ET.Element(tag)
-                        e.text = self._serialize(v, float_fmt=float_fmt_dict[tag] if tag in float_fmt_dict else None)
+                        _t = self._serialize(v, float_fmt=float_fmt_dict[tag] if float_fmt_dict is not None and tag in float_fmt_dict else None)
+                        try:
+                            e.text = _t
+                        except TypeError as error:
+                            print(_t, type(_t))
+                            raise error
                         out.append(e)
                 else:
                     e = ET.Element(tag)
-                    e.text = self._serialize(val, float_fmt=float_fmt_dict[tag] if tag in float_fmt_dict else None)
+                    _t = self._serialize(val, float_fmt=float_fmt_dict[tag] if float_fmt_dict is not None and tag in float_fmt_dict else None)
+                    try:
+                        e.text = _t
+                    except TypeError as error:
+                        print(_t, type(_t))
+                        raise error
                     out.append(e)
         # children that are nested in another element
         if self.xml_nested_children != {}:
@@ -191,8 +201,8 @@ class XMLDefinition(object):
             elif any([type(v) in [float, np.float64] for v in entry]):
                 entry = [float_fmt % v if type(v) in [float, np.float64] and float_fmt is not None else str(v) for v in entry]
             return " ".join(entry)
-        elif type(entry) == int:
-            return str(entry)
+        elif type(entry) in [int, bool]:
+            return str(int(entry))
         elif type(entry) in [float, np.float64]:
             return float_fmt % entry if float_fmt is not None else str(entry)
         else:
