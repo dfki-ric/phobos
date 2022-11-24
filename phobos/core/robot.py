@@ -921,13 +921,12 @@ class Robot(SMURFRobot):
             for i, sm in enumerate(self.submechanisms):
                 # ToDo pretty setting of the submechanism legend
                 out += f"node [shape=box, color={SUBMECH_COLORS[i%len(SUBMECH_COLORS)]}, fontcolor=black];\n"
-                out += f"\"{str(sm)}\" [label="
-                out += f"\"Submechanism\ntype: {sm.type} "
+                out += f"\"submech_{str(sm)}\" [label="
+                out += f"\"Submechanism\\ntype: {sm.type} "
                 out += f"\\nname: {sm.name} "
                 out += f"\\ncontextual_name: {sm.contextual_name} "
                 out += "\"];\n"
-                for link in self.get_links_ordered_df():
-                    out += f"\"{str(link)}\" [label=\"{str(link)}\"];\n"
+            for i, sm in enumerate(self.submechanisms):
                 out += f"node [shape=ellipse, color={SUBMECH_COLORS[i%len(SUBMECH_COLORS)]}, fontcolor=black];\n"
                 assert len(sm.get_joints()) == len(set(sm.get_joints()))
                 for joint in sorted(sm.get_joints()):
@@ -935,6 +934,8 @@ class Robot(SMURFRobot):
                     assert str(joint) not in printed_joints, str(printed_joints)
                     printed_joints.append(str(joint))
                     out += add_joint(joint)
+                    ## includes the submechanisms deeper by drawing an error to them
+                    # out += f"\"{joint.name}\" -- \"submech_{str(sm)}\" [color=gray]\n"
         if hasattr(self, "exoskeletons") and self.exoskeletons is not None and len(self.exoskeletons) > 0:
             for i, exo in enumerate(self.exoskeletons):
                 out += f"node [shape=septagon, color={EXOSKEL_COLORS[i%len(SUBMECH_COLORS)]}, fontcolor=black];\n"
