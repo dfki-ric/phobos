@@ -19,7 +19,6 @@ def main(args):
     from phobos.utils import hyrodyn as hyrodyn_utils
     import argparse
     import os.path as path
-    from ..defs import BASE_LOG_LEVEL
     from ..core import Robot
     from ..utils.commandline_logging import setup_logger_level
 
@@ -27,7 +26,7 @@ def main(args):
     parser.add_argument('robot_file', type=str, help='Path to the urdf file')
     parser.add_argument('--submechanisms_file', type=str, help='Path to the urdf or smurf file', default=None)
     parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-                        default=BASE_LOG_LEVEL)
+                        default="INFO")
     args = parser.parse_args(args)
 
     log = setup_logger_level(log_level=args.loglevel)
