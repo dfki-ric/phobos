@@ -181,7 +181,7 @@ def get_repo_data(directory):
     url, _ = execute_shell_command("git remote get-url --push autobuild || true", directory, silent=True)
     if url == "":
         url, _ = execute_shell_command("git remote get-url --push origin || true", directory, silent=True)
-    return author, maintainer, url
+    return author.strip(), maintainer.strip(), url.strip()
 
 
 def has_diff(repo, file=None):
