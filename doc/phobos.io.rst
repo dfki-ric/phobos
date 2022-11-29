@@ -16,17 +16,9 @@ robot's entities.
 "xmlrobot" and "smurfrobot" define the basic classes for robots in URDF/SDF respectively smurf format; they hold all the
 information models in the respective formats can hold.
 
-Subpackages
------------
 
-.. toctree::
-    :maxdepth: 3
-
-    phobos.io.base
-    phobos.io.xml_factory
-    phobos.io.yaml_reflection
-    phobos.io.smurf_reflection
-
+Submodules
+----------
 
 phobos.io.base module
 `````````````````````
@@ -37,7 +29,7 @@ phobos.io.base module
     :show-inheritance:
 
 phobos.io.xml_factory module
-`````````````````````
+````````````````````````````
 xml_factory depends on data/xml_formats.json. This file defines how XML formats like URDF and SDF are defined, and where
 to obtain the corresponding information.
 
@@ -55,7 +47,7 @@ phobos.io.yaml_reflection module
     :show-inheritance:
 
 phobos.io.smurf_reflection module
-````````````````````````````````
+`````````````````````````````````
 
 .. automodule:: phobos.blender.phobosgui
     :members:

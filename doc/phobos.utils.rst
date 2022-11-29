@@ -1,8 +1,11 @@
 phobos utils module
 -------------------
 
+Submodules
+----------
+
 phobos.utils.commandline_logging module
-`````````````````````
+```````````````````````````````````````
 
 .. automodule:: phobos.utils.commandline_logging
     :members:
@@ -18,7 +21,7 @@ phobos.utils.git module
     :show-inheritance:
 
 phobos.utils.hyrodyn module
-```````````````````````
+```````````````````````````
 
 .. automodule:: phobos.utils.hyrodyn
     :members:
@@ -27,7 +30,7 @@ phobos.utils.hyrodyn module
 
 
 phobos.utils.inertia module
-```````````````````````
+```````````````````````````
 
 .. automodule:: phobos.utils.inertia
     :members:
@@ -35,7 +38,7 @@ phobos.utils.inertia module
     :show-inheritance:
 
 phobos.utils.misc module
-```````````````````````
+````````````````````````
 
 .. automodule:: phobos.utils.misc
     :members:
@@ -43,7 +46,7 @@ phobos.utils.misc module
     :show-inheritance:
 
 phobos.utils.xml module
-`````````````````````
+```````````````````````
 
 .. automodule:: phobos.utils.xml
     :members:
@@ -51,7 +54,7 @@ phobos.utils.xml module
     :show-inheritance:
 
 phobos.utils.transform module
-```````````````````````
+`````````````````````````````
 
 .. automodule:: phobos.utils.transform
     :members:
@@ -59,7 +62,7 @@ phobos.utils.transform module
     :show-inheritance:
 
 phobos.utils.tree module
-```````````````````````
+````````````````````````
 
 .. automodule:: phobos.utils.tree
     :members:

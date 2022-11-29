@@ -6,6 +6,7 @@ phobos comes with several command line utilities for commonly used tasks.
 These can be used by simply calling them via the `phobos` command:
 
 .. code-block:: rst
+
     phobos --help
 
     Usage:

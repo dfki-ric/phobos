@@ -33,23 +33,39 @@ Phobos is structured into some submodules which contain different functionality:
 
 .. toctree::
    :maxdepth: 1
+   :caption: Blender Add-on
 
-   ## Blender Add-on
    phobos.blender <phobos.blender.rst>
    phobos.blender.io <phobos.blender.io.rst>
    phobos.blender.model <phobos.blender.model.rst>
    phobos.blender.operators <phobos.blender.operators.rst>
    phobos.blender.utils <phobos.blender.utils.rst>
-   ## API
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API
+
    phobos.io <phobos.io.rst>
    phobos.core <phobos.core.rst>
    phobos.scenes <phobos.scenes.rst>
-   ### Utils
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Utils
+
    phobos.geometry <phobos.geometry.rst>
    phobos.utils <phobos.utils.rst>
-   ## CI
+
+.. toctree::
+   :maxdepth: 1
+   :caption: CI
+
    phobos.ci <phobos.ci.rst>
-   ## Scripts
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Scripts
+
    phobos.scripts <phobos.scripts.rst>
 
 Indices and tables

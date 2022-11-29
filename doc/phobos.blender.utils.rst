@@ -1,69 +1,69 @@
-phobos.utils package
-====================
+phobos.blender.utils package
+============================
 
 Submodules
 ----------
 
-phobos.utils.blender module
-```````````````````````````
+phobos.blender.utils.blender module
+```````````````````````````````````
 
-.. automodule:: phobos.utils.blender
+.. automodule:: phobos.blender.utils.blender
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.utils.editing module
-```````````````````````````
+phobos.blender.utils.editing module
+```````````````````````````````````
 
-.. automodule:: phobos.utils.editing
+.. automodule:: phobos.blender.utils.editing
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.utils.general module
-```````````````````````````
+phobos.blender.utils.general module
+```````````````````````````````````
 
-.. automodule:: phobos.utils.general
+.. automodule:: phobos.blender.utils.general
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.utils.git module
-```````````````````````
+phobos.blender.utils.git module
+```````````````````````````````
 
-.. automodule:: phobos.utils.git
+.. automodule:: phobos.blender.utils.git
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.utils.io module
-``````````````````````
-
-.. automodule:: phobos.utils.io
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-phobos.utils.naming module
-``````````````````````````
-
-.. automodule:: phobos.utils.naming
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-phobos.utils.selection module
-`````````````````````````````
-
-.. automodule:: phobos.utils.selection
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-phobos.utils.validation module
+phobos.blender.utils.io module
 ``````````````````````````````
 
-.. automodule:: phobos.utils.validation
+.. automodule:: phobos.blender.utils.io
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+phobos.blender.utils.naming module
+``````````````````````````````````
+
+.. automodule:: phobos.blender.utils.naming
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+phobos.blender.utils.selection module
+`````````````````````````````````````
+
+.. automodule:: phobos.blender.utils.selection
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+phobos.blender.utils.validation module
+``````````````````````````````````````
+
+.. automodule:: phobos.blender.utils.validation
     :members:
     :undoc-members:
     :show-inheritance:
@@ -72,7 +72,7 @@ phobos.utils.validation module
 Module contents
 ---------------
 
-.. automodule:: phobos.utils
+.. automodule:: phobos.blender.utils
     :members:
     :undoc-members:
     :show-inheritance:

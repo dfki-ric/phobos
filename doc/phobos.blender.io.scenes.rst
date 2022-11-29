@@ -1,29 +1,29 @@
-phobos.io.scenes package
+phobos.blender.io.scenes package
 ========================
 
 Submodules
 ----------
 
-phobos.io.scenes.mars module
+phobos.blender.io.scenes.mars module
 ````````````````````````````
 
-.. automodule:: phobos.io.scenes.mars
+.. automodule:: phobos.blender.io.scenes.mars
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.scenes.sdfworld module
+phobos.blender.io.scenes.sdfworld module
 ````````````````````````````````
 
-.. automodule:: phobos.io.scenes.sdfworld
+.. automodule:: phobos.blender.io.scenes.sdfworld
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.scenes.smurfs module
+phobos.blender.io.scenes.smurfs module
 ``````````````````````````````
 
-.. automodule:: phobos.io.scenes.smurfs
+.. automodule:: phobos.blender.io.scenes.smurfs
     :members:
     :undoc-members:
     :show-inheritance:
@@ -32,7 +32,7 @@ phobos.io.scenes.smurfs module
 Module contents
 ---------------
 
-.. automodule:: phobos.io.scenes
+.. automodule:: phobos.blender.io.scenes
     :members:
     :undoc-members:
     :show-inheritance:

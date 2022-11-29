@@ -1,13 +1,13 @@
-phobos.io.meshes package
+phobos.blender.io.meshes package
 ========================
 
 Submodules
 ----------
 
-phobos.io.meshes.meshes module
+phobos.blender.io.meshes.meshes module
 ``````````````````````````````
 
-.. automodule:: phobos.io.meshes.meshes
+.. automodule:: phobos.blender.io.meshes.meshes
     :members:
     :undoc-members:
     :show-inheritance:
@@ -16,7 +16,7 @@ phobos.io.meshes.meshes module
 Module contents
 ---------------
 
-.. automodule:: phobos.io.meshes
+.. automodule:: phobos.blender.io.meshes
     :members:
     :undoc-members:
     :show-inheritance:

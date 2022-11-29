@@ -1,53 +1,53 @@
-phobos.operators package
+phobos.blender.operators package
 ========================
 
 Submodules
 ----------
 
-phobos.operators.editing module
-```````````````````````````````
+phobos.blender.operators.editing module
+```````````````````````````````````````
 
-.. automodule:: phobos.operators.editing
+.. automodule:: phobos.blender.operators.editing
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.operators.generic module
-```````````````````````````````
+phobos.blender.operators.generic module
+```````````````````````````````````````
 
-.. automodule:: phobos.operators.generic
+.. automodule:: phobos.blender.operators.generic
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.operators.io module
-``````````````````````````
+phobos.blender.operators.io module
+``````````````````````````````````
 
-.. automodule:: phobos.operators.io
+.. automodule:: phobos.blender.operators.io
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.operators.naming module
-``````````````````````````````
+phobos.blender.operators.naming module
+``````````````````````````````````````
 
-.. automodule:: phobos.operators.naming
+.. automodule:: phobos.blender.operators.naming
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.operators.poses module
-`````````````````````````````
+phobos.blender.operators.poses module
+`````````````````````````````````````
 
-.. automodule:: phobos.operators.poses
+.. automodule:: phobos.blender.operators.poses
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.operators.selection module
-`````````````````````````````````
+phobos.blender.operators.selection module
+`````````````````````````````````````````
 
-.. automodule:: phobos.operators.selection
+.. automodule:: phobos.blender.operators.selection
     :members:
     :undoc-members:
     :show-inheritance:
@@ -56,7 +56,7 @@ phobos.operators.selection module
 Module contents
 ---------------
 
-.. automodule:: phobos.operators
+.. automodule:: phobos.blender.operators
     :members:
     :undoc-members:
     :show-inheritance:

@@ -1,93 +1,93 @@
-phobos.model package
+phobos.blender.model package
 ====================
 
 Submodules
 ----------
 
-phobos.model.controllers module
-```````````````````````````````
+phobos.blender.model.controllers module
+```````````````````````````````````````
 
-.. automodule:: phobos.model.controllers
+.. automodule:: phobos.blender.model.controllers
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.model.geometries module
-``````````````````````````````
+phobos.blender.model.geometries module
+``````````````````````````````````````
 
-.. automodule:: phobos.model.geometries
+.. automodule:: phobos.blender.model.geometries
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.model.inertia module
-```````````````````````````
+phobos.blender.model.inertia module
+```````````````````````````````````
 
-.. automodule:: phobos.model.inertia
+.. automodule:: phobos.blender.model.inertia
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.model.joints module
-``````````````````````````
+phobos.blender.model.joints module
+``````````````````````````````````
 
-.. automodule:: phobos.model.joints
+.. automodule:: phobos.blender.model.joints
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.model.lights module
-``````````````````````````
+phobos.blender.model.lights module
+``````````````````````````````````
 
-.. automodule:: phobos.model.lights
+.. automodule:: phobos.blender.model.lights
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.model.links module
-`````````````````````````
+phobos.blender.model.links module
+`````````````````````````````````
 
-.. automodule:: phobos.model.links
+.. automodule:: phobos.blender.model.links
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.model.materials module
-`````````````````````````````
+phobos.blender.model.materials module
+`````````````````````````````````````
 
-.. automodule:: phobos.model.materials
+.. automodule:: phobos.blender.model.materials
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.model.models module
-``````````````````````````
+phobos.blender.model.models module
+``````````````````````````````````
 
-.. automodule:: phobos.model.models
+.. automodule:: phobos.blender.model.models
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.model.motors module
-``````````````````````````
+phobos.blender.model.motors module
+``````````````````````````````````
 
-.. automodule:: phobos.model.motors
+.. automodule:: phobos.blender.model.motors
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.model.poses module
-`````````````````````````
+phobos.blender.model.poses module
+`````````````````````````````````
 
-.. automodule:: phobos.model.poses
+.. automodule:: phobos.blender.model.poses
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.model.sensors module
-```````````````````````````
+phobos.blender.model.sensors module
+```````````````````````````````````
 
-.. automodule:: phobos.model.sensors
+.. automodule:: phobos.blender.model.sensors
     :members:
     :undoc-members:
     :show-inheritance:
@@ -96,7 +96,7 @@ phobos.model.sensors module
 Module contents
 ---------------
 
-.. automodule:: phobos.model
+.. automodule:: phobos.blender.model
     :members:
     :undoc-members:
     :show-inheritance:

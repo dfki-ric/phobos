@@ -3,18 +3,11 @@ phobos scenes module
 
 In this modules robots are wrapped as entities to arrange them then in scenes or assemblies.
 
-Subpackages
------------
-
-.. toctree::
-    :maxdepth: 3
-
-    phobos.scenes.entity
-    phobos.scenes.assembly
-    phobos.scenes.scene
+Submodules
+----------
 
 phobos.scenes.entity module
-`````````````````````
+```````````````````````````
 
 .. automodule:: phobos.scenes.entity
     :members:
@@ -22,7 +15,7 @@ phobos.scenes.entity module
     :show-inheritance:
 
 phobos.scenes.assembly module
-```````````````````````
+`````````````````````````````
 
 .. automodule:: phobos.scenes.assembly
     :members:
@@ -30,7 +23,7 @@ phobos.scenes.assembly module
     :show-inheritance:
 
 phobos.scenes.scene module
-```````````````````````
+``````````````````````````
 
 .. automodule:: phobos.scenes.scene
     :members:

@@ -1,21 +1,21 @@
-phobos.io.libraries package
+phobos.blender.io.libraries package
 ===========================
 
 Submodules
 ----------
 
-phobos.io.libraries.mechanisms module
+phobos.blender.io.libraries.mechanisms module
 `````````````````````````````````````
 
-.. automodule:: phobos.io.libraries.mechanisms
+.. automodule:: phobos.blender.io.libraries.mechanisms
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.libraries.models module
+phobos.blender.io.libraries.models module
 `````````````````````````````````
 
-.. automodule:: phobos.io.libraries.models
+.. automodule:: phobos.blender.io.libraries.models
     :members:
     :undoc-members:
     :show-inheritance:
@@ -24,7 +24,7 @@ phobos.io.libraries.models module
 Module contents
 ---------------
 
-.. automodule:: phobos.io.libraries
+.. automodule:: phobos.blender.io.libraries
     :members:
     :undoc-members:
     :show-inheritance:

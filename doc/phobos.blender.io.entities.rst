@@ -4,90 +4,90 @@ phobos.io.entities package
 Submodules
 ----------
 
-phobos.io.entities.entities module
+phobos.blender.io.entities.entities module
 ``````````````````````````````````
 
-.. automodule:: phobos.io.entities.entities
+.. automodule:: phobos.blender.io.entities.entities
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.entities.heightmap module
+phobos.blender.io.entities.heightmap module
 ```````````````````````````````````
 
-.. automodule:: phobos.io.entities.heightmap
+.. automodule:: phobos.blender.io.entities.heightmap
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.entities.light module
+phobos.blender.io.entities.light module
 ```````````````````````````````
 
-.. automodule:: phobos.io.entities.light
+.. automodule:: phobos.blender.io.entities.light
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.entities.primitive module
+phobos.blender.io.entities.primitive module
 ```````````````````````````````````
 
-.. automodule:: phobos.io.entities.primitive
+.. automodule:: phobos.blender.io.entities.primitive
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.entities.sdf module
+phobos.blender.io.entities.sdf module
 `````````````````````````````
 
-.. automodule:: phobos.io.entities.sdf
+.. automodule:: phobos.blender.io.entities.sdf
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.entities.smurf module
+phobos.blender.io.entities.smurf module
 ```````````````````````````````
 
-.. automodule:: phobos.io.entities.smurf
+.. automodule:: phobos.blender.io.entities.smurf
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.entities.srdf module
+phobos.blender.io.entities.srdf module
 ``````````````````````````````
 
-.. automodule:: phobos.io.entities.srdf
+.. automodule:: phobos.blender.io.entities.srdf
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.entities.submechanisms module
+phobos.blender.io.entities.submechanisms module
 ```````````````````````````````````````
 
-.. automodule:: phobos.io.entities.submechanisms
+.. automodule:: phobos.blender.io.entities.submechanisms
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.entities.thumbnail module
+phobos.blender.io.entities.thumbnail module
 ```````````````````````````````````
 
-.. automodule:: phobos.io.entities.thumbnail
+.. automodule:: phobos.blender.io.entities.thumbnail
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.entities.urdf module
+phobos.blender.io.entities.urdf module
 ``````````````````````````````
 
-.. automodule:: phobos.io.entities.urdf
+.. automodule:: phobos.blender.io.entities.urdf
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.io.entities.yaml module
+phobos.blender.io.entities.yaml module
 ``````````````````````````````
 
-.. automodule:: phobos.io.entities.yaml
+.. automodule:: phobos.blender.io.entities.yaml
     :members:
     :undoc-members:
     :show-inheritance:
@@ -96,7 +96,7 @@ phobos.io.entities.yaml module
 Module contents
 ---------------
 
-.. automodule:: phobos.io.entities
+.. automodule:: phobos.blender.io.entities
     :members:
     :undoc-members:
     :show-inheritance:

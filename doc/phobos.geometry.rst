@@ -3,18 +3,11 @@ phobos geometry module
 
 This module provides all utilities that are related to mesh handling
 
-Subpackages
------------
-
-.. toctree::
-    :maxdepth: 3
-
-    phobos.geometry.geometry
-    phobos.geometry.io
-    phobos.geometry.robot
+Submodules
+----------
 
 phobos.geometry.geometry module
-`````````````````````
+```````````````````````````````
 
 .. automodule:: phobos.geometry.geometry
     :members:
@@ -22,7 +15,7 @@ phobos.geometry.geometry module
     :show-inheritance:
 
 phobos.geometry.io module
-```````````````````````
+`````````````````````````
 
 .. automodule:: phobos.geometry.io
     :members:
@@ -30,7 +23,7 @@ phobos.geometry.io module
     :show-inheritance:
 
 phobos.geometry.robot module
-```````````````````````
+````````````````````````````
 Tools for visual and collision editing.
 
 .. automodule:: phobos.geometry.robot

@@ -7,15 +7,15 @@ Subpackages
 .. toctree::
     :maxdepth: 3
 
-    phobos.io.entities
-    phobos.io.libraries
-    phobos.io.meshes
-    phobos.io.scenes
+    phobos.blender.io.entities
+    phobos.blender.io.libraries
+    phobos.blender.io.meshes
+    phobos.blender.io.scenes
 
 Module contents
 ---------------
 
-.. automodule:: phobos.io
+.. automodule:: phobos.blender.io
     :members:
     :undoc-members:
     :show-inheritance:
