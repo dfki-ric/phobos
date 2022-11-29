@@ -1,4 +1,4 @@
-phobos package
+phobos blender package
 ==============
 
 Subpackages
@@ -7,10 +7,10 @@ Subpackages
 .. toctree::
     :maxdepth: 3
 
-    phobos.io
-    phobos.model
-    phobos.operators
-    phobos.utils
+    phobos.blender.io
+    phobos.blender.model
+    phobos.blender.operators
+    phobos.blender.utils
 
 Submodules
 ----------
@@ -18,7 +18,7 @@ Submodules
 phobos.defs module
 ``````````````````
 
-.. automodule:: phobos.defs
+.. automodule:: phobos.blender.defs
     :members:
     :undoc-members:
     :show-inheritance:
@@ -26,7 +26,7 @@ phobos.defs module
 phobos.display module
 `````````````````````
 
-.. automodule:: phobos.display
+.. automodule:: phobos.blender.display
     :members:
     :undoc-members:
     :show-inheritance:
@@ -34,7 +34,7 @@ phobos.display module
 phobos.phobosgui module
 ```````````````````````
 
-.. automodule:: phobos.phobosgui
+.. automodule:: phobos.blender.phobosgui
     :members:
     :undoc-members:
     :show-inheritance:
@@ -42,7 +42,7 @@ phobos.phobosgui module
 phobos.phoboslog module
 ```````````````````````
 
-.. automodule:: phobos.phoboslog
+.. automodule:: phobos.blender.phoboslog
     :members:
     :undoc-members:
     :show-inheritance:
@@ -50,7 +50,7 @@ phobos.phoboslog module
 phobos.phobossystem module
 ``````````````````````````
 
-.. automodule:: phobos.phobossystem
+.. automodule:: phobos.blender.phobossystem
     :members:
     :undoc-members:
     :show-inheritance:
@@ -58,7 +58,7 @@ phobos.phobossystem module
 Module contents
 ---------------
 
-.. automodule:: phobos
+.. automodule:: phobos.blender
     :members:
     :undoc-members:
     :show-inheritance:
