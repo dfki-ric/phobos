@@ -1264,8 +1264,9 @@ class PhobosExportPanel(bpy.types.Panel):
             box = layout.box()
             box.label(text='SDF export')
             box.prop(ioUtils.getExpSettings(), 'export_sdf_mesh_type')
-            box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
-            box.prop(ioUtils.getExpSettings(), 'export_sdf_to_gazebo_models', icon='EXPORT')
+            # doesn't work properly therefore excluded
+            # box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
+            # box.prop(ioUtils.getExpSettings(), 'export_sdf_to_gazebo_models', icon='EXPORT')
 
         # TODO delete me?
         # c2.prop(expsets, "exportCustomData", text="Export custom data")
@@ -1280,16 +1281,16 @@ class PhobosExportPanel(bpy.types.Panel):
 
         layout.separator()
         splitlayout = layout.split()
-        c1 = splitlayout.column()
+        #c1 = splitlayout.column()
         c2 = splitlayout.column()
-        c1.label(text="Export Configuration")
-        c1.operator('phobos.move_to_scene', text='Move to configuration', icon='SCREEN_BACK')
-        c1.operator(
-            'phobos.safely_remove_objects_from_scene', text='Remove from configuration', icon='X'
-        )
+        #c1.label(text="Export Configuration") # doesn't work properly therefore excluded
+        #c1.operator('phobos.move_to_scene', text='Move to configuration', icon='SCREEN_BACK')
+        #c1.operator(
+        #    'phobos.safely_remove_objects_from_scene', text='Remove from configuration', icon='X'
+        #)
         c2.label(text="Export")
         c2.operator("phobos.export_model", icon="EXPORT")
-        c2.operator("phobos.export_scene", icon="WORLD_DATA")
+        #c2.operator("phobos.export_scene", icon="WORLD_DATA") # doesn't work properly therefore excluded
 
     def check(self, context):
         """
