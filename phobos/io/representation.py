@@ -110,8 +110,8 @@ class Pose(Representation, SmurfBase):
 
     @property
     def vec(self):
-        xyz = self.xyz if self.xyz is not None else np.array([0.0, 0.0, 0.0])
-        rpy = self.rpy if self.rpy is not None else np.array([0.0, 0.0, 0.0])
+        xyz = np.array(self.xyz) if self.xyz is not None else np.array([0.0, 0.0, 0.0])
+        rpy = np.array(self.rpy) if self.rpy is not None else np.array([0.0, 0.0, 0.0])
         return xyz.tolist() + rpy.tolist()
 
     @staticmethod
@@ -608,6 +608,9 @@ class JointDynamics(Representation):
         self.spring_stiffness = spring_stiffness
         self.spring_reference = spring_reference
 
+    def stringable(self):
+        return False
+
 
 class JointLimit(Representation):
     _class_variables = ["effort", "velocity", "lower", "upper"]
@@ -618,6 +621,9 @@ class JointLimit(Representation):
         self.velocity = velocity
         self.lower = lower
         self.upper = upper
+
+    def stringable(self):
+        return False
 
 
 class JointMimic(Representation, SmurfBase):
@@ -657,10 +663,7 @@ class Joint(Representation, SmurfBase):
                  axis=None, origin=None, limit=None,
                  dynamics=None, safety_controller=None, calibration=None,
                  mimic=None, motor=None,
-                 noDataPackage=False, reducedDataPackage=False,
-                 damping_const_constraint_axis1=None, springStiffness=None,
-                 spring_const_constraint_axis1=None, cut_joint=False, constraint_axes=None, **kwargs):
-        SmurfBase.__init__(self, **kwargs)
+                 noDataPackage=False, reducedDataPackage=False, cut_joint=False, constraint_axes=None, **kwargs):
         self.name = name
         self.returns = ['name']
         self.parent = parent if type(parent) == str else parent.name
@@ -686,16 +689,8 @@ class Joint(Representation, SmurfBase):
             self.returns += ["reducedDataPackage"]
         # dynamics
         self.dynamics = _singular(dynamics)
-        if damping_const_constraint_axis1 is not None:
-            self.damping = damping_const_constraint_axis1
-            self.returns += ["damping_const_constraint_axis1"]
-        if springStiffness is not None:
-            self.springStiffness = springStiffness
-            self.returns += ["springStiffness"]
-        elif spring_const_constraint_axis1 is not None:
-            self.spring_const_constraint_axis1 = spring_const_constraint_axis1
-            self.returns += ["spring_const_constraint_axis1"]
-        self.excludes += ["limit", "mimic", "axis"]
+        SmurfBase.__init__(self, **kwargs)
+        self.excludes += ["limit", "mimic", "axis", "dynamics"]
 
     def check_valid(self):
         return (self.joint_type in self.TYPES, "Invalid joint type: {}".format(self.joint_type) and  # noqa
@@ -736,6 +731,8 @@ class Joint(Representation, SmurfBase):
 
     @springStiffness.setter
     def springStiffness(self, value):
+        if value is None:
+            return
         if self.dynamics is None:
             self.dynamics = JointDynamics(spring_stiffness=value)
         else:
@@ -755,6 +752,8 @@ class Joint(Representation, SmurfBase):
 
     @damping.setter
     def damping(self, value):
+        if value is None:
+            return
         if self.dynamics is None:
             self.dynamics = JointDynamics(damping=value)
         else:
@@ -774,6 +773,8 @@ class Joint(Representation, SmurfBase):
 
     @friction.setter
     def friction(self, value):
+        if value is None:
+            return
         if self.dynamics is None:
             self.dynamics = JointDynamics(friction=value)
         else:

@@ -36,7 +36,7 @@ bl_info = {
     "category": "Development",
 }
 
-# todo fill this automatically
+# [TODO v2.1.0] fill this automatically
 requirements = {
     "yaml": "pyyaml",
     "numpy": "numpy",
@@ -200,7 +200,7 @@ def unregister():
     """This function unregisters all modules in Blender."""
     print("\n" + "-" * 100)
     print("Unregistering Phobos...")
-    # TODO delete all imported modules to resolve reregistration conflicts
+    # [TODO v2.1.0] delete all imported modules to resolve reregistration conflicts
     from . import blender
     blender.phobosgui.unregister()
 

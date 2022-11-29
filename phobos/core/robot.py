@@ -236,6 +236,9 @@ class Robot(SMURFRobot):
                 for k, v in values.items():  # [TODO pre_v2.0.0] this doesn't work, it seems phobos input dictionary is differently handled than the output dict
                     if k.startswith("mimic_"):
                         mimic_dict[k[len("mimic_"):]] = v
+
+                if "$dynamics" in values:
+                    values["dynamics"] = values.pop("$dynamics")
                 cli_joints.append(representation.Joint(
                     name=values['name'],
                     parent=values['parent'],
@@ -244,10 +247,11 @@ class Robot(SMURFRobot):
                     axis=values.get('axis'),
                     origin=representation.Pose.from_matrix(np.array(values['pose']['rawmatrix'])),
                     limit=cli_limit,
-                    dynamics=None,
+                    springStiffness=values["dynamics"]["spring_const_constraint_axis1"] if "dynamics" in values else None,
+                    damping=values["dynamics"]["damping_const_constraint_axis1"] if "dynamics" in values else None,
                     safety_controller=None,
                     calibration=None,
-                    mimic=representation.JointMimic(**mimic_dict) if len(mimic_dict) > 0 else None
+                    mimic=representation.JointMimic(**mimic_dict) if len(mimic_dict) > 0 else None,
                 ))
 
             cli_links = []
@@ -525,6 +529,7 @@ class Robot(SMURFRobot):
                      export_joint_limits=True, export_submodels=True, formats=["urdf"], filename=None, float_fmt_dict=None):
         """ Export self and all annotations inside a given folder with structure
         """
+        assert len(formats) > 0
         # Convert to absolute path
         if outputfile is not None:
             assert outputdir is None
@@ -543,6 +548,7 @@ class Robot(SMURFRobot):
                 os.makedirs(submech_dir)
 
         # First, export the urdf
+        # [TODO pre_v2.0.0] allow for sdf here as well
         robotfile = os.path.join(outputdir, "urdf/{}.urdf".format(self.name))
         if not os.path.exists(os.path.dirname(robotfile)):
             os.mkdir(os.path.dirname(robotfile))

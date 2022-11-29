@@ -18,7 +18,6 @@ from phobos.blender import defs
 from phobos.blender import display
 from phobos.blender.phoboslog import log
 
-from phobos.blender.io.entities import entity_types
 from phobos.geometry.io import mesh_types
 from phobos.blender.io.scenes import scene_types
 
@@ -26,6 +25,8 @@ from phobos.blender.utils import selection as sUtils
 from phobos.blender.utils import naming as nUtils
 from phobos.blender.utils import blender as bUtils
 from phobos.core import Robot
+
+from phobos.defs import EXPORT_TYPES, IMPORT_TYPES
 
 indent = '  '
 xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
@@ -222,20 +223,12 @@ def getOutputMeshpath(path, meshtype=None, pathType="relative"):
 
 def getEntityTypesForExport():
     """Returns list of entity types available for export"""
-    return [
-        typename
-        for typename in sorted(entity_types)
-        if 'export' in entity_types[typename] and 'extensions' in entity_types[typename]
-    ]
+    return EXPORT_TYPES
 
 
 def getEntityTypesForImport():
     """Returns list of entity types available for import"""
-    return [
-        typename
-        for typename in sorted(entity_types)
-        if 'import' in entity_types[typename] and 'extensions' in entity_types[typename]
-    ]
+    return IMPORT_TYPES
 
 
 def getSceneTypesForExport():
@@ -568,10 +561,10 @@ def exportModel(model, exportpath='.', entitytypes=None):
     }
     if "smurf" in entitytypes:
         robot.export_smurf(**export_args)
-    elif len(export_args["xml_formats"]) > 0:
+    elif len(export_args["formats"]) > 0:
         robot.export_xml_with_meshes(**export_args)
-
-
+    else:
+        raise ValueError(f"Can't export for given entitytypes: {entitytypes}")
 
 
 def exportScene(

@@ -35,11 +35,13 @@ import phobos.blender.utils.io as ioUtils
 import phobos.blender.utils.blender as bUtils
 import phobos.blender.utils.naming as nUtils
 from phobos.blender.utils.io import securepath
-import phobos.blender.io.entities as entity_io
 from phobos.blender.io.entities import entity_types
 from phobos.blender.io.entities.entities import deriveGenericEntity
 
+from phobos.defs import IMPORT_TYPES
 
+
+# [TODO pre_v2.0.0] let this use the phobos API as well
 class ExportSceneOperator(Operator):
     """Export the selected model(s) in a scene"""
 
@@ -279,7 +281,7 @@ class ImportModelOperator(bpy.types.Operator):
         """
         from phobos.core.robot import Robot
         suffix = self.filepath.split(".")[-1]
-        if suffix in entity_io.entity_types:
+        if suffix.lower() in IMPORT_TYPES:
             log("Importing " + self.filepath + ' as ' + suffix, "INFO")
             robot = Robot(inputfile=self.filepath)
             model = robot.get_blender_model_dictionary()

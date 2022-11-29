@@ -76,4 +76,5 @@ except ImportError:
     print("YAML not available (backwards compatibility).")
 
 MESH_TYPES = ["dae", "stl", "obj", "mars_obj", "bobj"]
-ENTITY_TYPES = ["smurf", "urdf", "sdf", "joint_limits", "pdf"]
+EXPORT_TYPES = ["smurf", "urdf", "sdf", "joint_limits", "pdf"]
+IMPORT_TYPES = ["smurf", "urdf", "sdf"]

@@ -1222,7 +1222,7 @@ class PhobosExportPanel(bpy.types.Panel):
 
         cmodel = inlayout.column(align=True)
         cmodel.label(text="Models")
-        for entitytype in phobos_defs.ENTITY_TYPES:
+        for entitytype in phobos_defs.EXPORT_TYPES:
             cmodel.prop(bpy.context.scene, "export_entity_"+entitytype)
 
         cmesh = inlayout.column(align=True)
@@ -1564,7 +1564,7 @@ def register():
         typename = "export_mesh_" + meshtype
         setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=False))
 
-    for entitytype in phobos_defs.ENTITY_TYPES:
+    for entitytype in phobos_defs.EXPORT_TYPES:
         typename = "export_entity_" + entitytype
         setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=False))
 
