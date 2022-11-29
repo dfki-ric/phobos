@@ -1,4 +1,4 @@
-from .urdf import generate_kccd_optimizer_ready_collision, find_zero_pose_collisions, join_collisions, \
+from .robot import generate_kccd_optimizer_ready_collision, find_zero_pose_collisions, join_collisions, \
     replace_collisions, replace_collision, reduce_mesh_collision, remove_collision, replace_visuals, replace_visual, \
     remove_visual
 from .geometry import round_vector, get_vertex_id, create_box, create_sphere, create_cylinder, create_convex_hull, \
