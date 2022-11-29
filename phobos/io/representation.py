@@ -158,16 +158,16 @@ class Material(Representation, SmurfBase):
         self.excludes += ["diffuse", "ambient", "specular", "emissive", "original_name", "users"]
 
     def check_valid(self):
-        # TODO REVIEW add other colors here
+        # [TODO pre_v2.0.0] REVIEW add other colors here
         if self.diffuse is None and self.texture is None:
             raise Exception("Material has neither a color nor texture.")
 
     def equivalent(self, other):
-        # TODO REVIEW add other colors here
+        # [TODO pre_v2.0.0] REVIEW add other colors here
         return other.texture == self.texture and other.diffuse == self.diffuse
 
     def is_delegate(self):
-        # TODO REVIEW add other colors here
+        # [TODO pre_v2.0.0] REVIEW add other colors here
         return self.diffuse is None and self.texture is None
 
     @property

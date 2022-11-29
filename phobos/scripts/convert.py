@@ -26,7 +26,7 @@ def main(args):
                                                       'if the output_file has no ending like sdf, urdf or pdf and '
                                                       'is a (non-existing) directory SMURF will be exported.',
                         action="store", default=None)
-    parser.add_argument('-c', '--copy-meshes', help='Copies the meshes', action='store_true', default=False)  # Todo
+    parser.add_argument('-c', '--copy-meshes', help='Copies the meshes', action='store_true', default=False)  # [TODO pre_v2.0.0]
     parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                         default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)

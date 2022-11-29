@@ -112,7 +112,7 @@ class HyrodynAnnotation(SmurfBase):
         joints = self.get_joints()
         out = all([robot.get_joint(j) is not None for j in joints])
         # (not done as this is computationally expensive) check if the joints are in a correct order
-        # ToDO check if all fixed joints in the area of this submechanism are included
+        # [TODO v2.1.0] check if all fixed joints in the area of this submechanism are included
         return out
 
     def get_joints(self):

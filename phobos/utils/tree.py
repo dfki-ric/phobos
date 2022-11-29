@@ -61,7 +61,7 @@ def find_leaves(input_model, input_spanningtree):
     return leaves
 
 
-def find_close_ancestor_links(robot, linkname):  # Todo find also siblings?
+def find_close_ancestor_links(robot, linkname):
     """
     Returns list of ancestors for the given linkname, that are only a rotational transformation apart.
     This is used to exclude collision checking for those links.

@@ -142,10 +142,8 @@ class CombinedModel(BaseModel):
         if "mirror" in self.join.keys():
             combined_model.mirror_model(
                 mirror_plane=self.join["mirror"]["plane"] if "plane" in self.join["mirror"].keys() else [0, 1, 0],
-                maintain_order=self.join["mirror"]["maintain_order"] if "maintain_order" in self.join[
-                    "mirror"].keys() else [0, 2, 1],
-                exclude_meshes=self.join["mirror"]["exclude_meshes"] if "exclude_meshes" in self.join[
-                    "mirror"].keys() else [],
+                maintain_order=self.join["mirror"]["flip_axis"] if "flip_axis" in self.join["mirror"].keys() else 1,
+                exclude_meshes=self.join["mirror"]["exclude_meshes"] if "exclude_meshes" in self.join["mirror"].keys() else [],
                 target_urdf=os.path.dirname(self.basefile)
             )
 
@@ -217,10 +215,8 @@ class CombinedModel(BaseModel):
                 if "mirror" in child.keys():
                     att_model.mirror_model(
                         mirror_plane=child["mirror"]["plane"] if "plane" in child["mirror"].keys() else [0, 1, 0],
-                        maintain_order=child["mirror"]["maintain_order"] if "maintain_order" in child[
-                            "mirror"].keys() else [0, 2, 1],
-                        exclude_meshes=child["mirror"]["exclude_meshes"] if "exclude_meshes" in child[
-                            "mirror"].keys() else [],
+                        maintain_order=child["mirror"]["flip_axis"] if "flip_axis" in child["mirror"].keys() else 1,
+                        exclude_meshes=child["mirror"]["exclude_meshes"] if "exclude_meshes" in child["mirror"].keys() else [],
                         target_urdf=combined_model.xmlfile
                     )
 

@@ -727,7 +727,7 @@ class TestingPipeline(yaml.YAMLObject):
         return success
 
 
-# Todo use inheritance to remove redundant code
+# [TODO v2.1.0] use inheritance to remove redundant code
 class XTypePipeline(yaml.YAMLObject):
     def __init__(self, configfile, processed_model_exists, only_create=False):
         self.processing_failed = {}

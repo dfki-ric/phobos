@@ -137,7 +137,7 @@ class Robot(SMURFRobot):
             if joint.mimic is not None:
                 for k, v in joint.mimic.to_yaml().items():
                     model["joints"][joint.name]["mimic_"+k] = v
-            # Todo dynamics, etc.
+            # [TODO pre_v2.0.0] dynamics, etc.
             model["links"][joint.child]["pose"] = {'translation': joint.origin.xyz,
                                                    'rotation_euler': joint.origin.rpy,
                                                   }
@@ -233,7 +233,7 @@ class Robot(SMURFRobot):
                 else:
                     cli_limit = None
                 mimic_dict = {}
-                for k, v in values.items():  # TODO this doesn't work, it seems phobos input dictionary is differently handled than the output dict
+                for k, v in values.items():  # [TODO pre_v2.0.0] this doesn't work, it seems phobos input dictionary is differently handled than the output dict
                     if k.startswith("mimic_"):
                         mimic_dict[k[len("mimic_"):]] = v
                 cli_joints.append(representation.Joint(
@@ -305,7 +305,7 @@ class Robot(SMURFRobot):
 
             if "sensors" in blender_model:
                 for key, values in blender_model['sensors'].items():
-                    # TODO "type" Abfragen an die verschiedenen User-Präferenzen angleichen
+                    # [TODO pre_v2.0.0] "type" Abfragen an die verschiedenen User-Präferenzen angleichen
                     if values.get('id') is not None:
                         values['targets'] = [
                             x for x in values['id'] if (
@@ -327,7 +327,7 @@ class Robot(SMURFRobot):
                         new_robot.add_sensor(getattr(sensor_representations, values["type"])(**values))
 
             if "motors" in blender_model:
-                motors = blender_model["motors"]  # TODO Teste ob Hennings umstrukturierung funktioniert
+                motors = blender_model["motors"]
                 for key, value in motors.items():
                     name = value.pop('name')
                     joint = value.pop('joint')
@@ -515,7 +515,7 @@ class Robot(SMURFRobot):
     def export_xml_with_meshes(self, output_dir=None, export_visuals=True, export_collisions=True,
                    create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
                    export_joint_limits=True, export_submodels=True, formats=["urdf"], filename=None, float_fmt_dict=None):
-        # ToDo export meshes
+        # [TODO pre_v2.0.0] export meshes
         self.export_xml(output_dir=output_dir, export_visuals=export_visuals, export_collisions=export_collisions,
                    create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes, ros_pkg_name=ros_pkg_name,
                    export_joint_limits=export_joint_limits, export_submodels=export_submodels, formats=formats, filename=filename, float_fmt_dict=float_fmt_dict)
@@ -769,7 +769,7 @@ class Robot(SMURFRobot):
                 # generate cover volume
                 distance = len(
                     kccd_robot.get_chain(self.get_root(), temp["link"], links=False, joints=True, fixed=False))
-                n_points = int((25 - 3) * 0.4 ** (distance / 3) + 3)  # Todo elaborate this
+                n_points = int((25 - 3) * 0.4 ** (distance / 3) + 3)  # [TODO v2.1.0] elaborate this
                 if temp["link"] in edit_collisions.keys():
                     if "n_points" in edit_collisions[temp["link"]].keys():
                         n_points = edit_collisions[temp["link"]]["n_points"]
@@ -926,7 +926,7 @@ class Robot(SMURFRobot):
         printed_joints = []
         if hasattr(self, "submechanisms") and self.submechanisms is not None and len(self.submechanisms) > 0:
             for i, sm in enumerate(self.submechanisms):
-                # ToDo pretty setting of the submechanism legend
+                # [TODO later] pretty setting of the submechanism legend
                 out += f"node [shape=box, color={SUBMECH_COLORS[i%len(SUBMECH_COLORS)]}, fontcolor=black];\n"
                 out += f"\"submech_{str(sm)}\" [label="
                 out += f"\"Submechanism\\ntype: {sm.type} "
@@ -1178,7 +1178,6 @@ class Robot(SMURFRobot):
         :param definition: definition of a submodel
         :return: the submodel
         """
-        # ToDo link_obj has to be reviewed
         assert name is not None or definition is not None
         if name is not None and definition is None:
             definition = self._submodels[name]
@@ -1323,7 +1322,7 @@ class Robot(SMURFRobot):
             )
         return new_robot
 
-    # # TODO this method is not fully implemented
+    # # [TODO later] this method is not fully implemented
     # def difference(self, other, name=None, submodel=True, useother=False, exclude=None):
     #     """
     #     Compute the difference between two models and returns a new robot model with this as the spanning
@@ -1348,7 +1347,7 @@ class Robot(SMURFRobot):
         Correct all inertials of the robot.
         """
         for link in self.links:
-            # Todo check if the I is basically zero and then recreate the inertial using the collision
+            # [TODO pre_v2.0.0] check if the I is basically zero and then recreate the inertial using the collision
             if link.inertial:
                 M = self.get_inertial(link.name).to_mass_matrix()
                 origin = link.inertial.origin
@@ -2115,7 +2114,7 @@ class Robot(SMURFRobot):
             raise Exception("Provide valid joint type.")
 
         # Check for naming and rename if necessary
-        # Todo attach the rest
+        # [TODO pre_v2.0.0] attach the rest
         plink = set([str(link) for link in self.links])
         pjoints = set([str(j) for j in self.joints])
         pcollisions = set([str(c) for c in self.get_all_collisions()])
@@ -2267,7 +2266,7 @@ class Robot(SMURFRobot):
         self.add_aggregate('exoskeleton', other.exoskeletons)
         self.add_aggregate('interface', other.interfaces)
 
-        # Todo rework poses
+        # [TODO pre_v2.0.0] check on poses
         # for cPose in other.poses:
         #     self.add_aggregate('pose', cPose)
 
@@ -2343,12 +2342,12 @@ class Robot(SMURFRobot):
             self.add_motor(motor)
 
     # has to be overridden in smurf and hyrodyn?
-    def mirror_model(self, mirror_plane=None, maintain_order=None, exclude_meshes=None, name_replacements=None,
+    def mirror_model(self, mirror_plane=None, flip_axis=1, exclude_meshes=None, name_replacements=None,
                      target_urdf=None, target_smurf=None, only_return=False):
         """
         Mirrors the robot model.
         :param mirror_plane: The normal of the mirror plane. Default y-plane
-        :param maintain_order: The priority in which the frame axes will be preferably conserved
+        :param flip_axis: The axis which will be flipped for maintaining a right handed coordinate frame while mirroring (default y-axis)
         :param exclude_meshes: List of meshes that will not be mirrored. Use this for already symmetric meshes
         :param name_replacements: dict, of name replacements for all names
         :param only_return: if set to true this instance remains untouched and the mirrored model will only be returned
@@ -2360,8 +2359,6 @@ class Robot(SMURFRobot):
             name_replacements = {}
         if exclude_meshes is None:
             exclude_meshes = []
-        if maintain_order is None: # Todo exchange to give flip_axis=y directly
-            maintain_order = [0, 2, 1]
         if mirror_plane is None:
             mirror_plane = [0, 1, 0]
         robot = type(self)(self.name)
@@ -2440,7 +2437,6 @@ class Robot(SMURFRobot):
                 T_flip = np.eye(4)
 
                 # All frames are mirrored using least-maintain-axis as flip axis
-                flip_axis = maintain_order[-1]
                 T_flip[flip_axis, flip_axis] *= -1
                 # now we transform the local coordinate system using t_flip to make it right handed
                 new_root_to_joint = T_R.dot(T_link.dot(joint_.origin.to_matrix().dot(T_flip)))

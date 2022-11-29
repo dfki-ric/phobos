@@ -132,7 +132,7 @@ class ModelTest(object):
             joint_names = [joint.name for joint in self.new.robot.joints]
             for joint_name in self.new.remove_joints:
                 success &= joint_name not in joint_names
-        # TODO check the others
+        # [TODO later] check the others
         # check if meshes are there
         for link in self.new.robot.links:
             for mesh in [c.geometry.filename for c in link.collisions if hasattr(c.geometry, "filename")] +\
