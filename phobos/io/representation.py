@@ -658,7 +658,7 @@ class Joint(Representation, SmurfBase):
                  dynamics=None, safety_controller=None, calibration=None,
                  mimic=None, motor=None,
                  noDataPackage=False, reducedDataPackage=False,
-                 damping_const_constraint_axis1=None, springDamping=None, springStiffness=None,
+                 damping_const_constraint_axis1=None, springStiffness=None,
                  spring_const_constraint_axis1=None, cut_joint=False, constraint_axes=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
         self.name = name
@@ -687,15 +687,12 @@ class Joint(Representation, SmurfBase):
         # dynamics
         self.dynamics = _singular(dynamics)
         if damping_const_constraint_axis1 is not None:
-            self.damping_const_constraint_axis1 = damping_const_constraint_axis1
+            self.damping = damping_const_constraint_axis1
             self.returns += ["damping_const_constraint_axis1"]
-        if springDamping is not None:
-            self.springDamping = springDamping
-            self.returns += ["springDamping"]
-        if springStiffness is not None:  # todo provide this to JointDynamics
+        if springStiffness is not None:
             self.springStiffness = springStiffness
             self.returns += ["springStiffness"]
-        if spring_const_constraint_axis1 is not None:  # todo provide this to JointDynamics (spring_reference)
+        elif spring_const_constraint_axis1 is not None:
             self.spring_const_constraint_axis1 = spring_const_constraint_axis1
             self.returns += ["spring_const_constraint_axis1"]
         self.excludes += ["limit", "mimic", "axis"]
@@ -743,6 +740,44 @@ class Joint(Representation, SmurfBase):
             self.dynamics = JointDynamics(spring_stiffness=value)
         else:
             self.dynamics.spring_stiffness = value
+
+    @property  # alias of springStiffness
+    def spring_const_constraint_axis1(self):
+        return self.springStiffness
+
+    @spring_const_constraint_axis1.setter  # alias of springStiffness
+    def spring_const_constraint_axis1(self, value):
+        self.springStiffness = value
+
+    @property
+    def damping(self):
+        return self.dynamics.damping if self.dynamics is not None else None
+
+    @damping.setter
+    def damping(self, value):
+        if self.dynamics is None:
+            self.dynamics = JointDynamics(damping=value)
+        else:
+            self.dynamics.damping = value
+
+    @property  # alias of damping
+    def damping_const_constraint_axis1(self):
+        return self.damping
+
+    @damping_const_constraint_axis1.setter  # alias of damping
+    def damping_const_constraint_axis1(self, value):
+        self.damping = value
+
+    @property
+    def friction(self):
+        return self.dynamics.friction if self.dynamics is not None else None
+
+    @friction.setter
+    def friction(self, value):
+        if self.dynamics is None:
+            self.dynamics = JointDynamics(friction=value)
+        else:
+            self.dynamics.friction = value
 
     @property
     def joint_dependencies(self):

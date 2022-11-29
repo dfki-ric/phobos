@@ -115,7 +115,7 @@ def main(args):
     _author, _maintainer, _default["repository"] = get_repo_data(args.model_directory)
     if _default["repository"].startswith("git@"):
         _default["repository"] = _default["repository"].replace(":", "/").replace("//", "/").replace("git@", "https://")
-    _default["designedBy"] = ", ".join(set([_author, _maintainer])).replace("[", "").replace("]", "")
+    _default["designedBy"] = ", ".join({_author, _maintainer}).replace("[", "").replace("]", "")
     _default["designedBy"] = _default["designedBy"] if len(_default["designedBy"]) > 0 or _default["designedBy"] is not None else cm.designedBy
 
     # run interactive mode

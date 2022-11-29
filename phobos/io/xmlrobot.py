@@ -615,7 +615,7 @@ class XMLRobot(Representation):
         Get the parent of targettype for the given link name.
         :param name: the name of the link to get the parent for
         :param targettype: the next parent joint or the next parent link (default: 'joint')
-        :return: List with one element (todo)
+        :return: the parent link or joint
         """
         if type(name) in [list, tuple, set]:
             return [self.get_parent(n, targettype=targettype) for n in name]

@@ -351,7 +351,6 @@ class SMURFRobot(XMLRobot):
             jointnames_spanningtree: ["BodyPitch", "BodyRoll", "Body_B11", "Body_B12", "Body_Act1",
                                       "Body_B21", "Body_B22", "Body_Act2"]
             jointnames_active: ["Body_Act1", "Body_Act2"]
-        ToDo: check internal and close fixed joints
         """
         assert isinstance(definition, dict)
         # Check if the information given is enough
