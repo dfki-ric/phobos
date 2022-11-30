@@ -126,10 +126,10 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
 
     filepath = xml_utils.read_urdf_filename(filepath, urdf_path)
 
-    do_export = True
-    if os.path.isfile(filepath):
+    do_export = mesh is not None
+    if do_export and os.path.isfile(filepath):
         existing_mesh = import_mesh(filepath)
-        if identical(mesh, existing_mesh):
+        if existing_mesh is not None and identical(mesh, existing_mesh):
             #print("NOTE: Skipping export of", filepath, "as the mesh file already exists and is identical")
             do_export = False
 

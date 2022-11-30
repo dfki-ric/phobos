@@ -221,8 +221,10 @@ def reduce_mesh(mesh, factor):
 
 
 def identical(mesh_a, mesh_b):
+    if mesh_a == mesh_b:
+        return True
+    assert mesh_a is not None and mesh_b is not None
     return (
-        mesh_a == mesh_b or
         all(trimesh.comparison.identifier_simple(mesh_a) == trimesh.comparison.identifier_simple(mesh_b)) or
         ((
                len(mesh_a.vertices.flatten()) == len(mesh_b.vertices.flatten()) and
