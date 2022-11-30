@@ -611,11 +611,14 @@ class JointDynamics(Representation):
     def stringable(self):
         return False
 
+    def is_empty(self):
+        return self.damping is None and self.friction is None and self.spring_stiffness is None and self.spring_reference is None
+
 
 class JointLimit(Representation):
     _class_variables = ["effort", "velocity", "lower", "upper"]
 
-    def __init__(self, effort=None, velocity=None, lower=None, upper=None, **kwargs):
+    def __init__(self, effort=None, velocity=None, lower=None, upper=None):
         super().__init__()
         self.effort = effort
         self.velocity = velocity
@@ -624,6 +627,9 @@ class JointLimit(Representation):
 
     def stringable(self):
         return False
+
+    def is_empty(self):
+        return self.effort is None and self.velocity is None and self.lower is None and self.upper is None
 
 
 class JointMimic(Representation, SmurfBase):
@@ -646,6 +652,9 @@ class JointMimic(Representation, SmurfBase):
 
     def stringable(self):
         return False
+
+    def is_empty(self):
+        return self.joint is None and self.multiplier is None and self.offset is None
 
 
 class Joint(Representation, SmurfBase):
@@ -842,7 +851,6 @@ class Interface(Representation, SmurfBase):
     @rotation.setter
     def rotation(self, value):
         self.origin.rotation = value
-
 
 
 # class PR2Transmission(Representation):

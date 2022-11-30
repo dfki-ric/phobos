@@ -217,6 +217,9 @@ class Linkable(object):
     def stringable(self):
         return True
 
+    def is_empty(self):
+        return False
+
 
 class Representation(Linkable):
     factory = {}

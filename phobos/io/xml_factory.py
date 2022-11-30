@@ -101,7 +101,7 @@ class XMLDefinition(object):
         for tag, var in self.xml_children.items():
             obj = getattr(object, var["varname"])
             if type(obj) == list:
-                children += [o for o in obj]
+                children += [o for o in obj if o is not None and (not isinstance(o, Representation) or not o.is_empty())]
             elif isinstance(obj, var["class"]):
                 children += [obj]
         for child in sorted(children, key=lambda x: x.sort_string()):
