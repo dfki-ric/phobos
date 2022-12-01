@@ -259,9 +259,9 @@ class BaseModel(yaml.YAMLObject):
                     if "axis" in self.redefine_articulation[joint.name].keys():
                         joint.axis = self.redefine_articulation[joint.name]["axis"]
                     if "min" in self.redefine_articulation[joint.name].keys():
-                        joint.limit.lower = misc.read_angle_2_rad(self.redefine_articulation[joint.name]["min"])
+                        joint.limit.lower = misc.read_number_from_config(self.redefine_articulation[joint.name]["min"])
                     if "max" in self.redefine_articulation[joint.name].keys():
-                        joint.limit.upper = misc.read_angle_2_rad(self.redefine_articulation[joint.name]["max"])
+                        joint.limit.upper = misc.read_number_from_config(self.redefine_articulation[joint.name]["max"])
                     if "vel" in self.redefine_articulation[joint.name].keys():
                         joint.limit.velocity = self.redefine_articulation[joint.name]["vel"]
                     if "eff" in self.redefine_articulation[joint.name].keys():
@@ -293,10 +293,10 @@ class BaseModel(yaml.YAMLObject):
                         joint.limit = representation.JointLimit()
                     if "min" in self.redefine_articulation["default"].keys() and (
                             joint.limit is None or joint.limit.lower is None):
-                        joint.limit.lower = misc.read_angle_2_rad(self.redefine_articulation["default"]["min"])
+                        joint.limit.lower = misc.read_number_from_config(self.redefine_articulation["default"]["min"])
                     if "max" in self.redefine_articulation["default"].keys() and (
                             joint.limit is None or joint.limit.upper is None):
-                        joint.limit.upper = misc.read_angle_2_rad(self.redefine_articulation["default"]["max"])
+                        joint.limit.upper = misc.read_number_from_config(self.redefine_articulation["default"]["max"])
                     if "vel" in self.redefine_articulation["default"].keys() and (
                             joint.limit is None or joint.limit.velocity is None):
                         joint.limit.velocity = self.redefine_articulation["default"]["vel"]

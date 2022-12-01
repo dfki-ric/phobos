@@ -18,7 +18,7 @@ from ..io.hyrodyn import Submechanism, Exoskeleton
 from ..io.xmlrobot import XMLRobot
 from ..io.smurfrobot import SMURFRobot
 from ..utils import transform
-from ..utils.misc import read_angle_2_rad, regex_replace, create_dir, edit_name_string, execute_shell_command, \
+from ..utils.misc import read_number_from_config, regex_replace, create_dir, edit_name_string, execute_shell_command, \
     duplicate, color_parser
 from ..utils.transform import create_transformation, inv, get_adjoint, round_array
 from ..utils.tree import find_close_ancestor_links
@@ -1748,9 +1748,9 @@ class Robot(SMURFRobot):
                     if backup is not None:
                         limit_temp = [joint.limit.lower, joint.limit.upper]
                         if "min" in backup.keys() and limit_temp[0] == limit_temp[1]:
-                            joint.limit.lower = read_angle_2_rad(backup["min"])
+                            joint.limit.lower = read_number_from_config(backup["min"])
                         if "max" in backup.keys() and limit_temp[0] == limit_temp[1]:
-                            joint.limit.upper = read_angle_2_rad(backup["max"])
+                            joint.limit.upper = read_number_from_config(backup["max"])
                         if "vel" in backup.keys() and joint.limit.velocity == 0:
                             joint.limit.velocity = backup["vel"]
                         if "eff" in backup.keys() and joint.limit.effort == 0:

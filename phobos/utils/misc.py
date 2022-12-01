@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 import numpy as np
+from numpy import pi
 from copy import deepcopy
 from xml.dom.minidom import parseString
 from xml.etree import ElementTree as ET
@@ -23,18 +24,17 @@ def to_pretty_xml_string(xml):
     return xml_string.toprettyxml(indent='  ').replace(u'<?xml version="1.0" ?>', '').strip()
 
 
-def read_angle_2_rad(config_input):
-    """Converts ["rad"/"deg", value] into the rad value"""
+def read_number_from_config(config_input):
+    """Converts ["rad"/"deg", value] into the rad value, computes *+/- and pi in input string"""
     if type(config_input) is list:
-        if config_input[0] == "deg":
-            return np.pi * config_input[1] / 180.
-        elif config_input[0] == "rad":
-            return config_input[1]
+        if config_input[0].lower() == "deg":
+            return np.pi * eval(str(config_input[1])) / 180.
+        elif config_input[0].lower() == "rad":
+            return eval(str(config_input[1]))
         else:
             raise AttributeError("unit not properly defined")
     else:
-        log.info("Rad/deg not defined, taking rad!")
-        return config_input
+        return eval(str(config_input))
 
 
 def trunc(values, decimals=0):
