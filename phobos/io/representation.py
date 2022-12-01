@@ -601,7 +601,7 @@ class Link(Representation, SmurfBase):
 
 
 class JointDynamics(Representation):
-    def __init__(self, damping=None, friction=None, spring_stiffness=None, spring_reference=None):
+    def __init__(self, damping=None, friction=None, spring_stiffness=None, spring_reference=None, **kwargs):
         super().__init__()
         self.damping = damping
         self.friction = friction
@@ -618,7 +618,7 @@ class JointDynamics(Representation):
 class JointLimit(Representation):
     _class_variables = ["effort", "velocity", "lower", "upper"]
 
-    def __init__(self, effort=None, velocity=None, lower=None, upper=None):
+    def __init__(self, effort=None, velocity=None, lower=None, upper=None, **kwargs):
         super().__init__()
         self.effort = effort
         self.velocity = velocity
