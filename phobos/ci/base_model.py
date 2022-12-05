@@ -1,11 +1,13 @@
 import os
 import sys
 import re
+import filecmp
 import pkg_resources
 import yaml
+import numpy as np
+from copy import deepcopy, copy
 
-from ..defs import load_json, dump_json, dump_yaml
-from copy import deepcopy
+from ..defs import load_json, dump_json, dump_yaml, KINEMATIC_TYPES
 
 from ..core import Robot
 from ..geometry import replace_collision, join_collisions, remove_collision, import_mesh, import_mars_mesh, \
@@ -19,13 +21,12 @@ log = get_logger(__name__)
 SUBMECHS_VIA_ASSEMBLIES = False
 
 
-# [TODO pre_v2.0.0] simplify config files:
-# define all joint related info in one section e.g.:
-#  - cut_joint
-#  - actuators/passive joint
-#  - completely remove smurf section
+# [TODO pre_v2.0.0] simplify config files
 class BaseModel(yaml.YAMLObject):
-    def __init__(self, configfile, pipeline, processed_model_exists=True):
+    def __init__subclass__(self, configfile, pipeline, processed_model_exists=True):
+        self.processed_model_exists = processed_model_exists
+        self.pipeline = pipeline
+
         if type(configfile) is str:
             if not os.path.isfile(configfile):
                 raise Exception('{} not found!'.format(configfile))
@@ -33,296 +34,463 @@ class BaseModel(yaml.YAMLObject):
         else:
             self.cfg = configfile
 
+        # These variables have to be defined in the config file
+        self.modelname = ""
+        self.robotname = ""
+        self.export_config = []
         kwargs = {}
-        if 'combined_model' in self.cfg.keys():
-            kwargs = self.cfg['combined_model']
-        elif 'model' in self.cfg.keys():
+        if 'model' in self.cfg.keys():
             kwargs = self.cfg['model']
         elif 'xtype_model' in self.cfg.keys():
             kwargs = self.cfg['xtype_model']
         for (k, v) in kwargs.items():
             setattr(self, k, v)
+        # check whether all necessary configurations are there
+        assert hasattr(self, "modelname") and len(self.modelname) > 0
+        assert hasattr(self, "robotname") and len(self.robotname) > 0
+        assert hasattr(self, "export_config") and len(self.export_config) >= 1
 
-        self.processed_model_exists = processed_model_exists
-        self.pipeline = pipeline
-
-        # self.tempfile = None
-        self.submech2urdf = []
+        # get directories for this model
         self.exportdir = os.path.join(self.pipeline.temp_dir, self.modelname)
-        self.submechanisms_path = os.path.join(self.exportdir, "submechanisms")
-        self.exporturdf = os.path.join(self.exportdir, "urdf", self.robotname + ".urdf")
-        self.exportsmurf = os.path.join(self.exportdir, "smurf", self.robotname + ".smurf")
-        self.exportsubmechs = os.path.join(self.exportdir, "smurf", self.robotname + "_submechanisms.yml")
-        self.tempdir = os.path.join(self.pipeline.temp_dir, "temp_" + self.modelname)
-        # self.tempfile = os.path.join(self.tempdir,)
         self.targetdir = os.path.join(self.pipeline.root, self.modelname)
+        self.tempdir = os.path.join(self.pipeline.temp_dir, "temp_" + self.modelname)
 
-        self.processed_meshes = []
+        # parse export_config
+        self.export_meshpathes = []
+        self.export_xmlfile = []
+        for ec in self.export_config:
+            if ec["type"] in KINEMATIC_TYPES:
+                assert "mesh_format" in ec
+                if "link_in_smurf" in ec and ec["link_in_smurf"] is True:
+                    if self.export_xmlfile is not None:
+                        raise AssertionError("Can only have one kinematics defining xml file in smurf, "
+                                             "but defined multiple exports to be linked in smurf (link_in_smurf).")
+                    self.export_xmlfile = self.robotname
+                    if "filename_suffix" in ec:
+                        self.export_xmlfile += ec["filename_suffix"]
+                    ext = ec["type"].split("_")[-1].lower()
+                    assert ext in ["sdf", "urdf"]
+                    self.export_xmlfile += "." + ext
+                    self.export_meshpathes = [self.pipeline.meshes[ec["mesh_format"]]] + self.export_meshpathes
+                else:
+                    self.export_meshpathes += [self.pipeline.meshes[ec["mesh_format"]]]                
+                
+    def __init__(self, configfile, pipeline, processed_model_exists=True):
+        # These variables have to be defined in the config file
+        self.input_models = {}
+        self.assemble = {}
+        # init
+        self.__init__subclass__(configfile, pipeline, processed_model_exists)
+        # check whether all necessary configurations are there
+        assert hasattr(self, "input_models") and len(self.input_models) >= 1
+        assert hasattr(self, "assemble") and len(self.assemble) > 0
 
         # list directly imported mesh pathes
         self._meshes = []
-        if hasattr(self, "basefile"):
-            r = Robot(inputfile=self.basefile)
-            for link in r.links:
-                for g in link.visuals + link.collisions:
-                    if isinstance(g.geometry, representation.Mesh):
-                        self._meshes += [xml.read_urdf_filename(g.geometry.filename, self.basefile)]
-        elif hasattr(self, "depends_on"):
-            for _, v in self.depends_on.items():
-                if "basefile" in v.keys():
-                    r = Robot(inputfile=v["basefile"], is_human=v["is_human"] if "is_human" in v else False)
-                    for link in r.links:
-                        for g in link.visuals + link.collisions:
-                            if hasattr(g.geometry, "filename"):
-                                self._meshes += [xml.read_urdf_filename(g.geometry.filename[:-4], v["basefile"])]
-        elif hasattr(self, "repo"):
-            repo_path = os.path.join(self.tempdir, "repo", os.path.basename(self.repo["git"]))
-            git.clone(
-                self,
-                self.repo["git"],
-                repo_path,
-                commit_id=self.repo["commit"],
-                recursive=True,
-                ignore_failure=True
-            )
-            self.basefile = os.path.join(repo_path, self.repo["model_in_repo"])
-            r = Robot(inputfile=self.basefile)
-            for link in r.links:
-                for g in link.visuals + link.collisions:
-                    if isinstance(g.geometry, representation.Mesh):
-                        self._meshes += [xml.read_urdf_filename(g.geometry.filename[:-4], self.basefile)]
+        for _, v in self.input_models.items():
+            if "basefile" in v.keys():
+                r = Robot(inputfile=v["basefile"], is_human=v["is_human"] if "is_human" in v else False)
+                for link in r.links:
+                    for g in link.visuals + link.collisions:
+                        if hasattr(g.geometry, "filename"):
+                            self._meshes += [xml.read_urdf_filename(g.geometry.filename[:-4], v["basefile"])]
+            elif "repo" in v.keys():
+                repo_path = os.path.join(self.tempdir, "repo", os.path.basename(self.input_models["repo"]["git"]))
+                git.clone(
+                    self,
+                    self.input_models["repo"]["git"],
+                    repo_path,
+                    commit_id=self.input_models["repo"]["commit"],
+                    recursive=True,
+                    ignore_failure=True
+                )
+                self.basefile = os.path.join(repo_path, self.input_models["repo"]["model_in_repo"])
+                r = Robot(inputfile=self.basefile)
+                for link in r.links:
+                    for g in link.visuals + link.collisions:
+                        if isinstance(g.geometry, representation.Mesh):
+                            self._meshes += [xml.read_urdf_filename(g.geometry.filename[:-4], self.basefile)]
+        self.processed_meshes = []  # used to make mesh processing more efficient
 
-        if self.modeltype in pipeline.modeltypes.keys():
-            self.typedef = pipeline.modeltypes[self.modeltype]
-        else:
-            log.warning('Model type {} not known using default!'.format(self.modeltype))
-            self.typedef = pipeline.modeltypes["default"]
-        self.ros_pkg_name = self.modelname if "ros_package" in self.typedef.keys() and self.typedef[
-            "ros_package"] else None
-        if hasattr(self, "ros_package_name") and "ros_package" in self.typedef.keys() and self.typedef["ros_package"]:
-            self.ros_pkg_name = self.ros_package_name
+        # where to find the already processed model
+        self.basedir = os.path.join(self.tempdir, "combined_model")
+        self.basefile = os.path.join(self.basedir, "smurf", "combined_model.smurf")
 
-        if self.processed_model_exists or (hasattr(self, "basefile") and os.path.isfile(self.basefile)):
+        if self.processed_model_exists:
             self._load_robot()
 
-    @staticmethod
-    def get_exported_model_path(pipeline, configfile):
-        cfg = load_json(open(configfile, 'r'))
-        if "model" in cfg.keys():
-            cfg = cfg['model']
-        elif "combined_model" in cfg.keys():
-            cfg = cfg['combined_model']
-        return os.path.join(pipeline.temp_dir, cfg["modelname"], "urdf", cfg["robotname"] + ".urdf")
-
-    @property
-    def tolerances(self):
-        """Convenience getter related to class TestModel"""
-        return self.typedef['compare_model']
-
-    @property
-    def urdf(self):
-        """Convenience getter related to class TestModel"""
-        return self.exporturdf
-
-    @property
-    def floatingbase_urdf(self):
-        """Convenience getter related to class TestModel"""
-        return self.urdf[:-5]+"_floatingbase.urdf"
-
-    @property
-    def modeldir(self):
-        """Convenience getter related to class TestModel"""
-        return self.exportdir
-
-    @property
-    def floatingbase(self):
-        return hasattr(self, "export_floatingbase") and self.export_floatingbase is True
-
-    @property
-    def submechanisms_file_path(self):
-        return self.exportsubmechs
-
-    @property
-    def floatingbase_submechanisms_file_path(self):
-        return self.exportsubmechs.replace("_submechanisms", "_floatingbase_submechanisms")
+        log.debug(f"Finished reading config and joining models to base model {configfile}")
 
     def _load_robot(self):
-        if not self.processed_model_exists and hasattr(self, "basefile"):
-            if not os.path.isfile(self.basefile):
-                raise Exception('{} not found!'.format(self.basefile))
-            self.robot = Robot(name=self.robotname if self.robotname else None,
-                               inputfile=self.basefile)
+        if not self.processed_model_exists:
+            if os.path.exists(os.path.join(self.basedir, "smurf", "combined_model.smurf")):
+                # may be there is already an assembly from a stopped job
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                   smurffile=os.path.join(self.basedir, "smurf", "combined_model.smurf"))
+            else:
+                # create a robot with the basic properties given
+                self.robot = Robot(name=self.robotname if self.robotname else None)
         else:
-            if not os.path.isfile(self.exporturdf):
-                raise Exception('Preprocessed file {} not found!'.format(self.exporturdf))
-            self.robot = Robot(name=self.robotname if self.robotname else None,
-                               inputfile=self.exportsmurf)
+            if os.path.exists(os.path.join(self.exportdir, "smurf", self.robotname + ".smurf")):
+                self.robot = Robot(name=self.robotname if self.robotname else None,
+                                   smurffile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
+            else:
+                raise Exception('Preprocessed file {} not found!'.format(self.basefile))
 
-    def recreate_sym_links(self):
-        misc.create_symlink(self.pipeline,
-                            os.path.join(self.pipeline.temp_dir, self.typedef["meshespath"]),
-                            os.path.join(self.exportdir, self.typedef["meshespath"])
+    def _join_to_basefile(self):
+        # get all the models we need
+        self.dep_models = {}
+        for name, config in self.input_models.items():
+            if "derived_base" in config.keys():
+                self.dep_models.update({
+                    name: BaseModel(
+                        os.path.join(self.pipeline.configdir, config["derived_base"]),
+                        self.pipeline, processed_model_exists=True)
+                })
+                # copy the mesh files to the temporary combined model directory
+                for mp in self.dep_models[name].export_meshpathes:
+                    misc.create_symlink(
+                        self.pipeline, os.path.join(self.pipeline.temp_dir, mp), os.path.join(self.basedir, mp)
+                    )
+        for name, config in self.input_models.items():
+            if "basefile" in config.keys():
+                kwargs = {}
+                kwargs["inputfile"] = config["basefile"]
+                if "is_human" in config:
+                    kwargs["is_human"] = config["is_human"]
+                kwargs["inputfile"] = config["basefile"]
+                self.dep_models.update({name: Robot(name=name, **kwargs)})
+                # copy the mesh files to the temporary combined model directory
+                for link in self.dep_models[name].links:
+                    for v in link.visuals + link.collisions:
+                        if isinstance(v.geometry, representation.Mesh):
+                            misc.copy(
+                                self.pipeline,
+                                os.path.join(os.path.dirname(config["basefile"]), v.geometry.filename),
+                                os.path.join(os.path.dirname(self.basefile), v.geometry.filename),
+                                silent=True
                             )
-        if "also_export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"]:
-            misc.create_symlink(self.pipeline,
-                                os.path.join(self.pipeline.temp_dir, self.pipeline.meshes["bobj"]),
-                                os.path.join(self.exportdir, self.pipeline.meshes["bobj"])
-                                )
-        if hasattr(self, "export_kccd"):
-            misc.create_symlink(self.pipeline,
-                                os.path.join(self.pipeline.temp_dir, self.pipeline.meshes["iv"]),
-                                os.path.join(self.exportdir, self.pipeline.meshes["iv"]))
+            elif "repo" in config.keys():
+                repo_path = os.path.join(self.tempdir, "repo", os.path.basename(config["repo"]["git"]))
+                git.clone(
+                    self.pipeline,
+                    config["repo"]["git"],
+                    repo_path,
+                    config["repo"]["commit"],
+                    recursive=True,
+                    ignore_failure=True
+                )
+                self.dep_models.update({
+                    name: Robot(name=name, inputfile=os.path.join(repo_path, config["repo"]["model_in_repo"]),
+                                submechanisms_file=os.path.join(repo_path, config["repo"]["submechanisms_in_repo"])
+                                                   if "submechanisms_in_repo" in config["repo"] else None,
+                                is_human=config["is_human"] if "is_human" in config else False)
+                })
+                # copy the mesh files to the temporary combined model directory
+                for link in self.dep_models[name].links:
+                    for v in link.visuals + link.collisions:
+                        if isinstance(v.geometry, representation.Mesh):
+                            source = os.path.join(repo_path, os.path.dirname(self.dep_models[name].xmlfile),
+                                                  v.geometry.filename)
+                            target = os.path.join(os.path.dirname(self.basefile), v.geometry.filename)
+                            if not os.path.exists(target) or (os.path.exists(target) and filecmp.cmp(source, target)):
+                                misc.copy(self.pipeline, source, target)
+                            else:
+                                misc.copy(self.pipeline, source, target[:-4] + name + target[-4:])
+                                v.geometry.filename = v.geometry.filename[:-4] + name + v.geometry.filename[-4:]
 
-    def _process(self):
-        log.info('Start processing robot')
+        # now we can join theses models
+        # 1. get root model
+        if isinstance(self.dep_models[self.assemble["model"]], Robot):
+            combined_model = self.dep_models[self.assemble["model"]].duplicate()
+        else:  # it must be an instance of BaseModel
+            combined_model = self.dep_models[self.assemble["model"]].robot.duplicate()
+        combined_model.name = self.robotname
+        combined_model.autogenerate_submechanisms = False
+        combined_model.smurffile = self.basefile
+        combined_model.xmlfile = os.path.join(self.basedir, "urdf", "combined_model.urdf")
 
+        if "name_editing" in self.assemble.keys():
+            combined_model.edit_names(self.assemble["name_editing"])
+            for c in self.assemble["children"]:
+                c["joint"]["parent"] = misc.edit_name_string(
+                    c["joint"]["parent"],
+                    prefix=self.assemble["name_editing"]["prefix"] if "prefix" in self.assemble["name_editing"] else "",
+                    suffix=self.assemble["name_editing"]["suffix"] if "suffix" in self.assemble["name_editing"] else "",
+                    replacements=self.assemble["name_editing"]["replacements"] if "replacements" in self.assemble["name_editing"] else {})
+                c["joint"]["parent"] = misc.edit_name_string(
+                    c["joint"]["parent"],
+                    prefix=self.assemble["name_editing"]["link_prefix"] if "link_prefix" in self.assemble["name_editing"] else "",
+                    suffix=self.assemble["name_editing"]["link_suffix"] if "link_suffix" in self.assemble["name_editing"] else "",
+                    replacements=self.assemble["name_editing"]["link_replacements"] if "link_replacements" in self.assemble["name_editing"] else {})
+
+        if "remove_beyond" in self.assemble.keys():
+            combined_model = combined_model.get_before(self.assemble["remove_beyond"])
+
+        if "take_leaf" in self.assemble.keys():
+            assert type(self.assemble["take_leaf"]) == str
+            combined_model = combined_model.get_beyond(self.assemble["take_leaf"])
+
+        if "mirror" in self.assemble.keys():
+            combined_model.mirror_model(
+                mirror_plane=self.assemble["mirror"]["plane"] if "plane" in self.assemble["mirror"].keys() else [0, 1, 0],
+                flip_axis=self.assemble["mirror"]["flip_axis"] if "flip_axis" in self.assemble["mirror"].keys() else 1,
+                exclude_meshes=self.assemble["mirror"]["exclude_meshes"] if "exclude_meshes" in self.assemble["mirror"].keys() else [],
+                target_urdf=os.path.dirname(self.basefile)
+            )
+
+        # 2. go recursively through the children and attach them
+        def recursive_attach(parent, children, parentname):
+            for child in children:
+                if isinstance(self.dep_models[parentname], Robot):
+                    parent_model = self.dep_models[parentname]
+                else:
+                    parent_model = self.dep_models[parentname].robot
+
+                if isinstance(self.dep_models[child["model"]], Robot):
+                    att_model = self.dep_models[child["model"]].duplicate()
+                else:
+                    att_model = self.dep_models[child["model"]].robot.duplicate()
+
+                att_model.relink_entities()
+
+                if "child" not in child["joint"].keys() or child["joint"]["child"] is None:
+                    child["joint"]["child"] = str(att_model.get_root())
+                    if "take_leaf" in child:
+                        child["joint"]["child"] = child["take_leaf"]
+
+                if "r2r_transform" in child["joint"].keys():
+                    T = np.array(child["joint"]["r2r_transform"])
+                    src_T = parent_model.get_transformation(child["joint"]["parent"])
+                    dst_T = att_model.get_transformation(child["joint"]["child"])
+                    T = np.linalg.inv(src_T).dot(T).dot(dst_T)
+                    origin = representation.Pose.from_matrix(T)
+                    child["joint"]["xyz"] = origin.xyz
+                    child["joint"]["rpy"] = origin.rpy
+
+                if "name_editing" in child.keys():
+                    att_model.edit_names(child["name_editing"])
+                    child["joint"]["child"] = misc.edit_name_string(
+                        child["joint"]["child"],
+                        prefix=child["name_editing"]["prefix"] if "prefix" in child["name_editing"] else "",
+                        suffix=child["name_editing"]["suffix"] if "suffix" in child["name_editing"] else "",
+                        replacements=child["name_editing"]["replacements"] if "replacements" in child["name_editing"] else {})
+                    child["joint"]["child"] = misc.edit_name_string(
+                        child["joint"]["child"],
+                        prefix=child["name_editing"]["link_prefix"] if "link_prefix" in child["name_editing"] else "",
+                        suffix=child["name_editing"]["link_suffix"] if "link_suffix" in child["name_editing"] else "",
+                        replacements=child["name_editing"]["link_replacements"] if "link_replacements" in child["name_editing"] else {})
+                    if "children" in child:
+                        for c in child["children"]:
+                            c["joint"]["parent"] = misc.edit_name_string(
+                                c["joint"]["parent"],
+                                prefix=child["name_editing"]["prefix"] if "prefix" in child["name_editing"] else "",
+                                suffix=child["name_editing"]["suffix"] if "suffix" in child["name_editing"] else "",
+                                replacements=child["name_editing"]["replacements"] if "replacements" in child["name_editing"] else {})
+                            c["joint"]["parent"] = misc.edit_name_string(
+                                c["joint"]["parent"],
+                                prefix=child["name_editing"]["link_prefix"] if "link_prefix" in child["name_editing"] else "",
+                                suffix=child["name_editing"]["link_suffix"] if "link_suffix" in child["name_editing"] else "",
+                                replacements=child["name_editing"]["link_replacements"] if "link_replacements" in child["name_editing"] else {})
+
+                if "remove_beyond" in child.keys():
+                    att_model = att_model.get_before(child["remove_beyond"])
+                    att_model.relink_entities()
+
+                if "take_leaf" in child.keys():
+                    assert type(child["take_leaf"]) == str
+                    att_model = att_model.get_beyond(child["take_leaf"])
+                    assert len(att_model.keys()) == 1, "take_leaf: Please cut the tree in a way to get only one leaf"
+                    att_model = list(att_model.values())[0]
+                    att_model.relink_entities()
+
+                if "mirror" in child.keys():
+                    att_model.mirror_model(
+                        mirror_plane=child["mirror"]["plane"] if "plane" in child["mirror"].keys() else [0, 1, 0],
+                        flip_axis=child["mirror"]["flip_axis"] if "flip_axis" in child["mirror"].keys() else 1,
+                        exclude_meshes=child["mirror"]["exclude_meshes"] if "exclude_meshes" in child["mirror"].keys() else [],
+                        target_urdf=combined_model.xmlfile
+                    )
+
+                if "name" not in child["joint"].keys() or child["joint"]["name"] is None:
+                    child["joint"]["name"] = child["joint"]["parent"] + "2" + child["joint"]["child"]
+                if "type" not in child["joint"].keys() or child["joint"]["type"] is None:
+                    child["joint"]["type"] = "fixed"
+
+                if parent.get_link(child["joint"]["parent"]) is None:
+                    log.error(f"Parent links: {sorted([lnk.name for lnk in parent.links])}")
+                    raise AssertionError(
+                        "Problem with assembling joint " + child["joint"]["parent"] + " -> " + child["joint"]["child"]
+                        + ": the parent link doesn't exist!")
+                elif att_model.get_link(child["joint"]["child"]) is None:
+                    log.error(f"Child links: {sorted([lnk.name for lnk in att_model.links])}")
+                    raise AssertionError(
+                        "Problem with assembling joint " + child["joint"]["parent"] + " -> " + child["joint"]["child"]
+                        + ": the child link doesn't exist!")
+                assert att_model.get_joint(child["joint"]["name"]) is None and parent.get_joint(child["joint"]["name"]) is None, f'Can not join using joint name {child["joint"]["name"]} as this name already exists.'
+                joint = representation.Joint(
+                    name=child["joint"]["name"],
+                    parent=parent.get_link(child["joint"]["parent"]).name,
+                    child=att_model.get_link(child["joint"]["child"]).name,
+                    joint_type=child["joint"]["type"] if "type" in child["joint"].keys() else "fixed",
+                    origin=representation.Pose(
+                        child["joint"]["xyz"] if "xyz" in child["joint"].keys() else [0, 0, 0],
+                        child["joint"]["rpy"] if "rpy" in child["joint"].keys() else [0, 0, 0]
+                    ),
+                    limit=representation.JointLimit(
+                        effort=child["joint"]["eff"] if "eff" in child["joint"].keys() else 0,
+                        velocity=child["joint"]["vel"] if "vel" in child["joint"].keys() else 0,
+                        lower=child["joint"]["min"] if "min" in child["joint"].keys() else 0,
+                        upper=child["joint"]["max"] if "max" in child["joint"].keys() else 0)
+                    if child["joint"]["type"] != "fixed" else None
+                )
+
+                parent.attach(att_model if isinstance(att_model, Robot) else att_model.robot, joint, do_not_rename=False)
+                assert len(combined_model.links) == len(combined_model.joints) + 1
+                if "remove_joint_later" in child["joint"] and child["joint"]["remove_joint_later"]:
+                    if hasattr(self, "remove_joints") and type(self.remove_joints) == list:
+                        self.remove_joints += [child["joint"]["name"]]
+                    else:
+                        self.remove_joints = [child["joint"]["name"]]
+                parent.relink_entities()
+
+                if "children" in child.keys():
+                    recursive_attach(parent, child["children"], child["model"])
+
+        if "children" in self.assemble.keys() and len(self.assemble["children"]) > 0:
+            recursive_attach(combined_model, self.assemble["children"], parentname=self.assemble["model"])
+            combined_model.relink_entities()
+
+        # 3. save combined_model to the temp directory
+        assert len(combined_model.links) == len(combined_model.joints) + 1
+        combined_model.name = "combined_model"
+        combined_model.full_export(self.basedir)
+
+    def process(self):
+        misc.recreate_dir(self.pipeline, self.tempdir)
+        misc.recreate_dir(self.pipeline, self.basedir)
+
+        self._join_to_basefile()
         self._load_robot()
 
+        assert hasattr(self, 'robot') and hasattr(self, 'pipeline')
+
+        log.info('Start processing robot')
+
         self.robot.correct_inertials()
-        # self.robot.correct_axes()
+        self.robot.clean_meshes()
 
-        name_editing_dict = {}
-        if hasattr(self, "name_editing") and self.name_editing is not None:
-            name_editing_dict = self.name_editing
-        if hasattr(self, "name_editing_before") and self.name_editing_before is not None:
-            name_editing_dict = self.name_editing_before
-        if hasattr(self, "append_link_suffix"):
-            name_editing_dict["append_link_suffix"] = self.append_link_suffix
-        if name_editing_dict != {}:
-            self.robot.edit_names(name_editing_dict)
-
-        if hasattr(self, "take_leaf"):
-            assert type(self.take_leanf) == str
-            self.robot = self.robot.get_beyond(self.take_leaf)
-
-        if hasattr(self, "remove_beyond"):
-            self.robot = self.robot.get_before(self.remove_beyond)
-
-        if hasattr(self, "transform_links"):
-            for k, v in self.transform_links.items():
-                transformation = transform.create_transformation(
-                    xyz=v["xyz"] if "xyz" in v.keys() else [0, 0, 0],
-                    rpy=v["rpy"] if "rpy" in v.keys() else [0, 0, 0]
-                )
-                # if "transform" in v.keys() and v["transform"] == "TO":
-                #     if self.robot.getParent(k) is not None:
-                #         transformation = inv(Homogeneous(self.robot.getJoint(self.robot.getParent(k)[0]).origin)
-                #                              ).dot(transformation)
-                # else: BY
-                self.robot.transform_link_orientation(linkname=k, transformation=transformation,
-                                                      only_frame=v["only_frame"] if "only_frame" in v.keys() else True,
-                                                      transform_to="transform" in v.keys() and v["transform"] == "TO")
-                log.debug('       {}'.format(k))
-
-        if hasattr(self, "move_link_in_tree"):
-            for link in self.move_link_in_tree:
-                ln = link["linkName"] if "linkName" in link.keys() else link["link_name"]
-                pn = link["newParentName"] if "newParentName" in link.keys() else link["new_parent_name"]
-                self.robot.move_link_in_tree(link_name=ln, new_parent_name=pn)
-
-        if hasattr(self, 'remove_joints'):
-            for j in self.remove_joints:
-                self.robot.remove_joint(j)
-
-        if hasattr(self, 'add_frames'):
-            for j in self.add_frames:
-                self.robot.add_link_by_properties(
-                    j["name"], j["xyz"], j["rpy"], j["parent"],
-                    jointname=j["jointname"] if "jointname" in j.keys() else None,
-                    jointtype=j["type"] if "type" in j.keys() else "fixed",
-                    axis=j["axis"] if "axis" in j.keys() else [0, 0, 1],
-                    mass=j["mass"] if "mass" in j.keys() else 0.0,
-                    is_human=j["is_human"] if "is_human" in j else False
-                )
-
-        if hasattr(self, "move_joints_to_intersection"):
-            for mj_name, tjj_names in self.move_joints_to_intersection.items():
-                self.robot.move_joint_to_intersection(mj_name, tjj_names)
-
-        if hasattr(self, 'replace_joint_types'):
-            for joint in self.robot.joints:
-                for old, new in self.replace_joint_types.items():
-                    if joint.joint_type == old:
-                        joint.joint_type = new
-
-        if hasattr(self, 'redefine_articulation'):
-            transmissions = {}
-            for joint in self.robot.joints:
-                if joint.joint_type == "fixed":
+        if hasattr(self, "frames"):
+            _default = {} if "$default" not in self.frames else self.frames["$default"]
+            _ignore_new_links = []
+            for linkname, config in self.frames.items():
+                self.frames[linkname] = misc.merge_default(config, _default)
+                config = copy(self.frames[linkname])
+                if self.robot.get_link(linkname) is None:
+                    assert "transform_frame" not in config and "transform_link" not in config
+                    assert "joint" in config
+                    # [TODO!!! pre_v2.0.0] add provider for default values
+                    # _joint_def = misc.merge_default(config.pop("joint"), default_joint)
+                    _joint_def = config.pop("joint")
+                    _joint = representation.Joint(
+                        child=linkname,
+                        parent=_joint_def.pop("parent"),
+                        origin=representation.Pose(xyz=_joint_def.pop("xyz"), rpy=_joint_def.pop("rpy")),
+                        **_joint_def
+                    )
+                    self.robot.add_link_by_properties(linkname, _joint, **config)
+                    _ignore_new_links.append(linkname)
+            for link in self.robot.links:
+                linkname = link.name
+                if linkname in _ignore_new_links:
                     continue
-                elif joint.name in self.redefine_articulation.keys():
-                    # print("Overriding joint definition for", joint.name)
-                    if joint.limit is None:
-                        joint.limit = representation.JointLimit()
-                    if "type" in self.redefine_articulation[joint.name].keys():
-                        joint.joint_type = self.redefine_articulation[joint.name]["type"]
-                    if "axis" in self.redefine_articulation[joint.name].keys():
-                        joint.axis = self.redefine_articulation[joint.name]["axis"]
-                    if "min" in self.redefine_articulation[joint.name].keys():
-                        joint.limit.lower = misc.read_number_from_config(self.redefine_articulation[joint.name]["min"])
-                    if "max" in self.redefine_articulation[joint.name].keys():
-                        joint.limit.upper = misc.read_number_from_config(self.redefine_articulation[joint.name]["max"])
-                    if "vel" in self.redefine_articulation[joint.name].keys():
-                        joint.limit.velocity = self.redefine_articulation[joint.name]["vel"]
-                    if "eff" in self.redefine_articulation[joint.name].keys():
-                        joint.limit.effort = self.redefine_articulation[joint.name]["eff"]
-                    if "cut_joint" in self.redefine_articulation[joint.name].keys():
-                        joint.cut_joint = self.redefine_articulation[joint.name]["cut_joint"]
-                        joint.constraint_axes = [ConstraintAxis(**ca) for ca in self.redefine_articulation[joint.name]["constraint_axes"]]
-                    if "mimic" in self.redefine_articulation[joint.name].keys():
-                        mimic = self.redefine_articulation[joint.name]["mimic"]
-                        joint.joint_dependencies.append(representation.JointMimic(joint=mimic["joint_name"],
-                                                                                  offset=mimic["offset"],
-                                                                                  multiplier=mimic["multiplier"]))
-                    if "transmission" in self.redefine_articulation[joint.name].keys():
-                        tm = self.redefine_articulation[joint.name]["transmission"]
-                        joint.joint_dependencies = [
-                            representation.JointMimic(joint=mimic["joint_name"],
-                                                      offset=mimic["offset"],
-                                                      multiplier=mimic["multiplier"]) for mimic in tm["mimics"]]
-                    joint.add_annotations({
-                        "reducedDataPackage": self.redefine_articulation[joint.name]["reducedDataPackage"] if "reducedDataPackage" in self.redefine_articulation[joint.name].keys() else False,
-                        "noDataPackage": self.redefine_articulation[joint.name]["noDataPackage"] if "noDataPackage" in self.redefine_articulation[joint.name].keys() else False,
-                        "damping_const_constraint_axis1": self.redefine_articulation[joint.name]["damping_const_constraint_axis1"] if "damping_const_constraint_axis1" in self.redefine_articulation[joint.name].keys() else False,
-                        "springDamping": self.redefine_articulation[joint.name]["springDamping"] if "springDamping" in self.redefine_articulation[joint.name].keys() else False,
-                        "springStiffness": self.redefine_articulation[joint.name]["springStiffness"] if "springStiffness" in self.redefine_articulation[joint.name].keys() else False,
-                        "spring_const_constraint_axis1": self.redefine_articulation[joint.name]["spring_const_constraint_axis1"] if "spring_const_constraint_axis1" in self.redefine_articulation[joint.name].keys() else False
-                    })
-                elif "default" in self.redefine_articulation.keys():
-                    if joint.limit is None:
-                        joint.limit = representation.JointLimit()
-                    if "min" in self.redefine_articulation["default"].keys() and (
-                            joint.limit is None or joint.limit.lower is None):
-                        joint.limit.lower = misc.read_number_from_config(self.redefine_articulation["default"]["min"])
-                    if "max" in self.redefine_articulation["default"].keys() and (
-                            joint.limit is None or joint.limit.upper is None):
-                        joint.limit.upper = misc.read_number_from_config(self.redefine_articulation["default"]["max"])
-                    if "vel" in self.redefine_articulation["default"].keys() and (
-                            joint.limit is None or joint.limit.velocity is None):
-                        joint.limit.velocity = self.redefine_articulation["default"]["vel"]
-                    if "eff" in self.redefine_articulation["default"].keys() and (
-                            joint.limit is None or joint.limit.effort is None):
-                        joint.limit.effort = self.redefine_articulation["default"]["eff"]
-                    if "smurf" in self.modeltype \
-                            and ("reducedDataPackage" in self.redefine_articulation["default"].keys()
-                                 or "noDataPackage" in self.redefine_articulation["default"].keys()):
-                        joint.add_annotations({
-                            "reducedDataPackage": self.redefine_articulation["default"]["reducedDataPackage"] if "reducedDataPackage" in self.redefine_articulation["default"].keys() else False,
-                            "noDataPackage": self.redefine_articulation["default"]["noDataPackage"] if "noDataPackage" in self.redefine_articulation["default"].keys() else False,
-                            "damping_const_constraint_axis1": self.redefine_articulation["default"]["damping_const_constraint_axis1"] if "damping_const_constraint_axis1" in self.redefine_articulation["default"].keys() else False,
-                            "springDamping": self.redefine_articulation["default"]["springDamping"] if "springDamping" in self.redefine_articulation["default"].keys() else False,
-                            "springStiffness": self.redefine_articulation["default"]["springStiffness"] if "springStiffness" in self.redefine_articulation["default"].keys() else False,
-                            "spring_const_constraint_axis1": self.redefine_articulation["default"]["spring_const_constraint_axis1"] if "spring_const_constraint_axis1" in self.redefine_articulation["default"].keys() else False
-                        })
-                # else:
-                # print("    Leaving joint", joint.name, "(", joint.type, ") untouched")
+                config = self.frames["linkname"] if linkname in self.frames else _default
+                for k, v in config.items():
+                    if k in ["transform_frame", "transform_link"]:
+                        transformation = transform.create_transformation(
+                            xyz=v["xyz"] if "xyz" in v.keys() else [0, 0, 0],
+                            rpy=v["rpy"] if "rpy" in v.keys() else [0, 0, 0]
+                        )
+                        # this is never really used and therefore not perfectly tested, hence commented
+                        # if "transform" in v.keys() and v["transform"] == "TO":
+                        #     if self.robot.getParent(k) is not None:
+                        #         transformation = inv(
+                        #             Homogeneous(self.robot.getJoint(self.robot.getParent(k)[0]).origin)
+                        #         ).dot(transformation)
+                        # else: BY
+                        self.robot.transform_link_orientation(
+                            linkname=k,
+                            transformation=transformation,
+                            only_frame=(k == "transform_frame"),
+                            # transform_to="transform" in v.keys() and v["transform"] == "TO"
+                        )
+                    elif k == "reparent_to":
+                        self.robot.move_link_in_tree(link_name=linkname, new_parent_name=v)
+                    elif k == "estimate_missing_com" and v is True:
+                        self.robot.set_estimated_link_com(linkname, dont_overwrite=True)
+                    else:
+                        link.add_annotation(k, v, overwrite=True)
+            
+        if hasattr(self, "joints"):
+            transmissions = {}
+            _default = {} if "$default" not in self.joints else self.joints["$default"]
+            for jointname, config in self.joints.items():
+                if self.robot.get_joint(jointname, verbose=True) is None and ("cut_joint" not in config or config["cut_joint"] is False):
+                    raise NameError(f"There is no joint with name {jointname}")
+                else:
+                    # [TODO pre_v2.0.0] Review and Check whether this works as expected
+                    # Check whether everxthing is given and calculate origin and axis (?)
+                    _joint = representation.Joint(**config)
+                    assert "constraint_axes" in config
+                    _joint.constraint_axes = [ConstraintAxis(**ca) for ca in config["constraint_axes"]]
+                    assert _joint.check_valid()
+                    self.robot.add_aggregate(_joint)
+            for joint in self.robot.joints:
+                jointname = joint.name
+                config = misc.merge_default(self.joints[jointname], _default)
+                for k, v in config.items():
+                    if k in ["min", "max", "eff", "vel"]:
+                        if joint.limit is None:
+                            joint.limit = representation.JointLimit()
+                    if k == "move_joint_axis_to_intersection":
+                        self.robot.move_joint_to_intersection(jointname, v)
+                    elif k == "type":
+                        joint.joint_type = v
+                    elif k == "min":
+                        joint.limit.lower = misc.read_number_from_config(v)
+                    elif k == "max":
+                        joint.limit.upper = misc.read_number_from_config(v)
+                    elif k == "eff":
+                        joint.limit.efforrt = misc.read_number_from_config(v)
+                    elif k == "vel":
+                        joint.limit.velocity = misc.read_number_from_config(v)
+                    elif k == "movement_depends_on":
+                        for jd in v:
+                            joint.joint_dependencies.append(representation.JointMimic(joint=jd["joint_name"],
+                                                                                      offset=jd["offset"],
+                                                                                      multiplier=jd["multiplier"]))
+                    elif k == "active":
+                        if type(v) == dict:
+                            if "name" not in v:
+                                v["name"] = jointname+"_motor"
+                            if "joint" not in v:
+                                v["joint"] = jointname
+                            else:
+                                assert jointname == v["joint"]
+                            _motor = representation.Motor(**v)
+                            self.robot.add_motor(_motor)
+                        elif v is True:
+                            _motor = representation.Motor(name=jointname+"_motor", joint=jointname)
+                            self.robot.add_motor(_motor)
+                    else:  # axis, cut_joint
+                        joint.add_annotation(k, v, overwrite=True)
+                    # [TODO pre_v2.0.0] Re-add transmission support
                 joint.link_with_robot(self.robot)
-            for _, transmission in transmissions.items():
-                self.robot.add_aggregate("transmission", transmission)
-
+    
         # Check for joint definitions
         self.robot.check_joint_definitions(
-            raise_error=self.typedef["ensure_valid_joints"] if "ensure_valid_joints" in self.typedef.keys() else True,
+            raise_error=self.typedef[
+                "ensure_valid_joints"] if "ensure_valid_joints" in self.typedef.keys() else True,
             backup=self.redefine_articulation["default"] if (
                     hasattr(self, "redefine_articulation")
                     and "default" in self.redefine_articulation.keys()
@@ -331,10 +499,6 @@ class BaseModel(yaml.YAMLObject):
             ) else None,
         )
 
-        self.robot.clean_meshes()
-
-        if hasattr(self, 'estimate_missing_coms') and self.estimate_missing_coms:
-            self.robot.set_estimated_link_com(self.robot.links, dont_overwrite=True)
 
         if hasattr(self, 'replace_collisions'):
             self.edit_collisions = self.replace_collisions
@@ -382,7 +546,8 @@ class BaseModel(yaml.YAMLObject):
                 if "auto_bitmask" in self.smurf["collisions"].keys() and \
                         self.smurf["collisions"]["auto_bitmask"] is True:
                     log.debug("         Setting auto bitmask")
-                    kwargs = self.smurf["collisions"]["default"] if "default" in self.smurf["collisions"].keys() else {}
+                    kwargs = self.smurf["collisions"]["default"] if "default" in self.smurf[
+                        "collisions"].keys() else {}
                     self.robot.set_self_collision(
                         1,
                         coll_override=self.smurf["collisions"]["collision_between"]
@@ -474,9 +639,11 @@ class BaseModel(yaml.YAMLObject):
 
         if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):
             if hasattr(self, "exoskeletons"):
-                self.robot.load_submechanisms({"exoskeletons": deepcopy(self.exoskeletons)}, replace_only_conflicting=True)
+                self.robot.load_submechanisms({"exoskeletons": deepcopy(self.exoskeletons)},
+                                              replace_only_conflicting=True)
             if hasattr(self, "submechanisms"):
-                self.robot.load_submechanisms({"submechanisms": deepcopy(self.submechanisms)}, replace_only_conflicting=True)
+                self.robot.load_submechanisms({"submechanisms": deepcopy(self.submechanisms)},
+                                              replace_only_conflicting=True)
         elif hasattr(self, "submechanisms_file"):
             self.robot.autogenerate_submechanisms = False
             self.robot.load_submechanisms(deepcopy(self.submechanisms_file))
@@ -504,12 +671,14 @@ class BaseModel(yaml.YAMLObject):
             assert self.robot.motors == []
             for joint in self.robot.joints:
                 if hasattr(self, "smurf"):
-                    conf = self.smurf["motors"]["default"] if "motors" in self.smurf.keys() and "default" in self.smurf["motors"].keys() else {}
+                    conf = self.smurf["motors"]["default"] if "motors" in self.smurf.keys() and "default" in \
+                                                              self.smurf["motors"].keys() else {}
                 else:
                     conf = {}
                 if "name" in conf.keys():  # we dont ẃant that someone overwrites the same name for all motors
                     conf.pop("name")
-                if hasattr(self, "smurf") and "motors" in self.smurf.keys() and joint.name in self.smurf["motors"].keys():
+                if hasattr(self, "smurf") and "motors" in self.smurf.keys() and joint.name in self.smurf[
+                    "motors"].keys():
                     for k, v in self.smurf["motors"][joint.name].items():
                         conf[k] = v
                 if joint.joint_type == "fixed":
@@ -539,8 +708,10 @@ class BaseModel(yaml.YAMLObject):
                                  not x.startswith("__") and x not in sensor_representations.__IMPORTS__ and
                                  issubclass(getattr(sensor_representations, x), sensor_representations.MultiSensor)]
                 single_sensors = [x for x in dir(sensor_representations) if
-                                  not x.startswith("__") and x not in sensor_representations.__IMPORTS__ and issubclass(
-                                      getattr(sensor_representations, x), sensor_representations.Sensor) and x not in multi_sensors]
+                                  not x.startswith(
+                                      "__") and x not in sensor_representations.__IMPORTS__ and issubclass(
+                                      getattr(sensor_representations, x),
+                                      sensor_representations.Sensor) and x not in multi_sensors]
                 moveable_joints = [j for j in self.robot.joints if j.joint_type != 'fixed']
 
                 for s in self.smurf["sensors"]:
@@ -570,8 +741,11 @@ class BaseModel(yaml.YAMLObject):
                     name = link.name if link.name in self.smurf["links"].keys() else "default"
                     if name in self.smurf["links"].keys():
                         link_instance = self.robot.get_link(link.name)
-                        link_instance.noDataPackage = self.smurf["links"][name]["noDataPackage"] if "noDataPackage" in self.smurf["links"][name].keys() else False
-                        link_instance.reducedDataPackage = self.smurf["links"][name]["reducedDataPackage"] if "reducedDataPackage" in self.smurf["links"][name].keys() else False
+                        link_instance.noDataPackage = self.smurf["links"][name][
+                            "noDataPackage"] if "noDataPackage" in self.smurf["links"][name].keys() else False
+                        link_instance.reducedDataPackage = self.smurf["links"][name][
+                            "reducedDataPackage"] if "reducedDataPackage" in self.smurf["links"][
+                            name].keys() else False
                         log.debug('      Defined Link {}'.format(link.name))
 
             if "materials" in self.smurf.keys():
@@ -594,341 +768,3 @@ class BaseModel(yaml.YAMLObject):
         log.info('Finished processing')
 
         return True
-
-    def export(self):
-        if "enforce_zero" in self.typedef and self.typedef["enforce_zero"]:
-            self.robot.enforce_zero()
-        if "smurf" in self.modeltype:
-            self.robot.export_smurf(
-                self.exportdir, create_pdf=self.typedef["export_pdf"],
-                ros_pkg=self.typedef["ros_package"],
-                ros_pkg_name=self.ros_pkg_name,
-                export_with_ros_pathes=self.export_ros_pathes if hasattr(self, "export_ros_pathes") else None
-            )
-        else:
-            misc.create_dir(self.pipeline, os.path.dirname(self.exporturdf))
-            self.robot.full_export(self.exportdir, create_pdf=self.typedef["export_pdf"],
-                                   ros_pkg=self.typedef["ros_package"],
-                                   export_with_ros_pathes=self.export_ros_pathes
-                                   if hasattr(self, "export_ros_pathes") else None,
-                                   ros_pkg_name=self.ros_pkg_name
-                                   if self.ros_pkg_name is not None or (
-                                               hasattr(self, "export_ros_pathes") and self.export_ros_pathes)
-                                   else None)
-
-        if hasattr(self, "export_joint_limits"):
-            def limits_file_export(file_path, output_dict):
-                log.debug(f"Exporting joint_limits file {os.path.join(self.exportdir, file_path)}")
-                if not os.path.isdir(os.path.dirname(os.path.join(self.exportdir, file_path))):
-                    os.makedirs(os.path.dirname(os.path.join(self.exportdir, file_path)))
-                output_dict = {"limits": output_dict}
-                with open(os.path.join(self.exportdir, file_path), "w") as jl_file:
-                    jl_file.write(dump_json(output_dict))
-                    #jl_file.write("limits:\n")
-                    #jl_file.write("  names: " + dump_yaml(output_dict["names"], default_flow_style=True) + "\n")
-                    #jl_file.write("  elements: " + dump_yaml(output_dict["elements"], default_flow_style=True))
-
-            def get_joints(robot, joint_desc):
-                robot_joint_names = [jnt.name for jnt in robot.joints]
-                if type(joint_desc) is list:
-                    joints = joint_desc
-                elif hasattr(self, "submechanisms_file") and type(joint_desc) is str and joint_desc.upper() != "ALL":
-                    if joint_desc.upper() == "ABSTRACT" or joint_desc.upper() == "INDEPENDENT":
-                        joints = []
-                        for sm in self.submechanisms_file["submechanisms"]:
-                            joints += sm["jointnames_independent"]
-                        joints = [joint for joint in joints if joint in robot_joint_names]
-                    elif joint_desc.upper() == "ACTIVE" or joint_desc.upper() == "ACTUATED":
-                        joints = []
-                        for sm in self.submechanisms_file["submechanisms"]:
-                            joints += sm["jointnames_active"]
-                        joints = [joint for joint in joints if joint in robot_joint_names]
-                    else:
-                        raise Exception(joint_desc + " is no valid joint descriptor!")
-                elif joint_desc.upper() == "ALL" or (
-                        not hasattr(self, "submechanisms_file") and joint_desc in ["ABSTRACT", "INDEPENDENT", "ACTIVE",
-                                                                                   "ACTUATED"]):
-                    joints = robot_joint_names
-                else:
-                    raise Exception(joint_desc + " is no valid joint descriptor!")
-                return list(set(joints))
-
-            for file in self.export_joint_limits:
-                if file["type"].upper() == "URDF":
-                    temp_model = Robot(name="temp", xmlfile=os.path.join(self.exportdir, file["in"]))
-                    if "joints" in file.keys():
-                        out = xml.get_joint_info_dict(temp_model, get_joints(temp_model, file["joints"]))
-                    else:
-                        out = xml.get_joint_info_dict(temp_model, get_joints(temp_model, "ALL"))
-                elif file["type"].upper() == "JOINTS":
-                    out = xml.get_joint_info_dict(self.robot, get_joints(self.robot, file["joints"]))
-                else:
-                    raise Exception("Invalid export joint limits type:" + file["type"])
-                limits_file_export(file["out"], out)
-
-        if hasattr(self, "export_kccd") and self.export_kccd is not False:
-            if not type(self.export_kccd) is dict:
-                self.export_kccd = {
-                    "join_before_convexhull": True,
-                    "keep_stls": False,
-                    "keep_urdf": False,
-                    "dirname": "kccd",
-                    "reduce_meshes": 0
-                }
-            log.debug(f"Creating kccd model with config:\n {dump_yaml(self.export_kccd, default_flow_style=False)}")
-            misc.create_symlink(self.pipeline,
-                                os.path.join(self.pipeline.temp_dir, self.pipeline.meshes["iv"]),
-                                os.path.join(self.exportdir, self.pipeline.meshes["iv"]))
-            self.robot.export_kccd(self.exportdir, self.pipeline.meshes["iv"], self.typedef["output_mesh_format"],
-                                   edit_collisions=self.edit_collisions, **self.export_kccd)
-
-        if hasattr(self, "export_floatingbase") and self.export_floatingbase is True:
-            log.info("Creating floatingbase model...")
-            self.robot.export_floatingbase(
-                self.exportdir,
-                ros_pkg_name=self.ros_pkg_name
-                if hasattr(self, "export_ros_pathes") and self.export_ros_pathes else None,
-                export_with_ros_pathes=self.export_ros_pathes if hasattr(self, "export_ros_pathes") else False,
-                create_pdf=self.typedef["export_pdf"]
-            )
-
-        if hasattr(self, "keep_files"):
-            git.reset(self.targetdir, "autobuild", "master")
-            misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
-
-        log.info('Finished export of the new model')
-        self.processed_model_exists = True
-
-        if hasattr(self, "post_processing"):
-            for script in self.post_processing:
-                if "cwd" not in script.keys():
-                    script["cwd"] = self.exportdir
-                else:
-                    script["cwd"] = os.path.abspath(script["cwd"])
-                misc.execute_shell_command(script["cmd"], script["cwd"])
-            log.info('Finished post_processing of the new model')
-
-        if self.ros_pkg_name is not None:
-            # ROS CMakeLists.txt
-            ros_cmake = os.path.join(self.exportdir, "CMakeLists.txt")
-            directories = [p for p in os.listdir(self.exportdir) if os.path.isdir(os.path.join(self.exportdir, p))]
-            for d in directories:
-                directories += [os.path.join(d, p) for p in os.listdir(os.path.join(self.exportdir, d)) if
-                                os.path.isdir(os.path.join(self.exportdir, d, p))]
-            if hasattr(self, "submodules"):
-                for subm in self.submodules:
-                    directories += [subm["target"]]
-            if hasattr(self, "keep_files"):
-                for k in self.keep_files:
-                    if k.endswith("/"):
-                        directories += [k]
-                    elif "/" in k:
-                        directories += [os.path.dirname(k)]
-            if not os.path.isfile(ros_cmake):
-                misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/ROSCMakeLists.txt.in"),
-                          ros_cmake)
-                with open(ros_cmake, "r") as cmake:
-                    content = cmake.read()
-                    content = misc.regex_replace(content, {
-                        "@PACKAGE_NAME@": self.ros_pkg_name,
-                        "@DIRECTORIES@": " ".join(directories),
-                    })
-                with open(ros_cmake, "w") as cmake:
-                    cmake.write(content)
-            # ROS package.xml
-            packagexml_path = os.path.join(self.exportdir, "package.xml")
-            if not os.path.isfile(packagexml_path):
-                misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/ROSpackage.xml.in"),
-                          packagexml_path)
-                with open(packagexml_path, "r") as packagexml:
-                    content = packagexml.read()
-                    url = self.pipeline.remote_base + "/" + self.modelname
-                    content = misc.regex_replace(content, {
-                        "\$INPUTNAME": self.ros_pkg_name,
-                        "\$AUTHOR": "<author>" + os.path.join(self.pipeline.configdir,
-                                                              self.modelname + ".yml") + "</author>",
-                        "\$MAINTAINER": "<maintainer>https://git.hb.dfki.de/phobos/ci-run/-/wikis/home</maintainer>",
-                        "\$URL": "<url>" + url + "</url>",
-                        "\$VERSION": "def:" + self.pipeline.git_rev[10],
-                    })
-                with open(packagexml_path, "w") as packagexml:
-                    packagexml.write(content)
-
-        # REVIEW are the following lines here obsolete?
-        if hasattr(self, "keep_files"):
-            git.reset(self.targetdir, "autobuild", "master")
-            misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
-
-    def deploy(self, mesh_commit, failed_model=False, uses_lfs=False):
-        if hasattr(self, "do_not_deploy") and self.do_not_deploy is True:
-            return "deployment suppressed in cfg"
-        if not os.path.exists(self.targetdir):
-            raise Exception("The result directory " + self.targetdir + " doesn't exist:\n" +
-                            "  This might happen if you haven't added the result" +
-                            " repo to the manifest.xml or spelled it wrong.")
-        repo = self.targetdir
-        git.reset(self.targetdir, "autobuild", "master")
-        if hasattr(self, "keep_files"):
-            misc.store_persisting_files(self.pipeline, repo, self.keep_files, os.path.join(self.tempdir, "sustain"))
-        git.update(repo, update_target_branch="$CI_UPDATE_TARGET_BRANCH" if failed_model else "master")
-        git.clear_repo(repo)
-        # add manifest.xml if necessary
-        manifest_path = os.path.join(repo, "manifest.xml")
-        if not os.path.isfile(manifest_path):
-            misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/manifest.xml.in"), manifest_path)
-            with open(manifest_path, "r") as manifest:
-                content = manifest.read()
-                url = self.pipeline.remote_base + "/" + self.modelname
-                content = misc.regex_replace(content, {
-                    "\$INPUTNAME": self.modelname,
-                    "\$AUTHOR": "<author>" + os.path.join(self.pipeline.configdir,
-                                                          self.modelname + ".yml") + "</author>",
-                    "\$MAINTAINER": "<maintainer>https://git.hb.dfki.de/phobos/ci-run/-/wikis/home</maintainer>",
-                    "\$URL": "<url>" + url + "</url>",
-                })
-            with open(manifest_path, "w") as manifest:
-                manifest.write(content)
-        readme_path = os.path.join(repo, "README.md")
-        if not os.path.isfile(readme_path):
-            misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/README.md.in"), readme_path)
-            with open(readme_path, "r") as readme:
-                content = readme.read()
-                content = misc.regex_replace(content, {
-                    "\$MODELNAME": self.modelname,
-                    "\$USERS": self.pipeline.mr_mention if not hasattr(self, "mr_mention") else self.mr_mention,
-                    "\$DEFINITION_FILE": "https://git.hb.dfki.de/" + os.path.join(
-                        os.environ["CI_ROOT_PATH"],
-                        os.environ["CI_MODEL_DEFINITIONS_PATH"],
-                        self.modelname + ".yml").replace("models/robots", "models-robots"),
-                })
-            with open(readme_path, "w") as readme:
-                readme.write(content)
-        if uses_lfs:
-            readme_content = open(readme_path, "r").read()
-            if "# Git LFS for mesh repositories" not in readme_content:
-                with open(readme_path, "a") as readme:
-                    readme.write(open(pkg_resources.resource_filename("phobos", "data/GitLFS_README.md.in")).read())
-        # update additional submodules
-        if hasattr(self, "submodules"):
-            for subm in self.submodules:
-                git.add_submodule(
-                    repo,
-                    subm["repo"],
-                    subm["target"],
-                    commit=subm["commit"] if "commit" in subm.keys() else None,
-                    branch=subm["branch"] if "branch" in subm.keys() else "master"
-                )
-        # update the mesh submodule
-        git.add_submodule(
-            repo,
-            os.path.relpath(
-                os.path.join(self.pipeline.root, self.typedef["meshespath"]), repo
-            ),
-            self.typedef["meshespath"],
-            commit=mesh_commit[self.typedef["output_mesh_format"]]["commit"],
-            branch=os.environ[
-                "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
-        )
-        if "also_export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"]:
-            git.add_submodule(
-                repo,
-                os.path.relpath(
-                    os.path.join(self.pipeline.root, self.pipeline.meshes["bobj"]), repo
-                ),
-                self.pipeline.meshes["bobj"],
-                commit=mesh_commit["bobj"]["commit"],
-                branch=os.environ[
-                    "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
-            )
-        if hasattr(self, "export_kccd") and self.export_kccd is not False:
-            git.add_submodule(
-                repo,
-                os.path.relpath(
-                    os.path.join(self.pipeline.root, self.pipeline.meshes["iv"]), repo
-                ),
-                self.pipeline.meshes["iv"],
-                commit=mesh_commit["iv"]["commit"],
-                branch=os.environ[
-                    "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
-            )
-        if "export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"] is False:
-            git.add_submodule(
-                repo,
-                os.path.relpath(
-                    os.path.join(self.pipeline.root, self.pipeline.meshes["iv"]), repo
-                ),
-                self.pipeline.meshes["iv"],
-                commit=mesh_commit["iv"]["commit"],
-                branch=os.environ[
-                    "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
-            )
-        # now we move back to the push repo
-        misc.copy(self.pipeline, self.exportdir + "/*", self.targetdir)
-        if hasattr(self, "keep_files"):
-            misc.restore_persisting_files(self.pipeline, repo, self.keep_files, os.path.join(self.tempdir, "sustain"))
-        git.commit(repo, origin_repo=os.path.abspath(self.pipeline.configdir))
-        git.add_remote(repo, self.pipeline.remote_base + "/" + self.modelname)
-        mr = git.MergeRequest()
-        mr.target = self.pipeline.mr_target_branch if not hasattr(self, "mr_target_branch") else self.mr_target_branch
-        mr.title = self.pipeline.mr_title if not hasattr(self, "mr_title") else self.mr_title
-        mr.description = self.pipeline.mr_description
-        if os.path.isfile(self.pipeline.test_protocol):
-            log.info("Appending test_protocol to MR description")
-            with open(self.pipeline.test_protocol, "r") as f:
-                protocol = load_json(f.read())
-                mr.description = misc.append_string(mr.description, "\n" + str(protocol["all"]))
-                mr.description = misc.append_string(mr.description, str(protocol[self.modelname]))
-        else:
-            log.warning(f"Did not find test_protocol file at: {self.pipeline.test_protocol}")
-        if failed_model:
-            if hasattr(self.pipeline, "mr_mention") or hasattr(self, "mr_mention"):
-                mr.mention = self.pipeline.mr_mention if not hasattr(self, "mr_mention") else self.mr_mention
-            return_msg = "pushed to " + git.push(repo, merge_request=mr)
-        else:
-            return_msg = "pushed to " + git.push(repo, branch="master")
-            # deploy to mirror
-        if hasattr(self, "deploy_to_mirror"):
-            log.info(f"Deploying to mirror:\n {dump_yaml(self.deploy_to_mirror, default_flow_style=False)}")
-            mirror_dir = os.path.join(self.tempdir, "deploy_mirror")
-            git.clone(self.pipeline, self.deploy_to_mirror["repo"], mirror_dir, branch="master", shallow=False)
-            git.update(mirror_dir, update_remote="origin", update_target_branch=self.deploy_to_mirror["branch"])
-            git.clear_repo(mirror_dir)
-            submodule_dict = {}
-            if "submodules" in self.deploy_to_mirror.keys() and ".gitmodules" in os.listdir(repo):
-                submodule_file = open(os.path.join(repo, ".gitmodules"), "r").read()
-                current_key = None
-                for line in submodule_file.split("\n"):
-                    if line.startswith("["):
-                        current_key = line.split()[1][1:-2]
-                        if current_key not in submodule_dict.keys():
-                            submodule_dict[current_key] = {}
-                    elif " = " in line:
-                        k, v = line.strip().split(" = ")
-                        submodule_dict[current_key][k] = v
-                if self.deploy_to_mirror["submodules"]:
-                    for _, sm in submodule_dict.items():
-                        git.add_submodule(mirror_dir, sm["url"], sm["path"],
-                                          branch=sm["branch"] if "branch" in sm.keys() else "master")
-            misc.copy(self.pipeline, repo + "/*", mirror_dir)
-            if "submodules" in self.deploy_to_mirror.keys() and ".gitmodules" in os.listdir(repo):
-                for _, sm in submodule_dict.items():
-                    # git.clone(self.pipeline, os.path.join(self.deploy_to_mirror["repo"], sm["url"]), sm["path"],
-                    #           sm["branch"] if "branch" in sm.keys() else "master", cwd=mirror_dir)
-                    misc.execute_shell_command("rm -rf " + os.path.join(sm["path"], ".git*"), mirror_dir)
-            git.commit(mirror_dir, origin_repo=self.pipeline.configdir)
-            if "merge_request" in self.deploy_to_mirror.keys() and self.deploy_to_mirror["merge_request"]:
-                if "mr_mention" in self.deploy_to_mirror.keys():
-                    mr.mention = self.deploy_to_mirror["mr_mention"]
-                if "mr_title" in self.deploy_to_mirror.keys():
-                    mr.title = self.deploy_to_mirror["mr_title"]
-                if "mr_target" in self.deploy_to_mirror.keys():
-                    mr.target = self.deploy_to_mirror["mr_target"]
-                git.push(mirror_dir, remote="origin", merge_request=mr, branch=self.deploy_to_mirror["branch"])
-            else:
-                git.push(mirror_dir, remote="origin", branch=self.deploy_to_mirror["branch"])
-            return_msg += "& pushed to mirror"
-        git.checkout("master", repo)
-        return return_msg
-
-    def get_imported_meshes(self):
-        return self._meshes

@@ -1000,83 +1000,84 @@ class Robot(SMURFRobot):
             for coll in link.collisions:
                 link.remove_aggregate(coll)
 
-    def reparent_link(self, link_name, parent, inertia=True, visual=True, collision=True):
-        """
-        Reparent all xml-children ( inertia, visual and collision ) of the given link onto the new parent.
-        :param link_name: the link we apply this to
-        :param parent: the new parent
-        :param inertia: whether we do this for the inertias
-        :param visual: whether we do this for the visuals
-        :param collision: whether we do this for the collisions
-        :return: None
-        """
-        if isinstance(link_name, list):
-            if isinstance(parent, list):
-                assert len(link_name) == len(parent)
-                for link_, parent_ in zip(link_name, parent):
-                    self.reparent_link(link_, parent_, inertia=inertia, visual=visual, collision=collision)
-                return
-            for link_ in link_name:
-                self.reparent_link(link_, parent, inertia=inertia, visual=visual, collision=collision)
-            return
-
-        link = self.get_link(link_name)
-        parent = self.get_link(parent)
-
-        if not link or not parent:
-            log.warning("Link or new parent not found!")
-            return
-
-        # Get the transformation
-        # root to link
-        L_T_R = self.get_transformation(link.name)
-        R_T_P = inv(self.get_transformation(parent.name))
-
-        L_T_P = R_T_P.dot(L_T_R)
-
-        if inertia and link.inertial:
-            inertia_L = link.inertial
-            if parent.inertial:
-                # Merge the inertials
-                # Old one
-                I_L = inertia_L.to_mass_matrix()
-                IP_T_IL = parent.inertial.origin.to_matrix().dot(
-                    L_T_P.dot(inertia_L.origin.to_matrix()))
-                Ad = get_adjoint(IP_T_IL)
-                # Transform into parent
-                I_NL = Ad.dot(I_L.dot(Ad.T)) + parent.inertial.to_mass_matrix()
-                parent.inertial = representation.Inertial.from_mass_matrix(I_NL, parent.inertial.origin)
-
-            else:
-                # Set inertial to new parent
-                new_origin = L_T_P.dot(inertia_L.origin.to_matrix())
-                parent.inertial = link.inertial
-                parent.inertial.origin = representation.Pose.from_matrix(new_origin)
-
-            # Set link to near zero
-            link.inertial = representation.Inertial.from_mass_matrix(1e-5 * np.ones((6, 6)), link.inertial.origin)
-
-        if visual and link.visuals:
-            for vis in link.visuals:
-                VL_T_L = vis.origin.to_matrix()
-                new_origin = L_T_P.dot(VL_T_L)
-                vis.origin = representation.Pose.from_matrix(new_origin)
-                parent.add_aggregate('visual', vis.duplicate())
-                link.remove_aggregate(vis)
-
-        if collision and link.collisions:
-            for col in link.collisions:
-                CL_T_L = col.origin.to_matrix()
-                new_origin = L_T_P.dot(CL_T_L)
-                col.origin = representation.Pose.from_matrix(new_origin)
-                parent.add_aggregate('collision', col.duplicate())
-                link.remove_aggregate(col)
-
-        # Reinit the link
-        # link.to_xml()
-        # parent.to_xml()
-        self.relink_entities()
-        return
+    # not used
+    # def reparent_link(self, link_name, parent, inertia=True, visual=True, collision=True):
+    #     """
+    #     Reparent all xml-children ( inertia, visual and collision ) of the given link onto the new parent.
+    #     :param link_name: the link we apply this to
+    #     :param parent: the new parent
+    #     :param inertia: whether we do this for the inertias
+    #     :param visual: whether we do this for the visuals
+    #     :param collision: whether we do this for the collisions
+    #     :return: None
+    #     """
+    #     if isinstance(link_name, list):
+    #         if isinstance(parent, list):
+    #             assert len(link_name) == len(parent)
+    #             for link_, parent_ in zip(link_name, parent):
+    #                 self.reparent_link(link_, parent_, inertia=inertia, visual=visual, collision=collision)
+    #             return
+    #         for link_ in link_name:
+    #             self.reparent_link(link_, parent, inertia=inertia, visual=visual, collision=collision)
+    #         return
+    #
+    #     link = self.get_link(link_name)
+    #     parent = self.get_link(parent)
+    #
+    #     if not link or not parent:
+    #         log.warning("Link or new parent not found!")
+    #         return
+    #
+    #     # Get the transformation
+    #     # root to link
+    #     L_T_R = self.get_transformation(link.name)
+    #     R_T_P = inv(self.get_transformation(parent.name))
+    #
+    #     L_T_P = R_T_P.dot(L_T_R)
+    #
+    #     if inertia and link.inertial:
+    #         inertia_L = link.inertial
+    #         if parent.inertial:
+    #             # Merge the inertials
+    #             # Old one
+    #             I_L = inertia_L.to_mass_matrix()
+    #             IP_T_IL = parent.inertial.origin.to_matrix().dot(
+    #                 L_T_P.dot(inertia_L.origin.to_matrix()))
+    #             Ad = get_adjoint(IP_T_IL)
+    #             # Transform into parent
+    #             I_NL = Ad.dot(I_L.dot(Ad.T)) + parent.inertial.to_mass_matrix()
+    #             parent.inertial = representation.Inertial.from_mass_matrix(I_NL, parent.inertial.origin)
+    #
+    #         else:
+    #             # Set inertial to new parent
+    #             new_origin = L_T_P.dot(inertia_L.origin.to_matrix())
+    #             parent.inertial = link.inertial
+    #             parent.inertial.origin = representation.Pose.from_matrix(new_origin)
+    #
+    #         # Set link to near zero
+    #         link.inertial = representation.Inertial.from_mass_matrix(1e-5 * np.ones((6, 6)), link.inertial.origin)
+    #
+    #     if visual and link.visuals:
+    #         for vis in link.visuals:
+    #             VL_T_L = vis.origin.to_matrix()
+    #             new_origin = L_T_P.dot(VL_T_L)
+    #             vis.origin = representation.Pose.from_matrix(new_origin)
+    #             parent.add_aggregate('visual', vis.duplicate())
+    #             link.remove_aggregate(vis)
+    #
+    #     if collision and link.collisions:
+    #         for col in link.collisions:
+    #             CL_T_L = col.origin.to_matrix()
+    #             new_origin = L_T_P.dot(CL_T_L)
+    #             col.origin = representation.Pose.from_matrix(new_origin)
+    #             parent.add_aggregate('collision', col.duplicate())
+    #             link.remove_aggregate(col)
+    #
+    #     # Reinit the link
+    #     # link.to_xml()
+    #     # parent.to_xml()
+    #     self.relink_entities()
+    #     return
 
     def move_link_in_tree(self, link_name, new_parent_name):
         """
@@ -1380,34 +1381,6 @@ class Robot(SMURFRobot):
 
             log.info(" Corrected inertia for link {}".format(link.name))
 
-    def correct_axes(self, joints=None, tol=1E-3):
-        """
-        Turns all joints where the axis are not unit. Not yet entirely tested
-        """
-        if joints is None:
-            joints = [j for j in self.joints if j.joint_type != "fixed" and hasattr(j, "axis") and j.axis is not None]
-        elif not isinstance(joints, list):
-            joints = [joints]
-
-        for joint in joints:
-            joint.axis = joint.axis / np.linalg.norm(joint.axis)
-            axis_correction = np.eye(4)
-            if 1 - (np.amax(np.abs(joint.axis))) > tol:
-                log.warning(f"Axis of joint {joint.name} is not even close to unit! No changes made Axis:{joint.axis}")
-            elif joint.type != "fixed" and len(np.where(np.array(joint.axis) == 0.0)[0]) != 2:
-                log.warning(f"Joint axis is not x, y or z unit vector:\n {joint.__dict__}")
-                v = [np.abs(a) for a in joint.axis]
-                new_axis = [0 if i != np.argmax(v) else 1 for i in range(3)]
-                if joint.axis[np.argmax(v)] < 0:
-                    new_axis *= -1
-                R = scipy_rot.align_vectors([new_axis], [joint.axis])
-                # joint.axis = new_axis
-                axis_correction[:3, :3] = R[0].as_matrix()
-                log.info(f"Rotating joint by \n {axis_correction}")
-                log.info(f"New axis is: {new_axis}")
-
-                joint.origin = representation.Pose.from_matrix(axis_correction.dot(joint.originto_matrix()))
-                joint.axis = new_axis
 
     def compute_mass(self):
         """
@@ -2298,29 +2271,21 @@ class Robot(SMURFRobot):
         self.relink_entities()
         return renamed_entities
 
-    def add_link_by_properties(self, name, translation, rotation, parent, jointname=None, jointtype="fixed", axis=None,
-                               mass=0.0, add_default_motor=True, is_human=False):
+    def add_link_by_properties(self, name, joint, mass=0.0, add_default_motor=True, **kwargs):
         """
         Adds a link with the given parameters.
         This method has to be overridden in subclasses.
         :param name: the name of the link
-        :param translation: the translation of the joint
-        :param rotation: the rotation of the joint
-        :param parent: the parent link to which this shall be attached
-        :param jointname: the name for the joint to create (default is link name)
-        :param jointtype: the joint type (default: fixed)
-        :param axis: the axis if the joint is not fixed
+        :param joint: the representation.Joint which connects the link to the robot
         :param mass: the point mass we should add to this link
         :return: parent link and the created link and joint
         """
         if name in [link.name for link in self.links]:
             raise NameError("You can't add '" + name + "' as the model already contains a link with this name!")
-        if jointname in [j.name for j in self.joints]:
-            raise NameError("You can't add '" + jointname + "' as the model already contains a joint with this name!")
-        if type(parent) is str:
-            parent = self.get_link(parent)
-        else:
-            assert (isinstance(parent, representation.Link))
+        if joint.name in [j.name for j in self.joints]:
+            raise NameError("You can't add '" + joint.name + "' as the model already contains a joint with this name!")
+        if self.get_link(joint.parent, verbose=True) is None:
+            raise NameError("The parent '" + joint.name + "' of the given joint does not exist!")
         if mass > 0.0:
             inertial = representation.Inertial(
                 mass=mass, inertia=representation.Inertia(
@@ -2332,10 +2297,9 @@ class Robot(SMURFRobot):
             )
         else:
             inertial = None
-        link = representation.Link(name, inertial=inertial, is_human=is_human)
-        joint = representation.Joint(name=jointname if jointname is not None else name, parent=parent.name,
-                                     child=link.name, joint_type=jointtype,
-                                     origin=representation.Pose(translation, rotation), axis=axis)
+        link = representation.Link(name, inertial=inertial,**kwargs)
+
+        assert joint.child == name
         self.add_aggregate("link", link)
         self.add_aggregate("joint", joint)
         link.link_with_robot(self)

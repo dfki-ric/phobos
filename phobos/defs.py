@@ -1,5 +1,9 @@
 EULER_CONVENTION = 'xyz'
 RPY_CONVENTION = 'xyz'
+MESH_TYPES = ["dae", "stl", "obj", "mars_obj", "bobj"]
+EXPORT_TYPES = ["smurf", "urdf", "sdf", "joint_limits", "pdf"]
+IMPORT_TYPES = ["smurf", "urdf", "sdf"]
+KINEMATIC_TYPES = ["urdf", "sdf"]
 
 HYRODYN_AVAILABLE = False
 BASE_LOG_LEVEL = "WARNING"
@@ -74,7 +78,3 @@ except ImportError:
     from json import loads as load_json, dumps
     dump_yaml = dump_json
     print("YAML not available (backwards compatibility).")
-
-MESH_TYPES = ["dae", "stl", "obj", "mars_obj", "bobj"]
-EXPORT_TYPES = ["smurf", "urdf", "sdf", "joint_limits", "pdf"]
-IMPORT_TYPES = ["smurf", "urdf", "sdf"]

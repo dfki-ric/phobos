@@ -24,6 +24,15 @@ def to_pretty_xml_string(xml):
     return xml_string.toprettyxml(indent='  ').replace(u'<?xml version="1.0" ?>', '').strip()
 
 
+def merge_default(input_dict, default_dict):
+    if input_dict is None or len(input_dict) == 0:
+        return default_dict
+    for _k, _v in default_dict.items():
+        if _k not in input_dict:
+            input_dict[_k] = _v
+    return input_dict
+
+
 def read_number_from_config(config_input):
     """Converts ["rad"/"deg", value] into the rad value, computes *+/- and pi in input string"""
     if type(config_input) is list:

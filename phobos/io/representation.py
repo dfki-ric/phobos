@@ -681,7 +681,7 @@ class Joint(Representation, SmurfBase):
         assert self.child is not None
         self.joint_type = joint_type if joint_type is not None else (kwargs["type"] if "type" in kwargs else None)
         assert self.joint_type is not None, f"Joint type of {self.name} undefined!"
-        self.axis = axis if joint_type != "fixed" else None
+        self.axis = (np.array(axis)/np.linalg.norm(axis)).tolist() if joint_type != "fixed" else None
         if origin is None:
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self._origin = _singular(origin)
