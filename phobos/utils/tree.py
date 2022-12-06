@@ -150,3 +150,25 @@ def get_joints_depth_first(robot, start_link, independent_joints=None):
             raise e
     return joints
 
+
+def get_joints(robot, joint_desc):
+    robot_joint_names = [jnt.name for jnt in robot.joints]
+    if type(joint_desc) == list:
+        return list(set(joint_desc))
+    elif type(joint_desc) == str:
+        if robot.submechanisms is not None and len(robot.submechanisms) > 0 and joint_desc.upper() != "ALL":
+            if joint_desc.upper() == "INDEPENDENT":
+                joints = set()
+                for sm in robot.submechanisms:
+                    joints.union([joint for joint in sm.jointnames_independent if joint in robot_joint_names])
+                return list(joints)
+            elif joint_desc.upper() == "ACTIVE":
+                joints = set()
+                for sm in robot.submechanisms:
+                    joints.union([joint for joint in sm.jointnames_active if joint in robot_joint_names])
+                return list(joints)
+            elif joint_desc.upper() == "ALL":
+                return list(set(robot_joint_names))
+        elif joint_desc.upper() in ["ALL", "INDEPENDENT", "ACTIVE"]:
+            return list(set(robot_joint_names))
+    raise Exception(joint_desc + " is no valid joint descriptor!")

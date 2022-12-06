@@ -1,0 +1,161 @@
+{
+  "sensors": {
+    "Joint6DOF": {},
+    "RotatingRaySensor": {
+      "default": {
+        "bands": 16,
+        "draw_rays": false,
+        "horizontal_offset": 0,
+        "opening_width": 6.283185307,
+        "horizontal_resolution": null,
+        "lasers": 24,
+        "max_distance": 5.0,
+        "min_distance": null,
+        "opening_height": 6.283185307,
+        "vertical_offset": 0
+      },
+      "VLP16": {
+        "bands": null,
+        "draw_rays": false,
+        "horizontal_offset": 0,
+        "opening_width": 6.283185307,
+        "horizontal_resolution": 0.1,
+        "lasers": 16,
+        "max_distance": 100.0,
+        "min_distance": null,
+        "opening_height": 0.523598776,
+        "vertical_offset": -0.261799388,
+        "rate": 20
+      }
+    },
+    "CameraSensor": {
+      "default": {
+        "height": 480,
+        "width": 640,
+        "hud_height": 240,
+        "hud_width": 0,
+        "opening_height": 90,
+        "opening_width": 90,
+        "depth_image": true,
+        "show_cam": false,
+        "frame_offset": 1
+      }
+    },
+    "IMU": {
+      "default": {}
+    },
+    "MotorCurrent": {
+      "default": {}
+    },
+    "JointPosition": {
+      "default": {}
+    },
+    "JointVelocity": {
+      "default": {}
+    },
+    "NodeContact": {
+      "default": {}
+    },
+    "NodeContactForce": {
+      "default": {}
+    },
+    "NodeCOM": {
+      "default": {}
+    },
+    "NodePosition": {
+      "default": {}
+    },
+    "NodeRotation": {
+      "default": {}
+    }
+  },
+  "motors": {
+    "default": {
+      "maxSpeed": 3.141,
+      "maxEffort": 50.0,
+      "p": 20.0,
+      "i": 0.0,
+      "d": 0.0,
+      "type": "PID"
+    }
+  },
+  "joints": {
+    "fixed": {
+      "joint_type": "fixed",
+      "axis": null,
+      "limit": null,
+      "cut_joint": false,
+      "dynamics": null
+    },
+    "revolute": {
+      "joint_type": "revolute",
+      "axis": [1, 0, 0],
+      "limit": {
+        "effort": 500.0,
+        "velocity": 3.1415926,
+        "lower": -3.1415926,
+        "upper": 3.1415926
+      },
+      "cut_joint": false,
+      "dynamics": {
+        "damping": null,
+        "friction": null,
+        "spring_stiffness": null,
+        "spring_reference": null
+      }
+    },
+    "prismatic": {
+      "joint_type": "prismatic",
+      "axis": [0, 0, 1],
+      "limit": {
+        "effort": 500.0,
+        "velocity": 0.1,
+        "lower": -0.1,
+        "upper": 0.1
+      },
+      "cut_joint": false,
+      "dynamics": {
+        "damping": null,
+        "friction": null,
+        "spring_stiffness": null,
+        "spring_reference": null
+      }
+    },
+    "continuous": {
+      "joint_type": "continuous",
+      "axis": [1, 0, 0],
+      "limit": null,
+      "cut_joint": false,
+      "dynamics": {
+        "damping": null,
+        "friction": null,
+        "spring_stiffness": null,
+        "spring_reference": null
+      }
+    },
+    "floating": {
+      "joint_type": "floating",
+      "axis": null,
+      "limit": null,
+      "cut_joint": false,
+      "dynamics": {
+        "damping": null,
+        "friction": null,
+        "spring_stiffness": null,
+        "spring_reference": null
+      }
+    },
+    "planar": {
+      "joint_type": "planar",
+      "axis": [1, 0, 0],
+      "limit": null,
+      "cut_joint": false,
+      "dynamics": {
+        "damping": null,
+        "friction": null,
+        "spring_stiffness": null,
+        "spring_reference": null
+      }
+    }
+  }
+}

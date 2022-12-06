@@ -599,6 +599,20 @@ class Link(Representation, SmurfBase):
         elif isinstance(elem, Collision) or elem_type.lower() == "collision":
             self.collisions.append(elem)
 
+    @property
+    def materials(self):
+        return [visual.material for visual in self.visuals]
+
+    @materials.setter
+    def materials(self, value):
+        if type(value) == dict:
+            for visual in self.visuals:
+                if visual.name in value:
+                    visual.material = value[visual.name]
+        elif type(value) == str:
+            for visual in self.visuals:
+                visual.material = value
+
 
 class JointDynamics(Representation):
     def __init__(self, damping=None, friction=None, spring_stiffness=None, spring_reference=None, **kwargs):
@@ -682,7 +696,7 @@ class Joint(Representation, SmurfBase):
         self.joint_type = joint_type if joint_type is not None else (kwargs["type"] if "type" in kwargs else None)
         assert self.joint_type is not None, f"Joint type of {self.name} undefined!"
         self.axis = (np.array(axis)/np.linalg.norm(axis)).tolist() if joint_type != "fixed" else None
-        if origin is None:
+        if origin is None and cut_joint is False:
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self._origin = _singular(origin)
         self.limit = _singular(limit)
@@ -700,6 +714,14 @@ class Joint(Representation, SmurfBase):
         self.dynamics = _singular(dynamics)
         SmurfBase.__init__(self, **kwargs)
         self.excludes += ["limit", "mimic", "axis", "dynamics"]
+
+    def link_with_robot(self, robot, check_linkage_later=False):
+        super(Joint, self).link_with_robot(robot, check_linkage_later=True)
+        if self.cut_joint and self.origin is None:
+            self.origin = Pose.from_matrix(self._related_robot_instance.get_transformation(self.child, self.parent),
+                                           relative_to=self.parent)
+        if not check_linkage_later:
+            self.check_linkage()
 
     def check_valid(self):
         return (self.joint_type in self.TYPES, "Invalid joint type: {}".format(self.joint_type) and  # noqa

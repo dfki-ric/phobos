@@ -30,7 +30,7 @@ class TestSMURFIO(unittest.TestCase):
 
     def test_export(self):
         robot = phobos.core.Robot(inputfile="test_data/example_mechanism/smurf/example_mechanism.smurf")
-        robot.export_smurf(outputdir="test_data/.temp/")
+        robot.full_export(outputdir="test_data/.temp/")
 
         # Note currently we copy the model not the mehes so the pathes are adapted accordingly and thereby lead to a diff
         with open("test_data/example_mechanism/urdf/example_mechanism.urdf", "r") as f:

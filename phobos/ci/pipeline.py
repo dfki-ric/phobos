@@ -7,7 +7,6 @@ import yaml
 from ..defs import *
 from .test_model import TestModel
 from .model import Model
-from .combined_model import CombinedModel
 from .model_testing import ModelTest
 from .compare_model import CompareModel
 from .xtype_model import XTypeModel
@@ -107,12 +106,10 @@ class Pipeline(yaml.YAMLObject):
             try:
                 if list(cfg.keys())[0] == "model":
                     self.models += [Model(os.path.join(self.configdir, md), self, self.processed_model_exists)]
-                elif list(cfg.keys())[0] == "combined_model":
-                    self.models += [CombinedModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
                 elif list(cfg.keys())[0] == "xtype_model":
                     self.models += [XTypeModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
                 else:
-                    self.processing_failed[md[:-4]][ "load"] = f"Skipping {md} as it is no valid model definition!\n"
+                    self.processing_failed[md[:-4]]["load"] = f"Skipping {md} as it is no valid model definition!\n"
                     log.error(self.processing_failed[md[:-4]]["load"])
                     continue
                 for m in self.models[-1].get_imported_meshes():

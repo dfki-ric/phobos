@@ -207,7 +207,7 @@ class Submechanism(HyrodynAnnotation):
     @property
     def multi_joint_dependencies(self):
         if self._related_robot_instance is not None:
-            for j in self.get_joints():
+            for j in self.get_joints() + [lc.cut_joint for lc in self.loop_constraints]:
                 joint = self._related_robot_instance.get_joint(j, verbose=True)
                 assert joint is not None
                 if len(joint.joint_dependencies) > 1:
@@ -229,10 +229,15 @@ class Submechanism(HyrodynAnnotation):
     @property
     def loop_constraints(self):
         if self._related_robot_instance is not None:
-            for j in self.get_joints():
-                joint = self._related_robot_instance.get_joint(j)
+            links = self.get_relative_links(self._related_robot_instance)
+            loop_closure_joints = []
+            for lcj in self._related_robot_instance.get_loop_closure_joints():
+                if lcj.child in links:
+                    assert lcj.parent in links
+                    loop_closure_joints.append(lcj)
+            for joint in loop_closure_joints:
                 if joint.cut_joint:
-                    self._loop_constraints.append(LoopConstraint(cut_joint=joint.name, predecessor_body=joint.parent,
+                    self._loop_constraints.append(LoopConstraint(cut_joint=joint, predecessor_body=joint.parent,
                                                                  successor_body=joint.child,
                                                                  constraint_axes=joint.constraint_axes))
         if self._loop_constraints is not None and len(self._loop_constraints) > 0:
@@ -245,7 +250,8 @@ class Submechanism(HyrodynAnnotation):
         if self._related_robot_instance is None:
             self._loop_constraints = value
         else:
-            raise RuntimeError("Please set the cut_joint and constraint_axes of the corresponding cut-joint!")
+            raise RuntimeError("Please set the cut_joint and constraint_axes of the corresponding cut-joint!"
+                               "Loop constraints will be filled automatically")
 
     def link_with_robot(self, robot, check_linkage_later=False):
         super(Submechanism, self).link_with_robot(robot, check_linkage_later=True)

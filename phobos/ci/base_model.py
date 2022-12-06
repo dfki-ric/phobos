@@ -56,11 +56,15 @@ class BaseModel(yaml.YAMLObject):
         self.tempdir = os.path.join(self.pipeline.temp_dir, "temp_" + self.modelname)
 
         # parse export_config
-        self.export_meshpathes = []
+        self.export_meshes = {}
         self.export_xmlfile = []
         for ec in self.export_config:
             if ec["type"] in KINEMATIC_TYPES:
                 assert "mesh_format" in ec
+                if type(ec["additional_meshes"]) == str:
+                    ec["additional_meshes"] = [ec["additional_meshes"]]
+                else:
+                    ec["additional_meshes"] = []
                 if "link_in_smurf" in ec and ec["link_in_smurf"] is True:
                     if self.export_xmlfile is not None:
                         raise AssertionError("Can only have one kinematics defining xml file in smurf, "
@@ -71,10 +75,14 @@ class BaseModel(yaml.YAMLObject):
                     ext = ec["type"].split("_")[-1].lower()
                     assert ext in ["sdf", "urdf"]
                     self.export_xmlfile += "." + ext
-                    self.export_meshpathes = [self.pipeline.meshes[ec["mesh_format"]]] + self.export_meshpathes
-                else:
-                    self.export_meshpathes += [self.pipeline.meshes[ec["mesh_format"]]]                
-                
+                self.export_meshes = {
+                    mt.lower(): self.pipeline.meshes[mt] for mt in [ec["mesh_format"]] + ec["additional_meshes"]
+                }
+            elif ec["type"] == "kccd":
+                self.export_meshes = {
+                    "iv": self.pipeline.meshes["iv"]
+                }
+
     def __init__(self, configfile, pipeline, processed_model_exists=True):
         # These variables have to be defined in the config file
         self.input_models = {}
@@ -148,9 +156,9 @@ class BaseModel(yaml.YAMLObject):
                         self.pipeline, processed_model_exists=True)
                 })
                 # copy the mesh files to the temporary combined model directory
-                for mp in self.dep_models[name].export_meshpathes:
+                for mp in self.dep_models[name].export_meshes.values():
                     misc.create_symlink(
-                        self.pipeline, os.path.join(self.pipeline.temp_dir, mp), os.path.join(self.basedir, mp)
+                        self.pipeline, os.path.join(self.pipeline.temp_dir, str(mp)), os.path.join(self.basedir, str(mp))
                     )
         for name, config in self.input_models.items():
             if "basefile" in config.keys():
@@ -366,6 +374,13 @@ class BaseModel(yaml.YAMLObject):
         combined_model.name = "combined_model"
         combined_model.full_export(self.basedir)
 
+    def recreate_sym_links(self):
+        for mt, mp in self.export_meshes.items():
+            log.info('  Re-exporting meshes')
+            misc.create_symlink(
+                self.pipeline, os.path.join(self.pipeline.temp_dir, str(mp)), os.path.join(self.exportdir, str(mp))
+            )
+
     def process(self):
         misc.recreate_dir(self.pipeline, self.tempdir)
         misc.recreate_dir(self.pipeline, self.basedir)
@@ -379,6 +394,17 @@ class BaseModel(yaml.YAMLObject):
 
         self.robot.correct_inertials()
         self.robot.clean_meshes()
+
+        if hasattr(self, "materials"):
+            for m_name, m_def in self.materials.items():
+                material_instance = self.robot.get_material(m_name)
+                if material_instance is not None:
+                    material_instance.add_annotations(**m_def)
+                    log.debug('Added annotation to Material {}'.format(m_name))
+                else:
+                    material_instance = representation.Material(name=m_name, **m_def)
+                    self.robot.add_aggregate("material", material_instance)
+                    log.debug('Defined Material {}'.format(m_name))
 
         if hasattr(self, "frames"):
             _default = {} if "$default" not in self.frames else self.frames["$default"]
@@ -428,6 +454,8 @@ class BaseModel(yaml.YAMLObject):
                         self.robot.move_link_in_tree(link_name=linkname, new_parent_name=v)
                     elif k == "estimate_missing_com" and v is True:
                         self.robot.set_estimated_link_com(linkname, dont_overwrite=True)
+                    elif k == "material" or k == "materials":
+                        link.materials = v
                     else:
                         link.add_annotation(k, v, overwrite=True)
             
@@ -437,9 +465,9 @@ class BaseModel(yaml.YAMLObject):
             for jointname, config in self.joints.items():
                 if self.robot.get_joint(jointname, verbose=True) is None and ("cut_joint" not in config or config["cut_joint"] is False):
                     raise NameError(f"There is no joint with name {jointname}")
-                else:
+                else:  # cut_joint
                     # [TODO pre_v2.0.0] Review and Check whether this works as expected
-                    # Check whether everxthing is given and calculate origin and axis (?)
+                    # Check whether everything is given and calculate origin and axis (?)
                     _joint = representation.Joint(**config)
                     assert "constraint_axes" in config
                     _joint.constraint_axes = [ConstraintAxis(**ca) for ca in config["constraint_axes"]]
@@ -461,7 +489,7 @@ class BaseModel(yaml.YAMLObject):
                     elif k == "max":
                         joint.limit.upper = misc.read_number_from_config(v)
                     elif k == "eff":
-                        joint.limit.efforrt = misc.read_number_from_config(v)
+                        joint.limit.effort = misc.read_number_from_config(v)
                     elif k == "vel":
                         joint.limit.velocity = misc.read_number_from_config(v)
                     elif k == "movement_depends_on":
@@ -470,6 +498,8 @@ class BaseModel(yaml.YAMLObject):
                                                                                       offset=jd["offset"],
                                                                                       multiplier=jd["multiplier"]))
                     elif k == "active":
+                        # [TODO!!! pre_v2.0.0] add provider for default values
+                        # v = misc.merge_default(v, default_motor)
                         if type(v) == dict:
                             if "name" not in v:
                                 v["name"] = jointname+"_motor"
@@ -482,36 +512,30 @@ class BaseModel(yaml.YAMLObject):
                         elif v is True:
                             _motor = representation.Motor(name=jointname+"_motor", joint=jointname)
                             self.robot.add_motor(_motor)
-                    else:  # axis, cut_joint
+                    else:  # axis
                         joint.add_annotation(k, v, overwrite=True)
                     # [TODO pre_v2.0.0] Re-add transmission support
                 joint.link_with_robot(self.robot)
     
         # Check for joint definitions
         self.robot.check_joint_definitions(
-            raise_error=self.typedef[
-                "ensure_valid_joints"] if "ensure_valid_joints" in self.typedef.keys() else True,
-            backup=self.redefine_articulation["default"] if (
-                    hasattr(self, "redefine_articulation")
-                    and "default" in self.redefine_articulation.keys()
-                    and "backup" in self.redefine_articulation["default"].keys()
-                    and self.redefine_articulation["default"]["backup"]
-            ) else None,
+            raise_error=True,
+            backup=self.joints["$default"] if (
+                    hasattr(self, "joints")
+                    and "$default" in self.joints.keys()
+                    and "backup" in self.joints["$default"].keys()
+                    and self.joints["$default"]["backup"]
+            ) else None
         )
 
-
-        if hasattr(self, 'replace_collisions'):
-            self.edit_collisions = self.replace_collisions
-        if hasattr(self, 'edit_collisions'):
-            log.debug('  Replacing collisions')
+        if hasattr(self, 'collisions'):
             for link in self.robot.links:
-                conf = deepcopy(self.edit_collisions["default"])
-                exclude = self.edit_collisions["exclude"] if "exclude" in self.edit_collisions.keys() else []
+                conf = deepcopy(self.collisions["default"])
+                exclude = self.collisions["exclude"] if "exclude" in self.collisions.keys() else []
                 if link.name in exclude:
                     continue
-                log.debug('       {}'.format(link.name))
-                if link.name in self.edit_collisions.keys():
-                    for k, v in self.edit_collisions[link.name].items():
+                if link.name in self.collisions.keys():
+                    for k, v in self.collisions[link.name].items():
                         conf[k] = v
                 if "remove" in conf.keys():
                     if type(conf["remove"]) is list:
@@ -528,8 +552,8 @@ class BaseModel(yaml.YAMLObject):
                     if conf["shape"] == "remove":
                         remove_collision(self.robot, link.name)
                     elif conf["shape"] != "mesh":
-                        if not ("do_not_apply_primitives" in self.edit_collisions.keys() and
-                                self.edit_collisions["do_not_apply_primitives"] is True):
+                        if not ("do_not_apply_primitives" in self.collisions.keys() and
+                                self.collisions["do_not_apply_primitives"] is True):
                             replace_collision(
                                 self.robot, link.name,
                                 shape=conf["shape"],
@@ -540,102 +564,80 @@ class BaseModel(yaml.YAMLObject):
                     # if conf["shape"] == "convex":
                     #     reduceMeshCollision(self.robot, link.name, reduction=0.3)
 
-        if hasattr(self, "smurf"):
-            log.debug('  Smurfing Collisions')
-            if 'collisions' in self.smurf.keys():
-                if "auto_bitmask" in self.smurf["collisions"].keys() and \
-                        self.smurf["collisions"]["auto_bitmask"] is True:
-                    log.debug("         Setting auto bitmask")
-                    kwargs = self.smurf["collisions"]["default"] if "default" in self.smurf[
-                        "collisions"].keys() else {}
-                    self.robot.set_self_collision(
-                        1,
-                        coll_override=self.smurf["collisions"]["collision_between"]
-                        if "collision_between" in self.smurf["collisions"].keys() else {},
-                        no_coll_override=self.smurf["collisions"]["no_collision_between"]
-                        if "no_collision_between" in self.smurf["collisions"].keys() else {},
-                        **kwargs
-                    )
-                    for coll in self.robot.get_all_collisions():
-                        if coll.name in self.smurf["collisions"].keys():
-                            for k, v in self.smurf["collisions"][coll.name].items():
-                                setattr(coll, k, v)
-                else:
-                    for coll_name in self.smurf["collisions"].keys():
-                        conf = self.smurf["collisions"][coll_name]
-                        coll = self.robot.get_collision_by_name(coll_name)
-                        if coll is not None:
-                            for key in ["name", "link", "geometry", "origin"]:
-                                if key in conf:
-                                    conf.pop(key)
-                            coll.add_annotations(**conf)
+            if "auto_bitmask" in self.collisions.keys() and \
+                    self.collisions["auto_bitmask"] is True:
+                log.debug("         Setting auto bitmask")
+                kwargs = self.collisions["default"] if "default" in self.collisions.keys() else {}
+                self.robot.set_self_collision(
+                    1,
+                    coll_override=self.collisions["collision_between"]
+                    if "collision_between" in self.collisions.keys() else {},
+                    no_coll_override=self.collisions["no_collision_between"]
+                    if "no_collision_between" in self.collisions.keys() else {},
+                    **kwargs
+                )
+                for coll in self.robot.get_all_collisions():
+                    if coll.name in self.collisions.keys():
+                        for k, v in self.collisions[coll.name].items():
+                            setattr(coll, k, v)
+            else:
+                for coll_name in self.collisions.keys():
+                    conf = self.collisions[coll_name]
+                    coll = self.robot.get_collision_by_name(coll_name)
+                    if coll is not None:
+                        for key in ["name", "link", "geometry", "origin"]:
+                            if key in conf:
+                                conf.pop(key)
+                        coll.add_annotations(**conf)
 
-        log.info('  Re-exporting meshes')
-        misc.create_symlink(self.pipeline,
-                            os.path.join(self.pipeline.temp_dir, self.typedef["meshespath"]),
-                            os.path.join(self.exportdir, self.typedef["meshespath"])
-                            )
-        if self.typedef["output_mesh_format"].lower() != "bobj" and \
-                "also_export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"]:
-            misc.create_symlink(self.pipeline,
-                                os.path.join(self.pipeline.temp_dir, self.pipeline.meshes["bobj"]),
-                                os.path.join(self.exportdir, self.pipeline.meshes["bobj"])
-                                )
-        assert self.processed_meshes == []
-        for link in self.robot.links:
-            v_c = 0
-            for v in link.visuals + link.collisions:
-                if isinstance(v.geometry, representation.Mesh) and v.geometry.filename not in self.processed_meshes:
-                    v_c += 1
-                    if "mars_obj" in v.geometry.filename.lower() or (
-                            "input_meshes_are_mars_obj" in self.typedef.keys() and
-                            self.typedef["input_meshes_are_mars_obj"]):
-                        mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile), mars_mesh=True)
-                    elif v.geometry.filename.lower().endswith("bobj"):
-                        raise NotImplementedError("Can't load bobj meshes!")
-                    else:
-                        if v.geometry.filename.lower().endswith("obj"):
-                            log.warning("Loading obj mesh, where the orientation convention might be unknown")
-                        mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile))
-                    meshexport = os.path.join(self.exportdir, self.typedef["meshespath"],
-                                              os.path.basename(v.geometry.filename)[:-3])
-                    b_meshexport = os.path.join(self.exportdir, self.pipeline.meshes["bobj"],
-                                                os.path.basename(v.geometry.filename)[:-3])
-                    v.geometry.filename = v.geometry.filename.replace(" ", "_")
-                    v.geometry.filename = meshexport
-                    if self.typedef["output_mesh_format"].lower() == "mars_obj":
-                        export_mars_mesh(mesh, meshexport + "obj", urdf_path=self.exporturdf)
-                        v.geometry.filename += "obj"
-                    elif self.typedef["output_mesh_format"].lower() == "bobj":
-                        export_bobj_mesh(mesh, meshexport + "bobj", urdf_path=self.exporturdf)
-                        v.geometry.filename += "bobj"
-                    elif self.typedef["output_mesh_format"].lower() == "obj":
-                        export_mesh(mesh, meshexport + "obj", urdf_path=self.exporturdf)
-                        v.geometry.filename += "obj"
-                    elif self.typedef["output_mesh_format"].lower() == "stl":
-                        # and (not v.geometry.filename.lower.endswith("stl")) -> copy
-                        export_mesh(mesh, meshexport + "stl", urdf_path=self.exporturdf)
-                        v.geometry.filename += "stl"
-                    elif self.typedef["output_mesh_format"].lower() == "dae":
-                        color = None
-                        for m in self.robot.materials:
-                            if str(m) != str(v.material):
-                                continue
-                            else:
-                                color = m.color.rgba
-                        export_mesh(mesh, meshexport + "dae", urdf_path=self.exporturdf, dae_mesh_color=color)
-                        v.geometry.filename += "dae"
-                    else:
-                        raise ValueError("Unknown mesh type" + self.typedef["output_mesh_format"].lower())
-                    self.processed_meshes.append(os.path.realpath(v.geometry._filename))
-                    if self.typedef["output_mesh_format"].lower() != "bobj" and \
-                            "also_export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"]:
-                        _filepath = export_bobj_mesh(mesh, b_meshexport + "bobj", urdf_path=self.exporturdf)
-                        self.processed_meshes.append(os.path.realpath(_filepath))
-            # print('       {} with {} meshes as {}'.format(link.name, v_c, self.typedef["output_mesh_format"]))
-
-        if hasattr(self, "name_editing_after") and self.name_editing_after is not None:
-            self.robot.edit_names(self.name_editing_after)
+        # Re-export meshes
+        for mt, mp in self.export_meshes.items():
+            log.info('  Re-exporting meshes')
+            misc.create_symlink(
+                self.pipeline, os.path.join(self.pipeline.temp_dir, str(mp)), os.path.join(self.exportdir, str(mp))
+            )
+            assert self.processed_meshes == []
+            for link in self.robot.links:
+                v_c = 0
+                for v in link.visuals + link.collisions:
+                    if isinstance(v.geometry, representation.Mesh) and v.geometry.filename not in self.processed_meshes:
+                        v_c += 1
+                        if "mars_obj" in v.geometry.filename.lower() or v.geometry.filename.lower().endswith(".mars.obj"):
+                            mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile), mars_mesh=True)
+                        elif v.geometry.filename.lower().endswith("bobj"):
+                            raise NotImplementedError("Can't load bobj meshes!")
+                        else:
+                            if v.geometry.filename.lower().endswith("obj"):
+                                log.warning(f"Loading obj mesh {v.geometry.filename}, "
+                                            f"where the orientation convention might be unknown")
+                            mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile))
+                        meshexport = os.path.join(self.exportdir, mp, os.path.basename(v.geometry.filename)[:-3])
+                        v.geometry.filename = v.geometry.filename.replace(" ", "_")
+                        v.geometry.filename = meshexport
+                        if mt == "mars_obj":
+                            export_mars_mesh(mesh, meshexport + "obj", urdf_path=self.exporturdf)
+                            v.geometry.filename += "obj"
+                        elif mt == "bobj":
+                            export_bobj_mesh(mesh, meshexport + "bobj", urdf_path=self.exporturdf)
+                            v.geometry.filename += "bobj"
+                        elif mt == "obj":
+                            export_mesh(mesh, meshexport + "obj", urdf_path=self.exporturdf)
+                            v.geometry.filename += "obj"
+                        elif mt == "stl":
+                            export_mesh(mesh, meshexport + "stl", urdf_path=self.exporturdf)
+                            v.geometry.filename += "stl"
+                        elif mt == "dae":
+                            color = None
+                            for m in self.robot.materials:
+                                if str(m) != str(v.material):
+                                    continue
+                                else:
+                                    color = m.color.rgba
+                            export_mesh(mesh, meshexport + "dae", urdf_path=self.exporturdf, dae_mesh_color=color)
+                            v.geometry.filename += "dae"
+                        else:
+                            raise ValueError("Unknown mesh type" + self.typedef["output_mesh_format"].lower())
+                        self.processed_meshes.append(os.path.realpath(v.geometry._filename))
 
         if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):
             if hasattr(self, "exoskeletons"):
@@ -658,113 +660,302 @@ class BaseModel(yaml.YAMLObject):
         #                                stop=tree.find_leaves(self.robot, spanningtree),
         #                                only_urdf=True)
 
-        if hasattr(self, "additional_urdfs") and not hasattr(self, "export_submodels"):
-            setattr(self, "export_submodels", self.additional_urdfs)
-        if hasattr(self, "export_submodels"):
-            for au in self.export_submodels:
-                self.robot.define_submodel(name=au["name"], start=au["start"],
-                                           stop=au["stop"] if "stop" in au else None,
-                                           only_urdf=au["only_urdf"] if "only_urdf" in au.keys() else None)
+        if hasattr(self, "sensors"):
+            multi_sensors = [x for x in dir(sensor_representations) if
+                             not x.startswith("__") and x not in sensor_representations.__IMPORTS__ and
+                             issubclass(getattr(sensor_representations, x), sensor_representations.MultiSensor)]
+            single_sensors = [x for x in dir(sensor_representations) if
+                              not x.startswith(
+                                  "__") and x not in sensor_representations.__IMPORTS__ and issubclass(
+                                  getattr(sensor_representations, x),
+                                  sensor_representations.Sensor) and x not in multi_sensors]
+            moveable_joints = [j for j in self.robot.joints if j.joint_type != 'fixed']
 
-        # motors
-        if hasattr(self, "smurf"):
-            assert self.robot.motors == []
-            for joint in self.robot.joints:
-                if hasattr(self, "smurf"):
-                    conf = self.smurf["motors"]["default"] if "motors" in self.smurf.keys() and "default" in \
-                                                              self.smurf["motors"].keys() else {}
-                else:
-                    conf = {}
-                if "name" in conf.keys():  # we dont ẃant that someone overwrites the same name for all motors
-                    conf.pop("name")
-                if hasattr(self, "smurf") and "motors" in self.smurf.keys() and joint.name in self.smurf[
-                    "motors"].keys():
-                    for k, v in self.smurf["motors"][joint.name].items():
-                        conf[k] = v
-                if joint.joint_type == "fixed":
-                    continue
-                motor = representation.Motor(
-                    joint=joint,
-                    name=conf["name"] if "name" in conf.keys() else joint.name + "_motor",
-                    p=conf["p"] if "p" in conf.keys() else 20.0,
-                    i=conf["i"] if "i" in conf.keys() else 0.0,
-                    d=conf["d"] if "d" in conf.keys() else 0.1,
-                    maxEffort=joint.limit.effort if joint.limit is not None and joint.limit.effort > 0.0 else 400,
-                    reducedDataPackage=conf["reducedDataPackage"] if "reducedDataPackage" in conf.keys() else False,
-                    noDataPackage=conf["noDataPackage"] if "noDataPackage" in conf.keys() else False,
-                )
-                self.robot.add_motor(motor)
+            for s in self.sensors:
+                sensor_ = None
+                if s["type"] in single_sensors:
+                    kwargs = {k: v for k, v in s.items() if k != "type"}
+                    sensor_ = getattr(sensor_representations, s["type"])(**kwargs)
 
-        if hasattr(self, "smurf"):
-            log.debug('  Smurfing poses, sensors, links, materials, etc.')
-            if 'poses' in self.smurf.keys():
-                for (cn, config) in self.smurf["poses"].items():
-                    pose = poses.JointPoseSet(robot=self.robot, name=cn, configuration=config)
-                    self.robot.add_pose(pose)
-                    log.debug('      Added pose {}'.format(cn))
+                if s["type"] in multi_sensors:
+                    if "targets" not in s:
+                        pass
+                    elif type(s['targets']) is str and s['targets'].upper() == "ALL":
+                        s['targets'] = moveable_joints
+                    elif type(s['targets']) is list:
+                        pass
+                    else:
+                        raise ValueError('Targets can only be a list or "All"!')
+                    kwargs = {k: v for k, v in s.items() if k != "type"}
+                    sensor_ = getattr(sensor_representations, s["type"])(**kwargs)
 
-            if 'sensors' in self.smurf.keys():
-                multi_sensors = [x for x in dir(sensor_representations) if
-                                 not x.startswith("__") and x not in sensor_representations.__IMPORTS__ and
-                                 issubclass(getattr(sensor_representations, x), sensor_representations.MultiSensor)]
-                single_sensors = [x for x in dir(sensor_representations) if
-                                  not x.startswith(
-                                      "__") and x not in sensor_representations.__IMPORTS__ and issubclass(
-                                      getattr(sensor_representations, x),
-                                      sensor_representations.Sensor) and x not in multi_sensors]
-                moveable_joints = [j for j in self.robot.joints if j.joint_type != 'fixed']
+                if sensor_ is not None:
+                    self.robot.add_sensor(sensor_)
+                    log.debug('      Attached {} {}'.format(s["type"], s['name']))
 
-                for s in self.smurf["sensors"]:
-                    sensor_ = None
-                    if s["type"] in single_sensors:
-                        kwargs = {k: v for k, v in s.items() if k != "type"}
-                        sensor_ = getattr(sensor_representations, s["type"])(**kwargs)
+        if hasattr(self, "poses"):
+            for (cn, config) in self.poses.items():
+                pose = poses.JointPoseSet(robot=self.robot, name=cn, configuration=config)
+                self.robot.add_pose(pose)
 
-                    if s["type"] in multi_sensors:
-                        if "targets" not in s:
-                            pass
-                        elif type(s['targets']) is str and s['targets'].upper() == "ALL":
-                            s['targets'] = moveable_joints
-                        elif type(s['targets']) is list:
-                            pass
-                        else:
-                            raise ValueError('Targets can only be a list or "All"!')
-                        kwargs = {k: v for k, v in s.items() if k != "type"}
-                        sensor_ = getattr(sensor_representations, s["type"])(**kwargs)
+        if hasattr(self, "annotations"):
+            log.debug('  Adding further annotations.')
 
-                    if sensor_ is not None:
-                        self.robot.add_sensor(sensor_)
-                        log.debug('      Attached {} {}'.format(s["type"], s['name']))
-
-            if 'links' in self.smurf.keys():
-                for link in self.robot.links:
-                    name = link.name if link.name in self.smurf["links"].keys() else "default"
-                    if name in self.smurf["links"].keys():
-                        link_instance = self.robot.get_link(link.name)
-                        link_instance.noDataPackage = self.smurf["links"][name][
-                            "noDataPackage"] if "noDataPackage" in self.smurf["links"][name].keys() else False
-                        link_instance.reducedDataPackage = self.smurf["links"][name][
-                            "reducedDataPackage"] if "reducedDataPackage" in self.smurf["links"][
-                            name].keys() else False
-                        log.debug('      Defined Link {}'.format(link.name))
-
-            if "materials" in self.smurf.keys():
-                for m in self.smurf["materials"]:
-                    material_instance = self.robot.get_material(m["name"])
-                    material_instance.add_annotations(**m)
-                    log.debug('      Defined Material {}'.format(m["name"]))
-
-            if "further_annotations" in self.smurf.keys():
-                for k, v in self.smurf["further_annotations"]:
+            if "general_annotations" in self.annotations.keys():
+                for k, v in self.annotations["general_annotations"]:
                     if k in self.robot.annotations.keys():
                         self.robot.annotations[k] += v
                     else:
                         self.robot.annotations[k] = v
 
-            if "named_annotations" in self.smurf.keys():
-                for k, v in self.smurf["named_annotations"].items():
+            if "named_annotations" in self.annotations.keys():
+                for k, v in self.annotations["named_annotations"].items():
                     self.robot.add_named_annotation(k, v)
 
         log.info('Finished processing')
 
         return True
+
+    def export(self):
+        self.robot.export(self.exportdir, self.export_meshes, self.export_config)
+
+        if hasattr(self, "keep_files"):
+            git.reset(self.targetdir, "autobuild", "master")
+            misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
+
+        log.info('Finished export of the new model')
+        self.processed_model_exists = True
+
+        if hasattr(self, "post_processing"):
+            for script in self.post_processing:
+                if "cwd" not in script.keys():
+                    script["cwd"] = self.exportdir
+                else:
+                    script["cwd"] = os.path.abspath(script["cwd"])
+                misc.execute_shell_command(script["cmd"], script["cwd"])
+            log.info('Finished post_processing of the new model')
+
+        if self.ros_pkg_name is not None:
+            # ROS CMakeLists.txt
+            ros_cmake = os.path.join(self.exportdir, "CMakeLists.txt")
+            directories = [p for p in os.listdir(self.exportdir) if os.path.isdir(os.path.join(self.exportdir, p))]
+            for d in directories:
+                directories += [os.path.join(d, p) for p in os.listdir(os.path.join(self.exportdir, d)) if
+                                os.path.isdir(os.path.join(self.exportdir, d, p))]
+            if hasattr(self, "submodules"):
+                for subm in self.submodules:
+                    directories += [subm["target"]]
+            if hasattr(self, "keep_files"):
+                for k in self.keep_files:
+                    if k.endswith("/"):
+                        directories += [k]
+                    elif "/" in k:
+                        directories += [os.path.dirname(k)]
+            if not os.path.isfile(ros_cmake):
+                misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/ROSCMakeLists.txt.in"),
+                          ros_cmake)
+                with open(ros_cmake, "r") as cmake:
+                    content = cmake.read()
+                    content = misc.regex_replace(content, {
+                        "@PACKAGE_NAME@": self.ros_pkg_name,
+                        "@DIRECTORIES@": " ".join(directories),
+                    })
+                with open(ros_cmake, "w") as cmake:
+                    cmake.write(content)
+            # ROS package.xml
+            packagexml_path = os.path.join(self.exportdir, "package.xml")
+            if not os.path.isfile(packagexml_path):
+                misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/ROSpackage.xml.in"),
+                          packagexml_path)
+                with open(packagexml_path, "r") as packagexml:
+                    content = packagexml.read()
+                    url = self.pipeline.remote_base + "/" + self.modelname
+                    content = misc.regex_replace(content, {
+                        "\$INPUTNAME": self.ros_pkg_name,
+                        "\$AUTHOR": "<author>" + os.path.join(self.pipeline.configdir,
+                                                              self.modelname + ".yml") + "</author>",
+                        "\$MAINTAINER": "<maintainer>https://git.hb.dfki.de/phobos/ci-run/-/wikis/home</maintainer>",
+                        "\$URL": "<url>" + url + "</url>",
+                        "\$VERSION": "def:" + self.pipeline.git_rev[10],
+                    })
+                with open(packagexml_path, "w") as packagexml:
+                    packagexml.write(content)
+
+        # REVIEW are the following lines here obsolete?
+        if hasattr(self, "keep_files"):
+            git.reset(self.targetdir, "autobuild", "master")
+            misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
+
+    def deploy(self, mesh_commit, failed_model=False, uses_lfs=False):
+        if hasattr(self, "do_not_deploy") and self.do_not_deploy is True:
+            return "deployment suppressed in cfg"
+        if not os.path.exists(self.targetdir):
+            raise Exception("The result directory " + self.targetdir + " doesn't exist:\n" +
+                            "  This might happen if you haven't added the result" +
+                            " repo to the manifest.xml or spelled it wrong.")
+        repo = self.targetdir
+        git.reset(self.targetdir, "autobuild", "master")
+        if hasattr(self, "keep_files"):
+            misc.store_persisting_files(self.pipeline, repo, self.keep_files, os.path.join(self.tempdir, "sustain"))
+        git.update(repo, update_target_branch="$CI_UPDATE_TARGET_BRANCH" if failed_model else "master")
+        git.clear_repo(repo)
+        # add manifest.xml if necessary
+        manifest_path = os.path.join(repo, "manifest.xml")
+        if not os.path.isfile(manifest_path):
+            misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/manifest.xml.in"), manifest_path)
+            with open(manifest_path, "r") as manifest:
+                content = manifest.read()
+                url = self.pipeline.remote_base + "/" + self.modelname
+                content = misc.regex_replace(content, {
+                    "\$INPUTNAME": self.modelname,
+                    "\$AUTHOR": "<author>" + os.path.join(self.pipeline.configdir,
+                                                          self.modelname + ".yml") + "</author>",
+                    "\$MAINTAINER": "<maintainer>https://git.hb.dfki.de/phobos/ci-run/-/wikis/home</maintainer>",
+                    "\$URL": "<url>" + url + "</url>",
+                })
+            with open(manifest_path, "w") as manifest:
+                manifest.write(content)
+        readme_path = os.path.join(repo, "README.md")
+        if not os.path.isfile(readme_path):
+            misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/README.md.in"), readme_path)
+            with open(readme_path, "r") as readme:
+                content = readme.read()
+                content = misc.regex_replace(content, {
+                    "\$MODELNAME": self.modelname,
+                    "\$USERS": self.pipeline.mr_mention if not hasattr(self, "mr_mention") else self.mr_mention,
+                    "\$DEFINITION_FILE": "https://git.hb.dfki.de/" + os.path.join(
+                        os.environ["CI_ROOT_PATH"],
+                        os.environ["CI_MODEL_DEFINITIONS_PATH"],
+                        self.modelname + ".yml").replace("models/robots", "models-robots"),
+                })
+            with open(readme_path, "w") as readme:
+                readme.write(content)
+        if uses_lfs:
+            readme_content = open(readme_path, "r").read()
+            if "# Git LFS for mesh repositories" not in readme_content:
+                with open(readme_path, "a") as readme:
+                    readme.write(open(pkg_resources.resource_filename("phobos", "data/GitLFS_README.md.in")).read())
+        # update additional submodules
+        if hasattr(self, "submodules"):
+            for subm in self.submodules:
+                git.add_submodule(
+                    repo,
+                    subm["repo"],
+                    subm["target"],
+                    commit=subm["commit"] if "commit" in subm.keys() else None,
+                    branch=subm["branch"] if "branch" in subm.keys() else "master"
+                )
+        # update the mesh submodule
+        git.add_submodule(
+            repo,
+            os.path.relpath(
+                os.path.join(self.pipeline.root, self.typedef["meshespath"]), repo
+            ),
+            self.typedef["meshespath"],
+            commit=mesh_commit[self.typedef["output_mesh_format"]]["commit"],
+            branch=os.environ[
+                "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
+        )
+        if "also_export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"]:
+            git.add_submodule(
+                repo,
+                os.path.relpath(
+                    os.path.join(self.pipeline.root, self.pipeline.meshes["bobj"]), repo
+                ),
+                self.pipeline.meshes["bobj"],
+                commit=mesh_commit["bobj"]["commit"],
+                branch=os.environ[
+                    "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
+            )
+        if hasattr(self, "export_kccd") and self.export_kccd is not False:
+            git.add_submodule(
+                repo,
+                os.path.relpath(
+                    os.path.join(self.pipeline.root, self.pipeline.meshes["iv"]), repo
+                ),
+                self.pipeline.meshes["iv"],
+                commit=mesh_commit["iv"]["commit"],
+                branch=os.environ[
+                    "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
+            )
+        if "export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"] is False:
+            git.add_submodule(
+                repo,
+                os.path.relpath(
+                    os.path.join(self.pipeline.root, self.pipeline.meshes["iv"]), repo
+                ),
+                self.pipeline.meshes["iv"],
+                commit=mesh_commit["iv"]["commit"],
+                branch=os.environ[
+                    "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
+            )
+        # now we move back to the push repo
+        misc.copy(self.pipeline, self.exportdir + "/*", self.targetdir)
+        if hasattr(self, "keep_files"):
+            misc.restore_persisting_files(self.pipeline, repo, self.keep_files, os.path.join(self.tempdir, "sustain"))
+        git.commit(repo, origin_repo=os.path.abspath(self.pipeline.configdir))
+        git.add_remote(repo, self.pipeline.remote_base + "/" + self.modelname)
+        mr = git.MergeRequest()
+        mr.target = self.pipeline.mr_target_branch if not hasattr(self, "mr_target_branch") else self.mr_target_branch
+        mr.title = self.pipeline.mr_title if not hasattr(self, "mr_title") else self.mr_title
+        mr.description = self.pipeline.mr_description
+        if os.path.isfile(self.pipeline.test_protocol):
+            log.info("Appending test_protocol to MR description")
+            with open(self.pipeline.test_protocol, "r") as f:
+                protocol = load_json(f.read())
+                mr.description = misc.append_string(mr.description, "\n" + str(protocol["all"]))
+                mr.description = misc.append_string(mr.description, str(protocol[self.modelname]))
+        else:
+            log.warning(f"Did not find test_protocol file at: {self.pipeline.test_protocol}")
+        if failed_model:
+            if hasattr(self.pipeline, "mr_mention") or hasattr(self, "mr_mention"):
+                mr.mention = self.pipeline.mr_mention if not hasattr(self, "mr_mention") else self.mr_mention
+            return_msg = "pushed to " + git.push(repo, merge_request=mr)
+        else:
+            return_msg = "pushed to " + git.push(repo, branch="master")
+            # deploy to mirror
+        if hasattr(self, "deploy_to_mirror"):
+            log.info(f"Deploying to mirror:\n {dump_yaml(self.deploy_to_mirror, default_flow_style=False)}")
+            mirror_dir = os.path.join(self.tempdir, "deploy_mirror")
+            git.clone(self.pipeline, self.deploy_to_mirror["repo"], mirror_dir, branch="master", shallow=False)
+            git.update(mirror_dir, update_remote="origin", update_target_branch=self.deploy_to_mirror["branch"])
+            git.clear_repo(mirror_dir)
+            submodule_dict = {}
+            if "submodules" in self.deploy_to_mirror.keys() and ".gitmodules" in os.listdir(repo):
+                submodule_file = open(os.path.join(repo, ".gitmodules"), "r").read()
+                current_key = None
+                for line in submodule_file.split("\n"):
+                    if line.startswith("["):
+                        current_key = line.split()[1][1:-2]
+                        if current_key not in submodule_dict.keys():
+                            submodule_dict[current_key] = {}
+                    elif " = " in line:
+                        k, v = line.strip().split(" = ")
+                        submodule_dict[current_key][k] = v
+                if self.deploy_to_mirror["submodules"]:
+                    for _, sm in submodule_dict.items():
+                        git.add_submodule(mirror_dir, sm["url"], sm["path"],
+                                          branch=sm["branch"] if "branch" in sm.keys() else "master")
+            misc.copy(self.pipeline, repo + "/*", mirror_dir)
+            if "submodules" in self.deploy_to_mirror.keys() and ".gitmodules" in os.listdir(repo):
+                for _, sm in submodule_dict.items():
+                    # git.clone(self.pipeline, os.path.join(self.deploy_to_mirror["repo"], sm["url"]), sm["path"],
+                    #           sm["branch"] if "branch" in sm.keys() else "master", cwd=mirror_dir)
+                    misc.execute_shell_command("rm -rf " + os.path.join(sm["path"], ".git*"), mirror_dir)
+            git.commit(mirror_dir, origin_repo=self.pipeline.configdir)
+            if "merge_request" in self.deploy_to_mirror.keys() and self.deploy_to_mirror["merge_request"]:
+                if "mr_mention" in self.deploy_to_mirror.keys():
+                    mr.mention = self.deploy_to_mirror["mr_mention"]
+                if "mr_title" in self.deploy_to_mirror.keys():
+                    mr.title = self.deploy_to_mirror["mr_title"]
+                if "mr_target" in self.deploy_to_mirror.keys():
+                    mr.target = self.deploy_to_mirror["mr_target"]
+                git.push(mirror_dir, remote="origin", merge_request=mr, branch=self.deploy_to_mirror["branch"])
+            else:
+                git.push(mirror_dir, remote="origin", branch=self.deploy_to_mirror["branch"])
+            return_msg += "& pushed to mirror"
+        git.checkout("master", repo)
+        return return_msg
+
+    def get_imported_meshes(self):
+        return self._meshes

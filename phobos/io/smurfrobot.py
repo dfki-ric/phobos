@@ -489,7 +489,7 @@ class SMURFRobot(XMLRobot):
         self.sort_submechanisms()
         for jointname in missing_joints:
             joint = self.get_joint(jointname)
-            if joint.joint_type != "fixed" and joint._child.is_human is not True:
+            if joint.joint_type != "fixed" and joint._child.is_human is False and joint.cut_joint is False:
                 # If we have not already inserted this joint (fixed) let's create a serial mechanism for it
                 self.add_aggregate("submechanisms", Submechanism(
                     name="serial",
@@ -578,3 +578,6 @@ class SMURFRobot(XMLRobot):
                sm.name = "serial_chain"
                sm.contextual_name = "serial_chain" + str(counter)
                counter += 1
+
+    def get_loop_closure_joints(self):
+        return [j for j in self.robot.joints if j.cut_joint]

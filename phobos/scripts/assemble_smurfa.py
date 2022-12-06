@@ -38,7 +38,7 @@ def main(args):
         assembly = Assembly.from_scene(scene, output_dir=args.output)
         assembly.merge(copy_meshes=args.copy_meshes)
         assembly.robot.name = os.path.basename(args.input).split(".")[0]
-        assembly.robot.full_export(output_dir=args.output)
+        assembly.robot.full_export(outputdir=args.output)
     else:
         log.info("Found Scene!")
         for i, ents in enumerate(scene.entities):
@@ -46,7 +46,7 @@ def main(args):
             assembly = Assembly.from_entities(ents, output_dir=os.path.join(args.output, name))
             assembly.merge(copy_meshes=args.copy_meshes)
             assembly.robot.name = name
-            assembly.robot.full_export(output_dir=args.output)
+            assembly.robot.full_export(outputdir=args.output)
 
 
 if __name__ == '__main__':

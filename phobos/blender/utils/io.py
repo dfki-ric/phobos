@@ -560,7 +560,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
         "create_pdf": "pdf" in entitytypes
     }
     if "smurf" in entitytypes:
-        robot.export_smurf(**export_args)
+        robot.full_export(**export_args)
     elif len(export_args["formats"]) > 0:
         robot.export_xml_with_meshes(**export_args)
     else:

@@ -1,10 +1,9 @@
+from .base_model import BaseModel
 from ..core import Robot
 from ..defs import *
 
-from .combined_model import CombinedModel
 
-
-class XTypeModel(CombinedModel):
+class XTypeModel(BaseModel):
     def __init__(self, configfile, pipeline, processed_model_exists=True, only_create=False):
         configfile = load_json(open(configfile, 'r'))
         if only_create:
