@@ -59,13 +59,14 @@ extra_requirements = {
 }
 
 
-def install_requirement(package_name, upgrade_pip=False, lib=None):
+def install_requirement(package_name, upgrade_pip=False, lib=None, ensure_pip=True):
     import subprocess
     import sys
     if lib is None and BPY_AVAILABLE:
         lib = bpy.utils.user_resource("SCRIPTS", path="modules")
-    # Ensure pip is installed
-    subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+    if ensure_pip:
+        # Ensure pip is installed
+        subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
     # Update pip (not mandatory)
     if upgrade_pip:
         print("  Upgrading pip...")
@@ -73,9 +74,9 @@ def install_requirement(package_name, upgrade_pip=False, lib=None):
     # Install package
     print("  Installing package", package_name)
     if lib is None:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package_name])
     else:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", f"--target={str(lib)}", package_name])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", f"--target={str(lib)}", package_name])
 
 
 def check_requirements(optional=False, extra=False, force=False, upgrade_pip=False, lib=None):
@@ -84,14 +85,16 @@ def check_requirements(optional=False, extra=False, force=False, upgrade_pip=Fal
         return
     print("Checking requirements:")
     import importlib
+    import subprocess
+    import sys
+    # Ensure pip is installed
+    subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
     reqs = [requirements]
     if optional:
         reqs += [optional_requirements]
     if extra:
         reqs += [extra_requirements]
     if upgrade_pip:
-        import sys
-        import subprocess
         print("  Upgrading pip...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
     for r in reqs:
@@ -99,11 +102,11 @@ def check_requirements(optional=False, extra=False, force=False, upgrade_pip=Fal
             print("  Checking", import_name)
             try:
                 if importlib.util.find_spec(import_name) is None:
-                    install_requirement(req_name, upgrade_pip=False, lib=lib)
-            except AttributeError:
+                    install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+            except AttributeError:  # when using importlib before v3.4
                 loader = importlib.find_loader(import_name)
                 if not issubclass(type(loader), importlib.machinery.SourceFileLoader):
-                    install_requirement(req_name, upgrade_pip=False, lib=lib)
+                    install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
             except subprocess.CalledProcessError as e:
                 if import_name in optional_requirements.keys():
                     print(f"Couldn't install optional_requirement {import_name} ({req_name})")
@@ -216,6 +219,9 @@ if not "blender" in sys.executable.lower() and not BPY_AVAILABLE:
         __version__ = ".".join([str(x) for x in bl_info["version"]])
     finally:
         del get_distribution, DistributionNotFound
+else:
+    if not sys.platform.startswith("win"):
+        check_requirements(optional=True, upgrade_pip=True)
 
 from . import defs
 from . import io
