@@ -3,6 +3,7 @@ import os
 from phobos.core import Robot
 from phobos.defs import dump_json, load_json, dump_yaml
 
+
 class TestModel(object):
     def __init__(self, root, tolerances, model_in_repo=None, submechanisms_in_repo=None, floating_base=False,
                  floatingbase_submechanisms_in_repo=None, swing_my_robot=False):

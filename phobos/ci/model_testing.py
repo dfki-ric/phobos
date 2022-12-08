@@ -18,22 +18,18 @@ class ModelTest(object):
     """Checks the general validity of a new model possibly against an old model.
     """
 
-    def __init__(self, new_model, old_robot=None):
-        # Check for the module
+    def __init__(self, new_model, compare_model=None):
+        # Check for the model
         self.new = new_model
-        self.old = old_robot
+        self.old = compare_model
         self.new_hyrodyn = None
         self.old_hyrodyn = None
-        self.new_hml_test = get_load_report(self.new.urdf, self.new.submechanisms_file_path)
-        self.new_fb_hml_test = None
+        self.new_hml_test = get_load_report(self.new.robot.xmlfile, self.new.robot.submechanisms_file)
         self.new_sm_hml_test = []
-        if hasattr(self.new, "export_floatingbase") and self.new.floatingbase is True:
-            self.new_fb_hml_test = get_load_report(self.new.urdf[:-5]+"_floatingbase.urdf",
-                                                           self.new.floatingbase_submechanisms_file_path)
-        if hasattr(self.new, "export_submodels"):
+        if len([x for x in self.new.robot.submodels if not x["name"].startswith("#submech#")]) > 0:
             sm_path = os.path.join(self.new.exportdir, "submodels")
-            for au in self.new.export_submodels:
-                if "only_urdf" in au.keys() and au["only_urdf"] is True:
+            for au in self.new.robot.submodels:
+                if au["name"].startswith("#submech#"):
                     continue
                 self.new_sm_hml_test += [{
                     "name": au["name"],
@@ -97,7 +93,7 @@ class ModelTest(object):
         if os.path.isfile(limits_file):
             cmd += " --joint_limits_yml " + limits_file
         log.info("URDF:", self.new.robot.xmlfile,
-              "exists!" if os.path.isfile(self.new.robot.xmlfile) else "does not exist!")
+                 "exists!" if os.path.isfile(self.new.robot.xmlfile) else "does not exist!")
         # cmd += " --export_animation"
         cmd += " --export_animation_as_mp4"
         cmd += " " + self.new.robot.xmlfile
@@ -311,15 +307,6 @@ class ModelTest(object):
         except RuntimeError as e:
             log.error(f"Failed: Loading the model in HyRoDyn not possible. Check failed! {e}")
             out &= False
-        if self.new.floatingbase is True:
-            try:
-                debug_report(self.new_fb_hml_test, self.new.floatingbase_urdf,
-                             self.new.floatingbase_submechanisms_file_path, raise_error_failure=True)
-                log.info("Floatingbase model loaded!")
-                out &= True
-            except RuntimeError as e:
-                log.error(f"Failed: Loading floatingbase model in HyRoDyn not possible. Check failed! {e}")
-                out &= False
         for test in self.new_sm_hml_test:
             try:
                 debug_report(test["report"], test["urdf"], test["submech"], raise_error_failure=True)

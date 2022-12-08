@@ -19,8 +19,8 @@ def get_load_report(urdf_file, submechs):
 
 def debug_report(report, urdf_file, submech_file, raise_error_failure=False):
     log.info(f"Trying to load model in hyrodyn:\n  {urdf_file}" +
-          (" (file exists)\n" if os.path.exists(urdf_file) else " (does not exist)\n  ") + submech_file +
-          (" (file exists) " if os.path.exists(submech_file) else " (does not exist)"))
+             (" (file exists)\n" if os.path.exists(urdf_file) else " (does not exist)\n  ") + str(submech_file) +
+             (" (file exists) " if submech_file is not None and os.path.exists(submech_file) else " (does not exist)"))
     # print(submech_file, open(submech_file, "r").read(), load_json(open(submech_file, "r").read()))
     submech_dict = load_json(open(submech_file, "r").read())
     robot = Robot(xmlfile=urdf_file)

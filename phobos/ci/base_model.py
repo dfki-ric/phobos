@@ -37,6 +37,7 @@ class BaseModel(yaml.YAMLObject):
         # These variables have to be defined in the config file
         self.modelname = ""
         self.robotname = ""
+        self.test = {}
         self.export_config = []
         kwargs = {}
         if 'model' in self.cfg.keys():
@@ -49,6 +50,11 @@ class BaseModel(yaml.YAMLObject):
         assert hasattr(self, "modelname") and len(self.modelname) > 0
         assert hasattr(self, "robotname") and len(self.robotname) > 0
         assert hasattr(self, "export_config") and len(self.export_config) >= 1
+        assert hasattr(self, "test") and len(self.test) >= 1
+        # self.test = misc.merge_default(
+        #   self.test,
+        #   self.pipeline.default_test if hasattr(pipeline, "default_test") else default_test
+        # )  # [TODO pre_v2.0.0] add default provider
 
         # get directories for this model
         self.exportdir = os.path.join(self.pipeline.temp_dir, self.modelname)
@@ -79,9 +85,7 @@ class BaseModel(yaml.YAMLObject):
                     mt.lower(): self.pipeline.meshes[mt] for mt in [ec["mesh_format"]] + ec["additional_meshes"]
                 }
             elif ec["type"] == "kccd":
-                self.export_meshes = {
-                    "iv": self.pipeline.meshes["iv"]
-                }
+                self.export_meshes["iv"] = self.pipeline.meshes["iv"]
 
     def __init__(self, configfile, pipeline, processed_model_exists=True):
         # These variables have to be defined in the config file
@@ -128,6 +132,13 @@ class BaseModel(yaml.YAMLObject):
             self._load_robot()
 
         log.debug(f"Finished reading config and joining models to base model {configfile}")
+
+    @staticmethod
+    def get_exported_model_path(pipeline, configfile):
+        cfg = load_json(open(configfile, 'r'))
+        assert "model" in cfg
+        cfg = cfg["model"]
+        return os.path.join(pipeline.temp_dir, cfg["modelname"], "smurf", cfg["robotname"] + ".smurf")
 
     def _load_robot(self):
         if not self.processed_model_exists:
@@ -717,9 +728,10 @@ class BaseModel(yaml.YAMLObject):
         return True
 
     def export(self):
-        self.robot.export(self.exportdir, self.export_meshes, self.export_config)
+        ros_pkg_name = self.robot.export(self.exportdir, self.export_meshes, self.export_config,
+                          ros_pkg_later=True)
 
-        if hasattr(self, "keep_files"):
+        if hasattr(self, "deployment") and "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")
             misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
 
@@ -735,51 +747,14 @@ class BaseModel(yaml.YAMLObject):
                 misc.execute_shell_command(script["cmd"], script["cwd"])
             log.info('Finished post_processing of the new model')
 
-        if self.ros_pkg_name is not None:
-            # ROS CMakeLists.txt
-            ros_cmake = os.path.join(self.exportdir, "CMakeLists.txt")
-            directories = [p for p in os.listdir(self.exportdir) if os.path.isdir(os.path.join(self.exportdir, p))]
-            for d in directories:
-                directories += [os.path.join(d, p) for p in os.listdir(os.path.join(self.exportdir, d)) if
-                                os.path.isdir(os.path.join(self.exportdir, d, p))]
-            if hasattr(self, "submodules"):
-                for subm in self.submodules:
-                    directories += [subm["target"]]
-            if hasattr(self, "keep_files"):
-                for k in self.keep_files:
-                    if k.endswith("/"):
-                        directories += [k]
-                    elif "/" in k:
-                        directories += [os.path.dirname(k)]
-            if not os.path.isfile(ros_cmake):
-                misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/ROSCMakeLists.txt.in"),
-                          ros_cmake)
-                with open(ros_cmake, "r") as cmake:
-                    content = cmake.read()
-                    content = misc.regex_replace(content, {
-                        "@PACKAGE_NAME@": self.ros_pkg_name,
-                        "@DIRECTORIES@": " ".join(directories),
-                    })
-                with open(ros_cmake, "w") as cmake:
-                    cmake.write(content)
-            # ROS package.xml
-            packagexml_path = os.path.join(self.exportdir, "package.xml")
-            if not os.path.isfile(packagexml_path):
-                misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/ROSpackage.xml.in"),
-                          packagexml_path)
-                with open(packagexml_path, "r") as packagexml:
-                    content = packagexml.read()
-                    url = self.pipeline.remote_base + "/" + self.modelname
-                    content = misc.regex_replace(content, {
-                        "\$INPUTNAME": self.ros_pkg_name,
-                        "\$AUTHOR": "<author>" + os.path.join(self.pipeline.configdir,
-                                                              self.modelname + ".yml") + "</author>",
-                        "\$MAINTAINER": "<maintainer>https://git.hb.dfki.de/phobos/ci-run/-/wikis/home</maintainer>",
-                        "\$URL": "<url>" + url + "</url>",
-                        "\$VERSION": "def:" + self.pipeline.git_rev[10],
-                    })
-                with open(packagexml_path, "w") as packagexml:
-                    packagexml.write(content)
+        if ros_pkg_name is not None:
+            self.robot.export_ros_package_files(
+                self.exportdir, ros_pkg_name,
+                author=os.path.join(self.pipeline.configdir, self.modelname + ".yml"),
+                maintainer="https://git.hb.dfki.de/phobos/ci-run/-/wikis/home",
+                url=self.pipeline.remote_base + "/" + self.modelname,
+                version=self.pipeline.git_rev[10]
+            )
 
         # REVIEW are the following lines here obsolete?
         if hasattr(self, "keep_files"):
@@ -787,7 +762,7 @@ class BaseModel(yaml.YAMLObject):
             misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
 
     def deploy(self, mesh_commit, failed_model=False, uses_lfs=False):
-        if hasattr(self, "do_not_deploy") and self.do_not_deploy is True:
+        if hasattr(self, "deployment") and "do_not_deploy" in self.deployment and self.deployment["do_not_deploy"] is True:
             return "deployment suppressed in cfg"
         if not os.path.exists(self.targetdir):
             raise Exception("The result directory " + self.targetdir + " doesn't exist:\n" +
@@ -796,7 +771,7 @@ class BaseModel(yaml.YAMLObject):
         repo = self.targetdir
         git.reset(self.targetdir, "autobuild", "master")
         if hasattr(self, "keep_files"):
-            misc.store_persisting_files(self.pipeline, repo, self.keep_files, os.path.join(self.tempdir, "sustain"))
+            misc.store_persisting_files(self.pipeline, repo, self.keep_files, os.path.join(self.tempdir, "_sustain"))
         git.update(repo, update_target_branch="$CI_UPDATE_TARGET_BRANCH" if failed_model else "master")
         git.clear_repo(repo)
         # add manifest.xml if necessary
@@ -835,9 +810,10 @@ class BaseModel(yaml.YAMLObject):
             if "# Git LFS for mesh repositories" not in readme_content:
                 with open(readme_path, "a") as readme:
                     readme.write(open(pkg_resources.resource_filename("phobos", "data/GitLFS_README.md.in")).read())
+
         # update additional submodules
-        if hasattr(self, "submodules"):
-            for subm in self.submodules:
+        if hasattr(self, "deployment") and "submodules" in self.deployment:
+            for subm in self.deployment["submodules"]:
                 git.add_submodule(
                     repo,
                     subm["repo"],
@@ -846,58 +822,27 @@ class BaseModel(yaml.YAMLObject):
                     branch=subm["branch"] if "branch" in subm.keys() else "master"
                 )
         # update the mesh submodule
-        git.add_submodule(
-            repo,
-            os.path.relpath(
-                os.path.join(self.pipeline.root, self.typedef["meshespath"]), repo
-            ),
-            self.typedef["meshespath"],
-            commit=mesh_commit[self.typedef["output_mesh_format"]]["commit"],
-            branch=os.environ[
-                "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
-        )
-        if "also_export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"]:
+        for mt, mp in self.export_meshes.items():
             git.add_submodule(
                 repo,
                 os.path.relpath(
-                    os.path.join(self.pipeline.root, self.pipeline.meshes["bobj"]), repo
+                    os.path.join(self.pipeline.root, str(mp)), repo
                 ),
-                self.pipeline.meshes["bobj"],
-                commit=mesh_commit["bobj"]["commit"],
-                branch=os.environ[
-                    "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
+                mp,
+                commit=mesh_commit[mt]["commit"],
+                branch=os.environ["CI_MESH_UPDATE_TARGET_BRANCH"]
+                if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
             )
-        if hasattr(self, "export_kccd") and self.export_kccd is not False:
-            git.add_submodule(
-                repo,
-                os.path.relpath(
-                    os.path.join(self.pipeline.root, self.pipeline.meshes["iv"]), repo
-                ),
-                self.pipeline.meshes["iv"],
-                commit=mesh_commit["iv"]["commit"],
-                branch=os.environ[
-                    "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
-            )
-        if "export_bobj" in self.typedef.keys() and self.typedef["also_export_bobj"] is False:
-            git.add_submodule(
-                repo,
-                os.path.relpath(
-                    os.path.join(self.pipeline.root, self.pipeline.meshes["iv"]), repo
-                ),
-                self.pipeline.meshes["iv"],
-                commit=mesh_commit["iv"]["commit"],
-                branch=os.environ[
-                    "CI_MESH_UPDATE_TARGET_BRANCH"] if "CI_MESH_UPDATE_TARGET_BRANCH" in os.environ.keys() else "master"
-            )
+
         # now we move back to the push repo
         misc.copy(self.pipeline, self.exportdir + "/*", self.targetdir)
-        if hasattr(self, "keep_files"):
-            misc.restore_persisting_files(self.pipeline, repo, self.keep_files, os.path.join(self.tempdir, "sustain"))
+        if hasattr(self, "deployment") and "keep_files" in self.deployment:
+            misc.restore_persisting_files(self.pipeline, repo, self.deployment["keep_files"], os.path.join(self.tempdir, "_sustain"))
         git.commit(repo, origin_repo=os.path.abspath(self.pipeline.configdir))
         git.add_remote(repo, self.pipeline.remote_base + "/" + self.modelname)
         mr = git.MergeRequest()
-        mr.target = self.pipeline.mr_target_branch if not hasattr(self, "mr_target_branch") else self.mr_target_branch
-        mr.title = self.pipeline.mr_title if not hasattr(self, "mr_title") else self.mr_title
+        mr.target = self.pipeline.mr_target_branch if "mr_target_branch" not in self.deployment else self.deployment["mr_target_branch"]
+        mr.title = self.pipeline.mr_title if "mr_title" not in self.deployment else self.deployment["mr_title"]
         mr.description = self.pipeline.mr_description
         if os.path.isfile(self.pipeline.test_protocol):
             log.info("Appending test_protocol to MR description")
@@ -908,20 +853,20 @@ class BaseModel(yaml.YAMLObject):
         else:
             log.warning(f"Did not find test_protocol file at: {self.pipeline.test_protocol}")
         if failed_model:
-            if hasattr(self.pipeline, "mr_mention") or hasattr(self, "mr_mention"):
-                mr.mention = self.pipeline.mr_mention if not hasattr(self, "mr_mention") else self.mr_mention
+            if hasattr(self.pipeline, "mr_mention") or "mr_mention" in self.deployment:
+                mr.mention = self.pipeline.mr_mention if "mr_mention" not in self.deployment else self.deployment["mr_mention"]
             return_msg = "pushed to " + git.push(repo, merge_request=mr)
         else:
             return_msg = "pushed to " + git.push(repo, branch="master")
             # deploy to mirror
-        if hasattr(self, "deploy_to_mirror"):
-            log.info(f"Deploying to mirror:\n {dump_yaml(self.deploy_to_mirror, default_flow_style=False)}")
+        if hasattr(self, "deployment") and "mirror" in self.deployment:
+            log.info(f"Deploying to mirror:\n {dump_yaml(self.deployment['mirror'], default_flow_style=False)}")
             mirror_dir = os.path.join(self.tempdir, "deploy_mirror")
-            git.clone(self.pipeline, self.deploy_to_mirror["repo"], mirror_dir, branch="master", shallow=False)
-            git.update(mirror_dir, update_remote="origin", update_target_branch=self.deploy_to_mirror["branch"])
+            git.clone(self.pipeline, self.deployment["mirror"]["repo"], mirror_dir, branch="master", shallow=False)
+            git.update(mirror_dir, update_remote="origin", update_target_branch=self.deployment["mirror"]["branch"])
             git.clear_repo(mirror_dir)
             submodule_dict = {}
-            if "submodules" in self.deploy_to_mirror.keys() and ".gitmodules" in os.listdir(repo):
+            if "submodules" in self.deployment["mirror"].keys() and ".gitmodules" in os.listdir(repo):
                 submodule_file = open(os.path.join(repo, ".gitmodules"), "r").read()
                 current_key = None
                 for line in submodule_file.split("\n"):
@@ -932,30 +877,30 @@ class BaseModel(yaml.YAMLObject):
                     elif " = " in line:
                         k, v = line.strip().split(" = ")
                         submodule_dict[current_key][k] = v
-                if self.deploy_to_mirror["submodules"]:
+                if self.deployment["mirror"]["submodules"]:
                     for _, sm in submodule_dict.items():
                         git.add_submodule(mirror_dir, sm["url"], sm["path"],
                                           branch=sm["branch"] if "branch" in sm.keys() else "master")
             misc.copy(self.pipeline, repo + "/*", mirror_dir)
-            if "submodules" in self.deploy_to_mirror.keys() and ".gitmodules" in os.listdir(repo):
+            if "submodules" in self.deployment["mirror"].keys() and ".gitmodules" in os.listdir(repo):
                 for _, sm in submodule_dict.items():
-                    # git.clone(self.pipeline, os.path.join(self.deploy_to_mirror["repo"], sm["url"]), sm["path"],
+                    # git.clone(self.pipeline, os.path.join(self.deployment["mirror"]["repo"], sm["url"]), sm["path"],
                     #           sm["branch"] if "branch" in sm.keys() else "master", cwd=mirror_dir)
                     misc.execute_shell_command("rm -rf " + os.path.join(sm["path"], ".git*"), mirror_dir)
             git.commit(mirror_dir, origin_repo=self.pipeline.configdir)
-            if "merge_request" in self.deploy_to_mirror.keys() and self.deploy_to_mirror["merge_request"]:
-                if "mr_mention" in self.deploy_to_mirror.keys():
-                    mr.mention = self.deploy_to_mirror["mr_mention"]
-                if "mr_title" in self.deploy_to_mirror.keys():
-                    mr.title = self.deploy_to_mirror["mr_title"]
-                if "mr_target" in self.deploy_to_mirror.keys():
-                    mr.target = self.deploy_to_mirror["mr_target"]
-                git.push(mirror_dir, remote="origin", merge_request=mr, branch=self.deploy_to_mirror["branch"])
+            if "merge_request" in self.deployment["mirror"].keys() and self.deployment["mirror"]["merge_request"]:
+                if "mr_mention" in self.deployment["mirror"].keys():
+                    mr.mention = self.deployment["mirror"]["mr_mention"]
+                if "mr_title" in self.deployment["mirror"].keys():
+                    mr.title = self.deployment["mirror"]["mr_title"]
+                if "mr_target" in self.deployment["mirror"].keys():
+                    mr.target = self.deployment["mirror"]["mr_target"]
+                git.push(mirror_dir, remote="origin", merge_request=mr, branch=self.deployment["mirror"]["branch"])
             else:
-                git.push(mirror_dir, remote="origin", branch=self.deploy_to_mirror["branch"])
+                git.push(mirror_dir, remote="origin", branch=self.deployment["mirror"]["branch"])
             return_msg += "& pushed to mirror"
         git.checkout("master", repo)
         return return_msg
 
-    def get_imported_meshes(self):
+    def get_input_meshes(self):
         return self._meshes

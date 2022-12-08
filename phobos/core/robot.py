@@ -17,7 +17,7 @@ from ..io import representation, sensor_representations
 from ..io.hyrodyn import Submechanism, Exoskeleton
 from ..io.xmlrobot import XMLRobot
 from ..io.smurfrobot import SMURFRobot
-from ..utils import transform, xml
+from ..utils import transform, xml, misc, git
 from ..utils.misc import read_number_from_config, regex_replace, create_dir, edit_name_string, execute_shell_command, \
     duplicate, color_parser
 from ..utils.transform import create_transformation, inv, get_adjoint, round_array
@@ -810,7 +810,7 @@ class Robot(SMURFRobot):
                             create_pdf=False, format="urdf", float_fmt_dict=None):
         floatingbase = self.add_floating_base()
         floatingbase.full_export(outputdir, create_pdf=create_pdf, export_with_ros_pathes=export_with_ros_pathes,
-                                 ros_pkg_name=ros_pkg_name, export_joint_limits=False, format=format, float_fmt_dict=float_fmt_dict)
+                                 ros_pkg_name=ros_pkg_name, export_joint_limits=False, formats=[format], float_fmt_dict=float_fmt_dict)
 
     def export_submodel(self, name, outputdir=None, filename=None, export_visuals=True, export_collisions=True,
                         robotname=None, create_pdf=False, ros_pkg=False, export_with_ros_pathes=None,
@@ -959,8 +959,10 @@ class Robot(SMURFRobot):
         graph = pydot.graph_from_dot_data(out)
         graph[0].write_pdf(outputfile)
 
-    def export(self, outputdir, rel_mesh_pathes, export_config, ros_pkg_name=None, copy_meshes=False, no_smurf=False):
-        xml_file_in_smurf = None
+    def export(self, outputdir, rel_mesh_pathes, export_config, ros_pkg_name=None, copy_meshes=False, no_smurf=False,
+               ros_pkg_later=False):
+        xml_file_in_smurf    = None
+        ros_pkg = False
         if ros_pkg_name is None:
             ros_pkg_name = os.path.basename(outputdir)
         if copy_meshes:
@@ -974,6 +976,8 @@ class Robot(SMURFRobot):
                     xml_file_in_smurf = os.path.join(export["type"].lower(), self.name, "."+export["type"].lower())
                 if export["enforce_zero"]:
                     export_robot_instance.enforce_zero()
+                if export["ros_pathes"]:
+                    ros_pkg |= export["ros_pathes"]
                 export_robot_instance.export_xml(
                     outputdir=outputdir,
                     format=export["type"],
@@ -984,12 +988,14 @@ class Robot(SMURFRobot):
             elif export["type"] == "submodel":
                 export_robot_instance = export_robot_instance.define_submodel(
                     name=export["name"],
-                    start=export["start"],
-                    stop=export["stop"],
+                    start=export["start"] if "start" in export else str(export_robot_instance.get_root()),
+                    stop=export["stop"] if "stop" in export else [str(x) for x in export_robot_instance.get_leaves()],
                     include_unstopped_branches=export["include_unstopped_branches"]
                     if "include_unstopped_branches" in export else None,
                     no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False
                 )
+                if "add_floating_base" in export and export["add_floating_base"]:
+                    export_robot_instance.add_floating_base()
                 _export_config = None
                 if "export_config" in export:
                     _export_config = export["export_config"]
@@ -1024,6 +1030,45 @@ class Robot(SMURFRobot):
                 outputdir=outputdir,
                 robotfile=xml_file_in_smurf
             )
+        # export ros package files
+        if ros_pkg and not ros_pkg_later:
+            self.export_ros_package_files(outputdir, ros_pkg_name)
+        elif ros_pkg and ros_pkg_later:
+            return ros_pkg_name
+
+    def export_ros_package_files(self, outputdir, ros_pkg_name, author=None, maintainer=None, url=None, version=None):
+        # ROS CMakeLists.txt
+        ros_cmake = os.path.join(outputdir, "CMakeLists.txt")
+        directories = [os.path.relpath(dir, outputdir) for dir, _, _ in os.walk(outputdir)]
+        if not os.path.isfile(ros_cmake):
+            misc.copy(None, pkg_resources.resource_filename("phobos", "data/ROSCMakeLists.txt.in"),
+                      ros_cmake)
+            with open(ros_cmake, "r") as cmake:
+                content = cmake.read()
+                content = misc.regex_replace(content, {
+                    "@PACKAGE_NAME@": ros_pkg_name,
+                    "@DIRECTORIES@": " ".join(directories),
+                })
+            with open(ros_cmake, "w") as cmake:
+                cmake.write(content)
+        # ROS package.xml
+        packagexml_path = os.path.join(outputdir, "package.xml")
+        if not os.path.isfile(packagexml_path):
+            misc.copy(None, pkg_resources.resource_filename("phobos", "data/ROSpackage.xml.in"),
+                      packagexml_path)
+            with open(packagexml_path, "r") as packagexml:
+                content = packagexml.read()
+                if any([x is None for x in [author, maintainer, url]]):
+                    _author, _maintainer, _url = git.get_repo_data(outputdir)
+                content = misc.regex_replace(content, {
+                    "\$INPUTNAME": ros_pkg_name,
+                    "\$AUTHOR": f"<author>{author if author is not None else _author}</author>",
+                    "\$MAINTAINER": f"<maintainer>{maintainer if maintainer is not None else _maintainer}</maintainer>",
+                    "\$URL": f"<url>{url if url is not None else _url}</url>",
+                    "\$VERSION": f"def: {version if version is not None else self.version}"
+                })
+            with open(packagexml_path, "w") as packagexml:
+                packagexml.write(content)
 
     # getters
     def get_submodel(self, name):
